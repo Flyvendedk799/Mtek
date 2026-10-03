@@ -1,0 +1,20 @@
+scene Demo {
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Left {
+        position: vec3(-1.5, 0.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #f97316 };
+    }
+
+    entity Right {
+        position: vec2(1.5, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { colour: #14b8a6 };
+    }
+}

@@ -1,0 +1,25 @@
+# Camera: position (0, 0, 8) looking at the origin, fov_y 0.9, 128 x 128 target. CPU projection
+# (benchmarks/baselines/support/test/projection.ts) of the visible front faces (z = 0.5), each 17.7 pixels wide:
+#   Left  (centre x = -1.5): x from 28.7 to 46.3, plus a sliver of its +X side face up to 48.4
+#   Right (centre x = +1.5): x from 81.7 to 99.3, plus a sliver of its -X side face down to 79.6
+# Both span y from 55.2 to 72.8.
+name = "two cubes: orange on the left, teal on the right"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # background
+  { expect_pixel = { x = 2, y = 2, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 125, y = 125, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 108, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 37, y = 50, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 90, y = 78, color = "#202020", tolerance = 2 } },
+  # Left cube
+  { expect_pixel = { x = 37, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 32, y = 59, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 43, y = 69, color = "#f97316", tolerance = 2 } },
+  # Right cube
+  { expect_pixel = { x = 90, y = 64, color = "#14b8a6", tolerance = 2 } },
+  { expect_pixel = { x = 85, y = 59, color = "#14b8a6", tolerance = 2 } },
+  { expect_pixel = { x = 96, y = 69, color = "#14b8a6", tolerance = 2 } },
+]
