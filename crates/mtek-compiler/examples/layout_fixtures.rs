@@ -18,55 +18,27 @@
 use std::env;
 use std::error::Error;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use mtek_compiler::emit_js::{emit_test_module, writer_qualifier};
-use mtek_compiler::layout::fixture::parse_type_json;
-use mtek_compiler::layout::{LayoutRecord, compute};
 
-/// Record id and WGSL struct name by the fixture naming rule (`spec/gpu-layout.md` section 5).
-fn identity(name: &str) -> (String, String) {
-    match name {
-        "builtin_frame" => ("builtin:frame".to_owned(), "MtekFrame".to_owned()),
-        "builtin_object" => ("builtin:object".to_owned(), "MtekObject".to_owned()),
-        other => (format!("fixture:{other}"), format!("MtekFixture_{other}")),
-    }
-}
-
-/// Fixture names (`<name>.type.json`) in sorted order.
-fn fixture_names(dir: &Path) -> Result<Vec<String>, Box<dyn Error>> {
-    let mut names = Vec::new();
-    for entry in fs::read_dir(dir)? {
-        let file = entry?.file_name();
-        if let Some(name) = file.to_str().and_then(|f| f.strip_suffix(".type.json")) {
-            names.push(name.to_owned());
-        }
-    }
-    names.sort();
-    Ok(names)
-}
-
-fn record_of(dir: &Path, name: &str) -> Result<LayoutRecord, Box<dyn Error>> {
-    let text = fs::read_to_string(dir.join(format!("{name}.type.json")))?;
-    let ty = parse_type_json(&text).map_err(|e| format!("fixture {name}: {e}"))?;
-    let (id, wgsl_struct) = identity(name);
-    compute(&ty, &id, &wgsl_struct).map_err(|e| format!("fixture {name}: {e}").into())
-}
+#[path = "support/fixtures.rs"]
+mod fixtures;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let out_dir: PathBuf = env::args_os()
         .nth(1)
         .map(PathBuf::from)
         .ok_or("usage: layout_fixtures <out_dir>")?;
-    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/gpu-layout");
+    let fixture_dir = fixtures::fixture_dir();
     fs::create_dir_all(&out_dir)?;
 
-    let names = fixture_names(&fixtures)?;
+    let names = fixtures::fixture_names(&fixture_dir)?;
     if names.is_empty() {
-        return Err(format!("no fixtures found in {}", fixtures.display()).into());
+        return Err(format!("no fixtures found in {}", fixture_dir.display()).into());
     }
     for name in &names {
-        let record = record_of(&fixtures, name)?;
+        let record = fixtures::record_of(&fixture_dir, name)?;
         let mut json = serde_json::to_string_pretty(&record)?;
         json.push('\n');
         fs::write(out_dir.join(format!("{name}.layout.json")), json)?;
