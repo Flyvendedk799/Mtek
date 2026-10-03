@@ -7,3 +7,4 @@ tests/browser/results/
 *.log
 .DS_Store
 *.tsbuildinfo
+tests/codegen/.out/
