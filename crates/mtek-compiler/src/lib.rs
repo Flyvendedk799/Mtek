@@ -3,6 +3,7 @@
 //! At milestone M0 this crate only exposes the version constants that the
 //! command line tool and the runtime agree on.
 
+pub mod emit_js;
 pub mod emit_wgsl;
 pub mod layout;
 
