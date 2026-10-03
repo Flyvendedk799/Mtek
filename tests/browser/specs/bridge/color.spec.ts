@@ -36,7 +36,7 @@ function expectedColour(a: number, f: { r: number; g: number; b: number }): [num
   ];
 }
 
-test("mixed: the rendered colour matches the CPU sRGB encoding of f.rgb * a", async ({ bridge }) => {
+test("mixed: the rendered colour matches the CPU sRGB encoding of f.rgb * a", async ({ bridge }, testInfo) => {
   const centres: number[][] = [];
   for (const { a, f } of CASES) {
     const expected = expectedColour(a, f);
@@ -46,6 +46,7 @@ test("mixed: the rendered colour matches the CPU sRGB encoding of f.rgb * a", as
     expect(result.pixels).toHaveLength(16 * 16 * 4);
 
     const label = `a=${a} f=(${f.r}, ${f.g}, ${f.b}): got ${result.centre.join(",")}, expected ${expected.join(",")}`;
+    testInfo.annotations.push({ type: "centre pixel", description: label });
     result.centre.forEach((channel, index) => {
       expect(Math.abs(channel - (expected[index] ?? 0)), `${label} (channel ${index})`).toBeLessThanOrEqual(TOLERANCE);
     });
