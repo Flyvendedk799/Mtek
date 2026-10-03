@@ -1,0 +1,3 @@
+"" "hello" "a b" "\"" "\\" "\n\t\r\0"
+"\u{41}" "\u{1F600}" "\u{000041}" "\u{10FFFF}"
+"é日本" "// not a comment" "# not a color" "/* nor this */"

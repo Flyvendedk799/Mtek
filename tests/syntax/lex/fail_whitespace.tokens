@@ -1,0 +1,29 @@
+KwLet 0..3 "let"
+Ident 4..8 "nbsp"
+Eq 9..10 "="
+Int 11..12 "1" = 1
+Plus 15..16 "+"
+Int 17..18 "2" = 2
+Semi 18..19 ";"
+KwLet 20..23 "let"
+Ident 24..35 "ideographic"
+Eq 36..37 "="
+Int 38..39 "3" = 3
+Plus 42..43 "+"
+Int 44..45 "4" = 4
+Semi 45..46 ";"
+KwLet 47..50 "let"
+Ident 51..65 "line_separator"
+Eq 66..67 "="
+Int 68..69 "5" = 5
+Plus 73..74 "+"
+Int 75..76 "6" = 6
+Semi 76..77 ";"
+KwLet 78..81 "let"
+Ident 82..92 "zero_width"
+Eq 93..94 "="
+Int 95..96 "7" = 7
+Plus 99..100 "+"
+Int 101..102 "8" = 8
+Semi 102..103 ";"
+Eof 104..104 ""

@@ -1,0 +1,15 @@
+// Every keyword (language.md 2.2) is a token kind of its own.
+bind break const continue cpu else entity export false fn for if
+import in let material on param prefab return scene self
+state struct true var
+
+// Reserved words (2.3) are identifiers flagged reserved; no lexical error.
+as async await enum extern impl loop match mod move mut
+priv pub static super trait type unsafe use where while yield
+compute vertex storage uniform workgroup system query component
+
+// Contextual names (2.4) are ordinary identifiers.
+camera update fixed_update fragment from key_down
+
+// Keywords are case-sensitive and must match whole identifiers.
+Fn LET selfish fn_ iff in2 True _fn

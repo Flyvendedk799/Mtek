@@ -1,0 +1,17 @@
+Color 0..7 "#6b5cff" = #6b5cffff
+Color 8..15 "#6B5CFF" = #6b5cffff
+Color 16..23 "#000000" = #000000ff
+Color 24..31 "#ffffff" = #ffffffff
+Color 32..41 "#6b5cffcc" = #6b5cffcc
+Color 42..51 "#00000000" = #00000000
+Color 52..61 "#AbCdEf12" = #abcdef12
+LParen 62..63 "("
+Color 63..70 "#6b5cff" = #6b5cffff
+RParen 70..71 ")"
+LBracket 72..73 "["
+Color 73..80 "#112233" = #112233ff
+Comma 80..81 ","
+Color 82..91 "#44556677" = #44556677
+RBracket 91..92 "]"
+Semi 92..93 ";"
+Eof 94..94 ""

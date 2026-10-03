@@ -1,0 +1,4 @@
+let nbsp = 1  + 2;
+let ideographic = 3　+ 4;
+let line_separator = 5  + 6;
+let zero_width = 7​+ 8;

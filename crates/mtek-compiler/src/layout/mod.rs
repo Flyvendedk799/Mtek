@@ -2,7 +2,7 @@
 //! (`spec/gpu-layout.md`, decision 0010).
 //!
 //! - [`types`]: [`LayoutType`], the typed block description,
-//! - [`compute`]: the uniform-address-space algorithm and [`compute()`](compute::compute),
+//! - [`compute`](mod@compute): the uniform-address-space algorithm and [`compute()`](compute::compute),
 //! - [`record`]: [`LayoutRecord`] / [`LayoutNode`], the serialisable result,
 //! - [`builtin`]: the compiler-owned frame and object blocks,
 //! - [`fixture`]: the JSON type format of the layout fixtures.

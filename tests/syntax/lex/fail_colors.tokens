@@ -1,0 +1,26 @@
+KwLet 0..3 "let"
+Ident 4..5 "a"
+Eq 6..7 "="
+Color 8..12 "#fff" = malformed
+Semi 12..13 ";"
+KwLet 14..17 "let"
+Ident 18..19 "b"
+Eq 20..21 "="
+Color 22..28 "#12345" = malformed
+Semi 28..29 ";"
+KwLet 30..33 "let"
+Ident 34..35 "c"
+Eq 36..37 "="
+Color 38..45 "#12345g" = malformed
+Semi 45..46 ";"
+KwLet 47..50 "let"
+Ident 51..52 "d"
+Eq 53..54 "="
+Color 55..56 "#" = malformed
+Semi 56..57 ";"
+KwLet 58..61 "let"
+Ident 62..63 "e"
+Eq 64..65 "="
+Color 66..73 "#6b5cff" = #6b5cffff
+Semi 73..74 ";"
+Eof 75..75 ""

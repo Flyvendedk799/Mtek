@@ -1,0 +1,5 @@
+let a = #fff;
+let b = #12345;
+let c = #12345g;
+let d = #;
+let e = #6b5cff;

@@ -1,0 +1,6 @@
+let __x = 1;
+let _ = 2;
+let _ok = 3;
+let café = 4;
+let 日本語 = 5;
+let x = naïve + y;

@@ -1,0 +1,39 @@
+[
+  {
+    "code": "MTEK-E0011",
+    "file": "fail_identifiers.mtek",
+    "startByte": 4,
+    "endByte": 7,
+    "message": "Identifier `__x` starts with two underscores, which are reserved for generated code."
+  },
+  {
+    "code": "MTEK-E0010",
+    "file": "fail_identifiers.mtek",
+    "startByte": 41,
+    "endByte": 46,
+    "message": "Identifier `café` contains non-ASCII characters.",
+    "notes": [
+      "Unicode identifiers are not supported in v0.1"
+    ]
+  },
+  {
+    "code": "MTEK-E0010",
+    "file": "fail_identifiers.mtek",
+    "startByte": 56,
+    "endByte": 65,
+    "message": "Identifier `日本語` contains non-ASCII characters.",
+    "notes": [
+      "Unicode identifiers are not supported in v0.1"
+    ]
+  },
+  {
+    "code": "MTEK-E0010",
+    "file": "fail_identifiers.mtek",
+    "startByte": 79,
+    "endByte": 85,
+    "message": "Identifier `naïve` contains non-ASCII characters.",
+    "notes": [
+      "Unicode identifiers are not supported in v0.1"
+    ]
+  }
+]

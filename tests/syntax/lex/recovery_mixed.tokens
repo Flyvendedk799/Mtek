@@ -1,0 +1,21 @@
+KwFn 0..2 "fn"
+Ident 3..4 "f"
+LParen 4..5 "("
+Ident 5..6 "x"
+Colon 6..7 ":"
+Int 8..12 "0x1F" = malformed
+RParen 12..13 ")"
+Arrow 14..16 "->"
+Float 17..19 "1." = malformed
+LBrace 20..21 "{"
+KwLet 26..29 "let"
+Ident 30..31 "s"
+Eq 32..33 "="
+String 34..39 "\"oops" = malformed
+KwLet 44..47 "let"
+Ident 48..49 "c"
+Eq 50..51 "="
+Color 52..56 "#fff" = malformed
+Semi 56..57 ";"
+trivia BlockComment 58..92 "/* never closed\n    return @ x;\n}\n"
+Eof 92..92 ""

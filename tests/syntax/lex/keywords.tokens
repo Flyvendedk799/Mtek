@@ -1,0 +1,75 @@
+trivia LineComment 0..62 "// Every keyword (language.md 2.2) is a token kind of its own."
+KwBind 63..67 "bind"
+KwBreak 68..73 "break"
+KwConst 74..79 "const"
+KwContinue 80..88 "continue"
+KwCpu 89..92 "cpu"
+KwElse 93..97 "else"
+KwEntity 98..104 "entity"
+KwExport 105..111 "export"
+KwFalse 112..117 "false"
+KwFn 118..120 "fn"
+KwFor 121..124 "for"
+KwIf 125..127 "if"
+KwImport 128..134 "import"
+KwIn 135..137 "in"
+KwLet 138..141 "let"
+KwMaterial 142..150 "material"
+KwOn 151..153 "on"
+KwParam 154..159 "param"
+KwPrefab 160..166 "prefab"
+KwReturn 167..173 "return"
+KwScene 174..179 "scene"
+KwSelf 180..184 "self"
+KwState 185..190 "state"
+KwStruct 191..197 "struct"
+KwTrue 198..202 "true"
+KwVar 203..206 "var"
+trivia LineComment 208..283 "// Reserved words (2.3) are identifiers flagged reserved; no lexical error."
+Ident 284..286 "as" = reserved
+Ident 287..292 "async" = reserved
+Ident 293..298 "await" = reserved
+Ident 299..303 "enum" = reserved
+Ident 304..310 "extern" = reserved
+Ident 311..315 "impl" = reserved
+Ident 316..320 "loop" = reserved
+Ident 321..326 "match" = reserved
+Ident 327..330 "mod" = reserved
+Ident 331..335 "move" = reserved
+Ident 336..339 "mut" = reserved
+Ident 340..344 "priv" = reserved
+Ident 345..348 "pub" = reserved
+Ident 349..355 "static" = reserved
+Ident 356..361 "super" = reserved
+Ident 362..367 "trait" = reserved
+Ident 368..372 "type" = reserved
+Ident 373..379 "unsafe" = reserved
+Ident 380..383 "use" = reserved
+Ident 384..389 "where" = reserved
+Ident 390..395 "while" = reserved
+Ident 396..401 "yield" = reserved
+Ident 402..409 "compute" = reserved
+Ident 410..416 "vertex" = reserved
+Ident 417..424 "storage" = reserved
+Ident 425..432 "uniform" = reserved
+Ident 433..442 "workgroup" = reserved
+Ident 443..449 "system" = reserved
+Ident 450..455 "query" = reserved
+Ident 456..465 "component" = reserved
+trivia LineComment 467..518 "// Contextual names (2.4) are ordinary identifiers."
+Ident 519..525 "camera"
+Ident 526..532 "update"
+Ident 533..545 "fixed_update"
+Ident 546..554 "fragment"
+Ident 555..559 "from"
+Ident 560..568 "key_down"
+trivia LineComment 570..634 "// Keywords are case-sensitive and must match whole identifiers."
+Ident 635..637 "Fn"
+Ident 638..641 "LET"
+Ident 642..649 "selfish"
+Ident 650..653 "fn_"
+Ident 654..657 "iff"
+Ident 658..661 "in2"
+Ident 662..666 "True"
+Ident 667..670 "_fn"
+Eof 671..671 ""
