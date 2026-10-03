@@ -23,6 +23,9 @@ pub mod resolve;
 pub mod source;
 pub mod syntax;
 
+mod check;
+pub use check::{CheckResult, check};
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -2,7 +2,7 @@
 //! module graph.
 //!
 //! Lexing, parsing, `import` gating and scene selection are not part of
-//! loading; they follow in M1-09. In M1 the module graph holds the entry
+//! loading; [`crate::check`] does them after loading. In M1 the module graph holds the entry
 //! module only.
 
 use std::sync::Arc;
