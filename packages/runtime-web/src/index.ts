@@ -33,3 +33,5 @@ export type {
   UniformArenaLayout,
   UniformArenaOptions,
 } from "./gpu/uniform-arena.js";
+/** Program format: manifest types, validation and compatibility checks (spec/runtime-abi.md). */
+export * from "./abi/index.js";
