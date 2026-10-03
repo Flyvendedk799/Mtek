@@ -1,0 +1,195 @@
+/* =====================================================================
+   Mtek language 0.1 — reference grammar
+   Authoritative parser: crates/mtek-compiler/src/syntax (handwritten,
+   recursive descent + Pratt). This file is the reference used for the
+   shared conformance corpus and for generated adapters (GBNF, tree-sitter).
+   Semantic restrictions are noted as [S: ...]; they are enforced by the
+   checker, not by this grammar.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. Lexical grammar
+   Tokens are separated by whitespace and comments. Longest match wins,
+   with one exception: a digit sequence followed by '..' lexes as Int,
+   so `0..n` is Int '..' Ident (a Float requires a digit after '.').
+   --------------------------------------------------------------------- */
+
+Whitespace      ::= ( #x20 | #x09 | #x0A | #x0D #x0A )+        /* lone #x0D is an error (E0003) */
+LineComment     ::= '//' [^#x0A#x0D]*                           /* includes '///' doc comments  */
+BlockComment    ::= '/*' ( BlockComment | [^*/] | '*' [^/] | '/' [^*] )* '*/'
+                                                                /* nests; unterminated is E0006  */
+
+Ident           ::= IdentStart IdentContinue* - ( Keyword | Reserved )
+IdentStart      ::= [A-Za-z_]
+IdentContinue   ::= [A-Za-z0-9_]
+                    /* [S: '_' alone and names starting with '__' are rejected (E0012, E0011)] */
+
+Keyword         ::= 'bind' | 'break' | 'const' | 'continue' | 'cpu' | 'else' | 'entity'
+                  | 'export' | 'false' | 'fn' | 'for' | 'if' | 'import' | 'in' | 'let'
+                  | 'material' | 'on' | 'param' | 'prefab' | 'return' | 'scene' | 'self'
+                  | 'state' | 'struct' | 'true' | 'var'
+
+Reserved        ::= 'as' | 'async' | 'await' | 'enum' | 'extern' | 'impl' | 'loop' | 'match'
+                  | 'mod' | 'move' | 'mut' | 'priv' | 'pub' | 'static' | 'super' | 'trait'
+                  | 'type' | 'unsafe' | 'use' | 'where' | 'while' | 'yield' | 'compute'
+                  | 'vertex' | 'storage' | 'uniform' | 'workgroup' | 'system' | 'query'
+                  | 'component'                                 /* E0013 when used as a name */
+
+/* Contextual words (ordinary identifiers, meaningful only in position):
+   'camera'                  scene-object kind      (SceneObject)
+   'update', 'fixed_update'  lifecycle functions    (LifecycleFn)
+   'fragment'                material stage         (StageFn)
+   'from'                    import clause          (Import)
+   event names after 'on'    resolved via registry  (Handler)             */
+
+Int             ::= '0' | [1-9] [0-9]*                          /* no leading zeros, no suffixes */
+Float           ::= IntPart '.' [0-9]+ Exponent?
+IntPart         ::= '0' | [1-9] [0-9]*
+Exponent        ::= [eE] [+-]? [0-9]+
+String          ::= '"' ( StringChar | Escape )* '"'
+StringChar      ::= [^"\#x0A#x0D]
+Escape          ::= '\' ( '"' | '\' | 'n' | 't' | 'r' | '0' | 'u{' Hex Hex? Hex? Hex? Hex? Hex? '}' )
+Color           ::= '#' Hex Hex Hex Hex Hex Hex ( Hex Hex )?
+Hex             ::= [0-9A-Fa-f]
+Bool            ::= 'true' | 'false'
+
+/* Punctuation and operators */
+/*  {  }  (  )  [  ]  <  >  ,  ;  :  .  ..  ->
+    +  -  *  /  %  !  =  ==  !=  <=  >=  &&  ||  +=  -=  *=  /=
+    The lexer also recognises  &  |  ^  ~  <<  >>  so they can be rejected
+    with E1901 (bitwise operators are not in v0.1).                       */
+
+/* ---------------------------------------------------------------------
+   2. Modules and items
+   --------------------------------------------------------------------- */
+
+Module          ::= Item* EOF
+Item            ::= Import
+                  | 'export'? ( ConstDecl | FnDecl | StructDecl | MaterialDecl
+                              | PrefabDecl | SceneDecl )
+
+Import          ::= 'import' '{' Ident ( ',' Ident )* ','? '}' 'from' String ';'
+                    /* 'from' is contextual. [S: specifier rules E2030-E2034] */
+
+ConstDecl       ::= 'const' Ident ( ':' Type )? '=' Expr ';'
+FnDecl          ::= 'cpu'? 'fn' Ident '(' ParamList? ')' ( '->' Type )? Block
+ParamList       ::= Param ( ',' Param )* ','?
+Param           ::= Ident ':' Type
+
+StructDecl      ::= 'struct' Ident '{' StructField+ '}'
+StructField     ::= Ident ':' Type ';'
+
+/* ---------------------------------------------------------------------
+   3. Materials
+   --------------------------------------------------------------------- */
+
+MaterialDecl    ::= 'material' Ident '{' MaterialMember* '}'
+MaterialMember  ::= ParamDecl | StageFn
+ParamDecl       ::= 'param' Ident ':' Type ( '=' Expr )? ';'
+StageFn         ::= Ident '(' ParamList? ')' ( '->' Type )? Block
+                    /* [S: Ident must be 'fragment' (E4020/E4021); 'vertex'/'compute'
+                        are reserved words and are reported as E4901 by the parser] */
+
+/* ---------------------------------------------------------------------
+   4. Scenes, entities, prefabs
+   Members are distinguished with two tokens of lookahead:
+     Ident ':'      -> FieldInit
+     Ident Ident    -> SceneObject (only in scene bodies)
+     Ident '('      -> LifecycleFn
+   --------------------------------------------------------------------- */
+
+SceneDecl       ::= 'scene' Ident '{' SceneMember* '}'
+SceneMember     ::= FieldInit | ConstDecl | StateDecl | SceneObject | EntityDecl
+                  | LifecycleFn | Handler
+
+PrefabDecl      ::= 'prefab' Ident '{' EntityMember* '}'
+                    /* [S: nested EntityDecl is E5040] */
+
+EntityDecl      ::= 'entity' Ident ( ':' Ident )? '{' EntityMember* '}'
+                    /* ': Ident' instantiates a prefab. [S: then only FieldInit
+                       naming prefab params is allowed (E5042)] */
+EntityMember    ::= FieldInit | ConstDecl | StateDecl | ParamDecl | EntityDecl
+                  | LifecycleFn | Handler
+                    /* [S: ParamDecl only inside prefabs (E1040)] */
+
+SceneObject     ::= Ident Ident '{' FieldInit* '}'
+                    /* [S: first Ident is a registered scene-object kind: 'camera' (E5014 "unknown scene object kind" otherwise)] */
+
+StateDecl       ::= 'state' Ident ':' Type '=' Expr ';'
+FieldInit       ::= Ident ':' FieldValue ';'
+FieldValue      ::= 'bind' '(' Expr ')' | Expr
+                    /* [S: bind only on bindable fields (E5004)] */
+
+LifecycleFn     ::= Ident '(' ParamList? ')' Block
+                    /* [S: 'update' | 'fixed_update' with exactly (name: f32) (E5050-E5052)] */
+
+Handler         ::= 'on' Ident '(' HandlerArgs? ')' Block
+HandlerArgs     ::= HandlerArg ( ',' HandlerArg )* ','?
+HandlerArg      ::= Ident ':' Type            /* parameter form, e.g. other: entity_ref   */
+                  | Expr                       /* filter form, e.g. Key.Space              */
+                    /* disambiguation: Ident followed by ':' is the parameter form        */
+
+/* ---------------------------------------------------------------------
+   5. Types
+   --------------------------------------------------------------------- */
+
+Type            ::= Ident ( '<' Type ',' ArrayLength '>' )?
+ArrayLength     ::= Int | Ident
+                    /* [S: only 'array' takes arguments; Ident must name an integer constant] */
+
+/* ---------------------------------------------------------------------
+   6. Statements
+   --------------------------------------------------------------------- */
+
+Block           ::= '{' Statement* '}'
+Statement       ::= LetStmt | VarStmt | ConstDecl | IfStmt | ForStmt | ReturnStmt
+                  | BreakStmt | ContinueStmt | Block | SimpleStmt
+
+LetStmt         ::= 'let' Ident ( ':' Type )? '=' Expr ';'
+VarStmt         ::= 'var' Ident ( ':' Type )? '=' Expr ';'
+SimpleStmt      ::= Expr ( AssignOp Expr )? ';'
+                    /* [S: without AssignOp, Expr must be a call (E1020);
+                        with AssignOp, the left side must be a place (E3061)] */
+AssignOp        ::= '=' | '+=' | '-=' | '*=' | '/='
+
+IfStmt          ::= 'if' ExprNoDesc Block ( 'else' ( IfStmt | Block ) )?
+ForStmt         ::= 'for' Ident 'in' ExprNoDesc ( '..' ExprNoDesc )? Block
+ReturnStmt      ::= 'return' Expr? ';'
+BreakStmt       ::= 'break' ';'
+ContinueStmt    ::= 'continue' ';'
+
+/* ---------------------------------------------------------------------
+   7. Expressions (precedence from loosest to tightest; see the table in
+      spec/language.md §6.1). Comparison and equality are NON-associative.
+   --------------------------------------------------------------------- */
+
+Expr            ::= OrExpr
+OrExpr          ::= AndExpr ( '||' AndExpr )*
+AndExpr         ::= EqExpr ( '&&' EqExpr )*
+EqExpr          ::= RelExpr ( ( '==' | '!=' ) RelExpr )?
+RelExpr         ::= AddExpr ( ( '<' | '<=' | '>' | '>=' ) AddExpr )?
+AddExpr         ::= MulExpr ( ( '+' | '-' ) MulExpr )*
+MulExpr         ::= UnaryExpr ( ( '*' | '/' | '%' ) UnaryExpr )*
+UnaryExpr       ::= ( '-' | '!' ) UnaryExpr | PostfixExpr
+PostfixExpr     ::= Primary PostfixOp*
+PostfixOp       ::= '(' ArgList? ')' | '.' Ident | '[' Expr ']'
+ArgList         ::= Expr ( ',' Expr )* ','?
+
+Primary         ::= Int | Float | String | Color | Bool
+                  | 'self'
+                  | Ident
+                  | '(' Expr ')'
+                  | ArrayLiteral
+                  | DescriptorLiteral
+
+ArrayLiteral    ::= '[' Expr ( ',' Expr )* ','? ']'
+DescriptorLiteral ::= Ident '{' ( DescField ( ';' DescField )* ';'? )? '}'
+DescField       ::= Ident ':' FieldValue
+
+/* ExprNoDesc is Expr with DescriptorLiteral removed from Primary at the top
+   level (it is still allowed inside parentheses, brackets and call arguments).
+   It exists only to keep `if x { ... }` unambiguous. A descriptor literal in
+   that position is reported as E1011 with a parenthesising edit. Generated
+   adapters (GBNF, tree-sitter) must expand this as a duplicated rule set:
+   ExprNoDesc, OrExprNoDesc, ..., PrimaryNoDesc.                               */
+ExprNoDesc      ::= Expr   /* with the restriction above */
