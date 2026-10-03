@@ -1,0 +1,27 @@
+{
+  "name": "@mtek/baseline-m0-bridge",
+  "version": "0.1.0-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check:types": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "size": "node tools/count-lines.ts",
+    "test:unit": "vitest run"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.1",
+    "@types/three": "0.186.0",
+    "@webgpu/types": "0.1.74",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}

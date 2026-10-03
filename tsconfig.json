@@ -1,4 +1,9 @@
 {
   "files": [],
-  "references": [{ "path": "packages/runtime-web" }, { "path": "tests/browser" }, { "path": "tests/codegen" }]
+  "references": [
+    { "path": "packages/runtime-web" },
+    { "path": "tests/browser" },
+    { "path": "tests/codegen" },
+    { "path": "benchmarks/baselines/m0-bridge" }
+  ]
 }
