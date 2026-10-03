@@ -38,7 +38,7 @@ The same mapping is used in every WGSL context (buffers, locals, function parame
 | `color` | `vec4<f32>` | linear RGBA; `.r .g .b .a .rgb` map to WGSL swizzles |
 | `quat` | `vec4<f32>` | `(x, y, z, w)`; operations lower to generated helper functions (`mtek_quat_mul`, `mtek_quat_rotate`) |
 | `mat4` | `mat4x4<f32>` | column-major (WGSL native) |
-| `struct S` | `struct S_<mangled>` | one declaration, with explicit `@align`/`@size` attributes from §4 |
+| `struct S` | `struct S_<mangled>` | one declaration, with explicit `@align`/`@size` attributes from §4. **Member names** of every Mtek-declared struct and parameter block are emitted as `u_<name>` (e.g. `u_tint`), because Mtek field names such as `target`, `filter`, `layout` or `type` are WGSL reserved words; the layout record and all diagnostics keep the Mtek names. Built-in blocks (`MtekFrame`, `MtekLight`, `MtekObject`) and padded-element wrappers (`value`) use their fixed generated member names. |
 | `array<T, N>` | `array<T', N>` where `T'` = WGSL type of `T`, or `MtekPad16_<T'>` when padding is required (§4.4) | |
 
 Type distinctions that WGSL lacks (`color` vs `quat` vs `vec4`) are enforced by Mtek's type checker before lowering.
