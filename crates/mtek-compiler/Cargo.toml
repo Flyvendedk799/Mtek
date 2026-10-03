@@ -1,0 +1,10 @@
+[package]
+name = "mtek-compiler"
+description = "The Mtek compiler library: source text to build output."
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
