@@ -52,6 +52,8 @@ jobs:
         run: npm run lint
       - name: Naming check
         run: npm run check:naming
+      - name: Benchmark task validation
+        run: npm run check:tasks
       - name: Unit tests
         run: npm run test:unit
 
