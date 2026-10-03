@@ -69,7 +69,12 @@ layout records; every shader is validated with Naga first) and bundles `tests/br
 which drives the production `gpu/device`, `gpu/registry` and `gpu/uniform-arena` modules. Randomised
 tests record their seed as a `seed` annotation; `MTEK_TEST_SEED` reproduces a run. Gate evidence is
 `MTEK_REQUIRE_GPU=1 npm run test:browser:hardware` on the recorded hardware machine, saved as
-`evidence/M0/environment-bridge.json` and `evidence/M0/test-results-bridge.json`.
+`evidence/M0/environment-bridge.json` and `evidence/M0/test-results-bridge.json`. Committed evidence
+must be machine-neutral: the raw Playwright report is passed through
+`npm run evidence:sanitize -- <in.json> <out.json>` (`tests/browser/support/sanitize-report.ts`), which
+rewrites paths under the checkout to repo-relative POSIX paths, the results directory to `<results>/...`
+and any other absolute path to `<external>`, and leaves timestamps, durations and every other value
+unchanged. The environment record contains no paths and is committed as written.
 
 ## Planned commands (not available)
 

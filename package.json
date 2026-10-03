@@ -17,6 +17,7 @@
     "check": "cargo fmt --check && cargo clippy --workspace --all-targets --locked -- -D warnings && npm run check:ts && npm run lint && npm run check:naming",
     "check:ts": "node scripts/gen-manifest-validator.mjs && tsc -b",
     "check:naming": "node scripts/check-naming.mjs",
+    "evidence:sanitize": "node tests/browser/support/sanitize-report.ts",
     "lint": "npm run lint --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
     "test:browser": "npm run build && npm run test -w @mtek/browser-tests --",
