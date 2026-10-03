@@ -19,6 +19,7 @@ pub const RUNTIME_ABI: u32 = 1;
 pub mod diagnostics;
 pub mod project;
 pub mod source;
+pub mod syntax;
 
 #[cfg(test)]
 mod tests {
