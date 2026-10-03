@@ -119,9 +119,9 @@ pub struct ParsedModule {
 /// Parse a whole file: `tokens` and `trivia` are the tokens and comments of
 /// `text` as produced by [`lex`](super::lex) or [`lex_str`](super::lex_str)
 /// (the token list ends with `Eof`). Syntax problems are reported to `sink`
-/// (the lexical diagnostics are the caller's: [`Lexed::report_into`]
-/// (super::Lexed::report_into)), including `W0007` for doc comments that
-/// document nothing.
+/// (the lexical diagnostics are the caller's, through
+/// [`Lexed::report_into`](super::Lexed::report_into)), including `W0007` for
+/// doc comments that document nothing.
 ///
 /// The parser never panics, and a result is always returned: the tree of an
 /// erroneous file has `Error` nodes where the text could not be understood.
