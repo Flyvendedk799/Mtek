@@ -1,0 +1,36 @@
+--- additive and multiplicative operators are left associative
+a - b - c
+---
+a / b / c
+---
+a % b % c
+---
+a - b - c - d
+---
+a / b % c * d
+---
+a + b - c + d
+---
+a * b / c % d
+--- logical operators are left associative
+a || b || c
+---
+a && b && c
+---
+a || b || c || d
+---
+a && b && c && d
+--- comparison and equality operators of different levels combine
+a < b == c < d
+---
+a == b < c
+---
+a < b == c
+---
+a != b >= c
+---
+(a < b) < c
+---
+a < b && b < c
+---
+a == b || c == d

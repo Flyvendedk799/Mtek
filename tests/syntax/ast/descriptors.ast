@@ -1,0 +1,62 @@
+;; descriptor literals separate fields with semicolons; the last one is optional
+; Box { size: vec3(1.0, 1.0, 1.0) }
+(desc Box
+  (field size
+    (call (name vec3) (lit float 1.0) (lit float 1.0) (lit float 1.0))))
+
+; Box { size: vec3(1.0, 1.0, 1.0); }
+(desc Box
+  (field size
+    (call (name vec3) (lit float 1.0) (lit float 1.0) (lit float 1.0))))
+
+; Unlit { color: #6b5cff }
+(desc Unlit (field color (lit color #6b5cff)))
+
+; Unlit {}
+(desc Unlit)
+
+; Dynamic { mass: 2.0; friction: 0.5; }
+(desc Dynamic (field mass (lit float 2.0)) (field friction (lit float 0.5)))
+
+;; bind is a field value
+; Pulse { tint: bind(tint); phase: bind(frame.time) }
+(desc Pulse
+  (field tint (bind (name tint)))
+  (field phase (bind (field (name frame) time))))
+
+; Pulse { tint: bind(tint); phase: 0.0 }
+(desc Pulse (field tint (bind (name tint))) (field phase (lit float 0.0)))
+
+;; descriptors nest and take postfix operators
+; Pulse { inner: Box { size: 1.0 }; other: [Box { size: 2.0 }] }
+(desc Pulse
+  (field inner (desc Box (field size (lit float 1.0))))
+  (field other (array (desc Box (field size (lit float 2.0))))))
+
+; Box { size: 1.0 }.size
+(field (desc Box (field size (lit float 1.0))) size)
+
+; Box { size: 1.0 }.size * 2.0
+(binary * (field (desc Box (field size (lit float 1.0))) size) (lit float 2.0))
+
+; P { a: 1 + 2 * 3; b: f(x, y); c: -d.e; }
+(desc P
+  (field a (binary + (lit int 1) (binary * (lit int 2) (lit int 3))))
+  (field b (call (name f) (name x) (name y)))
+  (field c (unary - (field (name d) e))))
+
+; mesh_of(Box { size: v }, Sphere { radius: r })
+(call
+  (name mesh_of)
+  (desc Box (field size (name v)))
+  (desc Sphere (field radius (name r))))
+
+;; a descriptor can be a whole struct literal
+; Light { power: 1.5; color: #ffffff; samples: [vec3(0.0), vec3(1.0)] }
+(desc Light
+  (field power (lit float 1.5))
+  (field color (lit color #ffffff))
+  (field samples
+    (array
+      (call (name vec3) (lit float 0.0))
+      (call (name vec3) (lit float 1.0)))))

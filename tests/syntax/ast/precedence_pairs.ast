@@ -1,0 +1,109 @@
+;; every pair of binary levels, the looser operator first and then the tighter one first
+; a || b && c
+(binary || (name a) (binary && (name b) (name c)))
+
+; a && b || c
+(binary || (binary && (name a) (name b)) (name c))
+
+; a || b == c
+(binary || (name a) (binary == (name b) (name c)))
+
+; a == b || c
+(binary || (binary == (name a) (name b)) (name c))
+
+; a || b < c
+(binary || (name a) (binary < (name b) (name c)))
+
+; a < b || c
+(binary || (binary < (name a) (name b)) (name c))
+
+; a || b + c
+(binary || (name a) (binary + (name b) (name c)))
+
+; a + b || c
+(binary || (binary + (name a) (name b)) (name c))
+
+; a || b * c
+(binary || (name a) (binary * (name b) (name c)))
+
+; a * b || c
+(binary || (binary * (name a) (name b)) (name c))
+
+; a && b == c
+(binary && (name a) (binary == (name b) (name c)))
+
+; a == b && c
+(binary && (binary == (name a) (name b)) (name c))
+
+; a && b < c
+(binary && (name a) (binary < (name b) (name c)))
+
+; a < b && c
+(binary && (binary < (name a) (name b)) (name c))
+
+; a && b + c
+(binary && (name a) (binary + (name b) (name c)))
+
+; a + b && c
+(binary && (binary + (name a) (name b)) (name c))
+
+; a && b * c
+(binary && (name a) (binary * (name b) (name c)))
+
+; a * b && c
+(binary && (binary * (name a) (name b)) (name c))
+
+; a == b < c
+(binary == (name a) (binary < (name b) (name c)))
+
+; a < b == c
+(binary == (binary < (name a) (name b)) (name c))
+
+; a == b + c
+(binary == (name a) (binary + (name b) (name c)))
+
+; a + b == c
+(binary == (binary + (name a) (name b)) (name c))
+
+; a == b * c
+(binary == (name a) (binary * (name b) (name c)))
+
+; a * b == c
+(binary == (binary * (name a) (name b)) (name c))
+
+; a < b + c
+(binary < (name a) (binary + (name b) (name c)))
+
+; a + b < c
+(binary < (binary + (name a) (name b)) (name c))
+
+; a < b * c
+(binary < (name a) (binary * (name b) (name c)))
+
+; a * b < c
+(binary < (binary * (name a) (name b)) (name c))
+
+; a + b * c
+(binary + (name a) (binary * (name b) (name c)))
+
+; a * b + c
+(binary + (binary * (name a) (name b)) (name c))
+
+;; the other operators of each level behave like the one above
+; a != b <= c
+(binary != (name a) (binary <= (name b) (name c)))
+
+; a >= b != c
+(binary != (binary >= (name a) (name b)) (name c))
+
+; a - b % c
+(binary - (name a) (binary % (name b) (name c)))
+
+; a / b + c
+(binary + (binary / (name a) (name b)) (name c))
+
+; a > b - c
+(binary > (name a) (binary - (name b) (name c)))
+
+; a / b >= c
+(binary >= (binary / (name a) (name b)) (name c))

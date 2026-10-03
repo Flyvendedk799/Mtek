@@ -1,0 +1,20 @@
+--- no-desc: where `x {` starts a block, a name is just a name
+x
+--- no-desc
+a < b
+--- no-desc
+a.b(c) == d
+--- no-desc: parentheses, brackets and call arguments allow descriptor literals again
+(Box { size: 1.0 })
+--- no-desc
+(Box { size: 1.0 }).size < 2.0
+--- no-desc
+f(Box { size: 1.0 })
+--- no-desc
+[Box { size: 1.0 }]
+--- no-desc
+a[Box { size: 1.0 }.n] == 1
+--- no-desc
+count_of(Box { size: 1.0 }) > 3
+--- the same text with descriptors allowed
+Box { size: 1.0 }

@@ -1,0 +1,107 @@
+;; an expression is missing
+; 1 +
+(binary + (lit int 1) (error))
+; MTEK-E1004 3..3 `` Unexpected end of file; expected an expression.
+
+; )
+(error)
+; MTEK-E1001 0..1 `)` Expected an expression, found `)`.
+
+; ()
+(paren (error))
+; MTEK-E1001 1..2 `)` Expected an expression, found `)`.
+
+; a *
+(binary * (name a) (error))
+; MTEK-E1004 3..3 `` Unexpected end of file; expected an expression.
+
+; f(,)
+(call (name f) (error))
+; MTEK-E1001 2..3 `,` Expected an expression, found `,`.
+
+;; something follows the expression
+; a b
+(name a)
+; MTEK-E1001 2..3 `b` Expected the end of the expression, found identifier `b`.
+
+;; delimiters are not closed: E1002 with the opener as a related span
+; (a + b
+(paren (binary + (name a) (name b)))
+; MTEK-E1002 6..6 `` Expected `)` to close the `(` opened here, found end of file.
+
+; f(a, b
+(call (name f) (name a) (name b))
+; MTEK-E1002 6..6 `` Expected `)` to close the `(` opened here, found end of file.
+
+; [1, 2
+(array (lit int 1) (lit int 2))
+; MTEK-E1002 5..5 `` Expected `]` to close the `[` opened here, found end of file.
+
+; a[0
+(index (name a) (lit int 0))
+; MTEK-E1002 3..3 `` Expected `]` to close the `[` opened here, found end of file.
+
+; Box { size: 1.0
+(desc Box (field size (lit float 1.0)))
+; MTEK-E1002 15..15 `` Expected `}` to close the `{` opened here, found end of file.
+
+;; a missing separator, with recovery
+; f(a b, c)
+(call (name f) (name a) (name c))
+; MTEK-E1001 4..5 `b` Expected `,` or `)`, found identifier `b`.
+
+; Box { size 1.0 }
+(desc Box (field size (error)))
+; MTEK-E1001 11..14 `1.0` Expected `:` after the field name `size`, found float literal `1.0`.
+
+; Box { : 1.0 }
+(desc Box)
+; MTEK-E1001 6..7 `:` Expected a field name or `}`, found `:`.
+
+;; empty array and missing names
+; []
+(array)
+; MTEK-E1001 0..2 `[]` An array literal needs at least one element.
+
+; a.
+(name a)
+; MTEK-E1001 2..2 `` Expected a field name after `.`, found end of file.
+
+; a.1
+(name a)
+; MTEK-E0022 1..3 `.1` Float literal `.1` has no digits before the decimal point; floats need digits on both sides of the point.
+
+;; bind outside a field value
+; bind(x)
+(error)
+; MTEK-E1001 0..4 `bind` `bind(...)` is only allowed as the value of a field.
+
+; Box { size: bind }
+(desc Box (field size (bind (error))))
+; MTEK-E1001 17..18 `}` Expected `(` after `bind`, found `}`.
+
+;; reserved words used as names (E0013), the tree is still built
+; while + x
+(binary + (name while) (name x))
+; MTEK-E0013 0..5 `while` `while` is reserved for a future version of Mtek and cannot be used as a name.
+
+; a.type
+(field (name a) type)
+; MTEK-E0013 2..6 `type` `type` is reserved for a future version of Mtek and cannot be used as a name.
+
+; Box { async: 1 }
+(desc Box (field async (lit int 1)))
+; MTEK-E0013 6..11 `async` `async` is reserved for a future version of Mtek and cannot be used as a name.
+
+;; malformed literals are reported by the lexer only
+; 1.
+(error)
+; MTEK-E0022 0..2 `1.` Float literal `1.` has no digits after the decimal point; floats need digits on both sides of the point.
+
+; 1 + 007
+(binary + (lit int 1) (error))
+; MTEK-E0020 4..7 `007` Integer literal `007` has a leading zero; write it without leading zeros.
+
+; "unterminated
+(error)
+; MTEK-E0024 0..13 `"unterminated` String literal is not terminated; a string must end with `"` on the same line.

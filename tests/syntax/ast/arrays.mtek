@@ -1,0 +1,20 @@
+--- array literals separate elements with commas and allow a trailing comma
+[1, 2, 3]
+---
+[1, 2, 3,]
+---
+[1]
+---
+[a + b, c * d]
+---
+[[1, 2], [3, 4]]
+---
+[vec3(0.0, 1.0, 0.0), vec3(1.0)]
+---
+[Box { size: 1.0 }, Sphere { radius: 2.0 }]
+---
+[1, 2, 3][i]
+---
+[a, b].x
+---
+f([1, 2], [3])

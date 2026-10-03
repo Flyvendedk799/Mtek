@@ -1,0 +1,60 @@
+--- unary operators bind tighter than every binary operator
+-a * b
+---
+a * -b
+---
+!a && b
+---
+a || !b
+---
+-a + b
+---
+a < -b
+---
+-a == b
+---
+!a || b && c
+--- unary operators bind looser than postfix operators
+-a.b
+---
+!f(x)
+---
+-a[i]
+---
+!a.b.c
+---
+-f(x).y
+---
+- -a
+---
+!!a
+---
+-!a
+--- postfix operators bind tighter than every binary operator
+a * b.c
+---
+a.b * c
+---
+a + f(b)
+---
+f(a) + b
+---
+a || b.c
+---
+a[i] < b[j]
+---
+a.b == c.d
+---
+a && f(x) || g(y)
+--- parentheses override precedence and are kept
+(a + b) * c
+---
+a * (b + c)
+---
+-(a + b)
+---
+(a || b) && c
+---
+(a < b) == c
+---
+((a))

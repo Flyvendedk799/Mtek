@@ -1,0 +1,33 @@
+;; single components and swizzles are field accesses; the checker tells them apart
+; v.x
+(field (name v) x)
+
+; v.xy
+(field (name v) xy)
+
+; v.zyx
+(field (name v) zyx)
+
+; v.xxxx
+(field (name v) xxxx)
+
+; v.rgb
+(field (name v) rgb)
+
+; c.a
+(field (name c) a)
+
+; (a + b).xy
+(field (paren (binary + (name a) (name b))) xy)
+
+; f(x).yz
+(field (call (name f) (name x)) yz)
+
+; self.position.xz
+(field (field (self) position) xz)
+
+; v.xy * s
+(binary * (field (name v) xy) (name s))
+
+; -v.xy
+(unary - (field (name v) xy))

@@ -1,0 +1,54 @@
+;; calls, fields and indices chain left to right
+; a.b(c)[d].e
+(field (index (call (field (name a) b) (name c)) (name d)) e)
+
+; f()()
+(call (call (name f)))
+
+; f(a)(b)
+(call (call (name f) (name a)) (name b))
+
+; a[0][1][2]
+(index (index (index (name a) (lit int 0)) (lit int 1)) (lit int 2))
+
+; a.b.c.d
+(field (field (field (name a) b) c) d)
+
+; self.position.y
+(field (field (self) position) y)
+
+; Key.Space
+(field (name Key) Space)
+
+; frame.time
+(field (name frame) time)
+
+; m[2].xyz.x
+(field (field (index (name m) (lit int 2)) xyz) x)
+
+; f(a, b,)
+(call (name f) (name a) (name b))
+
+; f(g(h(1)))
+(call (name f) (call (name g) (call (name h) (lit int 1))))
+
+; quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt)
+(call
+  (field (name quat) axis_angle)
+  (call (name vec3) (lit float 0.0) (lit float 1.0) (lit float 0.0))
+  (binary * (name speed) (name dt)))
+
+; color.linear(tint.rgb * pulse(phase), tint.a)
+(call
+  (field (name color) linear)
+  (binary * (field (name tint) rgb) (call (name pulse) (name phase)))
+  (field (name tint) a))
+
+; a[b[c]]
+(index (name a) (index (name b) (name c)))
+
+; a.b(c.d(e), f[g])
+(call
+  (field (name a) b)
+  (call (field (name c) d) (name e))
+  (index (name f) (name g)))
