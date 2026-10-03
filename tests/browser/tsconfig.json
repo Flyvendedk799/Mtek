@@ -16,5 +16,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["*.ts", "support", "specs"]
+  "include": ["*.ts", "support", "specs", "pages"]
 }
