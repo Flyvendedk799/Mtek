@@ -1,0 +1,225 @@
+{
+  "description": "Expected first failure of checkManifest for each invalid manifest (code and dotted field path). Shared by the TypeScript tests (M1-13) and the Rust round-trip tests (M1-17).",
+  "cases": {
+    "invalid/abi-future.json": {
+      "code": "E8003",
+      "field": "runtimeAbi"
+    },
+    "invalid/abi-old.json": {
+      "code": "E8003",
+      "field": "runtimeAbi"
+    },
+    "invalid/manifest-schema-future.json": {
+      "code": "E8003",
+      "field": "manifestSchema"
+    },
+    "invalid/language-version-future.json": {
+      "code": "E8003",
+      "field": "languageVersion"
+    },
+    "invalid/incompatible-and-invalid.json": {
+      "code": "E8003",
+      "field": "runtimeAbi"
+    },
+    "invalid/missing-build-id.json": {
+      "code": "E8006",
+      "field": "buildId"
+    },
+    "invalid/extra-top-level-key.json": {
+      "code": "E8006",
+      "field": "extra"
+    },
+    "invalid/bad-build-id.json": {
+      "code": "E8006",
+      "field": "buildId"
+    },
+    "invalid/unknown-target-profile.json": {
+      "code": "E8006",
+      "field": "targetProfile"
+    },
+    "invalid/runtime-abi-as-string.json": {
+      "code": "E8006",
+      "field": "runtimeAbi"
+    },
+    "invalid/manifest-schema-fractional.json": {
+      "code": "E8006",
+      "field": "manifestSchema"
+    },
+    "invalid/language-version-number.json": {
+      "code": "E8006",
+      "field": "languageVersion"
+    },
+    "invalid/physics-not-boolean.json": {
+      "code": "E8006",
+      "field": "subsystems.physics"
+    },
+    "invalid/zero-fixed-step.json": {
+      "code": "E8006",
+      "field": "runtimeConfig.fixedStep"
+    },
+    "invalid/negative-span.json": {
+      "code": "E8006",
+      "field": "spans[0].start"
+    },
+    "invalid/source-short-hash.json": {
+      "code": "E8006",
+      "field": "sources[0].sha256"
+    },
+    "invalid/unknown-symbol-kind.json": {
+      "code": "E8006",
+      "field": "symbols[0].kind"
+    },
+    "invalid/layout-unknown-node-kind.json": {
+      "code": "E8006",
+      "field": "layouts[0].root.members[0].node.kind"
+    },
+    "invalid/layout-scalar-unknown-type.json": {
+      "code": "E8006",
+      "field": "layouts[0].root.members[2].node.scalar"
+    },
+    "invalid/layout-vector-five-components.json": {
+      "code": "E8006",
+      "field": "layouts[0].root.members[1].node.components"
+    },
+    "invalid/layout-extra-node-key.json": {
+      "code": "E8006",
+      "field": "layouts[0].root.members[1].node.rows"
+    },
+    "invalid/shader-bad-url.json": {
+      "code": "E8006",
+      "field": "shaders[0].url"
+    },
+    "invalid/shader-unknown-attribute.json": {
+      "code": "E8006",
+      "field": "shaders[0].vertexAttributes[0]"
+    },
+    "invalid/mesh-unknown-kind.json": {
+      "code": "E8006",
+      "field": "meshes[0].kind"
+    },
+    "invalid/mesh-box-two-components.json": {
+      "code": "E8006",
+      "field": "meshes[0].size"
+    },
+    "invalid/mesh-box-non-positive.json": {
+      "code": "E8006",
+      "field": "meshes[0].size[1]"
+    },
+    "invalid/mesh-sphere-missing-rings.json": {
+      "code": "E8006",
+      "field": "meshes[1].rings"
+    },
+    "invalid/asset-unknown-kind.json": {
+      "code": "E8006",
+      "field": "assets[1].kind"
+    },
+    "invalid/asset-image-without-color-space.json": {
+      "code": "E8006",
+      "field": "assets[1].colorSpace"
+    },
+    "invalid/asset-bad-index-format.json": {
+      "code": "E8006",
+      "field": "assets[0].primitives[0].indexFormat"
+    },
+    "invalid/scene-missing-gravity.json": {
+      "code": "E8006",
+      "field": "scene.fields.gravity"
+    },
+    "invalid/scene-clear-color-three-components.json": {
+      "code": "E8006",
+      "field": "scene.fields.clearColor"
+    },
+    "invalid/camera-unknown-projection.json": {
+      "code": "E8006",
+      "field": "scene.cameras[0].projection"
+    },
+    "invalid/entity-missing-name.json": {
+      "code": "E8006",
+      "field": "scene.entities[0].name"
+    },
+    "invalid/entity-extra-key.json": {
+      "code": "E8006",
+      "field": "scene.entities[0].tags"
+    },
+    "invalid/entity-mesh-id-malformed.json": {
+      "code": "E8006",
+      "field": "scene.entities[0].mesh"
+    },
+    "invalid/entity-negative-parent.json": {
+      "code": "E8006",
+      "field": "scene.entities[1].parent"
+    },
+    "invalid/body-unknown-kind.json": {
+      "code": "E8006",
+      "field": "scene.entities[0].body.kind"
+    },
+    "invalid/body-dynamic-zero-mass.json": {
+      "code": "E8006",
+      "field": "scene.entities[0].body.mass"
+    },
+    "invalid/collider-restitution-above-one.json": {
+      "code": "E8006",
+      "field": "scene.entities[0].collider.restitution"
+    },
+    "invalid/light-point-without-range.json": {
+      "code": "E8006",
+      "field": "scene.lights[1].range"
+    },
+    "invalid/light-directional-with-range.json": {
+      "code": "E8006",
+      "field": "scene.lights[0].range"
+    },
+    "invalid/instance-unknown-class.json": {
+      "code": "E8006",
+      "field": "scene.materialInstances[0].params[0].class"
+    },
+    "invalid/instance-bound-without-binding.json": {
+      "code": "E8006",
+      "field": "scene.materialInstances[0].params[0].binding"
+    },
+    "invalid/instance-resource-without-value.json": {
+      "code": "E8006",
+      "field": "scene.materialInstances[1].params[3].value"
+    },
+    "invalid/instance-unknown-builtin-resource.json": {
+      "code": "E8006",
+      "field": "scene.materialInstances[1].params[3].value.name"
+    },
+    "invalid/binding-unknown-target-kind.json": {
+      "code": "E8006",
+      "field": "scene.bindings[0].target.kind"
+    },
+    "invalid/binding-transform-bad-field.json": {
+      "code": "E8006",
+      "field": "scene.bindings[1].target.field"
+    },
+    "invalid/binding-camera-bad-field.json": {
+      "code": "E8006",
+      "field": "scene.bindings[3].target.field"
+    },
+    "invalid/binding-frame-dep-bad-name.json": {
+      "code": "E8006",
+      "field": "scene.bindings[1].deps[0].name"
+    },
+    "invalid/binding-missing-order.json": {
+      "code": "E8006",
+      "field": "scene.bindings[0].order"
+    },
+    "invalid/host-input-unknown-codec.json": {
+      "code": "E8006",
+      "field": "scene.hostInputs[0].codec"
+    },
+    "invalid/host-input-target-not-state.json": {
+      "code": "E8006",
+      "field": "scene.hostInputs[0].target.kind"
+    },
+    "invalid/capabilities-limit-not-integer.json": {
+      "code": "E8006",
+      "field": "requiredCapabilities.limits.maxBindGroups"
+    },
+    "invalid/capabilities-limit-bad-name.json": {
+      "code": "E8006",
+      "field": "requiredCapabilities.limits.bindGroups"
+    }
+  }
+}
