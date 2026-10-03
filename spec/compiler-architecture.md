@@ -111,7 +111,7 @@ Project (mtek.toml, entry)                     project/
 The **registry** — one Rust data table of every prelude type, schema, field (type, default, flags `writable`/`bindable`/`construction_only`/`required`), scene-object kind, component, event, enum (`Key`), intrinsic (signature, domain, const-eligibility, CPU semantics reference) — and the embedded prelude Mtek source (`std/materials.mtek`, …). From the registry are generated: `spec/stdlib-schema.json` (checked in; a test fails if it is stale), completion items (LSP), schema reference docs and the AI context export (blueprint §3.4: one registry).
 
 ### 4.6 `resolve/`
-Scopes per `spec/language.md` §4; `DefId(u32)` for every declaration; side table `NodeId → Res`. Enforces no-shadowing, import/export rules, path resolution. Produces related spans for every conflict.
+Scopes per `spec/language.md` §4; `DefId(u32)` for every declaration; side table `NodeId → Res`. Enforces no-shadowing, import/export rules, path resolution. Produces related spans for every conflict. Milestone gating (`E9010`) is table-driven here; the choices the specification leaves open (gating table, outermost-construct reporting, scope details) are decision 0025.
 
 ### 4.7 `types/`
 - `Ty` interned (`TyId(u32)` into a `TyInterner`); kinds per `spec/language.md` §5 plus `Ty::Error`.
