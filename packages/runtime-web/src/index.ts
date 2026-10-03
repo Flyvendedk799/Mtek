@@ -21,6 +21,17 @@ export type {
   MtekSuggestedEdit,
   RuntimeDiagnosticCode,
 } from "./diagnostics/types.js";
+/** The host API (`spec/runtime-abi.md` section 6); `app.js` re-exports `mountMtek` from the runtime bundle. */
+export { mountMtek } from "./host/mount.js";
+export type {
+  MtekApp,
+  MtekAppState,
+  MtekDebug,
+  MtekInputResult,
+  MtekMountOptions,
+  MtekMountProgram,
+  MtekTestOptions,
+} from "./host/types.js";
 export { acquireDevice, isLittleEndianPlatform } from "./gpu/device.js";
 export type { AcquireDeviceOptions, AcquiredDevice, MtekAdapterInfo } from "./gpu/device.js";
 export { ResourceRegistry } from "./gpu/registry.js";

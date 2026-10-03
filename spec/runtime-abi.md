@@ -157,7 +157,7 @@ JSON, UTF-8, keys in a fixed order, schema version 1. A JSON Schema for it is ch
   "runtimeConfig": { "fixedStep": 0.016666668, "maxCatchUpSteps": 4, "maxFrameDelta": 0.1, "maxEntities": 16384, "pauseWhenHidden": true },
   "entryScene": "Demo",
   "sources": [ { "id": 0, "path": "src/main.mtek", "sha256": "…" } ],
-  "spans": [ { "file": 0, "start": 412, "end": 431 } ],
+  "spans": [ { "file": 0, "start": 412, "end": 431, "startLine": 18, "startColumn": 16, "endLine": 18, "endColumn": 35 } ],
   "symbols": [ { "id": "src/main.mtek::Demo.Cube", "kind": "entity", "span": 3 } ],
   "layouts": [ /* layout records, spec/gpu-layout.md §5 */ ],
   "shaders": [ { "hash": "…", "url": "shaders/1a2b….wgsl", "map": "shaders/1a2b….mtek-map.json", "material": "src/main.mtek::Pulse", "vertexEntry": "mtek_vs", "fragmentEntry": "mtek_fs", "vertexAttributes": ["position"], "surfaceInputs": [] } ],
@@ -167,6 +167,8 @@ JSON, UTF-8, keys in a fixed order, schema version 1. A JSON Schema for it is ch
   "scene": { /* §5.2 */ }
 }
 ```
+
+Every `spans` entry carries the half-open byte range into the file as stored on disk and the 1-based line and column of both ends (columns count Unicode scalar values), computed by the compiler's source manager exactly as for compiler diagnostics; the runtime copies them verbatim into the `source` of a diagnostic and never ships or reads source text (decision `spec/decisions/0019-manifest-spans-carry-line-columns.md`).
 
 `requiredCapabilities.limits` lists only limits **above** the WebGPU defaults that the program needs (the v0.1 profile `webgpu-core-2026` is exactly the default limits, so it is `{}`); `features` lists optional WebGPU features (none in v0.1; `timestamp-query` is requested opportunistically by dev builds and never required).
 
@@ -406,4 +408,4 @@ With `renderTarget`, frames render into an offscreen `rgba8unorm-srgb` texture o
 
 ## 12. Runtime diagnostics
 
-Runtime diagnostics use the same envelope as compiler diagnostics (`spec/diagnostics.md` §2) with codes in the `8xxx` range, source spans resolved through the manifest `spans` table, and `"phase"` set to the scheduler phase where they arose. Each distinct `(code, span)` is reported once per mount unless its documentation says otherwise. They are delivered to `onDiagnostic`, to the overlay (errors only, or all in dev builds), and to `console` in dev builds.
+Runtime diagnostics use the same envelope as compiler diagnostics (`spec/diagnostics.md` §2) with codes in the `8xxx` range, source spans resolved through the manifest `spans` table (byte range and line/column range, decision 0019), and `"phase"` set to the scheduler phase where they arose. Each distinct `(code, span)` is reported once per mount unless its documentation says otherwise. They are delivered to `onDiagnostic`, to the overlay (errors only, or all in dev builds), and to `console` in dev builds.

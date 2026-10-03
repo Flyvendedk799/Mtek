@@ -44,122 +44,218 @@
     {
       "file": 0,
       "start": 0,
-      "end": 8
+      "end": 8,
+      "startLine": 1,
+      "startColumn": 1,
+      "endLine": 1,
+      "endColumn": 9
     },
     {
       "file": 1,
       "start": 10,
-      "end": 18
+      "end": 18,
+      "startLine": 1,
+      "startColumn": 11,
+      "endLine": 1,
+      "endColumn": 19
     },
     {
       "file": 0,
       "start": 20,
-      "end": 28
+      "end": 28,
+      "startLine": 1,
+      "startColumn": 21,
+      "endLine": 1,
+      "endColumn": 29
     },
     {
       "file": 1,
       "start": 30,
-      "end": 38
+      "end": 38,
+      "startLine": 1,
+      "startColumn": 31,
+      "endLine": 1,
+      "endColumn": 39
     },
     {
       "file": 0,
       "start": 40,
-      "end": 48
+      "end": 48,
+      "startLine": 2,
+      "startColumn": 1,
+      "endLine": 2,
+      "endColumn": 9
     },
     {
       "file": 1,
       "start": 50,
-      "end": 58
+      "end": 58,
+      "startLine": 2,
+      "startColumn": 11,
+      "endLine": 2,
+      "endColumn": 19
     },
     {
       "file": 0,
       "start": 60,
-      "end": 68
+      "end": 68,
+      "startLine": 2,
+      "startColumn": 21,
+      "endLine": 2,
+      "endColumn": 29
     },
     {
       "file": 1,
       "start": 70,
-      "end": 78
+      "end": 78,
+      "startLine": 2,
+      "startColumn": 31,
+      "endLine": 2,
+      "endColumn": 39
     },
     {
       "file": 0,
       "start": 80,
-      "end": 88
+      "end": 88,
+      "startLine": 3,
+      "startColumn": 1,
+      "endLine": 3,
+      "endColumn": 9
     },
     {
       "file": 1,
       "start": 90,
-      "end": 98
+      "end": 98,
+      "startLine": 3,
+      "startColumn": 11,
+      "endLine": 3,
+      "endColumn": 19
     },
     {
       "file": 0,
       "start": 100,
-      "end": 108
+      "end": 108,
+      "startLine": 3,
+      "startColumn": 21,
+      "endLine": 3,
+      "endColumn": 29
     },
     {
       "file": 1,
       "start": 110,
-      "end": 118
+      "end": 118,
+      "startLine": 3,
+      "startColumn": 31,
+      "endLine": 3,
+      "endColumn": 39
     },
     {
       "file": 0,
       "start": 120,
-      "end": 128
+      "end": 128,
+      "startLine": 4,
+      "startColumn": 1,
+      "endLine": 4,
+      "endColumn": 9
     },
     {
       "file": 1,
       "start": 130,
-      "end": 138
+      "end": 138,
+      "startLine": 4,
+      "startColumn": 11,
+      "endLine": 4,
+      "endColumn": 19
     },
     {
       "file": 0,
       "start": 140,
-      "end": 148
+      "end": 148,
+      "startLine": 4,
+      "startColumn": 21,
+      "endLine": 4,
+      "endColumn": 29
     },
     {
       "file": 1,
       "start": 150,
-      "end": 158
+      "end": 158,
+      "startLine": 4,
+      "startColumn": 31,
+      "endLine": 4,
+      "endColumn": 39
     },
     {
       "file": 0,
       "start": 160,
-      "end": 168
+      "end": 168,
+      "startLine": 5,
+      "startColumn": 1,
+      "endLine": 5,
+      "endColumn": 9
     },
     {
       "file": 1,
       "start": 170,
-      "end": 178
+      "end": 178,
+      "startLine": 5,
+      "startColumn": 11,
+      "endLine": 5,
+      "endColumn": 19
     },
     {
       "file": 0,
       "start": 180,
-      "end": 188
+      "end": 188,
+      "startLine": 5,
+      "startColumn": 21,
+      "endLine": 5,
+      "endColumn": 29
     },
     {
       "file": 1,
       "start": 190,
-      "end": 198
+      "end": 198,
+      "startLine": 5,
+      "startColumn": 31,
+      "endLine": 5,
+      "endColumn": 39
     },
     {
       "file": 0,
       "start": 200,
-      "end": 208
+      "end": 208,
+      "startLine": 6,
+      "startColumn": 1,
+      "endLine": 6,
+      "endColumn": 9
     },
     {
       "file": 1,
       "start": 210,
-      "end": 218
+      "end": 218,
+      "startLine": 6,
+      "startColumn": 11,
+      "endLine": 6,
+      "endColumn": 19
     },
     {
       "file": 0,
       "start": 220,
-      "end": 228
+      "end": 228,
+      "startLine": 6,
+      "startColumn": 21,
+      "endLine": 6,
+      "endColumn": 29
     },
     {
       "file": 1,
       "start": 230,
-      "end": 238
+      "end": 238,
+      "startLine": 6,
+      "startColumn": 31,
+      "endLine": 6,
+      "endColumn": 39
     }
   ],
   "symbols": [

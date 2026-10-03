@@ -61,6 +61,14 @@
       "code": "E8006",
       "field": "spans[0].start"
     },
+    "invalid/span-start-line-zero.json": {
+      "code": "E8006",
+      "field": "spans[0].startLine"
+    },
+    "invalid/span-missing-end-column.json": {
+      "code": "E8006",
+      "field": "spans[0].endColumn"
+    },
     "invalid/source-short-hash.json": {
       "code": "E8006",
       "field": "sources[0].sha256"
