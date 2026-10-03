@@ -45,7 +45,7 @@ Diagnostics are the main interface between Mtek and anyone repairing a program �
 | `severity` | yes | `error` \| `warning` \| `note` |
 | `title` | yes | the catalogue title of the code (short, constant) |
 | `message` | yes | specific, complete sentence naming the construct; no trailing jargon |
-| `source` | yes except for project-level diagnostics without a file (then `null`) | primary location. Bytes are offsets into the file **as stored on disk**, half-open. Lines/columns are 1-based; columns count Unicode scalar values. |
+| `source` | yes, except `null` for project-level diagnostics and for files the source manager rejected before they got a file id (E0001, E0002, E0004, E9002 — their path and byte offset are stated in the message) | primary location. Bytes are offsets into the file **as stored on disk**, half-open. Lines/columns are 1-based; columns count Unicode scalar values. |
 | `expected`, `actual` | when relevant | rendered Mtek types or forms |
 | `related` | yes (may be empty) | secondary locations with their own message (e.g. the earlier declaration, the `bind`, each step of a cycle) |
 | `notes` | yes (may be empty) | extra explanation, "help:" hints, unsupported-feature context |
@@ -101,7 +101,7 @@ error[MTEK-E3102]: field or parameter type mismatch
    |     ----------------------- parameter 'phase' is declared here
    = help: material parameters are typed; pass an f32 such as `0.0`
 ```
-Colour only when stdout is a TTY and `NO_COLOR` is unset. Tabs render as 4 spaces for caret alignment. Lines longer than 160 columns are elided around the span.
+The header line shows the code and the **message** (the specific sentence); the generic catalogue `title` appears only in JSON. The example above shows the title for brevity — implementations print the message there. Colour only when stdout is a TTY and `NO_COLOR` is unset. Tabs render as 4 spaces for caret alignment. Lines longer than 160 columns are elided around the span.
 
 ## 5. Catalogue (v0.1)
 
