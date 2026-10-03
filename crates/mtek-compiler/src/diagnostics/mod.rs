@@ -11,6 +11,7 @@
 mod codes;
 mod json;
 mod model;
+mod render;
 mod sink;
 
 pub use codes::Code;
@@ -18,4 +19,5 @@ pub use json::{SCHEMA_VERSION, source_object, to_envelope, to_pretty_string, to_
 pub use model::{
     Diagnostic, HELP_PREFIX, Label, Phase, RuntimePhase, Severity, SuggestedEdit, TextEdit,
 };
+pub use render::{MAX_LINE_COLUMNS, RenderOptions, render, render_report};
 pub use sink::{Diagnostics, MAX_DIAGNOSTICS_PER_FILE, Report, Summary};
