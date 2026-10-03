@@ -1,0 +1,109 @@
+{
+  "task": "M0-09",
+  "project": "hardware",
+  "base": {
+    "a": 1,
+    "b": [
+      10,
+      5,
+      2.5
+    ],
+    "c": 0,
+    "d": [
+      0,
+      0
+    ],
+    "e": false,
+    "f": [
+      0,
+      0,
+      0
+    ]
+  },
+  "observations": [
+    {
+      "c": 1.5,
+      "centreA": [
+        89,
+        63,
+        44,
+        255
+      ],
+      "expectedToUint32Model": [
+        89,
+        63,
+        44,
+        255
+      ],
+      "expectedNumberAsWritten": [
+        108,
+        77,
+        54,
+        255
+      ]
+    },
+    {
+      "c": -1,
+      "centreA": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "expectedToUint32Model": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "expectedNumberAsWritten": [
+        0,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "c": 4294967296,
+      "centreA": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "expectedToUint32Model": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "expectedNumberAsWritten": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "c": 100,
+      "centreA": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "expectedToUint32Model": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "expectedNumberAsWritten": [
+        255,
+        255,
+        255,
+        255
+      ]
+    }
+  ]
+}

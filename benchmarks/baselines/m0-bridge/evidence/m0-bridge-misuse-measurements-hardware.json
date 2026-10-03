@@ -1,0 +1,36 @@
+{
+  "task": "M0-09",
+  "project": "hardware",
+  "observations": [
+    {
+      "kind": "vec3-add-vec2",
+      "pixel": [
+        89,
+        178,
+        76,
+        255
+      ],
+      "consoleMessages": []
+    },
+    {
+      "kind": "float-as-colour",
+      "pixel": [
+        128,
+        128,
+        128,
+        255
+      ],
+      "consoleMessages": []
+    },
+    {
+      "kind": "vec2-as-colour",
+      "pixel": [
+        64,
+        128,
+        0,
+        255
+      ],
+      "consoleMessages": []
+    }
+  ]
+}

@@ -9,7 +9,8 @@
   "workspaces": [
     "packages/runtime-web",
     "tests/browser",
-    "tests/codegen"
+    "tests/codegen",
+    "benchmarks/baselines/m0-bridge"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present && cargo build -p mtek-cli --locked",
