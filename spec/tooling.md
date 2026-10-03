@@ -103,6 +103,8 @@ steps = [
   { expect_pixel = { x = 64, y = 64, color = "#6b5cff", tolerance = 2 } },
 ]
 ```
+Fixture steps are `step`, `press`, `release`, `set_input`, `expect_state` and `expect_pixel`; the `set_input` step (a host input is set, applied at the next frame) and the rules for render-target size, pixel origin and tolerance are fixed by decision 0021 (`spec/decisions/0021-benchmark-task-format.md`).
+
 `mtek test` builds the project in `test` mode, launches the browser harness of `spec/testing.md` §6 (Playwright must be installed; otherwise it reports NOT-RUN and exits 1 unless `--allow-not-run`) and reports per fixture.
 
 ## 7. Language server (`mtek lsp`, M6)

@@ -103,6 +103,8 @@ baseline-tests/    # Playwright tests asserting the same observable behaviour
 reference/         # a reference solution for each side, written by a human or a reviewed agent;
                    # proves the task is solvable and that both test sets pass on a correct answer
 ```
+The exact `task.toml` keys, where `mtek test` fixtures run from, the holdout tree-hash algorithm and the baseline test hooks are fixed by decision 0021 (`spec/decisions/0021-benchmark-task-format.md`).
+
 `task.toml` example:
 ```toml
 id = "interaction-03"

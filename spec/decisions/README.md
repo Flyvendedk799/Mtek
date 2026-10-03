@@ -41,3 +41,4 @@ recorded here before code depends on it (blueprint §15).
 | 0018 | `mtek.toml` validation rules the specification leaves open |
 | 0019 | Manifest spans carry line and column ranges |
 | 0020 | M1 runtime: interim behaviour where a later task is not ready |
+| 0021 | Benchmark task format: details fixed at M0 |
