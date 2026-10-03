@@ -587,7 +587,7 @@ fn missing_pieces_are_reported_once_each() {
         ("f(1 2)", &[Code::E1001]),
         ("[1,", &[Code::E1002]),
         ("[]", &[Code::E1001]),
-        ("a.", &[Code::E1001]),
+        ("a.", &[Code::E1004]),
         ("a[", &[Code::E1004]),
         ("()", &[Code::E1001]),
     ];

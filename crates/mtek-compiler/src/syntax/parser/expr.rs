@@ -385,7 +385,7 @@ impl Parser<'_> {
     /// consumed) if there is no name.
     fn desc_field(&mut self, fields: &mut Vec<DescField>, height: &mut u32) -> bool {
         let start = self.span().start;
-        if !matches!(self.kind(), TokenKind::Ident | TokenKind::Underscore) {
+        if !self.at_field_name() {
             self.expected("a field name or `}`");
             return false;
         }
@@ -430,7 +430,8 @@ impl Parser<'_> {
             source
         } else {
             self.expected("`(` after `bind`");
-            self.error_leaf(Span::at(open.file, open.start))
+            let hole = self.placeholder_span();
+            self.error_leaf(hole)
         };
         *height = (*height).max(source.height);
         Bind {
@@ -442,11 +443,11 @@ impl Parser<'_> {
 
     /// An empty `Error` expression at the current token, as a field value.
     fn missing_value(&mut self) -> FieldValue {
-        let at = self.span();
-        FieldValue::Expr(self.error_leaf(Span::at(at.file, at.start)).expr)
+        let hole = self.placeholder_span();
+        FieldValue::Expr(self.error_leaf(hole).expr)
     }
 
-    fn expected_colon_after(&mut self, field: &str) {
+    pub(super) fn expected_colon_after(&mut self, field: &str) {
         self.expected(&format!("`:` after the field name `{field}`"));
     }
 
@@ -481,7 +482,8 @@ impl Parser<'_> {
             }
         };
         self.error(diagnostic.at(at));
-        self.error_leaf(Span::at(at.file, at.start))
+        let hole = self.placeholder_span();
+        self.error_leaf(hole)
     }
 
     // ----- postfix operators --------------------------------------------------
@@ -527,7 +529,7 @@ impl Parser<'_> {
     fn field_access(&mut self, base: Sub) -> Sub {
         let start = base.expr.span.start;
         self.bump();
-        let Some(name) = self.ident() else {
+        let Some(name) = self.field_name() else {
             self.expected("a field name after `.`");
             return base;
         };
@@ -572,6 +574,24 @@ impl Parser<'_> {
         Some(self.name_here())
     }
 
+    /// A field name: a name, or the keyword `material`, which is also the name
+    /// of an entity field (`material: Unlit { ... };`, `Cube.material.color`;
+    /// decision 0023). `None`, nothing consumed, for any other token.
+    pub(super) fn field_name(&mut self) -> Option<Ident> {
+        if !self.at_field_name() {
+            return None;
+        }
+        Some(self.name_here())
+    }
+
+    /// True at a token that [`Self::field_name`] accepts.
+    pub(super) fn at_field_name(&self) -> bool {
+        matches!(
+            self.kind(),
+            TokenKind::Ident | TokenKind::Underscore | TokenKind::KwMaterial
+        )
+    }
+
     /// Consume the current token as a name; the caller has checked that it
     /// is an identifier or `_`.
     fn name_here(&mut self) -> Ident {
@@ -585,7 +605,7 @@ impl Parser<'_> {
 
     /// Like [`Self::name_here`], for a name that becomes part of an
     /// expression node and so gets no node of its own.
-    fn name_text(&mut self) -> (String, Span) {
+    pub(super) fn name_text(&mut self) -> (String, Span) {
         let span = self.span();
         let name = self.text_of(span).to_owned();
         self.report_if_reserved(span);
@@ -623,7 +643,7 @@ impl Parser<'_> {
         }
     }
 
-    fn error_leaf(&mut self, span: Span) -> Sub {
+    pub(super) fn error_leaf(&mut self, span: Span) -> Sub {
         self.leaf(span, ExprKind::Error)
     }
 

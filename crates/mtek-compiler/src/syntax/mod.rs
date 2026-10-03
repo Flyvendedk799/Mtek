@@ -1,7 +1,8 @@
 //! The syntax stage: the lexer (tokens, literals, comments and lexical
 //! diagnostics, `spec/grammar.ebnf` section 1), the AST of the whole v0.1
-//! language, and the parser. The expression parser is complete; items,
-//! members and statements arrive with M1-05.
+//! language, and the parser: the Pratt expression parser and the recursive
+//! descent parser of types, items, members and statements with error recovery
+//! ([`parse_module`]).
 
 pub mod ast;
 mod dump;
@@ -15,7 +16,8 @@ mod walk;
 pub use dump::{dump_expr, dump_module};
 pub use lexer::{FloatFix, Lexed, MAX_LEXICAL_DIAGNOSTICS, lex, lex_str};
 pub use parser::{
-    CandidateEdit, MAX_NESTING_DEPTH, ParsedExpr, parse_expression, parse_expression_no_desc,
+    CandidateEdit, MAX_NESTING_DEPTH, ParsedExpr, ParsedModule, parse_expression,
+    parse_expression_no_desc, parse_module,
 };
 pub use token::{
     KEYWORDS, PUNCTUATION, RESERVED_WORDS, Token, TokenKind, TokenValue, Trivia, TriviaItem,
