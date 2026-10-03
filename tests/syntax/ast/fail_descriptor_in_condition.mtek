@@ -1,0 +1,10 @@
+--- no-desc: a descriptor literal directly where a block follows is E1011 (with a candidate parenthesising edit)
+Box { size: 1.0 }
+--- no-desc
+Box { size: 1.0 }.size < 2.0
+--- no-desc
+a == Box { size: 1.0 }
+--- no-desc: a block that does not look like a descriptor is not reported; the block is left over
+x { y
+--- no-desc
+x { y = 1; }

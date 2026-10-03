@@ -1,0 +1,46 @@
+--- integers carry no sign: a negative literal is a unary minus
+0
+---
+42
+---
+-2147483648
+---
+18446744073709551615
+---
+18446744073709551616
+--- floats
+1.0
+---
+0.5
+---
+2.5e-3
+---
+1.5E+10
+---
+1.0e39
+--- strings with escapes decoded
+"hello"
+---
+""
+---
+"a\n\t\"b\"\\"
+---
+"\u{1F600}\0"
+--- colors: rgb is opaque, rgba keeps the alpha, case is not significant
+#6b5cff
+---
+#6B5CFF
+---
+#6b5cffcc
+---
+#000000
+--- booleans, self and names
+true
+---
+false
+---
+self
+---
+speed
+---
+_

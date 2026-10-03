@@ -1,0 +1,46 @@
+;; bitwise operators are E1901; the operator and its right operand are dropped
+; a & b
+(name a)
+; MTEK-E1901 2..3 `&` The bitwise operator `&` is not supported in v0.1.
+
+; a | b
+(name a)
+; MTEK-E1901 2..3 `|` The bitwise operator `|` is not supported in v0.1.
+
+; a ^ b
+(name a)
+; MTEK-E1901 2..3 `^` The bitwise operator `^` is not supported in v0.1.
+
+; a << 2
+(name a)
+; MTEK-E1901 2..4 `<<` The bitwise operator `<<` is not supported in v0.1.
+
+; a >> 2
+(name a)
+; MTEK-E1901 2..4 `>>` The bitwise operator `>>` is not supported in v0.1.
+
+;; in a prefix position the operator is ignored
+; ~a
+(name a)
+; MTEK-E1901 0..1 `~` The bitwise operator `~` is not supported in v0.1.
+
+;; parsing continues after the operator
+; a & b + c
+(binary + (name a) (name c))
+; MTEK-E1901 2..3 `&` The bitwise operator `&` is not supported in v0.1.
+
+; 1 + ~a
+(binary + (lit int 1) (name a))
+; MTEK-E1901 4..5 `~` The bitwise operator `~` is not supported in v0.1.
+
+;; inside brackets
+; f(a | b, [c & d])
+(call (name f) (name a) (array (name c)))
+; MTEK-E1901 4..5 `|` The bitwise operator `|` is not supported in v0.1.
+; MTEK-E1901 12..13 `&` The bitwise operator `&` is not supported in v0.1.
+
+;; several in one expression
+; a & b | c
+(name a)
+; MTEK-E1901 2..3 `&` The bitwise operator `&` is not supported in v0.1.
+; MTEK-E1901 6..7 `|` The bitwise operator `|` is not supported in v0.1.

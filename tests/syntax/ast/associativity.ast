@@ -1,0 +1,56 @@
+;; additive and multiplicative operators are left associative
+; a - b - c
+(binary - (binary - (name a) (name b)) (name c))
+
+; a / b / c
+(binary / (binary / (name a) (name b)) (name c))
+
+; a % b % c
+(binary % (binary % (name a) (name b)) (name c))
+
+; a - b - c - d
+(binary - (binary - (binary - (name a) (name b)) (name c)) (name d))
+
+; a / b % c * d
+(binary * (binary % (binary / (name a) (name b)) (name c)) (name d))
+
+; a + b - c + d
+(binary + (binary - (binary + (name a) (name b)) (name c)) (name d))
+
+; a * b / c % d
+(binary % (binary / (binary * (name a) (name b)) (name c)) (name d))
+
+;; logical operators are left associative
+; a || b || c
+(binary || (binary || (name a) (name b)) (name c))
+
+; a && b && c
+(binary && (binary && (name a) (name b)) (name c))
+
+; a || b || c || d
+(binary || (binary || (binary || (name a) (name b)) (name c)) (name d))
+
+; a && b && c && d
+(binary && (binary && (binary && (name a) (name b)) (name c)) (name d))
+
+;; comparison and equality operators of different levels combine
+; a < b == c < d
+(binary == (binary < (name a) (name b)) (binary < (name c) (name d)))
+
+; a == b < c
+(binary == (name a) (binary < (name b) (name c)))
+
+; a < b == c
+(binary == (binary < (name a) (name b)) (name c))
+
+; a != b >= c
+(binary != (name a) (binary >= (name b) (name c)))
+
+; (a < b) < c
+(binary < (paren (binary < (name a) (name b))) (name c))
+
+; a < b && b < c
+(binary && (binary < (name a) (name b)) (binary < (name b) (name c)))
+
+; a == b || c == d
+(binary || (binary == (name a) (name b)) (binary == (name c) (name d)))

@@ -1,0 +1,22 @@
+--- single components and swizzles are field accesses; the checker tells them apart
+v.x
+---
+v.xy
+---
+v.zyx
+---
+v.xxxx
+---
+v.rgb
+---
+c.a
+---
+(a + b).xy
+---
+f(x).yz
+---
+self.position.xz
+---
+v.xy * s
+---
+-v.xy

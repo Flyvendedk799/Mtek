@@ -1,0 +1,47 @@
+;; comparison operators do not chain: one E1010 at the second operator, parsing continues left associatively
+; a < b < c
+(binary < (binary < (name a) (name b)) (name c))
+; MTEK-E1010 6..7 `<` Comparison operators cannot be chained: `<` follows `<` without parentheses.
+
+; a <= b > c
+(binary > (binary <= (name a) (name b)) (name c))
+; MTEK-E1010 7..8 `>` Comparison operators cannot be chained: `>` follows `<=` without parentheses.
+
+; a > b >= c
+(binary >= (binary > (name a) (name b)) (name c))
+; MTEK-E1010 6..8 `>=` Comparison operators cannot be chained: `>=` follows `>` without parentheses.
+
+; a == b == c
+(binary == (binary == (name a) (name b)) (name c))
+; MTEK-E1010 7..9 `==` Equality operators cannot be chained: `==` follows `==` without parentheses.
+
+; a != b == c
+(binary == (binary != (name a) (name b)) (name c))
+; MTEK-E1010 7..9 `==` Equality operators cannot be chained: `==` follows `!=` without parentheses.
+
+;; a long chain is still one diagnostic
+; a < b < c < d < e
+(binary <
+  (binary < (binary < (binary < (name a) (name b)) (name c)) (name d))
+  (name e))
+; MTEK-E1010 6..7 `<` Comparison operators cannot be chained: `<` follows `<` without parentheses.
+
+;; two separate chains are two diagnostics
+; a < b < c && d == e == f
+(binary &&
+  (binary < (binary < (name a) (name b)) (name c))
+  (binary == (binary == (name d) (name e)) (name f)))
+; MTEK-E1010 6..7 `<` Comparison operators cannot be chained: `<` follows `<` without parentheses.
+; MTEK-E1010 20..22 `==` Equality operators cannot be chained: `==` follows `==` without parentheses.
+
+;; a different level after the chain is fine
+; a < b < c == d
+(binary == (binary < (binary < (name a) (name b)) (name c)) (name d))
+; MTEK-E1010 6..7 `<` Comparison operators cannot be chained: `<` follows `<` without parentheses.
+
+;; parentheses state the grouping, and different levels combine without error
+; (a < b) < c
+(binary < (paren (binary < (name a) (name b))) (name c))
+
+; a < b == c
+(binary == (binary < (name a) (name b)) (name c))

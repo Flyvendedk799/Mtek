@@ -1,0 +1,50 @@
+--- an expression is missing
+1 +
+---
+)
+---
+()
+---
+a *
+---
+f(,)
+--- something follows the expression
+a b
+--- delimiters are not closed: E1002 with the opener as a related span
+(a + b
+---
+f(a, b
+---
+[1, 2
+---
+a[0
+---
+Box { size: 1.0
+--- a missing separator, with recovery
+f(a b, c)
+---
+Box { size 1.0 }
+---
+Box { : 1.0 }
+--- empty array and missing names
+[]
+---
+a.
+---
+a.1
+--- bind outside a field value
+bind(x)
+---
+Box { size: bind }
+--- reserved words used as names (E0013), the tree is still built
+while + x
+---
+a.type
+---
+Box { async: 1 }
+--- malformed literals are reported by the lexer only
+1.
+---
+1 + 007
+---
+"unterminated

@@ -1,0 +1,95 @@
+;; unary operators bind tighter than every binary operator
+; -a * b
+(binary * (unary - (name a)) (name b))
+
+; a * -b
+(binary * (name a) (unary - (name b)))
+
+; !a && b
+(binary && (unary ! (name a)) (name b))
+
+; a || !b
+(binary || (name a) (unary ! (name b)))
+
+; -a + b
+(binary + (unary - (name a)) (name b))
+
+; a < -b
+(binary < (name a) (unary - (name b)))
+
+; -a == b
+(binary == (unary - (name a)) (name b))
+
+; !a || b && c
+(binary || (unary ! (name a)) (binary && (name b) (name c)))
+
+;; unary operators bind looser than postfix operators
+; -a.b
+(unary - (field (name a) b))
+
+; !f(x)
+(unary ! (call (name f) (name x)))
+
+; -a[i]
+(unary - (index (name a) (name i)))
+
+; !a.b.c
+(unary ! (field (field (name a) b) c))
+
+; -f(x).y
+(unary - (field (call (name f) (name x)) y))
+
+; - -a
+(unary - (unary - (name a)))
+
+; !!a
+(unary ! (unary ! (name a)))
+
+; -!a
+(unary - (unary ! (name a)))
+
+;; postfix operators bind tighter than every binary operator
+; a * b.c
+(binary * (name a) (field (name b) c))
+
+; a.b * c
+(binary * (field (name a) b) (name c))
+
+; a + f(b)
+(binary + (name a) (call (name f) (name b)))
+
+; f(a) + b
+(binary + (call (name f) (name a)) (name b))
+
+; a || b.c
+(binary || (name a) (field (name b) c))
+
+; a[i] < b[j]
+(binary < (index (name a) (name i)) (index (name b) (name j)))
+
+; a.b == c.d
+(binary == (field (name a) b) (field (name c) d))
+
+; a && f(x) || g(y)
+(binary ||
+  (binary && (name a) (call (name f) (name x)))
+  (call (name g) (name y)))
+
+;; parentheses override precedence and are kept
+; (a + b) * c
+(binary * (paren (binary + (name a) (name b))) (name c))
+
+; a * (b + c)
+(binary * (name a) (paren (binary + (name b) (name c))))
+
+; -(a + b)
+(unary - (paren (binary + (name a) (name b))))
+
+; (a || b) && c
+(binary && (paren (binary || (name a) (name b))) (name c))
+
+; (a < b) == c
+(binary == (paren (binary < (name a) (name b))) (name c))
+
+; ((a))
+(paren (paren (name a)))

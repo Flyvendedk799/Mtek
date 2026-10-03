@@ -1,0 +1,26 @@
+--- descriptor literals separate fields with semicolons; the last one is optional
+Box { size: vec3(1.0, 1.0, 1.0) }
+---
+Box { size: vec3(1.0, 1.0, 1.0); }
+---
+Unlit { color: #6b5cff }
+---
+Unlit {}
+---
+Dynamic { mass: 2.0; friction: 0.5; }
+--- bind is a field value
+Pulse { tint: bind(tint); phase: bind(frame.time) }
+---
+Pulse { tint: bind(tint); phase: 0.0 }
+--- descriptors nest and take postfix operators
+Pulse { inner: Box { size: 1.0 }; other: [Box { size: 2.0 }] }
+---
+Box { size: 1.0 }.size
+---
+Box { size: 1.0 }.size * 2.0
+---
+P { a: 1 + 2 * 3; b: f(x, y); c: -d.e; }
+---
+mesh_of(Box { size: v }, Sphere { radius: r })
+--- a descriptor can be a whole struct literal
+Light { power: 1.5; color: #ffffff; samples: [vec3(0.0), vec3(1.0)] }

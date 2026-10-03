@@ -254,8 +254,12 @@ impl<'a> Parser<'a> {
     }
 
     /// Report a syntax error unless one was reported within the last few
-    /// tokens (see the module documentation).
+    /// tokens (see the module documentation), or when the current token is a
+    /// literal the lexer already reported.
     fn error(&mut self, diagnostic: Diagnostic) {
+        if self.tok().is_malformed() {
+            return;
+        }
         if self
             .last_error_pos
             .is_some_and(|last| self.pos < last.saturating_add(MIN_TOKENS_BETWEEN_ERRORS))

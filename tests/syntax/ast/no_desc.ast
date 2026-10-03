@@ -1,0 +1,47 @@
+;; where `x {` starts a block, a name is just a name
+; [no-desc]
+; x
+(name x)
+
+; [no-desc]
+; a < b
+(binary < (name a) (name b))
+
+; [no-desc]
+; a.b(c) == d
+(binary == (call (field (name a) b) (name c)) (name d))
+
+;; parentheses, brackets and call arguments allow descriptor literals again
+; [no-desc]
+; (Box { size: 1.0 })
+(paren (desc Box (field size (lit float 1.0))))
+
+; [no-desc]
+; (Box { size: 1.0 }).size < 2.0
+(binary <
+  (field (paren (desc Box (field size (lit float 1.0)))) size)
+  (lit float 2.0))
+
+; [no-desc]
+; f(Box { size: 1.0 })
+(call (name f) (desc Box (field size (lit float 1.0))))
+
+; [no-desc]
+; [Box { size: 1.0 }]
+(array (desc Box (field size (lit float 1.0))))
+
+; [no-desc]
+; a[Box { size: 1.0 }.n] == 1
+(binary ==
+  (index (name a) (field (desc Box (field size (lit float 1.0))) n))
+  (lit int 1))
+
+; [no-desc]
+; count_of(Box { size: 1.0 }) > 3
+(binary >
+  (call (name count_of) (desc Box (field size (lit float 1.0))))
+  (lit int 3))
+
+;; the same text with descriptors allowed
+; Box { size: 1.0 }
+(desc Box (field size (lit float 1.0)))

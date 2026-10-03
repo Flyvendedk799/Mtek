@@ -1,0 +1,29 @@
+;; a descriptor literal directly where a block follows is E1011 (with a candidate parenthesising edit)
+; [no-desc]
+; Box { size: 1.0 }
+(desc Box (field size (lit float 1.0)))
+; MTEK-E1011 0..17 `Box { size: 1.0 }` A descriptor literal cannot be used directly as the condition of `if` or the iterable of `for`; wrap it in parentheses.
+; edit MTEK-E1011 "(" at 0..0, ")" at 17..17
+
+; [no-desc]
+; Box { size: 1.0 }.size < 2.0
+(binary < (field (desc Box (field size (lit float 1.0))) size) (lit float 2.0))
+; MTEK-E1011 0..17 `Box { size: 1.0 }` A descriptor literal cannot be used directly as the condition of `if` or the iterable of `for`; wrap it in parentheses.
+; edit MTEK-E1011 "(" at 0..0, ")" at 17..17
+
+; [no-desc]
+; a == Box { size: 1.0 }
+(binary == (name a) (desc Box (field size (lit float 1.0))))
+; MTEK-E1011 5..22 `Box { size: 1.0 }` A descriptor literal cannot be used directly as the condition of `if` or the iterable of `for`; wrap it in parentheses.
+; edit MTEK-E1011 "(" at 5..5, ")" at 22..22
+
+;; a block that does not look like a descriptor is not reported; the block is left over
+; [no-desc]
+; x { y
+(name x)
+; MTEK-E1001 2..3 `{` Expected the end of the expression, found `{`.
+
+; [no-desc]
+; x { y = 1; }
+(name x)
+; MTEK-E1001 2..3 `{` Expected the end of the expression, found `{`.

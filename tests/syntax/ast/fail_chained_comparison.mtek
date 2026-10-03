@@ -1,0 +1,20 @@
+--- comparison operators do not chain: one E1010 at the second operator, parsing continues left associatively
+a < b < c
+---
+a <= b > c
+---
+a > b >= c
+---
+a == b == c
+---
+a != b == c
+--- a long chain is still one diagnostic
+a < b < c < d < e
+--- two separate chains are two diagnostics
+a < b < c && d == e == f
+--- a different level after the chain is fine
+a < b < c == d
+--- parentheses state the grouping, and different levels combine without error
+(a < b) < c
+---
+a < b == c

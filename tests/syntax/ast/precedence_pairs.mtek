@@ -1,0 +1,72 @@
+--- every pair of binary levels, the looser operator first and then the tighter one first
+a || b && c
+---
+a && b || c
+---
+a || b == c
+---
+a == b || c
+---
+a || b < c
+---
+a < b || c
+---
+a || b + c
+---
+a + b || c
+---
+a || b * c
+---
+a * b || c
+---
+a && b == c
+---
+a == b && c
+---
+a && b < c
+---
+a < b && c
+---
+a && b + c
+---
+a + b && c
+---
+a && b * c
+---
+a * b && c
+---
+a == b < c
+---
+a < b == c
+---
+a == b + c
+---
+a + b == c
+---
+a == b * c
+---
+a * b == c
+---
+a < b + c
+---
+a + b < c
+---
+a < b * c
+---
+a * b < c
+---
+a + b * c
+---
+a * b + c
+--- the other operators of each level behave like the one above
+a != b <= c
+---
+a >= b != c
+---
+a - b % c
+---
+a / b + c
+---
+a > b - c
+---
+a / b >= c

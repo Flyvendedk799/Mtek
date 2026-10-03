@@ -1,0 +1,20 @@
+--- bitwise operators are E1901; the operator and its right operand are dropped
+a & b
+---
+a | b
+---
+a ^ b
+---
+a << 2
+---
+a >> 2
+--- in a prefix position the operator is ignored
+~a
+--- parsing continues after the operator
+a & b + c
+---
+1 + ~a
+--- inside brackets
+f(a | b, [c & d])
+--- several in one expression
+a & b | c

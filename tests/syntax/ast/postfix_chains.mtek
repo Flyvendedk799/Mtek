@@ -1,0 +1,30 @@
+--- calls, fields and indices chain left to right
+a.b(c)[d].e
+---
+f()()
+---
+f(a)(b)
+---
+a[0][1][2]
+---
+a.b.c.d
+---
+self.position.y
+---
+Key.Space
+---
+frame.time
+---
+m[2].xyz.x
+---
+f(a, b,)
+---
+f(g(h(1)))
+---
+quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt)
+---
+color.linear(tint.rgb * pulse(phase), tint.a)
+---
+a[b[c]]
+---
+a.b(c.d(e), f[g])

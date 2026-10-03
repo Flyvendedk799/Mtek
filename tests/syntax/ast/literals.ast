@@ -1,0 +1,73 @@
+;; integers carry no sign: a negative literal is a unary minus
+; 0
+(lit int 0)
+
+; 42
+(lit int 42)
+
+; -2147483648
+(unary - (lit int 2147483648))
+
+; 18446744073709551615
+(lit int 18446744073709551615)
+
+; 18446744073709551616
+(lit int overflow)
+
+;; floats
+; 1.0
+(lit float 1.0)
+
+; 0.5
+(lit float 0.5)
+
+; 2.5e-3
+(lit float 0.0025)
+
+; 1.5E+10
+(lit float 15000000000.0)
+
+; 1.0e39
+(lit float 1e39)
+
+;; strings with escapes decoded
+; "hello"
+(lit string "hello")
+
+; ""
+(lit string "")
+
+; "a\n\t\"b\"\\"
+(lit string "a\n\t\"b\"\\")
+
+; "\u{1F600}\0"
+(lit string "😀\0")
+
+;; colors: rgb is opaque, rgba keeps the alpha, case is not significant
+; #6b5cff
+(lit color #6b5cff)
+
+; #6B5CFF
+(lit color #6b5cff)
+
+; #6b5cffcc
+(lit color #6b5cffcc)
+
+; #000000
+(lit color #000000)
+
+;; booleans, self and names
+; true
+(lit bool true)
+
+; false
+(lit bool false)
+
+; self
+(self)
+
+; speed
+(name speed)
+
+; _
+(name _)
