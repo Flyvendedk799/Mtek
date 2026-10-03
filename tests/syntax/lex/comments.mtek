@@ -8,6 +8,11 @@ fn /* inline */ f() { }
 
 /* nested /* inside */ still comment */
 const A: i32 = 1; // trailing
-/**/ /***/ //// four slashes are a doc comment
+/**/ /***/ //// four slashes are an ordinary comment
+//////////////////////////////////////////////////
+////////// A banner //////////
+//////////////////////////////////////////////////
 /* // line comment markers inside a block comment */
+///x doc comment without a space
+///
 /// last comment, attached to the end of the file

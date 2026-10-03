@@ -432,7 +432,8 @@ impl Token {
 pub enum TriviaKind {
     /// `// ...`
     LineComment,
-    /// `/// ...` (a documentation comment, `spec/language.md` 1.5)
+    /// `/// ...` not followed by a fourth `/` (a documentation comment,
+    /// `spec/language.md` 1.5); `////...` is a `LineComment`.
     DocComment,
     /// `/* ... */`, possibly nested.
     BlockComment,

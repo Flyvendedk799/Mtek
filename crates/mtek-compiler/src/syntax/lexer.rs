@@ -357,11 +357,12 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// `// ...` up to, not including, the line terminator. Every comment that
-    /// starts with `///` is a documentation comment (`spec/language.md` 1.5).
+    /// `// ...` up to, not including, the line terminator. A comment that
+    /// starts with `///` and not with `////` is a documentation comment
+    /// (`spec/language.md` 1.5); `////...` banners are ordinary comments.
     fn line_comment(&mut self) {
         let start = self.pos;
-        let kind = if self.byte(2) == Some(b'/') {
+        let kind = if self.byte(2) == Some(b'/') && self.byte(3) != Some(b'/') {
             TriviaKind::DocComment
         } else {
             TriviaKind::LineComment

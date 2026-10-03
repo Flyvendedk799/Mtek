@@ -776,10 +776,23 @@ fn line_and_doc_comments_are_trivia_keyed_by_the_following_token() {
 }
 
 #[test]
-fn every_comment_that_starts_with_three_slashes_is_a_doc_comment() {
+fn a_doc_comment_is_three_slashes_not_followed_by_a_fourth() {
     use TriviaKind as T;
     assert_eq!(trivia_of("///"), vec![(T::DocComment, "///", 0)]);
-    assert_eq!(trivia_of("////"), vec![(T::DocComment, "////", 0)]);
+    assert_eq!(trivia_of("/// x"), vec![(T::DocComment, "/// x", 0)]);
+    assert_eq!(trivia_of("///\n"), vec![(T::DocComment, "///", 0)]);
+    assert_eq!(trivia_of("////"), vec![(T::LineComment, "////", 0)]);
+    assert_eq!(trivia_of("//// x"), vec![(T::LineComment, "//// x", 0)]);
+    assert_eq!(
+        trivia_of("////////////"),
+        vec![(T::LineComment, "////////////", 0)]
+    );
+    assert_eq!(trivia_of("///// x"), vec![(T::LineComment, "///// x", 0)]);
+    // A fourth slash later in the line does not matter.
+    assert_eq!(
+        trivia_of("/// a ////"),
+        vec![(T::DocComment, "/// a ////", 0)]
+    );
     assert_eq!(trivia_of("//"), vec![(T::LineComment, "//", 0)]);
     assert_eq!(trivia_of("///x"), vec![(T::DocComment, "///x", 0)]);
     assert_eq!(

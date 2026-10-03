@@ -21,7 +21,7 @@ Conventions in this document: **must** / **must not** are requirements on the co
 1.5 **Comments.**
 - `// …` to end of line.
 - `/* … */` block comments. Block comments **nest** (`/* a /* b */ c */` is one comment), matching WGSL. An unterminated block comment is error `E0006`, reported at the opening `/*`.
-- `/// …` is a **documentation comment**. It attaches to the declaration or member that immediately follows it (blank lines allowed, other comments not). Doc comments feed hover text and the context export. A doc comment followed by nothing documentable is warning `W0007`.
+- `/// …` is a **documentation comment**. It attaches to the declaration or member that immediately follows it (blank lines allowed, other comments not). Doc comments feed hover text and the context export. A doc comment followed by nothing documentable is warning `W0007`. A doc comment is `///` not followed by a fourth `/`: `////` and any longer run of slashes (separator banners such as `//////////`) start an ordinary line comment.
 
 ## 2. Tokens
 
