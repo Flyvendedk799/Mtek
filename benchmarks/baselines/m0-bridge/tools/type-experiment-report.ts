@@ -12,6 +12,8 @@ export interface CaseOutcome {
   readonly id: string;
   readonly description: string;
   readonly rejected: boolean;
+  /** False for valid-looking code ("not a mistake"), where a rejection is a false positive. */
+  readonly mistake: boolean;
   /** First line of the first diagnostic reported inside the case, or null. */
   readonly message: string | null;
   readonly code: number | null;
@@ -37,6 +39,7 @@ export function analyse(text: string, diagnostics: readonly { line: number; code
       id: start.id,
       description: start.description,
       rejected: hit !== undefined,
+      mistake: !start.description.startsWith("not a mistake"),
       message: hit?.message ?? null,
       code: hit?.code ?? null,
     };
@@ -86,8 +89,12 @@ function run(): void {
   console.log("| Case | Wrong usage | tsc | First diagnostic |");
   console.log("|---|---|---|---|");
   for (const row of rows) console.log(row);
-  const rejected = outcomes.filter((o) => o.rejected).length;
-  console.log(`\n${String(rejected)} of ${String(outcomes.length)} cases rejected by tsc`);
+  const mistakes = outcomes.filter((o) => o.mistake);
+  const valid = outcomes.filter((o) => !o.mistake);
+  console.log(
+    `\n${String(mistakes.filter((o) => o.rejected).length)} of ${String(mistakes.length)} wrong usages rejected by tsc; ` +
+      `${String(valid.filter((o) => o.rejected).length)} of ${String(valid.length)} "not a mistake" cases rejected by tsc`,
+  );
 }
 
 if (process.argv[1] !== undefined && import.meta.filename === process.argv[1]) run();

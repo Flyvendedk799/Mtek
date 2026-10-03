@@ -3,10 +3,11 @@
 // error; TypeScript itself fails the file if such a line is NOT an error ("Unused '@ts-expect-error'
 // directive"), so the directives cannot overstate what is caught. Lines without a directive are
 // wrong usages that tsc accepts. The outcome table in RESULTS.md is generated from the output of
-// that command (see `tools/type-experiment-report.ts`), not written by hand.
+// that command (see `tools/type-experiment-report.ts`), not written by hand. Cases whose description
+// starts with "not a mistake" are valid-looking code: a rejection there is a false positive.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unused-expressions --
    the statements below are wrong on purpose */
-import { float, uniform, vec3 } from "three/tsl";
+import { float, select, uniform, vec3 } from "three/tsl";
 import { Color, MeshBasicNodeMaterial, Vector2, Vector3 } from "three/webgpu";
 import { applyParams, type MixedUniforms } from "./src/mixed.ts";
 
@@ -85,4 +86,12 @@ export function experiments(): void {
   // CASE 19: a Vector2 value assigned to a vec3 uniform
   // @ts-expect-error rejected by tsc
   uniforms.b.value = new Vector2(1, 2);
+
+  // CASE 20: not a mistake: converting a colour uniform node with the vec3() constructor
+  // @ts-expect-error rejected by tsc
+  vec3(uniforms.f);
+
+  // CASE 21: not a mistake: adding a vec3 to the result of select() over colour-times-float branches
+  // @ts-expect-error rejected by tsc
+  select(uniforms.e, uniforms.f.mul(uniforms.a), uniforms.f).add(vec3(1, 2, 3));
 }

@@ -22,6 +22,12 @@ describe("analyse", () => {
     expect(outcomes[1]?.code).toBe(2322);
   });
 
+  it("marks cases described as 'not a mistake' so they are not counted as wrong usages", () => {
+    const outcomes = analyse("// CASE 01: not a mistake: fine code\nok();", []);
+    expect(outcomes[0]?.mistake).toBe(false);
+    expect(analyse(text, [])[0]?.mistake).toBe(true);
+  });
+
   it("reports every case as not rejected without diagnostics", () => {
     expect(analyse(text, []).every((o) => !o.rejected)).toBe(true);
   });
