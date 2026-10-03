@@ -79,6 +79,22 @@ impl ProjectPath {
         resolve(&base, spec)
     }
 
+    /// The path `rel` below this directory. Both operands are valid
+    /// project-relative paths, so the concatenation is valid too: no check can
+    /// fail. The root joined with `rel` is `rel`, and a path joined with the
+    /// root is itself. Used to address a project that does not sit at the base
+    /// of the file system (`project::ProjectRoot`).
+    #[must_use]
+    pub fn join(&self, rel: &ProjectPath) -> ProjectPath {
+        if self.is_root() {
+            rel.clone()
+        } else if rel.is_root() {
+            self.clone()
+        } else {
+            ProjectPath(format!("{}/{}", self.0, rel.0))
+        }
+    }
+
     /// The normalised path text; empty for the root.
     #[must_use]
     pub fn as_str(&self) -> &str {
@@ -294,6 +310,19 @@ mod tests {
         assert_eq!(p("a").parent(), Some(ProjectPath::root()));
         assert_eq!(path.segments().collect::<Vec<_>>(), ["a", "b", "c.mtek"]);
         assert_eq!(path.to_string(), "a/b/c.mtek");
+    }
+
+    #[test]
+    fn join_concatenates_valid_paths() {
+        assert_eq!(p("a/b").join(&p("c/d.mtek")).as_str(), "a/b/c/d.mtek");
+        assert_eq!(p("a").join(&p("b")).as_str(), "a/b");
+        assert_eq!(ProjectPath::root().join(&p("b/c")), p("b/c"));
+        assert_eq!(p("a/b").join(&ProjectPath::root()), p("a/b"));
+        assert!(ProjectPath::root().join(&ProjectPath::root()).is_root());
+        // The result is again a valid path with the expected structure.
+        let joined = p("a/b").join(&p("c"));
+        assert_eq!(joined.parent(), Some(p("a/b")));
+        assert_eq!(joined.file_name(), Some("c"));
     }
 
     #[test]
