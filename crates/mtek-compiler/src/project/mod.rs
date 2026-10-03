@@ -31,6 +31,7 @@ pub use config::{
 };
 pub use graph::{GraphError, Import, ImportCycle, MAX_MODULES, Module, ModuleGraph, ModuleId};
 pub use load::Project;
+pub(crate) use parse::edit_distance;
 pub use parse::parse_config;
 pub use root::{ProjectFs, ProjectRoot};
 pub use scene::{SceneSelection, select_scene};
