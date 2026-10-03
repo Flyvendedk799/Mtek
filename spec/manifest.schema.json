@@ -1,0 +1,857 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:mtek:schema:program-manifest:1",
+  "title": "Mtek program manifest (schema version 1, runtime ABI 1)",
+  "description": "Machine-checked definition of program.manifest.json (spec/runtime-abi.md section 5). Written by the compiler, validated by the runtime. manifestSchema and runtimeAbi are plain integers and languageVersion a plain string (never const) so that the compatibility check of section 5.1 can run before full validation. Objects are closed (additionalProperties false) except the open map requiredCapabilities.limits, whose keys are constrained by a name pattern and whose values by type.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifestSchema",
+    "runtimeAbi",
+    "languageVersion",
+    "compilerVersion",
+    "buildId",
+    "targetProfile",
+    "requiredCapabilities",
+    "subsystems",
+    "runtimeConfig",
+    "entryScene",
+    "sources",
+    "spans",
+    "symbols",
+    "layouts",
+    "shaders",
+    "materials",
+    "meshes",
+    "assets",
+    "scene"
+  ],
+  "properties": {
+    "manifestSchema": { "type": "integer", "description": "Schema version; this schema describes version 1." },
+    "runtimeAbi": { "type": "integer", "description": "Runtime ABI version; this schema describes ABI 1." },
+    "languageVersion": { "type": "string", "description": "Mtek language version the program was compiled for (\"0.1\")." },
+    "compilerVersion": { "type": "string", "minLength": 1 },
+    "buildId": { "$ref": "#/$defs/sha256", "description": "sha256 of the build identity (section 5.3)." },
+    "targetProfile": { "type": "string", "enum": ["webgpu-core-2026"] },
+    "requiredCapabilities": { "$ref": "#/$defs/requiredCapabilities" },
+    "subsystems": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["physics"],
+      "properties": { "physics": { "type": "boolean" } }
+    },
+    "runtimeConfig": { "$ref": "#/$defs/runtimeConfig" },
+    "entryScene": { "type": "string", "minLength": 1 },
+    "sources": { "type": "array", "items": { "$ref": "#/$defs/source" } },
+    "spans": { "type": "array", "items": { "$ref": "#/$defs/span" } },
+    "symbols": { "type": "array", "items": { "$ref": "#/$defs/symbol" } },
+    "layouts": { "type": "array", "items": { "$ref": "#/$defs/layout" } },
+    "shaders": { "type": "array", "items": { "$ref": "#/$defs/shader" } },
+    "materials": { "type": "array", "items": { "$ref": "#/$defs/material" } },
+    "meshes": { "type": "array", "items": { "$ref": "#/$defs/mesh" } },
+    "assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } },
+    "scene": { "$ref": "#/$defs/scene" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Full SHA-256, 64 lowercase hex digits." },
+    "index": { "type": "integer", "minimum": 0 },
+    "spanId": { "type": "integer", "minimum": 0, "description": "Index into the manifest spans table." },
+    "name": { "type": "string", "minLength": 1 },
+    "wgslIdentifier": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+    "mtekTypeName": { "type": "string", "minLength": 1, "description": "An Mtek type as written in source (f32, vec3, color, array<f32, 3>, a struct name, ...)." },
+    "symbolId": { "type": "string", "minLength": 1, "description": "normalised module path :: qualified declaration name" },
+    "vec2": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+    "vec3": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "vec4": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+    "webgpuFeatureNames": {
+      "type": "array",
+      "description": "GPUFeatureName strings (kebab-case, e.g. timestamp-query).",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+      "uniqueItems": true
+    },
+    "wgslLanguageFeatureNames": {
+      "type": "array",
+      "description": "WGSL language extension names (snake_case, e.g. readonly_and_readwrite_storage_textures).",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_]*$" },
+      "uniqueItems": true
+    },
+
+    "requiredCapabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["features", "limits", "wgslLanguageFeatures"],
+      "properties": {
+        "features": { "$ref": "#/$defs/webgpuFeatureNames", "description": "Optional WebGPU features the program needs (none in v0.1)." },
+        "limits": {
+          "type": "object",
+          "description": "Only limits above the WebGPU defaults, name -> required value ({} in profile webgpu-core-2026).",
+          "propertyNames": { "pattern": "^(max|min)[A-Z][A-Za-z0-9]*$" },
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "wgslLanguageFeatures": { "$ref": "#/$defs/wgslLanguageFeatureNames" }
+      }
+    },
+
+    "runtimeConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixedStep", "maxCatchUpSteps", "maxFrameDelta", "maxEntities", "pauseWhenHidden"],
+      "properties": {
+        "fixedStep": { "type": "number", "exclusiveMinimum": 0 },
+        "maxCatchUpSteps": { "type": "integer", "minimum": 1 },
+        "maxFrameDelta": { "type": "number", "exclusiveMinimum": 0 },
+        "maxEntities": { "type": "integer", "minimum": 1 },
+        "pauseWhenHidden": { "type": "boolean" }
+      }
+    },
+
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "sha256"],
+      "properties": {
+        "id": { "$ref": "#/$defs/index" },
+        "path": { "$ref": "#/$defs/name" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "start", "end"],
+      "properties": {
+        "file": { "$ref": "#/$defs/index", "description": "Source id." },
+        "start": { "$ref": "#/$defs/index", "description": "Byte offset, inclusive." },
+        "end": { "$ref": "#/$defs/index", "description": "Byte offset, exclusive." }
+      }
+    },
+
+    "symbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "span"],
+      "properties": {
+        "id": { "$ref": "#/$defs/symbolId" },
+        "kind": { "type": "string", "enum": ["scene", "camera", "entity", "state", "material", "param", "prefab", "function"] },
+        "span": { "$ref": "#/$defs/spanId" }
+      }
+    },
+
+    "layout": {
+      "type": "object",
+      "description": "Layout record of spec/gpu-layout.md section 5.",
+      "additionalProperties": false,
+      "required": ["id", "wgslStruct", "size", "align", "root"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^(builtin:[a-z]+|material:.+::.+|fixture:.+)$" },
+        "wgslStruct": { "$ref": "#/$defs/wgslIdentifier" },
+        "size": { "$ref": "#/$defs/index" },
+        "align": { "$ref": "#/$defs/index" },
+        "root": { "$ref": "#/$defs/layoutStructNode" }
+      }
+    },
+
+    "layoutNode": {
+      "type": "object",
+      "oneOf": [
+        { "$ref": "#/$defs/layoutScalarNode" },
+        { "$ref": "#/$defs/layoutVectorNode" },
+        { "$ref": "#/$defs/layoutMatrixNode" },
+        { "$ref": "#/$defs/layoutStructNode" },
+        { "$ref": "#/$defs/layoutArrayNode" }
+      ],
+      "discriminator": { "propertyName": "kind" }
+    },
+    "layoutScalarNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "offset", "size", "align", "scalar"],
+      "properties": {
+        "kind": { "const": "scalar" },
+        "offset": { "$ref": "#/$defs/index" },
+        "size": { "$ref": "#/$defs/index" },
+        "align": { "$ref": "#/$defs/index" },
+        "scalar": { "type": "string", "enum": ["f32", "i32", "u32", "bool32"] }
+      }
+    },
+    "layoutVectorNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "offset", "size", "align", "scalar", "components"],
+      "properties": {
+        "kind": { "const": "vector" },
+        "offset": { "$ref": "#/$defs/index" },
+        "size": { "$ref": "#/$defs/index" },
+        "align": { "$ref": "#/$defs/index" },
+        "scalar": { "type": "string", "enum": ["f32"] },
+        "components": { "type": "integer", "minimum": 2, "maximum": 4 }
+      }
+    },
+    "layoutMatrixNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "offset", "size", "align", "columns", "rows", "columnStride"],
+      "properties": {
+        "kind": { "const": "matrix" },
+        "offset": { "$ref": "#/$defs/index" },
+        "size": { "$ref": "#/$defs/index" },
+        "align": { "$ref": "#/$defs/index" },
+        "columns": { "type": "integer", "enum": [4] },
+        "rows": { "type": "integer", "enum": [4] },
+        "columnStride": { "type": "integer", "enum": [16] }
+      }
+    },
+    "layoutStructNode": {
+      "type": "object",
+      "description": "name is omitted on the root of a block and present on nested struct nodes. Member offsets are absolute within the block.",
+      "additionalProperties": false,
+      "required": ["kind", "offset", "size", "align", "members"],
+      "properties": {
+        "kind": { "const": "struct" },
+        "name": { "$ref": "#/$defs/name" },
+        "offset": { "$ref": "#/$defs/index" },
+        "size": { "$ref": "#/$defs/index" },
+        "align": { "$ref": "#/$defs/index" },
+        "members": { "type": "array", "items": { "$ref": "#/$defs/layoutMember" } }
+      }
+    },
+    "layoutArrayNode": {
+      "type": "object",
+      "description": "element is a node whose offsets are relative to the element start.",
+      "additionalProperties": false,
+      "required": ["kind", "offset", "size", "align", "length", "stride", "padded", "element"],
+      "properties": {
+        "kind": { "const": "array" },
+        "offset": { "$ref": "#/$defs/index" },
+        "size": { "$ref": "#/$defs/index" },
+        "align": { "$ref": "#/$defs/index" },
+        "length": { "type": "integer", "minimum": 1 },
+        "stride": { "type": "integer", "minimum": 1 },
+        "padded": { "type": "boolean" },
+        "element": { "$ref": "#/$defs/layoutNode" }
+      }
+    },
+    "layoutMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "mtekType", "node"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "mtekType": { "$ref": "#/$defs/mtekTypeName" },
+        "node": { "$ref": "#/$defs/layoutNode" }
+      }
+    },
+
+    "shader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hash", "url", "map", "material", "vertexEntry", "fragmentEntry", "vertexAttributes", "surfaceInputs"],
+      "properties": {
+        "hash": { "$ref": "#/$defs/sha256" },
+        "url": { "type": "string", "pattern": "^shaders/[0-9a-f]{16}\\.wgsl$" },
+        "map": { "type": "string", "pattern": "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" },
+        "material": { "$ref": "#/$defs/symbolId", "description": "Id of the material this shader was generated for." },
+        "vertexEntry": { "$ref": "#/$defs/wgslIdentifier" },
+        "fragmentEntry": { "$ref": "#/$defs/wgslIdentifier" },
+        "vertexAttributes": {
+          "type": "array",
+          "description": "Present vertex attributes in vertex-buffer slot order (spec/materials.md section 3.3).",
+          "items": { "type": "string", "enum": ["position", "normal", "uv"] },
+          "uniqueItems": true
+        },
+        "surfaceInputs": {
+          "type": "array",
+          "description": "SurfaceInput fields the fragment stage reads.",
+          "items": { "type": "string", "enum": ["local_position", "world_position", "world_normal", "uv"] },
+          "uniqueItems": true
+        }
+      }
+    },
+
+    "material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "layout", "shader", "resources", "params"],
+      "properties": {
+        "id": { "$ref": "#/$defs/symbolId" },
+        "layout": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "Layout id of the parameter block; null when the material has no value params (bind group 1 binding 0 is then absent)."
+        },
+        "shader": { "$ref": "#/$defs/sha256", "description": "Hash of the material's shader." },
+        "resources": { "type": "array", "items": { "$ref": "#/$defs/materialResource" } },
+        "params": { "type": "array", "items": { "$ref": "#/$defs/materialParam" } }
+      }
+    },
+    "materialResource": {
+      "type": "object",
+      "description": "One texture or sampler binding in bind group 1, in param declaration order.",
+      "additionalProperties": false,
+      "required": ["name", "kind", "binding"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "kind": { "type": "string", "enum": ["texture", "sampler"] },
+        "binding": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "materialParam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "span"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "type": { "$ref": "#/$defs/mtekTypeName" },
+        "span": { "$ref": "#/$defs/spanId" }
+      }
+    },
+
+    "mesh": {
+      "type": "object",
+      "oneOf": [
+        { "$ref": "#/$defs/boxMesh" },
+        { "$ref": "#/$defs/sphereMesh" },
+        { "$ref": "#/$defs/planeMesh" },
+        { "$ref": "#/$defs/assetMesh" }
+      ],
+      "discriminator": { "propertyName": "kind" }
+    },
+    "meshId": { "type": "string", "pattern": "^mesh:[0-9]+$" },
+    "boxMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "size"],
+      "properties": {
+        "id": { "$ref": "#/$defs/meshId" },
+        "kind": { "const": "box" },
+        "size": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 }, "minItems": 3, "maxItems": 3 }
+      }
+    },
+    "sphereMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "radius", "segments", "rings"],
+      "properties": {
+        "id": { "$ref": "#/$defs/meshId" },
+        "kind": { "const": "sphere" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 },
+        "segments": { "type": "integer", "minimum": 3, "maximum": 256 },
+        "rings": { "type": "integer", "minimum": 2, "maximum": 256 }
+      }
+    },
+    "planeMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "size"],
+      "properties": {
+        "id": { "$ref": "#/$defs/meshId" },
+        "kind": { "const": "plane" },
+        "size": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 }, "minItems": 2, "maxItems": 2 }
+      }
+    },
+    "assetMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "asset", "primitive"],
+      "properties": {
+        "id": { "$ref": "#/$defs/meshId" },
+        "kind": { "const": "asset" },
+        "asset": { "$ref": "#/$defs/assetUrl", "description": "Url of a mesh-data entry of the assets table." },
+        "primitive": { "$ref": "#/$defs/index", "description": "Index into that entry's primitives." }
+      }
+    },
+
+    "assetUrl": { "type": "string", "pattern": "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" },
+    "asset": {
+      "type": "object",
+      "oneOf": [{ "$ref": "#/$defs/meshDataAsset" }, { "$ref": "#/$defs/imageAsset" }],
+      "discriminator": { "propertyName": "kind" }
+    },
+    "meshDataAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "sha256", "bytes", "kind", "primitives", "preprocessing", "span"],
+      "properties": {
+        "url": { "$ref": "#/$defs/assetUrl" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "bytes": { "$ref": "#/$defs/index", "description": "Byte length of the file." },
+        "kind": { "const": "mesh-data" },
+        "primitives": { "type": "array", "items": { "$ref": "#/$defs/meshPrimitive" } },
+        "preprocessing": { "$ref": "#/$defs/preprocessing" },
+        "span": { "$ref": "#/$defs/spanId", "description": "Declaring span, used to map load failures (E7030) to source." }
+      }
+    },
+    "imageAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "sha256", "bytes", "kind", "colorSpace", "preprocessing", "span"],
+      "properties": {
+        "url": { "$ref": "#/$defs/assetUrl" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "bytes": { "$ref": "#/$defs/index" },
+        "kind": { "const": "image" },
+        "colorSpace": { "type": "string", "enum": ["srgb", "linear"] },
+        "preprocessing": { "$ref": "#/$defs/preprocessing" },
+        "span": { "$ref": "#/$defs/spanId" }
+      }
+    },
+    "preprocessing": {
+      "type": "array",
+      "description": "Recorded preprocessing decisions, e.g. \"u8 indices widened to u16\".",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "meshPrimitive": {
+      "type": "object",
+      "description": "One primitive inside a packaged .bin (spec/assets.md section 4). Offsets are byte offsets into the file.",
+      "additionalProperties": false,
+      "required": ["source", "vertexCount", "indexCount", "indexFormat", "attributes", "offsets", "boundingSphere"],
+      "properties": {
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "mesh", "primitive"],
+          "properties": {
+            "file": { "$ref": "#/$defs/name" },
+            "mesh": { "$ref": "#/$defs/name" },
+            "primitive": { "$ref": "#/$defs/index" }
+          }
+        },
+        "vertexCount": { "type": "integer", "minimum": 1 },
+        "indexCount": { "type": "integer", "minimum": 1 },
+        "indexFormat": { "type": "string", "enum": ["uint16", "uint32"] },
+        "attributes": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["position", "normal", "uv"] },
+          "uniqueItems": true
+        },
+        "offsets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["position", "indices"],
+          "properties": {
+            "position": { "$ref": "#/$defs/index" },
+            "normal": { "$ref": "#/$defs/index" },
+            "uv": { "$ref": "#/$defs/index" },
+            "indices": { "$ref": "#/$defs/index" }
+          }
+        },
+        "boundingSphere": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["center", "radius"],
+          "properties": {
+            "center": { "$ref": "#/$defs/vec3" },
+            "radius": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "scene": {
+      "type": "object",
+      "description": "Scene structure (spec/runtime-abi.md section 5.2).",
+      "additionalProperties": false,
+      "required": ["name", "symbol", "fields", "state", "cameras", "entities", "materialInstances", "bindings", "hostInputs", "lights"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "symbol": { "$ref": "#/$defs/symbolId" },
+        "fields": {
+          "type": "object",
+          "description": "Constant scene field values; linear colours as [r, g, b, a].",
+          "additionalProperties": false,
+          "required": ["clearColor", "ambientColor", "ambientIntensity", "gravity"],
+          "properties": {
+            "clearColor": { "$ref": "#/$defs/vec4" },
+            "ambientColor": { "$ref": "#/$defs/vec4" },
+            "ambientIntensity": { "type": "number", "minimum": 0 },
+            "gravity": { "$ref": "#/$defs/vec3" }
+          }
+        },
+        "state": { "type": "array", "items": { "$ref": "#/$defs/stateEntry" } },
+        "cameras": { "type": "array", "items": { "$ref": "#/$defs/camera" } },
+        "entities": { "type": "array", "items": { "$ref": "#/$defs/entity" } },
+        "materialInstances": { "type": "array", "items": { "$ref": "#/$defs/materialInstance" } },
+        "bindings": { "type": "array", "items": { "$ref": "#/$defs/binding" } },
+        "hostInputs": { "type": "array", "items": { "$ref": "#/$defs/hostInput" } },
+        "lights": { "type": "array", "items": { "$ref": "#/$defs/light" } }
+      }
+    },
+    "stateEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "symbol"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "type": { "$ref": "#/$defs/mtekTypeName" },
+        "symbol": { "$ref": "#/$defs/symbolId" }
+      }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "symbol", "projection", "hasTarget", "active"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "symbol": { "$ref": "#/$defs/symbolId" },
+        "projection": { "type": "string", "enum": ["perspective", "orthographic"] },
+        "hasTarget": { "type": "boolean" },
+        "active": { "type": "boolean" }
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "name", "symbol", "parent", "mesh", "material", "light", "body", "collider", "state", "update", "fixedUpdate"],
+      "properties": {
+        "index": { "$ref": "#/$defs/index", "description": "Static entity index in stable instance order (depth-first pre-order)." },
+        "name": { "$ref": "#/$defs/name" },
+        "symbol": { "$ref": "#/$defs/symbolId" },
+        "parent": { "type": ["integer", "null"], "minimum": 0, "description": "Index of the parent entity, or null for a root." },
+        "mesh": {
+          "type": ["string", "null"],
+          "pattern": "^mesh:[0-9]+$",
+          "description": "Id of an entry of the meshes table, or null."
+        },
+        "material": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["id", "instance"],
+          "properties": {
+            "id": { "$ref": "#/$defs/symbolId" },
+            "instance": { "$ref": "#/$defs/index", "description": "Index into scene.materialInstances." }
+          }
+        },
+        "light": { "type": ["integer", "null"], "minimum": 0, "description": "Index into scene.lights, or null." },
+        "body": {
+          "type": ["object", "null"],
+          "if": { "type": "object" },
+          "then": { "$ref": "#/$defs/body" }
+        },
+        "collider": {
+          "type": ["object", "null"],
+          "if": { "type": "object" },
+          "then": { "$ref": "#/$defs/collider" }
+        },
+        "state": { "type": "array", "items": { "$ref": "#/$defs/stateEntry" } },
+        "update": { "type": "boolean", "description": "The entity declares update(dt)." },
+        "fixedUpdate": { "type": "boolean", "description": "The entity declares fixed_update(dt)." }
+      }
+    },
+    "body": {
+      "type": "object",
+      "oneOf": [
+        { "$ref": "#/$defs/staticBody" },
+        { "$ref": "#/$defs/dynamicBody" },
+        { "$ref": "#/$defs/kinematicBody" }
+      ],
+      "discriminator": { "propertyName": "kind" }
+    },
+    "staticBody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": { "kind": { "const": "static" } }
+    },
+    "kinematicBody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": { "kind": { "const": "kinematic" } }
+    },
+    "dynamicBody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "mass", "linearDamping", "angularDamping"],
+      "properties": {
+        "kind": { "const": "dynamic" },
+        "mass": { "type": "number", "exclusiveMinimum": 0 },
+        "linearDamping": { "type": "number", "minimum": 0 },
+        "angularDamping": { "type": "number", "minimum": 0 }
+      }
+    },
+    "collider": {
+      "type": "object",
+      "oneOf": [{ "$ref": "#/$defs/boxCollider" }, { "$ref": "#/$defs/sphereCollider" }],
+      "discriminator": { "propertyName": "kind" }
+    },
+    "boxCollider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "size", "sensor", "friction", "restitution"],
+      "properties": {
+        "kind": { "const": "box" },
+        "size": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 }, "minItems": 3, "maxItems": 3 },
+        "sensor": { "type": "boolean" },
+        "friction": { "type": "number", "minimum": 0 },
+        "restitution": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "sphereCollider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "radius", "sensor", "friction", "restitution"],
+      "properties": {
+        "kind": { "const": "sphere" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 },
+        "sensor": { "type": "boolean" },
+        "friction": { "type": "number", "minimum": 0 },
+        "restitution": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+
+    "light": {
+      "type": "object",
+      "oneOf": [{ "$ref": "#/$defs/directionalLight" }, { "$ref": "#/$defs/pointLight" }],
+      "discriminator": { "propertyName": "kind" }
+    },
+    "directionalLight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "entity", "kind"],
+      "properties": {
+        "index": { "$ref": "#/$defs/index" },
+        "entity": { "$ref": "#/$defs/index" },
+        "kind": { "const": "directional" }
+      }
+    },
+    "pointLight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "entity", "kind", "range"],
+      "properties": {
+        "index": { "$ref": "#/$defs/index" },
+        "entity": { "$ref": "#/$defs/index" },
+        "kind": { "const": "point" },
+        "range": { "type": "number", "minimum": 0, "description": "0 = unlimited." }
+      }
+    },
+
+    "materialInstance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "material", "entity", "params", "shareable"],
+      "properties": {
+        "index": { "$ref": "#/$defs/index" },
+        "material": { "$ref": "#/$defs/symbolId" },
+        "entity": { "$ref": "#/$defs/index" },
+        "params": { "type": "array", "items": { "$ref": "#/$defs/instanceParam" } },
+        "shareable": { "type": "boolean" }
+      }
+    },
+    "instanceParam": {
+      "type": "object",
+      "oneOf": [
+        { "$ref": "#/$defs/initialParam" },
+        { "$ref": "#/$defs/imperativeParam" },
+        { "$ref": "#/$defs/boundParam" },
+        { "$ref": "#/$defs/resourceParam" }
+      ],
+      "discriminator": { "propertyName": "class" }
+    },
+    "initialParam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "class"],
+      "properties": { "name": { "$ref": "#/$defs/name" }, "class": { "const": "initial" } }
+    },
+    "imperativeParam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "class"],
+      "properties": { "name": { "$ref": "#/$defs/name" }, "class": { "const": "imperative" } }
+    },
+    "boundParam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "class", "binding"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "class": { "const": "bound" },
+        "binding": { "$ref": "#/$defs/index", "description": "Id of the binding that writes this param." }
+      }
+    },
+    "resourceParam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "class", "value"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "class": { "const": "resource" },
+        "value": { "$ref": "#/$defs/resourceValue" }
+      }
+    },
+    "resourceValue": {
+      "type": "object",
+      "oneOf": [{ "$ref": "#/$defs/builtinResourceValue" }, { "$ref": "#/$defs/assetResourceValue" }],
+      "discriminator": { "propertyName": "kind" }
+    },
+    "builtinResourceValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name"],
+      "properties": {
+        "kind": { "const": "builtin" },
+        "name": {
+          "type": "string",
+          "enum": ["texture.white", "texture.black", "sampler.linear_repeat", "sampler.linear_clamp", "sampler.nearest_repeat", "sampler.nearest_clamp"]
+        }
+      }
+    },
+    "assetResourceValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "asset"],
+      "properties": {
+        "kind": { "const": "asset" },
+        "asset": { "$ref": "#/$defs/assetUrl", "description": "Url of an image entry of the assets table." }
+      }
+    },
+
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "target", "deps", "order", "span"],
+      "properties": {
+        "id": { "$ref": "#/$defs/index" },
+        "target": { "$ref": "#/$defs/bindingTarget" },
+        "deps": { "type": "array", "items": { "$ref": "#/$defs/bindingDep" } },
+        "order": { "$ref": "#/$defs/index", "description": "Position in the topological evaluation order." },
+        "span": { "$ref": "#/$defs/spanId" }
+      }
+    },
+    "bindingTarget": {
+      "type": "object",
+      "oneOf": [
+        { "$ref": "#/$defs/transformTarget" },
+        { "$ref": "#/$defs/visibleTarget" },
+        { "$ref": "#/$defs/paramTarget" },
+        { "$ref": "#/$defs/cameraTarget" },
+        { "$ref": "#/$defs/lightTarget" }
+      ],
+      "discriminator": { "propertyName": "kind" }
+    },
+    "transformTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "entity", "field"],
+      "properties": {
+        "kind": { "const": "transform" },
+        "entity": { "$ref": "#/$defs/index" },
+        "field": { "type": "string", "enum": ["position", "rotation", "scale"] }
+      }
+    },
+    "visibleTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "entity"],
+      "properties": { "kind": { "const": "visible" }, "entity": { "$ref": "#/$defs/index" } }
+    },
+    "paramTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "instance", "name"],
+      "properties": {
+        "kind": { "const": "param" },
+        "instance": { "$ref": "#/$defs/index" },
+        "name": { "$ref": "#/$defs/name" }
+      }
+    },
+    "cameraTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "field"],
+      "properties": {
+        "kind": { "const": "camera" },
+        "field": {
+          "type": "string",
+          "enum": ["position", "target", "rotation", "projection.fov_y", "projection.height", "projection.near", "projection.far"]
+        }
+      }
+    },
+    "lightTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "entity", "field"],
+      "properties": {
+        "kind": { "const": "light" },
+        "entity": { "$ref": "#/$defs/index" },
+        "field": { "type": "string", "enum": ["color", "intensity"] }
+      }
+    },
+    "bindingDep": {
+      "type": "object",
+      "oneOf": [
+        { "$ref": "#/$defs/stateDep" },
+        { "$ref": "#/$defs/frameDep" },
+        { "$ref": "#/$defs/entityFieldDep" },
+        { "$ref": "#/$defs/entityStateDep" },
+        { "$ref": "#/$defs/paramDep" }
+      ],
+      "discriminator": { "propertyName": "kind" }
+    },
+    "stateDep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name"],
+      "properties": { "kind": { "const": "state" }, "name": { "$ref": "#/$defs/name" } }
+    },
+    "frameDep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name"],
+      "properties": { "kind": { "const": "frame" }, "name": { "type": "string", "enum": ["time", "delta", "index"] } }
+    },
+    "entityFieldDep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "entity", "field"],
+      "properties": {
+        "kind": { "const": "entityField" },
+        "entity": { "$ref": "#/$defs/index" },
+        "field": { "type": "string", "enum": ["position", "rotation", "scale", "visible"] }
+      }
+    },
+    "entityStateDep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "entity", "name"],
+      "properties": {
+        "kind": { "const": "entityState" },
+        "entity": { "$ref": "#/$defs/index" },
+        "name": { "$ref": "#/$defs/name" }
+      }
+    },
+    "paramDep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "instance", "name"],
+      "properties": {
+        "kind": { "const": "param" },
+        "instance": { "$ref": "#/$defs/index" },
+        "name": { "$ref": "#/$defs/name" }
+      }
+    },
+
+    "hostInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "target", "type", "codec"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "target": {
+          "type": "object",
+          "description": "Only scene state can be exposed as a host input.",
+          "additionalProperties": false,
+          "required": ["kind", "name"],
+          "properties": { "kind": { "const": "state" }, "name": { "$ref": "#/$defs/name" } }
+        },
+        "type": { "type": "string", "enum": ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] },
+        "codec": {
+          "type": "string",
+          "enum": ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color-hex", "color-hex-opaque", "string"]
+        }
+      }
+    }
+  }
+}

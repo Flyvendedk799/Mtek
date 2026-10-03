@@ -33,10 +33,29 @@ From a clean checkout:
 | `npm run lint` | ESLint (`recommended-type-checked`, no `any`) |
 | `npm run check:naming` | fails if the retired placeholder name appears outside the two decision records that explain the rename (decision 0017) |
 | `npm run test:unit` | Vitest unit tests |
-| `npm test` | `check`, then `cargo test --workspace --locked`, then `test:unit` |
+| `npm run test:browser` | builds, then runs the Playwright browser tests (`hardware` and `software` projects); tests without a WebGPU adapter are reported NOT-RUN, never passed |
+| `npm run test:browser:hardware` | the `hardware` project only; with `MTEK_REQUIRE_GPU=1` it fails on any NOT-RUN test or software adapter |
+| `npm test` | `check`, then `cargo test --workspace --locked`, then `test:unit`, then `test:browser` (NOT-RUN tolerant unless `MTEK_REQUIRE_GPU=1`) |
 | `cargo run -p mtek-cli -- --version` | prints `mtek 0.1.0-dev (language 0.1, runtime ABI 1)` |
 
-Browser tests (`npm run test:browser`) do not exist yet (planned for M0, `spec/testing.md` section 6).
+### Browser tests
+
+The browser harness lives in [`tests/browser`](tests/browser) (`spec/testing.md` section 6, decision 0012). One-time browser install:
+
+```
+npx playwright install chromium
+```
+
+| Variable | Effect |
+|---|---|
+| `MTEK_REQUIRE_GPU=1` | fail the run on any NOT-RUN test, and when a hardware project reports `isFallbackAdapter === true` (required for gate evidence) |
+| `MTEK_ACCEPT_SOFTWARE=1` | with `MTEK_REQUIRE_GPU=1`, accept a software adapter in the hardware project |
+| `MTEK_BROWSER_CHANNEL` | Playwright channel, default `chromium` (new headless mode); `chrome` uses installed Google Chrome |
+| `MTEK_HEADED=1` | run headed instead of headless |
+| `MTEK_BROWSER_ARGS` | extra Chromium arguments, space separated (for example `--disable-gpu` to simulate a machine without a GPU) |
+| `MTEK_RESULTS_DIR` | results directory, default `tests/browser/results/<timestamp>` (JSON report and `environment-<project>.json`) |
+
+The working configuration on the development machine is recorded in decision 0012 (amendment) and `evidence/environments/`.
 
 ## Planned commands (not available)
 

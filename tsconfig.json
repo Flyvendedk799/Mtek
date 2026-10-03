@@ -1,4 +1,4 @@
 {
   "files": [],
-  "references": [{ "path": "packages/runtime-web" }]
+  "references": [{ "path": "packages/runtime-web" }, { "path": "tests/browser" }]
 }

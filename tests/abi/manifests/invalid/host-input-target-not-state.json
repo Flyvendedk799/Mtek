@@ -1,0 +1,1310 @@
+{
+  "manifestSchema": 1,
+  "runtimeAbi": 1,
+  "languageVersion": "0.1",
+  "compilerVersion": "0.1.0-dev",
+  "buildId": "753e90529403cf38253e8a70cb9f3cddd18f67f20ddf89207ef4929cac5d1355",
+  "targetProfile": "webgpu-core-2026",
+  "requiredCapabilities": {
+    "features": [
+      "timestamp-query"
+    ],
+    "limits": {
+      "maxBindGroups": 5,
+      "minUniformBufferOffsetAlignment": 256
+    },
+    "wgslLanguageFeatures": [
+      "readonly_and_readwrite_storage_textures"
+    ]
+  },
+  "subsystems": {
+    "physics": true
+  },
+  "runtimeConfig": {
+    "fixedStep": 0.016666668,
+    "maxCatchUpSteps": 4,
+    "maxFrameDelta": 0.1,
+    "maxEntities": 16384,
+    "pauseWhenHidden": true
+  },
+  "entryScene": "Demo",
+  "sources": [
+    {
+      "id": 0,
+      "path": "src/main.mtek",
+      "sha256": "5661eafa0bfbdfd97e1f5ce41c32e2742a2437b35dc023b477bc83cd5a0898b9"
+    },
+    {
+      "id": 1,
+      "path": "src/props.mtek",
+      "sha256": "b264807709578e5c5fee1de72a80ab0dab5692bfcee892db3a58e0e9b0d63c72"
+    }
+  ],
+  "spans": [
+    {
+      "file": 0,
+      "start": 0,
+      "end": 8
+    },
+    {
+      "file": 1,
+      "start": 10,
+      "end": 18
+    },
+    {
+      "file": 0,
+      "start": 20,
+      "end": 28
+    },
+    {
+      "file": 1,
+      "start": 30,
+      "end": 38
+    },
+    {
+      "file": 0,
+      "start": 40,
+      "end": 48
+    },
+    {
+      "file": 1,
+      "start": 50,
+      "end": 58
+    },
+    {
+      "file": 0,
+      "start": 60,
+      "end": 68
+    },
+    {
+      "file": 1,
+      "start": 70,
+      "end": 78
+    },
+    {
+      "file": 0,
+      "start": 80,
+      "end": 88
+    },
+    {
+      "file": 1,
+      "start": 90,
+      "end": 98
+    },
+    {
+      "file": 0,
+      "start": 100,
+      "end": 108
+    },
+    {
+      "file": 1,
+      "start": 110,
+      "end": 118
+    },
+    {
+      "file": 0,
+      "start": 120,
+      "end": 128
+    },
+    {
+      "file": 1,
+      "start": 130,
+      "end": 138
+    },
+    {
+      "file": 0,
+      "start": 140,
+      "end": 148
+    },
+    {
+      "file": 1,
+      "start": 150,
+      "end": 158
+    },
+    {
+      "file": 0,
+      "start": 160,
+      "end": 168
+    },
+    {
+      "file": 1,
+      "start": 170,
+      "end": 178
+    },
+    {
+      "file": 0,
+      "start": 180,
+      "end": 188
+    },
+    {
+      "file": 1,
+      "start": 190,
+      "end": 198
+    },
+    {
+      "file": 0,
+      "start": 200,
+      "end": 208
+    },
+    {
+      "file": 1,
+      "start": 210,
+      "end": 218
+    },
+    {
+      "file": 0,
+      "start": 220,
+      "end": 228
+    },
+    {
+      "file": 1,
+      "start": 230,
+      "end": 238
+    }
+  ],
+  "symbols": [
+    {
+      "id": "src/main.mtek::Demo",
+      "kind": "scene",
+      "span": 0
+    },
+    {
+      "id": "src/main.mtek::Demo.Main",
+      "kind": "camera",
+      "span": 1
+    },
+    {
+      "id": "src/main.mtek::Demo.Cube",
+      "kind": "entity",
+      "span": 2
+    },
+    {
+      "id": "src/main.mtek::Demo.Badge",
+      "kind": "entity",
+      "span": 3
+    },
+    {
+      "id": "src/main.mtek::Demo.Floor",
+      "kind": "entity",
+      "span": 4
+    },
+    {
+      "id": "src/main.mtek::Demo.Sun",
+      "kind": "entity",
+      "span": 5
+    },
+    {
+      "id": "src/main.mtek::Demo.Lamp",
+      "kind": "entity",
+      "span": 6
+    },
+    {
+      "id": "src/main.mtek::Demo.Model",
+      "kind": "entity",
+      "span": 7
+    },
+    {
+      "id": "src/main.mtek::Demo.tint",
+      "kind": "state",
+      "span": 8
+    },
+    {
+      "id": "src/main.mtek::Pulse",
+      "kind": "material",
+      "span": 9
+    },
+    {
+      "id": "src/main.mtek::Pulse.tint",
+      "kind": "param",
+      "span": 10
+    },
+    {
+      "id": "src/props.mtek::Crate",
+      "kind": "prefab",
+      "span": 11
+    },
+    {
+      "id": "src/main.mtek::pulse",
+      "kind": "function",
+      "span": 12
+    }
+  ],
+  "layouts": [
+    {
+      "id": "builtin:frame",
+      "wgslStruct": "MtekFrame",
+      "size": 288,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 288,
+        "align": 16,
+        "members": [
+          {
+            "name": "view_proj",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "camera_position",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 64,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "light_count",
+            "mtekType": "u32",
+            "node": {
+              "kind": "scalar",
+              "offset": 76,
+              "size": 4,
+              "align": 4,
+              "scalar": "u32"
+            }
+          },
+          {
+            "name": "ambient",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 80,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "reserved0",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 92,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "lights",
+            "mtekType": "array<MtekLight, 4>",
+            "node": {
+              "kind": "array",
+              "offset": 96,
+              "size": 192,
+              "align": 16,
+              "length": 4,
+              "stride": 48,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "MtekLight",
+                "offset": 0,
+                "size": 48,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "color",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 0,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "kind",
+                    "mtekType": "u32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 12,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "u32"
+                    }
+                  },
+                  {
+                    "name": "position",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 16,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "range",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 28,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  },
+                  {
+                    "name": "direction",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 32,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "reserved",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 44,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin:object",
+      "wgslStruct": "MtekObject",
+      "size": 128,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 128,
+        "align": 16,
+        "members": [
+          {
+            "name": "model",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "normal_matrix",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 64,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "material:std/materials.mtek::Pbr",
+      "wgslStruct": "MtekParams_6d1f2a40_Pbr",
+      "size": 32,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 32,
+        "align": 16,
+        "members": [
+          {
+            "name": "base_color",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          },
+          {
+            "name": "metallic",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 16,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "roughness",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 20,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "material:src/main.mtek::Pulse",
+      "wgslStruct": "MtekParams_1f3a9c2e_Pulse",
+      "size": 112,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 112,
+        "align": 16,
+        "members": [
+          {
+            "name": "tint",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          },
+          {
+            "name": "phase",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 16,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "flag",
+            "mtekType": "bool",
+            "node": {
+              "kind": "scalar",
+              "offset": 20,
+              "size": 4,
+              "align": 4,
+              "scalar": "bool32"
+            }
+          },
+          {
+            "name": "size",
+            "mtekType": "vec2",
+            "node": {
+              "kind": "vector",
+              "offset": 24,
+              "size": 8,
+              "align": 8,
+              "scalar": "f32",
+              "components": 2
+            }
+          },
+          {
+            "name": "weights",
+            "mtekType": "array<f32, 3>",
+            "node": {
+              "kind": "array",
+              "offset": 32,
+              "size": 48,
+              "align": 16,
+              "length": 3,
+              "stride": 16,
+              "padded": true,
+              "element": {
+                "kind": "scalar",
+                "offset": 0,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            }
+          },
+          {
+            "name": "inner",
+            "mtekType": "Inner",
+            "node": {
+              "kind": "struct",
+              "name": "S_1f3a9c2e_Inner",
+              "offset": 80,
+              "size": 4,
+              "align": 16,
+              "members": [
+                {
+                  "name": "k",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 80,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "after",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 96,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "shaders": [
+    {
+      "hash": "5c08635e9bb99393155167a629f8b9308c3e39c03c0f4d22ab22f57842b911a0",
+      "url": "shaders/5c08635e9bb99393.wgsl",
+      "map": "shaders/5c08635e9bb99393.mtek-map.json",
+      "material": "std/materials.mtek::Pbr",
+      "vertexEntry": "mtek_vs",
+      "fragmentEntry": "mtek_fs",
+      "vertexAttributes": [
+        "position",
+        "normal",
+        "uv"
+      ],
+      "surfaceInputs": [
+        "world_position",
+        "world_normal",
+        "uv"
+      ]
+    },
+    {
+      "hash": "70181a128204d69fbf509655194fb777a288cd200c65a316d3fa63000e775a13",
+      "url": "shaders/70181a128204d69f.wgsl",
+      "map": "shaders/70181a128204d69f.mtek-map.json",
+      "material": "src/main.mtek::Pulse",
+      "vertexEntry": "mtek_vs",
+      "fragmentEntry": "mtek_fs",
+      "vertexAttributes": [
+        "position"
+      ],
+      "surfaceInputs": []
+    },
+    {
+      "hash": "a5db04774f40a4a857a6f2947fc76ab352cf5f885cfbe4e26f06a580d68c836c",
+      "url": "shaders/a5db04774f40a4a8.wgsl",
+      "map": "shaders/a5db04774f40a4a8.mtek-map.json",
+      "material": "src/main.mtek::Glow",
+      "vertexEntry": "mtek_vs",
+      "fragmentEntry": "mtek_fs",
+      "vertexAttributes": [
+        "position",
+        "uv"
+      ],
+      "surfaceInputs": [
+        "local_position",
+        "uv"
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "id": "std/materials.mtek::Pbr",
+      "layout": "material:std/materials.mtek::Pbr",
+      "shader": "5c08635e9bb99393155167a629f8b9308c3e39c03c0f4d22ab22f57842b911a0",
+      "resources": [
+        {
+          "name": "base_color_texture",
+          "kind": "texture",
+          "binding": 1
+        },
+        {
+          "name": "base_color_sampler",
+          "kind": "sampler",
+          "binding": 2
+        }
+      ],
+      "params": [
+        {
+          "name": "base_color",
+          "type": "color",
+          "span": 13
+        },
+        {
+          "name": "metallic",
+          "type": "f32",
+          "span": 14
+        },
+        {
+          "name": "roughness",
+          "type": "f32",
+          "span": 15
+        },
+        {
+          "name": "base_color_texture",
+          "type": "texture",
+          "span": 16
+        },
+        {
+          "name": "base_color_sampler",
+          "type": "sampler",
+          "span": 17
+        }
+      ]
+    },
+    {
+      "id": "src/main.mtek::Pulse",
+      "layout": "material:src/main.mtek::Pulse",
+      "shader": "70181a128204d69fbf509655194fb777a288cd200c65a316d3fa63000e775a13",
+      "resources": [],
+      "params": [
+        {
+          "name": "tint",
+          "type": "color",
+          "span": 10
+        },
+        {
+          "name": "phase",
+          "type": "f32",
+          "span": 18
+        }
+      ]
+    },
+    {
+      "id": "src/main.mtek::Glow",
+      "layout": null,
+      "shader": "a5db04774f40a4a857a6f2947fc76ab352cf5f885cfbe4e26f06a580d68c836c",
+      "resources": [
+        {
+          "name": "mask",
+          "kind": "texture",
+          "binding": 1
+        },
+        {
+          "name": "mask_sampler",
+          "kind": "sampler",
+          "binding": 2
+        }
+      ],
+      "params": [
+        {
+          "name": "mask",
+          "type": "texture",
+          "span": 19
+        },
+        {
+          "name": "mask_sampler",
+          "type": "sampler",
+          "span": 20
+        }
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "id": "mesh:0",
+      "kind": "box",
+      "size": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "mesh:1",
+      "kind": "sphere",
+      "radius": 0.5,
+      "segments": 32,
+      "rings": 16
+    },
+    {
+      "id": "mesh:2",
+      "kind": "plane",
+      "size": [
+        20,
+        20
+      ]
+    },
+    {
+      "id": "mesh:3",
+      "kind": "asset",
+      "asset": "assets/b7f9a53a15a88547.bin",
+      "primitive": 0
+    }
+  ],
+  "assets": [
+    {
+      "url": "assets/b7f9a53a15a88547.bin",
+      "sha256": "b7f9a53a15a88547fd0e55a920c2ee23c17e029db786da9a3cb3d1a39621f46a",
+      "bytes": 1296,
+      "kind": "mesh-data",
+      "span": 21,
+      "preprocessing": [
+        "u8 indices widened to u16"
+      ],
+      "primitives": [
+        {
+          "source": {
+            "file": "models/chair.glb",
+            "mesh": "Seat",
+            "primitive": 0
+          },
+          "vertexCount": 24,
+          "indexCount": 36,
+          "indexFormat": "uint16",
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "offsets": {
+            "position": 0,
+            "normal": 288,
+            "uv": 576,
+            "indices": 768
+          },
+          "boundingSphere": {
+            "center": [
+              0,
+              0.5,
+              0
+            ],
+            "radius": 0.866
+          }
+        }
+      ]
+    },
+    {
+      "url": "assets/de7030234493a8be.png",
+      "sha256": "de7030234493a8bea844dbe1d8676e68a2c1a4b014c721f0425a22b6df66faec",
+      "bytes": 2048,
+      "kind": "image",
+      "colorSpace": "srgb",
+      "span": 22,
+      "preprocessing": [
+        "mipmaps not generated"
+      ]
+    },
+    {
+      "url": "assets/e29579ce6430e703.png",
+      "sha256": "e29579ce6430e70309e132af30e2cdc4ad3648e149e0ea008fd7b4f9c86359fd",
+      "bytes": 512,
+      "kind": "image",
+      "colorSpace": "linear",
+      "span": 23,
+      "preprocessing": []
+    }
+  ],
+  "scene": {
+    "name": "Demo",
+    "symbol": "src/main.mtek::Demo",
+    "fields": {
+      "clearColor": [
+        0.0052,
+        0.007,
+        0.0091,
+        1
+      ],
+      "ambientColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "ambientIntensity": 0.1,
+      "gravity": [
+        0,
+        -9.81,
+        0
+      ]
+    },
+    "state": [
+      {
+        "name": "tint",
+        "type": "color",
+        "symbol": "src/main.mtek::Demo.tint"
+      },
+      {
+        "name": "speed",
+        "type": "f32",
+        "symbol": "src/main.mtek::Demo.speed"
+      },
+      {
+        "name": "paused",
+        "type": "bool",
+        "symbol": "src/main.mtek::Demo.paused"
+      }
+    ],
+    "cameras": [
+      {
+        "name": "Main",
+        "symbol": "src/main.mtek::Demo.Main",
+        "projection": "perspective",
+        "hasTarget": true,
+        "active": true
+      },
+      {
+        "name": "Top",
+        "symbol": "src/main.mtek::Demo.Top",
+        "projection": "orthographic",
+        "hasTarget": false,
+        "active": false
+      }
+    ],
+    "entities": [
+      {
+        "index": 0,
+        "name": "Cube",
+        "symbol": "src/main.mtek::Demo.Cube",
+        "parent": null,
+        "mesh": "mesh:0",
+        "material": {
+          "id": "src/main.mtek::Pulse",
+          "instance": 0
+        },
+        "light": null,
+        "body": {
+          "kind": "dynamic",
+          "mass": 2,
+          "linearDamping": 0,
+          "angularDamping": 0.05
+        },
+        "collider": {
+          "kind": "box",
+          "size": [
+            1,
+            1,
+            1
+          ],
+          "sensor": false,
+          "friction": 0.5,
+          "restitution": 0.25
+        },
+        "state": [
+          {
+            "name": "hits",
+            "type": "i32",
+            "symbol": "src/main.mtek::Demo.Cube.hits"
+          }
+        ],
+        "update": true,
+        "fixedUpdate": true
+      },
+      {
+        "index": 1,
+        "name": "Badge",
+        "symbol": "src/main.mtek::Demo.Badge",
+        "parent": 0,
+        "mesh": "mesh:1",
+        "material": {
+          "id": "std/materials.mtek::Pbr",
+          "instance": 1
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 2,
+        "name": "Floor",
+        "symbol": "src/main.mtek::Demo.Floor",
+        "parent": null,
+        "mesh": "mesh:2",
+        "material": {
+          "id": "src/main.mtek::Glow",
+          "instance": 2
+        },
+        "light": null,
+        "body": {
+          "kind": "static"
+        },
+        "collider": {
+          "kind": "sphere",
+          "radius": 10,
+          "sensor": true,
+          "friction": 0.5,
+          "restitution": 0
+        },
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 3,
+        "name": "Sun",
+        "symbol": "src/main.mtek::Demo.Sun",
+        "parent": null,
+        "mesh": null,
+        "material": null,
+        "light": 0,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 4,
+        "name": "Lamp",
+        "symbol": "src/main.mtek::Demo.Lamp",
+        "parent": null,
+        "mesh": null,
+        "material": null,
+        "light": 1,
+        "body": {
+          "kind": "kinematic"
+        },
+        "collider": {
+          "kind": "box",
+          "size": [
+            0.2,
+            0.2,
+            0.2
+          ],
+          "sensor": false,
+          "friction": 0.5,
+          "restitution": 0
+        },
+        "state": [],
+        "update": true,
+        "fixedUpdate": false
+      },
+      {
+        "index": 5,
+        "name": "Model",
+        "symbol": "src/main.mtek::Demo.Model",
+        "parent": null,
+        "mesh": "mesh:3",
+        "material": {
+          "id": "std/materials.mtek::Pbr",
+          "instance": 3
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      }
+    ],
+    "materialInstances": [
+      {
+        "index": 0,
+        "material": "src/main.mtek::Pulse",
+        "entity": 0,
+        "shareable": false,
+        "params": [
+          {
+            "name": "tint",
+            "class": "bound",
+            "binding": 0
+          },
+          {
+            "name": "phase",
+            "class": "imperative"
+          }
+        ]
+      },
+      {
+        "index": 1,
+        "material": "std/materials.mtek::Pbr",
+        "entity": 1,
+        "shareable": true,
+        "params": [
+          {
+            "name": "base_color",
+            "class": "initial"
+          },
+          {
+            "name": "metallic",
+            "class": "initial"
+          },
+          {
+            "name": "roughness",
+            "class": "initial"
+          },
+          {
+            "name": "base_color_texture",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "texture.white"
+            }
+          },
+          {
+            "name": "base_color_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_repeat"
+            }
+          }
+        ]
+      },
+      {
+        "index": 2,
+        "material": "src/main.mtek::Glow",
+        "entity": 2,
+        "shareable": false,
+        "params": [
+          {
+            "name": "mask",
+            "class": "resource",
+            "value": {
+              "kind": "asset",
+              "asset": "assets/e29579ce6430e703.png"
+            }
+          },
+          {
+            "name": "mask_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.nearest_clamp"
+            }
+          }
+        ]
+      },
+      {
+        "index": 3,
+        "material": "std/materials.mtek::Pbr",
+        "entity": 5,
+        "shareable": false,
+        "params": [
+          {
+            "name": "base_color",
+            "class": "bound",
+            "binding": 6
+          },
+          {
+            "name": "metallic",
+            "class": "initial"
+          },
+          {
+            "name": "roughness",
+            "class": "initial"
+          },
+          {
+            "name": "base_color_texture",
+            "class": "resource",
+            "value": {
+              "kind": "asset",
+              "asset": "assets/de7030234493a8be.png"
+            }
+          },
+          {
+            "name": "base_color_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_clamp"
+            }
+          }
+        ]
+      }
+    ],
+    "bindings": [
+      {
+        "id": 0,
+        "target": {
+          "kind": "param",
+          "instance": 0,
+          "name": "tint"
+        },
+        "deps": [
+          {
+            "kind": "state",
+            "name": "tint"
+          }
+        ],
+        "order": 0,
+        "span": 7
+      },
+      {
+        "id": 1,
+        "target": {
+          "kind": "transform",
+          "entity": 0,
+          "field": "rotation"
+        },
+        "deps": [
+          {
+            "kind": "frame",
+            "name": "time"
+          }
+        ],
+        "order": 1,
+        "span": 8
+      },
+      {
+        "id": 2,
+        "target": {
+          "kind": "visible",
+          "entity": 1
+        },
+        "deps": [
+          {
+            "kind": "entityState",
+            "entity": 0,
+            "name": "hits"
+          },
+          {
+            "kind": "frame",
+            "name": "index"
+          }
+        ],
+        "order": 2,
+        "span": 9
+      },
+      {
+        "id": 3,
+        "target": {
+          "kind": "camera",
+          "field": "projection.fov_y"
+        },
+        "deps": [
+          {
+            "kind": "state",
+            "name": "speed"
+          }
+        ],
+        "order": 3,
+        "span": 10
+      },
+      {
+        "id": 4,
+        "target": {
+          "kind": "light",
+          "entity": 3,
+          "field": "intensity"
+        },
+        "deps": [
+          {
+            "kind": "frame",
+            "name": "delta"
+          }
+        ],
+        "order": 4,
+        "span": 11
+      },
+      {
+        "id": 5,
+        "target": {
+          "kind": "transform",
+          "entity": 1,
+          "field": "position"
+        },
+        "deps": [
+          {
+            "kind": "entityField",
+            "entity": 0,
+            "field": "position"
+          }
+        ],
+        "order": 6,
+        "span": 12
+      },
+      {
+        "id": 6,
+        "target": {
+          "kind": "param",
+          "instance": 3,
+          "name": "base_color"
+        },
+        "deps": [
+          {
+            "kind": "param",
+            "instance": 0,
+            "name": "tint"
+          }
+        ],
+        "order": 5,
+        "span": 13
+      }
+    ],
+    "hostInputs": [
+      {
+        "name": "tint",
+        "target": {
+          "kind": "entityState",
+          "name": "tint"
+        },
+        "type": "color",
+        "codec": "color-hex-opaque"
+      },
+      {
+        "name": "speed",
+        "target": {
+          "kind": "state",
+          "name": "speed"
+        },
+        "type": "f32",
+        "codec": "f32"
+      },
+      {
+        "name": "paused",
+        "target": {
+          "kind": "state",
+          "name": "paused"
+        },
+        "type": "bool",
+        "codec": "bool"
+      }
+    ],
+    "lights": [
+      {
+        "index": 0,
+        "entity": 3,
+        "kind": "directional"
+      },
+      {
+        "index": 1,
+        "entity": 4,
+        "kind": "point",
+        "range": 12
+      }
+    ]
+  }
+}

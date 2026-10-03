@@ -4,13 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "lint": "eslint src",
-    "test:unit": "vitest run"
+    "gen": "node ../../scripts/gen-manifest-validator.mjs",
+    "build": "npm run gen && node scripts/build.mjs",
+    "lint": "npm run gen && eslint src",
+    "test:unit": "npm run gen && vitest run"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@webgpu/types": "0.1.74",
+    "ajv": "8.20.0",
     "esbuild": "0.28.2",
     "eslint": "10.12.0",
     "typescript": "6.0.3",
