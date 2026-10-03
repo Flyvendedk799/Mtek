@@ -21,7 +21,7 @@
 //! A literal that received a diagnostic carries
 //! [`TokenValue::Malformed`], so that the parser does not report it again.
 
-use crate::diagnostics::{Code, Diagnostic};
+use crate::diagnostics::{Code, Diagnostic, Diagnostics, Severity};
 use crate::source::{FileId, SourceFile, Span};
 
 use super::token::{
@@ -55,9 +55,32 @@ pub struct Lexed {
     /// (one per `E0022` diagnostic in [`Self::diagnostics`]).
     pub float_fixes: Vec<FloatFix>,
     /// Diagnostics found after the first [`MAX_LEXICAL_DIAGNOSTICS`] and not
-    /// stored, so that a file of junk cannot exhaust memory. The driver
-    /// counts them as suppressed (`W9003`).
+    /// stored, so that a file of junk cannot exhaust memory.
+    /// [`Lexed::report_into`] hands them to the sink as suppressed.
     pub suppressed_diagnostics: usize,
+    /// How many of the suppressed diagnostics were errors (all lexical
+    /// diagnostics are errors today).
+    pub suppressed_errors: usize,
+    /// The file that was lexed.
+    pub file: FileId,
+}
+
+impl Lexed {
+    /// Move the lexical diagnostics into `sink`, including the account of
+    /// those the lexer dropped (`suppressed_diagnostics`), so that `W9003`,
+    /// `summary.suppressed` and `has_errors` tell the truth. This is the one
+    /// way to hand lexical diagnostics to the driver's sink.
+    ///
+    /// The diagnostics are moved out, so reporting twice cannot count them
+    /// twice; tokens, trivia and `float_fixes` stay available.
+    pub fn report_into(&mut self, sink: &mut Diagnostics) {
+        sink.extend(std::mem::take(&mut self.diagnostics));
+        sink.record_suppressed(
+            self.file,
+            std::mem::take(&mut self.suppressed_diagnostics),
+            std::mem::take(&mut self.suppressed_errors),
+        );
+    }
 }
 
 /// The lexer stores at most this many diagnostics per file; the driver's sink
@@ -87,6 +110,7 @@ pub fn lex_str(file: FileId, text: &str) -> Lexed {
         diagnostics: Vec::new(),
         float_fixes: Vec::new(),
         suppressed: 0,
+        suppressed_errors: 0,
     }
     .run()
 }
@@ -113,6 +137,7 @@ struct Lexer<'a> {
     diagnostics: Vec<Diagnostic>,
     float_fixes: Vec<FloatFix>,
     suppressed: usize,
+    suppressed_errors: usize,
 }
 
 impl<'a> Lexer<'a> {
@@ -146,6 +171,8 @@ impl<'a> Lexer<'a> {
             diagnostics: self.diagnostics,
             float_fixes: self.float_fixes,
             suppressed_diagnostics: self.suppressed,
+            suppressed_errors: self.suppressed_errors,
+            file: self.file,
         }
     }
 
@@ -181,6 +208,9 @@ impl<'a> Lexer<'a> {
     fn report(&mut self, diagnostic: Diagnostic) -> bool {
         if self.diagnostics.len() >= MAX_LEXICAL_DIAGNOSTICS {
             self.suppressed += 1;
+            if diagnostic.severity == Severity::Error {
+                self.suppressed_errors += 1;
+            }
             return false;
         }
         self.diagnostics.push(diagnostic);

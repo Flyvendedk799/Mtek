@@ -563,6 +563,68 @@ fn a_file_of_junk_does_not_exhaust_memory_through_diagnostics() {
 }
 
 #[test]
+fn suppressed_lexical_diagnostics_reach_the_sink_with_the_true_total() {
+    use mtek_compiler::diagnostics::{Diagnostics, MAX_DIAGNOSTICS_PER_FILE};
+    use mtek_compiler::source::FileId;
+
+    // A file id other than 0, so that a hard-coded id would show.
+    let file = FileId(3);
+    let total = 2 * MAX_LEXICAL_DIAGNOSTICS + 345;
+    let text = "@ ".repeat(total);
+    let mut lexed = lex_str(file, &text);
+    assert_eq!(lexed.diagnostics.len(), MAX_LEXICAL_DIAGNOSTICS);
+    assert_eq!(
+        lexed.suppressed_diagnostics,
+        total - MAX_LEXICAL_DIAGNOSTICS
+    );
+    assert_eq!(lexed.suppressed_errors, lexed.suppressed_diagnostics);
+
+    let mut sink = Diagnostics::new();
+    lexed.report_into(&mut sink);
+    // The diagnostics were moved out, so reporting again counts nothing twice.
+    assert!(lexed.diagnostics.is_empty());
+    assert_eq!(lexed.suppressed_diagnostics, 0);
+    lexed.report_into(&mut sink);
+
+    assert!(sink.has_errors());
+    let dropped = total - MAX_DIAGNOSTICS_PER_FILE;
+    assert_eq!(sink.suppressed(), dropped);
+    let report = sink.finish();
+    assert_eq!(report.summary.suppressed, dropped);
+    assert_eq!(report.summary.errors, MAX_DIAGNOSTICS_PER_FILE);
+    let notes: Vec<_> = report
+        .diagnostics
+        .iter()
+        .filter(|d| d.code == Code::W9003)
+        .collect();
+    assert_eq!(notes.len(), 1);
+    assert_eq!(
+        notes[0].message,
+        format!(
+            "{dropped} further diagnostics in this file are suppressed after the first {MAX_DIAGNOSTICS_PER_FILE}."
+        )
+    );
+
+    // Tokens are untouched by reporting.
+    assert_eq!(lexed.tokens.len(), 1);
+}
+
+#[test]
+fn a_file_with_few_errors_reports_everything_and_suppresses_nothing() {
+    use mtek_compiler::diagnostics::Diagnostics;
+    use mtek_compiler::source::FileId;
+
+    let mut lexed = lex_str(FileId(0), "@ 007 1.");
+    let mut sink = Diagnostics::new();
+    lexed.report_into(&mut sink);
+    assert_eq!(sink.suppressed(), 0);
+    let report = sink.finish();
+    assert_eq!(report.summary.errors, 3);
+    assert_eq!(report.summary.suppressed, 0);
+    assert_eq!(report.diagnostics.len(), 3);
+}
+
+#[test]
 fn the_largest_accepted_source_file_lexes() {
     // 4 MiB of tokens is the largest file the source map accepts.
     let unit = "let x = 1.5 + 2; // c\n";

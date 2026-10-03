@@ -109,6 +109,20 @@ impl Diagnostics {
         }
     }
 
+    /// Account for `count` diagnostics of `file` that a stage dropped before
+    /// they reached the sink (a stage with its own storage bound, such as the
+    /// lexer). They count as suppressed exactly like diagnostics dropped by
+    /// the cap: [`Self::suppressed`], `summary.suppressed` and the `W9003`
+    /// message include them. `errors` of them were errors (`errors <= count`),
+    /// which keeps [`Self::has_errors`] true even though none was stored.
+    pub fn record_suppressed(&mut self, file: FileId, count: usize, errors: usize) {
+        if count == 0 {
+            return;
+        }
+        self.files.entry(file).or_default().dropped += count;
+        self.errors_seen += errors.min(count);
+    }
+
     /// True if any error was reported, including errors the cap dropped.
     #[must_use]
     pub fn has_errors(&self) -> bool {
@@ -355,6 +369,46 @@ mod tests {
         let report = sink.finish();
         assert_eq!(report.summary.errors, 0);
         assert_eq!(report.summary.warnings, 3);
+    }
+
+    #[test]
+    fn record_suppressed_adds_to_the_dropped_count_and_errors() {
+        let mut sink = Diagnostics::with_limit(2);
+        sink.push(err(A, 0));
+        sink.record_suppressed(A, 0, 0);
+        assert_eq!(sink.suppressed(), 0);
+        sink.record_suppressed(A, 7, 7);
+        assert_eq!(sink.suppressed(), 7);
+        // Another file with a suppressed warning only: no error.
+        let mut warned = Diagnostics::with_limit(2);
+        warned.record_suppressed(B, 3, 0);
+        assert!(!warned.has_errors());
+        assert_eq!(warned.suppressed(), 3);
+
+        // Suppressed ones add to those dropped by the cap.
+        sink.push(err(A, 1));
+        sink.push(err(A, 2));
+        assert_eq!(sink.suppressed(), 8);
+        let report = sink.finish();
+        assert_eq!(report.summary.suppressed, 8);
+        let note = report.diagnostics.last().unwrap();
+        assert_eq!(note.code, Code::W9003);
+        assert_eq!(
+            note.message,
+            "8 further diagnostics in this file are suppressed after the first 2."
+        );
+    }
+
+    #[test]
+    fn suppressed_errors_keep_has_errors_true_without_stored_diagnostics() {
+        let mut sink = Diagnostics::new();
+        sink.record_suppressed(A, 2, 2);
+        assert!(sink.has_errors());
+        assert!(sink.is_empty());
+        let report = sink.finish();
+        assert_eq!(report.summary.suppressed, 2);
+        assert_eq!(report.diagnostics.len(), 1);
+        assert_eq!(report.diagnostics[0].code, Code::W9003);
     }
 
     #[test]
