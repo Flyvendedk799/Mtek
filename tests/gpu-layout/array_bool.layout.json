@@ -1,0 +1,19 @@
+{
+  "id": "fixture:array_bool",
+  "wgslStruct": "MtekFixture_array_bool",
+  "size": 48,
+  "align": 16,
+  "root": {
+    "kind": "struct", "name": "Flags", "offset": 0, "size": 48, "align": 16,
+    "members": [
+      {
+        "name": "flags", "mtekType": "array<bool, 2>",
+        "node": {
+          "kind": "array", "offset": 0, "size": 32, "align": 16, "length": 2, "stride": 16, "padded": true,
+          "element": { "kind": "scalar", "offset": 0, "size": 4, "align": 4, "scalar": "bool32" }
+        }
+      },
+      { "name": "after", "mtekType": "u32", "node": { "kind": "scalar", "offset": 32, "size": 4, "align": 4, "scalar": "u32" } }
+    ]
+  }
+}

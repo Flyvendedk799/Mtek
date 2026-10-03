@@ -1,0 +1,13 @@
+{
+  "id": "builtin:object",
+  "wgslStruct": "MtekObject",
+  "size": 128,
+  "align": 16,
+  "root": {
+    "kind": "struct", "name": "MtekObject", "offset": 0, "size": 128, "align": 16,
+    "members": [
+      { "name": "model", "mtekType": "mat4", "node": { "kind": "matrix", "offset": 0, "size": 64, "align": 16, "columns": 4, "rows": 4, "columnStride": 16 } },
+      { "name": "normal_matrix", "mtekType": "mat4", "node": { "kind": "matrix", "offset": 64, "size": 64, "align": 16, "columns": 4, "rows": 4, "columnStride": 16 } }
+    ]
+  }
+}

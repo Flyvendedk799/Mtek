@@ -1,0 +1,6 @@
+{ "name": "Nested", "kind": "struct", "members": [
+  { "name": "items", "type": { "kind": "array", "length": 3, "element": { "kind": "struct", "name": "P", "members": [
+    { "name": "a", "type": "f32" }
+  ] } } },
+  { "name": "tail", "type": "vec2" }
+] }

@@ -1,0 +1,4 @@
+{ "name": "MtekObject", "kind": "struct", "members": [
+  { "name": "model", "type": "mat4" },
+  { "name": "normal_matrix", "type": "mat4" }
+] }

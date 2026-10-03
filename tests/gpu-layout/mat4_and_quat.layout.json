@@ -1,0 +1,14 @@
+{
+  "id": "fixture:mat4_and_quat",
+  "wgslStruct": "MtekFixture_mat4_and_quat",
+  "size": 96,
+  "align": 16,
+  "root": {
+    "kind": "struct", "name": "Mat4AndQuat", "offset": 0, "size": 96, "align": 16,
+    "members": [
+      { "name": "m", "mtekType": "mat4", "node": { "kind": "matrix", "offset": 0, "size": 64, "align": 16, "columns": 4, "rows": 4, "columnStride": 16 } },
+      { "name": "q", "mtekType": "quat", "node": { "kind": "vector", "offset": 64, "size": 16, "align": 16, "scalar": "f32", "components": 4 } },
+      { "name": "s", "mtekType": "f32", "node": { "kind": "scalar", "offset": 80, "size": 4, "align": 4, "scalar": "f32" } }
+    ]
+  }
+}

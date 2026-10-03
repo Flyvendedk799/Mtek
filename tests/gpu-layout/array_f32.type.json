@@ -1,0 +1,4 @@
+{ "name": "W", "kind": "struct", "members": [
+  { "name": "weights", "type": { "kind": "array", "element": "f32", "length": 3 } },
+  { "name": "bias", "type": "f32" }
+] }

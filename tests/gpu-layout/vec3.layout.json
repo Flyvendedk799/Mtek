@@ -1,0 +1,12 @@
+{
+  "id": "fixture:vec3",
+  "wgslStruct": "MtekFixture_vec3",
+  "size": 16,
+  "align": 16,
+  "root": {
+    "kind": "struct", "name": "Vec3Block", "offset": 0, "size": 16, "align": 16,
+    "members": [
+      { "name": "value", "mtekType": "vec3", "node": { "kind": "vector", "offset": 0, "size": 12, "align": 16, "scalar": "f32", "components": 3 } }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "fixture:scalar_f32",
+  "wgslStruct": "MtekFixture_scalar_f32",
+  "size": 4,
+  "align": 4,
+  "root": {
+    "kind": "struct", "name": "ScalarF32", "offset": 0, "size": 4, "align": 4,
+    "members": [
+      { "name": "value", "mtekType": "f32", "node": { "kind": "scalar", "offset": 0, "size": 4, "align": 4, "scalar": "f32" } }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{ "name": "Mat4AndQuat", "kind": "struct", "members": [
+  { "name": "m", "type": "mat4" },
+  { "name": "q", "type": "quat" },
+  { "name": "s", "type": "f32" }
+] }
