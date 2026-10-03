@@ -18,3 +18,8 @@ jsonschema = { version = "=0.58.5", default-features = false }
 
 [lints]
 workspace = true
+
+# The generator's own unit tests (shader text, leaf list) run with `cargo test`.
+[[example]]
+name = "bridge_spike"
+test = true
