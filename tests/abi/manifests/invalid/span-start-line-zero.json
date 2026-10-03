@@ -33,7 +33,7 @@
       "file": 0,
       "start": 0,
       "end": 120,
-      "startLine": 1,
+      "startLine": 0,
       "startColumn": 1,
       "endLine": 4,
       "endColumn": 1
@@ -416,7 +416,7 @@
         "params": [
           {
             "name": "color",
-            "class": "bound"
+            "class": "initial"
           }
         ],
         "shareable": true

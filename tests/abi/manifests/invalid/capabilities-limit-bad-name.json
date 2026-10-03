@@ -34,22 +34,38 @@
     {
       "file": 0,
       "start": 0,
-      "end": 120
+      "end": 120,
+      "startLine": 1,
+      "startColumn": 1,
+      "endLine": 4,
+      "endColumn": 1
     },
     {
       "file": 0,
       "start": 20,
-      "end": 31
+      "end": 31,
+      "startLine": 1,
+      "startColumn": 21,
+      "endLine": 1,
+      "endColumn": 32
     },
     {
       "file": 0,
       "start": 40,
-      "end": 58
+      "end": 58,
+      "startLine": 2,
+      "startColumn": 1,
+      "endLine": 2,
+      "endColumn": 19
     },
     {
       "file": 0,
       "start": 60,
-      "end": 71
+      "end": 71,
+      "startLine": 2,
+      "startColumn": 21,
+      "endLine": 2,
+      "endColumn": 32
     }
   ],
   "symbols": [

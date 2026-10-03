@@ -38,10 +38,15 @@ export interface MtekSource {
   readonly sha256: string;
 }
 
+/** A source range (decision 0019): half-open byte offsets, and 1-based line and column (in Unicode scalar values) of both ends. */
 export interface MtekSpan {
   readonly file: number;
   readonly start: number;
   readonly end: number;
+  readonly startLine: number;
+  readonly startColumn: number;
+  readonly endLine: number;
+  readonly endColumn: number;
 }
 
 export type MtekSymbolKind =
