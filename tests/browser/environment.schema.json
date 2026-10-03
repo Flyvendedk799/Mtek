@@ -1,0 +1,316 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mtek.invalid/schemas/browser-environment-1.json",
+  "title": "Mtek browser test environment record",
+  "description": "Written by the browser test harness for every Playwright project that probes WebGPU (spec/testing.md section 6.1). Evidence is only as good as this record: it names the browser, the launch arguments and the adapter that actually ran the tests.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "project",
+    "recordedAt",
+    "os",
+    "browser",
+    "userAgent",
+    "devicePixelRatio",
+    "renderTargetSize",
+    "gpu",
+    "source",
+    "toolchain",
+    "settings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recordedAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+    },
+    "os": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "release",
+        "version",
+        "arch"
+      ],
+      "properties": {
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        },
+        "release": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string"
+        },
+        "arch": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "browser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "channel",
+        "version",
+        "headless",
+        "launchArgs"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headless": {
+          "type": "boolean"
+        },
+        "launchArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "userAgent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "devicePixelRatio": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "renderTargetSize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "gpu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "navigatorGpu",
+        "reason",
+        "adapter",
+        "wgslLanguageFeatures"
+      ],
+      "properties": {
+        "navigatorGpu": {
+          "type": "boolean"
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "adapter": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "info",
+                "adapterFeatures",
+                "deviceFeatures",
+                "limits"
+              ],
+              "properties": {
+                "info": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "vendor",
+                    "architecture",
+                    "device",
+                    "description",
+                    "isFallbackAdapter"
+                  ],
+                  "properties": {
+                    "vendor": {
+                      "type": "string"
+                    },
+                    "architecture": {
+                      "type": "string"
+                    },
+                    "device": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "isFallbackAdapter": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "adapterFeatures": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "deviceFeatures": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "limits": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "wgslLanguageFeatures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gitCommit",
+        "gitDirty"
+      ],
+      "properties": {
+        "gitCommit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gitDirty": {
+          "type": "boolean"
+        }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rustc",
+        "naga",
+        "node",
+        "playwright",
+        "runtimeWeb"
+      ],
+      "properties": {
+        "rustc": {
+          "type": "string",
+          "minLength": 1
+        },
+        "naga": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node": {
+          "type": "string",
+          "minLength": 1
+        },
+        "playwright": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtimeWeb": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requireGpu",
+        "acceptSoftware"
+      ],
+      "properties": {
+        "requireGpu": {
+          "type": "boolean"
+        },
+        "acceptSoftware": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "A record without an adapter must say why.",
+      "if": {
+        "type": "object",
+        "properties": {
+          "gpu": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "gpu": {
+            "type": "object",
+            "properties": {
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
