@@ -57,6 +57,20 @@ npx playwright install chromium
 
 The working configuration on the development machine is recorded in decision 0012 (amendment) and `evidence/environments/`.
 
+#### The CPU/GPU bridge specs (M0)
+
+`tests/browser/specs/bridge/` proves on real WebGPU that values written by the **generated** JavaScript
+writers into a production uniform arena are read bit-exactly by **generated** WGSL (`spec/gpu-layout.md`
+section 9.4; `spec/testing.md` section 6.2), for all 14 layout fixtures: the bit-exact probe, two
+instances in one arena, no pipeline or shader module created by value updates, and a rendered colour.
+Global setup generates the inputs with the disposable
+`cargo run -p mtek-compiler --example bridge_spike -- tests/browser/.out/bridge` (shaders, writers,
+layout records; every shader is validated with Naga first) and bundles `tests/browser/pages/bridge.ts`,
+which drives the production `gpu/device`, `gpu/registry` and `gpu/uniform-arena` modules. Randomised
+tests record their seed as a `seed` annotation; `MTEK_TEST_SEED` reproduces a run. Gate evidence is
+`MTEK_REQUIRE_GPU=1 npm run test:browser:hardware` on the recorded hardware machine, saved as
+`evidence/M0/environment-bridge.json` and `evidence/M0/test-results-bridge.json`.
+
 ## Planned commands (not available)
 
 None of these commands exists yet. The milestone in which each is planned is listed in
