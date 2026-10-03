@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E9010",
+    "file": "src/main.mtek",
+    "startByte": 68,
+    "endByte": 93,
+    "message": "`bind` is specified for v0.1 but not implemented by this compiler build yet (planned for M3).",
+    "notes": [
+      "this compiler build implements the language up to milestone M1"
+    ]
+  }
+]

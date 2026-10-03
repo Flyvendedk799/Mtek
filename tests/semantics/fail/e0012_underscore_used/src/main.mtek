@@ -1,0 +1,5 @@
+const A = _;
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,5 @@
+const length = 2.0;
+
+scene Demo {
+    camera Main {}
+}

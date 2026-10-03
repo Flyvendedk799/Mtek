@@ -1,0 +1,9 @@
+prefab Crate {
+    position: vec3(0.0, LIFT, 0.0);
+    mesh: Box {};
+}
+
+scene Demo {
+    const LIFT = 2.0;
+    camera Main {}
+}

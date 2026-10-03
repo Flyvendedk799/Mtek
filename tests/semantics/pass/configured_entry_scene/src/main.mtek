@@ -1,0 +1,9 @@
+scene First {
+    camera Main {}
+}
+
+scene Second {
+    clear_color: #202020;
+    camera Main {}
+    entity Cube { mesh: Box {}; }
+}

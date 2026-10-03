@@ -1,0 +1,6 @@
+const STEPS = [1.0, 2.0];
+const FIRST = STEPS[0];
+
+scene Demo {
+    camera Main {}
+}

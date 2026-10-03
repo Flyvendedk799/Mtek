@@ -1,0 +1,7 @@
+scene Demo {
+    camera Main {}
+    entity Cube {
+        state position: vec3 = vec3(0.0, 0.0, 0.0);
+        mesh: Box {};
+    }
+}

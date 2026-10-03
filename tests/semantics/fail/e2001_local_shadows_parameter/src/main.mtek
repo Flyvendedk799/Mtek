@@ -1,0 +1,8 @@
+fn twice(x: f32) -> f32 {
+    let x = x * 2.0;
+    return x;
+}
+
+scene Demo {
+    camera Main {}
+}

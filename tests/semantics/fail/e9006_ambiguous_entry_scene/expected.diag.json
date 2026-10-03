@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E9006",
+    "file": "src/main.mtek",
+    "startByte": 41,
+    "endByte": 45,
+    "message": "The entry module 'src/main.mtek' declares 2 scenes and project.scene is not set in mtek.toml, so the entry scene is ambiguous.",
+    "related": [
+      {
+        "message": "scene 'Menu' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 6,
+        "endByte": 10
+      }
+    ],
+    "notes": [
+      "help: set project.scene in mtek.toml to one of: Menu, Demo"
+    ]
+  }
+]

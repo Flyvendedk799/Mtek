@@ -1,0 +1,8 @@
+scene Demo {
+    camera Main {}
+    entity Cube {
+        const Lamp = 1.0;
+        mesh: Box {};
+    }
+    entity Lamp { mesh: Sphere {}; }
+}

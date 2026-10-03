@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E9006",
+    "file": null,
+    "startByte": null,
+    "endByte": null,
+    "message": "The entry scene 'Demoo' (project.scene in mtek.toml) is not declared in the entry module 'src/main.mtek'.",
+    "notes": [
+      "help: did you mean 'Demo'?",
+      "help: declared scenes: Demo"
+    ]
+  }
+]

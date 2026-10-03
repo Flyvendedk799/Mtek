@@ -1,0 +1,5 @@
+const M: mat4 = mat4.identity();
+
+scene Demo {
+    camera Main {}
+}

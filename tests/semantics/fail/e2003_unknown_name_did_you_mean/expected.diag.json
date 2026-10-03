@@ -1,0 +1,17 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 76,
+    "endByte": 81,
+    "message": "Unknown name 'SPEDE'.",
+    "related": [
+      {
+        "message": "did you mean 'SPEED'?",
+        "file": "src/main.mtek",
+        "startByte": 6,
+        "endByte": 11
+      }
+    ]
+  }
+]

@@ -1,0 +1,10 @@
+// Constants may be used before they are declared, in the module and in
+// the scene.
+const DOUBLE = BASE * 2.0;
+const BASE = 1.5;
+
+scene Demo {
+    camera Main { position: vec3(0.0, 0.0, OFFSET); }
+    const OFFSET = DOUBLE + 3.0;
+    entity Cube { mesh: Box {}; }
+}

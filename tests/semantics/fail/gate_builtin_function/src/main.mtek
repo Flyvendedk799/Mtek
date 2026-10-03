@@ -1,0 +1,5 @@
+const S = sin(1.0);
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,11 @@
+// A parameter, a local and a state may reuse the name of a built-in
+// function: only the not-yet-implemented constructs are reported.
+fn falloff(length: f32, step: f32) -> f32 {
+    let distance = length * step;
+    return distance;
+}
+
+scene Demo {
+    state log: f32 = 0.0;
+    camera Main {}
+}

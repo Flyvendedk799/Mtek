@@ -1,0 +1,7 @@
+scene Menu {
+    camera Main {}
+}
+
+scene Demo {
+    camera Main {}
+}

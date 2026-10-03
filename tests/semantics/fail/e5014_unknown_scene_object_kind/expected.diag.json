@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5014",
+    "file": "src/main.mtek",
+    "startByte": 36,
+    "endByte": 40,
+    "message": "Unknown scene object kind 'lamp'.",
+    "notes": [
+      "help: v0.1 scene object kinds: camera"
+    ]
+  }
+]

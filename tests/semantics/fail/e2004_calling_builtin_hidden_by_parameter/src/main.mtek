@@ -1,0 +1,7 @@
+fn shade(length: f32) -> f32 {
+    return length(vec3(length, 0.0, 0.0));
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E0012",
+    "file": "src/main.mtek",
+    "startByte": 10,
+    "endByte": 11,
+    "message": "`_` is reserved and cannot be used as a name.",
+    "notes": [
+      "help: choose a descriptive name"
+    ]
+  }
+]

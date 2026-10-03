@@ -1,0 +1,6 @@
+const SPEED = 1.0;
+
+scene Demo {
+    const SPEED = 2.0;
+    camera Main {}
+}

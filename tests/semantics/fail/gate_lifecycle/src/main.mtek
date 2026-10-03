@@ -1,0 +1,5 @@
+scene Demo {
+    camera Main {}
+    update(dt: f32) {
+    }
+}

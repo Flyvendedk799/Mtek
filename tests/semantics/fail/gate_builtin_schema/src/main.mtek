@@ -1,0 +1,7 @@
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        material: Pbr { metallic: 1.0 };
+    }
+}

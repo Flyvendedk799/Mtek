@@ -1,0 +1,13 @@
+scene Plan {
+    camera Top {
+        position: vec3(0.0, 10.0, 0.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.0; near: 0.1; far: 50.0 };
+        active: true;
+    }
+    camera Side {
+        position: vec3(10.0, 0.0, 0.0);
+        rotation: quat.identity();
+    }
+    entity Ground { mesh: Plane {}; }
+}

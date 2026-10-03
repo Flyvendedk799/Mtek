@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 41,
+    "endByte": 46,
+    "message": "Unknown name 'quatt'.",
+    "notes": [
+      "help: did you mean the built-in 'quat'?"
+    ]
+  }
+]

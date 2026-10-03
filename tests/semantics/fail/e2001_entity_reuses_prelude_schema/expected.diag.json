@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E2001",
+    "file": "src/main.mtek",
+    "startByte": 43,
+    "endByte": 46,
+    "message": "The entity 'Box' would hide the built-in schema 'Box'.",
+    "notes": [
+      "'Box' is a built-in schema of the standard library, visible in every module",
+      "help: names cannot be shadowed in v0.1; choose another name"
+    ]
+  }
+]

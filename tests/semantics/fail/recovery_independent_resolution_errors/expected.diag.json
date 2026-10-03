@@ -1,0 +1,52 @@
+[
+  {
+    "code": "MTEK-E2002",
+    "file": "src/main.mtek",
+    "startByte": 23,
+    "endByte": 28,
+    "message": "Duplicate declaration of 'LIMIT': a constant of that name is already declared in this module.",
+    "related": [
+      {
+        "message": "the constant 'LIMIT' is first declared here",
+        "file": "src/main.mtek",
+        "startByte": 6,
+        "endByte": 11
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 91,
+    "endByte": 96,
+    "message": "Unknown name 'DEPTH'."
+  },
+  {
+    "code": "MTEK-E5014",
+    "file": "src/main.mtek",
+    "startByte": 105,
+    "endByte": 109,
+    "message": "Unknown scene object kind 'lamp'.",
+    "notes": [
+      "help: v0.1 scene object kinds: camera"
+    ]
+  },
+  {
+    "code": "MTEK-E2002",
+    "file": "src/main.mtek",
+    "startByte": 162,
+    "endByte": 166,
+    "message": "Duplicate declaration of 'Cube': an entity of that name is already declared in this scene.",
+    "related": [
+      {
+        "message": "the entity 'Cube' is first declared here",
+        "file": "src/main.mtek",
+        "startByte": 128,
+        "endByte": 132
+      }
+    ],
+    "notes": [
+      "entity names are unique within the scene, including nested entities, and share the scene scope with state and cameras"
+    ]
+  }
+]

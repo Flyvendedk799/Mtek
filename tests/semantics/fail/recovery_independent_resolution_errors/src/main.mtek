@@ -1,0 +1,9 @@
+const LIMIT = 1;
+const LIMIT = 2;
+
+scene Demo {
+    camera Main { position: vec3(0.0, 0.0, DEPTH); }
+    lamp Sun {}
+    entity Cube { mesh: Box {}; }
+    entity Cube { mesh: Sphere {}; }
+}

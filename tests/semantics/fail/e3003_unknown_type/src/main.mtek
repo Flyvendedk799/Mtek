@@ -1,0 +1,5 @@
+const A: f23 = 1.0;
+
+scene Demo {
+    camera Main {}
+}
