@@ -1,0 +1,10 @@
+# Without any key press the cube keeps turning the same way at 0.7 rad/s (the starter's behaviour, which
+# the change must not break). After 2 s the angle is 1.4: the marker is at world (0.739, 0, 0.127), pixel
+# x 80.67 (CPU projection), clear of the cube's silhouette (x from about 51 to 77); its mirror image at
+# pixel x 47 shows the background.
+name = "without a key press the cube keeps turning at 0.7 rad/s"
+steps = [
+  { step = 120, dt = 0.016666668 },
+  { expect_pixel = { x = 80, y = 64, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 47, y = 64, color = "#202020", tolerance = 2 } },
+]

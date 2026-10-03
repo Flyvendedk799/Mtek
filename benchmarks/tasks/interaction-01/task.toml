@@ -1,0 +1,13 @@
+id = "interaction-01"
+category = "interaction"
+mode = "edit"
+title = "Reverse the cube's rotation with Space"
+prompt = """The scene Demo shows a cube named Cube that rotates about the Y axis at 0.7 radians per second. A small red sphere named Marker sits on the cube's +Z face and turns with it.
+Change the program so that the cube reverses its rotation direction each time Space is pressed: the first press makes it turn the other way, the second press makes it turn the original way again, and so on. The rotation speed (0.7 radians per second) and everything else stay as they are."""
+required_symbols = ["Demo.Cube", "Demo.Marker"]
+mtek_side_status = "unverified-until-M6"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

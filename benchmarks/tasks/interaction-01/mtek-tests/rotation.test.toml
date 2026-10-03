@@ -1,0 +1,36 @@
+# The cube turns about +Y at 0.7 rad/s; its red Marker sits at local (0, 0, 0.75), so after angle a it is at
+# world (0.75 sin a, 0, 0.75 cos a). Camera: position (0, 0, 6) looking at the origin, fov_y 0.9, 128 x 128
+# target. Pixel x of the marker centre (CPU projection, benchmarks/baselines/support/test/projection.ts):
+#   a =  0.70 -> 75.80   (mirror image 52.20)
+#   a =  0.00 -> 64.00
+#   a = -0.35 -> 57.57   (mirror image 70.43)
+#   a =  0.35 -> 70.43   (mirror image 57.57)
+# The marker is a sphere of radius about 3.7 pixels, so the pixel containing its centre is red; the mirror
+# image position shows the cube (#6b5cff). A key press is applied at the start of the next frame, so the
+# frame after `press` already turns the other way: 1 + 59 frames of 1/60 s undo 60 frames of 1/60 s.
+name = "Space reverses the rotation direction each time it is pressed"
+steps = [
+  { step = 60, dt = 0.016666668 },
+  { expect_pixel = { x = 75, y = 64, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 52, y = 64, color = "#6b5cff", tolerance = 2 } },
+
+  # first press: turns back, reaching angle 0 after one more second
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 59, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#ef4444", tolerance = 2 } },
+
+  # keeps turning the same way: angle -0.35 half a second later
+  { step = 30, dt = 0.016666668 },
+  { expect_pixel = { x = 57, y = 64, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 70, y = 64, color = "#6b5cff", tolerance = 2 } },
+
+  # second press: turns the original way again, angle 0.35 one second later
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 59, dt = 0.016666668 },
+  { expect_pixel = { x = 70, y = 64, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 57, y = 64, color = "#6b5cff", tolerance = 2 } },
+]
