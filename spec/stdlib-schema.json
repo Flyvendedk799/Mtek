@@ -1,0 +1,2458 @@
+{
+  "registryVersion": 1,
+  "languageVersion": "0.1",
+  "schemas": [
+    {
+      "name": "Box",
+      "category": "mesh",
+      "since": "M1",
+      "doc": "An axis-aligned box centred on the origin.",
+      "fields": [
+        {
+          "name": "size",
+          "type": "vec3",
+          "default": "vec3(1.0, 1.0, 1.0)",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "every component > 0",
+          "since": "M1",
+          "doc": "Full extents along X, Y and Z."
+        }
+      ]
+    },
+    {
+      "name": "BoxCollider",
+      "category": "collider",
+      "since": "M5",
+      "doc": "A box collision shape.",
+      "fields": [
+        {
+          "name": "friction",
+          "type": "f32",
+          "default": "0.5",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0",
+          "since": "M5",
+          "doc": "Coulomb friction coefficient."
+        },
+        {
+          "name": "restitution",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "0…1",
+          "since": "M5",
+          "doc": "Bounciness, 0 (none) to 1 (perfect)."
+        },
+        {
+          "name": "sensor",
+          "type": "bool",
+          "default": "false",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M5",
+          "doc": "A sensor reports collisions but does not push other bodies."
+        },
+        {
+          "name": "size",
+          "type": "vec3",
+          "default": null,
+          "required": true,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "every component > 0",
+          "since": "M5",
+          "doc": "Full extents along X, Y and Z."
+        }
+      ]
+    },
+    {
+      "name": "Camera",
+      "category": "object",
+      "since": "M1",
+      "doc": "The fields of a `camera` scene object. Looks along its local -Z axis, or at `target` when one is declared.",
+      "fields": [
+        {
+          "name": "active",
+          "type": "bool",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Marks the active camera. Optional when the scene has exactly one camera; with several cameras exactly one must declare `active: true`."
+        },
+        {
+          "name": "position",
+          "type": "vec3",
+          "default": "vec3(0.0, 0.0, 5.0)",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Camera position in world space, in metres."
+        },
+        {
+          "name": "projection",
+          "type": "projection",
+          "default": "Perspective {}",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "`Perspective {..}` or `Orthographic {..}`. The projection kind is construction-only; the fields of the descriptor are writable and bindable."
+        },
+        {
+          "name": "rotation",
+          "type": "quat",
+          "default": "quat.identity()",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Orientation when no `target` is declared."
+        },
+        {
+          "name": "target",
+          "type": "vec3",
+          "default": null,
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Optional point to look at (up is +Y). When declared, `rotation` must not be."
+        }
+      ]
+    },
+    {
+      "name": "DirectionalLight",
+      "category": "light",
+      "since": "M4",
+      "doc": "A light infinitely far away. Travels along the entity's world -Z axis; rotate the entity to aim it.",
+      "fields": [
+        {
+          "name": "color",
+          "type": "color",
+          "default": "#ffffff",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M4",
+          "doc": "Light colour (linear RGB; alpha is ignored)."
+        },
+        {
+          "name": "intensity",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M4",
+          "doc": "Illuminance in lux."
+        }
+      ]
+    },
+    {
+      "name": "Dynamic",
+      "category": "body",
+      "since": "M5",
+      "doc": "A solver-controlled body; forces, impulses and teleports are explicit commands.",
+      "fields": [
+        {
+          "name": "angular_damping",
+          "type": "f32",
+          "default": "0.05",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0",
+          "since": "M5",
+          "doc": "Rate at which angular velocity decays."
+        },
+        {
+          "name": "linear_damping",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0",
+          "since": "M5",
+          "doc": "Rate at which linear velocity decays."
+        },
+        {
+          "name": "mass",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0, finite",
+          "since": "M5",
+          "doc": "Mass in kilograms."
+        }
+      ]
+    },
+    {
+      "name": "Entity",
+      "category": "object",
+      "since": "M1",
+      "doc": "The fields of an entity or prefab body: a named node with a transform and optional components.",
+      "fields": [
+        {
+          "name": "body",
+          "type": "body",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M5",
+          "doc": "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only."
+        },
+        {
+          "name": "collider",
+          "type": "collider",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M5",
+          "doc": "A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`."
+        },
+        {
+          "name": "light",
+          "type": "light",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M4",
+          "doc": "A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only."
+        },
+        {
+          "name": "material",
+          "type": "material",
+          "default": "Unlit {}",
+          "defaultWhenSet": "mesh",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`."
+        },
+        {
+          "name": "mesh",
+          "type": "mesh",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh."
+        },
+        {
+          "name": "position",
+          "type": "vec3",
+          "default": "vec3(0.0, 0.0, 0.0)",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Position local to the parent, in metres."
+        },
+        {
+          "name": "rotation",
+          "type": "quat",
+          "default": "quat.identity()",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Rotation local to the parent."
+        },
+        {
+          "name": "scale",
+          "type": "vec3",
+          "default": "vec3(1.0, 1.0, 1.0)",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "every component > 0, finite",
+          "since": "M1",
+          "doc": "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body; that rule belongs to the checker, not to this field."
+        },
+        {
+          "name": "visible",
+          "type": "bool",
+          "default": "true",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Hides the mesh draw only; the entity's behaviour keeps running."
+        }
+      ]
+    },
+    {
+      "name": "Kinematic",
+      "category": "body",
+      "since": "M5",
+      "doc": "A body whose pose the program sets with `set_kinematic_target`.",
+      "fields": []
+    },
+    {
+      "name": "Orthographic",
+      "category": "projection",
+      "since": "M1",
+      "doc": "An orthographic projection (right-handed, clip depth 0 to 1).",
+      "fields": [
+        {
+          "name": "far",
+          "type": "f32",
+          "default": "1000.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "> near",
+          "since": "M1",
+          "doc": "Distance to the far plane."
+        },
+        {
+          "name": "height",
+          "type": "f32",
+          "default": "10.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "> 0",
+          "since": "M1",
+          "doc": "Height of the view volume in world units; the width follows from the aspect ratio."
+        },
+        {
+          "name": "near",
+          "type": "f32",
+          "default": "0.1",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "> 0",
+          "since": "M1",
+          "doc": "Distance to the near plane."
+        }
+      ]
+    },
+    {
+      "name": "Pbr",
+      "category": "material",
+      "since": "M4",
+      "doc": "The documented PBR subset (metallic-roughness, no image-based lighting). Defined in the embedded prelude source `std/materials.mtek`.",
+      "fields": [
+        {
+          "name": "base_color",
+          "type": "color",
+          "default": "#ffffff",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M4",
+          "doc": "Linear base colour multiplied with the base colour texture."
+        },
+        {
+          "name": "base_color_sampler",
+          "type": "sampler",
+          "default": "sampler.linear_repeat()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M4",
+          "doc": "Sampler for the base colour texture."
+        },
+        {
+          "name": "base_color_texture",
+          "type": "texture",
+          "default": "texture.white()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M4",
+          "doc": "Base colour texture."
+        },
+        {
+          "name": "metallic",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M4",
+          "doc": "Metalness; clamped to 0..1 by the lighting model."
+        },
+        {
+          "name": "roughness",
+          "type": "f32",
+          "default": "0.5",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M4",
+          "doc": "Perceptual roughness; clamped to 0.045..1 by the lighting model."
+        }
+      ]
+    },
+    {
+      "name": "Perspective",
+      "category": "projection",
+      "since": "M1",
+      "doc": "A perspective projection (right-handed, clip depth 0 to 1).",
+      "fields": [
+        {
+          "name": "far",
+          "type": "f32",
+          "default": "1000.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "> near",
+          "since": "M1",
+          "doc": "Distance to the far plane."
+        },
+        {
+          "name": "fov_y",
+          "type": "f32",
+          "default": "0.9",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "(0, π)",
+          "since": "M1",
+          "doc": "Full vertical field of view in radians."
+        },
+        {
+          "name": "near",
+          "type": "f32",
+          "default": "0.1",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "> 0",
+          "since": "M1",
+          "doc": "Distance to the near plane."
+        }
+      ]
+    },
+    {
+      "name": "Plane",
+      "category": "mesh",
+      "since": "M1",
+      "doc": "A single-sided horizontal plane at y = 0 facing +Y.",
+      "fields": [
+        {
+          "name": "size",
+          "type": "vec2",
+          "default": "vec2(1.0, 1.0)",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "every component > 0",
+          "since": "M1",
+          "doc": "Extent along X and Z."
+        }
+      ]
+    },
+    {
+      "name": "PointLight",
+      "category": "light",
+      "since": "M4",
+      "doc": "A light radiating from the entity's world position.",
+      "fields": [
+        {
+          "name": "color",
+          "type": "color",
+          "default": "#ffffff",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M4",
+          "doc": "Light colour (linear RGB; alpha is ignored)."
+        },
+        {
+          "name": "intensity",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M4",
+          "doc": "Luminous intensity in candela."
+        },
+        {
+          "name": "range",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0",
+          "since": "M4",
+          "doc": "Distance at which the light fades to nothing; 0 means unlimited."
+        }
+      ]
+    },
+    {
+      "name": "Scene",
+      "category": "object",
+      "since": "M1",
+      "doc": "The fields of a scene declaration. All are construction-only and must be constant expressions.",
+      "fields": [
+        {
+          "name": "ambient_color",
+          "type": "color",
+          "default": "#ffffff",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M4",
+          "doc": "Colour of the ambient light term of lit materials. Only the RGB channels are used."
+        },
+        {
+          "name": "ambient_intensity",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0",
+          "since": "M4",
+          "doc": "Scale of the ambient light term of lit materials; 0 turns ambient light off."
+        },
+        {
+          "name": "clear_color",
+          "type": "color",
+          "default": "#000000",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Colour the canvas is cleared to. Only the RGB channels are used."
+        },
+        {
+          "name": "gravity",
+          "type": "vec3",
+          "default": "vec3(0.0, -9.81, 0.0)",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M5",
+          "doc": "Gravitational acceleration in metres per second squared. Used only when the scene has physics bodies."
+        }
+      ]
+    },
+    {
+      "name": "Sphere",
+      "category": "mesh",
+      "since": "M1",
+      "doc": "A UV sphere centred on the origin.",
+      "fields": [
+        {
+          "name": "radius",
+          "type": "f32",
+          "default": "0.5",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0",
+          "since": "M1",
+          "doc": "Radius in metres."
+        },
+        {
+          "name": "rings",
+          "type": "u32",
+          "default": "16",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "2…256",
+          "since": "M1",
+          "doc": "Subdivisions from pole to pole."
+        },
+        {
+          "name": "segments",
+          "type": "u32",
+          "default": "32",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "3…256",
+          "since": "M1",
+          "doc": "Subdivisions around the Y axis."
+        }
+      ]
+    },
+    {
+      "name": "SphereCollider",
+      "category": "collider",
+      "since": "M5",
+      "doc": "A sphere collision shape.",
+      "fields": [
+        {
+          "name": "friction",
+          "type": "f32",
+          "default": "0.5",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0",
+          "since": "M5",
+          "doc": "Coulomb friction coefficient."
+        },
+        {
+          "name": "radius",
+          "type": "f32",
+          "default": null,
+          "required": true,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0",
+          "since": "M5",
+          "doc": "Radius in metres."
+        },
+        {
+          "name": "restitution",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "0…1",
+          "since": "M5",
+          "doc": "Bounciness, 0 (none) to 1 (perfect)."
+        },
+        {
+          "name": "sensor",
+          "type": "bool",
+          "default": "false",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M5",
+          "doc": "A sensor reports collisions but does not push other bodies."
+        }
+      ]
+    },
+    {
+      "name": "Static",
+      "category": "body",
+      "since": "M5",
+      "doc": "An immovable body; its pose is fixed at creation from the entity transform.",
+      "fields": []
+    },
+    {
+      "name": "Unlit",
+      "category": "material",
+      "since": "M1",
+      "doc": "Flat colour, no lighting. Defined in the embedded prelude source `std/materials.mtek`.",
+      "fields": [
+        {
+          "name": "color",
+          "type": "color",
+          "default": "#ffffff",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "The colour written to the canvas."
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "collision_enter",
+      "form": "parameter",
+      "argumentType": "entity_ref",
+      "allowedIn": [
+        "entity",
+        "prefab"
+      ],
+      "requiresCollider": true,
+      "since": "M5",
+      "doc": "The entity's collider started touching another entity's collider; the parameter is the other entity."
+    },
+    {
+      "name": "collision_exit",
+      "form": "parameter",
+      "argumentType": "entity_ref",
+      "allowedIn": [
+        "entity",
+        "prefab"
+      ],
+      "requiresCollider": true,
+      "since": "M5",
+      "doc": "The entity's collider stopped touching another entity's collider; the parameter is the other entity."
+    },
+    {
+      "name": "key_down",
+      "form": "filter",
+      "argumentType": "Key",
+      "allowedIn": [
+        "scene",
+        "entity",
+        "prefab"
+      ],
+      "requiresCollider": false,
+      "since": "M3",
+      "doc": "Delivered when the filtered key transitions to pressed. Auto-repeat is ignored."
+    },
+    {
+      "name": "key_up",
+      "form": "filter",
+      "argumentType": "Key",
+      "allowedIn": [
+        "scene",
+        "entity",
+        "prefab"
+      ],
+      "requiresCollider": false,
+      "since": "M3",
+      "doc": "Delivered when the filtered key is released."
+    },
+    {
+      "name": "pointer_down",
+      "form": "parameter",
+      "argumentType": "PointerEvent",
+      "allowedIn": [
+        "scene",
+        "entity",
+        "prefab"
+      ],
+      "requiresCollider": false,
+      "since": "M3",
+      "doc": "A pointer button was pressed on the canvas."
+    },
+    {
+      "name": "pointer_move",
+      "form": "parameter",
+      "argumentType": "PointerEvent",
+      "allowedIn": [
+        "scene",
+        "entity",
+        "prefab"
+      ],
+      "requiresCollider": false,
+      "since": "M3",
+      "doc": "The pointer moved; at most once per frame with the latest position."
+    },
+    {
+      "name": "pointer_up",
+      "form": "parameter",
+      "argumentType": "PointerEvent",
+      "allowedIn": [
+        "scene",
+        "entity",
+        "prefab"
+      ],
+      "requiresCollider": false,
+      "since": "M3",
+      "doc": "A pointer button was released."
+    }
+  ],
+  "enums": [
+    {
+      "name": "Key",
+      "since": "M3",
+      "doc": "A physical keyboard key, independent of the keyboard layout. Maps from the DOM `KeyboardEvent.code`; events with any other code are ignored by the runtime.",
+      "members": [
+        {
+          "name": "A",
+          "code": "KeyA",
+          "since": "M3"
+        },
+        {
+          "name": "AltLeft",
+          "code": "AltLeft",
+          "since": "M3"
+        },
+        {
+          "name": "AltRight",
+          "code": "AltRight",
+          "since": "M3"
+        },
+        {
+          "name": "ArrowDown",
+          "code": "ArrowDown",
+          "since": "M3"
+        },
+        {
+          "name": "ArrowLeft",
+          "code": "ArrowLeft",
+          "since": "M3"
+        },
+        {
+          "name": "ArrowRight",
+          "code": "ArrowRight",
+          "since": "M3"
+        },
+        {
+          "name": "ArrowUp",
+          "code": "ArrowUp",
+          "since": "M3"
+        },
+        {
+          "name": "B",
+          "code": "KeyB",
+          "since": "M3"
+        },
+        {
+          "name": "Backspace",
+          "code": "Backspace",
+          "since": "M3"
+        },
+        {
+          "name": "C",
+          "code": "KeyC",
+          "since": "M3"
+        },
+        {
+          "name": "ControlLeft",
+          "code": "ControlLeft",
+          "since": "M3"
+        },
+        {
+          "name": "ControlRight",
+          "code": "ControlRight",
+          "since": "M3"
+        },
+        {
+          "name": "D",
+          "code": "KeyD",
+          "since": "M3"
+        },
+        {
+          "name": "Digit0",
+          "code": "Digit0",
+          "since": "M3"
+        },
+        {
+          "name": "Digit1",
+          "code": "Digit1",
+          "since": "M3"
+        },
+        {
+          "name": "Digit2",
+          "code": "Digit2",
+          "since": "M3"
+        },
+        {
+          "name": "Digit3",
+          "code": "Digit3",
+          "since": "M3"
+        },
+        {
+          "name": "Digit4",
+          "code": "Digit4",
+          "since": "M3"
+        },
+        {
+          "name": "Digit5",
+          "code": "Digit5",
+          "since": "M3"
+        },
+        {
+          "name": "Digit6",
+          "code": "Digit6",
+          "since": "M3"
+        },
+        {
+          "name": "Digit7",
+          "code": "Digit7",
+          "since": "M3"
+        },
+        {
+          "name": "Digit8",
+          "code": "Digit8",
+          "since": "M3"
+        },
+        {
+          "name": "Digit9",
+          "code": "Digit9",
+          "since": "M3"
+        },
+        {
+          "name": "E",
+          "code": "KeyE",
+          "since": "M3"
+        },
+        {
+          "name": "Enter",
+          "code": "Enter",
+          "since": "M3"
+        },
+        {
+          "name": "Escape",
+          "code": "Escape",
+          "since": "M3"
+        },
+        {
+          "name": "F",
+          "code": "KeyF",
+          "since": "M3"
+        },
+        {
+          "name": "G",
+          "code": "KeyG",
+          "since": "M3"
+        },
+        {
+          "name": "H",
+          "code": "KeyH",
+          "since": "M3"
+        },
+        {
+          "name": "I",
+          "code": "KeyI",
+          "since": "M3"
+        },
+        {
+          "name": "J",
+          "code": "KeyJ",
+          "since": "M3"
+        },
+        {
+          "name": "K",
+          "code": "KeyK",
+          "since": "M3"
+        },
+        {
+          "name": "L",
+          "code": "KeyL",
+          "since": "M3"
+        },
+        {
+          "name": "M",
+          "code": "KeyM",
+          "since": "M3"
+        },
+        {
+          "name": "N",
+          "code": "KeyN",
+          "since": "M3"
+        },
+        {
+          "name": "O",
+          "code": "KeyO",
+          "since": "M3"
+        },
+        {
+          "name": "P",
+          "code": "KeyP",
+          "since": "M3"
+        },
+        {
+          "name": "Q",
+          "code": "KeyQ",
+          "since": "M3"
+        },
+        {
+          "name": "R",
+          "code": "KeyR",
+          "since": "M3"
+        },
+        {
+          "name": "S",
+          "code": "KeyS",
+          "since": "M3"
+        },
+        {
+          "name": "ShiftLeft",
+          "code": "ShiftLeft",
+          "since": "M3"
+        },
+        {
+          "name": "ShiftRight",
+          "code": "ShiftRight",
+          "since": "M3"
+        },
+        {
+          "name": "Space",
+          "code": "Space",
+          "since": "M3"
+        },
+        {
+          "name": "T",
+          "code": "KeyT",
+          "since": "M3"
+        },
+        {
+          "name": "Tab",
+          "code": "Tab",
+          "since": "M3"
+        },
+        {
+          "name": "U",
+          "code": "KeyU",
+          "since": "M3"
+        },
+        {
+          "name": "V",
+          "code": "KeyV",
+          "since": "M3"
+        },
+        {
+          "name": "W",
+          "code": "KeyW",
+          "since": "M3"
+        },
+        {
+          "name": "X",
+          "code": "KeyX",
+          "since": "M3"
+        },
+        {
+          "name": "Y",
+          "code": "KeyY",
+          "since": "M3"
+        },
+        {
+          "name": "Z",
+          "code": "KeyZ",
+          "since": "M3"
+        }
+      ]
+    }
+  ],
+  "intrinsics": [
+    {
+      "name": "abs",
+      "signatures": [
+        "(x: T) -> T",
+        "(x: I) -> I"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "`abs(i32 MIN) = MIN`.",
+      "since": "M2",
+      "doc": "Absolute value, component-wise."
+    },
+    {
+      "name": "acos",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Arc cosine, in radians."
+    },
+    {
+      "name": "alive",
+      "signatures": [
+        "(target: entity_ref) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M5",
+      "doc": "Whether the entity reference points at a live entity."
+    },
+    {
+      "name": "asin",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Arc sine, in radians."
+    },
+    {
+      "name": "atan",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Arc tangent, in radians."
+    },
+    {
+      "name": "atan2",
+      "signatures": [
+        "(y: T, x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Angle of the point `(x, y)` in radians; note the argument order `atan2(y, x)`."
+    },
+    {
+      "name": "ceil",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Smallest integer value not below `x`."
+    },
+    {
+      "name": "clamp",
+      "signatures": [
+        "(x: T, lo: T, hi: T) -> T",
+        "(x: I, lo: I, hi: I) -> I"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "`min(max(x, lo), hi)`; `lo > hi` is non-portable.",
+      "since": "M2",
+      "doc": "Limits `x` to the range `lo..hi`."
+    },
+    {
+      "name": "cos",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Cosine of an angle in radians."
+    },
+    {
+      "name": "cross",
+      "signatures": [
+        "(a: vec3, b: vec3) -> vec3"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Cross product of two 3D vectors."
+    },
+    {
+      "name": "degrees",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Radians to degrees."
+    },
+    {
+      "name": "destroy",
+      "signatures": [
+        "(target: entity_ref) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M5",
+      "doc": "Queues removal of a spawned entity; it counts as dead from the moment of the call."
+    },
+    {
+      "name": "distance",
+      "signatures": [
+        "(a: T, b: T) -> f32"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Distance between two points."
+    },
+    {
+      "name": "dot",
+      "signatures": [
+        "(a: V, b: V) -> f32"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Dot product of two vectors."
+    },
+    {
+      "name": "exp",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "Tolerance-based CPU/GPU agreement.",
+      "since": "M2",
+      "doc": "e raised to `x`."
+    },
+    {
+      "name": "exp2",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "Tolerance-based CPU/GPU agreement.",
+      "since": "M2",
+      "doc": "2 raised to `x`."
+    },
+    {
+      "name": "floor",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Largest integer value not above `x`."
+    },
+    {
+      "name": "fract",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "`fract(x) = x - floor(x)`.",
+      "since": "M2",
+      "doc": "Fractional part of `x`."
+    },
+    {
+      "name": "inverse_sqrt",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Reciprocal of the square root."
+    },
+    {
+      "name": "is_key_down",
+      "signatures": [
+        "(key: Key) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M3",
+      "doc": "Whether the key was down at the end of input handling in the current frame."
+    },
+    {
+      "name": "length",
+      "signatures": [
+        "(x: T) -> f32"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Length of a vector, or the absolute value of a scalar."
+    },
+    {
+      "name": "log",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "Tolerance-based CPU/GPU agreement.",
+      "since": "M2",
+      "doc": "Natural logarithm."
+    },
+    {
+      "name": "log2",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "Tolerance-based CPU/GPU agreement.",
+      "since": "M2",
+      "doc": "Base-2 logarithm."
+    },
+    {
+      "name": "max",
+      "signatures": [
+        "(a: T, b: T) -> T",
+        "(a: I, b: I) -> I"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "NaN handling is non-portable.",
+      "since": "M2",
+      "doc": "Larger of two values, component-wise."
+    },
+    {
+      "name": "min",
+      "signatures": [
+        "(a: T, b: T) -> T",
+        "(a: I, b: I) -> I"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "NaN handling is non-portable.",
+      "since": "M2",
+      "doc": "Smaller of two values, component-wise."
+    },
+    {
+      "name": "mix",
+      "signatures": [
+        "(a: T, b: T, t: f32) -> T",
+        "(a: T, b: T, t: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "`a * (1 - t) + b * t`.",
+      "since": "M2",
+      "doc": "Linear interpolation `a * (1 - t) + b * t`, with a scalar or a component-wise `t`."
+    },
+    {
+      "name": "normalize",
+      "signatures": [
+        "(v: V) -> V"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "A zero vector gives the zero vector on the CPU; non-portable on the GPU.",
+      "since": "M2",
+      "doc": "The vector scaled to length 1."
+    },
+    {
+      "name": "pow",
+      "signatures": [
+        "(base: T, exponent: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "Tolerance-based CPU/GPU agreement.",
+      "since": "M2",
+      "doc": "`base` raised to `exponent`, component-wise."
+    },
+    {
+      "name": "print",
+      "signatures": [
+        "(message: string) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "No-op in release builds.",
+      "since": "M3",
+      "doc": "Writes a message to the development console."
+    },
+    {
+      "name": "radians",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Degrees to radians."
+    },
+    {
+      "name": "random",
+      "signatures": [
+        "() -> f32"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "Seeded PRNG (xoshiro128**, seed from the mount options); deterministic under a fixed seed.",
+      "since": "M3",
+      "doc": "A pseudo-random number in `[0, 1)`."
+    },
+    {
+      "name": "reflect",
+      "signatures": [
+        "(i: V, n: V) -> V"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "`i - 2 * dot(n, i) * n`.",
+      "since": "M2",
+      "doc": "Reflects incident vector `i` about the surface normal `n`."
+    },
+    {
+      "name": "round",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "Ties to even (not JavaScript `Math.round`).",
+      "since": "M2",
+      "doc": "Nearest integer value, halves to even."
+    },
+    {
+      "name": "sample",
+      "signatures": [
+        "(t: texture, s: sampler, uv: vec2) -> vec4"
+      ],
+      "domain": "gpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M4",
+      "doc": "Filtered texel of `t` at `uv`. `texture` and `sampler` parameters may be used only as direct arguments to `sample`."
+    },
+    {
+      "name": "saturate",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "`clamp(x, 0, 1)`.",
+      "since": "M2",
+      "doc": "Limits `x` to 0..1."
+    },
+    {
+      "name": "sign",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "`sign(0) = 0`.",
+      "since": "M2",
+      "doc": "-1, 0 or 1 according to the sign of `x`."
+    },
+    {
+      "name": "sin",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Sine of an angle in radians."
+    },
+    {
+      "name": "smoothstep",
+      "signatures": [
+        "(edge0: T, edge1: T, x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "Hermite, `t = clamp((x - e0) / (e1 - e0), 0, 1)`.",
+      "since": "M2",
+      "doc": "Smooth Hermite interpolation between `edge0` and `edge1`."
+    },
+    {
+      "name": "spawn",
+      "signatures": [
+        "(prefab: prefab descriptor) -> entity_ref"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M5",
+      "doc": "Queues creation of a prefab instance as a root entity; the reference is valid immediately and `alive` turns true after the next lifecycle flush."
+    },
+    {
+      "name": "sqrt",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "Correctly rounded on the CPU.",
+      "since": "M2",
+      "doc": "Square root."
+    },
+    {
+      "name": "step",
+      "signatures": [
+        "(edge: T, x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "`x >= edge ? 1 : 0` per component.",
+      "since": "M2",
+      "doc": "0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`."
+    },
+    {
+      "name": "tan",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Tangent of an angle in radians."
+    },
+    {
+      "name": "transpose",
+      "signatures": [
+        "(m: mat4) -> mat4"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Transpose of a 4x4 matrix."
+    },
+    {
+      "name": "trunc",
+      "signatures": [
+        "(x: T) -> T"
+      ],
+      "domain": "both",
+      "constEligible": true,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M2",
+      "doc": "Integer part of `x`, rounding toward zero."
+    }
+  ],
+  "namespaces": [
+    {
+      "name": "asset",
+      "since": "M4",
+      "doc": "Compile-time asset declarations. The argument must be a string literal naming a file inside the project.",
+      "members": [
+        {
+          "name": "glb",
+          "kind": "function",
+          "signatures": [
+            "(path: string) -> glb_asset"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "A static GLB model. May be stored only in a `const` and used through its accessors."
+        },
+        {
+          "name": "linear_texture",
+          "kind": "function",
+          "signatures": [
+            "(path: string) -> texture"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "A linear data texture (masks, normal data)."
+        },
+        {
+          "name": "texture",
+          "kind": "function",
+          "signatures": [
+            "(path: string) -> texture"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "An sRGB colour texture."
+        }
+      ]
+    },
+    {
+      "name": "color",
+      "since": "M1",
+      "doc": "Colour constructors.",
+      "members": [
+        {
+          "name": "linear",
+          "kind": "function",
+          "signatures": [
+            "(rgb: vec3, a: f32) -> color"
+          ],
+          "domain": "both",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "A colour from linear-light components."
+        },
+        {
+          "name": "srgb",
+          "kind": "function",
+          "signatures": [
+            "(rgb: vec3, a: f32) -> color"
+          ],
+          "domain": "both",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "Per channel `c <= 0.04045 ? c / 12.92 : powf((c + 0.055) / 1.055, 2.4)`, every operation rounded to `f32`; alpha unchanged. Constant folding uses `libm::powf` (deterministic); run time agrees within the CPU/GPU tolerance. `#rrggbb` literals use the exact `f64` conversion instead and may differ in the last bit.",
+          "since": "M1",
+          "doc": "A colour from sRGB-encoded components, converted to linear light with the sRGB transfer function."
+        }
+      ]
+    },
+    {
+      "name": "frame",
+      "since": "M3",
+      "doc": "Per-frame values. Readable in CPU code and in `bind` expressions, not in GPU stage code: route them through material parameters.",
+      "members": [
+        {
+          "name": "delta",
+          "kind": "value",
+          "type": "f32",
+          "domain": "cpu",
+          "since": "M3",
+          "doc": "The clamped frame delta of the current rendered frame; the value passed to `update`."
+        },
+        {
+          "name": "index",
+          "kind": "value",
+          "type": "u32",
+          "domain": "cpu",
+          "since": "M3",
+          "doc": "Rendered frame counter since mount, wrapping."
+        },
+        {
+          "name": "time",
+          "kind": "value",
+          "type": "f32",
+          "domain": "cpu",
+          "since": "M3",
+          "doc": "Active application time in seconds since mount, excluding paused time."
+        }
+      ]
+    },
+    {
+      "name": "lighting",
+      "since": "M4",
+      "doc": "Lighting functions for material fragment stages.",
+      "members": [
+        {
+          "name": "pbr",
+          "kind": "function",
+          "signatures": [
+            "(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color"
+          ],
+          "domain": "gpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "The documented PBR subset evaluated for every light in the scene."
+        }
+      ]
+    },
+    {
+      "name": "mat4",
+      "since": "M2",
+      "doc": "Constructors for column-major 4x4 matrices.",
+      "members": [
+        {
+          "name": "columns",
+          "kind": "function",
+          "signatures": [
+            "(c0: vec4, c1: vec4, c2: vec4, c3: vec4) -> mat4"
+          ],
+          "domain": "both",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M2",
+          "doc": "Matrix from its four columns."
+        },
+        {
+          "name": "identity",
+          "kind": "function",
+          "signatures": [
+            "() -> mat4"
+          ],
+          "domain": "both",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M2",
+          "doc": "The identity matrix."
+        },
+        {
+          "name": "rotation",
+          "kind": "function",
+          "signatures": [
+            "(q: quat) -> mat4"
+          ],
+          "domain": "both",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M2",
+          "doc": "Rotation matrix of a quaternion."
+        },
+        {
+          "name": "scale",
+          "kind": "function",
+          "signatures": [
+            "(v: vec3) -> mat4"
+          ],
+          "domain": "both",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M2",
+          "doc": "Non-uniform scale by `v`."
+        },
+        {
+          "name": "translation",
+          "kind": "function",
+          "signatures": [
+            "(v: vec3) -> mat4"
+          ],
+          "domain": "both",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M2",
+          "doc": "Translation by `v`."
+        }
+      ]
+    },
+    {
+      "name": "quat",
+      "since": "M1",
+      "doc": "Quaternion constructors.",
+      "members": [
+        {
+          "name": "axis_angle",
+          "kind": "function",
+          "signatures": [
+            "(axis: vec3, angle: f32) -> quat"
+          ],
+          "domain": "both",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Rotation by `angle` radians about `axis`. The axis is normalised; a zero axis gives the identity on the CPU."
+        },
+        {
+          "name": "euler",
+          "kind": "function",
+          "signatures": [
+            "(x: f32, y: f32, z: f32) -> quat"
+          ],
+          "domain": "both",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Rotation about Z, then X, then Y, all about fixed world axes: `axis_angle(+Y, y) * axis_angle(+X, x) * axis_angle(+Z, z)`."
+        },
+        {
+          "name": "identity",
+          "kind": "function",
+          "signatures": [
+            "() -> quat"
+          ],
+          "domain": "both",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "The rotation that does nothing."
+        }
+      ]
+    },
+    {
+      "name": "sampler",
+      "since": "M4",
+      "doc": "Built-in sampler presets.",
+      "members": [
+        {
+          "name": "linear_clamp",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "Bilinear filtering, texture coordinates clamp to the edge."
+        },
+        {
+          "name": "linear_repeat",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "Bilinear filtering, texture coordinates wrap."
+        },
+        {
+          "name": "nearest_clamp",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "Nearest-texel filtering, texture coordinates clamp to the edge."
+        },
+        {
+          "name": "nearest_repeat",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "Nearest-texel filtering, texture coordinates wrap."
+        }
+      ]
+    },
+    {
+      "name": "texture",
+      "since": "M4",
+      "doc": "Built-in textures.",
+      "members": [
+        {
+          "name": "black",
+          "kind": "function",
+          "signatures": [
+            "() -> texture"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "A 1x1 opaque black texture."
+        },
+        {
+          "name": "white",
+          "kind": "function",
+          "signatures": [
+            "() -> texture"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "A 1x1 opaque white texture."
+        }
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "PointerEvent",
+      "kind": "record",
+      "gpu": false,
+      "since": "M3",
+      "doc": "A pointer event: `position` in normalised canvas coordinates (x right, y up, both in -1..1) and the `button` (0 primary, 1 middle, 2 secondary).",
+      "fields": [
+        {
+          "name": "position",
+          "type": "vec2"
+        },
+        {
+          "name": "button",
+          "type": "i32"
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "SurfaceInput",
+      "kind": "record",
+      "gpu": true,
+      "since": "M2",
+      "doc": "The interpolated inputs of a material fragment stage; the compiler records which fields a material reads.",
+      "fields": [
+        {
+          "name": "local_position",
+          "type": "vec3"
+        },
+        {
+          "name": "world_position",
+          "type": "vec3"
+        },
+        {
+          "name": "world_normal",
+          "type": "vec3"
+        },
+        {
+          "name": "uv",
+          "type": "vec2"
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "array",
+      "kind": "array",
+      "gpu": true,
+      "since": "M2",
+      "doc": "The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "bool",
+      "kind": "scalar",
+      "gpu": true,
+      "since": "M1",
+      "doc": "Truth value.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "color",
+      "kind": "color",
+      "gpu": true,
+      "since": "M1",
+      "doc": "Linear-light RGBA with straight alpha; distinct from `vec4`.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "entity_ref",
+      "kind": "handle",
+      "gpu": false,
+      "since": "M5",
+      "doc": "A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "f32",
+      "kind": "scalar",
+      "gpu": true,
+      "since": "M1",
+      "doc": "IEEE-754 binary32 floating-point number.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "glb_asset",
+      "kind": "handle",
+      "gpu": false,
+      "since": "M4",
+      "doc": "The compile-time handle of `asset.glb(..)`; may be stored only in a `const` and used through its accessors.",
+      "fields": [],
+      "methods": [
+        {
+          "name": "material",
+          "signatures": [
+            "(name: string) -> material"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "The glTF material with this name as a `Pbr` instance with every parameter taken from the file."
+        },
+        {
+          "name": "material_base_color",
+          "signatures": [
+            "(name: string) -> color"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "The linear `baseColorFactor` of the material; alpha must be 1."
+        },
+        {
+          "name": "material_metallic",
+          "signatures": [
+            "(name: string) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "The `metallicFactor` of the material."
+        },
+        {
+          "name": "material_roughness",
+          "signatures": [
+            "(name: string) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "The `roughnessFactor` of the material."
+        },
+        {
+          "name": "material_texture",
+          "signatures": [
+            "(name: string) -> texture"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "The `baseColorTexture` of the material, or `texture.white()` when absent."
+        },
+        {
+          "name": "mesh",
+          "signatures": [
+            "(name: string) -> mesh"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "The glTF mesh with this name; it must have exactly one primitive."
+        },
+        {
+          "name": "node_position",
+          "signatures": [
+            "(name: string) -> vec3"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "World position of the node in the default scene."
+        },
+        {
+          "name": "node_rotation",
+          "signatures": [
+            "(name: string) -> quat"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "World rotation of the node in the default scene."
+        },
+        {
+          "name": "node_scale",
+          "signatures": [
+            "(name: string) -> vec3"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "World scale of the node in the default scene."
+        },
+        {
+          "name": "primitive",
+          "signatures": [
+            "(name: string, index: u32) -> mesh"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M4",
+          "doc": "Primitive `index` (an integer literal) of the named glTF mesh."
+        }
+      ]
+    },
+    {
+      "name": "i32",
+      "kind": "scalar",
+      "gpu": true,
+      "since": "M1",
+      "doc": "32-bit signed integer.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "mat4",
+      "kind": "matrix",
+      "gpu": true,
+      "since": "M2",
+      "doc": "4x4 `f32` matrix, column-major; multiplies column vectors on the right.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "material",
+      "kind": "handle",
+      "gpu": false,
+      "since": "M1",
+      "doc": "A material instance with its own parameter storage.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "mesh",
+      "kind": "handle",
+      "gpu": false,
+      "since": "M1",
+      "doc": "An immutable mesh: a primitive descriptor or an asset mesh.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "quat",
+      "kind": "rotation",
+      "gpu": true,
+      "since": "M1",
+      "doc": "Unit quaternion `(x, y, z, w)`; distinct from `vec4`.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "sampler",
+      "kind": "handle",
+      "gpu": false,
+      "since": "M4",
+      "doc": "A sampler preset. Usable only as a material parameter.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "string",
+      "kind": "text",
+      "gpu": false,
+      "since": "M2",
+      "doc": "Immutable text. CPU only.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "texture",
+      "kind": "handle",
+      "gpu": false,
+      "since": "M4",
+      "doc": "An immutable texture. Usable only as a material parameter.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "u32",
+      "kind": "scalar",
+      "gpu": true,
+      "since": "M1",
+      "doc": "32-bit unsigned integer.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "vec2",
+      "kind": "vector",
+      "gpu": true,
+      "since": "M1",
+      "doc": "Two `f32` components.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "vec3",
+      "kind": "vector",
+      "gpu": true,
+      "since": "M1",
+      "doc": "Three `f32` components.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "vec4",
+      "kind": "vector",
+      "gpu": true,
+      "since": "M1",
+      "doc": "Four `f32` components.",
+      "fields": [],
+      "methods": []
+    }
+  ],
+  "sceneObjects": [
+    {
+      "keyword": "camera",
+      "schema": "Camera",
+      "since": "M1",
+      "doc": "Declares a camera: `camera Main { .. }`. A scene needs exactly one active camera."
+    }
+  ],
+  "bodyCommands": [
+    {
+      "name": "apply_force",
+      "params": [
+        {
+          "name": "force",
+          "type": "vec3"
+        }
+      ],
+      "appliesTo": [
+        "Dynamic"
+      ],
+      "since": "M5",
+      "doc": "A force in newtons applied for exactly the next tick, then cleared."
+    },
+    {
+      "name": "apply_impulse",
+      "params": [
+        {
+          "name": "impulse",
+          "type": "vec3"
+        }
+      ],
+      "appliesTo": [
+        "Dynamic"
+      ],
+      "since": "M5",
+      "doc": "Instantaneous change of momentum in newton-seconds, at the centre of mass, applied at the start of the next tick."
+    },
+    {
+      "name": "set_kinematic_target",
+      "params": [
+        {
+          "name": "position",
+          "type": "vec3"
+        },
+        {
+          "name": "rotation",
+          "type": "quat"
+        }
+      ],
+      "appliesTo": [
+        "Kinematic"
+      ],
+      "since": "M5",
+      "doc": "The pose reached at the end of the next tick; the solver derives the velocity."
+    },
+    {
+      "name": "set_linear_velocity",
+      "params": [
+        {
+          "name": "v",
+          "type": "vec3"
+        }
+      ],
+      "appliesTo": [
+        "Dynamic"
+      ],
+      "since": "M5",
+      "doc": "Sets the linear velocity at the start of the next tick."
+    },
+    {
+      "name": "teleport",
+      "params": [
+        {
+          "name": "position",
+          "type": "vec3"
+        },
+        {
+          "name": "rotation",
+          "type": "quat"
+        },
+        {
+          "name": "keep_velocity",
+          "type": "bool"
+        }
+      ],
+      "appliesTo": [
+        "Dynamic",
+        "Kinematic"
+      ],
+      "since": "M5",
+      "doc": "Sets the pose before the next tick; velocities are zeroed unless `keep_velocity` is true."
+    }
+  ],
+  "bodyProperties": [
+    {
+      "name": "angular_velocity",
+      "type": "vec3",
+      "appliesTo": [
+        "Dynamic",
+        "Kinematic"
+      ],
+      "since": "M5",
+      "doc": "Angular velocity as of the last completed tick. Read-only."
+    },
+    {
+      "name": "linear_velocity",
+      "type": "vec3",
+      "appliesTo": [
+        "Dynamic",
+        "Kinematic"
+      ],
+      "since": "M5",
+      "doc": "Linear velocity as of the last completed tick. Read-only."
+    }
+  ],
+  "typeClasses": [
+    {
+      "name": "I",
+      "members": [
+        "i32",
+        "u32"
+      ]
+    },
+    {
+      "name": "T",
+      "members": [
+        "f32",
+        "vec2",
+        "vec3",
+        "vec4"
+      ]
+    },
+    {
+      "name": "V",
+      "members": [
+        "vec2",
+        "vec3",
+        "vec4"
+      ]
+    }
+  ],
+  "preludeSources": [
+    "std/materials.mtek"
+  ]
+}
