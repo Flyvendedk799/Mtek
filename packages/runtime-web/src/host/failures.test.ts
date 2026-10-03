@@ -31,15 +31,15 @@ describe("abiFailureToDiagnostic", () => {
 });
 
 describe("resolveSpan and spanOfSymbol", () => {
-  it("resolves a span id to file and byte offsets; line and column are 0 (unresolved)", () => {
+  it("copies the byte range and the line/column range of the span verbatim", () => {
     expect(resolveSpan(manifest(), 2)).toEqual({
       file: "src/main.mtek",
       startByte: 40,
       endByte: 58,
-      startLine: 0,
-      startColumn: 0,
-      endLine: 0,
-      endColumn: 0,
+      startLine: 2,
+      startColumn: 1,
+      endLine: 2,
+      endColumn: 19,
     });
   });
 
@@ -88,7 +88,7 @@ describe("DiagnosticSink", () => {
     makeRuntimeDiagnostic("E8051", {
       phase: "runtime:mount",
       message: `m${String(start)}`,
-      source: { file: "a.mtek", startByte: start, endByte: start + 1, startLine: 0, startColumn: 0, endLine: 0, endColumn: 0 },
+      source: { file: "a.mtek", startByte: start, endByte: start + 1, startLine: 1, startColumn: 1, endLine: 1, endColumn: 2 },
     });
 
   it("delivers each distinct (code, span) once per mount", () => {

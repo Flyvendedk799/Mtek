@@ -457,10 +457,10 @@ describe("mountMtek failures (kind, diagnostics, overlay, cleanup)", () => {
       file: "src/main.mtek",
       startByte: 40,
       endByte: 58,
-      startLine: 0,
-      startColumn: 0,
-      endLine: 0,
-      endColumn: 0,
+      startLine: 2,
+      startColumn: 1,
+      endLine: 2,
+      endColumn: 19,
     });
     expect(diagnostic?.notes).toContain(`generated from ${MATERIAL}.fragment.expr`);
     expect(diagnostic?.notes.some((n) => n.includes(":2:16"))).toBe(true);
@@ -473,7 +473,7 @@ describe("mountMtek failures (kind, diagnostics, overlay, cleanup)", () => {
     const error = await rejection(mountOn(host));
     const diagnostic = error.diagnostics[0];
     expect(diagnostic?.code).toBe("MTEK-E8051");
-    // The material symbol resolves to span 3 (bytes 60..71 in the fixture).
+    // The material symbol resolves to span 3 (bytes 60..71, 2:21 in the fixture).
     expect(diagnostic?.source?.startByte).toBe(60);
     expect(diagnostic?.notes.some((n) => n.includes("span map could not be loaded"))).toBe(true);
   });

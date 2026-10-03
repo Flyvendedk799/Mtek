@@ -3,11 +3,7 @@
  * (`spec/runtime-abi.md` section 6.1).
  */
 
-/**
- * A byte/line/column range in a source file (`spec/diagnostics.md` section 2.1). Lines and columns are
- * 1-based, except that runtime diagnostics, which know byte offsets only, set them to `0` for
- * "unresolved" (decision 0018).
- */
+/** A byte/line/column range in a source file (`spec/diagnostics.md` section 2.1). */
 export interface MtekSourceSpan {
   readonly file: string;
   readonly startByte: number;

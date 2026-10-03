@@ -13,7 +13,7 @@ interface DiagnosticLike {
   severity: string;
   message: string;
   phase: string;
-  source: { file: string; startByte: number; endByte: number } | null;
+  source: { file: string; startByte: number; endByte: number; startLine: number; startColumn: number } | null;
 }
 
 interface DebugLike {
@@ -269,6 +269,7 @@ test.describe("mountMtek failures in a real browser (spec/testing.md section 6.7
     // The narrowest span-map entry covering the WGSL position of the error wins (manifest span 2).
     expect(first?.source?.file).toBe("src/main.mtek");
     expect(first?.source?.startByte).toBe(40);
+    expect([first?.source?.startLine, first?.source?.startColumn]).toEqual([2, 1]); // copied from the manifest span
     expect(outcome.reported.map((d) => d.code)).toEqual(["MTEK-E8051"]);
     expect(outcome.overlayRole).toBe("alert");
     expect(outcome.overlayText).toContain("MTEK-E8051");

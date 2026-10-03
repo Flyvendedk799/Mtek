@@ -3,7 +3,7 @@
 // program's dist/ next to app.d.ts, which imports from it. Keep it self-contained (no imports) so it
 // compiles in a host project with only the DOM library.
 
-/** A byte/line/column range in a source file. Lines and columns are 1-based; 0 means "unresolved" (a runtime diagnostic knows byte offsets only). */
+/** A byte/line/column range in a source file: half-open byte offsets, 1-based lines and columns (columns count Unicode scalar values). */
 export interface MtekSourceSpan {
   readonly file: string;
   readonly startByte: number;

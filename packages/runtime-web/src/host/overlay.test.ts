@@ -52,12 +52,9 @@ describe("FailureOverlay", () => {
     ]);
   });
 
-  it("shows file:line:column when the line is known and file plus bytes when it is not", () => {
+  it("shows file:line:column of the span start", () => {
     const resolved = { file: "src/main.mtek", startByte: 420, endByte: 439, startLine: 18, startColumn: 16, endLine: 18, endColumn: 35 };
     expect(formatLocation(resolved)).toBe("src/main.mtek:18:16");
-    expect(formatLocation({ ...resolved, startLine: 0, startColumn: 0, endLine: 0, endColumn: 0 })).toBe(
-      "src/main.mtek (bytes 420-439)",
-    );
 
     const { doc, make } = setup();
     make().show([diagnostic({ source: resolved })]);

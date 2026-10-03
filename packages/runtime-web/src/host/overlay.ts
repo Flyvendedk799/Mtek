@@ -11,10 +11,9 @@ export const MAX_OVERLAY_DIAGNOSTICS = 20;
 
 const overlays = new WeakMap<HTMLElement, FailureOverlay>();
 
-/** `file:line:column`, or `file (bytes a-b)` when the line is unresolved (the runtime has no source text). */
+/** `file:line:column` of the start of the span. */
 export function formatLocation(source: MtekSourceSpan): string {
-  if (source.startLine > 0) return `${source.file}:${String(source.startLine)}:${String(source.startColumn)}`;
-  return `${source.file} (bytes ${String(source.startByte)}-${String(source.endByte)})`;
+  return `${source.file}:${String(source.startLine)}:${String(source.startColumn)}`;
 }
 
 export class FailureOverlay {

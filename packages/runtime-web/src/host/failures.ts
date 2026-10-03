@@ -26,9 +26,9 @@ export function abiFailureToDiagnostic(failure: AbiFailure, phase: MtekRuntimePh
 }
 
 /**
- * Resolves a span id of the manifest `spans` table to a source span. The manifest has byte offsets only
- * and the runtime has no source text, so line and column are `0`, meaning "unresolved"
- * (`MtekSourceSpan` documents 1-based values for compiler diagnostics). Returns `null` for an unknown id.
+ * Resolves a span id of the manifest `spans` table to a source span. The table carries the byte range and
+ * the 1-based line and column of both ends (decision 0019), so the runtime copies them verbatim and needs
+ * no source text. Returns `null` for an unknown span id or source id.
  */
 export function resolveSpan(manifest: MtekManifest, spanId: number): MtekSourceSpan | null {
   const span = manifest.spans[spanId];
@@ -39,10 +39,10 @@ export function resolveSpan(manifest: MtekManifest, spanId: number): MtekSourceS
     file: source.path,
     startByte: span.start,
     endByte: span.end,
-    startLine: 0,
-    startColumn: 0,
-    endLine: 0,
-    endColumn: 0,
+    startLine: span.startLine,
+    startColumn: span.startColumn,
+    endLine: span.endLine,
+    endColumn: span.endColumn,
   };
 }
 
