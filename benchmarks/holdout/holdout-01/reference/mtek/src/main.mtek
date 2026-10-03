@@ -1,0 +1,34 @@
+// UNVERIFIED: written by hand from spec/language.md, spec/scenes.md and spec/materials.md; never compiled
+// (no compiler exists yet). Task M6-07 compiles and tests it; until then nothing here is a result.
+scene Demo {
+    clear_color: #0b1220;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 6.0; near: 0.1; far: 50.0 };
+    }
+
+    entity Small {
+        position: vec3(-2.0, 0.0, 0.0);
+        mesh: Box { size: vec3(0.5, 0.5, 0.5) };
+        material: Unlit { color: #ef4444 };
+    }
+
+    entity Medium {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #eab308 };
+
+        entity Cap {
+            position: vec3(0.0, 0.9, 0.0);
+            mesh: Sphere { radius: 0.25 };
+            material: Unlit { color: #f8fafc };
+        }
+    }
+
+    entity Large {
+        position: vec3(2.0, 0.0, 0.0);
+        mesh: Box { size: vec3(1.5, 1.5, 1.5) };
+        material: Unlit { color: #a855f7 };
+    }
+}

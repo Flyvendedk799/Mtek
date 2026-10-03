@@ -66,7 +66,7 @@ function writeTask(base: string, id: string, extraToml = ""): void {
 /** A valid repository: one task, one holdout task, a matching hash and the .gitattributes rule. */
 function writeValidRepo(): void {
   writeTask("benchmarks/tasks", "interaction-01");
-  writeTask("benchmarks/holdout", "holdout-01");
+  writeTask("benchmarks/holdout", "holdout-90");
   put(".gitattributes", "* text=auto eol=lf\nbenchmarks/holdout/** text eol=lf\n");
   put("spec/readme.md", "design material\n");
   writeFileSync(join(root, "benchmarks", "holdout.sha256"), formatHashFile(computeHoldoutHash(join(root, "benchmarks", "holdout"))));
@@ -83,7 +83,7 @@ describe("validateBenchmarks", () => {
     expect(errors).toEqual([]);
     expect(lines[0]).toBe("benchmarks: 1 task, 1 holdout task");
     expect(lines.slice(1, 3)).toEqual([
-      "  holdout-01  scene-rendering  edit  mtek_side_status=unverified-until-M6",
+      "  holdout-90  scene-rendering  edit  mtek_side_status=unverified-until-M6",
       "  interaction-01  interaction  edit  mtek_side_status=unverified-until-M6",
     ].sort());
     expect(lines.join("\n")).not.toContain(root);
@@ -196,29 +196,29 @@ steps = [
 
   it("fails when a holdout id appears in spec/, tools/, packages/ or benchmarks/tools/", () => {
     writeValidRepo();
-    put("spec/ai.md", "see holdout-01 for an example\n");
-    put("packages/x/src/a.ts", "// holdout-01\n");
-    put("tools/note.txt", "holdout-01");
-    put("benchmarks/tools/x.mjs", "// holdout-01\n");
-    put("packages/x/node_modules/dep/index.js", "holdout-01\n"); // skipped on purpose
+    put("spec/ai.md", "see holdout-90 for an example\n");
+    put("packages/x/src/a.ts", "// holdout-90\n");
+    put("tools/note.txt", "holdout-90");
+    put("benchmarks/tools/x.mjs", "// holdout-90\n");
+    put("packages/x/node_modules/dep/index.js", "holdout-90\n"); // skipped on purpose
     const errors = errorsOf();
     expect([...errors].sort()).toEqual([
-      "benchmarks/tools/x.mjs: mentions the holdout id 'holdout-01' (holdout ids must not appear in design material)",
-      "packages/x/src/a.ts: mentions the holdout id 'holdout-01' (holdout ids must not appear in design material)",
-      "spec/ai.md: mentions the holdout id 'holdout-01' (holdout ids must not appear in design material)",
-      "tools/note.txt: mentions the holdout id 'holdout-01' (holdout ids must not appear in design material)",
+      "benchmarks/tools/x.mjs: mentions the holdout id 'holdout-90' (holdout ids must not appear in design material)",
+      "packages/x/src/a.ts: mentions the holdout id 'holdout-90' (holdout ids must not appear in design material)",
+      "spec/ai.md: mentions the holdout id 'holdout-90' (holdout ids must not appear in design material)",
+      "tools/note.txt: mentions the holdout id 'holdout-90' (holdout ids must not appear in design material)",
     ].sort());
   });
 
   it("does not flag the tasks themselves or the benchmarks README for naming a holdout", () => {
     writeValidRepo();
-    put("benchmarks/README.md", "holdout-01 exists\n");
+    put("benchmarks/README.md", "holdout-90 exists\n");
     expect(errorsOf()).toEqual([]);
   });
 
   it("fails when the holdout tree no longer matches holdout.sha256", () => {
     writeValidRepo();
-    put("benchmarks/holdout/holdout-01/mtek/src/main.mtek", `${SOURCE}// edited\n`);
+    put("benchmarks/holdout/holdout-90/mtek/src/main.mtek", `${SOURCE}// edited\n`);
     expect(errorsOf().some((error) => error.startsWith("benchmarks/holdout.sha256: recorded "))).toBe(true);
   });
 
