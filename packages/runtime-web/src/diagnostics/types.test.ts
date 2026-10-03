@@ -6,28 +6,71 @@ import {
   makeRuntimeDiagnostic,
   mountErrorKindForCode,
   type MtekDiagnostic,
+  type RuntimeDiagnosticCode,
 } from "./types.js";
 
-/** Rows of the table in `spec/diagnostics.md` section 5.8 (the single-code ones). */
-function specRuntimeRows(): Array<{ code: string; title: string }> {
+interface SpecRuntimeRow {
+  readonly code: string;
+  readonly title: string;
+  /** The id of the `<a id="...">` anchor in the code cell, if the row has one. */
+  readonly anchor: string | undefined;
+}
+
+/** The section 5.8 part of `spec/diagnostics.md`. */
+function runtimeSection(): string {
   const start = specText.indexOf("### 5.8 Runtime");
   const end = specText.indexOf("### 5.9");
   expect(start).toBeGreaterThan(-1);
   expect(end).toBeGreaterThan(start);
-  const rows: Array<{ code: string; title: string }> = [];
-  for (const line of specText.slice(start, end).split("\n")) {
-    const m = /^\| ([EW]8\d{3}) \| ([^|]+?) \|/.exec(line);
-    if (m?.[1] !== undefined && m[2] !== undefined) rows.push({ code: m[1], title: m[2] });
+  return specText.slice(start, end);
+}
+
+/**
+ * Rows of the table in `spec/diagnostics.md` section 5.8 (the single-code ones), with or without
+ * an anchor in the code cell: `| <a id="mtek-e8004"></a>E8004 | WebGPU unavailable | ... |`.
+ */
+function specRuntimeRows(): SpecRuntimeRow[] {
+  const rows: SpecRuntimeRow[] = [];
+  for (const line of runtimeSection().split("\n")) {
+    const m = /^\| (?:<a id="([^"]*)"><\/a>)?([EW]8\d{3}) \| ([^|]+?) \|/.exec(line);
+    if (m?.[2] !== undefined && m[3] !== undefined) rows.push({ code: m[2], title: m[3], anchor: m[1] });
   }
   return rows;
 }
 
+/** The fragment of a runtime code's `docs` field, as `makeRuntimeDiagnostic` builds it. */
+function docsFragment(code: RuntimeDiagnosticCode): string {
+  const docs = makeRuntimeDiagnostic(code, { message: "m", phase: "runtime:mount" }).docs;
+  const prefix = "spec/diagnostics.md#";
+  expect(docs.startsWith(prefix)).toBe(true);
+  return docs.slice(prefix.length);
+}
+
+function isRuntimeCode(code: string): code is RuntimeDiagnosticCode {
+  return Object.hasOwn(RUNTIME_DIAGNOSTIC_CATALOGUE, code);
+}
+
 describe("runtime diagnostic catalogue", () => {
   it("lists exactly the codes and titles of spec/diagnostics.md section 5.8", () => {
-    const fromSpec = specRuntimeRows();
+    const fromSpec = specRuntimeRows().map(({ code, title }) => ({ code, title }));
     expect(fromSpec.length).toBeGreaterThan(20);
     const fromCode = Object.entries(RUNTIME_DIAGNOSTIC_CATALOGUE).map(([code, title]) => ({ code, title }));
     expect(fromCode).toEqual(fromSpec);
+  });
+
+  it("gives every runtime code exactly one anchor, in its row, equal to its docs fragment", () => {
+    const rows = specRuntimeRows();
+    const allIds = [...specText.matchAll(/<a id="([^"]*)"><\/a>/g)].map((m) => m[1]);
+    for (const row of rows) {
+      expect(isRuntimeCode(row.code)).toBe(true);
+      if (!isRuntimeCode(row.code)) continue;
+      const fragment = docsFragment(row.code);
+      expect(row.anchor, row.code).toBe(fragment);
+      expect(allIds.filter((id) => id === fragment), row.code).toHaveLength(1);
+    }
+    // No anchor in section 5.8 that is not a runtime code's row anchor.
+    const sectionIds = [...runtimeSection().matchAll(/<a id="([^"]*)"><\/a>/g)].map((m) => m[1]);
+    expect(sectionIds).toEqual(rows.map((row) => row.anchor));
   });
 });
 
