@@ -1,0 +1,4355 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=hardware"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "baselines\\m0-bridge.spec.ts",
+      "file": "baselines/m0-bridge.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "three.js baseline: update correctness, instance isolation and pipeline counts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1214,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:40.633Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "87b9e747ef586f55caf0-77f9eb5b303a0df94ca3",
+          "file": "baselines/m0-bridge.spec.ts",
+          "line": 210,
+          "column": 1
+        },
+        {
+          "title": "three.js baseline: out-of-range values written to the unsigned uniform",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1174,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:42.582Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "87b9e747ef586f55caf0-67b9cc0b96c2e77b118d",
+          "file": "baselines/m0-bridge.spec.ts",
+          "line": 343,
+          "column": 1
+        },
+        {
+          "title": "three.js baseline: run-time behaviour of shader-graph type mismatches that tsc accepts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 598,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:43.766Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "87b9e747ef586f55caf0-2a1b1365b9cca1763f7b",
+          "file": "baselines/m0-bridge.spec.ts",
+          "line": 372,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "bridge\\color.spec.ts",
+      "file": "bridge/color.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "mixed: the rendered colour matches the CPU sRGB encoding of f.rgb * a",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "centre pixel",
+                  "description": "a=0.5 f=(0.8, 0.4, 0.2): got 170,124,89,255, expected 170,124,89,255"
+                },
+                {
+                  "type": "centre pixel",
+                  "description": "a=1 f=(0.05, 0.25, 0.9): got 63,137,243,255, expected 63,137,243,255"
+                },
+                {
+                  "type": "centre pixel",
+                  "description": "a=0.25 f=(1, 0.6, 0.02): got 137,108,15,255, expected 137,108,16,255"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 889,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:44.406Z",
+                  "annotations": [
+                    {
+                      "type": "centre pixel",
+                      "description": "a=0.5 f=(0.8, 0.4, 0.2): got 170,124,89,255, expected 170,124,89,255"
+                    },
+                    {
+                      "type": "centre pixel",
+                      "description": "a=1 f=(0.05, 0.25, 0.9): got 63,137,243,255, expected 63,137,243,255"
+                    },
+                    {
+                      "type": "centre pixel",
+                      "description": "a=0.25 f=(1, 0.6, 0.02): got 137,108,15,255, expected 137,108,16,255"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "eeeb806bdcc95146202d-d3bde9443bd74d810834",
+          "file": "bridge/color.spec.ts",
+          "line": 39,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "bridge\\counters.spec.ts",
+      "file": "bridge/counters.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "all_types: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "276016002 (MTEK_TEST_SEED=default, all_types:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=320"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=480"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=640"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=640"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 293,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:45.324Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "276016002 (MTEK_TEST_SEED=default, all_types:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=320"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=480"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=640"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=640"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-103d82a35e5d8cc59402",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "array_bool: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "219130061 (MTEK_TEST_SEED=default, array_bool:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=96"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=144"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 289,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:45.626Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "219130061 (MTEK_TEST_SEED=default, array_bool:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=96"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=144"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-51efa3a36a6121a810aa",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "array_f32: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3971012782 (MTEK_TEST_SEED=default, array_f32:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=128"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=192"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 321,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:45.925Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3971012782 (MTEK_TEST_SEED=default, array_f32:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=128"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=192"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-a36d0dc4f529869a841d",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "array_of_structs: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "4164097961 (MTEK_TEST_SEED=default, array_of_structs:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=96"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=144"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 335,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:46.260Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "4164097961 (MTEK_TEST_SEED=default, array_of_structs:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=96"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=144"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-3a0a6d5438fa785b1285",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "array_vec2: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "345316709 (MTEK_TEST_SEED=default, array_vec2:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=96"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=144"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 280,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:46.606Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "345316709 (MTEK_TEST_SEED=default, array_vec2:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=96"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=144"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=192"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-5dab05b2fc3c3e12efd4",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "builtin_frame: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2713088546 (MTEK_TEST_SEED=default, builtin_frame:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=576"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=864"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=1152"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=1152"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 303,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:46.896Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2713088546 (MTEK_TEST_SEED=default, builtin_frame:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=576"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=864"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=1152"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=1152"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-bff64bfc0ff5bc3f89c1",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "builtin_object: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3686550070 (MTEK_TEST_SEED=default, builtin_object:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=256"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=384"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=512"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=512"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 299,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:47.210Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3686550070 (MTEK_TEST_SEED=default, builtin_object:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=256"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=384"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=512"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=512"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-a4a1d9c61ed6fd6bd762",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "mat4_and_quat: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "218849203 (MTEK_TEST_SEED=default, mat4_and_quat:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=192"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=288"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=384"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=384"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 304,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:47.519Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "218849203 (MTEK_TEST_SEED=default, mat4_and_quat:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=192"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=288"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=384"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=384"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-0ff286fdcf0c47f76b97",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "mixed: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "168013668 (MTEK_TEST_SEED=default, mixed:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=128"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=192"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 278,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:47.833Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "168013668 (MTEK_TEST_SEED=default, mixed:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=128"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=192"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-503ce54398c4375bd30d",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "nested_struct_in_array: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2967002386 (MTEK_TEST_SEED=default, nested_struct_in_array:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=128"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=192"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 270,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:48.122Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2967002386 (MTEK_TEST_SEED=default, nested_struct_in_array:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=128"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=192"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=256"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-25f5a5d00f8c7e6db51c",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "scalar_f32: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "713799423 (MTEK_TEST_SEED=default, scalar_f32:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=8"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=12"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=16"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=16"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 276,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:48.402Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "713799423 (MTEK_TEST_SEED=default, scalar_f32:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=8"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=12"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=16"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=16"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-1e60fee289b7f5b57440",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "struct_then_scalar: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3535650669 (MTEK_TEST_SEED=default, struct_then_scalar:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=64"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=96"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=128"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=128"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 278,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:48.687Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3535650669 (MTEK_TEST_SEED=default, struct_then_scalar:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=64"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=96"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=128"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=128"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-3f37226e83609c2edc2d",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "vec3: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "727769654 (MTEK_TEST_SEED=default, vec3:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=32"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=48"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=64"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=64"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 283,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:48.975Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "727769654 (MTEK_TEST_SEED=default, vec3:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=32"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=48"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=64"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=64"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-6f0f6009d301094ef662",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "vec3_then_f32: value updates create no pipeline, shader module or bind group",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "4015938508 (MTEK_TEST_SEED=default, vec3_then_f32:counters)"
+                },
+                {
+                  "type": "counters: after first run",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=32"
+                },
+                {
+                  "type": "counters: after changing B",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=48"
+                },
+                {
+                  "type": "counters: after changing A",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=64"
+                },
+                {
+                  "type": "counters: after identical rewrite",
+                  "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=64"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 276,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:49.266Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "4015938508 (MTEK_TEST_SEED=default, vec3_then_f32:counters)"
+                    },
+                    {
+                      "type": "counters: after first run",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=2 uploadBytes=32"
+                    },
+                    {
+                      "type": "counters: after changing B",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=3 uploadBytes=48"
+                    },
+                    {
+                      "type": "counters: after changing A",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=64"
+                    },
+                    {
+                      "type": "counters: after identical rewrite",
+                      "description": "shaderModulesCreated=1 pipelinesCreated=1 bindGroupsCreated=3 buffersAllocated=2 uploads=4 uploadBytes=64"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6f9361a796790a106236-3dfae4e71f5b2eaf4532",
+          "file": "bridge/counters.spec.ts",
+          "line": 18,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "bridge\\instances.spec.ts",
+      "file": "bridge/instances.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "all_types: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "4283958551 (MTEK_TEST_SEED=default, all_types:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 286,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:49.557Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "4283958551 (MTEK_TEST_SEED=default, all_types:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-c7abbcc8206c08804f86",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "array_bool: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3262619126 (MTEK_TEST_SEED=default, array_bool:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 252,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:49.852Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3262619126 (MTEK_TEST_SEED=default, array_bool:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-fe8f1c27ca74d0a6b715",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "array_f32: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3111003043 (MTEK_TEST_SEED=default, array_f32:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 270,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:50.113Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3111003043 (MTEK_TEST_SEED=default, array_f32:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-73431fda1d0ce82aafec",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "array_of_structs: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2649931474 (MTEK_TEST_SEED=default, array_of_structs:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 272,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:50.393Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2649931474 (MTEK_TEST_SEED=default, array_of_structs:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-5425cda02d7a8885c045",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "array_vec2: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1460895630 (MTEK_TEST_SEED=default, array_vec2:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 271,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:50.678Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1460895630 (MTEK_TEST_SEED=default, array_vec2:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-1ffddc46f2947bc34b06",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "builtin_frame: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2612285495 (MTEK_TEST_SEED=default, builtin_frame:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 288,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:50.959Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2612285495 (MTEK_TEST_SEED=default, builtin_frame:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-c728732e52ff57cc3fdc",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "builtin_object: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3589074187 (MTEK_TEST_SEED=default, builtin_object:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 271,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:51.257Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3589074187 (MTEK_TEST_SEED=default, builtin_object:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-d5098f17c0062b7a352b",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "mat4_and_quat: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2283068912 (MTEK_TEST_SEED=default, mat4_and_quat:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 257,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:51.537Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2283068912 (MTEK_TEST_SEED=default, mat4_and_quat:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-38fce3bf7264dd5563e8",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "mixed: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1132550205 (MTEK_TEST_SEED=default, mixed:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 284,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:51.804Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1132550205 (MTEK_TEST_SEED=default, mixed:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-89fd5bfee22fe8d317e6",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "nested_struct_in_array: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3861274023 (MTEK_TEST_SEED=default, nested_struct_in_array:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 272,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:52.099Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3861274023 (MTEK_TEST_SEED=default, nested_struct_in_array:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-0a519e10646a5e9ba722",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "scalar_f32: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3520002396 (MTEK_TEST_SEED=default, scalar_f32:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 252,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:52.381Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3520002396 (MTEK_TEST_SEED=default, scalar_f32:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-7548bb35f827bf29270c",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "struct_then_scalar: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1593483926 (MTEK_TEST_SEED=default, struct_then_scalar:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 261,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:52.642Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1593483926 (MTEK_TEST_SEED=default, struct_then_scalar:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-31a4eee96c36f2336761",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "vec3: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2736764171 (MTEK_TEST_SEED=default, vec3:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 272,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:52.911Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2736764171 (MTEK_TEST_SEED=default, vec3:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-6d54fb18dd2b834d9901",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        },
+        {
+          "title": "vec3_then_f32: two instances in one arena do not disturb each other",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1319259045 (MTEK_TEST_SEED=default, vec3_then_f32:instances)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 269,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:53.192Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1319259045 (MTEK_TEST_SEED=default, vec3_then_f32:instances)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1cc3e5ef3645f21bd8a8-8ce1cf6d905fac254003",
+          "file": "bridge/instances.spec.ts",
+          "line": 9,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "bridge\\probe.spec.ts",
+      "file": "bridge/probe.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "all_types: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3540674676 (MTEK_TEST_SEED=default, all_types:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 255,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:53.485Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3540674676 (MTEK_TEST_SEED=default, all_types:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-ca4bcceb7e54bad21558",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "all_types: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2683324144 (MTEK_TEST_SEED=default, all_types:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 265,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:53.749Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2683324144 (MTEK_TEST_SEED=default, all_types:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-e96706a0b78aeb497f97",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "all_types: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1209909234 (MTEK_TEST_SEED=default, all_types:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 278,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:54.024Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1209909234 (MTEK_TEST_SEED=default, all_types:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-7ae39d931cdf81748c88",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_bool: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3394147069 (MTEK_TEST_SEED=default, array_bool:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 253,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:54.312Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3394147069 (MTEK_TEST_SEED=default, array_bool:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-c436ff3f17114b32f929",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_bool: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1862313467 (MTEK_TEST_SEED=default, array_bool:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 251,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:54.575Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1862313467 (MTEK_TEST_SEED=default, array_bool:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-2c27e104beae30f767ba",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_bool: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "4134880895 (MTEK_TEST_SEED=default, array_bool:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 245,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:54.834Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "4134880895 (MTEK_TEST_SEED=default, array_bool:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-7f1af00b1a88d9b7bee3",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_f32: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2194442080 (MTEK_TEST_SEED=default, array_f32:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 256,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:55.088Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2194442080 (MTEK_TEST_SEED=default, array_f32:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-02009a41b8d42b0310dc",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_f32: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "349766812 (MTEK_TEST_SEED=default, array_f32:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 250,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:55.354Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "349766812 (MTEK_TEST_SEED=default, array_f32:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-6fe89f1973f6f43b2660",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_f32: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2606675566 (MTEK_TEST_SEED=default, array_f32:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 249,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:55.614Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2606675566 (MTEK_TEST_SEED=default, array_f32:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-479efec247c803ab57bd",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_of_structs: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2115603641 (MTEK_TEST_SEED=default, array_of_structs:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 288,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:55.872Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2115603641 (MTEK_TEST_SEED=default, array_of_structs:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-ea1f3987489867aef828",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_of_structs: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3309564855 (MTEK_TEST_SEED=default, array_of_structs:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 291,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:56.172Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3309564855 (MTEK_TEST_SEED=default, array_of_structs:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-0bb21c3f138c66b0ad0d",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_of_structs: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1570325723 (MTEK_TEST_SEED=default, array_of_structs:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 254,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:56.474Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1570325723 (MTEK_TEST_SEED=default, array_of_structs:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-51b5b14cf7c69bead0c1",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_vec2: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1097204997 (MTEK_TEST_SEED=default, array_vec2:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 241,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:56.738Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1097204997 (MTEK_TEST_SEED=default, array_vec2:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-e30b27c782139c733988",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_vec2: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "4019968787 (MTEK_TEST_SEED=default, array_vec2:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 241,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:56.987Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "4019968787 (MTEK_TEST_SEED=default, array_vec2:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-e7603e5116f322e9bc54",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "array_vec2: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3978404791 (MTEK_TEST_SEED=default, array_vec2:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 249,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:57.239Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3978404791 (MTEK_TEST_SEED=default, array_vec2:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-d325efcf28942e8f2ff5",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "builtin_frame: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1424531348 (MTEK_TEST_SEED=default, builtin_frame:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 253,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:57.496Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1424531348 (MTEK_TEST_SEED=default, builtin_frame:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-0a597b2824d87973009c",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "builtin_frame: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "384016912 (MTEK_TEST_SEED=default, builtin_frame:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 271,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:57.758Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "384016912 (MTEK_TEST_SEED=default, builtin_frame:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-faa86a41da101f29fd2f",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "builtin_frame: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3532663570 (MTEK_TEST_SEED=default, builtin_frame:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 292,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:58.040Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3532663570 (MTEK_TEST_SEED=default, builtin_frame:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-4bce37762767e9cafe0c",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "builtin_object: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2631583896 (MTEK_TEST_SEED=default, builtin_object:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 278,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:58.345Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2631583896 (MTEK_TEST_SEED=default, builtin_object:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-aa832f7d98a53cc28e35",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "builtin_object: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2508209412 (MTEK_TEST_SEED=default, builtin_object:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 250,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:58.634Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2508209412 (MTEK_TEST_SEED=default, builtin_object:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-28aead833e8e17ccfa77",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "builtin_object: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2553550966 (MTEK_TEST_SEED=default, builtin_object:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 263,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:58.894Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2553550966 (MTEK_TEST_SEED=default, builtin_object:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-925ac8e60980e93b4433",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "mat4_and_quat: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1911876639 (MTEK_TEST_SEED=default, mat4_and_quat:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 289,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:59.167Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1911876639 (MTEK_TEST_SEED=default, mat4_and_quat:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-cad905e86b448806eaa9",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "mat4_and_quat: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3139294849 (MTEK_TEST_SEED=default, mat4_and_quat:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 277,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:59.467Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3139294849 (MTEK_TEST_SEED=default, mat4_and_quat:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-7102d264ff67fae8bbeb",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "mat4_and_quat: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "829974153 (MTEK_TEST_SEED=default, mat4_and_quat:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 262,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:59.753Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "829974153 (MTEK_TEST_SEED=default, mat4_and_quat:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-0f64bfcede02979fd864",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "mixed: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2507916242 (MTEK_TEST_SEED=default, mixed:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 254,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:00.025Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2507916242 (MTEK_TEST_SEED=default, mixed:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-50431543f187970349df",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "mixed: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "422936642 (MTEK_TEST_SEED=default, mixed:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 263,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:00.289Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "422936642 (MTEK_TEST_SEED=default, mixed:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-66a9d92738688dc214b2",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "mixed: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1251823512 (MTEK_TEST_SEED=default, mixed:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 269,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:00.561Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1251823512 (MTEK_TEST_SEED=default, mixed:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-add149e392f0012eecaf",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "nested_struct_in_array: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3611270564 (MTEK_TEST_SEED=default, nested_struct_in_array:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 274,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:00.839Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3611270564 (MTEK_TEST_SEED=default, nested_struct_in_array:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-3a6c23170b2893727453",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "nested_struct_in_array: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "848828320 (MTEK_TEST_SEED=default, nested_struct_in_array:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 266,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:01.125Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "848828320 (MTEK_TEST_SEED=default, nested_struct_in_array:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-81e8a7363f5cf3adcc1d",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "nested_struct_in_array: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1279139458 (MTEK_TEST_SEED=default, nested_struct_in_array:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 260,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:01.401Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1279139458 (MTEK_TEST_SEED=default, nested_struct_in_array:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-0f7cb7b6ba8ed22a620d",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "scalar_f32: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3106002331 (MTEK_TEST_SEED=default, scalar_f32:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 259,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:01.672Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3106002331 (MTEK_TEST_SEED=default, scalar_f32:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-d7117ef9ce191f63848a",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "scalar_f32: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1819990461 (MTEK_TEST_SEED=default, scalar_f32:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 290,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:01.942Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1819990461 (MTEK_TEST_SEED=default, scalar_f32:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-e22ebe23e6a95266fcbc",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "scalar_f32: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2641729621 (MTEK_TEST_SEED=default, scalar_f32:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 289,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:02.254Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2641729621 (MTEK_TEST_SEED=default, scalar_f32:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-f29d327628b20c94d1c8",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "struct_then_scalar: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1920090013 (MTEK_TEST_SEED=default, struct_then_scalar:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 261,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:02.563Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1920090013 (MTEK_TEST_SEED=default, struct_then_scalar:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-fa8b54d12474fdb8fea3",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "struct_then_scalar: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2002063899 (MTEK_TEST_SEED=default, struct_then_scalar:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 261,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:02.833Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2002063899 (MTEK_TEST_SEED=default, struct_then_scalar:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-9c879bf820dbc425d59a",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "struct_then_scalar: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1198995615 (MTEK_TEST_SEED=default, struct_then_scalar:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 277,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:03.103Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1198995615 (MTEK_TEST_SEED=default, struct_then_scalar:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-84f1573345f7678fad99",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "vec3: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "1381634200 (MTEK_TEST_SEED=default, vec3:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 261,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:03.390Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "1381634200 (MTEK_TEST_SEED=default, vec3:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-d56392cafb5a51cfe69b",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "vec3: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3874395396 (MTEK_TEST_SEED=default, vec3:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 255,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:03.661Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3874395396 (MTEK_TEST_SEED=default, vec3:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-8b0238f4773b90bfce67",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "vec3: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3796672630 (MTEK_TEST_SEED=default, vec3:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 282,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:03.925Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3796672630 (MTEK_TEST_SEED=default, vec3:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-d72104d37be1a19bcc64",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "vec3_then_f32: random values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "2590841226 (MTEK_TEST_SEED=default, vec3_then_f32:random values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 280,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:04.217Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "2590841226 (MTEK_TEST_SEED=default, vec3_then_f32:random values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-e7762b2e020b59f177fb",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "vec3_then_f32: random values with the other boolean phase are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "3062505450 (MTEK_TEST_SEED=default, vec3_then_f32:random values with the other boolean phase)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 262,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:04.506Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "3062505450 (MTEK_TEST_SEED=default, vec3_then_f32:random values with the other boolean phase)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-21d638c0a090d7d78019",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "vec3_then_f32: edge values are read back bit-exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "seed",
+                  "description": "641180672 (MTEK_TEST_SEED=default, vec3_then_f32:edge values)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 241,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:04.781Z",
+                  "annotations": [
+                    {
+                      "type": "seed",
+                      "description": "641180672 (MTEK_TEST_SEED=default, vec3_then_f32:edge values)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3f4790adfc11ce9e3b80-6d5cbddef4c226ecbedd",
+          "file": "bridge/probe.spec.ts",
+          "line": 18,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "env.spec.ts",
+      "file": "env.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "environment record is written and valid",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:05.050Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8fc7dd60e4458e67f020-cd59c2d032892711af7b",
+          "file": "env.spec.ts",
+          "line": 15,
+          "column": 1
+        },
+        {
+          "title": "clears and reads back rgba8unorm {\"r\":1,\"g\":0.5,\"b\":0.25,\"a\":1}",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 207,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:05.060Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8fc7dd60e4458e67f020-12884a8e1e4dbaf97e1b",
+          "file": "env.spec.ts",
+          "line": 88,
+          "column": 3
+        },
+        {
+          "title": "clears and reads back rgba8unorm {\"r\":0,\"g\":0.25,\"b\":1,\"a\":0.5}",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 220,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:05.276Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8fc7dd60e4458e67f020-a1505d31ff90df884169",
+          "file": "env.spec.ts",
+          "line": 88,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "mount.spec.ts",
+      "file": "mount.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "without navigator.gpu the mount rejects with webgpu-unavailable (E8004) and shows the overlay",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 152,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:51:08.501Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a5462a3a646107446b0a-acb6fe7e49afefa3ea1f",
+          "file": "mount.spec.ts",
+          "line": 325,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "mountMtek on a real WebGPU device",
+          "file": "mount.spec.ts",
+          "line": 157,
+          "column": 6,
+          "specs": [
+            {
+              "title": "renders the linear clear colour through the hardware sRGB view, 32 px wide (padded rows)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 361,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-03T04:51:05.515Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a5462a3a646107446b0a-75a8ce09f3d1841efd3a",
+              "file": "mount.spec.ts",
+              "line": 165,
+              "column": 5
+            },
+            {
+              "title": "renders the linear clear colour through the hardware sRGB view, 100 px wide (padded rows)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 249,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-03T04:51:05.893Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a5462a3a646107446b0a-617a4385c3a7ed5a7539",
+              "file": "mount.spec.ts",
+              "line": 165,
+              "column": 5
+            },
+            {
+              "title": "configures and renders to the canvas without a validation error and sizes the backing store",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 438,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-03T04:51:06.155Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a5462a3a646107446b0a-b3a4b50755f61cb83d76",
+              "file": "mount.spec.ts",
+              "line": 191,
+              "column": 3
+            },
+            {
+              "title": "skips rendering on a zero-sized canvas and renders once it has a size (ResizeObserver)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 244,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-03T04:51:06.602Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a5462a3a646107446b0a-811e86d457f41c5a664f",
+              "file": "mount.spec.ts",
+              "line": 211,
+              "column": 3
+            },
+            {
+              "title": "mount/dispose 20 times leaves every live counter at 0 and no overlay",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 651,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-03T04:51:06.856Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a5462a3a646107446b0a-9096b69d9c5583282b74",
+              "file": "mount.spec.ts",
+              "line": 227,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "mountMtek failures in a real browser (spec/testing.md section 6.7)",
+          "file": "mount.spec.ts",
+          "line": 253,
+          "column": 6,
+          "specs": [
+            {
+              "title": "a shader that fails to compile rejects with shader-failed, E8051 mapped through the span map, and the overlay",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 270,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-03T04:51:07.517Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a5462a3a646107446b0a-f190a2945c40692d45e7",
+              "file": "mount.spec.ts",
+              "line": 259,
+              "column": 3
+            },
+            {
+              "title": "an incompatible program rejects with incompatible-program and shows the overlay",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 156,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-03T04:51:07.796Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a5462a3a646107446b0a-f88d5569139082d02088",
+              "file": "mount.spec.ts",
+              "line": 281,
+              "column": 3
+            },
+            {
+              "title": "an invalid manifest rejects with manifest-invalid and shows the overlay",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 156,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-03T04:51:07.961Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a5462a3a646107446b0a-78c35bfeae7c95b7f204",
+              "file": "mount.spec.ts",
+              "line": 291,
+              "column": 3
+            },
+            {
+              "title": "a device below the profile (an unsupported required limit) rejects with device-failed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 207,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-03T04:51:08.127Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a5462a3a646107446b0a-0b5c4129a442f56ffed4",
+              "file": "mount.spec.ts",
+              "line": 300,
+              "column": 3
+            },
+            {
+              "title": "failureDisplay none rejects and reports but shows no overlay",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 146,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-03T04:51:08.344Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a5462a3a646107446b0a-281fcbd087c69b747e4a",
+              "file": "mount.spec.ts",
+              "line": 314,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-03T04:50:39.542Z",
+    "duration": 29301.175,
+    "expected": 88,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

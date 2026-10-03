@@ -1,0 +1,532 @@
+   Compiling mtek-cli v0.1.0-dev (<repo>\crates\mtek-cli)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.01s
+     Running unittests src\main.rs (target\debug\deps\mtek-7790672cc7aec9bd.exe)
+
+running 3 tests
+test tests::anything_else_is_usage ... ok
+test tests::version_flag_is_recognised ... ok
+test tests::version_line_is_exact ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\cli.rs (target\debug\deps\cli-e2006bac60efe1ab.exe)
+
+running 3 tests
+test no_arguments_prints_usage_and_exits_two ... ok
+test version_prints_exact_line_and_exits_zero ... ok
+test unknown_arguments_exit_two ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running unittests src\lib.rs (target\debug\deps\mtek_compiler-07a80bbe04630257.exe)
+
+running 309 tests
+test diagnostics::codes::tests::ranges_and_unsupported_feature_codes ... ok
+test diagnostics::codes::tests::known_codes ... ok
+test diagnostics::codes::tests::default_phases ... ok
+test diagnostics::codes::tests::code_strings_follow_the_envelope_format ... ok
+test diagnostics::json::tests::related_without_text_omits_message ... ok
+test diagnostics::json::tests::multi_line_span_and_crlf ... ok
+test diagnostics::json::tests::envelope_matches_the_specification_example_shape ... ok
+test diagnostics::json::tests::optional_fields_are_omitted_and_project_level_source_is_null ... ok
+test diagnostics::json::tests::notes_edits_and_phase ... ok
+test diagnostics::codes::tests::source_error_codes_exist_in_the_catalogue ... ok
+test diagnostics::json::tests::pretty_output_is_stable ... ok
+test diagnostics::model::tests::new_takes_severity_and_phase_from_the_catalogue ... ok
+test diagnostics::model::tests::from_source_error_uses_the_error_code_and_text ... ok
+test diagnostics::json::tests::report_shape ... ok
+test diagnostics::sink::tests::earlier_positions_displace_later_ones ... ok
+test diagnostics::model::tests::sort_key_orders_file_start_end_code ... ok
+test diagnostics::sink::tests::dropped_errors_still_count_for_has_errors ... ok
+test diagnostics::json::tests::columns_count_scalar_values_and_bytes_are_disk_offsets ... ok
+test diagnostics::model::tests::phase_strings_match_the_specification ... ok
+test diagnostics::codes::tests::parse_round_trips ... ok
+test diagnostics::model::tests::builder_sets_every_field ... ok
+test diagnostics::sink::tests::empty_sink ... ok
+test diagnostics::sink::tests::cap_is_200_per_file_with_one_w9003 ... ok
+test diagnostics::json::tests::unknown_files_never_panic ... ok
+test diagnostics::sink::tests::push_order_does_not_change_the_result ... ok
+test diagnostics::sink::tests::record_suppressed_adds_to_the_dropped_count_and_errors ... ok
+test diagnostics::sink::tests::singular_message_and_exact_limit ... ok
+test diagnostics::sink::tests::sorts_by_file_start_end_code ... ok
+test diagnostics::sink::tests::summary_counts_severities ... ok
+test diagnostics::sink::tests::suppressed_errors_keep_has_errors_true_without_stored_diagnostics ... ok
+test diagnostics::sink::tests::ties_keep_insertion_order ... ok
+test diagnostics::sink::tests::unlocated_diagnostics_are_not_capped ... ok
+test emit_js::printer::tests::identifier_names_and_property_keys ... ok
+test emit_js::printer::tests::identifier_part_is_safe ... ok
+test emit_js::printer::tests::line_comment_cannot_be_broken_out_of ... ok
+test emit_js::printer::tests::printer_indents_blocks_and_never_underflows ... ok
+test emit_js::printer::tests::string_literal_escapes_everything_dangerous ... ok
+test emit_js::writers::tests::colour_arrays_keep_their_component_names ... ok
+test emit_js::writers::tests::arrays_of_sixteen_are_straight_line_and_seventeen_loop ... ok
+test emit_js::writers::tests::nested_long_arrays_use_distinct_loop_variables ... ok
+test emit_js::writers::tests::hostile_names_never_reach_the_output_unescaped ... ok
+test emit_js::writers::tests::pulse_matches_the_specification_example ... ok
+test emit_js::writers::tests::qualifiers_follow_the_naming_rules ... ok
+test emit_js::writers::tests::output_is_private_deterministic_and_has_the_header ... ok
+test emit_js::writers::tests::scalar_kinds_use_their_own_views_and_bool_becomes_a_u32 ... ok
+test emit_js::writers::tests::test_module_wraps_with_exactly_one_export_statement ... ok
+test emit_js::writers::tests::vectors_colours_quaternions_and_matrices_use_their_shapes ... ok
+test emit_wgsl::blocks::tests::array_leaves_go_through_the_wrapper_value ... ok
+test emit_wgsl::blocks::tests::binding_declaration_text ... ok
+test emit_wgsl::blocks::tests::bool_leaves_read_raw_in_the_probe_and_compared_in_typed_use ... ok
+test emit_wgsl::blocks::tests::emission_is_deterministic ... ok
+test emit_wgsl::blocks::tests::matrix_leaves_run_columns_then_rows ... ok
+test emit_wgsl::blocks::tests::mixed_block_is_emitted_with_explicit_gaps ... ok
+test emit_wgsl::blocks::tests::mixed_leaves_are_in_leaf_order_with_byte_offsets ... ok
+test emit_wgsl::blocks::tests::padded_scalar_array_uses_a_wrapper ... ok
+test emit_wgsl::blocks::tests::padded_struct_elements_read_through_value ... ok
+test emit_wgsl::blocks::tests::struct_followed_by_scalar_gets_align_and_size ... ok
+test emit_wgsl::blocks::tests::struct_elements_and_unpadded_arrays_have_relative_element_offsets ... ok
+test emit_wgsl::blocks::tests::struct_used_twice_is_declared_once_and_builtin_names_are_kept ... ok
+test emit_wgsl::blocks::tests::trailing_struct_member_needs_no_size_attribute ... ok
+test emit_wgsl::blocks::tests::unpadded_struct_elements_have_no_wrapper ... ok
+test emit_wgsl::blocks::tests::user_members_get_the_u_prefix_and_builtin_blocks_keep_their_names ... ok
+test emit_wgsl::blocks::tests::wrappers_exist_for_bool_vec2_and_struct_elements_once ... ok
+test layout::builtin::tests::blocks_are_listed_in_order ... ok
+test layout::builtin::tests::built_in_sizes_match_the_specification ... ok
+test layout::builtin::tests::frame_member_offsets_match_the_specification ... ok
+test layout::builtin::tests::object_member_offsets_match_the_specification ... ok
+test layout::compute::tests::align_and_size_of_every_primitive ... ok
+test layout::compute::tests::array_length_zero_and_too_long_are_errors ... ok
+test layout::compute::tests::array_metrics ... ok
+test emit_wgsl::validate::tests::syntax_errors_keep_message_and_span ... ok
+test layout::compute::tests::duplicate_member_is_an_error ... ok
+test layout::compute::tests::empty_struct_is_an_error ... ok
+test layout::compute::tests::nested_struct_member_offsets_are_absolute_and_element_offsets_relative ... ok
+test layout::compute::tests::non_struct_top_level_is_rejected ... ok
+test layout::compute::tests::oversized_nesting_is_an_overflow_error_not_a_panic ... ok
+test layout::compute::tests::padded_flag_follows_the_natural_stride ... ok
+test layout::compute::tests::scalar_only_struct_keeps_align_4 ... ok
+test emit_wgsl::validate::tests::valid_source_returns_the_module ... ok
+test emit_wgsl::validate::tests::validation_errors_keep_causes_and_span ... ok
+test layout::compute::tests::stride_of_every_primitive_is_a_multiple_of_16 ... ok
+test layout::compute::tests::struct_member_followed_by_scalar_uses_the_16_byte_rule ... ok
+test layout::compute::tests::struct_metrics ... ok
+test layout::compute::tests::trailing_struct_member_pads_the_block_to_16 ... ok
+test layout::fixture::tests::invalid_json_is_reported ... ok
+test layout::fixture::tests::array_length_must_be_a_u32 ... ok
+test layout::fixture::tests::missing_and_mistyped_keys_are_rejected ... ok
+test layout::fixture::tests::parses_every_type_name ... ok
+test layout::fixture::tests::parses_nested_structs_and_arrays ... ok
+test layout::fixture::tests::parses_the_mixed_example_of_the_specification ... ok
+test layout::fixture::tests::top_level_must_be_a_struct ... ok
+test layout::fixture::tests::unknown_kind_and_unknown_keys_are_rejected ... ok
+test layout::fixture::tests::unknown_type_name_names_the_path ... ok
+test layout::record::tests::accessors_read_every_variant ... ok
+test layout::record::tests::matrix_node_uses_camel_case_column_stride ... ok
+test layout::record::tests::scalar_node_key_order_and_names ... ok
+test layout::record::tests::struct_and_array_key_order ... ok
+test layout::record::tests::record_key_order_and_round_trip ... ok
+test layout::types::tests::spelling_of_composites ... ok
+test layout::types::tests::spelling_of_every_type ... ok
+test project::graph::tests::a_cycle_lists_every_module_in_order_and_names_the_closing_import ... ok
+test project::graph::tests::a_module_reached_twice_is_not_a_cycle ... ok
+test project::graph::tests::a_self_import_is_a_cycle_of_one ... ok
+test project::graph::tests::acyclic_graphs_have_no_cycles ... ok
+test project::graph::tests::a_new_graph_holds_only_the_entry ... ok
+test project::load::tests::a_directory_called_mtek_toml_is_e9004 ... ok
+test project::graph::tests::unreachable_modules_are_searched_too ... ok
+test project::graph::tests::adding_a_known_path_returns_the_existing_module ... ok
+test project::load::tests::a_custom_entry_is_loaded_instead_of_the_default ... ok
+test project::graph::tests::unknown_ids_are_rejected ... ok
+test project::graph::tests::modules_are_numbered_in_the_order_they_are_added ... ok
+test project::load::tests::a_minimal_project_loads_with_the_entry_as_its_only_module ... ok
+test project::graph::tests::two_cycles_are_reported_in_search_order ... ok
+test project::load::tests::a_missing_entry_is_e9005 ... ok
+test project::load::tests::a_missing_project_file_is_e9004 ... ok
+test project::load::tests::an_entry_below_a_file_is_not_found ... ok
+test project::load::tests::a_missing_entry_that_exists_with_other_letter_case_gets_a_hint ... ok
+test project::load::tests::an_entry_that_is_a_directory_is_e9005 ... ok
+test project::load::tests::a_project_file_that_is_not_utf8_is_e9001 ... ok
+test project::load::tests::an_unreadable_entry_is_e9005_with_the_reason ... ok
+test project::load::tests::an_unreadable_project_file_is_e9004_with_the_reason ... ok
+test project::load::tests::an_invalid_configuration_stops_loading_and_reports_every_problem ... ok
+test project::load::tests::host_inputs_are_reported_but_loading_continues ... ok
+test project::load::tests::paths_are_relative_to_the_project_root_not_the_file_system_base ... ok
+test project::load::tests::no_case_hint_when_nothing_similar_exists ... ok
+test project::load::tests::loading_does_not_depend_on_the_directory_listing_order ... ok
+test project::load::tests::the_entry_text_is_kept_exactly_including_a_byte_order_mark_and_crlf ... ok
+test project::parse::tests::a_dependency_table_is_unknown ... ok
+test project::parse::tests::a_byte_order_mark_is_ignored ... ok
+test project::parse::tests::a_key_in_the_wrong_table_gets_a_pointer ... ok
+test project::parse::tests::a_minimal_file_takes_every_default ... ok
+test project::parse::tests::a_table_where_a_value_is_expected_and_the_reverse ... ok
+test project::parse::tests::a_wrong_type_message_is_a_complete_sentence_with_a_location ... ok
+test project::parse::tests::an_empty_host_inputs_table_is_fine ... ok
+test project::parse::tests::an_unknown_key_is_named_by_its_path_with_help ... ok
+test project::parse::tests::an_unknown_table_is_named_by_its_path ... ok
+test project::parse::tests::articles_agree_with_the_noun ... ok
+test project::parse::tests::child_paths_quote_keys_that_are_not_bare ... ok
+test project::parse::tests::dotted_keys_inline_tables_and_integer_forms_are_accepted ... ok
+test project::parse::tests::duplicate_keys_are_invalid_toml ... ok
+test project::parse::tests::edit_distance_is_levenshtein ... ok
+test project::graph::tests::a_long_chain_does_not_overflow_the_stack ... ok
+test project::parse::tests::every_key_can_be_set ... ok
+test project::parse::tests::every_problem_is_reported_in_file_order ... ok
+test project::parse::tests::host_inputs_are_parsed_kept_and_reported_as_not_implemented ... ok
+test project::parse::tests::invalid_host_inputs_do_not_also_report_e9010 ... ok
+test project::parse::tests::invalid_toml_is_e9001_with_a_location ... ok
+test project::parse::tests::no_suggestion_when_two_candidates_are_equally_close ... ok
+test project::parse::tests::only_the_web_target_exists ... ok
+test project::parse::tests::out_dir_is_a_project_relative_path ... ok
+test project::parse::tests::out_dir_must_not_contain_the_entry ... ok
+test project::parse::tests::required_keys_and_tables_must_be_present ... ok
+test project::graph::tests::the_module_limit_is_enforced ... ok
+test project::parse::tests::the_default_constants_match_the_specification ... ok
+test project::parse::tests::the_entry_message_names_the_reason ... ok
+test project::parse::tests::out_of_range_values_name_the_key_the_accepted_range_and_the_value ... ok
+test project::parse::tests::range_bounds_are_inclusive ... ok
+test project::parse::tests::the_language_must_equal_the_compilers ... ok
+test project::load::tests::entry_text_problems_use_the_source_manager_codes ... ok
+test project::parse::tests::the_result_does_not_depend_on_key_order ... ok
+test project::parse::tests::the_specification_example_is_valid_except_for_host_inputs ... ok
+test project::parse::tests::the_name_must_match_the_pattern ... ok
+test project::parse::tests::the_entry_must_be_a_project_relative_mtek_file ... ok
+test project::parse::tests::unknown_keys_inside_host_and_dev_are_reported ... ok
+test project::parse::tests::the_scene_must_be_an_identifier ... ok
+test project::root::tests::a_directory_named_mtek_toml_is_not_a_project_file ... ok
+test project::root::tests::a_file_name_that_differs_in_case_is_not_a_project_file ... ok
+test project::root::tests::discovers_a_project_at_the_base_of_the_file_system ... ok
+test project::root::tests::discovers_the_nearest_ancestor ... ok
+test project::parse::tests::wrong_types_name_the_key_path_and_both_types ... ok
+test project::root::tests::discovers_the_project_at_the_start_directory ... ok
+test project::root::tests::missing_project_file_at_the_base_names_the_current_directory ... ok
+test project::root::tests::missing_project_file_is_e9004 ... ok
+test project::root::tests::unreadable_candidate_is_reported_not_skipped ... ok
+test project::root::tests::view_of_the_base_is_the_file_system_itself ... ok
+test project::root::tests::view_rebases_other_errors ... ok
+test project::root::tests::view_translates_paths_and_errors ... ok
+test project::scene::tests::a_configured_name_must_be_declared ... ok
+test project::scene::tests::a_configured_name_selects_the_only_scene_when_it_matches ... ok
+test project::scene::tests::a_duplicate_name_selects_the_first ... ok
+test project::scene::tests::a_single_scene_needs_no_configuration ... ok
+test project::scene::tests::no_scene_is_not_found ... ok
+test project::scene::tests::owned_names_work_too ... ok
+test project::scene::tests::several_scenes_need_a_configured_name ... ok
+test source::fs::tests::directory_prefix_does_not_match_sibling_with_common_prefix ... ok
+test source::fs::tests::error_display_names_the_path ... ok
+test source::fs::tests::exact_case_exists_is_case_sensitive_for_files_and_directories ... ok
+test source::fs::tests::insert_replaces_and_remove_deletes ... ok
+test source::fs::tests::list_dir_errors ... ok
+test source::fs::tests::list_dir_names_files_and_subdirectories_once ... ok
+test source::fs::tests::read_errors ... ok
+test source::fs::tests::read_returns_exact_bytes ... ok
+test source::line_index::tests::ascii_lines ... ok
+test source::line_index::tests::astral_characters_differ_between_scalar_and_utf16_columns ... ok
+test source::line_index::tests::astral_inverse_conversions ... ok
+test source::line_index::tests::bom_followed_by_newline ... ok
+test source::line_index::tests::bom_only_text ... ok
+test source::line_index::tests::crlf_terminators_are_not_columns ... ok
+test source::line_index::tests::conversions_round_trip_on_every_boundary ... ok
+test source::line_index::tests::empty_text ... ok
+test source::fs::tests::shuffled_listing_is_a_permutation_and_depends_on_the_seed ... ok
+test source::line_index::tests::eof_and_out_of_range_inputs_clamp ... ok
+test source::line_index::tests::leading_bom_is_zero_width ... ok
+test source::line_index::tests::lone_carriage_return_is_an_ordinary_character ... ok
+test source::line_index::tests::mixed_line_endings ... ok
+test source::line_index::tests::scalar_and_utf16_columns_agree_without_astral_characters ... ok
+test source::line_index::tests::stores_text_unmodified ... ok
+test source::line_index::tests::trailing_newline_creates_a_final_empty_line ... ok
+test source::line_index::tests::two_byte_characters ... ok
+test source::map::tests::bom_elsewhere_is_e0002 ... ok
+test source::map::tests::adds_files_with_sequential_ids_and_lookup ... ok
+test source::map::tests::bom_inside_a_string_literal_is_still_e0002 ... ok
+test source::map::tests::bom_only_file_is_valid ... ok
+test source::map::tests::empty_file_is_valid ... ok
+test source::map::tests::error_messages_name_file_and_position ... ok
+test source::map::tests::invalid_utf8_is_e0001_with_the_offending_offset ... ok
+test source::map::tests::invalid_utf8_variants_are_all_rejected ... ok
+test source::map::tests::leading_bom_is_kept_and_reported ... ok
+test source::map::tests::positions_through_the_map ... ok
+test source::map::tests::rejected_files_do_not_consume_ids ... ok
+test source::map::tests::second_bom_after_the_leading_one_is_e0002 ... ok
+test source::map::tests::sha256_matches_known_vectors_and_covers_the_whole_file ... ok
+test source::map::tests::slice_rejects_bad_spans_without_panicking ... ok
+test source::map::tests::text_is_stored_exactly_as_given ... ok
+test source::map::tests::truncated_character_at_eof_has_no_length ... ok
+test source::path::tests::accepts_and_normalises ... ok
+test source::path::tests::join_concatenates_valid_paths ... ok
+test source::path::tests::join_relative_rejects_escapes_and_bad_specs ... ok
+test source::path::tests::join_relative_resolves_against_the_importing_files_directory ... ok
+test source::path::tests::ordering_is_lexicographic_by_text ... ok
+test source::path::tests::rejects_absolute_paths ... ok
+test source::path::tests::rejects_backslashes ... ok
+test source::path::tests::rejects_control_characters_and_colons ... ok
+test source::path::tests::rejects_empty_and_root_results ... ok
+test source::path::tests::rejects_empty_segments ... ok
+test source::path::tests::rejects_escaping_the_root ... ok
+test source::path::tests::root_parent_and_names ... ok
+test source::span::tests::contains_is_half_open ... ok
+test source::span::tests::contains_span_requires_same_file_and_bounds ... ok
+test source::span::tests::file_id_index_and_display ... ok
+test source::span::tests::inverted_bounds_become_empty_at_start ... ok
+test source::map::tests::size_is_checked_before_encoding ... ok
+test source::span::tests::join_covers_both_and_rejects_foreign_files ... ok
+test source::span::tests::len_and_emptiness ... ok
+test source::span::tests::range_slices_text ... ok
+test syntax::lexer_tests::a_closing_marker_alone_is_not_a_comment ... ok
+test syntax::lexer_tests::a_doc_comment_is_three_slashes_not_followed_by_a_fourth ... ok
+test syntax::lexer_tests::a_file_full_of_errors_still_lexes_to_eof_in_order ... ok
+test syntax::lexer_tests::a_lone_carriage_return_in_a_string_ends_it_and_is_e0003 ... ok
+test syntax::lexer_tests::a_lone_carriage_return_inside_a_block_comment_is_e0003 ... ok
+test syntax::lexer_tests::a_lone_carriage_return_is_e0003_and_lexing_continues ... ok
+test syntax::lexer_tests::a_misplaced_byte_order_mark_is_e0002 ... ok
+test syntax::lexer_tests::a_point_after_digits_before_a_name_is_still_a_malformed_float ... ok
+test syntax::lexer_tests::all_lexical_diagnostics_are_errors_with_a_location_and_the_catalogue_phase ... ok
+test syntax::lexer_tests::an_invisible_character_after_a_backslash_is_shown_as_a_code_point ... ok
+test syntax::lexer_tests::an_unsupported_numeric_form_does_not_swallow_the_next_token ... ok
+test syntax::lexer_tests::block_comments_nest ... ok
+test syntax::lexer_tests::colors_decode_to_rgba_bytes ... ok
+test syntax::lexer_tests::contextual_names_are_plain_identifiers ... ok
+test syntax::lexer_tests::digits_followed_by_dot_dot_are_an_integer_then_the_range_operator ... ok
+test syntax::lexer_tests::disallowed_whitespace_and_control_characters_are_e0005_without_a_token ... ok
+test syntax::lexer_tests::double_underscore_prefix_is_e0011_but_still_one_identifier ... ok
+test syntax::lexer_tests::empty_and_blank_input_is_just_eof ... ok
+test syntax::lexer_tests::dump_lists_trivia_tokens_and_values ... ok
+test syntax::lexer_tests::eof_is_unique_and_last ... ok
+test syntax::lexer_tests::every_keyword_lexes_to_its_own_kind ... ok
+test syntax::lexer_tests::every_bad_escape_in_a_string_is_reported ... ok
+test syntax::lexer_tests::every_punctuation_and_operator_lexes_alone ... ok
+test syntax::lexer_tests::field_access_on_names_is_not_a_number ... ok
+test syntax::lexer_tests::float_literals_keep_text_and_f64_value ... ok
+test syntax::lexer_tests::generic_brackets_lex_as_single_angle_tokens ... ok
+test syntax::lexer_tests::huge_float_exponents_are_not_a_lexical_error ... ok
+test syntax::lexer_tests::integer_literals_keep_text_and_u64_value ... ok
+test syntax::lexer_tests::invalid_characters_do_not_stop_the_lexer ... ok
+test syntax::lexer_tests::invalid_characters_inside_strings_and_comments_are_fine ... ok
+test syntax::lexer_tests::invalid_escapes_are_e0023_at_the_escape_and_the_string_continues ... ok
+test syntax::lexer_tests::keywords_are_case_sensitive_and_prefix_safe ... ok
+test syntax::lexer_tests::leading_byte_order_mark_is_skipped_and_offsets_count_it ... ok
+test syntax::lexer_tests::leading_zeros_are_e0020_and_one_token ... ok
+test syntax::lexer_tests::line_and_doc_comments_are_trivia_keyed_by_the_following_token ... ok
+test syntax::lexer_tests::lexing_a_source_file_uses_its_text_and_file_id ... ok
+test syntax::lexer_tests::line_comments_stop_before_the_line_terminator ... ok
+test syntax::lexer_tests::longest_match_wins_for_operators ... ok
+test syntax::lexer_tests::malformed_colors_are_e0025_as_one_token ... ok
+test syntax::lexer_tests::malformed_float_fixes_are_positioned_in_context ... ok
+test syntax::lexer_tests::malformed_floats_are_e0022_with_the_recorded_replacement ... ok
+test syntax::lexer_tests::non_ascii_identifier_error_recovers_with_the_next_token ... ok
+test syntax::lexer_tests::non_ascii_identifier_run_is_one_token_with_e0010 ... ok
+test syntax::lexer_tests::reserved_words_are_flagged_identifiers_without_diagnostics ... ok
+test syntax::lexer_tests::slash_is_division_unless_it_starts_a_comment ... ok
+test syntax::lexer_tests::space_tab_lf_and_crlf_separate_tokens ... ok
+test syntax::lexer_tests::spans_stay_on_character_boundaries_with_multibyte_text ... ok
+test syntax::lexer_tests::stray_characters_are_e0005_and_name_themselves_safely ... ok
+test syntax::lexer_tests::strings_decode_their_escapes ... ok
+test syntax::lexer_tests::tokens_do_not_overlap_and_reproduce_the_text ... ok
+test syntax::lexer_tests::underscore_alone_is_its_own_kind ... ok
+test syntax::lexer_tests::unsupported_numeric_forms_are_one_e0021_token ... ok
+test syntax::lexer_tests::unterminated_block_comments_are_e0006_at_the_opener ... ok
+test syntax::lexer_tests::unterminated_strings_are_e0024_from_the_quote_to_the_end_of_the_line ... ok
+test syntax::token::tests::contextual_names_are_not_reserved ... ok
+test syntax::token::tests::keyword_table_round_trips ... ok
+test syntax::token::tests::keywords_and_reserved_words_are_disjoint_and_sorted_uniquely ... ok
+test syntax::token::tests::punctuation_spellings_round_trip_with_describe ... ok
+test syntax::token::tests::token_text_is_a_checked_slice ... ok
+test syntax::token::tests::trivia_before_finds_the_comments_of_one_token ... ok
+test syntax::token::tests::variable_kinds_have_no_fixed_text ... ok
+test tests::version_constants_match_the_specification ... ok
+test project::parse::tests::hostile_input_is_an_error_not_a_panic ... ok
+test source::map::tests::size_limit_is_four_mebibytes ... ok
+
+test result: ok. 309 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests\determinism.rs (target\debug\deps\determinism-7acdd45c4e3cf6ef.exe)
+
+running 3 tests
+test guarded_module_names ... ok
+test the_scanner_detects_forbidden_collections ... ok
+test no_hash_collections_in_output_producing_modules ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\diagnostics_catalogue.rs (target\debug\deps\diagnostics_catalogue-81375f9c66307958.exe)
+
+running 7 tests
+test a_changed_title_is_detected ... ok
+test titles_have_no_surrounding_whitespace_and_codes_are_unique ... ok
+test a_changed_severity_letter_is_detected ... ok
+test a_reordered_table_is_detected ... ok
+test the_parser_finds_the_whole_catalogue ... ok
+test spec_catalogue_and_codes_rs_agree ... ok
+test a_missing_or_extra_code_is_detected ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\diagnostics_render.rs (target\debug\deps\diagnostics_render-a1a1b5fa9848a254.exe)
+
+running 27 tests
+test a_leading_byte_order_mark_is_invisible ... ok
+test a_report_separates_diagnostics_with_an_empty_line ... ok
+test a_line_of_exactly_the_limit_is_not_elided ... ok
+test expected_and_actual_without_a_location_become_a_note ... ok
+test crlf_files_render_without_carriage_returns ... ok
+test empty_file_and_blank_lines ... ok
+test a_lone_carriage_return_cannot_move_the_cursor ... ok
+test colour_is_only_used_when_requested ... ok
+test line_numbers_widen_the_gutter ... ok
+test long_multi_line_span_elides_its_interior ... ok
+test nearby_related_labels_share_one_snippet ... ok
+test multi_byte_characters_keep_the_carets_aligned ... ok
+test long_lines_are_elided_around_the_span ... ok
+test overlapping_labels_let_the_primary_win ... ok
+test distant_lines_in_one_snippet_are_elided ... ok
+test related_spans_in_another_file ... ok
+test project_level_diagnostic_has_no_snippet ... ok
+test span_ending_after_a_line_break_ends_on_that_line ... ok
+test a_span_near_the_start_of_a_long_line_cuts_only_the_end ... ok
+test span_covering_a_crlf_ends_on_the_previous_line ... ok
+test tabs_expand_to_four_spaces ... ok
+test the_example_of_the_specification ... ok
+test three_line_span_is_underlined_on_every_line ... ok
+test two_labels_on_one_line_stack_their_messages ... ok
+test unknown_files_and_wild_spans_do_not_panic ... ok
+test warning_and_empty_span_at_end_of_file ... ok
+test every_span_of_a_tricky_file_renders_without_panicking ... ok
+
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\diagnostics_schema.rs (target\debug\deps\diagnostics_schema-e75730bc8c6f4310.exe)
+
+running 9 tests
+test the_schema_is_a_valid_draft_2020_12_schema ... ok
+test every_runtime_phase_is_valid ... ok
+test source_errors_become_valid_envelopes ... ok
+test malformed_reports_are_rejected ... ok
+test a_capped_report_validates_and_counts_suppressed ... ok
+test malformed_envelopes_are_rejected ... ok
+test the_two_shapes_are_mutually_exclusive ... ok
+test every_catalogue_code_produces_a_valid_envelope ... ok
+test a_report_validates_in_both_forms ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests\gpu_layout.rs (target\debug\deps\gpu_layout-d624d8868175a509.exe)
+
+running 8 tests
+test the_difference_reporter_names_the_path_of_a_mismatch ... ok
+test builtin_blocks_agree_with_the_builtin_fixtures ... ok
+test precomputed_sizes_and_alignments_from_the_task ... ok
+test padded_flag_is_set_exactly_for_the_padded_array_fixtures ... ok
+test identity_fields_follow_the_naming_rule ... ok
+test every_required_fixture_exists_with_all_three_files ... ok
+test computed_layouts_equal_the_hand_maintained_goldens ... ok
+test serialised_key_order_equals_the_normative_golden_order ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\js_writers.rs (target\debug\deps\js_writers-f6980294ee96bbe2.exe)
+
+running 3 tests
+test there_is_a_golden_for_every_fixture_and_no_stale_one ... ok
+test generated_writers_match_the_goldens ... ok
+test emission_is_deterministic_and_app_text_has_no_export ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\lexer_fixtures.rs (target\debug\deps\lexer_fixtures-29835150c59985a0.exe)
+
+running 4 tests
+test the_blueprint_example_lexes_cleanly_with_the_expected_shape ... ok
+test every_lexer_diagnostic_code_has_a_fixture ... ok
+test fixtures_named_fail_have_diagnostics_and_the_others_have_none ... ok
+test every_fixture_matches_its_goldens ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\lexer_robustness.rs (target\debug\deps\lexer_robustness-774882438e88e558.exe)
+
+running 10 tests
+test a_file_with_few_errors_reports_everything_and_suppresses_nothing ... ok
+test suppressed_lexical_diagnostics_reach_the_sink_with_the_true_total ... ok
+test a_file_of_junk_does_not_exhaust_memory_through_diagnostics ... ok
+test random_token_sequences_never_panic ... ok
+test random_byte_strings_never_panic ... ok
+test extreme_inputs_are_handled ... ok
+test every_prefix_of_every_corpus_file_never_panics ... ok
+test mutated_corpus_files_never_panic ... ok
+test the_largest_accepted_source_file_lexes ... ok
+test random_valid_text_never_panics ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+
+     Running tests\lexer_spec.rs (target\debug\deps\lexer_spec-548ad028e2dadae0.exe)
+
+running 4 tests
+test keywords_match_language_md_2_2 ... ok
+test reserved_words_match_language_md_2_3 ... ok
+test keywords_and_reserved_words_match_grammar_ebnf ... ok
+test punctuation_and_operators_match_language_md_2_6 ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\naga_oracle.rs (target\debug\deps\naga_oracle-1d7d4c61face7099.exe)
+
+running 6 tests
+test leaf_counts_of_selected_fixtures ... ok
+test naga_rejects_a_padded_array_without_its_wrapper ... ok
+test members_named_like_wgsl_reserved_words_validate_with_naga ... ok
+test naga_rejects_a_struct_member_without_its_size_attribute ... ok
+test emitted_structs_are_byte_identical_across_runs ... ok
+test naga_accepts_every_fixture_and_agrees_with_the_layout_record ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\no_direct_io.rs (target\debug\deps\no_direct_io-a7397dd91834e1e5.exe)
+
+running 2 tests
+test the_guard_recognises_violations ... ok
+test library_sources_use_no_direct_file_system_access ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\project_loading.rs (target\debug\deps\project_loading-ed1546677eba48ea.exe)
+
+running 8 tests
+test a_failed_load_reports_codes_from_the_catalogue ... ok
+test project_loading_is_independent_of_directory_listing_order ... ok
+test a_valid_project_loads_without_diagnostics ... ok
+test an_invalid_key_renders_with_its_exact_path ... ok
+test every_problem_of_a_file_is_reported_in_one_run ... ok
+test host_inputs_render_as_e9010_and_the_project_still_loads ... ok
+test a_missing_entry_renders_as_e9005 ... ok
+test a_missing_project_file_renders_as_e9004 ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\wgsl_blocks.rs (target\debug\deps\wgsl_blocks-6e43175110f491fa.exe)
+
+running 3 tests
+test there_is_exactly_one_golden_per_fixture ... ok
+test goldens_use_lf_line_endings_and_end_with_a_newline ... ok
+test emitted_wgsl_equals_the_golden_files ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\bridge_spike.rs (target\debug\examples\bridge_spike-b0838a49e82c4222.exe)
+
+running 13 tests
+test tests::padded_array_leaves_are_read_through_the_wrapper_value ... ok
+test tests::colour_shader_needs_the_members_it_reads ... ok
+test tests::scalar_kinds_name_themselves_like_the_layout_record ... ok
+test tests::target_width_rounds_up_to_whole_pixels ... ok
+test tests::probe_manifest_lists_the_leaves_in_word_order ... ok
+test tests::mixed_probe_reads_every_leaf_through_its_typed_path_in_word_order ... ok
+test tests::invalid_wgsl_fails_the_run ... ok
+test tests::colour_shader_multiplies_the_colour_by_the_scale_through_typed_members ... ok
+test tests::writers_are_the_generated_test_module ... ok
+test tests::generation_is_deterministic ... ok
+test tests::probe_shaders_never_read_raw_buffer_words ... ok
+test tests::only_the_mixed_fixture_has_a_colour_shader ... ok
+test tests::every_fixture_generates_a_probe_that_naga_accepts ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+   Doc-tests mtek_compiler
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
