@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E0006",
+    "file": "fail_comment.mtek",
+    "startByte": 11,
+    "endByte": 13,
+    "message": "Block comment is not terminated; the `/*` here needs a matching `*/`."
+  }
+]

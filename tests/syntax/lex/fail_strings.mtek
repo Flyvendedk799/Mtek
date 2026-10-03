@@ -1,0 +1,5 @@
+let a = "bad \q escape";
+let b = "bad \u{110000} and \u{} and \u41";
+let c = "fine";
+let d = "unterminated
+let e = 1;

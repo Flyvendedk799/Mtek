@@ -1,0 +1,13 @@
+// A line comment.
+/// A doc comment
+/// on two lines.
+fn /* inline */ f() { }
+
+/* A block comment
+   over several lines. */
+
+/* nested /* inside */ still comment */
+const A: i32 = 1; // trailing
+/**/ /***/ //// four slashes are a doc comment
+/* // line comment markers inside a block comment */
+/// last comment, attached to the end of the file

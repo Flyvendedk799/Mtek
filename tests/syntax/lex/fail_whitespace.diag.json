@@ -1,0 +1,39 @@
+[
+  {
+    "code": "MTEK-E0005",
+    "file": "fail_whitespace.mtek",
+    "startByte": 13,
+    "endByte": 15,
+    "message": "Whitespace or control character U+00A0 is not allowed outside strings and comments.",
+    "notes": [
+      "help: separate tokens with a space (U+0020), a tab or a line break"
+    ]
+  },
+  {
+    "code": "MTEK-E0005",
+    "file": "fail_whitespace.mtek",
+    "startByte": 39,
+    "endByte": 42,
+    "message": "Whitespace or control character U+3000 is not allowed outside strings and comments.",
+    "notes": [
+      "help: separate tokens with a space (U+0020), a tab or a line break"
+    ]
+  },
+  {
+    "code": "MTEK-E0005",
+    "file": "fail_whitespace.mtek",
+    "startByte": 70,
+    "endByte": 73,
+    "message": "Whitespace or control character U+2028 is not allowed outside strings and comments.",
+    "notes": [
+      "help: separate tokens with a space (U+0020), a tab or a line break"
+    ]
+  },
+  {
+    "code": "MTEK-E0005",
+    "file": "fail_whitespace.mtek",
+    "startByte": 96,
+    "endByte": 99,
+    "message": "Character U+200B is not part of the Mtek syntax."
+  }
+]

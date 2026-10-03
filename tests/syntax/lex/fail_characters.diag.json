@@ -1,0 +1,44 @@
+[
+  {
+    "code": "MTEK-E0005",
+    "file": "fail_characters.mtek",
+    "startByte": 10,
+    "endByte": 11,
+    "message": "Character `@` (U+0040) is not part of the Mtek syntax."
+  },
+  {
+    "code": "MTEK-E0005",
+    "file": "fail_characters.mtek",
+    "startByte": 25,
+    "endByte": 26,
+    "message": "Character `$` (U+0024) is not part of the Mtek syntax."
+  },
+  {
+    "code": "MTEK-E0005",
+    "file": "fail_characters.mtek",
+    "startByte": 40,
+    "endByte": 41,
+    "message": "Character `?` (U+003F) is not part of the Mtek syntax."
+  },
+  {
+    "code": "MTEK-E0005",
+    "file": "fail_characters.mtek",
+    "startByte": 55,
+    "endByte": 58,
+    "message": "Character U+2192 is not part of the Mtek syntax."
+  },
+  {
+    "code": "MTEK-E0005",
+    "file": "fail_characters.mtek",
+    "startByte": 86,
+    "endByte": 87,
+    "message": "Character '`' (U+0060) is not part of the Mtek syntax."
+  },
+  {
+    "code": "MTEK-E0005",
+    "file": "fail_characters.mtek",
+    "startByte": 88,
+    "endByte": 89,
+    "message": "Character '`' (U+0060) is not part of the Mtek syntax."
+  }
+]

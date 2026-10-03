@@ -1,0 +1,25 @@
+KwLet 0..3 "let"
+Ident 4..5 "a"
+Eq 6..7 "="
+String 8..23 "\"bad \\q escape\"" = malformed
+Semi 23..24 ";"
+KwLet 25..28 "let"
+Ident 29..30 "b"
+Eq 31..32 "="
+String 33..67 "\"bad \\u{110000} and \\u{} and \\u41\"" = malformed
+Semi 67..68 ";"
+KwLet 69..72 "let"
+Ident 73..74 "c"
+Eq 75..76 "="
+String 77..83 "\"fine\"" = "fine"
+Semi 83..84 ";"
+KwLet 85..88 "let"
+Ident 89..90 "d"
+Eq 91..92 "="
+String 93..106 "\"unterminated" = malformed
+KwLet 107..110 "let"
+Ident 111..112 "e"
+Eq 113..114 "="
+Int 115..116 "1" = 1
+Semi 116..117 ";"
+Eof 118..118 ""

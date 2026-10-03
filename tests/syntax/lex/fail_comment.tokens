@@ -1,0 +1,7 @@
+KwLet 0..3 "let"
+Ident 4..5 "a"
+Eq 6..7 "="
+Int 8..9 "1" = 1
+Semi 9..10 ";"
+trivia BlockComment 11..46 "/* outer\n   /* inner */\nlet b = 2;\n"
+Eof 46..46 ""

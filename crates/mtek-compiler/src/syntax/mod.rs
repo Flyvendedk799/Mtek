@@ -7,8 +7,8 @@ mod lexer;
 mod lexer_tests;
 mod token;
 
-pub use lexer::{FloatFix, Lexed, lex, lex_str};
+pub use lexer::{FloatFix, Lexed, MAX_LEXICAL_DIAGNOSTICS, lex, lex_str};
 pub use token::{
-    KEYWORDS, RESERVED_WORDS, Token, TokenKind, TokenValue, Trivia, TriviaItem, TriviaKind,
-    is_reserved_word, keyword_kind,
+    KEYWORDS, PUNCTUATION, RESERVED_WORDS, Token, TokenKind, TokenValue, Trivia, TriviaItem,
+    TriviaKind, is_reserved_word, keyword_kind,
 };

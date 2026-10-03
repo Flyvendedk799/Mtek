@@ -194,7 +194,7 @@ pub const RESERVED_WORDS: &[&str] = &[
 /// The spelling of every punctuation and operator kind. The lexer decides
 /// between kinds by lookahead (longest match); this table only names the
 /// spelling of each kind for [`TokenKind::fixed_text`].
-const PUNCTUATION: &[(&str, TokenKind)] = &[
+pub const PUNCTUATION: &[(&str, TokenKind)] = &[
     ("{", TokenKind::LBrace),
     ("}", TokenKind::RBrace),
     ("(", TokenKind::LParen),

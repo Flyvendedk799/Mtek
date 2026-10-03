@@ -1,0 +1,30 @@
+[
+  {
+    "code": "MTEK-E0025",
+    "file": "fail_colors.mtek",
+    "startByte": 8,
+    "endByte": 12,
+    "message": "Color literal `#fff` has 3 hexadecimal digits; colors are `#RRGGBB` or `#RRGGBBAA`."
+  },
+  {
+    "code": "MTEK-E0025",
+    "file": "fail_colors.mtek",
+    "startByte": 22,
+    "endByte": 28,
+    "message": "Color literal `#12345` has 5 hexadecimal digits; colors are `#RRGGBB` or `#RRGGBBAA`."
+  },
+  {
+    "code": "MTEK-E0025",
+    "file": "fail_colors.mtek",
+    "startByte": 38,
+    "endByte": 45,
+    "message": "Color literal `#12345g` contains `g`, which is not a hexadecimal digit; colors are `#RRGGBB` or `#RRGGBBAA`."
+  },
+  {
+    "code": "MTEK-E0025",
+    "file": "fail_colors.mtek",
+    "startByte": 55,
+    "endByte": 56,
+    "message": "Color literal `#` has no hexadecimal digits; colors are `#RRGGBB` or `#RRGGBBAA`."
+  }
+]

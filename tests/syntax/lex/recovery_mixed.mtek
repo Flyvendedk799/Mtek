@@ -1,0 +1,5 @@
+fn f(x: 0x1F) -> 1. {
+    let s = "oops
+    let c = #fff; /* never closed
+    return @ x;
+}

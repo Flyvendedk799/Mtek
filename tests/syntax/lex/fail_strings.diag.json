@@ -1,0 +1,49 @@
+[
+  {
+    "code": "MTEK-E0023",
+    "file": "fail_strings.mtek",
+    "startByte": 13,
+    "endByte": 15,
+    "message": "Invalid escape sequence `\\q` in string literal.",
+    "notes": [
+      "valid escapes are \\\", \\\\, \\n, \\t, \\r, \\0 and \\u{HEX} with 1 to 6 hexadecimal digits"
+    ]
+  },
+  {
+    "code": "MTEK-E0023",
+    "file": "fail_strings.mtek",
+    "startByte": 38,
+    "endByte": 48,
+    "message": "Invalid escape sequence `\\u{110000}` in string literal: it is not a Unicode scalar value.",
+    "notes": [
+      "valid escapes are \\\", \\\\, \\n, \\t, \\r, \\0 and \\u{HEX} with 1 to 6 hexadecimal digits"
+    ]
+  },
+  {
+    "code": "MTEK-E0023",
+    "file": "fail_strings.mtek",
+    "startByte": 53,
+    "endByte": 57,
+    "message": "Invalid escape sequence `\\u{}` in string literal: it has no hexadecimal digits.",
+    "notes": [
+      "valid escapes are \\\", \\\\, \\n, \\t, \\r, \\0 and \\u{HEX} with 1 to 6 hexadecimal digits"
+    ]
+  },
+  {
+    "code": "MTEK-E0023",
+    "file": "fail_strings.mtek",
+    "startByte": 62,
+    "endByte": 64,
+    "message": "Invalid escape sequence `\\u` in string literal; a Unicode escape is written `\\u{...}`.",
+    "notes": [
+      "valid escapes are \\\", \\\\, \\n, \\t, \\r, \\0 and \\u{HEX} with 1 to 6 hexadecimal digits"
+    ]
+  },
+  {
+    "code": "MTEK-E0024",
+    "file": "fail_strings.mtek",
+    "startByte": 93,
+    "endByte": 106,
+    "message": "String literal is not terminated; a string must end with `\"` on the same line."
+  }
+]

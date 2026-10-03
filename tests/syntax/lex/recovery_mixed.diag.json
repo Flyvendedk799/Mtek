@@ -1,0 +1,40 @@
+[
+  {
+    "code": "MTEK-E0021",
+    "file": "recovery_mixed.mtek",
+    "startByte": 8,
+    "endByte": 12,
+    "message": "Hexadecimal literal `0x1F` is not supported in v0.1; write integers in decimal."
+  },
+  {
+    "code": "MTEK-E0022",
+    "file": "recovery_mixed.mtek",
+    "startByte": 17,
+    "endByte": 19,
+    "message": "Float literal `1.` has no digits after the decimal point; floats need digits on both sides of the point.",
+    "notes": [
+      "help: write `1.0`"
+    ]
+  },
+  {
+    "code": "MTEK-E0024",
+    "file": "recovery_mixed.mtek",
+    "startByte": 34,
+    "endByte": 39,
+    "message": "String literal is not terminated; a string must end with `\"` on the same line."
+  },
+  {
+    "code": "MTEK-E0025",
+    "file": "recovery_mixed.mtek",
+    "startByte": 52,
+    "endByte": 56,
+    "message": "Color literal `#fff` has 3 hexadecimal digits; colors are `#RRGGBB` or `#RRGGBBAA`."
+  },
+  {
+    "code": "MTEK-E0006",
+    "file": "recovery_mixed.mtek",
+    "startByte": 58,
+    "endByte": 60,
+    "message": "Block comment is not terminated; the `/*` here needs a matching `*/`."
+  }
+]

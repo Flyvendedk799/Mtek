@@ -51,9 +51,19 @@ pub struct Lexed {
     pub trivia: Trivia,
     /// Lexical diagnostics in source order.
     pub diagnostics: Vec<Diagnostic>,
-    /// The recorded replacements of `E0022` diagnostics, in source order.
+    /// The recorded replacements of `E0022` diagnostics, in source order
+    /// (one per `E0022` diagnostic in [`Self::diagnostics`]).
     pub float_fixes: Vec<FloatFix>,
+    /// Diagnostics found after the first [`MAX_LEXICAL_DIAGNOSTICS`] and not
+    /// stored, so that a file of junk cannot exhaust memory. The driver
+    /// counts them as suppressed (`W9003`).
+    pub suppressed_diagnostics: usize,
 }
+
+/// The lexer stores at most this many diagnostics per file; the driver's sink
+/// keeps only the first [`MAX_DIAGNOSTICS_PER_FILE`](crate::diagnostics::MAX_DIAGNOSTICS_PER_FILE) of all stages anyway
+/// (`spec/compiler-architecture.md` section 9).
+pub const MAX_LEXICAL_DIAGNOSTICS: usize = 1000;
 
 /// Lex a validated source file. Lexing starts after a leading byte-order
 /// mark; every span refers to the file as stored.
@@ -76,6 +86,7 @@ pub fn lex_str(file: FileId, text: &str) -> Lexed {
         trivia: Trivia::default(),
         diagnostics: Vec::new(),
         float_fixes: Vec::new(),
+        suppressed: 0,
     }
     .run()
 }
@@ -101,6 +112,7 @@ struct Lexer<'a> {
     trivia: Trivia,
     diagnostics: Vec<Diagnostic>,
     float_fixes: Vec<FloatFix>,
+    suppressed: usize,
 }
 
 impl<'a> Lexer<'a> {
@@ -133,6 +145,7 @@ impl<'a> Lexer<'a> {
             trivia: self.trivia,
             diagnostics: self.diagnostics,
             float_fixes: self.float_fixes,
+            suppressed_diagnostics: self.suppressed,
         }
     }
 
@@ -162,8 +175,16 @@ impl<'a> Lexer<'a> {
         self.tokens.push(Token { kind, span, value });
     }
 
-    fn report(&mut self, diagnostic: Diagnostic) {
+    /// Record a diagnostic; returns false if the cap of
+    /// [`MAX_LEXICAL_DIAGNOSTICS`] was reached and the diagnostic was only
+    /// counted.
+    fn report(&mut self, diagnostic: Diagnostic) -> bool {
+        if self.diagnostics.len() >= MAX_LEXICAL_DIAGNOSTICS {
+            self.suppressed += 1;
+            return false;
+        }
         self.diagnostics.push(diagnostic);
+        true
     }
 
     fn trivia(&mut self, kind: TriviaKind, start: usize) {
@@ -601,8 +622,9 @@ impl<'a> Lexer<'a> {
         )
         .at(span)
         .help(format!("write `{replacement}`"));
-        self.report(diagnostic);
-        self.float_fixes.push(FloatFix { span, replacement });
+        if self.report(diagnostic) {
+            self.float_fixes.push(FloatFix { span, replacement });
+        }
         self.push(TokenKind::Float, start, TokenValue::Malformed);
     }
 
@@ -739,7 +761,7 @@ impl<'a> Lexer<'a> {
     fn invalid_escape(&mut self, start: usize, message: String) {
         let diagnostic = Diagnostic::new(Code::E0023, message)
             .at(self.span(start, self.pos))
-            .note("valid escapes are \\\" \\\\ \\n \\t \\r \\0 and \\u{1 to 6 hex digits}");
+            .note("valid escapes are \\\", \\\\, \\n, \\t, \\r, \\0 and \\u{HEX} with 1 to 6 hexadecimal digits");
         self.report(diagnostic);
     }
 
@@ -851,7 +873,10 @@ fn show_char(c: char) -> String {
 /// `` `c` (U+XXXX) `` for visible characters, `U+XXXX` for the others.
 fn describe_char(c: char) -> String {
     let code_point = format!("U+{:04X}", u32::from(c));
-    if c.is_ascii_graphic() || c.is_alphanumeric() {
+    if c == '`' {
+        // A backtick cannot be quoted with backticks.
+        format!("'{c}' ({code_point})")
+    } else if c.is_ascii_graphic() || c.is_alphanumeric() {
         format!("`{c}` ({code_point})")
     } else {
         code_point

@@ -1,0 +1,61 @@
+KwLet 0..3 "let"
+Ident 4..5 "a"
+Eq 6..7 "="
+Int 8..11 "007" = malformed
+Semi 11..12 ";"
+KwLet 13..16 "let"
+Ident 17..18 "b"
+Eq 19..20 "="
+Int 21..23 "00" = malformed
+Semi 23..24 ";"
+KwLet 25..28 "let"
+Ident 29..30 "c"
+Eq 31..32 "="
+Int 33..37 "0x1F" = malformed
+Semi 37..38 ";"
+KwLet 39..42 "let"
+Ident 43..44 "d"
+Eq 45..46 "="
+Int 47..52 "0b101" = malformed
+Semi 52..53 ";"
+KwLet 54..57 "let"
+Ident 58..59 "e"
+Eq 60..61 "="
+Int 62..67 "1_000" = malformed
+Semi 67..68 ";"
+KwLet 69..72 "let"
+Ident 73..74 "f"
+Eq 75..76 "="
+Int 77..82 "10u32" = malformed
+Semi 82..83 ";"
+KwLet 84..87 "let"
+Ident 88..89 "g"
+Eq 90..91 "="
+Float 92..94 "1." = malformed
+Semi 94..95 ";"
+KwLet 96..99 "let"
+Ident 100..101 "h"
+Eq 102..103 "="
+Float 104..106 ".5" = malformed
+Semi 106..107 ";"
+KwLet 108..111 "let"
+Ident 112..113 "i"
+Eq 114..115 "="
+Float 116..119 "1e3" = malformed
+Semi 119..120 ";"
+KwLet 121..124 "let"
+Ident 125..126 "j"
+Eq 127..128 "="
+Float 129..133 "1.e3" = malformed
+Semi 133..134 ";"
+KwLet 135..138 "let"
+Ident 139..140 "k"
+Eq 141..142 "="
+Float 143..148 "007.5" = malformed
+Semi 148..149 ";"
+KwLet 150..153 "let"
+Ident 154..155 "l"
+Eq 156..157 "="
+Int 158..165 "1_000.5" = malformed
+Semi 165..166 ";"
+Eof 167..167 ""
