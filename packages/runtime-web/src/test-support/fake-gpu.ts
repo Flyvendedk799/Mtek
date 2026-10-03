@@ -88,6 +88,39 @@ export class FakeBuffer {
     // Destroying twice is allowed by WebGPU (no-op).
     if (!this.destroyed) this.log(`destroy:${this.label}`);
     this.destroyed = true;
+    this.mapState = "unmapped";
+  }
+
+  /** `"unmapped"`, `"pending"` (between `mapAsync` and its resolution) or `"mapped"`. */
+  mapState: "unmapped" | "pending" | "mapped" = "unmapped";
+
+  /** `GPUBuffer.mapAsync` for reading: needs `MAP_READ` (0x01), an unmapped live buffer; resolves after a task. */
+  mapAsync(mode: number): Promise<void> {
+    if (mode !== 0x0001) return Promise.reject(new Error("mapAsync: only GPUMapMode.READ is modelled"));
+    if ((this.usage & 0x01) === 0) return Promise.reject(new Error(`mapAsync: buffer "${this.label}" lacks MAP_READ`));
+    if (this.destroyed) return Promise.reject(new Error(`mapAsync: buffer "${this.label}" is destroyed`));
+    if (this.mapState !== "unmapped") return Promise.reject(new Error("mapAsync: OperationError, the buffer is already mapped or pending"));
+    this.mapState = "pending";
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (this.destroyed) {
+          reject(new Error(`mapAsync: buffer "${this.label}" was destroyed while mapping`));
+          return;
+        }
+        this.mapState = "mapped";
+        resolve();
+      }, 0);
+    });
+  }
+
+  getMappedRange(): ArrayBuffer {
+    if (this.mapState !== "mapped") throw new Error(`getMappedRange: buffer "${this.label}" is not mapped`);
+    return this.contents.buffer as ArrayBuffer;
+  }
+
+  unmap(): void {
+    if (this.mapState !== "mapped") throw new Error(`unmap: buffer "${this.label}" is not mapped`);
+    this.mapState = "unmapped";
   }
 }
 
@@ -98,10 +131,32 @@ export interface FakeWrite {
   readonly size: number;
 }
 
+/** A finished command buffer: executes its recorded commands when submitted (see `fake-host.ts`). */
+export interface FakeCommandBuffer {
+  execute(): void;
+}
+
 export class FakeQueue {
   readonly writes: FakeWrite[] = [];
+  /** Number of `submit` calls and of command buffers executed. */
+  submits = 0;
+  executedCommandBuffers = 0;
 
   constructor(private readonly log: (event: string) => void) {}
+
+  /** Executes each command buffer once; submitting a buffer twice is a validation error in WebGPU. */
+  submit(commandBuffers: readonly FakeCommandBuffer[]): void {
+    this.submits += 1;
+    this.log("submit");
+    for (const buffer of commandBuffers) {
+      buffer.execute();
+      this.executedCommandBuffers += 1;
+    }
+  }
+
+  onSubmittedWorkDone(): Promise<void> {
+    return Promise.resolve();
+  }
 
   writeBuffer(
     buffer: FakeBuffer,
@@ -154,10 +209,63 @@ export class FakeResource {
   ) {}
 }
 
+/** The fields of a texture descriptor the fakes interpret. */
+export interface FakeTextureDescriptor {
+  readonly label?: string;
+  readonly size: readonly number[];
+  readonly format: string;
+  readonly usage: number;
+  readonly viewFormats?: readonly string[];
+}
+
+export class FakeTextureView {
+  constructor(
+    readonly texture: FakeTexture,
+    readonly format: string,
+  ) {}
+}
+
 export class FakeTexture {
   destroyed = false;
+  private pixelData: Uint8Array | undefined;
 
   constructor(readonly descriptor: unknown) {}
+
+  private get typed(): Partial<FakeTextureDescriptor> {
+    return this.descriptor as Partial<FakeTextureDescriptor>;
+  }
+
+  get width(): number {
+    return this.typed.size?.[0] ?? 0;
+  }
+
+  get height(): number {
+    return this.typed.size?.[1] ?? 1;
+  }
+
+  get format(): string {
+    return this.typed.format ?? "";
+  }
+
+  get usage(): number {
+    return this.typed.usage ?? 0;
+  }
+
+  /** Contents of an 8-bit RGBA texture, row-major, tightly packed; zero-initialised as WebGPU requires. */
+  get pixels(): Uint8Array {
+    this.pixelData ??= new Uint8Array(this.width * this.height * 4);
+    return this.pixelData;
+  }
+
+  /** `GPUTexture.createView`: the view format must be the texture's format or one of its `viewFormats`. */
+  createView(descriptor: { readonly format?: string } = {}): FakeTextureView {
+    if (this.destroyed) throw new Error("createView: the texture is destroyed");
+    const format = descriptor.format ?? this.format;
+    if (format !== this.format && !(this.typed.viewFormats ?? []).includes(format)) {
+      throw new TypeError(`createView: format ${format} is neither the texture format ${this.format} nor in its viewFormats`);
+    }
+    return new FakeTextureView(this, format);
+  }
 
   destroy(): void {
     this.destroyed = true;
@@ -216,7 +324,7 @@ export class FakeDevice {
     return Promise.resolve(scope.error);
   }
 
-  private raise(filter: string, message: string): void {
+  protected raise(filter: string, message: string): void {
     for (let i = this.scopes.length - 1; i >= 0; i--) {
       const scope = this.scopes[i];
       if (scope?.filter === filter) {
