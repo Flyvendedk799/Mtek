@@ -12,7 +12,7 @@ pub mod blocks;
 pub mod validate;
 
 pub use blocks::{
-    Leaf, LeafKind, emit_bindings, emit_block_structs, leaf_accessors, padded_element_name,
-    wgsl_struct_name,
+    Leaf, LeafKind, emit_bindings, emit_block_structs, leaf_accessors, member_wgsl_name,
+    padded_element_name, wgsl_struct_name,
 };
 pub use validate::{WgslErrorStage, WgslLabel, WgslValidationError, validate_wgsl};

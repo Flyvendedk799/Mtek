@@ -12,9 +12,9 @@ mod common;
 use common::{BINDING, GROUP, VAR_NAME, block_declarations, compute_fixture, fixture_names};
 use mtek_compiler::emit_wgsl::{
     Leaf, LeafKind, WgslErrorStage, emit_bindings, emit_block_structs, leaf_accessors,
-    padded_element_name, validate_wgsl, wgsl_struct_name,
+    member_wgsl_name, padded_element_name, validate_wgsl, wgsl_struct_name,
 };
-use mtek_compiler::layout::{LayoutNode, LayoutRecord, ScalarKind};
+use mtek_compiler::layout::{LayoutNode, LayoutRecord, LayoutType, ScalarKind, compute};
 use naga::{ArraySize, Handle, Module, Scalar, Type, TypeInner, VectorSize};
 
 /// The oracle module: structs, the binding and a fragment entry point that XORs the bit
@@ -165,6 +165,7 @@ fn check_node(module: &Module, handle: Handle<Type>, node: &LayoutNode, what: &s
 /// The struct span and every member offset (relative to the struct) equal the record.
 fn check_struct(module: &Module, handle: Handle<Type>, node: &LayoutNode, what: &str) {
     let LayoutNode::Struct {
+        name: struct_name,
         offset,
         size,
         members,
@@ -193,7 +194,7 @@ fn check_struct(module: &Module, handle: Handle<Type>, node: &LayoutNode, what: 
         let location = format!("{what}.{}", member.name);
         assert_eq!(
             naga_member.name.as_deref(),
-            Some(member.name.as_str()),
+            Some(member_wgsl_name(struct_name, &member.name).as_str()),
             "{location}: member name differs"
         );
         assert_eq!(
@@ -473,4 +474,55 @@ fn naga_rejects_a_padded_array_without_its_wrapper() {
                   \x20   return vec4<f32>(mtek_params.weights[0] + mtek_params.bias);\n}\n";
     let error = validate_wgsl(source).expect_err("an unpadded f32 array is not uniform-legal");
     assert_eq!(error.stage, WgslErrorStage::Validate, "{error}");
+}
+
+#[test]
+fn members_named_like_wgsl_reserved_words_validate_with_naga() {
+    // `target`, `filter`, `layout` and `type` are reserved words in WGSL; the u_ prefix of
+    // spec/gpu-layout.md section 3 makes the emitted module valid by construction.
+    let names = ["target", "filter", "layout", "type"];
+    let inner = LayoutType::new_struct("Inner", vec![("target".to_owned(), LayoutType::F32)]);
+    let mut members: Vec<(String, LayoutType)> = names
+        .iter()
+        .zip([
+            LayoutType::Vec3,
+            LayoutType::F32,
+            LayoutType::new_array(LayoutType::U32, 2),
+            LayoutType::Bool,
+        ])
+        .map(|(name, ty)| ((*name).to_owned(), ty))
+        .collect();
+    members.push(("inner".to_owned(), inner));
+    let ty = LayoutType::new_struct("Reserved", members);
+    let record = compute(&ty, "fixture:reserved", "MtekFixture_reserved")
+        .unwrap_or_else(|e| panic!("layout: {e}"));
+
+    let structs = emit_block_structs(&record);
+    for name in names {
+        assert!(
+            structs.contains(&format!("u_{name}: ")),
+            "missing u_{name} in\n{structs}"
+        );
+    }
+    let (source, leaves) = oracle_module(&record, &structs);
+    let module = validated(&source, "reserved");
+    let root = struct_handle(&module, &record.wgsl_struct);
+    check_struct(&module, root, &record.root, &record.wgsl_struct);
+
+    // The record keeps the Mtek names; only the WGSL paths are prefixed.
+    let paths: Vec<&str> = leaves.iter().map(|l| l.path.as_str()).collect();
+    assert_eq!(paths[0], "target.x");
+    assert!(paths.contains(&"layout[1]"));
+    assert!(paths.contains(&"inner.target"));
+    assert!(
+        leaves
+            .iter()
+            .any(|l| l.wgsl == "mtek_params.u_layout[1].value")
+    );
+
+    // Without the prefix the same names are rejected by Naga.
+    let unprefixed = source.replace("u_", "");
+    assert_ne!(unprefixed, source);
+    let error = validate_wgsl(&unprefixed).expect_err("reserved words are not member names");
+    assert_eq!(error.stage, WgslErrorStage::Parse, "{error}");
 }
