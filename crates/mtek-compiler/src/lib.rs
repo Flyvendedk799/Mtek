@@ -6,6 +6,7 @@
 pub mod emit_js;
 pub mod emit_wgsl;
 pub mod layout;
+pub mod stdlib;
 
 /// Version of this compiler build (the workspace package version).
 pub const COMPILER_VERSION: &str = env!("CARGO_PKG_VERSION");
