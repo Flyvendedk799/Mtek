@@ -218,6 +218,28 @@ fn duplicate_keys_are_invalid_toml() {
     assert_eq!(location, "at mtek.toml:4:1");
 }
 
+#[test]
+fn hostile_input_is_an_error_not_a_panic() {
+    let deep_arrays = format!("a = {}{}", "[".repeat(100_000), "]".repeat(100_000));
+    let deep_tables = format!("a = {}", "{ b = ".repeat(50_000));
+    for text in [
+        deep_arrays.as_str(),
+        deep_tables.as_str(),
+        "\0",
+        "[project]\nname = \"\u{0}\"",
+        "\u{FEFF}\u{FEFF}[project]",
+        "[[project]]\n[project]",
+        "project.name = 1\n[project]",
+    ] {
+        let (config, diagnostics) = parse(text);
+        assert!(config.is_none());
+        assert!(
+            diagnostics.iter().all(|d| d.code == Code::E9001) && !diagnostics.is_empty(),
+            "{diagnostics:#?}"
+        );
+    }
+}
+
 // ---- unknown tables and keys ------------------------------------------
 
 #[test]
