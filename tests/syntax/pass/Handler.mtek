@@ -1,0 +1,14 @@
+scene S {
+    state speed: f32 = 0.7;
+    on key_down(Key.Space) { speed = -speed; }
+    on key_up(Key.Space) {}
+    on pointer_down(event: PointerEvent) { speed = event.position.x; }
+    on pointer_move(event: PointerEvent) {}
+    entity E {
+        on collision_enter(other: entity_ref) { destroy(other); }
+        on collision_exit(other: entity_ref) {}
+    }
+}
+prefab P {
+    on collision_enter(other: entity_ref) { self.hits += 1; }
+}

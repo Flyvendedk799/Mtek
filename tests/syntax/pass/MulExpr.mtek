@@ -1,0 +1,5 @@
+const A = a * b;
+const B = a / b;
+const C = a % b;
+const D = a * b / c % d;
+const E = -a * !b;

@@ -1,0 +1,7 @@
+fn first() {}
+) ) )
+const A = 1;
+foo bar baz
+fn second() {}
+}
+scene Main {}

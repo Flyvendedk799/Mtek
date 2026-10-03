@@ -1,0 +1,7 @@
+// Blueprint 3.3 prose: `spawn(Crate { origin: ... })`, with a supplied vec3 for the ellipsis.
+scene Spawner {
+    on key_down(Key.Enter) {
+        let crate = spawn(Crate { origin: vec3(0.0, 5.0, 0.0) });
+        destroy(crate);
+    }
+}

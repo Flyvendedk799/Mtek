@@ -1,0 +1,8 @@
+scene S {
+    entity Cube {
+        material: Unlit { color: #6b5cff };
+    }
+    on key_down(Key.A) {
+        Cube.material.color = #ffffff;
+    }
+}

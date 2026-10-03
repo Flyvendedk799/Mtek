@@ -1,0 +1,4 @@
+cpu fn punctuation() {
+    print("a b/c{d}[e]#f//g /* h */ ; : , . 'x' ! ? + - * % = < > & | ^ ~ @ $");
+    print("tab	and unicode: éè ☃");
+}

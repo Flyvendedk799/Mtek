@@ -1,0 +1,5 @@
+scene Main {
+    entity Cube {
+        type: 1;
+    }
+}

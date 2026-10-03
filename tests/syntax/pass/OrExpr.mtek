@@ -1,0 +1,3 @@
+const A = a || b;
+const B = a || b || c;
+const C = a && b || c && d;

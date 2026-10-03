@@ -1,0 +1,11 @@
+scene Main {
+    fn helper() {}
+    param p: f32;
+    state speed: f32 = 0.7;
+    let x = 1;
+    entity Cube {
+        param q: f32;
+        position: vec3(0.0);
+    }
+    update(dt: f32) { speed += dt; }
+}

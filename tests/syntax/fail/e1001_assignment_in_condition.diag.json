@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_assignment_in_condition.mtek",
+    "startByte": 24,
+    "endByte": 25,
+    "message": "Expected `{` to start the block after the condition, found `=`.",
+    "notes": [
+      "help: assignments are statements; to compare, write `==`"
+    ]
+  }
+]

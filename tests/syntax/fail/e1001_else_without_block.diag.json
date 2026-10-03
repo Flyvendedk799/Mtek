@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_else_without_block.mtek",
+    "startByte": 39,
+    "endByte": 40,
+    "message": "Expected `if` or `{` after `else`, found identifier `h`."
+  }
+]

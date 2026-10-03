@@ -1,0 +1,4 @@
+scene Main {
+    state speed = 0.7;
+    state angle: f32 = 0.0;
+}

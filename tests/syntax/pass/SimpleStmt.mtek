@@ -1,0 +1,14 @@
+fn simple(v: vec3) {
+    call();
+    call(1, 2);
+    obj.method(3);
+    quat.identity();
+    x = 1;
+    self.position.y = 0.0;
+    Cube.rotation = quat.identity();
+    arr[0] = 2.0;
+    place += 1.0;
+    place -= 1.0;
+    place *= 2.0;
+    place /= 2.0;
+}

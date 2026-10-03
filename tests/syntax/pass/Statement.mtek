@@ -1,0 +1,22 @@
+fn every_kind(a: f32) -> f32 {
+    let x = 1;
+    var y: f32 = 2.0;
+    const Z = 3;
+    if a > 0.0 { y = 1.0; } else if a < 0.0 { y = -1.0; } else { y = 0.0; }
+    for i in 0..3 { y += 1.0; }
+    {
+        let scoped = 4;
+    }
+    y *= 2.0;
+    helper(y);
+    break_free(y);
+    return y;
+}
+fn helper(a: f32) {}
+fn break_free(a: f32) {}
+fn loops() {
+    for i in 0..3 {
+        if i == 1 { continue; }
+        break;
+    }
+}

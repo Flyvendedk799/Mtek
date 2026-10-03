@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1040",
+    "file": "e1040_state_in_function.mtek",
+    "startByte": 13,
+    "endByte": 18,
+    "message": "`state` declarations cannot appear in a function body or block.",
+    "notes": [
+      "help: a block contains statements such as `let`, `if`, `for` and calls"
+    ]
+  }
+]

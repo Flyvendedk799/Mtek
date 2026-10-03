@@ -1,0 +1,9 @@
+(module
+  (scene S
+    (entity Cube (init material (desc Unlit (field color (lit color #6b5cff)))))
+    (on key_down
+      (filter (field (name Key) A))
+      (block
+        (assign =
+          (field (field (name Cube) material) color)
+          (lit color #ffffff))))))

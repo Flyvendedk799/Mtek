@@ -1,0 +1,32 @@
+(module
+  (scene Demo
+    (init clear_color (lit color #101418))
+    (const LIMIT (lit int 3))
+    (state speed (type f32) (lit float 0.7))
+    (object camera Main
+      (init position
+        (call (name vec3) (lit float 0.0) (lit float 2.0) (lit float 5.0)))
+      (init projection
+        (desc Orthographic
+          (field height (lit float 6.0))
+          (field near (lit float 0.1)))))
+    (entity Cube
+      (init position
+        (call (name vec3) (lit float 0.0) (lit float 0.5) (lit float 0.0)))
+      (init material
+        (desc Pulse (field phase (bind (field (name frame) time)))))
+      (state hits (type i32) (lit int 0))
+      (entity Badge)
+      (lifecycle update
+        (params (param dt (type f32)))
+        (block (assign += (name hits) (lit int 1))))
+      (on collision_enter
+        (param other (type entity_ref))
+        (block (assign += (name hits) (name LIMIT)))))
+    (lifecycle update
+      (params (param dt (type f32)))
+      (block (assign *= (name speed) (lit float 0.99))))
+    (lifecycle fixed_update (params (param step (type f32))) (block))
+    (on key_down
+      (filter (field (name Key) Space))
+      (block (assign = (name speed) (unary - (name speed)))))))

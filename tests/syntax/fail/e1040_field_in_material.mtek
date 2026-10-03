@@ -1,0 +1,4 @@
+material Flat {
+    tint: #808080;
+    fragment(input: SurfaceInput) -> color { return #808080; }
+}

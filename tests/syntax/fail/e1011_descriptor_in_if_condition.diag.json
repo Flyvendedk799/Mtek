@@ -1,0 +1,29 @@
+[
+  {
+    "code": "MTEK-E1011",
+    "file": "e1011_descriptor_in_if_condition.mtek",
+    "startByte": 16,
+    "endByte": 33,
+    "message": "A descriptor literal cannot be used directly as the condition of `if` or the iterable of `for`; wrap it in parentheses.",
+    "notes": [
+      "help: write `(Name { ... })`"
+    ],
+    "candidateEdits": [
+      {
+        "description": "parenthesise the descriptor literal",
+        "edits": [
+          {
+            "startByte": 16,
+            "endByte": 16,
+            "replacement": "("
+          },
+          {
+            "startByte": 33,
+            "endByte": 33,
+            "replacement": ")"
+          }
+        ]
+      }
+    ]
+  }
+]

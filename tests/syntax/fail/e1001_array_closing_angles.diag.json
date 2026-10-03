@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_array_closing_angles.mtek",
+    "startByte": 28,
+    "endByte": 29,
+    "message": "Expected `,` and an array length after the element type, found `>`."
+  }
+]

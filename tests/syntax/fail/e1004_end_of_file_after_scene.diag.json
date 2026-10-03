@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1004",
+    "file": "e1004_end_of_file_after_scene.mtek",
+    "startByte": 5,
+    "endByte": 5,
+    "message": "Unexpected end of file; expected a scene name after `scene`."
+  }
+]

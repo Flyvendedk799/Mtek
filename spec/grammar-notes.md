@@ -1,7 +1,7 @@
 ## Notes for implementers
 
 1. **Lookahead.** The grammar is LL(2) at member level (see §4 comment) and needs one extra rule for `HandlerArg` (`Ident ':'`). Expressions are parsed by Pratt with binding powers from `spec/language.md` §6.1; after parsing a comparison (`<`, `<=`, `>`, `>=`) or equality operand pair, seeing another operator of the same level is `E1010`.
-2. **`'>'` in types.** Types appear only after `:` or `->` and in `ArrayLength` contexts, so `<`/`>` there are never comparison operators.
+2. **`'>'` in types.** Types appear only after `:` or `->` and in `ArrayLength` contexts, so `<`/`>` there are never comparison operators. The parser therefore splits a `>>` or `>=` token in type context into the closing `>` and the rest (decision 0023).
 3. **Trailing separators.** Commas may trail in parameter lists, argument lists, import lists, handler arguments and array literals. In descriptor literals the separator is `;` and a trailing `;` is optional. Struct fields, field initialisers, statements and declarations always end in `;`.
 4. **Corpus.** Every production must be exercised by at least one positive fixture in `tests/syntax/pass/` and every `[S: …]` rule by at least one negative fixture in `tests/semantics/fail/`. `tools/grammar-coverage` (M2) reports productions without fixtures; the M2 gate requires none.
 5. **Nested block comments** make the lexical grammar non-regular. Tree-sitter needs an external scanner for them (as the Rust grammar does); GBNF expresses them by recursion. Adapters that cannot support them must be documented as not accepting nested comments, and the corpus records that as a known adapter difference.

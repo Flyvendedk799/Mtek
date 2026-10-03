@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_handler_without_parentheses.mtek",
+    "startByte": 29,
+    "endByte": 32,
+    "message": "Expected `(` after the event name, found identifier `Key`."
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_stray_semicolon_statement.mtek",
+    "startByte": 13,
+    "endByte": 14,
+    "message": "Expected a statement, found `;`.",
+    "notes": [
+      "help: remove the stray `;`"
+    ]
+  }
+]

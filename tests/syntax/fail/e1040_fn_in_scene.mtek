@@ -1,0 +1,4 @@
+scene Main {
+    fn helper(a: f32) -> f32 { return a; }
+    state speed: f32 = 0.7;
+}

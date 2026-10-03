@@ -1,0 +1,8 @@
+fn no_params() {}
+fn unit_result(a: f32) { }
+fn with_result(a: f32) -> f32 { return a; }
+fn two(a: f32, b: vec3) -> vec3 { return b; }
+fn trailing_comma(a: f32, b: f32,) -> f32 { return a + b; }
+cpu fn cpu_unit() { print("hi"); }
+cpu fn cpu_value(msg: string) -> i32 { print(msg); return 1; }
+export fn exported(t: f32) -> f32 { return 0.65 + 0.35 * sin(t); }

@@ -1,0 +1,25 @@
+(module
+  (scene Main
+    (error)
+    (error)
+    (error)
+    (entity Cube (error) (init position (call (name vec3) (lit float 0.0))))
+    (state speed (type f32) (lit float 0.7)))
+  (material M
+    (error)
+    (error)
+    (stage fragment
+      (params (param i (type SurfaceInput)))
+      (ret (type color))
+      (block (return (lit color #ffffff)))))
+  (error)
+  (fn f (params) (block (error) (break))))
+; MTEK-E1040 17..19 `fn` `fn` declarations cannot appear in a scene.
+; MTEK-E1040 36..41 `param` `param` declarations cannot appear in a scene.
+; MTEK-E1040 54..57 `let` statements cannot appear in a scene.
+; MTEK-E1040 83..88 `param` `param` declarations cannot appear in an entity.
+; MTEK-E1040 167..172 `state` `state` declarations cannot appear in a material.
+; MTEK-E4901 191..197 `vertex` Custom `vertex` stages are not supported in v0.1; they are planned for v0.2.
+; MTEK-E1040 270..276 `entity` `entity` declarations cannot appear at the top level of a file.
+; MTEK-E1040 295..297 `fn` `fn` declarations cannot appear in a function body or block.
+; MTEK-E1030 305..310 `break` `break` can only be used inside a `for` loop.

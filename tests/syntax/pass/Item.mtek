@@ -1,0 +1,15 @@
+import { A } from "./a.mtek";
+const PLAIN = 1;
+export const EXPORTED = 2;
+fn plain_fn() {}
+export fn exported_fn() {}
+cpu fn plain_cpu() {}
+export cpu fn exported_cpu() {}
+struct PlainStruct { a: f32; }
+export struct ExportedStruct { a: f32; }
+material PlainMaterial { fragment(i: SurfaceInput) -> color { return #ffffff; } }
+export material ExportedMaterial { fragment(i: SurfaceInput) -> color { return #ffffff; } }
+prefab PlainPrefab {}
+export prefab ExportedPrefab {}
+scene PlainScene {}
+export scene ExportedScene {}

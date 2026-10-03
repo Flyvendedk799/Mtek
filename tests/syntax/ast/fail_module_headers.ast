@@ -1,0 +1,12 @@
+(module
+  (error)
+  (fn g (params (param a (type f32)) (param b (type f32))) (block))
+  (error)
+  (scene Main (error) (error) (error)))
+; MTEK-E1001 3..4 `(` Expected a function name after `fn`, found `(`.
+; MTEK-E1001 34..37 `f32` Expected `:` and a type after the parameter name `a`, found identifier `f32`.
+; MTEK-E1002 46..47 `{` Expected `)` to close the `(` opened here, found `{`.
+; MTEK-E1001 59..60 `{` Expected a material name after `material`, found `{`.
+; MTEK-E1001 138..139 `{` Expected an event name after `on`, found `{`.
+; MTEK-E1001 163..166 `Key` Expected `(` after the event name, found identifier `Key`.
+; MTEK-E1001 193..194 `{` Expected an entity name after `entity`, found `{`.

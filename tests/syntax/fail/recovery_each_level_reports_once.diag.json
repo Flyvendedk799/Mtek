@@ -1,0 +1,77 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_each_level_reports_once.mtek",
+    "startByte": 18,
+    "endByte": 33,
+    "message": "Expected `from` after the list of imported names, found string literal `\"./shared.mtek\"`."
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_each_level_reports_once.mtek",
+    "startByte": 59,
+    "endByte": 62,
+    "message": "Expected `:` after the field name `speed`, found float literal `0.7`."
+  },
+  {
+    "code": "MTEK-E1003",
+    "file": "recovery_each_level_reports_once.mtek",
+    "startByte": 109,
+    "endByte": 109,
+    "message": "Missing `;` at the end of the field, found `}`.",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "candidateEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "startByte": 109,
+            "endByte": 109,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_each_level_reports_once.mtek",
+    "startByte": 154,
+    "endByte": 155,
+    "message": "Expected an expression, found `;`."
+  },
+  {
+    "code": "MTEK-E1030",
+    "file": "recovery_each_level_reports_once.mtek",
+    "startByte": 164,
+    "endByte": 169,
+    "message": "`break` can only be used inside a `for` loop.",
+    "notes": [
+      "help: `break` and `continue` apply to the innermost `for`; there is no other loop in v0.1"
+    ]
+  },
+  {
+    "code": "MTEK-E1003",
+    "file": "recovery_each_level_reports_once.mtek",
+    "startByte": 200,
+    "endByte": 200,
+    "message": "Missing `;` at the end of the field, found identifier `b`.",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "candidateEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "startByte": 200,
+            "endByte": 200,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  }
+]

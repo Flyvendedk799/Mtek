@@ -1,0 +1,7 @@
+const A = 0.0;
+const B = 1.0;
+const C = 3.14159;
+const D = 0.001;
+const E = 2.5e3;
+const F = 1000000.0;
+const G = 0.5e-3;

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-W0007",
+    "file": "w0007_ordinary_comment_between.mtek",
+    "startByte": 0,
+    "endByte": 57,
+    "message": "This documentation comment is not followed by a declaration or member to document.",
+    "notes": [
+      "help: put the comment directly before the declaration, or make it an ordinary `//` comment"
+    ]
+  }
+]

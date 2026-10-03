@@ -1,0 +1,12 @@
+scene Objects {
+    camera Main { position: vec3(0.0, 0.0, 5.0); target: vec3(0.0, 0.0, 0.0); }
+    camera Top {
+        position: vec3(0.0, 10.0, 0.0);
+        rotation: quat.identity();
+        projection: Orthographic { height: 6.0; near: 0.1; far: 50.0 };
+        active: true;
+    }
+    camera Empty {}
+    // The kind is any name here; the checker accepts only the registered ones.
+    lamp Spot { intensity: 1.0; }
+}

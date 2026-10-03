@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1020",
+    "file": "e1020_unused_name.mtek",
+    "startByte": 19,
+    "endByte": 20,
+    "message": "The value of this expression is not used; only calls can be used as statements.",
+    "notes": [
+      "help: bind the value with `let name = ...;`, assign it to a place, or remove it"
+    ]
+  }
+]

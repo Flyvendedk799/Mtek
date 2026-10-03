@@ -1,0 +1,16 @@
+[
+  {
+    "code": "MTEK-E1002",
+    "file": "e1002_unclosed_index.mtek",
+    "startByte": 18,
+    "endByte": 19,
+    "message": "Expected `]` to close the `[` opened here, found `;`.",
+    "related": [
+      {
+        "message": "opened here",
+        "startByte": 16,
+        "endByte": 17
+      }
+    ]
+  }
+]

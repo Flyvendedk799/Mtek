@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_missing_initialiser.mtek",
+    "startByte": 23,
+    "endByte": 24,
+    "message": "Expected `=` and an initial value, found `;`.",
+    "notes": [
+      "help: `let` must be initialised where it is declared"
+    ]
+  }
+]

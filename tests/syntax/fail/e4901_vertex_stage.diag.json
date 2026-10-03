@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E4901",
+    "file": "e4901_vertex_stage.mtek",
+    "startByte": 53,
+    "endByte": 59,
+    "message": "Custom `vertex` stages are not supported in v0.1; they are planned for v0.2.",
+    "notes": [
+      "help: a material has exactly one stage function, `fragment`; the compiler supplies the vertex stage"
+    ]
+  }
+]

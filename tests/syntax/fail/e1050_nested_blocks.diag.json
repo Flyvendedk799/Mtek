@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1050",
+    "file": "e1050_nested_blocks.mtek",
+    "startByte": 602,
+    "endByte": 603,
+    "message": "Nesting is deeper than the limit of 256 levels.",
+    "notes": [
+      "help: move the inner code into a function of its own"
+    ]
+  }
+]

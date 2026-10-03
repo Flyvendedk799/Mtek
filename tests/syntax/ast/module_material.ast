@@ -1,0 +1,18 @@
+(module
+  (material Pulse
+    (param tint (type color) (lit color #6b5cff))
+    (param strength (type f32))
+    (param table
+      (type array (type f32) (len 4))
+      (array (lit float 1.0) (lit float 2.0) (lit float 3.0) (lit float 4.0)))
+    (stage fragment
+      (params (param input (type SurfaceInput)))
+      (ret (type color))
+      (block
+        (let amount
+          (binary * (name strength) (field (field (name input) uv) x)))
+        (return
+          (call
+            (field (name color) linear)
+            (binary * (field (name tint) rgb) (name amount))
+            (lit float 1.0)))))))

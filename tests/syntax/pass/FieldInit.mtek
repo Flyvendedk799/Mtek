@@ -1,0 +1,19 @@
+scene S {
+    clear_color: #101418;
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+    entity E {
+        position: vec3(0.0, 0.5, 0.0);
+        rotation: quat.identity();
+        scale: vec3(1.0);
+        visible: true;
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #6b5cff };
+        // `material` is a keyword and an entity field.
+        light: PointLight { intensity: 2.0; range: 8.0; };
+        body: Dynamic { mass: 1.0 };
+        collider: SphereCollider { radius: 0.5 };
+    }
+}

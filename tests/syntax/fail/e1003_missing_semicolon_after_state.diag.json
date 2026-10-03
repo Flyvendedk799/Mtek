@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E1003",
+    "file": "e1003_missing_semicolon_after_state.mtek",
+    "startByte": 39,
+    "endByte": 39,
+    "message": "Missing `;` at the end of the declaration, found `state`.",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "candidateEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "startByte": 39,
+            "endByte": 39,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  }
+]

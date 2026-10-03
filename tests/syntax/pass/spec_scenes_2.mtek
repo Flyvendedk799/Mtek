@@ -1,0 +1,8 @@
+scene Demo {
+    clear_color: #101418;          // scene field (schema `Scene`)
+    state speed: f32 = 0.7;        // scene state
+    camera Main { }              // scene object
+    entity Cube { }              // entity
+    update(dt: f32) { }          // lifecycle function
+    on key_down(Key.Space) { }   // event handler
+}

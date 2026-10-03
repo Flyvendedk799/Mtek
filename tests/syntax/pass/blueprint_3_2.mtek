@@ -1,0 +1,9 @@
+// The two lines of blueprint 3.2 are fragments: wrapped in a scene and an entity.
+scene Fragments {
+    entity Initialised {
+        material: Pulse { phase: frame.time };
+    }
+    entity Reactive {
+        material: Pulse { phase: bind(frame.time) };
+    }
+}

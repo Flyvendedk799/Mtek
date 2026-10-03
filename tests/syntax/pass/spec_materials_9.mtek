@@ -1,0 +1,17 @@
+export material Unlit {
+    param color: color = #ffffff;
+    fragment(surface: SurfaceInput) -> color { return color; }
+}
+
+export material Pbr {
+    param base_color: color = #ffffff;
+    param metallic: f32 = 0.0;
+    param roughness: f32 = 0.5;
+    param base_color_texture: texture = texture.white();
+    param base_color_sampler: sampler = sampler.linear_repeat();
+    fragment(surface: SurfaceInput) -> color {
+        let texel = sample(base_color_texture, base_color_sampler, surface.uv);
+        let albedo = color.linear(base_color.rgb * texel.xyz, 1.0);
+        return lighting.pbr(surface, albedo, metallic, roughness);
+    }
+}

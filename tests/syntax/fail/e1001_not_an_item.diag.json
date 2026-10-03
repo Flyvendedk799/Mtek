@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_not_an_item.mtek",
+    "startByte": 0,
+    "endByte": 2,
+    "message": "Expected an item: `import`, `const`, `fn`, `cpu fn`, `struct`, `material`, `prefab` or `scene`, found integer literal `42`."
+  }
+]

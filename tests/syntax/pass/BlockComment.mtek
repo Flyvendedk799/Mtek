@@ -1,0 +1,12 @@
+/* a block comment */
+fn a() { /* inline */ }
+/* comments nest: /* inner */ still a comment */
+fn b() {
+    /*
+       spans lines
+       /* and nests /* twice */ */
+    */
+}
+/** looks like a doc comment but is a block comment */
+fn c() {}
+const /* between tokens */ D /* anywhere */ = /* really */ 1;

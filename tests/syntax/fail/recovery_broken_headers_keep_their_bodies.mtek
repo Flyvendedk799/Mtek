@@ -1,0 +1,13 @@
+fn (a: f32) { let x = ; }
+
+material {
+    fragment(input: SurfaceInput) -> color { return ; }
+}
+
+scene Main {
+    on { speed = 0.0; }
+    on key_down Key.Space { speed = 0.0 }
+    state speed: f32 = 0.7;
+    update(dt: f32) { speed += dt; }
+    entity {  }
+}

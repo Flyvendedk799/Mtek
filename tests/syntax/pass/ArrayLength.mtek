@@ -1,0 +1,7 @@
+const COUNT = 4;
+struct Lengths {
+    literal: array<f32, 16>;
+    maximum: array<f32, 65536>;
+    named: array<f32, COUNT>;
+    both: array<array<f32, COUNT>, 2>;
+}

@@ -1,0 +1,10 @@
+fn ops() {
+    call();
+    call(1);
+    call(1, 2,);
+    let a = field.access;
+    let b = swizzle.xyzw;
+    let c = index[0];
+    let d = index[i + 1][j];
+    let e = chained.call(1).field[2]();
+}

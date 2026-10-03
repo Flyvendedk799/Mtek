@@ -1,0 +1,32 @@
+(module
+  (fn pulse
+    (params (param t (type f32)))
+    (ret (type f32))
+    (block
+      (let amplitude (error))
+      (let phase (type (error)) (lit float 1.0))
+      (return
+        (binary *
+          (name amplitude)
+          (call (name sin) (binary + (name t) (name phase)))))))
+  (scene Main
+    (state speed (type f32) (lit float 0.7))
+    (init speed2 (lit float 0.5))
+    (entity Cube
+      (init position (call (name vec3) (lit float 0.0)))
+      (init scale (error)))
+    (lifecycle update
+      (params (param dt (type f32)))
+      (block (assign += (name speed) (name dt)))))
+  (error)
+  (struct Pair (field a (type f32)) (field b (type f32))))
+; MTEK-E1001 46..47 `;` Expected an expression, found `;`.
+; MTEK-E1001 63..64 `=` Expected a type, found `=`.
+; MTEK-E1001 140..143 `f32` Expected `:` and a type after the state `speed`, found identifier `f32`.
+; MTEK-E1001 162..165 `0.5` Expected `:` after the field name `speed2`, found float literal `0.5`.
+; MTEK-E1003 212..212 `` Missing `;` at the end of the field, found identifier `scale`.
+; MTEK-E1003 269..269 `` Missing `;` at the end of the assignment, found `}`.
+; MTEK-E1003 297..297 `` Missing `;` at the end of the field, found identifier `b`.
+; edit MTEK-E1003 ";" at 212..212
+; edit MTEK-E1003 ";" at 269..269
+; edit MTEK-E1003 ";" at 297..297

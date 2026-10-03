@@ -1,0 +1,10 @@
+material Stages {
+    fragment(input: SurfaceInput) -> color {
+        let n = input.world_normal;
+        let uv = input.uv;
+        return color.linear(n * 0.5 + vec3(0.5), 1.0);
+    }
+}
+material Short {
+    fragment(surface: SurfaceInput) -> color { return #808080; }
+}

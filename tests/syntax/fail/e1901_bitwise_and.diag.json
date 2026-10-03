@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1901",
+    "file": "e1901_bitwise_and.mtek",
+    "startByte": 21,
+    "endByte": 22,
+    "message": "The bitwise operator `&` is not supported in v0.1.",
+    "notes": [
+      "help: for boolean logic use `&&` and `||`"
+    ]
+  }
+]

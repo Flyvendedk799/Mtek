@@ -1,0 +1,7 @@
+const A = f(1);
+const B = a.b;
+const C = a[0];
+const D = a.b.c[1].d(2, 3)[4];
+const E = quat.axis_angle(vec3(0.0, 1.0, 0.0), 1.0);
+const F = v.xyz.zyx;
+const G = f()()();

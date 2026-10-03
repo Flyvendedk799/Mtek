@@ -1,0 +1,31 @@
+fn statements() {
+    // 7.1
+    let x: f32 = 1;
+    let y = 2;
+    var z: f32 = 0.0;
+    var w = 3;
+    // 7.2
+    z = 1.0;
+    z += 1.0;
+    z -= 1.0;
+    z *= 2.0;
+    z /= 2.0;
+    self.position.y = 0.0;
+    Cube.rotation = quat.identity();
+    // 7.3
+    f(x);
+    // 7.4
+    if cond { a(); } else if cond { b(); } else { c(); }
+    // 7.5
+    for i in a..b { a(); }
+    for x in arr { a(); }
+    // 7.6
+    for i in 0..3 { if i == 1 { break; } else { continue; } }
+    // 7.7
+    return;
+}
+fn returns() -> f32 { return 1.0; }
+// 8.1 and 8.2
+const NAME: f32 = 1.0;
+fn name(p: f32, q: f32) -> f32 { return p + q; }
+cpu fn cpu_name(msg: string) -> f32 { return 1.0; }

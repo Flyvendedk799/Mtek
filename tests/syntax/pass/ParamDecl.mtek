@@ -1,0 +1,14 @@
+material Params {
+    param plain: f32;
+    param with_default: f32 = 0.5;
+    param computed: vec3 = vec3(1.0, 2.0, 3.0) * 2.0;
+    param tint: color = #ff8800;
+    param table: array<f32, 4> = [1.0, 2.0, 3.0, 4.0];
+    param base_color_texture: texture = texture.white();
+    param base_color_sampler: sampler = sampler.linear_repeat();
+    fragment(input: SurfaceInput) -> color { return tint; }
+}
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param required: color;
+}

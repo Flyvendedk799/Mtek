@@ -1,0 +1,5 @@
+struct Pair {
+    a: f32;
+    b: f32;
+
+fn make() -> Pair { return Pair { a: 1.0; b: 2.0 }; }

@@ -1,0 +1,22 @@
+scene Entities {
+    entity Plain {}
+    entity WithBody {
+        position: vec3(0.0, 0.5, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    }
+    entity Instance: Crate {}
+    entity InstanceWithParams: Crate {
+        origin: vec3(0.0, 3.0, 0.0);
+        tint: #ff0000;
+    }
+    entity Parent {
+        entity Child { position: vec3(0.0, 1.0, 0.0); }
+        entity Sibling {
+            entity Grandchild {}
+        }
+    }
+}
+prefab Crate {
+    param origin: vec3 = vec3(0.0);
+    param tint: color = #ffffff;
+}

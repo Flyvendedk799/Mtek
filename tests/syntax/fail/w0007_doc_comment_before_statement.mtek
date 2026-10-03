@@ -1,0 +1,4 @@
+fn f() {
+    /// Statements cannot be documented.
+    let x = 1;
+}

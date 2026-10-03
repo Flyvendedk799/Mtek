@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E1003",
+    "file": "e1003_missing_semicolon_after_const.mtek",
+    "startByte": 11,
+    "endByte": 11,
+    "message": "Missing `;` at the end of the constant declaration, found `const`.",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "candidateEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "startByte": 11,
+            "endByte": 11,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+scene S {
+    // `Ident :` is the parameter form ...
+    on param_form(other: entity_ref) {}
+    on param_form_two(x: f32, y: f32) {}
+    // ... anything else is a filter expression.
+    on filter_form(Key.Space) {}
+    on filter_name(SPACE) {}
+    on filter_call(key_of(1)) {}
+    on filter_literal(3) {}
+    on filter_descriptor(Combo { first: Key.A; second: Key.B }) {}
+}

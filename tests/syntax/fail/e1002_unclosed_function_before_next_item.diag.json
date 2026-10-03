@@ -1,0 +1,16 @@
+[
+  {
+    "code": "MTEK-E1002",
+    "file": "e1002_unclosed_function_before_next_item.mtek",
+    "startByte": 29,
+    "endByte": 31,
+    "message": "Expected `}` to close the `{` opened here, found `fn`.",
+    "related": [
+      {
+        "message": "opened here",
+        "startByte": 11,
+        "endByte": 12
+      }
+    ]
+  }
+]

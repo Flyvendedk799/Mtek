@@ -1,0 +1,11 @@
+(module
+  (struct Types
+    (field scalar (type f32))
+    (field list (type array (type f32) (len 4)))
+    (field grid (type array (type array (type f32) (len 2)) (len 3)))
+    (field named (type array (type vec3) (len COUNT)))
+    (field huge (type array (type f32) (len overflow))))
+  (fn glued
+    (params (param a (type array (type f32) (len 2))))
+    (ret (type array (type f32) (len 2)))
+    (block (let b (type array (type f32) (len 2)) (name a)) (return (name b)))))

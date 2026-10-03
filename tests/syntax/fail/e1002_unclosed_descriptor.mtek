@@ -1,0 +1,3 @@
+scene Main {
+    entity Cube {
+        mesh: Box { size: vec3(1.0);

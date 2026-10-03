@@ -1,0 +1,14 @@
+// A line comment.
+/// A doc comment documents the declaration that follows it.
+fn documented() {} // after code
+
+//// four slashes start an ordinary comment, not a doc comment
+////////////////////
+fn banner() {
+    // inside a body
+    helper(); // trailing
+}
+
+/// Blank lines between a doc comment and its declaration are fine.
+
+fn helper() {}

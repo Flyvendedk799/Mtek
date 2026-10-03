@@ -1,0 +1,6 @@
+const A = true;
+const B = false;
+fn pick(flag: bool) -> bool {
+    if flag == true { return false; }
+    return !flag && true || false;
+}

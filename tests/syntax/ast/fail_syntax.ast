@@ -65,7 +65,7 @@
 
 ; a.
 (name a)
-; MTEK-E1001 2..2 `` Expected a field name after `.`, found end of file.
+; MTEK-E1004 2..2 `` Unexpected end of file; expected a field name after `.`.
 
 ; a.1
 (name a)

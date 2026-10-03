@@ -1,0 +1,6 @@
+fn // line comment inside a signature
+f(a: f32, /* between parameters */ b: f32) // after the header
+-> f32 /* before the body */ {
+    // first
+    return a /* + */ + b; // last
+}

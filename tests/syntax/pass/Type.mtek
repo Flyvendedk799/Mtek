@@ -1,0 +1,11 @@
+struct Types {
+    scalar: f32;
+    vector: vec3;
+    user: Other;
+    list: array<f32, 4>;
+    grid: array<array<f32, 2>, 3>;
+    cube: array<array<array<f32, 2>, 3>, 4>;
+    structs: array<Other, 8>;
+}
+struct Other { a: f32; }
+fn glued(a: array<f32, 2>) -> array<array<f32, 2>, 3> { let local: array<f32, 2>= a; return x; }

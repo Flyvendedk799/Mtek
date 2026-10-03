@@ -1,0 +1,8 @@
+scene S {
+    on none() {}
+    on key(Key.A, Key.B,) {}
+    on typed(a: f32, b: vec2) {}
+    on mixed(Key.A, other: entity_ref) {}
+    on filter_call(f(1), 2) {}
+    on descriptor(Combo { first: Key.A }) {}
+}

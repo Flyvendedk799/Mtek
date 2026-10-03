@@ -1,0 +1,3 @@
+scene Main {
+    on tick() -> f32 { }
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_missing_comma_in_arguments.mtek",
+    "startByte": 19,
+    "endByte": 22,
+    "message": "Expected `,` or `)`, found float literal `2.0`."
+  }
+]

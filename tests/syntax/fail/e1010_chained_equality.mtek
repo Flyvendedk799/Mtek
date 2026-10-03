@@ -1,0 +1,1 @@
+const SAME = a == b == c;

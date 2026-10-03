@@ -1,0 +1,19 @@
+// 3.1: the forms of the item table.
+import { A, B } from "./path.mtek";
+const NAME: f32 = 1.0;
+const UNTYPED = 2;
+fn name(p: f32, q: i32) -> f32 { return p; }
+cpu fn cpu_name(p: f32) { print("x"); }
+struct Name { field: f32; other: vec3; }
+material Mat { fragment(input: SurfaceInput) -> color { return #ffffff; } }
+prefab Pre { position: vec3(0.0); }
+scene Sc { }
+// 3.2: a descriptor literal used as a field value is followed by the field's semicolon.
+scene Fields { entity E { mesh: Box { size: vec3(1.0, 1.0, 1.0) }; } }
+// 5.5: a struct and its descriptor literal.
+struct Rec { a: f32; b: vec3; }
+const REC = Name { a: 1.0; b: vec3(0.0) };
+// 5.6: array types and literals.
+const ARR: array<f32, 3> = [1.0, 2.0, 3.0];
+// 9.1: imports.
+import { C, D } from "./relative/path.mtek";

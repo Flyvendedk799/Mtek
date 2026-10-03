@@ -1,0 +1,42 @@
+[
+  {
+    "code": "MTEK-E1040",
+    "file": "recovery_misplaced_members_then_clean.mtek",
+    "startByte": 17,
+    "endByte": 19,
+    "message": "`fn` declarations cannot appear in a scene.",
+    "notes": [
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+    ]
+  },
+  {
+    "code": "MTEK-E1040",
+    "file": "recovery_misplaced_members_then_clean.mtek",
+    "startByte": 36,
+    "endByte": 41,
+    "message": "`param` declarations cannot appear in a scene.",
+    "notes": [
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+    ]
+  },
+  {
+    "code": "MTEK-E1040",
+    "file": "recovery_misplaced_members_then_clean.mtek",
+    "startByte": 82,
+    "endByte": 85,
+    "message": "statements cannot appear in a scene.",
+    "notes": [
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+    ]
+  },
+  {
+    "code": "MTEK-E1040",
+    "file": "recovery_misplaced_members_then_clean.mtek",
+    "startByte": 119,
+    "endByte": 124,
+    "message": "`param` declarations cannot appear in an entity.",
+    "notes": [
+      "help: an entity contains fields (`name: value;`), `const`, `state`, nested `entity` declarations, lifecycle functions and `on` handlers"
+    ]
+  }
+]

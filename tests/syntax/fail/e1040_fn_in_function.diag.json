@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1040",
+    "file": "e1040_fn_in_function.mtek",
+    "startByte": 17,
+    "endByte": 19,
+    "message": "`fn` declarations cannot appear in a function body or block.",
+    "notes": [
+      "help: a block contains statements such as `let`, `if`, `for` and calls"
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1004",
+    "file": "e1004_end_of_file_in_import.mtek",
+    "startByte": 6,
+    "endByte": 6,
+    "message": "Unexpected end of file; expected `{` and the names to import."
+  }
+]

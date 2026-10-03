@@ -1,0 +1,20 @@
+const CHAIR = asset.glb("models/chair.glb");
+const WOOD  = asset.texture("textures/wood.png");          // sRGB colour texture
+const MASK  = asset.linear_texture("textures/mask.png");   // linear data texture
+
+scene Configurator {
+    state seat_color: color = #c0392b;
+    camera Main { position: vec3(0.0, 1.2, 3.0); target: vec3(0.0, 0.6, 0.0); }
+    entity Sun { light: DirectionalLight { intensity: 3.0 }; rotation: quat.euler(-0.9, 0.4, 0.0); }
+    entity Seat {
+        mesh: CHAIR.mesh("Seat");
+        position: CHAIR.node_position("Seat");
+        rotation: CHAIR.node_rotation("Seat");
+        material: Pbr {
+            base_color: bind(seat_color);
+            roughness: CHAIR.material_roughness("Fabric");
+            base_color_texture: CHAIR.material_texture("Fabric");
+        };
+    }
+    entity Frame { mesh: CHAIR.mesh("Frame"); material: CHAIR.material("Oak"); }
+}

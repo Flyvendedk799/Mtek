@@ -1,0 +1,3 @@
+scene Main {
+    on key_down(Key.Space { }
+}

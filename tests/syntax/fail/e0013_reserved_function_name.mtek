@@ -1,0 +1,3 @@
+fn while(a: f32) -> f32 {
+    return a;
+}

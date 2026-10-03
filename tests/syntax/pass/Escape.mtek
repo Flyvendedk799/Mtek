@@ -1,0 +1,4 @@
+cpu fn escapes() {
+    print("quote \" backslash \\ newline \n tab \t return \r nul \0");
+    print("scalar \u{41} \u{e9} \u{1F600} \u{0} \u{10FFFF} \u{000041}");
+}

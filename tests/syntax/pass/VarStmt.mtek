@@ -1,0 +1,8 @@
+fn vars() {
+    var counter = 0;
+    var total: f32 = 0.0;
+    var position: vec3 = vec3(0.0);
+    counter += 1;
+    total *= 2.0;
+    position.y = 1.0;
+}

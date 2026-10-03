@@ -1,0 +1,5 @@
+entity Cube {
+    position: vec3(0.0);
+}
+
+scene Main {}

@@ -1,0 +1,7 @@
+const A = -a;
+const B = !a;
+const C = --a;
+const D = !-a;
+const E = -a.b;
+const F = -(a + b);
+const G = -2147483648;

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_garbage_after_statement.mtek",
+    "startByte": 23,
+    "endByte": 24,
+    "message": "Expected `;` after the statement, found integer literal `2`."
+  }
+]

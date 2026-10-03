@@ -1,0 +1,9 @@
+fn (a: f32) { let x = 1; }
+fn g(a f32, b: f32 {
+}
+material { fragment(i: SurfaceInput) -> color { return #ffffff; } }
+scene Main {
+    on { a(); }
+    on key_down Key.Space { b(); }
+    entity { }
+}

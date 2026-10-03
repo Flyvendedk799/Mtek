@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1040",
+    "file": "e1040_struct_in_scene.mtek",
+    "startByte": 17,
+    "endByte": 23,
+    "message": "`struct` declarations cannot appear in a scene.",
+    "notes": [
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+    ]
+  }
+]

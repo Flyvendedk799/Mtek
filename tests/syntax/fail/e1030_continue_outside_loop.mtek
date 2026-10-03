@@ -1,0 +1,5 @@
+scene Main {
+    update(dt: f32) {
+        continue;
+    }
+}

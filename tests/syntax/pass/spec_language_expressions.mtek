@@ -1,0 +1,19 @@
+// 1.5: nested block comments.
+/* a /* b */ c */
+// 2.5: literals.
+const LITERALS = [1.0, 0.5, 2.5e-3, 0, 7, true, false, "text", #6b5cff, #6b5cffcc];
+// 6.1: precedence.
+const PRECEDENCE = a || b && c == d < e + f * -g.h[i](j);
+// 6.5: conversions.
+const CONVERSIONS = [f32(x), i32(x), u32(x)];
+// 6.6: literal resolution.
+const NEGATIVE = -2147483648;
+const SPLAT = vec3(0, 1, 0);
+// 6.7: constructors.
+const CONSTRUCTORS = [vec2(x, y), vec3(x, y, z), vec4(x, y, z, w), vec3(s), quat.identity(), quat.axis_angle(axis, angle), quat.euler(x, y, z), mat4.identity(), mat4.translation(v), mat4.rotation(q), mat4.scale(v), mat4.columns(c0, c1, c2, c3), color.linear(rgb, a), color.srgb(rgb, a)];
+// 6.8: descriptor literals.
+const DESCRIPTOR = TypeName { field: value; other: 2 };
+// 6.9: swizzles.
+const SWIZZLES = [v.xy, v.zyx, v.xxxx, v.x, c.r, c.rgb];
+// 6.10: calls.
+const CALLS = f(a, b);

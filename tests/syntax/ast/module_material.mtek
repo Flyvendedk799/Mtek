@@ -1,0 +1,9 @@
+material Pulse {
+    param tint: color = #6b5cff;
+    param strength: f32;
+    param table: array<f32, 4> = [1.0, 2.0, 3.0, 4.0];
+    fragment(input: SurfaceInput) -> color {
+        let amount = strength * input.uv.x;
+        return color.linear(tint.rgb * amount, 1.0);
+    }
+}

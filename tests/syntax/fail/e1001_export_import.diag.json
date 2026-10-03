@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_export_import.mtek",
+    "startByte": 0,
+    "endByte": 6,
+    "message": "An `import` cannot be exported; only `const`, `fn`, `struct`, `material`, `prefab` and `scene` items can.",
+    "notes": [
+      "help: remove `export`"
+    ]
+  }
+]

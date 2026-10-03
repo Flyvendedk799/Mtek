@@ -1,0 +1,19 @@
+[
+  {
+    "code": "MTEK-E1010",
+    "file": "e1010_chained_comparison.mtek",
+    "startByte": 23,
+    "endByte": 24,
+    "message": "Comparison operators cannot be chained: `<` follows `<` without parentheses.",
+    "related": [
+      {
+        "message": "the first operator",
+        "startByte": 19,
+        "endByte": 20
+      }
+    ],
+    "notes": [
+      "help: compare with `&&` (`a < b && b < c`), or add parentheses to state the grouping"
+    ]
+  }
+]

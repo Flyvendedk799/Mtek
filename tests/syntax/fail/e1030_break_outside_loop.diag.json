@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1030",
+    "file": "e1030_break_outside_loop.mtek",
+    "startByte": 40,
+    "endByte": 45,
+    "message": "`break` can only be used inside a `for` loop.",
+    "notes": [
+      "help: `break` and `continue` apply to the innermost `for`; there is no other loop in v0.1"
+    ]
+  }
+]

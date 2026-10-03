@@ -1,0 +1,4 @@
+material Flat {
+    state time: f32 = 0.0;
+    fragment(input: SurfaceInput) -> color { return #808080; }
+}

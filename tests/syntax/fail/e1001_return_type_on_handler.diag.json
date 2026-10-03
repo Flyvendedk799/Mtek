@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_return_type_on_handler.mtek",
+    "startByte": 27,
+    "endByte": 29,
+    "message": "A handler has no result: remove `-> Type`."
+  }
+]

@@ -1,0 +1,6 @@
+scene Main {
+    entity Cube {
+        param origin: vec3 = vec3(0.0);
+        position: vec3(0.0);
+    }
+}

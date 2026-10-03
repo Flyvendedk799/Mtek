@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E0013",
+    "file": "e0013_reserved_field_name.mtek",
+    "startByte": 39,
+    "endByte": 43,
+    "message": "`type` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  }
+]

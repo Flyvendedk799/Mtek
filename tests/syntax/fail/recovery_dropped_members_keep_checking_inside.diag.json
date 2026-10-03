@@ -1,0 +1,68 @@
+[
+  {
+    "code": "MTEK-E1040",
+    "file": "recovery_dropped_members_keep_checking_inside.mtek",
+    "startByte": 17,
+    "endByte": 19,
+    "message": "`fn` declarations cannot appear in a scene.",
+    "notes": [
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+    ]
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_dropped_members_keep_checking_inside.mtek",
+    "startByte": 56,
+    "endByte": 57,
+    "message": "Expected a name after `let`, found `=`."
+  },
+  {
+    "code": "MTEK-E1040",
+    "file": "recovery_dropped_members_keep_checking_inside.mtek",
+    "startByte": 89,
+    "endByte": 95,
+    "message": "`struct` declarations cannot appear in a scene.",
+    "notes": [
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+    ]
+  },
+  {
+    "code": "MTEK-E1003",
+    "file": "recovery_dropped_members_keep_checking_inside.mtek",
+    "startByte": 109,
+    "endByte": 109,
+    "message": "Missing `;` at the end of the field, found identifier `b`.",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "candidateEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "startByte": 109,
+            "endByte": 109,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E1040",
+    "file": "recovery_dropped_members_keep_checking_inside.mtek",
+    "startByte": 146,
+    "endByte": 151,
+    "message": "`param` declarations cannot appear in an entity.",
+    "notes": [
+      "help: an entity contains fields (`name: value;`), `const`, `state`, nested `entity` declarations, lifecycle functions and `on` handlers"
+    ]
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_dropped_members_keep_checking_inside.mtek",
+    "startByte": 167,
+    "endByte": 168,
+    "message": "Expected an expression, found `;`."
+  }
+]

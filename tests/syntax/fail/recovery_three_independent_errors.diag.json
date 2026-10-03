@@ -1,0 +1,38 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_three_independent_errors.mtek",
+    "startByte": 46,
+    "endByte": 47,
+    "message": "Expected an expression, found `;`."
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_three_independent_errors.mtek",
+    "startByte": 118,
+    "endByte": 121,
+    "message": "Expected `:` and a type after the state `speed`, found identifier `f32`."
+  },
+  {
+    "code": "MTEK-E1003",
+    "file": "recovery_three_independent_errors.mtek",
+    "startByte": 245,
+    "endByte": 245,
+    "message": "Missing `;` at the end of the assignment, found `}`.",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "candidateEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "startByte": 245,
+            "endByte": 245,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  }
+]

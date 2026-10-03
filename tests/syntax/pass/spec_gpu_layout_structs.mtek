@@ -1,0 +1,25 @@
+struct A { position: vec3; intensity: f32; }
+struct Mixed { a: f32; b: vec3; c: u32; d: vec2; e: bool; f: color; }
+struct Inner { k: f32; }
+struct Outer { inner: Inner; after: f32; }
+struct W { weights: array<f32, 3>; bias: f32; }
+struct MtekLight {
+    color: vec3;       // linear rgb × intensity
+    kind: u32;         // 0 = directional, 1 = point
+    position: vec3;    // world position (point)
+    range: f32;        // 0 = unlimited (point)
+    direction: vec3;   // world unit vector the light travels along (directional)
+    reserved: f32;
+}                      // size 48, align 16
+struct MtekFrame {
+    view_proj: mat4;            // @0
+    camera_position: vec3;      // @64
+    light_count: u32;           // @76
+    ambient: vec3;              // @80  (ambient_color.rgb × ambient_intensity)
+    reserved0: f32;             // @92
+    lights: array<MtekLight, 4>;// @96, stride 48
+}                               // size 288
+struct MtekObject {
+    model: mat4;           // @0
+    normal_matrix: mat4;   // @64: inverse-transpose of the upper 3×3 of model, in the upper 3×3; last row/column (0,0,0,1)
+}                          // size 128

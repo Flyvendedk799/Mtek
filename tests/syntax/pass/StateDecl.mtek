@@ -1,0 +1,12 @@
+scene S {
+    state speed: f32 = 0.7;
+    state tint: color = #6b5cff;
+    state count: i32 = 0;
+    state offset: vec3 = vec3(0.0, 1.0, 0.0) * 2.0;
+    state table: array<f32, 3> = [1.0, 2.0, 3.0];
+    entity E {
+        state hits: i32 = 0;
+        state alive_time: f32 = 0.0;
+    }
+}
+prefab P { state bounces: i32 = 0; }

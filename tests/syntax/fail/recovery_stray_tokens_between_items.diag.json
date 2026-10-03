@@ -1,0 +1,23 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_stray_tokens_between_items.mtek",
+    "startByte": 14,
+    "endByte": 15,
+    "message": "Expected an item: `import`, `const`, `fn`, `cpu fn`, `struct`, `material`, `prefab` or `scene`, found `)`."
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_stray_tokens_between_items.mtek",
+    "startByte": 33,
+    "endByte": 36,
+    "message": "Expected an item: `import`, `const`, `fn`, `cpu fn`, `struct`, `material`, `prefab` or `scene`, found identifier `foo`."
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_stray_tokens_between_items.mtek",
+    "startByte": 60,
+    "endByte": 61,
+    "message": "Expected an item: `import`, `const`, `fn`, `cpu fn`, `struct`, `material`, `prefab` or `scene`, found `}`."
+  }
+]

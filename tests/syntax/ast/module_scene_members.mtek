@@ -1,0 +1,20 @@
+scene Demo {
+    clear_color: #101418;
+    const LIMIT = 3;
+    state speed: f32 = 0.7;
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        projection: Orthographic { height: 6.0; near: 0.1 };
+    }
+    entity Cube {
+        position: vec3(0.0, 0.5, 0.0);
+        material: Pulse { phase: bind(frame.time) };
+        state hits: i32 = 0;
+        entity Badge {}
+        update(dt: f32) { hits += 1; }
+        on collision_enter(other: entity_ref) { hits += LIMIT; }
+    }
+    update(dt: f32) { speed *= 0.99; }
+    fixed_update(step: f32) {}
+    on key_down(Key.Space) { speed = -speed; }
+}

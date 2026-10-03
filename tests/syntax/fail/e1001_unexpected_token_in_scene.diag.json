@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_unexpected_token_in_scene.mtek",
+    "startByte": 45,
+    "endByte": 47,
+    "message": "Expected a member: a field `name: value;`, `const`, `state`, `entity`, a lifecycle function such as `update(dt: f32) { ... }`, `on`, a scene object such as `camera Name { ... }`, or `}`, found integer literal `42`."
+  }
+]
