@@ -3,7 +3,10 @@
 //! `spec/tooling.md` section 3).
 
 mod config;
+mod graph;
 mod parse;
+mod root;
+mod scene;
 
 pub use config::{
     AssetsSection, BuildSection, BuildTarget, DEFAULT_DEV_PORT, DEFAULT_ENTRY, DEFAULT_FIXED_STEP,
@@ -12,4 +15,7 @@ pub use config::{
     MAX_ASSET_FILE_BYTES_RANGE, MAX_CATCH_UP_STEPS_RANGE, MAX_ENTITIES_RANGE, MAX_TIME_SECONDS,
     PROJECT_FILE, ProjectConfig, ProjectSection, RuntimeSection, SOURCE_EXTENSION,
 };
+pub use graph::{GraphError, Import, ImportCycle, MAX_MODULES, Module, ModuleGraph, ModuleId};
 pub use parse::parse_config;
+pub use root::{ProjectFs, ProjectRoot};
+pub use scene::{SceneSelection, select_scene};
