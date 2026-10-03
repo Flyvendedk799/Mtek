@@ -119,11 +119,16 @@
     "span": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["file", "start", "end"],
+      "description": "A source range: half-open byte offsets into the file as stored on disk, and the 1-based line and column of both ends (columns count Unicode scalar values), computed by the compiler (decision 0019).",
+      "required": ["file", "start", "end", "startLine", "startColumn", "endLine", "endColumn"],
       "properties": {
         "file": { "$ref": "#/$defs/index", "description": "Source id." },
         "start": { "$ref": "#/$defs/index", "description": "Byte offset, inclusive." },
-        "end": { "$ref": "#/$defs/index", "description": "Byte offset, exclusive." }
+        "end": { "$ref": "#/$defs/index", "description": "Byte offset, exclusive." },
+        "startLine": { "type": "integer", "minimum": 1, "description": "Line of start, 1-based." },
+        "startColumn": { "type": "integer", "minimum": 1, "description": "Column of start, 1-based, in Unicode scalar values." },
+        "endLine": { "type": "integer", "minimum": 1, "description": "Line of end, 1-based." },
+        "endColumn": { "type": "integer", "minimum": 1, "description": "Column of end, 1-based, in Unicode scalar values." }
       }
     },
 

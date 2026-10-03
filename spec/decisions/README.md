@@ -39,4 +39,5 @@ recorded here before code depends on it (blueprint §15).
 | 0016 | v0.1 restrictions beyond the blueprint |
 | 0017 | Language name: Mtek |
 | 0018 | `mtek.toml` validation rules the specification leaves open |
+| 0019 | Manifest spans carry line and column ranges |
 | 0020 | M1 runtime: interim behaviour where a later task is not ready |

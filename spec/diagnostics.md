@@ -67,7 +67,7 @@ Diagnostics are the main interface between Mtek and anyone repairing a program �
 Diagnostics are ordered by `(file load order, startByte, endByte, code)`. A machine-readable JSON Schema for both shapes is checked in as `spec/diagnostic.schema.json`; every golden diagnostic fixture is validated against it.
 
 ### 2.3 Runtime diagnostics
-Same shape; `phase` is `runtime:mount`, `runtime:input`, `runtime:tick`, `runtime:update`, `runtime:bindings`, `runtime:render`, `runtime:reload` or `runtime:device`; `source` resolved through the manifest `spans` table (`spec/runtime-abi.md` §12). Delivered through `onDiagnostic` as JavaScript objects of exactly this shape (TypeScript type `MtekDiagnostic` in the runtime).
+Same shape; `phase` is `runtime:mount`, `runtime:input`, `runtime:tick`, `runtime:update`, `runtime:bindings`, `runtime:render`, `runtime:reload` or `runtime:device`; `source` resolved through the manifest `spans` table, which carries both the byte range and the line/column range, so the runtime needs no source text (`spec/runtime-abi.md` §12, decision 0019). Delivered through `onDiagnostic` as JavaScript objects of exactly this shape (TypeScript type `MtekDiagnostic` in the runtime).
 
 ## 3. Code ranges
 
