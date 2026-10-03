@@ -1,0 +1,20 @@
+{
+  "extends": "./baselines/support/tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "@webgpu/types"],
+    "allowJs": true,
+    "checkJs": true
+  },
+  "include": [
+    "tools",
+    "baselines/support",
+    "tasks/*/baseline/src",
+    "tasks/*/reference/baseline/src",
+    "tasks/*/baseline-tests",
+    "holdout/*/baseline/src",
+    "holdout/*/reference/baseline/src",
+    "holdout/*/baseline-tests",
+    "vitest.config.ts"
+  ],
+  "exclude": ["tasks/maintenance-01/baseline/src"]
+}

@@ -28,12 +28,14 @@ From a clean checkout:
 |---|---|
 | `npm ci` | install the exact locked npm dependencies |
 | `npm run build` | bundle `@mtek/runtime-web` to `packages/runtime-web/dist/runtime.js`, then `cargo build -p mtek-cli --locked` |
-| `npm run check` | `cargo fmt --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `npm run check:ts`, `npm run lint`, `npm run check:naming` |
+| `npm run check` | `cargo fmt --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `npm run check:ts`, `npm run lint`, `npm run check:naming`, `npm run check:tasks` |
 | `npm run check:ts` | `tsc -b` over all TypeScript projects |
 | `npm run lint` | ESLint (`recommended-type-checked`, no `any`) |
 | `npm run check:naming` | fails if the retired placeholder name appears outside the two decision records that explain the rename (decision 0017) |
 | `npm run test:unit` | Vitest unit tests |
-| `npm run test:browser` | builds, then runs the Playwright browser tests (`hardware` and `software` projects); tests without a WebGPU adapter are reported NOT-RUN, never passed |
+| `npm run test:browser` | builds, then runs the Playwright browser tests (`hardware`, `software` and `benchmarks` projects; add `--project=<name>` to select one); tests without a WebGPU adapter are reported NOT-RUN, never passed |
+| `npm run check:tasks` | validates the benchmark tasks and the recorded holdout hash (`benchmarks/README.md`, decision 0021) |
+| `npm run test:benchmarks` | the `benchmarks` Playwright project: every benchmark task's fixtures against its three.js baseline reference (hardware configuration; `MTEK_BASELINE_SOURCE=starter` runs the starters instead) |
 | `npm run test:browser:hardware` | the `hardware` project only; with `MTEK_REQUIRE_GPU=1` it fails on any NOT-RUN test or software adapter |
 | `npm test` | `check`, then `cargo test --workspace --locked`, then `test:unit`, then `test:browser` (NOT-RUN tolerant unless `MTEK_REQUIRE_GPU=1`) |
 | `cargo run -p mtek-cli -- --version` | prints `mtek 0.1.0-dev (language 0.1, runtime ABI 1)` |

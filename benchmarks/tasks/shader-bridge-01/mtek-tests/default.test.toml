@@ -1,0 +1,8 @@
+# Until the host sets tint, the cube keeps the colour of the starter (#808080); nothing changes by itself.
+name = "without a host input the cube stays #808080"
+steps = [
+  { step = 30, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#808080", tolerance = 2 } },
+  { expect_pixel = { x = 54, y = 74, color = "#808080", tolerance = 2 } },
+  { expect_pixel = { x = 2, y = 2, color = "#202020", tolerance = 2 } },
+]

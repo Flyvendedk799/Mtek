@@ -3,3 +3,6 @@
 *.jpg binary
 *.glb binary
 *.bin binary
+
+# Benchmark holdout tree hash (decision 0021): bytes are hashed as stored, so LF everywhere.
+benchmarks/holdout/** text eol=lf

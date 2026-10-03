@@ -1,0 +1,17 @@
+id = "scene-rendering-01"
+category = "scene-rendering"
+mode = "cold"
+title = "A green box and a blue sphere on a dark grey background"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #202020.
+- One camera at (0, 0, 6) looking at the origin, with a perspective projection (vertical field of view 0.9 radians, near plane 0.1, far plane 1000).
+- A green box named Cube at the origin: colour #22c55e, edge length 1.0.
+- A blue sphere named Ball at (2, 0, 0), that is to the right of the box as seen from the camera: colour #3b82f6, radius 0.5.
+All surfaces are flat colours (no lighting)."""
+required_symbols = ["Demo.Cube", "Demo.Ball"]
+mtek_side_status = "unverified-until-M6"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

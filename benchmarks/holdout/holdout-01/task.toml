@@ -1,0 +1,16 @@
+id = "holdout-01"
+category = "scene-rendering"
+mode = "cold"
+title = "Three boxes in a row seen by an orthographic camera"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #0b1220.
+- One orthographic camera at (0, 0, 10) looking at the origin: visible world height 6 (the visible width is the same), near plane 0.1, far plane 50.
+- Three boxes in a row along the x axis, all flat colours (no lighting): Small at (-2, 0, 0) with edge length 0.5, colour #ef4444; Medium at the origin with edge length 1.0, colour #eab308; Large at (2, 0, 0) with edge length 1.5, colour #a855f7.
+- A white (#f8fafc) sphere named Cap of radius 0.25, a child of Medium, whose centre is 0.9 above the centre of Medium (flat colour)."""
+required_symbols = ["Demo.Small", "Demo.Medium", "Demo.Large", "Demo.Cap"]
+mtek_side_status = "unverified-until-M6"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

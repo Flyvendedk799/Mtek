@@ -1,0 +1,32 @@
+// UNVERIFIED: written by hand from spec/language.md, spec/scenes.md and spec/materials.md; never compiled
+// (no compiler exists yet). Task M6-07 compiles and tests it; until then nothing here is a result.
+scene Demo {
+    clear_color: #202020;
+    state speed: f32 = 0.7;
+    state angle: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #6b5cff };
+
+        entity Marker {
+            position: vec3(0.0, 0.0, 0.75);
+            mesh: Sphere { radius: 0.15 };
+            material: Unlit { color: #ef4444 };
+        }
+    }
+
+    update(dt: f32) {
+        angle += speed * dt;
+        Cube.rotation = quat.axis_angle(vec3(0.0, 1.0, 0.0), angle);
+    }
+
+    on key_down(Key.Space) {
+        speed = -speed;
+    }
+}

@@ -23,7 +23,7 @@ which its subject is delivered.
 | `physics.md` | Physics: Semantics, Adapter Contract and Rapier Mapping | M5 |
 | `tooling.md` | Developer Tooling: CLI, Project File, Dev Server, Formatter, LSP | M0 (`--version`), M1 onward |
 | `ai-and-benchmarks.md` | AI Workflow, Untrusted Previews and Benchmarks | M0 (initial benchmark tasks), M6 |
-| `decisions/` | Decision records 0001–0017, `README.md` and `sources.md` | M0 |
+| `decisions/` | Decision records 0001–0021, `README.md` and `sources.md` | M0 |
 
 The "First needed" column is a planning aid taken from the milestone markers inside the documents;
 the documents themselves are authoritative.

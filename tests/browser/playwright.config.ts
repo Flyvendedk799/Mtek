@@ -63,5 +63,14 @@ export default defineConfig({
       name: "software",
       use: { channel, headless, launchOptions: { args: softwareArgs } },
     },
+    {
+      // The benchmark tasks' three.js baselines (task M0-10, decision 0021): the task fixtures run
+      // against each task's reference solution (or, with MTEK_BASELINE_SOURCE=starter, its starter) on
+      // the hardware configuration. `npm run test:benchmarks` runs only this project.
+      name: "benchmarks",
+      testDir: "../../benchmarks",
+      testMatch: ["tasks/*/baseline-tests/*.spec.ts", "holdout/*/baseline-tests/*.spec.ts"],
+      use: { channel, headless, launchOptions: { args: hardwareArgs } },
+    },
   ],
 });
