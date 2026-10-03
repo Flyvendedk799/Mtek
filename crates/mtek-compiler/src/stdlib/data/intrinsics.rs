@@ -4,7 +4,7 @@ use super::build::{F32, I, T, V, exact, function, p, sig};
 use crate::stdlib::model::{Domain, IntrinsicDef, Milestone, TypeRef};
 
 /// A both-domain, const-eligible math function from M2 (the milestone that adds functions;
-/// decision 0021 item 5).
+/// decision 0024 item 5).
 fn math(
     name: &'static str,
     doc: &'static str,

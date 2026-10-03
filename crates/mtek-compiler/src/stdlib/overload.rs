@@ -10,7 +10,7 @@
 //! charged one point when it must adopt a type other than its default (`i32`, `f32`), and the
 //! overload with the fewest points wins: `max(1, 2)` is the `i32` overload, `max(x, 1)` with
 //! `x: f32` is the `f32` one. Two different results at the best score are an ambiguity, never
-//! a silent pick. (Decision 0021 item 8.)
+//! a silent pick. (Decision 0024 item 8.)
 
 use super::model::{IntrinsicDef, SigType, Signature, TypeClass, TypeRef};
 

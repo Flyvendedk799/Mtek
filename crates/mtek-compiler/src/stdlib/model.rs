@@ -377,7 +377,7 @@ pub enum TypeClass {
     Float,
     /// `I`: `i32`, `u32`.
     Int,
-    /// `V`: `vec2`, `vec3`, `vec4` (decision 0021 item 1: the specification never defines it).
+    /// `V`: `vec2`, `vec3`, `vec4` (decision 0024 item 1: the specification never defines it).
     Vector,
 }
 

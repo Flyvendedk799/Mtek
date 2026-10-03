@@ -43,3 +43,4 @@ recorded here before code depends on it (blueprint §15).
 | 0020 | M1 runtime: interim behaviour where a later task is not ready |
 | 0021 | Benchmark task format: details fixed at M0 |
 | 0022 | The parser's nesting limit also bounds the height of the expression tree |
+| 0024 | Standard library registry: details the specification leaves open |

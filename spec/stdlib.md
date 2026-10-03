@@ -24,6 +24,8 @@ pub struct FieldDef { pub name: &'static str, pub ty: TypeRef, pub default: Opti
                       pub flags: FieldFlags /* REQUIRED | WRITABLE | BINDABLE | CONSTRUCTION_ONLY */,
                       pub range: Option<ValueRange>, pub doc: &'static str }
 ```
+The implementation adds `since` and `default_when_set` to `FieldDef`, `body_commands` / `body_properties` to `Registry`, and type-class signatures (`T`, `I`, `V`, §6); see decision 0024 for these additions and the milestone assignments the tables below leave implicit.
+
 `since` records the milestone in which the compiler implements the item. Items whose milestone has not been reached in the running build are still resolvable but produce `E9010` when used — so the registry is complete from M1 while semantics land per milestone.
 
 ### 1.2 `stdlib-schema.json` format
@@ -36,6 +38,8 @@ pub struct FieldDef { pub name: &'static str, pub ty: TypeRef, pub default: Opti
   "events": [ … ], "enums": [ … ], "intrinsics": [ … ], "namespaces": [ … ], "types": [ … ] }
 ```
 Sorted by name within each array. Each `FieldDef` stores its default twice: as a `ConstValue` (used by the checker and code generation) and as **canonical source text** (used for documentation, completion and this JSON). Canonical text expands vector shorthands to every component (`vec3(1.0)` in the tables below is printed `vec3(1.0, 1.0, 1.0)`), prints floats with at least one fractional digit using the shortest decimal that round-trips the binary32 value, prints colours as the lowercase `#rrggbb` literal they were declared with, and prints namespace calls as written (`quat.identity()`, `texture.white()`). A test asserts that every canonical text re-parses and const-evaluates to the stored `ConstValue`.
+
+The generated file contains more than the sketch above (field `constructionOnly` / `since` / `doc`, the arrays `sceneObjects`, `bodyCommands`, `bodyProperties`, `typeClasses`, `preludeSources`); the exact shape is decision 0024 item 4. It is regenerated with `MTEK_BLESS=1 cargo test -p mtek-compiler --test stdlib_schema` and never edited by hand.
 
 ## 2. Types and namespaces
 
@@ -146,7 +150,7 @@ Events with a `code` outside this table are ignored by the runtime. Browser defa
 
 ## 6. Intrinsic functions
 
-Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i32, u32`. **D** = domains: `both`, `cpu`, `gpu`. **K** = const-eligible (usable in constant expressions). CPU semantics must equal the WGSL definition [S5] except where stated; the runtime math library (`rt`) implements them with per-operation `f32` rounding.
+Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i32, u32`, `V` over `vec2, vec3, vec4` (decision 0024). **D** = domains: `both`, `cpu`, `gpu`. **K** = const-eligible (usable in constant expressions). CPU semantics must equal the WGSL definition [S5] except where stated; the runtime math library (`rt`) implements them with per-operation `f32` rounding.
 
 | Function | Signatures | D | K | CPU semantics notes |
 |---|---|---|---|---|

@@ -167,7 +167,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                     &[p("rgb", vec3), p("a", F32)],
                     TypeRef::Color,
                 ),
-                // Not const-eligible: decision 0021 item 6.
+                // Not const-eligible: decision 0024 item 6.
                 NamespaceMember::Function(
                     function(
                         "srgb",
