@@ -10,48 +10,48 @@
       "title": "holdout-01 (starter baseline): three boxes in a row with a cap on the middle one",
       "project": "benchmarks",
       "status": "failed",
-      "durationMs": 495,
+      "durationMs": 493,
       "firstErrorLine": "Error: three boxes in a row with a cap on the middle one, step 2 (expect_pixel): pixel (2, 2) is rgb(0, 0, 0), expected #0b1220 within 2"
     },
     {
       "title": "interaction-01 (starter baseline): Space reverses the rotation direction each time it is pressed",
       "project": "benchmarks",
       "status": "failed",
-      "durationMs": 634,
+      "durationMs": 623,
       "firstErrorLine": "Error: Space reverses the rotation direction each time it is pressed, step 8 (expect_pixel): pixel (64, 64) is rgb(107, 92, 255), expected #ef4444 within 2"
     },
     {
       "title": "interaction-01 (starter baseline): without a key press the cube keeps turning at 0.7 rad/s",
       "project": "benchmarks",
       "status": "passed",
-      "durationMs": 542
+      "durationMs": 517
     },
     {
       "title": "maintenance-01 (starter baseline): two cubes: orange on the left, teal on the right",
       "project": "benchmarks",
       "status": "failed",
-      "durationMs": 557,
+      "durationMs": 534,
       "firstErrorLine": "Error: two cubes: orange on the left, teal on the right, step 12 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #14b8a6 within 2"
     },
     {
       "title": "scene-rendering-01 (starter baseline): green box at the origin, blue sphere to its right, dark grey background",
       "project": "benchmarks",
       "status": "failed",
-      "durationMs": 526,
+      "durationMs": 494,
       "firstErrorLine": "Error: green box at the origin, blue sphere to its right, dark grey background, step 2 (expect_pixel): pixel (2, 2) is rgb(0, 0, 0), expected #202020 within 2"
     },
     {
       "title": "shader-bridge-01 (starter baseline): the host input tint sets the cube colour",
       "project": "benchmarks",
       "status": "failed",
-      "durationMs": 452,
+      "durationMs": 425,
       "firstErrorLine": "Error: the host input tint sets the cube colour, step 3 (set_input): setInput('tint') was rejected: unknown-input: no host input named 'tint'"
     },
     {
       "title": "shader-bridge-01 (starter baseline): without a host input the cube stays #808080",
       "project": "benchmarks",
       "status": "passed",
-      "durationMs": 512
+      "durationMs": 488
     }
   ]
 }

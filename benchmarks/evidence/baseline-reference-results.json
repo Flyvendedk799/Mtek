@@ -10,43 +10,43 @@
       "title": "holdout-01 (reference baseline): three boxes in a row with a cap on the middle one",
       "project": "benchmarks",
       "status": "passed",
-      "durationMs": 519
+      "durationMs": 486
     },
     {
       "title": "interaction-01 (reference baseline): Space reverses the rotation direction each time it is pressed",
       "project": "benchmarks",
       "status": "passed",
-      "durationMs": 1044
+      "durationMs": 913
     },
     {
       "title": "interaction-01 (reference baseline): without a key press the cube keeps turning at 0.7 rad/s",
       "project": "benchmarks",
       "status": "passed",
-      "durationMs": 567
+      "durationMs": 548
     },
     {
       "title": "maintenance-01 (reference baseline): two cubes: orange on the left, teal on the right",
       "project": "benchmarks",
       "status": "passed",
-      "durationMs": 604
+      "durationMs": 587
     },
     {
       "title": "scene-rendering-01 (reference baseline): green box at the origin, blue sphere to its right, dark grey background",
       "project": "benchmarks",
       "status": "passed",
-      "durationMs": 612
+      "durationMs": 566
     },
     {
       "title": "shader-bridge-01 (reference baseline): the host input tint sets the cube colour",
       "project": "benchmarks",
       "status": "passed",
-      "durationMs": 1063
+      "durationMs": 1113
     },
     {
       "title": "shader-bridge-01 (reference baseline): without a host input the cube stays #808080",
       "project": "benchmarks",
       "status": "passed",
-      "durationMs": 641
+      "durationMs": 767
     }
   ]
 }

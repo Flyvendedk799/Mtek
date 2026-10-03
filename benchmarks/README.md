@@ -133,7 +133,7 @@ numbers they come from in comments.
 ## Baseline results
 
 Source: the files in [`evidence/`](evidence/), produced by `MTEK_REQUIRE_GPU=1 npm run test:benchmarks`
-on a clean working tree at commit `057115cc6e8eced73a9c009f98fb679d3ef5f4f2`. The environment record is
+on a clean working tree at commit `a7655626eaf5500164c1720ad9d0fc7c0c000183`. The environment record is
 [`evidence/environment-benchmarks.json`](evidence/environment-benchmarks.json) (it validates against
 `tests/browser/environment.schema.json`); the machine and configuration are those of
 [decision 0012](../spec/decisions/0012-browser-test-environment.md).
