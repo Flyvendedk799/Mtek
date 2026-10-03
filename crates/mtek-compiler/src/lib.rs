@@ -12,6 +12,7 @@ pub const LANGUAGE_VERSION: &str = "0.1";
 /// Version of the runtime ABI emitted programs target.
 pub const RUNTIME_ABI: u32 = 1;
 
+pub mod diagnostics;
 pub mod source;
 
 #[cfg(test)]
