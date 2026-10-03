@@ -7,7 +7,7 @@
 // device), and the source size of the baseline. The measurements are written to
 // `$MTEK_RESULTS_DIR/m0-bridge-measurements.json`.
 import { existsSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import type { Page } from "@playwright/test";
 import { expect, test } from "../../support/fixtures.ts";
 import { BROWSER_ROOT } from "../../support/environment.ts";
@@ -320,7 +320,7 @@ test("three.js baseline: update correctness, instance isolation and pipeline cou
   const measurements = {
     task: "M0-09",
     project: testInfo.project.name,
-    environmentRecord: gpu.recordPath,
+    environmentRecord: basename(gpu.recordPath),
     adapter: gpu.record.gpu.adapter?.info ?? null,
     browser: gpu.record.browser,
     targetSize: SIZE,
