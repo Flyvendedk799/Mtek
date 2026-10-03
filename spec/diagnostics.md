@@ -141,7 +141,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | E1020 | unused expression | non-call expression statement |
 | E1030 | `break`/`continue` outside loop | |
 | E1040 | member not allowed here | e.g. `fn` inside a scene |
-| E1050 | nesting too deep | > 256 |
+| E1050 | nesting too deep | > 256 levels (decision 0022: also a chain of operators that makes an expression tree taller than that) |
 | E1901 | bitwise operators not supported | v0.1 |
 
 ### 5.2 Names and modules (`2xxx`)

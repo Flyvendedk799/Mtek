@@ -37,7 +37,7 @@ All commands work from a clean checkout after `npm ci && npm run build` (`build`
 
 ### 3.1 Formats
 - `tests/syntax/pass/<name>.mtek` — must lex and parse with **zero** diagnostics.
-- `tests/syntax/ast/<name>.mtek` + `<name>.ast` — expected AST as an indented S-expression dump (`(binary + (lit 1) (binary * (lit 2) (lit 3)))`). Precedence and associativity are tested here.
+- `tests/syntax/ast/<name>.mtek` + `<name>.ast` — expected AST as an indented S-expression dump (`(binary + (lit 1) (binary * (lit 2) (lit 3)))`). Precedence and associativity are tested here. Expression fixtures hold one expression per case, cases separated by `---` lines (`--- no-desc` parses the case as `ExprNoDesc`); the `.ast` file shows each case's source, its dump, and the diagnostics (code, byte span, message) that parsing it produced, so error cases live here too and are named `fail_*`. The format is documented in `crates/mtek-compiler/tests/ast_fixtures.rs`.
 - `tests/syntax/fail/<name>.mtek` + `<name>.diag.json`, and `tests/semantics/fail/<name>/` (a directory with `mtek.toml` and sources when multi-file) + `expected.diag.json`:
   ```json
   [ { "code": "MTEK-E5001", "file": "src/main.mtek", "startByte": 120, "endByte": 128,

@@ -99,7 +99,7 @@ Project (mtek.toml, entry)                     project/
 
 ### 4.3 `syntax/`
 - `lexer.rs`: `Token { kind: TokenKind, span }`; comments and doc comments kept in a side table `Trivia` keyed by token index (formatter and doc extraction need them; the parser ignores them).
-- `parser/`: recursive descent for items, members and statements; Pratt parser for expressions with exactly the binding powers of `spec/language.md` §6.1. Recursion depth limit 256 (`E1050`).
+- `parser/`: recursive descent for items, members and statements; Pratt parser for expressions with exactly the binding powers of `spec/language.md` §6.1. Recursion depth limit 256 (`E1050`); the height of an expression tree is bounded as well (decision 0022).
 - `ast.rs`: owned tree; every node has `NodeId(u32)` (dense, assigned in parse order) and `Span`. The AST contains no resolved information, no GPU handles, no browser objects (blueprint §5.1).
 - **Recovery.** On an unexpected token the parser reports one error and skips to a synchronisation point: for statements `;` or `}` at the current depth; for members/fields `;` or the start of a member keyword (`state`, `param`, `entity`, `on`, `const`, `fn`, contextual `camera`/lifecycle names followed by the right punctuation); for items the next item keyword at depth 0. It inserts `Error` nodes so later stages can continue. At most one error per 3 tokens is reported (avoid avalanches).
 - The parser implements **the full v0.1 grammar from M1 onward** (decision 0013): parsing is mechanical given `spec/grammar.ebnf`, and implementing it whole avoids rework. Semantic support arrives per milestone; a syntactically valid construct whose semantics the current build does not implement yet yields `E9010` ("`material` declarations are specified for v0.1 but not implemented by this compiler build yet") — distinct from `x9xx` "not in v0.1" codes.
@@ -189,7 +189,7 @@ Every node carries its Mtek `Span`.
 |---|---|---|
 | Source file size | 4 MiB | `E0004` |
 | Modules per project | 1 024 | `E9002` |
-| Parser nesting depth | 256 | `E1050` |
+| Parser nesting depth (recursion levels; also the height of an expression tree, decision 0022) | 256 | `E1050` |
 | Diagnostics reported per file | 200 (then one `W9003` "further diagnostics suppressed") | `W9003` |
 | Array length | 1 … 65 536 | `E3031` |
 | Static entities per scene | 16 384 | `E5092` |
