@@ -1,0 +1,24 @@
+// UNVERIFIED: written by hand from spec/language.md, spec/scenes.md and spec/materials.md; never compiled
+// (no compiler exists yet). Task M6-07 compiles and tests it; until then nothing here is a result.
+material Flat {
+    param base: color = #808080;
+
+    fragment(surface: SurfaceInput) -> color {
+        return base;
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+    state tint: color = #808080;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Flat { base: bind(tint) };
+    }
+}

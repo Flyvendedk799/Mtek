@@ -1,0 +1,28 @@
+# Camera: position (0, 0, 6) looking at the origin, fov_y 0.9, 128 x 128 target. The unit cube's front face
+# spans pixels 51.96 to 76.04 in x and y (CPU projection, benchmarks/baselines/support/test/projection.ts).
+# A host input is applied at the start of the next frame, hence a `step` after every `set_input`.
+name = "the host input tint sets the cube colour"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#808080", tolerance = 2 } },
+
+  { set_input = { tint = "#ff8800" } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#ff8800", tolerance = 2 } },
+  { expect_pixel = { x = 54, y = 54, color = "#ff8800", tolerance = 2 } },
+  { expect_pixel = { x = 74, y = 74, color = "#ff8800", tolerance = 2 } },
+
+  { set_input = { tint = "#10a0c0" } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#10a0c0", tolerance = 2 } },
+
+  { set_input = { tint = "#ffffff" } },
+  { step = 5, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#ffffff", tolerance = 2 } },
+
+  # only the cube changes: the background keeps its clear colour
+  { expect_pixel = { x = 2, y = 2, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 125, y = 125, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 49, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 79, y = 64, color = "#202020", tolerance = 2 } },
+]

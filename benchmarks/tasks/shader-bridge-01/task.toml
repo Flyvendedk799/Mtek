@@ -1,0 +1,13 @@
+id = "shader-bridge-01"
+category = "shader-bridge"
+mode = "edit"
+title = "Set the cube's colour from the host input tint"
+prompt = """The scene Demo shows a cube named Cube drawn with a custom material named Flat whose colour is fixed at #808080.
+Make the cube's colour settable from the host page through an input named tint, whose value is a colour string such as "#ff8800": the material gets a colour parameter that follows a scene state, and the host input writes that state. Until the host sets a value the cube stays #808080. The colour must change by updating a value only; the material and its shader are not replaced. Everything else stays as it is."""
+required_symbols = ["Demo.Cube", "Flat"]
+mtek_side_status = "unverified-until-M6"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

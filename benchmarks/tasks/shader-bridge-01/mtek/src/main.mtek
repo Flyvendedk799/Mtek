@@ -1,0 +1,19 @@
+material Flat {
+    fragment(surface: SurfaceInput) -> color {
+        return #808080;
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Flat {};
+    }
+}
