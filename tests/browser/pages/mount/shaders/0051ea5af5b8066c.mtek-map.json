@@ -1,0 +1,7 @@
+{
+  "shader": "0051ea5af5b8066c7e8248c918c4018308f9585f2b2717aef41141532bfb283d",
+  "entries": [
+    { "wgsl": { "line": 1, "colStart": 1, "colEnd": 200 }, "span": 1, "symbol": "src/main.mtek::Demo.Main" },
+    { "wgsl": { "line": 1, "colStart": 20, "colEnd": 60 }, "span": 2, "symbol": "src/main.mtek::Demo.Cube" }
+  ]
+}

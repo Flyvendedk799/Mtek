@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mtek mount fixture</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      // The runtime bundle exactly as `npm run build -w @mtek/runtime-web` produces it, and a program
+      // object shaped like the default export of app.js (spec/runtime-abi.md section 3); M1 reads only
+      // abi, baseUrl and manifestUrl.
+      import { mountMtek, MtekMountError } from "/mount/runtime.js";
+      window.__mtek = {
+        mountMtek,
+        MtekMountError,
+        program: {
+          abi: 1,
+          baseUrl: new URL("/mount/fixture/", location.href),
+          manifestUrl: new URL("/mount/fixture/program.manifest.json", location.href),
+          writers: {},
+          functions: {},
+          scenes: {},
+          prefabs: {},
+        },
+      };
+    </script>
+  </body>
+</html>
