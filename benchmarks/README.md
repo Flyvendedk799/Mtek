@@ -89,6 +89,15 @@ That list is a prediction from `spec/diagnostics.md`, not compiler output.
 4. **Mtek results are claimed only after a real run.** Until M6-07, every statement about the Mtek
    side is a statement about what was written, not about what happens.
 
+### Integrity log
+
+Every known exposure of the holdout is recorded here, so that whoever runs the M6/M7 evaluations can
+judge whether to replace an exposed task first.
+
+| Date | What happened | Assessment |
+|---|---|---|
+| 2026-10-03 | While implementing the parser (M1-05), a worker agent printed one file of the holdout task's reference solution (a plain scene) while exploring the repository. | No effect on the parser, the corpus or any spec text. The parser tests do not read `benchmarks/holdout/`, and the agent reported the exposure itself. The holdout task counts as **exposed to one development agent**: consider replacing it before the first model evaluation (M6). Since then, the work-item guide tells every agent not to read `benchmarks/holdout/`. |
+
 ### The holdout tree hash
 
 `node benchmarks/tools/hash-holdout.mjs` prints it (`--check` compares, `--write` records). Every file
