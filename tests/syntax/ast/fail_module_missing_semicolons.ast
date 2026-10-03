@@ -1,0 +1,27 @@
+(module
+  (const A (lit int 1))
+  (struct Pair (field a (type f32)) (field b (type f32)))
+  (fn f
+    (params)
+    (block
+      (let x (lit int 1))
+      (let z (lit int 3))
+      (let w (lit int 4))
+      (return (name x))))
+  (scene Main
+    (state s (type f32) (lit float 0.0))
+    (entity E (init position (call (name vec3) (lit float 0.0))))))
+; MTEK-E1003 11..11 `` Missing `;` at the end of the constant declaration, found `struct`.
+; MTEK-E1003 32..32 `` Missing `;` at the end of the field, found identifier `b`.
+; MTEK-E1003 39..39 `` Missing `;` at the end of the field, found `}`.
+; MTEK-E1003 64..64 `` Missing `;` at the end of the statement, found `let`.
+; MTEK-E1003 107..107 `` Missing `;` at the end of the `return` statement, found `}`.
+; MTEK-E1003 145..145 `` Missing `;` at the end of the declaration, found `entity`.
+; MTEK-E1003 180..180 `` Missing `;` at the end of the field, found `}`.
+; edit MTEK-E1003 ";" at 11..11
+; edit MTEK-E1003 ";" at 32..32
+; edit MTEK-E1003 ";" at 39..39
+; edit MTEK-E1003 ";" at 64..64
+; edit MTEK-E1003 ";" at 107..107
+; edit MTEK-E1003 ";" at 145..145
+; edit MTEK-E1003 ";" at 180..180

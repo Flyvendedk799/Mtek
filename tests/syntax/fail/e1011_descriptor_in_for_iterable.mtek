@@ -1,0 +1,5 @@
+fn f() {
+    for x in Items { first: 1; second: 2 } {
+        g(x);
+    }
+}

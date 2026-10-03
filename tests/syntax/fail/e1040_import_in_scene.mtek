@@ -1,0 +1,3 @@
+scene Main {
+    import { Shared } from "./shared.mtek";
+}

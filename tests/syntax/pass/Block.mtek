@@ -1,0 +1,12 @@
+fn blocks() {
+}
+fn nested() {
+    {
+        {
+            let inner = 1;
+        }
+        let beside = 2;
+    }
+    if a { { b(); } }
+}
+scene S { update(dt: f32) { { speed += dt; } } }

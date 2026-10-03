@@ -1,0 +1,11 @@
+scene Wrapper {
+entity Cube {
+    position: vec3(0.0, 0.5, 0.0);
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    material: Unlit { color: #6b5cff };
+    state hits: i32 = 0;
+    entity Badge { position: vec3(0.0, 0.6, 0.0); mesh: Sphere { radius: 0.1 }; material: Unlit { color: #ffffff }; }
+    update(dt: f32) { }
+    on collision_enter(other: entity_ref) { }
+}
+}

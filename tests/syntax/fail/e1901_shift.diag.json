@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1901",
+    "file": "e1901_shift.mtek",
+    "startByte": 18,
+    "endByte": 20,
+    "message": "The bitwise operator `<<` is not supported in v0.1."
+  }
+]

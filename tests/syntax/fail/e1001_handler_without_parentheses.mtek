@@ -1,0 +1,4 @@
+scene Main {
+    on key_down Key.Space { speed = 0.0; }
+    state speed: f32 = 0.7;
+}

@@ -1,0 +1,10 @@
+const A = f();
+const B = f(1);
+const C = f(1, 2);
+const D = f(1, 2,);
+const E = f(g(1), h(2, 3), [4, 5], Box { a: 6 });
+const F = vec3(
+    1.0,
+    2.0,
+    3.0,
+);

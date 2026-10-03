@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-W0007",
+    "file": "w0007_dangling_doc_comment_at_end.mtek",
+    "startByte": 11,
+    "endByte": 44,
+    "message": "This documentation comment is not followed by a declaration or member to document.",
+    "notes": [
+      "help: put the comment directly before the declaration, or make it an ordinary `//` comment"
+    ]
+  }
+]

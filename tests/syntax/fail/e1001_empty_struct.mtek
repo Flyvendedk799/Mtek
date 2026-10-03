@@ -1,0 +1,3 @@
+struct Empty {}
+
+const AFTER = 1;

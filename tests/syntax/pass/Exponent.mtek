@@ -1,0 +1,5 @@
+const A = 2.5e-3;
+const B = 1.0e3;
+const C = 1.5E+2;
+const D = 0.25e10;
+const E = 4.0E-2;

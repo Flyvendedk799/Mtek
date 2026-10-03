@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1040",
+    "file": "e1040_scene_object_in_entity.mtek",
+    "startByte": 39,
+    "endByte": 45,
+    "message": "scene objects cannot appear in an entity.",
+    "notes": [
+      "help: an entity contains fields (`name: value;`), `const`, `state`, nested `entity` declarations, lifecycle functions and `on` handlers"
+    ]
+  }
+]

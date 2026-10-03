@@ -1,0 +1,8 @@
+fn returns(a: f32) -> f32 {
+    if a > 0.0 { return a; }
+    return a * 2.0;
+}
+fn unit() {
+    return;
+}
+fn vector() -> vec3 { return vec3(1.0, 2.0, 3.0); }

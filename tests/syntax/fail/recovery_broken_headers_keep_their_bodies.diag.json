@@ -1,0 +1,66 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_broken_headers_keep_their_bodies.mtek",
+    "startByte": 3,
+    "endByte": 4,
+    "message": "Expected a function name after `fn`, found `(`."
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_broken_headers_keep_their_bodies.mtek",
+    "startByte": 22,
+    "endByte": 23,
+    "message": "Expected an expression, found `;`."
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_broken_headers_keep_their_bodies.mtek",
+    "startByte": 36,
+    "endByte": 37,
+    "message": "Expected a material name after `material`, found `{`."
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_broken_headers_keep_their_bodies.mtek",
+    "startByte": 117,
+    "endByte": 118,
+    "message": "Expected an event name after `on`, found `{`."
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_broken_headers_keep_their_bodies.mtek",
+    "startByte": 150,
+    "endByte": 153,
+    "message": "Expected `(` after the event name, found identifier `Key`."
+  },
+  {
+    "code": "MTEK-E1003",
+    "file": "recovery_broken_headers_keep_their_bodies.mtek",
+    "startByte": 173,
+    "endByte": 173,
+    "message": "Missing `;` at the end of the assignment, found `}`.",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "candidateEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "startByte": 173,
+            "endByte": 173,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_broken_headers_keep_their_bodies.mtek",
+    "startByte": 252,
+    "endByte": 253,
+    "message": "Expected an entity name after `entity`, found `{`."
+  }
+]

@@ -1,0 +1,14 @@
+scene Main {
+    fn helper() {}
+    param p: f32;
+    let x = 1;
+    entity Cube { param q: f32; position: vec3(0.0); }
+    state speed: f32 = 0.7;
+}
+material M {
+    state s: f32 = 0.0;
+    vertex(i: In) { }
+    fragment(i: SurfaceInput) -> color { return #ffffff; }
+}
+entity Loose {}
+fn f() { fn g() {} break; }

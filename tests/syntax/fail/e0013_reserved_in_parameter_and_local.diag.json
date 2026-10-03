@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E0013",
+    "file": "e0013_reserved_in_parameter_and_local.mtek",
+    "startByte": 5,
+    "endByte": 10,
+    "message": "`match` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  }
+]

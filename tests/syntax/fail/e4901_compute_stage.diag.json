@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E4901",
+    "file": "e4901_compute_stage.mtek",
+    "startByte": 25,
+    "endByte": 32,
+    "message": "Custom `compute` stages are not supported in v0.1; they are planned for v0.2.",
+    "notes": [
+      "help: a material has exactly one stage function, `fragment`; the compiler supplies the vertex stage"
+    ]
+  }
+]

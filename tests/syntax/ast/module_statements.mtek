@@ -1,0 +1,19 @@
+fn statements(items: array<f32, 4>) -> f32 {
+    let a = 1;
+    var b: f32 = 2.0;
+    const C = 3;
+    b += 1.0;
+    b -= 1.0;
+    b *= 2.0;
+    b /= 2.0;
+    self.position.y = 0.0;
+    call(a, b);
+    if a > 0 { b = 1.0; } else if a < 0 { b = -1.0; } else { b = 0.0; }
+    for i in 0..4 { if i == 2 { continue; } if i == 3 { break; } }
+    for x in items { b += x; }
+    {
+        let scoped = 4;
+    }
+    return b;
+}
+fn unit() { return; }

@@ -1,0 +1,11 @@
+scene Members {
+    clear_color: #101418;
+    ambient_intensity: 0.25;
+    const LIMIT = 3;
+    state count: i32 = 0;
+    camera Main { position: vec3(0.0, 0.0, 5.0); }
+    entity Cube { position: vec3(0.0); }
+    update(dt: f32) { count += 1; }
+    fixed_update(step: f32) {}
+    on key_down(Key.Space) { count = 0; }
+}

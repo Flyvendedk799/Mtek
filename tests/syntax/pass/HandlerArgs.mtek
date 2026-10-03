@@ -1,0 +1,8 @@
+scene S {
+    on none() {}
+    on one(Key.A) {}
+    on two(Key.A, Key.B) {}
+    on trailing(Key.A,) {}
+    on mixed(Key.A, other: entity_ref) {}
+    on params(a: f32, b: vec2,) {}
+}

@@ -1,0 +1,6 @@
+const A = [1];
+const B = [1, 2, 3];
+const C = [1, 2, 3,];
+const D = [[1, 2], [3, 4]];
+const E = [vec3(0.0), vec3(1.0)];
+const F = [a + 1, b * 2, f(c)];

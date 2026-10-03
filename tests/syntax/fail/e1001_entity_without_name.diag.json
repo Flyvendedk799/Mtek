@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_entity_without_name.mtek",
+    "startByte": 24,
+    "endByte": 25,
+    "message": "Expected an entity name after `entity`, found `{`."
+  }
+]

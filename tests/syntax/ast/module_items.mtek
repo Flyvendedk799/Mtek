@@ -1,0 +1,9 @@
+import { Shared, Other, } from "./shared.mtek";
+const UNTYPED = 1;
+export const TYPED: f32 = 2.0;
+struct Pair { a: f32; b: array<vec3, 4>; }
+fn plain(a: f32, b: vec3,) -> vec3 { return b; }
+export cpu fn log_it(message: string) { print(message); }
+scene Empty {}
+prefab Nothing {}
+material NoStage {}

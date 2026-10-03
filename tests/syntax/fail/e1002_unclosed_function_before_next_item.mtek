@@ -1,0 +1,6 @@
+fn first() {
+    let x = 1;
+
+fn second() {
+    let y = 2;
+}

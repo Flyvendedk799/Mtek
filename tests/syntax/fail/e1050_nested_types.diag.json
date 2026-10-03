@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1050",
+    "file": "e1050_nested_types.mtek",
+    "startByte": 1551,
+    "endByte": 1556,
+    "message": "Nesting is deeper than the limit of 256 levels.",
+    "notes": [
+      "help: declare a `struct` for the inner type"
+    ]
+  }
+]

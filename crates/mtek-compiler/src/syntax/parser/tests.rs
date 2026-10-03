@@ -1079,6 +1079,157 @@ fn an_assignment_for_a_comparison_in_a_condition_is_one_error() {
     );
 }
 
+#[test]
+fn an_item_keyword_at_the_start_of_a_line_is_a_missing_brace() {
+    // The classic mistake: the `}` of a body is forgotten and the next item
+    // starts. One diagnostic, naming the unclosed brace, and the item is read.
+    let (dump, found) = flawed(
+        "fn first() {
+    let x = 1;
+
+fn second() { return; }
+",
+    );
+    assert_eq!(found, [d(Code::E1002, "fn")]);
+    assert_eq!(
+        dump,
+        "(module (fn first (params) (block (let x (lit int 1)))) (fn second (params) (block (return))))"
+    );
+    for src in [
+        "scene S {
+    a: 1;
+    entity E {
+        b: 2;
+    }
+
+material M {}
+",
+        "struct P {
+    a: f32;
+
+struct Q { b: f32; }
+",
+        "prefab P {
+    param a: f32;
+
+export fn f() {}
+",
+        "material M {
+    param a: f32;
+
+cpu fn f() {}
+",
+        "fn f() {
+    if a {
+        b();
+
+scene S {}
+",
+        "scene S { camera C {
+    a: 1;
+
+import { A } from \"./a.mtek\";
+",
+    ] {
+        let run = parse(src);
+        assert_eq!(run.codes(), [Code::E1002], "{src}: {:?}", run.found());
+        check_tree(&run);
+        // The item after the missing brace is an item of the file.
+        assert!(run.module.items.len() >= 2, "{src}: {}", run.dump());
+    }
+}
+
+#[test]
+fn an_indented_declaration_in_a_body_is_not_a_missing_brace() {
+    // It is a declaration in the wrong place (`spec/scenes.md` 2).
+    assert_eq!(
+        diags(
+            "scene S {
+    fn helper() {}
+}
+"
+        ),
+        [d(Code::E1040, "fn")]
+    );
+    assert_eq!(
+        diags(
+            "fn f() {
+    fn g() {}
+}
+"
+        ),
+        [d(Code::E1040, "fn")]
+    );
+    // A field named `material` at the start of a line is a field.
+    assert!(
+        diags(
+            "scene S {
+  entity E {
+material: Unlit {};
+  }
+}
+"
+        )
+        .is_empty()
+    );
+}
+
+#[test]
+fn a_malformed_literal_that_swallowed_the_semicolon_is_not_a_missing_semicolon() {
+    // The unterminated string takes the `;`; the lexer reported the string,
+    // and the parser does not report the semicolon on top of it.
+    let (_, found) = flawed(
+        "const A = \"unterminated;
+fn f() {}
+",
+    );
+    assert_eq!(found, [d(Code::E0024, "\"unterminated;")]);
+    let (_, found) = flawed(
+        "fn f() {
+    let x = 1.
+    let y = 2;
+}
+",
+    );
+    assert_eq!(found, [d(Code::E0022, "1.")]);
+}
+
+#[test]
+fn e1050_advises_on_the_construct_that_ran_out_of_levels() {
+    let help = |src: &str| {
+        let run = parse(src);
+        assert_eq!(run.codes(), [Code::E1050], "{src:.40}");
+        run.diagnostics[0].notes.join(" ")
+    };
+    assert_eq!(
+        help(&format!("const A = {};", nest("(", ")", "1", 300))),
+        "help: split the expression into several `let` statements"
+    );
+    assert_eq!(
+        help(&format!(
+            "fn f() {{ {} }}",
+            nest("{ ", "} ", "return;", 300)
+        )),
+        "help: move the inner code into a function of its own"
+    );
+    // The condition of an `if` is the first thing that runs out of levels in
+    // nested ifs, but the blocks are the problem.
+    assert_eq!(
+        help(&format!(
+            "fn f() {{ {} }}",
+            nest("if a { ", "} ", "return;", 300)
+        )),
+        "help: move the inner code into a function of its own"
+    );
+    assert_eq!(
+        help(&format!(
+            "scene S {{ {} }}",
+            nest("entity E { ", "} ", "", 300)
+        )),
+        "help: flatten the entity tree: declare the inner entities beside the outer ones"
+    );
+}
+
 // ---------------------------------------------------------------------------
 // Messages worth checking
 // ---------------------------------------------------------------------------

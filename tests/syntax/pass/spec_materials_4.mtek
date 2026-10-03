@@ -1,0 +1,7 @@
+scene Instances {
+    entity E {
+material: Pulse { tint: bind(tint); phase: bind(frame.time) };
+material: Pulse { phase: 0.25 };            // tint uses its default
+material: Unlit { color: #ff8800 };
+    }
+}

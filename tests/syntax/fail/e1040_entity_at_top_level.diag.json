@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1040",
+    "file": "e1040_entity_at_top_level.mtek",
+    "startByte": 0,
+    "endByte": 6,
+    "message": "`entity` declarations cannot appear at the top level of a file.",
+    "notes": [
+      "help: a file contains `import`, `const`, `fn`, `struct`, `material`, `prefab` and `scene` items"
+    ]
+  }
+]

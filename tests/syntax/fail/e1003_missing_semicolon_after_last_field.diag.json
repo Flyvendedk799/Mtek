@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E1003",
+    "file": "e1003_missing_semicolon_after_last_field.mtek",
+    "startByte": 68,
+    "endByte": 68,
+    "message": "Missing `;` at the end of the field, found `}`.",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "candidateEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "startByte": 68,
+            "endByte": 68,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  }
+]

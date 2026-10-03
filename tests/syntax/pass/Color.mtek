@@ -1,0 +1,5 @@
+const A: color = #6b5cff;
+const B: color = #6B5CFF;
+const C: color = #6b5cffcc;
+const D: color = #000000;
+const E: color = #ffffffff;

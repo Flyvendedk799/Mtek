@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_missing_from.mtek",
+    "startByte": 18,
+    "endByte": 33,
+    "message": "Expected `from` after the list of imported names, found string literal `\"./shared.mtek\"`."
+  }
+]

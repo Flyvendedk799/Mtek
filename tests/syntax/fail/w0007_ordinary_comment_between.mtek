@@ -1,0 +1,3 @@
+/// Documents nothing: an ordinary comment comes between.
+// A note.
+fn f() {}

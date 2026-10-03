@@ -1,0 +1,4 @@
+struct One { a: f32; }
+struct Mixed { a: f32; b: vec3; c: u32; d: vec2; e: bool; f: color; }
+struct Nested { inner: One; items: array<One, 4>; }
+export struct Exported { weights: array<f32, 3>; bias: f32; }

@@ -1,0 +1,11 @@
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    material: Unlit { color: tint };
+    body: Dynamic { mass: 1.0 };
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0) };
+    state bounces: i32 = 0;
+    on collision_enter(other: entity_ref) { self.bounces += 1; }
+}

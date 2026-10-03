@@ -224,7 +224,9 @@ impl Parser<'_> {
         }
         self.bump();
         let mut members = Vec::new();
-        while !matches!(self.kind(), TokenKind::RBrace | TokenKind::Eof) {
+        while !matches!(self.kind(), TokenKind::RBrace | TokenKind::Eof)
+            && !self.at_unindented_item()
+        {
             let before = self.pos;
             members.push(self.member(place));
             if self.pos == before {
@@ -260,7 +262,7 @@ impl Parser<'_> {
     /// documentation), so each kind of member is built by a function of its
     /// own that is not on the path of the others.
     fn member(&mut self, place: Place) -> Member {
-        self.depth_reported = false;
+        self.start_construct();
         self.mark_documentable();
         let first = self.span();
         let member = self.member_of_kind(place);
@@ -555,9 +557,11 @@ impl Parser<'_> {
         let open = self.span();
         self.bump();
         let mut fields = Vec::new();
-        while !matches!(self.kind(), TokenKind::RBrace | TokenKind::Eof) {
+        while !matches!(self.kind(), TokenKind::RBrace | TokenKind::Eof)
+            && !self.at_unindented_item()
+        {
             let before = self.pos;
-            self.depth_reported = false;
+            self.start_construct();
             self.mark_documentable();
             if self.at_field_name() {
                 if let Some(field) = self.field_init() {

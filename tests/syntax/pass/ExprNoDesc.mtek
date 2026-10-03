@@ -1,0 +1,12 @@
+fn conditions() {
+    if a < b { x(); }
+    if (Box { size: 1.0 }) == b { x(); }
+    if f(Box { size: 1.0 }) { x(); }
+    if [Box { size: 1.0 }] == c { x(); }
+    for i in a..b { x(); }
+    for i in 0..(Count { n: 1 }) { x(); }
+    for i in f(Box { size: 1.0 })..n { x(); }
+    // A name followed by a block is a name and a block.
+    if flag { x(); }
+    for i in items { x(); }
+}

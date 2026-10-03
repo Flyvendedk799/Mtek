@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_missing_block_after_condition.mtek",
+    "startByte": 25,
+    "endByte": 31,
+    "message": "Expected `{` to start a block, found `return`."
+  }
+]

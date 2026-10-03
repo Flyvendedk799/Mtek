@@ -1,0 +1,31 @@
+prefab Crate { param origin: vec3 = vec3(0.0); }
+scene Inline {
+    state speed: f32 = 0.7;
+    entity First: Crate { origin: vec3(0.0, 3.0, 0.0); }
+    entity Cube { state hits: i32 = 0; }
+    entity Floor {}
+    update(dt: f32) { }
+    fixed_update(dt: f32) { }
+    on key_down(Key.Space) { }
+    on key_up(Key.Space) { }
+    on pointer_down(event: PointerEvent) { speed = event.position.x; }
+    on pointer_move(event: PointerEvent) { }
+    on collision_enter(other: entity_ref) {
+        if other == Floor { self.hits += 1; }
+        destroy(other);
+        let r = spawn(Crate { origin: vec3(0.0, 1.0, 0.0) });
+        if alive(r) { r.body.apply_impulse(vec3(0.0, 4.0, 0.0)); }
+    }
+    on collision_exit(other: entity_ref) { }
+    on poll(Key.W) {
+        if is_key_down(Key.W) { Cube.position.y = 1.0; }
+        Cube.material.phase = 0.5;
+        Cube.rotation = quat.axis_angle(vec3(0.0, 1.0, 0.0), frame.time);
+        let wrapped = fract(frame.time / 10.0) * 10.0;
+        self.position.y = 0.0;
+    }
+    entity Bound {
+        phase: bind(fract(frame.time / 10.0) * 10.0);
+        position: vec3(0.0);
+    }
+}

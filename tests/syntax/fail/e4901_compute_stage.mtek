@@ -1,0 +1,4 @@
+material Particles {
+    compute(index: u32) { }
+    fragment(input: SurfaceInput) -> color { return #808080; }
+}

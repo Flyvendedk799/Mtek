@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1050",
+    "file": "e1050_nested_parentheses.mtek",
+    "startByte": 267,
+    "endByte": 268,
+    "message": "Nesting is deeper than the limit of 256 levels.",
+    "notes": [
+      "help: split the expression into several `let` statements"
+    ]
+  }
+]

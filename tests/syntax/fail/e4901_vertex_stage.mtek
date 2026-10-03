@@ -1,0 +1,7 @@
+material Waves {
+    param amplitude: f32 = 0.1;
+    vertex(input: VertexInput) -> VertexOutput {
+        return input;
+    }
+    fragment(input: SurfaceInput) -> color { return #808080; }
+}

@@ -1,0 +1,3 @@
+fn f() {
+    state count: i32 = 0;
+}

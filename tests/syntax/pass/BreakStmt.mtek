@@ -1,0 +1,6 @@
+fn breaks() {
+    for i in 0..10 {
+        if i == 5 { break; }
+        for j in 0..3 { if j == i { break; } }
+    }
+}

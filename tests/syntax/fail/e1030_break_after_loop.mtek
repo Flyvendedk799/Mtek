@@ -1,0 +1,4 @@
+fn f() {
+    for i in 0..3 { g(i); }
+    break;
+}

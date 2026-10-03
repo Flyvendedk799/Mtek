@@ -46,7 +46,9 @@ impl Parser<'_> {
         }
         self.bump();
         let mut stmts = Vec::new();
-        while !matches!(self.kind(), TokenKind::RBrace | TokenKind::Eof) {
+        while !matches!(self.kind(), TokenKind::RBrace | TokenKind::Eof)
+            && !self.at_unindented_item()
+        {
             let before = self.pos;
             stmts.push(self.stmt());
             if self.pos == before {
@@ -88,7 +90,7 @@ impl Parser<'_> {
     /// frame of the functions on the recursion path stays small (see
     /// [`Parser::member`]).
     pub(super) fn stmt(&mut self) -> Stmt {
-        self.depth_reported = false;
+        self.start_construct();
         match self.kind() {
             TokenKind::KwLet => self.local_stmt(false),
             TokenKind::KwVar => self.local_stmt(true),

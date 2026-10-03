@@ -1,0 +1,6 @@
+const A = a < b;
+const B = a <= b;
+const C = a > b;
+const D = a >= b;
+const E = a + 1 < b * 2;
+const F = (a < b) < c;

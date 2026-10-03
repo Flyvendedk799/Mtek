@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_missing_colon_in_field.mtek",
+    "startByte": 48,
+    "endByte": 52,
+    "message": "Expected `:` after the field name `position`, found identifier `vec3`."
+  }
+]

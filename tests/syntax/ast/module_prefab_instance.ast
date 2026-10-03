@@ -1,0 +1,19 @@
+(module
+  (prefab Crate
+    (param origin
+      (type vec3)
+      (call (name vec3) (lit float 0.0) (lit float 2.0) (lit float 0.0)))
+    (param tint (type color))
+    (init position (name origin))
+    (init material (desc Unlit (field color (name tint))))
+    (state bounces (type i32) (lit int 0))
+    (on collision_enter
+      (param other (type entity_ref))
+      (block (assign += (field (self) bounces) (lit int 1)))))
+  (scene Playground
+    (entity First
+      (prefab Crate)
+      (init origin
+        (call (name vec3) (lit float 0.0) (lit float 3.0) (lit float 0.0)))
+      (init tint (lit color #ff0000)))
+    (entity Second (prefab Crate))))

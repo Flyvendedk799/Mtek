@@ -1,0 +1,6 @@
+cpu fn greet() {
+    print("hello world");
+    print("");
+    print("one" );
+}
+import { A } from "./a.mtek";

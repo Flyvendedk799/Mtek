@@ -34,7 +34,7 @@
 //! would nest deeper is skipped without recursion (see
 //! [`Parser::skip_nested`]) and replaced by an `Error` node. The error is
 //! reported once per outermost expression, and once per statement, member or
-//! item for everything else.
+//! item for everything else (a new one, below the limit, starts afresh).
 //!
 //! # Recovery
 //!
@@ -205,6 +205,10 @@ struct Parser<'a> {
     split_rest: Option<Token>,
     /// End of the last consumed token: the end of every span being built.
     prev_end: u32,
+    /// The last consumed token is a literal the lexer reported: whatever
+    /// follows it may be missing because the literal swallowed it (an
+    /// unterminated string takes the `;` after it).
+    prev_malformed: bool,
     /// Where the last placeholder for something missing was put (see
     /// [`Parser::placeholder_span`]); spans being built reach at least that
     /// far, so that a node contains its placeholders.
@@ -213,8 +217,12 @@ struct Parser<'a> {
     /// Number of levels currently entered (see [`Parser::enter`]); 0 outside
     /// any parse function.
     depth: u32,
-    /// Whether `E1050` was already reported for the current statement, member
-    /// or item (expression, when parsing a lone one).
+    /// The nesting depth at which the expression being parsed started (see
+    /// [`Parser::report_nesting`]).
+    expr_base: u32,
+    /// Whether `E1050` was already reported for the statement, member or item
+    /// being parsed (the outermost expression, when parsing a lone one); see
+    /// [`Parser::start_construct`].
     depth_reported: bool,
     /// How many `for` bodies enclose the statement being parsed, within the
     /// current function body (`E1030`).
@@ -245,9 +253,11 @@ impl<'a> Parser<'a> {
             pos: 0,
             split_rest: None,
             prev_end: 0,
+            prev_malformed: false,
             reach: 0,
             next_id: 0,
             depth: 0,
+            expr_base: 0,
             depth_reported: false,
             loop_depth: 0,
             last_error_pos: None,
@@ -288,6 +298,7 @@ impl<'a> Parser<'a> {
     /// Consume the current token. `Eof` is never consumed.
     fn bump(&mut self) {
         if self.kind() != TokenKind::Eof {
+            self.prev_malformed = self.tok().is_malformed();
             self.prev_end = self.span().end;
             self.split_rest = None;
             self.pos += 1;
@@ -473,6 +484,17 @@ impl<'a> Parser<'a> {
 
     fn leave(&mut self) {
         self.depth = self.depth.saturating_sub(1);
+    }
+
+    /// A statement, member or item starts: it is a new place for a mistake,
+    /// so a nesting that is too deep is reported again, unless the nesting is
+    /// still at the limit, where it is the overflow that was reported (an
+    /// `else if` chain that is too long, for one, has statements in its
+    /// blocks all the way).
+    fn start_construct(&mut self) {
+        if self.depth < MAX_NESTING_DEPTH {
+            self.depth_reported = false;
+        }
     }
 
     /// `E1050` at `at` for an expression, once per outermost expression.

@@ -1,0 +1,13 @@
+scene S {
+    state tint: color = #6b5cff;
+    entity E {
+        position: vec3(0.0, 0.5, 0.0) + offset;
+        material: Pulse {
+            tint: bind(tint);
+            phase: bind(frame.time);
+            strength: 0.5;
+        };
+        scale: bind(vec3(1.0) * (1.0 + sin(frame.time)));
+        rotation: bind(quat.axis_angle(vec3(0.0, 1.0, 0.0), frame.time));
+    }
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_empty_import.mtek",
+    "startByte": 7,
+    "endByte": 10,
+    "message": "An import needs at least one name."
+  }
+]

@@ -1,0 +1,30 @@
+(module
+  (fn statements
+    (params (param items (type array (type f32) (len 4))))
+    (ret (type f32))
+    (block
+      (let a (lit int 1))
+      (var b (type f32) (lit float 2.0))
+      (const C (lit int 3))
+      (assign += (name b) (lit float 1.0))
+      (assign -= (name b) (lit float 1.0))
+      (assign *= (name b) (lit float 2.0))
+      (assign /= (name b) (lit float 2.0))
+      (assign = (field (field (self) position) y) (lit float 0.0))
+      (expr (call (name call) (name a) (name b)))
+      (if
+        (binary > (name a) (lit int 0))
+        (block (assign = (name b) (lit float 1.0)))
+        (if
+          (binary < (name a) (lit int 0))
+          (block (assign = (name b) (unary - (lit float 1.0))))
+          (block (assign = (name b) (lit float 0.0)))))
+      (for i
+        (range (lit int 0) (lit int 4))
+        (block
+          (if (binary == (name i) (lit int 2)) (block (continue)))
+          (if (binary == (name i) (lit int 3)) (block (break)))))
+      (for x (each (name items)) (block (assign += (name b) (name x))))
+      (block (let scoped (lit int 4)))
+      (return (name b))))
+  (fn unit (params) (block (return))))

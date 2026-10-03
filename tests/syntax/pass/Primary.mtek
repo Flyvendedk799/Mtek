@@ -1,0 +1,11 @@
+const A = 1;
+const B = 2.5;
+const C = "text";
+const D = #6b5cff;
+const E = true;
+const F = false;
+const G = name;
+const H = (1 + 2);
+const I = [1, 2];
+const J = Box { size: 1.0 };
+fn uses_self() { self.position = vec3(0.0); }

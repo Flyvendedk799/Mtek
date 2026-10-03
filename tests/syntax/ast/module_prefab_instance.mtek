@@ -1,0 +1,12 @@
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color;
+    position: origin;
+    material: Unlit { color: tint };
+    state bounces: i32 = 0;
+    on collision_enter(other: entity_ref) { self.bounces += 1; }
+}
+scene Playground {
+    entity First: Crate { origin: vec3(0.0, 3.0, 0.0); tint: #ff0000; }
+    entity Second: Crate {}
+}

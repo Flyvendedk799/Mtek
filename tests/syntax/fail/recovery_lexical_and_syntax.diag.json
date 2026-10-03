@@ -1,0 +1,33 @@
+[
+  {
+    "code": "MTEK-E0022",
+    "file": "recovery_lexical_and_syntax.mtek",
+    "startByte": 10,
+    "endByte": 12,
+    "message": "Float literal `1.` has no digits after the decimal point; floats need digits on both sides of the point.",
+    "notes": [
+      "help: write `1.0`"
+    ]
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_lexical_and_syntax.mtek",
+    "startByte": 26,
+    "endByte": 27,
+    "message": "Expected `;` after the constant declaration, found integer literal `3`."
+  },
+  {
+    "code": "MTEK-E0024",
+    "file": "recovery_lexical_and_syntax.mtek",
+    "startByte": 39,
+    "endByte": 53,
+    "message": "String literal is not terminated; a string must end with `\"` on the same line."
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_lexical_and_syntax.mtek",
+    "startByte": 67,
+    "endByte": 68,
+    "message": "Expected a name after `let`, found `=`."
+  }
+]

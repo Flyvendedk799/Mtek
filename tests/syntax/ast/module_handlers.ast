@@ -1,0 +1,16 @@
+(module
+  (scene S
+    (on none (block))
+    (on key (filter (field (name Key) A)) (filter (field (name Key) B)) (block))
+    (on typed (param a (type f32)) (param b (type vec2)) (block))
+    (on mixed
+      (filter (field (name Key) A))
+      (param other (type entity_ref))
+      (block))
+    (on filter_call
+      (filter (call (name f) (lit int 1)))
+      (filter (lit int 2))
+      (block))
+    (on descriptor
+      (filter (desc Combo (field first (field (name Key) A))))
+      (block))))

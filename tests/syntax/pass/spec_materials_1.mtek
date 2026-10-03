@@ -1,0 +1,8 @@
+material Pulse {
+    param tint: color = #6b5cff;
+    param phase: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * pulse(phase), 1.0);
+    }
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "code": "MTEK-E1002",
+    "file": "e1002_unclosed_handler_arguments.mtek",
+    "startByte": 39,
+    "endByte": 40,
+    "message": "Expected `)` to close the `(` opened here, found `{`.",
+    "related": [
+      {
+        "message": "opened here",
+        "startByte": 28,
+        "endByte": 29
+      }
+    ]
+  }
+]

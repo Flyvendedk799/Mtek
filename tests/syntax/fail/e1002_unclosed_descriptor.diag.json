@@ -1,0 +1,16 @@
+[
+  {
+    "code": "MTEK-E1002",
+    "file": "e1002_unclosed_descriptor.mtek",
+    "startByte": 68,
+    "endByte": 68,
+    "message": "Expected `}` to close the `{` opened here, found end of file.",
+    "related": [
+      {
+        "message": "opened here",
+        "startByte": 49,
+        "endByte": 50
+      }
+    ]
+  }
+]

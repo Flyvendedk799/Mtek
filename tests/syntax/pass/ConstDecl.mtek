@@ -1,0 +1,19 @@
+const UNTYPED = 1;
+const TYPED: f32 = 2.0;
+const VECTOR: vec3 = vec3(1.0, 2.0, 3.0);
+const TABLE: array<f32, 3> = [1.0, 2.0, 3.0];
+const SIZE: i32 = 2 + 3 * 4;
+const TINT: color = #6b5cff;
+export const OUT = 1;
+scene S {
+    const IN_SCENE = 1;
+    entity E {
+        const IN_ENTITY: f32 = 0.5;
+    }
+}
+fn f() {
+    const IN_BLOCK = 3;
+}
+prefab P {
+    const IN_PREFAB = 4;
+}

@@ -1,0 +1,16 @@
+fn pulse(t: f32) -> f32 {
+    let amplitude = ;
+    let phase: = 1.0;
+    return amplitude * sin(t + phase);
+}
+scene Main {
+    state speed f32 = 0.7;
+    speed2 0.5;
+    entity Cube {
+        position: vec3(0.0)
+        scale: ;
+    }
+    update(dt: f32) { speed += dt }
+}
+42
+struct Pair { a: f32 b: f32; }

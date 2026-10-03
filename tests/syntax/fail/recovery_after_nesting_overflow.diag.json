@@ -1,0 +1,19 @@
+[
+  {
+    "code": "MTEK-E1050",
+    "file": "recovery_after_nesting_overflow.mtek",
+    "startByte": 528,
+    "endByte": 529,
+    "message": "Nesting is deeper than the limit of 256 levels.",
+    "notes": [
+      "help: move the inner code into a function of its own"
+    ]
+  },
+  {
+    "code": "MTEK-E1001",
+    "file": "recovery_after_nesting_overflow.mtek",
+    "startByte": 1249,
+    "endByte": 1250,
+    "message": "Expected a name after `let`, found `=`."
+  }
+]

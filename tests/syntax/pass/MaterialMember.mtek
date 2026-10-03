@@ -1,0 +1,8 @@
+material Members {
+    param first: f32;
+    param second: vec3 = vec3(0.0, 1.0, 0.0);
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(second, first);
+    }
+    param after_the_stage: f32 = 1.0;
+}

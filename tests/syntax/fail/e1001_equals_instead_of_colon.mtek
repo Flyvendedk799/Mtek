@@ -1,0 +1,4 @@
+scene Main {
+    clear_color = #101418;
+    state speed: f32 = 0.7;
+}

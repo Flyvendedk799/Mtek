@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_empty_struct.mtek",
+    "startByte": 13,
+    "endByte": 15,
+    "message": "A struct needs at least one field.",
+    "notes": [
+      "help: declare a field as `name: Type;`"
+    ]
+  }
+]

@@ -1,0 +1,18 @@
+scene S {
+    entity Members {
+        position: vec3(0.0, 0.5, 0.0);
+        const K = 2;
+        state hits: i32 = 0;
+        entity Badge { position: vec3(0.0, 0.6, 0.0); }
+        update(dt: f32) { hits += K; }
+        on collision_enter(other: entity_ref) { hits += 1; }
+    }
+}
+prefab P {
+    param origin: vec3 = vec3(0.0);
+    position: origin;
+    const K = 2;
+    state hits: i32 = 0;
+    update(dt: f32) { hits += K; }
+    on collision_enter(other: entity_ref) { hits += 1; }
+}

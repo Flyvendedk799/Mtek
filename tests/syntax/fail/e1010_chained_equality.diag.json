@@ -1,0 +1,19 @@
+[
+  {
+    "code": "MTEK-E1010",
+    "file": "e1010_chained_equality.mtek",
+    "startByte": 20,
+    "endByte": 22,
+    "message": "Equality operators cannot be chained: `==` follows `==` without parentheses.",
+    "related": [
+      {
+        "message": "the first operator",
+        "startByte": 15,
+        "endByte": 17
+      }
+    ],
+    "notes": [
+      "help: compare with `&&` (`a < b && b < c`), or add parentheses to state the grouping"
+    ]
+  }
+]

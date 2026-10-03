@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1004",
+    "file": "e1004_end_of_file_in_expression.mtek",
+    "startByte": 9,
+    "endByte": 9,
+    "message": "Unexpected end of file; expected an expression."
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1004",
+    "file": "e1004_end_of_file_in_type.mtek",
+    "startByte": 15,
+    "endByte": 15,
+    "message": "Unexpected end of file; expected a type."
+  }
+]

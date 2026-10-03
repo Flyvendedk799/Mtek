@@ -1,0 +1,7 @@
+const A = 1 + 2 * 3;
+const B = (1 + 2) * 3;
+const C = -a.b[0](1);
+const D = a < b && c == d || !e;
+const E = Box { size: vec3(1.0) };
+const F = [1, 2, 3];
+const G = self.position;

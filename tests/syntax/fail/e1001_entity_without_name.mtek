@@ -1,0 +1,4 @@
+scene Main {
+    entity { position: vec3(0.0); }
+    entity Cube {}
+}

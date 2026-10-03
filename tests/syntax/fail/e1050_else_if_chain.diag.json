@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1050",
+    "file": "e1050_else_if_chain.mtek",
+    "startByte": 9256,
+    "endByte": 9259,
+    "message": "Nesting is deeper than the limit of 256 levels.",
+    "notes": [
+      "help: move the inner code into a function of its own"
+    ]
+  }
+]

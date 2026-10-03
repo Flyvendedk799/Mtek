@@ -1,0 +1,8 @@
+struct Types {
+    scalar: f32;
+    list: array<f32, 4>;
+    grid: array<array<f32, 2>, 3>;
+    named: array<vec3, COUNT>;
+    huge: array<f32, 18446744073709551616>;
+}
+fn glued(a: array<f32, 2>) -> array<f32, 2> { let b: array<f32, 2>= a; return b; }

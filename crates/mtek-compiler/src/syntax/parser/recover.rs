@@ -306,6 +306,13 @@ impl Parser<'_> {
         }
         self.depth_reported = true;
         let help = match nest {
+            // The expression is what ran out of levels; if most of them were
+            // used by the blocks around it, those are the problem.
+            Nest::Expression
+                if self.depth.saturating_sub(self.expr_base) < MAX_NESTING_DEPTH / 2 =>
+            {
+                "move the inner code into a function of its own"
+            }
             Nest::Expression => "split the expression into several `let` statements",
             Nest::Block => "move the inner code into a function of its own",
             Nest::Entity => {
@@ -320,6 +327,28 @@ impl Parser<'_> {
         .at(at)
         .help(help);
         self.report(diagnostic);
+    }
+
+    /// True at an item keyword that starts a line with no indentation: inside
+    /// a body that is a missing `}`, not an item in the wrong place (a
+    /// declaration that really is nested is indented, and gets `E1040`). The
+    /// body ends here, so that the item is read as one and the mistake is the
+    /// one unclosed brace.
+    pub(super) fn at_unindented_item(&self) -> bool {
+        let kind = self.kind();
+        let starts_item = matches!(
+            kind,
+            TokenKind::KwFn
+                | TokenKind::KwCpu
+                | TokenKind::KwStruct
+                | TokenKind::KwPrefab
+                | TokenKind::KwScene
+                | TokenKind::KwImport
+                | TokenKind::KwExport
+        ) || (kind == TokenKind::KwMaterial
+            && self.kind_at(1) != TokenKind::Colon);
+        let start = self.span().start as usize;
+        starts_item && start > 0 && self.text.as_bytes().get(start - 1) == Some(&b'\n')
     }
 
     // ----- terminators -----------------------------------------------------
@@ -344,7 +373,10 @@ impl Parser<'_> {
             || self.line_break_before_current()
             || self.starts_construct(sync);
         if forgotten {
-            self.report_missing_semi(what);
+            // A literal that the lexer reported may have swallowed the `;`.
+            if !self.prev_malformed {
+                self.report_missing_semi(what);
+            }
         } else {
             self.report_expected_semi(what);
             self.skip_to_sync(sync);

@@ -1,0 +1,10 @@
+scene S {
+    entity Cube {
+        material: Unlit { color: #6b5cff };
+    }
+    on key_down(Key.A) {
+        Cube.material.color = #ffffff;
+        Cube.material.phase = 0.5;
+    }
+    camera Odd { material: 1; }
+}

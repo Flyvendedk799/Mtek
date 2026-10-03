@@ -1,0 +1,5 @@
+fn typed(scalar: f32, whole: i32, flag: bool, text: string) {}
+fn vectors(a: vec2, b: vec3, c: vec4, q: quat, m: mat4, c2: color) {}
+fn user_types(p: Pair, list: array<Pair, 8>) {}
+fn handles(r: entity_ref, t: texture, s: sampler) {}
+struct Pair { a: f32; b: f32; }

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_equals_instead_of_colon.mtek",
+    "startByte": 29,
+    "endByte": 30,
+    "message": "Expected `:` after the field name `clear_color`, found `=`."
+  }
+]

@@ -1,0 +1,2 @@
+/// Imports cannot be documented.
+import { Shared } from "./shared.mtek";

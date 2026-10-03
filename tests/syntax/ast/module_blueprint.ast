@@ -1,0 +1,53 @@
+(module
+  (fn pulse
+    (params (param t (type f32)))
+    (ret (type f32))
+    (block
+      (return
+        (binary +
+          (lit float 0.65)
+          (binary * (lit float 0.35) (call (name sin) (name t)))))))
+  (material Pulse
+    (param tint (type color) (lit color #6b5cff))
+    (param phase (type f32) (lit float 0.0))
+    (stage fragment
+      (params (param input (type SurfaceInput)))
+      (ret (type color))
+      (block
+        (return
+          (call
+            (field (name color) linear)
+            (binary * (field (name tint) rgb) (call (name pulse) (name phase)))
+            (field (name tint) a))))))
+  (scene Demo
+    (state speed (type f32) (lit float 0.7))
+    (state tint (type color) (lit color #6b5cff))
+    (object camera Main
+      (init position
+        (call (name vec3) (lit float 0.0) (lit float 2.0) (lit float 5.0)))
+      (init target
+        (call (name vec3) (lit float 0.0) (lit float 0.5) (lit float 0.0))))
+    (entity Cube
+      (init mesh
+        (desc Box
+          (field size
+            (call (name vec3) (lit float 1.0) (lit float 1.0) (lit float 1.0)))))
+      (init material
+        (desc Pulse
+          (field tint (bind (name tint)))
+          (field phase (bind (field (name frame) time)))))
+      (init position
+        (call (name vec3) (lit float 0.0) (lit float 0.5) (lit float 0.0)))
+      (init rotation (call (field (name quat) identity)))
+      (lifecycle update
+        (params (param dt (type f32)))
+        (block
+          (assign *=
+            (field (self) rotation)
+            (call
+              (field (name quat) axis_angle)
+              (call (name vec3) (lit float 0.0) (lit float 1.0) (lit float 0.0))
+              (binary * (name speed) (name dt)))))))
+    (on key_down
+      (filter (field (name Key) Space))
+      (block (assign = (name speed) (unary - (name speed)))))))

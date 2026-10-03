@@ -1,0 +1,6 @@
+fn none() {}
+fn one(a: f32) {}
+fn many(a: f32, b: i32, c: vec3, d: color, e: array<f32, 4>) {}
+fn trailing(a: f32,) {}
+scene S { update(dt: f32) {} on collision_enter(other: entity_ref, speed: f32,) {} }
+material M { fragment(input: SurfaceInput) -> color { return #ffffff; } }

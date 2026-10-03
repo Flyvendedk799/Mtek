@@ -1,0 +1,16 @@
+(module
+  (import "./shared.mtek" Shared Other)
+  (const UNTYPED (lit int 1))
+  (export (const TYPED (type f32) (lit float 2.0)))
+  (struct Pair (field a (type f32)) (field b (type array (type vec3) (len 4))))
+  (fn plain
+    (params (param a (type f32)) (param b (type vec3)))
+    (ret (type vec3))
+    (block (return (name b))))
+  (export
+    (cpu-fn log_it
+      (params (param message (type string)))
+      (block (expr (call (name print) (name message))))))
+  (scene Empty)
+  (prefab Nothing)
+  (material NoStage))

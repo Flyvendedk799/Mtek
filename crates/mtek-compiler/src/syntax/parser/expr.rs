@@ -100,6 +100,7 @@ impl Parser<'_> {
         if self.depth == 0 {
             self.depth_reported = false;
         }
+        self.expr_base = self.depth;
         *self.expr_bp(0, allow_descriptor).expr
     }
 

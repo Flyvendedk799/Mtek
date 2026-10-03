@@ -1,0 +1,11 @@
+import { A } from "./a.mtek";
+import { A, B } from "./b.mtek";
+import { A, B, C, } from "../shared/c.mtek";
+import {
+    Long,
+    Names,
+    Wrapped,
+} from "./deeper/path/d.mtek";
+// `from` is an ordinary word everywhere else.
+import { from } from "./from.mtek";
+fn from(from: f32) -> f32 { return from; }

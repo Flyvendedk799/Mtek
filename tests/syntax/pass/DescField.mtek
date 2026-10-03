@@ -1,0 +1,6 @@
+const A = D { plain: 1 };
+const B = D { bound: bind(frame.time) };
+const C = D { a: 1; b: 2; c: bind(x) };
+const D1 = D { expr: 1 + 2 * 3 };
+const E = D { nested: D { deeper: 1 } };
+const F = D { call: vec3(1.0, 2.0, 3.0); array: [1, 2] };

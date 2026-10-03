@@ -24,7 +24,7 @@ impl Parser<'_> {
         let mut items = Vec::new();
         while self.kind() != TokenKind::Eof {
             let before = self.pos;
-            self.depth_reported = false;
+            self.start_construct();
             if self.kind() != TokenKind::KwImport {
                 self.mark_documentable();
             }
@@ -314,9 +314,11 @@ impl Parser<'_> {
         let open = self.span();
         self.bump();
         let empty = self.kind() == TokenKind::RBrace;
-        while !matches!(self.kind(), TokenKind::RBrace | TokenKind::Eof) {
+        while !matches!(self.kind(), TokenKind::RBrace | TokenKind::Eof)
+            && !self.at_unindented_item()
+        {
             let before = self.pos;
-            self.depth_reported = false;
+            self.start_construct();
             self.mark_documentable();
             if let Some(field) = self.struct_field() {
                 fields.push(field);

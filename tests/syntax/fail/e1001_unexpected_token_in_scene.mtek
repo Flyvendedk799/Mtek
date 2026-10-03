@@ -1,0 +1,5 @@
+scene Main {
+    state speed: f32 = 0.7;
+    42;
+    entity Cube {}
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1040",
+    "file": "e1040_handler_in_material.mtek",
+    "startByte": 20,
+    "endByte": 22,
+    "message": "`on` handlers cannot appear in a material.",
+    "notes": [
+      "help: a material contains `param` declarations and a stage function such as `fragment(input: SurfaceInput) -> color { ... }`"
+    ]
+  }
+]

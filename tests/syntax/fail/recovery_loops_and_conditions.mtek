@@ -1,0 +1,8 @@
+fn f(a: f32) {
+    for in xs { break; }
+    for i xs { continue; }
+    if a = 1.0 { g(); }
+    if a return;
+    else h();
+    break;
+}

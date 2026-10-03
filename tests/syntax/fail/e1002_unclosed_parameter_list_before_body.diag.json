@@ -1,0 +1,16 @@
+[
+  {
+    "code": "MTEK-E1002",
+    "file": "e1002_unclosed_parameter_list_before_body.mtek",
+    "startByte": 16,
+    "endByte": 17,
+    "message": "Expected `)` to close the `(` opened here, found `{`.",
+    "related": [
+      {
+        "message": "opened here",
+        "startByte": 8,
+        "endByte": 9
+      }
+    ]
+  }
+]

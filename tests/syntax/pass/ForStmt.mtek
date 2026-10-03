@@ -1,0 +1,9 @@
+fn loops(n: i32, items: array<f32, 4>) {
+    for i in 0..10 { step(i); }
+    for i in 0..n { step(i); }
+    for i in a..b { step(i); }
+    for i in a + 1..b * 2 { step(i); }
+    for x in items { use_it(x); }
+    for x in (Items { first: 1 }) { use_it(x); }
+    for i in 0..3 { for j in 0..3 { step(i + j); } }
+}

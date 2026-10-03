@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1040",
+    "file": "e1040_state_in_material.mtek",
+    "startByte": 20,
+    "endByte": 25,
+    "message": "`state` declarations cannot appear in a material.",
+    "notes": [
+      "help: a material contains `param` declarations and a stage function such as `fragment(input: SurfaceInput) -> color { ... }`"
+    ]
+  }
+]

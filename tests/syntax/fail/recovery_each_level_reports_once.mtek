@@ -1,0 +1,14 @@
+import { Shared } "./shared.mtek";
+
+scene Main {
+    speed 0.7;
+    entity Cube {
+        position: vec3(0.0)
+    }
+    update(dt: f32) {
+        let x = ;
+        break;
+    }
+}
+
+struct Pair { a: f32 b: f32; }

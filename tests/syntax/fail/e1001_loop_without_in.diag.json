@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_loop_without_in.mtek",
+    "startByte": 19,
+    "endByte": 20,
+    "message": "Expected `in` after the loop variable, found integer literal `0`."
+  }
+]

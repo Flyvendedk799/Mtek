@@ -1,0 +1,10 @@
+const A = 0;
+const B = 7;
+const C = 1234567890;
+const D = 18446744073709551615;
+const E = 18446744073709551616;
+fn count() {
+    // A digit sequence followed by `..` is an integer, then `..`.
+    for i in 0..10 {}
+    for j in 1..n {}
+}

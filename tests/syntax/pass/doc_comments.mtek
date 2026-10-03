@@ -1,0 +1,48 @@
+/// A function.
+fn f() {}
+
+/// A struct.
+struct S {
+    /// A field.
+    a: f32;
+}
+
+/// A material.
+material M {
+    /// A parameter.
+    param p: f32;
+    /// The stage.
+    fragment(i: SurfaceInput) -> color { return #ffffff; }
+}
+
+/// A prefab.
+prefab P {
+    /// A prefab parameter.
+    param q: f32;
+}
+
+/// A scene.
+scene Sc {
+    /// A state.
+    state s: f32 = 1.0;
+    /// A camera.
+    camera C {
+        /// A camera field.
+        position: vec3(0.0);
+    }
+    /// An entity.
+    entity E {}
+    /// A lifecycle function.
+    update(dt: f32) {}
+    /// A handler.
+    on a() {}
+    /// A constant.
+    const K = 1;
+    /// A field.
+    field: 1;
+}
+
+/// Several doc comments
+/// in a row
+/// document the same declaration.
+export const DOCUMENTED = 1;

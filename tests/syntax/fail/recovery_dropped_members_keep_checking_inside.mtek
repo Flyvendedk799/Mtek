@@ -1,0 +1,10 @@
+scene Main {
+    fn helper(a: f32) -> f32 {
+        let = a;
+        return a;
+    }
+    struct Pair { a: f32 b: f32; }
+    entity Cube {
+        param origin: vec3 = ;
+    }
+}

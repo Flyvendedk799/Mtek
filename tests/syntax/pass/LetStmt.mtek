@@ -1,0 +1,9 @@
+fn lets() {
+    let a = 1;
+    let b: f32 = 2.0;
+    let c = vec3(1.0, 2.0, 3.0);
+    let d: array<f32, 3> = [1.0, 2.0, 3.0];
+    let e = a + 1;
+    let f = Box { size: vec3(1.0) };
+    let color_value: color = #6b5cff;
+}

@@ -1,0 +1,6 @@
+// `>=` after a type is a closing angle and an equals sign.
+const A: array<f32, 2>= [1.0, 2.0];
+fn f() {
+    let b: array<array<f32, 2>, 3>= x;
+    var c: array<f32, 4>= y;
+}

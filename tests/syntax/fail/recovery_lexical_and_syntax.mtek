@@ -1,0 +1,4 @@
+const A = 1.;
+const B = 2 3;
+const C = "unterminated;
+fn f() { let = 1; }

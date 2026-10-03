@@ -1,0 +1,16 @@
+[
+  {
+    "code": "MTEK-E1002",
+    "file": "e1002_unclosed_scene_before_next_item.mtek",
+    "startByte": 95,
+    "endByte": 103,
+    "message": "Expected `}` to close the `{` opened here, found `material`.",
+    "related": [
+      {
+        "message": "opened here",
+        "startByte": 11,
+        "endByte": 12
+      }
+    ]
+  }
+]

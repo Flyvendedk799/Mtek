@@ -1,0 +1,13 @@
+// A module is a sequence of items, in any order.
+scene Main {
+    camera Cam { position: vec3(0.0, 0.0, 5.0); }
+    entity Cube { mesh: Box { size: vec3(1.0); }; material: Pulse {}; }
+}
+material Pulse {
+    fragment(input: SurfaceInput) -> color { return pulse_color(); }
+}
+fn pulse_color() -> color { return #6b5cff; }
+import { Helper } from "./helper.mtek";
+const SPEED: f32 = 0.7;
+struct Wave { amplitude: f32; }
+prefab Crate { position: vec3(0.0); }

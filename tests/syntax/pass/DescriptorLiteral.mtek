@@ -1,0 +1,10 @@
+const A = Empty {};
+const B = Box { size: vec3(1.0) };
+const C = Box { size: vec3(1.0); };
+const D = Material { tint: bind(tint); phase: bind(frame.time) };
+const E = Nested { inner: Box { size: 1.0 }; more: Other { a: 2 } };
+const F = Fields {
+    one: 1;
+    two: 2;
+    three: 3;
+};

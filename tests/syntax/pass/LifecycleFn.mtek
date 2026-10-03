@@ -1,0 +1,12 @@
+scene S {
+    state angle: f32 = 0.0;
+    update(dt: f32) { angle += dt; }
+    fixed_update(step: f32) { angle += step; }
+    // Which names are lifecycle functions is the checker's rule.
+    start() {}
+    entity E {
+        update(delta: f32) { self.rotation *= quat.identity(); }
+        fixed_update(dt: f32) {}
+    }
+}
+prefab P { update(dt: f32) {} }

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_missing_type.mtek",
+    "startByte": 8,
+    "endByte": 9,
+    "message": "Expected a type, found `,`."
+  }
+]

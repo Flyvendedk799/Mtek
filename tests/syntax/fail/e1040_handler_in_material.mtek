@@ -1,0 +1,4 @@
+material Flat {
+    on key_down(Key.Space) { }
+    fragment(input: SurfaceInput) -> color { return #808080; }
+}
