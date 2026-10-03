@@ -5,7 +5,7 @@
 // untouched material is unaffected), the number of pipeline / shader-module creations observed on
 // the GPUDevice during each update (the device methods are wrapped before three.js creates its
 // device), and the source size of the baseline. The measurements are written to
-// `$MTEK_RESULTS_DIR/m0-bridge-measurements.json`.
+// `$MTEK_RESULTS_DIR/m0-bridge-measurements-<project>.json`.
 import { existsSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import type { Page } from "@playwright/test";
@@ -333,7 +333,7 @@ test("three.js baseline: update correctness, instance isolation and pipeline cou
   };
   const resultsDir = process.env["MTEK_RESULTS_DIR"];
   if (resultsDir === undefined) throw new Error("MTEK_RESULTS_DIR is not set");
-  writeFileSync(join(resultsDir, "m0-bridge-measurements.json"), `${JSON.stringify(measurements, null, 2)}\n`);
+  writeFileSync(join(resultsDir, `m0-bridge-measurements-${testInfo.project.name}.json`), `${JSON.stringify(measurements, null, 2)}\n`);
 });
 
 // Values that TypeScript accepts for the unsigned uniform (type `number`) but that are not valid u32
@@ -362,7 +362,7 @@ test("three.js baseline: out-of-range values written to the unsigned uniform", a
   const resultsDir = process.env["MTEK_RESULTS_DIR"];
   if (resultsDir === undefined) throw new Error("MTEK_RESULTS_DIR is not set");
   writeFileSync(
-    join(resultsDir, "m0-bridge-uint-measurements.json"),
+    join(resultsDir, `m0-bridge-uint-measurements-${testInfo.project.name}.json`),
     `${JSON.stringify({ task: "M0-09", project: testInfo.project.name, base, observations }, null, 2)}\n`,
   );
 });
@@ -410,7 +410,7 @@ test("three.js baseline: run-time behaviour of shader-graph type mismatches that
   const resultsDir = process.env["MTEK_RESULTS_DIR"];
   if (resultsDir === undefined) throw new Error("MTEK_RESULTS_DIR is not set");
   writeFileSync(
-    join(resultsDir, "m0-bridge-misuse-measurements.json"),
+    join(resultsDir, `m0-bridge-misuse-measurements-${testInfo.project.name}.json`),
     `${JSON.stringify({ task: "M0-09", project: testInfo.project.name, observations }, null, 2)}\n`,
   );
 });

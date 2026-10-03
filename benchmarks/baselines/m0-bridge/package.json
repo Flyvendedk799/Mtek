@@ -8,6 +8,7 @@
     "check:types": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "size": "node tools/count-lines.ts",
+    "type-report": "node tools/type-experiment-report.ts",
     "test:unit": "vitest run"
   },
   "dependencies": {
