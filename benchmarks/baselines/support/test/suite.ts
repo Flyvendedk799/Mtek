@@ -1,5 +1,5 @@
 // Runs the `mtek-tests/*.test.toml` fixtures of a benchmark task against the task's three.js baseline,
-// one Playwright test per fixture (decision 0018, section 8). A task's `baseline-tests/*.spec.ts` is
+// one Playwright test per fixture (decision 0021, section 8). A task's `baseline-tests/*.spec.ts` is
 // one line: `defineFixtureSuite(import.meta.dirname)`.
 //
 // Which baseline runs:

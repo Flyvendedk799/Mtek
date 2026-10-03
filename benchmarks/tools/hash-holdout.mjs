@@ -1,4 +1,4 @@
-// Tree hash of the benchmark holdout set (spec/ai-and-benchmarks.md section 6.2, decision 0018).
+// Tree hash of the benchmark holdout set (spec/ai-and-benchmarks.md section 6.2, decision 0021).
 //
 //   node benchmarks/tools/hash-holdout.mjs           print the hash of benchmarks/holdout/
 //   node benchmarks/tools/hash-holdout.mjs --check   compare with benchmarks/holdout.sha256 (exit 1 on a difference)

@@ -1,6 +1,6 @@
 // A strict parser for the subset of TOML 1.0 that benchmark files use (task.toml and the
 // mtek-tests/*.test.toml fixtures). Dependency-free on purpose: the validator must run from a bare
-// Node install (decision 0018).
+// Node install (decision 0021).
 //
 // Supported: comments, bare and quoted keys, `[table]` headers (one level or dotted), basic and
 // multi-line basic strings with the usual escapes, single-line literal strings, decimal integers and

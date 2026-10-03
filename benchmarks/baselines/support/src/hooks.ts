@@ -1,4 +1,4 @@
-// The contract between a baseline application and the browser test (decision 0018, section 6).
+// The contract between a baseline application and the browser test (decision 0021, section 6).
 // `startTask` (task.ts) installs an object of this shape as `window.mtekTask`; the Playwright side
 // (../test) drives it. It is the baseline counterpart of Mtek's `app.debug` test control
 // (spec/runtime-abi.md section 10.2).

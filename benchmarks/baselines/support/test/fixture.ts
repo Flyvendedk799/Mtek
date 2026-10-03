@@ -1,5 +1,5 @@
-// `mtek test` fixtures (spec/tooling.md section 6 plus `set_input`, decision 0018) as typed data. The
-// baseline tests run the very same fixtures as the Mtek side (decision 0018, section 8), so the
+// `mtek test` fixtures (spec/tooling.md section 6 plus `set_input`, decision 0021) as typed data. The
+// baseline tests run the very same fixtures as the Mtek side (decision 0021, section 8), so the
 // expectations exist once.
 import { isTable, parseToml, type TomlValue } from "../../../tools/toml-subset.mjs";
 

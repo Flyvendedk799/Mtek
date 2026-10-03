@@ -1,15 +1,15 @@
-// Validates the benchmark tasks (spec/ai-and-benchmarks.md section 6, decision 0018).
+// Validates the benchmark tasks (spec/ai-and-benchmarks.md section 6, decision 0021).
 //
 //   node benchmarks/tools/validate-tasks.mjs            validate this repository (npm run check:tasks)
 //   node benchmarks/tools/validate-tasks.mjs --root DIR validate the repository rooted at DIR
 //
 // Checks, for every task under benchmarks/tasks/ and benchmarks/holdout/:
-//   - task.toml: exactly the keys of decision 0018, category and mode values, budgets, id equal to
+//   - task.toml: exactly the keys of decision 0021, category and mode values, budgets, id equal to
 //     the directory name, ids unique across both directories;
 //   - the six parts of the task format exist (mtek/, mtek-tests/, baseline/, baseline-tests/,
 //     reference/mtek/, reference/baseline/) with their entry files;
 //   - every mtek-tests/*.test.toml parses and uses only the fixture steps of spec/tooling.md
-//     section 6 plus `set_input` (decision 0018), and asserts something;
+//     section 6 plus `set_input` (decision 0021), and asserts something;
 //   - Mtek reference sources carry the UNVERIFIED header (the Mtek side cannot be compiled before M6);
 //   - required_symbols occur in the Mtek reference (and in the starter of edit tasks).
 // And for the benchmark set as a whole:
@@ -232,7 +232,7 @@ function isFiniteNumber(value) {
 }
 
 /**
- * Validates one step of a fixture (spec/tooling.md section 6 plus `set_input`, decision 0018).
+ * Validates one step of a fixture (spec/tooling.md section 6 plus `set_input`, decision 0021).
  * @param {TomlValue} step
  * @param {string} where
  * @returns {{ errors: string[], asserts: boolean }}
@@ -473,7 +473,7 @@ export function validateBenchmarks(repoRoot) {
   lines.push(`benchmarks: ${String(taskCount)} task${taskCount === 1 ? "" : "s"}, ${String(holdoutCount)} holdout task${holdoutCount === 1 ? "" : "s"}`);
   lines.push(...taskLines.sort());
 
-  // The holdout tree hash (decision 0018).
+  // The holdout tree hash (decision 0021).
   const holdoutDir = join(benchmarks, "holdout");
   const hashFile = join(benchmarks, "holdout.sha256");
   if (isDirectory(holdoutDir)) {

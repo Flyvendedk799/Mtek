@@ -42,7 +42,7 @@ benchmarks/
   evidence/               environment record and results of the baseline runs (below)
 ```
 
-A task directory (`spec/ai-and-benchmarks.md` section 6.1, details in decision 0018):
+A task directory (`spec/ai-and-benchmarks.md` section 6.1, details in decision 0021):
 
 ```
 task.toml             id, category, mode, title, prompt, required_symbols, mtek_side_status, [budgets]
@@ -55,7 +55,7 @@ reference/baseline/   a solution of the task in three.js (verified)
 ```
 
 `task.toml` keys, the fixture steps and the holdout hash are fixed by
-[decision 0018](../spec/decisions/0018-benchmark-task-format.md). The validator rejects any other key.
+[decision 0021](../spec/decisions/0021-benchmark-task-format.md). The validator rejects any other key.
 
 ### The seed tasks
 
@@ -165,7 +165,7 @@ The Playwright JSON reports themselves are not committed (they contain absolute 
   unknown until M6-07.
 - `startTask` approximates Mtek's frame order (input, update, render); it has no fixed-step ticks or
   physics, which none of the seed tasks needs.
-- The Mtek `set_input` step is a decision of this task (0018), not yet part of any implementation.
+- The Mtek `set_input` step is a decision of this task (0021), not yet part of any implementation.
 - `hash-holdout.test.ts` skips its symbolic-link test where the platform refuses to create symbolic links
   (this Windows machine does): that case is then untested here.
 - The validator checks that `required_symbols` occur as identifiers in the Mtek sources; it cannot check

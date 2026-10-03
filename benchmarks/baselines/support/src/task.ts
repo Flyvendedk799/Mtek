@@ -1,4 +1,4 @@
-// `startTask`: the baseline counterpart of Mtek's runtime in test mode (decision 0018, section 6).
+// `startTask`: the baseline counterpart of Mtek's runtime in test mode (decision 0021, section 6).
 // It owns the renderer, a 128 x 128 `RGBA8` sRGB render target with a depth buffer, a manual clock,
 // key transitions, host inputs and pixel readback; the application supplies a scene, a camera, a clear
 // colour, an optional `update(dt)` and its input handlers.
