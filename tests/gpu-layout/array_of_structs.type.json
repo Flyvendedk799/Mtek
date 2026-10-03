@@ -1,0 +1,7 @@
+{ "name": "Lights", "kind": "struct", "members": [
+  { "name": "lights", "type": { "kind": "array", "length": 2, "element": { "kind": "struct", "name": "L", "members": [
+    { "name": "color", "type": "vec3" },
+    { "name": "intensity", "type": "f32" }
+  ] } } },
+  { "name": "count", "type": "u32" }
+] }

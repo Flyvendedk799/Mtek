@@ -1,0 +1,4 @@
+{ "name": "A", "kind": "struct", "members": [
+  { "name": "position", "type": "vec3" },
+  { "name": "intensity", "type": "f32" }
+] }

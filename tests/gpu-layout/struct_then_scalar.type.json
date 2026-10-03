@@ -1,0 +1,6 @@
+{ "name": "Outer", "kind": "struct", "members": [
+  { "name": "inner", "type": { "kind": "struct", "name": "Inner", "members": [
+    { "name": "k", "type": "f32" }
+  ] } },
+  { "name": "after", "type": "f32" }
+] }

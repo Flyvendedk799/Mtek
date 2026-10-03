@@ -1,0 +1,15 @@
+{ "name": "MtekFrame", "kind": "struct", "members": [
+  { "name": "view_proj", "type": "mat4" },
+  { "name": "camera_position", "type": "vec3" },
+  { "name": "light_count", "type": "u32" },
+  { "name": "ambient", "type": "vec3" },
+  { "name": "reserved0", "type": "f32" },
+  { "name": "lights", "type": { "kind": "array", "length": 4, "element": { "kind": "struct", "name": "MtekLight", "members": [
+    { "name": "color", "type": "vec3" },
+    { "name": "kind", "type": "u32" },
+    { "name": "position", "type": "vec3" },
+    { "name": "range", "type": "f32" },
+    { "name": "direction", "type": "vec3" },
+    { "name": "reserved", "type": "f32" }
+  ] } } }
+] }

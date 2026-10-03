@@ -1,0 +1,3 @@
+{ "name": "ScalarF32", "kind": "struct", "members": [
+  { "name": "value", "type": "f32" }
+] }

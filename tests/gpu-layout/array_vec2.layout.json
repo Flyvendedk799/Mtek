@@ -1,0 +1,18 @@
+{
+  "id": "fixture:array_vec2",
+  "wgslStruct": "MtekFixture_array_vec2",
+  "size": 48,
+  "align": 16,
+  "root": {
+    "kind": "struct", "name": "V", "offset": 0, "size": 48, "align": 16,
+    "members": [
+      {
+        "name": "items", "mtekType": "array<vec2, 3>",
+        "node": {
+          "kind": "array", "offset": 0, "size": 48, "align": 16, "length": 3, "stride": 16, "padded": true,
+          "element": { "kind": "vector", "offset": 0, "size": 8, "align": 8, "scalar": "f32", "components": 2 }
+        }
+      }
+    ]
+  }
+}

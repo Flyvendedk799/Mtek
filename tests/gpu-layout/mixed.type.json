@@ -1,0 +1,8 @@
+{ "name": "Mixed", "kind": "struct", "members": [
+  { "name": "a", "type": "f32" },
+  { "name": "b", "type": "vec3" },
+  { "name": "c", "type": "u32" },
+  { "name": "d", "type": "vec2" },
+  { "name": "e", "type": "bool" },
+  { "name": "f", "type": "color" }
+] }

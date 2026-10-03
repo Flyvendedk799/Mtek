@@ -1,0 +1,12 @@
+{ "name": "AllTypes", "kind": "struct", "members": [
+  { "name": "b", "type": "bool" },
+  { "name": "i", "type": "i32" },
+  { "name": "u", "type": "u32" },
+  { "name": "f", "type": "f32" },
+  { "name": "v2", "type": "vec2" },
+  { "name": "v3", "type": "vec3" },
+  { "name": "v4", "type": "vec4" },
+  { "name": "c", "type": "color" },
+  { "name": "q", "type": "quat" },
+  { "name": "m", "type": "mat4" }
+] }

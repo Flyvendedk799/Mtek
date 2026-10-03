@@ -1,0 +1,3 @@
+{ "name": "V", "kind": "struct", "members": [
+  { "name": "items", "type": { "kind": "array", "element": "vec2", "length": 3 } }
+] }

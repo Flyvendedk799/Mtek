@@ -3,6 +3,8 @@
 //! At milestone M0 this crate only exposes the version constants that the
 //! command line tool and the runtime agree on.
 
+pub mod layout;
+
 /// Version of this compiler build (the workspace package version).
 pub const COMPILER_VERSION: &str = env!("CARGO_PKG_VERSION");
 

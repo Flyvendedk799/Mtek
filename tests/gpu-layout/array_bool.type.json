@@ -1,0 +1,4 @@
+{ "name": "Flags", "kind": "struct", "members": [
+  { "name": "flags", "type": { "kind": "array", "element": "bool", "length": 2 } },
+  { "name": "after", "type": "u32" }
+] }
