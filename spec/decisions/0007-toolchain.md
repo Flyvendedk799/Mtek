@@ -33,6 +33,10 @@ Blueprint §13 requires pinned, tested toolchains, a small Rust workspace and a 
 | eslint | 10.12.0 | linting | M0-02 |
 | typescript-eslint | 8.71.0 | typed ESLint rules (`recommended-type-checked`) | M0-02 |
 | @eslint/js | 10.0.1 | ESLint recommended base rules | M0-02 |
+| @playwright/test | 1.63.0 | browser test runner for `tests/browser` (latest stable on 2026-10-03; 1.63.x as chosen in this record) | M0-07 |
+| ajv | 8.20.0 | JSON Schema validation of environment records (`tests/browser/environment.schema.json`) | M0-07 |
+| @types/node | 24.19.1 | Node 24 typings for the browser test harness | M0-07 |
+| Chromium for Testing (Playwright build) | 153.0.8010.12 (Playwright `chromium` v1243) | test browser, installed with `npx playwright install chromium` (not an npm dependency) | M0-07 |
 
 Versions were the latest stable releases on the npm registry on **2026-10-03**, with one deliberate exception: `typescript` **7.0.2** was the latest tag, but `typescript-eslint` 8.71.0 declares the peer range `typescript >=4.8.4 <6.1.0`, so the newest release in the supported range, **6.0.3**, is pinned. Moving to TypeScript 7 requires a typescript-eslint release that supports it and a superseding note here after a full green run. Rust crates: none beyond the two workspace members (`mtek-compiler`, `mtek-cli`); no Rust dependency has been added yet. Transitive npm dependencies (for example `vite` 8.3.2 via Vitest) are fixed by the committed `package-lock.json`. npm 11 reports that the `esbuild` postinstall script is not covered by `allowScripts`; the script is not run and esbuild works without it, which keeps the "no install-time lifecycle scripts" rule of `spec/testing.md` section 1.
 

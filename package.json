@@ -7,7 +7,8 @@
   },
   "packageManager": "npm@11.16.0",
   "workspaces": [
-    "packages/runtime-web"
+    "packages/runtime-web",
+    "tests/browser"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present && cargo build -p mtek-cli --locked",
@@ -16,6 +17,8 @@
     "check:naming": "node scripts/check-naming.mjs",
     "lint": "npm run lint --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
-    "test": "npm run check && cargo test --workspace --locked && npm run test:unit"
+    "test:browser": "npm run build && npm run test -w @mtek/browser-tests --",
+    "test:browser:hardware": "npm run build && npm run test:hardware -w @mtek/browser-tests --",
+    "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run test:browser"
   }
 }
