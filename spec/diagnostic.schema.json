@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mtek diagnostic envelope and report",
+  "description": "Machine-readable form of spec/diagnostics.md sections 2.1 (one diagnostic) and 2.2 (a report). A document is either a single diagnostic or a report. Schema version 1.",
+  "oneOf": [
+    { "$ref": "#/$defs/diagnostic" },
+    { "$ref": "#/$defs/report" }
+  ],
+  "$defs": {
+    "diagnostic": {
+      "title": "One diagnostic (spec/diagnostics.md 2.1)",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "code",
+        "severity",
+        "title",
+        "message",
+        "source",
+        "related",
+        "notes",
+        "suggestedEdits",
+        "phase",
+        "docs"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "code": {
+          "description": "MTEK- + severity letter (E, W, N) + 4 digits; stable forever.",
+          "type": "string",
+          "pattern": "^MTEK-[EWN][0-9]{4}$"
+        },
+        "severity": { "enum": ["error", "warning", "note"] },
+        "title": {
+          "description": "The catalogue title of the code.",
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "description": "Specific, complete sentence naming the construct.",
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "description": "Primary location; null for project-level diagnostics without a file.",
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/source" }]
+        },
+        "expected": {
+          "description": "Rendered Mtek type or form that was expected.",
+          "type": "string"
+        },
+        "actual": {
+          "description": "Rendered Mtek type or form that was found.",
+          "type": "string"
+        },
+        "related": {
+          "description": "Secondary locations, each with its own message.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/related" }
+        },
+        "notes": {
+          "description": "Extra explanation; a note starting with \"help: \" is a hint.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "suggestedEdits": {
+          "description": "Validated edits only (spec/diagnostics.md section 6).",
+          "type": "array",
+          "items": { "$ref": "#/$defs/suggestedEdit" }
+        },
+        "phase": {
+          "description": "parse | check | emit | validate | runtime:<scheduler phase or mount>.",
+          "type": "string",
+          "pattern": "^(parse|check|emit|validate|runtime:(mount|input|tick|update|bindings|render|reload|device))$"
+        },
+        "docs": {
+          "description": "Anchor into spec/diagnostics.md for this code.",
+          "type": "string",
+          "pattern": "^spec/diagnostics\\.md#mtek-[ewn][0-9]{4}$"
+        }
+      }
+    },
+    "source": {
+      "title": "A location in one file",
+      "description": "Bytes are half-open offsets into the file as stored on disk. Lines and columns are 1-based; columns count Unicode scalar values.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "startByte",
+        "endByte",
+        "startLine",
+        "startColumn",
+        "endLine",
+        "endColumn"
+      ],
+      "properties": {
+        "file": {
+          "description": "Project path with forward slashes, relative to the project root.",
+          "type": "string",
+          "minLength": 1
+        },
+        "startByte": { "type": "integer", "minimum": 0 },
+        "endByte": { "type": "integer", "minimum": 0 },
+        "startLine": { "type": "integer", "minimum": 1 },
+        "startColumn": { "type": "integer", "minimum": 1 },
+        "endLine": { "type": "integer", "minimum": 1 },
+        "endColumn": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "related": {
+      "title": "A secondary location",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source"],
+      "properties": {
+        "message": { "type": "string" },
+        "source": { "$ref": "#/$defs/source" }
+      }
+    },
+    "suggestedEdit": {
+      "title": "A validated suggested edit",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "edits"],
+      "properties": {
+        "description": { "type": "string", "minLength": 1 },
+        "edits": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/textEdit" }
+        }
+      }
+    },
+    "textEdit": {
+      "title": "Replace a byte range of one file",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "startByte", "endByte", "replacement"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "startByte": { "type": "integer", "minimum": 0 },
+        "endByte": { "type": "integer", "minimum": 0 },
+        "replacement": { "type": "string" }
+      }
+    },
+    "report": {
+      "title": "A report (spec/diagnostics.md 2.2)",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "tool",
+        "compilerVersion",
+        "languageVersion",
+        "project",
+        "diagnostics",
+        "summary"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "tool": { "const": "mtek" },
+        "compilerVersion": { "type": "string", "minLength": 1 },
+        "languageVersion": { "type": "string", "minLength": 1 },
+        "project": {
+          "description": "Project name; null if no project could be read.",
+          "type": ["string", "null"]
+        },
+        "diagnostics": {
+          "description": "Ordered by (file load order, startByte, endByte, code).",
+          "type": "array",
+          "items": { "$ref": "#/$defs/diagnostic" }
+        },
+        "summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["errors", "warnings", "notes", "suppressed"],
+          "properties": {
+            "errors": { "type": "integer", "minimum": 0 },
+            "warnings": { "type": "integer", "minimum": 0 },
+            "notes": { "type": "integer", "minimum": 0 },
+            "suppressed": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    }
+  }
+}
