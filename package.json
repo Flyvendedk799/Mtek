@@ -10,6 +10,7 @@
     "packages/runtime-web",
     "tests/browser",
     "tests/codegen",
+    "benchmarks",
     "benchmarks/baselines/m0-bridge"
   ],
   "scripts": {
@@ -18,9 +19,11 @@
     "check:ts": "node scripts/gen-manifest-validator.mjs && tsc -b",
     "check:naming": "node scripts/check-naming.mjs",
     "evidence:sanitize": "node tests/browser/support/sanitize-report.ts",
+    "check:tasks": "node benchmarks/tools/validate-tasks.mjs",
     "lint": "npm run lint --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
     "test:browser": "npm run build && npm run test -w @mtek/browser-tests --",
+    "test:benchmarks": "npm run test:benchmarks -w @mtek/browser-tests --",
     "test:browser:hardware": "npm run build && npm run test:hardware -w @mtek/browser-tests --",
     "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run test:browser"
   }

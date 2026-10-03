@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node", "@webgpu/types"],
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
+    "checkJs": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "tools",
+    "baselines/support",
+    "tasks/*/baseline/src",
+    "tasks/*/reference/baseline/src",
+    "tasks/*/baseline-tests",
+    "holdout/*/baseline/src",
+    "holdout/*/reference/baseline/src",
+    "holdout/*/baseline-tests",
+    "vitest.config.ts"
+  ],
+  "exclude": ["tasks/maintenance-01/baseline/src"]
+}

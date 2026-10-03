@@ -1,23 +1,26 @@
 {
-  "name": "@mtek/browser-tests",
+  "name": "@mtek/benchmarks",
   "version": "0.1.0-dev",
   "private": true,
   "type": "module",
+  "description": "Benchmark tasks (spec/ai-and-benchmarks.md section 6), their validator and the three.js baseline support module.",
+  "exports": {
+    "./baseline-support": "./baselines/support/src/index.ts"
+  },
   "scripts": {
+    "validate": "node tools/validate-tasks.mjs",
+    "hash-holdout": "node tools/hash-holdout.mjs",
     "lint": "eslint .",
-    "test": "playwright test",
-    "test:hardware": "playwright test --project=hardware",
-    "test:benchmarks": "playwright test --project=benchmarks",
-    "test:software": "playwright test --project=software",
     "test:unit": "vitest run"
   },
   "dependencies": {
-    "ajv": "8.20.0"
+    "three": "0.186.1"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.63.0",
     "@types/node": "24.19.1",
+    "@types/three": "0.186.0",
     "@webgpu/types": "0.1.74",
     "esbuild": "0.28.2",
     "eslint": "10.12.0",
