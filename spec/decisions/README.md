@@ -38,3 +38,4 @@ recorded here before code depends on it (blueprint §15).
 | 0015 | Asset strictness |
 | 0016 | v0.1 restrictions beyond the blueprint |
 | 0017 | Language name: Mtek |
+| 0018 | `mtek.toml` validation rules the specification leaves open |
