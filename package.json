@@ -1,0 +1,21 @@
+{
+  "name": "mtek",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "packageManager": "npm@11.16.0",
+  "workspaces": [
+    "packages/runtime-web"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present && cargo build -p mtek-cli --locked",
+    "check": "cargo fmt --check && cargo clippy --workspace --all-targets --locked -- -D warnings && npm run check:ts && npm run lint && npm run check:naming",
+    "check:ts": "tsc -b",
+    "check:naming": "node scripts/check-naming.mjs",
+    "lint": "npm run lint --workspaces --if-present",
+    "test:unit": "npm run test:unit --workspaces --if-present",
+    "test": "npm run check && cargo test --workspace --locked && npm run test:unit"
+  }
+}

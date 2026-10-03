@@ -6,3 +6,4 @@ tests/browser/.out/
 tests/browser/results/
 *.log
 .DS_Store
+*.tsbuildinfo

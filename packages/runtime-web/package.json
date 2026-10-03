@@ -1,0 +1,20 @@
+{
+  "name": "@mtek/runtime-web",
+  "version": "0.1.0-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "lint": "eslint src",
+    "test:unit": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@webgpu/types": "0.1.74",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}
