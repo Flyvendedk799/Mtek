@@ -1712,11 +1712,11 @@
             "(rgb: vec3, a: f32) -> color"
           ],
           "domain": "both",
-          "constEligible": false,
+          "constEligible": true,
           "handlersOnly": false,
-          "cpuSemantics": "`f32` arithmetic per operation; not folded in constant expressions, because folding in `f64` would give different bits (use a `#rrggbb` literal for constants).",
+          "cpuSemantics": "Per channel `c <= 0.04045 ? c / 12.92 : powf((c + 0.055) / 1.055, 2.4)`, every operation rounded to `f32`; alpha unchanged. Constant folding uses `libm::powf` (deterministic); run time agrees within the CPU/GPU tolerance. `#rrggbb` literals use the exact `f64` conversion instead and may differ in the last bit.",
           "since": "M1",
-          "doc": "A colour from sRGB-encoded components, converted to linear light with the exact sRGB transfer function at run time."
+          "doc": "A colour from sRGB-encoded components, converted to linear light with the sRGB transfer function."
         }
       ]
     },

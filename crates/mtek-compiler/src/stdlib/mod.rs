@@ -32,6 +32,7 @@ pub use model::{
 pub use overload::{ArgType, ConcreteSignature, OverloadError, Resolution};
 pub use value::{
     BuiltinSampler, BuiltinTexture, ColorValue, ConstValue, Limit, ValueRange, format_f32,
+    srgb_channel_to_linear_f32, srgb_to_linear,
 };
 
 impl Registry {

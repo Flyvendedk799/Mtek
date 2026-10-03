@@ -1,7 +1,7 @@
 //! The registry data model (`spec/stdlib.md` section 1.1).
 //!
 //! Every prelude name is one value of one of these types; the tables that fill them live in
-//! [`super::data`]. The model is plain data: no behaviour beyond small accessors, so that the
+//! `stdlib::data`. The model is plain data: no behaviour beyond small accessors, so that the
 //! JSON export, name resolution, the checker and the LSP all read the same facts.
 
 use std::ops::BitOr;

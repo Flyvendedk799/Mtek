@@ -69,7 +69,7 @@ fn compile_time(
     )
 }
 
-/// Every namespace of the v0.1 registry. (`Key` is an enum, see [`super::events::enums`].)
+/// Every namespace of the v0.1 registry. (`Key` is an enum, see `events::enums`.)
 pub(super) fn namespaces() -> Vec<NamespaceDef> {
     let vec3 = exact(TypeRef::Vec3);
     let vec4 = exact(TypeRef::Vec4);
@@ -167,18 +167,18 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                     &[p("rgb", vec3), p("a", F32)],
                     TypeRef::Color,
                 ),
-                // Not const-eligible: decision 0024 item 6.
+                // Const-eligible, folded in binary32 with `libm::powf`; decision 0024 item 6.
                 NamespaceMember::Function(
                     function(
                         "srgb",
                         Domain::Both,
-                        false,
+                        true,
                         Milestone::M1,
-                        "A colour from sRGB-encoded components, converted to linear light with the exact sRGB transfer function at run time.",
+                        "A colour from sRGB-encoded components, converted to linear light with the sRGB transfer function.",
                         vec![sig(&[p("rgb", vec3), p("a", F32)], exact(TypeRef::Color))],
                     )
                     .cpu_semantics(
-                        "`f32` arithmetic per operation; not folded in constant expressions, because folding in `f64` would give different bits (use a `#rrggbb` literal for constants).",
+                        "Per channel `c <= 0.04045 ? c / 12.92 : powf((c + 0.055) / 1.055, 2.4)`, every operation rounded to `f32`; alpha unchanged. Constant folding uses `libm::powf` (deterministic); run time agrees within the CPU/GPU tolerance. `#rrggbb` literals use the exact `f64` conversion instead and may differ in the last bit.",
                     ),
                 ),
             ],

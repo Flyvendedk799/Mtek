@@ -587,8 +587,10 @@ fn namespace_function_domains_and_constness() {
         );
         assert_eq!(f.since, Milestone::M4);
     }
-    // Run-time sRGB conversion is not folded: it would differ from the literal conversion.
-    assert!(!function("color", "srgb").const_eligible);
+    // `color.srgb` is folded in binary32 (decision 0024 item 6); only GPU-only functions are
+    // excluded.
+    assert!(function("color", "srgb").const_eligible);
+    assert_eq!(function("color", "srgb").domain, Domain::Both);
     assert!(function("color", "linear").const_eligible);
     assert!(function("quat", "euler").const_eligible);
 }

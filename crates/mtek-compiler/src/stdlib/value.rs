@@ -56,6 +56,19 @@ impl ColorValue {
     }
 }
 
+/// The binary32 sRGB transfer function of one channel: the definition constant folding uses
+/// for `color.srgb(rgb, a)` (decision 0024 item 6). Every operation is rounded to binary32
+/// and `powf` is `libm::powf`, so the result is identical on every host. Run-time evaluation
+/// uses the same formula and agrees within the CPU/GPU tolerance, not necessarily bit for
+/// bit. `#rrggbb` literals use [`srgb_to_linear`] instead.
+pub fn srgb_channel_to_linear_f32(c: f32) -> f32 {
+    if c <= 0.04045 {
+        c / 12.92
+    } else {
+        libm::powf((c + 0.055) / 1.055, 2.4)
+    }
+}
+
 /// The sRGB electro-optical transfer function of one 8-bit channel.
 pub fn srgb_to_linear(channel: u8) -> f32 {
     let c = f64::from(channel) / 255.0;
@@ -454,6 +467,24 @@ mod tests {
             ColorValue::from_srgb8(0, 0, 0, 0x80).linear[3],
             (128.0_f64 / 255.0) as f32
         );
+    }
+
+    #[test]
+    fn folded_srgb_uses_the_binary32_formula() {
+        assert_eq!(srgb_channel_to_linear_f32(0.0), 0.0);
+        assert_eq!(srgb_channel_to_linear_f32(1.0), 1.0);
+        // Linear segment.
+        assert_eq!(srgb_channel_to_linear_f32(0.04), 0.04_f32 / 12.92);
+        // Power segment, every operation in binary32.
+        let c = 128.0_f32 / 255.0;
+        assert_eq!(
+            srgb_channel_to_linear_f32(c),
+            libm::powf((c + 0.055) / 1.055, 2.4)
+        );
+        // The literal path rounds once from f64 and may differ in the last bit; both are
+        // within a few binary32 steps of each other.
+        let literal = srgb_to_linear(128);
+        assert!((srgb_channel_to_linear_f32(c) - literal).abs() <= 4.0 * f32::EPSILON * literal);
     }
 
     #[test]
