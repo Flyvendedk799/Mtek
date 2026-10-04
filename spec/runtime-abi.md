@@ -368,6 +368,8 @@ P = | f/a  0   0              0              |
 
 8.5 **Pass sequence.** clear → opaque geometry → development overlay (dev builds) → present. No general render graph in v0.1.
 
+The M1 context subset, setter validation during `init`, the program/structure checks at mount and the other rendering details this section leaves open are fixed in `spec/decisions/0031-runtime-scene-rendering-details.md`.
+
 ## 9. Resource lifecycle and resilience
 
 9.1 **Registry.** Every GPU buffer, texture, sampler, shader module, pipeline and bind group, and every DOM event listener, is created through the runtime's resource registry, which counts creations, live objects and releases by kind (blueprint §7.4).
