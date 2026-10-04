@@ -4,9 +4,11 @@
 //! [`package`] runs after the typed IR exists. In a fixed order it
 //!
 //! 1. plans the entry scene's resources ([`crate::plan`]);
-//! 2. emits one shader per material: in M1 the temporary compiler-built `Unlit`
-//!    (decision 0029), for which the embedded prelude is added to the build's source map as
-//!    `std/materials.mtek`, so the manifest's `sources` and `spans` cover it;
+//! 2. emits one shader per material: a user material through the shader lowering
+//!    ([`crate::lowering::shader`], decision 0041), the built-in `Unlit` through the
+//!    temporary compiler-built path (decision 0029, until M2-09), for which the embedded
+//!    prelude is added to the build's source map as `std/materials.mtek`, so the manifest's
+//!    `sources` and `spans` cover it;
 //! 3. interns the manifest's spans in this order: symbols (scene, cameras, entities, per
 //!    material its declaration and its params, then the functions compiled for the CPU),
 //!    material params, shader span maps;
@@ -25,17 +27,17 @@ use std::collections::BTreeMap;
 
 use crate::diagnostics::{Code, Diagnostic};
 use crate::emit_js::{ProgramParts, emit_app_dts, emit_program, source_map};
-use crate::emit_wgsl::ShaderArtifact;
+use crate::emit_wgsl::{ShaderArtifact, emit_shader};
 use crate::ir::{self, MeshDesc, Program, Symbol};
 use crate::layout::{LayoutRecord, builtin_blocks, compute};
 use crate::lowering::builtin_unlit::{
     PRELUDE_PATH, prelude_text, unlit_declarations, unlit_shader, unlit_symbol,
 };
+use crate::lowering::shader::lower_material;
 use crate::plan::{ParamClass, PlannedInstance, ResourcePlan, plan_scene};
 use crate::project::Project;
-use crate::resolve::gate::{gate_message, gate_note};
 use crate::source::{ProjectPath, SourceMap, Span};
-use crate::stdlib::{Milestone, registry};
+use crate::stdlib::registry;
 use crate::types::ConstValue;
 use crate::{BuildMode, COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI, TargetProfile};
 
@@ -121,8 +123,7 @@ pub fn package(
         ))
     })?;
     let plan = plan_scene(scene).map_err(defect)?;
-    user_materials_gate(program, &plan)?;
-    let materials = build_materials(&plan, sources)?;
+    let materials = build_materials(program, &plan, sources)?;
     let sources: &SourceMap = sources;
 
     let mut layouts = Vec::new();
@@ -293,49 +294,58 @@ pub fn package(
     })
 }
 
-/// `E9010` at every user material the plan uses (decision 0039): user materials check and
-/// lower to the typed IR, but their shaders need the shader lowering of task M2-05 and their
-/// parameter blocks the resource plan of M2-09, so this build cannot package them yet.
-fn user_materials_gate(program: &Program, plan: &ResourcePlan) -> Result<(), Vec<Diagnostic>> {
-    let diagnostics: Vec<Diagnostic> = program
-        .materials()
-        .filter(|material| plan.materials.contains(&material.symbol))
-        .map(|material| {
-            Diagnostic::new(
-                Code::E9010,
-                gate_message(
-                    "Builds with user materials (shaders generated from their fragment stage)",
-                    true,
-                    Milestone::M2,
-                ),
-            )
-            .at(material.span)
-            .note(format!(
-                "'{}' checks without errors (`mtek check`, `mtek inspect --ir`); its shader needs the shader lowering of M2",
-                material.symbol
-            ))
-            .note(gate_note())
-        })
-        .collect();
-    if diagnostics.is_empty() {
-        Ok(())
-    } else {
-        Err(diagnostics)
+/// The source spelling of an IR type: the IR names a user struct by its symbol
+/// (`array<src/a.mtek::Wave, 2>`, decision 0041), the manifest's `mtekTypeName` as written
+/// in source (`array<Wave, 2>`).
+fn written_type(ty: &str) -> String {
+    let mut out = String::with_capacity(ty.len());
+    for (index, part) in ty.split("::").enumerate() {
+        if index == 0 {
+            out.push_str(part);
+            continue;
+        }
+        // Drop the module path that ends `out`: everything after the last `<` or space.
+        let keep = out.rfind(['<', ' ']).map_or(0, |i| i + 1);
+        out.truncate(keep);
+        out.push_str(part);
     }
+    out
 }
 
-/// The shader and declarations of every material of the plan, sorted by symbol. Adds the
-/// prelude to `sources` when a built-in material is used.
+/// The shader and declarations of the user material `symbol` of `program` (decision 0041).
+fn user_material(program: &Program, symbol: &Symbol) -> Result<BuiltMaterial, Vec<Diagnostic>> {
+    let material = program
+        .materials()
+        .find(|m| &m.symbol == symbol)
+        .ok_or_else(|| defect(format!("the material '{symbol}' is not in the IR")))?;
+    let lowered = lower_material(program, material)?;
+    let shader = emit_shader(&lowered)?;
+    Ok(BuiltMaterial {
+        symbol: symbol.clone(),
+        shader,
+        declaration: material.span,
+        params: material
+            .params
+            .iter()
+            .map(|p| (p.name.clone(), written_type(&p.ty), p.span))
+            .collect(),
+    })
+}
+
+/// The shader and declarations of every material of the plan, sorted by symbol: user
+/// materials through the shader lowering, the built-in `Unlit` through its temporary
+/// compiler-built path (decision 0013, until M2-09). Adds the prelude to `sources` when a
+/// built-in material is used.
 fn build_materials(
+    program: &Program,
     plan: &ResourcePlan,
     sources: &mut SourceMap,
 ) -> Result<Vec<BuiltMaterial>, Vec<Diagnostic>> {
     let mut built = Vec::with_capacity(plan.materials.len());
     for symbol in &plan.materials {
         if symbol.as_str() != unlit_symbol() {
-            return Err(defect(format!(
-                "the material '{symbol}' has no shader in this build (only the temporary 'Unlit' of decision 0013)"
-            )));
+            built.push(user_material(program, symbol)?);
+            continue;
         }
         let path = ProjectPath::new(PRELUDE_PATH)
             .map_err(|e| defect(format!("the prelude path is not a project path: {e}")))?;

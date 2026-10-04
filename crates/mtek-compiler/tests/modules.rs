@@ -545,65 +545,75 @@ fn same_named_materials_of_two_modules_build_to_distinct_names() {
             .all(|name| !parts_b.function_names.contains(name))
     );
 
-    // The build: shaders of user materials need the shader lowering of M2-05,
-    // so until then the build reports exactly one `E9010` per material, at
-    // its declaration in its own module. When M2-05 lands, the build must
-    // carry the same names into the shaders, `app.js` and the manifest.
+    // The build (M2-05, decision 0041): each material gets its own shader with
+    // its own module-qualified block, and the same names reach `app.js` and
+    // the manifest.
     let built = build(
         &ProjectRoot::at_base(),
         &fs,
         &CompileOptions::with_stub_runtime(BuildMode::Release),
     );
-    if built.has_errors() {
-        let located: Vec<(&str, u32, bool)> = built
-            .report
-            .diagnostics
-            .iter()
-            .map(|d| {
-                (
-                    d.code.short(),
-                    d.primary.as_ref().unwrap().span.file.0,
-                    d.message.starts_with("Builds with user materials"),
-                )
-            })
-            .collect();
-        assert_eq!(
-            located,
-            [("E9010", 1, true), ("E9010", 2, true)],
-            "{:#?}",
-            built.report
-        );
-        assert!(built.files.is_empty());
-        return;
-    }
-    let wgsl: String = built
+    assert!(!built.has_errors(), "{:#?}", built.report);
+    let shaders: Vec<String> = built
         .files
         .iter()
         .filter(|(path, _)| path.ends_with(".wgsl"))
         .map(|(_, bytes)| String::from_utf8(bytes.clone()).unwrap())
         .collect();
+    assert_eq!(shaders.len(), 2);
     let app = String::from_utf8(built.files["app.js"].clone()).unwrap();
-    for hash in [&ha, &hb] {
+    for (hash, other) in [(&ha, &hb), (&hb, &ha)] {
+        let own: Vec<&String> = shaders
+            .iter()
+            .filter(|wgsl| wgsl.contains(&format!("struct MtekParams_{hash}_Pulse {{")))
+            .collect();
+        assert_eq!(own.len(), 1, "{shaders:#?}");
         assert!(
-            wgsl.contains(&format!("struct MtekParams_{hash}_Pulse")),
-            "{wgsl}"
+            own[0].contains(&format!(
+                "@group(1) @binding(0) var<uniform> mtek_params: MtekParams_{hash}_Pulse;"
+            )),
+            "{}",
+            own[0]
         );
+        assert!(!own[0].contains(&format!("MtekParams_{other}_Pulse")));
+        validate_wgsl(own[0]).unwrap_or_else(|e| panic!("{e}\n{}", own[0]));
         assert!(app.contains(&format!("function w_{hash}_Pulse(")), "{app}");
     }
     let manifest: Value = serde_json::from_slice(&built.files["program.manifest.json"]).unwrap();
-    let layouts: Vec<&str> = manifest["layouts"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|l| l["id"].as_str().unwrap())
-        .collect();
-    assert!(
-        layouts.contains(&"material:src/pulse_a.mtek::Pulse"),
-        "{layouts:?}"
+    let ids = |key: &str, field: &str| -> Vec<String> {
+        manifest[key]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|l| l[field].as_str().unwrap().to_owned())
+            .collect()
+    };
+    assert_eq!(
+        ids("layouts", "id"),
+        [
+            "builtin:frame",
+            "builtin:object",
+            "material:src/pulse_a.mtek::Pulse",
+            "material:src/pulse_b.mtek::Pulse"
+        ]
     );
-    assert!(
-        layouts.contains(&"material:src/pulse_b.mtek::Pulse"),
-        "{layouts:?}"
+    assert_eq!(
+        ids("layouts", "wgslStruct")[2..],
+        [
+            format!("MtekParams_{ha}_Pulse"),
+            format!("MtekParams_{hb}_Pulse")
+        ]
+    );
+    assert_eq!(
+        ids("shaders", "material"),
+        ["src/pulse_a.mtek::Pulse", "src/pulse_b.mtek::Pulse"]
+    );
+    assert_eq!(
+        ids("materials", "layout"),
+        [
+            "material:src/pulse_a.mtek::Pulse",
+            "material:src/pulse_b.mtek::Pulse"
+        ]
     );
 }
 

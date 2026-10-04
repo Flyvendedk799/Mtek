@@ -82,6 +82,8 @@ pub fn unlit_shader(prelude: &SourceFile) -> Result<ShaderArtifact, Vec<Diagnost
         surface_inputs: Default::default(),
         params: Some(record),
         fragment,
+        structs: Vec::new(),
+        functions: Vec::new(),
     };
     let shader = build_standard_stage(&material)
         .map_err(|e| internal(format!("a built-in block has no layout: {e}")))?;
