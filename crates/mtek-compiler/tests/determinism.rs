@@ -1,8 +1,9 @@
 //! Determinism guard (`spec/compiler-architecture.md` section 5, `spec/testing.md` section 7).
 //!
 //! Hash-map iteration order must never influence generated output. The modules that produce
-//! output (`layout`, `emit_*`, `package`, `plan`) therefore may not use `HashMap` or
-//! `HashSet` at all: use `BTreeMap`, `IndexMap` or a `Vec` sorted by a total key.
+//! output (`layout`, `emit_*`, `package`, `plan`, and the typed IR in `ir` and `inspect`)
+//! therefore may not use `HashMap` or `HashSet` at all: use `BTreeMap`, `IndexMap` or a `Vec`
+//! sorted by a total key.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -11,7 +12,7 @@ const FORBIDDEN: [&str; 2] = ["HashMap", "HashSet"];
 
 /// Top-level entries of `src/` (directory names or file stems) that are guarded.
 fn is_guarded(stem: &str) -> bool {
-    stem == "layout" || stem == "package" || stem == "plan" || stem.starts_with("emit_")
+    matches!(stem, "layout" | "package" | "plan" | "ir" | "inspect") || stem.starts_with("emit_")
 }
 
 /// Every `.rs` file below `dir`, in sorted order.
@@ -75,7 +76,7 @@ fn no_hash_collections_in_output_producing_modules() {
     }
     assert!(
         report.is_empty(),
-        "HashMap/HashSet is forbidden in layout/, emit_*, package/ and plan/ \
+        "HashMap/HashSet is forbidden in layout/, emit_*, package/, plan/, ir/ and inspect \
          (spec/compiler-architecture.md section 5):\n{}",
         report.join("\n")
     );
@@ -98,7 +99,15 @@ fn the_scanner_detects_forbidden_collections() {
 
 #[test]
 fn guarded_module_names() {
-    for name in ["layout", "package", "plan", "emit_wgsl", "emit_js"] {
+    for name in [
+        "layout",
+        "package",
+        "plan",
+        "ir",
+        "inspect",
+        "emit_wgsl",
+        "emit_js",
+    ] {
         assert!(is_guarded(name), "{name}");
     }
     for name in ["lib", "check", "emit", "layouts"] {

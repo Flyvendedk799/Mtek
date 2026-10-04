@@ -48,3 +48,4 @@ recorded here before code depends on it (blueprint §15).
 | 0025 | Name resolution and milestone gating: details the specification leaves open |
 | 0026 | Types and constant evaluation: details the specification leaves open |
 | 0027 | Scene and schema checks: details the specification leaves open |
+| 0028 | Typed IR and the public `check`/`inspect` API: details the specification leaves open |

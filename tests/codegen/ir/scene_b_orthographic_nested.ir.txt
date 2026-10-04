@@ -1,0 +1,35 @@
+program (entry scene src/main.mtek::Courtyard)
+  module src/main.mtek @1:1-28:1
+    const GROUND_SIZE: f32 = 20.0 [src/main.mtek::GROUND_SIZE] @4:1-4:31
+    const ACCENT: color = color(1.0, 0.60382736, 0.0, 1.0) [src/main.mtek::ACCENT] @5:1-5:24
+    scene Courtyard [src/main.mtek::Courtyard] @7:1-27:2
+      fields
+        clear_color = color(0.0, 0.0, 0.0, 1.0) (default @7:1-27:2)
+      camera Overhead [src/main.mtek::Courtyard.Overhead] active @8:5-12:6
+        position = vec3(0.0, 15.0, 0.0) (written @9:9-9:40)
+        rotation = quat(-0.70710677, 0.0, 0.0, 0.70710677) (written @10:9-10:52)
+        projection = Orthographic { height: 20.0, near: 0.5, far: 40.0 } (written @11:9-11:80)
+      entity #0 Ground [src/main.mtek::Courtyard.Ground] root @13:5-22:6
+        position = vec3(0.0, 0.0, 0.0) (default @13:5-22:6)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @13:5-22:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @13:5-22:6)
+        visible = true (default @13:5-22:6)
+        mesh = Plane { size: vec2(20.0, 20.0) } (written @14:9-14:62)
+        material = std/materials.mtek::Unlit (written @15:9-15:44)
+          color: color = color(0.04231141, 0.114435375, 0.04231141, 1.0)
+      entity #1 Fountain [src/main.mtek::Courtyard.Ground.Fountain] parent #0 @16:9-21:10
+        position = vec3(0.0, 1.0, 0.0) (written @17:13-17:43)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @16:9-21:10)
+        scale = vec3(2.0, 0.5, 2.0) (written @18:13-18:40)
+        visible = true (default @16:9-21:10)
+        mesh = Sphere { radius: 1.0, segments: 24, rings: 12 } (written @19:13-19:67)
+        material = std/materials.mtek::Unlit (written @20:13-20:47)
+          color: color = color(1.0, 0.60382736, 0.0, 1.0)
+      entity #2 Lamp [src/main.mtek::Courtyard.Lamp] root @23:5-26:6
+        position = vec3(4.0, 0.25, 4.0) (written @24:9-24:40)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @23:5-26:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @23:5-26:6)
+        visible = true (default @23:5-26:6)
+        mesh = Sphere { radius: 0.5, segments: 32, rings: 16 } (written @25:9-25:25)
+        material = std/materials.mtek::Unlit (default @23:5-26:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)

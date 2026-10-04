@@ -1,0 +1,295 @@
+{
+  "entryScene": "src/main.mtek::Courtyard",
+  "modules": [
+    {
+      "path": "src/main.mtek",
+      "file": 0,
+      "span": {"file": 0, "start": 0, "end": 910},
+      "items": [
+        {
+          "kind": "const",
+          "name": "GROUND_SIZE",
+          "symbol": "src/main.mtek::GROUND_SIZE",
+          "type": "f32",
+          "value": {"f32": 20.0},
+          "span": {"file": 0, "start": 180, "end": 210}
+        },
+        {
+          "kind": "const",
+          "name": "ACCENT",
+          "symbol": "src/main.mtek::ACCENT",
+          "type": "color",
+          "value": {
+            "color": [1.0, 0.60382736, 0.0, 1.0]
+          },
+          "span": {"file": 0, "start": 211, "end": 234}
+        },
+        {
+          "kind": "scene",
+          "name": "Courtyard",
+          "symbol": "src/main.mtek::Courtyard",
+          "span": {"file": 0, "start": 236, "end": 909},
+          "fields": {
+            "clearColor": {
+              "source": {
+                "const": {
+                  "color": [0.0, 0.0, 0.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 0, "start": 236, "end": 909}
+            }
+          },
+          "constants": [],
+          "cameras": [
+            {
+              "name": "Overhead",
+              "symbol": "src/main.mtek::Courtyard.Overhead",
+              "span": {"file": 0, "start": 258, "end": 453},
+              "active": true,
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 15.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 284, "end": 315}
+              },
+              "target": null,
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [-0.70710677, 0.0, 0.0, 0.70710677]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 324, "end": 367}
+              },
+              "projection": {
+                "desc": {
+                  "kind": "orthographic",
+                  "height": 20.0,
+                  "near": 0.5,
+                  "far": 40.0
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 376, "end": 447}
+              }
+            }
+          ],
+          "entities": [
+            {
+              "index": 0,
+              "name": "Ground",
+              "symbol": "src/main.mtek::Courtyard.Ground",
+              "parent": null,
+              "span": {"file": 0, "start": 458, "end": 818},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.0, 0.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 458, "end": 818}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 458, "end": 818}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 458, "end": 818}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 458, "end": 818}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "plane",
+                  "size": [20.0, 20.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 482, "end": 535}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [0.04231141, 0.114435375, 0.04231141, 1.0]
+                      }
+                    },
+                    "span": {"file": 0, "start": 544, "end": 579}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 0, "start": 544, "end": 579}
+              }
+            },
+            {
+              "index": 1,
+              "name": "Fountain",
+              "symbol": "src/main.mtek::Courtyard.Ground.Fountain",
+              "parent": 0,
+              "span": {"file": 0, "start": 588, "end": 812},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 1.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 618, "end": 648}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 588, "end": 812}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [2.0, 0.5, 2.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 661, "end": 688}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 588, "end": 812}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 1.0,
+                  "segments": 24,
+                  "rings": 12
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 701, "end": 755}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 0.60382736, 0.0, 1.0]
+                      }
+                    },
+                    "span": {"file": 0, "start": 768, "end": 802}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 0, "start": 768, "end": 802}
+              }
+            },
+            {
+              "index": 2,
+              "name": "Lamp",
+              "symbol": "src/main.mtek::Courtyard.Lamp",
+              "parent": null,
+              "span": {"file": 0, "start": 823, "end": 907},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [4.0, 0.25, 4.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 845, "end": 876}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 823, "end": 907}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 823, "end": 907}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 823, "end": 907}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.5,
+                  "segments": 32,
+                  "rings": 16
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 885, "end": 901}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "span": {"file": 0, "start": 823, "end": 907}
+                  }
+                ],
+                "origin": "default",
+                "span": {"file": 0, "start": 823, "end": 907}
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

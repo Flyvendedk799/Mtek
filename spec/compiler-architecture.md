@@ -122,7 +122,7 @@ Scopes per `spec/language.md` §4; `DefId(u32)` for every declaration; side tabl
 - `scene.rs`: schema field checks, scene-object kinds, nesting/body rules, lifecycle/event signatures, single-writer analysis (every assignment and `bind` site is collected first, then conflicts reported with both spans), binding dependency graph with cycle detection (`E5075`, full cycle path). The schema and scene checks of M1 (field validation, constant expressions, the camera and entity rules, the checked-scene result for the typed IR) and the registry data they read are decision 0027.
 
 ### 4.8 `ir/`
-The **typed high-level IR**: the semantic contract between language and code generation (blueprint §5.1). Self-contained (no AST references), every node carries a `Span`, every expression its `TyId`, every name a resolved `DefId`/symbol. Contents: modules; functions (params, result, effect, body); materials (params with types/defaults, fragment function, used `SurfaceInput` fields); prefabs; the entry scene (fields, state, cameras, entity tree, components with descriptor values, handlers, lifecycle functions, bindings with explicit dependency edges, host inputs). `serde::Serialize` with stable field order → `mtek inspect --ir --format json`.
+The **typed high-level IR**: the semantic contract between language and code generation (blueprint §5.1). Self-contained (no AST references), every node carries a `Span`, every expression its `TyId`, every name a resolved `DefId`/symbol. Contents: modules; functions (params, result, effect, body); materials (params with types/defaults, fragment function, used `SurfaceInput` fields); prefabs; the entry scene (fields, state, cameras, entity tree, components with descriptor values, handlers, lifecycle functions, bindings with explicit dependency edges, host inputs). `serde::Serialize` with stable field order → `mtek inspect --ir --format json`. The node shapes, symbols, spans and value encoding of the M1 subset, `lower_to_ir` and the two inspect formats are decision 0028.
 
 ### 4.9 `lowering/`
 - `cpu.rs`: IR → JS AST (§6).
@@ -139,11 +139,12 @@ The **typed high-level IR**: the semantic contract between language and code gen
 ```rust
 pub struct CompileOptions { pub profile: TargetProfile, pub mode: BuildMode /* Dev | Release | Test | Preview */, pub runtime_bundle: Option<Arc<[u8]>>, pub runtime_declarations: Option<Arc<[u8]>> /* runtime.d.ts */ }
 pub fn check(project: &ProjectRoot, fs: &dyn Fs) -> CheckResult;            // diagnostics only; no GPU, no emission
+pub fn analyze(project: &ProjectRoot, fs: &dyn Fs) -> Analysis;             // the front end's full result (IR input, tests, LSP); decision 0028
 pub fn build(project: &ProjectRoot, fs: &dyn Fs, opts: &CompileOptions) -> BuildResult; // files + diagnostics
 pub fn inspect(project: &ProjectRoot, fs: &dyn Fs, what: Inspect) -> InspectResult;     // ir | bindings | shaders
 pub fn context(project: &ProjectRoot, fs: &dyn Fs, req: &ContextRequest) -> ContextResult; // M6
 ```
-The CLI, the tests and the LSP all call these; none re-implements compiler logic (blueprint §13).
+The CLI, the tests and the LSP all call these; none re-implements compiler logic (blueprint §13). The result types of `check`, `analyze` and `inspect` are decision 0028.
 
 **Runtime bundle in tests.** Compiler fixture tests and codegen goldens pass a fixed **stub bundle** — the bytes `// mtek test runtime stub\n` — as `runtime_bundle`, so the hashed runtime file name inside golden `app.js` files never changes when the runtime is edited, and `cargo test` never needs a Node build. Execution tests (Node) and browser tests build with the real bundle. `build` without any bundle fails with `E9030`.
 
