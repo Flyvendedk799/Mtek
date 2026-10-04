@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E2033",
+    "file": "src/main.mtek",
+    "startByte": 9,
+    "endByte": 15,
+    "message": "'ACCENT' is imported by 'src/theme.mtek', not declared there, so 'src/theme.mtek' does not export it.",
+    "related": [
+      {
+        "message": "'ACCENT' is imported here",
+        "file": "src/theme.mtek",
+        "startByte": 82,
+        "endByte": 88
+      }
+    ],
+    "notes": [
+      "imported names cannot be exported again",
+      "help: import the name from the module that declares it"
+    ]
+  }
+]

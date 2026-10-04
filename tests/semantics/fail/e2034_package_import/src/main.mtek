@@ -1,0 +1,6 @@
+import { ACCENT } from "palette";
+
+scene Demo {
+    clear_color: ACCENT;
+    camera Main {}
+}

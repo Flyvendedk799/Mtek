@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E2033",
+    "file": "src/main.mtek",
+    "startByte": 9,
+    "endByte": 14,
+    "message": "'src/palette.mtek' does not export 'ACCNT'.",
+    "related": [
+      {
+        "message": "did you mean 'ACCENT'?",
+        "file": "src/palette.mtek",
+        "startByte": 13,
+        "endByte": 19
+      }
+    ],
+    "notes": [
+      "'src/palette.mtek' exports: ACCENT, BACKDROP"
+    ]
+  }
+]

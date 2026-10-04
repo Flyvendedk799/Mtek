@@ -687,8 +687,6 @@ fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
     // so the resolver reports them. When a milestone implements one, this
     // test fails until the checker types it.
     for construct in [
-        Construct::Import,
-        Construct::Export,
         Construct::Fn,
         Construct::CpuFn,
         Construct::Struct,

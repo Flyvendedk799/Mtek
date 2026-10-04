@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/palette.mtek",
+    "startByte": 29,
+    "endByte": 32,
+    "message": "The constant 'ACCENT' is declared as color, but its value has type f32.",
+    "expected": "color",
+    "actual": "f32"
+  }
+]

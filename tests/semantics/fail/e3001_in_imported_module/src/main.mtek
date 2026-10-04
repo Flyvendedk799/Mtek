@@ -1,0 +1,7 @@
+// The error is in the imported module; the use here is not reported again.
+import { ACCENT } from "./palette.mtek";
+
+scene Demo {
+    clear_color: ACCENT;
+    camera Main {}
+}

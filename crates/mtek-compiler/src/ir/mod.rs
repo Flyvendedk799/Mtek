@@ -30,11 +30,11 @@ pub use model::{
 };
 pub use render::{to_human, to_json};
 
-use crate::Analysis;
 use crate::project::Project;
 use crate::resolve::Resolution;
 use crate::syntax::ast;
 use crate::types::Typeck;
+use crate::{Analysis, ModuleUnit};
 
 /// Why [`lower_to_ir`] produced no program.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -60,6 +60,7 @@ pub fn lower_to_ir(analysis: &Analysis) -> Result<Program, LowerError> {
         analysis.module.as_ref(),
         analysis.resolution.as_ref(),
         analysis.types.as_ref(),
+        &analysis.dependencies,
     )
 }
 
@@ -70,11 +71,26 @@ pub(crate) fn lower_parts(
     module: Option<&ast::Module>,
     resolution: Option<&Resolution>,
     types: Option<&Typeck>,
+    dependencies: &[ModuleUnit],
 ) -> Result<Program, LowerError> {
     let (Some(project), Some(module), Some(resolution), Some(types)) =
         (project, module, resolution, types)
     else {
         return Err(LowerError::HasErrors);
     };
-    lower::lower(project, module, resolution, types).map_err(LowerError::Internal)
+    let entry = lower::Unit {
+        id: project.modules.entry().id(),
+        module,
+        resolution,
+        types,
+    };
+    let units: Vec<lower::Unit<'_>> = std::iter::once(entry)
+        .chain(dependencies.iter().map(|unit| lower::Unit {
+            id: unit.id,
+            module: &unit.module,
+            resolution: &unit.resolution,
+            types: &unit.types,
+        }))
+        .collect();
+    lower::lower(project, &units).map_err(LowerError::Internal)
 }

@@ -1,0 +1,1 @@
+export const CRATE_SIZE: f32 = 1.0;

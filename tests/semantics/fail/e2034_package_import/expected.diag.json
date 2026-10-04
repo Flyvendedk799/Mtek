@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E2034",
+    "file": "src/main.mtek",
+    "startByte": 23,
+    "endByte": 32,
+    "message": "Package imports are not supported in v0.1: \"palette\" is a bare specifier.",
+    "notes": [
+      "help: to import a file of this project, write a relative path such as \"./palette.mtek\""
+    ]
+  }
+]

@@ -1,0 +1,2 @@
+export const ACCENT = #6b5cff;
+export const BACKDROP = #202830;

@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E2031",
+    "file": "src/main.mtek",
+    "startByte": 22,
+    "endByte": 45,
+    "message": "The import \"../std/materials.mtek\" resolves to 'std/materials.mtek', inside the directory 'std/', which is reserved for the embedded standard library.",
+    "notes": [
+      "standard-library names are in scope in every module without an import",
+      "help: move the module to another directory"
+    ]
+  }
+]

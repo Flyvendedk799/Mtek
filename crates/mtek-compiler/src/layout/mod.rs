@@ -22,6 +22,9 @@ pub mod types;
 pub use builtin::{BuiltinBlock, builtin_blocks};
 pub use compute::{compute, layout_struct, u_align, u_size, u_stride};
 pub use error::LayoutError;
-pub use naming::{hash8, material_layout_id, material_params_struct};
+pub use naming::{
+    hash8, material_layout_id, material_params_struct, material_writer_qualifier, qualified_name,
+    split_material_layout_id, user_struct_name,
+};
 pub use record::{LayoutMember, LayoutNode, LayoutRecord, ScalarKind};
 pub use types::LayoutType;

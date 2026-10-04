@@ -17,7 +17,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::layout::{LayoutMember, LayoutNode, LayoutRecord, ScalarKind};
+use crate::layout::{LayoutMember, LayoutNode, LayoutRecord, ScalarKind, user_struct_name};
 
 /// The alignment attribute value for struct- and array-typed members (section 4.4 rule 1).
 const UNIFORM_ALIGN: u32 = 16;
@@ -25,15 +25,18 @@ const UNIFORM_ALIGN: u32 = 16;
 /// Prefix of generated padded-element wrapper structs.
 const PAD_PREFIX: &str = "MtekPad16_";
 
-/// The WGSL name of a nested Mtek struct.
+/// The WGSL name of a nested Mtek struct (`spec/gpu-layout.md` section 5).
 ///
-/// User structs become `S_<Name>` (module qualification, `S_<hash8>_<Name>`, arrives with
-/// modules in M2). Names that already carry the reserved `Mtek` prefix are compiler-owned
-/// built-in structs (`MtekLight`) and keep their name, as `spec/gpu-layout.md` section 5
-/// requires.
+/// A user struct of a module is named by its symbol (`src/a.mtek::Shape`) and becomes
+/// `S_<hash8>_<Name>` ([`user_struct_name`], decision 0036), so same-named structs of two
+/// modules never collide. A plain name (the layout fixtures, which have no module) becomes
+/// `S_<Name>`. Names that already carry the reserved `Mtek` prefix are compiler-owned
+/// built-in structs (`MtekLight`) and keep their name.
 pub fn wgsl_struct_name(mtek_name: &str) -> String {
     if mtek_name.starts_with("Mtek") {
         mtek_name.to_owned()
+    } else if let Some((module_path, name)) = mtek_name.rsplit_once("::") {
+        user_struct_name(module_path, name)
     } else {
         format!("S_{mtek_name}")
     }
@@ -608,6 +611,21 @@ mod tests {
     #[test]
     fn emission_is_deterministic() {
         assert_eq!(emit_block_structs(&mixed()), emit_block_structs(&mixed()));
+    }
+
+    #[test]
+    fn struct_names_follow_the_module_naming_rules() {
+        assert_eq!(wgsl_struct_name("MtekLight"), "MtekLight");
+        assert_eq!(wgsl_struct_name("Inner"), "S_Inner");
+        // A user struct named by its symbol carries its module's hash.
+        assert_eq!(
+            wgsl_struct_name("src/main.mtek::Shape"),
+            format!("S_{}_Shape", crate::layout::hash8("src/main.mtek"))
+        );
+        assert_ne!(
+            wgsl_struct_name("src/a.mtek::Shape"),
+            wgsl_struct_name("src/b.mtek::Shape")
+        );
     }
 
     #[test]

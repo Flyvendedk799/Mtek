@@ -410,7 +410,9 @@ impl Checker<'_> {
             return Folded::Unknown;
         };
         match def.kind {
-            DefKind::Const => {
+            // An imported constant was seeded with its value
+            // (`check_module_with_imports`).
+            DefKind::Const | DefKind::Import => {
                 let value = self.out.consts.get(&id).and_then(|info| info.value.clone());
                 match (value, self.typed(expr)) {
                     (Some(value), Some(_)) => Folded::Value(value),
@@ -427,8 +429,7 @@ impl Checker<'_> {
                 kind: NonConstantKind::Declaration,
                 reason: format!("it refers to the {} '{}'", def.kind.noun(), def.name),
             }),
-            // Imported constants (imports are gated in this build) and names
-            // that are not values (reported by the checker).
+            // Names that are not values (reported by the checker).
             _ => Folded::Unknown,
         }
     }

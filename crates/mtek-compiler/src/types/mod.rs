@@ -173,6 +173,21 @@ impl Typeck {
     }
 }
 
+/// A constant another module exports, as the module that imports it sees
+/// it (decision 0036): its type in the exporting module's interner and its
+/// value.
+#[derive(Clone, Copy, Debug)]
+pub struct ImportedConst<'a> {
+    /// The exporting module's types.
+    pub interner: &'a TyInterner,
+    /// The constant's type (an id of `interner`) and value.
+    pub info: &'a ConstInfo,
+}
+
+/// The constants a module imports, by the `DefId` of the imported name in
+/// the importing module.
+pub type ImportedConsts<'a> = BTreeMap<DefId, ImportedConst<'a>>;
+
 /// Type-check `module` (whose source text is `text`) and fold its constant
 /// expressions, reporting to `sink`. Names were resolved into `resolution`;
 /// names the resolver could not resolve (`Res::Error`) are not reported
@@ -184,7 +199,36 @@ pub fn check_module(
     resolution: &Resolution,
     sink: &mut Diagnostics,
 ) -> Typeck {
+    check_module_with_imports(module, text, resolution, &ImportedConsts::new(), sink)
+}
+
+/// [`check_module`] for a module that imports constants: an imported name
+/// whose `DefId` is in `imports` has the constant's type (carried over into
+/// this module's interner) and value, so uses fold exactly like uses of a
+/// constant of the module. An imported name that is not there (its module
+/// was not checked first, which only an import cycle causes, or it is not a
+/// constant) has the type `Error` and no further diagnostic.
+#[must_use]
+pub fn check_module_with_imports(
+    module: &Module,
+    text: &str,
+    resolution: &Resolution,
+    imports: &ImportedConsts<'_>,
+    sink: &mut Diagnostics,
+) -> Typeck {
     let mut checker = check::Checker::new(module, text, resolution, sink);
+    for (def, imported) in imports {
+        let ty = checker
+            .out
+            .interner
+            .import_from(imported.interner, imported.info.ty);
+        let value = if checker.out.interner.is_error(ty) {
+            None
+        } else {
+            imported.info.value.clone()
+        };
+        checker.out.consts.insert(*def, ConstInfo { ty, value });
+    }
     checker.module(module);
     checker.scene_checks(module);
     checker.finish()

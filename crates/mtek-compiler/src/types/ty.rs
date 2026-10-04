@@ -211,6 +211,29 @@ impl TyInterner {
         self.intern(Ty::Struct(def))
     }
 
+    /// The type `id` of the interner `other` (another module's), as a type of
+    /// this interner (decision 0036). Built-in types carry over unchanged
+    /// and arrays element by element; a user struct is identified by its
+    /// declaration in its own module, which this interner cannot name, so it
+    /// becomes `Error` (structs are gated in this build; cross-module struct
+    /// types need a module-independent identity first).
+    pub fn import_from(&mut self, other: &TyInterner, id: TyId) -> TyId {
+        // Arrays nest at most as deep as the parser lets types nest, so the
+        // recursion is bounded by the parser's depth limit.
+        match other.get(id) {
+            Ty::Struct(_) => TyId::ERROR,
+            Ty::Array { element, len } => {
+                let element = self.import_from(other, element);
+                if self.is_error(element) {
+                    TyId::ERROR
+                } else {
+                    self.intern(Ty::Array { element, len })
+                }
+            }
+            ty => self.intern(ty),
+        }
+    }
+
     /// The type behind `id` (`Error` for an id of another interner).
     #[must_use]
     pub fn get(&self, id: TyId) -> Ty {

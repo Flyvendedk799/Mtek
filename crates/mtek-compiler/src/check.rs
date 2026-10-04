@@ -2,10 +2,13 @@
 //! (`spec/compiler-architecture.md` sections 3 and 4.12, decision 0028).
 //!
 //! Load the project (`mtek.toml`, the entry module), lex and parse the entry
-//! module, resolve its names, select the entry scene, type-check the module,
-//! fold its constant expressions and run the scene checks. Every stage
-//! reports to one [`Diagnostics`] sink and the next stage runs on whatever
-//! the previous one recovered.
+//! module and every module it imports (in load order, decision 0036), report
+//! import cycles, bind every module's imported names to the exports of the
+//! modules they import and resolve its names, select the entry scene, then
+//! type-check every module — the modules a module imports first, so the
+//! constants it imports are known — fold the constant expressions and run
+//! the scene checks. Every stage reports to one [`Diagnostics`] sink and the
+//! next stage runs on whatever the previous one recovered.
 //!
 //! Two entry points share the front end:
 //!
@@ -16,12 +19,14 @@
 //!   inside the checker read.
 
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report};
-use crate::project::{Project, ProjectRoot, SceneSelection, edit_distance, select_scene};
-use crate::resolve::{Resolution, resolve_module};
+use crate::project::{
+    ModuleId, Project, ProjectRoot, SceneSelection, edit_distance, load_modules, report_cycles,
+    select_scene,
+};
+use crate::resolve::{DefKind, Resolution, bind_imports, resolve_module_with_imports};
 use crate::source::{Fs, SourceMap};
 use crate::syntax::ast::{ItemKind, Module};
-use crate::syntax::{lex, parse_module};
-use crate::types::{Typeck, check_module};
+use crate::types::{ImportedConst, ImportedConsts, Typeck, check_module_with_imports};
 
 /// What [`check`] produced: diagnostics only (`spec/compiler-architecture.md`
 /// section 4.12).
@@ -58,8 +63,24 @@ pub struct Analysis {
     pub resolution: Option<Resolution>,
     /// The types, folded constants and checked scenes of the entry module.
     pub types: Option<Typeck>,
+    /// Every other module of the project, in load order (`ModuleId` 1, 2, …).
+    pub dependencies: Vec<ModuleUnit>,
     /// Every diagnostic, in report order.
     pub report: Report,
+}
+
+/// A module other than the entry module, as the front end left it.
+#[derive(Debug)]
+pub struct ModuleUnit {
+    /// Its place in the module graph ([`Project::modules`]).
+    pub id: ModuleId,
+    /// The parsed module.
+    pub module: Module,
+    /// Its names; imported names point into other modules
+    /// ([`Resolution::import_target`]).
+    pub resolution: Resolution,
+    /// Its types, folded constants and checked scenes.
+    pub types: Typeck,
 }
 
 impl Analysis {
@@ -92,9 +113,21 @@ pub(crate) struct FrontEnd {
     pub(crate) module: Option<Module>,
     pub(crate) resolution: Option<Resolution>,
     pub(crate) types: Option<Typeck>,
+    pub(crate) dependencies: Vec<ModuleUnit>,
 }
 
 impl FrontEnd {
+    /// The front end of a project that did not get as far as `project`.
+    fn stopped(project: Option<Project>) -> Self {
+        FrontEnd {
+            project,
+            module: None,
+            resolution: None,
+            types: None,
+            dependencies: Vec::new(),
+        }
+    }
+
     /// The analysis with the finished `report`.
     pub(crate) fn finish(self, report: Report) -> Analysis {
         Analysis {
@@ -102,6 +135,7 @@ impl FrontEnd {
             module: self.module,
             resolution: self.resolution,
             types: self.types,
+            dependencies: self.dependencies,
             report,
         }
     }
@@ -125,47 +159,113 @@ pub fn analyze(root: &ProjectRoot, fs: &dyn Fs) -> Analysis {
 
 /// The front end, reporting to `sink`.
 pub(crate) fn front_end(root: &ProjectRoot, fs: &dyn Fs, sink: &mut Diagnostics) -> FrontEnd {
-    let Some(project) = Project::load(root, fs, sink) else {
-        return FrontEnd {
-            project: None,
-            module: None,
-            resolution: None,
-            types: None,
-        };
+    let Some(mut project) = Project::load(root, fs, sink) else {
+        return FrontEnd::stopped(None);
     };
-    let Some(source) = project.sources.get(project.entry_file()) else {
+    let loaded = load_modules(&mut project, root, fs, sink);
+    if loaded.is_empty() {
         sink.push(Diagnostic::new(
             Code::E9999,
             "The entry module is missing from the source map; this is a compiler bug.",
         ));
-        return FrontEnd {
-            project: Some(project),
-            module: None,
-            resolution: None,
-            types: None,
-        };
-    };
-    let mut lexed = lex(source);
-    lexed.report_into(sink);
-    let parsed = parse_module(source.text(), &lexed.tokens, &lexed.trivia, sink);
-    let module = parsed.module;
+        return FrontEnd::stopped(Some(project));
+    }
+    report_cycles(&project, &project.modules.find_cycles(), sink);
 
-    let mut resolution = resolve_module(&module, sink);
-    let entry = source.path().to_string();
-    select_entry_scene(
-        &module,
-        &mut resolution,
-        project.config.project.scene.as_deref(),
-        &entry,
-        sink,
-    );
-    let types = check_module(&module, source.text(), &resolution, sink);
+    let mut resolutions: Vec<Resolution> = loaded
+        .iter()
+        .map(|unit| {
+            let bindings = bind_imports(&unit.ast, &unit.imports, &loaded, &project.modules, sink);
+            resolve_module_with_imports(&unit.ast, &bindings, sink)
+        })
+        .collect();
+    if let (Some(entry_module), Some(entry_resolution)) = (loaded.first(), resolutions.first_mut())
+    {
+        let entry = project.modules.entry().path().to_string();
+        select_entry_scene(
+            &entry_module.ast,
+            entry_resolution,
+            project.config.project.scene.as_deref(),
+            &entry,
+            sink,
+        );
+    }
+
+    let mut types: Vec<Option<Typeck>> = loaded.iter().map(|_| None).collect();
+    for id in project.modules.dependency_order() {
+        let index = id.index();
+        let (Some(unit), Some(resolution), Some(source)) = (
+            loaded.get(index),
+            resolutions.get(index),
+            project
+                .modules
+                .get(id)
+                .and_then(|module| project.sources.get(module.file())),
+        ) else {
+            continue;
+        };
+        let imports = imported_consts(resolution, &resolutions, &types);
+        let checked =
+            check_module_with_imports(&unit.ast, source.text(), resolution, &imports, sink);
+        if let Some(slot) = types.get_mut(index) {
+            *slot = Some(checked);
+        }
+    }
+
+    let mut units = loaded
+        .into_iter()
+        .zip(resolutions)
+        .zip(types)
+        .enumerate()
+        .map(|(index, ((unit, resolution), types))| (index, unit.ast, resolution, types));
+    let Some((_, module, resolution, entry_types)) = units.next() else {
+        return FrontEnd::stopped(Some(project));
+    };
+    let dependencies = units
+        .filter_map(|(index, module, resolution, types)| {
+            let id = project.modules.modules().get(index)?.id();
+            Some(ModuleUnit {
+                id,
+                module,
+                resolution,
+                types: types?,
+            })
+        })
+        .collect();
     FrontEnd {
         project: Some(project),
         module: Some(module),
         resolution: Some(resolution),
-        types: Some(types),
+        types: entry_types,
+        dependencies,
     }
+}
+
+/// The constants the module resolved as `resolution` imports from modules
+/// already checked (`types`, indexed like `resolutions` by module).
+fn imported_consts<'a>(
+    resolution: &Resolution,
+    resolutions: &[Resolution],
+    types: &'a [Option<Typeck>],
+) -> ImportedConsts<'a> {
+    resolution
+        .imports()
+        .filter(|(_, target)| target.kind == DefKind::Const)
+        .filter_map(|(def, target)| {
+            let exporter = types.get(target.module.index())?.as_ref()?;
+            let exported = resolutions
+                .get(target.module.index())?
+                .def_of(target.node)?;
+            let info = exporter.const_info(exported)?;
+            Some((
+                def,
+                ImportedConst {
+                    interner: exporter.interner(),
+                    info,
+                },
+            ))
+        })
+        .collect()
 }
 
 /// Select the entry scene (`project.scene`, or the module's only scene) and

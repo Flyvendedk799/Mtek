@@ -17,7 +17,9 @@
 //! write leaf bytes, so padding bytes are never touched. Output is straight-line code except
 //! for arrays longer than [`MAX_UNROLLED_LENGTH`], which use a counted loop.
 
-use crate::layout::{LayoutNode, LayoutRecord, ScalarKind};
+use crate::layout::{
+    LayoutNode, LayoutRecord, ScalarKind, material_writer_qualifier, split_material_layout_id,
+};
 
 use super::printer::{
     Printer, identifier_part, line_comment, member_access, property_key, string_literal,
@@ -42,14 +44,18 @@ pub struct EmittedWriters {
 
 /// The `<qual>` part of the writer names of `record` (`spec/gpu-layout.md` section 7):
 /// `fixture_<name>` for layout fixtures, `builtin_<MtekStruct>` for built-in blocks and
-/// `<hash8>_<Name>` for material blocks. Anything else falls back to the WGSL struct name.
-/// The result only contains ASCII letters, digits and `_`.
+/// `<hash8>_<Name>` for material blocks, computed from the module path and name of the
+/// layout id by [`material_writer_qualifier`] (the naming rules of `spec/gpu-layout.md`
+/// section 5, decision 0036). Anything else falls back to the WGSL struct name. The result
+/// only contains ASCII letters, digits and `_`.
 pub fn writer_qualifier(record: &LayoutRecord) -> String {
     let id = record.id.as_str();
     if let Some(name) = id.strip_prefix("fixture:") {
         format!("fixture_{}", identifier_part(name))
     } else if id.starts_with("builtin:") {
         format!("builtin_{}", identifier_part(&record.wgsl_struct))
+    } else if let Some((module_path, material)) = split_material_layout_id(id) {
+        identifier_part(&material_writer_qualifier(module_path, material))
     } else if id.starts_with("material:") {
         let name = record
             .wgsl_struct
@@ -414,7 +420,9 @@ mod tests {
         )
     }
 
-    /// The example of `spec/gpu-layout.md` section 7, without its explanatory comments.
+    /// The example of `spec/gpu-layout.md` section 7, without its explanatory comments, and
+    /// with the real `<hash8>` of `src/main.mtek` (`e2cab98b`) where the specification shows
+    /// an illustrative one (`1f3a9c2e`).
     #[test]
     fn pulse_matches_the_specification_example() {
         let ty = structure(
@@ -423,37 +431,37 @@ mod tests {
         );
         let record = record_of(
             "material:src/main.mtek::Pulse",
-            "MtekParams_1f3a9c2e_Pulse",
+            &crate::layout::material_params_struct("src/main.mtek", "Pulse"),
             &ty,
         );
         assert_eq!(record.size, 32);
-        assert_eq!(writer_qualifier(&record), "1f3a9c2e_Pulse");
+        assert_eq!(writer_qualifier(&record), "e2cab98b_Pulse");
         let parts = emit_writer_parts(&record, &writer_qualifier(&record));
         let expected = "\
 // Generated from layout material:src/main.mtek::Pulse (size 32). Do not edit.
-function w_1f3a9c2e_Pulse_tint(m, base, v) {
+function w_e2cab98b_Pulse_tint(m, base, v) {
   const w = base >>> 2;
   m.f32[w + 0] = v.r; m.f32[w + 1] = v.g; m.f32[w + 2] = v.b; m.f32[w + 3] = v.a;
 }
-function w_1f3a9c2e_Pulse_phase(m, base, v) {
+function w_e2cab98b_Pulse_phase(m, base, v) {
   m.f32[(base >>> 2) + 4] = v;
 }
-function w_1f3a9c2e_Pulse(m, base, v) {
-  w_1f3a9c2e_Pulse_tint(m, base, v.tint);
-  w_1f3a9c2e_Pulse_phase(m, base, v.phase);
+function w_e2cab98b_Pulse(m, base, v) {
+  w_e2cab98b_Pulse_tint(m, base, v.tint);
+  w_e2cab98b_Pulse_phase(m, base, v.phase);
 }
 ";
         assert_eq!(parts.functions, expected);
         assert_eq!(
             parts.table_entry,
-            r#""material:src/main.mtek::Pulse": { all: w_1f3a9c2e_Pulse, fields: { tint: w_1f3a9c2e_Pulse_tint, phase: w_1f3a9c2e_Pulse_phase } },"#
+            r#""material:src/main.mtek::Pulse": { all: w_e2cab98b_Pulse, fields: { tint: w_e2cab98b_Pulse_tint, phase: w_e2cab98b_Pulse_phase } },"#
         );
         assert_eq!(
             parts.function_names,
             [
-                "w_1f3a9c2e_Pulse",
-                "w_1f3a9c2e_Pulse_tint",
-                "w_1f3a9c2e_Pulse_phase"
+                "w_e2cab98b_Pulse",
+                "w_e2cab98b_Pulse_tint",
+                "w_e2cab98b_Pulse_phase"
             ]
         );
     }
@@ -630,9 +638,21 @@ function w_1f3a9c2e_Pulse(m, base, v) {
         assert_eq!(make("fixture:mixed", "MtekFixture_mixed"), "fixture_mixed");
         assert_eq!(make("builtin:frame", "MtekFrame"), "builtin_MtekFrame");
         assert_eq!(make("builtin:object", "MtekObject"), "builtin_MtekObject");
+        let a = crate::layout::hash8("src/a.mtek");
         assert_eq!(
-            make("material:src/a.mtek::Glow", "MtekParams_0123abcd_Glow"),
-            "0123abcd_Glow"
+            make("material:src/a.mtek::Glow", &format!("MtekParams_{a}_Glow")),
+            format!("{a}_Glow")
+        );
+        // The qualifier comes from the layout id through the naming rules.
+        assert_eq!(
+            make("material:src/a.mtek::Glow", "SomethingElse"),
+            format!("{a}_Glow")
+        );
+        let b = crate::layout::hash8("src/b.mtek");
+        assert_ne!(a, b);
+        assert_eq!(
+            make("material:src/b.mtek::Glow", &format!("MtekParams_{b}_Glow")),
+            format!("{b}_Glow")
         );
     }
 }

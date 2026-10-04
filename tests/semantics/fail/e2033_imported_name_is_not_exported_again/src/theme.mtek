@@ -1,0 +1,2 @@
+// `export` cannot precede `import`: imported names are not re-exported.
+import { ACCENT } from "./palette.mtek";

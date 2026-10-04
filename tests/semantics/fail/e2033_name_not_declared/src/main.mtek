@@ -1,0 +1,6 @@
+import { ACCNT } from "./palette.mtek";
+
+scene Demo {
+    clear_color: ACCNT;
+    camera Main {}
+}

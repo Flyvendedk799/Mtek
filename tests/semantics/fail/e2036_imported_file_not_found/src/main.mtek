@@ -1,0 +1,7 @@
+// The imported name is still declared, so its use is not reported again.
+import { ACCENT } from "./palette.mtek";
+
+scene Demo {
+    clear_color: ACCENT;
+    camera Main {}
+}

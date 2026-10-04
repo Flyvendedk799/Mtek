@@ -220,14 +220,36 @@ fn every_node_has_a_span_in_its_file_and_every_symbol_is_qualified() {
         let result = inspect_fixture("pass", &name, None);
         let (json, _) = rendered(&result, &name);
         let value: Value = serde_json::from_str(&json).unwrap();
+        // Every symbol of a module starts with that module's path, and every
+        // span of a module is in that module's file (decision 0036).
         let mut found = Vec::new();
-        objects(&value, "$".to_owned(), &mut found);
+        for (index, module) in value["modules"].as_array().unwrap().iter().enumerate() {
+            let mut inside = Vec::new();
+            objects(module, format!("$.modules[{index}]"), &mut inside);
+            let prefix = format!("{}::", module["path"].as_str().unwrap());
+            let file = module["file"].as_u64().unwrap();
+            found.extend(
+                inside
+                    .into_iter()
+                    .map(|(path, object)| (path, object, prefix.clone(), file)),
+            );
+        }
         let mut symbols = 0;
-        for (path, object) in &found {
+        for (path, object, prefix, module_file) in &found {
+            if let Some(Value::Object(span)) = object.get("span") {
+                assert_eq!(
+                    span["file"].as_u64(),
+                    Some(*module_file),
+                    "pass/{name} {path}"
+                );
+            }
             if let Some(symbol) = object.get("symbol") {
                 let symbol = symbol.as_str().unwrap();
                 assert!(is_symbol(symbol), "pass/{name} {path}: {symbol}");
-                assert!(symbol.starts_with("src/main.mtek::"), "pass/{name} {path}");
+                assert!(
+                    symbol.starts_with(prefix.as_str()),
+                    "pass/{name} {path}: {symbol}"
+                );
                 assert!(
                     object.contains_key("span"),
                     "pass/{name} {path} has no span"

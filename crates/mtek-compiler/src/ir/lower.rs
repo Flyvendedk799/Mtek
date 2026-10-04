@@ -1,8 +1,9 @@
 //! Lowering a checked program to the typed IR (decision 0028).
 //!
-//! The input is the front end's result without errors: the parsed entry
-//! module (for item order, constant declarations and their spans), the
-//! resolution (declarations and the entry scene) and the type checker's
+//! The input is the front end's result without errors, for every module of
+//! the project in load order (the entry module first): the parsed module (for
+//! item order, constant declarations and their spans), the resolution
+//! (declarations and, for the entry module, the entry scene) and the type checker's
 //! result (folded constants and the [`CheckedScene`]s of decision 0027, whose
 //! fields are complete: written values and registry defaults, descriptors
 //! completed in schema order). Lowering never reads registry defaults and
@@ -18,7 +19,7 @@ use super::model::{
     Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin,
     Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, Symbol, Value,
 };
-use crate::project::Project;
+use crate::project::{ModuleId, Project};
 use crate::resolve::Resolution;
 use crate::source::Span;
 use crate::stdlib::{SchemaCategory, registry};
@@ -45,17 +46,53 @@ pub(super) const PROJECTION_SCHEMAS: [&str; 2] = ["Perspective", "Orthographic"]
 /// Why lowering failed: a description of the compiler defect.
 pub(super) type Defect = String;
 
-/// Lower the entry module of a checked program without errors.
-pub(super) fn lower(
+/// One checked module: its id and what the front end produced for it.
+#[derive(Clone, Copy)]
+pub(super) struct Unit<'a> {
+    pub(super) id: ModuleId,
+    pub(super) module: &'a ast::Module,
+    pub(super) resolution: &'a Resolution,
+    pub(super) types: &'a Typeck,
+}
+
+/// Lower the modules of a checked program without errors, the entry module
+/// first, into [`Program::modules`] in that order (load order). Imports are
+/// not items of the IR: every use of an imported constant is folded, and a
+/// declaration is listed once, in the module that declares it, under its own
+/// symbol.
+pub(super) fn lower(project: &Project, units: &[Unit<'_>]) -> Result<Program, Defect> {
+    let mut modules = Vec::with_capacity(units.len());
+    let mut entry_scene = None;
+    for (index, unit) in units.iter().enumerate() {
+        let (module, scene) = lower_module(project, unit, index == 0)?;
+        modules.push(module);
+        entry_scene = entry_scene.or(scene);
+    }
+    let entry_scene = entry_scene.ok_or("the entry scene is not a scene of the entry module")?;
+    Ok(Program {
+        entry_scene,
+        modules,
+    })
+}
+
+/// Lower one module; for the entry module, also the symbol of the entry
+/// scene.
+fn lower_module(
     project: &Project,
-    module: &ast::Module,
-    resolution: &Resolution,
-    types: &Typeck,
-) -> Result<Program, Defect> {
+    unit: &Unit<'_>,
+    entry: bool,
+) -> Result<(Module, Option<Symbol>), Defect> {
+    let Unit {
+        module,
+        resolution,
+        types,
+        ..
+    } = *unit;
     let source = project
-        .sources
-        .get(project.entry_file())
-        .ok_or("the entry module is missing from the source map")?;
+        .modules
+        .get(unit.id)
+        .and_then(|m| project.sources.get(m.file()))
+        .ok_or("a module is missing from the source map")?;
     let path = source.path().as_str().to_owned();
     let lowering = Lowering {
         path: &path,
@@ -78,15 +115,15 @@ pub(super) fn lower(
                     .scene(def)
                     .ok_or_else(|| format!("scene '{}' was not checked", decl.name.name))?;
                 let scene = lowering.scene(decl, checked)?;
-                if resolution.entry_scene() == Some(def) {
+                if entry && resolution.entry_scene() == Some(def) {
                     entry_scene = Some(scene.symbol.clone());
                 }
                 items.push(Item::Scene(scene));
             }
+            ItemKind::Import(_) => {}
             // Everything else is gated in this build (`E9010`), so a program
             // without errors has none of it.
-            ItemKind::Import(_)
-            | ItemKind::Fn(_)
+            ItemKind::Fn(_)
             | ItemKind::Struct(_)
             | ItemKind::Material(_)
             | ItemKind::Prefab(_)
@@ -95,16 +132,15 @@ pub(super) fn lower(
             }
         }
     }
-    let entry_scene = entry_scene.ok_or("the entry scene is not a scene of the entry module")?;
-    Ok(Program {
-        entry_scene,
-        modules: vec![Module {
+    Ok((
+        Module {
             path: path.clone(),
             file: source.id().0,
             span: module.span,
             items,
-        }],
-    })
+        },
+        entry_scene,
+    ))
 }
 
 struct Lowering<'a> {

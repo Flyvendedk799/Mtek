@@ -156,6 +156,7 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
             front.module.as_ref(),
             front.resolution.as_ref(),
             front.types.as_ref(),
+            &front.dependencies,
         ) {
             Ok(program) => {
                 let input = PackageInput {

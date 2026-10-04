@@ -1,0 +1,9 @@
+// The entry module may export its items, the entry scene included; it does
+// not have to (decision 0036).
+export const HEIGHT = 2.0;
+
+export scene Demo {
+    camera Main {
+        position: vec3(0.0, HEIGHT, 5.0);
+    }
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E2035",
+    "file": "src/b.mtek",
+    "startByte": 18,
+    "endByte": 28,
+    "message": "Import cycle: src/a.mtek -> src/b.mtek -> src/a.mtek.",
+    "related": [
+      {
+        "message": "'src/a.mtek' imports 'src/b.mtek' here",
+        "file": "src/a.mtek",
+        "startByte": 18,
+        "endByte": 28
+      },
+      {
+        "message": "'src/b.mtek' imports 'src/a.mtek' here",
+        "file": "src/b.mtek",
+        "startByte": 18,
+        "endByte": 28
+      }
+    ],
+    "notes": [
+      "help: modules cannot import each other in a cycle; move the declarations they share into a module that both import"
+    ]
+  }
+]

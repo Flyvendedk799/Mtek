@@ -1,0 +1,18 @@
+// Two modules import a third: it is loaded once. Modules are numbered depth
+// first in import order (main, right, base, left), whatever order the
+// directory lists them in.
+import { RIGHT } from "./right.mtek";
+import { LEFT } from "./left.mtek";
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+    entity Left {
+        position: vec3(LEFT, 0.0, 0.0);
+    }
+    entity Right {
+        position: vec3(RIGHT, 0.0, 0.0);
+    }
+}

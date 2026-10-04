@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E2033",
+    "file": "src/main.mtek",
+    "startByte": 9,
+    "endByte": 15,
+    "message": "'ACCENT' is not exported by 'src/palette.mtek'.",
+    "related": [
+      {
+        "message": "the constant 'ACCENT' is declared here without `export`",
+        "file": "src/palette.mtek",
+        "startByte": 6,
+        "endByte": 12
+      }
+    ],
+    "notes": [
+      "help: write `export` in front of the declaration in 'src/palette.mtek' to make it importable"
+    ]
+  }
+]

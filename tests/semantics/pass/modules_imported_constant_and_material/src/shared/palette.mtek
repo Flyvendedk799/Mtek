@@ -1,0 +1,10 @@
+// Imports may chain: this module imports from its neighbour.
+import { CRATE_SIZE } from "./sizes.mtek";
+
+export const BACKDROP = #202830;
+export const ACCENT = #6b5cff;
+export const GLOW = Unlit { color: ACCENT };
+export const LIFT = CRATE_SIZE / 2.0;
+
+// Not exported: visible only in this module.
+const UNUSED = 3;

@@ -1,0 +1,11 @@
+// A different material with the same name as the one in pulse_a.mtek.
+export material Pulse {
+    param glow: f32 = 1.0;
+    param base: color = #40ff80;
+
+    fragment(surface: SurfaceInput) -> color {
+        return color.linear(base.rgb * glow, 1.0);
+    }
+}
+
+export const SOFT_PULSE = Pulse { glow: 0.5 };

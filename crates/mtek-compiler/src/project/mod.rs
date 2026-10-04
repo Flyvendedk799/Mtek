@@ -10,17 +10,22 @@
 //! 2. [`parse_config`] validates `mtek.toml` into a [`ProjectConfig`]
 //!    (`E9001`, `E9010` for `[host.inputs]`);
 //! 3. the entry module is read into the [`SourceMap`](crate::source::SourceMap)
-//!    (`E9005`) and becomes the first module of the [`ModuleGraph`].
+//!    (`E9005`) and becomes the first module of the [`ModuleGraph`];
+//! 4. [`load_modules`] parses the entry module and follows its imports
+//!    ([`resolve_specifier`], `E2030`–`E2036`), and [`report_cycles`] reports
+//!    the cycles of the finished graph (`E2035`, decision 0036).
 //!
-//! Parsing, `import` gating and entry scene selection happen in [`crate::check`];
-//! [`select_scene`] is the parser-independent rule it applies.
+//! Entry scene selection happens in [`crate::check`]; [`select_scene`] is the
+//! parser-independent rule it applies.
 
 mod config;
 mod graph;
 mod load;
+mod modules;
 mod parse;
 mod root;
 mod scene;
+mod specifier;
 
 pub use config::{
     AssetsSection, BuildSection, BuildTarget, DEFAULT_DEV_PORT, DEFAULT_ENTRY, DEFAULT_FIXED_STEP,
@@ -32,7 +37,9 @@ pub use config::{
 };
 pub use graph::{GraphError, Import, ImportCycle, MAX_MODULES, Module, ModuleGraph, ModuleId};
 pub use load::Project;
+pub use modules::{ImportLink, LoadedModule, load_modules, report_cycles};
 pub(crate) use parse::edit_distance;
 pub use parse::parse_config;
 pub use root::{ProjectFs, ProjectRoot};
 pub use scene::{SceneSelection, select_scene};
+pub use specifier::{InvalidSpecifier, SpecifierError, resolve_specifier};

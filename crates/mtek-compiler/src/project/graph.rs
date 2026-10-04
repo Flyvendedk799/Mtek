@@ -7,9 +7,7 @@
 //! therefore independent of directory enumeration order, as long as the loader
 //! adds modules in that traversal order.
 //!
-//! In M1 only the entry module is loaded and the graph has a single node;
-//! imports arrive in M2 (`E9010` reports them until then). The type is
-//! complete so that M2 only has to add modules and edges.
+//! [`super::load_modules`] builds it (decision 0036).
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -28,6 +26,13 @@ impl ModuleId {
     #[must_use]
     pub fn index(self) -> usize {
         self.0 as usize
+    }
+
+    /// The id at position `index` of a graph, for tests that need an id
+    /// without building a graph.
+    #[cfg(test)]
+    pub(crate) fn from_index(index: u32) -> Self {
+        Self(index)
     }
 }
 
@@ -220,6 +225,46 @@ impl ModuleGraph {
         false
     }
 
+    /// Every module in an order in which each comes after the modules it
+    /// imports, except across an import that closes a cycle: a depth-first
+    /// search from the entry (then from any module it did not reach, in load
+    /// order) that follows imports in source order and lists a module when
+    /// all its imports are done. An import whose target is still on the
+    /// search path closes a cycle ([`Self::find_cycles`] reports exactly
+    /// those) and is not followed. Type checking runs in this order, so the
+    /// constants a module imports are known before it is checked.
+    #[must_use]
+    pub fn dependency_order(&self) -> Vec<ModuleId> {
+        let mut done = vec![false; self.modules.len()];
+        let mut on_path = vec![false; self.modules.len()];
+        let mut order = Vec::with_capacity(self.modules.len());
+        for first in &self.modules {
+            if done[first.id.index()] {
+                continue;
+            }
+            let mut path: Vec<(ModuleId, usize)> = vec![(first.id, 0)];
+            on_path[first.id.index()] = true;
+            while let Some(&(module, next)) = path.last() {
+                let Some(import) = self.modules[module.index()].imports().get(next) else {
+                    on_path[module.index()] = false;
+                    done[module.index()] = true;
+                    order.push(module);
+                    path.pop();
+                    continue;
+                };
+                if let Some(top) = path.last_mut() {
+                    top.1 += 1;
+                }
+                let target = import.target.index();
+                if !done[target] && !on_path[target] {
+                    on_path[target] = true;
+                    path.push((import.target, 0));
+                }
+            }
+        }
+        order
+    }
+
     /// Every import cycle, each reported once at its closing import.
     ///
     /// A depth-first search visits modules in load order and follows imports
@@ -316,6 +361,7 @@ mod tests {
         assert!(!g.is_empty());
         let entry = g.entry();
         assert_eq!(entry.id().index(), 0);
+        assert_eq!(entry.id(), ModuleId::from_index(0));
         assert_eq!(entry.path(), &p("src/main.mtek"));
         assert_eq!(entry.file(), FileId(7));
         assert!(entry.imports().is_empty());
@@ -451,6 +497,44 @@ mod tests {
         let cycles = g.find_cycles();
         assert_eq!(cycles.len(), 1);
         assert_eq!(cycles[0].modules.len(), MAX_MODULES);
+    }
+
+    fn order(g: &ModuleGraph) -> Vec<usize> {
+        g.dependency_order().iter().map(|m| m.index()).collect()
+    }
+
+    #[test]
+    fn dependencies_come_first() {
+        // m0 -> m1 -> m3, m0 -> m2 -> m3
+        assert_eq!(
+            order(&graph(4, &[(0, 1), (1, 3), (0, 2), (2, 3)])),
+            [3, 1, 2, 0]
+        );
+        assert_eq!(order(&graph(1, &[])), [0]);
+        // A module imported twice is listed once.
+        assert_eq!(order(&graph(2, &[(0, 1), (0, 1)])), [1, 0]);
+    }
+
+    #[test]
+    fn the_dependency_order_skips_only_the_closing_imports() {
+        // m0 -> m1 -> m2 -> m1 (closing), m2 -> m3
+        let g = graph(4, &[(0, 1), (1, 2), (2, 1), (2, 3)]);
+        assert_eq!(order(&g), [3, 2, 1, 0]);
+        // A self-import does not list the module twice.
+        assert_eq!(order(&graph(2, &[(0, 1), (1, 1)])), [1, 0]);
+        // Unreachable modules are listed after the reachable ones.
+        assert_eq!(order(&graph(3, &[(1, 2)])), [0, 2, 1]);
+    }
+
+    #[test]
+    fn a_long_chain_is_ordered_without_recursion() {
+        let count = MAX_MODULES as u32;
+        let edges: Vec<(u32, u32)> = (0..count - 1).map(|i| (i, i + 1)).collect();
+        let g = graph(count, &edges);
+        let order = order(&g);
+        assert_eq!(order.len(), MAX_MODULES);
+        assert_eq!(order.first(), Some(&(MAX_MODULES - 1)));
+        assert_eq!(order.last(), Some(&0));
     }
 
     #[test]
