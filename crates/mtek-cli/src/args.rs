@@ -2,7 +2,7 @@
 //!
 //! [`parse`] turns the arguments into a [`Request`] or a [`UsageError`] (exit code 2). Commands
 //! and options that the specification names but this build does not implement yet (`mtek new`,
-//! `--mode preview`, `inspect --bindings`, …) are usage errors that say so, rather than clap's
+//! `--mode preview`, `mtek fmt`, …) are usage errors that say so, rather than clap's
 //! generic "unrecognized subcommand".
 
 use std::ffi::OsString;
@@ -64,10 +64,10 @@ struct InspectWhat {
     /// The typed intermediate representation
     #[arg(long)]
     ir: bool,
-    /// The GPU binding layout (milestone M2)
+    /// The GPU binding layout: blocks, slots and material instances
     #[arg(long)]
     bindings: bool,
-    /// The generated shaders (milestone M2)
+    /// The generated WGSL of every material, with its span map
     #[arg(long)]
     shaders: bool,
 }
@@ -172,8 +172,9 @@ pub enum Request {
         format: Format,
         path: Option<PathBuf>,
     },
-    /// `mtek inspect --ir`.
-    InspectIr {
+    /// `mtek inspect --ir`, `--shaders` or `--bindings`.
+    Inspect {
+        view: mtek_compiler::Inspect,
         format: Format,
         path: Option<PathBuf>,
     },
@@ -192,7 +193,7 @@ impl Request {
             Request::Version | Request::Help(_) | Request::Dev { .. } => Format::Human,
             Request::Check { format, .. }
             | Request::Build { format, .. }
-            | Request::InspectIr { format, .. } => *format,
+            | Request::Inspect { format, .. } => *format,
         }
     }
 
@@ -202,7 +203,7 @@ impl Request {
             Request::Version | Request::Help(_) => "mtek",
             Request::Check { .. } => "check",
             Request::Build { .. } => "build",
-            Request::InspectIr { .. } => "inspect",
+            Request::Inspect { .. } => "inspect",
             Request::Dev { .. } => "dev",
         }
     }
@@ -277,13 +278,14 @@ where
             })
         }
         CliCommand::Inspect { what, format, path } => {
-            if what.bindings {
-                Err(not_yet("mtek inspect --bindings", "M2"))
+            let view = if what.bindings {
+                mtek_compiler::Inspect::Bindings
             } else if what.shaders {
-                Err(not_yet("mtek inspect --shaders", "M2"))
+                mtek_compiler::Inspect::Shaders
             } else {
-                Ok(Request::InspectIr { format, path })
-            }
+                mtek_compiler::Inspect::Ir
+            };
+            Ok(Request::Inspect { view, format, path })
         }
         CliCommand::Dev { port, open, path } => Ok(Request::Dev { port, open, path }),
         CliCommand::New(_) => Err(not_yet("mtek new", "M3")),
@@ -376,15 +378,31 @@ mod tests {
     fn inspect_needs_exactly_one_view() {
         assert_eq!(
             parse_args(&["inspect", "--ir", "--format", "json"]),
-            Ok(Request::InspectIr {
+            Ok(Request::Inspect {
+                view: mtek_compiler::Inspect::Ir,
                 format: Format::Json,
                 path: None
             })
         );
+        assert_eq!(
+            parse_args(&["inspect", "--shaders"]),
+            Ok(Request::Inspect {
+                view: mtek_compiler::Inspect::Shaders,
+                format: Format::Human,
+                path: None
+            })
+        );
+        assert_eq!(
+            parse_args(&["inspect", "--bindings", "--format", "json", "game"]),
+            Ok(Request::Inspect {
+                view: mtek_compiler::Inspect::Bindings,
+                format: Format::Json,
+                path: Some(PathBuf::from("game"))
+            })
+        );
         usage(&["inspect"]);
         usage(&["inspect", "--ir", "--shaders"]);
-        assert!(usage(&["inspect", "--bindings"]).contains("M2"));
-        assert!(usage(&["inspect", "--shaders"]).contains("M2"));
+        usage(&["inspect", "--bindings", "--shaders"]);
     }
 
     #[test]

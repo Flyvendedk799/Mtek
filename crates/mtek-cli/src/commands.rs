@@ -251,7 +251,7 @@ pub fn execute(request: &Request, context: &Context) -> Outcome {
     let path = match request {
         Request::Check { path, .. }
         | Request::Build { path, .. }
-        | Request::InspectIr { path, .. } => path.as_deref(),
+        | Request::Inspect { path, .. } => path.as_deref(),
         Request::Version | Request::Help(_) | Request::Dev { .. } => {
             return printer.single(internal_diagnostic(
                 "--version, --help and dev are not one-shot commands",
@@ -265,7 +265,7 @@ pub fn execute(request: &Request, context: &Context) -> Outcome {
     let fs = RealFs::new(&dir);
     let root = ProjectRoot::at_base();
     match request {
-        Request::InspectIr { format, .. } => inspect_ir(&printer, &root, &fs, *format),
+        Request::Inspect { view, format, .. } => inspect_view(&printer, &root, &fs, *view, *format),
         Request::Build { mode, out, .. } => {
             let project = Located { dir: &dir, fs: &fs };
             build_project(&printer, context, &project, *mode, out.as_deref())
@@ -487,9 +487,16 @@ pub fn with_diagnostic(report: &Report, diagnostic: Diagnostic) -> Report {
     report
 }
 
-/// `mtek inspect --ir`: the IR on stdout; with errors, the report instead.
-fn inspect_ir(printer: &Printer, root: &ProjectRoot, fs: &RealFs, format: Format) -> Outcome {
-    let result = inspect(root, fs, Inspect::Ir);
+/// `mtek inspect --ir|--shaders|--bindings`: the view on stdout; with errors, the report
+/// instead.
+fn inspect_view(
+    printer: &Printer,
+    root: &ProjectRoot,
+    fs: &RealFs,
+    view: Inspect,
+    format: Format,
+) -> Outcome {
+    let result = inspect(root, fs, view);
     if result.has_errors() {
         let name = result.project_name.as_deref();
         return printer.report(name, &result.sources, &result.report, String::new);
@@ -501,12 +508,13 @@ fn inspect_ir(printer: &Printer, root: &ProjectRoot, fs: &RealFs, format: Format
     match result.render(format) {
         Some(text) => Outcome {
             stdout: text,
-            // Warnings have no place in the IR document; they go to stderr in both formats.
+            // Warnings have no place in the inspected document; they go to stderr in both
+            // formats.
             stderr: printer.human(&result.report, &result.sources),
             code: EXIT_OK,
         },
         None => printer.single(internal_diagnostic(
-            "inspect produced no IR for a program without errors",
+            "inspect produced no view for a program without errors",
         )),
     }
 }

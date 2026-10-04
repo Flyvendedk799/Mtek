@@ -191,7 +191,7 @@ fn usage_errors_exit_two_with_nothing_on_stdout() {
         &["build", "--mode", "preview", "--format", "json"],
         &["build", "--out", "."],
         &["inspect"],
-        &["inspect", "--bindings", "--format", "json"],
+        &["inspect", "--bindings", "--shaders", "--format", "json"],
         &["inspect", "--ir", "--shaders"],
         &["dev", "--port", "0"],
         &["dev", "--host", "0.0.0.0"],
@@ -383,6 +383,55 @@ fn inspect_with_errors_prints_the_report() {
     assert_eq!(out.status.code(), Some(1));
     assert!(out.stdout.is_empty());
     assert!(stderr(&out).ends_with("inspect failed: 1 error, 0 warnings\n"));
+}
+
+#[test]
+fn inspect_shaders_and_bindings_print_the_goldens_in_both_formats() {
+    let scratch = Scratch::new("inspect-views");
+    let goldens = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/codegen/inspect");
+    for (suite, name, stem) in [
+        (
+            "semantics/pass",
+            "scene_a_target_camera_box",
+            "scene_a_target_camera_box",
+        ),
+        (
+            "semantics/pass/materials",
+            "params_and_defaults",
+            "materials_params_and_defaults",
+        ),
+    ] {
+        let project = copy_fixture(&scratch, suite, name);
+        for view in ["shaders", "bindings"] {
+            for (format, extension) in [("json", "json"), ("human", "txt")] {
+                let out = run_in(
+                    &project,
+                    &["inspect", &format!("--{view}"), "--format", format],
+                );
+                assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+                assert!(out.stderr.is_empty(), "{}", stderr(&out));
+                let golden = fs::read_to_string(goldens.join(format!("{stem}.{view}.{extension}")))
+                    .unwrap()
+                    .replace("\r\n", "\n");
+                assert_eq!(stdout(&out), golden, "{name} --{view} --format {format}");
+            }
+        }
+    }
+}
+
+#[test]
+fn inspect_shaders_with_errors_prints_the_report() {
+    let scratch = Scratch::new("inspect-views-errors");
+    let project = scratch.project("app", INVALID);
+    for view in ["--shaders", "--bindings"] {
+        let out = run_in(&project, &["inspect", view, "--format", "json"]);
+        assert_eq!(out.status.code(), Some(1));
+        assert_eq!(codes(&report_of(&out, &scratch)), ["MTEK-E2003"]);
+        let out = run_in(&project, &["inspect", view]);
+        assert_eq!(out.status.code(), Some(1));
+        assert!(out.stdout.is_empty());
+        assert!(stderr(&out).ends_with("inspect failed: 1 error, 0 warnings\n"));
+    }
 }
 
 // ---- mtek build ------------------------------------------------------------------------------
