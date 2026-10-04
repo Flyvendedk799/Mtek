@@ -1,0 +1,448 @@
+{
+  "scene": "src/main.mtek::Demo",
+  "targetProfile": "webgpu-core-2026",
+  "blocks": [
+    {
+      "id": "builtin:frame",
+      "wgslStruct": "MtekFrame",
+      "size": 288,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "name": "MtekFrame",
+        "offset": 0,
+        "size": 288,
+        "align": 16,
+        "members": [
+          {
+            "name": "view_proj",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "camera_position",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 64,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "light_count",
+            "mtekType": "u32",
+            "node": {
+              "kind": "scalar",
+              "offset": 76,
+              "size": 4,
+              "align": 4,
+              "scalar": "u32"
+            }
+          },
+          {
+            "name": "ambient",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 80,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "reserved0",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 92,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "lights",
+            "mtekType": "array<MtekLight, 4>",
+            "node": {
+              "kind": "array",
+              "offset": 96,
+              "size": 192,
+              "align": 16,
+              "length": 4,
+              "stride": 48,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "MtekLight",
+                "offset": 0,
+                "size": 48,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "color",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 0,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "kind",
+                    "mtekType": "u32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 12,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "u32"
+                    }
+                  },
+                  {
+                    "name": "position",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 16,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "range",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 28,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  },
+                  {
+                    "name": "direction",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 32,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "reserved",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 44,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "group": 0,
+      "binding": 0,
+      "dynamicOffset": false,
+      "visibility": [
+        "vertex",
+        "fragment"
+      ],
+      "owner": "runtime",
+      "fields": [
+        {
+          "path": "view_proj",
+          "mtekType": "mat4",
+          "wgslType": "mat4x4<f32>",
+          "offset": 0,
+          "size": 64,
+          "padding": 0
+        },
+        {
+          "path": "camera_position",
+          "mtekType": "vec3",
+          "wgslType": "vec3<f32>",
+          "offset": 64,
+          "size": 12,
+          "padding": 0
+        },
+        {
+          "path": "light_count",
+          "mtekType": "u32",
+          "wgslType": "u32",
+          "offset": 76,
+          "size": 4,
+          "padding": 0
+        },
+        {
+          "path": "ambient",
+          "mtekType": "vec3",
+          "wgslType": "vec3<f32>",
+          "offset": 80,
+          "size": 12,
+          "padding": 0
+        },
+        {
+          "path": "reserved0",
+          "mtekType": "f32",
+          "wgslType": "f32",
+          "offset": 92,
+          "size": 4,
+          "padding": 0
+        },
+        {
+          "path": "lights",
+          "mtekType": "array<MtekLight, 4>",
+          "wgslType": "array<MtekLight, 4>",
+          "offset": 96,
+          "size": 192,
+          "padding": 0,
+          "length": 4,
+          "stride": 48,
+          "padded": false
+        }
+      ]
+    },
+    {
+      "id": "builtin:object",
+      "wgslStruct": "MtekObject",
+      "size": 128,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "name": "MtekObject",
+        "offset": 0,
+        "size": 128,
+        "align": 16,
+        "members": [
+          {
+            "name": "model",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "normal_matrix",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 64,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          }
+        ]
+      },
+      "group": 2,
+      "binding": 0,
+      "dynamicOffset": true,
+      "visibility": [
+        "vertex"
+      ],
+      "owner": "object",
+      "fields": [
+        {
+          "path": "model",
+          "mtekType": "mat4",
+          "wgslType": "mat4x4<f32>",
+          "offset": 0,
+          "size": 64,
+          "padding": 0
+        },
+        {
+          "path": "normal_matrix",
+          "mtekType": "mat4",
+          "wgslType": "mat4x4<f32>",
+          "offset": 64,
+          "size": 64,
+          "padding": 0
+        }
+      ]
+    },
+    {
+      "id": "material:src/main.mtek::Pulse",
+      "wgslStruct": "MtekParams_e2cab98b_Pulse",
+      "size": 32,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "name": "src/main.mtek::Pulse",
+        "offset": 0,
+        "size": 32,
+        "align": 16,
+        "members": [
+          {
+            "name": "tint",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          },
+          {
+            "name": "phase",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 16,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          }
+        ]
+      },
+      "group": 1,
+      "binding": 0,
+      "dynamicOffset": false,
+      "visibility": [
+        "fragment"
+      ],
+      "owner": "material instance",
+      "material": "src/main.mtek::Pulse",
+      "fields": [
+        {
+          "path": "tint",
+          "mtekType": "color",
+          "wgslType": "vec4<f32>",
+          "offset": 0,
+          "size": 16,
+          "padding": 0,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 292,
+            "endByte": 320,
+            "startLine": 9,
+            "startColumn": 5,
+            "endLine": 9,
+            "endColumn": 33
+          }
+        },
+        {
+          "path": "phase",
+          "mtekType": "f32",
+          "wgslType": "f32",
+          "offset": 16,
+          "size": 4,
+          "padding": 12,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 325,
+            "endByte": 348,
+            "startLine": 10,
+            "startColumn": 5,
+            "endLine": 10,
+            "endColumn": 28
+          }
+        }
+      ]
+    }
+  ],
+  "instances": [
+    {
+      "index": 0,
+      "material": "src/main.mtek::Pulse",
+      "entity": "src/main.mtek::Demo.Cube",
+      "entityIndex": 0,
+      "layout": "material:src/main.mtek::Pulse",
+      "group": 1,
+      "binding": 0,
+      "shareable": true,
+      "params": [
+        {
+          "name": "tint",
+          "type": "color",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 292,
+            "endByte": 320,
+            "startLine": 9,
+            "startColumn": 5,
+            "endLine": 9,
+            "endColumn": 33
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 655,
+            "endByte": 734,
+            "startLine": 25,
+            "startColumn": 9,
+            "endLine": 28,
+            "endColumn": 11
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "tint",
+          "offset": 0,
+          "size": 16
+        },
+        {
+          "name": "phase",
+          "type": "f32",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 325,
+            "endByte": 348,
+            "startLine": 10,
+            "startColumn": 5,
+            "endLine": 10,
+            "endColumn": 28
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 655,
+            "endByte": 734,
+            "startLine": 25,
+            "startColumn": 9,
+            "endLine": 28,
+            "endColumn": 11
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "phase",
+          "offset": 16,
+          "size": 4
+        }
+      ]
+    }
+  ]
+}

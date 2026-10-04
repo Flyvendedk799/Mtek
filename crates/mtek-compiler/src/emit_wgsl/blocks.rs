@@ -100,7 +100,7 @@ pub fn padded_element_name(element: &LayoutNode) -> String {
 }
 
 /// The WGSL type of a node as it appears in a struct member or an array element.
-fn type_expr(node: &LayoutNode) -> String {
+pub fn type_expr(node: &LayoutNode) -> String {
     match node {
         LayoutNode::Scalar { scalar, .. } => scalar_name(*scalar).to_owned(),
         LayoutNode::Vector {

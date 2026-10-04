@@ -1,0 +1,64 @@
+shaders of scene src/main.mtek::Demo (target profile webgpu-core-2026)
+
+shader of material src/main.mtek::Pulse (declared at src/main.mtek:8:1-15:2)
+  file shaders/31a39735d6cdd995.wgsl (sha256 31a39735d6cdd995a082186a2a254cd14506d00086e8737e48334185b3803e0c)
+  entry points mtek_vs (vertex), mtek_fs (fragment)
+  vertex attributes position
+  surface inputs none
+  parameter block material:src/main.mtek::Pulse (group 1 binding 0)
+  span map 72 entries over 55 lines; a line is followed by `// <source> <symbol>` where its origin changes
+   1 | struct MtekLight {  // src/main.mtek:8:1-15:2 src/main.mtek::Pulse
+   2 |     color: vec3<f32>,
+   3 |     kind: u32,
+   4 |     position: vec3<f32>,
+   5 |     range: f32,
+   6 |     direction: vec3<f32>,
+   7 |     reserved: f32,
+   8 | }
+   9 |
+  10 | struct MtekFrame {
+  11 |     view_proj: mat4x4<f32>,
+  12 |     camera_position: vec3<f32>,
+  13 |     light_count: u32,
+  14 |     ambient: vec3<f32>,
+  15 |     reserved0: f32,
+  16 |     @align(16) lights: array<MtekLight, 4>,
+  17 | }
+  18 |
+  19 | struct MtekParams_e2cab98b_Pulse {
+  20 |     u_tint: vec4<f32>,
+  21 |     u_phase: f32,
+  22 | }
+  23 |
+  24 | struct MtekObject {
+  25 |     model: mat4x4<f32>,
+  26 |     normal_matrix: mat4x4<f32>,
+  27 | }
+  28 |
+  29 | struct MtekVertexOutput {
+  30 |     @builtin(position) clip_position: vec4<f32>,
+  31 | }
+  32 |
+  33 | @group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;
+  34 | @group(1) @binding(0) var<uniform> mtek_params: MtekParams_e2cab98b_Pulse;
+  35 | @group(2) @binding(0) var<uniform> mtek_object: MtekObject;
+  36 |
+  37 | fn u_fn_e2cab98b_pulse(u_p_t: f32) -> f32 {  // src/main.mtek:4:1-6:2 src/main.mtek::pulse
+  38 |     return 0.65 + (0.35 * sin(u_p_t));  // src/main.mtek:5:5-5:33 src/main.mtek::pulse
+  39 | }
+  40 |
+  41 | fn mtek_fragment() -> vec4<f32> {  // src/main.mtek:12:5-14:6 src/main.mtek::Pulse.fragment
+  42 |     return vec4<f32>(mtek_params.u_tint.xyz * u_fn_e2cab98b_pulse(mtek_params.u_phase), mtek_params.u_tint.w);  // src/main.mtek:13:9-13:62 src/main.mtek::Pulse.fragment
+  43 | }
+  44 |
+  45 | @vertex  // src/main.mtek:8:1-15:2 src/main.mtek::Pulse
+  46 | fn mtek_vs(@location(0) mtek_position: vec3<f32>) -> MtekVertexOutput {
+  47 |     let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);
+  48 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world);
+  49 | }
+  50 |
+  51 | @fragment
+  52 | fn mtek_fs() -> @location(0) vec4<f32> {
+  53 |     let mtek_color = mtek_fragment();
+  54 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  55 | }

@@ -1,0 +1,1227 @@
+{
+  "scene": "src/main.mtek::Harbour",
+  "targetProfile": "webgpu-core-2026",
+  "blocks": [
+    {
+      "id": "builtin:frame",
+      "wgslStruct": "MtekFrame",
+      "size": 288,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "name": "MtekFrame",
+        "offset": 0,
+        "size": 288,
+        "align": 16,
+        "members": [
+          {
+            "name": "view_proj",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "camera_position",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 64,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "light_count",
+            "mtekType": "u32",
+            "node": {
+              "kind": "scalar",
+              "offset": 76,
+              "size": 4,
+              "align": 4,
+              "scalar": "u32"
+            }
+          },
+          {
+            "name": "ambient",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 80,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "reserved0",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 92,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "lights",
+            "mtekType": "array<MtekLight, 4>",
+            "node": {
+              "kind": "array",
+              "offset": 96,
+              "size": 192,
+              "align": 16,
+              "length": 4,
+              "stride": 48,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "MtekLight",
+                "offset": 0,
+                "size": 48,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "color",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 0,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "kind",
+                    "mtekType": "u32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 12,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "u32"
+                    }
+                  },
+                  {
+                    "name": "position",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 16,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "range",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 28,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  },
+                  {
+                    "name": "direction",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 32,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "reserved",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 44,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "group": 0,
+      "binding": 0,
+      "dynamicOffset": false,
+      "visibility": [
+        "vertex",
+        "fragment"
+      ],
+      "owner": "runtime",
+      "fields": [
+        {
+          "path": "view_proj",
+          "mtekType": "mat4",
+          "wgslType": "mat4x4<f32>",
+          "offset": 0,
+          "size": 64,
+          "padding": 0
+        },
+        {
+          "path": "camera_position",
+          "mtekType": "vec3",
+          "wgslType": "vec3<f32>",
+          "offset": 64,
+          "size": 12,
+          "padding": 0
+        },
+        {
+          "path": "light_count",
+          "mtekType": "u32",
+          "wgslType": "u32",
+          "offset": 76,
+          "size": 4,
+          "padding": 0
+        },
+        {
+          "path": "ambient",
+          "mtekType": "vec3",
+          "wgslType": "vec3<f32>",
+          "offset": 80,
+          "size": 12,
+          "padding": 0
+        },
+        {
+          "path": "reserved0",
+          "mtekType": "f32",
+          "wgslType": "f32",
+          "offset": 92,
+          "size": 4,
+          "padding": 0
+        },
+        {
+          "path": "lights",
+          "mtekType": "array<MtekLight, 4>",
+          "wgslType": "array<MtekLight, 4>",
+          "offset": 96,
+          "size": 192,
+          "padding": 0,
+          "length": 4,
+          "stride": 48,
+          "padded": false
+        }
+      ]
+    },
+    {
+      "id": "builtin:object",
+      "wgslStruct": "MtekObject",
+      "size": 128,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "name": "MtekObject",
+        "offset": 0,
+        "size": 128,
+        "align": 16,
+        "members": [
+          {
+            "name": "model",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "normal_matrix",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 64,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          }
+        ]
+      },
+      "group": 2,
+      "binding": 0,
+      "dynamicOffset": true,
+      "visibility": [
+        "vertex"
+      ],
+      "owner": "object",
+      "fields": [
+        {
+          "path": "model",
+          "mtekType": "mat4",
+          "wgslType": "mat4x4<f32>",
+          "offset": 0,
+          "size": 64,
+          "padding": 0
+        },
+        {
+          "path": "normal_matrix",
+          "mtekType": "mat4",
+          "wgslType": "mat4x4<f32>",
+          "offset": 64,
+          "size": 64,
+          "padding": 0
+        }
+      ]
+    },
+    {
+      "id": "material:src/main.mtek::Ocean",
+      "wgslStruct": "MtekParams_e2cab98b_Ocean",
+      "size": 192,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "name": "src/main.mtek::Ocean",
+        "offset": 0,
+        "size": 192,
+        "align": 16,
+        "members": [
+          {
+            "name": "base",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          },
+          {
+            "name": "depth",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 16,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "count",
+            "mtekType": "u32",
+            "node": {
+              "kind": "scalar",
+              "offset": 20,
+              "size": 4,
+              "align": 4,
+              "scalar": "u32"
+            }
+          },
+          {
+            "name": "enabled",
+            "mtekType": "bool",
+            "node": {
+              "kind": "scalar",
+              "offset": 24,
+              "size": 4,
+              "align": 4,
+              "scalar": "bool32"
+            }
+          },
+          {
+            "name": "offset",
+            "mtekType": "i32",
+            "node": {
+              "kind": "scalar",
+              "offset": 28,
+              "size": 4,
+              "align": 4,
+              "scalar": "i32"
+            }
+          },
+          {
+            "name": "spin",
+            "mtekType": "quat",
+            "node": {
+              "kind": "vector",
+              "offset": 32,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          },
+          {
+            "name": "warp",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 48,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "tint",
+            "mtekType": "vec4",
+            "node": {
+              "kind": "vector",
+              "offset": 112,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          },
+          {
+            "name": "wave",
+            "mtekType": "src/main.mtek::Wave",
+            "node": {
+              "kind": "struct",
+              "name": "src/main.mtek::Wave",
+              "offset": 128,
+              "size": 16,
+              "align": 16,
+              "members": [
+                {
+                  "name": "amplitude",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 128,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                },
+                {
+                  "name": "direction",
+                  "mtekType": "vec2",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 136,
+                    "size": 8,
+                    "align": 8,
+                    "scalar": "f32",
+                    "components": 2
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "weights",
+            "mtekType": "array<f32, 3>",
+            "node": {
+              "kind": "array",
+              "offset": 144,
+              "size": 48,
+              "align": 16,
+              "length": 3,
+              "stride": 16,
+              "padded": true,
+              "element": {
+                "kind": "scalar",
+                "offset": 0,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            }
+          }
+        ]
+      },
+      "group": 1,
+      "binding": 0,
+      "dynamicOffset": false,
+      "visibility": [
+        "fragment"
+      ],
+      "owner": "material instance",
+      "material": "src/main.mtek::Ocean",
+      "fields": [
+        {
+          "path": "base",
+          "mtekType": "color",
+          "wgslType": "vec4<f32>",
+          "offset": 0,
+          "size": 16,
+          "padding": 0,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 323,
+            "endByte": 348,
+            "startLine": 13,
+            "startColumn": 5,
+            "endLine": 13,
+            "endColumn": 30
+          }
+        },
+        {
+          "path": "depth",
+          "mtekType": "f32",
+          "wgslType": "f32",
+          "offset": 16,
+          "size": 4,
+          "padding": 0,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 353,
+            "endByte": 370,
+            "startLine": 14,
+            "startColumn": 5,
+            "endLine": 14,
+            "endColumn": 22
+          }
+        },
+        {
+          "path": "count",
+          "mtekType": "u32",
+          "wgslType": "u32",
+          "offset": 20,
+          "size": 4,
+          "padding": 0,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 375,
+            "endByte": 400,
+            "startLine": 15,
+            "startColumn": 5,
+            "endLine": 15,
+            "endColumn": 30
+          }
+        },
+        {
+          "path": "enabled",
+          "mtekType": "bool",
+          "wgslType": "u32",
+          "offset": 24,
+          "size": 4,
+          "padding": 0,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 405,
+            "endByte": 432,
+            "startLine": 16,
+            "startColumn": 5,
+            "endLine": 16,
+            "endColumn": 32
+          }
+        },
+        {
+          "path": "offset",
+          "mtekType": "i32",
+          "wgslType": "i32",
+          "offset": 28,
+          "size": 4,
+          "padding": 0,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 437,
+            "endByte": 460,
+            "startLine": 17,
+            "startColumn": 5,
+            "endLine": 17,
+            "endColumn": 28
+          }
+        },
+        {
+          "path": "spin",
+          "mtekType": "quat",
+          "wgslType": "vec4<f32>",
+          "offset": 32,
+          "size": 16,
+          "padding": 0,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 465,
+            "endByte": 500,
+            "startLine": 18,
+            "startColumn": 5,
+            "endLine": 18,
+            "endColumn": 40
+          }
+        },
+        {
+          "path": "warp",
+          "mtekType": "mat4",
+          "wgslType": "mat4x4<f32>",
+          "offset": 48,
+          "size": 64,
+          "padding": 0,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 505,
+            "endByte": 540,
+            "startLine": 19,
+            "startColumn": 5,
+            "endLine": 19,
+            "endColumn": 40
+          }
+        },
+        {
+          "path": "tint",
+          "mtekType": "vec4",
+          "wgslType": "vec4<f32>",
+          "offset": 112,
+          "size": 16,
+          "padding": 0,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 545,
+            "endByte": 589,
+            "startLine": 20,
+            "startColumn": 5,
+            "endLine": 20,
+            "endColumn": 49
+          }
+        },
+        {
+          "path": "wave",
+          "mtekType": "src/main.mtek::Wave",
+          "wgslType": "S_e2cab98b_Wave",
+          "offset": 128,
+          "size": 16,
+          "padding": 0,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 594,
+            "endByte": 665,
+            "startLine": 21,
+            "startColumn": 5,
+            "endLine": 21,
+            "endColumn": 76
+          }
+        },
+        {
+          "path": "wave.amplitude",
+          "mtekType": "f32",
+          "wgslType": "f32",
+          "offset": 128,
+          "size": 4,
+          "padding": 4
+        },
+        {
+          "path": "wave.direction",
+          "mtekType": "vec2",
+          "wgslType": "vec2<f32>",
+          "offset": 136,
+          "size": 8,
+          "padding": 0
+        },
+        {
+          "path": "weights",
+          "mtekType": "array<f32, 3>",
+          "wgslType": "array<MtekPad16_f32, 3>",
+          "offset": 144,
+          "size": 48,
+          "padding": 0,
+          "length": 3,
+          "stride": 16,
+          "padded": true,
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 670,
+            "endByte": 717,
+            "startLine": 22,
+            "startColumn": 5,
+            "endLine": 22,
+            "endColumn": 52
+          }
+        }
+      ]
+    }
+  ],
+  "instances": [
+    {
+      "index": 0,
+      "material": "src/main.mtek::Ocean",
+      "entity": "src/main.mtek::Harbour.Bay",
+      "entityIndex": 0,
+      "layout": "material:src/main.mtek::Ocean",
+      "group": 1,
+      "binding": 0,
+      "shareable": true,
+      "params": [
+        {
+          "name": "base",
+          "type": "color",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 323,
+            "endByte": 348,
+            "startLine": 13,
+            "startColumn": 5,
+            "endLine": 13,
+            "endColumn": 30
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1140,
+            "endByte": 1155,
+            "startLine": 39,
+            "startColumn": 9,
+            "endLine": 39,
+            "endColumn": 24
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "base",
+          "offset": 0,
+          "size": 16
+        },
+        {
+          "name": "depth",
+          "type": "f32",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 353,
+            "endByte": 370,
+            "startLine": 14,
+            "startColumn": 5,
+            "endLine": 14,
+            "endColumn": 22
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1140,
+            "endByte": 1155,
+            "startLine": 39,
+            "startColumn": 9,
+            "endLine": 39,
+            "endColumn": 24
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "depth",
+          "offset": 16,
+          "size": 4
+        },
+        {
+          "name": "count",
+          "type": "u32",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 375,
+            "endByte": 400,
+            "startLine": 15,
+            "startColumn": 5,
+            "endLine": 15,
+            "endColumn": 30
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1140,
+            "endByte": 1155,
+            "startLine": 39,
+            "startColumn": 9,
+            "endLine": 39,
+            "endColumn": 24
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "count",
+          "offset": 20,
+          "size": 4
+        },
+        {
+          "name": "enabled",
+          "type": "bool",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 405,
+            "endByte": 432,
+            "startLine": 16,
+            "startColumn": 5,
+            "endLine": 16,
+            "endColumn": 32
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1140,
+            "endByte": 1155,
+            "startLine": 39,
+            "startColumn": 9,
+            "endLine": 39,
+            "endColumn": 24
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "enabled",
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "name": "offset",
+          "type": "i32",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 437,
+            "endByte": 460,
+            "startLine": 17,
+            "startColumn": 5,
+            "endLine": 17,
+            "endColumn": 28
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1140,
+            "endByte": 1155,
+            "startLine": 39,
+            "startColumn": 9,
+            "endLine": 39,
+            "endColumn": 24
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "offset",
+          "offset": 28,
+          "size": 4
+        },
+        {
+          "name": "spin",
+          "type": "quat",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 465,
+            "endByte": 500,
+            "startLine": 18,
+            "startColumn": 5,
+            "endLine": 18,
+            "endColumn": 40
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1140,
+            "endByte": 1155,
+            "startLine": 39,
+            "startColumn": 9,
+            "endLine": 39,
+            "endColumn": 24
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "spin",
+          "offset": 32,
+          "size": 16
+        },
+        {
+          "name": "warp",
+          "type": "mat4",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 505,
+            "endByte": 540,
+            "startLine": 19,
+            "startColumn": 5,
+            "endLine": 19,
+            "endColumn": 40
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1140,
+            "endByte": 1155,
+            "startLine": 39,
+            "startColumn": 9,
+            "endLine": 39,
+            "endColumn": 24
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "warp",
+          "offset": 48,
+          "size": 64
+        },
+        {
+          "name": "tint",
+          "type": "vec4",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 545,
+            "endByte": 589,
+            "startLine": 20,
+            "startColumn": 5,
+            "endLine": 20,
+            "endColumn": 49
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1140,
+            "endByte": 1155,
+            "startLine": 39,
+            "startColumn": 9,
+            "endLine": 39,
+            "endColumn": 24
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "tint",
+          "offset": 112,
+          "size": 16
+        },
+        {
+          "name": "wave",
+          "type": "Wave",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 594,
+            "endByte": 665,
+            "startLine": 21,
+            "startColumn": 5,
+            "endLine": 21,
+            "endColumn": 76
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1140,
+            "endByte": 1155,
+            "startLine": 39,
+            "startColumn": 9,
+            "endLine": 39,
+            "endColumn": 24
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "wave",
+          "offset": 128,
+          "size": 16
+        },
+        {
+          "name": "weights",
+          "type": "array<f32, 3>",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 670,
+            "endByte": 717,
+            "startLine": 22,
+            "startColumn": 5,
+            "endLine": 22,
+            "endColumn": 52
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1140,
+            "endByte": 1155,
+            "startLine": 39,
+            "startColumn": 9,
+            "endLine": 39,
+            "endColumn": 24
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "weights",
+          "offset": 144,
+          "size": 48
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "material": "src/main.mtek::Ocean",
+      "entity": "src/main.mtek::Harbour.Reef",
+      "entityIndex": 1,
+      "layout": "material:src/main.mtek::Ocean",
+      "group": 1,
+      "binding": 0,
+      "shareable": true,
+      "params": [
+        {
+          "name": "base",
+          "type": "color",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 323,
+            "endByte": 348,
+            "startLine": 13,
+            "startColumn": 5,
+            "endLine": 13,
+            "endColumn": 30
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1237,
+            "endByte": 1309,
+            "startLine": 43,
+            "startColumn": 9,
+            "endLine": 43,
+            "endColumn": 81
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "base",
+          "offset": 0,
+          "size": 16
+        },
+        {
+          "name": "depth",
+          "type": "f32",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 353,
+            "endByte": 370,
+            "startLine": 14,
+            "startColumn": 5,
+            "endLine": 14,
+            "endColumn": 22
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1237,
+            "endByte": 1309,
+            "startLine": 43,
+            "startColumn": 9,
+            "endLine": 43,
+            "endColumn": 81
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "depth",
+          "offset": 16,
+          "size": 4
+        },
+        {
+          "name": "count",
+          "type": "u32",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 375,
+            "endByte": 400,
+            "startLine": 15,
+            "startColumn": 5,
+            "endLine": 15,
+            "endColumn": 30
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1237,
+            "endByte": 1309,
+            "startLine": 43,
+            "startColumn": 9,
+            "endLine": 43,
+            "endColumn": 81
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "count",
+          "offset": 20,
+          "size": 4
+        },
+        {
+          "name": "enabled",
+          "type": "bool",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 405,
+            "endByte": 432,
+            "startLine": 16,
+            "startColumn": 5,
+            "endLine": 16,
+            "endColumn": 32
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1237,
+            "endByte": 1309,
+            "startLine": 43,
+            "startColumn": 9,
+            "endLine": 43,
+            "endColumn": 81
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "enabled",
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "name": "offset",
+          "type": "i32",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 437,
+            "endByte": 460,
+            "startLine": 17,
+            "startColumn": 5,
+            "endLine": 17,
+            "endColumn": 28
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1237,
+            "endByte": 1309,
+            "startLine": 43,
+            "startColumn": 9,
+            "endLine": 43,
+            "endColumn": 81
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "offset",
+          "offset": 28,
+          "size": 4
+        },
+        {
+          "name": "spin",
+          "type": "quat",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 465,
+            "endByte": 500,
+            "startLine": 18,
+            "startColumn": 5,
+            "endLine": 18,
+            "endColumn": 40
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1237,
+            "endByte": 1309,
+            "startLine": 43,
+            "startColumn": 9,
+            "endLine": 43,
+            "endColumn": 81
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "spin",
+          "offset": 32,
+          "size": 16
+        },
+        {
+          "name": "warp",
+          "type": "mat4",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 505,
+            "endByte": 540,
+            "startLine": 19,
+            "startColumn": 5,
+            "endLine": 19,
+            "endColumn": 40
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1237,
+            "endByte": 1309,
+            "startLine": 43,
+            "startColumn": 9,
+            "endLine": 43,
+            "endColumn": 81
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "warp",
+          "offset": 48,
+          "size": 64
+        },
+        {
+          "name": "tint",
+          "type": "vec4",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 545,
+            "endByte": 589,
+            "startLine": 20,
+            "startColumn": 5,
+            "endLine": 20,
+            "endColumn": 49
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1237,
+            "endByte": 1309,
+            "startLine": 43,
+            "startColumn": 9,
+            "endLine": 43,
+            "endColumn": 81
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "tint",
+          "offset": 112,
+          "size": 16
+        },
+        {
+          "name": "wave",
+          "type": "Wave",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 594,
+            "endByte": 665,
+            "startLine": 21,
+            "startColumn": 5,
+            "endLine": 21,
+            "endColumn": 76
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1237,
+            "endByte": 1309,
+            "startLine": 43,
+            "startColumn": 9,
+            "endLine": 43,
+            "endColumn": 81
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "wave",
+          "offset": 128,
+          "size": 16
+        },
+        {
+          "name": "weights",
+          "type": "array<f32, 3>",
+          "declaration": {
+            "file": "src/main.mtek",
+            "startByte": 670,
+            "endByte": 717,
+            "startLine": 22,
+            "startColumn": 5,
+            "endLine": 22,
+            "endColumn": 52
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1237,
+            "endByte": 1309,
+            "startLine": 43,
+            "startColumn": 9,
+            "endLine": 43,
+            "endColumn": 81
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "weights",
+          "offset": 144,
+          "size": 48
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+bindings of scene src/main.mtek::Gallery (target profile webgpu-core-2026)
+
+block builtin:frame MtekFrame  group 0 binding 0  visibility vertex+fragment  owner runtime  size 288 align 16
+  field            type                 wgsl                 offset  size  padding  array
+  view_proj        mat4                 mat4x4<f32>               0    64        0
+  camera_position  vec3                 vec3<f32>                64    12        0
+  light_count      u32                  u32                      76     4        0
+  ambient          vec3                 vec3<f32>                80    12        0
+  reserved0        f32                  f32                      92     4        0
+  lights           array<MtekLight, 4>  array<MtekLight, 4>      96   192        0  4 x stride 48
+
+block builtin:object MtekObject  group 2 binding 0 (dynamic offset)  visibility vertex  owner object  size 128 align 16
+  field          type  wgsl         offset  size  padding  array
+  model          mat4  mat4x4<f32>       0    64        0
+  normal_matrix  mat4  mat4x4<f32>      64    64        0
+
+block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit  group 1 binding 0  visibility fragment  owner material instance  size 16 align 16
+  field  type   wgsl       offset  size  padding  array  declared at
+  color  color  vec4<f32>       0    16        0         std/materials.mtek:6:5-6:34
+
+instance #0 of std/materials.mtek::Unlit  entity src/main.mtek::Gallery.Crate (#0)  block material:std/materials.mtek::Unlit  group 1 binding 0  storage shareable
+  param  type   update   dependencies  field  offset  size  declared at                  instance at
+  color  color  initial  -             color       0    16  std/materials.mtek:6:5-6:34  src/main.mtek:12:9-12:44
