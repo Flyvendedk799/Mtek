@@ -108,6 +108,40 @@ describe("runtime.d.ts with tsc --strict", () => {
     expect(problems).toEqual([]);
   });
 
+  // The app.d.ts the compiler emits (M1-17 golden; no host inputs before M3).
+  const compiledAppDts = readFileSync(
+    path.resolve(PACKAGE_DIR, "../../tests/codegen/scene_a_target_camera_box/expected/app.d.ts"),
+    "utf8",
+  );
+  const host = `
+    import { mountMtek as mount } from "./runtime.js";
+    declare const canvas: HTMLCanvasElement;
+  `;
+
+  it("accepts the compiler's app.d.ts and a host using it", () => {
+    const problems = compile(
+      `${compiledAppDts}${host}
+      export async function run(): Promise<void> {
+        const app = await mount(canvas, program, { failureDisplay: "overlay" });
+        app.pause();
+        app.dispose();
+      }`,
+      { skipLibCheck: false },
+    );
+    expect(problems).toEqual([]);
+  });
+
+  it("rejects setting an input the compiler's app.d.ts does not declare", () => {
+    const problems = compile(
+      `${compiledAppDts}${host}
+      export async function run(): Promise<void> {
+        const app = await mount(canvas, program);
+        app.setInput("tint", "#ff0000");
+      }`,
+    );
+    expect(problems.join("\n")).toMatch(/TS2345/);
+  });
+
   const wrong: Array<[string, string, RegExp]> = [
     [
       "a wrongly typed input value",

@@ -71,6 +71,33 @@ describe("constants", () => {
   });
 });
 
+// The manifests the compiler produces for the codegen fixtures (M1-17 goldens).
+const compiled = import.meta.glob<string>("../../../../tests/codegen/*/expected/program.manifest.json", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+
+describe("compiled manifests (tests/codegen/*/expected)", () => {
+  const paths = Object.keys(compiled).sort();
+
+  it("exist for the two M1 scene fixtures", () => {
+    expect(paths.map((path) => path.split("/").at(-3))).toEqual([
+      "scene_a_target_camera_box",
+      "scene_b_orthographic_nested",
+    ]);
+  });
+
+  for (const path of paths) {
+    it(`${path.split("/").at(-3) ?? path} is accepted by checkManifest`, () => {
+      const manifest = parseJson(compiled[path] ?? "");
+      expect(checkCompatibility(manifest)).toEqual([]);
+      const accepted = checkManifest(manifest);
+      expect(accepted.ok ? [] : accepted.failures).toEqual([]);
+    });
+  }
+});
+
 describe("shared valid examples", () => {
   const valid = examplePaths("valid");
 
