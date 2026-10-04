@@ -4,7 +4,7 @@
 // compiler's `bridge_spike` example, bundles the bridge page and prepares the mount fixture.
 // Mtek fixtures are built into `.out/` by later tasks.
 import { execFileSync } from "node:child_process";
-import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { build } from "esbuild";
 import { BROWSER_ROOT, REPO_ROOT } from "./environment.ts";
@@ -54,6 +54,14 @@ function prepareMountFixture(out: string): void {
     join(mountOut, "fixture", "program.manifest.json"),
   );
   cpSync(join(BROWSER_ROOT, "pages", "mount", "shaders"), join(mountOut, "fixture", "shaders"), { recursive: true });
+  // The program module (M1-18): the compiler's golden app.js of codegen fixture A, whose generated
+  // writers and init fit the minimal manifest's layouts and its one box entity. It re-exports mountMtek
+  // from its hashed runtime file name, so the bundle is copied under that name too.
+  const appJs = readFileSync(join(REPO_ROOT, "tests", "codegen", "scene_a_target_camera_box", "expected", "app.js"), "utf8");
+  const runtimeName = /^export \{ mountMtek \} from "\.\/(runtime\.[0-9a-f]{16}\.js)";$/m.exec(appJs)?.[1];
+  if (runtimeName === undefined) throw new Error("the golden app.js has no runtime re-export line");
+  writeFileSync(join(mountOut, "fixture", "app.js"), appJs.replace(/^\/\/# sourceMappingURL=.*$/m, ""));
+  if (existsSync(join(bundleDir, "runtime.js"))) copyFileSync(join(bundleDir, "runtime.js"), join(mountOut, "fixture", runtimeName));
 }
 
 export default async function globalSetup(): Promise<() => Promise<void>> {

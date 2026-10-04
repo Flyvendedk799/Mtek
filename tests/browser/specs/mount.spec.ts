@@ -33,7 +33,10 @@ interface MountWindow {
   __mtek: {
     mountMtek(canvas: HTMLCanvasElement, program: unknown, options: unknown): Promise<AppLike>;
     MtekMountError: new (...args: never[]) => Error & { kind: string; diagnostics: DiagnosticLike[] };
+    /** The golden program with its box hidden: the M1-14 specs see the clear colour only. */
     program: unknown;
+    /** The same program drawing its box (M1-18). */
+    drawingProgram: unknown;
   };
   __app?: AppLike;
   __canvas?: HTMLCanvasElement;
@@ -81,9 +84,14 @@ async function patchManifest(page: Page, edit: (manifest: Record<string, unknown
 }
 
 /** Mounts the fixture program on a fresh canvas (`style` sizes it) and reports what happened. A rejected mount is an outcome, not an exception. */
-async function mountFixture(page: Page, canvasStyle: string, options: Record<string, unknown>): Promise<MountOutcome> {
+async function mountFixture(
+  page: Page,
+  canvasStyle: string,
+  options: Record<string, unknown>,
+  programName: "program" | "drawingProgram" = "program",
+): Promise<MountOutcome> {
   return page.evaluate(
-    async ({ style, mountOptions }): Promise<MountOutcome> => {
+    async ({ style, mountOptions, which }): Promise<MountOutcome> => {
       const w = window as unknown as MountWindow;
       const canvas = document.createElement("canvas");
       canvas.setAttribute("style", style);
@@ -96,7 +104,7 @@ async function mountFixture(page: Page, canvasStyle: string, options: Record<str
         return { role: element?.getAttribute("role") ?? null, text: element?.textContent ?? null };
       };
       try {
-        const app = await w.__mtek.mountMtek(canvas, w.__mtek.program, {
+        const app = await w.__mtek.mountMtek(canvas, w.__mtek[which], {
           ...(mountOptions as object),
           onDiagnostic: (d: DiagnosticLike) => reported.push(d),
         });
@@ -117,7 +125,7 @@ async function mountFixture(page: Page, canvasStyle: string, options: Record<str
         };
       }
     },
-    { style: canvasStyle, mountOptions: options },
+    { style: canvasStyle, mountOptions: options, which: programName },
   );
 }
 
@@ -206,6 +214,30 @@ test.describe("mountMtek on a real WebGPU device", () => {
     expect(result["liveShaderModules"]).toBe(1);
     const reported = await page.evaluate(() => (window as unknown as MountWindow).__reported);
     expect(reported).toEqual([]);
+  });
+
+  test("draws the golden program's box in its material colour over the clear colour, with one cached pipeline (M1-18)", async ({ page }) => {
+    const outcome = await mountFixture(page, "width:64px;height:64px", { test: { manualClock: true, renderTarget: { width: 32, height: 32 } } }, "drawingProgram");
+    expect(outcome.ok, JSON.stringify(outcome.errorDiagnostics)).toBe(true);
+    await step(page, 2);
+    const samples = await page.evaluate(async () => {
+      const app = (window as unknown as MountWindow).__app;
+      if (app === undefined) throw new Error("no mounted app");
+      const pixels = await app.debug.readPixels();
+      const at = (x: number, y: number): number[] => Array.from(pixels.data.subarray((y * pixels.width + x) * 4, (y * pixels.width + x) * 4 + 4));
+      return { centre: at(16, 16), corner: at(0, 0) };
+    });
+    // Linear colours from the golden app.js (material) and the minimal manifest (clear), sRGB-encoded.
+    const material = [0.14702726900577545, 0.10702310502529144, 1.0].map(encodeSrgb);
+    const clear = [0.0052, 0.007, 0.0091].map(encodeSrgb);
+    for (let channel = 0; channel < 3; channel += 1) {
+      expect(Math.abs((samples.centre[channel] ?? -1000) - (material[channel] ?? 0)), `centre ${samples.centre.join(",")}`).toBeLessThanOrEqual(1);
+      expect(Math.abs((samples.corner[channel] ?? -1000) - (clear[channel] ?? 0)), `corner ${samples.corner.join(",")}`).toBeLessThanOrEqual(1);
+    }
+    const result = await counters(page);
+    expect(result["drawCalls"]).toBe(1);
+    expect(result["pipelinesCreated"]).toBe(1);
+    expect(outcome.reported).toEqual([]);
   });
 
   test("skips rendering on a zero-sized canvas and renders once it has a size (ResizeObserver)", async ({ page }) => {
