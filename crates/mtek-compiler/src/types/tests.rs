@@ -788,7 +788,7 @@ fn intrinsics_resolve_their_overload_from_the_registry_and_fold() {
     let c = clean(
         "const A = sin(1.0);\nconst B = max(1, 2);\nconst C: u32 = max(1, 2);\nconst D = abs(-3);\nconst E = mix(vec3(0.0), vec3(2.0), 0.25);\nconst F = length(vec2(3, 4));\nconst G = dot(vec3(1.0), vec3(1.0, 2.0, 3.0));\nconst H = clamp(1.5, 0, 1);\nconst I: f32 = min(1, 2);\nconst J = cross(vec3(1, 0, 0), vec3(0, 1, 0));\nconst K = round(2.5);\nconst L = transpose(mat4.translation(vec3(1, 2, 3)));",
     );
-    assert_eq!(c.value("A"), Some(ConstValue::F32(libm::sinf(1.0))));
+    assert_eq!(c.value("A"), Some(ConstValue::F32(libm::sin(1.0) as f32)));
     assert_eq!(
         (c.ty("B"), c.value("B")),
         ("i32".into(), Some(ConstValue::I32(2)))

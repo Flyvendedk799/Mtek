@@ -6,10 +6,13 @@
 //! they are const-eligible; the checker has already chosen the overload, so
 //! the arguments here have the parameter types. Each function is written as
 //! a fixed sequence of binary32 operations (Rust `f32` arithmetic, correctly
-//! rounded; `f32::sqrt`, correctly rounded) and pure-Rust `libm` binary32
-//! functions for everything transcendental, so a folded value has the same
-//! bits on every host. A result that is not finite is an error (`E3040`,
-//! decision 0026 item 5).
+//! rounded; `f32::sqrt`, correctly rounded) in the operation order of the
+//! run-time library (decision 0037 item 7), and the pure-Rust binary64
+//! `libm` functions rounded once for everything transcendental (as the
+//! run-time library rounds its binary64 results once), so a folded value has
+//! the same bits on every host and equals the run-time value wherever no
+//! transcendental function is involved. A result that is not finite is an
+//! error (`E3040`, decision 0026 item 5).
 
 use super::value::{ConstValue, EvalError, EvalResult, cross};
 
@@ -111,18 +114,37 @@ fn component_wise(args: &[ConstValue], f: impl Fn(&[f32]) -> f32) -> EvalResult 
     like(shape, &out)
 }
 
+/// The binary32 value nearest `π/180` (`radians` multiplies by it once).
+const RADIANS_PER_DEGREE: f32 = (std::f64::consts::PI / 180.0) as f32;
+/// The binary32 value nearest `180/π` (`degrees` multiplies by it once).
+const DEGREES_PER_RADIAN: f32 = (180.0 / std::f64::consts::PI) as f32;
+
+/// A transcendental function evaluated by the binary64 `libm` function and
+/// rounded once to binary32 (decision 0035 item 3: the run-time library
+/// computes in binary64 and rounds once, decision 0037 item 5).
+fn wide(f: fn(f64) -> f64, x: f32) -> f32 {
+    f(f64::from(x)) as f32
+}
+
+fn wide2(f: fn(f64, f64) -> f64, a: f32, b: f32) -> f32 {
+    f(f64::from(a), f64::from(b)) as f32
+}
+
 fn arg(values: &[f32], index: usize) -> f32 {
     values.get(index).copied().unwrap_or(f32::NAN)
 }
 
 /// `a < b ? a : b`, written so that the result never depends on how a
 /// platform treats `-0.0` against `0.0` (the first operand wins a tie).
+/// A NaN operand yields the other operand, as in the run-time library
+/// (decision 0037 item 6); it matters for intermediate NaNs, such as the
+/// `0 / 0` of `smoothstep(e, e, e)`, which clamps to 0.
 fn min32(a: f32, b: f32) -> f32 {
-    if b < a { b } else { a }
+    if a.is_nan() || b < a { b } else { a }
 }
 
 fn max32(a: f32, b: f32) -> f32 {
-    if b > a { b } else { a }
+    if a.is_nan() || b > a { b } else { a }
 }
 
 /// `x0*y0 + x1*y1 + …`, summed left to right.
@@ -201,19 +223,19 @@ pub fn intrinsic_function(name: &str, args: &[ConstValue]) -> Option<EvalResult>
             t * t * (3.0 - 2.0 * t)
         }),
         ("sqrt", [_]) => unary(f32::sqrt),
-        ("inverse_sqrt", [_]) => unary(|x| 1.0 / x.sqrt()),
-        ("pow", [_, _]) => binary(libm::powf),
-        ("exp", [_]) => unary(libm::expf),
-        ("exp2", [_]) => unary(libm::exp2f),
-        ("log", [_]) => unary(libm::logf),
-        ("log2", [_]) => unary(libm::log2f),
-        ("sin", [_]) => unary(libm::sinf),
-        ("cos", [_]) => unary(libm::cosf),
-        ("tan", [_]) => unary(libm::tanf),
-        ("asin", [_]) => unary(libm::asinf),
-        ("acos", [_]) => unary(libm::acosf),
-        ("atan", [_]) => unary(libm::atanf),
-        ("atan2", [_, _]) => binary(libm::atan2f),
+        ("inverse_sqrt", [_]) => unary(|x| (1.0 / f64::from(x).sqrt()) as f32),
+        ("pow", [_, _]) => binary(|a, b| wide2(libm::pow, a, b)),
+        ("exp", [_]) => unary(|x| wide(libm::exp, x)),
+        ("exp2", [_]) => unary(|x| wide(libm::exp2, x)),
+        ("log", [_]) => unary(|x| wide(libm::log, x)),
+        ("log2", [_]) => unary(|x| wide(libm::log2, x)),
+        ("sin", [_]) => unary(|x| wide(libm::sin, x)),
+        ("cos", [_]) => unary(|x| wide(libm::cos, x)),
+        ("tan", [_]) => unary(|x| wide(libm::tan, x)),
+        ("asin", [_]) => unary(|x| wide(libm::asin, x)),
+        ("acos", [_]) => unary(|x| wide(libm::acos, x)),
+        ("atan", [_]) => unary(|x| wide(libm::atan, x)),
+        ("atan2", [_, _]) => binary(|y, x| wide2(libm::atan2, y, x)),
         ("floor", [_]) => unary(libm::floorf),
         ("ceil", [_]) => unary(libm::ceilf),
         ("trunc", [_]) => unary(libm::truncf),
@@ -230,12 +252,15 @@ pub fn intrinsic_function(name: &str, args: &[ConstValue]) -> Option<EvalResult>
             }
         }),
         // One multiplication by the binary32 value of π/180 (and 180/π).
-        ("radians", [_]) => unary(|x| x * (std::f32::consts::PI / 180.0)),
-        ("degrees", [_]) => unary(|x| x * (180.0 / std::f32::consts::PI)),
+        ("radians", [_]) => unary(|x| x * RADIANS_PER_DEGREE),
+        ("degrees", [_]) => unary(|x| x * DEGREES_PER_RADIAN),
+        // Of a scalar: its magnitude (decision 0037 item 5).
+        ("length", [V::F32(x)]) => Ok(V::F32(x.abs())),
         ("length", [x]) => components(x)
             .map(|v| V::F32(length(&v)))
             .ok_or(EvalError::Mismatch),
-        // `length(a - b)`.
+        // `length(a - b)`; of scalars `abs(a - b)`.
+        ("distance", [V::F32(a), V::F32(b)]) => Ok(V::F32((a - b).abs())),
         ("distance", [a, b]) => match (components(a), components(b)) {
             (Some(a), Some(b)) if a.len() == b.len() => {
                 let difference: Vec<f32> = a.iter().zip(&b).map(|(x, y)| x - y).collect();
@@ -248,13 +273,14 @@ pub fn intrinsic_function(name: &str, args: &[ConstValue]) -> Option<EvalResult>
             _ => Err(EvalError::Mismatch),
         },
         ("cross", [V::Vec3(a), V::Vec3(b)]) => Ok(V::Vec3(cross(*a, *b))),
-        // `v / length(v)`; the zero vector stays the zero vector (the CPU
-        // semantics of `spec/stdlib.md` 6).
+        // `v / length(v)`; a computed length of 0 gives the zero vector of
+        // positive zeros (the CPU semantics of `spec/stdlib.md` 6, decision
+        // 0037 item 6).
         ("normalize", [v]) => match vector(v) {
             Some(values) => {
                 let len = length(values);
                 if len == 0.0 {
-                    like(v, values)
+                    like(v, &vec![0.0; values.len()])
                 } else {
                     let scaled: Vec<f32> = values.iter().map(|c| c / len).collect();
                     like(v, &scaled)
@@ -426,7 +452,6 @@ mod tests {
             ("exp", vec![V::F32(100.0)]),
             ("inverse_sqrt", vec![V::F32(0.0)]),
             ("asin", vec![V::Vec2([0.5, 2.0])]),
-            ("smoothstep", vec![V::F32(1.0), V::F32(1.0), V::F32(1.0)]),
         ] {
             assert!(
                 matches!(eval(name, &args), Err(EvalError::NotFinite(_))),
@@ -437,18 +462,31 @@ mod tests {
             eval("sqrt", &[V::F32(-1.0)]),
             Err(EvalError::NotFinite("sqrt(-1.0) is not finite".to_owned()))
         );
+        // An intermediate NaN is clamped away as at run time: `0 / 0` in
+        // `smoothstep(e, e, e)` clamps to 0 (decision 0037 item 6).
+        assert_eq!(
+            eval("smoothstep", &[V::F32(1.0), V::F32(1.0), V::F32(1.0)]),
+            Ok(V::F32(0.0))
+        );
+        assert_eq!(
+            eval("min", &[V::F32(f32::NAN), V::F32(2.0)]),
+            Ok(V::F32(2.0))
+        );
     }
 
     #[test]
     fn transcendental_functions_are_libm() {
-        assert_eq!(eval("sin", &[V::F32(1.0)]), Ok(V::F32(libm::sinf(1.0))));
+        assert_eq!(
+            eval("sin", &[V::F32(1.0)]),
+            Ok(V::F32(libm::sin(1.0) as f32))
+        );
         assert_eq!(
             eval("pow", &[V::Vec2([2.0, 3.0]), V::Vec2([0.5, 2.0])]),
-            Ok(V::Vec2([libm::powf(2.0, 0.5), libm::powf(3.0, 2.0)]))
+            Ok(V::Vec2([libm::pow(2.0, 0.5) as f32, 9.0]))
         );
         assert_eq!(
             eval("atan2", &[V::F32(1.0), V::F32(-1.0)]),
-            Ok(V::F32(libm::atan2f(1.0, -1.0)))
+            Ok(V::F32(libm::atan2(1.0, -1.0) as f32))
         );
     }
 

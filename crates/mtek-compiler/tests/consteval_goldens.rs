@@ -180,9 +180,9 @@ fn scalar_arithmetic_has_these_bits() {
 
 #[test]
 fn remainders_and_boolean_operators() {
-    // `%` on f32 is `x - y * trunc(x / y)` with each operation one binary32
-    // operation (decision 0035), written out here with Rust f32 operations.
-    let rem = |x: f32, y: f32| x - y * (x / y).trunc();
+    // `%` on f32 is the exact remainder `x - y * trunc(x / y)` (C `fmod`,
+    // decision 0035), computed here independently in binary64.
+    let rem = |x: f32, y: f32| (f64::from(x) % f64::from(y)) as f32;
     for (decl, x, y) in [
         (" = 7.5 % 2.0", 7.5_f32, 2.0_f32),
         (" = 5.3 % 1.1", 5.3, 1.1),
@@ -381,24 +381,28 @@ fn descriptors_fold_to_struct_values() {
 #[test]
 fn intrinsics_fold_with_libm_in_binary32() {
     // Each expected value is the documented formula (decision 0035 item 3)
-    // evaluated here with Rust binary32 operations and `libm` directly.
+    // evaluated here with Rust binary32 operations and binary64 `libm`
+    // rounded once (the run-time library's rounding, decision 0037 item 5).
     for (decl, expected) in [
-        (" = sin(1.0)", libm::sinf(1.0)),
-        (" = cos(0.5)", libm::cosf(0.5)),
-        (" = tan(0.5)", libm::tanf(0.5)),
-        (" = asin(0.5)", libm::asinf(0.5)),
-        (" = acos(0.5)", libm::acosf(0.5)),
-        (" = atan(2.0)", libm::atanf(2.0)),
-        (" = atan2(1.0, -1.0)", libm::atan2f(1.0, -1.0)),
-        (" = pow(2.0, 0.5)", libm::powf(2.0, 0.5)),
-        (" = exp(1.0)", libm::expf(1.0)),
-        (" = exp2(0.5)", libm::exp2f(0.5)),
-        (" = log(2.0)", libm::logf(2.0)),
-        (" = log2(10.0)", libm::log2f(10.0)),
+        (" = sin(1.0)", (libm::sin(1.0) as f32)),
+        (" = cos(0.5)", (libm::cos(0.5) as f32)),
+        (" = tan(0.5)", (libm::tan(0.5) as f32)),
+        (" = asin(0.5)", (libm::asin(0.5) as f32)),
+        (" = acos(0.5)", (libm::acos(0.5) as f32)),
+        (" = atan(2.0)", (libm::atan(2.0) as f32)),
+        (" = atan2(1.0, -1.0)", (libm::atan2(1.0, -1.0) as f32)),
+        (" = pow(2.0, 0.5)", (libm::pow(2.0, 0.5) as f32)),
+        (" = exp(1.0)", (libm::exp(1.0) as f32)),
+        (" = exp2(0.5)", (libm::exp2(0.5) as f32)),
+        (" = log(2.0)", (libm::log(2.0) as f32)),
+        (" = log2(10.0)", (libm::log2(10.0) as f32)),
         (" = sqrt(2.0)", 2.0_f32.sqrt()),
-        (" = inverse_sqrt(2.0)", 1.0 / 2.0_f32.sqrt()),
-        (" = radians(90.0)", 90.0 * (std::f32::consts::PI / 180.0)),
-        (" = degrees(1.0)", 180.0 / std::f32::consts::PI),
+        (" = inverse_sqrt(2.0)", (1.0 / 2.0_f64.sqrt()) as f32),
+        (
+            " = radians(90.0)",
+            90.0 * ((std::f64::consts::PI / 180.0) as f32),
+        ),
+        (" = degrees(1.0)", (180.0 / std::f64::consts::PI) as f32),
         (" = fract(-1.1)", -1.1_f32 - (-2.0)),
         (" = round(2.5)", 2.0),
         (" = round(-3.5)", -4.0),
@@ -435,7 +439,7 @@ fn intrinsics_fold_with_libm_in_binary32() {
     let v = fold(" = sin(vec2(0.25, 0.75))");
     assert_eq!(
         bits(&floats(&v)),
-        bits(&[libm::sinf(0.25), libm::sinf(0.75)])
+        bits(&[libm::sin(0.25) as f32, libm::sin(0.75) as f32])
     );
     assert_eq!(fold(" = abs(-2147483648)"), ConstValue::I32(i32::MIN));
     assert_eq!(fold(": u32 = clamp(9, 2, 5)"), ConstValue::U32(5));

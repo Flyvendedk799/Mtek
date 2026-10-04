@@ -160,14 +160,13 @@ impl ArithOp {
 }
 
 /// `x % y` on `f32`: the truncated remainder `x - y * trunc(x / y)`
-/// (`spec/language.md` 6.2), each of the four operations one binary32
-/// operation, in that order (decision 0035). `x % 0.0` is NaN.
+/// (`spec/language.md` 6.2), computed exactly (C `fmod`, which Rust's `%`
+/// is): the exact remainder is always a binary32 value, so it needs no
+/// rounding and equals the run-time library's `%` (decisions 0035 and 0037
+/// item 5). `x % 0.0` is NaN.
 #[must_use]
 pub fn f32_remainder(x: f32, y: f32) -> f32 {
-    let quotient = x / y;
-    let whole = libm::truncf(quotient);
-    let product = y * whole;
-    x - product
+    x % y
 }
 
 /// The comparison and equality operators (`spec/language.md` 6.2).
