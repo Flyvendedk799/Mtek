@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 19,
+    "endByte": 33,
+    "message": "Argument 1 of `cross(a: vec3, b: vec3)` expects vec3, but received vec2.",
+    "expected": "vec3",
+    "actual": "vec2"
+  }
+]

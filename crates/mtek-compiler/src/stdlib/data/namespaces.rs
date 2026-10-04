@@ -115,40 +115,41 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         ),
         namespace(
             "mat4",
-            Milestone::M2,
+            // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
+            Milestone::M1,
             "Constructors for column-major 4x4 matrices.",
             vec![
                 pure(
                     "identity",
-                    Milestone::M2,
+                    Milestone::M1,
                     "The identity matrix.",
                     &[],
                     TypeRef::Mat4,
                 ),
                 pure(
                     "translation",
-                    Milestone::M2,
+                    Milestone::M1,
                     "Translation by `v`.",
                     &[p("v", vec3)],
                     TypeRef::Mat4,
                 ),
                 pure(
                     "rotation",
-                    Milestone::M2,
+                    Milestone::M1,
                     "Rotation matrix of a quaternion.",
                     &[p("q", quat)],
                     TypeRef::Mat4,
                 ),
                 pure(
                     "scale",
-                    Milestone::M2,
+                    Milestone::M1,
                     "Non-uniform scale by `v`.",
                     &[p("v", vec3)],
                     TypeRef::Mat4,
                 ),
                 pure(
                     "columns",
-                    Milestone::M2,
+                    Milestone::M1,
                     "Matrix from its four columns.",
                     &[p("c0", vec4), p("c1", vec4), p("c2", vec4), p("c3", vec4)],
                     TypeRef::Mat4,
@@ -401,7 +402,8 @@ pub(super) fn types() -> Vec<TypeDef> {
         simple(
             "string",
             TypeKind::Text,
-            Milestone::M2,
+            // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
+            Milestone::M1,
             false,
             "Immutable text. CPU only.",
         ),
@@ -429,7 +431,8 @@ pub(super) fn types() -> Vec<TypeDef> {
         simple(
             "mat4",
             TypeKind::Matrix,
-            Milestone::M2,
+            // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
+            Milestone::M1,
             true,
             "4x4 `f32` matrix, column-major; multiplies column vectors on the right.",
         ),
@@ -450,7 +453,8 @@ pub(super) fn types() -> Vec<TypeDef> {
         simple(
             "array",
             TypeKind::Array,
-            Milestone::M2,
+            // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
+            Milestone::M1,
             true,
             "The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`.",
         ),

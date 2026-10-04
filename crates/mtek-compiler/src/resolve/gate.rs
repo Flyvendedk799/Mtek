@@ -152,7 +152,8 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::BodyConst => row("`const` declarations in bodies", true, M1),
         Construct::Fn => row("`fn` declarations", true, M2),
         Construct::CpuFn => row("`cpu fn` declarations", true, M2),
-        Construct::Struct => row("`struct` declarations", true, M2),
+        // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
+        Construct::Struct => row("`struct` declarations", true, M1),
         Construct::Material => row("`material` declarations", true, M2),
         Construct::Prefab => row("`prefab` declarations", true, M5),
         Construct::Scene => row("Scenes", true, M1),
@@ -167,18 +168,21 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::Bind => row("`bind`", false, M3),
         Construct::SelfValue => row("`self`", false, M3),
         Construct::Descriptor => row("Descriptor literals", true, M1),
-        Construct::StringLiteral => row("String literals", true, M2),
-        Construct::ArrayLiteral => row("Array literals", true, M2),
-        Construct::Index => row("Indexing (`a[i]`)", false, M2),
+        // Planned for M2 with the registry types `string` and `array`; implemented by
+        // task M2-01 before the M2 gate (decision 0035).
+        Construct::StringLiteral => row("String literals", true, M1),
+        Construct::ArrayLiteral => row("Array literals", true, M1),
+        Construct::Index => row("Indexing (`a[i]`)", false, M1),
         // Operators (decision 0026): M1 types and folds unary minus and the
-        // four arithmetic operators; the others produce or consume `bool` or
-        // need the run-time math library, and land with statements.
+        // four arithmetic operators. The others are M2 work (M2-01) that
+        // landed before the M2 gate: `M1` marks them implemented by this
+        // build (decision 0035).
         Construct::Negation => row("Unary minus", false, M1),
         Construct::Arithmetic => row("Arithmetic operators", true, M1),
-        Construct::Remainder => row("The remainder operator `%`", false, M2),
-        Construct::Comparison => row("Comparison operators (`<`, `<=`, `>`, `>=`)", true, M2),
-        Construct::Equality => row("Equality operators (`==`, `!=`)", true, M2),
-        Construct::Logical => row("Logical operators (`!`, `&&`, `||`)", true, M2),
+        Construct::Remainder => row("The remainder operator `%`", false, M1),
+        Construct::Comparison => row("Comparison operators (`<`, `<=`, `>`, `>=`)", true, M1),
+        Construct::Equality => row("Equality operators (`==`, `!=`)", true, M1),
+        Construct::Logical => row("Logical operators (`!`, `&&`, `||`)", true, M1),
     }
 }
 
@@ -255,7 +259,7 @@ mod tests {
     }
 
     #[test]
-    fn m1_implements_scenes_cameras_entities_descriptors_and_constants() {
+    fn this_build_implements_scenes_entities_descriptors_constants_and_operators() {
         for construct in [
             Construct::ConstItem,
             Construct::BodyConst,
@@ -269,6 +273,14 @@ mod tests {
             Construct::Arithmetic,
             Construct::Import,
             Construct::Export,
+            Construct::Remainder,
+            Construct::Comparison,
+            Construct::Equality,
+            Construct::Logical,
+            Construct::StringLiteral,
+            Construct::ArrayLiteral,
+            Construct::Index,
+            Construct::Struct,
         ] {
             assert!(
                 is_implemented(construct_gate(construct).since),
@@ -278,7 +290,6 @@ mod tests {
         for construct in [
             Construct::Fn,
             Construct::CpuFn,
-            Construct::Struct,
             Construct::Material,
             Construct::Prefab,
             Construct::State,
@@ -287,13 +298,6 @@ mod tests {
             Construct::Handler,
             Construct::Bind,
             Construct::SelfValue,
-            Construct::StringLiteral,
-            Construct::ArrayLiteral,
-            Construct::Index,
-            Construct::Remainder,
-            Construct::Comparison,
-            Construct::Equality,
-            Construct::Logical,
         ] {
             assert!(
                 !is_implemented(construct_gate(construct).since),
@@ -354,7 +358,8 @@ mod tests {
         assert_eq!(unary_construct(UnaryOp::Neg), Construct::Negation);
         assert_eq!(unary_construct(UnaryOp::Not), Construct::Logical);
         assert!(construct_implemented(Construct::Arithmetic));
-        assert!(!construct_implemented(Construct::Logical));
+        assert!(construct_implemented(Construct::Logical));
+        assert!(!construct_implemented(Construct::Fn));
     }
 
     #[test]

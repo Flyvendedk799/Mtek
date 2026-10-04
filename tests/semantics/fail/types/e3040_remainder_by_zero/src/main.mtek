@@ -1,0 +1,5 @@
+const STEP: u32 = 16 % 0;
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,8 @@
+struct Light {
+    intensity: f32;
+    intensity: vec3;
+}
+
+scene Demo {
+    camera Main {}
+}

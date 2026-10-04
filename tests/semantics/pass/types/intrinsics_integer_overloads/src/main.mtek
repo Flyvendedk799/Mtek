@@ -1,0 +1,12 @@
+// D06 6: the `I` overloads of abs, min, max and clamp; literals take the expected type.
+const COUNT: u32 = 7;
+const ABS = abs(-2147483647);
+const LOWEST = abs(-2147483648);
+const MIN = min(COUNT, 3);
+const MAX = max(-1, 4);
+const CLAMPED = clamp(COUNT, 1, 5);
+const EXPECTED: u32 = max(1, 2);
+
+scene Demo {
+    camera Main {}
+}

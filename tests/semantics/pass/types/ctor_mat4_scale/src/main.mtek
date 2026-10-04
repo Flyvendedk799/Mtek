@@ -1,0 +1,6 @@
+// D02 6.7: `mat4.scale(v)`.
+const M = mat4.scale(vec3(2.0, 1.0, 0.5));
+
+scene Demo {
+    camera Main {}
+}

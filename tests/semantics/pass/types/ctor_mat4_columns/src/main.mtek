@@ -1,0 +1,6 @@
+// D02 6.7: `mat4.columns(c0, c1, c2, c3)`.
+const M = mat4.columns(vec4(1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, 1, 0), vec4(4, 5, 6, 1));
+
+scene Demo {
+    camera Main {}
+}

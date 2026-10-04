@@ -32,9 +32,14 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::Typeck;
-use super::ops::{arithmetic_result, literal_operand_type, negation_result};
-use super::ty::{Ty, TyId};
-use super::value::{ArithOp, Scalar};
+use super::ops::{
+    arithmetic_result, comparison_result, literal_operand_type, logical_result, negation_result,
+};
+use super::ty::{MAX_TYPE_DEPTH, Ty, TyId};
+use super::value::{ArithOp, CompareOp, ConstValue, LogicOp, Scalar};
+
+/// The largest length of `array<T, N>` (`spec/language.md` 5.1).
+pub(super) const MAX_ARRAY_LENGTH: u32 = 65_536;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
 use crate::resolve::gate::is_implemented;
 use crate::resolve::{
@@ -46,9 +51,9 @@ use crate::stdlib::{
     ArgType, IntrinsicDef, NamespaceMember, Registry, SchemaCategory, SigType, TypeKind, registry,
 };
 use crate::syntax::ast::{
-    BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr, ExprKind, FieldInit,
-    FieldValue, Ident, ItemKind, Module, NodeId, SceneDecl, SceneMember, SceneObject, Type,
-    TypeKind as AstTypeKind, UnaryOp,
+    ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr,
+    ExprKind, FieldInit, FieldValue, Ident, ItemKind, Module, NodeId, SceneDecl, SceneMember,
+    SceneObject, StructDecl, Type, TypeKind as AstTypeKind, UnaryOp,
 };
 
 /// Whether a literal expression is made of integer literals only, or holds a
@@ -87,12 +92,36 @@ pub(super) fn literal_kind(expr: &Expr) -> Option<LiteralKind> {
 
 /// The arithmetic operator of a binary operator, if it is one.
 pub(super) fn arith_op(op: BinaryOp) -> Option<ArithOp> {
-    match op {
-        BinaryOp::Add => Some(ArithOp::Add),
-        BinaryOp::Sub => Some(ArithOp::Sub),
-        BinaryOp::Mul => Some(ArithOp::Mul),
-        BinaryOp::Div => Some(ArithOp::Div),
+    match binary_class(op) {
+        BinaryClass::Arith(arith) => Some(arith),
         _ => None,
+    }
+}
+
+/// The three families of binary operators, by how they are typed.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(super) enum BinaryClass {
+    Arith(ArithOp),
+    Compare(CompareOp),
+    Logic(LogicOp),
+}
+
+/// The family of a binary operator.
+pub(super) fn binary_class(op: BinaryOp) -> BinaryClass {
+    match op {
+        BinaryOp::Add => BinaryClass::Arith(ArithOp::Add),
+        BinaryOp::Sub => BinaryClass::Arith(ArithOp::Sub),
+        BinaryOp::Mul => BinaryClass::Arith(ArithOp::Mul),
+        BinaryOp::Div => BinaryClass::Arith(ArithOp::Div),
+        BinaryOp::Rem => BinaryClass::Arith(ArithOp::Rem),
+        BinaryOp::Lt => BinaryClass::Compare(CompareOp::Lt),
+        BinaryOp::Le => BinaryClass::Compare(CompareOp::Le),
+        BinaryOp::Gt => BinaryClass::Compare(CompareOp::Gt),
+        BinaryOp::Ge => BinaryClass::Compare(CompareOp::Ge),
+        BinaryOp::Eq => BinaryClass::Compare(CompareOp::Eq),
+        BinaryOp::Ne => BinaryClass::Compare(CompareOp::Ne),
+        BinaryOp::And => BinaryClass::Logic(LogicOp::And),
+        BinaryOp::Or => BinaryClass::Logic(LogicOp::Or),
     }
 }
 
@@ -131,6 +160,8 @@ pub(super) enum FieldKind {
     },
     /// A value member of a namespace (`frame.time`).
     NamespaceValue(String),
+    /// A field of a user struct value.
+    StructField(String),
 }
 
 pub(super) struct Checker<'a> {
@@ -152,6 +183,15 @@ pub(super) struct Checker<'a> {
     pub(super) states: BTreeSet<(DefId, String)>,
     pub(super) calls: BTreeMap<NodeId, CallKind>,
     pub(super) fields: BTreeMap<NodeId, FieldKind>,
+    /// Every struct declaration of the module, by its `DefId`.
+    pub(super) struct_decls: BTreeMap<DefId, &'a StructDecl>,
+    /// Struct declarations already checked.
+    pub(super) struct_done: BTreeSet<DefId>,
+    /// The types of imported structs, by the `DefId` of the imported name
+    /// (seeded by [`super::check_module_with_imports`]).
+    pub(super) imported_structs: BTreeMap<DefId, TyId>,
+    /// Struct literals without errors, with their type (for folding).
+    pub(super) struct_literals: BTreeMap<NodeId, TyId>,
 }
 
 impl<'a> Checker<'a> {
@@ -192,6 +232,10 @@ impl<'a> Checker<'a> {
             states,
             calls: BTreeMap::new(),
             fields: BTreeMap::new(),
+            struct_decls: BTreeMap::new(),
+            struct_done: BTreeSet::new(),
+            imported_structs: BTreeMap::new(),
+            struct_literals: BTreeMap::new(),
         }
     }
 
@@ -245,8 +289,13 @@ impl<'a> Checker<'a> {
                 ItemKind::Scene(decl) if construct_implemented(Construct::Scene) => {
                     self.scene(decl);
                 }
-                // Imports, functions, structs, materials and prefabs are gated
-                // in this build (see the tests).
+                ItemKind::Struct(decl) if construct_implemented(Construct::Struct) => {
+                    if let Some(def) = self.res.def_of(decl.id) {
+                        self.struct_info(def);
+                    }
+                }
+                // Functions, materials and prefabs are gated in this build
+                // (see the tests); imports have nothing to check here.
                 _ => {}
             }
         }
@@ -258,6 +307,9 @@ impl<'a> Checker<'a> {
         for item in &module.items {
             match &item.kind {
                 ItemKind::Const(decl) => self.collect_constant(decl),
+                ItemKind::Struct(decl) if construct_implemented(Construct::Struct) => {
+                    self.collect_struct(decl);
+                }
                 ItemKind::Scene(scene) => {
                     for member in &scene.members {
                         match member {
@@ -380,17 +432,31 @@ impl<'a> Checker<'a> {
                     {
                         return TyId::ERROR;
                     }
-                    // `None` only for `array` without arguments, which is gated.
-                    self.out
-                        .interner
-                        .prelude_type(type_name)
-                        .unwrap_or(TyId::ERROR)
+                    // `None` only for `array` without arguments.
+                    if let Some(ty) = self.out.interner.prelude_type(type_name) {
+                        return ty;
+                    }
+                    self.report(
+                        Diagnostic::new(
+                            Code::E3003,
+                            format!(
+                                "The type '{type_name}' needs an element type and a length: `array<T, N>`."
+                            ),
+                        )
+                        .at(ty.span),
+                    );
+                    TyId::ERROR
                 }
-                // Struct types are gated in this build; anything else was
+                // A user struct, of this module or imported; anything else was
                 // reported by the resolver.
+                Some(Res::Def(id)) => self.struct_type(id).unwrap_or(TyId::ERROR),
                 _ => TyId::ERROR,
             },
-            AstTypeKind::Generic { name, .. } => match self.res.res(name.id) {
+            AstTypeKind::Generic {
+                name,
+                element,
+                length,
+            } => match self.res.res(name.id) {
                 Some(Res::Prelude(PreludeItem::Type(type_name))) => {
                     let implemented = PreludeItem::Type(type_name)
                         .since()
@@ -399,6 +465,17 @@ impl<'a> Checker<'a> {
                         .registry
                         .type_def(type_name)
                         .is_some_and(|t| t.kind == TypeKind::Array);
+                    if implemented && generic {
+                        let element = self.annotation(element);
+                        let length = self.array_length(length);
+                        return match length {
+                            Some(_) if self.too_deep(element, ty.span) => TyId::ERROR,
+                            Some(len) if !self.is_error(element) => {
+                                self.out.interner.intern(Ty::Array { element, len })
+                            }
+                            _ => TyId::ERROR,
+                        };
+                    }
                     if implemented && !generic {
                         self.report(
                             Diagnostic::new(
@@ -410,13 +487,93 @@ impl<'a> Checker<'a> {
                             .at(ty.span),
                         );
                     }
-                    // `array<T, N>` is gated in this build.
+                    // Gated, or reported just now.
+                    TyId::ERROR
+                }
+                Some(Res::Def(id)) if self.names_struct(id) => {
+                    let struct_name = self.snippet(name.span).to_owned();
+                    self.report(
+                        Diagnostic::new(
+                            Code::E3003,
+                            format!(
+                                "The type '{struct_name}' takes no type arguments; only `array<T, N>` does."
+                            ),
+                        )
+                        .at(ty.span),
+                    );
                     TyId::ERROR
                 }
                 _ => TyId::ERROR,
             },
             AstTypeKind::Error => TyId::ERROR,
         }
+    }
+
+    /// The length `N` of `array<T, N>`: an integer literal or the name of an
+    /// integer constant, with a value from 1 to 65 536 (`E3031`,
+    /// `spec/language.md` 5.1). `None` if it is not valid (reported here, or
+    /// earlier for a name that did not resolve or a constant with an error).
+    fn array_length(&mut self, length: &ArrayLength) -> Option<u32> {
+        let (value, shown): (Option<i64>, String) = match &length.kind {
+            ArrayLengthKind::Int { value } => (
+                value.and_then(|v| i64::try_from(v).ok()),
+                format!("the length is {}", self.snippet(length.span)),
+            ),
+            ArrayLengthKind::Name(name) => match self.res.res(length.id) {
+                Some(Res::Def(id))
+                    if self.res.def(id).is_some_and(|d| d.kind == DefKind::Const) =>
+                {
+                    self.const_info(id, Some(length.span));
+                    let shown = |v: &dyn std::fmt::Display| format!("the constant '{name}' is {v}");
+                    match self.out.consts.get(&id).and_then(|info| info.value.clone()) {
+                        Some(ConstValue::I32(v)) => (Some(i64::from(v)), shown(&v)),
+                        Some(ConstValue::U32(v)) => (Some(i64::from(v)), shown(&v)),
+                        // A constant without a value was reported.
+                        None => return None,
+                        Some(other) => {
+                            let what = format!(
+                                "the constant '{name}' has the value {other}, which is not an integer"
+                            );
+                            self.report_array_length(length.span, &what);
+                            return None;
+                        }
+                    }
+                }
+                Some(Res::Def(id)) => {
+                    let noun = self.res.def(id).map_or("declaration", |d| d.kind.noun());
+                    let what = format!("'{name}' is a {noun}, not an integer constant");
+                    self.report_array_length(length.span, &what);
+                    return None;
+                }
+                Some(Res::Prelude(_)) => {
+                    let what = format!("'{name}' is a built-in name, not an integer constant");
+                    self.report_array_length(length.span, &what);
+                    return None;
+                }
+                _ => return None,
+            },
+            ArrayLengthKind::Error => return None,
+        };
+        match value.and_then(|v| u32::try_from(v).ok()) {
+            Some(len) if (1..=MAX_ARRAY_LENGTH).contains(&len) => Some(len),
+            _ => {
+                self.report_array_length(length.span, &shown);
+                None
+            }
+        }
+    }
+
+    fn report_array_length(&mut self, span: Span, what: &str) {
+        self.report(
+            Diagnostic::new(
+                Code::E3031,
+                format!("Invalid array length: {what}."),
+            )
+            .at(span)
+            .note(format!(
+                "the length of `array<T, N>` is an integer literal or the name of an integer constant, from 1 to {MAX_ARRAY_LENGTH}"
+            )),
+        );
     }
 
     // ----- expressions -----------------------------------------------------
@@ -638,8 +795,13 @@ impl<'a> Checker<'a> {
             ExprKind::Bool(_) => TyId::BOOL,
             ExprKind::Color { .. } => TyId::COLOR,
             ExprKind::Str { .. } if construct_implemented(Construct::StringLiteral) => TyId::STRING,
-            // String and array literals, indexing and `self` are gated in this
-            // build (see the tests).
+            ExprKind::Array(items) if construct_implemented(Construct::ArrayLiteral) => {
+                self.array_literal(expr, items, expected)
+            }
+            ExprKind::Index { base, index } if construct_implemented(Construct::Index) => {
+                self.index(base, index)
+            }
+            // `self` is gated in this build (see the tests).
             ExprKind::Str { .. }
             | ExprKind::Array(_)
             | ExprKind::Index { .. }
@@ -647,10 +809,10 @@ impl<'a> Checker<'a> {
             | ExprKind::Error => TyId::ERROR,
             ExprKind::Name(_) => self.name_value(expr),
             ExprKind::Paren(inner) => self.check(inner, expected),
-            ExprKind::Descriptor { name, fields } => self.descriptor(name, fields),
+            ExprKind::Descriptor { name, fields } => self.descriptor(expr, name, fields),
             ExprKind::Unary { op, operand } => self.unary(expr, *op, operand, expected),
             ExprKind::Binary { op, lhs, rhs, .. } => self.binary(expr, *op, lhs, rhs, expected),
-            ExprKind::Call { callee, args } => self.call(expr, callee, args),
+            ExprKind::Call { callee, args } => self.call(expr, callee, args, expected),
             ExprKind::Field { base, name } => self.field(expr, base, name),
         }
     }
@@ -808,7 +970,7 @@ impl<'a> Checker<'a> {
     /// schema's type and each field value is checked with the field's type as
     /// expected type; unknown, duplicate, missing and mistyped fields are the
     /// schema checks' business.
-    fn descriptor(&mut self, name: &Ident, fields: &[DescField]) -> TyId {
+    fn descriptor(&mut self, expr: &Expr, name: &Ident, fields: &[DescField]) -> TyId {
         match self.res.res(name.id) {
             Some(Res::Prelude(PreludeItem::Schema(schema))) => {
                 let Some(def) = self.registry.schema(schema) else {
@@ -876,8 +1038,13 @@ impl<'a> Checker<'a> {
                 };
                 match kind {
                     _ if reused_prelude_name => TyId::ERROR,
+                    DefKind::Struct => match self.struct_type(id) {
+                        Some(ty) => self.struct_literal(expr, name, ty, fields),
+                        // An imported struct whose type is not known.
+                        None => TyId::ERROR,
+                    },
                     // Gated in this build.
-                    DefKind::Struct | DefKind::Material | DefKind::Prefab => TyId::ERROR,
+                    DefKind::Material | DefKind::Prefab => TyId::ERROR,
                     DefKind::SceneObject { kind: None } => TyId::ERROR,
                     kind => {
                         let (def_name, noun, span) = (def.name.clone(), kind.noun(), def.span);
@@ -939,11 +1106,202 @@ impl<'a> Checker<'a> {
         self.report(diagnostic);
     }
 
+    // ----- arrays ----------------------------------------------------------
+
+    /// `[e0, e1, …]` (`spec/language.md` 5.6): the elements have one type
+    /// after literal resolution and the length is their count. With an
+    /// expected `array<T, N>`, every element is checked against `T`;
+    /// otherwise the first element that is not a literal decides `T` (literals
+    /// adopt it), and an array of literals only is `f32` if any is a float
+    /// literal, `i32` otherwise (decision 0035 item 4).
+    fn array_literal(&mut self, expr: &Expr, items: &[Expr], expected: Option<TyId>) -> TyId {
+        let Ok(len) = u32::try_from(items.len()) else {
+            return TyId::ERROR;
+        };
+        if len > MAX_ARRAY_LENGTH {
+            self.synth_args(items);
+            self.report_array_length(expr.span, &format!("the array literal has {len} elements"));
+            return TyId::ERROR;
+        }
+        let expected_element = match expected.map(|t| self.out.interner.get(t)) {
+            Some(Ty::Array { element, .. }) if !self.is_error(element) => Some(element),
+            _ => None,
+        };
+        let element = match expected_element {
+            Some(element) => element,
+            None => {
+                let mut decided = None;
+                for item in items {
+                    if literal_kind(item).is_none() {
+                        decided = Some(self.check(item, None));
+                        break;
+                    }
+                }
+                match decided {
+                    Some(ty) => ty,
+                    None => {
+                        let float = items
+                            .iter()
+                            .any(|item| literal_kind(item) == Some(LiteralKind::Float));
+                        if float { TyId::F32 } else { TyId::I32 }
+                    }
+                }
+            }
+        };
+        if self.is_error(element) {
+            self.synth_unchecked(items);
+            return TyId::ERROR;
+        }
+        let mut ok = true;
+        let element_name = self.display(element);
+        for (index, item) in items.iter().enumerate() {
+            let actual = match self.ty_of(item.id) {
+                // The element that decided the type.
+                Some(ty) if expected_element.is_none() => ty,
+                _ => self.check(item, Some(element)),
+            };
+            if self.is_error(actual) {
+                ok = false;
+            } else if !self.assignable(actual, element) {
+                ok = false;
+                let actual_name = self.display(actual);
+                let message = if expected_element.is_some() {
+                    format!(
+                        "Element {} of the array literal must be {element_name}, but it has type {actual_name}.",
+                        index + 1
+                    )
+                } else {
+                    format!(
+                        "Element {} of the array literal has type {actual_name}, but the elements of this array have type {element_name}.",
+                        index + 1
+                    )
+                };
+                self.report(
+                    Diagnostic::new(Code::E3001, message)
+                        .at(item.span)
+                        .expected(element_name.clone())
+                        .actual(actual_name)
+                        .note("the elements of an array literal have one type"),
+                );
+            }
+        }
+        if ok && !self.too_deep(element, expr.span) {
+            self.out.interner.intern(Ty::Array { element, len })
+        } else {
+            TyId::ERROR
+        }
+    }
+
+    /// `E3032` if an array of `element` would nest deeper than
+    /// [`MAX_TYPE_DEPTH`] levels (decision 0035 item 7).
+    pub(super) fn too_deep(&mut self, element: TyId, span: Span) -> bool {
+        let depth = self.out.interner.depth(element).saturating_add(1);
+        if depth <= MAX_TYPE_DEPTH {
+            return false;
+        }
+        self.report_too_deep(span, "This array type");
+        true
+    }
+
+    /// `E3032` at `span` for `subject` ("This array type", "The struct 'S'").
+    pub(super) fn report_too_deep(&mut self, span: Span, subject: &str) {
+        self.report(
+            Diagnostic::new(
+                Code::E3032,
+                format!(
+                    "{subject} would nest more than {MAX_TYPE_DEPTH} levels of arrays and structs."
+                ),
+            )
+            .at(span)
+            .note(format!(
+                "array and struct types nest at most {MAX_TYPE_DEPTH} levels deep"
+            )),
+        );
+    }
+
+    /// Check the expressions of `items` that have not been checked yet.
+    fn synth_unchecked(&mut self, items: &[Expr]) {
+        for item in items {
+            if self.ty_of(item.id).is_none() {
+                self.check(item, None);
+            }
+        }
+    }
+
+    /// `base[index]` (`spec/language.md` 5.3, 5.6): an element of an array or
+    /// a column of a `mat4`, with an `i32` or `u32` index. A constant index
+    /// out of range is `E3030`, reported when the index is folded.
+    fn index(&mut self, base: &Expr, index: &Expr) -> TyId {
+        let base_ty = self.check(base, None);
+        let index_ty = self.check(index, None);
+        let index_ok = match self.out.interner.get(index_ty) {
+            Ty::I32 | Ty::U32 => true,
+            Ty::Error => false,
+            _ => {
+                let name = self.display(index_ty);
+                self.report(
+                    Diagnostic::new(
+                        Code::E3001,
+                        format!("An index must be an i32 or u32, but this one has type {name}."),
+                    )
+                    .at(index.span)
+                    .expected("i32 or u32")
+                    .actual(name),
+                );
+                false
+            }
+        };
+        let element = match self.out.interner.get(base_ty) {
+            Ty::Array { element, .. } => element,
+            Ty::Mat4 => TyId::VEC4,
+            Ty::Error => return TyId::ERROR,
+            _ => {
+                let name = self.display(base_ty);
+                self.report(
+                    Diagnostic::new(
+                        Code::E3001,
+                        format!("Only arrays and mat4 can be indexed, but this expression has type {name}."),
+                    )
+                    .at(base.span)
+                    .expected("an array or mat4")
+                    .actual(name.clone())
+                    .note(if self.out.interner.vector_dim(base_ty).is_some() {
+                        "read a vector component with `.x`, `.y`, `.z` or `.w`"
+                    } else {
+                        "`a[i]` reads an element of an array or a column of a mat4"
+                    }),
+                );
+                return TyId::ERROR;
+            }
+        };
+        if index_ok { element } else { TyId::ERROR }
+    }
+
     // ----- operators -------------------------------------------------------
 
     fn unary(&mut self, expr: &Expr, op: UnaryOp, operand: &Expr, expected: Option<TyId>) -> TyId {
-        if !construct_implemented(unary_construct(op)) || op != UnaryOp::Neg {
-            // `!` is gated in this build.
+        if !construct_implemented(unary_construct(op)) {
+            return TyId::ERROR;
+        }
+        if op == UnaryOp::Not {
+            let operand_ty = self.check(operand, Some(TyId::BOOL));
+            let ty = self.out.interner.get(operand_ty);
+            if ty == Ty::Error {
+                return TyId::ERROR;
+            }
+            if logical_result(&[ty]).is_some() {
+                return TyId::BOOL;
+            }
+            let name = self.display(operand_ty);
+            self.report(
+                Diagnostic::new(
+                    Code::E3014,
+                    format!("The operator `!` is not defined for {name}."),
+                )
+                .at(expr.span)
+                .actual(name)
+                .note("`!` negates a bool; v0.1 has no truthiness"),
+            );
             return TyId::ERROR;
         }
         let operand_ty = self.check(operand, expected);
@@ -986,14 +1344,16 @@ impl<'a> Checker<'a> {
         if !construct_implemented(binary_construct(op)) {
             return TyId::ERROR;
         }
-        let Some(arith) = arith_op(op) else {
-            // The other operators are gated in this build.
-            return TyId::ERROR;
+        let arith = match binary_class(op) {
+            BinaryClass::Arith(arith) => arith,
+            BinaryClass::Compare(compare) => return self.comparison(expr, compare, lhs, rhs),
+            BinaryClass::Logic(logic) => return self.logical(expr, logic, lhs, rhs),
         };
-        // `+` and `-` give their operands' type, so the expected type flows
-        // into both; `*` and `/` mix types (`vec3 * f32`), so it does not.
+        // `+`, `-` and `%` give their operands' type, so the expected type
+        // flows into both; `*` and `/` mix types (`vec3 * f32`), so it does
+        // not.
         let operand_expected = match arith {
-            ArithOp::Add | ArithOp::Sub => expected,
+            ArithOp::Add | ArithOp::Sub | ArithOp::Rem => expected,
             ArithOp::Mul | ArithOp::Div => None,
         };
         let (lhs_ty, rhs_ty) = match (literal_kind(lhs), literal_kind(rhs)) {
@@ -1046,29 +1406,126 @@ impl<'a> Checker<'a> {
         if let Some(result) = arithmetic_result(op, l, r) {
             return self.out.interner.intern(result);
         }
-        let (lhs_name, rhs_name) = (self.display(lhs), self.display(rhs));
+        self.report_no_row(span, op.symbol(), lhs, rhs);
+        TyId::ERROR
+    }
+
+    /// The operand types of a binary operator whose operands must have one
+    /// type (comparison, equality): a literal operand adopts the numeric
+    /// scalar type of the other operand (a float literal next to an integer
+    /// is asked to become that integer, which is `E3041`); two literal
+    /// operands are `f32` if either is a float literal, `i32` otherwise.
+    fn same_typed_operands(&mut self, lhs: &Expr, rhs: &Expr) -> (TyId, TyId) {
+        match (literal_kind(lhs), literal_kind(rhs)) {
+            (None, Some(kind)) => {
+                let lhs_ty = self.check(lhs, None);
+                let target = self.literal_partner_type(lhs_ty, kind);
+                self.assign_literal(rhs, target);
+                (lhs_ty, target)
+            }
+            (Some(kind), None) => {
+                let rhs_ty = self.check(rhs, None);
+                let target = self.literal_partner_type(rhs_ty, kind);
+                self.assign_literal(lhs, target);
+                (target, rhs_ty)
+            }
+            (Some(a), Some(b)) => {
+                let target = if a == LiteralKind::Float || b == LiteralKind::Float {
+                    TyId::F32
+                } else {
+                    TyId::I32
+                };
+                self.assign_literal(lhs, target);
+                self.assign_literal(rhs, target);
+                (target, target)
+            }
+            (None, None) => (self.check(lhs, None), self.check(rhs, None)),
+        }
+    }
+
+    /// The type a literal of `kind` adopts next to an operand of type
+    /// `other` that it must equal.
+    fn literal_partner_type(&self, other: TyId, kind: LiteralKind) -> TyId {
+        if self.out.interner.is_numeric_scalar(other) {
+            other
+        } else {
+            Self::literal_default(kind)
+        }
+    }
+
+    /// `< <= > >= == !=` (section 6.2): same-typed operands, `bool` result.
+    fn comparison(&mut self, expr: &Expr, op: CompareOp, lhs: &Expr, rhs: &Expr) -> TyId {
+        let (lhs_ty, rhs_ty) = self.same_typed_operands(lhs, rhs);
+        let (l, r) = (self.out.interner.get(lhs_ty), self.out.interner.get(rhs_ty));
+        if l == Ty::Error || r == Ty::Error {
+            return TyId::ERROR;
+        }
+        if comparison_result(op, l, r).is_some() {
+            return TyId::BOOL;
+        }
         let symbol = op.symbol();
+        let vector = |t: TyId| self.out.interner.vector_dim(t).is_some();
+        if op.is_equality() && vector(lhs_ty) && vector(rhs_ty) {
+            let (lhs_name, rhs_name) = (self.display(lhs_ty), self.display(rhs_ty));
+            self.report(
+                Diagnostic::new(
+                    Code::E3012,
+                    format!(
+                        "The operator `{symbol}` is not defined for vectors ({lhs_name} and {rhs_name}) in v0.1."
+                    ),
+                )
+                .at(expr.span)
+                .help("compare the components one by one, for example `a.x == b.x && a.y == b.y`"),
+            );
+            return TyId::ERROR;
+        }
+        self.report_no_row(expr.span, symbol, lhs_ty, rhs_ty);
+        TyId::ERROR
+    }
+
+    /// `&& ||` (section 6.2): `bool` operands, `bool` result.
+    fn logical(&mut self, expr: &Expr, op: LogicOp, lhs: &Expr, rhs: &Expr) -> TyId {
+        let lhs_ty = self.check(lhs, Some(TyId::BOOL));
+        let rhs_ty = self.check(rhs, Some(TyId::BOOL));
+        let (l, r) = (self.out.interner.get(lhs_ty), self.out.interner.get(rhs_ty));
+        if l == Ty::Error || r == Ty::Error {
+            return TyId::ERROR;
+        }
+        if logical_result(&[l, r]).is_some() {
+            return TyId::BOOL;
+        }
+        self.report_no_row(expr.span, op.symbol(), lhs_ty, rhs_ty);
+        TyId::ERROR
+    }
+
+    /// `E3014`: the operator table has no row for these operand types.
+    fn report_no_row(&mut self, span: Span, symbol: &str, lhs: TyId, rhs: TyId) {
+        let (lhs_name, rhs_name) = (self.display(lhs), self.display(rhs));
         let mut diagnostic = Diagnostic::new(
             Code::E3014,
             format!("The operator `{symbol}` is not defined for {lhs_name} and {rhs_name}."),
         )
         .at(span);
         let interner = &self.out.interner;
+        let vectors = (interner.vector_dim(lhs), interner.vector_dim(rhs));
+        let component_wise = matches!(symbol, "+" | "-" | "*" | "/");
         if interner.is_numeric_scalar(lhs) && interner.is_numeric_scalar(rhs) {
             diagnostic = diagnostic.help(format!(
                 "v0.1 has no implicit conversions; convert one operand explicitly, for example `{lhs_name}(…)`"
             ));
-        } else if let (Some(a), Some(b)) = (interner.vector_dim(lhs), interner.vector_dim(rhs)) {
+        } else if symbol == "%" {
+            diagnostic =
+                diagnostic.note("`%` is defined for f32, i32 and u32 operands of one type");
+        } else if let (true, Some(a), Some(b)) = (component_wise, vectors.0, vectors.1) {
             if a != b {
                 diagnostic = diagnostic.note("vector operands must have the same dimension");
             }
-        } else if interner.vector_dim(lhs).is_some() || interner.vector_dim(rhs).is_some() {
+        } else if component_wise && (vectors.0.is_some() || vectors.1.is_some()) {
             diagnostic = diagnostic.note(
                 "a vector combines with a vector of the same dimension, is multiplied or divided by an f32, or multiplies an f32",
             );
         }
         self.report(diagnostic);
-        TyId::ERROR
     }
 
     fn report_color_arithmetic(&mut self, span: Span, symbol: &str) {
@@ -1103,7 +1560,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    fn call(&mut self, expr: &Expr, callee: &Expr, args: &[Expr]) -> TyId {
+    fn call(&mut self, expr: &Expr, callee: &Expr, args: &[Expr], expected: Option<TyId>) -> TyId {
         if let ExprKind::Name(_) = &callee.kind {
             match self.res.res(callee.id) {
                 Some(Res::Prelude(PreludeItem::Type(name))) => {
@@ -1120,7 +1577,7 @@ impl<'a> Checker<'a> {
                         name: function.name,
                         const_eligible: function.const_eligible,
                     };
-                    return self.function_call(expr, name, function, args, kind);
+                    return self.function_call(expr, name, function, args, kind, expected);
                 }
                 Some(Res::Def(id))
                     if self.res.def(id).is_some_and(|def| def.kind == DefKind::Fn) =>
@@ -1382,7 +1839,7 @@ impl<'a> Checker<'a> {
                     const_eligible: function.const_eligible,
                 };
                 let name = format!("{namespace}.{member}");
-                self.function_call(expr, &name, function, args, kind)
+                self.function_call(expr, &name, function, args, kind, None)
             }
             Some(NamespaceMember::Value(value)) => {
                 if !is_implemented(value.since) {
@@ -1418,6 +1875,7 @@ impl<'a> Checker<'a> {
         function: &IntrinsicDef,
         args: &[Expr],
         kind: CallKind,
+        expected: Option<TyId>,
     ) -> TyId {
         let same_arity: Vec<_> = function
             .signatures
@@ -1490,7 +1948,33 @@ impl<'a> Checker<'a> {
                 return self.out.interner.from_type_ref(ret);
             }
         }
-        self.overloaded_call(expr, name, function, args, kind)
+        self.overloaded_call(expr, name, function, args, kind, expected)
+    }
+
+    /// A call whose arguments are all literals takes the scalar type its
+    /// context expects when an overload with that result accepts them
+    /// (decision 0035 item 3): `const N: u32 = max(1, 2);` is the `u32`
+    /// overload, where the literal costs of decision 0024 item 8 alone
+    /// would choose `i32`.
+    fn literal_call_for(
+        &self,
+        function: &IntrinsicDef,
+        args: &[ArgType],
+        expected: Option<TyId>,
+    ) -> Option<crate::stdlib::Resolution> {
+        let expected = expected.filter(|t| self.out.interner.is_numeric_scalar(*t))?;
+        let target = self.out.interner.to_type_ref(expected)?;
+        let adopted: Option<Vec<ArgType>> = args
+            .iter()
+            .map(|arg| match (arg, target) {
+                (ArgType::IntLiteral, _) | (ArgType::FloatLiteral, crate::stdlib::TypeRef::F32) => {
+                    Some(ArgType::Concrete(target))
+                }
+                _ => None,
+            })
+            .collect();
+        let resolution = function.resolve(&adopted?).ok()?;
+        (resolution.ret == target).then_some(resolution)
     }
 
     /// Overload resolution against class-typed signatures: literal arguments
@@ -1502,6 +1986,7 @@ impl<'a> Checker<'a> {
         function: &IntrinsicDef,
         args: &[Expr],
         kind: CallKind,
+        expected: Option<TyId>,
     ) -> TyId {
         let mut arg_types = Vec::with_capacity(args.len());
         let mut failed = false;
@@ -1525,7 +2010,8 @@ impl<'a> Checker<'a> {
         let resolution = if failed {
             None
         } else {
-            function.resolve(&arg_types).ok()
+            self.literal_call_for(function, &arg_types, expected)
+                .or_else(|| function.resolve(&arg_types).ok())
         };
         let Some(resolution) = resolution else {
             for arg in args {
@@ -1608,6 +2094,9 @@ impl<'a> Checker<'a> {
             }
         }
         let base_ty = self.check(base, None);
+        if self.out.interner.struct_def(base_ty).is_some() {
+            return self.struct_field(expr, base_ty, name);
+        }
         self.components(expr, base_ty, name)
     }
 

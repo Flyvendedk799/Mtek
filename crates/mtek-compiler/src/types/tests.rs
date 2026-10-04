@@ -5,7 +5,6 @@ use super::*;
 use crate::diagnostics::{Code, Diagnostic, Severity};
 use crate::resolve::{Construct, DefKind, construct_implemented, resolve_module};
 use crate::source::FileId;
-use crate::stdlib::registry;
 use crate::syntax::{lex_str, parse_module};
 
 struct Checked {
@@ -220,6 +219,126 @@ fn operators_without_a_row_are_e3014() {
     // Next to an i32 a float literal must become an i32, which it cannot.
     let c = consts("const N = 2;\nconst X = N * 1.5;");
     assert_eq!(c.codes(), ["E3041"]);
+}
+
+#[test]
+fn remainders_fold_with_the_specified_semantics() {
+    let c = clean(
+        "const A = 7 % 3;\nconst B = -7 % 3;\nconst C: u32 = 7 % 4;\nconst D = 7.5 % 2.0;\nconst E = -7.5 % 2;\nconst F: f32 = 9 % 4;\nconst G = 2147483647 % -1;",
+    );
+    assert_eq!(c.value("A"), Some(ConstValue::I32(1)));
+    // The remainder has the sign of the dividend.
+    assert_eq!(c.value("B"), Some(ConstValue::I32(-1)));
+    assert_eq!(c.value("C"), Some(ConstValue::U32(3)));
+    assert_eq!(c.value("D"), Some(ConstValue::F32(1.5)));
+    assert_eq!(c.value("E"), Some(ConstValue::F32(-1.5)));
+    assert_eq!(c.value("F"), Some(ConstValue::F32(1.0)));
+    assert_eq!(c.value("G"), Some(ConstValue::I32(0)));
+    for (source, message) in [
+        (
+            "const A = 7 % 0;",
+            "Division by zero in a constant expression: 7 % 0.",
+        ),
+        (
+            "const A: u32 = 7 % 0;",
+            "Division by zero in a constant expression: 7 % 0.",
+        ),
+        (
+            "const A = -2147483648 % -1;",
+            "Integer overflow in a constant expression: -2147483648 % -1 does not fit in i32.",
+        ),
+        (
+            "const A = 1.0 % 0.0;",
+            "A constant expression has no finite f32 value: 1.0 % 0.0 is not finite.",
+        ),
+    ] {
+        let c = consts(source);
+        assert_eq!(c.codes(), ["E3040"], "{source}");
+        assert_eq!(c.only("E3040").message, message, "{source}");
+    }
+    let c = consts("const A = vec3(1.0) % vec3(2.0);");
+    let d = c.only("E3014");
+    assert_eq!(
+        d.message,
+        "The operator `%` is not defined for vec3 and vec3."
+    );
+    assert_eq!(
+        d.notes,
+        ["`%` is defined for f32, i32 and u32 operands of one type"]
+    );
+}
+
+#[test]
+fn comparisons_equality_and_logic_give_bool() {
+    let c = clean(
+        "const N: u32 = 3;\nconst A = 1 < 2;\nconst B = 2.5 >= 2;\nconst C = N <= 3;\nconst D = 1.0 > 2.0;\nconst E = N == 3;\nconst F = true != false;\nconst G = -0.0 == 0.0;\nconst H = !(A && D) || false;\nconst I = !true;",
+    );
+    for (name, value) in [
+        ("A", true),
+        ("B", true),
+        ("C", true),
+        ("D", false),
+        ("E", true),
+        ("F", true),
+        ("G", true),
+        ("H", true),
+        ("I", false),
+    ] {
+        assert_eq!(
+            (c.ty(name), c.value(name)),
+            ("bool".into(), Some(ConstValue::Bool(value))),
+            "{name}"
+        );
+    }
+    for (source, code, message) in [
+        (
+            "const A = vec2(1.0) == vec2(1.0);",
+            "E3012",
+            "The operator `==` is not defined for vectors (vec2 and vec2) in v0.1.",
+        ),
+        (
+            "const A = vec3(1.0) < vec3(2.0);",
+            "E3014",
+            "The operator `<` is not defined for vec3 and vec3.",
+        ),
+        (
+            "const A = true < false;",
+            "E3014",
+            "The operator `<` is not defined for bool and bool.",
+        ),
+        (
+            "const N: u32 = 1;\nconst A = N == 1.5;",
+            "E3041",
+            "The float literal 1.5 is not representable as u32: a float literal always has type f32.",
+        ),
+        (
+            "const H = 1.0;\nconst N = 1;\nconst A = H == N;",
+            "E3014",
+            "The operator `==` is not defined for f32 and i32.",
+        ),
+        (
+            "const A = 1 && true;",
+            "E3014",
+            "The operator `&&` is not defined for i32 and bool.",
+        ),
+        (
+            "const A = !1.0;",
+            "E3014",
+            "The operator `!` is not defined for f32.",
+        ),
+        (
+            "const A = #ffffff == #ffffff;",
+            "E3014",
+            "The operator `==` is not defined for color and color.",
+        ),
+    ] {
+        let c = consts(source);
+        assert_eq!(c.codes(), [code], "{source}");
+        assert_eq!(c.only(code).message, message, "{source}");
+    }
+    // Both operands are folded: an overflow behind `false &&` is reported.
+    let c = consts("const A = false && 2147483647 + 1 > 0;");
+    assert_eq!(c.codes(), ["E3040"]);
 }
 
 #[test]
@@ -665,17 +784,336 @@ fn field_values_are_typed_and_folded() {
 }
 
 #[test]
-fn gated_constructs_are_not_typed_or_reported_again() {
-    for source in [
-        "const R = 7.0 % 2.0;",
-        "const S = sin(1.0);",
-        "const B = 1.0 < 2.0;",
-        "const T = \"text\";",
-        "const M = mat4.identity();",
-        "const F = frame.time;",
-        "const K = Key.A;",
-        "const X = [1.0, 2.0];",
+fn intrinsics_resolve_their_overload_from_the_registry_and_fold() {
+    let c = clean(
+        "const A = sin(1.0);\nconst B = max(1, 2);\nconst C: u32 = max(1, 2);\nconst D = abs(-3);\nconst E = mix(vec3(0.0), vec3(2.0), 0.25);\nconst F = length(vec2(3, 4));\nconst G = dot(vec3(1.0), vec3(1.0, 2.0, 3.0));\nconst H = clamp(1.5, 0, 1);\nconst I: f32 = min(1, 2);\nconst J = cross(vec3(1, 0, 0), vec3(0, 1, 0));\nconst K = round(2.5);\nconst L = transpose(mat4.translation(vec3(1, 2, 3)));",
+    );
+    assert_eq!(c.value("A"), Some(ConstValue::F32(libm::sin(1.0) as f32)));
+    assert_eq!(
+        (c.ty("B"), c.value("B")),
+        ("i32".into(), Some(ConstValue::I32(2)))
+    );
+    // All-literal arguments take the expected scalar type.
+    assert_eq!(
+        (c.ty("C"), c.value("C")),
+        ("u32".into(), Some(ConstValue::U32(2)))
+    );
+    assert_eq!(c.value("D"), Some(ConstValue::I32(3)));
+    assert_eq!(c.value("E"), Some(ConstValue::Vec3([0.5; 3])));
+    assert_eq!(
+        (c.ty("F"), c.value("F")),
+        ("f32".into(), Some(ConstValue::F32(5.0)))
+    );
+    assert_eq!(c.value("G"), Some(ConstValue::F32(6.0)));
+    assert_eq!(c.value("H"), Some(ConstValue::F32(1.0)));
+    assert_eq!(c.value("I"), Some(ConstValue::F32(1.0)));
+    assert_eq!(c.value("J"), Some(ConstValue::Vec3([0.0, 0.0, 1.0])));
+    assert_eq!(c.value("K"), Some(ConstValue::F32(2.0)));
+    let Some(ConstValue::Mat4(l)) = c.value("L") else {
+        panic!()
+    };
+    assert_eq!(l[0], [1.0, 0.0, 0.0, 1.0]);
+
+    for (source, code, message) in [
+        (
+            "const A = sin(true);",
+            "E3001",
+            "No signature of `sin` accepts (bool).",
+        ),
+        (
+            "const A = max(vec3(1.0), 2.0);",
+            "E3001",
+            "No signature of `max` accepts (vec3, f32).",
+        ),
+        (
+            "const A = dot(1.0, 2.0);",
+            "E3001",
+            "No signature of `dot` accepts (f32, f32).",
+        ),
+        (
+            "const A = cross(vec2(1.0), vec3(1.0));",
+            "E3001",
+            "Argument 1 of `cross(a: vec3, b: vec3)` expects vec3, but received vec2.",
+        ),
+        (
+            "const A = clamp(1.0, 2.0);",
+            "E3002",
+            "`clamp` takes 3 arguments, but 2 were given.",
+        ),
+        (
+            "const A = sin();",
+            "E3002",
+            "`sin` takes 1 argument, but 0 were given.",
+        ),
+        (
+            "const A = sqrt(-1.0);",
+            "E3040",
+            "A constant expression has no finite f32 value: sqrt(-1.0) is not finite.",
+        ),
+        (
+            "const A = log(0.0);",
+            "E3040",
+            "A constant expression has no finite f32 value: log(0.0) is not finite.",
+        ),
     ] {
+        let c = consts(source);
+        assert_eq!(c.codes(), [code], "{source}");
+        assert_eq!(c.only(code).message, message, "{source}");
+    }
+}
+
+#[test]
+fn mat4_constructors_fold_column_major() {
+    let c = clean(
+        "const I = mat4.identity();\nconst T = mat4.translation(vec3(1, 2, 3));\nconst S = mat4.scale(vec3(2.0));\nconst R = mat4.rotation(quat.identity());\nconst C = mat4.columns(vec4(1.0), vec4(2.0), vec4(3.0), vec4(4.0));\nconst P = T * vec4(0, 0, 0, 1);\nconst M = T * S;",
+    );
+    assert_eq!(c.ty("I"), "mat4");
+    assert_eq!(c.value("I"), c.value("R"));
+    let Some(ConstValue::Mat4(t)) = c.value("T") else {
+        panic!()
+    };
+    assert_eq!(t[3], [1.0, 2.0, 3.0, 1.0]);
+    let Some(ConstValue::Mat4(columns)) = c.value("C") else {
+        panic!()
+    };
+    assert_eq!(columns[2], [3.0; 4]);
+    assert_eq!(c.value("P"), Some(ConstValue::Vec4([1.0, 2.0, 3.0, 1.0])));
+    let Some(ConstValue::Mat4(m)) = c.value("M") else {
+        panic!()
+    };
+    assert_eq!(m[0], [2.0, 0.0, 0.0, 0.0]);
+    assert_eq!(m[3], [1.0, 2.0, 3.0, 1.0]);
+    // A rotation matrix rotates like its quaternion.
+    let c = clean(
+        "const Q = quat.axis_angle(vec3(0, 0, 1), 1.5707964);\nconst V = mat4.rotation(Q) * vec4(1, 0, 0, 0);",
+    );
+    let Some(ConstValue::Vec4(v)) = c.value("V") else {
+        panic!()
+    };
+    assert!(v[0].abs() < 1.0e-6 && (v[1] - 1.0).abs() < 1.0e-6, "{v:?}");
+    let c = consts("const A = mat4.translation(vec4(1.0));");
+    assert_eq!(
+        c.only("E3001").message,
+        "Argument 1 of `mat4.translation(v: vec3)` expects vec3, but received vec4."
+    );
+}
+
+#[test]
+fn strings_are_values_without_operators() {
+    let c = clean("const TITLE = \"Show\\troom\";\nconst SAME: string = TITLE;");
+    assert_eq!(c.ty("SAME"), "string");
+    assert_eq!(c.value("SAME"), Some(ConstValue::Str("Show\troom".into())));
+    let c = consts("const A = \"a\" + \"b\";");
+    assert_eq!(
+        c.only("E3014").message,
+        "The operator `+` is not defined for string and string."
+    );
+    let c = consts("const A = \"a\" == \"a\";");
+    assert_eq!(c.codes(), ["E3014"]);
+}
+
+#[test]
+fn arrays_literals_lengths_and_indexing() {
+    let c = clean(
+        "const N: u32 = 3;\nconst A = [1, 2, 3];\nconst B = [1, 2.5];\nconst C: array<f32, N> = [1, 2, 3];\nconst D = [vec2(1.0), vec2(0, 1)];\nconst E = A[2];\nconst F = D[1].y;\nconst G = [[1, 2], [3, 4]][1][0];\nconst M = mat4.translation(vec3(1, 2, 3))[3];\nconst H: array<u32, 2> = [7, 8];\nconst I = H[N - 2];",
+    );
+    assert_eq!(c.ty("A"), "array<i32, 3>");
+    assert_eq!(
+        c.value("A"),
+        Some(ConstValue::Array(vec![
+            ConstValue::I32(1),
+            ConstValue::I32(2),
+            ConstValue::I32(3)
+        ]))
+    );
+    assert_eq!(c.ty("B"), "array<f32, 2>");
+    assert_eq!(c.ty("C"), "array<f32, 3>");
+    assert_eq!(c.ty("D"), "array<vec2, 2>");
+    assert_eq!(c.value("E"), Some(ConstValue::I32(3)));
+    assert_eq!(c.value("F"), Some(ConstValue::F32(1.0)));
+    assert_eq!(c.value("G"), Some(ConstValue::I32(3)));
+    assert_eq!(c.value("M"), Some(ConstValue::Vec4([1.0, 2.0, 3.0, 1.0])));
+    assert_eq!(c.value("I"), Some(ConstValue::U32(8)));
+
+    for (source, code, message) in [
+        (
+            "const A = [1.0, 2.0][2];",
+            "E3030",
+            "The index 2 is out of range for array<f32, 2>: valid indices are 0 to 1.",
+        ),
+        (
+            "const A = [1.0, 2.0][-1];",
+            "E3030",
+            "The index -1 is out of range for array<f32, 2>: valid indices are 0 to 1.",
+        ),
+        (
+            "const A = mat4.identity()[4];",
+            "E3030",
+            "The index 4 is out of range for mat4: valid indices are 0 to 3.",
+        ),
+        (
+            "const A: array<f32, 0> = [1.0];",
+            "E3031",
+            "Invalid array length: the length is 0.",
+        ),
+        (
+            "const A: array<f32, 65537> = [1.0];",
+            "E3031",
+            "Invalid array length: the length is 65537.",
+        ),
+        (
+            "const L = -2;\nconst A: array<f32, L> = [1.0];",
+            "E3031",
+            "Invalid array length: the constant 'L' is -2.",
+        ),
+        (
+            "const L = 2.0;\nconst A: array<f32, L> = [1.0, 2.0];",
+            "E3031",
+            "Invalid array length: the constant 'L' has the value 2.0, which is not an integer.",
+        ),
+        (
+            "const A: array = [1.0];",
+            "E3003",
+            "The type 'array' needs an element type and a length: `array<T, N>`.",
+        ),
+        (
+            "const A = [1.0, vec2(1.0)];",
+            "E3001",
+            "Element 1 of the array literal has type f32, but the elements of this array have type vec2.",
+        ),
+        (
+            "const A: array<vec3, 2> = [vec3(1.0), 2.0];",
+            "E3001",
+            "Element 2 of the array literal must be vec3, but it has type f32.",
+        ),
+        (
+            "const A: array<f32, 3> = [1.0, 2.0];",
+            "E3001",
+            "The constant 'A' is declared as array<f32, 3>, but its value has type array<f32, 2>.",
+        ),
+        (
+            "const A = [1.0][0.0];",
+            "E3001",
+            "An index must be an i32 or u32, but this one has type f32.",
+        ),
+        (
+            "const A = vec3(1.0)[0];",
+            "E3001",
+            "Only arrays and mat4 can be indexed, but this expression has type vec3.",
+        ),
+    ] {
+        let c = consts(source);
+        assert_eq!(c.codes(), [code], "{source}");
+        assert_eq!(c.only(code).message, message, "{source}");
+    }
+    // A constant used as a length is evaluated first, whatever the order.
+    let c = clean("const A: array<f32, N> = [1.0, 2.0];\nconst N = 2;");
+    assert_eq!(c.ty("A"), "array<f32, 2>");
+    let c = consts("const A: array<f32, A> = [1.0];");
+    assert_eq!(c.codes(), ["E2020"]);
+}
+
+#[test]
+fn structs_declare_types_literals_fold_in_declaration_order() {
+    let c = clean(
+        "const P = Pair { b: vec3(1, 2, 3); a: 0.5 };\nstruct Pair { a: f32; b: vec3; }\nconst B = P.b.y;\nconst W: Wrap = Wrap { pairs: [P, Pair { a: 1; b: vec3(0.0) }]; n: N };\nstruct Wrap { pairs: array<Pair, N>; n: u32; }\nconst N: u32 = 2;\nconst A = W.pairs[1].a;",
+    );
+    assert_eq!(c.ty("P"), "Pair");
+    assert_eq!(
+        c.value("P"),
+        Some(ConstValue::Struct {
+            name: "Pair".into(),
+            fields: vec![
+                ("a".into(), ConstValue::F32(0.5)),
+                ("b".into(), ConstValue::Vec3([1.0, 2.0, 3.0])),
+            ],
+        })
+    );
+    assert_eq!(c.value("B"), Some(ConstValue::F32(2.0)));
+    assert_eq!(c.ty("W"), "Wrap");
+    assert_eq!(c.value("A"), Some(ConstValue::F32(1.0)));
+
+    for (source, code, message) in [
+        (
+            "struct Node { value: f32; next: Node; }",
+            "E3020",
+            "The struct 'Node' contains itself: Node → Node.",
+        ),
+        (
+            "struct A { b: array<B, 2>; }\nstruct B { a: A; }",
+            "E3020",
+            "The struct 'A' contains itself: A → B → A.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair { a: 1.0 };",
+            "E3021",
+            "The struct literal Pair is missing the field 'b'.",
+        ),
+        (
+            "struct Trio { a: f32; b: f32; c: f32; }\nconst P = Trio { a: 1.0 };",
+            "E3021",
+            "The struct literal Trio is missing the fields 'b' and 'c'.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair { a: 1.0; b: 2.0; a: 3.0 };",
+            "E3022",
+            "The field 'a' of struct Pair is given twice.",
+        ),
+        (
+            "struct Pair { a: f32; a: vec3; }",
+            "E3022",
+            "The struct 'Pair' declares the field 'a' twice.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair { a: 1.0; b: 2.0; c: 3.0 };",
+            "E3023",
+            "The struct Pair has no field 'c'.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair { a: 1.0; b: 2.0 };\nconst C = P.c;",
+            "E3023",
+            "The struct Pair has no field 'c'.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair { a: vec3(1.0); b: 2.0 };",
+            "E3001",
+            "Field 'a' of struct Pair expects f32, but received vec3.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P: Pair<f32, 2> = Pair { a: 1.0; b: 2.0 };",
+            "E3003",
+            "The type 'Pair' takes no type arguments; only `array<T, N>` does.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair;",
+            "E3001",
+            "'Pair' is a struct, not a value.",
+        ),
+        (
+            "struct Sized { v: array<f32, L>; }\nconst L: Sized = Sized { v: [1.0] };",
+            "E2020",
+            "The constant 'L' is defined in terms of itself: L → Sized → L.",
+        ),
+    ] {
+        let c = consts(source);
+        assert_eq!(c.codes(), [code], "{source}");
+        assert_eq!(c.only(code).message, message, "{source}");
+    }
+    // A did-you-mean for an unknown field.
+    let c = consts("struct Pair { alpha: f32; }\nconst P = Pair { alpah: 1.0 };");
+    assert_eq!(c.codes(), ["E3023"]);
+    assert!(
+        c.only("E3023")
+            .notes
+            .contains(&"help: did you mean 'alpha'?".to_owned()),
+        "{:?}",
+        c.only("E3023").notes
+    );
+}
+
+#[test]
+fn gated_constructs_are_not_typed_or_reported_again() {
+    for source in ["const F = frame.time;", "const K = Key.A;"] {
         let c = consts(source);
         assert_eq!(c.codes(), ["E9010"], "{source}");
     }
@@ -689,7 +1127,6 @@ fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
     for construct in [
         Construct::Fn,
         Construct::CpuFn,
-        Construct::Struct,
         Construct::Material,
         Construct::Prefab,
         Construct::State,
@@ -698,25 +1135,8 @@ fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
         Construct::Handler,
         Construct::Bind,
         Construct::SelfValue,
-        Construct::StringLiteral,
-        Construct::ArrayLiteral,
-        Construct::Index,
-        Construct::Remainder,
-        Construct::Comparison,
-        Construct::Equality,
-        Construct::Logical,
     ] {
         assert!(!construct_implemented(construct), "{construct:?}");
-    }
-    // Global intrinsics are not folded by this build.
-    for intrinsic in &registry().intrinsics {
-        assert!(
-            !intrinsic
-                .since
-                .is_reached_by(crate::resolve::IMPLEMENTED_MILESTONE),
-            "{}",
-            intrinsic.name
-        );
     }
 }
 

@@ -1,0 +1,6 @@
+const STEPS = [1.0, 2.0, 3.0];
+const LAST = STEPS[3];
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3040",
+    "file": "src/main.mtek",
+    "startByte": 13,
+    "endByte": 23,
+    "message": "A constant expression has no finite f32 value: sqrt(-4.0) is not finite.",
+    "notes": [
+      "a folded constant must be a finite f32 value"
+    ]
+  }
+]

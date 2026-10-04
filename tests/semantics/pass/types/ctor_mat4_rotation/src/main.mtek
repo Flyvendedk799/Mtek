@@ -1,0 +1,6 @@
+// D02 6.7: `mat4.rotation(q)`.
+const M = mat4.rotation(quat.euler(0.1, 0.2, 0.3));
+
+scene Demo {
+    camera Main {}
+}

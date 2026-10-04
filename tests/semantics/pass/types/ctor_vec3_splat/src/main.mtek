@@ -1,0 +1,8 @@
+// D02 6.7: `vec3(s)` splats one f32.
+const V = vec3(2.0);
+
+scene Demo {
+    camera Main {
+        position: V;
+    }
+}

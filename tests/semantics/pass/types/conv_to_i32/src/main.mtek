@@ -1,0 +1,11 @@
+// D02 6.5: `i32(x)` from f32 (clamp, then truncate) and u32 (bits).
+const N: u32 = 4294967295;
+const FROM_F32 = i32(-2.9);
+const SATURATED = i32(3.0e9);
+const FROM_U32 = i32(N);
+
+scene Demo {
+    camera Main {
+        position: vec3(f32(FROM_F32), f32(FROM_U32), f32(SATURATED / 429496729));
+    }
+}

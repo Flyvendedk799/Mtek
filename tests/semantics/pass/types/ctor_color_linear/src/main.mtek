@@ -1,0 +1,7 @@
+// D02 6.7: `color.linear(rgb, a)` from linear components.
+const C = color.linear(vec3(0.1, 0.2, 0.3), 1);
+
+scene Demo {
+    clear_color: C;
+    camera Main {}
+}

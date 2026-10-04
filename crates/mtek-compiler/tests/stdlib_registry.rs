@@ -953,9 +953,14 @@ fn since_milestones_follow_the_work_plan() {
     assert_eq!(schema_since("PointLight"), Milestone::M4);
     assert_eq!(schema_since("Static"), Milestone::M5);
     let intrinsic_since = |name: &str| registry.intrinsic(name).unwrap().since;
-    // M2: functions and materials.
-    assert_eq!(intrinsic_since("smoothstep"), Milestone::M2);
-    assert_eq!(registry.namespace("mat4").unwrap().since, Milestone::M2);
+    // M2: functions and materials. The math intrinsics and `mat4` landed with task M2-01
+    // before the M2 gate and are marked as implemented by the current build (decision 0035).
+    assert_eq!(intrinsic_since("smoothstep"), Milestone::M1);
+    assert_eq!(registry.namespace("mat4").unwrap().since, Milestone::M1);
+    assert_eq!(
+        registry.type_def("SurfaceInput").unwrap().since,
+        Milestone::M2
+    );
     // M3: state, events, bind, frame values, input and diagnostics output.
     assert_eq!(intrinsic_since("is_key_down"), Milestone::M3);
     assert_eq!(intrinsic_since("random"), Milestone::M3);

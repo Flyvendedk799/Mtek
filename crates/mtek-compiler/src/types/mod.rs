@@ -1,5 +1,5 @@
 //! Types and constant evaluation (`spec/compiler-architecture.md` section
-//! 4.7, `spec/language.md` sections 5, 6 and 8.1, decision 0026).
+//! 4.7, `spec/language.md` sections 5, 6 and 8.1, decisions 0026 and 0035).
 //!
 //! [`check_module`] types every expression of the constructs this build
 //! implements and folds every constant expression. It reports to the
@@ -10,10 +10,15 @@
 //!   not a value, a call of something that is not a function;
 //! * `E3002` the wrong number of arguments; `E3003` type arguments on a type
 //!   that takes none (unknown type names are the resolver's `E3003`);
-//! * `E3010` arithmetic on `color`, `E3011` negation of `u32`, `E3014` an
-//!   operator without a row for its operand types;
+//! * `E3010` arithmetic on `color`, `E3011` negation of `u32`, `E3012`
+//!   equality of vectors, `E3014` an operator without a row for its operand
+//!   types;
 //! * `E3013` an invalid component or swizzle; `E5001` a field a named entity
 //!   or camera does not have;
+//! * `E3020` a struct that contains itself, `E3021`–`E3023` a missing,
+//!   duplicate or unknown struct field; `E3030` a constant index out of
+//!   range, `E3031` an invalid array length, `E3032` a type nested deeper than
+//!   256 levels (decision 0035);
 //! * `E3041` a literal not representable in the type its context requires;
 //! * `W3050` a conversion to the type the value already has;
 //! * `E3040` overflow, division by zero or a non-finite `f32` while folding;
@@ -33,14 +38,17 @@
 //!   them;
 //! - `ops`: the operator typing table;
 //! - `check`: the checker; `consteval`: folding and constant declarations;
+//!   `intrinsics`: the compile-time semantics of the global intrinsics;
 //! - [`scene`]: the scene and schema checks and their result.
 
 mod check;
 mod consteval;
+mod intrinsics;
 mod ops;
 pub mod scene;
 #[cfg(test)]
 mod scene_tests;
+mod structs;
 #[cfg(test)]
 mod tests;
 pub mod ty;
@@ -49,7 +57,7 @@ pub mod value;
 use std::collections::BTreeMap;
 
 pub use scene::{CheckedEntity, CheckedField, CheckedObject, CheckedScene, FieldOrigin};
-pub use ty::{Ty, TyId, TyInterner};
+pub use ty::{StructDef, StructKey, Ty, TyId, TyInterner};
 pub use value::{ArithOp, ConstValue, EvalError, EvalResult, Scalar};
 
 use crate::diagnostics::Diagnostics;
@@ -103,6 +111,8 @@ pub struct Typeck {
     values: Vec<Option<ConstValue>>,
     non_constant: BTreeMap<NodeId, NonConstant>,
     consts: BTreeMap<DefId, ConstInfo>,
+    /// The type of every struct the module declares, by its `DefId`.
+    structs: BTreeMap<DefId, TyId>,
     scenes: Vec<CheckedScene>,
 }
 
@@ -115,6 +125,7 @@ impl Typeck {
             values: vec![None; slots],
             non_constant: BTreeMap::new(),
             consts: BTreeMap::new(),
+            structs: BTreeMap::new(),
             scenes: Vec::new(),
         }
     }
@@ -166,6 +177,13 @@ impl Typeck {
         self.consts.get(&def)
     }
 
+    /// The type of the struct declared as `def` (its fields:
+    /// [`TyInterner::struct_def`]).
+    #[must_use]
+    pub fn struct_ty(&self, def: DefId) -> Option<TyId> {
+        self.structs.get(&def).copied()
+    }
+
     /// The Mtek spelling of `ty`.
     #[must_use]
     pub fn display(&self, ty: TyId) -> String {
@@ -188,6 +206,24 @@ pub struct ImportedConst<'a> {
 /// the importing module.
 pub type ImportedConsts<'a> = BTreeMap<DefId, ImportedConst<'a>>;
 
+/// A struct another module exports (decision 0035 item 5): its type in the
+/// exporting module's interner, which carries its fields.
+#[derive(Clone, Copy, Debug)]
+pub struct ImportedStruct<'a> {
+    /// The exporting module's types.
+    pub interner: &'a TyInterner,
+    /// The struct type (an id of `interner`).
+    pub ty: TyId,
+}
+
+/// Everything a module imports that has a type: constants and structs, by
+/// the `DefId` of the imported name in the importing module.
+#[derive(Clone, Debug, Default)]
+pub struct Imports<'a> {
+    pub consts: ImportedConsts<'a>,
+    pub structs: BTreeMap<DefId, ImportedStruct<'a>>,
+}
+
 /// Type-check `module` (whose source text is `text`) and fold its constant
 /// expressions, reporting to `sink`. Names were resolved into `resolution`;
 /// names the resolver could not resolve (`Res::Error`) are not reported
@@ -199,7 +235,7 @@ pub fn check_module(
     resolution: &Resolution,
     sink: &mut Diagnostics,
 ) -> Typeck {
-    check_module_with_imports(module, text, resolution, &ImportedConsts::new(), sink)
+    check_module_with_imports(module, text, resolution, &Imports::default(), sink)
 }
 
 /// [`check_module`] for a module that imports constants: an imported name
@@ -207,17 +243,28 @@ pub fn check_module(
 /// this module's interner) and value, so uses fold exactly like uses of a
 /// constant of the module. An imported name that is not there (its module
 /// was not checked first, which only an import cycle causes, or it is not a
-/// constant) has the type `Error` and no further diagnostic.
+/// constant) has the type `Error` and no further diagnostic. An imported
+/// struct keeps its identity and brings its fields along (decision 0035
+/// item 5).
 #[must_use]
 pub fn check_module_with_imports(
     module: &Module,
     text: &str,
     resolution: &Resolution,
-    imports: &ImportedConsts<'_>,
+    imports: &Imports<'_>,
     sink: &mut Diagnostics,
 ) -> Typeck {
     let mut checker = check::Checker::new(module, text, resolution, sink);
-    for (def, imported) in imports {
+    for (def, imported) in &imports.structs {
+        let ty = checker
+            .out
+            .interner
+            .import_from(imported.interner, imported.ty);
+        if !checker.out.interner.is_error(ty) {
+            checker.imported_structs.insert(*def, ty);
+        }
+    }
+    for (def, imported) in &imports.consts {
         let ty = checker
             .out
             .interner

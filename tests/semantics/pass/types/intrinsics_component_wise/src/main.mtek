@@ -1,0 +1,37 @@
+// D06 6: the component-wise intrinsics (`T -> T` and friends), folded with libm.
+const V = vec3(0.25, 0.5, 2.0);
+const ABS = abs(-V);
+const MIN = min(V, vec3(1.0));
+const MAX = max(0.5, 0.25);
+const CLAMP = clamp(V, vec3(0.3), vec3(1.0));
+const SATURATE = saturate(V);
+const MIX_SCALAR = mix(V, vec3(1.0), 0.5);
+const MIX_VECTOR = mix(V, vec3(1.0), V);
+const STEP = step(0.5, 0.75);
+const SMOOTH = smoothstep(0.0, 1.0, 0.25);
+const SQRT = sqrt(V);
+const INVERSE = inverse_sqrt(4.0);
+const POW = pow(V, vec3(2.0));
+const EXP = exp(1.0);
+const EXP2 = exp2(V);
+const LOG = log(2.0);
+const LOG2 = log2(8.0);
+const SIN = sin(V);
+const COS = cos(0.5);
+const TAN = tan(0.5);
+const ASIN = asin(0.5);
+const ACOS = acos(0.5);
+const ATAN = atan(V);
+const ATAN2 = atan2(1.0, -1.0);
+const FLOOR = floor(-V);
+const CEIL = ceil(V);
+const TRUNC = trunc(-2.5);
+const FRACT = fract(-1.25);
+const SIGN = sign(-V);
+const ROUND = round(vec2(2.5, 3.5));
+const RADIANS = radians(180.0);
+const DEGREES = degrees(V);
+
+scene Demo {
+    camera Main {}
+}

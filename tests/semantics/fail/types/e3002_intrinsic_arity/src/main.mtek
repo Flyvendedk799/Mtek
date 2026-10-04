@@ -1,0 +1,5 @@
+const LIMITED = clamp(1.5, 0.0);
+
+scene Demo {
+    camera Main {}
+}

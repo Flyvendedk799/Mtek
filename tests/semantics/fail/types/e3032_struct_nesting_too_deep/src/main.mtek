@@ -1,0 +1,1033 @@
+// Struct types nest at most 256 levels (decision 0035 item 7): S0 is one
+// level deep, each S<i> one more, so S256 is the first beyond the limit.
+struct S0 {
+    value: f32;
+}
+
+struct S1 {
+    inner: S0;
+}
+
+struct S2 {
+    inner: S1;
+}
+
+struct S3 {
+    inner: S2;
+}
+
+struct S4 {
+    inner: S3;
+}
+
+struct S5 {
+    inner: S4;
+}
+
+struct S6 {
+    inner: S5;
+}
+
+struct S7 {
+    inner: S6;
+}
+
+struct S8 {
+    inner: S7;
+}
+
+struct S9 {
+    inner: S8;
+}
+
+struct S10 {
+    inner: S9;
+}
+
+struct S11 {
+    inner: S10;
+}
+
+struct S12 {
+    inner: S11;
+}
+
+struct S13 {
+    inner: S12;
+}
+
+struct S14 {
+    inner: S13;
+}
+
+struct S15 {
+    inner: S14;
+}
+
+struct S16 {
+    inner: S15;
+}
+
+struct S17 {
+    inner: S16;
+}
+
+struct S18 {
+    inner: S17;
+}
+
+struct S19 {
+    inner: S18;
+}
+
+struct S20 {
+    inner: S19;
+}
+
+struct S21 {
+    inner: S20;
+}
+
+struct S22 {
+    inner: S21;
+}
+
+struct S23 {
+    inner: S22;
+}
+
+struct S24 {
+    inner: S23;
+}
+
+struct S25 {
+    inner: S24;
+}
+
+struct S26 {
+    inner: S25;
+}
+
+struct S27 {
+    inner: S26;
+}
+
+struct S28 {
+    inner: S27;
+}
+
+struct S29 {
+    inner: S28;
+}
+
+struct S30 {
+    inner: S29;
+}
+
+struct S31 {
+    inner: S30;
+}
+
+struct S32 {
+    inner: S31;
+}
+
+struct S33 {
+    inner: S32;
+}
+
+struct S34 {
+    inner: S33;
+}
+
+struct S35 {
+    inner: S34;
+}
+
+struct S36 {
+    inner: S35;
+}
+
+struct S37 {
+    inner: S36;
+}
+
+struct S38 {
+    inner: S37;
+}
+
+struct S39 {
+    inner: S38;
+}
+
+struct S40 {
+    inner: S39;
+}
+
+struct S41 {
+    inner: S40;
+}
+
+struct S42 {
+    inner: S41;
+}
+
+struct S43 {
+    inner: S42;
+}
+
+struct S44 {
+    inner: S43;
+}
+
+struct S45 {
+    inner: S44;
+}
+
+struct S46 {
+    inner: S45;
+}
+
+struct S47 {
+    inner: S46;
+}
+
+struct S48 {
+    inner: S47;
+}
+
+struct S49 {
+    inner: S48;
+}
+
+struct S50 {
+    inner: S49;
+}
+
+struct S51 {
+    inner: S50;
+}
+
+struct S52 {
+    inner: S51;
+}
+
+struct S53 {
+    inner: S52;
+}
+
+struct S54 {
+    inner: S53;
+}
+
+struct S55 {
+    inner: S54;
+}
+
+struct S56 {
+    inner: S55;
+}
+
+struct S57 {
+    inner: S56;
+}
+
+struct S58 {
+    inner: S57;
+}
+
+struct S59 {
+    inner: S58;
+}
+
+struct S60 {
+    inner: S59;
+}
+
+struct S61 {
+    inner: S60;
+}
+
+struct S62 {
+    inner: S61;
+}
+
+struct S63 {
+    inner: S62;
+}
+
+struct S64 {
+    inner: S63;
+}
+
+struct S65 {
+    inner: S64;
+}
+
+struct S66 {
+    inner: S65;
+}
+
+struct S67 {
+    inner: S66;
+}
+
+struct S68 {
+    inner: S67;
+}
+
+struct S69 {
+    inner: S68;
+}
+
+struct S70 {
+    inner: S69;
+}
+
+struct S71 {
+    inner: S70;
+}
+
+struct S72 {
+    inner: S71;
+}
+
+struct S73 {
+    inner: S72;
+}
+
+struct S74 {
+    inner: S73;
+}
+
+struct S75 {
+    inner: S74;
+}
+
+struct S76 {
+    inner: S75;
+}
+
+struct S77 {
+    inner: S76;
+}
+
+struct S78 {
+    inner: S77;
+}
+
+struct S79 {
+    inner: S78;
+}
+
+struct S80 {
+    inner: S79;
+}
+
+struct S81 {
+    inner: S80;
+}
+
+struct S82 {
+    inner: S81;
+}
+
+struct S83 {
+    inner: S82;
+}
+
+struct S84 {
+    inner: S83;
+}
+
+struct S85 {
+    inner: S84;
+}
+
+struct S86 {
+    inner: S85;
+}
+
+struct S87 {
+    inner: S86;
+}
+
+struct S88 {
+    inner: S87;
+}
+
+struct S89 {
+    inner: S88;
+}
+
+struct S90 {
+    inner: S89;
+}
+
+struct S91 {
+    inner: S90;
+}
+
+struct S92 {
+    inner: S91;
+}
+
+struct S93 {
+    inner: S92;
+}
+
+struct S94 {
+    inner: S93;
+}
+
+struct S95 {
+    inner: S94;
+}
+
+struct S96 {
+    inner: S95;
+}
+
+struct S97 {
+    inner: S96;
+}
+
+struct S98 {
+    inner: S97;
+}
+
+struct S99 {
+    inner: S98;
+}
+
+struct S100 {
+    inner: S99;
+}
+
+struct S101 {
+    inner: S100;
+}
+
+struct S102 {
+    inner: S101;
+}
+
+struct S103 {
+    inner: S102;
+}
+
+struct S104 {
+    inner: S103;
+}
+
+struct S105 {
+    inner: S104;
+}
+
+struct S106 {
+    inner: S105;
+}
+
+struct S107 {
+    inner: S106;
+}
+
+struct S108 {
+    inner: S107;
+}
+
+struct S109 {
+    inner: S108;
+}
+
+struct S110 {
+    inner: S109;
+}
+
+struct S111 {
+    inner: S110;
+}
+
+struct S112 {
+    inner: S111;
+}
+
+struct S113 {
+    inner: S112;
+}
+
+struct S114 {
+    inner: S113;
+}
+
+struct S115 {
+    inner: S114;
+}
+
+struct S116 {
+    inner: S115;
+}
+
+struct S117 {
+    inner: S116;
+}
+
+struct S118 {
+    inner: S117;
+}
+
+struct S119 {
+    inner: S118;
+}
+
+struct S120 {
+    inner: S119;
+}
+
+struct S121 {
+    inner: S120;
+}
+
+struct S122 {
+    inner: S121;
+}
+
+struct S123 {
+    inner: S122;
+}
+
+struct S124 {
+    inner: S123;
+}
+
+struct S125 {
+    inner: S124;
+}
+
+struct S126 {
+    inner: S125;
+}
+
+struct S127 {
+    inner: S126;
+}
+
+struct S128 {
+    inner: S127;
+}
+
+struct S129 {
+    inner: S128;
+}
+
+struct S130 {
+    inner: S129;
+}
+
+struct S131 {
+    inner: S130;
+}
+
+struct S132 {
+    inner: S131;
+}
+
+struct S133 {
+    inner: S132;
+}
+
+struct S134 {
+    inner: S133;
+}
+
+struct S135 {
+    inner: S134;
+}
+
+struct S136 {
+    inner: S135;
+}
+
+struct S137 {
+    inner: S136;
+}
+
+struct S138 {
+    inner: S137;
+}
+
+struct S139 {
+    inner: S138;
+}
+
+struct S140 {
+    inner: S139;
+}
+
+struct S141 {
+    inner: S140;
+}
+
+struct S142 {
+    inner: S141;
+}
+
+struct S143 {
+    inner: S142;
+}
+
+struct S144 {
+    inner: S143;
+}
+
+struct S145 {
+    inner: S144;
+}
+
+struct S146 {
+    inner: S145;
+}
+
+struct S147 {
+    inner: S146;
+}
+
+struct S148 {
+    inner: S147;
+}
+
+struct S149 {
+    inner: S148;
+}
+
+struct S150 {
+    inner: S149;
+}
+
+struct S151 {
+    inner: S150;
+}
+
+struct S152 {
+    inner: S151;
+}
+
+struct S153 {
+    inner: S152;
+}
+
+struct S154 {
+    inner: S153;
+}
+
+struct S155 {
+    inner: S154;
+}
+
+struct S156 {
+    inner: S155;
+}
+
+struct S157 {
+    inner: S156;
+}
+
+struct S158 {
+    inner: S157;
+}
+
+struct S159 {
+    inner: S158;
+}
+
+struct S160 {
+    inner: S159;
+}
+
+struct S161 {
+    inner: S160;
+}
+
+struct S162 {
+    inner: S161;
+}
+
+struct S163 {
+    inner: S162;
+}
+
+struct S164 {
+    inner: S163;
+}
+
+struct S165 {
+    inner: S164;
+}
+
+struct S166 {
+    inner: S165;
+}
+
+struct S167 {
+    inner: S166;
+}
+
+struct S168 {
+    inner: S167;
+}
+
+struct S169 {
+    inner: S168;
+}
+
+struct S170 {
+    inner: S169;
+}
+
+struct S171 {
+    inner: S170;
+}
+
+struct S172 {
+    inner: S171;
+}
+
+struct S173 {
+    inner: S172;
+}
+
+struct S174 {
+    inner: S173;
+}
+
+struct S175 {
+    inner: S174;
+}
+
+struct S176 {
+    inner: S175;
+}
+
+struct S177 {
+    inner: S176;
+}
+
+struct S178 {
+    inner: S177;
+}
+
+struct S179 {
+    inner: S178;
+}
+
+struct S180 {
+    inner: S179;
+}
+
+struct S181 {
+    inner: S180;
+}
+
+struct S182 {
+    inner: S181;
+}
+
+struct S183 {
+    inner: S182;
+}
+
+struct S184 {
+    inner: S183;
+}
+
+struct S185 {
+    inner: S184;
+}
+
+struct S186 {
+    inner: S185;
+}
+
+struct S187 {
+    inner: S186;
+}
+
+struct S188 {
+    inner: S187;
+}
+
+struct S189 {
+    inner: S188;
+}
+
+struct S190 {
+    inner: S189;
+}
+
+struct S191 {
+    inner: S190;
+}
+
+struct S192 {
+    inner: S191;
+}
+
+struct S193 {
+    inner: S192;
+}
+
+struct S194 {
+    inner: S193;
+}
+
+struct S195 {
+    inner: S194;
+}
+
+struct S196 {
+    inner: S195;
+}
+
+struct S197 {
+    inner: S196;
+}
+
+struct S198 {
+    inner: S197;
+}
+
+struct S199 {
+    inner: S198;
+}
+
+struct S200 {
+    inner: S199;
+}
+
+struct S201 {
+    inner: S200;
+}
+
+struct S202 {
+    inner: S201;
+}
+
+struct S203 {
+    inner: S202;
+}
+
+struct S204 {
+    inner: S203;
+}
+
+struct S205 {
+    inner: S204;
+}
+
+struct S206 {
+    inner: S205;
+}
+
+struct S207 {
+    inner: S206;
+}
+
+struct S208 {
+    inner: S207;
+}
+
+struct S209 {
+    inner: S208;
+}
+
+struct S210 {
+    inner: S209;
+}
+
+struct S211 {
+    inner: S210;
+}
+
+struct S212 {
+    inner: S211;
+}
+
+struct S213 {
+    inner: S212;
+}
+
+struct S214 {
+    inner: S213;
+}
+
+struct S215 {
+    inner: S214;
+}
+
+struct S216 {
+    inner: S215;
+}
+
+struct S217 {
+    inner: S216;
+}
+
+struct S218 {
+    inner: S217;
+}
+
+struct S219 {
+    inner: S218;
+}
+
+struct S220 {
+    inner: S219;
+}
+
+struct S221 {
+    inner: S220;
+}
+
+struct S222 {
+    inner: S221;
+}
+
+struct S223 {
+    inner: S222;
+}
+
+struct S224 {
+    inner: S223;
+}
+
+struct S225 {
+    inner: S224;
+}
+
+struct S226 {
+    inner: S225;
+}
+
+struct S227 {
+    inner: S226;
+}
+
+struct S228 {
+    inner: S227;
+}
+
+struct S229 {
+    inner: S228;
+}
+
+struct S230 {
+    inner: S229;
+}
+
+struct S231 {
+    inner: S230;
+}
+
+struct S232 {
+    inner: S231;
+}
+
+struct S233 {
+    inner: S232;
+}
+
+struct S234 {
+    inner: S233;
+}
+
+struct S235 {
+    inner: S234;
+}
+
+struct S236 {
+    inner: S235;
+}
+
+struct S237 {
+    inner: S236;
+}
+
+struct S238 {
+    inner: S237;
+}
+
+struct S239 {
+    inner: S238;
+}
+
+struct S240 {
+    inner: S239;
+}
+
+struct S241 {
+    inner: S240;
+}
+
+struct S242 {
+    inner: S241;
+}
+
+struct S243 {
+    inner: S242;
+}
+
+struct S244 {
+    inner: S243;
+}
+
+struct S245 {
+    inner: S244;
+}
+
+struct S246 {
+    inner: S245;
+}
+
+struct S247 {
+    inner: S246;
+}
+
+struct S248 {
+    inner: S247;
+}
+
+struct S249 {
+    inner: S248;
+}
+
+struct S250 {
+    inner: S249;
+}
+
+struct S251 {
+    inner: S250;
+}
+
+struct S252 {
+    inner: S251;
+}
+
+struct S253 {
+    inner: S252;
+}
+
+struct S254 {
+    inner: S253;
+}
+
+struct S255 {
+    inner: S254;
+}
+
+struct S256 {
+    inner: S255;
+}
+
+scene Demo {
+    camera Main {}
+}

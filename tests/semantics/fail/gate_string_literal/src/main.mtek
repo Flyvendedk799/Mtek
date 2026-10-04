@@ -1,5 +1,0 @@
-const TITLE = "Showroom";
-
-scene Demo {
-    camera Main {}
-}

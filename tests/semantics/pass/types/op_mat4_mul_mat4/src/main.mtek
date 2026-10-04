@@ -1,0 +1,6 @@
+// D02 6.2 row 4: `mat4 * mat4` (the right operand applies first).
+const MODEL = mat4.translation(vec3(1, 2, 3)) * mat4.scale(vec3(2.0));
+
+scene Demo {
+    camera Main {}
+}

@@ -79,9 +79,41 @@ const ATOMS: &[&str] = &[
     "Cube.position",
     "Main.position",
     "Cube.nothing",
+    "\"text\"",
+    "P0",
+    "P0.a",
+    "P0.c",
+    "ARR",
+    "N",
+    "mat4.identity()",
 ];
 
-const BINARY: &[&str] = &["+", "-", "*", "/", "%", "<", "==", "&&"];
+const BINARY: &[&str] = &[
+    "+", "-", "*", "/", "%", "<", "<=", ">", ">=", "==", "!=", "&&", "||",
+];
+
+/// Global intrinsics and `mat4` constructors with their usual arities.
+const CALLS: &[(&str, usize)] = &[
+    ("sin", 1),
+    ("sqrt", 1),
+    ("log", 1),
+    ("pow", 2),
+    ("max", 2),
+    ("clamp", 3),
+    ("mix", 3),
+    ("smoothstep", 3),
+    ("dot", 2),
+    ("cross", 2),
+    ("normalize", 1),
+    ("length", 1),
+    ("reflect", 2),
+    ("round", 1),
+    ("abs", 1),
+    ("transpose", 1),
+    ("mat4.translation", 1),
+    ("mat4.rotation", 1),
+    ("mat4.columns", 4),
+];
 
 const SWIZZLES: &[&str] = &["x", "w", "xy", "xyz", "zyx", "rgb", "r", "a", "xyzwx", "q"];
 
@@ -99,7 +131,7 @@ fn expr(rng: &mut Rng, depth: usize, out: &mut String) {
             expr(rng, d, out);
         }
     };
-    match rng.below(16) {
+    match rng.below(22) {
         0 => {
             out.push('(');
             expr(rng, d, out);
@@ -166,6 +198,57 @@ fn expr(rng: &mut Rng, depth: usize, out: &mut String) {
             expr(rng, d, out);
             out.push_str(" }");
         }
+        14 | 15 => {
+            let (name, arity) = CALLS[rng.below(CALLS.len())];
+            out.push_str(name);
+            out.push('(');
+            let count = if rng.below(4) == 0 {
+                rng.below(4)
+            } else {
+                arity
+            };
+            args(rng, out, count);
+            out.push(')');
+        }
+        16 => {
+            out.push('[');
+            let count = 1 + rng.below(3);
+            args(rng, out, count);
+            out.push(']');
+        }
+        17 => {
+            out.push('(');
+            expr(rng, d, out);
+            out.push_str(")[");
+            expr(rng, d, out);
+            out.push(']');
+        }
+        18 => {
+            // A struct literal, sometimes with a missing, duplicate or
+            // unknown field.
+            out.push_str("P { ");
+            let fields = ["a", "b", "a", "c"];
+            let count = 1 + rng.below(3);
+            for i in 0..count {
+                out.push_str(fields[rng.below(fields.len())]);
+                out.push_str(": ");
+                expr(rng, d, out);
+                if i + 1 < count {
+                    out.push_str("; ");
+                }
+            }
+            out.push_str(" }");
+        }
+        19 => {
+            out.push('!');
+            expr(rng, d, out);
+        }
+        20 => {
+            out.push('(');
+            expr(rng, d, out);
+            out.push_str(").");
+            out.push_str(rng.pick(&["a", "b", "c"]));
+        }
         _ => out.push_str(rng.pick(ATOMS)),
     }
 }
@@ -178,14 +261,47 @@ fn sub(rng: &mut Rng, low: usize, span: usize, out: &mut String) {
 
 fn program(rng: &mut Rng) -> String {
     let mut text = String::new();
+    text.push_str(rng.pick(&[
+        "struct P { a: f32; b: vec3; }
+",
+        "struct P { a: f32; b: array<P, 2>; }
+",
+        "struct P { a: f32; a: vec3; }
+",
+        "struct P { a: array<f32, N>; b: Q; }
+struct Q { q: f32; }
+",
+    ]));
+    text.push_str("const N: u32 = ");
+    text.push_str(rng.pick(&["2", "0", "70000", "-1", "1.5"]));
+    text.push_str(
+        ";
+const P0 = P { a: 1.0; b: vec3(0.0) };
+const ARR: array<f32, N> = [1.0, 2.0];
+",
+    );
     for name in ["A", "B", "C", "UP"] {
         text.push_str("const ");
         text.push_str(name);
         if rng.below(3) == 0 {
             text.push_str(": ");
-            text.push_str(
-                rng.pick(&["f32", "i32", "u32", "vec3", "quat", "color", "mesh", "vec5"]),
-            );
+            text.push_str(rng.pick(&[
+                "f32",
+                "i32",
+                "u32",
+                "vec3",
+                "quat",
+                "color",
+                "mesh",
+                "vec5",
+                "bool",
+                "string",
+                "mat4",
+                "P",
+                "array<f32, 2>",
+                "array<P, N>",
+                "array<f32, A>",
+            ]));
         }
         text.push_str(" = ");
         sub(rng, 1, 4, &mut text);
@@ -274,7 +390,8 @@ fn random_constant_programs_never_break_type_checking() {
         }
         // The generator reaches the diagnostics of this task.
         for code in [
-            "E3001", "E3002", "E3013", "E3014", "E3040", "E3041", "E2020", "E3090",
+            "E3001", "E3002", "E3012", "E3013", "E3014", "E3020", "E3021", "E3022", "E3023",
+            "E3030", "E3031", "E3040", "E3041", "E2020", "E3090",
         ] {
             assert!(codes.contains(code), "{code} never reported: {codes:?}");
         }
@@ -369,5 +486,53 @@ fn long_constant_chains_and_wide_cycles_are_checked() {
             .collect();
         assert_eq!(codes, ["E2020"]);
         assert_eq!(result.report.diagnostics[0].related.len(), count as usize);
+    });
+}
+
+#[test]
+fn deep_type_nesting_is_e3032_without_deep_recursion() {
+    // Types (and so values) nest as deeply as a chain of declarations lets
+    // them, not only as deeply as the syntax: 50 000 structs each holding
+    // the previous one, and 1 000 array constants each holding the previous
+    // one. Both stop at 256 levels with one E3032 (decision 0035 item 7),
+    // on a 1 MiB stack.
+    let mut structs = String::from(
+        "struct S0 { v: f32; }
+",
+    );
+    for i in 1..50_000 {
+        structs.push_str(&format!(
+            "struct S{i} {{ inner: S{}; }}
+",
+            i - 1
+        ));
+    }
+    let mut arrays = String::from(
+        "const A0 = [1.0];
+",
+    );
+    for i in 1..1_000 {
+        arrays.push_str(&format!(
+            "const A{i} = [A{}];
+",
+            i - 1
+        ));
+    }
+    let scene = "scene Demo {
+    camera Main {}
+}
+";
+    let (structs, arrays) = (format!("{structs}{scene}"), format!("{arrays}{scene}"));
+    on_stack(1024 * 1024, "deep types".to_owned(), move || {
+        for text in [&structs, &arrays] {
+            let result = check_text(text);
+            let codes: Vec<&str> = result
+                .report
+                .diagnostics
+                .iter()
+                .map(|d| d.code.short())
+                .collect();
+            assert_eq!(codes, ["E3032"], "{:#?}", result.report);
+        }
     });
 }

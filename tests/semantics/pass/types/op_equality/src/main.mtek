@@ -1,0 +1,15 @@
+// D02 6.2 row 12: `==` and `!=` on same-typed bool, f32, i32 and u32 operands.
+const COUNT: u32 = 3;
+const B_EQ = true == true;
+const F_NE = 0.5 != 0.25;
+const I_EQ = -3 == -3;
+const U_NE = COUNT != 3;
+const ZEROS = -0.0 == 0.0;
+
+scene Demo {
+    camera Main {}
+    entity Cube {
+        visible: B_EQ == (F_NE && I_EQ && !U_NE && ZEROS);
+        mesh: Box {};
+    }
+}

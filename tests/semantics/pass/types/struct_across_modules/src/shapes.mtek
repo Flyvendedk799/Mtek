@@ -1,0 +1,14 @@
+// A struct type crosses modules with its identity and its fields
+// (decision 0035 item 5).
+export struct Wave {
+    amp: f32;
+    dir: vec3;
+}
+
+export struct Swell {
+    waves: array<Wave, 2>;
+    count: u32;
+}
+
+export const BASE = Wave { amp: 0.5; dir: vec3(0.0, 1.0, 0.0) };
+export const SEA: Swell = Swell { waves: [BASE, Wave { dir: vec3(1.0, 0.0, 0.0); amp: 2.0 }]; count: 2 };

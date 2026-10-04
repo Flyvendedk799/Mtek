@@ -38,9 +38,9 @@ fn blessing() -> bool {
     std::env::var("MTEK_BLESS").is_ok_and(|value| value == "1")
 }
 
-/// The fixture directories of a semantic suite, sorted.
-fn fixtures(suite: &str) -> Vec<String> {
-    let mut names: Vec<String> = fs::read_dir(semantics_dir(suite))
+/// The names of the subdirectories of `dir`, sorted.
+fn subdirectories(dir: &Path) -> Vec<String> {
+    let mut names: Vec<String> = fs::read_dir(dir)
         .unwrap()
         .filter_map(|entry| {
             let entry = entry.ok()?;
@@ -48,6 +48,28 @@ fn fixtures(suite: &str) -> Vec<String> {
             entry.file_name().into_string().ok()
         })
         .collect();
+    names.sort();
+    names
+}
+
+/// The fixture directories of a semantic suite, sorted: directories with an
+/// `mtek.toml`, and the fixtures of group directories (`types/`) as
+/// `group/name` (the rule of `tests/fixtures.rs`).
+fn fixtures(suite: &str) -> Vec<String> {
+    let root = semantics_dir(suite);
+    let mut names = Vec::new();
+    for name in subdirectories(&root) {
+        let dir = root.join(&name);
+        if dir.join("mtek.toml").is_file() {
+            names.push(name);
+        } else {
+            names.extend(
+                subdirectories(&dir)
+                    .into_iter()
+                    .map(|fixture| format!("{name}/{fixture}")),
+            );
+        }
+    }
     names.sort();
     names
 }

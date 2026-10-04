@@ -1,0 +1,8 @@
+// D02 6.7: `vec4(x, y, z, w)` from f32 components.
+const V = vec4(0, 1, 5.0, 1);
+
+scene Demo {
+    camera Main {
+        position: V.xyz;
+    }
+}

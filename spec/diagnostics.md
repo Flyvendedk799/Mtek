@@ -179,6 +179,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e3023"></a>E3023 | unknown struct field | |
 | <a id="mtek-e3030"></a>E3030 | constant index out of range | |
 | <a id="mtek-e3031"></a>E3031 | invalid array length | |
+| <a id="mtek-e3032"></a>E3032 | type nesting too deep | an array or struct type nested more than 256 levels (decision 0035) |
 | <a id="mtek-e3040"></a>E3040 | constant evaluation overflow or division by zero | |
 | <a id="mtek-e3041"></a>E3041 | literal not representable | |
 | <a id="mtek-w3050"></a>W3050 | redundant conversion | |

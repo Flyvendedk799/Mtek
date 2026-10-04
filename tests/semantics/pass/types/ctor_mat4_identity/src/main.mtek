@@ -1,0 +1,6 @@
+// D02 6.7: `mat4.identity()`.
+const M = mat4.identity();
+
+scene Demo {
+    camera Main {}
+}

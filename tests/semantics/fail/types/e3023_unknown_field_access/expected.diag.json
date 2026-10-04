@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E3023",
+    "file": "src/main.mtek",
+    "startByte": 131,
+    "endByte": 139,
+    "message": "The struct Light has no field 'intensty'.",
+    "notes": [
+      "the fields of Light are 'intensity', 'offset'",
+      "help: did you mean 'intensity'?"
+    ]
+  }
+]

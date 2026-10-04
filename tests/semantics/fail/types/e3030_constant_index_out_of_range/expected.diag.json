@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3030",
+    "file": "src/main.mtek",
+    "startByte": 50,
+    "endByte": 51,
+    "message": "The index 3 is out of range for array<f32, 3>: valid indices are 0 to 2.",
+    "notes": [
+      "a constant index must lie in the array; only a run-time index is clamped"
+    ]
+  }
+]

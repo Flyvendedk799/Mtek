@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3032",
+    "file": "src/main.mtek",
+    "startByte": 8638,
+    "endByte": 8642,
+    "message": "The struct 'S256' would nest more than 256 levels of arrays and structs.",
+    "notes": [
+      "array and struct types nest at most 256 levels deep"
+    ]
+  }
+]

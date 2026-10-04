@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3021",
+    "file": "src/main.mtek",
+    "startByte": 68,
+    "endByte": 73,
+    "message": "The struct literal Light is missing the field 'offset'.",
+    "notes": [
+      "a struct literal gives every field exactly once; struct fields have no defaults"
+    ]
+  }
+]

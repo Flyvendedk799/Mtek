@@ -94,7 +94,7 @@ impl Program {
             .flat_map(|module| module.items.iter())
             .filter_map(|item| match item {
                 Item::Scene(scene) => Some(scene),
-                Item::Const(_) => None,
+                Item::Const(_) | Item::Struct(_) => None,
             })
     }
 }
@@ -123,6 +123,31 @@ pub struct Module {
 pub enum Item {
     Const(Const),
     Scene(Scene),
+    /// A user struct declaration (M2-01, decision 0035 item 6).
+    Struct(StructItem),
+}
+
+/// A struct declaration: its fields in declaration order with their types.
+/// Values of the struct are `Value::Struct` with the fields in this order.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StructItem {
+    pub name: String,
+    pub symbol: Symbol,
+    pub fields: Vec<StructFieldItem>,
+    /// The whole declaration, `struct Name { … }`.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// One field of a [`StructItem`].
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StructFieldItem {
+    pub name: String,
+    /// The field's type, as Mtek spells it.
+    #[serde(rename = "type")]
+    pub ty: String,
 }
 
 /// A constant declaration (at module level, or in a scene or entity body)
@@ -393,6 +418,8 @@ pub enum Value {
         fields: Vec<NamedValue>,
     },
     Array(Vec<Value>),
+    /// A string (CPU only): `{ "string": "Showroom" }`.
+    String(String),
 }
 
 /// A field of a [`Value::Struct`].
@@ -427,6 +454,7 @@ impl From<&crate::types::ConstValue> for Value {
                     .collect(),
             },
             C::Array(items) => Value::Array(items.iter().map(Value::from).collect()),
+            C::Str(text) => Value::String(text.clone()),
         }
     }
 }
@@ -483,6 +511,22 @@ impl fmt::Display for Value {
                     write!(f, "{item}")?;
                 }
                 f.write_str("]")
+            }
+            Value::String(text) => {
+                f.write_str("\"")?;
+                for c in text.chars() {
+                    match c {
+                        '"' => f.write_str("\\\"")?,
+                        '\\' => f.write_str("\\\\")?,
+                        '\n' => f.write_str("\\n")?,
+                        '\t' => f.write_str("\\t")?,
+                        '\r' => f.write_str("\\r")?,
+                        '\0' => f.write_str("\\0")?,
+                        c if c.is_control() => write!(f, "\\u{{{:x}}}", u32::from(c))?,
+                        c => write!(f, "{c}")?,
+                    }
+                }
+                f.write_str("\"")
             }
         }
     }

@@ -1,0 +1,9 @@
+// D02 6.2 row 7: `quat * vec3` rotates the vector.
+const TURN = quat.axis_angle(vec3(0.0, 0.0, 1.0), 1.5707964);
+const RIGHT = vec3(1.0, 0.0, 0.0);
+
+scene Demo {
+    camera Main {
+        position: TURN * RIGHT * 5.0;
+    }
+}

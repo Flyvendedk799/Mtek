@@ -1,0 +1,26 @@
+// D02 6.2 row 1: `+ - * / %` on same-typed f32, i32 and u32 operands.
+const F_SUM = 1.5 + 0.25;
+const F_DIFF = 1.5 - 0.25;
+const F_PROD = 1.5 * 0.25;
+const F_QUOT = 1.5 / 0.25;
+const F_REM = 7.5 % 2.0;
+const I_SUM = 7 + -3;
+const I_DIFF = 7 - 10;
+const I_PROD = 7 * -3;
+const I_QUOT = -7 / 2;
+const I_REM = -7 % 2;
+const U_SUM: u32 = 7 + 3;
+const U_DIFF: u32 = 7 - 3;
+const U_PROD: u32 = 7 * 3;
+const U_QUOT: u32 = 7 / 2;
+const U_REM: u32 = 7 % 2;
+
+scene Demo {
+    camera Main {
+        position: vec3(F_REM, f32(I_REM), f32(U_REM + U_QUOT));
+    }
+    entity Ball {
+        position: vec3(F_SUM - F_DIFF, F_PROD * F_QUOT, f32(I_SUM * I_DIFF + I_PROD / I_QUOT));
+        mesh: Sphere { segments: U_SUM * U_PROD - U_DIFF };
+    }
+}

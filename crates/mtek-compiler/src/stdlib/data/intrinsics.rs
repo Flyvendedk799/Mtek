@@ -3,15 +3,16 @@
 use super::build::{F32, I, T, V, exact, function, p, sig};
 use crate::stdlib::model::{Domain, IntrinsicDef, Milestone, TypeRef};
 
-/// A both-domain, const-eligible math function from M2 (the milestone that adds functions;
-/// decision 0024 item 5).
+/// A both-domain, const-eligible math function. Planned for M2 (the milestone that adds
+/// functions; decision 0024 item 5); task M2-01 implemented them before the M2 gate, so they are
+/// marked as implemented by the current build (decision 0035 item 1).
 fn math(
     name: &'static str,
     doc: &'static str,
     cpu: &'static str,
     signatures: Vec<crate::stdlib::model::Signature>,
 ) -> IntrinsicDef {
-    function(name, Domain::Both, true, Milestone::M2, doc, signatures).cpu_semantics(cpu)
+    function(name, Domain::Both, true, Milestone::M1, doc, signatures).cpu_semantics(cpu)
 }
 
 /// `T -> T`.

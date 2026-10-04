@@ -1,9 +1,8 @@
-//! The operator typing table of `spec/language.md` section 6.2, for the
-//! operators this build implements (unary `-` and `+ - * /`; the others are
-//! gated, decision 0026).
+//! The operator typing table of `spec/language.md` section 6.2: every row
+//! (decisions 0026 and 0035).
 
 use super::ty::Ty;
-use super::value::ArithOp;
+use super::value::{ArithOp, CompareOp};
 
 /// One row of the table: `lhs op rhs` has type `result` for every `op` of
 /// `ops`.
@@ -14,6 +13,15 @@ struct Row {
     result: Ty,
 }
 
+/// `+ - * / %`: the operators of same-typed scalars.
+const SCALAR: &[ArithOp] = &[
+    ArithOp::Add,
+    ArithOp::Sub,
+    ArithOp::Mul,
+    ArithOp::Div,
+    ArithOp::Rem,
+];
+/// `+ - * /`: the component-wise operators of vectors.
 const ALL: &[ArithOp] = &[ArithOp::Add, ArithOp::Sub, ArithOp::Mul, ArithOp::Div];
 const SCALE: &[ArithOp] = &[ArithOp::Mul, ArithOp::Div];
 const MUL: &[ArithOp] = &[ArithOp::Mul];
@@ -27,14 +35,14 @@ const fn row(ops: &'static [ArithOp], lhs: Ty, rhs: Ty, result: Ty) -> Row {
     }
 }
 
-/// Section 6.2, transcribed: same-typed scalars; same-dimension vectors
-/// component-wise; vector times or divided by `f32`, `f32` times vector;
-/// `mat4 * mat4`, `mat4 * vec4`; `quat * quat` (Hamilton product) and
+/// Section 6.2, transcribed: same-typed scalars (with `%`); same-dimension
+/// vectors component-wise; vector times or divided by `f32`, `f32` times
+/// vector; `mat4 * mat4`, `mat4 * vec4`; `quat * quat` (Hamilton product) and
 /// `quat * vec3` (rotation).
 const ROWS: &[Row] = &[
-    row(ALL, Ty::F32, Ty::F32, Ty::F32),
-    row(ALL, Ty::I32, Ty::I32, Ty::I32),
-    row(ALL, Ty::U32, Ty::U32, Ty::U32),
+    row(SCALAR, Ty::F32, Ty::F32, Ty::F32),
+    row(SCALAR, Ty::I32, Ty::I32, Ty::I32),
+    row(SCALAR, Ty::U32, Ty::U32, Ty::U32),
     row(ALL, Ty::Vec2, Ty::Vec2, Ty::Vec2),
     row(ALL, Ty::Vec3, Ty::Vec3, Ty::Vec3),
     row(ALL, Ty::Vec4, Ty::Vec4, Ty::Vec4),
@@ -80,6 +88,23 @@ pub fn literal_operand_type(op: ArithOp, other: Ty, literal_is_rhs: bool) -> Opt
 #[must_use]
 pub fn negation_result(operand: Ty) -> Option<Ty> {
     matches!(operand, Ty::F32 | Ty::I32 | Ty::Vec2 | Ty::Vec3 | Ty::Vec4).then_some(operand)
+}
+
+/// The type of `lhs op rhs` for a comparison (`< <= > >=`: same-typed
+/// `f32`, `i32`, `u32`) or equality operator (`== !=`: same-typed `bool`,
+/// `f32`, `i32`, `u32`, `entity_ref`): `bool`, or `None`.
+#[must_use]
+pub fn comparison_result(op: CompareOp, lhs: Ty, rhs: Ty) -> Option<Ty> {
+    let ordered = matches!(lhs, Ty::F32 | Ty::I32 | Ty::U32);
+    let equatable = ordered || matches!(lhs, Ty::Bool | Ty::EntityRef);
+    let accepted = if op.is_equality() { equatable } else { ordered };
+    (lhs == rhs && accepted).then_some(Ty::Bool)
+}
+
+/// The type of `!operand`, `lhs && rhs` and `lhs || rhs`: `bool` on `bool`.
+#[must_use]
+pub fn logical_result(operands: &[Ty]) -> Option<Ty> {
+    operands.iter().all(|t| *t == Ty::Bool).then_some(Ty::Bool)
 }
 
 #[cfg(test)]
@@ -143,6 +168,57 @@ mod tests {
         assert_eq!(literal_operand_type(ArithOp::Div, Ty::Vec3, false), None);
         assert_eq!(literal_operand_type(ArithOp::Add, Ty::Vec3, true), None);
         assert_eq!(literal_operand_type(ArithOp::Mul, Ty::Quat, true), None);
+    }
+
+    #[test]
+    fn remainder_is_scalar_only() {
+        for scalar in [Ty::F32, Ty::I32, Ty::U32] {
+            assert_eq!(
+                arithmetic_result(ArithOp::Rem, scalar, scalar),
+                Some(scalar)
+            );
+        }
+        assert_eq!(arithmetic_result(ArithOp::Rem, Ty::Vec3, Ty::Vec3), None);
+        assert_eq!(arithmetic_result(ArithOp::Rem, Ty::Vec3, Ty::F32), None);
+        assert_eq!(arithmetic_result(ArithOp::Rem, Ty::F32, Ty::I32), None);
+        assert_eq!(
+            literal_operand_type(ArithOp::Rem, Ty::U32, true),
+            Some(Ty::U32)
+        );
+        assert_eq!(literal_operand_type(ArithOp::Rem, Ty::Vec2, true), None);
+    }
+
+    #[test]
+    fn comparisons_and_equality_give_bool() {
+        use CompareOp::*;
+        for op in [Lt, Le, Gt, Ge, Eq, Ne] {
+            for scalar in [Ty::F32, Ty::I32, Ty::U32] {
+                assert_eq!(comparison_result(op, scalar, scalar), Some(Ty::Bool));
+            }
+            assert_eq!(comparison_result(op, Ty::F32, Ty::I32), None);
+            assert_eq!(comparison_result(op, Ty::Vec3, Ty::Vec3), None);
+            assert_eq!(comparison_result(op, Ty::Color, Ty::Color), None);
+            assert_eq!(comparison_result(op, Ty::String, Ty::String), None);
+        }
+        for op in [Eq, Ne] {
+            assert_eq!(comparison_result(op, Ty::Bool, Ty::Bool), Some(Ty::Bool));
+            assert_eq!(
+                comparison_result(op, Ty::EntityRef, Ty::EntityRef),
+                Some(Ty::Bool)
+            );
+        }
+        for op in [Lt, Le, Gt, Ge] {
+            assert_eq!(comparison_result(op, Ty::Bool, Ty::Bool), None);
+            assert_eq!(comparison_result(op, Ty::EntityRef, Ty::EntityRef), None);
+        }
+    }
+
+    #[test]
+    fn logic_is_on_bool() {
+        assert_eq!(logical_result(&[Ty::Bool]), Some(Ty::Bool));
+        assert_eq!(logical_result(&[Ty::Bool, Ty::Bool]), Some(Ty::Bool));
+        assert_eq!(logical_result(&[Ty::Bool, Ty::I32]), None);
+        assert_eq!(logical_result(&[Ty::F32]), None);
     }
 
     #[test]

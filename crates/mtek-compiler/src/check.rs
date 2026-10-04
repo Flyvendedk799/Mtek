@@ -18,15 +18,19 @@
 //!   input of [`crate::ir::lower_to_ir`], and what tests and tools that look
 //!   inside the checker read.
 
+use std::collections::BTreeMap;
+
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report};
 use crate::project::{
     ModuleId, Project, ProjectRoot, SceneSelection, edit_distance, load_modules, report_cycles,
     select_scene,
 };
-use crate::resolve::{DefKind, Resolution, bind_imports, resolve_module_with_imports};
+use crate::resolve::{DefId, DefKind, Resolution, bind_imports, resolve_module_with_imports};
 use crate::source::{Fs, SourceMap};
 use crate::syntax::ast::{ItemKind, Module};
-use crate::types::{ImportedConst, ImportedConsts, Typeck, check_module_with_imports};
+use crate::types::{
+    ImportedConst, ImportedConsts, ImportedStruct, Imports, Typeck, check_module_with_imports,
+};
 
 /// What [`check`] produced: diagnostics only (`spec/compiler-architecture.md`
 /// section 4.12).
@@ -204,7 +208,10 @@ pub(crate) fn front_end(root: &ProjectRoot, fs: &dyn Fs, sink: &mut Diagnostics)
         ) else {
             continue;
         };
-        let imports = imported_consts(resolution, &resolutions, &types);
+        let imports = Imports {
+            consts: imported_consts(resolution, &resolutions, &types),
+            structs: imported_structs(resolution, &resolutions, &types),
+        };
         let checked =
             check_module_with_imports(&unit.ast, source.text(), resolution, &imports, sink);
         if let Some(slot) = types.get_mut(index) {
@@ -262,6 +269,34 @@ fn imported_consts<'a>(
                 ImportedConst {
                     interner: exporter.interner(),
                     info,
+                },
+            ))
+        })
+        .collect()
+}
+
+/// The structs `resolution`'s module imports, with their types in the
+/// exporting modules (decision 0035 item 5); a struct of a module not checked
+/// yet (across the closing import of a cycle) is left out.
+fn imported_structs<'a>(
+    resolution: &Resolution,
+    resolutions: &[Resolution],
+    types: &'a [Option<Typeck>],
+) -> BTreeMap<DefId, ImportedStruct<'a>> {
+    resolution
+        .imports()
+        .filter(|(_, target)| target.kind == DefKind::Struct)
+        .filter_map(|(def, target)| {
+            let exporter = types.get(target.module.index())?.as_ref()?;
+            let exported = resolutions
+                .get(target.module.index())?
+                .def_of(target.node)?;
+            let ty = exporter.struct_ty(exported)?;
+            Some((
+                def,
+                ImportedStruct {
+                    interner: exporter.interner(),
+                    ty,
                 },
             ))
         })

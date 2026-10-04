@@ -1,0 +1,17 @@
+[
+  {
+    "code": "MTEK-E3022",
+    "file": "src/main.mtek",
+    "startByte": 111,
+    "endByte": 120,
+    "message": "The field 'intensity' of struct Light is given twice.",
+    "related": [
+      {
+        "message": "'intensity' is first given here",
+        "file": "src/main.mtek",
+        "startByte": 76,
+        "endByte": 85
+      }
+    ]
+  }
+]

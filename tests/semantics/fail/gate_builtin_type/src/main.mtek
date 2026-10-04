@@ -1,4 +1,4 @@
-const M: mat4 = mat4.identity();
+const S: sampler = sampler.linear_repeat();
 
 scene Demo {
     camera Main {}

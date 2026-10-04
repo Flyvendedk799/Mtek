@@ -40,6 +40,8 @@ pub enum ConstValue {
         fields: Vec<(String, ConstValue)>,
     },
     Array(Vec<ConstValue>),
+    /// A string (CPU only, `spec/language.md` 5.1).
+    Str(String),
 }
 
 impl ConstValue {
@@ -101,6 +103,7 @@ impl fmt::Display for ConstValue {
             ConstValue::Mat4(_) => write!(f, "mat4(…)"),
             ConstValue::Struct { name, .. } => write!(f, "{name} {{ … }}"),
             ConstValue::Array(items) => write!(f, "[… {} elements]", items.len()),
+            ConstValue::Str(text) => write!(f, "{text:?}"),
         }
     }
 }
@@ -122,13 +125,14 @@ pub enum EvalError {
 /// The result of one operation.
 pub type EvalResult = Result<ConstValue, EvalError>;
 
-/// The four arithmetic operators.
+/// The arithmetic operators: the four of `+ - * /` and the remainder `%`.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum ArithOp {
     Add,
     Sub,
     Mul,
     Div,
+    Rem,
 }
 
 impl ArithOp {
@@ -140,6 +144,7 @@ impl ArithOp {
             ArithOp::Sub => "-",
             ArithOp::Mul => "*",
             ArithOp::Div => "/",
+            ArithOp::Rem => "%",
         }
     }
 
@@ -149,7 +154,114 @@ impl ArithOp {
             ArithOp::Sub => a - b,
             ArithOp::Mul => a * b,
             ArithOp::Div => a / b,
+            ArithOp::Rem => f32_remainder(a, b),
         }
+    }
+}
+
+/// `x % y` on `f32`: the truncated remainder `x - y * trunc(x / y)`
+/// (`spec/language.md` 6.2), computed exactly (C `fmod`, which Rust's `%`
+/// is): the exact remainder is always a binary32 value, so it needs no
+/// rounding and equals the run-time library's `%` (decisions 0035 and 0037
+/// item 5). `x % 0.0` is NaN.
+#[must_use]
+pub fn f32_remainder(x: f32, y: f32) -> f32 {
+    x % y
+}
+
+/// The comparison and equality operators (`spec/language.md` 6.2).
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum CompareOp {
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    Eq,
+    Ne,
+}
+
+impl CompareOp {
+    /// The operator as written.
+    #[must_use]
+    pub fn symbol(self) -> &'static str {
+        match self {
+            CompareOp::Lt => "<",
+            CompareOp::Le => "<=",
+            CompareOp::Gt => ">",
+            CompareOp::Ge => ">=",
+            CompareOp::Eq => "==",
+            CompareOp::Ne => "!=",
+        }
+    }
+
+    /// Whether the operator is `==` or `!=` (the others order their operands).
+    #[must_use]
+    pub fn is_equality(self) -> bool {
+        matches!(self, CompareOp::Eq | CompareOp::Ne)
+    }
+
+    fn holds<T: PartialOrd>(self, a: T, b: T) -> bool {
+        match self {
+            CompareOp::Lt => a < b,
+            CompareOp::Le => a <= b,
+            CompareOp::Gt => a > b,
+            CompareOp::Ge => a >= b,
+            CompareOp::Eq => a == b,
+            CompareOp::Ne => a != b,
+        }
+    }
+}
+
+/// The short-circuit operators `&&` and `||`.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum LogicOp {
+    And,
+    Or,
+}
+
+impl LogicOp {
+    /// The operator as written.
+    #[must_use]
+    pub fn symbol(self) -> &'static str {
+        match self {
+            LogicOp::And => "&&",
+            LogicOp::Or => "||",
+        }
+    }
+}
+
+/// `l op r` for a comparison or equality operator: same-typed `f32`, `i32`,
+/// `u32`, and for equality also `bool` (`spec/language.md` 6.2). `f32`
+/// compares as IEEE 754 does (`-0.0 == 0.0`; folded values are finite).
+pub fn compare(op: CompareOp, l: &ConstValue, r: &ConstValue) -> EvalResult {
+    use ConstValue as V;
+    let result = match (l, r) {
+        (V::F32(a), V::F32(b)) => op.holds(*a, *b),
+        (V::I32(a), V::I32(b)) => op.holds(*a, *b),
+        (V::U32(a), V::U32(b)) => op.holds(*a, *b),
+        (V::Bool(a), V::Bool(b)) if op.is_equality() => op.holds(*a, *b),
+        _ => return Err(EvalError::Mismatch),
+    };
+    Ok(V::Bool(result))
+}
+
+/// `l && r`, `l || r` on `bool`. Both operands are constant expressions and
+/// were folded (and checked) already; the result is the logical value.
+pub fn logic(op: LogicOp, l: &ConstValue, r: &ConstValue) -> EvalResult {
+    match (l, r) {
+        (ConstValue::Bool(a), ConstValue::Bool(b)) => Ok(ConstValue::Bool(match op {
+            LogicOp::And => *a && *b,
+            LogicOp::Or => *a || *b,
+        })),
+        _ => Err(EvalError::Mismatch),
+    }
+}
+
+/// `!v` on `bool`.
+pub fn not(value: &ConstValue) -> EvalResult {
+    match value {
+        ConstValue::Bool(v) => Ok(ConstValue::Bool(!v)),
+        _ => Err(EvalError::Mismatch),
     }
 }
 
@@ -197,18 +309,22 @@ pub fn negate(value: &ConstValue) -> EvalResult {
     })
 }
 
+/// Integer `/` and `%` by zero during folding (`E3040`).
+fn by_zero(op: ArithOp, a: impl fmt::Display) -> EvalError {
+    EvalError::DivisionByZero(format!("{a} {} 0", op.symbol()))
+}
+
 fn int_i32(op: ArithOp, a: i32, b: i32) -> EvalResult {
     let symbol = op.symbol();
     let result = match op {
         ArithOp::Add => a.checked_add(b),
         ArithOp::Sub => a.checked_sub(b),
         ArithOp::Mul => a.checked_mul(b),
-        ArithOp::Div => {
-            if b == 0 {
-                return Err(EvalError::DivisionByZero(format!("{a} / 0")));
-            }
-            a.checked_div(b)
-        }
+        // `i32::MIN / -1` and `i32::MIN % -1` overflow (`checked_*` gives
+        // `None`), which WGSL const-evaluation rejects as well.
+        ArithOp::Div | ArithOp::Rem if b == 0 => return Err(by_zero(op, a)),
+        ArithOp::Div => a.checked_div(b),
+        ArithOp::Rem => a.checked_rem(b),
     };
     result
         .map(ConstValue::I32)
@@ -221,12 +337,9 @@ fn int_u32(op: ArithOp, a: u32, b: u32) -> EvalResult {
         ArithOp::Add => a.checked_add(b),
         ArithOp::Sub => a.checked_sub(b),
         ArithOp::Mul => a.checked_mul(b),
-        ArithOp::Div => {
-            if b == 0 {
-                return Err(EvalError::DivisionByZero(format!("{a} / 0")));
-            }
-            a.checked_div(b)
-        }
+        ArithOp::Div | ArithOp::Rem if b == 0 => return Err(by_zero(op, a)),
+        ArithOp::Div => a.checked_div(b),
+        ArithOp::Rem => a.checked_rem(b),
     };
     result
         .map(ConstValue::U32)
@@ -275,6 +388,8 @@ pub fn arithmetic(op: ArithOp, l: &ConstValue, r: &ConstValue) -> EvalResult {
     use ConstValue as V;
     let mul = op == ArithOp::Mul;
     let scales = matches!(op, ArithOp::Mul | ArithOp::Div);
+    // `%` is defined on scalars only (`spec/language.md` 6.2).
+    let component_wise = op != ArithOp::Rem;
     match (l, r) {
         (V::F32(a), V::F32(b)) => {
             let out = op.apply(*a, *b);
@@ -285,9 +400,9 @@ pub fn arithmetic(op: ArithOp, l: &ConstValue, r: &ConstValue) -> EvalResult {
         }
         (V::I32(a), V::I32(b)) => int_i32(op, *a, *b),
         (V::U32(a), V::U32(b)) => int_u32(op, *a, *b),
-        (V::Vec2(a), V::Vec2(b)) => vector_op(op, *a, *b, V::Vec2, "vec2"),
-        (V::Vec3(a), V::Vec3(b)) => vector_op(op, *a, *b, V::Vec3, "vec3"),
-        (V::Vec4(a), V::Vec4(b)) => vector_op(op, *a, *b, V::Vec4, "vec4"),
+        (V::Vec2(a), V::Vec2(b)) if component_wise => vector_op(op, *a, *b, V::Vec2, "vec2"),
+        (V::Vec3(a), V::Vec3(b)) if component_wise => vector_op(op, *a, *b, V::Vec3, "vec3"),
+        (V::Vec4(a), V::Vec4(b)) if component_wise => vector_op(op, *a, *b, V::Vec4, "vec4"),
         (V::Vec2(v), V::F32(s)) if scales => vector_scalar(op, *v, *s, false, V::Vec2, "vec2"),
         (V::Vec3(v), V::F32(s)) if scales => vector_scalar(op, *v, *s, false, V::Vec3, "vec3"),
         (V::Vec4(v), V::F32(s)) if scales => vector_scalar(op, *v, *s, false, V::Vec4, "vec4"),
@@ -367,7 +482,7 @@ pub fn quat_mul(a: [f32; 4], b: [f32; 4]) -> [f32; 4] {
     ]
 }
 
-fn cross(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
+pub(super) fn cross(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
     [
         a[1] * b[2] - a[2] * b[1],
         a[2] * b[0] - a[0] * b[2],
@@ -550,8 +665,60 @@ pub fn select_components(value: &ConstValue, indices: &[usize]) -> EvalResult {
 pub fn has_namespace_evaluator(namespace: &str, member: &str) -> bool {
     matches!(
         (namespace, member),
-        ("quat", "identity" | "axis_angle" | "euler") | ("color", "linear" | "srgb")
+        ("quat", "identity" | "axis_angle" | "euler")
+            | ("color", "linear" | "srgb")
+            | (
+                "mat4",
+                "identity" | "translation" | "rotation" | "scale" | "columns"
+            )
     )
+}
+
+/// `mat4.identity()`.
+pub const MAT4_IDENTITY: [[f32; 4]; 4] = [
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0, 0.0],
+    [0.0, 0.0, 1.0, 0.0],
+    [0.0, 0.0, 0.0, 1.0],
+];
+
+/// `mat4.translation(v)`: the identity with `(v, 1)` as its last column.
+#[must_use]
+pub fn mat4_translation(v: [f32; 3]) -> [[f32; 4]; 4] {
+    let mut m = MAT4_IDENTITY;
+    m[3] = [v[0], v[1], v[2], 1.0];
+    m
+}
+
+/// `mat4.scale(v)`: `v` on the diagonal, 1 in the corner.
+#[must_use]
+pub fn mat4_scale(v: [f32; 3]) -> [[f32; 4]; 4] {
+    let mut m = MAT4_IDENTITY;
+    m[0][0] = v[0];
+    m[1][1] = v[1];
+    m[2][2] = v[2];
+    m
+}
+
+/// `mat4.rotation(q)`: the rotation matrix of the unit quaternion `q`
+/// (decision 0035), column-major, with the products `xx = x*x`, `xy = x*y`,
+/// `wz = w*z`, … and each element one expression left to right in binary32:
+/// column 0 is `(1 - 2*(yy + zz), 2*(xy + wz), 2*(xz - wy), 0)`, column 1
+/// `(2*(xy - wz), 1 - 2*(xx + zz), 2*(yz + wx), 0)`, column 2
+/// `(2*(xz + wy), 2*(yz - wx), 1 - 2*(xx + yy), 0)`, column 3 `(0, 0, 0, 1)`
+/// (the formula of the runtime's `math/mat4.ts`).
+#[must_use]
+pub fn mat4_rotation(q: [f32; 4]) -> [[f32; 4]; 4] {
+    let [x, y, z, w] = q;
+    let (xx, yy, zz) = (x * x, y * y, z * z);
+    let (xy, xz, yz) = (x * y, x * z, y * z);
+    let (wx, wy, wz) = (w * x, w * y, w * z);
+    [
+        [1.0 - 2.0 * (yy + zz), 2.0 * (xy + wz), 2.0 * (xz - wy), 0.0],
+        [2.0 * (xy - wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz + wx), 0.0],
+        [2.0 * (xz + wy), 2.0 * (yz - wx), 1.0 - 2.0 * (xx + yy), 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ]
 }
 
 /// Evaluates the const-eligible namespace function `namespace.member` (the
@@ -572,6 +739,19 @@ pub fn namespace_function(
         ("quat", "euler", [V::F32(x), V::F32(y), V::F32(z)]) => quat_euler(*x, *y, *z),
         ("color", "linear", [V::Vec3(rgb), V::F32(a)]) => Ok(color_linear(*rgb, *a)),
         ("color", "srgb", [V::Vec3(rgb), V::F32(a)]) => color_srgb(*rgb, *a),
+        ("mat4", "identity", []) => Ok(V::Mat4(MAT4_IDENTITY)),
+        ("mat4", "translation", [V::Vec3(v)]) => Ok(V::Mat4(mat4_translation(*v))),
+        ("mat4", "scale", [V::Vec3(v)]) => Ok(V::Mat4(mat4_scale(*v))),
+        ("mat4", "rotation", [V::Quat(q)]) => {
+            let m = mat4_rotation(*q);
+            finite(m.as_flattened(), || {
+                "mat4.rotation(q) is not finite".to_owned()
+            })
+            .map(|()| V::Mat4(m))
+        }
+        ("mat4", "columns", [V::Vec4(c0), V::Vec4(c1), V::Vec4(c2), V::Vec4(c3)]) => {
+            Ok(V::Mat4([*c0, *c1, *c2, *c3]))
+        }
         _ if has_namespace_evaluator(namespace, member) => Err(EvalError::Mismatch),
         _ => return None,
     };
@@ -924,7 +1104,7 @@ mod tests {
                 }
             }
         }
-        assert!(namespace_function("mat4", "identity", &[]).is_none());
+        assert!(namespace_function("texture", "white", &[]).is_none());
         assert_eq!(
             namespace_function("quat", "euler", &[]),
             Some(Err(EvalError::Mismatch))

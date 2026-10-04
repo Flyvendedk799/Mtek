@@ -1,0 +1,5 @@
+const READY = 1 && true;
+
+scene Demo {
+    camera Main {}
+}

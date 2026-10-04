@@ -14,6 +14,7 @@
 use std::collections::BTreeMap;
 
 use crate::resolve::DefId;
+use crate::source::FileId;
 use crate::stdlib::{SchemaCategory, TypeKind, TypeRef, registry};
 
 /// A type, by its index in a [`TyInterner`].
@@ -88,8 +89,9 @@ pub enum Ty {
         element: TyId,
         len: u32,
     },
-    /// A user `struct`: nominal, identified by its declaration.
-    Struct(DefId),
+    /// A user `struct`: nominal, identified by its declaration (in any
+    /// module, decision 0035 item 5).
+    Struct(StructKey),
     Mesh,
     Material,
     Texture,
@@ -159,13 +161,54 @@ const NAMED_TYPE_REFS: [TypeRef; 17] = [
     TypeRef::GlbAsset,
 ];
 
+/// The identity of a user struct type: its declaration, by the file that
+/// declares it and its `DefId` there. It is the same in every module, so a
+/// struct type keeps its identity when it crosses an import (decision 0035
+/// item 5).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct StructKey {
+    /// The file of the declaring module.
+    pub file: FileId,
+    /// The declaration in that module's resolution.
+    pub def: DefId,
+}
+
+/// The fields of a user struct type, in declaration order, with their types
+/// in the interner that holds the definition.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StructDef {
+    /// The struct's name, as diagnostics print it.
+    pub name: String,
+    /// `(name, type)` of each field; empty until the declaration is checked
+    /// (and for a struct whose declaration has an error).
+    pub fields: Vec<(String, TyId)>,
+    /// How deeply the type nests: 1 plus the deepest field ([`TyInterner::depth`]).
+    pub depth: u32,
+    /// The declaration has an error that leaves the struct without fields
+    /// (`E3020`, `E3032`, or a field of a broken struct): values of it
+    /// cannot be built, and nothing about it is reported again.
+    pub broken: bool,
+}
+
+impl StructDef {
+    /// The type of the field `name`.
+    #[must_use]
+    pub fn field(&self, name: &str) -> Option<TyId> {
+        self.fields.iter().find(|(n, _)| n == name).map(|(_, t)| *t)
+    }
+}
+
+/// The deepest nesting of array and struct types a program may build (the
+/// parser's depth limit, `spec/compiler-architecture.md` 9): `E3032` beyond.
+pub const MAX_TYPE_DEPTH: u32 = 256;
+
 /// Every type of one compilation, stored once.
 #[derive(Clone, Debug)]
 pub struct TyInterner {
     types: Vec<Ty>,
     ids: BTreeMap<Ty, TyId>,
-    /// The names of struct types, for display.
-    struct_names: BTreeMap<DefId, String>,
+    /// The names and fields of struct types.
+    structs: BTreeMap<StructKey, StructDef>,
 }
 
 impl Default for TyInterner {
@@ -181,7 +224,7 @@ impl TyInterner {
         let mut interner = Self {
             types: Vec::new(),
             ids: BTreeMap::new(),
-            struct_names: BTreeMap::new(),
+            structs: BTreeMap::new(),
         };
         for ty in PRIMITIVES {
             interner.intern(ty);
@@ -205,25 +248,139 @@ impl TyInterner {
         id
     }
 
-    /// The struct type declared by `def`, named `name` in diagnostics.
-    pub fn intern_struct(&mut self, def: DefId, name: &str) -> TyId {
-        self.struct_names.insert(def, name.to_owned());
-        self.intern(Ty::Struct(def))
+    /// The struct type declared as `key`, named `name` in diagnostics (its
+    /// fields are given by [`Self::define_struct`]).
+    pub fn intern_struct(&mut self, key: StructKey, name: &str) -> TyId {
+        self.structs.entry(key).or_insert_with(|| StructDef {
+            name: name.to_owned(),
+            fields: Vec::new(),
+            depth: 1,
+            broken: false,
+        });
+        self.intern(Ty::Struct(key))
+    }
+
+    /// Record the fields of the struct type `key` (its nesting depth is 1
+    /// plus that of its deepest field, whose structs are defined already).
+    pub fn define_struct(&mut self, key: StructKey, fields: Vec<(String, TyId)>) {
+        let depth = 1 + fields
+            .iter()
+            .map(|(_, ty)| self.depth(*ty))
+            .max()
+            .unwrap_or(0);
+        if let Some(def) = self.structs.get_mut(&key) {
+            def.fields = fields;
+            def.depth = depth;
+        }
+    }
+
+    /// Mark the struct type `key` as broken (no fields, depth 0).
+    pub fn break_struct(&mut self, key: StructKey) {
+        if let Some(def) = self.structs.get_mut(&key) {
+            def.fields.clear();
+            def.depth = 0;
+            def.broken = true;
+        }
+    }
+
+    /// Whether `id` is, or holds in its arrays, a broken struct type.
+    #[must_use]
+    pub fn is_broken(&self, id: TyId) -> bool {
+        let mut current = id;
+        loop {
+            match self.get(current) {
+                Ty::Array { element, .. } => current = element,
+                Ty::Struct(key) => return self.structs.get(&key).is_some_and(|d| d.broken),
+                _ => return false,
+            }
+        }
+    }
+
+    /// How many array and struct levels `id` nests (0 for a scalar, 1 for
+    /// `array<f32, 2>` or a struct of scalars, …): bounded by
+    /// [`MAX_TYPE_DEPTH`] in every program without errors (`E3032`, decision
+    /// 0035), so that values, which nest as their types do, can be walked
+    /// recursively by later stages.
+    #[must_use]
+    pub fn depth(&self, id: TyId) -> u32 {
+        let mut levels = 0_u32;
+        let mut current = id;
+        loop {
+            match self.get(current) {
+                Ty::Array { element, .. } => {
+                    levels = levels.saturating_add(1);
+                    current = element;
+                }
+                Ty::Struct(key) => {
+                    let inner = self.structs.get(&key).map_or(1, |def| def.depth);
+                    return levels.saturating_add(inner);
+                }
+                _ => return levels,
+            }
+        }
+    }
+
+    /// The definition of a struct type.
+    #[must_use]
+    pub fn struct_def(&self, id: TyId) -> Option<&StructDef> {
+        match self.get(id) {
+            Ty::Struct(key) => self.structs.get(&key),
+            _ => None,
+        }
     }
 
     /// The type `id` of the interner `other` (another module's), as a type of
-    /// this interner (decision 0036). Built-in types carry over unchanged
-    /// and arrays element by element; a user struct is identified by its
-    /// declaration in its own module, which this interner cannot name, so it
-    /// becomes `Error` (structs are gated in this build; cross-module struct
-    /// types need a module-independent identity first).
+    /// this interner (decision 0036). Built-in types carry over unchanged,
+    /// arrays element by element, and a user struct keeps its identity
+    /// (its [`StructKey`]) and brings its definition, with every struct its
+    /// fields name. The structs are copied with a worklist, so a long chain
+    /// of structs nesting each other needs no deep recursion.
     pub fn import_from(&mut self, other: &TyInterner, id: TyId) -> TyId {
+        let mut pending = Vec::new();
+        let imported = self.import_shallow(other, id, &mut pending);
+        while let Some(key) = pending.pop() {
+            let Some(def) = other.structs.get(&key) else {
+                continue;
+            };
+            let fields = def
+                .fields
+                .iter()
+                .map(|(name, ty)| (name.clone(), self.import_shallow(other, *ty, &mut pending)))
+                .collect();
+            // The exporter computed the depth with every field defined.
+            if let Some(slot) = self.structs.get_mut(&key) {
+                slot.fields = fields;
+                slot.depth = def.depth;
+                slot.broken = def.broken;
+            }
+        }
+        imported
+    }
+
+    /// One type of `other` in this interner; a struct this interner does not
+    /// know yet is registered by name and queued in `pending` for its fields.
+    fn import_shallow(
+        &mut self,
+        other: &TyInterner,
+        id: TyId,
+        pending: &mut Vec<StructKey>,
+    ) -> TyId {
         // Arrays nest at most as deep as the parser lets types nest, so the
         // recursion is bounded by the parser's depth limit.
         match other.get(id) {
-            Ty::Struct(_) => TyId::ERROR,
+            Ty::Struct(key) => {
+                if !self.structs.contains_key(&key) {
+                    let name = other
+                        .structs
+                        .get(&key)
+                        .map_or_else(|| "struct".to_owned(), |d| d.name.clone());
+                    pending.push(key);
+                    return self.intern_struct(key, &name);
+                }
+                self.intern(Ty::Struct(key))
+            }
             Ty::Array { element, len } => {
-                let element = self.import_from(other, element);
+                let element = self.import_shallow(other, element, pending);
                 if self.is_error(element) {
                     TyId::ERROR
                 } else {
@@ -384,11 +541,10 @@ impl TyInterner {
         match self.get(id) {
             Ty::Error => "{error}".to_owned(),
             Ty::Array { element, len } => format!("array<{}, {len}>", self.display(element)),
-            Ty::Struct(def) => self
-                .struct_names
-                .get(&def)
-                .cloned()
-                .unwrap_or_else(|| "struct".to_owned()),
+            Ty::Struct(key) => self
+                .structs
+                .get(&key)
+                .map_or_else(|| "struct".to_owned(), |def| def.name.clone()),
             Ty::Schema(name) => name.to_owned(),
             _ => self
                 .to_type_ref(id)
@@ -442,11 +598,67 @@ mod tests {
     #[test]
     fn structs_are_nominal() {
         let mut interner = TyInterner::new();
-        let a = interner.intern_struct(DefId(1), "Light");
-        let b = interner.intern_struct(DefId(2), "Light");
+        let key = |file, def| StructKey {
+            file: FileId(file),
+            def: DefId(def),
+        };
+        let a = interner.intern_struct(key(0, 1), "Light");
+        let b = interner.intern_struct(key(0, 2), "Light");
+        // The same `DefId` in another module is another struct.
+        let c = interner.intern_struct(key(1, 1), "Light");
         assert_ne!(a, b);
+        assert_ne!(a, c);
         assert_eq!(interner.display(a), "Light");
         assert!(!interner.assignable(a, b));
+    }
+
+    #[test]
+    fn struct_types_cross_modules_with_their_fields() {
+        // Module 1 declares `Inner { v: vec3 }` and `Outer { a: array<Inner,
+        // 2>, s: f32 }`; importing `Outer` brings both definitions along.
+        let inner_key = StructKey {
+            file: FileId(1),
+            def: DefId(4),
+        };
+        let outer_key = StructKey {
+            file: FileId(1),
+            def: DefId(5),
+        };
+        let mut exporter = TyInterner::new();
+        let inner = exporter.intern_struct(inner_key, "Inner");
+        exporter.define_struct(inner_key, vec![("v".into(), TyId::VEC3)]);
+        let array = exporter.intern(Ty::Array {
+            element: inner,
+            len: 2,
+        });
+        let outer = exporter.intern_struct(outer_key, "Outer");
+        exporter.define_struct(
+            outer_key,
+            vec![("a".into(), array), ("s".into(), TyId::F32)],
+        );
+
+        let mut importer = TyInterner::new();
+        // Shift the importer's ids so that equal ids would be a coincidence.
+        importer.intern(Ty::Array {
+            element: TyId::BOOL,
+            len: 7,
+        });
+        let imported = importer.import_from(&exporter, outer);
+        assert_eq!(importer.get(imported), Ty::Struct(outer_key));
+        assert_eq!(importer.display(imported), "Outer");
+        let def = importer.struct_def(imported).unwrap().clone();
+        assert_eq!(def.field("s"), Some(TyId::F32));
+        let a = def.field("a").unwrap();
+        let Ty::Array { element, len: 2 } = importer.get(a) else {
+            panic!("{:?}", importer.get(a))
+        };
+        assert_eq!(importer.display(element), "Inner");
+        assert_eq!(
+            importer.struct_def(element).unwrap().field("v"),
+            Some(TyId::VEC3)
+        );
+        // Importing again changes nothing.
+        assert_eq!(importer.import_from(&exporter, outer), imported);
     }
 
     #[test]

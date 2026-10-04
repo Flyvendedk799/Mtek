@@ -1,0 +1,8 @@
+// D02 6.7: `quat.identity()`.
+const Q = quat.identity();
+
+scene Demo {
+    camera Main {
+        rotation: Q;
+    }
+}

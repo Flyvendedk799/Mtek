@@ -521,3 +521,57 @@ fn same_named_materials_of_two_modules_build_to_distinct_names() {
         "{layouts:?}"
     );
 }
+
+#[test]
+fn struct_types_cross_modules_with_their_identity_and_fields() {
+    // M2-01 (decision 0035 item 5): an imported struct is a type in the
+    // importing module, values of it fold across the import, and the struct
+    // is an IR item once, in the module that declares it.
+    let analysis = analyze_fixture("pass", "types/struct_across_modules");
+    assert!(!analysis.has_errors(), "{:#?}", analysis.report);
+    let ir = ir_json(&analysis);
+    let shapes = ir["modules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|m| m["path"] == "src/shapes.mtek")
+        .unwrap();
+    let structs: Vec<(&str, Value)> = shapes["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| item["kind"] == "struct")
+        .map(|item| (item["symbol"].as_str().unwrap(), item["fields"].clone()))
+        .collect();
+    assert_eq!(
+        structs,
+        [
+            (
+                "src/shapes.mtek::Wave",
+                serde_json::json!([{ "name": "amp", "type": "f32" }, { "name": "dir", "type": "vec3" }])
+            ),
+            (
+                "src/shapes.mtek::Swell",
+                serde_json::json!([{ "name": "waves", "type": "array<Wave, 2>" }, { "name": "count", "type": "u32" }])
+            ),
+        ]
+    );
+    // The literal wrote `dir` before `amp`: values list declaration order.
+    let sea = &constants(&ir, "src/shapes.mtek")[1].1;
+    assert_eq!(
+        sea["struct"]["fields"][0]["value"]["array"][1]["struct"]["fields"][0],
+        serde_json::json!({ "name": "amp", "value": { "f32": 2.0 } })
+    );
+    let main = constants(&ir, "src/main.mtek");
+    assert_eq!(main[0].0, "src/main.mtek::LOCAL");
+    let entity = &ir["modules"][0]["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|item| item["kind"] == "scene")
+        .unwrap()["entities"][0];
+    assert_eq!(
+        entity["position"]["source"]["const"],
+        serde_json::json!({ "vec3": [1.0, 1.0, 0.0] })
+    );
+}

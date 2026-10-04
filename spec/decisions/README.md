@@ -55,5 +55,6 @@ recorded here before code depends on it (blueprint §15).
 | 0032 | The `mtek` command line tool: details the specification leaves open |
 | 0033 | The development server `mtek dev`: details the specification leaves open |
 | 0034 | M1 exit-gate browser tests: details the specification leaves open |
+| 0035 | The complete type system: details the specification leaves open |
 | 0036 | Modules: details the specification leaves open |
 | 0037 | Runtime math library `rt`: details the specification leaves open |

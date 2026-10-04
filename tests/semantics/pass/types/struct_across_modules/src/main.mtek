@@ -1,0 +1,15 @@
+// The imported struct is a type here: annotations, literals and field
+// reads, also of a struct nested in an imported constant.
+import { Wave, BASE, SEA } from "./shapes.mtek";
+
+const LOCAL: Wave = Wave { amp: BASE.amp * 2.0; dir: SEA.waves[1].dir };
+
+scene Harbour {
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+    }
+    entity Buoy {
+        position: LOCAL.dir * LOCAL.amp + BASE.dir;
+        mesh: Sphere { segments: SEA.count * 8 };
+    }
+}

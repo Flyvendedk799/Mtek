@@ -26,7 +26,8 @@ mod tests;
 
 pub use model::{
     Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module, NamedValue,
-    Origin, Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, Symbol, Value,
+    Origin, Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source,
+    StructFieldItem, StructItem, Symbol, Value,
 };
 pub use render::{to_human, to_json};
 

@@ -384,7 +384,8 @@ fn importing_a_name_twice_is_e2002() {
 fn type_names_resolve_to_structs_and_prelude_types() {
     let r =
         resolve_text("struct Pair { a: f32; b: vec3; }\nfn f(p: Pair) -> f32 { return p.a; }\n");
-    assert_eq!(r.codes(), ["E9010", "E9010"]);
+    // Only the function is gated (structs are implemented, decision 0035).
+    assert_eq!(r.codes(), ["E9010"]);
     let pair = r.def_named("Pair");
     assert_eq!(r.res("ident", "Pair", 1), Some(Res::Def(pair.id)));
     assert_eq!(

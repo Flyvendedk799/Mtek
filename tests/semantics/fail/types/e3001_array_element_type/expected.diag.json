@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 27,
+    "endByte": 36,
+    "message": "Element 2 of the array literal has type vec3, but the elements of this array have type vec2.",
+    "expected": "vec2",
+    "actual": "vec3",
+    "notes": [
+      "the elements of an array literal have one type"
+    ]
+  }
+]

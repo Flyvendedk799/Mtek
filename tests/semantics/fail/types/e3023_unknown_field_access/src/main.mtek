@@ -1,0 +1,11 @@
+struct Light {
+    intensity: f32;
+    offset: vec3;
+}
+
+const KEY = Light { intensity: 1.0; offset: vec3(0.0) };
+const LEVEL = KEY.intensty;
+
+scene Demo {
+    camera Main {}
+}

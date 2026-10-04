@@ -1116,7 +1116,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "`abs(i32 MIN) = MIN`.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Absolute value, component-wise."
     },
     {
@@ -1128,7 +1128,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Arc cosine, in radians."
     },
     {
@@ -1152,7 +1152,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Arc sine, in radians."
     },
     {
@@ -1164,7 +1164,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Arc tangent, in radians."
     },
     {
@@ -1176,7 +1176,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Angle of the point `(x, y)` in radians; note the argument order `atan2(y, x)`."
     },
     {
@@ -1188,7 +1188,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Smallest integer value not below `x`."
     },
     {
@@ -1201,7 +1201,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "`min(max(x, lo), hi)`; `lo > hi` is non-portable.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Limits `x` to the range `lo..hi`."
     },
     {
@@ -1213,7 +1213,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Cosine of an angle in radians."
     },
     {
@@ -1225,7 +1225,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Cross product of two 3D vectors."
     },
     {
@@ -1237,7 +1237,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Radians to degrees."
     },
     {
@@ -1261,7 +1261,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Distance between two points."
     },
     {
@@ -1273,7 +1273,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Dot product of two vectors."
     },
     {
@@ -1285,7 +1285,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "Tolerance-based CPU/GPU agreement.",
-      "since": "M2",
+      "since": "M1",
       "doc": "e raised to `x`."
     },
     {
@@ -1297,7 +1297,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "Tolerance-based CPU/GPU agreement.",
-      "since": "M2",
+      "since": "M1",
       "doc": "2 raised to `x`."
     },
     {
@@ -1309,7 +1309,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Largest integer value not above `x`."
     },
     {
@@ -1321,7 +1321,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "`fract(x) = x - floor(x)`.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Fractional part of `x`."
     },
     {
@@ -1333,7 +1333,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Reciprocal of the square root."
     },
     {
@@ -1357,7 +1357,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Length of a vector, or the absolute value of a scalar."
     },
     {
@@ -1369,7 +1369,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "Tolerance-based CPU/GPU agreement.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Natural logarithm."
     },
     {
@@ -1381,7 +1381,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "Tolerance-based CPU/GPU agreement.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Base-2 logarithm."
     },
     {
@@ -1394,7 +1394,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "NaN handling is non-portable.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Larger of two values, component-wise."
     },
     {
@@ -1407,7 +1407,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "NaN handling is non-portable.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Smaller of two values, component-wise."
     },
     {
@@ -1420,7 +1420,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "`a * (1 - t) + b * t`.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Linear interpolation `a * (1 - t) + b * t`, with a scalar or a component-wise `t`."
     },
     {
@@ -1432,7 +1432,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "A zero vector gives the zero vector on the CPU; non-portable on the GPU.",
-      "since": "M2",
+      "since": "M1",
       "doc": "The vector scaled to length 1."
     },
     {
@@ -1444,7 +1444,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "Tolerance-based CPU/GPU agreement.",
-      "since": "M2",
+      "since": "M1",
       "doc": "`base` raised to `exponent`, component-wise."
     },
     {
@@ -1468,7 +1468,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Degrees to radians."
     },
     {
@@ -1492,7 +1492,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "`i - 2 * dot(n, i) * n`.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Reflects incident vector `i` about the surface normal `n`."
     },
     {
@@ -1504,7 +1504,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "Ties to even (not JavaScript `Math.round`).",
-      "since": "M2",
+      "since": "M1",
       "doc": "Nearest integer value, halves to even."
     },
     {
@@ -1528,7 +1528,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "`clamp(x, 0, 1)`.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Limits `x` to 0..1."
     },
     {
@@ -1540,7 +1540,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "`sign(0) = 0`.",
-      "since": "M2",
+      "since": "M1",
       "doc": "-1, 0 or 1 according to the sign of `x`."
     },
     {
@@ -1552,7 +1552,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Sine of an angle in radians."
     },
     {
@@ -1564,7 +1564,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "Hermite, `t = clamp((x - e0) / (e1 - e0), 0, 1)`.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Smooth Hermite interpolation between `edge0` and `edge1`."
     },
     {
@@ -1588,7 +1588,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "Correctly rounded on the CPU.",
-      "since": "M2",
+      "since": "M1",
       "doc": "Square root."
     },
     {
@@ -1600,7 +1600,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "`x >= edge ? 1 : 0` per component.",
-      "since": "M2",
+      "since": "M1",
       "doc": "0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`."
     },
     {
@@ -1612,7 +1612,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Tangent of an angle in radians."
     },
     {
@@ -1624,7 +1624,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Transpose of a 4x4 matrix."
     },
     {
@@ -1636,7 +1636,7 @@
       "constEligible": true,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M2",
+      "since": "M1",
       "doc": "Integer part of `x`, rounding toward zero."
     }
   ],
@@ -1773,7 +1773,7 @@
     },
     {
       "name": "mat4",
-      "since": "M2",
+      "since": "M1",
       "doc": "Constructors for column-major 4x4 matrices.",
       "members": [
         {
@@ -1786,7 +1786,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M2",
+          "since": "M1",
           "doc": "Matrix from its four columns."
         },
         {
@@ -1799,7 +1799,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M2",
+          "since": "M1",
           "doc": "The identity matrix."
         },
         {
@@ -1812,7 +1812,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M2",
+          "since": "M1",
           "doc": "Rotation matrix of a quaternion."
         },
         {
@@ -1825,7 +1825,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M2",
+          "since": "M1",
           "doc": "Non-uniform scale by `v`."
         },
         {
@@ -1838,7 +1838,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M2",
+          "since": "M1",
           "doc": "Translation by `v`."
         }
       ]
@@ -2031,7 +2031,7 @@
       "name": "array",
       "kind": "array",
       "gpu": true,
-      "since": "M2",
+      "since": "M1",
       "doc": "The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`.",
       "fields": [],
       "methods": []
@@ -2215,7 +2215,7 @@
       "name": "mat4",
       "kind": "matrix",
       "gpu": true,
-      "since": "M2",
+      "since": "M1",
       "doc": "4x4 `f32` matrix, column-major; multiplies column vectors on the right.",
       "fields": [],
       "methods": []
@@ -2260,7 +2260,7 @@
       "name": "string",
       "kind": "text",
       "gpu": false,
-      "since": "M2",
+      "since": "M1",
       "doc": "Immutable text. CPU only.",
       "fields": [],
       "methods": []

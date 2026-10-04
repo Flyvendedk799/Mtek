@@ -1,0 +1,6 @@
+const SIZE = 2.0;
+const PAIR: array<f32, SIZE> = [1.0, 2.0];
+
+scene Demo {
+    camera Main {}
+}

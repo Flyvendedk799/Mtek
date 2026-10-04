@@ -1,5 +1,0 @@
-const BIG = 2.0 > 1.0;
-
-scene Demo {
-    camera Main {}
-}
