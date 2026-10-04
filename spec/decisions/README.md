@@ -61,4 +61,5 @@ recorded here before code depends on it (blueprint §15).
 | 0038 | Functions, statements and effects: details the specification leaves open |
 | 0039 | Materials in the checker: details the specification leaves open |
 | 0040 | The CPU emitter: details the specification leaves open |
+| 0041 | Shader lowering: details the specification leaves open |
 | 0042 | Grammar coverage and the M2 grammar freeze: details the specification leaves open |
