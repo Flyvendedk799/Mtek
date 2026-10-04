@@ -30,7 +30,7 @@ All of the following are **proposals** (design choices), not external constraint
 - No new dependency (`serde`, `serde_json`, `sha2`, `jsonschema` as a dev-dependency are in decision 0007's table) and no new diagnostic code. `E9030` is now reported by the library and covered by `tests/build.rs`.
 - M1-18 (rendering) reads structure from the manifest and every value from `init(ctx)`: it must implement `ctx.e`, `ctx.setCamera`, `ctx.setTransform`, `ctx.setVisible` and `ctx.setParam` (through the material's field writer from `writers`) before the first frame, and accept `entityUpdate`/`entityFixedUpdate` arrays of `null`.
 - M1-19 (CLI) calls `build` with the embedded bundle and `runtime.d.ts`, writes `files` with `dist::write_dist(out_dir, build_id, files)` (removing the `expect(dead_code)` on the module), and maps `has_errors()` to exit code 1.
-- M1-20 (browser fixtures) builds with `--mode test` and calls `window.__mtekMount(options)`.
+- M1-21 (browser fixtures) builds with `--mode test` and calls `window.__mtekMount(options)`.
 - `spec/compiler-architecture.md` §4.10–§4.12 point here.
 
 ## Verification

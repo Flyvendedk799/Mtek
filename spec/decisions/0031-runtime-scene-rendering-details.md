@@ -26,7 +26,7 @@ All of the following are **proposals** (design choices), not external constraint
 ## Consequences
 
 - No new dependency and no new diagnostic code.
-- M1-20/M1-21 (browser fixtures) mount compiled programs through `window.__mtekMount`; `app.debug.counters()` now reports `drawCalls`, `pipelinesCreated`, `uploads` and the param-block counters from real rendering, and `debug.scene()` the world's transforms.
+- M1-21 (browser fixtures) mount compiled programs through `window.__mtekMount`; `app.debug.counters()` now reports `drawCalls`, `pipelinesCreated`, `uploads` and the param-block counters from real rendering, and `debug.scene()` the world's transforms.
 - M3 adds the remaining context members (and removes them from the internal-error path), the per-frame bindings, handlers and `debug.setParam`, and must keep the "relations are checked after `init`" rule or replace it here.
 - M4 may share immutable parameter blocks and instance compatible draws; it must then count `sharedParamBlocks` and `instancedDraws`.
 

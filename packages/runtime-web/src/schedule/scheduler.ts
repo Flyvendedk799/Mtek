@@ -2,7 +2,9 @@
  * The frame scheduler: the implementation contract of `spec/runtime-abi.md` section 7 (the frame
  * order of `spec/scenes.md` section 10).
  *
- * Each rendered frame runs seven explicit phases. Until M3 phases 1 to 6 do nothing; phase 7 renders.
+ * Each rendered frame runs seven explicit phases, supplied by the owner (`host/app.ts` for a
+ * mounted application). There, until M3, phases 2 to 5 do nothing; phase 1 sets the world's frame
+ * time (host inputs come later), phase 6 propagates transforms and phase 7 renders.
  * The scheduler owns time (`activeTime`, `frameIndex`, the fixed-step accumulator) but knows nothing
  * about GPUs or the DOM: the frame source is injected, which is how the manual clock of tests works.
  */
@@ -25,7 +27,10 @@ export interface FramePhases {
   phase7_render(): void;
 }
 
-/** Phases 1 to 6 are no-ops until M3 (state, input, bindings and transforms do not exist yet). */
+/**
+ * A render-only phase set: phases 1 to 6 are no-ops and phase 7 calls `render`. The scheduler tests
+ * use it; a mounted application uses the phases of `host/app.ts`, which also run phases 1 and 6.
+ */
 export function m1Phases(render: () => void): FramePhases {
   return {
     phase1_input: () => undefined,
