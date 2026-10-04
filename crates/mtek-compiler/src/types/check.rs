@@ -229,6 +229,7 @@ impl<'a> Checker<'a> {
 
     pub(super) fn module(&mut self, module: &'a Module) {
         self.collect_constants(module);
+        self.evaluate_constants();
         for item in &module.items {
             match &item.kind {
                 ItemKind::Const(decl) if construct_implemented(Construct::ConstItem) => {

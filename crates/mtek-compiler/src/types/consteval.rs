@@ -7,10 +7,12 @@
 //! recorded ([`Typeck::value`](super::Typeck::value)). Overflow and division
 //! by zero during folding are `E3040`, wherever they happen.
 //!
-//! Constants are evaluated on demand, in source order of first use, with
-//! their declared or inferred type. A constant that depends on itself is
-//! `E2020`, reported once at the first constant of the cycle with every step
-//! as a related span. The initialiser of a constant must be a constant
+//! Constants are evaluated dependencies first (an explicit depth-first search
+//! over the uses of constants in initialisers, so the stack does not grow with
+//! the length of a chain of constants), each with its declared or inferred
+//! type. A constant that depends on itself is `E2020`, reported once per cycle
+//! at the first constant of the cycle in source order, with every step as a
+//! related span. The initialiser of a constant must be a constant
 //! expression; the first form in it that is not is `E3090`. Other places that
 //! demand constants (scene fields, mesh, body and collider descriptors) are
 //! the schema checks'; for them the reason a root expression is not constant
@@ -18,6 +20,8 @@
 //!
 //! An expression that is not folded because of an error that was already
 //! reported is simply unknown: it causes no further diagnostic.
+
+use std::collections::BTreeMap;
 
 use super::check::{CallKind, Checker, FieldKind};
 use super::ty::{Ty, TyId};
@@ -43,15 +47,152 @@ pub(super) enum Folded {
 }
 
 impl Checker<'_> {
+    /// Evaluate every constant the checker may refer to, dependencies first.
+    ///
+    /// The dependency graph has an edge for every name in an initialiser that
+    /// denotes another constant (including names inside constructs that are
+    /// gated in this build: a cycle is an error of its own). A depth-first
+    /// search over it, in source order, with an explicit stack, reports each
+    /// cycle once (`E2020`) and yields an order in which every constant comes
+    /// after the constants it uses, so evaluating in that order never recurses
+    /// from one constant into another: a chain of thousands of constants
+    /// needs no deeper stack than one.
+    pub(super) fn evaluate_constants(&mut self) {
+        let mut roots: Vec<(u32, DefId)> = self
+            .const_decls
+            .iter()
+            .map(|(def, decl)| (decl.span.start, *def))
+            .collect();
+        roots.sort_unstable();
+        let mut edges: BTreeMap<DefId, Vec<(DefId, Span)>> = BTreeMap::new();
+        for (def, decl) in &self.const_decls {
+            let mut uses = Vec::new();
+            self.constant_uses(&decl.value, &mut uses);
+            edges.insert(*def, uses);
+        }
+
+        #[derive(Clone, Copy, PartialEq, Eq)]
+        enum Mark {
+            OnStack,
+            Done,
+        }
+        let mut marks: BTreeMap<DefId, Mark> = BTreeMap::new();
+        let mut order = Vec::with_capacity(roots.len());
+        for (_, root) in roots {
+            if marks.contains_key(&root) {
+                continue;
+            }
+            // (constant, the reference it was reached through, next edge)
+            let mut stack: Vec<(DefId, Option<Span>, usize)> = vec![(root, None, 0)];
+            marks.insert(root, Mark::OnStack);
+            while let Some(top) = stack.last_mut() {
+                let (node, next) = (top.0, top.2);
+                let edge = edges.get(&node).and_then(|uses| uses.get(next)).copied();
+                top.2 += 1;
+                match edge {
+                    Some((target, span)) => match marks.get(&target) {
+                        None => {
+                            marks.insert(target, Mark::OnStack);
+                            stack.push((target, Some(span), 0));
+                        }
+                        Some(Mark::OnStack) => {
+                            if let Some(start) = stack.iter().position(|(d, _, _)| *d == target) {
+                                let cycle: Vec<(DefId, Option<Span>)> = stack
+                                    .get(start..)
+                                    .unwrap_or(&[])
+                                    .iter()
+                                    .map(|(d, via, _)| (*d, *via))
+                                    .collect();
+                                self.report_cycle(&cycle, span);
+                            }
+                        }
+                        Some(Mark::Done) => {}
+                    },
+                    None => {
+                        marks.insert(node, Mark::Done);
+                        order.push(node);
+                        stack.pop();
+                    }
+                }
+            }
+        }
+        for def in order {
+            self.const_info(def, None);
+        }
+    }
+
+    /// The names in `expr` that denote constants the checker may evaluate,
+    /// with their spans, in source order.
+    fn constant_uses(&self, expr: &Expr, uses: &mut Vec<(DefId, Span)>) {
+        match &expr.kind {
+            ExprKind::Name(_) => {
+                if let Some(Res::Def(id)) = self.res.res(expr.id)
+                    && self.const_decls.contains_key(&id)
+                {
+                    uses.push((id, expr.span));
+                }
+            }
+            ExprKind::Paren(inner) | ExprKind::Unary { operand: inner, .. } => {
+                self.constant_uses(inner, uses);
+            }
+            ExprKind::Binary { lhs, rhs, .. }
+            | ExprKind::Index {
+                base: lhs,
+                index: rhs,
+            } => {
+                self.constant_uses(lhs, uses);
+                self.constant_uses(rhs, uses);
+            }
+            ExprKind::Call { callee, args } => {
+                self.constant_uses(callee, uses);
+                for arg in args {
+                    self.constant_uses(arg, uses);
+                }
+            }
+            ExprKind::Field { base, .. } => self.constant_uses(base, uses),
+            ExprKind::Array(items) => {
+                for item in items {
+                    self.constant_uses(item, uses);
+                }
+            }
+            ExprKind::Descriptor { fields, .. } => {
+                for field in fields {
+                    match &field.value {
+                        FieldValue::Expr(value) => self.constant_uses(value, uses),
+                        FieldValue::Bind(bind) => self.constant_uses(&bind.source, uses),
+                    }
+                }
+            }
+            ExprKind::Int { .. }
+            | ExprKind::Float { .. }
+            | ExprKind::Str { .. }
+            | ExprKind::Color { .. }
+            | ExprKind::Bool(_)
+            | ExprKind::SelfValue
+            | ExprKind::Error => {}
+        }
+    }
+
     /// Type and evaluate the constant `def` (once), returning its type. `via`
     /// is the span of the reference that asks, `None` for the declaration
-    /// itself.
+    /// itself. [`Self::evaluate_constants`] evaluates every constant before
+    /// anything refers to it, so a reference finds it done; a constant on a
+    /// cycle is `Error` wherever it is used.
     pub(super) fn const_info(&mut self, def: DefId, via: Option<Span>) -> TyId {
         if let Some(info) = self.out.consts.get(&def) {
             return info.ty;
         }
+        if via.is_some() && self.cyclic.contains(&def) {
+            return TyId::ERROR;
+        }
         if self.in_progress.contains(&def) {
-            self.report_cycle(def, via);
+            // Unreachable when the dependency graph is complete; should a
+            // reference escape it, the cycle is still reported here.
+            let start = self.const_stack.iter().position(|(d, _)| *d == def);
+            if let (Some(start), Some(span)) = (start, via) {
+                let cycle = self.const_stack.get(start..).unwrap_or(&[]).to_vec();
+                self.report_cycle(&cycle, span);
+            }
             return TyId::ERROR;
         }
         let Some(decl) = self.const_decls.get(&def).copied() else {
@@ -116,18 +257,18 @@ impl Checker<'_> {
         ty
     }
 
-    /// `E2020` for the cycle that the reference `via` to `def` closes.
-    fn report_cycle(&mut self, def: DefId, via: Option<Span>) {
-        let Some(start) = self.const_stack.iter().position(|(d, _)| *d == def) else {
+    /// `E2020` for `cycle` (each constant with the reference it was reached
+    /// through, the first one's ignored), closed by the reference `closing`
+    /// back to its first constant.
+    fn report_cycle(&mut self, cycle: &[(DefId, Option<Span>)], closing: Span) {
+        let Some(&(first_def, _)) = cycle.first() else {
             return;
         };
-        let cycle: Vec<(DefId, Option<Span>)> =
-            self.const_stack.get(start..).unwrap_or(&[]).to_vec();
         let name = |id: DefId| self.res.def(id).map_or("", |d| d.name.as_str()).to_owned();
+        let first = name(first_def);
         let mut path: Vec<String> = cycle.iter().map(|(id, _)| name(*id)).collect();
-        let first = name(def);
         path.push(first.clone());
-        let Some(primary) = self.res.def(def).map(|d| d.span) else {
+        let Some(primary) = self.res.def(first_def).map(|d| d.span) else {
             return;
         };
         let mut diagnostic = Diagnostic::new(
@@ -146,14 +287,15 @@ impl Checker<'_> {
                 );
             }
         }
-        if let (Some((last, _)), Some(span)) = (cycle.last(), via) {
-            diagnostic = diagnostic.related(span, format!("'{}' uses '{first}' here", name(*last)));
+        if let Some((last, _)) = cycle.last() {
+            diagnostic =
+                diagnostic.related(closing, format!("'{}' uses '{first}' here", name(*last)));
         }
         self.sink.push(diagnostic.help(
             "a constant cannot depend on itself; give one constant of the cycle a value that does not refer back",
         ));
         for (id, _) in cycle {
-            self.cyclic.insert(id);
+            self.cyclic.insert(*id);
         }
     }
 
