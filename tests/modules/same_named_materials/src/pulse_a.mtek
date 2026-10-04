@@ -1,0 +1,8 @@
+export material Pulse {
+    param tint: color = #6b5cff;
+    param phase: f32 = 0.0;
+
+    fragment(surface: SurfaceInput) -> color {
+        return tint;
+    }
+}

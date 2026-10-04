@@ -1,0 +1,23 @@
+// Two modules both declare a material `Pulse` (decision 0036). Generated
+// names are module-qualified: the WGSL structs MtekParams_<hash8>_Pulse and
+// the writers w_<hash8>_Pulse differ by the hash of each module's path. The
+// entry module imports one `Pulse` and an instance of the other.
+import { Pulse } from "./pulse_a.mtek";
+import { SOFT_PULSE } from "./pulse_b.mtek";
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+    entity Left {
+        position: vec3(-1.0, 0.5, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Pulse { tint: #ff4040 };
+    }
+    entity Right {
+        position: vec3(1.0, 0.5, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: SOFT_PULSE;
+    }
+}

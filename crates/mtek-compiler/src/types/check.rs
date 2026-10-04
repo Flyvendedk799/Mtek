@@ -865,7 +865,16 @@ impl<'a> Checker<'a> {
                 // reported by the resolver (`E2001`); its uses are not
                 // reported again.
                 let reused_prelude_name = !self.registry.prelude_name_kinds(&def.name).is_empty();
-                match def.kind {
+                // An imported name stands for what it imports (decision 0036);
+                // one whose import was reported is not reported again.
+                let kind = match def.kind {
+                    DefKind::Import => match self.res.import_target(id) {
+                        Some(target) => target.kind,
+                        None => return TyId::ERROR,
+                    },
+                    kind => kind,
+                };
+                match kind {
                     _ if reused_prelude_name => TyId::ERROR,
                     // Gated in this build.
                     DefKind::Struct | DefKind::Material | DefKind::Prefab => TyId::ERROR,
