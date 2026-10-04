@@ -199,6 +199,7 @@ pub fn package(
         shader_files.push((artifact.wgsl_path(), artifact.wgsl.clone().into_bytes()));
         shader_files.push((artifact.map_path(), map_text.into_bytes()));
     }
+    let span_entries = spans.into_entries();
 
     let source_entries: Vec<SourceEntry> = sources
         .files()
@@ -250,7 +251,7 @@ pub fn package(
         },
         entry_scene: scene.name.clone(),
         sources: source_entries,
-        spans: Vec::new(),
+        spans: span_entries,
         symbols,
         layouts: layouts.iter().map(Layout::from_record).collect(),
         shaders,
@@ -258,10 +259,6 @@ pub fn package(
         meshes: meshes(&plan).map_err(defect)?,
         assets: Vec::new(),
         scene: manifest_scene(scene, &plan).map_err(defect)?,
-    };
-    let manifest = Manifest {
-        spans: spans.into_entries(),
-        ..manifest
     };
 
     let html = index_html(&project.config.build.title, input.mode).ok_or_else(|| {
