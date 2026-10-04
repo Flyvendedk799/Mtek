@@ -7,7 +7,9 @@
 //!   `#mtek` with the given options (Playwright passes `test` options).
 //! - `dev`: mounts like `release` and adds the development reload client: it subscribes to
 //!   `/__mtek/events` and reloads the page on `build-succeeded` (the M1 behaviour; candidate
-//!   hot reload is M3). The compiler emits it; the CLI never patches HTML.
+//!   hot reload is M3); on `build-failed` it shows the diagnostics in an overlay element. The
+//!   compiler emits it; the CLI never patches HTML. [`dev_waiting_page`] is the page `mtek dev`
+//!   serves before the first successful build: the same client without a program.
 //!
 //! The `<title>` is `[build] title` (default: the project name), HTML-escaped.
 
@@ -34,7 +36,37 @@ const MOUNT: &str = "  mountMtek(document.getElementById(\"mtek\"), program).cat
 
 const TEST_MOUNT: &str = "  window.__mtekMount = (options) => mountMtek(document.getElementById(\"mtek\"), program, options);\n";
 
-const RELOAD_CLIENT: &str = "  // Development reload client (spec/tooling.md section 4): reload after every successful build.\n  new EventSource(\"/__mtek/events\").onmessage = (event) => {\n    const message = JSON.parse(event.data);\n    if (message.type === \"build-succeeded\") location.reload();\n    if (message.type === \"build-failed\") console.error(\"mtek: build failed\", message.diagnostics);\n  };\n";
+/// The id of the element in which the reload client shows the diagnostics of a failed build.
+pub const DEV_OVERLAY_ID: &str = "mtek-dev-overlay";
+
+/// The development reload client (`spec/tooling.md` section 4, `spec/runtime-abi.md` section
+/// 11.1): one `data: <JSON>` message per event on `/__mtek/events`. `build-succeeded` reloads
+/// the page (M1); `build-failed` logs the diagnostics and shows them, as plain text, in a
+/// fixed `<pre id="mtek-dev-overlay">` over the page.
+const RELOAD_CLIENT: &str = concat!(
+    "  // Development reload client (spec/tooling.md section 4): reload after every successful build,\n",
+    "  // show the diagnostics of a failed one.\n",
+    "  new EventSource(\"/__mtek/events\").onmessage = (event) => {\n",
+    "    const message = JSON.parse(event.data);\n",
+    "    if (message.type === \"build-succeeded\") location.reload();\n",
+    "    if (message.type !== \"build-failed\") return;\n",
+    "    console.error(\"mtek: build failed\", message.diagnostics);\n",
+    "    let overlay = document.getElementById(\"mtek-dev-overlay\");\n",
+    "    if (!overlay) {\n",
+    "      overlay = document.createElement(\"pre\");\n",
+    "      overlay.id = \"mtek-dev-overlay\";\n",
+    "      overlay.style.cssText = \"position:fixed;inset:0;margin:0;padding:16px;overflow:auto;z-index:2147483647;background:rgba(24,24,24,0.94);color:#f4f4f4;font:13px/1.45 monospace;white-space:pre-wrap\";\n",
+    "      document.body.append(overlay);\n",
+    "    }\n",
+    "    overlay.textContent = \"mtek: build failed\\n\\n\" + message.diagnostics.map((d) =>\n",
+    "      (d.source ? d.source.file + \":\" + d.source.startLine + \":\" + d.source.startColumn + \": \" : \"\") +\n",
+    "      d.severity + \"[\" + d.code + \"]: \" + d.message + d.notes.map((note) => \"\\n  = \" + note).join(\"\")\n",
+    "    ).join(\"\\n\\n\");\n",
+    "  };\n",
+);
+
+const STYLE: &str =
+    "<style>html,body{margin:0;height:100%}canvas{display:block;width:100%;height:100%}</style>\n";
 
 /// The text of `index.html` for `mode` with the page title `title`. `None` for a mode whose
 /// bootstrap this build does not implement (`preview`, M6).
@@ -48,7 +80,7 @@ pub fn index_html(title: &str, mode: BuildMode) -> Option<String> {
     };
     Some(format!(
         "<!doctype html><meta charset=\"utf-8\"><title>{}</title>\n\
-         <style>html,body{{margin:0;height:100%}}canvas{{display:block;width:100%;height:100%}}</style>\n\
+         {STYLE}\
          <canvas id=\"mtek\"></canvas>\n\
          <script type=\"module\">\n\
          \x20 import program, {{ mountMtek }} from \"./app.js\";\n\
@@ -56,6 +88,23 @@ pub fn index_html(title: &str, mode: BuildMode) -> Option<String> {
          </script>\n",
         escape_html(title)
     ))
+}
+
+/// The page `mtek dev` serves for `/` while its output directory has no `index.html`, i.e.
+/// before the first successful build (decision 0033): no program to mount, only the reload
+/// client of the dev `index.html`, so the diagnostics of the failed build appear in the
+/// overlay and the first successful build reloads into the real page.
+#[must_use]
+pub fn dev_waiting_page(title: &str) -> String {
+    format!(
+        "<!doctype html><meta charset=\"utf-8\"><title>{}</title>\n\
+         {STYLE}\
+         <canvas id=\"mtek\"></canvas>\n\
+         <script type=\"module\">\n\
+         {RELOAD_CLIENT}\
+         </script>\n",
+        escape_html(title)
+    )
 }
 
 #[cfg(test)]
@@ -99,6 +148,46 @@ mod tests {
             "{page}"
         );
         assert!(!page.contains("__mtekMount"), "{page}");
+    }
+
+    #[test]
+    fn dev_mode_shows_failed_builds_in_an_overlay() {
+        let page = index_html("t", BuildMode::Dev).expect("page");
+        assert!(
+            page.contains("if (message.type !== \"build-failed\") return;"),
+            "{page}"
+        );
+        assert!(
+            page.contains(&format!("overlay.id = \"{DEV_OVERLAY_ID}\";")),
+            "{page}"
+        );
+        assert!(
+            page.contains(&format!("getElementById(\"{DEV_OVERLAY_ID}\")")),
+            "{page}"
+        );
+        // Text, never markup: a message cannot inject HTML into the page.
+        assert!(page.contains("overlay.textContent = "), "{page}");
+        assert!(!page.contains("innerHTML"), "{page}");
+        assert!(page.is_ascii(), "generated code is ASCII");
+        assert_eq!(page.matches("<script").count(), 1);
+    }
+
+    #[test]
+    fn the_waiting_page_has_the_reload_client_and_mounts_nothing() {
+        let page = dev_waiting_page("<demo>");
+        assert!(
+            page.starts_with(
+                "<!doctype html><meta charset=\"utf-8\"><title>&lt;demo&gt;</title>\n"
+            )
+        );
+        assert!(page.contains(RELOAD_CLIENT), "{page}");
+        assert!(
+            !page.contains("app.js") && !page.contains("mountMtek"),
+            "{page}"
+        );
+        let dev = index_html("<demo>", BuildMode::Dev).expect("page");
+        assert!(dev.contains(RELOAD_CLIENT));
+        assert!(page.is_ascii());
     }
 
     #[test]
