@@ -8,6 +8,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import * as rt from "./rt.js";
+import type { Vec3 } from "./types.js";
 
 const fr = Math.fround;
 
@@ -26,6 +27,48 @@ function fromBits(b: number): number {
 }
 
 /** `Object.is` equality of every component, so `-0` and `0` differ. */
+function expectSame(actual: object, expected: object): void {
+  expect(Object.keys(actual)).toEqual(Object.keys(expected));
+  for (const [key, value] of Object.entries(expected)) {
+    expect(Object.is((actual as Record<string, unknown>)[key], value), `${key}: ${String((actual as Record<string, unknown>)[key])} vs ${String(value)}`).toBe(true);
+  }
+}
+
+describe("constructors", () => {
+  it("round every component to binary32", () => {
+    expectSame(rt.v2(0.1, 0.2), { x: fr(0.1), y: fr(0.2) });
+    expectSame(rt.v3(0.1, 1, -0), { x: fr(0.1), y: 1, z: -0 });
+    expectSame(rt.v4(1, 2, 3, 0.3), { x: 1, y: 2, z: 3, w: fr(0.3) });
+    expectSame(rt.quat(0.1, 0, 0, 1), { x: fr(0.1), y: 0, z: 0, w: 1 });
+    expectSame(rt.color(0.1, 0.2, 0.3, 0.4), { r: fr(0.1), g: fr(0.2), b: fr(0.3), a: fr(0.4) });
+  });
+
+  it("splat and compose", () => {
+    expectSame(rt.v2splat(0.1), { x: fr(0.1), y: fr(0.1) });
+    expectSame(rt.v3splat(2), { x: 2, y: 2, z: 2 });
+    expectSame(rt.v4splat(-1), { x: -1, y: -1, z: -1, w: -1 });
+    expectSame(rt.v3fromV2(rt.v2(1, 2), 3), { x: 1, y: 2, z: 3 });
+    expectSame(rt.v4fromV3(rt.v3(1, 2, 3), 4), { x: 1, y: 2, z: 3, w: 4 });
+    expectSame(rt.v4fromV2(rt.v2(1, 2), 3, 4), { x: 1, y: 2, z: 3, w: 4 });
+    expectSame(rt.qidentity(), { x: 0, y: 0, z: 0, w: 1 });
+    expectSame(rt.clinear(rt.v3(0.25, 0.5, 1), 0.75), { r: 0.25, g: 0.5, b: 1, a: 0.75 });
+  });
+
+  it("swizzle with repetition and replace components without mutating", () => {
+    const v = rt.v4(1, 2, 3, 4);
+    expectSame(rt.swizzle2(v, "w", "x"), { x: 4, y: 1 });
+    expectSame(rt.swizzle3(v, "z", "y", "x"), { x: 3, y: 2, z: 1 });
+    expectSame(rt.swizzle4(rt.v2(5, 6), "x", "x", "y", "y"), { x: 5, y: 5, z: 6, w: 6 });
+    const p = rt.v3(1, 2, 3);
+    const q = rt.v3with(p, "y", 0.1);
+    expectSame(q, { x: 1, y: fr(0.1), z: 3 });
+    expectSame(p, { x: 1, y: 2, z: 3 });
+    expectSame(rt.v2with(rt.v2(1, 2), "x", 7), { x: 7, y: 2 });
+    expectSame(rt.v4with(v, "w", 9), { x: 1, y: 2, z: 3, w: 9 });
+    expectSame(rt.crgb(rt.color(0.5, 0.25, 0.125, 1)), { x: 0.5, y: 0.25, z: 0.125 });
+  });
+});
+
 describe("f32 operators", () => {
   it("round each result once (0.1 + 0.2 is 0.3 in binary32)", () => {
     expect(rt.fadd(fr(0.1), fr(0.2))).toBe(fr(0.3));
@@ -293,3 +336,192 @@ describe("f32 intrinsics", () => {
   });
 });
 
+describe("vectors", () => {
+  const a = rt.v3(1, 2, 3);
+  const b = rt.v3(0.5, 0.25, 0.125);
+
+  it("operate component-wise and scale by scalars in either order", () => {
+    expectSame(rt.v3add(a, b), { x: 1.5, y: 2.25, z: 3.125 });
+    expectSame(rt.v3sub(a, b), { x: 0.5, y: 1.75, z: 2.875 });
+    expectSame(rt.v3mul(a, b), { x: 0.5, y: 0.5, z: 0.375 });
+    expectSame(rt.v3div(a, b), { x: 2, y: 8, z: 24 });
+    expectSame(rt.v3scale(a, 2), { x: 2, y: 4, z: 6 });
+    expectSame(rt.v3smul(2, a), { x: 2, y: 4, z: 6 });
+    expectSame(rt.v3divs(a, 2), { x: 0.5, y: 1, z: 1.5 });
+    expectSame(rt.v3neg(rt.v3(1, 0, -2)), { x: -1, y: -0, z: 2 });
+    expectSame(rt.v2add(rt.v2(fr(0.1), 1), rt.v2(fr(0.2), 1)), { x: fr(0.3), y: 2 });
+    expectSame(rt.v4divs(rt.v4(1, -1, 0, 2), 0), { x: Infinity, y: -Infinity, z: NaN, w: Infinity });
+  });
+
+  it("never modify their arguments and always return new objects", () => {
+    const before = JSON.stringify([a, b]);
+    const sum = rt.v3add(a, b);
+    rt.v3normalize(a);
+    rt.v3reflect(a, b);
+    expect(JSON.stringify([a, b])).toBe(before);
+    expect(sum).not.toBe(a);
+    expect(rt.v3scale(a, 1)).not.toBe(a);
+  });
+
+  it("dot, length, distance, cross, normalize and reflect", () => {
+    expect(rt.v3dot(a, b)).toBe(1.375);
+    expect(rt.v2dot(rt.v2(3, 4), rt.v2(3, 4))).toBe(25);
+    expect(rt.v4dot(rt.v4(1, 1, 1, 1), rt.v4(1, 2, 3, 4))).toBe(10);
+    expect(rt.v2length(rt.v2(3, 4))).toBe(5);
+    expect(rt.v3length(rt.v3(2, 3, 6))).toBe(7);
+    expect(rt.v4length(rt.v4(1, 1, 1, 1))).toBe(2);
+    expect(rt.v3distance(rt.v3(1, 1, 1), rt.v3(3, 4, 7))).toBe(7);
+    expectSame(rt.v3cross(rt.v3(1, 0, 0), rt.v3(0, 1, 0)), { x: 0, y: 0, z: 1 });
+    expectSame(rt.v3cross(a, a), { x: 0, y: 0, z: 0 });
+    expectSame(rt.v2normalize(rt.v2(3, 4)), { x: fr(0.6), y: fr(0.8) });
+    expectSame(rt.v3normalize(rt.v3(0, 0, -5)), { x: 0, y: 0, z: -1 });
+    expectSame(rt.v3reflect(rt.v3(1, -1, 0), rt.v3(0, 1, 0)), { x: 1, y: 1, z: 0 });
+    expectSame(rt.v2reflect(rt.v2(1, -1), rt.v2(0, 1)), { x: 1, y: 1 });
+    expectSame(rt.v4reflect(rt.v4(1, -1, 0, 2), rt.v4(0, 1, 0, 0)), { x: 1, y: 1, z: 0, w: 2 });
+  });
+
+  it("normalize gives the zero vector when the length is zero (CPU only)", () => {
+    expectSame(rt.v2normalize(rt.v2(0, 0)), { x: 0, y: 0 });
+    expectSame(rt.v3normalize(rt.v3(-0, 0, 0)), { x: 0, y: 0, z: 0 });
+    expectSame(rt.v4normalize(rt.v4(0, 0, 0, 0)), { x: 0, y: 0, z: 0, w: 0 });
+    // The squared length of 1e-30 underflows to 0 in binary32.
+    expectSame(rt.v3normalize(rt.v3(1e-30, 0, 0)), { x: 0, y: 0, z: 0 });
+  });
+
+  it("lift every component-wise intrinsic from its scalar definition", () => {
+    const v = rt.v4(-1.5, 0.5, 2.5, -0.25);
+    expectSame(rt.v4round(v), { x: -2, y: 0, z: 2, w: -0 });
+    expectSame(rt.v4abs(v), { x: 1.5, y: 0.5, z: 2.5, w: 0.25 });
+    expectSame(rt.v4sign(v), { x: -1, y: 1, z: 1, w: -1 });
+    expectSame(rt.v4fract(v), { x: 0.5, y: 0.5, z: 0.5, w: 0.75 });
+    expectSame(rt.v4step(rt.v4splat(0), v), { x: 0, y: 1, z: 1, w: 0 });
+    expectSame(rt.v4clamp(v, rt.v4splat(-1), rt.v4splat(1)), { x: -1, y: 0.5, z: 1, w: -0.25 });
+    expectSame(rt.v2mixs(rt.v2(0, 10), rt.v2(10, 20), 0.5), { x: 5, y: 15 });
+    expectSame(rt.v2mix(rt.v2(0, 10), rt.v2(10, 20), rt.v2(0, 1)), { x: 0, y: 20 });
+    expectSame(rt.v3min(rt.v3(1, NaN, 3), rt.v3(2, 2, NaN)), { x: 1, y: 2, z: 3 });
+    expectSame(rt.v2pow(rt.v2(2, 1), rt.v2(3, NaN)), { x: 8, y: 1 });
+    expectSame(rt.v3smoothstep(rt.v3splat(0), rt.v3splat(1), rt.v3(0.5, -1, 2)), { x: 0.5, y: 0, z: 1 });
+  });
+});
+
+describe("quaternions (operation order of decision 0026)", () => {
+  /** An independent evaluation of the Hamilton product with the formula of decision 0026. */
+  function hamilton(a: number[], b: number[]): number[] {
+    const [ax = 0, ay = 0, az = 0, aw = 0] = a;
+    const [bx = 0, by = 0, bz = 0, bw = 0] = b;
+    const f = fr;
+    return [
+      f(f(f(f(aw * bx) + f(ax * bw)) + f(ay * bz)) - f(az * by)),
+      f(f(f(f(aw * by) - f(ax * bz)) + f(ay * bw)) + f(az * bx)),
+      f(f(f(f(aw * bz) + f(ax * by)) - f(ay * bx)) + f(az * bw)),
+      f(f(f(f(aw * bw) - f(ax * bx)) - f(ay * by)) - f(az * bz)),
+    ];
+  }
+
+  it("multiply with the Hamilton product; the identity is neutral exactly", () => {
+    const a = rt.qaxisAngle(rt.v3(0, 0, 1), 0.4);
+    const b = rt.qaxisAngle(rt.v3(1, 1, 0), 1.1);
+    const ab = rt.qmul(a, b);
+    expect([ab.x, ab.y, ab.z, ab.w]).toEqual(hamilton([a.x, a.y, a.z, a.w], [b.x, b.y, b.z, b.w]));
+    expectSame(rt.qmul(rt.qidentity(), b), { ...b });
+    expectSame(rt.qmul(b, rt.qidentity()), { ...b });
+  });
+
+  it("compose rotations: (a * b) * v == a * (b * v) within rounding", () => {
+    const a = rt.qaxisAngle(rt.v3(0, 0, 1), 0.4);
+    const b = rt.qaxisAngle(rt.v3(1, 1, 0), 1.1);
+    const v = rt.v3(0.3, -0.7, 2);
+    const left = rt.qrotate(rt.qmul(a, b), v);
+    const right = rt.qrotate(a, rt.qrotate(b, v));
+    for (const key of ["x", "y", "z"] as const) expect(Math.abs(left[key] - right[key])).toBeLessThan(1e-6);
+    expectSame(rt.qrotate(rt.qidentity(), v), { ...v });
+  });
+
+  it("rotate +X a quarter turn about +Z to +Y", () => {
+    const q = rt.qaxisAngle(rt.v3(0, 0, 1), fr(Math.PI / 2));
+    const r = rt.qrotate(q, rt.v3(1, 0, 0));
+    expect(Math.abs(r.x)).toBeLessThan(1e-7);
+    expect(Math.abs(r.y - 1)).toBeLessThan(1e-7);
+    expect(r.z).toBe(0);
+  });
+
+  it("axis_angle normalises the axis via its largest component; a zero axis is the identity", () => {
+    const half = fr(0.5);
+    expectSame(rt.qaxisAngle(rt.v3(0, 2, 0), 1), { x: 0, y: fr(Math.sin(half)), z: 0, w: fr(Math.cos(half)) });
+    expectSame(rt.qaxisAngle(rt.v3(1e-30, 0, 0), 1), { x: fr(Math.sin(half)), y: 0, z: 0, w: fr(Math.cos(half)) });
+    expectSame(rt.qaxisAngle(rt.v3(0, 0, -3e38), 1), { x: 0, y: 0, z: -fr(Math.sin(half)), w: fr(Math.cos(half)) });
+    expectSame(rt.qaxisAngle(rt.v3(0, 0, 0), 1), { x: 0, y: 0, z: 0, w: 1 });
+    const q = rt.qaxisAngle(rt.v3(1, 2, 3), 0.7);
+    expect(Math.abs(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w - 1)).toBeLessThan(4 * 2 ** -23);
+  });
+
+  it("euler is (qy * qx) * qz: about Z first, then X, then Y", () => {
+    const [x, y, z] = [0.3, -1.2, 0.8].map(fr) as [number, number, number];
+    const qx = rt.qaxisAngle(rt.v3(1, 0, 0), x);
+    const qy = rt.qaxisAngle(rt.v3(0, 1, 0), y);
+    const qz = rt.qaxisAngle(rt.v3(0, 0, 1), z);
+    expectSame(rt.qeuler(x, y, z), { ...rt.qmul(rt.qmul(qy, qx), qz) });
+    const v = rt.v3(1, 2, 3);
+    const stepwise: Vec3 = rt.qrotate(qy, rt.qrotate(qx, rt.qrotate(qz, v)));
+    const direct = rt.qrotate(rt.qeuler(x, y, z), v);
+    for (const key of ["x", "y", "z"] as const) expect(Math.abs(direct[key] - stepwise[key])).toBeLessThan(1e-5);
+  });
+});
+
+describe("matrices", () => {
+  const translate = rt.m4translation(rt.v3(5, 6, 7));
+
+  it("construct column-major", () => {
+    expect([...rt.m4identity()]).toEqual([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+    expect([...translate]).toEqual([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 5, 6, 7, 1]);
+    expect([...rt.m4scale(rt.v3(2, 3, 4))]).toEqual([2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1]);
+    const m = rt.m4columns(rt.v4(1, 2, 3, 4), rt.v4(5, 6, 7, 8), rt.v4(9, 10, 11, 12), rt.v4(13, 14, 15, 16));
+    expect([...m]).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+    expectSame(rt.m4col(m, 2), { x: 9, y: 10, z: 11, w: 12 });
+    expect([...rt.m4transpose(m)]).toEqual([1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]);
+  });
+
+  it("multiply with m * v applying to column vectors and a * b applying b first", () => {
+    expectSame(rt.m4mulv(translate, rt.v4(1, 2, 3, 1)), { x: 6, y: 8, z: 10, w: 1 });
+    const scale = rt.m4scale(rt.v3(2, 2, 2));
+    // T * S scales first, then translates.
+    expectSame(rt.m4mulv(rt.m4mul(translate, scale), rt.v4(1, 1, 1, 1)), { x: 7, y: 8, z: 9, w: 1 });
+    // S * T translates first, then scales.
+    expectSame(rt.m4mulv(rt.m4mul(scale, translate), rt.v4(1, 1, 1, 1)), { x: 12, y: 14, z: 16, w: 1 });
+    expect([...rt.m4mul(rt.m4identity(), translate)]).toEqual([...translate]);
+  });
+
+  it("round every product and sum left to right", () => {
+    const a = rt.m4columns(rt.v4(0.1, 0.2, 0.3, 0.4), rt.v4(0.5, 0.6, 0.7, 0.8), rt.v4(0.9, 1.1, 1.2, 1.3), rt.v4(1.4, 1.5, 1.6, 1.7));
+    const v = rt.v4(0.3, 0.7, 1.9, 2.3);
+    const r = rt.m4mulv(a, v);
+    const col = (i: number) => rt.m4col(a, i);
+    const expected = fr(fr(fr(fr(col(0).x * v.x) + fr(col(1).x * v.y)) + fr(col(2).x * v.z)) + fr(col(3).x * v.w));
+    expect(r.x).toBe(expected);
+    const ab = rt.m4mul(a, a);
+    expectSame(rt.m4col(ab, 1), { ...rt.m4mulv(a, col(1)) });
+  });
+
+  it("rotation matches rotating with the quaternion", () => {
+    const q = rt.qaxisAngle(rt.v3(1, 2, 3), 0.9);
+    const m = rt.m4rotation(q);
+    const v = rt.v3(0.3, -0.7, 2);
+    const byMatrix = rt.m4mulv(m, rt.v4fromV3(v, 1));
+    const byQuat = rt.qrotate(q, v);
+    for (const key of ["x", "y", "z"] as const) expect(Math.abs(byMatrix[key] - byQuat[key])).toBeLessThan(1e-6);
+    expect(byMatrix.w).toBe(1);
+    expect([...rt.m4rotation(rt.qidentity())]).toEqual([...rt.m4identity()]);
+  });
+});
+
+describe("color", () => {
+  it("srgb uses the binary32 formula of decision 0024 item 6 and keeps alpha", () => {
+    const c = rt.csrgb(rt.v3(0.5, 0.04, 1), 0.25);
+    expect(c.r).toBe(fr(Math.pow(fr(fr(0.5 + fr(0.055)) / fr(1.055)), fr(2.4))));
+    expect(c.g).toBe(fr(fr(0.04) / fr(12.92)));
+    expect(c.b).toBe(1);
+    expect(c.a).toBe(0.25);
+    expect(rt.srgbChannelToLinear(0)).toBe(0);
+    expect(rt.srgbChannelToLinear(fr(0.04045))).toBe(fr(fr(0.04045) / fr(12.92)));
+  });
+});

@@ -6,3 +6,7 @@
  */
 export * from "./scalar.js";
 export * from "./integer.js";
+export * from "./vector.js";
+export * from "./quat.js";
+export * from "./color.js";
+export * from "./matrix.js";
