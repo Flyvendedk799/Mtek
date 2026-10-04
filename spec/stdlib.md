@@ -24,7 +24,7 @@ pub struct FieldDef { pub name: &'static str, pub ty: TypeRef, pub default: Opti
                       pub flags: FieldFlags /* REQUIRED | WRITABLE | BINDABLE | CONSTRUCTION_ONLY */,
                       pub range: Option<ValueRange>, pub doc: &'static str }
 ```
-The implementation adds `since` and `default_when_set` to `FieldDef`, `body_commands` / `body_properties` to `Registry`, and type-class signatures (`T`, `I`, `V`, §6); see decision 0024 for these additions and the milestone assignments the tables below leave implicit.
+The implementation adds `since` and `default_when_set` to `FieldDef`, `body_commands` / `body_properties` to `Registry`, and type-class signatures (`T`, `I`, `V`, §6); see decision 0024 for these additions and the milestone assignments the tables below leave implicit. Decision 0027 adds the scene rules as data: `declaration_schemas` (the schemas of scene and entity bodies), `SchemaDef.rules` (`material` requires `mesh`, `rotation` is excluded by `target`), `FieldDef.range_code` and the active-object selection of scene-object kinds.
 
 `since` records the milestone in which the compiler implements the item. Items whose milestone has not been reached in the running build are still resolvable but produce `E9010` when used — so the registry is complete from M1 while semantics land per milestone.
 

@@ -20,13 +20,20 @@
 //! * `E2020` a constant that depends on itself; `E3090` a constant whose
 //!   value is not a constant expression.
 //!
+//! The scene checks ([`scene`], decision 0027) then validate every scene,
+//! camera and entity body and every descriptor literal against the registry
+//! (`E5001`–`E5003`, `E3102`, `E5006`, `E5010`–`E5013`, `E5020`, `E5081`,
+//! `E5090`, `E5092`, `E5100`, `E3090` for fields) and record a
+//! [`CheckedScene`] per scene ([`Typeck::scenes`]), the input of the typed IR.
+//!
 //! Modules:
 //!
 //! - [`ty`]: the type catalogue ([`Ty`]) and the [`TyInterner`];
 //! - [`value`]: constant values ([`ConstValue`]) and the exact operations on
 //!   them;
 //! - `ops`: the operator typing table;
-//! - `check`: the checker; `consteval`: folding and constant declarations.
+//! - `check`: the checker; `consteval`: folding and constant declarations;
+//! - [`scene`]: the scene and schema checks and their result.
 
 mod check;
 mod consteval;
