@@ -28,10 +28,10 @@ use std::collections::BTreeMap;
 use crate::diagnostics::{Code, Diagnostic};
 use crate::emit_js::{ProgramParts, emit_app_dts, emit_program, source_map};
 use crate::emit_wgsl::{ShaderArtifact, emit_shader};
-use crate::ir::{self, MeshDesc, Program, Symbol};
+use crate::ir::{self, MeshDesc, Program};
 use crate::layout::{LayoutRecord, builtin_blocks, compute};
 use crate::lowering::shader::lower_material;
-use crate::plan::{ParamClass, ResourcePlan, plan_scene};
+use crate::plan::{ParamClass, PlannedMaterial, ResourcePlan, check_limits, plan_program};
 use crate::project::Project;
 use crate::source::Span;
 use crate::stdlib::registry;
@@ -90,22 +90,18 @@ fn defect(text: impl Into<String>) -> Vec<Diagnostic> {
     ]
 }
 
-/// A material of the build with its shader and declarations.
-struct BuiltMaterial {
-    symbol: Symbol,
+/// A material of the build: its plan and its shader.
+struct BuiltMaterial<'p> {
+    planned: &'p PlannedMaterial,
     shader: ShaderArtifact,
-    /// The material declaration.
-    declaration: Span,
-    /// `(name, type, declaration)` of every param, in declaration order.
-    params: Vec<(String, String, Span)>,
 }
 
 /// Packages the checked `program` of `project`. The project's source map holds the prelude
 /// modules the program uses (the front end added them, decision 0044).
 ///
 /// # Errors
-/// `E9999` (or `E6100` from Naga) for a compiler defect, `E9010` for a build mode this build
-/// does not implement.
+/// `E6001` for a parameter block over the target profile's limit; `E9999` (or `E6100` from
+/// Naga) for a compiler defect, `E9010` for a build mode this build does not implement.
 pub fn package(
     project: &Project,
     program: &Program,
@@ -118,8 +114,13 @@ pub fn package(
             program.entry_scene
         ))
     })?;
-    let plan = plan_scene(scene).map_err(defect)?;
-    let materials = build_materials(program, &plan)?;
+    let plan = checked_plan(program, input.profile)?;
+    let materials: Vec<BuiltMaterial<'_>> = plan
+        .materials
+        .iter()
+        .zip(material_shaders(program, &plan)?)
+        .map(|(planned, shader)| BuiltMaterial { planned, shader })
+        .collect();
 
     let mut layouts = Vec::new();
     for block in builtin_blocks() {
@@ -129,30 +130,32 @@ pub fn package(
             layouts.push(record);
         }
     }
-    let mut material_layouts: Vec<LayoutRecord> = materials
+    let mut material_layouts: Vec<LayoutRecord> = plan
+        .materials
         .iter()
-        .filter_map(|m| m.shader.layout.clone())
+        .filter_map(|m| m.layout.clone())
         .collect();
     material_layouts.sort_by(|a, b| a.id.cmp(&b.id));
     layouts.extend(material_layouts);
 
     let mut spans = SpanTable::new(sources);
-    let symbols = symbols(program, scene, &materials, &mut spans).map_err(defect)?;
+    let symbols = symbols(program, scene, &plan, &mut spans).map_err(defect)?;
     let mut manifest_materials = Vec::with_capacity(materials.len());
     let mut shaders = Vec::with_capacity(materials.len());
     let mut shader_files = Vec::with_capacity(materials.len() * 2);
     for material in &materials {
-        let mut params = Vec::with_capacity(material.params.len());
-        for (name, ty, span) in &material.params {
+        let planned = material.planned;
+        let mut params = Vec::with_capacity(planned.params.len());
+        for param in &planned.params {
             params.push(MaterialParam {
-                name: name.clone(),
-                ty: ty.clone(),
-                span: spans.intern(*span).map_err(defect)?,
+                name: param.name.clone(),
+                ty: param.ty.clone(),
+                span: spans.intern(param.span).map_err(defect)?,
             });
         }
         manifest_materials.push(Material {
-            id: material.symbol.to_string(),
-            layout: material.shader.layout.as_ref().map(|l| l.id.clone()),
+            id: planned.symbol.to_string(),
+            layout: planned.layout.as_ref().map(|l| l.id.clone()),
             shader: material.shader.sha256.clone(),
             resources: Vec::new(),
             params,
@@ -289,54 +292,48 @@ pub fn package(
     })
 }
 
-/// The source spelling of an IR type: the IR names a user struct by its symbol
-/// (`array<src/a.mtek::Wave, 2>`, decision 0041), the manifest's `mtekTypeName` as written
-/// in source (`array<Wave, 2>`).
-fn written_type(ty: &str) -> String {
-    let mut out = String::with_capacity(ty.len());
-    for (index, part) in ty.split("::").enumerate() {
-        if index == 0 {
-            out.push_str(part);
-            continue;
-        }
-        // Drop the module path that ends `out`: everything after the last `<` or space.
-        let keep = out.rfind(['<', ' ']).map_or(0, |i| i + 1);
-        out.truncate(keep);
-        out.push_str(part);
-    }
-    out
+/// The resource plan of `program`'s entry scene, checked against the limits of `profile`
+/// (`E6001`, `spec/gpu-layout.md` section 8.3) before any shader is lowered.
+///
+/// # Errors
+/// `E6001` for a parameter block over the profile's limit; `E9999` for a compiler defect.
+pub fn checked_plan(
+    program: &Program,
+    profile: TargetProfile,
+) -> Result<ResourcePlan, Vec<Diagnostic>> {
+    let plan = plan_program(program).map_err(defect)?;
+    let over = check_limits(
+        &plan,
+        profile.as_str(),
+        profile.max_uniform_buffer_binding_size(),
+    );
+    if over.is_empty() { Ok(plan) } else { Err(over) }
 }
 
-/// The shader and declarations of the material `symbol` of `program` (decision 0041).
-fn build_material(program: &Program, symbol: &Symbol) -> Result<BuiltMaterial, Vec<Diagnostic>> {
-    let material = program
-        .materials()
-        .find(|m| &m.symbol == symbol)
-        .ok_or_else(|| defect(format!("the material '{symbol}' is not in the IR")))?;
-    let lowered = lower_material(program, material)?;
-    let shader = emit_shader(&lowered)?;
-    Ok(BuiltMaterial {
-        symbol: symbol.clone(),
-        shader,
-        declaration: material.span,
-        params: material
-            .params
-            .iter()
-            .map(|p| (p.name.clone(), written_type(&p.ty), p.span))
-            .collect(),
-    })
-}
-
-/// The shader and declarations of every material of the plan, sorted by symbol: user
-/// materials and the built-in ones of the embedded prelude alike, through the shader lowering
-/// (decisions 0041 and 0044).
-fn build_materials(
+/// The validated shader of every material of `plan`, in the plan's order (sorted by
+/// symbol): user materials and the built-in ones of the embedded prelude alike, through the
+/// shader lowering (decisions 0041 and 0044).
+///
+/// # Errors
+/// `E9999` (or `E6100` from Naga) for a compiler defect.
+pub fn material_shaders(
     program: &Program,
     plan: &ResourcePlan,
-) -> Result<Vec<BuiltMaterial>, Vec<Diagnostic>> {
+) -> Result<Vec<ShaderArtifact>, Vec<Diagnostic>> {
     plan.materials
         .iter()
-        .map(|symbol| build_material(program, symbol))
+        .map(|planned| {
+            let material = program
+                .materials()
+                .find(|m| m.symbol == planned.symbol)
+                .ok_or_else(|| {
+                    defect(format!(
+                        "the material '{}' is not in the IR",
+                        planned.symbol
+                    ))
+                })?;
+            emit_shader(&lower_material(program, material)?)
+        })
         .collect()
 }
 
@@ -345,7 +342,7 @@ fn build_materials(
 fn symbols(
     program: &Program,
     scene: &ir::Scene,
-    materials: &[BuiltMaterial],
+    plan: &ResourcePlan,
     spans: &mut SpanTable<'_>,
 ) -> Result<Vec<SymbolEntry>, String> {
     let mut symbols = Vec::new();
@@ -364,17 +361,17 @@ fn symbols(
     for entity in &scene.entities {
         add(entity.symbol.to_string(), SymbolKind::Entity, entity.span)?;
     }
-    for material in materials {
+    for material in &plan.materials {
         add(
             material.symbol.to_string(),
             SymbolKind::Material,
             material.declaration,
         )?;
-        for (name, _, span) in &material.params {
+        for param in &material.params {
             add(
-                material.symbol.child(name).to_string(),
+                material.symbol.child(&param.name).to_string(),
                 SymbolKind::Param,
-                *span,
+                param.span,
             )?;
         }
     }

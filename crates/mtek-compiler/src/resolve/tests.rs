@@ -471,3 +471,22 @@ fn resolution_at_the_nesting_limit_fits_in_a_small_stack() {
         assert_eq!(handle.join().unwrap(), 0);
     }
 }
+
+#[test]
+fn only_the_prelude_mode_declares_the_names_of_builtin_materials() {
+    let text = "export material Unlit {\n    param color: color = #ffffff;\n    fragment(surface: SurfaceInput) -> color { return color; }\n}\nmaterial Box { fragment(s: SurfaceInput) -> color { return #ffffff; } }\n";
+    // In a user module both declarations hide a prelude name (decision 0044).
+    let user = resolve_text(text);
+    let codes: Vec<Code> = user.diagnostics.iter().map(|d| d.code).collect();
+    assert_eq!(codes, [Code::E2001, Code::E2001], "{:#?}", user.diagnostics);
+    // The prelude may declare the built-in material `Unlit`, and nothing else.
+    let mut lexed = lex_str(FileId(0), text);
+    let mut sink = Diagnostics::new();
+    lexed.report_into(&mut sink);
+    let parsed = parse_module(text, &lexed.tokens, &lexed.trivia, &mut sink);
+    let _ = resolve_prelude_module(&parsed.module, &mut sink);
+    let diagnostics = sink.finish().diagnostics;
+    assert_eq!(diagnostics.len(), 1, "{diagnostics:#?}");
+    assert_eq!(diagnostics[0].code, Code::E2001);
+    assert!(diagnostics[0].message.contains("Box"), "{diagnostics:#?}");
+}

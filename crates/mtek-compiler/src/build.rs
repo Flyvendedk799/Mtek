@@ -45,6 +45,15 @@ impl TargetProfile {
             TargetProfile::WebGpuCore2026 => "webgpu-core-2026",
         }
     }
+
+    /// `maxUniformBufferBindingSize` of the profile: the largest parameter block a material
+    /// may have (`spec/gpu-layout.md` section 8.3, `E6001`).
+    #[must_use]
+    pub const fn max_uniform_buffer_binding_size(self) -> u32 {
+        match self {
+            TargetProfile::WebGpuCore2026 => crate::plan::MAX_UNIFORM_BUFFER_BINDING_SIZE,
+        }
+    }
 }
 
 /// The build modes of `spec/tooling.md` section 2.

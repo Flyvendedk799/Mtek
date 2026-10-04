@@ -1503,10 +1503,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
         "E5902",
         "no v0.1 construct requests transparency explicitly (`spec/materials.md` section 2)",
     ),
-    (
-        "E6001",
-        "M2-09: the resource plan's limits (`spec/gpu-layout.md` section 8.3)",
-    ),
     ("E6002", "M4: texture and sampler params"),
     (
         "E6003",
@@ -1577,6 +1573,9 @@ const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
     ("E9002", "src/project/modules/tests.rs"),
     // A fixture always builds with the stub runtime; only a caller without a bundle gets it.
     ("E9030", "tests/build.rs"),
+    // An emit-phase limit of the resource plan (`spec/gpu-layout.md` section 8.3): `build`
+    // and `inspect --bindings`/`--shaders` report it, `check` (which runs the fixtures) does not.
+    ("E6001", "tests/build.rs"),
     // An I/O failure of the command line tool while writing `dist/`.
     ("E9031", "../mtek-cli/tests/cli.rs"),
     // Too large to review as fixtures: more than 200 diagnostics in one
