@@ -6,6 +6,9 @@
     expect(dead_code, reason = "called by `mtek build` (M1-19)")
 )]
 mod dist;
+// The file system the commands read projects through; used by `mtek check` (M1-19).
+#[cfg_attr(not(test), expect(dead_code, reason = "used by the commands (M1-19)"))]
+mod real_fs;
 
 use std::io::Write;
 use std::process::ExitCode;
