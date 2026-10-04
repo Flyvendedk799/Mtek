@@ -1,0 +1,9 @@
+material Uv {
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(input.uvw, 0.0), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

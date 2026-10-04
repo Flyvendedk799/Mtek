@@ -513,7 +513,8 @@ pub(super) fn types() -> Vec<TypeDef> {
             ..simple(
                 "SurfaceInput",
                 TypeKind::Record,
-                Milestone::M2,
+                // Planned for M2; implemented by task M2-04 before the M2 gate (decision 0039).
+                Milestone::M1,
                 true,
                 "The interpolated inputs of a material fragment stage; the compiler records which fields a material reads.",
             )

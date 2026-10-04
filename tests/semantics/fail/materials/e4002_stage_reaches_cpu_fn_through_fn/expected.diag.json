@@ -1,0 +1,30 @@
+[
+  {
+    "code": "MTEK-W4003",
+    "file": "src/main.mtek",
+    "startByte": 147,
+    "endByte": 152,
+    "message": "The `cpu fn` 'noise' uses no CPU-only operation; it could be a `fn`.",
+    "notes": [
+      "help: declare it with `fn`, so that pure functions and GPU code can call it"
+    ]
+  },
+  {
+    "code": "MTEK-E4002",
+    "file": "src/main.mtek",
+    "startByte": 214,
+    "endByte": 221,
+    "message": "The pure function 'grain' calls the `cpu fn` 'noise'.",
+    "related": [
+      {
+        "message": "'noise' is declared `cpu fn` here",
+        "file": "src/main.mtek",
+        "startByte": 147,
+        "endByte": 152
+      }
+    ],
+    "notes": [
+      "help: a `fn` may call only `fn`s and pure built-in functions; declare 'grain' as `cpu fn` if it needs the CPU"
+    ]
+  }
+]

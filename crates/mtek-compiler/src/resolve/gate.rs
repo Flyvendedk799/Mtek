@@ -142,7 +142,7 @@ const fn row(subject: &'static str, plural: bool, since: Milestone) -> Construct
 /// 0026).
 #[must_use]
 pub const fn construct_gate(construct: Construct) -> ConstructGate {
-    use Milestone::{M1, M2, M3, M5};
+    use Milestone::{M1, M3, M5};
     match construct {
         // Modules (task M2-03, decision 0036) are implemented ahead of the M2
         // gate; this build still reports milestone M1, so the rows say M1.
@@ -155,7 +155,8 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::CpuFn => row("`cpu fn` declarations", true, M1),
         // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
         Construct::Struct => row("`struct` declarations", true, M1),
-        Construct::Material => row("`material` declarations", true, M2),
+        // Planned for M2; implemented by task M2-04 before the M2 gate (decision 0039).
+        Construct::Material => row("`material` declarations", true, M1),
         Construct::Prefab => row("`prefab` declarations", true, M5),
         Construct::Scene => row("Scenes", true, M1),
         Construct::SceneField => row("Scene fields", true, M1),
@@ -284,6 +285,7 @@ mod tests {
             Construct::Struct,
             Construct::Fn,
             Construct::CpuFn,
+            Construct::Material,
         ] {
             assert!(
                 is_implemented(construct_gate(construct).since),
@@ -291,7 +293,6 @@ mod tests {
             );
         }
         for construct in [
-            Construct::Material,
             Construct::Prefab,
             Construct::State,
             Construct::PrefabInstance,
@@ -361,15 +362,15 @@ mod tests {
         assert!(construct_implemented(Construct::Arithmetic));
         assert!(construct_implemented(Construct::Logical));
         assert!(construct_implemented(Construct::Fn));
-        assert!(!construct_implemented(Construct::Material));
+        assert!(construct_implemented(Construct::Material));
     }
 
     #[test]
     fn messages_follow_the_specified_wording() {
-        let gate = construct_gate(Construct::Material);
+        let gate = construct_gate(Construct::Prefab);
         assert_eq!(
             gate_message(gate.subject, gate.plural, gate.since),
-            "`material` declarations are specified for v0.1 but not implemented by this compiler build yet (planned for M2)."
+            "`prefab` declarations are specified for v0.1 but not implemented by this compiler build yet (planned for M5)."
         );
         let gate = construct_gate(Construct::Bind);
         assert_eq!(

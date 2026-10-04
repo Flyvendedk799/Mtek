@@ -1,0 +1,74 @@
+material Crowded {
+    param p0: f32 = 0.0;
+    param p1: f32 = 0.0;
+    param p2: f32 = 0.0;
+    param p3: f32 = 0.0;
+    param p4: f32 = 0.0;
+    param p5: f32 = 0.0;
+    param p6: f32 = 0.0;
+    param p7: f32 = 0.0;
+    param p8: f32 = 0.0;
+    param p9: f32 = 0.0;
+    param p10: f32 = 0.0;
+    param p11: f32 = 0.0;
+    param p12: f32 = 0.0;
+    param p13: f32 = 0.0;
+    param p14: f32 = 0.0;
+    param p15: f32 = 0.0;
+    param p16: f32 = 0.0;
+    param p17: f32 = 0.0;
+    param p18: f32 = 0.0;
+    param p19: f32 = 0.0;
+    param p20: f32 = 0.0;
+    param p21: f32 = 0.0;
+    param p22: f32 = 0.0;
+    param p23: f32 = 0.0;
+    param p24: f32 = 0.0;
+    param p25: f32 = 0.0;
+    param p26: f32 = 0.0;
+    param p27: f32 = 0.0;
+    param p28: f32 = 0.0;
+    param p29: f32 = 0.0;
+    param p30: f32 = 0.0;
+    param p31: f32 = 0.0;
+    param p32: f32 = 0.0;
+    param p33: f32 = 0.0;
+    param p34: f32 = 0.0;
+    param p35: f32 = 0.0;
+    param p36: f32 = 0.0;
+    param p37: f32 = 0.0;
+    param p38: f32 = 0.0;
+    param p39: f32 = 0.0;
+    param p40: f32 = 0.0;
+    param p41: f32 = 0.0;
+    param p42: f32 = 0.0;
+    param p43: f32 = 0.0;
+    param p44: f32 = 0.0;
+    param p45: f32 = 0.0;
+    param p46: f32 = 0.0;
+    param p47: f32 = 0.0;
+    param p48: f32 = 0.0;
+    param p49: f32 = 0.0;
+    param p50: f32 = 0.0;
+    param p51: f32 = 0.0;
+    param p52: f32 = 0.0;
+    param p53: f32 = 0.0;
+    param p54: f32 = 0.0;
+    param p55: f32 = 0.0;
+    param p56: f32 = 0.0;
+    param p57: f32 = 0.0;
+    param p58: f32 = 0.0;
+    param p59: f32 = 0.0;
+    param p60: f32 = 0.0;
+    param p61: f32 = 0.0;
+    param p62: f32 = 0.0;
+    param p63: f32 = 0.0;
+    param p64: f32 = 0.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(p0), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

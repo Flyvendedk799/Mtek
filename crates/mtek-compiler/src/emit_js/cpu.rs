@@ -462,12 +462,20 @@ impl FnLowering<'_, '_> {
                 }
             }
             ir::ExprKind::Array { elements } => Expr::Array(self.exprs(elements)?),
-            ir::ExprKind::Struct { fields } | ir::ExprKind::Descriptor { fields, .. } => {
+            // A material instance built by CPU code is a plain object of its params, like a
+            // descriptor (decision 0039); nothing consumes one before M3.
+            ir::ExprKind::Struct { fields }
+            | ir::ExprKind::Descriptor { fields, .. }
+            | ir::ExprKind::Material { params: fields, .. } => {
                 let mut properties = Vec::with_capacity(fields.len());
                 for field in fields {
                     properties.push((field.name.clone(), self.expr(&field.value)?));
                 }
                 Expr::object(properties)
+            }
+            // Material params exist only in stage bodies, which are never CPU code.
+            ir::ExprKind::Param { name, .. } => {
+                return Err(format!("the material param '{name}' in CPU code"));
             }
         };
         Ok(lowered.spanned(expr.span))
@@ -630,7 +638,10 @@ mod tests {
                     expr(index, out);
                 }
                 ir::ExprKind::Array { elements } => elements.iter().for_each(|a| expr(a, out)),
-                ir::ExprKind::Struct { fields } | ir::ExprKind::Descriptor { fields, .. } => {
+                ir::ExprKind::Param { .. } => {}
+                ir::ExprKind::Struct { fields }
+                | ir::ExprKind::Descriptor { fields, .. }
+                | ir::ExprKind::Material { params: fields, .. } => {
                     fields.iter().for_each(|f| expr(&f.value, out));
                 }
             }

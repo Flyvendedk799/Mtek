@@ -1,0 +1,14 @@
+// A vertex stage is reported once by the parser and dropped; the rest of
+// the material checks without further diagnostics.
+material Wobble {
+    vertex(input: SurfaceInput) -> color {
+        return #ffffff;
+    }
+    fragment(input: SurfaceInput) -> color {
+        return #ffffff;
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

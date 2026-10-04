@@ -1500,7 +1500,7 @@ fn every_gated_construct_has_a_gating_fixture() {
             "no gate_* fixture reports {construct:?}: {messages:#?}"
         );
     }
-    assert!(gated >= 8, "{gated} gated constructs");
+    assert!(gated >= 7, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
         ("The built-in type `sampler`", "M4"),
@@ -1617,13 +1617,7 @@ fn the_syntax_corpus_resolves_without_panicking() {
 /// that implement them.
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
-    ("E4020", "M2-04: materials"),
-    ("E4021", "M2-04: materials"),
-    ("E4030", "M2-04: materials"),
-    ("E4031", "M2-04: materials"),
-    ("E4032", "M2-04: materials"),
-    ("E4040", "M2-04: materials"),
-    ("E4041", "M2-04: materials"),
+    ("E4041", "M4: texture and sampler params"),
     ("E5004", "M3-05: bind"),
     ("E5005", "M3-05: bind"),
     ("E5030", "M5: spawn and destroy"),
@@ -1643,17 +1637,25 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E5074", "M5: entity_ref"),
     ("E5075", "M3-05: bind"),
     ("E5091", "M5: physics"),
-    ("W5101", "M2-04: materials"),
     ("E5110", "M5: lights in prefabs"),
     ("E5111", "M4: lights"),
     (
         "E5901",
         "no v0.1 construct switches scenes (`spec/scenes.md` section 1)",
     ),
-    ("E5902", "M2-04: materials"),
-    ("E6001", "M2-04: materials"),
-    ("E6002", "M2-04: materials"),
-    ("E6003", "M2-04: materials"),
+    (
+        "E5902",
+        "no v0.1 construct requests transparency explicitly (`spec/materials.md` section 2)",
+    ),
+    (
+        "E6001",
+        "M2-09: the resource plan's limits (`spec/gpu-layout.md` section 8.3)",
+    ),
+    ("E6002", "M4: texture and sampler params"),
+    (
+        "E6003",
+        "v0.1 has at most 4 inter-stage variables (`spec/materials.md` section 3.3); custom vertex stages are v0.2",
+    ),
     ("E7010", "M4: assets"),
     ("E8011", "M3: run-time field writes"),
     ("W8030", "M2: arrays (run-time index clamping)"),
@@ -1689,11 +1691,6 @@ const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
         "E5080",
         "`spawn` and `destroy` are planned for M5",
         "src/types/effects_tests.rs",
-    ),
-    (
-        "E5003",
-        "no M1 schema has a required field (the first are the M5 colliders)",
-        "src/types/scene_tests.rs",
     ),
     (
         "E6100",

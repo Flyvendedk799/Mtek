@@ -1,0 +1,10 @@
+material Dim {
+    param level: f32 = vec3(1.0, 1.0, 1.0);
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(level), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 272,
+    "endByte": 278,
+    "message": "Unknown parameter 'hieght' on material Ramp. Valid parameters: height.",
+    "notes": [
+      "help: did you mean 'height'?"
+    ]
+  }
+]

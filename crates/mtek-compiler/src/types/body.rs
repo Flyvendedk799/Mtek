@@ -39,8 +39,11 @@ use crate::syntax::ast::{
 
 /// The state of the body being checked.
 pub(super) struct BodyState {
-    /// The function's name, for messages.
+    /// The function's name (`fragment` for a stage), for messages.
     pub(super) name: String,
+    /// How messages start when they name the body: "The function 'shade'",
+    /// "The fragment stage of material 'Pulse'".
+    subject: String,
     /// The result type ([`TyId::UNIT`] without `->`).
     ret: TyId,
     pub(super) facts: BodyFacts,
@@ -48,6 +51,23 @@ pub(super) struct BodyState {
     assigned: BTreeSet<DefId>,
     /// Every `var` local, with its name and the span of the name.
     vars: Vec<(DefId, String, Span)>,
+    /// For a material's stage function: what the stage rules need.
+    pub(super) stage: Option<StageState>,
+}
+
+/// What the checker tracks in a stage function (decision 0039).
+pub(super) struct StageState {
+    /// The material's name, for messages.
+    pub(super) material: String,
+    /// The `SurfaceInput` parameter.
+    pub(super) surface: Option<DefId>,
+    /// How often the body names the `SurfaceInput` parameter.
+    pub(super) surface_uses: usize,
+    /// The fields read as `input.field`, each read once per use counted in
+    /// `surface_uses`.
+    pub(super) surface_field_reads: usize,
+    /// The `SurfaceInput` fields read, by their registry position.
+    pub(super) surface_reads: BTreeSet<usize>,
 }
 
 /// How a statement leaves its block, when it always does.
@@ -154,13 +174,8 @@ impl<'a> Checker<'a> {
         let Some(sig) = self.out.functions.get(&def).map(|info| info.sig.clone()) else {
             return;
         };
-        self.body = Some(BodyState {
-            name: decl.name.name.clone(),
-            ret: sig.ret,
-            facts: BodyFacts::default(),
-            assigned: BTreeSet::new(),
-            vars: Vec::new(),
-        });
+        let name = decl.name.name.clone();
+        self.start_body(format!("The function '{name}'"), name, sig.ret, None);
         for (param, (name, ty)) in decl.params.iter().zip(&sig.params) {
             if let Some(param_def) = self.res.def_of(param.id) {
                 self.out.locals.insert(param_def, *ty);
@@ -171,29 +186,67 @@ impl<'a> Checker<'a> {
             let what = format!("the result of '{}'", decl.name.name);
             self.cpu_only_site(ret.span, what, sig.ret);
         }
-        let exit = self.block(&decl.body);
-        if sig.ret != TyId::UNIT && !exit.is_some_and(|e| e.returns) {
-            let end = decl.body.span.end;
-            let close = Span::new(decl.body.span.file, end.saturating_sub(1), end);
-            let ret_name = self.display(sig.ret);
+        let Some(state) = self.end_body(&decl.body, decl.ret.as_ref()) else {
+            return;
+        };
+        if let Some(info) = self.out.functions.get_mut(&def) {
+            info.facts = state.facts;
+        }
+    }
+
+    /// Start checking a body named `name` (messages begin with `subject`)
+    /// with the result type `ret`; its parameters are declared next, then
+    /// [`Self::end_body`] checks the block.
+    pub(super) fn start_body(
+        &mut self,
+        subject: String,
+        name: String,
+        ret: TyId,
+        stage: Option<StageState>,
+    ) {
+        self.body = Some(BodyState {
+            name,
+            subject,
+            ret,
+            facts: BodyFacts::default(),
+            assigned: BTreeSet::new(),
+            vars: Vec::new(),
+            stage,
+        });
+    }
+
+    /// Check the block of the body started by [`Self::start_body`]: its
+    /// statements, `E3080` when a result type is not returned on every path
+    /// (`ret_annotation` is the written result type) and `W2010`. Returns the
+    /// body's state.
+    pub(super) fn end_body(
+        &mut self,
+        block: &Block,
+        ret_annotation: Option<&crate::syntax::ast::Type>,
+    ) -> Option<BodyState> {
+        let (name, subject, ret) = {
+            let body = self.body.as_ref()?;
+            (body.name.clone(), body.subject.clone(), body.ret)
+        };
+        let exit = self.block(block);
+        if ret != TyId::UNIT && !exit.is_some_and(|e| e.returns) {
+            let end = block.span.end;
+            let close = Span::new(block.span.file, end.saturating_sub(1), end);
+            let ret_name = self.display(ret);
             let mut diagnostic = Diagnostic::new(
                 Code::E3080,
                 format!(
-                    "The function '{}' does not return a value on every path: control can reach the end of its body.",
-                    decl.name.name
+                    "{subject} does not return a value on every path: control can reach the end of its body."
                 ),
             )
             .at(close)
             .help("end every path of the body with `return …;`");
-            if let Some(ret) = &decl.ret {
-                diagnostic = diagnostic
-                    .related(ret.span, format!("'{}' returns {ret_name}", decl.name.name));
+            if let Some(ret) = ret_annotation {
+                diagnostic = diagnostic.related(ret.span, format!("'{name}' returns {ret_name}"));
             }
             self.report_diagnostic(diagnostic);
         }
-        let Some(state) = self.body.take() else {
-            return;
-        };
+        let state = self.body.take()?;
         for (var, name, span) in &state.vars {
             if !state.assigned.contains(var) {
                 self.report_diagnostic(
@@ -208,9 +261,7 @@ impl<'a> Checker<'a> {
                 );
             }
         }
-        if let Some(info) = self.out.functions.get_mut(&def) {
-            info.facts = state.facts;
-        }
+        Some(state)
     }
 
     fn report_diagnostic(&mut self, diagnostic: Diagnostic) {
@@ -274,7 +325,8 @@ impl<'a> Checker<'a> {
                 | Ty::Enum(_)
                 | Ty::Schema(_)
                 | Ty::Descriptor(_)
-                | Ty::PrefabDescriptor => return false,
+                | Ty::PrefabDescriptor
+                | Ty::MaterialInstance(_) => return false,
             }
         }
         true
@@ -561,7 +613,11 @@ impl<'a> Checker<'a> {
 
     /// `return;` or `return value;` against the function's result type.
     fn return_stmt(&mut self, span: Span, value: Option<&Expr>) {
-        let Some((name, ret)) = self.body.as_ref().map(|b| (b.name.clone(), b.ret)) else {
+        let Some((name, subject, ret)) = self
+            .body
+            .as_ref()
+            .map(|b| (b.name.clone(), b.subject.clone(), b.ret))
+        else {
             if let Some(value) = value {
                 self.check(value, None);
             }
@@ -573,7 +629,7 @@ impl<'a> Checker<'a> {
                 self.report_diagnostic(
                     Diagnostic::new(
                         Code::E3001,
-                        format!("The function '{name}' returns {ret_name}, but this `return` gives no value."),
+                        format!("{subject} returns {ret_name}, but this `return` gives no value."),
                     )
                     .at(span)
                     .expected(ret_name)
@@ -588,12 +644,14 @@ impl<'a> Checker<'a> {
                 self.report_diagnostic(
                     Diagnostic::new(
                         Code::E3001,
-                        format!("The function '{name}' has no result type, so its `return` takes no value."),
+                        format!("{subject} has no result type, so its `return` takes no value."),
                     )
                     .at(value.span)
                     .expected("()")
                     .actual(actual)
-                    .help(format!("declare the result type: `fn {name}(…) -> T`, or write `return;`")),
+                    .help(format!(
+                        "declare the result type: `fn {name}(…) -> T`, or write `return;`"
+                    )),
                 );
             }
             Some(value) => {
@@ -604,7 +662,7 @@ impl<'a> Checker<'a> {
                         Diagnostic::new(
                             Code::E3001,
                             format!(
-                                "The function '{name}' returns {ret_name}, but this value has type {actual}."
+                                "{subject} returns {ret_name}, but this value has type {actual}."
                             ),
                         )
                         .at(value.span)
@@ -613,6 +671,7 @@ impl<'a> Checker<'a> {
                     );
                 }
                 self.fold_in_body(value);
+                self.returned_alpha(value);
             }
         }
     }

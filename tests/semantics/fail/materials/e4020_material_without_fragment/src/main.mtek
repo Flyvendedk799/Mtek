@@ -1,0 +1,7 @@
+material Blank {
+    param tint: color = #ffffff;
+}
+
+scene Demo {
+    camera Main {}
+}

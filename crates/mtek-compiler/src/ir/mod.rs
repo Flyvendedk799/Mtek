@@ -28,9 +28,9 @@ mod tests;
 
 pub use model::{
     Block, Branch, Camera, Const, Entity, Expr, ExprKind, Field, Function, Item, LocalItem,
-    LocalKind, MaterialInstanceDesc, Mesh, MeshDesc, Module, NamedExpr, NamedValue, Origin, Param,
-    Place, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, Stmt, StructFieldItem,
-    StructItem, Symbol, Value,
+    LocalKind, MaterialInstanceDesc, MaterialItem, MaterialParamItem, Mesh, MeshDesc, Module,
+    NamedExpr, NamedValue, Origin, Param, Place, Program, Projection, ProjectionDesc, Scene,
+    SceneFields, Source, StageItem, Stmt, StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 pub use render::{to_human, to_json};
 

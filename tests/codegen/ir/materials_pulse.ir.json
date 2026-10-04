@@ -1,0 +1,361 @@
+{
+  "entryScene": "src/main.mtek::Demo",
+  "modules": [
+    {
+      "path": "src/main.mtek",
+      "file": 0,
+      "span": {"file": 0, "start": 0, "end": 817},
+      "items": [
+        {
+          "kind": "function",
+          "name": "pulse",
+          "symbol": "src/main.mtek::pulse",
+          "effect": "pure",
+          "gpuReachable": true,
+          "cpuReachable": false,
+          "result": "f32",
+          "locals": [
+            {
+              "index": 0,
+              "name": "t",
+              "type": "f32",
+              "kind": "param",
+              "span": {"file": 0, "start": 218, "end": 219}
+            }
+          ],
+          "body": {
+            "stmts": [
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "binary",
+                  "op": "+",
+                  "lhs": {
+                    "kind": "const",
+                    "value": {"f32": 0.65},
+                    "type": "f32",
+                    "span": {"file": 0, "start": 246, "end": 250}
+                  },
+                  "rhs": {
+                    "kind": "binary",
+                    "op": "*",
+                    "lhs": {
+                      "kind": "const",
+                      "value": {"f32": 0.35},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 253, "end": 257}
+                    },
+                    "rhs": {
+                      "kind": "builtin",
+                      "function": "sin",
+                      "args": [
+                        {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "t",
+                          "type": "f32",
+                          "span": {"file": 0, "start": 264, "end": 265}
+                        }
+                      ],
+                      "type": "f32",
+                      "span": {"file": 0, "start": 260, "end": 266}
+                    },
+                    "type": "f32",
+                    "span": {"file": 0, "start": 253, "end": 266}
+                  },
+                  "type": "f32",
+                  "span": {"file": 0, "start": 246, "end": 266}
+                },
+                "span": {"file": 0, "start": 239, "end": 267}
+              }
+            ],
+            "span": {"file": 0, "start": 233, "end": 269}
+          },
+          "span": {"file": 0, "start": 209, "end": 269}
+        },
+        {
+          "kind": "material",
+          "name": "Pulse",
+          "symbol": "src/main.mtek::Pulse",
+          "params": [
+            {
+              "name": "tint",
+              "type": "color",
+              "default": {
+                "color": [0.14702727, 0.107023105, 1.0, 1.0]
+              },
+              "span": {"file": 0, "start": 292, "end": 320}
+            },
+            {
+              "name": "phase",
+              "type": "f32",
+              "default": {"f32": 0.0},
+              "span": {"file": 0, "start": 325, "end": 348}
+            }
+          ],
+          "layout": {
+            "id": "material:src/main.mtek::Pulse",
+            "wgslStruct": "MtekParams_e2cab98b_Pulse",
+            "size": 32,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "src/main.mtek::Pulse",
+              "offset": 0,
+              "size": 32,
+              "align": 16,
+              "members": [
+                {
+                  "name": "tint",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                },
+                {
+                  "name": "phase",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 16,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "src/main.mtek::Pulse.fragment",
+            "surfaceInputs": [],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "input",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 0, "start": 363, "end": 368}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "builtin",
+                    "function": "color.linear",
+                    "args": [
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "param",
+                            "param": 0,
+                            "name": "tint",
+                            "type": "color",
+                            "span": {"file": 0, "start": 423, "end": 427}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 423, "end": 431}
+                        },
+                        "rhs": {
+                          "kind": "call",
+                          "function": "src/main.mtek::pulse",
+                          "args": [
+                            {
+                              "kind": "param",
+                              "param": 1,
+                              "name": "phase",
+                              "type": "f32",
+                              "span": {"file": 0, "start": 440, "end": 445}
+                            }
+                          ],
+                          "type": "f32",
+                          "span": {"file": 0, "start": 434, "end": 446}
+                        },
+                        "type": "vec3",
+                        "span": {"file": 0, "start": 423, "end": 446}
+                      },
+                      {
+                        "kind": "components",
+                        "base": {
+                          "kind": "param",
+                          "param": 0,
+                          "name": "tint",
+                          "type": "color",
+                          "span": {"file": 0, "start": 448, "end": 452}
+                        },
+                        "components": [3],
+                        "type": "f32",
+                        "span": {"file": 0, "start": 448, "end": 454}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 0, "start": 410, "end": 455}
+                  },
+                  "span": {"file": 0, "start": 403, "end": 456}
+                }
+              ],
+              "span": {"file": 0, "start": 393, "end": 462}
+            },
+            "span": {"file": 0, "start": 354, "end": 462}
+          },
+          "span": {"file": 0, "start": 271, "end": 464}
+        },
+        {
+          "kind": "scene",
+          "name": "Demo",
+          "symbol": "src/main.mtek::Demo",
+          "span": {"file": 0, "start": 466, "end": 816},
+          "fields": {
+            "clearColor": {
+              "source": {
+                "const": {
+                  "color": [0.0, 0.0, 0.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 0, "start": 466, "end": 816}
+            }
+          },
+          "constants": [],
+          "cameras": [
+            {
+              "name": "Main",
+              "symbol": "src/main.mtek::Demo.Main",
+              "span": {"file": 0, "start": 483, "end": 578},
+              "active": true,
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 2.0, 5.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 505, "end": 535}
+              },
+              "target": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.5, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 544, "end": 572}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 483, "end": 578}
+              },
+              "projection": {
+                "desc": {
+                  "kind": "perspective",
+                  "fovY": 0.9,
+                  "near": 0.1,
+                  "far": 1000.0
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 483, "end": 578}
+              }
+            }
+          ],
+          "entities": [
+            {
+              "index": 0,
+              "name": "Cube",
+              "symbol": "src/main.mtek::Demo.Cube",
+              "parent": null,
+              "span": {"file": 0, "start": 584, "end": 814},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.5, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 743, "end": 773}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 782, "end": 808}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 584, "end": 814}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 584, "end": 814}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "box",
+                  "size": [1.0, 1.0, 1.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 606, "end": 646}
+              },
+              "material": {
+                "material": "src/main.mtek::Pulse",
+                "params": [
+                  {
+                    "name": "tint",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [0.14702727, 0.107023105, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 655, "end": 734}
+                  },
+                  {
+                    "name": "phase",
+                    "type": "f32",
+                    "source": {
+                      "const": {"f32": 0.0}
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 655, "end": 734}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 0, "start": 655, "end": 734}
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

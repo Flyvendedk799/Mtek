@@ -64,6 +64,12 @@ pub use gate::{
 
 pub use imports::{ImportBindings, bind_imports};
 
+/// The note of every capture in a material stage (`E4040`,
+/// `spec/materials.md` section 3), whether the resolver or the type checker
+/// reports it.
+pub const STAGE_CAPTURE_NOTE: &str =
+    "to use `frame.time` in a material, add a param and bind it: `phase: bind(frame.time)`";
+
 use crate::diagnostics::Diagnostics;
 use crate::syntax::ast::Module;
 

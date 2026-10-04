@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E4030",
+    "file": "src/main.mtek",
+    "startByte": 86,
+    "endByte": 92,
+    "message": "The param 'caption' has type string, which a material cannot hold.",
+    "notes": [
+      "params are uploaded to the GPU in the material's parameter block",
+      "help: material params are bool, i32, u32, f32, vec2, vec3, vec4, mat4, quat, color, and structs and arrays of those (texture and sampler arrive in M4)"
+    ]
+  },
+  {
+    "code": "MTEK-E4030",
+    "file": "src/main.mtek",
+    "startByte": 120,
+    "endByte": 125,
+    "message": "The param 'label' has type Label, which a material cannot hold (it contains string).",
+    "notes": [
+      "params are uploaded to the GPU in the material's parameter block",
+      "help: material params are bool, i32, u32, f32, vec2, vec3, vec4, mat4, quat, color, and structs and arrays of those (texture and sampler arrive in M4)"
+    ]
+  }
+]

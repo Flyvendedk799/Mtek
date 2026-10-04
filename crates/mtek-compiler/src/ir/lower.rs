@@ -18,15 +18,16 @@
 use super::model::{
     Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin,
     Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StructFieldItem,
-    StructItem, Symbol, Value,
+    StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 
 use crate::project::{ModuleId, Project};
 use crate::resolve::Resolution;
-use crate::source::Span;
+use crate::source::{FileId, Span};
 use crate::stdlib::{SchemaCategory, registry};
 use crate::syntax::ast::{self, ConstDecl, EntityMember, ItemKind, SceneMember};
+use crate::types::MaterialKey;
 use crate::types::{
     CheckedEntity, CheckedField, CheckedObject, CheckedScene, ConstValue, ProgramEffects, Typeck,
 };
@@ -79,10 +80,50 @@ pub(super) fn lower(
             Some((module.id(), source.path().as_str().to_owned()))
         })
         .collect();
+    let file_paths: BTreeMap<FileId, String> = project
+        .modules
+        .modules()
+        .iter()
+        .filter_map(|module| {
+            let source = project.sources.get(module.file())?;
+            Some((module.file(), source.path().as_str().to_owned()))
+        })
+        .collect();
+    // Every user material of the program, for the instances that use it in
+    // other modules (decision 0039).
+    let mut materials = BTreeMap::new();
+    for unit in units {
+        for (_, info) in unit.types.materials() {
+            let path = file_paths
+                .get(&info.key.file)
+                .ok_or("a material of a module without a path")?;
+            materials.insert(
+                info.key,
+                MaterialSummary {
+                    symbol: Symbol::item(path, &info.name),
+                    params: info
+                        .params
+                        .iter()
+                        .map(|p| SummaryParam {
+                            name: p.name.clone(),
+                            ty: unit.types.display(p.ty),
+                            default: p.default.as_ref().map(Value::from),
+                        })
+                        .collect(),
+                },
+            );
+        }
+    }
+    let context = Context {
+        paths: &paths,
+        file_paths: &file_paths,
+        materials: &materials,
+        effects,
+    };
     let mut modules = Vec::with_capacity(units.len());
     let mut entry_scene = None;
     for (index, unit) in units.iter().enumerate() {
-        let (module, scene) = lower_module(project, unit, index == 0, &paths, effects)?;
+        let (module, scene) = lower_module(project, unit, index == 0, &context)?;
         modules.push(module);
         entry_scene = entry_scene.or(scene);
     }
@@ -93,14 +134,36 @@ pub(super) fn lower(
     })
 }
 
+/// What every module's lowering needs to know about the whole program.
+struct Context<'c> {
+    paths: &'c BTreeMap<ModuleId, String>,
+    file_paths: &'c BTreeMap<FileId, String>,
+    materials: &'c BTreeMap<MaterialKey, MaterialSummary>,
+    effects: &'c ProgramEffects,
+}
+
+/// A user material as its instances in any module see it.
+pub(super) struct MaterialSummary {
+    pub(super) symbol: Symbol,
+    /// The params in declaration order.
+    pub(super) params: Vec<SummaryParam>,
+}
+
+/// One param of a [`MaterialSummary`].
+pub(super) struct SummaryParam {
+    pub(super) name: String,
+    /// The type as Mtek spells it.
+    pub(super) ty: String,
+    pub(super) default: Option<Value>,
+}
+
 /// Lower one module; for the entry module, also the symbol of the entry
 /// scene.
 fn lower_module(
     project: &Project,
     unit: &Unit<'_>,
     entry: bool,
-    paths: &BTreeMap<ModuleId, String>,
-    effects: &ProgramEffects,
+    context: &Context<'_>,
 ) -> Result<(Module, Option<Symbol>), Defect> {
     let Unit {
         module,
@@ -119,8 +182,10 @@ fn lower_module(
         module: unit.id,
         resolution,
         types,
-        paths,
-        effects,
+        paths: context.paths,
+        file_paths: context.file_paths,
+        materials: context.materials,
+        effects: context.effects,
     };
     let mut items = Vec::new();
     let mut entry_scene = None;
@@ -152,9 +217,13 @@ fn lower_module(
                 let symbol = Symbol::item(&path, &decl.name.name);
                 items.push(Item::Function(lowering.function(decl, symbol)?));
             }
+            ItemKind::Material(decl) => {
+                let symbol = Symbol::item(&path, &decl.name.name);
+                items.push(Item::Material(lowering.material(decl, symbol)?));
+            }
             // Everything else is gated in this build (`E9010`), so a program
             // without errors has none of it.
-            ItemKind::Material(_) | ItemKind::Prefab(_) | ItemKind::Error => {
+            ItemKind::Prefab(_) | ItemKind::Error => {
                 return Err("a module item of a kind this build does not lower".to_owned());
             }
         }
@@ -179,6 +248,11 @@ pub(super) struct Lowering<'a> {
     pub(super) types: &'a Typeck,
     /// The path of every module, for the symbols of imported functions.
     pub(super) paths: &'a BTreeMap<ModuleId, String>,
+    /// The path of every module by its file, for declarations identified by
+    /// their file (structs and materials).
+    pub(super) file_paths: &'a BTreeMap<FileId, String>,
+    /// Every user material of the program.
+    pub(super) materials: &'a BTreeMap<MaterialKey, MaterialSummary>,
     /// The effect level and reachability of every function.
     pub(super) effects: &'a ProgramEffects,
 }
@@ -353,7 +427,7 @@ impl Lowering<'_> {
         let material = match fields.iter().find(|f| f.name == "material") {
             Some(field) => {
                 let (value, origin, span) = parts(&what, field, checked.span)?;
-                Some(material_instance(&what, value, origin, span)?)
+                Some(self.material_instance(&what, value, origin, span)?)
             }
             None => None,
         };
@@ -555,9 +629,60 @@ pub(super) fn projection_desc(what: &str, value: &ConstValue) -> Result<Projecti
     }
 }
 
-/// A completed material descriptor: the material's symbol and every
-/// parameter in declaration order.
-fn material_instance(
+impl Lowering<'_> {
+    /// A completed material instance: the material's symbol and every
+    /// parameter in declaration order, each `initial` (decision 0039).
+    fn material_instance(
+        &self,
+        what: &str,
+        value: &ConstValue,
+        origin: Origin,
+        span: Span,
+    ) -> Result<MaterialInstanceDesc, Defect> {
+        let ConstValue::Material {
+            material, params, ..
+        } = value
+        else {
+            return builtin_material_instance(what, value, origin, span);
+        };
+        let summary = self
+            .materials
+            .get(material)
+            .ok_or_else(|| format!("the material of {what} is not a material of the program"))?;
+        if summary.params.len() != params.len() {
+            return Err(format!(
+                "the material instance of {what} does not have every param of {}",
+                summary.symbol
+            ));
+        }
+        let mut out = Vec::with_capacity(params.len());
+        for ((name, value), declared) in params.iter().zip(&summary.params) {
+            if *name != declared.name {
+                return Err(format!(
+                    "the material instance of {what} lists '{name}' where {} declares '{}'",
+                    summary.symbol, declared.name
+                ));
+            }
+            out.push(Param {
+                name: name.clone(),
+                ty: declared.ty.clone(),
+                source: Source::Const(Value::from(value)),
+                update: UpdateClass::Initial,
+                span,
+            });
+        }
+        Ok(MaterialInstanceDesc {
+            material: summary.symbol.clone(),
+            params: out,
+            origin,
+            span,
+        })
+    }
+}
+
+/// A completed descriptor of a built-in material: the material's symbol and
+/// every parameter in declaration order.
+fn builtin_material_instance(
     what: &str,
     value: &ConstValue,
     origin: Origin,
@@ -579,6 +704,7 @@ fn material_instance(
             name: param.clone(),
             ty: def.ty.spelling().to_owned(),
             source: Source::Const(Value::from(value)),
+            update: UpdateClass::Initial,
             span,
         });
     }

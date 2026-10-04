@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E4020",
+    "file": "src/main.mtek",
+    "startByte": 9,
+    "endByte": 14,
+    "message": "Material 'Blank' has no fragment stage.",
+    "notes": [
+      "a material has exactly one stage function, `fragment`; the compiler supplies the vertex stage",
+      "help: add `fragment(input: SurfaceInput) -> color { … }`"
+    ]
+  }
+]

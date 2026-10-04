@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E4040",
+    "file": "src/main.mtek",
+    "startByte": 91,
+    "endByte": 95,
+    "message": "The fragment stage of material 'Mirror' cannot read `self`: a material belongs to no entity.",
+    "notes": [
+      "stage code may read only its input, the material's params, and constants and `fn`s that exist on the GPU",
+      "to use `frame.time` in a material, add a param and bind it: `phase: bind(frame.time)`"
+    ]
+  }
+]

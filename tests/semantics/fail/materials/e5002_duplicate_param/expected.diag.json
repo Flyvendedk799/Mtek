@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5002",
+    "file": "src/main.mtek",
+    "startByte": 285,
+    "endByte": 291,
+    "message": "The param 'height' is set twice on material Ramp.",
+    "related": [
+      {
+        "message": "'height' is first set here",
+        "file": "src/main.mtek",
+        "startByte": 272,
+        "endByte": 278
+      }
+    ],
+    "notes": [
+      "help: remove one of the two"
+    ]
+  }
+]

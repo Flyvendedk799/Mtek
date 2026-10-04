@@ -1,0 +1,14 @@
+material Ramp {
+    param height: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(height), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Slope {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Ramp { hieght: 2.0 };
+    }
+}

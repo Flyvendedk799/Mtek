@@ -28,10 +28,10 @@ use crate::project::{
 use crate::resolve::{DefId, DefKind, Resolution, bind_imports, resolve_module_with_imports};
 use crate::source::{Fs, SourceMap};
 use crate::syntax::ast::{ItemKind, Module};
-use crate::types::effects::{ProgramUnit, check_program};
+use crate::types::effects::{ProgramUnit, RootBody, check_program};
 use crate::types::{
-    FnRef, ImportedConst, ImportedConsts, ImportedFn, ImportedStruct, Imports, ProgramEffects,
-    Roots, Typeck, check_module_with_imports,
+    FnRef, ImportedConst, ImportedConsts, ImportedFn, ImportedMaterial, ImportedStruct, Imports,
+    ProgramEffects, Roots, Typeck, check_module_with_imports,
 };
 
 /// What [`check`] produced: diagnostics only (`spec/compiler-architecture.md`
@@ -246,6 +246,7 @@ pub(crate) fn front_end_with(
             consts: imported_consts(resolution, &resolutions, &types),
             structs: imported_structs(resolution, &resolutions, &types),
             fns: imported_fns(resolution, &resolutions, &types),
+            materials: imported_materials(resolution, &resolutions, &types),
         };
         let checked =
             check_module_with_imports(&unit.ast, source.text(), resolution, &imports, sink);
@@ -270,6 +271,7 @@ pub(crate) fn front_end_with(
         })
         .collect();
     let roots = Roots {
+        gpu_bodies: stage_roots(&program),
         gpu_functions: gpu_root_functions(&project, &program, &options.gpu_root_functions),
         ..Roots::default()
     };
@@ -304,6 +306,52 @@ pub(crate) fn front_end_with(
         dependencies,
         effects,
     }
+}
+
+/// The fragment stage of every material of the program, in module and
+/// declaration order: the GPU roots (decision 0039).
+fn stage_roots(program: &[ProgramUnit<'_>]) -> Vec<RootBody> {
+    program
+        .iter()
+        .flat_map(|unit| {
+            unit.types.materials().filter_map(|(_, material)| {
+                let stage = material.fragment.as_ref()?;
+                Some(RootBody {
+                    module: unit.id,
+                    label: format!("the fragment stage of material '{}'", material.name),
+                    span: stage.name_span,
+                    facts: stage.facts.clone(),
+                })
+            })
+        })
+        .collect()
+}
+
+/// The materials `resolution`'s module imports, with their params in the
+/// exporting modules (decision 0039).
+fn imported_materials<'a>(
+    resolution: &Resolution,
+    resolutions: &[Resolution],
+    types: &'a [Option<Typeck>],
+) -> BTreeMap<DefId, ImportedMaterial<'a>> {
+    resolution
+        .imports()
+        .filter(|(_, target)| target.kind == DefKind::Material)
+        .filter_map(|(def, target)| {
+            let exporter = types.get(target.module.index())?.as_ref()?;
+            let exported = resolutions
+                .get(target.module.index())?
+                .def_of(target.node)?;
+            let info = exporter.material(exported)?;
+            Some((
+                def,
+                ImportedMaterial {
+                    interner: exporter.interner(),
+                    info,
+                },
+            ))
+        })
+        .collect()
 }
 
 /// The functions `symbols` name (`path::name`), for [`Roots::gpu_functions`].

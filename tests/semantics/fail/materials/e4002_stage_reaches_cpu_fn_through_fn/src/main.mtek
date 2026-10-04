@@ -1,0 +1,19 @@
+// A fn that calls a cpu fn is E4002 wherever it is called from; the stage
+// that calls the fn adds nothing (only a direct call is E4040).
+cpu fn noise() -> f32 {
+    return 0.5;
+}
+
+fn grain() -> f32 {
+    return noise() * 0.1;
+}
+
+material Film {
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(grain()), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

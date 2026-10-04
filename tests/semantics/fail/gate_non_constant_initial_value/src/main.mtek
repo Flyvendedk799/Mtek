@@ -1,0 +1,22 @@
+// An initial value that is not a constant expression is valid v0.1 (it is
+// evaluated once at construction, spec/scenes.md 11), but this build folds
+// every initial value: E9010 until M3.
+fn half(x: f32) -> f32 {
+    return x * 0.5;
+}
+
+material Glow {
+    param strength: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(strength), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Lamp {
+        position: vec3(half(1.0), 0.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Glow { strength: half(3.0) };
+    }
+}

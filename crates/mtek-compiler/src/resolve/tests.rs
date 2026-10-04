@@ -245,7 +245,7 @@ fn a_material_or_prefab_param_may_share_its_name_with_a_prelude_type() {
     let r = resolve_text(
         "material M { param color: color = #ffffff; fragment(s: SurfaceInput) -> color { return color; } }\n",
     );
-    assert_eq!(r.codes(), ["E9010"], "{:?}", r.diagnostics);
+    assert!(r.codes().is_empty(), "{:?}", r.diagnostics);
     let param = r.def_named("color");
     assert_eq!(param.kind, DefKind::Param);
     assert_eq!(
@@ -259,9 +259,9 @@ fn a_material_or_prefab_param_may_share_its_name_with_a_prelude_type() {
     assert_eq!(r.codes(), ["E9010"]);
     // ... but not with a schema or an enum.
     let r = resolve_text("material M { param Box: f32 = 1.0; }\n");
-    assert_eq!(r.codes(), ["E9010", "E2001"]);
+    assert_eq!(r.codes(), ["E2001"]);
     let r = resolve_text("material M { param Key: f32 = 1.0; }\n");
-    assert_eq!(r.codes(), ["E9010", "E2001"]);
+    assert_eq!(r.codes(), ["E2001"]);
     // A local may not share a prelude type name.
     let r = resolve_text("fn f() { let color = 1.0; }\n");
     assert_eq!(r.codes(), ["E2001"]);
@@ -274,7 +274,7 @@ fn a_component_of_a_param_named_like_a_namespace_is_not_e2005() {
     let r = resolve_text(
         "material M { param color: color = #ffffff; fragment(s: SurfaceInput) -> color { let r = color.r; return color; } }\n",
     );
-    assert_eq!(r.codes(), ["E9010"], "{:?}", r.diagnostics);
+    assert!(r.codes().is_empty(), "{:?}", r.diagnostics);
 }
 
 #[test]

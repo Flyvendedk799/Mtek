@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E9010",
+    "file": "src/main.mtek",
+    "startByte": 463,
+    "endByte": 472,
+    "message": "Initial values that are not constant expressions are specified for v0.1 but not implemented by this compiler build yet (planned for M3).",
+    "notes": [
+      "the value of field 'position' of entity 'Lamp' is not a constant expression: it calls the function 'half', and calls of user functions are not constant in v0.1",
+      "this compiler build implements the language up to milestone M1"
+    ]
+  },
+  {
+    "code": "MTEK-E9010",
+    "file": "src/main.mtek",
+    "startByte": 569,
+    "endByte": 578,
+    "message": "Initial values that are not constant expressions are specified for v0.1 but not implemented by this compiler build yet (planned for M3).",
+    "notes": [
+      "the value of parameter 'strength' of material Glow is not a constant expression: it calls the function 'half', and calls of user functions are not constant in v0.1",
+      "this compiler build implements the language up to milestone M1"
+    ]
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-W5101",
+    "file": "src/main.mtek",
+    "startByte": 351,
+    "endByte": 360,
+    "message": "The fragment stage of material 'Ghost' returns the alpha 0.5019608, which is ignored: v0.1 always writes alpha 1.0.",
+    "notes": [
+      "materials are opaque in v0.1; a fractional alpha does not enable blending",
+      "help: return an alpha of 1.0"
+    ]
+  },
+  {
+    "code": "MTEK-W5101",
+    "file": "src/main.mtek",
+    "startByte": 410,
+    "endByte": 414,
+    "message": "The fragment stage of material 'Ghost' returns the alpha 0.25, which is ignored: v0.1 always writes alpha 1.0.",
+    "notes": [
+      "materials are opaque in v0.1; a fractional alpha does not enable blending",
+      "help: return an alpha of 1.0"
+    ]
+  }
+]

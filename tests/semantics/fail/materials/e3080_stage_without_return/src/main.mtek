@@ -1,0 +1,11 @@
+material Partial {
+    fragment(input: SurfaceInput) -> color {
+        if input.uv.x > 0.5 {
+            return #ffffff;
+        }
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,10 @@
+material Haze {
+    param tint: color = #ffffff80;
+    fragment(input: SurfaceInput) -> color {
+        return tint;
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

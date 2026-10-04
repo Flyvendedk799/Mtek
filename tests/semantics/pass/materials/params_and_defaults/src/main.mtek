@@ -1,0 +1,45 @@
+// Params of every GPU-representable kind (spec/materials.md 2), defaults
+// computed from constants, a param without a default that every instance
+// supplies, and an instance stored in a constant.
+const BASE = #3060c0;
+const WAVES: u32 = 3;
+
+struct Wave {
+    amplitude: f32;
+    direction: vec2;
+}
+
+material Ocean {
+    param base: color = BASE;
+    param depth: f32;
+    param count: u32 = WAVES;
+    param enabled: bool = true;
+    param offset: i32 = -2;
+    param spin: quat = quat.identity();
+    param warp: mat4 = mat4.identity();
+    param tint: vec4 = vec4(1.0, 1.0, 1.0, 0.5);
+    param wave: Wave = Wave { direction: vec2(1.0, 0.0); amplitude: 0.25 };
+    param weights: array<f32, 3> = [0.5, 0.3, 0.2];
+
+    fragment(input: SurfaceInput) -> color {
+        var level = depth * weights[0] + wave.amplitude;
+        if enabled && count > 2 && offset < 0 {
+            level = level * 0.5;
+        }
+        return color.linear(base.rgb * level * tint.w, 1.0);
+    }
+}
+
+const CALM = Ocean { depth: 2.0; enabled: false };
+
+scene Harbour {
+    camera Main {}
+    entity Bay {
+        mesh: Plane { size: vec2(8.0, 8.0) };
+        material: CALM;
+    }
+    entity Reef {
+        mesh: Box { size: vec3(1.0, 0.2, 1.0) };
+        material: Ocean { depth: 0.5; base: #20a0a0; weights: [1.0, 0.0, 0.0] };
+    }
+}

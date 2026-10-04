@@ -1,0 +1,46 @@
+[
+  {
+    "code": "MTEK-E4011",
+    "file": "src/main.mtek",
+    "startByte": 62,
+    "endByte": 66,
+    "message": "The parameter 'm' has type mesh, which does not exist on the GPU, but the function 'width' runs on the GPU.",
+    "actual": "mesh",
+    "related": [
+      {
+        "message": "the fragment stage of material 'Outline' runs on the GPU",
+        "file": "src/main.mtek",
+        "startByte": 119,
+        "endByte": 127
+      },
+      {
+        "message": "'the fragment stage of material 'Outline'' calls 'width' here",
+        "file": "src/main.mtek",
+        "startByte": 193,
+        "endByte": 205
+      }
+    ],
+    "notes": [
+      "GPU code uses only bool, i32, u32, f32, vectors, mat4, quat, color, and structs and arrays of them"
+    ]
+  },
+  {
+    "code": "MTEK-E4040",
+    "file": "src/main.mtek",
+    "startByte": 199,
+    "endByte": 204,
+    "message": "The fragment stage of material 'Outline' cannot capture the constant 'SHAPE': its type Box exists only on the CPU.",
+    "related": [
+      {
+        "message": "the constant 'SHAPE' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 6,
+        "endByte": 11
+      }
+    ],
+    "notes": [
+      "stage code may read only its input, the material's params, and constants and `fn`s that exist on the GPU",
+      "to use `frame.time` in a material, add a param and bind it: `phase: bind(frame.time)`"
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E4040",
+    "file": "src/main.mtek",
+    "startByte": 138,
+    "endByte": 148,
+    "message": "The fragment stage of material 'Pulse' cannot read `frame.time`.",
+    "notes": [
+      "stage code may read only its input, the material's params, and constants and `fn`s that exist on the GPU",
+      "to use `frame.time` in a material, add a param and bind it: `phase: bind(frame.time)`"
+    ]
+  }
+]

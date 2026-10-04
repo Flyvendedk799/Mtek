@@ -94,7 +94,18 @@ impl Program {
             .flat_map(|module| module.items.iter())
             .filter_map(|item| match item {
                 Item::Scene(scene) => Some(scene),
-                Item::Const(_) | Item::Struct(_) | Item::Function(_) => None,
+                Item::Const(_) | Item::Struct(_) | Item::Function(_) | Item::Material(_) => None,
+            })
+    }
+
+    /// Every material of every module, in order.
+    pub fn materials(&self) -> impl Iterator<Item = &MaterialItem> {
+        self.modules
+            .iter()
+            .flat_map(|module| module.items.iter())
+            .filter_map(|item| match item {
+                Item::Material(material) => Some(material),
+                Item::Const(_) | Item::Struct(_) | Item::Function(_) | Item::Scene(_) => None,
             })
     }
 }
@@ -127,6 +138,70 @@ pub enum Item {
     Struct(StructItem),
     /// A `fn` or `cpu fn` with its typed body (M2-02, decision 0038).
     Function(Function),
+    /// A user material: params, parameter block and fragment stage (M2-04,
+    /// decision 0039).
+    Material(MaterialItem),
+}
+
+/// A material declaration (decision 0039): the input of shader lowering
+/// (M2-05: the fragment body and the `SurfaceInput` fields it reads) and of
+/// the resource plan (M2-09: the parameter block).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MaterialItem {
+    pub name: String,
+    pub symbol: Symbol,
+    /// The params in declaration order (the order of the parameter block's
+    /// members and of instance params).
+    pub params: Vec<MaterialParamItem>,
+    /// The parameter block (`spec/gpu-layout.md` section 5): id
+    /// `material:<path>::<Name>`, WGSL struct `MtekParams_<hash8>_<Name>`,
+    /// named from the declaring module's path (`layout::naming`) and laid out
+    /// by `layout::compute`; `None` for a material without params.
+    pub layout: Option<crate::layout::LayoutRecord>,
+    pub fragment: StageItem,
+    /// The whole declaration, `material Name { … }`.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// One param of a [`MaterialItem`].
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MaterialParamItem {
+    pub name: String,
+    /// The param's type, as Mtek spells it.
+    #[serde(rename = "type")]
+    pub ty: String,
+    /// The folded default; `None` when every instance must supply the param.
+    pub default: Option<Value>,
+    /// The whole `param name: T = default;`.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// The fragment stage of a material with its typed body. Material params
+/// appear in it as [`ExprKind::Param`]; the `SurfaceInput` parameter is the
+/// first local.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StageItem {
+    /// `<material symbol>.fragment` (the span-map symbol of
+    /// `spec/runtime-abi.md` section 5.4).
+    pub symbol: Symbol,
+    /// The `SurfaceInput` fields the body reads, in varying order
+    /// (`local_position`, `world_position`, `world_normal`, `uv`): the
+    /// generated vertex stage outputs, and meshes must provide, only those
+    /// (`spec/materials.md` section 3.1).
+    pub surface_inputs: Vec<&'static str>,
+    /// The result type (`color`).
+    pub result: String,
+    /// The `SurfaceInput` parameter, then the locals in declaration order.
+    pub locals: Vec<LocalItem>,
+    pub body: Block,
+    /// The whole stage function.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
 }
 
 /// A function declaration with its typed body (decision 0038): the input of
@@ -374,6 +449,17 @@ pub enum ExprKind {
     Descriptor {
         schema: String,
         fields: Vec<NamedExpr>,
+    },
+    /// A param of the material whose stage this is (decision 0039): its
+    /// position in [`MaterialItem::params`] and its name. Params are read
+    /// from the instance's parameter block, never folded.
+    Param { param: u32, name: String },
+    /// A descriptor literal of a user material that is not constant: every
+    /// param in declaration order, the written value or the default as a
+    /// constant (decision 0039).
+    Material {
+        material: Symbol,
+        params: Vec<NamedExpr>,
     },
 }
 
@@ -627,7 +713,8 @@ pub enum MeshDesc {
 #[serde(rename_all = "camelCase")]
 pub struct MaterialInstanceDesc {
     /// The material: `std/materials.mtek::Unlit` for a built-in material
-    /// (the prelude source that declares it).
+    /// (the prelude source that declares it), `src/main.mtek::Pulse` for a
+    /// user material (a [`MaterialItem`] of the program).
     pub material: Symbol,
     /// Every parameter of the material, in declaration order, with its
     /// initial value (written or the material's default).
@@ -647,9 +734,23 @@ pub struct Param {
     #[serde(rename = "type")]
     pub ty: String,
     pub source: Source,
+    /// When the value is uploaded (`spec/materials.md` section 4); every
+    /// param of this build is `initial` (decision 0039).
+    pub update: UpdateClass,
     /// The material instance's span (decision 0028).
     #[serde(serialize_with = "span")]
     pub span: Span,
+}
+
+/// The update class of a material instance param (`spec/materials.md`
+/// section 4). `imperative` and `bound` arrive with handlers and `bind`
+/// (M3), `resource` with textures (M4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum UpdateClass {
+    /// A default or constant initialiser, never written: uploaded once at
+    /// creation.
+    Initial,
 }
 
 /// A constant value. Externally tagged by its type in JSON:
@@ -712,6 +813,19 @@ impl From<&crate::types::ConstValue> for Value {
             },
             C::Array(items) => Value::Array(items.iter().map(Value::from).collect()),
             C::Str(text) => Value::String(text.clone()),
+            // A material instance as a value: the material's name and its
+            // parameters, like a descriptor (decision 0039); entities carry
+            // instances as `MaterialInstanceDesc` with the material's symbol.
+            C::Material { name, params, .. } => Value::Struct {
+                name: name.clone(),
+                fields: params
+                    .iter()
+                    .map(|(name, value)| NamedValue {
+                        name: name.clone(),
+                        value: value.into(),
+                    })
+                    .collect(),
+            },
         }
     }
 }

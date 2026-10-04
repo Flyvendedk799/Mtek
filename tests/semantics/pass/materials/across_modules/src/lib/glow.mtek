@@ -1,0 +1,13 @@
+import { WARM } from "./palette.mtek";
+
+export material Glow {
+    param tint: color = WARM;
+    param strength: f32;
+
+    fragment(input: SurfaceInput) -> color {
+        let facing = abs(input.world_normal.z);
+        return color.linear(tint.rgb * strength * facing, 1.0);
+    }
+}
+
+export const BRIGHT = Glow { strength: 2.0 };

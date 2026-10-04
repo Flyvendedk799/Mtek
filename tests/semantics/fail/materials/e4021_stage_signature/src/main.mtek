@@ -1,0 +1,27 @@
+material A {
+    fragment(input: SurfaceInput, extra: f32) -> color {
+        return #ffffff;
+    }
+}
+
+material B {
+    fragment(input: vec3) -> color {
+        return #ffffff;
+    }
+}
+
+material C {
+    fragment(input: SurfaceInput) {
+        return #ffffff;
+    }
+}
+
+material D {
+    fragment(input: SurfaceInput) -> vec4 {
+        return vec4(1.0, 1.0, 1.0, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

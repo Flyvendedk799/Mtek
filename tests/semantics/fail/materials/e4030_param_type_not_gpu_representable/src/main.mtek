@@ -1,0 +1,17 @@
+struct Label {
+    text: string;
+    size: f32;
+}
+
+material Sign {
+    param caption: string = "open";
+    param label: Label = Label { text: "a"; size: 1.0 };
+    param ok: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(ok), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

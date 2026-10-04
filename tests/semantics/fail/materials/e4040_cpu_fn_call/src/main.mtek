@@ -1,0 +1,13 @@
+cpu fn brightness() -> f32 {
+    return 0.5;
+}
+
+material Lamp {
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(brightness()), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

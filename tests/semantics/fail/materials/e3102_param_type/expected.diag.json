@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 316,
+    "endByte": 335,
+    "message": "Parameter 'phase' of material Pulse expects f32, but received vec3.",
+    "expected": "f32",
+    "actual": "vec3"
+  }
+]
