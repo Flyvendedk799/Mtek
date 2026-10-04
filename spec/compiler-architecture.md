@@ -105,7 +105,7 @@ Project (mtek.toml, entry)                     project/
 - The parser implements **the full v0.1 grammar from M1 onward** (decision 0013): parsing is mechanical given `spec/grammar.ebnf`, and implementing it whole avoids rework. Semantic support arrives per milestone; a syntactically valid construct whose semantics the current build does not implement yet yields `E9010` ("`material` declarations are specified for v0.1 but not implemented by this compiler build yet") — distinct from `x9xx` "not in v0.1" codes.
 
 ### 4.4 `project/`
-`mtek.toml` model (`spec/tooling.md` §3) with unknown-key rejection (`E9001`); module graph construction from the entry, in import order; cycle detection with the complete path (`E2035`); per-project limits (§9).
+`mtek.toml` model (`spec/tooling.md` §3) with unknown-key rejection (`E9001`); module graph construction from the entry, in import order; cycle detection with the complete path (`E2035`); per-project limits (§9). Load order, the specifier rules and how modules are checked together are decision 0036.
 
 ### 4.5 `stdlib/`
 The **registry** — one Rust data table of every prelude type, schema, field (type, default, flags `writable`/`bindable`/`construction_only`/`required`), scene-object kind, component, event, enum (`Key`), intrinsic (signature, domain, const-eligibility, CPU semantics reference) — and the embedded prelude Mtek source (`std/materials.mtek`, …). From the registry are generated: `spec/stdlib-schema.json` (checked in; a test fails if it is stale), completion items (LSP), schema reference docs and the AI context export (blueprint §3.4: one registry).
