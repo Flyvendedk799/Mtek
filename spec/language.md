@@ -184,7 +184,7 @@ Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated rema
 
 6.4 **Floating-point semantics.**
 - `f32` is IEEE-754 binary32. On the CPU, the emitter rounds the result of **every** `f32` operation to binary32 (`Math.fround`); for `+ - * /` and `sqrt` this reproduces correctly-rounded binary32 exactly. On the GPU, WGSL accuracy rules apply ([S5]): division and transcendental functions may differ by documented ULP bounds, implementations may contract `a*b+c`, and infinities/NaN handling may be non-IEEE.
-- **Mtek promises:** identical results for constant-folded values; correctly rounded `+ - * /` and `sqrt` on the CPU; agreement between CPU and GPU within the per-function tolerances listed in `spec/testing.md` §5 for finite inputs in the documented domains. Mtek does **not** promise bit-identical CPU/GPU results, nor GPU behaviour for NaN, infinity, or division by zero. Code whose meaning depends on those is non-portable; the CPU result is the specified one.
+- **Mtek promises:** identical results for constant-folded values; correctly rounded `+ - * /` and `sqrt` on the CPU; agreement between CPU and GPU within the per-function tolerances listed in `spec/testing.md` §5 for finite inputs in the documented domains. Mtek does **not** promise bit-identical CPU/GPU results, nor GPU behaviour for NaN, infinity, or division by zero. Code whose meaning depends on those is non-portable; the CPU result is the specified one. On the GPU, subnormal inputs and results may be flushed to zero and the sign of a zero may differ (WGSL rules). The cases of the conformance table that are non-portable or outside the input ranges WGSL states its accuracy for are listed in `tests/semantics/numeric/gpu-not-compared.json` (decision 0043).
 - `f32` division by zero on the CPU follows IEEE (±inf, NaN).
 
 6.5 **Conversions.** Explicit, by calling the target type: `f32(x)`, `i32(x)`, `u32(x)`, `bool` has no conversions.
@@ -192,7 +192,7 @@ Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated rema
 | From → To | Rule (identical on CPU and GPU) |
 |---|---|
 | `i32 → f32`, `u32 → f32` | Round to nearest representable (CPU: ties-to-even. GPU may choose either neighbour — inside tolerance). |
-| `f32 → i32` / `f32 → u32` | **Clamp** to the target range, then truncate toward zero (WGSL rule, [S5]). NaN → `0` on the CPU; on the GPU NaN yields an indeterminate value (non-portable). |
+| `f32 → i32` / `f32 → u32` | **Clamp** to the target range, then truncate toward zero (WGSL rule, [S5]). NaN → `0` on the CPU; on the GPU NaN yields an indeterminate value (non-portable). Out of range, the CPU clamps to the integer maxima while WGSL clamps to the largest value representable in both types (2147483520, 4294967040): an open spec issue, decision 0043 item 8. |
 | `i32 ↔ u32` | Bit reinterpretation (two's complement). |
 | same → same | Identity (allowed; lint `W3050` "redundant conversion"). |
 

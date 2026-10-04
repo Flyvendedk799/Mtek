@@ -63,4 +63,5 @@ recorded here before code depends on it (blueprint §15).
 | 0040 | The CPU emitter: details the specification leaves open |
 | 0041 | Shader lowering: details the specification leaves open |
 | 0042 | Grammar coverage and the M2 grammar freeze: details the specification leaves open |
+| 0043 | CPU/GPU numeric conformance: details the specification leaves open |
 | 0045 | Assignable places: struct fields and array elements (owner decision) |
