@@ -1,9 +1,11 @@
 //! The program module `app.js` (`spec/runtime-abi.md` sections 3 and 4): [`emit_program`]
 //! builds its JavaScript AST from the typed IR and the resource plan.
 //!
-//! The module has exactly the ABI-1 export surface: the `mountMtek` re-export from the hashed
-//! runtime file, `abi`, `baseUrl`, `manifestUrl`, `writers` (keyed by layout id; the writer
-//! functions themselves are module-private, `spec/gpu-layout.md` section 7), `functions`,
+//! The module imports the runtime bundle as `rt` (the math helpers generated code calls,
+//! decision 0037) and has exactly the ABI-1 export surface: the `mountMtek` re-export from the
+//! hashed runtime file, `abi`, `baseUrl`, `manifestUrl`, `writers` (keyed by layout id; the
+//! writer functions themselves are module-private, `spec/gpu-layout.md` section 7),
+//! `functions` (every CPU-reachable user function by symbol, lowered by [`super::cpu`]),
 //! `scenes` (the entry scene only), `prefabs` and the default export of all seven.
 //!
 //! The entry scene's `init(ctx)` runs the initialisation order of `spec/scenes.md` section 11
@@ -30,7 +32,10 @@ use crate::layout::{LayoutNode, LayoutRecord};
 use crate::plan::ResourcePlan;
 use crate::{COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI};
 
+use crate::source::Span;
+
 use super::ast::{Expr, Item, JsModule, Module, Number, Stmt, print};
+use super::cpu::emit_functions;
 use super::printer::identifier_part;
 use super::writers::{emit_writer_parts, writer_qualifier};
 
@@ -61,25 +66,38 @@ pub fn init_function_name(scene: &Scene) -> String {
     format!("s_{}_init", identifier_part(&scene.name))
 }
 
-/// Builds `app.js` for the entry scene of `program`.
+/// Builds `app.js` for the entry scene of `program`. `span_id` gives the manifest span id of
+/// a source span (generated code reports run-time warnings by span id).
 ///
 /// # Errors
 /// A text describing a compiler defect: no entry scene, a value the CPU representation does
-/// not cover, or an entity without a plan entry.
+/// not cover, an IR node the CPU emitter does not know, or an entity without a plan entry.
 pub fn emit_program(
     program: &Program,
     plan: &ResourcePlan,
     parts: &ProgramParts<'_>,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<JsModule, String> {
     let scene = program
         .entry()
         .ok_or_else(|| format!("the entry scene '{}' is not in the IR", program.entry_scene))?;
+    let runtime = format!("./{}", parts.runtime_file);
     let mut items = vec![
         Item::Stmt(Stmt::Comment(header())),
+        Item::ImportNamespace {
+            name: "rt".to_owned(),
+            from: runtime.clone(),
+        },
         Item::ExportFrom {
             names: vec!["mountMtek".to_owned()],
-            from: format!("./{}", parts.runtime_file),
+            from: runtime,
         },
+        // Every `f32` operation result is rounded through this alias.
+        Item::Stmt(Stmt::Const {
+            name: "fr".to_owned(),
+            value: Expr::ident("Math").member("fround"),
+            span: None,
+        }),
         Item::Stmt(Stmt::Blank),
         Item::ExportConst {
             name: "abi".to_owned(),
@@ -110,10 +128,18 @@ pub fn emit_program(
         name: "writers".to_owned(),
         value: Expr::object_lines(table),
     });
+    let functions = emit_functions(program, span_id)?;
+    items.extend(functions.stmts.into_iter().map(Item::Stmt));
     items.push(Item::Stmt(Stmt::Blank));
     items.push(Item::ExportConst {
         name: "functions".to_owned(),
-        value: Expr::object_lines(Vec::new()),
+        value: Expr::object_lines(
+            functions
+                .table
+                .into_iter()
+                .map(|(symbol, name)| (symbol.to_string(), Expr::Ident(name)))
+                .collect(),
+        ),
     });
 
     let init = init_function_name(scene);
