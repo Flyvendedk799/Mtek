@@ -220,7 +220,8 @@ impl Limit {
         }
     }
 
-    fn text(self) -> String {
+    /// The limit as written in documentation and diagnostics (`3`, `0.5`, `π`).
+    pub fn text(self) -> String {
         match self {
             Limit::Int(v) => v.to_string(),
             Limit::Float(v) => format_f32(v),

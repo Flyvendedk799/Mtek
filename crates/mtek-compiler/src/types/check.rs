@@ -51,11 +51,6 @@ use crate::syntax::ast::{
     TypeKind as AstTypeKind, UnaryOp,
 };
 
-/// The registry schema of scene fields.
-pub(super) const SCENE_SCHEMA: &str = "Scene";
-/// The registry schema of entity fields.
-pub(super) const ENTITY_SCHEMA: &str = "Entity";
-
 /// Whether a literal expression is made of integer literals only, or holds a
 /// float literal.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -295,7 +290,7 @@ impl<'a> Checker<'a> {
         for member in &decl.members {
             match member {
                 SceneMember::Field(field) if construct_implemented(Construct::SceneField) => {
-                    self.schema_field(SCENE_SCHEMA, field);
+                    self.schema_field(self.registry.declaration_schemas.scene, field);
                 }
                 SceneMember::Const(decl) if construct_implemented(Construct::BodyConst) => {
                     self.const_decl(decl);
@@ -330,7 +325,7 @@ impl<'a> Checker<'a> {
         for member in &entity.members {
             match member {
                 EntityMember::Field(field) if construct_implemented(Construct::EntityField) => {
-                    self.schema_field(ENTITY_SCHEMA, field);
+                    self.schema_field(self.registry.declaration_schemas.entity, field);
                 }
                 EntityMember::Const(decl) if construct_implemented(Construct::BodyConst) => {
                     self.const_decl(decl);
@@ -1505,7 +1500,7 @@ impl<'a> Checker<'a> {
             && let Some(def) = self.res.def(id)
         {
             let object = match def.kind {
-                DefKind::Entity => Some((ENTITY_SCHEMA, "entity")),
+                DefKind::Entity => Some((self.registry.declaration_schemas.entity, "entity")),
                 DefKind::SceneObject { kind: Some(kind) } => self
                     .registry
                     .scene_object(kind)

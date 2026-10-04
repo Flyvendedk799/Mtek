@@ -1,8 +1,9 @@
 //! Small constructors that keep the registry tables readable.
 
+use crate::diagnostics::Code;
 use crate::stdlib::model::{
-    Domain, FieldDef, FieldFlags, IntrinsicDef, Milestone, ParamDef, SchemaCategory, SchemaDef,
-    SigType, Signature, TypeClass, TypeRef,
+    Domain, FieldDef, FieldFlags, FieldRule, IntrinsicDef, Milestone, ParamDef, SchemaCategory,
+    SchemaDef, SigType, Signature, TypeClass, TypeRef,
 };
 use crate::stdlib::value::{ConstValue, ValueRange};
 
@@ -25,6 +26,7 @@ pub(super) fn field(
         default_when_set: None,
         flags,
         range: None,
+        range_code: Code::E5006,
         since: Milestone::M1,
         doc,
     }
@@ -43,6 +45,12 @@ impl FieldDef {
 
     pub(super) fn range(mut self, range: ValueRange) -> Self {
         self.range = Some(range);
+        self
+    }
+
+    /// The code of a constant outside the range, when it is not `E5006`.
+    pub(super) fn range_code(mut self, code: Code) -> Self {
+        self.range_code = code;
         self
     }
 
@@ -65,8 +73,17 @@ pub(super) fn schema(
         name,
         category,
         fields,
+        rules: Vec::new(),
         since,
         doc,
+    }
+}
+
+impl SchemaDef {
+    /// Adds a rule between two of the schema's fields.
+    pub(super) fn rule(mut self, rule: FieldRule) -> Self {
+        self.rules.push(rule);
+        self
     }
 }
 

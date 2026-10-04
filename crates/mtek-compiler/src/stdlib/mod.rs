@@ -24,10 +24,11 @@ use std::sync::OnceLock;
 pub use export::{REGISTRY_VERSION, export_schema_json};
 pub use lookup::{PreludeNameKind, ResolveError};
 pub use model::{
-    BodyCommandDef, BodyKind, BodyPropertyDef, CURRENT_MILESTONE, Domain, EnumDef, EnumMember,
-    EventDef, EventForm, EventHost, FieldDef, FieldFlags, IntrinsicDef, Milestone, NamespaceDef,
-    NamespaceMember, ParamDef, RecordField, Registry, SceneObjectKind, SchemaCategory, SchemaDef,
-    SigType, Signature, TypeClass, TypeDef, TypeKind, TypeRef, ValueDef,
+    ActiveObject, BodyCommandDef, BodyKind, BodyPropertyDef, CURRENT_MILESTONE, DeclarationSchemas,
+    Domain, EnumDef, EnumMember, EventDef, EventForm, EventHost, FieldDef, FieldFlags, FieldRule,
+    IntrinsicDef, Milestone, NamespaceDef, NamespaceMember, ParamDef, RecordField, Registry,
+    SceneObjectKind, SchemaCategory, SchemaDef, SigType, Signature, TypeClass, TypeDef, TypeKind,
+    TypeRef, ValueDef,
 };
 pub use overload::{ArgType, ConcreteSignature, OverloadError, Resolution};
 pub use value::{

@@ -7,6 +7,7 @@
 use std::ops::BitOr;
 
 use super::value::{ConstValue, ValueRange};
+use crate::diagnostics::Code;
 
 /// The milestone in which the compiler implements an item.
 ///
@@ -198,6 +199,9 @@ pub struct FieldDef {
     pub default_when_set: Option<&'static str>,
     pub flags: FieldFlags,
     pub range: Option<ValueRange>,
+    /// The diagnostic for a constant outside `range` (decision 0027): `E5006` unless the
+    /// specification names a dedicated code (`E5011` for projections, `E5090` for scale).
+    pub range_code: Code,
     pub since: Milestone,
     pub doc: &'static str,
 }
@@ -220,6 +224,8 @@ pub struct SchemaDef {
     pub name: &'static str,
     pub category: SchemaCategory,
     pub fields: Vec<FieldDef>,
+    /// Rules between fields that every body and descriptor of the schema must satisfy.
+    pub rules: Vec<FieldRule>,
     pub since: Milestone,
     pub doc: &'static str,
 }
@@ -229,6 +235,47 @@ impl SchemaDef {
     pub fn field(&self, name: &str) -> Option<&FieldDef> {
         self.fields.iter().find(|f| f.name == name)
     }
+}
+
+/// A rule between two fields of one schema (decision 0027). The checker enforces it on
+/// every scene, entity or scene-object body and every descriptor literal of the schema;
+/// `code` is the diagnostic the specification names for the violation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FieldRule {
+    /// `field` may be declared only together with `requires` (`Entity.material` needs a
+    /// `mesh`, `E5020`).
+    Requires {
+        field: &'static str,
+        requires: &'static str,
+        code: Code,
+    },
+    /// `field` must not be declared together with `excluded_by` (`Camera.rotation` when a
+    /// `target` is declared, `E5010`).
+    ExcludedBy {
+        field: &'static str,
+        excluded_by: &'static str,
+        code: Code,
+    },
+}
+
+/// The schemas of the declarations whose fields are written directly in their body: scene
+/// fields and entity (and prefab) fields. Camera fields come from the scene-object kind.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DeclarationSchemas {
+    /// The fields of `scene Name { .. }`.
+    pub scene: &'static str,
+    /// The fields of `entity Name { .. }` and `prefab Name { .. }`.
+    pub entity: &'static str,
+}
+
+/// How a scene selects the one active object of a scene-object kind (decision 0027): a
+/// scene must declare at least one object of the kind (`missing`), and with several, exactly
+/// one of them must set the `bool` field `field` to `true` (`ambiguous`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ActiveObject {
+    pub field: &'static str,
+    pub missing: Code,
+    pub ambiguous: Code,
 }
 
 /// The kind of a registry type (`spec/language.md` section 5.1).
@@ -292,6 +339,9 @@ pub struct TypeDef {
 pub struct SceneObjectKind {
     pub keyword: &'static str,
     pub schema: &'static str,
+    /// Whether every scene needs exactly one active object of this kind, and how it is
+    /// chosen (`camera`: `E5012`, `E5013`).
+    pub active: Option<ActiveObject>,
     pub since: Milestone,
     pub doc: &'static str,
 }
@@ -559,6 +609,8 @@ pub struct BodyPropertyDef {
 pub struct Registry {
     pub types: Vec<TypeDef>,
     pub schemas: Vec<SchemaDef>,
+    /// Which schemas describe scene and entity bodies.
+    pub declaration_schemas: DeclarationSchemas,
     pub scene_objects: Vec<SceneObjectKind>,
     pub events: Vec<EventDef>,
     pub enums: Vec<EnumDef>,

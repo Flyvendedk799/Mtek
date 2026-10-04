@@ -23,11 +23,6 @@ use crate::syntax::ast::{
 /// The reserved identifier (`spec/language.md` 2.1, `E0012`).
 const UNDERSCORE: &str = "_";
 
-/// The schema whose fields every entity and prefab has.
-const ENTITY_SCHEMA: &str = "Entity";
-/// The schema of scene fields.
-const SCENE_SCHEMA: &str = "Scene";
-
 /// What a scope belongs to; used for wording only.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum ScopeKind {
@@ -192,7 +187,7 @@ impl<'a> Resolver<'a> {
                 .is_some_and(|p| matches!(p, DefKind::Entity | DefKind::Prefab))
             && self
                 .registry
-                .schema_field(ENTITY_SCHEMA, &name.name)
+                .schema_field(self.registry.declaration_schemas.entity, &name.name)
                 .is_some()
         {
             self.sink.push(
@@ -205,8 +200,8 @@ impl<'a> Resolver<'a> {
                 )
                 .at(name.span)
                 .note(format!(
-                    "every entity has the field '{0}' (schema {ENTITY_SCHEMA}), so `self.{0}` would be ambiguous",
-                    name.name
+                    "every entity has the field '{0}' (schema {1}), so `self.{0}` would be ambiguous",
+                    name.name, self.registry.declaration_schemas.entity
                 ))
                 .help("choose another name for the state"),
             );
@@ -665,7 +660,11 @@ impl<'a> Resolver<'a> {
         for member in &decl.members {
             match member {
                 SceneMember::Field(field) => {
-                    self.field_init(field, Some(SCENE_SCHEMA), Some(Construct::SceneField));
+                    self.field_init(
+                        field,
+                        Some(self.registry.declaration_schemas.scene),
+                        Some(Construct::SceneField),
+                    );
                 }
                 SceneMember::Const(c) => self.body_const(c),
                 SceneMember::State(s) => self.state(s.span, &s.ty, &s.value),
@@ -791,7 +790,10 @@ impl<'a> Resolver<'a> {
         let (schema, construct) = if entity.prefab.is_some() {
             (None, None)
         } else {
-            (Some(ENTITY_SCHEMA), Some(Construct::EntityField))
+            (
+                Some(self.registry.declaration_schemas.entity),
+                Some(Construct::EntityField),
+            )
         };
         for member in &entity.members {
             self.entity_member(member, owner, schema, construct);
@@ -863,7 +865,7 @@ impl<'a> Resolver<'a> {
             self.entity_member(
                 member,
                 owner,
-                Some(ENTITY_SCHEMA),
+                Some(self.registry.declaration_schemas.entity),
                 Some(Construct::EntityField),
             );
         }
@@ -1307,7 +1309,7 @@ impl<'a> Resolver<'a> {
                 // by the field's own `since`, like writing it (decision 0026).
                 let schema = match res {
                     Res::Def(id) => match self.def_kind(id) {
-                        Some(DefKind::Entity) => Some(ENTITY_SCHEMA),
+                        Some(DefKind::Entity) => Some(self.registry.declaration_schemas.entity),
                         Some(DefKind::SceneObject { kind: Some(kind) }) => {
                             self.registry.scene_object(kind).map(|k| k.schema)
                         }

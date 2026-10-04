@@ -19,6 +19,7 @@ pub(super) fn build_registry() -> Registry {
     Registry {
         types: namespaces::types(),
         schemas: schemas::schemas(),
+        declaration_schemas: schemas::declaration_schemas(),
         scene_objects: schemas::scene_objects(),
         events: events::events(),
         enums: events::enums(),
