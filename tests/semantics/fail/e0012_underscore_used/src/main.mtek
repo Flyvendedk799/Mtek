@@ -3,3 +3,4 @@ const A = _;
 scene Demo {
     camera Main {}
 }
+// covers: [S: reserved-identifiers]

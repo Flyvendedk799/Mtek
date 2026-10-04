@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/mtek-compiler", "crates/mtek-cli"]
+members = ["crates/mtek-compiler", "crates/mtek-cli", "tools/grammar-coverage"]
 resolver = "3"
 
 [workspace.package]

@@ -1,0 +1,13 @@
+// A prefab describes one entity: a nested entity is E5040 once prefabs are
+// implemented (M5-01); until then the prefab itself is gated, once.
+prefab Crate {
+    mesh: Box {};
+    entity Lid {
+        mesh: Box {};
+    }
+}
+
+scene Demo {
+    camera Main {}
+}
+// covers: [S: prefab-no-nested-entity]

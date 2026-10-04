@@ -11,7 +11,7 @@
 The repository root **is** the `mtek/` root of blueprint §13 (decision 0007). Directories are created when the milestone that needs them starts — never prefilled with placeholders (blueprint §13).
 
 ```
-Cargo.toml                 # [workspace] members = ["crates/*"], resolver = "3"
+Cargo.toml                 # [workspace] members: the crates under crates/ and tools/grammar-coverage, resolver = "3"
 Cargo.lock                 # committed
 rust-toolchain.toml        # pinned stable toolchain + rustfmt, clippy
 package.json               # private root, npm workspaces, scripts orchestrating builds/tests
@@ -30,7 +30,7 @@ tests/
   syntax/ semantics/ codegen/ gpu-layout/ assets/   # compiler fixtures (§10)
   browser/                 # @mtek/browser-tests — Playwright (M0+)
 benchmarks/  tasks/ baselines/ results/
-tools/       ai-eval/ grammar-adapters/            # M6
+tools/       grammar-coverage/ ai-eval/ grammar-adapters/   # grammar-coverage: M2 (Rust crate, decision 0042); the others M6
 evidence/    M0/ M1/ …     # milestone gate evidence (spec/testing.md §8)
 ```
 

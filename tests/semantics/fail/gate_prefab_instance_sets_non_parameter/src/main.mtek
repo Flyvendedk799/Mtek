@@ -1,0 +1,12 @@
+// An instance may set only the prefab's params: `position` is E5042 once
+// prefabs are implemented (M5-01); until then both constructs are gated.
+prefab Crate {
+    param lift: f32 = 1.0;
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate { position: vec3(0.0, 1.0, 0.0); }
+}
+// covers: [S: prefab-instance-params]

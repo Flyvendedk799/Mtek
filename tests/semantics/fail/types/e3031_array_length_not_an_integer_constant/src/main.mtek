@@ -4,3 +4,4 @@ const PAIR: array<f32, SIZE> = [1.0, 2.0];
 scene Demo {
     camera Main {}
 }
+// covers: [S: array-type-arguments]

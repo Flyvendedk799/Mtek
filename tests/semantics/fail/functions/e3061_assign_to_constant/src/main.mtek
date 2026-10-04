@@ -8,3 +8,4 @@ fn raise(x: f32) -> f32 {
 scene Demo {
     camera Main {}
 }
+// covers: [S: simple-statement]

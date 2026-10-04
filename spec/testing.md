@@ -52,7 +52,7 @@ All commands work from a clean checkout after `npm ci && npm run build` (`build`
 Runner: `crates/mtek-compiler/tests/fixtures.rs` discovers fixtures in sorted order and runs them with the in-memory `Fs`. `MTEK_BLESS=1` rewrites expected files; blessed diffs are reviewed like code.
 
 ### 3.2 Requirements
-- Every grammar production: ≥ 1 pass fixture. Every `[S: …]` rule and every diagnostic code: ≥ 1 fail fixture (a test lists codes from `codes.rs` that no fixture produces; M7 requires the list to be empty, earlier milestones require it for codes of implemented features; the lists and their categories are decision 0027 item 11).
+- Every grammar production: ≥ 1 pass fixture. Every `[S: …]` rule and every diagnostic code: ≥ 1 fail fixture. `tools/grammar-coverage` measures the productions (with their top-level alternatives) and the rules on what the parser builds (decision 0042); for the codes, a test lists codes from `codes.rs` that no fixture produces (M7 requires the list to be empty, earlier milestones require it for codes of implemented features; the lists and their categories are decision 0027 item 11).
 - Recovery: fail fixtures with several independent errors assert that all are reported and nothing after the first error is a cascade.
 
 ### 3.3 Robustness (fuzz-style, stable Rust, runs in CI)

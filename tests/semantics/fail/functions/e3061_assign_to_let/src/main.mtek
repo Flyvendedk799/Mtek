@@ -7,3 +7,4 @@ fn total(a: f32, b: f32) -> f32 {
 scene Demo {
     camera Main {}
 }
+// covers: [S: simple-statement]

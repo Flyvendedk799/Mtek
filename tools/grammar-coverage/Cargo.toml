@@ -1,0 +1,19 @@
+[package]
+name = "mtek-grammar-coverage"
+description = "Grammar coverage of the syntax corpus: productions and alternatives the parser actually builds from tests/syntax/pass, and the [S: …] rules of spec/grammar.ebnf covered by fail fixtures (decision 0042)."
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "grammar-coverage"
+path = "src/main.rs"
+
+[dependencies]
+mtek-compiler = { path = "../../crates/mtek-compiler" }
+# Already in the workspace (decision 0007): the expected diagnostics of the fail fixtures.
+serde_json = { version = "=1.0.151", features = ["preserve_order"] }
+
+[lints]
+workspace = true

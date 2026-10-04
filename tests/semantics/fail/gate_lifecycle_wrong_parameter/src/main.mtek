@@ -1,0 +1,8 @@
+// A lifecycle function takes exactly one `f32`: E5050 once lifecycle
+// functions are implemented (M3-02); until then they are gated.
+scene Demo {
+    camera Main {}
+    update(dt: i32) {
+    }
+}
+// covers: [S: lifecycle-signature]

@@ -3,3 +3,4 @@ const NONE: array<f32, 0> = [1.0];
 scene Demo {
     camera Main {}
 }
+// covers: [S: array-type-arguments]

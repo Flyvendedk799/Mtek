@@ -1,0 +1,34 @@
+// Every word reserved for future use (spec/language.md 2.3) is rejected
+// wherever it would be a name: one E0013 per word, nothing else.
+struct Reserved {
+    as: f32;
+    async: f32;
+    await: f32;
+    enum: f32;
+    extern: f32;
+    impl: f32;
+    loop: f32;
+    match: f32;
+    mod: f32;
+    move: f32;
+    mut: f32;
+    priv: f32;
+    pub: f32;
+    static: f32;
+    super: f32;
+    trait: f32;
+    type: f32;
+    unsafe: f32;
+    use: f32;
+    where: f32;
+    while: f32;
+    yield: f32;
+    compute: f32;
+    vertex: f32;
+    storage: f32;
+    uniform: f32;
+    workgroup: f32;
+    system: f32;
+    query: f32;
+    component: f32;
+}

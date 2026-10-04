@@ -5,3 +5,4 @@ material Waves {
     }
     fragment(input: SurfaceInput) -> color { return #808080; }
 }
+// covers: [S: stage-name]

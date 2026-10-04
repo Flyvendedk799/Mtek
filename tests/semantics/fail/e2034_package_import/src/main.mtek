@@ -4,3 +4,4 @@ scene Demo {
     clear_color: ACCENT;
     camera Main {}
 }
+// covers: [S: import-specifier]
