@@ -7,11 +7,14 @@
 //! 2. emits one shader per material: in M1 the temporary compiler-built `Unlit`
 //!    (decision 0029), for which the embedded prelude is added to the build's source map as
 //!    `std/materials.mtek`, so the manifest's `sources` and `spans` cover it;
-//! 3. emits `app.js` ([`crate::emit_js::emit_program`]) with the writers of `builtin:frame`,
-//!    `builtin:object` and every material block;
-//! 4. builds the manifest, interning spans in this order: symbols (scene, cameras, entities,
-//!    then per material its declaration and its params), material params, shader span maps;
-//! 5. writes the files with content-addressed names for the runtime bundle and the shaders.
+//! 3. interns the manifest's spans in this order: symbols (scene, cameras, entities, per
+//!    material its declaration and its params, then the functions compiled for the CPU),
+//!    material params, shader span maps;
+//! 4. emits `app.js` ([`crate::emit_js::emit_program`]) with the writers of `builtin:frame`,
+//!    `builtin:object` and every material block and the CPU functions, whose run-time index
+//!    checks intern their spans last;
+//! 5. builds the manifest and writes the files with content-addressed names for the runtime
+//!    bundle and the shaders.
 //!
 //! The manifest carries structure and constant scene fields only; entity and camera values
 //! are set by `init(ctx)` (`spec/scenes.md` section 11). `ambientColor`, `ambientIntensity`
@@ -135,20 +138,8 @@ pub fn package(
     material_layouts.sort_by(|a, b| a.id.cmp(&b.id));
     layouts.extend(material_layouts);
 
-    let runtime_file = format!("runtime.{}.js", h16(input.runtime_bundle));
-    let app = emit_program(
-        program,
-        &plan,
-        &ProgramParts {
-            runtime_file: &runtime_file,
-            layouts: &layouts,
-        },
-    )
-    .map_err(defect)?;
-    let app_map = source_map(APP_JS, &app.mappings, sources).map_err(defect)?;
-
     let mut spans = SpanTable::new(sources);
-    let symbols = symbols(scene, &materials, &mut spans).map_err(defect)?;
+    let symbols = symbols(program, scene, &materials, &mut spans).map_err(defect)?;
     let mut manifest_materials = Vec::with_capacity(materials.len());
     let mut shaders = Vec::with_capacity(materials.len());
     let mut shader_files = Vec::with_capacity(materials.len() * 2);
@@ -199,6 +190,21 @@ pub fn package(
         shader_files.push((artifact.wgsl_path(), artifact.wgsl.clone().into_bytes()));
         shader_files.push((artifact.map_path(), map_text.into_bytes()));
     }
+
+    // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
+    // other span, so a program's span ids do not depend on its function bodies.
+    let runtime_file = format!("runtime.{}.js", h16(input.runtime_bundle));
+    let app = emit_program(
+        program,
+        &plan,
+        &ProgramParts {
+            runtime_file: &runtime_file,
+            layouts: &layouts,
+        },
+        &mut |span| spans.intern(span),
+    )
+    .map_err(defect)?;
+    let app_map = source_map(APP_JS, &app.mappings, sources).map_err(defect)?;
     let span_entries = spans.into_entries();
 
     let source_entries: Vec<SourceEntry> = sources
@@ -347,8 +353,9 @@ fn build_materials(
 }
 
 /// The manifest's `symbols`: the scene, its cameras and entities, then every material and its
-/// params.
+/// params, then every function compiled for the CPU (the entries of `app.js`'s `functions`).
 fn symbols(
+    program: &Program,
     scene: &ir::Scene,
     materials: &[BuiltMaterial],
     spans: &mut SpanTable<'_>,
@@ -381,6 +388,19 @@ fn symbols(
                 SymbolKind::Param,
                 *span,
             )?;
+        }
+    }
+    for module in &program.modules {
+        for item in &module.items {
+            if let ir::Item::Function(function) = item
+                && function.cpu_reachable
+            {
+                add(
+                    function.symbol.to_string(),
+                    SymbolKind::Function,
+                    function.span,
+                )?;
+            }
         }
     }
     Ok(symbols)

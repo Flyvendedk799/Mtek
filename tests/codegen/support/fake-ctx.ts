@@ -1,7 +1,7 @@
 // A test implementation of the generated-code context (spec/runtime-abi.md section 4.2,
-// spec/testing.md section 4.1): it records every setter call so tests can assert what generated
-// code does without a browser. Only the members M1 code uses exist; anything else is a
-// TypeError, which fails the test.
+// spec/testing.md section 4.1): it records every setter call and every run-time warning so tests
+// can assert what generated code does without a browser. Only the members generated code uses so
+// far exist; anything else is a TypeError, which fails the test.
 
 /** One recorded setter call. `entity` is the static index of the record passed, or -1. */
 export interface SetterCall {
@@ -9,6 +9,12 @@ export interface SetterCall {
   readonly entity: number;
   readonly field: string;
   readonly value: unknown;
+}
+
+/** One recorded `ctx.warn(code, spanId)` (index clamping reports `W8030`, decision 0037). */
+export interface WarningCall {
+  readonly code: string;
+  readonly spanId: number;
 }
 
 /** An entity record as the fake hands it to generated code. */
@@ -22,14 +28,17 @@ export interface FakeContext {
   setTransform(entity: FakeEntityRecord, field: string, value: unknown): void;
   setVisible(entity: FakeEntityRecord, value: unknown): void;
   setParam(entity: FakeEntityRecord, name: string, value: unknown): void;
+  warn(code: string, spanId: number): void;
 }
 
-/** A context with `entityCount` entity records and the calls it records. */
+/** A context with `entityCount` entity records and the calls and warnings it records. */
 export function createFakeContext(entityCount: number): {
   ctx: FakeContext;
   calls: SetterCall[];
+  warnings: WarningCall[];
 } {
   const calls: SetterCall[] = [];
+  const warnings: WarningCall[] = [];
   const e: FakeEntityRecord[] = Array.from({ length: entityCount }, (_, index) =>
     Object.freeze({ index }),
   );
@@ -52,6 +61,9 @@ export function createFakeContext(entityCount: number): {
     setParam(entity: FakeEntityRecord, name: string, value: unknown): void {
       calls.push({ method: "setParam", entity: indexOf(entity), field: name, value });
     },
+    warn(code: string, spanId: number): void {
+      warnings.push({ code, spanId });
+    },
   });
-  return { ctx, calls };
+  return { ctx, calls, warnings };
 }

@@ -1,39 +1,24 @@
 // Execution test of the generated program module (spec/runtime-abi.md sections 3 and 4,
-// spec/testing.md section 4.1, decision 0030): every codegen fixture's golden `app.js`
-// (tests/codegen/<fixture>/expected/) is imported in Node with a test module standing in for the
-// runtime bundle, and
-//  - its export surface is exactly the ABI-1 surface, with module-private writers;
+// spec/testing.md section 4.1, decisions 0030 and 0040): every codegen fixture, built by the
+// global setup with the **real** runtime bundle (the generated code imports it as `rt`), is
+// imported in Node, and
+//  - its app.js, app.js.map and manifest are the golden ones of tests/codegen/<fixture>/expected/
+//    (built with the stub bundle) up to the hashed runtime file name;
+//  - its export surface is exactly the ABI-1 surface, with module-private writers, and
+//    `functions` holds every CPU-reachable function of the typed IR by symbol;
 //  - `writers` covers every layout of the manifest and agrees with the independent encoder;
-//  - `scenes.<entry>.init(ctx)` makes exactly the setter calls the typed IR golden
-//    (tests/codegen/ir/<fixture>.ir.json) implies, with bit-exact binary32 values.
-import { cpSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+//  - `scenes.<entry>.init(ctx)` makes exactly the setter calls the typed IR implies, with
+//    bit-exact binary32 values.
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import { firstDifference } from "./support/bytes.js";
 import type { CpuValue } from "./support/cpu-value.js";
 import { encodeBlock } from "./support/encoder.js";
 import { type SetterCall, createFakeContext } from "./support/fake-ctx.js";
-import { type Views, codegenDir, makeViews, outDir } from "./support/fixtures.js";
+import { type Views, codegenDir, makeViews } from "./support/fixtures.js";
 import { parseLayoutRecord } from "./support/layout.js";
-
-interface ManifestLayout {
-  readonly id: string;
-  readonly wgslStruct: string;
-  readonly root: { readonly members: readonly { readonly name: string }[] };
-}
-
-interface Manifest {
-  readonly entryScene: string;
-  readonly layouts: readonly ManifestLayout[];
-  readonly materials: readonly { readonly id: string; readonly layout: string | null }[];
-  readonly scene: {
-    readonly entities: readonly {
-      readonly index: number;
-      readonly material: { readonly id: string; readonly instance: number } | null;
-    }[];
-  };
-}
+import { type BuiltProgram, codegenFixtures, loadProgram, record } from "./support/programs.js";
 
 type IrValue = Readonly<Record<string, unknown>>;
 
@@ -66,62 +51,25 @@ interface IrEntity {
   } | null;
 }
 
-interface IrScene {
+interface IrItem {
   readonly kind: string;
   readonly symbol: string;
+  readonly cpuReachable?: boolean;
   readonly cameras: readonly IrCamera[];
   readonly entities: readonly IrEntity[];
 }
 
 interface IrProgram {
   readonly entryScene: string;
-  readonly modules: readonly { readonly items: readonly IrScene[] }[];
+  readonly modules: readonly { readonly items: readonly IrItem[] }[];
 }
 
 type Writer = (m: Views, base: number, v: unknown) => void;
 
-interface LoadedProgram {
-  readonly module: Readonly<Record<string, unknown>>;
-  readonly appUrl: string;
-  readonly manifest: Manifest;
-  readonly ir: IrProgram;
-}
+const fixtures = codegenFixtures();
 
-/** The codegen fixtures: directories under tests/codegen with an mtek.toml. */
-const fixtures = readdirSync(codegenDir)
-  .filter((name) => existsSync(resolve(codegenDir, name, "mtek.toml")))
-  .sort();
-
-const RUNTIME_LINE = /^export \{ mountMtek \} from "\.\/(runtime\.[0-9a-f]{16}\.js)";$/m;
-
-function record(value: unknown, where: string): Readonly<Record<string, unknown>> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new Error(`${where}: expected an object`);
-  }
-  return value as Readonly<Record<string, unknown>>;
-}
-
-/** Copies the golden dist/ and adds a stand-in for the runtime bundle, then imports app.js. */
-async function load(name: string): Promise<LoadedProgram> {
-  const target = resolve(outDir, "programs", name);
-  rmSync(target, { recursive: true, force: true });
-  cpSync(resolve(codegenDir, name, "expected"), target, { recursive: true });
-  // app.js.map names the project-relative sources (decision 0030); put them where it says.
-  cpSync(resolve(codegenDir, name, "src"), resolve(target, "src"), { recursive: true });
-  const appFile = resolve(target, "app.js");
-  const runtime = RUNTIME_LINE.exec(readFileSync(appFile, "utf8"))?.[1];
-  if (runtime === undefined) throw new Error(`${name}: app.js has no runtime re-export line`);
-  writeFileSync(
-    resolve(target, runtime),
-    'export function mountMtek() { throw new Error("test stand-in for the runtime"); }\n',
-  );
-  const appUrl = pathToFileURL(appFile).href;
-  const module = record(await import(/* @vite-ignore */ appUrl), name);
-  const manifest = JSON.parse(readFileSync(resolve(target, "program.manifest.json"), "utf8")) as Manifest;
-  const ir = JSON.parse(
-    readFileSync(resolve(codegenDir, "ir", `${name}.ir.json`), "utf8"),
-  ) as IrProgram;
-  return { module, appUrl, manifest, ir };
+function irOf(program: BuiltProgram): IrProgram {
+  return program.ir as IrProgram;
 }
 
 /** The CPU representation (spec/runtime-abi.md section 4.1) of a typed IR constant. */
@@ -208,14 +156,34 @@ function expectedCalls(ir: IrProgram): SetterCall[] {
 }
 
 describe("the generated program module", () => {
-  it("covers the two M1 scene fixtures", () => {
-    expect(fixtures).toEqual(["scene_a_target_camera_box", "scene_b_orthographic_nested"]);
+  it("covers the M1 scene fixtures and the function fixtures", () => {
+    expect(fixtures).toEqual([
+      "cpu_functions",
+      "numeric_cpu_table",
+      "scene_a_target_camera_box",
+      "scene_b_orthographic_nested",
+    ]);
   });
 
   for (const name of fixtures) {
     describe(name, () => {
+      it("is the golden build with the real runtime in place of the stub", async () => {
+        const program = await loadProgram(name);
+        const expected = resolve(codegenDir, name, "expected");
+        const golden = readFileSync(resolve(expected, "app.js"), "utf8");
+        const stub = /runtime\.[0-9a-f]{16}\.js/.exec(golden)?.[0] ?? "";
+        expect(stub).not.toBe("");
+        expect(program.runtimeFile).not.toBe(stub);
+        expect(program.appText).toBe(golden.split(stub).join(program.runtimeFile));
+        for (const file of ["app.js.map", "program.manifest.json", "app.d.ts", "index.html"]) {
+          expect(readFileSync(resolve(program.dir, file), "utf8"), file).toBe(
+            readFileSync(resolve(expected, file), "utf8"),
+          );
+        }
+      });
+
       it("has exactly the ABI-1 export surface", async () => {
-        const { module, appUrl, manifest } = await load(name);
+        const { module, appUrl, manifest } = await loadProgram(name);
         expect(Object.keys(module).sort()).toEqual([
           "abi",
           "baseUrl",
@@ -242,7 +210,6 @@ describe("the generated program module", () => {
           "prefabs",
         ]);
         for (const key of Object.keys(program)) expect(program[key]).toBe(module[key]);
-        expect(module["functions"]).toEqual({});
         expect(module["prefabs"]).toEqual({});
 
         const scenes = record(module["scenes"], "scenes");
@@ -267,19 +234,35 @@ describe("the generated program module", () => {
         expect(scene["bindings"]).toEqual([]);
       });
 
+      it("registers every CPU-reachable function by symbol and as a manifest symbol", async () => {
+        const program = await loadProgram(name);
+        const reachable = irOf(program)
+          .modules.flatMap((m) => m.items)
+          .filter((item) => item.kind === "function" && item.cpuReachable === true)
+          .map((item) => item.symbol);
+        const functions = record(program.module["functions"], "functions");
+        expect(Object.keys(functions)).toEqual(reachable);
+        for (const symbol of reachable) expect(typeof functions[symbol]).toBe("function");
+        expect(
+          program.manifest.symbols.filter((s) => s.kind === "function").map((s) => s.id),
+        ).toEqual(reachable);
+      });
+
       it("init sets every camera, transform, visibility and param value through ctx", async () => {
-        const { module, manifest, ir } = await load(name);
+        const program = await loadProgram(name);
+        const { module, manifest } = program;
         const scene = record(record(module["scenes"], "scenes")[manifest.entryScene], "scene");
         const init = scene["init"] as (ctx: unknown) => void;
-        const { ctx, calls } = createFakeContext(manifest.scene.entities.length);
+        const { ctx, calls, warnings } = createFakeContext(manifest.scene.entities.length);
         init(ctx);
-        const expected = expectedCalls(ir);
         expect(calls.length).toBeGreaterThan(0);
-        expect(calls).toStrictEqual(expected);
+        expect(calls).toStrictEqual(expectedCalls(irOf(program)));
+        expect(warnings).toEqual([]);
       });
 
       it("has a writer for every layout, agreeing with the independent encoder", async () => {
-        const { module, manifest, ir } = await load(name);
+        const program = await loadProgram(name);
+        const { module, manifest } = program;
         const writers = record(module["writers"], "writers");
         expect(Object.keys(writers)).toEqual(manifest.layouts.map((l) => l.id));
         for (const layout of manifest.layouts) {
@@ -290,7 +273,7 @@ describe("the generated program module", () => {
         }
         // Each entity's material params, written by the material's whole-block writer, give the
         // bytes the independent encoder computes from the layout record alone.
-        const calls = expectedCalls(ir);
+        const calls = expectedCalls(irOf(program));
         for (const entity of manifest.scene.entities) {
           if (entity.material === null) continue;
           const materialId = entity.material.id;

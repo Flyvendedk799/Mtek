@@ -6,8 +6,9 @@
 //! column]`; original lines and columns are 0-based and columns count UTF-16 code units, as
 //! the format expects. `sources` lists the project-relative paths of the referenced `.mtek`
 //! files in file-id order; the map carries no `sourcesContent` (no source text is shipped,
-//! decision 0019). M1 maps the statements of the scene initialiser; M2-07 maps every
-//! expression.
+//! decision 0019). The statements of the scene initialiser, and every function, statement and
+//! expression of the emitted CPU functions, are mapped (decision 0040); where several start at
+//! one generated position, the outermost keeps it.
 
 use serde::Serialize;
 
@@ -143,6 +144,17 @@ mod tests {
         assert_eq!(vlq(123), "2H");
         assert_eq!(vlq(1000), "w+B");
         assert_eq!(vlq(-2_147_483_648), "hgggggE");
+        // Digit boundaries (5 bits per digit, the sign in the lowest bit of the first).
+        assert_eq!(vlq(31), "+B");
+        assert_eq!(vlq(-31), "/B");
+        assert_eq!(vlq(32), "gC");
+        assert_eq!(vlq(-32), "hC");
+        assert_eq!(vlq(511), "+f");
+        assert_eq!(vlq(512), "ggB");
+        assert_eq!(vlq(-1000), "x+B");
+        assert_eq!(vlq(1_000_000), "gkh9B");
+        assert_eq!(vlq(2_147_483_647), "+/////D");
+        assert_eq!(vlq(4_294_967_295), "+/////H");
     }
 
     #[test]
