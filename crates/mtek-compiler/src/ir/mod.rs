@@ -12,29 +12,32 @@
 //! it holds what M1 programs contain: module constants, and scenes with their
 //! fields, constants, cameras and a flat entity list (stable instance order,
 //! with parent indices) whose meshes and material instances are complete
-//! descriptors.
+//! descriptors. Structs (decision 0035) and functions with typed bodies,
+//! effect level and reachability (decision 0038) are items too.
 //!
 //! [`lower_to_ir`] builds it from an [`Analysis`] without errors;
 //! [`to_json`] and [`to_human`] are the two forms of `mtek inspect --ir`
 //! ([`crate::inspect`]).
 
 mod lower;
+mod lower_fn;
 mod model;
 mod render;
 #[cfg(test)]
 mod tests;
 
 pub use model::{
-    Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module, NamedValue,
-    Origin, Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source,
-    StructFieldItem, StructItem, Symbol, Value,
+    Block, Branch, Camera, Const, Entity, Expr, ExprKind, Field, Function, Item, LocalItem,
+    LocalKind, MaterialInstanceDesc, Mesh, MeshDesc, Module, NamedExpr, NamedValue, Origin, Param,
+    Place, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, Stmt, StructFieldItem,
+    StructItem, Symbol, Value,
 };
 pub use render::{to_human, to_json};
 
 use crate::project::Project;
 use crate::resolve::Resolution;
 use crate::syntax::ast;
-use crate::types::Typeck;
+use crate::types::{ProgramEffects, Typeck};
 use crate::{Analysis, ModuleUnit};
 
 /// Why [`lower_to_ir`] produced no program.
@@ -62,6 +65,7 @@ pub fn lower_to_ir(analysis: &Analysis) -> Result<Program, LowerError> {
         analysis.resolution.as_ref(),
         analysis.types.as_ref(),
         &analysis.dependencies,
+        &analysis.effects,
     )
 }
 
@@ -73,6 +77,7 @@ pub(crate) fn lower_parts(
     resolution: Option<&Resolution>,
     types: Option<&Typeck>,
     dependencies: &[ModuleUnit],
+    effects: &ProgramEffects,
 ) -> Result<Program, LowerError> {
     let (Some(project), Some(module), Some(resolution), Some(types)) =
         (project, module, resolution, types)
@@ -93,5 +98,5 @@ pub(crate) fn lower_parts(
             types: &unit.types,
         }))
         .collect();
-    lower::lower(project, &units).map_err(LowerError::Internal)
+    lower::lower(project, &units, effects).map_err(LowerError::Internal)
 }

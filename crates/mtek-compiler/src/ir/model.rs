@@ -94,7 +94,7 @@ impl Program {
             .flat_map(|module| module.items.iter())
             .filter_map(|item| match item {
                 Item::Scene(scene) => Some(scene),
-                Item::Const(_) | Item::Struct(_) => None,
+                Item::Const(_) | Item::Struct(_) | Item::Function(_) => None,
             })
     }
 }
@@ -125,6 +125,263 @@ pub enum Item {
     Scene(Scene),
     /// A user struct declaration (M2-01, decision 0035 item 6).
     Struct(StructItem),
+    /// A `fn` or `cpu fn` with its typed body (M2-02, decision 0038).
+    Function(Function),
+}
+
+/// A function declaration with its typed body (decision 0038): the input of
+/// shader lowering (the GPU-reachable `fn`s) and of the CPU emitter.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Function {
+    pub name: String,
+    pub symbol: Symbol,
+    /// `pure` for `fn`, `cpu` for `cpu fn` (`spec/language.md` 8.3).
+    pub effect: &'static str,
+    /// A GPU root (a material stage function) reaches it through `fn`s: it
+    /// is compiled to WGSL.
+    pub gpu_reachable: bool,
+    /// CPU code (a `cpu fn`, a lifecycle function or handler) reaches it: it
+    /// is compiled for the CPU.
+    pub cpu_reachable: bool,
+    /// The result type as Mtek spells it; `None` for a function without
+    /// `->`.
+    pub result: Option<String>,
+    /// Every parameter, local and loop variable: the parameters first, in
+    /// order, then the others in the order they are declared. Statements and
+    /// expressions refer to them by `index` (names may repeat in sibling
+    /// blocks).
+    pub locals: Vec<LocalItem>,
+    pub body: Block,
+    /// The whole declaration.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+impl Function {
+    /// The parameters, in order.
+    pub fn params(&self) -> impl Iterator<Item = &LocalItem> {
+        self.locals
+            .iter()
+            .filter(|local| local.kind == LocalKind::Param)
+    }
+}
+
+/// A parameter, local or loop variable of a [`Function`].
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalItem {
+    /// Its position in [`Function::locals`].
+    pub index: u32,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub ty: String,
+    pub kind: LocalKind,
+    /// The declared name.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// What declares a local.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LocalKind {
+    Param,
+    Let,
+    Var,
+    /// The variable of a `for` loop.
+    Loop,
+}
+
+/// `{ statements }`.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Block {
+    pub stmts: Vec<Stmt>,
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// A statement (`spec/language.md` section 7).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum Stmt {
+    /// `let`: the local `local` (an index into [`Function::locals`]).
+    Let {
+        local: u32,
+        value: Expr,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// `var`.
+    Var {
+        local: u32,
+        value: Expr,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// A block constant; its uses are folded, it is listed for completeness.
+    Const {
+        name: String,
+        #[serde(rename = "type")]
+        ty: String,
+        value: Value,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// `target = value;` or `target op= value;` (`op` is `=`, `+=`, `-=`,
+    /// `*=` or `/=`; a compound assignment evaluates the place once).
+    Assign {
+        target: Place,
+        op: &'static str,
+        value: Expr,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// `if c0 { … } else if c1 { … } else { … }`: the branches in order and
+    /// the final `else`.
+    If {
+        branches: Vec<Branch>,
+        #[serde(rename = "else")]
+        otherwise: Option<Block>,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// `for local in start..end { … }` (`i32` or `u32`, `end` exclusive).
+    ForRange {
+        local: u32,
+        start: Expr,
+        end: Expr,
+        body: Block,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// `for local in array { … }`, each element by value.
+    ForEach {
+        local: u32,
+        array: Expr,
+        body: Block,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    Return {
+        value: Option<Expr>,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    Break {
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    Continue {
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// A nested block.
+    Block { body: Block },
+    /// A call whose result (if any) is discarded.
+    Expr {
+        expr: Expr,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+}
+
+/// One `if`/`else if` branch.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Branch {
+    pub cond: Expr,
+    pub body: Block,
+}
+
+/// An assignable place: a `var` local, or one component of a vector place.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum Place {
+    Local {
+        local: u32,
+        #[serde(rename = "type")]
+        ty: String,
+    },
+    /// Component `index` (0 for `.x`) of a vector place.
+    Component { base: Box<Place>, index: u32 },
+}
+
+/// A typed expression: what it computes, its type and its span. Every
+/// constant expression is folded into an [`ExprKind::Const`] (folding is
+/// mandatory, `spec/language.md` 6.3).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct Expr {
+    #[serde(flatten)]
+    pub kind: ExprKind,
+    /// The type as Mtek spells it.
+    #[serde(rename = "type")]
+    pub ty: String,
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// The forms of an [`Expr`].
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum ExprKind {
+    /// A folded constant.
+    Const { value: Value },
+    /// A parameter, local or loop variable.
+    Local { local: u32, name: String },
+    /// `-x` or `!x`.
+    Unary {
+        op: &'static str,
+        operand: Box<Expr>,
+    },
+    /// `a op b`; `&&` and `||` short-circuit on the CPU.
+    Binary {
+        op: &'static str,
+        lhs: Box<Expr>,
+        rhs: Box<Expr>,
+    },
+    /// A call of a user function.
+    Call { function: Symbol, args: Vec<Expr> },
+    /// A call of a built-in function: a global intrinsic (`sin`) or a
+    /// namespace function (`quat.axis_angle`), the overload given by the
+    /// argument types.
+    Builtin { function: String, args: Vec<Expr> },
+    /// A vector constructor (`vec3(…)`: components, splat or composition, by
+    /// the argument types).
+    Construct { args: Vec<Expr> },
+    /// A numeric conversion to the expression's type (`f32(x)`).
+    Convert { arg: Box<Expr> },
+    /// Components of a vector, `quat` or `color` (0 for `.x`/`.r`); several
+    /// for a swizzle.
+    Components {
+        base: Box<Expr>,
+        components: Vec<u32>,
+    },
+    /// A field of a struct value, with its position in the declaration.
+    Field {
+        base: Box<Expr>,
+        field: String,
+        index: u32,
+    },
+    /// `base[index]` of an array or `mat4`; a run-time index is clamped.
+    Index { base: Box<Expr>, index: Box<Expr> },
+    /// An array literal.
+    Array { elements: Vec<Expr> },
+    /// A struct literal, its fields in declaration order (decision 0038).
+    Struct { fields: Vec<NamedExpr> },
+    /// A descriptor literal of a registry schema, its fields as written.
+    Descriptor {
+        schema: String,
+        fields: Vec<NamedExpr>,
+    },
+}
+
+/// A named field value of a struct or descriptor literal.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct NamedExpr {
+    pub name: String,
+    pub value: Expr,
 }
 
 /// A struct declaration: its fields in declaration order with their types.

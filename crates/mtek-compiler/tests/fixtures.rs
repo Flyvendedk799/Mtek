@@ -1617,8 +1617,6 @@ fn the_syntax_corpus_resolves_without_panicking() {
 /// that implement them.
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
-    ("W2010", "M2-02: functions and statements"),
-    ("W3081", "M2-02: functions and statements"),
     ("E4020", "M2-04: materials"),
     ("E4021", "M2-04: materials"),
     ("E4030", "M2-04: materials"),

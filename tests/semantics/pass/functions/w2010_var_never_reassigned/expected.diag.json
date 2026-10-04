@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-W2010",
+    "file": "src/main.mtek",
+    "startByte": 41,
+    "endByte": 42,
+    "message": "The variable 'a' is never reassigned; declare it with `let`.",
+    "notes": [
+      "help: `var` is for locals that are assigned after their declaration"
+    ]
+  }
+]

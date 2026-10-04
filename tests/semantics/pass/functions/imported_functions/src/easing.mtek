@@ -1,0 +1,7 @@
+export struct Curve {
+    power: f32;
+}
+
+export fn ease(t: f32, c: Curve) -> f32 {
+    return pow(t, c.power);
+}

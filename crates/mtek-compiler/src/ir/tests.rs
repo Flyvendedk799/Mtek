@@ -362,3 +362,106 @@ fn the_entry_scene_is_the_configured_one_and_every_scene_is_lowered() {
         Some("src/main.mtek::Second.Main")
     );
 }
+
+// ----- functions (decision 0038) -------------------------------------------
+
+fn functions(program: &Program) -> Vec<&Function> {
+    program
+        .modules
+        .iter()
+        .flat_map(|m| m.items.iter())
+        .filter_map(|item| match item {
+            Item::Function(function) => Some(function),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn functions_carry_effects_reachability_locals_and_folded_bodies() {
+    let mut fs = project(
+        "import { ease } from \"./lib.mtek\";
+fn shade(t: f32) -> f32 { let k = 2.0 * 3.0; return ease(t) * k; }
+cpu fn tick() { var x = 1; x += shade(0.5) > 0.0 && true == true; }
+scene Demo { camera Main {} }
+",
+    );
+    fs.insert(
+        ProjectPath::new("src/lib.mtek").unwrap(),
+        "export fn ease(t: f32) -> f32 { return t * t; }\n",
+    );
+    let options = crate::AnalyzeOptions {
+        gpu_root_functions: vec!["src/main.mtek::shade".to_owned()],
+    };
+    let analysis = crate::analyze_with(&ProjectRoot::at_base(), &fs, &options);
+    // `x += bool` does not type-check: no IR.
+    assert!(analysis.has_errors());
+    assert_eq!(lower_to_ir(&analysis), Err(LowerError::HasErrors));
+
+    let mut fs = project(
+        "import { ease } from \"./lib.mtek\";
+fn shade(t: f32) -> f32 { let k = 2.0 * 3.0; return ease(t) * k; }
+cpu fn tick() -> f32 { return shade(0.5); }
+scene Demo { camera Main {} }
+",
+    );
+    fs.insert(
+        ProjectPath::new("src/lib.mtek").unwrap(),
+        "export fn ease(t: f32) -> f32 { return t * t; }\n",
+    );
+    let analysis = crate::analyze_with(&ProjectRoot::at_base(), &fs, &options);
+    let program = lower_to_ir(&analysis).unwrap();
+    let all = functions(&program);
+    let names: Vec<(&str, &str, bool, bool)> = all
+        .iter()
+        .map(|f| {
+            (
+                f.symbol.as_str(),
+                f.effect,
+                f.gpu_reachable,
+                f.cpu_reachable,
+            )
+        })
+        .collect();
+    assert_eq!(
+        names,
+        [
+            ("src/main.mtek::shade", "pure", true, true),
+            ("src/main.mtek::tick", "cpu", false, true),
+            ("src/lib.mtek::ease", "pure", true, true),
+        ]
+    );
+    let shade = all[0];
+    let locals: Vec<(&str, LocalKind)> = shade
+        .locals
+        .iter()
+        .map(|l| (l.name.as_str(), l.kind))
+        .collect();
+    assert_eq!(locals, [("t", LocalKind::Param), ("k", LocalKind::Let)]);
+    assert_eq!(shade.params().count(), 1);
+    // `2.0 * 3.0` is folded; the call of the imported function names the
+    // module that declares it.
+    let Stmt::Let { value, .. } = &shade.body.stmts[0] else {
+        panic!("{:?}", shade.body.stmts[0])
+    };
+    assert_eq!(
+        value.kind,
+        ExprKind::Const {
+            value: Value::F32(6.0)
+        }
+    );
+    let Stmt::Return {
+        value: Some(ret), ..
+    } = &shade.body.stmts[1]
+    else {
+        panic!("{:?}", shade.body.stmts[1])
+    };
+    let ExprKind::Binary { lhs, .. } = &ret.kind else {
+        panic!("{ret:?}")
+    };
+    let ExprKind::Call { function, args } = &lhs.kind else {
+        panic!("{lhs:?}")
+    };
+    assert_eq!(function.as_str(), "src/lib.mtek::ease");
+    assert_eq!(args.len(), 1);
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "MTEK-W3081",
+    "file": "src/main.mtek",
+    "startByte": 119,
+    "endByte": 139,
+    "message": "Unreachable code: it follows a `return`, which always leaves the block.",
+    "related": [
+      {
+        "message": "control leaves the block here",
+        "file": "src/main.mtek",
+        "startByte": 97,
+        "endByte": 106
+      }
+    ]
+  }
+]

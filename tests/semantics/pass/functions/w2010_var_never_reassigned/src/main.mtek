@@ -1,0 +1,8 @@
+fn area(w: f32, h: f32) -> f32 {
+    var a = w * h;
+    return a;
+}
+
+scene Demo {
+    camera Main {}
+}

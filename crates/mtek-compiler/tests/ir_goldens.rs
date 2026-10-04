@@ -3,7 +3,9 @@
 //! * Goldens: `tests/codegen/ir/<fixture>.ir.json` (`--format json`) and
 //!   `<fixture>.ir.txt` (`--format human`) for the two structurally
 //!   different M1 scenes, the pass fixtures `scene_a_target_camera_box` and
-//!   `scene_b_orthographic_nested` of `tests/semantics/pass/`. Rewrite them
+//!   `scene_b_orthographic_nested` of `tests/semantics/pass/`, and for
+//!   `functions_statements_and_calls`, every statement and expression form
+//!   of a function body (decision 0038). Rewrite them
 //!   with `MTEK_BLESS=1 cargo test -p mtek-compiler --test ir_goldens` and
 //!   review the diff like code.
 //! * Determinism (`spec/compiler-architecture.md` section 5): every semantic
@@ -23,8 +25,13 @@ use mtek_compiler::source::{MemFs, ProjectPath};
 use mtek_compiler::{Inspect, InspectFormat, InspectResult, check, inspect};
 use serde_json::Value;
 
-/// The fixtures with IR goldens: pass scenes A and B of M1-11.
-const GOLDEN_FIXTURES: [&str; 2] = ["scene_a_target_camera_box", "scene_b_orthographic_nested"];
+/// The fixtures with IR goldens: pass scenes A and B of M1-11 and the
+/// function bodies of M2-02.
+const GOLDEN_FIXTURES: [&str; 3] = [
+    "scene_a_target_camera_box",
+    "scene_b_orthographic_nested",
+    "functions_statements_and_calls",
+];
 
 fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
