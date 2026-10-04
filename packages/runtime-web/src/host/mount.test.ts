@@ -367,6 +367,35 @@ const FAILURE_CASES: readonly FailureCase[] = [
     mention: "could not be loaded",
   },
   {
+    name: "a render pipeline that cannot be created",
+    kind: "shader-failed",
+    code: "MTEK-E8051",
+    host: () => hostWith({ adapter: { pipelineError: () => "vertex attribute location 0 is not provided" } }),
+    mention: "vertex attribute location 0",
+  },
+  {
+    name: "a scene structure whose references do not resolve",
+    kind: "manifest-invalid",
+    code: "MTEK-E8006",
+    host: () =>
+      hostWith({}, (manifest) => {
+        const entity = (manifest["scene"] as { entities: Record<string, unknown>[] }).entities[0];
+        if (entity !== undefined) entity["mesh"] = "mesh:7";
+      }),
+    mention: "mesh:7",
+  },
+  {
+    name: "a program module from another build (no such entry scene)",
+    kind: "incompatible-program",
+    code: "MTEK-E8003",
+    host: () =>
+      hostWith({}, (manifest) => {
+        manifest["entryScene"] = "Elsewhere";
+        (manifest["scene"] as Record<string, unknown>)["name"] = "Elsewhere";
+      }),
+    mention: "no scene 'Elsewhere'",
+  },
+  {
     name: "an out-of-memory depth texture",
     kind: "allocation-failed",
     code: "MTEK-E8063",

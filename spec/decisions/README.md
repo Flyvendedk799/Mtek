@@ -51,4 +51,5 @@ recorded here before code depends on it (blueprint §15).
 | 0028 | Typed IR and the public `check`/`inspect` API: details the specification leaves open |
 | 0029 | Shader IR, standard stage and shader artifact: details the specification leaves open |
 | 0030 | Code generation and packaging: details the specification leaves open |
+| 0031 | Runtime scene rendering: details the specification leaves open |
 | 0032 | The `mtek` command line tool: details the specification leaves open |

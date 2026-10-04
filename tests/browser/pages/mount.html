@@ -12,22 +12,24 @@
   </head>
   <body>
     <script type="module">
-      // The runtime bundle exactly as `npm run build -w @mtek/runtime-web` produces it, and a program
-      // object shaped like the default export of app.js (spec/runtime-abi.md section 3); M1 reads only
-      // abi, baseUrl and manifestUrl.
+      // The runtime bundle exactly as `npm run build -w @mtek/runtime-web` produces it, and the compiler's
+      // golden app.js of codegen fixture A (copied next to the minimal manifest by global setup), whose
+      // generated writers and init fit the manifest's layouts and its one box entity. Its scene is renamed
+      // to the manifest's entry scene `Demo`.
+      //  - `program` hides the box after init, so the M1-14 specs see the clear colour only;
+      //  - `drawingProgram` draws it (M1-18).
       import { mountMtek, MtekMountError } from "/mount/runtime.js";
+      import golden from "/mount/fixture/app.js";
+      const scene = Object.values(golden.scenes)[0];
+      const withInit = (init) => ({ ...golden, scenes: { Demo: { ...scene, init } } });
       window.__mtek = {
         mountMtek,
         MtekMountError,
-        program: {
-          abi: 1,
-          baseUrl: new URL("/mount/fixture/", location.href),
-          manifestUrl: new URL("/mount/fixture/program.manifest.json", location.href),
-          writers: {},
-          functions: {},
-          scenes: {},
-          prefabs: {},
-        },
+        program: withInit((ctx) => {
+          scene.init(ctx);
+          ctx.setVisible(ctx.e[0], false);
+        }),
+        drawingProgram: withInit(scene.init),
       };
     </script>
   </body>

@@ -2,13 +2,14 @@
  * `mountMtek` (`spec/runtime-abi.md` section 6.1, M1 subset).
  *
  * Steps, in order: check the program's `abi`; fetch and validate the manifest (compatibility first, then
- * the schema); acquire the device with the manifest's required capabilities; compare the wgsl language
- * features; configure the canvas with the preferred format and its sRGB view format; create the depth
- * texture; load every startup shader and await its compilation info; flush pending validation results;
- * resolve with the application handle.
+ * the schema); resolve the scene structure and check the program module against the manifest; acquire
+ * the device with the manifest's required capabilities; compare the wgsl language features; configure the
+ * canvas with the preferred format and its sRGB view format; create the depth texture; load every startup
+ * shader and await its compilation info; start the scene (material arenas, the world, `init(ctx)`,
+ * transforms, mesh uploads, every startup pipeline, the renderer: `render/startup.ts`); flush pending
+ * validation results; resolve with the application handle.
  *
- * Pipeline creation is wired in by M1-18; until then the mount resolves after the shader modules exist.
- * Startup assets are not loaded yet either (no M1 program has any that the runtime reads before M1-18).
+ * Startup assets are not loaded yet (M1 programs have none; asset meshes are rejected with `E8003`).
  *
  * Every failure rejects with an `MtekMountError` of the documented kind, reports its diagnostics through
  * `onDiagnostic`, shows the overlay (unless `failureDisplay: "none"`), and leaves no live resource,
@@ -28,6 +29,9 @@ import { defaultEnvironment, type HostEnvironment } from "./environment.js";
 import { DiagnosticSink, abiFailureToDiagnostic, mountError } from "./failures.js";
 import { FailureOverlay } from "./overlay.js";
 import { loadStartupShaders } from "./shaders.js";
+import { startScene } from "../render/startup.js";
+import { checkProgram } from "../scene/program.js";
+import { resolveStructure } from "../scene/structure.js";
 import { Surface, srgbViewFormat, type CanvasFormat } from "./surface.js";
 import type { MtekApp, MtekMountOptions, MtekMountProgram } from "./types.js";
 
@@ -132,6 +136,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
   // A holder object, because the callbacks below assign it and TypeScript does not track that.
   const early: { lost?: GPUDeviceLostInfo } = {};
   const allocationFailures: MtekDiagnostic[] = [];
+  const earlyReports: MtekDiagnostic[] = [];
 
   try {
     if ((program.abi as number) !== 1) {
@@ -145,6 +150,13 @@ export async function mountMtekWith<I = Record<string, unknown>>(
     }
 
     const manifest = await loadManifest(environment, program.manifestUrl);
+
+    // The scene structure and the program module, before any device work: a broken or mismatched
+    // program fails fast. The structure is checked first (E8006 before E8003).
+    const structure = resolveStructure(manifest);
+    if (!structure.ok) throw mountError(structure.diagnostics);
+    const checked = checkProgram(program, manifest);
+    if (!checked.ok) throw mountError(checked.diagnostics);
 
     // Device. Capabilities come from the adapter's features and limits, never from the user agent.
     const required = manifest.requiredCapabilities;
@@ -233,6 +245,23 @@ export async function mountMtekWith<I = Record<string, unknown>>(
     });
     if (shaders.diagnostics.length > 0) throw mountError(shaders.diagnostics);
 
+    // The scene: init(ctx), meshes and every startup pipeline. Run-time diagnostics of init (E8090,
+    // E8011, E8100) are not fatal; they are delivered once the application exists.
+    const started = await startScene({
+      manifest,
+      structure: structure.structure,
+      program: checked.program,
+      device,
+      registry,
+      surface,
+      modules: shaders.modules,
+      report: (diagnostic) => {
+        if (app !== undefined) app.report(diagnostic);
+        else earlyReports.push(diagnostic);
+      },
+    });
+    if (!started.ok) throw mountError(started.diagnostics);
+
     // Allocation errors arrive asynchronously (the out-of-memory scopes pop after a round trip); wait
     // for the queue so none is missed. This is a mount-time wait only; ordinary frames never wait.
     await device.queue.onSubmittedWorkDone();
@@ -266,7 +295,9 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       pauseWhenHidden: options.pauseWhenHidden ?? manifest.runtimeConfig.pauseWhenHidden,
       test: options.test,
       seed,
+      scene: started.scene,
     });
+    for (const diagnostic of earlyReports) app.report(diagnostic);
     return app;
   } catch (error) {
     // Release everything acquired so far, then make the failure visible.
