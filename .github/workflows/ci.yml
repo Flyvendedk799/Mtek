@@ -46,6 +46,11 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      # `npm run build` produced packages/runtime-web/dist, so the CLI is rebuilt with the runtime
+      # embedded (cfg `mtek_runtime_embedded`) and its embedded-path tests run here; the `rust` job
+      # covers the path without the bundle (E9030).
+      - name: CLI tests with the embedded runtime
+        run: cargo test -p mtek-cli --locked
       - name: Type-check
         run: npm run check:ts
       - name: Lint
