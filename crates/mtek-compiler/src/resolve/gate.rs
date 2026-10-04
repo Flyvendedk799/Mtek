@@ -17,6 +17,7 @@
 //! row (or the registry's `since`, or the constant), never the logic.
 
 use crate::stdlib::{CURRENT_MILESTONE, Milestone};
+use crate::syntax::ast::{BinaryOp, UnaryOp};
 
 /// The milestone this compiler build implements. It is the registry's
 /// [`CURRENT_MILESTONE`] (decision 0024), so that the construct table and the
@@ -65,11 +66,23 @@ pub enum Construct {
     StringLiteral,
     ArrayLiteral,
     Index,
+    /// Unary `-` (operators: decision 0026).
+    Negation,
+    /// Binary `+`, `-`, `*`, `/`.
+    Arithmetic,
+    /// Binary `%`.
+    Remainder,
+    /// `<`, `<=`, `>`, `>=`.
+    Comparison,
+    /// `==`, `!=`.
+    Equality,
+    /// `!`, `&&`, `||`.
+    Logical,
 }
 
 impl Construct {
     /// Every construct, in declaration order.
-    pub const ALL: [Construct; 24] = [
+    pub const ALL: [Construct; 30] = [
         Construct::Import,
         Construct::Export,
         Construct::ConstItem,
@@ -94,6 +107,12 @@ impl Construct {
         Construct::StringLiteral,
         Construct::ArrayLiteral,
         Construct::Index,
+        Construct::Negation,
+        Construct::Arithmetic,
+        Construct::Remainder,
+        Construct::Comparison,
+        Construct::Equality,
+        Construct::Logical,
     ];
 }
 
@@ -118,8 +137,9 @@ const fn row(subject: &'static str, plural: bool, since: Milestone) -> Construct
 
 /// The construct table. M1 implements scenes with scene fields, `camera`
 /// objects, entities (nested), descriptor literals of M1 registry schemas and
-/// constants (task M1-09); the milestones of the rest follow the work plan
-/// (decision 0025).
+/// constants (task M1-09), and unary minus and the arithmetic operators (task
+/// M1-10); the milestones of the rest follow the work plan (decisions 0025 and
+/// 0026).
 #[must_use]
 pub const fn construct_gate(construct: Construct) -> ConstructGate {
     use Milestone::{M1, M2, M3, M5};
@@ -148,7 +168,44 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::StringLiteral => row("String literals", true, M2),
         Construct::ArrayLiteral => row("Array literals", true, M2),
         Construct::Index => row("Indexing (`a[i]`)", false, M2),
+        // Operators (decision 0026): M1 types and folds unary minus and the
+        // four arithmetic operators; the others produce or consume `bool` or
+        // need the run-time math library, and land with statements.
+        Construct::Negation => row("Unary minus", false, M1),
+        Construct::Arithmetic => row("Arithmetic operators", true, M1),
+        Construct::Remainder => row("The remainder operator `%`", false, M2),
+        Construct::Comparison => row("Comparison operators (`<`, `<=`, `>`, `>=`)", true, M2),
+        Construct::Equality => row("Equality operators (`==`, `!=`)", true, M2),
+        Construct::Logical => row("Logical operators (`!`, `&&`, `||`)", true, M2),
     }
+}
+
+/// The construct a unary operator belongs to.
+#[must_use]
+pub const fn unary_construct(op: UnaryOp) -> Construct {
+    match op {
+        UnaryOp::Neg => Construct::Negation,
+        UnaryOp::Not => Construct::Logical,
+    }
+}
+
+/// The construct a binary operator belongs to.
+#[must_use]
+pub const fn binary_construct(op: BinaryOp) -> Construct {
+    match op {
+        BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div => Construct::Arithmetic,
+        BinaryOp::Rem => Construct::Remainder,
+        BinaryOp::Lt | BinaryOp::Le | BinaryOp::Gt | BinaryOp::Ge => Construct::Comparison,
+        BinaryOp::Eq | BinaryOp::Ne => Construct::Equality,
+        BinaryOp::And | BinaryOp::Or => Construct::Logical,
+    }
+}
+
+/// Whether this build implements `construct`. The type checker asks the
+/// same table, so it never types what the resolver reported as `E9010`.
+#[must_use]
+pub const fn construct_implemented(construct: Construct) -> bool {
+    is_implemented(construct_gate(construct).since)
 }
 
 /// Whether something added in `since` is implemented by this build.
@@ -206,6 +263,8 @@ mod tests {
             Construct::Entity,
             Construct::EntityField,
             Construct::Descriptor,
+            Construct::Negation,
+            Construct::Arithmetic,
         ] {
             assert!(
                 is_implemented(construct_gate(construct).since),
@@ -229,6 +288,10 @@ mod tests {
             Construct::StringLiteral,
             Construct::ArrayLiteral,
             Construct::Index,
+            Construct::Remainder,
+            Construct::Comparison,
+            Construct::Equality,
+            Construct::Logical,
         ] {
             assert!(
                 !is_implemented(construct_gate(construct).since),
@@ -268,6 +331,28 @@ mod tests {
         );
         let camera = registry.scene_object("camera").map(|k| k.since);
         assert_eq!(Some(construct_gate(Construct::SceneObject).since), camera);
+    }
+
+    #[test]
+    fn every_operator_belongs_to_one_construct() {
+        use BinaryOp::*;
+        for op in [Add, Sub, Mul, Div] {
+            assert_eq!(binary_construct(op), Construct::Arithmetic);
+        }
+        assert_eq!(binary_construct(Rem), Construct::Remainder);
+        for op in [Lt, Le, Gt, Ge] {
+            assert_eq!(binary_construct(op), Construct::Comparison);
+        }
+        for op in [Eq, Ne] {
+            assert_eq!(binary_construct(op), Construct::Equality);
+        }
+        for op in [And, Or] {
+            assert_eq!(binary_construct(op), Construct::Logical);
+        }
+        assert_eq!(unary_construct(UnaryOp::Neg), Construct::Negation);
+        assert_eq!(unary_construct(UnaryOp::Not), Construct::Logical);
+        assert!(construct_implemented(Construct::Arithmetic));
+        assert!(!construct_implemented(Construct::Logical));
     }
 
     #[test]

@@ -4,7 +4,10 @@
 use std::collections::BTreeMap;
 
 use super::defs::{Def, DefId, DefKind, PreludeItem, Res, Resolution};
-use super::gate::{Construct, construct_gate, gate_message, gate_note, is_implemented};
+use super::gate::{
+    Construct, binary_construct, construct_gate, gate_message, gate_note, is_implemented,
+    unary_construct,
+};
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
 use crate::project::edit_distance;
 use crate::source::Span;
@@ -1145,10 +1148,16 @@ impl<'a> Resolver<'a> {
                 self.leave(entered);
             }
             ExprKind::Descriptor { name, fields } => self.descriptor(expr.span, name, fields),
-            ExprKind::Unary { operand, .. } => self.expr(operand),
-            ExprKind::Binary { lhs, rhs, .. } => {
+            ExprKind::Unary { op, operand } => {
+                let entered = self.enter(unary_construct(*op), expr.span);
+                self.expr(operand);
+                self.leave(entered);
+            }
+            ExprKind::Binary { op, lhs, rhs, .. } => {
+                let entered = self.enter(binary_construct(*op), expr.span);
                 self.expr(lhs);
                 self.expr(rhs);
+                self.leave(entered);
             }
             ExprKind::Call { callee, args } => {
                 self.callee(callee);
@@ -1156,7 +1165,7 @@ impl<'a> Resolver<'a> {
                     self.expr(arg);
                 }
             }
-            ExprKind::Field { base, name } => self.field_access(base, name),
+            ExprKind::Field { base, name } => self.field_access(expr.span, base, name),
             ExprKind::Index { base, index } => {
                 let entered = self.enter(Construct::Index, expr.span);
                 self.expr(base);
@@ -1244,7 +1253,7 @@ impl<'a> Resolver<'a> {
         self.set_res(callee.id, res);
     }
 
-    fn field_access(&mut self, base: &Expr, name: &Ident) {
+    fn field_access(&mut self, span: Span, base: &Expr, name: &Ident) {
         let ExprKind::Name(base_name) = &base.kind else {
             self.expr(base);
             self.set_res(name.id, Res::Field);
@@ -1309,6 +1318,22 @@ impl<'a> Resolver<'a> {
             _ => {
                 self.set_res(base.id, res);
                 self.set_res(name.id, Res::Field);
+                // Reading a field of a named entity or scene object is gated
+                // by the field's own `since`, like writing it (decision 0026).
+                let schema = match res {
+                    Res::Def(id) => match self.def_kind(id) {
+                        Some(DefKind::Entity) => Some(ENTITY_SCHEMA),
+                        Some(DefKind::SceneObject { kind: Some(kind) }) => {
+                            self.registry.scene_object(kind).map(|k| k.schema)
+                        }
+                        _ => None,
+                    },
+                    _ => None,
+                };
+                if let Some(schema) = schema {
+                    let entered = self.enter_field(schema, name, span);
+                    self.leave(entered);
+                }
             }
         }
     }

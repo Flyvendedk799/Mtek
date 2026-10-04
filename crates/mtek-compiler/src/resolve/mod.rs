@@ -54,7 +54,10 @@ mod resolver;
 mod tests;
 
 pub use defs::{Def, DefId, DefKind, PreludeItem, Res, Resolution};
-pub use gate::{Construct, ConstructGate, IMPLEMENTED_MILESTONE, construct_gate};
+pub use gate::{
+    Construct, ConstructGate, IMPLEMENTED_MILESTONE, binary_construct, construct_gate,
+    construct_implemented, unary_construct,
+};
 
 use crate::diagnostics::Diagnostics;
 use crate::syntax::ast::Module;
