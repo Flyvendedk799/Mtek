@@ -320,17 +320,17 @@ function f_e2cab98b_in_range(ctx, a_x, a_lo, a_hi) {
   return a_lo <= a_x && a_x < a_hi;
 }
 
-// fn make_wave(a: f32) -> Wave (src/main.mtek::make_wave)
+// fn make_wave(a: f32) -> src/main.mtek::Wave (src/main.mtek::make_wave)
 function f_e2cab98b_make_wave(ctx, a_a) {
   return { amplitude: fr(a_a * 2.0), offset: rt.v3(a_a, 0.0, -a_a) };
 }
 
-// fn wave_at(w: Wave, t: f32) -> vec3 (src/main.mtek::wave_at)
+// fn wave_at(w: src/main.mtek::Wave, t: f32) -> vec3 (src/main.mtek::wave_at)
 function f_e2cab98b_wave_at(ctx, a_w, a_t) {
   return rt.v3scale(a_w.offset, fr(a_w.amplitude * a_t));
 }
 
-// fn wave_sum(waves: array<Wave, 2>) -> f32 (src/main.mtek::wave_sum)
+// fn wave_sum(waves: array<src/main.mtek::Wave, 2>) -> f32 (src/main.mtek::wave_sum)
 function f_e2cab98b_wave_sum(ctx, a_waves) {
   let l_total = 0.0;
   for (const l_w of a_waves) {

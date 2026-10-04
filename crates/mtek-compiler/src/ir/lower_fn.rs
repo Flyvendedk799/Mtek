@@ -76,7 +76,7 @@ impl Lowering<'_> {
             },
             gpu_reachable: effect.gpu_reachable,
             cpu_reachable: effect.cpu_reachable,
-            result: (info.sig.ret != TyId::UNIT).then(|| self.types.display(info.sig.ret)),
+            result: (info.sig.ret != TyId::UNIT).then(|| self.type_name(info.sig.ret)),
             locals: lowering.locals,
             body,
             span: decl.span,
@@ -115,7 +115,7 @@ impl Lowering<'_> {
             }
             params.push(MaterialParamItem {
                 name: param.name.clone(),
-                ty: self.types.display(param.ty),
+                ty: self.type_name(param.ty),
                 default: param.default.as_ref().map(Value::from),
                 span: param.span,
             });
@@ -219,7 +219,7 @@ impl FnLowering<'_, '_> {
     }
 
     fn display(&self, ty: TyId) -> String {
-        self.lowering.types.display(ty)
+        self.lowering.type_name(ty)
     }
 
     /// Add a local to the table.

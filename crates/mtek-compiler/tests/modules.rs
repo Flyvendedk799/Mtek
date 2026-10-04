@@ -637,7 +637,7 @@ fn struct_types_cross_modules_with_their_identity_and_fields() {
             ),
             (
                 "src/shapes.mtek::Swell",
-                serde_json::json!([{ "name": "waves", "type": "array<Wave, 2>" }, { "name": "count", "type": "u32" }])
+                serde_json::json!([{ "name": "waves", "type": "array<src/shapes.mtek::Wave, 2>" }, { "name": "count", "type": "u32" }])
             ),
         ]
     );
