@@ -4,7 +4,7 @@
 //! literals, every operator, constructors, conversions, namespace calls,
 //! swizzles, descriptors, constant references that may form cycles, names
 //! that do not resolve — and maximally nested expressions go through
-//! `mtek_compiler::check` on a thread with the compilation stack. Nothing
+//! `mtek_compiler::analyze` on a thread with the compilation stack. Nothing
 //! panics, every diagnostic has a catalogue code and severity and lies in its
 //! file, and checking twice gives the same report.
 
@@ -18,7 +18,7 @@ use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::resolve::DefKind;
 use mtek_compiler::source::{MemFs, ProjectPath};
 use mtek_compiler::types::ConstValue;
-use mtek_compiler::{CheckResult, check};
+use mtek_compiler::{Analysis, analyze};
 
 /// The stack of the compilation thread (`spec/compiler-architecture.md` 3).
 const STACK: usize = 16 * 1024 * 1024;
@@ -207,14 +207,14 @@ fn program(rng: &mut Rng) -> String {
     text
 }
 
-fn check_text(text: &str) -> CheckResult {
+fn check_text(text: &str) -> Analysis {
     let mut fs = MemFs::new();
     fs.insert(
         ProjectPath::new("mtek.toml").unwrap(),
         "[project]\nname = \"fuzz\"\nlanguage = \"0.1\"\n",
     )
     .insert(ProjectPath::new("src/main.mtek").unwrap(), text);
-    check(&ProjectRoot::at_base(), &fs)
+    analyze(&ProjectRoot::at_base(), &fs)
 }
 
 /// The invariants of one report over `text`; `Err` describes a violation.

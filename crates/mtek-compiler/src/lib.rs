@@ -25,7 +25,7 @@ pub mod syntax;
 pub mod types;
 
 mod check;
-pub use check::{CheckResult, check};
+pub use check::{Analysis, CheckResult, analyze, check};
 
 #[cfg(test)]
 mod tests {

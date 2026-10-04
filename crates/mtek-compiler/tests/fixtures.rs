@@ -67,7 +67,7 @@ use mtek_compiler::syntax::{
 };
 use mtek_compiler::types::scene::MAX_STATIC_ENTITIES;
 use mtek_compiler::types::{CheckedEntity, CheckedField, CheckedScene, ConstValue};
-use mtek_compiler::{CheckResult, check};
+use mtek_compiler::{Analysis, analyze};
 use serde_json::{Map, Value};
 
 fn syntax_dir() -> PathBuf {
@@ -873,7 +873,7 @@ fn the_benchmark_programs_parse() {
 // unless the project file says otherwise) and `expected.diag.json`. Every
 // file of the directory except `expected.diag.json` is put into an in-memory
 // file system rooted at the directory, and the project is checked with
-// `mtek_compiler::check`.
+// `mtek_compiler::analyze`.
 //
 // * `pass/<name>/` must check with zero errors; warnings, if any, are listed
 //   in `expected.diag.json`, which is absent when there are no diagnostics.
@@ -948,12 +948,12 @@ fn fixture_fs(suite: &str, name: &str, shuffle: Option<u64>) -> MemFs {
 }
 
 /// Check the fixture `<suite>/<name>`.
-fn check_fixture(suite: &str, name: &str) -> CheckResult {
-    check(&ProjectRoot::at_base(), &fixture_fs(suite, name, None))
+fn check_fixture(suite: &str, name: &str) -> Analysis {
+    analyze(&ProjectRoot::at_base(), &fixture_fs(suite, name, None))
 }
 
 /// The project-relative path of `file`.
-fn path_of(result: &CheckResult, file: FileId) -> Value {
+fn path_of(result: &Analysis, file: FileId) -> Value {
     result
         .project
         .as_ref()
@@ -962,7 +962,7 @@ fn path_of(result: &CheckResult, file: FileId) -> Value {
 }
 
 /// The `expected.diag.json` content of a check result.
-fn semantic_json(result: &CheckResult) -> String {
+fn semantic_json(result: &Analysis) -> String {
     let items: Vec<Value> = result
         .report
         .diagnostics
@@ -1016,7 +1016,7 @@ fn semantic_json(result: &CheckResult) -> String {
     text
 }
 
-fn error_count(result: &CheckResult) -> usize {
+fn error_count(result: &Analysis) -> usize {
     result
         .report
         .diagnostics
@@ -1027,7 +1027,7 @@ fn error_count(result: &CheckResult) -> usize {
 
 /// The report of `result` must be valid against `spec/diagnostic.schema.json`
 /// (`spec/diagnostics.md` 2.2: every golden diagnostic fixture is validated).
-fn assert_report_schema_valid(label: &str, result: &CheckResult) {
+fn assert_report_schema_valid(label: &str, result: &Analysis) {
     let schema: Value =
         serde_json::from_str(include_str!("../../../spec/diagnostic.schema.json")).unwrap();
     let validator = jsonschema::draft202012::new(&schema).unwrap();
@@ -1042,7 +1042,7 @@ fn assert_report_schema_valid(label: &str, result: &CheckResult) {
 }
 
 /// The checked entry scene of `result`.
-fn entry_scene(result: &CheckResult) -> &CheckedScene {
+fn entry_scene(result: &Analysis) -> &CheckedScene {
     let (Some(resolution), Some(types)) = (&result.resolution, &result.types) else {
         panic!("the project was not checked")
     };
@@ -1055,7 +1055,7 @@ fn entry_scene(result: &CheckResult) -> &CheckedScene {
 /// A program without errors has a complete checked entry scene, which the
 /// typed IR is built from: every field has a value and exactly one camera
 /// is active.
-fn assert_complete_scene(label: &str, result: &CheckResult) {
+fn assert_complete_scene(label: &str, result: &Analysis) {
     fn entity_complete(entity: &CheckedEntity) -> bool {
         entity.fields.iter().all(|f| f.value.is_some())
             && entity.children.iter().all(entity_complete)
@@ -1163,7 +1163,7 @@ fn semantic_results_are_deterministic() {
             assert_eq!(first, second, "{suite}/{name}");
             for seed in [1, 2, 3] {
                 let memory = fixture_fs(suite, &name, Some(seed));
-                let shuffled = semantic_json(&check(&ProjectRoot::at_base(), &memory));
+                let shuffled = semantic_json(&analyze(&ProjectRoot::at_base(), &memory));
                 assert_eq!(first, shuffled, "{suite}/{name} with seed {seed}");
             }
         }
@@ -1356,7 +1356,7 @@ fn too_many_static_entities_is_e5092() {
                 "[project]\nname = \"fixture\"\nlanguage = \"0.1\"\n",
             )
             .insert(ProjectPath::new("src/main.mtek").unwrap(), text.clone());
-        (check(&ProjectRoot::at_base(), &memory), text)
+        (analyze(&ProjectRoot::at_base(), &memory), text)
     };
     let (at_limit, _) = run(program(MAX_STATIC_ENTITIES / 2, false));
     assert!(

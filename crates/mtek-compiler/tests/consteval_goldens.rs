@@ -2,7 +2,7 @@
 //! 5.4, 6.3 to 6.7; task M1-10).
 //!
 //! Each case is a constant declared in a one-scene project and checked with
-//! `mtek_compiler::check`; its folded value must have exactly the expected
+//! `mtek_compiler::analyze`; its folded value must have exactly the expected
 //! bits. The expected values are computed **independently** here: colour
 //! literals from `c / 255` in `f64` through the sRGB EOTF with `libm::pow`,
 //! rounded once with `as f32`; `color.srgb` with the binary32 formula of
@@ -14,7 +14,7 @@
 // Test-only code: helper functions outside `#[test]` functions may panic.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use mtek_compiler::check;
+use mtek_compiler::analyze;
 use mtek_compiler::diagnostics::Severity;
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::resolve::DefKind;
@@ -31,7 +31,7 @@ fn fold(decl: &str) -> ConstValue {
         "[project]\nname = \"golden\"\nlanguage = \"0.1\"\n",
     )
     .insert(ProjectPath::new("src/main.mtek").unwrap(), source.as_str());
-    let result = check(&ProjectRoot::at_base(), &fs);
+    let result = analyze(&ProjectRoot::at_base(), &fs);
     let errors: Vec<_> = result
         .report
         .diagnostics

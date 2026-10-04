@@ -3,7 +3,7 @@
 //! Random scenes — any number of cameras, entities nested at random, known,
 //! unknown, duplicated and gated fields, descriptor literals of every M1
 //! schema with values in and out of range, of the right and the wrong type,
-//! constants and entity field reads — go through `mtek_compiler::check` on a
+//! constants and entity field reads — go through `mtek_compiler::analyze` on a
 //! thread with the compilation stack. Nothing panics, every diagnostic has a
 //! catalogue code and severity and lies in its file, checking twice gives the
 //! same report, and a scene without errors is complete: every field of the
@@ -19,7 +19,7 @@ use mtek_compiler::diagnostics::{Code, Severity};
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::source::{MemFs, ProjectPath};
 use mtek_compiler::types::{CheckedEntity, CheckedField};
-use mtek_compiler::{CheckResult, check};
+use mtek_compiler::{Analysis, analyze};
 
 /// The stack of the compilation thread (`spec/compiler-architecture.md` 3).
 const STACK: usize = 16 * 1024 * 1024;
@@ -167,14 +167,14 @@ fn program(rng: &mut Rng) -> String {
     text
 }
 
-fn check_text(text: &str) -> CheckResult {
+fn check_text(text: &str) -> Analysis {
     let mut fs = MemFs::new();
     fs.insert(
         ProjectPath::new("mtek.toml").unwrap(),
         "[project]\nname = \"fuzz\"\nlanguage = \"0.1\"\n",
     )
     .insert(ProjectPath::new("src/main.mtek").unwrap(), text);
-    check(&ProjectRoot::at_base(), &fs)
+    analyze(&ProjectRoot::at_base(), &fs)
 }
 
 fn complete(fields: &[CheckedField]) -> bool {
@@ -186,7 +186,7 @@ fn entity_complete(entity: &CheckedEntity) -> bool {
 }
 
 /// The invariants of one result over `text`; `Err` describes a violation.
-fn invariants(text: &str, result: &CheckResult) -> Result<(), String> {
+fn invariants(text: &str, result: &Analysis) -> Result<(), String> {
     for d in &result.report.diagnostics {
         if !Code::ALL.contains(&d.code) || d.code == Code::E9999 {
             return Err(format!("{:?} is not a catalogue code", d.code));
