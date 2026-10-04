@@ -191,9 +191,14 @@ fn the_two_m1_scenes_are_codegen_fixtures_with_the_semantic_sources() {
     let fixtures = codegen_fixtures();
     assert_eq!(
         fixtures,
-        ["scene_a_target_camera_box", "scene_b_orthographic_nested"]
+        [
+            "cpu_functions",
+            "numeric_cpu_table",
+            "scene_a_target_camera_box",
+            "scene_b_orthographic_nested"
+        ]
     );
-    for name in &fixtures {
+    for name in ["scene_a_target_camera_box", "scene_b_orthographic_nested"] {
         let ours = fs::read(codegen_dir().join(name).join("src/main.mtek")).unwrap();
         let theirs = fs::read(
             repo()

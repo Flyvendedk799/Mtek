@@ -1,0 +1,21 @@
+// A second module: imported functions are emitted under the declaring module's name, and a
+// function named like one of the entry module's gets a distinct JavaScript name.
+
+// `f32 * vec3` keeps its operand order (rt.v3smul).
+export fn scale(v: vec3, s: f32) -> vec3 {
+    return s * v;
+}
+
+// u32 addition wraps.
+export fn wrap_add(a: u32, b: u32) -> u32 {
+    return a + b;
+}
+
+// Also declared in src/main.mtek.
+fn pulse(t: f32) -> f32 {
+    return t * 2.0;
+}
+
+export fn util_pulse(t: f32) -> f32 {
+    return pulse(t);
+}

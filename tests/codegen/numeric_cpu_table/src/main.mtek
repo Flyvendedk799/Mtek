@@ -1,0 +1,1202 @@
+// Generated from tests/semantics/numeric/cpu.json by
+// crates/mtek-compiler/tests/codegen_cpu_table.rs; do not edit (decision 0040).
+// One function per operation and signature of the CPU conformance table; the
+// execution test calls them with every case of the table.
+
+fn add_f32_f32(a: f32, b: f32) -> f32 {
+    return a + b;
+}
+
+fn sub_f32_f32(a: f32, b: f32) -> f32 {
+    return a - b;
+}
+
+fn mul_f32_f32(a: f32, b: f32) -> f32 {
+    return a * b;
+}
+
+fn div_f32_f32(a: f32, b: f32) -> f32 {
+    return a / b;
+}
+
+fn rem_f32_f32(a: f32, b: f32) -> f32 {
+    return a % b;
+}
+
+fn neg_f32(a: f32) -> f32 {
+    return -a;
+}
+
+fn lt_f32_f32(a: f32, b: f32) -> bool {
+    return a < b;
+}
+
+fn lt_i32_i32(a: i32, b: i32) -> bool {
+    return a < b;
+}
+
+fn lt_u32_u32(a: u32, b: u32) -> bool {
+    return a < b;
+}
+
+fn le_f32_f32(a: f32, b: f32) -> bool {
+    return a <= b;
+}
+
+fn le_i32_i32(a: i32, b: i32) -> bool {
+    return a <= b;
+}
+
+fn le_u32_u32(a: u32, b: u32) -> bool {
+    return a <= b;
+}
+
+fn gt_f32_f32(a: f32, b: f32) -> bool {
+    return a > b;
+}
+
+fn gt_i32_i32(a: i32, b: i32) -> bool {
+    return a > b;
+}
+
+fn gt_u32_u32(a: u32, b: u32) -> bool {
+    return a > b;
+}
+
+fn ge_f32_f32(a: f32, b: f32) -> bool {
+    return a >= b;
+}
+
+fn ge_i32_i32(a: i32, b: i32) -> bool {
+    return a >= b;
+}
+
+fn ge_u32_u32(a: u32, b: u32) -> bool {
+    return a >= b;
+}
+
+fn eq_f32_f32(a: f32, b: f32) -> bool {
+    return a == b;
+}
+
+fn eq_i32_i32(a: i32, b: i32) -> bool {
+    return a == b;
+}
+
+fn eq_u32_u32(a: u32, b: u32) -> bool {
+    return a == b;
+}
+
+fn ne_f32_f32(a: f32, b: f32) -> bool {
+    return a != b;
+}
+
+fn ne_i32_i32(a: i32, b: i32) -> bool {
+    return a != b;
+}
+
+fn ne_u32_u32(a: u32, b: u32) -> bool {
+    return a != b;
+}
+
+fn add_i32_i32(a: i32, b: i32) -> i32 {
+    return a + b;
+}
+
+fn sub_i32_i32(a: i32, b: i32) -> i32 {
+    return a - b;
+}
+
+fn mul_i32_i32(a: i32, b: i32) -> i32 {
+    return a * b;
+}
+
+fn div_i32_i32(a: i32, b: i32) -> i32 {
+    return a / b;
+}
+
+fn rem_i32_i32(a: i32, b: i32) -> i32 {
+    return a % b;
+}
+
+fn neg_i32(a: i32) -> i32 {
+    return -a;
+}
+
+fn add_u32_u32(a: u32, b: u32) -> u32 {
+    return a + b;
+}
+
+fn sub_u32_u32(a: u32, b: u32) -> u32 {
+    return a - b;
+}
+
+fn mul_u32_u32(a: u32, b: u32) -> u32 {
+    return a * b;
+}
+
+fn div_u32_u32(a: u32, b: u32) -> u32 {
+    return a / b;
+}
+
+fn rem_u32_u32(a: u32, b: u32) -> u32 {
+    return a % b;
+}
+
+fn to_i32_f32(a: f32) -> i32 {
+    return i32(a);
+}
+
+fn to_u32_f32(a: f32) -> u32 {
+    return u32(a);
+}
+
+fn to_f32_i32(a: i32) -> f32 {
+    return f32(a);
+}
+
+fn to_f32_u32(a: u32) -> f32 {
+    return f32(a);
+}
+
+fn to_i32_u32(a: u32) -> i32 {
+    return i32(a);
+}
+
+fn to_u32_i32(a: i32) -> u32 {
+    return u32(a);
+}
+
+fn abs_f32(a: f32) -> f32 {
+    return abs(a);
+}
+
+fn saturate_f32(a: f32) -> f32 {
+    return saturate(a);
+}
+
+fn sqrt_f32(a: f32) -> f32 {
+    return sqrt(a);
+}
+
+fn inverse_sqrt_f32(a: f32) -> f32 {
+    return inverse_sqrt(a);
+}
+
+fn exp_f32(a: f32) -> f32 {
+    return exp(a);
+}
+
+fn exp2_f32(a: f32) -> f32 {
+    return exp2(a);
+}
+
+fn log_f32(a: f32) -> f32 {
+    return log(a);
+}
+
+fn log2_f32(a: f32) -> f32 {
+    return log2(a);
+}
+
+fn sin_f32(a: f32) -> f32 {
+    return sin(a);
+}
+
+fn cos_f32(a: f32) -> f32 {
+    return cos(a);
+}
+
+fn tan_f32(a: f32) -> f32 {
+    return tan(a);
+}
+
+fn asin_f32(a: f32) -> f32 {
+    return asin(a);
+}
+
+fn acos_f32(a: f32) -> f32 {
+    return acos(a);
+}
+
+fn atan_f32(a: f32) -> f32 {
+    return atan(a);
+}
+
+fn floor_f32(a: f32) -> f32 {
+    return floor(a);
+}
+
+fn ceil_f32(a: f32) -> f32 {
+    return ceil(a);
+}
+
+fn trunc_f32(a: f32) -> f32 {
+    return trunc(a);
+}
+
+fn fract_f32(a: f32) -> f32 {
+    return fract(a);
+}
+
+fn sign_f32(a: f32) -> f32 {
+    return sign(a);
+}
+
+fn round_f32(a: f32) -> f32 {
+    return round(a);
+}
+
+fn radians_f32(a: f32) -> f32 {
+    return radians(a);
+}
+
+fn degrees_f32(a: f32) -> f32 {
+    return degrees(a);
+}
+
+fn length_f32(a: f32) -> f32 {
+    return length(a);
+}
+
+fn distance_f32_f32(a: f32, b: f32) -> f32 {
+    return distance(a, b);
+}
+
+fn min_f32_f32(a: f32, b: f32) -> f32 {
+    return min(a, b);
+}
+
+fn max_f32_f32(a: f32, b: f32) -> f32 {
+    return max(a, b);
+}
+
+fn pow_f32_f32(a: f32, b: f32) -> f32 {
+    return pow(a, b);
+}
+
+fn atan2_f32_f32(a: f32, b: f32) -> f32 {
+    return atan2(a, b);
+}
+
+fn step_f32_f32(a: f32, b: f32) -> f32 {
+    return step(a, b);
+}
+
+fn clamp_f32_f32_f32(a: f32, b: f32, c: f32) -> f32 {
+    return clamp(a, b, c);
+}
+
+fn mix_f32_f32_f32(a: f32, b: f32, c: f32) -> f32 {
+    return mix(a, b, c);
+}
+
+fn smoothstep_f32_f32_f32(a: f32, b: f32, c: f32) -> f32 {
+    return smoothstep(a, b, c);
+}
+
+fn abs_i32(a: i32) -> i32 {
+    return abs(a);
+}
+
+fn abs_u32(a: u32) -> u32 {
+    return abs(a);
+}
+
+fn min_i32_i32(a: i32, b: i32) -> i32 {
+    return min(a, b);
+}
+
+fn max_i32_i32(a: i32, b: i32) -> i32 {
+    return max(a, b);
+}
+
+fn min_u32_u32(a: u32, b: u32) -> u32 {
+    return min(a, b);
+}
+
+fn max_u32_u32(a: u32, b: u32) -> u32 {
+    return max(a, b);
+}
+
+fn clamp_i32_i32_i32(a: i32, b: i32, c: i32) -> i32 {
+    return clamp(a, b, c);
+}
+
+fn clamp_u32_u32_u32(a: u32, b: u32, c: u32) -> u32 {
+    return clamp(a, b, c);
+}
+
+fn abs_vec2(a: vec2) -> vec2 {
+    return abs(a);
+}
+
+fn abs_vec3(a: vec3) -> vec3 {
+    return abs(a);
+}
+
+fn abs_vec4(a: vec4) -> vec4 {
+    return abs(a);
+}
+
+fn saturate_vec2(a: vec2) -> vec2 {
+    return saturate(a);
+}
+
+fn saturate_vec3(a: vec3) -> vec3 {
+    return saturate(a);
+}
+
+fn saturate_vec4(a: vec4) -> vec4 {
+    return saturate(a);
+}
+
+fn sqrt_vec2(a: vec2) -> vec2 {
+    return sqrt(a);
+}
+
+fn sqrt_vec3(a: vec3) -> vec3 {
+    return sqrt(a);
+}
+
+fn sqrt_vec4(a: vec4) -> vec4 {
+    return sqrt(a);
+}
+
+fn inverse_sqrt_vec2(a: vec2) -> vec2 {
+    return inverse_sqrt(a);
+}
+
+fn inverse_sqrt_vec3(a: vec3) -> vec3 {
+    return inverse_sqrt(a);
+}
+
+fn inverse_sqrt_vec4(a: vec4) -> vec4 {
+    return inverse_sqrt(a);
+}
+
+fn exp_vec2(a: vec2) -> vec2 {
+    return exp(a);
+}
+
+fn exp_vec3(a: vec3) -> vec3 {
+    return exp(a);
+}
+
+fn exp_vec4(a: vec4) -> vec4 {
+    return exp(a);
+}
+
+fn exp2_vec2(a: vec2) -> vec2 {
+    return exp2(a);
+}
+
+fn exp2_vec3(a: vec3) -> vec3 {
+    return exp2(a);
+}
+
+fn exp2_vec4(a: vec4) -> vec4 {
+    return exp2(a);
+}
+
+fn log_vec2(a: vec2) -> vec2 {
+    return log(a);
+}
+
+fn log_vec3(a: vec3) -> vec3 {
+    return log(a);
+}
+
+fn log_vec4(a: vec4) -> vec4 {
+    return log(a);
+}
+
+fn log2_vec2(a: vec2) -> vec2 {
+    return log2(a);
+}
+
+fn log2_vec3(a: vec3) -> vec3 {
+    return log2(a);
+}
+
+fn log2_vec4(a: vec4) -> vec4 {
+    return log2(a);
+}
+
+fn sin_vec2(a: vec2) -> vec2 {
+    return sin(a);
+}
+
+fn sin_vec3(a: vec3) -> vec3 {
+    return sin(a);
+}
+
+fn sin_vec4(a: vec4) -> vec4 {
+    return sin(a);
+}
+
+fn cos_vec2(a: vec2) -> vec2 {
+    return cos(a);
+}
+
+fn cos_vec3(a: vec3) -> vec3 {
+    return cos(a);
+}
+
+fn cos_vec4(a: vec4) -> vec4 {
+    return cos(a);
+}
+
+fn tan_vec2(a: vec2) -> vec2 {
+    return tan(a);
+}
+
+fn tan_vec3(a: vec3) -> vec3 {
+    return tan(a);
+}
+
+fn tan_vec4(a: vec4) -> vec4 {
+    return tan(a);
+}
+
+fn asin_vec2(a: vec2) -> vec2 {
+    return asin(a);
+}
+
+fn asin_vec3(a: vec3) -> vec3 {
+    return asin(a);
+}
+
+fn asin_vec4(a: vec4) -> vec4 {
+    return asin(a);
+}
+
+fn acos_vec2(a: vec2) -> vec2 {
+    return acos(a);
+}
+
+fn acos_vec3(a: vec3) -> vec3 {
+    return acos(a);
+}
+
+fn acos_vec4(a: vec4) -> vec4 {
+    return acos(a);
+}
+
+fn atan_vec2(a: vec2) -> vec2 {
+    return atan(a);
+}
+
+fn atan_vec3(a: vec3) -> vec3 {
+    return atan(a);
+}
+
+fn atan_vec4(a: vec4) -> vec4 {
+    return atan(a);
+}
+
+fn floor_vec2(a: vec2) -> vec2 {
+    return floor(a);
+}
+
+fn floor_vec3(a: vec3) -> vec3 {
+    return floor(a);
+}
+
+fn floor_vec4(a: vec4) -> vec4 {
+    return floor(a);
+}
+
+fn ceil_vec2(a: vec2) -> vec2 {
+    return ceil(a);
+}
+
+fn ceil_vec3(a: vec3) -> vec3 {
+    return ceil(a);
+}
+
+fn ceil_vec4(a: vec4) -> vec4 {
+    return ceil(a);
+}
+
+fn trunc_vec2(a: vec2) -> vec2 {
+    return trunc(a);
+}
+
+fn trunc_vec3(a: vec3) -> vec3 {
+    return trunc(a);
+}
+
+fn trunc_vec4(a: vec4) -> vec4 {
+    return trunc(a);
+}
+
+fn fract_vec2(a: vec2) -> vec2 {
+    return fract(a);
+}
+
+fn fract_vec3(a: vec3) -> vec3 {
+    return fract(a);
+}
+
+fn fract_vec4(a: vec4) -> vec4 {
+    return fract(a);
+}
+
+fn sign_vec2(a: vec2) -> vec2 {
+    return sign(a);
+}
+
+fn sign_vec3(a: vec3) -> vec3 {
+    return sign(a);
+}
+
+fn sign_vec4(a: vec4) -> vec4 {
+    return sign(a);
+}
+
+fn round_vec2(a: vec2) -> vec2 {
+    return round(a);
+}
+
+fn round_vec3(a: vec3) -> vec3 {
+    return round(a);
+}
+
+fn round_vec4(a: vec4) -> vec4 {
+    return round(a);
+}
+
+fn radians_vec2(a: vec2) -> vec2 {
+    return radians(a);
+}
+
+fn radians_vec3(a: vec3) -> vec3 {
+    return radians(a);
+}
+
+fn radians_vec4(a: vec4) -> vec4 {
+    return radians(a);
+}
+
+fn degrees_vec2(a: vec2) -> vec2 {
+    return degrees(a);
+}
+
+fn degrees_vec3(a: vec3) -> vec3 {
+    return degrees(a);
+}
+
+fn degrees_vec4(a: vec4) -> vec4 {
+    return degrees(a);
+}
+
+fn min_vec2_vec2(a: vec2, b: vec2) -> vec2 {
+    return min(a, b);
+}
+
+fn min_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return min(a, b);
+}
+
+fn min_vec4_vec4(a: vec4, b: vec4) -> vec4 {
+    return min(a, b);
+}
+
+fn max_vec2_vec2(a: vec2, b: vec2) -> vec2 {
+    return max(a, b);
+}
+
+fn max_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return max(a, b);
+}
+
+fn max_vec4_vec4(a: vec4, b: vec4) -> vec4 {
+    return max(a, b);
+}
+
+fn pow_vec2_vec2(a: vec2, b: vec2) -> vec2 {
+    return pow(a, b);
+}
+
+fn pow_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return pow(a, b);
+}
+
+fn pow_vec4_vec4(a: vec4, b: vec4) -> vec4 {
+    return pow(a, b);
+}
+
+fn atan2_vec2_vec2(a: vec2, b: vec2) -> vec2 {
+    return atan2(a, b);
+}
+
+fn atan2_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return atan2(a, b);
+}
+
+fn atan2_vec4_vec4(a: vec4, b: vec4) -> vec4 {
+    return atan2(a, b);
+}
+
+fn step_vec2_vec2(a: vec2, b: vec2) -> vec2 {
+    return step(a, b);
+}
+
+fn step_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return step(a, b);
+}
+
+fn step_vec4_vec4(a: vec4, b: vec4) -> vec4 {
+    return step(a, b);
+}
+
+fn clamp_vec2_vec2_vec2(a: vec2, b: vec2, c: vec2) -> vec2 {
+    return clamp(a, b, c);
+}
+
+fn clamp_vec3_vec3_vec3(a: vec3, b: vec3, c: vec3) -> vec3 {
+    return clamp(a, b, c);
+}
+
+fn clamp_vec4_vec4_vec4(a: vec4, b: vec4, c: vec4) -> vec4 {
+    return clamp(a, b, c);
+}
+
+fn mix_vec2_vec2_vec2(a: vec2, b: vec2, c: vec2) -> vec2 {
+    return mix(a, b, c);
+}
+
+fn mix_vec3_vec3_vec3(a: vec3, b: vec3, c: vec3) -> vec3 {
+    return mix(a, b, c);
+}
+
+fn mix_vec4_vec4_vec4(a: vec4, b: vec4, c: vec4) -> vec4 {
+    return mix(a, b, c);
+}
+
+fn smoothstep_vec2_vec2_vec2(a: vec2, b: vec2, c: vec2) -> vec2 {
+    return smoothstep(a, b, c);
+}
+
+fn smoothstep_vec3_vec3_vec3(a: vec3, b: vec3, c: vec3) -> vec3 {
+    return smoothstep(a, b, c);
+}
+
+fn smoothstep_vec4_vec4_vec4(a: vec4, b: vec4, c: vec4) -> vec4 {
+    return smoothstep(a, b, c);
+}
+
+fn mix_vec2_vec2_f32(a: vec2, b: vec2, c: f32) -> vec2 {
+    return mix(a, b, c);
+}
+
+fn mix_vec3_vec3_f32(a: vec3, b: vec3, c: f32) -> vec3 {
+    return mix(a, b, c);
+}
+
+fn mix_vec4_vec4_f32(a: vec4, b: vec4, c: f32) -> vec4 {
+    return mix(a, b, c);
+}
+
+fn add_vec2_vec2(a: vec2, b: vec2) -> vec2 {
+    return a + b;
+}
+
+fn sub_vec2_vec2(a: vec2, b: vec2) -> vec2 {
+    return a - b;
+}
+
+fn mul_vec2_vec2(a: vec2, b: vec2) -> vec2 {
+    return a * b;
+}
+
+fn div_vec2_vec2(a: vec2, b: vec2) -> vec2 {
+    return a / b;
+}
+
+fn mul_vec2_f32(a: vec2, b: f32) -> vec2 {
+    return a * b;
+}
+
+fn mul_f32_vec2(a: f32, b: vec2) -> vec2 {
+    return a * b;
+}
+
+fn div_vec2_f32(a: vec2, b: f32) -> vec2 {
+    return a / b;
+}
+
+fn neg_vec2(a: vec2) -> vec2 {
+    return -a;
+}
+
+fn dot_vec2_vec2(a: vec2, b: vec2) -> f32 {
+    return dot(a, b);
+}
+
+fn length_vec2(a: vec2) -> f32 {
+    return length(a);
+}
+
+fn distance_vec2_vec2(a: vec2, b: vec2) -> f32 {
+    return distance(a, b);
+}
+
+fn normalize_vec2(a: vec2) -> vec2 {
+    return normalize(a);
+}
+
+fn reflect_vec2_vec2(a: vec2, b: vec2) -> vec2 {
+    return reflect(a, b);
+}
+
+fn add_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return a + b;
+}
+
+fn sub_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return a - b;
+}
+
+fn mul_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return a * b;
+}
+
+fn div_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return a / b;
+}
+
+fn mul_vec3_f32(a: vec3, b: f32) -> vec3 {
+    return a * b;
+}
+
+fn mul_f32_vec3(a: f32, b: vec3) -> vec3 {
+    return a * b;
+}
+
+fn div_vec3_f32(a: vec3, b: f32) -> vec3 {
+    return a / b;
+}
+
+fn neg_vec3(a: vec3) -> vec3 {
+    return -a;
+}
+
+fn dot_vec3_vec3(a: vec3, b: vec3) -> f32 {
+    return dot(a, b);
+}
+
+fn length_vec3(a: vec3) -> f32 {
+    return length(a);
+}
+
+fn distance_vec3_vec3(a: vec3, b: vec3) -> f32 {
+    return distance(a, b);
+}
+
+fn normalize_vec3(a: vec3) -> vec3 {
+    return normalize(a);
+}
+
+fn reflect_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return reflect(a, b);
+}
+
+fn add_vec4_vec4(a: vec4, b: vec4) -> vec4 {
+    return a + b;
+}
+
+fn sub_vec4_vec4(a: vec4, b: vec4) -> vec4 {
+    return a - b;
+}
+
+fn mul_vec4_vec4(a: vec4, b: vec4) -> vec4 {
+    return a * b;
+}
+
+fn div_vec4_vec4(a: vec4, b: vec4) -> vec4 {
+    return a / b;
+}
+
+fn mul_vec4_f32(a: vec4, b: f32) -> vec4 {
+    return a * b;
+}
+
+fn mul_f32_vec4(a: f32, b: vec4) -> vec4 {
+    return a * b;
+}
+
+fn div_vec4_f32(a: vec4, b: f32) -> vec4 {
+    return a / b;
+}
+
+fn neg_vec4(a: vec4) -> vec4 {
+    return -a;
+}
+
+fn dot_vec4_vec4(a: vec4, b: vec4) -> f32 {
+    return dot(a, b);
+}
+
+fn length_vec4(a: vec4) -> f32 {
+    return length(a);
+}
+
+fn distance_vec4_vec4(a: vec4, b: vec4) -> f32 {
+    return distance(a, b);
+}
+
+fn normalize_vec4(a: vec4) -> vec4 {
+    return normalize(a);
+}
+
+fn reflect_vec4_vec4(a: vec4, b: vec4) -> vec4 {
+    return reflect(a, b);
+}
+
+fn cross_vec3_vec3(a: vec3, b: vec3) -> vec3 {
+    return cross(a, b);
+}
+
+fn make_vec2_f32_f32(a: f32, b: f32) -> vec2 {
+    return vec2(a, b);
+}
+
+fn make_vec2_f32(a: f32) -> vec2 {
+    return vec2(a);
+}
+
+fn make_vec3_f32_f32_f32(a: f32, b: f32, c: f32) -> vec3 {
+    return vec3(a, b, c);
+}
+
+fn make_vec3_f32(a: f32) -> vec3 {
+    return vec3(a);
+}
+
+fn make_vec3_vec2_f32(a: vec2, b: f32) -> vec3 {
+    return vec3(a, b);
+}
+
+fn make_vec4_f32_f32_f32_f32(a: f32, b: f32, c: f32, d: f32) -> vec4 {
+    return vec4(a, b, c, d);
+}
+
+fn make_vec4_f32(a: f32) -> vec4 {
+    return vec4(a);
+}
+
+fn make_vec4_vec3_f32(a: vec3, b: f32) -> vec4 {
+    return vec4(a, b);
+}
+
+fn make_vec4_vec2_f32_f32(a: vec2, b: f32, c: f32) -> vec4 {
+    return vec4(a, b, c);
+}
+
+fn quat_identity() -> quat {
+    return quat.identity();
+}
+
+fn quat_axis_angle_vec3_f32(a: vec3, b: f32) -> quat {
+    return quat.axis_angle(a, b);
+}
+
+fn quat_euler_f32_f32_f32(a: f32, b: f32, c: f32) -> quat {
+    return quat.euler(a, b, c);
+}
+
+fn mul_quat_quat(a: quat, b: quat) -> quat {
+    return a * b;
+}
+
+fn mul_quat_vec3(a: quat, b: vec3) -> vec3 {
+    return a * b;
+}
+
+fn mat4_identity() -> mat4 {
+    return mat4.identity();
+}
+
+fn mat4_translation_vec3(a: vec3) -> mat4 {
+    return mat4.translation(a);
+}
+
+fn mat4_scale_vec3(a: vec3) -> mat4 {
+    return mat4.scale(a);
+}
+
+fn mat4_rotation_quat(a: quat) -> mat4 {
+    return mat4.rotation(a);
+}
+
+fn mat4_columns_vec4_vec4_vec4_vec4(a: vec4, b: vec4, c: vec4, d: vec4) -> mat4 {
+    return mat4.columns(a, b, c, d);
+}
+
+fn mul_mat4_mat4(a: mat4, b: mat4) -> mat4 {
+    return a * b;
+}
+
+fn mul_mat4_vec4(a: mat4, b: vec4) -> vec4 {
+    return a * b;
+}
+
+fn transpose_mat4(a: mat4) -> mat4 {
+    return transpose(a);
+}
+
+fn color_linear_vec3_f32(a: vec3, b: f32) -> color {
+    return color.linear(a, b);
+}
+
+fn color_srgb_vec3_f32(a: vec3, b: f32) -> color {
+    return color.srgb(a, b);
+}
+
+// Makes every function above CPU-reachable (decision 0038).
+cpu fn reach_all() {
+    add_f32_f32(0.0, 0.0);
+    sub_f32_f32(0.0, 0.0);
+    mul_f32_f32(0.0, 0.0);
+    div_f32_f32(0.0, 0.0);
+    rem_f32_f32(0.0, 0.0);
+    neg_f32(0.0);
+    lt_f32_f32(0.0, 0.0);
+    lt_i32_i32(0, 0);
+    lt_u32_u32(0, 0);
+    le_f32_f32(0.0, 0.0);
+    le_i32_i32(0, 0);
+    le_u32_u32(0, 0);
+    gt_f32_f32(0.0, 0.0);
+    gt_i32_i32(0, 0);
+    gt_u32_u32(0, 0);
+    ge_f32_f32(0.0, 0.0);
+    ge_i32_i32(0, 0);
+    ge_u32_u32(0, 0);
+    eq_f32_f32(0.0, 0.0);
+    eq_i32_i32(0, 0);
+    eq_u32_u32(0, 0);
+    ne_f32_f32(0.0, 0.0);
+    ne_i32_i32(0, 0);
+    ne_u32_u32(0, 0);
+    add_i32_i32(0, 0);
+    sub_i32_i32(0, 0);
+    mul_i32_i32(0, 0);
+    div_i32_i32(0, 0);
+    rem_i32_i32(0, 0);
+    neg_i32(0);
+    add_u32_u32(0, 0);
+    sub_u32_u32(0, 0);
+    mul_u32_u32(0, 0);
+    div_u32_u32(0, 0);
+    rem_u32_u32(0, 0);
+    to_i32_f32(0.0);
+    to_u32_f32(0.0);
+    to_f32_i32(0);
+    to_f32_u32(0);
+    to_i32_u32(0);
+    to_u32_i32(0);
+    abs_f32(0.0);
+    saturate_f32(0.0);
+    sqrt_f32(0.0);
+    inverse_sqrt_f32(0.0);
+    exp_f32(0.0);
+    exp2_f32(0.0);
+    log_f32(0.0);
+    log2_f32(0.0);
+    sin_f32(0.0);
+    cos_f32(0.0);
+    tan_f32(0.0);
+    asin_f32(0.0);
+    acos_f32(0.0);
+    atan_f32(0.0);
+    floor_f32(0.0);
+    ceil_f32(0.0);
+    trunc_f32(0.0);
+    fract_f32(0.0);
+    sign_f32(0.0);
+    round_f32(0.0);
+    radians_f32(0.0);
+    degrees_f32(0.0);
+    length_f32(0.0);
+    distance_f32_f32(0.0, 0.0);
+    min_f32_f32(0.0, 0.0);
+    max_f32_f32(0.0, 0.0);
+    pow_f32_f32(0.0, 0.0);
+    atan2_f32_f32(0.0, 0.0);
+    step_f32_f32(0.0, 0.0);
+    clamp_f32_f32_f32(0.0, 0.0, 0.0);
+    mix_f32_f32_f32(0.0, 0.0, 0.0);
+    smoothstep_f32_f32_f32(0.0, 0.0, 0.0);
+    abs_i32(0);
+    abs_u32(0);
+    min_i32_i32(0, 0);
+    max_i32_i32(0, 0);
+    min_u32_u32(0, 0);
+    max_u32_u32(0, 0);
+    clamp_i32_i32_i32(0, 0, 0);
+    clamp_u32_u32_u32(0, 0, 0);
+    abs_vec2(vec2(0.0));
+    abs_vec3(vec3(0.0));
+    abs_vec4(vec4(0.0));
+    saturate_vec2(vec2(0.0));
+    saturate_vec3(vec3(0.0));
+    saturate_vec4(vec4(0.0));
+    sqrt_vec2(vec2(0.0));
+    sqrt_vec3(vec3(0.0));
+    sqrt_vec4(vec4(0.0));
+    inverse_sqrt_vec2(vec2(0.0));
+    inverse_sqrt_vec3(vec3(0.0));
+    inverse_sqrt_vec4(vec4(0.0));
+    exp_vec2(vec2(0.0));
+    exp_vec3(vec3(0.0));
+    exp_vec4(vec4(0.0));
+    exp2_vec2(vec2(0.0));
+    exp2_vec3(vec3(0.0));
+    exp2_vec4(vec4(0.0));
+    log_vec2(vec2(0.0));
+    log_vec3(vec3(0.0));
+    log_vec4(vec4(0.0));
+    log2_vec2(vec2(0.0));
+    log2_vec3(vec3(0.0));
+    log2_vec4(vec4(0.0));
+    sin_vec2(vec2(0.0));
+    sin_vec3(vec3(0.0));
+    sin_vec4(vec4(0.0));
+    cos_vec2(vec2(0.0));
+    cos_vec3(vec3(0.0));
+    cos_vec4(vec4(0.0));
+    tan_vec2(vec2(0.0));
+    tan_vec3(vec3(0.0));
+    tan_vec4(vec4(0.0));
+    asin_vec2(vec2(0.0));
+    asin_vec3(vec3(0.0));
+    asin_vec4(vec4(0.0));
+    acos_vec2(vec2(0.0));
+    acos_vec3(vec3(0.0));
+    acos_vec4(vec4(0.0));
+    atan_vec2(vec2(0.0));
+    atan_vec3(vec3(0.0));
+    atan_vec4(vec4(0.0));
+    floor_vec2(vec2(0.0));
+    floor_vec3(vec3(0.0));
+    floor_vec4(vec4(0.0));
+    ceil_vec2(vec2(0.0));
+    ceil_vec3(vec3(0.0));
+    ceil_vec4(vec4(0.0));
+    trunc_vec2(vec2(0.0));
+    trunc_vec3(vec3(0.0));
+    trunc_vec4(vec4(0.0));
+    fract_vec2(vec2(0.0));
+    fract_vec3(vec3(0.0));
+    fract_vec4(vec4(0.0));
+    sign_vec2(vec2(0.0));
+    sign_vec3(vec3(0.0));
+    sign_vec4(vec4(0.0));
+    round_vec2(vec2(0.0));
+    round_vec3(vec3(0.0));
+    round_vec4(vec4(0.0));
+    radians_vec2(vec2(0.0));
+    radians_vec3(vec3(0.0));
+    radians_vec4(vec4(0.0));
+    degrees_vec2(vec2(0.0));
+    degrees_vec3(vec3(0.0));
+    degrees_vec4(vec4(0.0));
+    min_vec2_vec2(vec2(0.0), vec2(0.0));
+    min_vec3_vec3(vec3(0.0), vec3(0.0));
+    min_vec4_vec4(vec4(0.0), vec4(0.0));
+    max_vec2_vec2(vec2(0.0), vec2(0.0));
+    max_vec3_vec3(vec3(0.0), vec3(0.0));
+    max_vec4_vec4(vec4(0.0), vec4(0.0));
+    pow_vec2_vec2(vec2(0.0), vec2(0.0));
+    pow_vec3_vec3(vec3(0.0), vec3(0.0));
+    pow_vec4_vec4(vec4(0.0), vec4(0.0));
+    atan2_vec2_vec2(vec2(0.0), vec2(0.0));
+    atan2_vec3_vec3(vec3(0.0), vec3(0.0));
+    atan2_vec4_vec4(vec4(0.0), vec4(0.0));
+    step_vec2_vec2(vec2(0.0), vec2(0.0));
+    step_vec3_vec3(vec3(0.0), vec3(0.0));
+    step_vec4_vec4(vec4(0.0), vec4(0.0));
+    clamp_vec2_vec2_vec2(vec2(0.0), vec2(0.0), vec2(0.0));
+    clamp_vec3_vec3_vec3(vec3(0.0), vec3(0.0), vec3(0.0));
+    clamp_vec4_vec4_vec4(vec4(0.0), vec4(0.0), vec4(0.0));
+    mix_vec2_vec2_vec2(vec2(0.0), vec2(0.0), vec2(0.0));
+    mix_vec3_vec3_vec3(vec3(0.0), vec3(0.0), vec3(0.0));
+    mix_vec4_vec4_vec4(vec4(0.0), vec4(0.0), vec4(0.0));
+    smoothstep_vec2_vec2_vec2(vec2(0.0), vec2(0.0), vec2(0.0));
+    smoothstep_vec3_vec3_vec3(vec3(0.0), vec3(0.0), vec3(0.0));
+    smoothstep_vec4_vec4_vec4(vec4(0.0), vec4(0.0), vec4(0.0));
+    mix_vec2_vec2_f32(vec2(0.0), vec2(0.0), 0.0);
+    mix_vec3_vec3_f32(vec3(0.0), vec3(0.0), 0.0);
+    mix_vec4_vec4_f32(vec4(0.0), vec4(0.0), 0.0);
+    add_vec2_vec2(vec2(0.0), vec2(0.0));
+    sub_vec2_vec2(vec2(0.0), vec2(0.0));
+    mul_vec2_vec2(vec2(0.0), vec2(0.0));
+    div_vec2_vec2(vec2(0.0), vec2(0.0));
+    mul_vec2_f32(vec2(0.0), 0.0);
+    mul_f32_vec2(0.0, vec2(0.0));
+    div_vec2_f32(vec2(0.0), 0.0);
+    neg_vec2(vec2(0.0));
+    dot_vec2_vec2(vec2(0.0), vec2(0.0));
+    length_vec2(vec2(0.0));
+    distance_vec2_vec2(vec2(0.0), vec2(0.0));
+    normalize_vec2(vec2(0.0));
+    reflect_vec2_vec2(vec2(0.0), vec2(0.0));
+    add_vec3_vec3(vec3(0.0), vec3(0.0));
+    sub_vec3_vec3(vec3(0.0), vec3(0.0));
+    mul_vec3_vec3(vec3(0.0), vec3(0.0));
+    div_vec3_vec3(vec3(0.0), vec3(0.0));
+    mul_vec3_f32(vec3(0.0), 0.0);
+    mul_f32_vec3(0.0, vec3(0.0));
+    div_vec3_f32(vec3(0.0), 0.0);
+    neg_vec3(vec3(0.0));
+    dot_vec3_vec3(vec3(0.0), vec3(0.0));
+    length_vec3(vec3(0.0));
+    distance_vec3_vec3(vec3(0.0), vec3(0.0));
+    normalize_vec3(vec3(0.0));
+    reflect_vec3_vec3(vec3(0.0), vec3(0.0));
+    add_vec4_vec4(vec4(0.0), vec4(0.0));
+    sub_vec4_vec4(vec4(0.0), vec4(0.0));
+    mul_vec4_vec4(vec4(0.0), vec4(0.0));
+    div_vec4_vec4(vec4(0.0), vec4(0.0));
+    mul_vec4_f32(vec4(0.0), 0.0);
+    mul_f32_vec4(0.0, vec4(0.0));
+    div_vec4_f32(vec4(0.0), 0.0);
+    neg_vec4(vec4(0.0));
+    dot_vec4_vec4(vec4(0.0), vec4(0.0));
+    length_vec4(vec4(0.0));
+    distance_vec4_vec4(vec4(0.0), vec4(0.0));
+    normalize_vec4(vec4(0.0));
+    reflect_vec4_vec4(vec4(0.0), vec4(0.0));
+    cross_vec3_vec3(vec3(0.0), vec3(0.0));
+    make_vec2_f32_f32(0.0, 0.0);
+    make_vec2_f32(0.0);
+    make_vec3_f32_f32_f32(0.0, 0.0, 0.0);
+    make_vec3_f32(0.0);
+    make_vec3_vec2_f32(vec2(0.0), 0.0);
+    make_vec4_f32_f32_f32_f32(0.0, 0.0, 0.0, 0.0);
+    make_vec4_f32(0.0);
+    make_vec4_vec3_f32(vec3(0.0), 0.0);
+    make_vec4_vec2_f32_f32(vec2(0.0), 0.0, 0.0);
+    quat_identity();
+    quat_axis_angle_vec3_f32(vec3(0.0), 0.0);
+    quat_euler_f32_f32_f32(0.0, 0.0, 0.0);
+    mul_quat_quat(quat.identity(), quat.identity());
+    mul_quat_vec3(quat.identity(), vec3(0.0));
+    mat4_identity();
+    mat4_translation_vec3(vec3(0.0));
+    mat4_scale_vec3(vec3(0.0));
+    mat4_rotation_quat(quat.identity());
+    mat4_columns_vec4_vec4_vec4_vec4(vec4(0.0), vec4(0.0), vec4(0.0), vec4(0.0));
+    mul_mat4_mat4(mat4.identity(), mat4.identity());
+    mul_mat4_vec4(mat4.identity(), vec4(0.0));
+    transpose_mat4(mat4.identity());
+    color_linear_vec3_f32(vec3(0.0), 0.0);
+    color_srgb_vec3_f32(vec3(0.0), 0.0);
+}
+
+scene Table {
+    camera Main {}
+}
