@@ -8,7 +8,8 @@
 //!   of another type; `W2010` for a `var` never assigned), block `const`s
 //!   (evaluated with the module's constants);
 //! * assignments and compound assignments to assignable places — a `var`
-//!   local or a single component of a vector `var` (`E3061` for anything
+//!   local, its struct fields and array elements to any depth, and a single
+//!   component of a vector among them (decision 0045; `E3061` for anything
 //!   else, `E3060` for a multi-component swizzle);
 //! * `if` conditions of type `bool` (`E3070`), `for` over an `i32`/`u32`
 //!   range or an array, with an immutable loop variable;
@@ -681,6 +682,9 @@ impl<'a> Checker<'a> {
     /// `place = value;` and `place op= value;` (section 7.2).
     fn assign(&mut self, stmt: &AssignStmt) {
         let place_ty = self.check(&stmt.target, None);
+        // Folded like every expression of a body: a constant index out of
+        // range is `E3030` in a target too.
+        self.fold_in_body(&stmt.target);
         let root = self.place(&stmt.target);
         if let (Some(var), Some(body)) = (root, &mut self.body) {
             body.assigned.insert(var);
@@ -743,130 +747,139 @@ impl<'a> Checker<'a> {
         self.fold_in_body(&stmt.value);
     }
 
-    /// Check that `target` is an assignable place (section 7.2): a `var`
-    /// local, or a single component of a vector that is one. Reports `E3061`
-    /// or `E3060` otherwise. Returns the `var` local the place belongs to,
-    /// if there is one (also when the place has an error, so that it does
-    /// not count as never assigned).
+    /// Check that `target` is an assignable place (section 7.2, decision
+    /// 0045): a chain of struct fields, array elements (constant or run-time
+    /// indices) and at most one final single vector component, rooted at a
+    /// `var` local. Reports `E3061` for a root that is not assignable or a
+    /// step that is not a place (a component of a `quat` or `color`, a `mat4`
+    /// column, any other field, any other expression), `E3060` for a
+    /// multi-component swizzle anywhere in the chain, and only the first
+    /// problem found walking from the outside in. Returns the `var` local the
+    /// place belongs to, if there is one (also when the place has an error,
+    /// so that it does not count as never assigned). The chain is walked
+    /// with a loop.
     fn place(&mut self, target: &Expr) -> Option<DefId> {
-        match &target.kind {
-            ExprKind::Paren(inner) => self.place(inner),
-            ExprKind::Name(_) => match self.res.res(target.id) {
-                Some(Res::Def(id)) => {
-                    let def = self.res.def(id)?.clone();
-                    match def.kind {
-                        DefKind::Local { mutable: true } => Some(id),
-                        DefKind::Local { mutable: false }
-                        | DefKind::FnParam
-                        | DefKind::LoopVar
-                        | DefKind::Const
-                        | DefKind::State
-                        | DefKind::Param => {
-                            self.report_immutable(target.span, &def);
-                            None
+        let mut current = target;
+        // Whether a step was already passed (the root is then part of a
+        // larger place).
+        let mut nested = false;
+        loop {
+            match &current.kind {
+                ExprKind::Paren(inner) => current = inner,
+                ExprKind::Name(_) => return self.place_name(current, target, nested),
+                ExprKind::Field { base, name } => match self.fields.get(&current.id).cloned() {
+                    Some(FieldKind::Components(indices)) => {
+                        let base_ty = self.ty_of(base.id).unwrap_or(TyId::ERROR);
+                        if indices.len() > 1 {
+                            self.report_diagnostic(
+                                Diagnostic::new(
+                                    Code::E3060,
+                                    format!(
+                                        "Assigning to the swizzle '.{}' is not supported in v0.1.",
+                                        name.name
+                                    ),
+                                )
+                                .at(current.span)
+                                .help("assign the components one at a time: `v.x = …; v.y = …;`"),
+                            );
+                            return self.place_root(base);
                         }
-                        DefKind::Import => {
-                            if self
-                                .res
-                                .import_target(id)
-                                .is_some_and(|t| t.kind == DefKind::Const)
-                            {
-                                self.report_immutable(target.span, &def);
-                            }
-                            None
-                        }
-                        // Not values: reported as `E3001` when the target was
-                        // typed.
-                        _ => None,
-                    }
-                }
-                _ => None,
-            },
-            ExprKind::Field { base, name } => match self.fields.get(&target.id).cloned() {
-                Some(FieldKind::Components(indices)) => {
-                    let base_ty = self.ty_of(base.id).unwrap_or(TyId::ERROR);
-                    if indices.len() > 1 {
-                        let root = self.place_root(base);
-                        self.report_diagnostic(
-                            Diagnostic::new(
-                                Code::E3060,
+                        if self.out.interner.vector_dim(base_ty).is_none() {
+                            let type_name = self.display(base_ty);
+                            self.report_not_a_place(
+                                current.span,
                                 format!(
-                                    "Assigning to the swizzle '.{}' is not supported in v0.1.",
-                                    name.name
+                                    "Cannot assign to a component of a {type_name} value: only single components of vectors are assignable."
                                 ),
-                            )
-                            .at(target.span)
-                            .help("assign the components one at a time: `v.x = …; v.y = …;`"),
+                                None,
+                            );
+                            return self.place_root(base);
+                        }
+                        nested = true;
+                        current = base;
+                    }
+                    Some(FieldKind::StructField(_)) => {
+                        nested = true;
+                        current = base;
+                    }
+                    Some(_) => {
+                        self.report_not_a_place(
+                            current.span,
+                            "This field is not an assignable place.".to_owned(),
+                            None,
                         );
-                        return root;
+                        return self.place_root(base);
                     }
-                    if self.out.interner.vector_dim(base_ty).is_some() {
-                        return self.place(base);
+                    // The field access has an error, reported when it was typed.
+                    None => return self.place_root(base),
+                },
+                ExprKind::Index { base, .. } => {
+                    let base_ty = self.ty_of(base.id).unwrap_or(TyId::ERROR);
+                    match self.out.interner.get(base_ty) {
+                        Ty::Array { .. } => {
+                            nested = true;
+                            current = base;
+                        }
+                        Ty::Mat4 => {
+                            self.report_not_a_place(
+                                current.span,
+                                "Cannot assign to a column of a mat4: matrix columns are not assignable places in v0.1."
+                                    .to_owned(),
+                                Some("build a new matrix with `mat4.columns(…)` and assign it to the variable"),
+                            );
+                            return self.place_root(base);
+                        }
+                        // An index of anything else has an error, reported
+                        // when it was typed.
+                        _ => return self.place_root(base),
                     }
-                    let type_name = self.display(base_ty);
-                    let root = self.place_root(base);
-                    self.report_not_a_place(
-                        target.span,
-                        format!(
-                            "Cannot assign to a component of a {type_name} value: only single components of vectors are assignable."
-                        ),
-                        None,
-                    );
-                    root
                 }
-                Some(FieldKind::StructField(field)) => {
-                    let root = self.place_root(base);
-                    self.report_not_a_place(
-                        target.span,
-                        format!(
-                            "Cannot assign to the field '{field}': struct fields are not assignable places in v0.1."
-                        ),
-                        Some("assign a whole new struct value to the variable instead"),
-                    );
-                    root
+                ExprKind::Error => return None,
+                _ => {
+                    let ty = self.ty_of(current.id).unwrap_or(TyId::ERROR);
+                    if !self.out.interner.is_error(ty) {
+                        self.report_not_a_place(
+                            target.span,
+                            "This expression is not an assignable place.".to_owned(),
+                            None,
+                        );
+                    }
+                    return None;
                 }
-                Some(_) => {
-                    self.report_not_a_place(
-                        target.span,
-                        "This field is not an assignable place.".to_owned(),
-                        None,
-                    );
-                    None
-                }
-                // The field access has an error, reported when it was typed.
-                None => self.place_root(base),
-            },
-            ExprKind::Index { base, .. } => {
-                let root = self.place_root(base);
-                let base_ty = self.ty_of(base.id).unwrap_or(TyId::ERROR);
-                if !self.out.interner.is_error(base_ty) {
-                    let what = if self.out.interner.get(base_ty) == Ty::Mat4 {
-                        "a column of a mat4"
-                    } else {
-                        "an element of an array"
-                    };
-                    self.report_not_a_place(
-                        target.span,
-                        format!(
-                            "Cannot assign to {what}: indexed places are not assignable in v0.1."
-                        ),
-                        Some("assign a whole new value to the variable instead"),
-                    );
-                }
-                root
             }
-            ExprKind::Error => None,
-            _ => {
-                let ty = self.ty_of(target.id).unwrap_or(TyId::ERROR);
-                if !self.out.interner.is_error(ty) {
-                    self.report_not_a_place(
-                        target.span,
-                        "This expression is not an assignable place.".to_owned(),
-                        None,
-                    );
+        }
+    }
+
+    /// The root `name` of the assignment target `target` (`nested` when the
+    /// target is a part of it): a `var` local, or `E3061`.
+    fn place_name(&mut self, name: &Expr, target: &Expr, nested: bool) -> Option<DefId> {
+        let Some(Res::Def(id)) = self.res.res(name.id) else {
+            return None;
+        };
+        let def = self.res.def(id)?.clone();
+        match def.kind {
+            DefKind::Local { mutable: true } => Some(id),
+            DefKind::Local { mutable: false }
+            | DefKind::FnParam
+            | DefKind::LoopVar
+            | DefKind::Const
+            | DefKind::State
+            | DefKind::Param => {
+                self.report_immutable(target.span, &def, nested);
+                None
+            }
+            DefKind::Import => {
+                if self
+                    .res
+                    .import_target(id)
+                    .is_some_and(|t| t.kind == DefKind::Const)
+                {
+                    self.report_immutable(target.span, &def, nested);
                 }
                 None
             }
+            // Not values: reported as `E3001` when the target was typed.
+            _ => None,
         }
     }
 
@@ -895,29 +908,38 @@ impl<'a> Checker<'a> {
         }
     }
 
-    /// `E3061` for an assignment to the immutable declaration `def`.
-    fn report_immutable(&mut self, span: Span, def: &Def) {
+    /// `E3061` for an assignment to the immutable declaration `def`, or to a
+    /// part of it (a field, an element or a component) when `nested`.
+    fn report_immutable(&mut self, span: Span, def: &Def, nested: bool) {
         let name = &def.name;
+        let part = if nested { "a part of " } else { "" };
         let (message, help) = match def.kind {
             DefKind::Local { mutable: false } => (
-                format!("Cannot assign to the local '{name}': it is declared with `let`."),
+                format!("Cannot assign to {part}the local '{name}': it is declared with `let`."),
                 Some("declare it with `var` to assign to it"),
             ),
             DefKind::FnParam => (
-                format!("Cannot assign to the parameter '{name}': parameters are immutable."),
+                format!("Cannot assign to {part}the parameter '{name}': parameters are immutable."),
                 Some("copy it into a `var` local and assign to that"),
             ),
             DefKind::LoopVar => (
                 format!(
-                    "Cannot assign to the loop variable '{name}': loop variables are immutable."
+                    "Cannot assign to {part}the loop variable '{name}': loop variables are immutable."
                 ),
-                None,
+                Some("copy it into a `var` local and assign to that"),
             ),
-            DefKind::Const | DefKind::Import => {
-                (format!("Cannot assign to the constant '{name}'."), None)
-            }
+            DefKind::Const | DefKind::Import => (
+                format!("Cannot assign to {part}the constant '{name}'."),
+                Some("copy it into a `var` local and assign to that"),
+            ),
+            DefKind::Param => (
+                format!(
+                    "Cannot assign to {part}the material param '{name}': params are read-only in the stage."
+                ),
+                Some("copy it into a `var` local and assign to that"),
+            ),
             kind => (
-                format!("Cannot assign to the {} '{name}'.", kind.noun()),
+                format!("Cannot assign to {part}the {} '{name}'.", kind.noun()),
                 None,
             ),
         };
@@ -937,7 +959,7 @@ impl<'a> Checker<'a> {
     /// `E3061` for a target that is not an assignable place at all.
     fn report_not_a_place(&mut self, span: Span, message: String, help: Option<&str>) {
         let mut diagnostic = Diagnostic::new(Code::E3061, message).at(span).note(
-            "assignable places are `var` locals and single components of vector `var` locals",
+            "assignable places are `var` locals, their struct fields and array elements, and single components of those that are vectors",
         );
         if let Some(help) = help {
             diagnostic = diagnostic.help(help);

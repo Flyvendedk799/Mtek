@@ -1256,7 +1256,7 @@ fn component_assignment_needs_a_vector_var() {
         ),
         (
             "fn f(v: vec3) -> vec3 { let w = v; w.x = 1.0; return w; }",
-            "Cannot assign to the local 'w': it is declared with `let`.",
+            "Cannot assign to a part of the local 'w': it is declared with `let`.",
         ),
         (
             "fn f() { helper() = 1.0; }\nfn helper() -> f32 { return 1.0; }",
@@ -1265,6 +1265,95 @@ fn component_assignment_needs_a_vector_var() {
     ] {
         let c = consts(source);
         assert_eq!(c.only("E3061").message, message, "{source}");
+    }
+}
+
+#[test]
+fn fields_and_elements_of_var_locals_are_assignable_places() {
+    // Decision 0045: chains of fields, constant and run-time indices and a
+    // final vector component, plain and compound, rooted at a `var`.
+    let c = clean(
+        "struct P { offset: vec3; w: f32; lit: bool; }
+struct S { items: array<f32, 4>; ps: array<P, 2>; }
+fn f(i: i32, j: u32, s0: S) -> f32 {
+    var p = P { offset: vec3(0.0); w: 1.0; lit: false };
+    p.offset = vec3(1.0);
+    p.offset.y = 2.0;
+    p.w += 0.5;
+    p.lit = true;
+    var arr = [1.0, 2.0, 3.0];
+    arr[i] = 4.0;
+    arr[1] *= 2.0;
+    var s = s0;
+    s.items[j] = 1.0;
+    s.items[j] -= 1.0;
+    s.ps[i].offset.z /= 2.0;
+    s.ps[0] = p;
+    var grid = [[1, 2], [3, 4]];
+    grid[i][j] += 1;
+    return arr[0] + s.items[0] + f32(grid[0][0]);
+}",
+    );
+    assert_eq!(local_ty(&c, "grid"), "array<array<i32, 2>, 2>");
+}
+
+#[test]
+fn places_keep_their_remaining_errors() {
+    for (source, code, message) in [
+        (
+            "fn f(a: array<f32, 3>) { a[0] = 1.0; }",
+            "E3061",
+            "Cannot assign to a part of the parameter 'a': parameters are immutable.",
+        ),
+        (
+            "fn f() -> f32 { let a = [1.0, 2.0]; a[1] = 0.0; return a[0]; }",
+            "E3061",
+            "Cannot assign to a part of the local 'a': it is declared with `let`.",
+        ),
+        (
+            "fn f(xs: array<array<f32, 2>, 2>) { for x in xs { x[0] = 1.0; } }",
+            "E3061",
+            "Cannot assign to a part of the loop variable 'x': loop variables are immutable.",
+        ),
+        (
+            "const C = [1.0, 2.0];\nfn f() { C[0] = 1.0; }",
+            "E3061",
+            "Cannot assign to a part of the constant 'C'.",
+        ),
+        (
+            "fn f(m: mat4) -> mat4 { var n = m; n[0] = vec4(1.0); return n; }",
+            "E3061",
+            "Cannot assign to a column of a mat4: matrix columns are not assignable places in v0.1.",
+        ),
+        (
+            "fn f(c: color) -> color { var d = [c]; d[0].r = 1.0; return d[0]; }",
+            "E3061",
+            "Cannot assign to a component of a color value: only single components of vectors are assignable.",
+        ),
+        (
+            "struct P { v: vec3; }\nfn f() -> vec3 { var p = P { v: vec3(0.0) }; p.v.xy = vec2(1.0); return p.v; }",
+            "E3060",
+            "Assigning to the swizzle '.xy' is not supported in v0.1.",
+        ),
+        (
+            "fn f() -> f32 { var a = [1.0, 2.0]; a[0] = 1; a[1] = true; return a[0]; }",
+            "E3001",
+            "Cannot assign a value of type bool to a place of type f32.",
+        ),
+        (
+            "fn f() -> f32 { var a = [1.0, 2.0]; a[2] = 1.0; return a[0]; }",
+            "E3030",
+            "The index 2 is out of range for array<f32, 2>: valid indices are 0 to 1.",
+        ),
+        (
+            "fn f() -> f32 { var a = [1.0, 2.0]; a[-1] += 1.0; return a[0]; }",
+            "E3030",
+            "The index -1 is out of range for array<f32, 2>: valid indices are 0 to 1.",
+        ),
+    ] {
+        let c = consts(source);
+        assert_eq!(c.only(code).message, message, "{source}");
+        assert_eq!(c.codes(), [code], "{source}: {:#?}", c.diagnostics);
     }
 }
 

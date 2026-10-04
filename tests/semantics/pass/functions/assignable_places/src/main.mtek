@@ -1,0 +1,85 @@
+// Assignable places (spec/language.md 7.2, decision 0045): struct fields and
+// array elements of `var` locals, to any depth, with at most one final vector
+// component; plain and compound; constant and run-time (clamped) indices.
+struct Probe {
+    offset: vec3;
+    weight: f32;
+    enabled: bool;
+    samples: array<f32, 4>;
+}
+
+struct Rig {
+    probes: array<Probe, 2>;
+    grid: array<array<i32, 2>, 2>;
+}
+
+fn probe(w: f32) -> Probe {
+    return Probe { offset: vec3(0.0); weight: w; enabled: false; samples: [0.0, 0.0, 0.0, 0.0] };
+}
+
+fn fields(w: f32) -> Probe {
+    var p = probe(w);
+    p.offset = vec3(1.0, 2.0, 3.0);
+    p.offset.y = 5.0;
+    p.weight += 0.5;
+    p.weight *= 2.0;
+    p.enabled = true;
+    p.samples[1] = w;
+    return p;
+}
+
+fn elements(i: i32, j: u32) -> array<f32, 4> {
+    var xs = [1.0, 2.0, 3.0, 4.0];
+    xs[0] = 10.0;
+    xs[i] = 20.0;
+    xs[j] -= 1.0;
+    xs[3] /= 2.0;
+    return xs;
+}
+
+fn nested(i: i32, j: u32) -> Rig {
+    var rig = Rig { probes: [probe(1.0), probe(2.0)]; grid: [[1, 2], [3, 4]] };
+    rig.probes[i].offset.x += 1.0;
+    rig.probes[1].samples[j] = 7.0;
+    rig.probes[0] = fields(3.0);
+    rig.grid[i][j] += 10;
+    rig.grid[1] = [5, 6];
+    return rig;
+}
+
+fn vectors(i: i32) -> array<vec3, 3> {
+    var vs = [vec3(0.0), vec3(1.0), vec3(2.0)];
+    vs[i].z = 9.0;
+    vs[2] *= 2.0;
+    return vs;
+}
+
+material Stripes {
+    param index: i32 = 1;
+    fragment(input: SurfaceInput) -> color {
+        var rig = Rig { probes: [probe(1.0), probe(2.0)]; grid: [[1, 2], [3, 4]] };
+        rig.probes[index].weight = input.uv.x;
+        rig.probes[index].enabled = input.uv.y > 0.5;
+        rig.probes[0].samples[index] += 0.25;
+        var shade = rig.probes[index].weight + rig.probes[0].samples[1];
+        if rig.probes[index].enabled {
+            shade *= 0.5;
+        }
+        return color.linear(vec3(shade), 1.0);
+    }
+}
+
+cpu fn reach_all() {
+    fields(1.0);
+    elements(1, 2);
+    nested(0, 1);
+    vectors(2);
+}
+
+scene Demo {
+    camera Main {}
+    entity Panel {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Stripes {};
+    }
+}

@@ -1,0 +1,9 @@
+fn flattened(vs: array<vec3, 4>, i: i32) -> array<vec3, 4> {
+    var out = vs;
+    out[i].xz = vec2(0.0, 0.0);
+    return out;
+}
+
+scene Demo {
+    camera Main {}
+}

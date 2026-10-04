@@ -81,8 +81,9 @@ const compiled = import.meta.glob<string>("../../../../tests/codegen/*/expected/
 describe("compiled manifests (tests/codegen/*/expected)", () => {
   const paths = Object.keys(compiled).sort();
 
-  it("exist for the two M1 scene fixtures and the two function fixtures", () => {
+  it("exist for the two M1 scene fixtures and the three function fixtures", () => {
     expect(paths.map((path) => path.split("/").at(-3))).toEqual([
+      "assignable_places",
       "cpu_functions",
       "numeric_cpu_table",
       "scene_a_target_camera_box",

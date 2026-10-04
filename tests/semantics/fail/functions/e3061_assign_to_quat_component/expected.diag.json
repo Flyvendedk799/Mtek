@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 72,
+    "endByte": 80,
+    "message": "Cannot assign to a component of a quat value: only single components of vectors are assignable.",
+    "notes": [
+      "assignable places are `var` locals, their struct fields and array elements, and single components of those that are vectors"
+    ]
+  }
+]

@@ -951,6 +951,10 @@ mod tests {
                     "../../../../tests/semantics/pass/functions_statements_and_calls/src/main.mtek"
                 ),
             )]),
+            program_of(&[(
+                "src/main.mtek",
+                include_str!("../../../../tests/codegen/assignable_places/src/main.mtek"),
+            )]),
         ];
         let mut checked = 0;
         for program in &programs {

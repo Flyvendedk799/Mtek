@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-W4003",
+    "file": "src/main.mtek",
+    "startByte": 1889,
+    "endByte": 1898,
+    "message": "The `cpu fn` 'reach_all' uses no CPU-only operation; it could be a `fn`.",
+    "notes": [
+      "help: declare it with `fn`, so that pure functions and GPU code can call it"
+    ]
+  }
+]

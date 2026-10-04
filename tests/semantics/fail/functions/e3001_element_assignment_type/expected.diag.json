@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 112,
+    "endByte": 116,
+    "message": "Cannot assign a value of type bool to a place of type f32.",
+    "expected": "f32",
+    "actual": "bool"
+  }
+]

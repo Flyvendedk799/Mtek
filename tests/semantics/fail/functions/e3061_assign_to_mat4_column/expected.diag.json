@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 47,
+    "endByte": 51,
+    "message": "Cannot assign to a column of a mat4: matrix columns are not assignable places in v0.1.",
+    "notes": [
+      "assignable places are `var` locals, their struct fields and array elements, and single components of those that are vectors",
+      "help: build a new matrix with `mat4.columns(…)` and assign it to the variable"
+    ]
+  }
+]

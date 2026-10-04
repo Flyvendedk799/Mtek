@@ -3,14 +3,14 @@
     "code": "MTEK-E3061",
     "file": "src/main.mtek",
     "startByte": 98,
-    "endByte": 103,
-    "message": "Cannot assign to the material param 'level': params are read-only in the stage.",
+    "endByte": 104,
+    "message": "Cannot assign to a part of the loop variable 'row': loop variables are immutable.",
     "related": [
       {
-        "message": "the param 'level' is declared here",
+        "message": "the loop variable 'row' is declared here",
         "file": "src/main.mtek",
-        "startByte": 27,
-        "endByte": 32
+        "startByte": 76,
+        "endByte": 79
       }
     ],
     "notes": [
