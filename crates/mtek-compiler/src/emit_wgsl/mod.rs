@@ -1,6 +1,7 @@
 //! WGSL emission (`spec/gpu-layout.md` sections 3, 4.4 and 9.2,
 //! `spec/compiler-architecture.md` sections 7 and 8).
 //!
+//! - [`artifact`]: [`emit_shader`] and the validated [`ShaderArtifact`] of a material,
 //! - [`blocks`]: struct declarations, typed leaf accessors and binding declarations
 //!   generated from a [`LayoutRecord`](crate::layout::LayoutRecord),
 //! - [`printer`]: the WGSL printer of the shader IR
@@ -12,11 +13,13 @@
 //! The emitter never computes an offset: every `@align` and `@size` attribute is derived
 //! from offsets, sizes and strides already present in the layout record.
 
+pub mod artifact;
 pub mod blocks;
 pub mod printer;
 pub mod span_map;
 pub mod validate;
 
+pub use artifact::{ShaderArtifact, emit_shader};
 pub use blocks::{
     Leaf, LeafKind, emit_bindings, emit_block_structs, leaf_accessors, member_wgsl_name,
     padded_element_name, wgsl_struct_name,

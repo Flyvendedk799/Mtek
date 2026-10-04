@@ -4,7 +4,11 @@
 //! - [`shader_ir`]: the shader IR of section 7.1, printed to WGSL by
 //!   [`crate::emit_wgsl::printer`],
 //! - [`standard_stage`]: the generated vertex stage and fragment wrapper every material
-//!   shares (`spec/materials.md` section 3).
+//!   shares (`spec/materials.md` section 3),
+//! - [`builtin_unlit`]: **temporary** (decision 0013, removed in M2-09): the compiler-built
+//!   shader of the built-in `Unlit` material.
 
+// TEMPORARY (decision 0013): removed in M2-09
+pub mod builtin_unlit;
 pub mod shader_ir;
 pub mod standard_stage;
