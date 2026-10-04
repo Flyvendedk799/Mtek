@@ -403,22 +403,7 @@ impl<'a> Resolver<'a> {
     }
 
     fn prelude_since(&self, item: PreludeItem) -> Option<Milestone> {
-        let registry = self.registry;
-        match item {
-            PreludeItem::Type(name) => registry.type_def(name).map(|t| t.since),
-            PreludeItem::Schema(name) => registry.schema(name).map(|s| s.since),
-            PreludeItem::Enum(name) => registry.enum_def(name).map(|e| e.since),
-            PreludeItem::Namespace(name) => registry.namespace(name).map(|n| n.since),
-            PreludeItem::Function(name) => registry.intrinsic(name).map(|i| i.since),
-            PreludeItem::NamespaceMember { namespace, member } => registry
-                .namespace_member(namespace, member)
-                .map(|m| m.since()),
-            PreludeItem::EnumMember { enum_name, member } => {
-                registry.enum_member(enum_name, member).map(|m| m.since)
-            }
-            PreludeItem::SceneObject(keyword) => registry.scene_object(keyword).map(|k| k.since),
-            PreludeItem::Event(name) => registry.event(name).map(|e| e.since),
-        }
+        item.since()
     }
 
     /// Gate the use of a prelude item by its registry `since`.
