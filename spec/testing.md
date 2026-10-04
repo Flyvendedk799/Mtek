@@ -45,6 +45,7 @@ All commands work from a clean checkout after `npm ci && npm run build` (`build`
   ```
   The compiler's diagnostics must match the list **exactly** (codes, primary spans, messages, order). Related spans and notes are matched when present in the expected file.
 - `tests/semantics/pass/<name>/` — must check with zero errors (warnings listed in `expected.diag.json` if any).
+- `tests/semantics/gpu/<name>/` — like a fail fixture, checked with the functions listed in `gpu-roots.txt` (one symbol per line) as GPU roots: the GPU-reachability rules before material stage functions exist (decision 0038).
 - `tests/codegen/<name>/` — a codegen fixture is **any directory directly under `tests/codegen/` that contains `mtek.toml`**; every other directory there (`support/`, `.out/`, `writers/`, `wgsl/`, `wgsl-blocks/`, `ir/`, …) is ignored by the fixture runner. Contents: `mtek.toml`, sources, `expected/` (the `dist/` tree built with the fixed stub runtime bundle of `spec/compiler-architecture.md` §4.12, minus the bundle file itself), and `exec.json` (§4.1).
 - `tests/gpu-layout/<name>.type.json` + `<name>.layout.json` — §4.2.
 

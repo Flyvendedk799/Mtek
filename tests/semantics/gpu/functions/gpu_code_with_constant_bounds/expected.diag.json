@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-W4003",
+    "file": "src/main.mtek",
+    "startByte": 266,
+    "endByte": 272,
+    "message": "The `cpu fn` 'report' uses no CPU-only operation; it could be a `fn`.",
+    "notes": [
+      "help: declare it with `fn`, so that pure functions and GPU code can call it"
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+fn total(a: f32, b: f32) -> f32 {
+    let sum = a;
+    sum += b;
+    return sum;
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 59,
+    "endByte": 60,
+    "message": "A `for` loop runs over a range `a..b` or an array, but this expression has type vec3.",
+    "expected": "an array or a range",
+    "actual": "vec3"
+  }
+]

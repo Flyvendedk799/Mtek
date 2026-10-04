@@ -67,7 +67,7 @@ use mtek_compiler::syntax::{
 };
 use mtek_compiler::types::scene::MAX_STATIC_ENTITIES;
 use mtek_compiler::types::{CheckedEntity, CheckedField, CheckedScene, ConstValue};
-use mtek_compiler::{Analysis, analyze};
+use mtek_compiler::{Analysis, AnalyzeOptions, analyze, analyze_with};
 use serde_json::{Map, Value};
 
 fn syntax_dir() -> PathBuf {
@@ -928,6 +928,11 @@ fn semantic_fixtures(suite: &str) -> Vec<String> {
     names
 }
 
+/// The file of a `gpu` fixture that names its GPU roots, one function
+/// symbol per line (decision 0038: the test hook until M2-04's stage
+/// functions are the roots).
+const GPU_ROOTS: &str = "gpu-roots.txt";
+
 /// Every file under `dir` except the expected diagnostics, with its path
 /// relative to the fixture root, in sorted order.
 fn fixture_files(root: &Path, dir: &Path, out: &mut Vec<(String, Vec<u8>)>) {
@@ -969,9 +974,21 @@ fn fixture_fs(suite: &str, name: &str, shuffle: Option<u64>) -> MemFs {
     memory
 }
 
-/// Check the fixture `<suite>/<name>`.
+/// Check the fixture `<suite>/<name>`; a `gpu` fixture with the GPU roots
+/// its `gpu-roots.txt` names.
 fn check_fixture(suite: &str, name: &str) -> Analysis {
-    analyze(&ProjectRoot::at_base(), &fixture_fs(suite, name, None))
+    check_fixture_fs(suite, name, &fixture_fs(suite, name, None))
+}
+
+/// [`check_fixture`] on the in-memory project `memory`.
+fn check_fixture_fs(suite: &str, name: &str, memory: &MemFs) -> Analysis {
+    let roots = semantics_dir().join(suite).join(name).join(GPU_ROOTS);
+    let options = AnalyzeOptions {
+        gpu_root_functions: fs::read_to_string(roots)
+            .map(|text| text.lines().map(str::to_owned).collect())
+            .unwrap_or_default(),
+    };
+    analyze_with(&ProjectRoot::at_base(), memory, &options)
 }
 
 /// The project-relative path of `file`.
@@ -1156,15 +1173,45 @@ fn every_semantic_fail_fixture_has_exactly_the_expected_diagnostics() {
 }
 
 #[test]
+fn every_gpu_fixture_has_exactly_the_expected_diagnostics() {
+    // GPU reachability (decision 0038): each fixture names the functions a
+    // material stage would call; until M2-04 implements stage functions,
+    // that is the only way to make code GPU-reachable.
+    let names = semantic_fixtures("gpu");
+    assert!(names.len() >= 3, "fixtures are missing: {names:?}");
+    for name in &names {
+        let dir = semantics_dir().join("gpu").join(name);
+        assert!(
+            dir.join(GPU_ROOTS).is_file(),
+            "semantics/gpu/{name} has no {GPU_ROOTS}"
+        );
+        let result = check_fixture("gpu", name);
+        let json = semantic_json(&result);
+        check_diagnostics(&dir.join(EXPECTED), &json);
+        assert_report_schema_valid(&format!("gpu/{name}"), &result);
+        // Without the roots, nothing is GPU code: no `E4010`–`E4012`.
+        let plain = analyze(&ProjectRoot::at_base(), &fixture_fs("gpu", name, None));
+        assert!(
+            plain
+                .report
+                .diagnostics
+                .iter()
+                .all(|d| !matches!(d.code.short(), "E4010" | "E4011" | "E4012")),
+            "semantics/gpu/{name} reports GPU rules without GPU roots"
+        );
+    }
+}
+
+#[test]
 fn every_semantic_fixture_directory_is_a_project() {
-    for suite in ["pass", "fail"] {
+    for suite in ["pass", "fail", "gpu"] {
         for name in semantic_fixtures(suite) {
             let dir = semantics_dir().join(suite).join(&name);
             assert!(
                 dir.join("mtek.toml").is_file(),
                 "semantics/{suite}/{name} has no mtek.toml"
             );
-            if suite == "fail" {
+            if suite != "pass" {
                 assert!(
                     dir.join(EXPECTED).is_file(),
                     "semantics/fail/{name} has no {EXPECTED}"
@@ -1178,14 +1225,14 @@ fn every_semantic_fixture_directory_is_a_project() {
 fn semantic_results_are_deterministic() {
     // The same fixture checked twice, and with shuffled directory listings,
     // gives identical diagnostics (`spec/compiler-architecture.md` 5).
-    for suite in ["pass", "fail"] {
+    for suite in ["pass", "fail", "gpu"] {
         for name in semantic_fixtures(suite) {
             let first = semantic_json(&check_fixture(suite, &name));
             let second = semantic_json(&check_fixture(suite, &name));
             assert_eq!(first, second, "{suite}/{name}");
             for seed in [1, 2, 3] {
                 let memory = fixture_fs(suite, &name, Some(seed));
-                let shuffled = semantic_json(&analyze(&ProjectRoot::at_base(), &memory));
+                let shuffled = semantic_json(&check_fixture_fs(suite, &name, &memory));
                 assert_eq!(first, shuffled, "{suite}/{name} with seed {seed}");
             }
         }
@@ -1453,7 +1500,7 @@ fn every_gated_construct_has_a_gating_fixture() {
             "no gate_* fixture reports {construct:?}: {messages:#?}"
         );
     }
-    assert!(gated >= 10, "{gated} gated constructs");
+    assert!(gated >= 8, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
         ("The built-in type `sampler`", "M4"),
@@ -1570,19 +1617,6 @@ fn the_syntax_corpus_resolves_without_panicking() {
 /// that implement them.
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
-    ("W2010", "M2-02: functions and statements"),
-    ("E3060", "M2-02: functions and statements"),
-    ("E3061", "M2-02: functions and statements"),
-    ("E3070", "M2-02: functions and statements"),
-    ("E3080", "M2-02: functions and statements"),
-    ("W3081", "M2-02: functions and statements"),
-    ("E4001", "M2-02: functions and statements"),
-    ("E4002", "M2-02: functions and statements"),
-    ("W4003", "M2-02: functions and statements"),
-    ("E4010", "M2-04: materials"),
-    ("E4011", "M2-04: materials"),
-    ("E4012", "M2-04: materials"),
-    ("E4013", "M2-04: materials"),
     ("E4020", "M2-04: materials"),
     ("E4021", "M2-04: materials"),
     ("E4030", "M2-04: materials"),
@@ -1608,7 +1642,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E5073", "M3-02: field writes in handlers"),
     ("E5074", "M5: entity_ref"),
     ("E5075", "M3-05: bind"),
-    ("E5080", "M5: spawn and destroy"),
     ("E5091", "M5: physics"),
     ("W5101", "M2-04: materials"),
     ("E5110", "M5: lights in prefabs"),
@@ -1642,6 +1675,21 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
 /// Codes this build implements that no program checked by this build can
 /// produce, with the reason and the test file that covers them instead.
 const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
+    (
+        "E4012",
+        "every CPU-only built-in function is planned for M3 or later",
+        "src/types/effects_tests.rs",
+    ),
+    (
+        "E4013",
+        "every GPU-only built-in function is planned for M4",
+        "src/types/effects_tests.rs",
+    ),
+    (
+        "E5080",
+        "`spawn` and `destroy` are planned for M5",
+        "src/types/effects_tests.rs",
+    ),
     (
         "E5003",
         "no M1 schema has a required field (the first are the M5 colliders)",
@@ -1740,7 +1788,7 @@ fn fixture_codes() -> BTreeMap<String, BTreeSet<String>> {
             }
         }
     }
-    for suite in ["pass", "fail"] {
+    for suite in ["pass", "fail", "gpu"] {
         for name in semantic_fixtures(suite) {
             let path = semantics_dir().join(suite).join(&name).join(EXPECTED);
             if path.exists() {

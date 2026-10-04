@@ -1,0 +1,48 @@
+// Every statement and expression form a function body has in M2-02.
+struct Wave {
+    amplitude: f32;
+    offset: vec3;
+}
+
+const STEPS: u32 = 4;
+
+fn falloff(d: f32) -> f32 {
+    return 1.0 / (1.0 + d * d);
+}
+
+fn ripple(w: Wave, p: vec3, weights: array<f32, 3>, enabled: bool) -> vec3 {
+    let d = length(p - w.offset);
+    var total = 0.0;
+    var v = vec3(0.0, 1.0, 0.0);
+    const HALF: f32 = 0.5 * 1.0;
+    for i in 0..STEPS {
+        if i == 2 {
+            continue;
+        } else if !enabled {
+            break;
+        }
+        total += falloff(d * f32(i)) * HALF;
+    }
+    for weight in weights {
+        total -= weight;
+    }
+    v.y = total * w.amplitude;
+    v *= 2.0;
+    {
+        let lifted = Wave { offset: v; amplitude: weights[1] };
+        v = lifted.offset + vec3(p.x, -d, 0.0);
+    }
+    if enabled && total > 0.0 {
+        return v.zyx;
+    }
+    return -v;
+}
+
+cpu fn report(w: Wave) {
+    ripple(w, vec3(1.0), [0.25, 0.5, 0.25], true);
+    return;
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -3,8 +3,9 @@
 //! deterministic: they depend only on the program and the source text.
 
 use super::model::{
-    Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Origin, Program,
-    Projection, ProjectionDesc, Scene, Source, StructItem,
+    Block, Camera, Const, Entity, Expr, ExprKind, Field, Function, Item, LocalItem, LocalKind,
+    MaterialInstanceDesc, Mesh, MeshDesc, NamedExpr, Origin, Place, Program, Projection,
+    ProjectionDesc, Scene, Source, Stmt, StructItem,
 };
 use crate::source::{SourceMap, Span};
 
@@ -103,6 +104,7 @@ pub fn to_human(program: &Program, sources: &SourceMap) -> String {
                 Item::Const(constant) => out.constant(2, constant),
                 Item::Scene(scene) => out.scene(2, scene),
                 Item::Struct(item) => out.structure(2, item),
+                Item::Function(function) => out.function(2, function),
             }
         }
     }
@@ -163,6 +165,203 @@ impl Tree<'_> {
                 item.symbol
             ),
         );
+    }
+
+    fn function(&mut self, depth: usize, function: &Function) {
+        let location = self.location(function.span);
+        let keyword = if function.effect == "cpu" {
+            "cpu fn"
+        } else {
+            "fn"
+        };
+        let params: Vec<String> = function
+            .params()
+            .map(|p| format!("{}: {}", p.name, p.ty))
+            .collect();
+        let result = function
+            .result
+            .as_ref()
+            .map_or_else(String::new, |r| format!(" -> {r}"));
+        let mut domains = Vec::new();
+        if function.gpu_reachable {
+            domains.push("gpu");
+        }
+        if function.cpu_reachable {
+            domains.push("cpu");
+        }
+        let reached = if domains.is_empty() {
+            "unreached".to_owned()
+        } else {
+            format!("reached by {}", domains.join(" and "))
+        };
+        self.line(
+            depth,
+            format!(
+                "{keyword} {}({}){result} [{}] {}, {reached} {location}",
+                function.name,
+                params.join(", "),
+                function.symbol,
+                function.effect
+            ),
+        );
+        for local in &function.locals {
+            let location = self.location(local.span);
+            let kind = match local.kind {
+                LocalKind::Param => "param",
+                LocalKind::Let => "let",
+                LocalKind::Var => "var",
+                LocalKind::Loop => "loop",
+            };
+            self.line(
+                depth + 1,
+                format!(
+                    "local #{} {}: {} ({kind}) {location}",
+                    local.index, local.name, local.ty
+                ),
+            );
+        }
+        self.block(depth + 1, &function.body, &function.locals);
+    }
+
+    fn block(&mut self, depth: usize, block: &Block, locals: &[LocalItem]) {
+        for stmt in &block.stmts {
+            self.stmt(depth, stmt, locals);
+        }
+    }
+
+    fn stmt(&mut self, depth: usize, stmt: &Stmt, locals: &[LocalItem]) {
+        let local_name = |index: u32| {
+            locals
+                .get(index as usize)
+                .map_or_else(|| format!("#{index}"), |l| format!("{}#{index}", l.name))
+        };
+        match stmt {
+            Stmt::Let { local, value, span } | Stmt::Var { local, value, span } => {
+                let keyword = if matches!(stmt, Stmt::Var { .. }) {
+                    "var"
+                } else {
+                    "let"
+                };
+                let location = self.location(*span);
+                self.line(
+                    depth,
+                    format!(
+                        "{keyword} {} = {} {location}",
+                        local_name(*local),
+                        expr_text(value)
+                    ),
+                );
+            }
+            Stmt::Const {
+                name,
+                ty,
+                value,
+                span,
+            } => {
+                let location = self.location(*span);
+                self.line(depth, format!("const {name}: {ty} = {value} {location}"));
+            }
+            Stmt::Assign {
+                target,
+                op,
+                value,
+                span,
+            } => {
+                let location = self.location(*span);
+                self.line(
+                    depth,
+                    format!(
+                        "{} {op} {} {location}",
+                        place_text(target, &local_name),
+                        expr_text(value)
+                    ),
+                );
+            }
+            Stmt::If {
+                branches,
+                otherwise,
+                span,
+            } => {
+                let location = self.location(*span);
+                for (index, branch) in branches.iter().enumerate() {
+                    let keyword = if index == 0 { "if" } else { "else if" };
+                    let suffix = if index == 0 {
+                        format!(" {location}")
+                    } else {
+                        String::new()
+                    };
+                    self.line(
+                        depth,
+                        format!("{keyword} {}{suffix}", expr_text(&branch.cond)),
+                    );
+                    self.block(depth + 1, &branch.body, locals);
+                }
+                if let Some(block) = otherwise {
+                    self.line(depth, "else".to_owned());
+                    self.block(depth + 1, block, locals);
+                }
+            }
+            Stmt::ForRange {
+                local,
+                start,
+                end,
+                body,
+                span,
+            } => {
+                let location = self.location(*span);
+                self.line(
+                    depth,
+                    format!(
+                        "for {} in {}..{} {location}",
+                        local_name(*local),
+                        expr_text(start),
+                        expr_text(end)
+                    ),
+                );
+                self.block(depth + 1, body, locals);
+            }
+            Stmt::ForEach {
+                local,
+                array,
+                body,
+                span,
+            } => {
+                let location = self.location(*span);
+                self.line(
+                    depth,
+                    format!(
+                        "for {} in {} {location}",
+                        local_name(*local),
+                        expr_text(array)
+                    ),
+                );
+                self.block(depth + 1, body, locals);
+            }
+            Stmt::Return { value, span } => {
+                let location = self.location(*span);
+                let value = value
+                    .as_ref()
+                    .map_or_else(String::new, |v| format!(" {}", expr_text(v)));
+                self.line(depth, format!("return{value} {location}"));
+            }
+            Stmt::Break { span } => {
+                let location = self.location(*span);
+                self.line(depth, format!("break {location}"));
+            }
+            Stmt::Continue { span } => {
+                let location = self.location(*span);
+                self.line(depth, format!("continue {location}"));
+            }
+            Stmt::Block { body } => {
+                let location = self.location(body.span);
+                self.line(depth, format!("block {location}"));
+                self.block(depth + 1, body, locals);
+            }
+            Stmt::Expr { expr, span } => {
+                let location = self.location(*span);
+                self.line(depth, format!("{} {location}", expr_text(expr)));
+            }
+        }
     }
 
     fn scene(&mut self, depth: usize, scene: &Scene) {
@@ -292,6 +491,56 @@ impl Tree<'_> {
             self.line(depth + 1, format!("{}: {} = {value}", param.name, param.ty));
         }
     }
+}
+
+/// An assignment target in Mtek-like notation.
+fn place_text(place: &Place, local_name: &dyn Fn(u32) -> String) -> String {
+    match place {
+        Place::Local { local, .. } => local_name(*local),
+        Place::Component { base, index } => {
+            let letter = ["x", "y", "z", "w"].get(*index as usize).unwrap_or(&"?");
+            format!("{}.{letter}", place_text(base, local_name))
+        }
+    }
+}
+
+/// An expression in Mtek-like notation with its type: `(x * 2.0): f32`.
+/// Expressions nest no deeper than the parser allows.
+fn expr_text(expr: &Expr) -> String {
+    let list = |items: &[Expr]| items.iter().map(expr_text).collect::<Vec<_>>().join(", ");
+    let named = |fields: &[NamedExpr]| {
+        fields
+            .iter()
+            .map(|f| format!("{}: {}", f.name, expr_text(&f.value)))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    let text = match &expr.kind {
+        ExprKind::Const { value } => return value.to_string(),
+        ExprKind::Local { local, name } => return format!("{name}#{local}"),
+        ExprKind::Unary { op, operand } => format!("{op}{}", expr_text(operand)),
+        ExprKind::Binary { op, lhs, rhs } => {
+            format!("{} {op} {}", expr_text(lhs), expr_text(rhs))
+        }
+        ExprKind::Call { function, args } => format!("{function}({})", list(args)),
+        ExprKind::Builtin { function, args } => format!("{function}({})", list(args)),
+        ExprKind::Construct { args } => format!("{}({})", expr.ty, list(args)),
+        ExprKind::Convert { arg } => format!("{}({})", expr.ty, expr_text(arg)),
+        ExprKind::Components { base, components } => {
+            let letters = if base.ty == "color" { "rgba" } else { "xyzw" };
+            let names: String = components
+                .iter()
+                .filter_map(|i| letters.chars().nth(*i as usize))
+                .collect();
+            format!("{}.{names}", expr_text(base))
+        }
+        ExprKind::Field { base, field, .. } => format!("{}.{field}", expr_text(base)),
+        ExprKind::Index { base, index } => format!("{}[{}]", expr_text(base), expr_text(index)),
+        ExprKind::Array { elements } => format!("[{}]", list(elements)),
+        ExprKind::Struct { fields } => format!("{} {{ {} }}", expr.ty, named(fields)),
+        ExprKind::Descriptor { schema, fields } => format!("{schema} {{ {} }}", named(fields)),
+    };
+    format!("({text}): {}", expr.ty)
 }
 
 fn origin(origin: Origin) -> &'static str {

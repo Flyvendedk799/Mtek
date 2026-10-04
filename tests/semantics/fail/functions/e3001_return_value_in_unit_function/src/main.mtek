@@ -1,0 +1,7 @@
+fn log_level(a: f32) {
+    return a;
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,15 @@
+fn blur(steps: i32) -> f32 {
+    var total = 0.0;
+    for i in 0..steps {
+        total += 1.0;
+    }
+    return total;
+}
+
+fn shade(x: f32) -> f32 {
+    return blur(4) * x;
+}
+
+scene Demo {
+    camera Main {}
+}

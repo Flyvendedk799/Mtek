@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 50,
+    "endByte": 51,
+    "message": "The local 'a' is declared as f32, but its value has type i32.",
+    "expected": "f32",
+    "actual": "i32"
+  }
+]

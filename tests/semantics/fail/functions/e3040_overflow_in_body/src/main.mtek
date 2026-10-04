@@ -1,0 +1,8 @@
+fn big(x: i32) -> i32 {
+    let limit = 2147483647 + 1;
+    return x + limit;
+}
+
+scene Demo {
+    camera Main {}
+}

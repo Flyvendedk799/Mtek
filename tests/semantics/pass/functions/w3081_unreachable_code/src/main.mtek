@@ -1,0 +1,13 @@
+fn first_positive(xs: array<f32, 3>) -> f32 {
+    for x in xs {
+        if x > 0.0 {
+            return x;
+            let never = x * 2.0;
+        }
+    }
+    return 0.0;
+}
+
+scene Demo {
+    camera Main {}
+}

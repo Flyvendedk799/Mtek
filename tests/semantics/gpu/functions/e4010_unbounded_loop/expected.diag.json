@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E4010",
+    "file": "src/main.mtek",
+    "startByte": 63,
+    "endByte": 71,
+    "message": "The bounds of this `for` loop are not constant expressions, but the function 'blur' runs on the GPU.",
+    "related": [
+      {
+        "message": "'shade' runs on the GPU (called from a stage function)",
+        "file": "src/main.mtek",
+        "startByte": 126,
+        "endByte": 131
+      },
+      {
+        "message": "'shade' calls 'blur' here",
+        "file": "src/main.mtek",
+        "startByte": 160,
+        "endByte": 167
+      }
+    ],
+    "notes": [
+      "loops in GPU code need bounds that are constant expressions"
+    ]
+  }
+]

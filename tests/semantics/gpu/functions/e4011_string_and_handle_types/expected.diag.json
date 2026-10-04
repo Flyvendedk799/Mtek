@@ -1,0 +1,65 @@
+[
+  {
+    "code": "MTEK-E4011",
+    "file": "src/main.mtek",
+    "startByte": 15,
+    "endByte": 21,
+    "message": "The parameter 'name' has type string, which does not exist on the GPU, but the function 'label' runs on the GPU.",
+    "actual": "string",
+    "related": [
+      {
+        "message": "'tint' runs on the GPU (called from a stage function)",
+        "file": "src/main.mtek",
+        "startByte": 54,
+        "endByte": 58
+      },
+      {
+        "message": "'tint' calls 'label' here",
+        "file": "src/main.mtek",
+        "startByte": 120,
+        "endByte": 132
+      }
+    ],
+    "notes": [
+      "GPU code uses only bool, i32, u32, f32, vectors, mat4, quat, color, and structs and arrays of them"
+    ]
+  },
+  {
+    "code": "MTEK-E4011",
+    "file": "src/main.mtek",
+    "startByte": 62,
+    "endByte": 66,
+    "message": "The parameter 'm' has type mesh, which does not exist on the GPU, but the function 'tint' runs on the GPU.",
+    "actual": "mesh",
+    "related": [
+      {
+        "message": "'tint' runs on the GPU (called from a stage function)",
+        "file": "src/main.mtek",
+        "startByte": 54,
+        "endByte": 58
+      }
+    ],
+    "notes": [
+      "GPU code uses only bool, i32, u32, f32, vectors, mat4, quat, color, and structs and arrays of them"
+    ]
+  },
+  {
+    "code": "MTEK-E4011",
+    "file": "src/main.mtek",
+    "startByte": 93,
+    "endByte": 98,
+    "message": "The local 'title' has type string, which does not exist on the GPU, but the function 'tint' runs on the GPU.",
+    "actual": "string",
+    "related": [
+      {
+        "message": "'tint' runs on the GPU (called from a stage function)",
+        "file": "src/main.mtek",
+        "startByte": 54,
+        "endByte": 58
+      }
+    ],
+    "notes": [
+      "GPU code uses only bool, i32, u32, f32, vectors, mat4, quat, color, and structs and arrays of them"
+    ]
+  }
+]

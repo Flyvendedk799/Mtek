@@ -1,0 +1,10 @@
+import { ease, Curve } from "./easing.mtek";
+
+fn eased(t: f32) -> f32 {
+    let c = Curve { power: 2.0 };
+    return ease(t, c);
+}
+
+scene Demo {
+    camera Main {}
+}

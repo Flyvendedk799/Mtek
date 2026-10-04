@@ -1,0 +1,10 @@
+fn flatten(v: vec3) -> vec3 {
+    var p = v;
+    p.xz = vec2(0.0, 0.0);
+    p.y = 0.0;
+    return p;
+}
+
+scene Demo {
+    camera Main {}
+}

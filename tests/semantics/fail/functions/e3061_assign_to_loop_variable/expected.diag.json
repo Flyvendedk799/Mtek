@@ -1,0 +1,17 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 74,
+    "endByte": 75,
+    "message": "Cannot assign to the loop variable 'i': loop variables are immutable.",
+    "related": [
+      {
+        "message": "the loop variable 'i' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 54,
+        "endByte": 55
+      }
+    ]
+  }
+]

@@ -58,3 +58,4 @@ recorded here before code depends on it (blueprint §15).
 | 0035 | The complete type system: details the specification leaves open |
 | 0036 | Modules: details the specification leaves open |
 | 0037 | Runtime math library `rt`: details the specification leaves open |
+| 0038 | Functions, statements and effects: details the specification leaves open |

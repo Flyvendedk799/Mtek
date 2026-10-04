@@ -1,0 +1,11 @@
+cpu fn roll(seed: f32) -> f32 {
+    return seed;
+}
+
+fn jitter(x: f32) -> f32 {
+    return x + roll(x);
+}
+
+scene Demo {
+    camera Main {}
+}

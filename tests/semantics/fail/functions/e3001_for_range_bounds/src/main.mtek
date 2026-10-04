@@ -1,0 +1,11 @@
+fn steps(n: f32) -> f32 {
+    var total = 0.0;
+    for i in 0.0..n {
+        total += 1.0;
+    }
+    return total;
+}
+
+scene Demo {
+    camera Main {}
+}

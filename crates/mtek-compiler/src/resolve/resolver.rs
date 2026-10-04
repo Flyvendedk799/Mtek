@@ -1213,10 +1213,14 @@ impl<'a> Resolver<'a> {
     }
 
     fn self_value(&mut self, expr: &Expr) {
-        let entered = self.enter(Construct::SelfValue, expr.span);
-        self.leave(entered);
         let res = match self.self_def {
-            Some(id) => Res::Def(id),
+            Some(id) => {
+                let entered = self.enter(Construct::SelfValue, expr.span);
+                self.leave(entered);
+                Res::Def(id)
+            }
+            // Outside an entity or prefab `self` would be wrong in every
+            // build: only `E2003`, not `E9010` as well.
             None => {
                 self.sink.push(
                     Diagnostic::new(

@@ -1,0 +1,25 @@
+fn sign_of(x: f32) -> f32 {
+    if x > 0.0 {
+        return 1.0;
+    } else if x < 0.0 {
+        return -1.0;
+    } else {
+        return 0.0;
+    }
+}
+
+fn nested(x: i32) -> i32 {
+    {
+        return x;
+    }
+}
+
+fn unit(x: f32) {
+    if x > 0.0 {
+        return;
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

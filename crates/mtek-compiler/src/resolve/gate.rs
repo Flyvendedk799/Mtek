@@ -150,8 +150,9 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::Export => row("`export`", false, M1),
         Construct::ConstItem => row("`const` items", true, M1),
         Construct::BodyConst => row("`const` declarations in bodies", true, M1),
-        Construct::Fn => row("`fn` declarations", true, M2),
-        Construct::CpuFn => row("`cpu fn` declarations", true, M2),
+        // Planned for M2; implemented by task M2-02 before the M2 gate (decision 0038).
+        Construct::Fn => row("`fn` declarations", true, M1),
+        Construct::CpuFn => row("`cpu fn` declarations", true, M1),
         // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
         Construct::Struct => row("`struct` declarations", true, M1),
         Construct::Material => row("`material` declarations", true, M2),
@@ -281,6 +282,8 @@ mod tests {
             Construct::ArrayLiteral,
             Construct::Index,
             Construct::Struct,
+            Construct::Fn,
+            Construct::CpuFn,
         ] {
             assert!(
                 is_implemented(construct_gate(construct).since),
@@ -288,8 +291,6 @@ mod tests {
             );
         }
         for construct in [
-            Construct::Fn,
-            Construct::CpuFn,
             Construct::Material,
             Construct::Prefab,
             Construct::State,
@@ -359,15 +360,16 @@ mod tests {
         assert_eq!(unary_construct(UnaryOp::Not), Construct::Logical);
         assert!(construct_implemented(Construct::Arithmetic));
         assert!(construct_implemented(Construct::Logical));
-        assert!(!construct_implemented(Construct::Fn));
+        assert!(construct_implemented(Construct::Fn));
+        assert!(!construct_implemented(Construct::Material));
     }
 
     #[test]
     fn messages_follow_the_specified_wording() {
-        let gate = construct_gate(Construct::Fn);
+        let gate = construct_gate(Construct::Material);
         assert_eq!(
             gate_message(gate.subject, gate.plural, gate.since),
-            "`fn` declarations are specified for v0.1 but not implemented by this compiler build yet (planned for M2)."
+            "`material` declarations are specified for v0.1 but not implemented by this compiler build yet (planned for M2)."
         );
         let gate = construct_gate(Construct::Bind);
         assert_eq!(

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3002",
+    "file": "src/main.mtek",
+    "startByte": 122,
+    "endByte": 132,
+    "message": "`mix3` takes 3 arguments, but 2 were given.",
+    "notes": [
+      "signature: mix3(a: f32, b: f32, t: f32) -> f32"
+    ]
+  }
+]

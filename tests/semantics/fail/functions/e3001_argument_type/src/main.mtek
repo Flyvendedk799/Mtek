@@ -1,0 +1,15 @@
+fn scale(v: vec3, factor: f32) -> vec3 {
+    return v * factor;
+}
+
+fn twice(v: vec3) -> vec3 {
+    return scale(v, 2);
+}
+
+fn wrong(v: vec3) -> vec3 {
+    return scale(2.0, v);
+}
+
+scene Demo {
+    camera Main {}
+}

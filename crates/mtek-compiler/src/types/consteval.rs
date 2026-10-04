@@ -548,7 +548,7 @@ impl Checker<'_> {
             return Folded::Unknown;
         };
         match kind {
-            CallKind::UserFunction(name) => Folded::NotConstant(NonConstant {
+            CallKind::UserFunction { name, .. } => Folded::NotConstant(NonConstant {
                 span: expr.span,
                 kind: NonConstantKind::Call,
                 reason: format!(

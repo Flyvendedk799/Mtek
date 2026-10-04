@@ -1,0 +1,7 @@
+export cpu fn roll(seed: f32) -> f32 {
+    return seed * 0.5;
+}
+
+cpu fn twice(seed: f32) -> f32 {
+    return roll(seed) * 2.0;
+}

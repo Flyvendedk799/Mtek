@@ -1,0 +1,11 @@
+fn mix3(a: f32, b: f32, t: f32) -> f32 {
+    return a * (1.0 - t) + b * t;
+}
+
+fn half(a: f32, b: f32) -> f32 {
+    return mix3(a, b);
+}
+
+scene Demo {
+    camera Main {}
+}

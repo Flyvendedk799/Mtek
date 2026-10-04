@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 72,
+    "endByte": 84,
+    "message": "This call gives no value: the function it calls has no result type.",
+    "expected": "a value",
+    "actual": "()"
+  }
+]

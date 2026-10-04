@@ -1,0 +1,108 @@
+[
+  {
+    "code": "MTEK-W4003",
+    "file": "src/main.mtek",
+    "startByte": 7,
+    "endByte": 19,
+    "message": "The `cpu fn` 'sample_noise' uses no CPU-only operation; it could be a `fn`.",
+    "notes": [
+      "help: declare it with `fn`, so that pure functions and GPU code can call it"
+    ]
+  },
+  {
+    "code": "MTEK-E4002",
+    "file": "src/main.mtek",
+    "startByte": 95,
+    "endByte": 110,
+    "message": "The pure function 'noise' calls the `cpu fn` 'sample_noise'.",
+    "related": [
+      {
+        "message": "'sample_noise' is declared `cpu fn` here",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 19
+      }
+    ],
+    "notes": [
+      "help: a `fn` may call only `fn`s and pure built-in functions; declare 'noise' as `cpu fn` if it needs the CPU"
+    ]
+  },
+  {
+    "code": "MTEK-E4002",
+    "file": "src/main.mtek",
+    "startByte": 164,
+    "endByte": 172,
+    "message": "The pure function 'turbulence' calls 'noise', which needs the CPU: turbulence → noise → sample_noise.",
+    "related": [
+      {
+        "message": "'noise' calls the `cpu fn` 'sample_noise' here",
+        "file": "src/main.mtek",
+        "startByte": 95,
+        "endByte": 110
+      },
+      {
+        "message": "'sample_noise' is declared `cpu fn` here",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 19
+      }
+    ],
+    "notes": [
+      "help: a `fn` may call only `fn`s and pure built-in functions; declare 'turbulence' as `cpu fn` if it needs the CPU"
+    ]
+  },
+  {
+    "code": "MTEK-E4002",
+    "file": "src/main.mtek",
+    "startByte": 175,
+    "endByte": 189,
+    "message": "The pure function 'turbulence' calls 'noise', which needs the CPU: turbulence → noise → sample_noise.",
+    "related": [
+      {
+        "message": "'noise' calls the `cpu fn` 'sample_noise' here",
+        "file": "src/main.mtek",
+        "startByte": 95,
+        "endByte": 110
+      },
+      {
+        "message": "'sample_noise' is declared `cpu fn` here",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 19
+      }
+    ],
+    "notes": [
+      "help: a `fn` may call only `fn`s and pure built-in functions; declare 'turbulence' as `cpu fn` if it needs the CPU"
+    ]
+  },
+  {
+    "code": "MTEK-E4002",
+    "file": "src/main.mtek",
+    "startByte": 239,
+    "endByte": 252,
+    "message": "The pure function 'shade' calls 'turbulence', which needs the CPU: shade → turbulence → noise → sample_noise.",
+    "related": [
+      {
+        "message": "'turbulence' calls 'noise' here",
+        "file": "src/main.mtek",
+        "startByte": 164,
+        "endByte": 172
+      },
+      {
+        "message": "'noise' calls the `cpu fn` 'sample_noise' here",
+        "file": "src/main.mtek",
+        "startByte": 95,
+        "endByte": 110
+      },
+      {
+        "message": "'sample_noise' is declared `cpu fn` here",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 19
+      }
+    ],
+    "notes": [
+      "help: a `fn` may call only `fn`s and pure built-in functions; declare 'shade' as `cpu fn` if it needs the CPU"
+    ]
+  }
+]

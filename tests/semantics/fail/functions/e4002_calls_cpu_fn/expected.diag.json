@@ -1,0 +1,30 @@
+[
+  {
+    "code": "MTEK-W4003",
+    "file": "src/main.mtek",
+    "startByte": 7,
+    "endByte": 11,
+    "message": "The `cpu fn` 'roll' uses no CPU-only operation; it could be a `fn`.",
+    "notes": [
+      "help: declare it with `fn`, so that pure functions and GPU code can call it"
+    ]
+  },
+  {
+    "code": "MTEK-E4002",
+    "file": "src/main.mtek",
+    "startByte": 94,
+    "endByte": 101,
+    "message": "The pure function 'jitter' calls the `cpu fn` 'roll'.",
+    "related": [
+      {
+        "message": "'roll' is declared `cpu fn` here",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 11
+      }
+    ],
+    "notes": [
+      "help: a `fn` may call only `fn`s and pure built-in functions; declare 'jitter' as `cpu fn` if it needs the CPU"
+    ]
+  }
+]

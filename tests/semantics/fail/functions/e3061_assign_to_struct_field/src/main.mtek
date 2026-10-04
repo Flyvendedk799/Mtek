@@ -1,0 +1,14 @@
+struct Light {
+    position: vec3;
+    intensity: f32;
+}
+
+fn dimmed(l: Light) -> Light {
+    var copy = l;
+    copy.intensity = 0.5;
+    return copy;
+}
+
+scene Demo {
+    camera Main {}
+}

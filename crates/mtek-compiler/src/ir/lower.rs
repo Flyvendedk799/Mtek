@@ -20,12 +20,16 @@ use super::model::{
     Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StructFieldItem,
     StructItem, Symbol, Value,
 };
+use std::collections::BTreeMap;
+
 use crate::project::{ModuleId, Project};
 use crate::resolve::Resolution;
 use crate::source::Span;
 use crate::stdlib::{SchemaCategory, registry};
 use crate::syntax::ast::{self, ConstDecl, EntityMember, ItemKind, SceneMember};
-use crate::types::{CheckedEntity, CheckedField, CheckedObject, CheckedScene, ConstValue, Typeck};
+use crate::types::{
+    CheckedEntity, CheckedField, CheckedObject, CheckedScene, ConstValue, ProgramEffects, Typeck,
+};
 
 /// The scene fields lowered into [`SceneFields`].
 pub(super) const SCENE_FIELDS: [&str; 1] = ["clear_color"];
@@ -61,11 +65,24 @@ pub(super) struct Unit<'a> {
 /// not items of the IR: every use of an imported constant is folded, and a
 /// declaration is listed once, in the module that declares it, under its own
 /// symbol.
-pub(super) fn lower(project: &Project, units: &[Unit<'_>]) -> Result<Program, Defect> {
+pub(super) fn lower(
+    project: &Project,
+    units: &[Unit<'_>],
+    effects: &ProgramEffects,
+) -> Result<Program, Defect> {
+    let paths: BTreeMap<ModuleId, String> = project
+        .modules
+        .modules()
+        .iter()
+        .filter_map(|module| {
+            let source = project.sources.get(module.file())?;
+            Some((module.id(), source.path().as_str().to_owned()))
+        })
+        .collect();
     let mut modules = Vec::with_capacity(units.len());
     let mut entry_scene = None;
     for (index, unit) in units.iter().enumerate() {
-        let (module, scene) = lower_module(project, unit, index == 0)?;
+        let (module, scene) = lower_module(project, unit, index == 0, &paths, effects)?;
         modules.push(module);
         entry_scene = entry_scene.or(scene);
     }
@@ -82,6 +99,8 @@ fn lower_module(
     project: &Project,
     unit: &Unit<'_>,
     entry: bool,
+    paths: &BTreeMap<ModuleId, String>,
+    effects: &ProgramEffects,
 ) -> Result<(Module, Option<Symbol>), Defect> {
     let Unit {
         module,
@@ -97,8 +116,11 @@ fn lower_module(
     let path = source.path().as_str().to_owned();
     let lowering = Lowering {
         path: &path,
+        module: unit.id,
         resolution,
         types,
+        paths,
+        effects,
     };
     let mut items = Vec::new();
     let mut entry_scene = None;
@@ -126,9 +148,13 @@ fn lower_module(
                 let symbol = Symbol::item(&path, &decl.name.name);
                 items.push(Item::Struct(lowering.structure(decl, symbol)?));
             }
+            ItemKind::Fn(decl) => {
+                let symbol = Symbol::item(&path, &decl.name.name);
+                items.push(Item::Function(lowering.function(decl, symbol)?));
+            }
             // Everything else is gated in this build (`E9010`), so a program
             // without errors has none of it.
-            ItemKind::Fn(_) | ItemKind::Material(_) | ItemKind::Prefab(_) | ItemKind::Error => {
+            ItemKind::Material(_) | ItemKind::Prefab(_) | ItemKind::Error => {
                 return Err("a module item of a kind this build does not lower".to_owned());
             }
         }
@@ -144,16 +170,22 @@ fn lower_module(
     ))
 }
 
-struct Lowering<'a> {
+pub(super) struct Lowering<'a> {
     /// The normalised path of the module, the prefix of its symbols.
-    path: &'a str,
-    resolution: &'a Resolution,
-    types: &'a Typeck,
+    pub(super) path: &'a str,
+    /// The module being lowered.
+    pub(super) module: ModuleId,
+    pub(super) resolution: &'a Resolution,
+    pub(super) types: &'a Typeck,
+    /// The path of every module, for the symbols of imported functions.
+    pub(super) paths: &'a BTreeMap<ModuleId, String>,
+    /// The effect level and reachability of every function.
+    pub(super) effects: &'a ProgramEffects,
 }
 
 impl Lowering<'_> {
     /// A constant declaration with its folded value.
-    fn constant(&self, decl: &ConstDecl, symbol: Symbol) -> Result<Const, Defect> {
+    pub(super) fn constant(&self, decl: &ConstDecl, symbol: Symbol) -> Result<Const, Defect> {
         let name = &decl.name.name;
         let info = self
             .resolution

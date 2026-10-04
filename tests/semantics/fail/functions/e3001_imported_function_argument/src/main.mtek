@@ -1,0 +1,9 @@
+import { brighten } from "./shade.mtek";
+
+fn glow(level: i32) -> f32 {
+    return brighten(level);
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,12 @@
+fn nothing(x: f32) {
+    let y = x;
+}
+
+fn use_it() -> f32 {
+    let v = nothing(1.0);
+    return 0.0;
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "code": "MTEK-E4001",
+    "file": "src/main.mtek",
+    "startByte": 3,
+    "endByte": 10,
+    "message": "The function 'is_even' calls itself: is_even → is_odd → check → is_even.",
+    "related": [
+      {
+        "message": "'is_even' calls 'is_odd' here",
+        "file": "src/main.mtek",
+        "startByte": 83,
+        "endByte": 96
+      },
+      {
+        "message": "'is_odd' calls 'check' here",
+        "file": "src/main.mtek",
+        "startByte": 184,
+        "endByte": 196
+      },
+      {
+        "message": "'check' calls 'is_even' here",
+        "file": "src/main.mtek",
+        "startByte": 239,
+        "endByte": 249
+      }
+    ],
+    "notes": [
+      "help: recursion is not supported in v0.1, in either domain; rewrite it with a `for` loop"
+    ]
+  }
+]

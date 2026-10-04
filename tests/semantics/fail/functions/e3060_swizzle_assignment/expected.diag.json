@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3060",
+    "file": "src/main.mtek",
+    "startByte": 49,
+    "endByte": 53,
+    "message": "Assigning to the swizzle '.xz' is not supported in v0.1.",
+    "notes": [
+      "help: assign the components one at a time: `v.x = …; v.y = …;`"
+    ]
+  }
+]

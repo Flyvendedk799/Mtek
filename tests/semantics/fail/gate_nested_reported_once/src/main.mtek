@@ -1,16 +1,15 @@
-// Everything in this function is unimplemented in M1 (statements, arrays,
-// indexing, `sin`, `frame`, `print`, strings), but the function is
+// Everything in this lifecycle function is unimplemented in M1 (`frame`,
+// `print`, the lifecycle function itself), but the lifecycle function is
 // reported once. Its names are still resolved.
-fn everything(n: i32) -> f32 {
-    let xs = [1.0, 2.0];
-    var total = 0.0;
-    for i in 0..n {
-        total += sin(xs[i]) + frame.time;
-    }
-    print("done");
-    return total + missing;
-}
-
 scene Demo {
     camera Main {}
+    update(dt: f32) {
+        let xs = [1.0, 2.0];
+        var total = 0.0;
+        for i in 0..2 {
+            total += sin(xs[i]) + frame.time;
+        }
+        print("done");
+        total = total + missing;
+    }
 }
