@@ -20,6 +20,12 @@ pub const DEFAULT_OUT_DIR: &str = "dist";
 /// Extension every Mtek source file, and therefore the entry, carries.
 pub const SOURCE_EXTENSION: &str = ".mtek";
 
+/// The top-level directory reserved for the embedded standard library
+/// (`std/materials.mtek`, decision 0028): `project.entry` may not lie in it,
+/// so a project module never shares a path, a source id or a symbol prefix
+/// with a prelude module (decision 0030).
+pub const RESERVED_DIRECTORY: &str = "std";
+
 /// Default of `runtime.fixed_step`: one sixtieth of a second as a binary32
 /// value, as printed in `spec/runtime-abi.md`.
 pub const DEFAULT_FIXED_STEP: f64 = 0.016_666_668;

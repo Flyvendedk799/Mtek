@@ -743,6 +743,31 @@ fn the_entry_message_names_the_reason() {
 }
 
 #[test]
+fn the_entry_must_not_be_in_the_reserved_std_directory() {
+    // `std/` holds the embedded standard library (`std/materials.mtek`, whose symbols are
+    // `std/materials.mtek::Unlit`, decision 0028): a project module there would collide with
+    // it in the manifest's sources and symbols (decision 0030).
+    for reserved in ["std/materials.mtek", "std/main.mtek", "./std/a/b.mtek"] {
+        let (message, _) = invalid(&format!(
+            "[project]\nname = \"a\"\nlanguage = \"0.1\"\nentry = \"{reserved}\"\n"
+        ));
+        let normalised = reserved.trim_start_matches("./");
+        assert_eq!(
+            message,
+            format!(
+                "Invalid project configuration: 'project.entry' must be a path outside the directory 'std/', which is reserved for the embedded standard library, found \"{normalised}\"."
+            )
+        );
+    }
+    for allowed in ["stdlib/main.mtek", "src/std/main.mtek", "std.mtek"] {
+        let (_, diagnostics) = parse(&format!(
+            "[project]\nname = \"a\"\nlanguage = \"0.1\"\nentry = \"{allowed}\"\n"
+        ));
+        assert!(diagnostics.is_empty(), "{allowed}: {diagnostics:#?}");
+    }
+}
+
+#[test]
 fn the_scene_must_be_an_identifier() {
     let scene = |value: &str| {
         parse(&format!(

@@ -1,0 +1,4 @@
+// A project module where the embedded standard library lives (decision 0030).
+scene Demo {
+    camera Main {}
+}

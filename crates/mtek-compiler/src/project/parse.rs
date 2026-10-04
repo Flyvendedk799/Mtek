@@ -18,8 +18,8 @@ use toml::de::{DeTable, DeValue};
 use super::config::{
     AssetsSection, BuildSection, BuildTarget, DEFAULT_ENTRY, DEFAULT_OUT_DIR, DEV_PORT_RANGE,
     DevSection, MAX_ASSET_FILE_BYTES_RANGE, MAX_CATCH_UP_STEPS_RANGE, MAX_ENTITIES_RANGE,
-    MAX_TIME_SECONDS, PROJECT_FILE, ProjectConfig, ProjectSection, RuntimeSection,
-    SOURCE_EXTENSION, constant_path,
+    MAX_TIME_SECONDS, PROJECT_FILE, ProjectConfig, ProjectSection, RESERVED_DIRECTORY,
+    RuntimeSection, SOURCE_EXTENSION, constant_path,
 };
 use crate::LANGUAGE_VERSION;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
@@ -502,6 +502,17 @@ impl Validator {
                 path,
                 value,
                 &format!("a path to a source file ending in {SOURCE_EXTENSION}"),
+                &format!("{:?}", parsed.as_str()),
+            );
+            return None;
+        }
+        if parsed.segments().next() == Some(RESERVED_DIRECTORY) {
+            self.out_of_range(
+                path,
+                value,
+                &format!(
+                    "a path outside the directory '{RESERVED_DIRECTORY}/', which is reserved for the embedded standard library"
+                ),
                 &format!("{:?}", parsed.as_str()),
             );
             return None;
