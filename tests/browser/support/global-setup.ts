@@ -1,13 +1,15 @@
 // Global setup: prepares `.out/` (the served root), starts the static server and creates the
 // results directory. It builds the environment probe page, generates the bridge spike artifacts
 // (shaders, writers and layout records of every layout fixture, `.out/bridge/`) with the
-// compiler's `bridge_spike` example, bundles the bridge page and prepares the mount fixture.
-// Mtek fixtures are built into `.out/` by later tasks.
+// compiler's `bridge_spike` example, bundles the bridge page and prepares the mount fixture. It builds
+// the CLI (`cargo build -p mtek-cli --locked`) and every M1 fixture (`fixtures/m1/*`) with
+// `mtek build --mode test` into `.out/m1/`, plus the post-build failure variants (support/m1-fixtures.ts).
 import { execFileSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { build } from "esbuild";
 import { BROWSER_ROOT, REPO_ROOT } from "./environment.ts";
+import { buildCli, buildM1Fixtures } from "./m1-fixtures.ts";
 import { startStaticServer } from "./serve.ts";
 
 /** Bundles one page script into `.out/<name>.js` and copies its HTML next to it. */
@@ -76,6 +78,12 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   await buildPage(out, join("pages", "bridge.ts"), "bridge.html", "bridge");
 
   prepareMountFixture(out);
+
+  // M1 fixtures (M1-21). The CLI embeds the runtime bundle only when it existed at CLI build time
+  // (decision 0032 item 10); without it every `mtek build` fails with E9030 and so does this setup.
+  const cli = buildCli();
+  process.env["MTEK_CLI"] = cli;
+  buildM1Fixtures(cli);
 
   const server = await startStaticServer(out);
   // Workers are started after global setup and inherit this variable.
