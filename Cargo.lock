@@ -730,6 +730,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mtek-grammar-coverage"
+version = "0.1.0-dev"
+dependencies = [
+ "mtek-compiler",
+ "serde_json",
+]
+
+[[package]]
 name = "naga"
 version = "30.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
