@@ -25,7 +25,7 @@ use crate::layout::{
 };
 use crate::source::{SourceFile, Span};
 use crate::stdlib::{SchemaCategory, TypeRef, registry};
-use crate::syntax::ast::ItemKind;
+use crate::syntax::ast::{Item, ItemKind, MaterialMember};
 use crate::syntax::{lex, parse_module};
 
 use super::shader_ir::{Expr, Name, ShaderType, Statement, UserNameKind};
@@ -88,8 +88,47 @@ pub fn unlit_shader(prelude: &SourceFile) -> Result<ShaderArtifact, Vec<Diagnost
     emit_shader(&shader)
 }
 
+/// Where `Unlit` and its parameters are declared in the prelude: the manifest's material and
+/// param symbols and the materials' param spans point there.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UnlitDeclarations {
+    /// `export material Unlit { … }`.
+    pub declaration: Span,
+    /// Each `param name: T = default;`, in declaration order.
+    pub params: Vec<(String, Span)>,
+}
+
+/// The declarations of `Unlit` in `prelude` (the file [`PRELUDE_PATH`] with the text of
+/// [`prelude_text`]).
+///
+/// # Errors
+/// `E9999` if `prelude` is not the prelude or does not declare `Unlit`.
+pub fn unlit_declarations(prelude: &SourceFile) -> Result<UnlitDeclarations, Vec<Diagnostic>> {
+    let item = unlit_item(prelude)?;
+    let ItemKind::Material(material) = &item.kind else {
+        return Err(internal("the prelude item 'Unlit' is not a material"));
+    };
+    let params = material
+        .members
+        .iter()
+        .filter_map(|member| match member {
+            MaterialMember::Param(param) => Some((param.name.name.clone(), param.span)),
+            _ => None,
+        })
+        .collect();
+    Ok(UnlitDeclarations {
+        declaration: item.span,
+        params,
+    })
+}
+
 /// The span of `material Unlit { … }` (from `export`) in the prelude file.
 fn unlit_declaration(prelude: &SourceFile) -> Result<Span, Vec<Diagnostic>> {
+    unlit_item(prelude).map(|item| item.span)
+}
+
+/// The item `export material Unlit { … }` of the prelude file.
+fn unlit_item(prelude: &SourceFile) -> Result<Item, Vec<Diagnostic>> {
     if prelude.path().as_str() != PRELUDE_PATH || Some(prelude.text()) != prelude_text() {
         return Err(internal(format!(
             "the file '{}' passed as the prelude is not the embedded '{PRELUDE_PATH}'",
@@ -108,9 +147,8 @@ fn unlit_declaration(prelude: &SourceFile) -> Result<Span, Vec<Diagnostic>> {
     parsed
         .module
         .items
-        .iter()
+        .into_iter()
         .find(|item| matches!(&item.kind, ItemKind::Material(m) if m.name.name == UNLIT))
-        .map(|item| item.span)
         .ok_or_else(|| {
             internal(format!(
                 "the prelude '{PRELUDE_PATH}' declares no material '{UNLIT}'"
@@ -227,6 +265,22 @@ mod tests {
         );
         assert!(declared.ends_with('}'), "{declared}");
         assert!(!declared.contains("Pbr"), "{declared}");
+    }
+
+    #[test]
+    fn the_param_declarations_are_found_in_the_prelude() {
+        let text = prelude_text().expect("embedded prelude");
+        let sources = prelude_map(PRELUDE_PATH, text);
+        let file = prelude_file(&sources);
+        let found = unlit_declarations(file).expect("found");
+        assert_eq!(found.declaration, unlit_declaration(file).expect("found"));
+        let names: Vec<&str> = found.params.iter().map(|(n, _)| n.as_str()).collect();
+        assert_eq!(names, ["color"]);
+        let span = found.params[0].1;
+        assert_eq!(
+            file.slice(span.start, span.end),
+            Some("param color: color = #ffffff;")
+        );
     }
 
     #[test]

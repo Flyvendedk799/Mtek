@@ -1,9 +1,10 @@
 //! The Mtek compiler library.
 //!
 //! The public entry points (`spec/compiler-architecture.md` section 4.12):
-//! [`check`] (diagnostics only), [`inspect`] (the typed IR, decision 0028)
-//! and [`analyze`] (everything the front end produced), plus the version
-//! constants the command line tool and the runtime agree on.
+//! [`check`] (diagnostics only), [`inspect`] (the typed IR, decision 0028),
+//! [`analyze`] (everything the front end produced) and [`build`] (the
+//! `dist/` file set in memory, decision 0030), plus the version constants the
+//! command line tool and the runtime agree on.
 
 pub mod emit_js;
 pub mod emit_wgsl;
@@ -30,8 +31,13 @@ pub mod source;
 pub mod syntax;
 pub mod types;
 
+mod build;
 mod check;
 mod inspect;
+pub use build::{
+    BuildMode, BuildResult, CompileOptions, STUB_RUNTIME_BUNDLE, STUB_RUNTIME_DECLARATIONS,
+    TargetProfile, build,
+};
 pub use check::{Analysis, CheckResult, analyze, check};
 pub use inspect::{Inspect, InspectFormat, InspectResult, inspect};
 

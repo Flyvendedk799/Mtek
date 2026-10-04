@@ -1,0 +1,7 @@
+<!doctype html><meta charset="utf-8"><title>fixture</title>
+<style>html,body{margin:0;height:100%}canvas{display:block;width:100%;height:100%}</style>
+<canvas id="mtek"></canvas>
+<script type="module">
+  import program, { mountMtek } from "./app.js";
+  mountMtek(document.getElementById("mtek"), program).catch(() => {}); // failures are shown by the overlay
+</script>

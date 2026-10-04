@@ -1,0 +1,539 @@
+//! Assembling a build: shaders, `app.js`, the manifest and the `dist/` file set
+//! (`spec/runtime-abi.md` sections 2 and 5).
+//!
+//! [`package`] runs after the typed IR exists. In a fixed order it
+//!
+//! 1. plans the entry scene's resources ([`crate::plan`]);
+//! 2. emits one shader per material: in M1 the temporary compiler-built `Unlit`
+//!    (decision 0029), for which the embedded prelude is added to the build's source map as
+//!    `std/materials.mtek`, so the manifest's `sources` and `spans` cover it;
+//! 3. emits `app.js` ([`crate::emit_js::emit_program`]) with the writers of `builtin:frame`,
+//!    `builtin:object` and every material block;
+//! 4. builds the manifest, interning spans in this order: symbols (scene, cameras, entities,
+//!    then per material its declaration and its params), material params, shader span maps;
+//! 5. writes the files with content-addressed names for the runtime bundle and the shaders.
+//!
+//! The manifest carries structure and constant scene fields only; entity and camera values
+//! are set by `init(ctx)` (`spec/scenes.md` section 11). `ambientColor`, `ambientIntensity`
+//! and `gravity` are registry fields that M4/M5 implement: until then they are the registry
+//! defaults of the `Scene` schema.
+
+use std::collections::BTreeMap;
+
+use crate::diagnostics::{Code, Diagnostic};
+use crate::emit_js::{ProgramParts, emit_app_dts, emit_program, source_map};
+use crate::emit_wgsl::ShaderArtifact;
+use crate::ir::{self, MeshDesc, Program, Symbol};
+use crate::layout::{LayoutRecord, builtin_blocks, compute};
+use crate::lowering::builtin_unlit::{
+    PRELUDE_PATH, prelude_text, unlit_declarations, unlit_shader, unlit_symbol,
+};
+use crate::plan::{ParamClass, PlannedInstance, ResourcePlan, plan_scene};
+use crate::project::Project;
+use crate::source::{ProjectPath, SourceMap, Span};
+use crate::stdlib::registry;
+use crate::types::ConstValue;
+use crate::{BuildMode, COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI, TargetProfile};
+
+use super::html::index_html;
+use super::identity::{BuildIdentity, h16};
+use super::manifest::{
+    Camera, Entity, EntityMaterial, InstanceParam, Layout, MANIFEST_SCHEMA, Manifest, Material,
+    MaterialInstance, MaterialParam, Mesh, MeshShape, Num, ParamClass as ManifestClass,
+    RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, Subsystems,
+    SymbolEntry, SymbolKind,
+};
+use super::spans::SpanTable;
+
+/// The fixed file names of `spec/runtime-abi.md` section 2.
+pub const INDEX_HTML: &str = "index.html";
+pub const APP_JS: &str = "app.js";
+pub const APP_JS_MAP: &str = "app.js.map";
+pub const APP_DTS: &str = "app.d.ts";
+pub const RUNTIME_DTS: &str = "runtime.d.ts";
+pub const MANIFEST_JSON: &str = "program.manifest.json";
+
+/// What [`package`] needs besides the project and the IR.
+#[derive(Clone, Copy, Debug)]
+pub struct PackageInput<'a> {
+    pub profile: TargetProfile,
+    pub mode: BuildMode,
+    /// The runtime bundle (`runtime.<h16>.js`).
+    pub runtime_bundle: &'a [u8],
+    /// The runtime host declarations (`runtime.d.ts`).
+    pub runtime_declarations: &'a [u8],
+}
+
+/// A packaged build.
+#[derive(Clone, Debug)]
+pub struct Package {
+    /// Every file of `dist/`, keyed by its path relative to `dist/` (`/`-separated).
+    pub files: BTreeMap<String, Vec<u8>>,
+    /// The manifest's `buildId`.
+    pub build_id: String,
+    /// The manifest written to `program.manifest.json`.
+    pub manifest: Manifest,
+}
+
+/// `E9999` for a packaging defect.
+fn defect(text: impl Into<String>) -> Vec<Diagnostic> {
+    vec![
+        Diagnostic::new(
+            Code::E9999,
+            "The program could not be packaged; this is a compiler bug.",
+        )
+        .note(text.into())
+        .help("please report it with the program that caused it"),
+    ]
+}
+
+/// A material of the build with its shader and declarations.
+struct BuiltMaterial {
+    symbol: Symbol,
+    shader: ShaderArtifact,
+    /// The material declaration.
+    declaration: Span,
+    /// `(name, type, declaration)` of every param, in declaration order.
+    params: Vec<(String, String, Span)>,
+}
+
+/// Packages the checked `program` of `project`. `sources` starts as the project's source map;
+/// the prelude modules the build uses are added to it (so the caller can render any
+/// diagnostic, including one that points into the prelude).
+///
+/// # Errors
+/// `E9999` (or `E6100` from Naga) for a compiler defect, `E9010` for a build mode this build
+/// does not implement.
+pub fn package(
+    project: &Project,
+    program: &Program,
+    input: &PackageInput<'_>,
+    sources: &mut SourceMap,
+) -> Result<Package, Vec<Diagnostic>> {
+    let scene = program.entry().ok_or_else(|| {
+        defect(format!(
+            "the entry scene '{}' is not in the IR",
+            program.entry_scene
+        ))
+    })?;
+    let plan = plan_scene(scene).map_err(defect)?;
+    let materials = build_materials(&plan, sources)?;
+    let sources: &SourceMap = sources;
+
+    let mut layouts = Vec::new();
+    for block in builtin_blocks() {
+        if block.id == "builtin:frame" || block.id == "builtin:object" {
+            let record = compute(&block.ty, block.id, block.wgsl_struct)
+                .map_err(|e| defect(format!("the block '{}' has no layout: {e}", block.id)))?;
+            layouts.push(record);
+        }
+    }
+    let mut material_layouts: Vec<LayoutRecord> = materials
+        .iter()
+        .filter_map(|m| m.shader.layout.clone())
+        .collect();
+    material_layouts.sort_by(|a, b| a.id.cmp(&b.id));
+    layouts.extend(material_layouts);
+
+    let runtime_file = format!("runtime.{}.js", h16(input.runtime_bundle));
+    let app = emit_program(
+        program,
+        &plan,
+        &ProgramParts {
+            runtime_file: &runtime_file,
+            layouts: &layouts,
+        },
+    )
+    .map_err(defect)?;
+    let app_map = source_map(APP_JS, &app.mappings, sources).map_err(defect)?;
+
+    let mut spans = SpanTable::new(sources);
+    let symbols = symbols(scene, &materials, &mut spans).map_err(defect)?;
+    let mut manifest_materials = Vec::with_capacity(materials.len());
+    let mut shaders = Vec::with_capacity(materials.len());
+    let mut shader_files = Vec::with_capacity(materials.len() * 2);
+    for material in &materials {
+        let mut params = Vec::with_capacity(material.params.len());
+        for (name, ty, span) in &material.params {
+            params.push(MaterialParam {
+                name: name.clone(),
+                ty: ty.clone(),
+                span: spans.intern(*span).map_err(defect)?,
+            });
+        }
+        manifest_materials.push(Material {
+            id: material.symbol.to_string(),
+            layout: material.shader.layout.as_ref().map(|l| l.id.clone()),
+            shader: material.shader.sha256.clone(),
+            resources: Vec::new(),
+            params,
+        });
+    }
+    for material in &materials {
+        let artifact = &material.shader;
+        for entry in &artifact.span_map.entries {
+            spans.intern(entry.span).map_err(defect)?;
+        }
+        // Every span was interned above, so the lookup cannot fail.
+        let document = artifact.span_map_document(|span| spans.intern(span).unwrap_or(0));
+        let mut map_text = serde_json::to_string_pretty(&document).unwrap_or_default();
+        map_text.push('\n');
+        shaders.push(Shader {
+            hash: artifact.sha256.clone(),
+            url: artifact.wgsl_path(),
+            map: artifact.map_path(),
+            material: artifact.material.clone(),
+            vertex_entry: artifact.vertex_entry.to_owned(),
+            fragment_entry: artifact.fragment_entry.to_owned(),
+            vertex_attributes: artifact
+                .vertex_attributes
+                .iter()
+                .map(|a| a.name().to_owned())
+                .collect(),
+            surface_inputs: artifact
+                .surface_inputs
+                .iter()
+                .map(|s| s.name().to_owned())
+                .collect(),
+        });
+        shader_files.push((artifact.wgsl_path(), artifact.wgsl.clone().into_bytes()));
+        shader_files.push((artifact.map_path(), map_text.into_bytes()));
+    }
+
+    let source_entries: Vec<SourceEntry> = sources
+        .files()
+        .map(|file| SourceEntry {
+            id: file.id().0,
+            path: file.path().as_str().to_owned(),
+            sha256: file.sha256_hex(),
+        })
+        .collect();
+    let features: Vec<String> = Vec::new();
+    let build_id = BuildIdentity {
+        compiler_version: COMPILER_VERSION,
+        language_version: LANGUAGE_VERSION,
+        runtime_abi: RUNTIME_ABI,
+        target_profile: input.profile.as_str(),
+        features: &features,
+        sources: source_entries
+            .iter()
+            .map(|s| (s.path.clone(), s.sha256.clone()))
+            .collect(),
+        assets: Vec::new(),
+        config: &project.config_text,
+    }
+    .build_id();
+
+    let runtime = &project.config.runtime;
+    let number = |value: f64, what: &str| {
+        Num::from_f64(value).ok_or_else(|| defect(format!("{what} is not finite")))
+    };
+    let manifest = Manifest {
+        manifest_schema: MANIFEST_SCHEMA,
+        runtime_abi: RUNTIME_ABI,
+        language_version: LANGUAGE_VERSION.to_owned(),
+        compiler_version: COMPILER_VERSION.to_owned(),
+        build_id: build_id.clone(),
+        target_profile: input.profile.as_str().to_owned(),
+        required_capabilities: RequiredCapabilities {
+            features,
+            limits: BTreeMap::new(),
+            wgsl_language_features: Vec::new(),
+        },
+        subsystems: Subsystems { physics: false },
+        runtime_config: RuntimeConfig {
+            fixed_step: number(runtime.fixed_step, "runtime.fixed_step")?,
+            max_catch_up_steps: runtime.max_catch_up_steps,
+            max_frame_delta: number(runtime.max_frame_delta, "runtime.max_frame_delta")?,
+            max_entities: runtime.max_entities,
+            pause_when_hidden: runtime.pause_when_hidden,
+        },
+        entry_scene: scene.name.clone(),
+        sources: source_entries,
+        spans: Vec::new(),
+        symbols,
+        layouts: layouts.iter().map(Layout::from_record).collect(),
+        shaders,
+        materials: manifest_materials,
+        meshes: meshes(&plan).map_err(defect)?,
+        assets: Vec::new(),
+        scene: manifest_scene(scene, &plan).map_err(defect)?,
+    };
+    let manifest = Manifest {
+        spans: spans.into_entries(),
+        ..manifest
+    };
+
+    let html = index_html(&project.config.build.title, input.mode).ok_or_else(|| {
+        vec![Diagnostic::new(
+            Code::E9010,
+            "Preview builds are specified for v0.1 but not implemented by this compiler build yet (planned for M6).",
+        )]
+    })?;
+    let mut files = BTreeMap::new();
+    files.insert(INDEX_HTML.to_owned(), html.into_bytes());
+    files.insert(APP_JS.to_owned(), app.text.into_bytes());
+    files.insert(APP_JS_MAP.to_owned(), app_map.to_json().into_bytes());
+    files.insert(APP_DTS.to_owned(), emit_app_dts().into_bytes());
+    files.insert(RUNTIME_DTS.to_owned(), input.runtime_declarations.to_vec());
+    files.insert(runtime_file, input.runtime_bundle.to_vec());
+    files.insert(MANIFEST_JSON.to_owned(), manifest.to_json().into_bytes());
+    for (path, bytes) in shader_files {
+        files.insert(path, bytes);
+    }
+    Ok(Package {
+        files,
+        build_id,
+        manifest,
+    })
+}
+
+/// The shader and declarations of every material of the plan, sorted by symbol. Adds the
+/// prelude to `sources` when a built-in material is used.
+fn build_materials(
+    plan: &ResourcePlan,
+    sources: &mut SourceMap,
+) -> Result<Vec<BuiltMaterial>, Vec<Diagnostic>> {
+    let mut built = Vec::with_capacity(plan.materials.len());
+    for symbol in &plan.materials {
+        if symbol.as_str() != unlit_symbol() {
+            return Err(defect(format!(
+                "the material '{symbol}' has no shader in this build (only the temporary 'Unlit' of decision 0013)"
+            )));
+        }
+        let path = ProjectPath::new(PRELUDE_PATH)
+            .map_err(|e| defect(format!("the prelude path is not a project path: {e}")))?;
+        let file = match sources.id_of(&path) {
+            Some(id) => id,
+            None => {
+                let text = prelude_text().ok_or_else(|| {
+                    defect(format!("the prelude '{PRELUDE_PATH}' is not embedded"))
+                })?;
+                sources
+                    .add(path, text.as_bytes())
+                    .map_err(|e| defect(format!("the prelude could not be added: {e}")))?
+            }
+        };
+        let prelude = sources
+            .get(file)
+            .ok_or_else(|| defect("the prelude is missing from the source map"))?;
+        let shader = unlit_shader(prelude)?;
+        let declarations = unlit_declarations(prelude)?;
+        let instance: &PlannedInstance = plan
+            .instances
+            .iter()
+            .find(|i| &i.material == symbol)
+            .ok_or_else(|| defect(format!("no instance uses the material '{symbol}'")))?;
+        let mut params = Vec::with_capacity(instance.params.len());
+        for param in &instance.params {
+            let span = declarations
+                .params
+                .iter()
+                .find(|(name, _)| *name == param.name)
+                .map(|(_, span)| *span)
+                .ok_or_else(|| {
+                    defect(format!(
+                        "the param '{}' of '{symbol}' is not declared in the prelude",
+                        param.name
+                    ))
+                })?;
+            params.push((param.name.clone(), param.ty.clone(), span));
+        }
+        built.push(BuiltMaterial {
+            symbol: symbol.clone(),
+            shader,
+            declaration: declarations.declaration,
+            params,
+        });
+    }
+    Ok(built)
+}
+
+/// The manifest's `symbols`: the scene, its cameras and entities, then every material and its
+/// params.
+fn symbols(
+    scene: &ir::Scene,
+    materials: &[BuiltMaterial],
+    spans: &mut SpanTable<'_>,
+) -> Result<Vec<SymbolEntry>, String> {
+    let mut symbols = Vec::new();
+    let mut add = |id: String, kind: SymbolKind, span: Span| -> Result<(), String> {
+        symbols.push(SymbolEntry {
+            id,
+            kind,
+            span: spans.intern(span)?,
+        });
+        Ok(())
+    };
+    add(scene.symbol.to_string(), SymbolKind::Scene, scene.span)?;
+    for camera in &scene.cameras {
+        add(camera.symbol.to_string(), SymbolKind::Camera, camera.span)?;
+    }
+    for entity in &scene.entities {
+        add(entity.symbol.to_string(), SymbolKind::Entity, entity.span)?;
+    }
+    for material in materials {
+        add(
+            material.symbol.to_string(),
+            SymbolKind::Material,
+            material.declaration,
+        )?;
+        for (name, _, span) in &material.params {
+            add(
+                material.symbol.child(name).to_string(),
+                SymbolKind::Param,
+                *span,
+            )?;
+        }
+    }
+    Ok(symbols)
+}
+
+fn nums(values: &[f32]) -> Result<Vec<Num>, String> {
+    values
+        .iter()
+        .map(|v| Num::from_f32(*v).ok_or_else(|| format!("the value {v} is not finite")))
+        .collect()
+}
+
+fn num(value: f32) -> Result<Num, String> {
+    Num::from_f32(value).ok_or_else(|| format!("the value {value} is not finite"))
+}
+
+/// The manifest's `meshes`.
+fn meshes(plan: &ResourcePlan) -> Result<Vec<Mesh>, String> {
+    let mut meshes = Vec::with_capacity(plan.meshes.len());
+    for (index, desc) in plan.meshes.iter().enumerate() {
+        let index = u32::try_from(index).map_err(|_| "too many meshes".to_owned())?;
+        let shape = match desc {
+            MeshDesc::Box { size } => MeshShape::Box { size: nums(size)? },
+            MeshDesc::Sphere {
+                radius,
+                segments,
+                rings,
+            } => MeshShape::Sphere {
+                radius: num(*radius)?,
+                segments: *segments,
+                rings: *rings,
+            },
+            MeshDesc::Plane { size } => MeshShape::Plane { size: nums(size)? },
+        };
+        meshes.push(Mesh {
+            id: ResourcePlan::mesh_id(index),
+            shape,
+        });
+    }
+    Ok(meshes)
+}
+
+/// The registry default of the `Scene` field `name` (fields that later milestones implement).
+fn scene_default(name: &str) -> Result<ConstValue, String> {
+    registry()
+        .schema_field("Scene", name)
+        .and_then(|field| field.default.as_ref())
+        .and_then(crate::types::value::from_registry)
+        .ok_or_else(|| format!("the registry has no constant default for 'Scene.{name}'"))
+}
+
+fn color_nums(value: &ConstValue, what: &str) -> Result<Vec<Num>, String> {
+    match value {
+        ConstValue::Color(rgba) => nums(rgba),
+        _ => Err(format!("{what} is not a colour")),
+    }
+}
+
+/// The manifest's `scene`.
+fn manifest_scene(scene: &ir::Scene, plan: &ResourcePlan) -> Result<Scene, String> {
+    let clear_color = match scene.fields.clear_color.source.as_const() {
+        Some(ir::Value::Color(rgba)) => nums(rgba)?,
+        _ => return Err("the scene's clear_color is not a constant colour".to_owned()),
+    };
+    let ambient_intensity = match scene_default("ambient_intensity")? {
+        ConstValue::F32(v) => num(v)?,
+        _ => return Err("the default of 'Scene.ambient_intensity' is not an f32".to_owned()),
+    };
+    let gravity = match scene_default("gravity")? {
+        ConstValue::Vec3(v) => nums(&v)?,
+        _ => return Err("the default of 'Scene.gravity' is not a vec3".to_owned()),
+    };
+    let fields = SceneFields {
+        clear_color,
+        ambient_color: color_nums(&scene_default("ambient_color")?, "Scene.ambient_color")?,
+        ambient_intensity,
+        gravity,
+    };
+    let cameras = scene
+        .cameras
+        .iter()
+        .map(|camera| Camera {
+            name: camera.name.clone(),
+            symbol: camera.symbol.to_string(),
+            projection: camera.projection.desc.kind().to_owned(),
+            has_target: camera.target.is_some(),
+            active: camera.active,
+        })
+        .collect();
+    let mut entities = Vec::with_capacity(scene.entities.len());
+    for entity in &scene.entities {
+        let slot = entity.index as usize;
+        let mesh = plan
+            .entity_meshes
+            .get(slot)
+            .ok_or_else(|| format!("the entity '{}' is not in the plan", entity.symbol))?;
+        let instance = plan
+            .entity_instances
+            .get(slot)
+            .copied()
+            .flatten()
+            .and_then(|index| plan.instances.get(index as usize));
+        entities.push(Entity {
+            index: entity.index,
+            name: entity.name.clone(),
+            symbol: entity.symbol.to_string(),
+            parent: entity.parent,
+            mesh: mesh.map(ResourcePlan::mesh_id),
+            material: instance.map(|i| EntityMaterial {
+                id: i.material.to_string(),
+                instance: i.index,
+            }),
+            light: None,
+            body: None,
+            collider: None,
+            state: Vec::new(),
+            update: false,
+            fixed_update: false,
+        });
+    }
+    let material_instances = plan
+        .instances
+        .iter()
+        .map(|instance| MaterialInstance {
+            index: instance.index,
+            material: instance.material.to_string(),
+            entity: instance.entity,
+            params: instance
+                .params
+                .iter()
+                .map(|param| InstanceParam {
+                    name: param.name.clone(),
+                    class: match param.class {
+                        ParamClass::Initial => ManifestClass::Initial,
+                    },
+                })
+                .collect(),
+            shareable: instance.shareable(),
+        })
+        .collect();
+    Ok(Scene {
+        name: scene.name.clone(),
+        symbol: scene.symbol.to_string(),
+        fields,
+        state: Vec::new(),
+        cameras,
+        entities,
+        material_instances,
+        bindings: Vec::new(),
+        host_inputs: Vec::new(),
+        lights: Vec::new(),
+    })
+}

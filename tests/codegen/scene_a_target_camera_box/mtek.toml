@@ -1,0 +1,6 @@
+[project]
+name = "fixture"
+language = "0.1"
+
+[build]
+title = "Scene A: <target> camera & box"
