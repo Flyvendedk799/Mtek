@@ -119,6 +119,7 @@ catalogue! {
     E3023 Error "unknown struct field",
     E3030 Error "constant index out of range",
     E3031 Error "invalid array length",
+    E3032 Error "type nesting too deep",
     E3040 Error "constant evaluation overflow or division by zero",
     E3041 Error "literal not representable",
     W3050 Warning "redundant conversion",

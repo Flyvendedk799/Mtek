@@ -17,7 +17,8 @@
 //!   or camera does not have;
 //! * `E3020` a struct that contains itself, `E3021`–`E3023` a missing,
 //!   duplicate or unknown struct field; `E3030` a constant index out of
-//!   range, `E3031` an invalid array length (decision 0035);
+//!   range, `E3031` an invalid array length, `E3032` a type nested deeper than
+//!   256 levels (decision 0035);
 //! * `E3041` a literal not representable in the type its context requires;
 //! * `W3050` a conversion to the type the value already has;
 //! * `E3040` overflow, division by zero or a non-finite `f32` while folding;

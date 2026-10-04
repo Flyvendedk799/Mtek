@@ -195,6 +195,7 @@ Every node carries its Mtek `Span`.
 | Parser nesting depth (recursion levels; also the height of an expression tree, decision 0022) | 256 | `E1050` |
 | Diagnostics reported per file | 200 (then one `W9003` "further diagnostics suppressed") | `W9003` |
 | Array length | 1 … 65 536 | `E3031` |
+| Nesting of array and struct types (decision 0035) | 256 | `E3032` |
 | Static entities per scene | 16 384 | `E5092` |
 | Material params per material | 64 | `E4032` |
 

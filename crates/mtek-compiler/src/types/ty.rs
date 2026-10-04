@@ -182,6 +182,12 @@ pub struct StructDef {
     /// `(name, type)` of each field; empty until the declaration is checked
     /// (and for a struct whose declaration has an error).
     pub fields: Vec<(String, TyId)>,
+    /// How deeply the type nests: 1 plus the deepest field ([`TyInterner::depth`]).
+    pub depth: u32,
+    /// The declaration has an error that leaves the struct without fields
+    /// (`E3020`, `E3032`, or a field of a broken struct): values of it
+    /// cannot be built, and nothing about it is reported again.
+    pub broken: bool,
 }
 
 impl StructDef {
@@ -191,6 +197,10 @@ impl StructDef {
         self.fields.iter().find(|(n, _)| n == name).map(|(_, t)| *t)
     }
 }
+
+/// The deepest nesting of array and struct types a program may build (the
+/// parser's depth limit, `spec/compiler-architecture.md` 9): `E3032` beyond.
+pub const MAX_TYPE_DEPTH: u32 = 256;
 
 /// Every type of one compilation, stored once.
 #[derive(Clone, Debug)]
@@ -244,14 +254,69 @@ impl TyInterner {
         self.structs.entry(key).or_insert_with(|| StructDef {
             name: name.to_owned(),
             fields: Vec::new(),
+            depth: 1,
+            broken: false,
         });
         self.intern(Ty::Struct(key))
     }
 
-    /// Record the fields of the struct type `key`.
+    /// Record the fields of the struct type `key` (its nesting depth is 1
+    /// plus that of its deepest field, whose structs are defined already).
     pub fn define_struct(&mut self, key: StructKey, fields: Vec<(String, TyId)>) {
+        let depth = 1 + fields
+            .iter()
+            .map(|(_, ty)| self.depth(*ty))
+            .max()
+            .unwrap_or(0);
         if let Some(def) = self.structs.get_mut(&key) {
             def.fields = fields;
+            def.depth = depth;
+        }
+    }
+
+    /// Mark the struct type `key` as broken (no fields, depth 0).
+    pub fn break_struct(&mut self, key: StructKey) {
+        if let Some(def) = self.structs.get_mut(&key) {
+            def.fields.clear();
+            def.depth = 0;
+            def.broken = true;
+        }
+    }
+
+    /// Whether `id` is, or holds in its arrays, a broken struct type.
+    #[must_use]
+    pub fn is_broken(&self, id: TyId) -> bool {
+        let mut current = id;
+        loop {
+            match self.get(current) {
+                Ty::Array { element, .. } => current = element,
+                Ty::Struct(key) => return self.structs.get(&key).is_some_and(|d| d.broken),
+                _ => return false,
+            }
+        }
+    }
+
+    /// How many array and struct levels `id` nests (0 for a scalar, 1 for
+    /// `array<f32, 2>` or a struct of scalars, …): bounded by
+    /// [`MAX_TYPE_DEPTH`] in every program without errors (`E3032`, decision
+    /// 0035), so that values, which nest as their types do, can be walked
+    /// recursively by later stages.
+    #[must_use]
+    pub fn depth(&self, id: TyId) -> u32 {
+        let mut levels = 0_u32;
+        let mut current = id;
+        loop {
+            match self.get(current) {
+                Ty::Array { element, .. } => {
+                    levels = levels.saturating_add(1);
+                    current = element;
+                }
+                Ty::Struct(key) => {
+                    let inner = self.structs.get(&key).map_or(1, |def| def.depth);
+                    return levels.saturating_add(inner);
+                }
+                _ => return levels,
+            }
         }
     }
 
@@ -282,7 +347,12 @@ impl TyInterner {
                 .iter()
                 .map(|(name, ty)| (name.clone(), self.import_shallow(other, *ty, &mut pending)))
                 .collect();
-            self.define_struct(key, fields);
+            // The exporter computed the depth with every field defined.
+            if let Some(slot) = self.structs.get_mut(&key) {
+                slot.fields = fields;
+                slot.depth = def.depth;
+                slot.broken = def.broken;
+            }
         }
         imported
     }

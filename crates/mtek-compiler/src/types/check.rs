@@ -35,7 +35,7 @@ use super::Typeck;
 use super::ops::{
     arithmetic_result, comparison_result, literal_operand_type, logical_result, negation_result,
 };
-use super::ty::{Ty, TyId};
+use super::ty::{MAX_TYPE_DEPTH, Ty, TyId};
 use super::value::{ArithOp, CompareOp, ConstValue, LogicOp, Scalar};
 
 /// The largest length of `array<T, N>` (`spec/language.md` 5.1).
@@ -469,6 +469,7 @@ impl<'a> Checker<'a> {
                         let element = self.annotation(element);
                         let length = self.array_length(length);
                         return match length {
+                            Some(_) if self.too_deep(element, ty.span) => TyId::ERROR,
                             Some(len) if !self.is_error(element) => {
                                 self.out.interner.intern(Ty::Array { element, len })
                             }
@@ -1184,11 +1185,38 @@ impl<'a> Checker<'a> {
                 );
             }
         }
-        if ok {
+        if ok && !self.too_deep(element, expr.span) {
             self.out.interner.intern(Ty::Array { element, len })
         } else {
             TyId::ERROR
         }
+    }
+
+    /// `E3032` if an array of `element` would nest deeper than
+    /// [`MAX_TYPE_DEPTH`] levels (decision 0035 item 7).
+    pub(super) fn too_deep(&mut self, element: TyId, span: Span) -> bool {
+        let depth = self.out.interner.depth(element).saturating_add(1);
+        if depth <= MAX_TYPE_DEPTH {
+            return false;
+        }
+        self.report_too_deep(span, "This array type");
+        true
+    }
+
+    /// `E3032` at `span` for `subject` ("This array type", "The struct 'S'").
+    pub(super) fn report_too_deep(&mut self, span: Span, subject: &str) {
+        self.report(
+            Diagnostic::new(
+                Code::E3032,
+                format!(
+                    "{subject} would nest more than {MAX_TYPE_DEPTH} levels of arrays and structs."
+                ),
+            )
+            .at(span)
+            .note(format!(
+                "array and struct types nest at most {MAX_TYPE_DEPTH} levels deep"
+            )),
+        );
     }
 
     /// Check the expressions of `items` that have not been checked yet.

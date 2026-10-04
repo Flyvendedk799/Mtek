@@ -15,7 +15,7 @@
 use std::collections::BTreeMap;
 
 use super::check::{Checker, FieldKind};
-use super::ty::{StructKey, TyId};
+use super::ty::{MAX_TYPE_DEPTH, StructKey, TyId};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::project::edit_distance;
 use crate::resolve::{DefId, DefKind};
@@ -85,6 +85,7 @@ impl<'a> Checker<'a> {
             return;
         };
         if self.cyclic.contains(&def) {
+            self.out.interner.break_struct(key);
             return;
         }
         let mut fields: Vec<(String, TyId)> = Vec::with_capacity(decl.fields.len());
@@ -105,6 +106,26 @@ impl<'a> Checker<'a> {
             }
             seen.insert(field.name.name.as_str(), field.name.span);
             fields.push((field.name.name.clone(), field_ty));
+        }
+        if fields
+            .iter()
+            .any(|(_, ty)| self.out.interner.is_broken(*ty))
+        {
+            // A field of a struct reported already: nothing more to say.
+            self.out.interner.break_struct(key);
+            return;
+        }
+        let depth = fields
+            .iter()
+            .map(|(_, ty)| self.out.interner.depth(*ty))
+            .max()
+            .unwrap_or(0)
+            .saturating_add(1);
+        if depth > MAX_TYPE_DEPTH {
+            let subject = format!("The struct '{}'", decl.name.name);
+            self.report_too_deep(decl.name.span, &subject);
+            self.out.interner.break_struct(key);
+            return;
         }
         self.out.interner.define_struct(key, fields);
     }
@@ -162,9 +183,9 @@ impl<'a> Checker<'a> {
         fields: &[DescField],
     ) -> TyId {
         let declared = self.out.interner.struct_def(ty).cloned();
-        let Some(declared) = declared.filter(|d| !d.fields.is_empty()) else {
-            // A struct whose declaration was reported (`E3020`): its values
-            // cannot be built.
+        let Some(declared) = declared.filter(|d| !d.broken && !d.fields.is_empty()) else {
+            // A struct whose declaration was reported (`E3020`, `E3032`):
+            // its values cannot be built.
             for field in fields {
                 if let FieldValue::Expr(value) = &field.value {
                     self.check(value, None);
@@ -291,8 +312,8 @@ impl<'a> Checker<'a> {
         let Some(declared) = self.out.interner.struct_def(ty).cloned() else {
             return TyId::ERROR;
         };
-        if declared.fields.is_empty() {
-            // Reported with the declaration (`E3020`).
+        if declared.broken || declared.fields.is_empty() {
+            // Reported with the declaration (`E3020`, `E3032`).
             return TyId::ERROR;
         }
         if let Some(field_ty) = declared.field(&name.name) {
