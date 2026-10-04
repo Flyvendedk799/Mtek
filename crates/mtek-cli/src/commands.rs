@@ -90,7 +90,7 @@ pub fn exit_code(report: &Report) -> u8 {
 }
 
 /// "2 errors, 1 warning".
-fn counts(summary: &Summary) -> String {
+pub fn counts(summary: &Summary) -> String {
     fn count(n: usize, word: &str) -> String {
         if n == 1 {
             format!("1 {word}")
@@ -176,6 +176,16 @@ pub fn internal_diagnostic(note: &str) -> Diagnostic {
     .help("please report it with the program that caused it and this message")
 }
 
+/// The outcome of a command that ends with `diagnostic` alone (no project could be read).
+pub fn single(verb: &'static str, format: Format, color: bool, diagnostic: Diagnostic) -> Outcome {
+    Printer {
+        verb,
+        format,
+        color,
+    }
+    .single(diagnostic)
+}
+
 /// The outcome of a panic in the command `verb` (exit code 3).
 pub fn internal_error(verb: &'static str, format: Format, color: bool, note: &str) -> Outcome {
     Printer {
@@ -203,7 +213,7 @@ fn absolute(cwd: &Path, path: &Path) -> PathBuf {
 
 /// The project directory for the `PATH` argument: the nearest directory at or above it that
 /// contains `mtek.toml` (`spec/tooling.md` section 1). A file argument starts at its directory.
-fn locate_project(cwd: &Path, path: Option<&Path>) -> Result<PathBuf, Box<Diagnostic>> {
+pub fn locate_project(cwd: &Path, path: Option<&Path>) -> Result<PathBuf, Box<Diagnostic>> {
     let project_file = ProjectPath::new(PROJECT_FILE).map_err(|error| {
         Box::new(internal_diagnostic(&format!(
             "invalid project file name: {error}"
@@ -242,9 +252,9 @@ pub fn execute(request: &Request, context: &Context) -> Outcome {
         Request::Check { path, .. }
         | Request::Build { path, .. }
         | Request::InspectIr { path, .. } => path.as_deref(),
-        Request::Version | Request::Help(_) => {
+        Request::Version | Request::Help(_) | Request::Dev { .. } => {
             return printer.single(internal_diagnostic(
-                "--version and --help are answered before any command runs",
+                "--version, --help and dev are not one-shot commands",
             ));
         }
     };
@@ -275,11 +285,11 @@ pub fn execute(request: &Request, context: &Context) -> Outcome {
 }
 
 /// A project found on disk.
-struct Located<'a> {
+pub struct Located<'a> {
     /// The project directory (absolute).
-    dir: &'a Path,
+    pub dir: &'a Path,
     /// The file system rooted at it.
-    fs: &'a RealFs,
+    pub fs: &'a RealFs,
 }
 
 /// The `--mode` spelling of `mode`.
@@ -292,16 +302,37 @@ fn mode_name(mode: BuildMode) -> &'static str {
     }
 }
 
-/// `mtek build`: compile, then write the file set with replace-on-success
-/// (`spec/runtime-abi.md` section 2) into `--out` (relative to the working directory) or
-/// `build.out_dir` (relative to the project).
-fn build_project(
-    printer: &Printer,
+/// What [`compile_and_write`] did.
+#[derive(Debug)]
+pub struct Written {
+    /// The project name from `mtek.toml`, if the project could be loaded.
+    pub name: Option<String>,
+    /// The build's sources, to render the report with.
+    pub sources: SourceMap,
+    /// The report, including an `E9031` for a failed write.
+    pub report: Report,
+    /// The build id and the number of files, when the file set was written.
+    pub written: Option<(String, usize)>,
+    /// The output directory as the user sees it (`--out` as given, or `build.out_dir`), when
+    /// known.
+    pub shown: Option<String>,
+    /// The output directory (absolute), when known.
+    pub target: Option<PathBuf>,
+    /// Why nothing was written although the program has no errors: the output directory is
+    /// the project directory, contains it or contains one of its sources (decision 0032 item 8).
+    pub refused: Option<String>,
+}
+
+/// Compile the project in `mode` and, if the program has no errors, write the file set with
+/// replace-on-success (`spec/runtime-abi.md` section 2) into `out` (relative to the working
+/// directory) or `build.out_dir` (relative to the project). Shared by `mtek build` and every
+/// rebuild of `mtek dev`.
+pub fn compile_and_write(
     context: &Context,
     project: &Located<'_>,
     mode: BuildMode,
     out: Option<&Path>,
-) -> Outcome {
+) -> Written {
     let options = CompileOptions {
         profile: TargetProfile::WebGpuCore2026,
         mode,
@@ -311,50 +342,93 @@ fn build_project(
             .map(|runtime| Arc::from(runtime.declarations)),
     };
     let result = build(&ProjectRoot::at_base(), project.fs, &options);
-    let name = result.project_name.as_deref();
-    if result.has_errors() {
-        return printer.report(name, &result.sources, &result.report, String::new);
-    }
-    let (Some(build_id), Some(out_dir)) = (&result.build_id, &result.out_dir) else {
-        return printer.single(internal_diagnostic(
-            "a build without errors has no build id or output directory",
-        ));
-    };
-    let (target, shown) = match out {
-        Some(out) => (absolute(&context.cwd, out), out.display().to_string()),
-        None => (
+    let place = match (out, &result.out_dir) {
+        (Some(out), _) => Some((absolute(&context.cwd, out), out.display().to_string())),
+        (None, Some(out_dir)) => Some((
             out_dir
                 .segments()
                 .fold(project.dir.to_path_buf(), |path, segment| {
                     path.join(segment)
                 }),
             out_dir.as_str().to_owned(),
-        ),
+        )),
+        (None, None) => None,
     };
-    if let Some(problem) = replaces_project(&target, project.dir, &result.sources) {
+    let mut written = Written {
+        name: result.project_name.clone(),
+        sources: result.sources,
+        report: result.report,
+        written: None,
+        shown: place.as_ref().map(|(_, shown)| shown.clone()),
+        target: place.as_ref().map(|(target, _)| target.clone()),
+        refused: None,
+    };
+    if written.report.summary.errors > 0 {
+        return written;
+    }
+    let (Some(build_id), Some((target, shown))) = (result.build_id, place) else {
+        written.report = with_diagnostic(
+            &written.report,
+            internal_diagnostic("a build without errors has no build id or output directory"),
+        );
+        return written;
+    };
+    if let Some(problem) = replaces_project(&target, project.dir, &written.sources) {
+        written.refused = Some(problem);
+        return written;
+    }
+    match dist::write_dist(&target, &build_id, &result.files) {
+        Ok(()) => written.written = Some((build_id, result.files.len())),
+        Err(error) => {
+            written.report = with_diagnostic(&written.report, write_failed(&shown, &error));
+        }
+    }
+    written
+}
+
+/// The human result line of a successful build: `built 'demo' (release): 9 files in dist,
+/// build 7c4846274cc3a51e; 0 errors, 0 warnings` (decision 0032 item 4).
+pub fn built_line(written: &Written, mode: BuildMode) -> String {
+    let (build_id, files) = match &written.written {
+        Some((build_id, files)) => (build_id.as_str(), *files),
+        None => ("", 0),
+    };
+    format!(
+        "built '{}' ({}): {files} files in {}, build {}; {}",
+        written.name.as_deref().unwrap_or_default(),
+        mode_name(mode),
+        written.shown.as_deref().unwrap_or_default(),
+        build_id.get(..16).unwrap_or(build_id),
+        counts(&written.report.summary)
+    )
+}
+
+/// `mtek build`: [`compile_and_write`], then the outcome of decision 0032 items 4, 6 and 8.
+fn build_project(
+    printer: &Printer,
+    context: &Context,
+    project: &Located<'_>,
+    mode: BuildMode,
+    out: Option<&Path>,
+) -> Outcome {
+    let written = compile_and_write(context, project, mode, out);
+    if let Some(problem) = &written.refused {
         return Outcome {
             stdout: String::new(),
             stderr: format!(
-                "error: the output directory '{shown}' {problem}; the build would replace it\n"
+                "error: the output directory '{}' {problem}; the build would replace it\n",
+                written.shown.as_deref().unwrap_or_default()
             ),
             code: EXIT_USAGE,
         };
     }
-    match dist::write_dist(&target, build_id, &result.files) {
-        Ok(()) => printer.report(name, &result.sources, &result.report, || {
-            format!(
-                "built '{}' ({}): {} files in {shown}, build {}; {}",
-                name.unwrap_or_default(),
-                mode_name(mode),
-                result.files.len(),
-                build_id.get(..16).unwrap_or(build_id),
-                counts(&result.report.summary)
-            )
-        }),
-        Err(error) => {
-            let report = with_diagnostic(&result.report, write_failed(&shown, &error));
-            printer.report(name, &result.sources, &report, String::new)
-        }
+    let name = written.name.as_deref();
+    if written.written.is_some() {
+        printer.report(name, &written.sources, &written.report, || {
+            built_line(&written, mode)
+        })
+    } else {
+        printer.report(name, &written.sources, &written.report, String::new)
     }
 }
 
@@ -385,7 +459,7 @@ fn replaces_project(target: &Path, dir: &Path, sources: &SourceMap) -> Option<St
 }
 
 /// The `E9031` of a build output that could not be written.
-fn write_failed(shown: &str, error: &std::io::Error) -> Diagnostic {
+pub fn write_failed(shown: &str, error: &std::io::Error) -> Diagnostic {
     Diagnostic::new(
         Code::E9031,
         format!("Could not write the build output to '{shown}' ({error})."),
@@ -397,7 +471,7 @@ fn write_failed(shown: &str, error: &std::io::Error) -> Diagnostic {
 
 /// `report` with `diagnostic` (which has no location) added after the other diagnostics
 /// without a location, keeping the report order of `spec/diagnostics.md` section 2.2.
-fn with_diagnostic(report: &Report, diagnostic: Diagnostic) -> Report {
+pub fn with_diagnostic(report: &Report, diagnostic: Diagnostic) -> Report {
     let mut report = report.clone();
     match diagnostic.severity {
         Severity::Error => report.summary.errors += 1,

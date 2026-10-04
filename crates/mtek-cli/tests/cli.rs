@@ -193,7 +193,8 @@ fn usage_errors_exit_two_with_nothing_on_stdout() {
         &["inspect"],
         &["inspect", "--bindings", "--format", "json"],
         &["inspect", "--ir", "--shaders"],
-        &["dev"],
+        &["dev", "--port", "0"],
+        &["dev", "--host", "0.0.0.0"],
         &["lsp"],
     ];
     for args in cases {
@@ -207,7 +208,20 @@ fn usage_errors_exit_two_with_nothing_on_stdout() {
         );
     }
     assert!(stderr(&run(&["build", "--mode", "preview"])).contains("M6"));
-    assert!(stderr(&run(&["dev"])).contains("'mtek dev'"));
+    assert!(stderr(&run(&["new", "x"])).contains("'mtek new'"));
+}
+
+#[test]
+fn dev_without_a_project_is_e9004_and_exit_1() {
+    let scratch = Scratch::new("dev-no-project");
+    let out = run_in(&scratch.0, &["dev", "--port", "1"]);
+    assert_eq!(out.status.code(), Some(1), "{}", stderr(&out));
+    assert!(out.stdout.is_empty());
+    assert!(
+        stderr(&out).starts_with("error[MTEK-E9004]"),
+        "{}",
+        stderr(&out)
+    );
 }
 
 // ---- mtek check ------------------------------------------------------------------------------
