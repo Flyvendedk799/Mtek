@@ -113,7 +113,7 @@ Generated code imports only `rt` math/value helpers and receives everything else
 
 Because values are never mutated in place, sharing a reference is semantically a copy, which is what value semantics require. Assignment to a vector component (`self.position.y = 0.0`) emits construction of a new vector. Allocation cost is accepted for v0.1 and measured by the runtime benchmark before any optimisation.
 
-`rt` exports the helpers generated code uses: `v2 v3 v4 quat color` constructors, `fround`-disciplined vector/matrix/quaternion operations (`v3add`, `v3scale`, `qmul`, `qrotate`, `m4mul`, …), integer helpers (`idiv`, `irem`, `udiv`, `urem` implementing `spec/language.md` §6.3), conversions (`f2i`, `f2u`), and every pure intrinsic of `spec/stdlib.md` §6 with WGSL-matching semantics (`round` = ties-to-even, …). These live in `packages/runtime-web/src/math/` and have their own unit tests against the conformance table.
+`rt` exports the helpers generated code uses: `v2 v3 v4 quat color` constructors, `fround`-disciplined vector/matrix/quaternion operations (`v3add`, `v3scale`, `qmul`, `qrotate`, `m4mul`, …), integer helpers (`idiv`, `irem`, `udiv`, `urem` implementing `spec/language.md` §6.3), conversions (`f2i`, `f2u`), and every pure intrinsic of `spec/stdlib.md` §6 with WGSL-matching semantics (`round` = ties-to-even, …). These live in `packages/runtime-web/src/math/` and have their own unit tests against the conformance table. The helper names, the index from Mtek operations to helpers, the CPU results of non-portable cases and the table format are decision 0037.
 
 ### 4.2 The context object (`ctx`)
 
