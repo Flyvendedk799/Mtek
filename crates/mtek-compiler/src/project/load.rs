@@ -1,9 +1,9 @@
 //! Loading a project: its configuration, the entry module's source and the
 //! module graph.
 //!
-//! Lexing, parsing, `import` gating and scene selection are not part of
-//! loading; [`crate::check`] does them after loading. In M1 the module graph holds the entry
-//! module only.
+//! Loading reads the configuration and the entry module; the imported modules
+//! are loaded by [`super::load_modules`], which parses as it goes, and scene
+//! selection is [`crate::check`]'s.
 
 use std::sync::Arc;
 
@@ -24,7 +24,8 @@ pub struct Project {
     pub config_text: Arc<str>,
     /// Every source file of the project, the entry module first.
     pub sources: SourceMap,
-    /// The modules and their imports (the entry module only in M1).
+    /// The modules and their imports: the entry module after [`Project::load`],
+    /// every module after [`super::load_modules`].
     pub modules: ModuleGraph,
 }
 
@@ -133,7 +134,7 @@ fn entry_not_readable(view: &dyn Fs, entry: &ProjectPath, error: &FsError) -> Di
 /// there is one. Segments are matched one directory at a time; when several
 /// entries of a directory match, the first in sorted order is taken, so the
 /// answer does not depend on directory enumeration order.
-fn path_differing_in_case(fs: &dyn Fs, wanted: &ProjectPath) -> Option<ProjectPath> {
+pub(super) fn path_differing_in_case(fs: &dyn Fs, wanted: &ProjectPath) -> Option<ProjectPath> {
     let mut found = ProjectPath::root();
     for segment in wanted.segments() {
         let mut names = fs.list_dir(&found).ok()?;
