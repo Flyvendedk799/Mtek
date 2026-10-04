@@ -286,19 +286,7 @@ fn app_js_maps_every_emitted_statement_and_expression() {
             &memory,
             &CompileOptions::with_stub_runtime(BuildMode::Release),
         );
-        // A program that uses a user material does not build until shader
-        // lowering (M2-05, decision 0039); `tests/build.rs` asserts its
-        // diagnostics.
-        if result
-            .report
-            .diagnostics
-            .iter()
-            .all(|d| d.message.starts_with("Builds with user materials"))
-            && result.has_errors()
-        {
-            continue;
-        }
-        assert!(!result.has_errors(), "{label}");
+        assert!(!result.has_errors(), "{label}: {:#?}", result.report);
         let app = std::str::from_utf8(&result.files["app.js"]).unwrap();
         let map: Value = serde_json::from_slice(&result.files["app.js.map"]).unwrap();
         let sources: Vec<&str> = map["sources"]

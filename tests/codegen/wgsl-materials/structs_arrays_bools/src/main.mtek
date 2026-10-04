@@ -1,0 +1,63 @@
+// Structs, arrays and bools on the GPU (spec/gpu-layout.md 3, 4.4): bools
+// inside structs, arrays and the param block are stored as u32 and decoded
+// on read, encoded on construction; arrays of scalars have padded elements
+// read through `.value`; dynamic indices are clamped, constant ones are not.
+struct Light {
+    color: vec3;
+    active: bool;
+    weights: array<f32, 3>;
+}
+
+struct Rig {
+    lights: array<Light, 2>;
+    flags: array<bool, 4>;
+    offset: vec2;
+}
+
+const RIG = Rig {
+    lights: [
+        Light { color: vec3(1.0, 0.5, 0.25); active: true; weights: [0.5, 0.25, 0.25] },
+        Light { color: vec3(0.2, 0.4, 0.8); active: false; weights: [1.0, 0.0, 0.0] }
+    ];
+    flags: [true, false, true, false];
+    offset: vec2(0.5, 0.25)
+};
+
+fn brightness(light: Light, k: i32) -> f32 {
+    if !light.active {
+        return 0.0;
+    }
+    return light.weights[k] * length(light.color);
+}
+
+fn pick(flags: array<bool, 4>, i: u32) -> bool {
+    return flags[i];
+}
+
+material Stage {
+    param rig: Rig = RIG;
+    param mask: array<bool, 4> = [true, true, false, true];
+    param index: i32 = 1;
+    param slot: u32 = 2;
+    param enabled: bool = true;
+
+    fragment(surface: SurfaceInput) -> color {
+        let local = Light { color: surface.world_normal; active: enabled && pick(mask, slot); weights: [0.25, 0.5, 0.25] };
+        let lit = [rig.lights[0], local];
+        var total = brightness(lit[index], index) + brightness(rig.lights[index], 2);
+        if rig.flags[slot] && mask[3] {
+            total += rig.offset.x;
+        }
+        let w: array<f32, 3> = local.weights;
+        total *= w[slot];
+        return color.linear(vec3(total), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Panel {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Stage { slot: 1 };
+    }
+}

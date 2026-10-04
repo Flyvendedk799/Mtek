@@ -114,7 +114,7 @@
             {
               "index": 0,
               "name": "w",
-              "type": "Wave",
+              "type": "src/main.mtek::Wave",
               "kind": "param",
               "span": {"file": 0, "start": 220, "end": 221}
             },
@@ -177,7 +177,7 @@
             {
               "index": 9,
               "name": "lifted",
-              "type": "Wave",
+              "type": "src/main.mtek::Wave",
               "kind": "let",
               "span": {"file": 0, "start": 705, "end": 711}
             }
@@ -207,7 +207,7 @@
                           "kind": "local",
                           "local": 0,
                           "name": "w",
-                          "type": "Wave",
+                          "type": "src/main.mtek::Wave",
                           "span": {"file": 0, "start": 310, "end": 311}
                         },
                         "field": "offset",
@@ -455,7 +455,7 @@
                       "kind": "local",
                       "local": 0,
                       "name": "w",
-                      "type": "Wave",
+                      "type": "src/main.mtek::Wave",
                       "span": {"file": 0, "start": 660, "end": 661}
                     },
                     "field": "amplitude",
@@ -526,7 +526,7 @@
                             }
                           }
                         ],
-                        "type": "Wave",
+                        "type": "src/main.mtek::Wave",
                         "span": {"file": 0, "start": 714, "end": 755}
                       },
                       "span": {"file": 0, "start": 701, "end": 756}
@@ -548,7 +548,7 @@
                             "kind": "local",
                             "local": 9,
                             "name": "lifted",
-                            "type": "Wave",
+                            "type": "src/main.mtek::Wave",
                             "span": {"file": 0, "start": 769, "end": 775}
                           },
                           "field": "offset",
@@ -701,7 +701,7 @@
             {
               "index": 0,
               "name": "w",
-              "type": "Wave",
+              "type": "src/main.mtek::Wave",
               "kind": "param",
               "span": {"file": 0, "start": 903, "end": 904}
             }
@@ -718,7 +718,7 @@
                       "kind": "local",
                       "local": 0,
                       "name": "w",
-                      "type": "Wave",
+                      "type": "src/main.mtek::Wave",
                       "span": {"file": 0, "start": 925, "end": 926}
                     },
                     {

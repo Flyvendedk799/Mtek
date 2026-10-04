@@ -189,6 +189,14 @@ pub struct MaterialDescription {
     /// The value-param block, bound at group 1 binding 0; `None` without value params.
     pub params: Option<LayoutRecord>,
     pub fragment: FragmentBody,
+    /// Further struct declarations the fragment body and its callees use (user structs and
+    /// padded-element wrappers), each before its first use; declared after the param
+    /// block's structs, skipping any the module already declares.
+    pub structs: Vec<StructDecl>,
+    /// Functions the fragment body calls, directly or through each other: the generated
+    /// helpers and the user functions, each before its first caller; printed before
+    /// `mtek_fragment`.
+    pub functions: Vec<Function>,
 }
 
 /// A material's complete shader module and the facts the packager and the runtime need.
@@ -249,6 +257,11 @@ pub fn build_standard_stage(material: &MaterialDescription) -> Result<MaterialSh
     if let Some(params) = &material.params {
         module.declare_block(params, span);
     }
+    for decl in &material.structs {
+        if !module.structs.iter().any(|s| s.name == decl.name) {
+            module.structs.push(decl.clone());
+        }
+    }
     module.declare_block(&object_record, span);
     module.structs.push(vertex_output_struct(&inputs, span));
     if !inputs.is_empty() {
@@ -263,6 +276,7 @@ pub fn build_standard_stage(material: &MaterialDescription) -> Result<MaterialSh
     }
     module.globals.push(object.clone());
 
+    module.functions.extend(material.functions.iter().cloned());
     module
         .functions
         .push(fragment_function(material, !inputs.is_empty()));
@@ -617,6 +631,8 @@ mod tests {
                 symbol: format!("{SYMBOL}.fragment"),
                 span,
             },
+            structs: Vec::new(),
+            functions: Vec::new(),
         }
     }
 

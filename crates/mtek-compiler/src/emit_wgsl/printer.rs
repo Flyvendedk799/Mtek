@@ -6,23 +6,31 @@
 //! meaningful:
 //!
 //! - 4-space indentation, one struct member, global or statement per line, `\n` line ends
-//!   and a final line break;
+//!   and a final line break; `if`, `for` and blocks put their header (`if c {`,
+//!   `} else if c {`, `} else {`, `for (..) {`, `{`) and their closing `}` on lines of
+//!   their own;
 //! - declarations in module order: structs (a blank line between two), the globals as one
 //!   group, then functions (a blank line before each); an entry point's stage attribute
 //!   sits on its own line above `fn`;
-//! - the operand of a binary operator, and the base of a field access or swizzle, is
-//!   parenthesised when it is itself a binary expression;
+//! - an operand of a binary or unary operator, and the base of a field access, swizzle or
+//!   index, is parenthesised when it is itself an operator expression or a negative
+//!   literal (WGSL forbids mixing some operators without parentheses; this rule never
+//!   needs to know which);
 //! - generated names get the reserved `mtek_` prefix and user names become
-//!   `u_<kind>_<name>`.
+//!   `u_<kind>_<name>`;
+//! - literals: `f32` as the shortest text that reads back as the same binary32 value
+//!   (also through a binary64 reading, as WGSL's abstract floats are read), `i32` with
+//!   the suffix `i` (the minimum as `i32(-2147483647 - 1)`, `spec/language.md` 6.6),
+//!   `u32` with `u`.
 //!
 //! Every declaration line, member, parameter, statement and expression adds a span-map
-//! entry with the node's span.
+//! entry with the node's span. Generated WGSL is ASCII, so columns are bytes.
 
 use std::cmp::Reverse;
 
 use crate::lowering::shader_ir::{
-    BinaryOp, BuiltinValue, Expr, ExprKind, Function, FunctionParam, GlobalDecl, GlobalKind,
-    IoBinding, Literal, Name, Scalar, ShaderModule, ShaderStage, ShaderType, Statement, StructDecl,
+    BuiltinValue, Expr, ExprKind, Function, FunctionParam, GlobalDecl, GlobalKind, IoBinding,
+    Literal, Name, Scalar, ShaderModule, ShaderStage, ShaderType, Statement, StructDecl,
     StructMember,
 };
 use crate::source::Span;
@@ -124,22 +132,44 @@ fn binding_text(binding: IoBinding) -> String {
     }
 }
 
-fn literal_text(literal: Literal) -> String {
-    match literal {
-        Literal::Bool(value) => value.to_string(),
-        // `-2147483648i` would negate an out-of-range `2147483648i`.
-        Literal::I32(i32::MIN) => format!("i32({})", i32::MIN),
-        Literal::I32(value) => format!("{value}i"),
-        Literal::U32(value) => format!("{value}u"),
-        // `Debug` is the shortest text that reads back as the same `f32`, always with a
-        // `.` or an exponent (`1.0`, `0.1`, `1e-7`), which WGSL reads as a float literal.
-        Literal::F32(value) => format!("{:?}", value.get()),
+/// The text of an `f32` literal: the shortest text that reads back as `value`, both
+/// directly as binary32 and as binary64 rounded to binary32 (how WGSL reads an abstract
+/// float literal); where the two readings could differ (a shortest text close to the
+/// midpoint of two binary32 values), the binary64 text of the value, which reads back
+/// exactly either way.
+fn f32_text(value: f32) -> String {
+    // `Debug` always has a `.` or an exponent (`1.0`, `0.1`, `1e-7`), which WGSL reads as
+    // a float literal.
+    let shortest = format!("{value:?}");
+    let through_f64 = shortest
+        .parse::<f64>()
+        .ok()
+        .map(|wide| (wide as f32).to_bits());
+    if through_f64 == Some(value.to_bits()) {
+        shortest
+    } else {
+        format!("{:?}", f64::from(value))
     }
 }
 
-fn binary_op_text(op: BinaryOp) -> &'static str {
-    match op {
-        BinaryOp::Multiply => "*",
+fn literal_text(literal: Literal) -> String {
+    match literal {
+        Literal::Bool(value) => value.to_string(),
+        // WGSL has no literal for the minimum (`-2147483648i` would negate an
+        // out-of-range `2147483648i`); `spec/language.md` section 6.6 fixes this form.
+        Literal::I32(i32::MIN) => "i32(-2147483647 - 1)".to_owned(),
+        Literal::I32(value) => format!("{value}i"),
+        Literal::U32(value) => format!("{value}u"),
+        Literal::F32(value) => f32_text(value.get()),
+    }
+}
+
+/// Whether `expr` needs parentheses as an operand or as the base of an access.
+fn needs_parentheses(expr: &Expr) -> bool {
+    match &expr.kind {
+        ExprKind::Binary { .. } | ExprKind::Unary { .. } => true,
+        ExprKind::Literal(literal) => literal_text(*literal).starts_with('-'),
+        _ => false,
     }
 }
 
@@ -153,15 +183,22 @@ struct Printer {
 }
 
 impl Printer {
-    /// The 1-based column of the next character.
+    /// The 1-based column of the next character (generated WGSL is ASCII: bytes are
+    /// characters).
     fn column(&self) -> u32 {
-        u32::try_from(self.line.chars().count())
+        u32::try_from(self.line.len())
             .unwrap_or(u32::MAX)
             .saturating_add(1)
     }
 
     fn push(&mut self, text: &str) {
         self.line.push_str(text);
+    }
+
+    fn indent(&mut self, depth: usize) {
+        for _ in 0..depth {
+            self.line.push_str(INDENT);
+        }
     }
 
     fn end_line(&mut self) {
@@ -272,11 +309,7 @@ impl Printer {
         self.push(" {");
         self.record(start, function.span, symbol);
         self.end_line();
-        for statement in &function.body {
-            self.push(INDENT);
-            self.statement(statement, symbol);
-            self.end_line();
-        }
+        self.statements(&function.body, 1, symbol);
         self.push("}");
         self.end_line();
     }
@@ -293,13 +326,111 @@ impl Printer {
         self.record(start, param.span, symbol);
     }
 
-    fn statement(&mut self, statement: &Statement, symbol: &str) {
+    fn statements(&mut self, statements: &[Statement], depth: usize, symbol: &str) {
+        for statement in statements {
+            self.statement(statement, depth, symbol);
+        }
+    }
+
+    /// Prints `statement` on its own line(s) at indentation `depth`.
+    fn statement(&mut self, statement: &Statement, depth: usize, symbol: &str) {
+        self.indent(depth);
         let start = self.column();
+        let span = statement.span();
         match statement {
-            Statement::Let { name, value, .. } => {
-                self.push("let ");
+            Statement::Let { name, value, .. } | Statement::Var { name, value, .. } => {
+                self.push(if matches!(statement, Statement::Let { .. }) {
+                    "let "
+                } else {
+                    "var "
+                });
                 self.push(&mangle(name));
                 self.push(" = ");
+                self.expr(value, symbol);
+                self.push(";");
+            }
+            Statement::Assign { target, value, .. } => {
+                self.expr(target, symbol);
+                self.push(" = ");
+                self.expr(value, symbol);
+                self.push(";");
+            }
+            Statement::If {
+                branches,
+                otherwise,
+                ..
+            } => {
+                for (index, (condition, body)) in branches.iter().enumerate() {
+                    if index > 0 {
+                        self.indent(depth);
+                    }
+                    let header = self.column();
+                    self.push(if index == 0 { "if " } else { "} else if " });
+                    self.expr(condition, symbol);
+                    self.push(" {");
+                    self.record(header, span, symbol);
+                    self.end_line();
+                    self.statements(body, depth + 1, symbol);
+                }
+                if let Some(body) = otherwise {
+                    self.indent(depth);
+                    let header = self.column();
+                    self.push("} else {");
+                    self.record(header, span, symbol);
+                    self.end_line();
+                    self.statements(body, depth + 1, symbol);
+                }
+                self.indent(depth);
+                self.push("}");
+                self.end_line();
+                return;
+            }
+            Statement::For {
+                name,
+                start: from,
+                end,
+                body,
+                ..
+            } => {
+                let counter = mangle(name);
+                self.push("for (var ");
+                self.push(&counter);
+                self.push(" = ");
+                self.expr(from, symbol);
+                self.push("; ");
+                self.push(&counter);
+                self.push(" < ");
+                self.expr(end, symbol);
+                self.push("; ");
+                self.push(&counter);
+                self.push("++) {");
+                self.record(start, span, symbol);
+                self.end_line();
+                self.statements(body, depth + 1, symbol);
+                self.indent(depth);
+                self.push("}");
+                self.end_line();
+                return;
+            }
+            Statement::Block { body, .. } => {
+                self.push("{");
+                self.record(start, span, symbol);
+                self.end_line();
+                self.statements(body, depth + 1, symbol);
+                self.indent(depth);
+                self.push("}");
+                self.end_line();
+                return;
+            }
+            Statement::Break { .. } => self.push("break;"),
+            Statement::Continue { .. } => self.push("continue;"),
+            Statement::Call { function, args, .. } => {
+                self.push(&mangle(function));
+                self.arguments(args, symbol);
+                self.push(";");
+            }
+            Statement::Discard { value, .. } => {
+                self.push("_ = ");
                 self.expr(value, symbol);
                 self.push(";");
             }
@@ -312,18 +443,13 @@ impl Printer {
                 self.push(";");
             }
         }
-        self.record(start, statement.span(), symbol);
+        self.record(start, span, symbol);
+        self.end_line();
     }
 
-    /// Prints `expr`, parenthesised when it is a binary expression.
+    /// Prints `expr`, parenthesised when [`needs_parentheses`] says so.
     fn operand(&mut self, expr: &Expr, symbol: &str) {
-        let needs_parentheses = match &expr.kind {
-            ExprKind::Binary { .. } => true,
-            ExprKind::Literal(Literal::F32(value)) => value.get().is_sign_negative(),
-            ExprKind::Literal(Literal::I32(value)) => *value < 0,
-            _ => false,
-        };
-        if needs_parentheses {
+        if needs_parentheses(expr) {
             self.push("(");
             self.expr(expr, symbol);
             self.push(")");
@@ -359,6 +485,12 @@ impl Printer {
                 let letters: String = components.iter().map(|c| c.letter()).collect();
                 self.push(&letters);
             }
+            ExprKind::Index { base, index } => {
+                self.operand(base, symbol);
+                self.push("[");
+                self.expr(index, symbol);
+                self.push("]");
+            }
             ExprKind::Construct { args } => {
                 self.push(&type_text(&expr.ty));
                 self.arguments(args, symbol);
@@ -366,9 +498,30 @@ impl Printer {
             ExprKind::Binary { op, left, right } => {
                 self.operand(left, symbol);
                 self.push(" ");
-                self.push(binary_op_text(*op));
+                self.push(op.text());
                 self.push(" ");
                 self.operand(right, symbol);
+            }
+            ExprKind::Unary { op, operand } => {
+                self.push(op.text());
+                self.operand(operand, symbol);
+            }
+            ExprKind::Bitcast { arg } => {
+                self.push("bitcast<");
+                self.push(&type_text(&expr.ty));
+                self.push(">(");
+                self.expr(arg, symbol);
+                self.push(")");
+            }
+            ExprKind::Bool32Encode { value } => {
+                self.push("select(0u, 1u, ");
+                self.expr(value, symbol);
+                self.push(")");
+            }
+            ExprKind::Bool32Decode { value } => {
+                self.push("(");
+                self.operand(value, symbol);
+                self.push(" != 0u)");
             }
             ExprKind::Intrinsic { function, args } => {
                 self.push(function.wgsl_name());
@@ -387,7 +540,7 @@ impl Printer {
 mod tests {
     use super::*;
     use crate::lowering::shader_ir::{
-        Component, FiniteF32, FunctionResult, UserNameKind, VectorSize,
+        BinaryOp, Component, FiniteF32, FunctionResult, UserNameKind, VectorSize,
     };
     use crate::source::FileId;
 
@@ -456,7 +609,7 @@ mod tests {
         assert_eq!(f(3.0e20), "3e20");
         assert_eq!(literal_text(Literal::U32(7)), "7u");
         assert_eq!(literal_text(Literal::I32(-3)), "-3i");
-        assert_eq!(literal_text(Literal::I32(i32::MIN)), "i32(-2147483648)");
+        assert_eq!(literal_text(Literal::I32(i32::MIN)), "i32(-2147483647 - 1)");
         assert_eq!(literal_text(Literal::Bool(true)), "true");
     }
 
@@ -674,6 +827,232 @@ mod tests {
         assert_eq!(
             printed.text,
             "fn mtek_f(mtek_x: f32) -> f32 {\n    return mtek_x * (-2.0);\n}\n"
+        );
+        crate::emit_wgsl::validate_wgsl(&printed.text).expect("Naga accepts the module");
+    }
+
+    #[test]
+    fn f32_literals_read_back_exactly_through_binary64() {
+        // A sweep of binary32 values: every printed text reads back as the same value
+        // directly and through a binary64 reading.
+        for bits in (1u32..0x7f80_0000).step_by(16_411).chain([0x7f7f_ffff]) {
+            for bits in [bits, bits | 0x8000_0000] {
+                let text = f32_text(f32::from_bits(bits));
+                assert_eq!(text.parse::<f32>().map(f32::to_bits), Ok(bits), "{text}");
+                let wide: f64 = text.parse().expect("a float");
+                assert_eq!((wide as f32).to_bits(), bits, "{text}");
+                assert!(text.contains('.') || text.contains('e'), "{text}");
+            }
+        }
+        assert_eq!(f32_text(-0.0), "-0.0");
+    }
+
+    /// A unit function of one `i32` parameter with `body`.
+    fn function_of(body: Vec<Statement>) -> ShaderModule {
+        let mut module = ShaderModule::new("m", at(0));
+        module.functions.push(Function {
+            name: Name::user(UserNameKind::Function, "h_f"),
+            stage: None,
+            params: vec![FunctionParam {
+                name: Name::user(UserNameKind::Param, "n"),
+                ty: ShaderType::I32,
+                binding: None,
+                span: at(1),
+            }],
+            result: Some(FunctionResult {
+                ty: ShaderType::I32,
+                binding: None,
+            }),
+            body,
+            symbol: "m::f".to_owned(),
+            span: at(2),
+        });
+        module
+    }
+
+    #[test]
+    fn statements_print_with_nested_blocks() {
+        let n = || Expr::local(Name::user(UserNameKind::Param, "n"), ShaderType::I32, at(3));
+        let t = || Expr::local(Name::user(UserNameKind::Local, "t"), ShaderType::I32, at(4));
+        let i = || Expr::local(Name::user(UserNameKind::Local, "i"), ShaderType::I32, at(5));
+        let int = |v: i32| Expr::literal(Literal::I32(v), at(6));
+        let less = |a: Expr, b: Expr| Expr::binary(BinaryOp::Less, a, b, ShaderType::BOOL, at(7));
+        let body = vec![
+            Statement::Var {
+                name: Name::user(UserNameKind::Local, "t"),
+                value: int(0),
+                span: at(8),
+            },
+            Statement::For {
+                name: Name::user(UserNameKind::Local, "i"),
+                start: int(0),
+                end: int(4),
+                body: vec![
+                    Statement::Assign {
+                        target: t(),
+                        value: Expr::binary(BinaryOp::Add, t(), i(), ShaderType::I32, at(9)),
+                        span: at(10),
+                    },
+                    Statement::If {
+                        branches: vec![
+                            (less(n(), int(0)), vec![Statement::Break { span: at(11) }]),
+                            (less(n(), i()), vec![Statement::Continue { span: at(12) }]),
+                        ],
+                        otherwise: Some(vec![Statement::Block {
+                            body: vec![Statement::Discard {
+                                value: Expr::intrinsic(
+                                    crate::lowering::shader_ir::Intrinsic::Abs,
+                                    vec![n()],
+                                    ShaderType::I32,
+                                    at(13),
+                                ),
+                                span: at(14),
+                            }],
+                            span: at(15),
+                        }]),
+                        span: at(16),
+                    },
+                ],
+                span: at(17),
+            },
+            Statement::Return {
+                value: Some(
+                    t().unary(crate::lowering::shader_ir::UnaryOp::Negate, at(18))
+                        .unary(crate::lowering::shader_ir::UnaryOp::Negate, at(19)),
+                ),
+                span: at(20),
+            },
+        ];
+        let printed = print_module(&function_of(body));
+        assert_eq!(
+            printed.text,
+            "fn u_fn_h_f(u_p_n: i32) -> i32 {\n\
+             \x20   var u_l_t = 0i;\n\
+             \x20   for (var u_l_i = 0i; u_l_i < 4i; u_l_i++) {\n\
+             \x20       u_l_t = u_l_t + u_l_i;\n\
+             \x20       if u_p_n < 0i {\n\
+             \x20           break;\n\
+             \x20       } else if u_p_n < u_l_i {\n\
+             \x20           continue;\n\
+             \x20       } else {\n\
+             \x20           {\n\
+             \x20               _ = abs(u_p_n);\n\
+             \x20           }\n\
+             \x20       }\n\
+             \x20   }\n\
+             \x20   return -(-u_l_t);\n\
+             }\n"
+        );
+        crate::emit_wgsl::validate_wgsl(&printed.text).expect("Naga accepts the module");
+        let lines: Vec<&str> = printed.text.lines().collect();
+        let headers: Vec<(u32, &str)> = printed
+            .span_map
+            .entries
+            .iter()
+            .filter(|e| e.span == at(16))
+            .map(|e| (e.wgsl.line, covered(&printed.text, e)))
+            .collect();
+        assert_eq!(
+            headers,
+            [
+                (5, "if u_p_n < 0i {"),
+                (7, "} else if u_p_n < u_l_i {"),
+                (9, "} else {")
+            ]
+        );
+        assert_eq!(
+            lines[2].trim(),
+            "for (var u_l_i = 0i; u_l_i < 4i; u_l_i++) {"
+        );
+        let for_header = printed
+            .span_map
+            .entries
+            .iter()
+            .find(|e| e.span == at(17))
+            .expect("the for header");
+        assert_eq!(
+            covered(&printed.text, for_header),
+            "for (var u_l_i = 0i; u_l_i < 4i; u_l_i++) {"
+        );
+    }
+
+    #[test]
+    fn index_bitcast_and_bool32_nodes_print_in_wgsl_form() {
+        let array = ShaderType::Array {
+            element: Box::new(ShaderType::named("MtekPad16_u32")),
+            length: 3,
+        };
+        let flags = Expr::local(
+            Name::user(UserNameKind::Param, "flags"),
+            array.clone(),
+            at(1),
+        );
+        let n = Expr::local(Name::user(UserNameKind::Param, "n"), ShaderType::I32, at(2));
+        let read = flags
+            .index(
+                n.clone().bitcast(ShaderType::U32, at(3)),
+                ShaderType::named("MtekPad16_u32"),
+                at(4),
+            )
+            .field("value", ShaderType::U32, at(5))
+            .bool32_decode(at(6));
+        let encoded = read.clone().bool32_encode(at(7));
+        let mut module = ShaderModule::new("m", at(0));
+        module.structs.push(StructDecl {
+            name: "MtekPad16_u32".to_owned(),
+            members: vec![StructMember {
+                name: "value".to_owned(),
+                ty: ShaderType::U32,
+                align: None,
+                size: Some(16),
+                binding: None,
+                span: at(0),
+            }],
+            span: at(0),
+        });
+        module.functions.push(Function {
+            name: Name::generated("f"),
+            stage: None,
+            params: vec![
+                FunctionParam {
+                    name: Name::user(UserNameKind::Param, "flags"),
+                    ty: array,
+                    binding: None,
+                    span: at(8),
+                },
+                FunctionParam {
+                    name: Name::user(UserNameKind::Param, "n"),
+                    ty: ShaderType::I32,
+                    binding: None,
+                    span: at(9),
+                },
+            ],
+            result: Some(FunctionResult {
+                ty: ShaderType::U32,
+                binding: None,
+            }),
+            body: vec![
+                Statement::Let {
+                    name: Name::user(UserNameKind::Local, "b"),
+                    value: read,
+                    span: at(10),
+                },
+                Statement::Return {
+                    value: Some(encoded),
+                    span: at(11),
+                },
+            ],
+            symbol: "m".to_owned(),
+            span: at(12),
+        });
+        let printed = print_module(&module);
+        assert!(
+            printed.text.contains(
+                "    let u_l_b = (u_p_flags[bitcast<u32>(u_p_n)].value != 0u);\n\
+                 \x20   return select(0u, 1u, (u_p_flags[bitcast<u32>(u_p_n)].value != 0u));\n"
+            ),
+            "{}",
+            printed.text
         );
         crate::emit_wgsl::validate_wgsl(&printed.text).expect("Naga accepts the module");
     }

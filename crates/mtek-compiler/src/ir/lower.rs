@@ -22,6 +22,7 @@ use super::model::{
 };
 use std::collections::BTreeMap;
 
+use crate::layout::qualified_name;
 use crate::project::{ModuleId, Project};
 use crate::resolve::Resolution;
 use crate::source::{FileId, Span};
@@ -29,7 +30,8 @@ use crate::stdlib::{SchemaCategory, registry};
 use crate::syntax::ast::{self, ConstDecl, EntityMember, ItemKind, SceneMember};
 use crate::types::MaterialKey;
 use crate::types::{
-    CheckedEntity, CheckedField, CheckedObject, CheckedScene, ConstValue, ProgramEffects, Typeck,
+    CheckedEntity, CheckedField, CheckedObject, CheckedScene, ConstValue, ProgramEffects, Ty, TyId,
+    Typeck,
 };
 
 /// The scene fields lowered into [`SceneFields`].
@@ -51,6 +53,28 @@ pub(super) const PROJECTION_SCHEMAS: [&str; 2] = ["Perspective", "Orthographic"]
 
 /// Why lowering failed: a description of the compiler defect.
 pub(super) type Defect = String;
+
+/// The IR spelling of the type `ty` of `types` (decision 0041): the Mtek
+/// spelling diagnostics print (`vec3`, `array<f32, 4>`, `Box`), except that a
+/// user struct is named by its symbol (`src/shapes.mtek::Wave`,
+/// `array<src/shapes.mtek::Wave, 2>`), so that a type names one declaration
+/// wherever it appears: two modules may declare structs of one name, and a
+/// value of either can reach the other through a call or a constant without
+/// an import. Types nest at most 256 levels (`E3032`), which bounds the
+/// recursion.
+pub(super) fn type_name(types: &Typeck, file_paths: &BTreeMap<FileId, String>, ty: TyId) -> String {
+    let interner = types.interner();
+    match interner.get(ty) {
+        Ty::Array { element, len } => {
+            format!("array<{}, {len}>", type_name(types, file_paths, element))
+        }
+        Ty::Struct(key) => match (interner.struct_def(ty), file_paths.get(&key.file)) {
+            (Some(def), Some(path)) => qualified_name(path, &def.name),
+            _ => types.display(ty),
+        },
+        _ => types.display(ty),
+    }
+}
 
 /// One checked module: its id and what the front end produced for it.
 #[derive(Clone, Copy)]
@@ -106,7 +130,7 @@ pub(super) fn lower(
                         .iter()
                         .map(|p| SummaryParam {
                             name: p.name.clone(),
-                            ty: unit.types.display(p.ty),
+                            ty: type_name(unit.types, &file_paths, p.ty),
                             default: p.default.as_ref().map(Value::from),
                         })
                         .collect(),
@@ -258,6 +282,11 @@ pub(super) struct Lowering<'a> {
 }
 
 impl Lowering<'_> {
+    /// The IR spelling of `ty` ([`type_name`]).
+    pub(super) fn type_name(&self, ty: TyId) -> String {
+        type_name(self.types, self.file_paths, ty)
+    }
+
     /// A constant declaration with its folded value.
     pub(super) fn constant(&self, decl: &ConstDecl, symbol: Symbol) -> Result<Const, Defect> {
         let name = &decl.name.name;
@@ -273,7 +302,7 @@ impl Lowering<'_> {
         Ok(Const {
             name: name.clone(),
             symbol,
-            ty: self.types.display(info.ty),
+            ty: self.type_name(info.ty),
             value: value.into(),
             span: decl.span,
         })
@@ -299,7 +328,7 @@ impl Lowering<'_> {
                 .iter()
                 .map(|(field, ty)| StructFieldItem {
                     name: field.clone(),
-                    ty: self.types.display(*ty),
+                    ty: self.type_name(*ty),
                 })
                 .collect(),
             span: decl.span,

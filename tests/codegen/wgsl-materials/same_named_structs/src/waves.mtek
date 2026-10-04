@@ -1,0 +1,8 @@
+export struct Wave {
+    height: f32;
+    width: f32;
+}
+
+export fn make_wave(h: f32) -> Wave {
+    return Wave { height: h * 2.0; width: h };
+}

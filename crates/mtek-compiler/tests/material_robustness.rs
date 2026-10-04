@@ -8,9 +8,12 @@
 //! compilation stack: nothing panics, every diagnostic has a catalogue code
 //! and severity and lies in its file, checking twice gives the same report,
 //! and a program without errors lowers to the typed IR with a parameter
-//! block for every material with params. A stage at the root of a chain of
+//! block for every material with params, every material of it lowers to WGSL
+//! that Naga accepts and the program builds (decision 0041). A stage at the
+//! root of a chain of
 //! 50 000 functions is checked on a 1 MiB stack, and a material with 10 000
-//! params and an instance of it stay linear.
+//! params and an instance of it stay linear; a stage with an expression close
+//! to the parser's height limit and blocks nested 100 deep builds.
 
 // Test-only code: helper functions outside `#[test]` functions may panic.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
@@ -19,10 +22,12 @@ use std::collections::BTreeSet;
 use std::thread;
 
 use mtek_compiler::diagnostics::{Code, Report};
+use mtek_compiler::emit_wgsl::emit_shader;
 use mtek_compiler::ir::lower_to_ir;
+use mtek_compiler::lowering::shader::lower_material;
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::source::{MemFs, ProjectPath};
-use mtek_compiler::{Analysis, analyze};
+use mtek_compiler::{Analysis, BuildMode, CompileOptions, analyze, build};
 
 /// The stack of the compilation thread (`spec/compiler-architecture.md` 3).
 const STACK: usize = 16 * 1024 * 1024;
@@ -194,6 +199,21 @@ fn valid_program(rng: &mut Rng) -> String {
         ),
         ("array<f32, 2> = [1.0, 2.0]", "[3.0, 4.0]", "a{i}[1]"),
         ("bool = false", "true", "1.0"),
+        (
+            "array<vec3, 2> = [vec3(1.0), vec3(2.0)]",
+            "[vec3(0.5), vec3(0.25)]",
+            "a{i}[1].x",
+        ),
+        (
+            "mat4 = mat4.identity()",
+            "mat4.scale(vec3(2.0))",
+            "a{i}[2].z",
+        ),
+        (
+            "quat = quat.identity()",
+            "quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.5)",
+            "(a{i} * input.world_normal).x",
+        ),
     ];
     const INPUTS: &[&str] = &[
         "input.uv.x",
@@ -287,6 +307,7 @@ fn random_material_programs_never_break_checking_or_lowering() {
     on_stack(STACK, "random material programs".to_owned(), move || {
         let mut codes = BTreeSet::new();
         let mut lowered = 0;
+        let mut built_count = 0;
         for text in &cases {
             let first = check_text(text);
             if let Err(problem) = invariants(text, &first.report) {
@@ -305,7 +326,19 @@ fn random_material_programs_never_break_checking_or_lowering() {
                         !material.params.is_empty(),
                         "{text}"
                     );
+                    // Shader lowering (M2-05): every material, used or not, lowers to
+                    // WGSL that Naga accepts.
+                    let shader = lower_material(&program, material)
+                        .unwrap_or_else(|d| panic!("{d:#?} for\n{text}"));
+                    emit_shader(&shader).unwrap_or_else(|d| panic!("{d:#?} for\n{text}"));
                 }
+                let built = build(
+                    &ProjectRoot::at_base(),
+                    &project(text),
+                    &CompileOptions::with_stub_runtime(BuildMode::Release),
+                );
+                assert!(!built.has_errors(), "{:#?} for\n{text}", built.report);
+                built_count += usize::from(!built.has_errors());
                 lowered += 1;
             }
             codes.extend(first.report.diagnostics.iter().map(|d| d.code.short()));
@@ -319,6 +352,7 @@ fn random_material_programs_never_break_checking_or_lowering() {
             assert!(codes.contains(code), "{code} never reported: {codes:?}");
         }
         assert!(lowered > 0, "no program lowered");
+        assert_eq!(built_count, lowered, "every program that lowers builds");
     });
 }
 
@@ -381,5 +415,44 @@ fn ten_thousand_params_are_one_e4032_and_an_instance_of_them_checks() {
             .map(|d| d.code.short())
             .collect();
         assert_eq!(codes, ["E4032"]);
+    });
+}
+
+#[test]
+fn deep_expressions_and_nested_blocks_in_a_stage_build_on_the_compilation_stack() {
+    // An expression close to the parser's height limit of 256 that does not fold, and
+    // blocks nested 100 deep: shader lowering and printing recurse along the tree only
+    // as deep as the parser lets it grow.
+    let depth = 80;
+    let mut expr = String::from("input.uv.x");
+    for _ in 0..depth {
+        expr = format!("(input.uv.y * {expr} + 0.5)");
+    }
+    let mut blocks = String::new();
+    for _ in 0..100 {
+        blocks.push_str("if input.uv.x > 0.5 {\n");
+    }
+    blocks.push_str("v = v * 0.5;\n");
+    for _ in 0..100 {
+        blocks.push_str("}\n");
+    }
+    let text = format!(
+        "material M {{\n    fragment(input: SurfaceInput) -> color {{\n        var v = {expr};\n{blocks}        return color.linear(vec3(v), 1.0);\n    }}\n}}\n\
+         scene Demo {{\n    camera Main {{}}\n    entity Cube {{\n        mesh: Box {{}};\n        material: M {{}};\n    }}\n}}\n"
+    );
+    on_stack(STACK, "a deep stage".to_owned(), move || {
+        let built = build(
+            &ProjectRoot::at_base(),
+            &project(&text),
+            &CompileOptions::with_stub_runtime(BuildMode::Release),
+        );
+        assert!(!built.has_errors(), "{:#?}", built.report);
+        let wgsl = built
+            .files
+            .iter()
+            .find(|(path, _)| path.ends_with(".wgsl"))
+            .map(|(_, bytes)| String::from_utf8_lossy(bytes).into_owned())
+            .unwrap();
+        assert_eq!(wgsl.matches("if u_p_input.uv.x > 0.5 {").count(), 100);
     });
 }

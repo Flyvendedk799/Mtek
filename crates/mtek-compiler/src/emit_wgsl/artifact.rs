@@ -141,6 +141,8 @@ mod tests {
                 symbol: "src/main.mtek::M.fragment".to_owned(),
                 span: fragment(),
             },
+            structs: Vec::new(),
+            functions: Vec::new(),
         }
     }
 

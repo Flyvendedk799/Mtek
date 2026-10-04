@@ -15,28 +15,26 @@
 //!   identifier outside the runtime import line; no output contains an absolute path.
 //! * `E9030` without a bundle or declarations, `E9010` for preview builds, no files for a
 //!   program with errors.
-//! * A pass fixture whose entry scene uses a user material is checked and lowered, but its
-//!   build is `E9010` at every user material it uses until shader lowering (M2-05) generates
-//!   their shaders (decision 0039); the build tests above skip those fixtures.
+//! * Every semantic pass fixture builds, those with user materials included (their shaders
+//!   come from the shader lowering, decision 0041).
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 mod common;
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use common::manifest_schema::{assert_valid, validator};
-use mtek_compiler::ir::lower_to_ir;
 use mtek_compiler::package::Manifest;
 use mtek_compiler::package::identity::{h16, sha256_hex};
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::source::{FileId, MemFs, ProjectPath};
 use mtek_compiler::{
-    BuildMode, BuildResult, CompileOptions, STUB_RUNTIME_BUNDLE, STUB_RUNTIME_DECLARATIONS,
-    analyze, build, check,
+    BuildMode, BuildResult, CompileOptions, STUB_RUNTIME_BUNDLE, STUB_RUNTIME_DECLARATIONS, build,
+    check,
 };
 use serde_json::Value;
 
@@ -92,41 +90,6 @@ fn semantic_fixtures(suite: &str) -> Vec<String> {
     }
     names.sort();
     names
-}
-
-/// The pass fixtures this build can build: all but those whose entry scene uses a user
-/// material ([`user_materials_used`]).
-fn pass_fixtures() -> Vec<String> {
-    semantic_fixtures("pass")
-        .into_iter()
-        .filter(|name| {
-            user_materials_used(&repo().join("tests/semantics/pass").join(name)).is_empty()
-        })
-        .collect()
-}
-
-/// The user materials the entry scene of the project at `root` uses (decision 0039).
-fn user_materials_used(root: &Path) -> BTreeSet<String> {
-    let analysis = analyze(&ProjectRoot::at_base(), &project_fs(root, None));
-    let Ok(program) = lower_to_ir(&analysis) else {
-        return BTreeSet::new();
-    };
-    let user: BTreeSet<String> = program
-        .materials()
-        .map(|material| material.symbol.to_string())
-        .collect();
-    program
-        .entry()
-        .map(|scene| {
-            scene
-                .entities
-                .iter()
-                .filter_map(|entity| entity.material.as_ref())
-                .map(|instance| instance.material.to_string())
-                .filter(|symbol| user.contains(symbol))
-                .collect()
-        })
-        .unwrap_or_default()
 }
 
 /// Every file below `dir` relative to `root`, sorted, skipping `skip` (relative names).
@@ -212,7 +175,7 @@ fn every_project() -> Vec<(String, PathBuf)> {
         .into_iter()
         .map(|name| (format!("codegen/{name}"), codegen_dir().join(name)))
         .collect();
-    all.extend(pass_fixtures().into_iter().map(|name| {
+    all.extend(semantic_fixtures("pass").into_iter().map(|name| {
         (
             format!("semantics/pass/{name}"),
             repo().join("tests/semantics/pass").join(name),
