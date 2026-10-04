@@ -2031,7 +2031,7 @@
       "name": "array",
       "kind": "array",
       "gpu": true,
-      "since": "M2",
+      "since": "M1",
       "doc": "The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`.",
       "fields": [],
       "methods": []
@@ -2260,7 +2260,7 @@
       "name": "string",
       "kind": "text",
       "gpu": false,
-      "since": "M2",
+      "since": "M1",
       "doc": "Immutable text. CPU only.",
       "fields": [],
       "methods": []

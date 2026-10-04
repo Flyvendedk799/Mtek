@@ -40,6 +40,8 @@ pub enum ConstValue {
         fields: Vec<(String, ConstValue)>,
     },
     Array(Vec<ConstValue>),
+    /// A string (CPU only, `spec/language.md` 5.1).
+    Str(String),
 }
 
 impl ConstValue {
@@ -101,6 +103,7 @@ impl fmt::Display for ConstValue {
             ConstValue::Mat4(_) => write!(f, "mat4(…)"),
             ConstValue::Struct { name, .. } => write!(f, "{name} {{ … }}"),
             ConstValue::Array(items) => write!(f, "[… {} elements]", items.len()),
+            ConstValue::Str(text) => write!(f, "{text:?}"),
         }
     }
 }

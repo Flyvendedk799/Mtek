@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3031",
+    "file": "src/main.mtek",
+    "startByte": 41,
+    "endByte": 45,
+    "message": "Invalid array length: the constant 'SIZE' has the value 2.0, which is not an integer.",
+    "notes": [
+      "the length of `array<T, N>` is an integer literal or the name of an integer constant, from 1 to 65536"
+    ]
+  }
+]

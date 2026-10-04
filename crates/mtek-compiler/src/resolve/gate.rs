@@ -167,9 +167,11 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::Bind => row("`bind`", false, M3),
         Construct::SelfValue => row("`self`", false, M3),
         Construct::Descriptor => row("Descriptor literals", true, M1),
-        Construct::StringLiteral => row("String literals", true, M2),
-        Construct::ArrayLiteral => row("Array literals", true, M2),
-        Construct::Index => row("Indexing (`a[i]`)", false, M2),
+        // Planned for M2 with the registry types `string` and `array`; implemented by
+        // task M2-01 before the M2 gate (decision 0035).
+        Construct::StringLiteral => row("String literals", true, M1),
+        Construct::ArrayLiteral => row("Array literals", true, M1),
+        Construct::Index => row("Indexing (`a[i]`)", false, M1),
         // Operators (decision 0026): M1 types and folds unary minus and the
         // four arithmetic operators. The others are M2 work (M2-01) that
         // landed before the M2 gate: `M1` marks them implemented by this
@@ -274,6 +276,9 @@ mod tests {
             Construct::Comparison,
             Construct::Equality,
             Construct::Logical,
+            Construct::StringLiteral,
+            Construct::ArrayLiteral,
+            Construct::Index,
         ] {
             assert!(
                 is_implemented(construct_gate(construct).since),
@@ -292,9 +297,6 @@ mod tests {
             Construct::Handler,
             Construct::Bind,
             Construct::SelfValue,
-            Construct::StringLiteral,
-            Construct::ArrayLiteral,
-            Construct::Index,
         ] {
             assert!(
                 !is_implemented(construct_gate(construct).since),

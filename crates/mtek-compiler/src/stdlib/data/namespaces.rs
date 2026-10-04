@@ -402,7 +402,8 @@ pub(super) fn types() -> Vec<TypeDef> {
         simple(
             "string",
             TypeKind::Text,
-            Milestone::M2,
+            // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
+            Milestone::M1,
             false,
             "Immutable text. CPU only.",
         ),
@@ -452,7 +453,8 @@ pub(super) fn types() -> Vec<TypeDef> {
         simple(
             "array",
             TypeKind::Array,
-            Milestone::M2,
+            // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
+            Milestone::M1,
             true,
             "The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`.",
         ),

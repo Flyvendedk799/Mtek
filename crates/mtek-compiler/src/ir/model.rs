@@ -393,6 +393,8 @@ pub enum Value {
         fields: Vec<NamedValue>,
     },
     Array(Vec<Value>),
+    /// A string (CPU only): `{ "string": "Showroom" }`.
+    String(String),
 }
 
 /// A field of a [`Value::Struct`].
@@ -427,6 +429,7 @@ impl From<&crate::types::ConstValue> for Value {
                     .collect(),
             },
             C::Array(items) => Value::Array(items.iter().map(Value::from).collect()),
+            C::Str(text) => Value::String(text.clone()),
         }
     }
 }
@@ -483,6 +486,22 @@ impl fmt::Display for Value {
                     write!(f, "{item}")?;
                 }
                 f.write_str("]")
+            }
+            Value::String(text) => {
+                f.write_str("\"")?;
+                for c in text.chars() {
+                    match c {
+                        '"' => f.write_str("\\\"")?,
+                        '\\' => f.write_str("\\\\")?,
+                        '\n' => f.write_str("\\n")?,
+                        '\t' => f.write_str("\\t")?,
+                        '\r' => f.write_str("\\r")?,
+                        '\0' => f.write_str("\\0")?,
+                        c if c.is_control() => write!(f, "\\u{{{:x}}}", u32::from(c))?,
+                        c => write!(f, "{c}")?,
+                    }
+                }
+                f.write_str("\"")
             }
         }
     }

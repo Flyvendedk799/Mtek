@@ -1,0 +1,5 @@
+const GREETING = "Hello, " + "world";
+
+scene Demo {
+    camera Main {}
+}

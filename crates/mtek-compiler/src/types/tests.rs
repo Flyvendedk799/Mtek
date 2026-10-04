@@ -899,13 +899,123 @@ fn mat4_constructors_fold_column_major() {
 }
 
 #[test]
-fn gated_constructs_are_not_typed_or_reported_again() {
-    for source in [
-        "const T = \"text\";",
-        "const F = frame.time;",
-        "const K = Key.A;",
-        "const X = [1.0, 2.0];",
+fn strings_are_values_without_operators() {
+    let c = clean("const TITLE = \"Show\\troom\";\nconst SAME: string = TITLE;");
+    assert_eq!(c.ty("SAME"), "string");
+    assert_eq!(c.value("SAME"), Some(ConstValue::Str("Show\troom".into())));
+    let c = consts("const A = \"a\" + \"b\";");
+    assert_eq!(
+        c.only("E3014").message,
+        "The operator `+` is not defined for string and string."
+    );
+    let c = consts("const A = \"a\" == \"a\";");
+    assert_eq!(c.codes(), ["E3014"]);
+}
+
+#[test]
+fn arrays_literals_lengths_and_indexing() {
+    let c = clean(
+        "const N: u32 = 3;\nconst A = [1, 2, 3];\nconst B = [1, 2.5];\nconst C: array<f32, N> = [1, 2, 3];\nconst D = [vec2(1.0), vec2(0, 1)];\nconst E = A[2];\nconst F = D[1].y;\nconst G = [[1, 2], [3, 4]][1][0];\nconst M = mat4.translation(vec3(1, 2, 3))[3];\nconst H: array<u32, 2> = [7, 8];\nconst I = H[N - 2];",
+    );
+    assert_eq!(c.ty("A"), "array<i32, 3>");
+    assert_eq!(
+        c.value("A"),
+        Some(ConstValue::Array(vec![
+            ConstValue::I32(1),
+            ConstValue::I32(2),
+            ConstValue::I32(3)
+        ]))
+    );
+    assert_eq!(c.ty("B"), "array<f32, 2>");
+    assert_eq!(c.ty("C"), "array<f32, 3>");
+    assert_eq!(c.ty("D"), "array<vec2, 2>");
+    assert_eq!(c.value("E"), Some(ConstValue::I32(3)));
+    assert_eq!(c.value("F"), Some(ConstValue::F32(1.0)));
+    assert_eq!(c.value("G"), Some(ConstValue::I32(3)));
+    assert_eq!(c.value("M"), Some(ConstValue::Vec4([1.0, 2.0, 3.0, 1.0])));
+    assert_eq!(c.value("I"), Some(ConstValue::U32(8)));
+
+    for (source, code, message) in [
+        (
+            "const A = [1.0, 2.0][2];",
+            "E3030",
+            "The index 2 is out of range for array<f32, 2>: valid indices are 0 to 1.",
+        ),
+        (
+            "const A = [1.0, 2.0][-1];",
+            "E3030",
+            "The index -1 is out of range for array<f32, 2>: valid indices are 0 to 1.",
+        ),
+        (
+            "const A = mat4.identity()[4];",
+            "E3030",
+            "The index 4 is out of range for mat4: valid indices are 0 to 3.",
+        ),
+        (
+            "const A: array<f32, 0> = [1.0];",
+            "E3031",
+            "Invalid array length: the length is 0.",
+        ),
+        (
+            "const A: array<f32, 65537> = [1.0];",
+            "E3031",
+            "Invalid array length: the length is 65537.",
+        ),
+        (
+            "const L = -2;\nconst A: array<f32, L> = [1.0];",
+            "E3031",
+            "Invalid array length: the constant 'L' is -2.",
+        ),
+        (
+            "const L = 2.0;\nconst A: array<f32, L> = [1.0, 2.0];",
+            "E3031",
+            "Invalid array length: the constant 'L' has the value 2.0, which is not an integer.",
+        ),
+        (
+            "const A: array = [1.0];",
+            "E3003",
+            "The type 'array' needs an element type and a length: `array<T, N>`.",
+        ),
+        (
+            "const A = [1.0, vec2(1.0)];",
+            "E3001",
+            "Element 1 of the array literal has type f32, but the elements of this array have type vec2.",
+        ),
+        (
+            "const A: array<vec3, 2> = [vec3(1.0), 2.0];",
+            "E3001",
+            "Element 2 of the array literal must be vec3, but it has type f32.",
+        ),
+        (
+            "const A: array<f32, 3> = [1.0, 2.0];",
+            "E3001",
+            "The constant 'A' is declared as array<f32, 3>, but its value has type array<f32, 2>.",
+        ),
+        (
+            "const A = [1.0][0.0];",
+            "E3001",
+            "An index must be an i32 or u32, but this one has type f32.",
+        ),
+        (
+            "const A = vec3(1.0)[0];",
+            "E3001",
+            "Only arrays and mat4 can be indexed, but this expression has type vec3.",
+        ),
     ] {
+        let c = consts(source);
+        assert_eq!(c.codes(), [code], "{source}");
+        assert_eq!(c.only(code).message, message, "{source}");
+    }
+    // A constant used as a length is evaluated first, whatever the order.
+    let c = clean("const A: array<f32, N> = [1.0, 2.0];\nconst N = 2;");
+    assert_eq!(c.ty("A"), "array<f32, 2>");
+    let c = consts("const A: array<f32, A> = [1.0];");
+    assert_eq!(c.codes(), ["E2020"]);
+}
+
+#[test]
+fn gated_constructs_are_not_typed_or_reported_again() {
+    for source in ["const F = frame.time;", "const K = Key.A;"] {
         let c = consts(source);
         assert_eq!(c.codes(), ["E9010"], "{source}");
     }
@@ -928,9 +1038,6 @@ fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
         Construct::Handler,
         Construct::Bind,
         Construct::SelfValue,
-        Construct::StringLiteral,
-        Construct::ArrayLiteral,
-        Construct::Index,
     ] {
         assert!(!construct_implemented(construct), "{construct:?}");
     }

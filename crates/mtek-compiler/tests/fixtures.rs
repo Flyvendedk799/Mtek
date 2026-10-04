@@ -1453,7 +1453,7 @@ fn every_gated_construct_has_a_gating_fixture() {
             "no gate_* fixture reports {construct:?}: {messages:#?}"
         );
     }
-    assert!(gated >= 14, "{gated} gated constructs");
+    assert!(gated >= 11, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
         ("The built-in type `sampler`", "M4"),
@@ -1575,8 +1575,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E3021", "M2-01: structs"),
     ("E3022", "M2-01: structs"),
     ("E3023", "M2-01: structs"),
-    ("E3030", "M2: arrays"),
-    ("E3031", "M2: arrays"),
     ("E3060", "M2-02: functions and statements"),
     ("E3061", "M2-02: functions and statements"),
     ("E3070", "M2-02: functions and statements"),

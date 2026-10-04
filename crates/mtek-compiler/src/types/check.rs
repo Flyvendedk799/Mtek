@@ -36,7 +36,10 @@ use super::ops::{
     arithmetic_result, comparison_result, literal_operand_type, logical_result, negation_result,
 };
 use super::ty::{Ty, TyId};
-use super::value::{ArithOp, CompareOp, LogicOp, Scalar};
+use super::value::{ArithOp, CompareOp, ConstValue, LogicOp, Scalar};
+
+/// The largest length of `array<T, N>` (`spec/language.md` 5.1).
+pub(super) const MAX_ARRAY_LENGTH: u32 = 65_536;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
 use crate::resolve::gate::is_implemented;
 use crate::resolve::{
@@ -48,9 +51,9 @@ use crate::stdlib::{
     ArgType, IntrinsicDef, NamespaceMember, Registry, SchemaCategory, SigType, TypeKind, registry,
 };
 use crate::syntax::ast::{
-    BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr, ExprKind, FieldInit,
-    FieldValue, Ident, ItemKind, Module, NodeId, SceneDecl, SceneMember, SceneObject, Type,
-    TypeKind as AstTypeKind, UnaryOp,
+    ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr,
+    ExprKind, FieldInit, FieldValue, Ident, ItemKind, Module, NodeId, SceneDecl, SceneMember,
+    SceneObject, Type, TypeKind as AstTypeKind, UnaryOp,
 };
 
 /// Whether a literal expression is made of integer literals only, or holds a
@@ -406,17 +409,30 @@ impl<'a> Checker<'a> {
                     {
                         return TyId::ERROR;
                     }
-                    // `None` only for `array` without arguments, which is gated.
-                    self.out
-                        .interner
-                        .prelude_type(type_name)
-                        .unwrap_or(TyId::ERROR)
+                    // `None` only for `array` without arguments.
+                    if let Some(ty) = self.out.interner.prelude_type(type_name) {
+                        return ty;
+                    }
+                    self.report(
+                        Diagnostic::new(
+                            Code::E3003,
+                            format!(
+                                "The type '{type_name}' needs an element type and a length: `array<T, N>`."
+                            ),
+                        )
+                        .at(ty.span),
+                    );
+                    TyId::ERROR
                 }
                 // Struct types are gated in this build; anything else was
                 // reported by the resolver.
                 _ => TyId::ERROR,
             },
-            AstTypeKind::Generic { name, .. } => match self.res.res(name.id) {
+            AstTypeKind::Generic {
+                name,
+                element,
+                length,
+            } => match self.res.res(name.id) {
                 Some(Res::Prelude(PreludeItem::Type(type_name))) => {
                     let implemented = PreludeItem::Type(type_name)
                         .since()
@@ -425,6 +441,16 @@ impl<'a> Checker<'a> {
                         .registry
                         .type_def(type_name)
                         .is_some_and(|t| t.kind == TypeKind::Array);
+                    if implemented && generic {
+                        let element = self.annotation(element);
+                        let length = self.array_length(length);
+                        return match length {
+                            Some(len) if !self.is_error(element) => {
+                                self.out.interner.intern(Ty::Array { element, len })
+                            }
+                            _ => TyId::ERROR,
+                        };
+                    }
                     if implemented && !generic {
                         self.report(
                             Diagnostic::new(
@@ -443,6 +469,73 @@ impl<'a> Checker<'a> {
             },
             AstTypeKind::Error => TyId::ERROR,
         }
+    }
+
+    /// The length `N` of `array<T, N>`: an integer literal or the name of an
+    /// integer constant, with a value from 1 to 65 536 (`E3031`,
+    /// `spec/language.md` 5.1). `None` if it is not valid (reported here, or
+    /// earlier for a name that did not resolve or a constant with an error).
+    fn array_length(&mut self, length: &ArrayLength) -> Option<u32> {
+        let (value, shown): (Option<i64>, String) = match &length.kind {
+            ArrayLengthKind::Int { value } => (
+                value.and_then(|v| i64::try_from(v).ok()),
+                format!("the length is {}", self.snippet(length.span)),
+            ),
+            ArrayLengthKind::Name(name) => match self.res.res(length.id) {
+                Some(Res::Def(id))
+                    if self.res.def(id).is_some_and(|d| d.kind == DefKind::Const) =>
+                {
+                    self.const_info(id, Some(length.span));
+                    let shown = |v: &dyn std::fmt::Display| format!("the constant '{name}' is {v}");
+                    match self.out.consts.get(&id).and_then(|info| info.value.clone()) {
+                        Some(ConstValue::I32(v)) => (Some(i64::from(v)), shown(&v)),
+                        Some(ConstValue::U32(v)) => (Some(i64::from(v)), shown(&v)),
+                        // A constant without a value was reported.
+                        None => return None,
+                        Some(other) => {
+                            let what = format!(
+                                "the constant '{name}' has the value {other}, which is not an integer"
+                            );
+                            self.report_array_length(length.span, &what);
+                            return None;
+                        }
+                    }
+                }
+                Some(Res::Def(id)) => {
+                    let noun = self.res.def(id).map_or("declaration", |d| d.kind.noun());
+                    let what = format!("'{name}' is a {noun}, not an integer constant");
+                    self.report_array_length(length.span, &what);
+                    return None;
+                }
+                Some(Res::Prelude(_)) => {
+                    let what = format!("'{name}' is a built-in name, not an integer constant");
+                    self.report_array_length(length.span, &what);
+                    return None;
+                }
+                _ => return None,
+            },
+            ArrayLengthKind::Error => return None,
+        };
+        match value.and_then(|v| u32::try_from(v).ok()) {
+            Some(len) if (1..=MAX_ARRAY_LENGTH).contains(&len) => Some(len),
+            _ => {
+                self.report_array_length(length.span, &shown);
+                None
+            }
+        }
+    }
+
+    fn report_array_length(&mut self, span: Span, what: &str) {
+        self.report(
+            Diagnostic::new(
+                Code::E3031,
+                format!("Invalid array length: {what}."),
+            )
+            .at(span)
+            .note(format!(
+                "the length of `array<T, N>` is an integer literal or the name of an integer constant, from 1 to {MAX_ARRAY_LENGTH}"
+            )),
+        );
     }
 
     // ----- expressions -----------------------------------------------------
@@ -664,8 +757,13 @@ impl<'a> Checker<'a> {
             ExprKind::Bool(_) => TyId::BOOL,
             ExprKind::Color { .. } => TyId::COLOR,
             ExprKind::Str { .. } if construct_implemented(Construct::StringLiteral) => TyId::STRING,
-            // String and array literals, indexing and `self` are gated in this
-            // build (see the tests).
+            ExprKind::Array(items) if construct_implemented(Construct::ArrayLiteral) => {
+                self.array_literal(expr, items, expected)
+            }
+            ExprKind::Index { base, index } if construct_implemented(Construct::Index) => {
+                self.index(base, index)
+            }
+            // `self` is gated in this build (see the tests).
             ExprKind::Str { .. }
             | ExprKind::Array(_)
             | ExprKind::Index { .. }
@@ -963,6 +1061,150 @@ impl<'a> Checker<'a> {
             ));
         }
         self.report(diagnostic);
+    }
+
+    // ----- arrays ----------------------------------------------------------
+
+    /// `[e0, e1, …]` (`spec/language.md` 5.6): the elements have one type
+    /// after literal resolution and the length is their count. With an
+    /// expected `array<T, N>`, every element is checked against `T`;
+    /// otherwise the first element that is not a literal decides `T` (literals
+    /// adopt it), and an array of literals only is `f32` if any is a float
+    /// literal, `i32` otherwise (decision 0035 item 4).
+    fn array_literal(&mut self, expr: &Expr, items: &[Expr], expected: Option<TyId>) -> TyId {
+        let Ok(len) = u32::try_from(items.len()) else {
+            return TyId::ERROR;
+        };
+        if len > MAX_ARRAY_LENGTH {
+            self.synth_args(items);
+            self.report_array_length(expr.span, &format!("the array literal has {len} elements"));
+            return TyId::ERROR;
+        }
+        let expected_element = match expected.map(|t| self.out.interner.get(t)) {
+            Some(Ty::Array { element, .. }) if !self.is_error(element) => Some(element),
+            _ => None,
+        };
+        let element = match expected_element {
+            Some(element) => element,
+            None => {
+                let mut decided = None;
+                for item in items {
+                    if literal_kind(item).is_none() {
+                        decided = Some(self.check(item, None));
+                        break;
+                    }
+                }
+                match decided {
+                    Some(ty) => ty,
+                    None => {
+                        let float = items
+                            .iter()
+                            .any(|item| literal_kind(item) == Some(LiteralKind::Float));
+                        if float { TyId::F32 } else { TyId::I32 }
+                    }
+                }
+            }
+        };
+        if self.is_error(element) {
+            self.synth_unchecked(items);
+            return TyId::ERROR;
+        }
+        let mut ok = true;
+        let element_name = self.display(element);
+        for (index, item) in items.iter().enumerate() {
+            let actual = match self.ty_of(item.id) {
+                // The element that decided the type.
+                Some(ty) if expected_element.is_none() => ty,
+                _ => self.check(item, Some(element)),
+            };
+            if self.is_error(actual) {
+                ok = false;
+            } else if !self.assignable(actual, element) {
+                ok = false;
+                let actual_name = self.display(actual);
+                let message = if expected_element.is_some() {
+                    format!(
+                        "Element {} of the array literal must be {element_name}, but it has type {actual_name}.",
+                        index + 1
+                    )
+                } else {
+                    format!(
+                        "Element {} of the array literal has type {actual_name}, but the elements of this array have type {element_name}.",
+                        index + 1
+                    )
+                };
+                self.report(
+                    Diagnostic::new(Code::E3001, message)
+                        .at(item.span)
+                        .expected(element_name.clone())
+                        .actual(actual_name)
+                        .note("the elements of an array literal have one type"),
+                );
+            }
+        }
+        if ok {
+            self.out.interner.intern(Ty::Array { element, len })
+        } else {
+            TyId::ERROR
+        }
+    }
+
+    /// Check the expressions of `items` that have not been checked yet.
+    fn synth_unchecked(&mut self, items: &[Expr]) {
+        for item in items {
+            if self.ty_of(item.id).is_none() {
+                self.check(item, None);
+            }
+        }
+    }
+
+    /// `base[index]` (`spec/language.md` 5.3, 5.6): an element of an array or
+    /// a column of a `mat4`, with an `i32` or `u32` index. A constant index
+    /// out of range is `E3030`, reported when the index is folded.
+    fn index(&mut self, base: &Expr, index: &Expr) -> TyId {
+        let base_ty = self.check(base, None);
+        let index_ty = self.check(index, None);
+        let index_ok = match self.out.interner.get(index_ty) {
+            Ty::I32 | Ty::U32 => true,
+            Ty::Error => false,
+            _ => {
+                let name = self.display(index_ty);
+                self.report(
+                    Diagnostic::new(
+                        Code::E3001,
+                        format!("An index must be an i32 or u32, but this one has type {name}."),
+                    )
+                    .at(index.span)
+                    .expected("i32 or u32")
+                    .actual(name),
+                );
+                false
+            }
+        };
+        let element = match self.out.interner.get(base_ty) {
+            Ty::Array { element, .. } => element,
+            Ty::Mat4 => TyId::VEC4,
+            Ty::Error => return TyId::ERROR,
+            _ => {
+                let name = self.display(base_ty);
+                self.report(
+                    Diagnostic::new(
+                        Code::E3001,
+                        format!("Only arrays and mat4 can be indexed, but this expression has type {name}."),
+                    )
+                    .at(base.span)
+                    .expected("an array or mat4")
+                    .actual(name.clone())
+                    .note(if self.out.interner.vector_dim(base_ty).is_some() {
+                        "read a vector component with `.x`, `.y`, `.z` or `.w`"
+                    } else {
+                        "`a[i]` reads an element of an array or a column of a mat4"
+                    }),
+                );
+                return TyId::ERROR;
+            }
+        };
+        if index_ok { element } else { TyId::ERROR }
     }
 
     // ----- operators -------------------------------------------------------

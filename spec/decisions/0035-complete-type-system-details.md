@@ -26,6 +26,12 @@ All of the following are **proposals** (design choices), not external constraint
    - `mat4.identity`, `translation(v)` (last column `(v, 1)`), `scale(v)` (diagonal `(v, 1)`), `columns(c0, c1, c2, c3)` and `rotation(q)` with the products `xx = x*x`, `xy = x*y`, `wz = w*z`, … and columns `(1 - 2*(yy + zz), 2*(xy + wz), 2*(xz - wy), 0)`, `(2*(xy - wz), 1 - 2*(xx + zz), 2*(yz + wx), 0)`, `(2*(xz + wy), 2*(yz - wx), 1 - 2*(xx + yy), 0)`, `(0, 0, 0, 1)` — the formula of the runtime's `math/mat4.ts`, evaluated in binary32.
    - Run-time evaluation (`rt`, M2-06) agrees within the tolerances of `spec/testing.md` §5; folded constants are emitted, so both domains see the folded bits.
 
+4. **Strings and arrays.**
+   - A string literal has type `string` and folds to its text; strings have no operators (`+` and `==` are `E3014`). The typed IR writes a string value as `{ "string": "…" }` and, in the human form, as a Mtek string literal; code generation writes a JavaScript string (constants are folded into their uses, so none is emitted in this build).
+   - `array<T, N>`: `N` is an integer literal or the name of an `i32`/`u32` constant from 1 to 65 536; anything else is `E3031` at the length ("Invalid array length: the constant 'L' is -2."). A constant named as a length is evaluated first (an edge of the constant dependency search of decision 0026 item 8, so `const A: array<f32, A>` is `E2020`). `array` without arguments is `E3003`.
+   - An array literal checks every element against the expected element type when an `array<T, N>` is expected; otherwise the first element that is not a literal decides `T` (literal elements adopt it), and an array of literals only is `f32` if any is a float literal, `i32` otherwise. An element of another type is `E3001` at the element. More than 65 536 elements is `E3031`.
+   - `a[i]` takes an `i32` or `u32` index (`E3001` otherwise) into an array (its element type) or a `mat4` (a `vec4` column, `spec/language.md` §5.3); any other base is `E3001`. When the index folds to a constant outside `0 … N-1` (4 for `mat4`) it is `E3030` at the index, whether or not the base is constant. A folded array is `ConstValue::Array`.
+
 ## Consequences
 
 - When M2-02, M2-03 and M2-04 land they mark their own rows and registry items the same way; the M2 gate raises `CURRENT_MILESTONE`.

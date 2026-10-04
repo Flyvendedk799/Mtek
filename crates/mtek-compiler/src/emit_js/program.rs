@@ -399,6 +399,7 @@ pub fn value_expr(value: &Value) -> Result<Expr, String> {
             }
             Expr::Array(elements)
         }
+        Value::String(text) => Expr::string(text),
     })
 }
 

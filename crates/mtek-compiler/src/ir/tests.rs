@@ -108,6 +108,17 @@ fn values_are_tagged_by_their_type() {
     );
     assert_eq!(Value::U32(24).to_string(), "u32(24)");
     assert_eq!(Value::I32(-3).to_string(), "i32(-3)");
+    // Strings (M2-01): tagged in JSON, a Mtek string literal in the human form.
+    let text = Value::from(&ConstValue::Str("a \"b\"\\\n\t\u{1}".to_owned()));
+    assert_eq!(
+        serde_json::to_string(&text).unwrap(),
+        "{\"string\":\"a \\\"b\\\"\\\\\\n\\t\\u0001\"}"
+    );
+    assert_eq!(text.to_string(), "\"a \\\"b\\\"\\\\\\n\\t\\u{1}\"");
+    assert_eq!(
+        Value::from(&ConstValue::Array(vec![ConstValue::Bool(true)])).to_string(),
+        "[true]"
+    );
     assert_eq!(
         Value::Color([0.5, 0.25, 0.0, 1.0]).to_string(),
         "color(0.5, 0.25, 0.0, 1.0)"

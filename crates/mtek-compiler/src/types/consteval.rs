@@ -34,7 +34,9 @@ use super::{ConstInfo, NonConstant, NonConstantKind};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::resolve::{DefId, DefKind, Res};
 use crate::source::Span;
-use crate::syntax::ast::{DescField, Expr, ExprKind, FieldValue, UnaryOp};
+use crate::syntax::ast::{
+    ArrayLengthKind, DescField, Expr, ExprKind, FieldValue, Type, TypeKind, UnaryOp,
+};
 
 /// The outcome of folding one expression.
 #[derive(Clone, Debug, PartialEq)]
@@ -68,6 +70,9 @@ impl Checker<'_> {
         let mut edges: BTreeMap<DefId, Vec<(DefId, Span)>> = BTreeMap::new();
         for (def, decl) in &self.const_decls {
             let mut uses = Vec::new();
+            if let Some(ty) = &decl.ty {
+                self.annotation_uses(ty, &mut uses);
+            }
             self.constant_uses(&decl.value, &mut uses);
             edges.insert(*def, uses);
         }
@@ -119,6 +124,23 @@ impl Checker<'_> {
         }
         for def in order {
             self.const_info(def, None);
+        }
+    }
+
+    /// The constants named as array lengths in the type annotation `ty`
+    /// (`array<f32, N>`): a constant's type may depend on another constant.
+    pub(super) fn annotation_uses(&self, ty: &Type, uses: &mut Vec<(DefId, Span)>) {
+        if let TypeKind::Generic {
+            element, length, ..
+        } = &ty.kind
+        {
+            self.annotation_uses(element, uses);
+            if let ArrayLengthKind::Name(_) = &length.kind
+                && let Some(Res::Def(id)) = self.res.res(length.id)
+                && self.const_decls.contains_key(&id)
+            {
+                uses.push((id, length.span));
+            }
         }
     }
 
@@ -378,13 +400,19 @@ impl Checker<'_> {
             ExprKind::Call { args, .. } => self.fold_call(expr, args),
             ExprKind::Field { base, .. } => self.fold_field(expr, base),
             ExprKind::Descriptor { fields, .. } => self.fold_descriptor(expr, fields),
-            // String and array literals, indexing and `self` are gated in
-            // this build; `Error` nodes were reported.
-            ExprKind::Str { .. }
-            | ExprKind::Array(_)
-            | ExprKind::Index { .. }
-            | ExprKind::SelfValue
-            | ExprKind::Error => Folded::Unknown,
+            ExprKind::Str { value } => match self.typed(expr) {
+                Some(_) => Folded::Value(ConstValue::Str(value.clone())),
+                None => Folded::Unknown,
+            },
+            ExprKind::Array(items) => {
+                let folded: Vec<Folded> = items.iter().map(|item| self.fold(item)).collect();
+                self.combine(expr, folded, |values| {
+                    Ok(ConstValue::Array(values.to_vec()))
+                })
+            }
+            ExprKind::Index { base, index } => self.fold_index(expr, base, index),
+            // `self` is gated in this build; `Error` nodes were reported.
+            ExprKind::SelfValue | ExprKind::Error => Folded::Unknown,
         }
     }
 
@@ -522,6 +550,59 @@ impl Checker<'_> {
                 reason: format!("it reads `{name}`, which changes at run time"),
             }),
         }
+    }
+
+    /// `base[index]`: a constant index out of range is `E3030` whether or
+    /// not the base is constant (`spec/language.md` 5.6); with both constant,
+    /// the element.
+    fn fold_index(&mut self, expr: &Expr, base: &Expr, index: &Expr) -> Folded {
+        let base_folded = self.fold(base);
+        let index_folded = self.fold(index);
+        let len = match self.typed(base).map(|t| self.out.interner.get(t)) {
+            Some(Ty::Array { len, .. }) => Some(i64::from(len)),
+            Some(Ty::Mat4) => Some(4),
+            _ => None,
+        };
+        let position = match &index_folded {
+            Folded::Value(ConstValue::I32(i)) => Some(i64::from(*i)),
+            Folded::Value(ConstValue::U32(i)) => Some(i64::from(*i)),
+            _ => None,
+        };
+        if let (Some(len), Some(position), Some(base_ty)) = (len, position, self.typed(base))
+            && !(0..len).contains(&position)
+        {
+            let name = self.display(base_ty);
+            self.sink.push(
+                Diagnostic::new(
+                    Code::E3030,
+                    format!(
+                        "The index {position} is out of range for {name}: valid indices are 0 to {}.",
+                        len - 1
+                    ),
+                )
+                .at(index.span)
+                .note("a constant index must lie in the array; only a run-time index is clamped"),
+            );
+            return Folded::Unknown;
+        }
+        self.combine(expr, vec![base_folded, index_folded], |values| {
+            let element = match values {
+                [ConstValue::Array(items), ConstValue::I32(i)] => {
+                    usize::try_from(*i).ok().and_then(|i| items.get(i).cloned())
+                }
+                [ConstValue::Array(items), ConstValue::U32(i)] => {
+                    usize::try_from(*i).ok().and_then(|i| items.get(i).cloned())
+                }
+                [ConstValue::Mat4(columns), ConstValue::I32(i)] => usize::try_from(*i)
+                    .ok()
+                    .and_then(|i| columns.get(i).map(|c| ConstValue::Vec4(*c))),
+                [ConstValue::Mat4(columns), ConstValue::U32(i)] => usize::try_from(*i)
+                    .ok()
+                    .and_then(|i| columns.get(i).map(|c| ConstValue::Vec4(*c))),
+                _ => None,
+            };
+            element.ok_or(EvalError::Mismatch)
+        })
     }
 
     /// A descriptor literal folds to the fields as written. The reason each
