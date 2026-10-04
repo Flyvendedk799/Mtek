@@ -277,14 +277,12 @@ fn span_map_entries_resolve_to_the_source_they_come_from() {
                     .or_else(|| wgsl.strip_prefix("u_p_"))
                     .filter(|rest| rest.chars().all(|c| c.is_ascii_alphanumeric() || c == '_'));
                 if let Some(name) = mangled_local {
-                    assert!(
-                        source == name
-                            // An assignment target maps to its statement (the IR has
-                            // no span for places).
-                            || source.starts_with(&format!("{name} "))
-                            || source.starts_with(&format!("{name}.")),
-                        "{key}: `{wgsl}` maps to `{source}`"
-                    );
+                    // Assignment targets included: places carry their own spans
+                    // (decision 0045).
+                    assert!(source == name, "{key}: `{wgsl}` maps to `{source}`");
+                } else if wgsl.starts_with("let mtek_index_") {
+                    // A write index clamped once maps to the indexing step.
+                    assert!(source.ends_with(']'), "{key}: `{wgsl}` maps to `{source}`");
                 } else if let Some(call) = wgsl.strip_prefix("u_fn_") {
                     let name = &call[9..call.find('(').unwrap()];
                     assert!(

@@ -4,8 +4,8 @@
 
 use super::model::{
     Block, Camera, Const, Entity, Expr, ExprKind, Field, Function, Item, LocalItem, LocalKind,
-    MaterialInstanceDesc, MaterialItem, Mesh, MeshDesc, NamedExpr, Origin, Place, Program,
-    Projection, ProjectionDesc, Scene, Source, Stmt, StructItem,
+    MaterialInstanceDesc, MaterialItem, Mesh, MeshDesc, NamedExpr, Origin, Place, PlaceRoot,
+    PlaceStep, Program, Projection, ProjectionDesc, Scene, Source, Stmt, StructItem,
 };
 use crate::source::{SourceMap, Span};
 
@@ -550,13 +550,30 @@ impl Tree<'_> {
 
 /// An assignment target in Mtek-like notation.
 fn place_text(place: &Place, local_name: &dyn Fn(u32) -> String) -> String {
-    match place {
-        Place::Local { local, .. } => local_name(*local),
-        Place::Component { base, index } => {
-            let letter = ["x", "y", "z", "w"].get(*index as usize).unwrap_or(&"?");
-            format!("{}.{letter}", place_text(base, local_name))
+    let mut text = match &place.root {
+        PlaceRoot::Local { local, .. } => local_name(*local),
+    };
+    for step in &place.steps {
+        match step {
+            PlaceStep::Field { field, .. } => {
+                text.push('.');
+                text.push_str(field);
+            }
+            PlaceStep::Index { index, .. } => {
+                text.push('[');
+                text.push_str(&expr_text(index));
+                text.push(']');
+            }
+            PlaceStep::Component { component, .. } => {
+                let letter = ["x", "y", "z", "w"]
+                    .get(*component as usize)
+                    .unwrap_or(&"?");
+                text.push('.');
+                text.push_str(letter);
+            }
         }
     }
+    text
 }
 
 /// An expression in Mtek-like notation with its type: `(x * 2.0): f32`.

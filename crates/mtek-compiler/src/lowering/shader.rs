@@ -29,8 +29,9 @@
 //!   `.rgb`/`.a` are `.xyz`/`.w`. A constant index reads directly (`E3030` keeps it in
 //!   range); any other index is clamped: `min(i, N - 1u)` for `u32`, `clamp(i, 0i, N -
 //!   1i)` for `i32` (`spec/language.md` section 5.6).
-//! - **Statements.** `let`, `var`, assignment (a compound assignment `p op= v` is `p = p
-//!   op v`, `p` being a local or a component of one), `if`/`else if`/`else`, `for i in
+//! - **Statements.** `let`, `var`, assignment to a place (decision 0045; a compound
+//!   assignment `p op= v` is `p = p op v`, each run-time index of `p` clamped once into a
+//!   `let mtek_index_<k>` first), `if`/`else if`/`else`, `for i in
 //!   a..b` as `for (var u_l_i = a; u_l_i < b; u_l_i++)`, `for x in arr` as a block that
 //!   binds the array once and counts over it, `break`, `continue`, `return`, blocks; a
 //!   call statement is `f(..);` for a function without result and `_ = ..;` otherwise; a
@@ -38,9 +39,10 @@
 //!
 //! Places are built by [`ShaderLowering`]'s `field_place` and `index_place`, which give
 //! the stored WGSL reference (before any `bool` decoding) of a field or clamped element;
-//! reads decode it. Assignment targets are shader IR expressions, so a chain of field and
-//! index steps (M2-13) lowers through the same two functions, encoding a stored `bool` on
-//! write.
+//! reads decode it. Assignment targets are shader IR expressions: a place's chain of field
+//! and index steps lowers through the same two functions (a run-time write index clamped
+//! exactly like a read, a padded element written through `.value`), and a value written to a
+//! stored `bool` is encoded (`select(0u, 1u, b)`).
 //!
 //! A typed IR node this lowering cannot represent is a compiler defect: `E9999`.
 
@@ -310,28 +312,45 @@ impl<'p> ShaderLowering<'p> {
                 value,
                 span,
             } => {
-                let (place, place_ty) = self.place(body, target, *span)?;
+                // A compound assignment reads the place too: its run-time indices are
+                // clamped once, into `let`s before the assignment.
+                let compound = *op != "=";
+                let mut lets = Vec::new();
+                let (place, encoded) = self.place(body, target, compound, &mut lets)?;
                 let lowered = self.expr(body, value)?;
                 let value = match *op {
+                    "=" if encoded => lowered.bool32_encode(value.span),
                     "=" => lowered,
                     "+=" | "-=" | "*=" | "/=" => {
+                        // `p op v` maps to the text `p op= v`.
+                        let operation =
+                            Span::new(target.span.file, target.span.start, value.span.end);
                         let operator = op.trim_end_matches('=');
                         self.binary(
                             operator,
-                            &place_ty,
+                            &target.ty,
                             &value.ty,
-                            &place_ty,
+                            &target.ty,
                             place.clone(),
                             lowered,
-                            *span,
+                            operation,
                         )?
                     }
                     other => return Err(format!("the assignment operator '{other}'")),
                 };
-                Statement::Assign {
+                let assign = Statement::Assign {
                     target: place,
                     value,
                     span: *span,
+                };
+                if lets.is_empty() {
+                    assign
+                } else {
+                    lets.push(assign);
+                    Statement::Block {
+                        body: lets,
+                        span: *span,
+                    }
                 }
             }
             ir::Stmt::If {
@@ -455,25 +474,62 @@ impl<'p> ShaderLowering<'p> {
         })
     }
 
-    /// An assignment target as a WGSL reference, with its IR type.
+    /// An assignment target as a WGSL reference (decision 0045): the root local, then each
+    /// step through [`ShaderLowering::field_place`] and [`ShaderLowering::index_place`] —
+    /// a run-time index clamped exactly like a read, a padded element written through
+    /// `.value` — and a final vector component. Each node carries its step's span. With
+    /// `hoist`, every clamped index is computed once into a `let mtek_index_<k>` pushed to
+    /// `lets`. Also says whether the reference is a stored `bool` (a `u32`), which a written
+    /// value must be encoded for.
     fn place(
         &mut self,
-        body: &Body<'p>,
+        body: &mut Body<'p>,
         place: &Place,
-        span: Span,
-    ) -> Result<(Expr, String), Defect> {
-        match place {
-            Place::Local { local, .. } => {
-                let item = local_item(body, *local)?;
-                let ty = self.types.value_type(&item.ty)?;
-                Ok((Expr::local(local_name(item), ty, span), item.ty.clone()))
-            }
-            Place::Component { base, index } => {
-                let (base, _) = self.place(body, base, span)?;
-                let component = component(*index)?;
-                Ok((base.swizzle(&[component], span), "f32".to_owned()))
-            }
+        hoist: bool,
+        lets: &mut Vec<Statement>,
+    ) -> Result<(Expr, bool), Defect> {
+        let ir::PlaceRoot::Local { local, span, .. } = &place.root;
+        let item = local_item(body, *local)?;
+        let mut reference = Expr::local(local_name(item), self.types.value_type(&item.ty)?, *span);
+        let mut reference_ty = item.ty.clone();
+        let mut stored = false;
+        for step in &place.steps {
+            let span = step.span();
+            reference = match step {
+                ir::PlaceStep::Field { field, ty, .. } => {
+                    stored = true;
+                    self.field_place(reference, &reference_ty, field, ty, span)?
+                }
+                ir::PlaceStep::Index { index, .. } => {
+                    stored = true;
+                    let mut value = self.expr(body, index)?;
+                    let mut in_range = matches!(index.kind, ir::ExprKind::Const { .. });
+                    if hoist && !in_range {
+                        let length = self.types.array_element(&reference_ty)?.length;
+                        let clamped = clamped_index(value, &index.ty, length, span)?;
+                        let ty = clamped.ty.clone();
+                        let name = Name::generated(format!("index_{}", lets.len()));
+                        lets.push(Statement::Let {
+                            name: name.clone(),
+                            value: clamped,
+                            span,
+                        });
+                        value = Expr::local(name, ty, span);
+                        in_range = true;
+                    }
+                    self.index_place(reference, &reference_ty, value, &index.ty, in_range, span)?
+                        .0
+                }
+                ir::PlaceStep::Component {
+                    component: index, ..
+                } => {
+                    stored = false;
+                    reference.swizzle(&[component(*index)?], span)
+                }
+            };
+            reference_ty = step.ty().to_owned();
         }
+        Ok((reference, stored && place.ty == "bool"))
     }
 
     // Expressions.

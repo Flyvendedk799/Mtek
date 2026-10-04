@@ -451,9 +451,16 @@
                           {
                             "kind": "assign",
                             "target": {
-                              "kind": "local",
-                              "local": 1,
-                              "type": "f32"
+                              "root": {
+                                "kind": "local",
+                                "local": 1,
+                                "name": "level",
+                                "type": "f32",
+                                "span": {"file": 0, "start": 881, "end": 886}
+                              },
+                              "steps": [],
+                              "type": "f32",
+                              "span": {"file": 0, "start": 881, "end": 886}
                             },
                             "op": "=",
                             "value": {

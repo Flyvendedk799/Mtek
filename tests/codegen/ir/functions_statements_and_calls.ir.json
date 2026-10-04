@@ -336,9 +336,16 @@
                     {
                       "kind": "assign",
                       "target": {
-                        "kind": "local",
-                        "local": 5,
-                        "type": "f32"
+                        "root": {
+                          "kind": "local",
+                          "local": 5,
+                          "name": "total",
+                          "type": "f32",
+                          "span": {"file": 0, "start": 540, "end": 545}
+                        },
+                        "steps": [],
+                        "type": "f32",
+                        "span": {"file": 0, "start": 540, "end": 545}
                       },
                       "op": "+=",
                       "value": {
@@ -408,9 +415,16 @@
                     {
                       "kind": "assign",
                       "target": {
-                        "kind": "local",
-                        "local": 5,
-                        "type": "f32"
+                        "root": {
+                          "kind": "local",
+                          "local": 5,
+                          "name": "total",
+                          "type": "f32",
+                          "span": {"file": 0, "start": 619, "end": 624}
+                        },
+                        "steps": [],
+                        "type": "f32",
+                        "span": {"file": 0, "start": 619, "end": 624}
                       },
                       "op": "-=",
                       "value": {
@@ -430,13 +444,23 @@
               {
                 "kind": "assign",
                 "target": {
-                  "kind": "component",
-                  "base": {
+                  "root": {
                     "kind": "local",
                     "local": 6,
-                    "type": "vec3"
+                    "name": "v",
+                    "type": "vec3",
+                    "span": {"file": 0, "start": 646, "end": 647}
                   },
-                  "index": 1
+                  "steps": [
+                    {
+                      "kind": "component",
+                      "component": 1,
+                      "type": "f32",
+                      "span": {"file": 0, "start": 646, "end": 649}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 646, "end": 649}
                 },
                 "op": "=",
                 "value": {
@@ -471,9 +495,16 @@
               {
                 "kind": "assign",
                 "target": {
-                  "kind": "local",
-                  "local": 6,
-                  "type": "vec3"
+                  "root": {
+                    "kind": "local",
+                    "local": 6,
+                    "name": "v",
+                    "type": "vec3",
+                    "span": {"file": 0, "start": 677, "end": 678}
+                  },
+                  "steps": [],
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 677, "end": 678}
                 },
                 "op": "*=",
                 "value": {
@@ -534,9 +565,16 @@
                     {
                       "kind": "assign",
                       "target": {
-                        "kind": "local",
-                        "local": 6,
-                        "type": "vec3"
+                        "root": {
+                          "kind": "local",
+                          "local": 6,
+                          "name": "v",
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 765, "end": 766}
+                        },
+                        "steps": [],
+                        "type": "vec3",
+                        "span": {"file": 0, "start": 765, "end": 766}
                       },
                       "op": "=",
                       "value": {

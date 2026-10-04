@@ -370,17 +370,100 @@ pub struct Branch {
     pub body: Block,
 }
 
-/// An assignable place: a `var` local, or one component of a vector place.
+/// An assignable place (`spec/language.md` 7.2, decision 0045): a root and a chain of
+/// steps applied to it in order — struct fields, array elements (a constant or run-time
+/// index, clamped like a read) and at most one final vector component. `a[i].offset.y`
+/// is the root `a` with the steps `[i]`, `.offset`, `.y`.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Place {
+    pub root: PlaceRoot,
+    pub steps: Vec<PlaceStep>,
+    /// The type of the whole place (the root's type when there are no steps).
+    #[serde(rename = "type")]
+    pub ty: String,
+    /// The whole target as written.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// What a [`Place`] starts from. In this build only a `var` local; scene state and entity
+/// fields (M3) are further roots that compose with the same steps.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub enum Place {
+pub enum PlaceRoot {
+    /// A `var` local (an index into the function's locals).
     Local {
         local: u32,
+        name: String,
         #[serde(rename = "type")]
         ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
     },
-    /// Component `index` (0 for `.x`) of a vector place.
-    Component { base: Box<Place>, index: u32 },
+}
+
+impl PlaceRoot {
+    /// The root's type.
+    pub fn ty(&self) -> &str {
+        match self {
+            PlaceRoot::Local { ty, .. } => ty,
+        }
+    }
+}
+
+/// One step of a [`Place`]; `ty` is the type of the place up to and including this step,
+/// `span` the text from the root to the end of this step (`a[i]` for the step `[i]` of
+/// `a[i].x`).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum PlaceStep {
+    /// The field `field` of a struct place, with its position in the declaration.
+    Field {
+        field: String,
+        index: u32,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// The element `index` (an `i32` or `u32` expression; a constant is in range, `E3030`)
+    /// of an array place.
+    Index {
+        index: Expr,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// Component `component` (0 for `.x`) of a vector place; always the last step.
+    Component {
+        component: u32,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+}
+
+impl PlaceStep {
+    /// The type of the place up to and including this step.
+    pub fn ty(&self) -> &str {
+        match self {
+            PlaceStep::Field { ty, .. }
+            | PlaceStep::Index { ty, .. }
+            | PlaceStep::Component { ty, .. } => ty,
+        }
+    }
+
+    /// The text from the root to the end of this step.
+    pub fn span(&self) -> Span {
+        match self {
+            PlaceStep::Field { span, .. }
+            | PlaceStep::Index { span, .. }
+            | PlaceStep::Component { span, .. } => *span,
+        }
+    }
 }
 
 /// A typed expression: what it computes, its type and its span. Every
