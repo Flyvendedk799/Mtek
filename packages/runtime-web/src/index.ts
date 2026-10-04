@@ -46,3 +46,8 @@ export type {
 } from "./gpu/uniform-arena.js";
 /** Program format: manifest types, validation and compatibility checks (spec/runtime-abi.md). */
 export * from "./abi/index.js";
+/**
+ * The runtime math library `rt` (spec/runtime-abi.md section 4.1): generated code imports this module
+ * as `import * as rt`, so every helper is a top-level export (decision 0037).
+ */
+export * from "./math/rt.js";
