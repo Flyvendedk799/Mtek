@@ -1,0 +1,1169 @@
+{
+  "$comment": [
+    "Mtek CPU/GPU numeric tolerances (spec/testing.md section 5; task M2-08; decision 0043).",
+    "One entry per Mtek operation of the CPU conformance table cpu.json (key: callee, then the argument class",
+    "'(float)'/'(integer)' or a concrete signature). 'wgsl' is the WGSL the shader lowering emits for it (decision",
+    "0041); 'compare' is 'exact' (bit for bit, except where a quoted WGSL rule permits a difference: zero sign,",
+    "flush to zero, the other neighbour of an inexact integer-to-float conversion) or 'tolerance' (the GPU value",
+    "must lie in the interval WGSL allows for the exact inputs, widened by cpuRoundingUlp at each end).",
+    "'accuracy' is the machine form of the f32 bound transcribed from W3C WGSL [S5] section 15.7.4.1; 'cite' quotes",
+    "the spec text verbatim (superscripts of the HTML written as ^, e.g. 2^-126), each with its section number and",
+    "anchor (https://www.w3.org/TR/WGSL/#<anchor>). Inherited bounds are evaluated with interval arithmetic over the",
+    "quoted WGSL expression (tests/browser/support/numeric-accuracy.ts), every sub-operation with its own entry and",
+    "the global rules below (rounding up or down, reassociation, fusion, flush to zero, overflow).",
+    "'domain' lists the input domain; inputs outside the domain or outside the range an accuracy statement is given",
+    "for are not compared (WGSL: 'the accuracy is undefined for input values outside that range') and are listed in",
+    "gpu-not-compared.json. Never widen an entry to make a test pass (blueprint section 14): a disagreement is a",
+    "lowering bug or a spec issue with a decision record."
+  ],
+  "format": "mtek-numeric-tolerances/1",
+  "source": {
+    "ref": "S5",
+    "title": "WebGPU Shading Language",
+    "url": "https://www.w3.org/TR/WGSL/",
+    "status": "W3C Candidate Recommendation Draft, 21 September 2026",
+    "retrieved": "2026-10-04"
+  },
+  "cpuRoundingUlp": 1,
+  "knownDeviations": [
+    {
+      "id": "mix_f32#7",
+      "decision": "0043",
+      "observed": "-Infinity on D3D12 (AMD Radeon RX 7900 XTX, Chrome) and on SwiftShader (Vulkan, Chrome); the CPU and the WGSL bound give 0",
+      "cause": "Both backends evaluate mix(x, y, t) as x + t * (y - x) (HLSL lerp, SPIR-V FMix), and y - x = -6e38 overflows. WGSL bounds mix by x * (1.0 - z) + y * z, which does not overflow for these inputs: the platforms do not meet the WGSL bound. Pending the decision 0043 question (lower mix to its reference expression, or document near-overflow mix as non-portable)."
+    }
+  ],
+  "rules": [
+    {
+      "id": "rounding-direction",
+      "section": "15.7.4",
+      "anchor": "floating-point-accuracy",
+      "quote": "The correctly rounded result of the operation for floating point type T is: x, when x is in T, Otherwise: the smallest value in T greater than x, or the largest value in T less than x. That is, the result may be rounded up or down: WGSL does not specify a rounding mode.",
+      "use": "A correctly rounded sub-operation contributes the interval [round down, round up] of its exact result. Mtek still requires bit-exact + - * on hardware (spec/testing.md section 5): that is a Mtek promise stronger than WGSL (decision 0043)."
+    },
+    {
+      "id": "ulp",
+      "section": "15.7.4",
+      "anchor": "floating-point-accuracy",
+      "quote": "If x is in the finite range of the floating point type, then ULP(x) is the minimum distance between two non-equal, finite floating point numbers a and b such that a ≤ x ≤ b (i.e. ulp(x) = mina,b|b - a|). Otherwise, ULP(x) is |b - a| where b and a are the largest and second-largest representable finite floating point values.",
+      "use": "ulpF32 in tests/browser/support/numeric-values.ts; an n-ULP bound widens the exact result x to [x - n ULP(x), x + n ULP(x)]."
+    },
+    {
+      "id": "inherited",
+      "section": "15.7.4",
+      "anchor": "floating-point-accuracy",
+      "quote": "An expression that the accuracy is inherited from. That is, the accuracy of the operation is defined as the accuracy of evaluating the given WGSL expression. The given expression is only one valid implementation of the function. When evaluating the inherited-from expression, subexpression evaluations are subject to other rules for floating-point evaluation, including those regarding rounding, overflow, reassociation, fusion, and flush-to-zero.",
+      "use": "kind 'inherited': the expression is evaluated with interval arithmetic, each operation by its own entry."
+    },
+    {
+      "id": "undefined-outside-range",
+      "section": "15.7.4",
+      "anchor": "floating-point-accuracy",
+      "quote": "When the accuracy for an operation is specified over an input range, the accuracy is undefined for input values outside that range.",
+      "use": "Rows whose inputs (or the inputs of an inherited sub-operation) leave the stated range are not compared; they are listed in gpu-not-compared.json and their GPU values are reported informationally."
+    },
+    {
+      "id": "reassociation",
+      "section": "15.7.5",
+      "anchor": "reassociation-and-fusion",
+      "quote": "An implementation may reassociate operations.",
+      "use": "A chain of three or more + and - terms is bounded as an exact sum plus one rounding of at most ULP(sum of the term magnitudes) per addition, whatever the order; likewise a chain of three or more products."
+    },
+    {
+      "id": "fusion",
+      "section": "15.7.5",
+      "anchor": "reassociation-and-fusion",
+      "quote": "An implementation may fuse operations if the transformed expression is at least as accurate as the original formulation.",
+      "use": "Covered by the intervals: an unrounded product lies inside the interval of the rounded one."
+    },
+    {
+      "id": "flush-to-zero",
+      "section": "15.7.2",
+      "anchor": "differences-from-ieee754",
+      "quote": "Any inputs or outputs of operations listed in § 15.7.4 Floating Point Accuracy may be flushed to zero. Additionally, intermediate result values of operations listed in § 17.2 Bit Reinterpretation Built-in Functions, § 17.9 Data Packing Built-in Functions, or § 17.10 Data Unpacking Built-in Functions may be flushed to zero. Other operations are required to preserve subnormal numbers.",
+      "use": "An interval that reaches a subnormal value also contains 0. An exact row with a subnormal input or result accepts the flushed value (reported separately). Constructors and bit reinterpretations of i32/u32 must preserve subnormals."
+    },
+    {
+      "id": "zero-sign",
+      "section": "15.7.2",
+      "anchor": "differences-from-ieee754",
+      "quote": "Implementations may ignore the sign field of a floating point zero value. That is, a zero with a positive sign may behave like a zero a with a negative sign, and vice versa.",
+      "use": "An exact row whose result is a zero accepts a zero of either sign (reported separately)."
+    },
+    {
+      "id": "finite-math",
+      "section": "15.7.2",
+      "anchor": "differences-from-ieee754",
+      "quote": "Implementations may assume that overflow, infinities, and NaNs are not present during shader execution. In such an implementation, if the intermediate result of evaluating a runtime expression overflows, or yields an infinity or a NaN, the final result will be an indeterminate value of the target type.",
+      "use": "Rows with non-finite inputs or results are non-portable in cpu.json; an interval that may overflow (any intermediate beyond the finite range) is not compared."
+    }
+  ],
+  "entries": [
+    {
+      "key": "+ (float)",
+      "wgsl": "x + y",
+      "wgslOp": "+",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x + y | Correctly rounded" },
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "If T is a floating point type, the scalar domain is the set of all pairs of extended reals (x,y) except: (−∞,+∞) (+∞,−∞)" }
+      ]
+    },
+    {
+      "key": "- (float)",
+      "wgsl": "x - y",
+      "wgslOp": "-",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x - y | Correctly rounded" }
+      ]
+    },
+    {
+      "key": "* (float)",
+      "wgsl": "x * y",
+      "wgslOp": "*",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x * y | Correctly rounded" },
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "ev * es: V | ev * V(es)" }
+      ],
+      "note": "Covers f32 * f32, vecN * vecN and the mixed vector/scalar forms, which WGSL defines through a splat (one correctly rounded product per component)."
+    },
+    {
+      "key": "/ (float)",
+      "wgsl": "x / y",
+      "wgslOp": "/",
+      "params": ["x", "y"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "ulp", "ulp": 2.5, "where": [{ "param": "y", "absIn": [1.1754943508222875e-38, 8.507059173023462e37] }] },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x / y | 2.5 ULP for |y| in the range [2^-126, 2^126]" },
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "If T is a floating point type, the scalar domain is the set of all pairs of extended reals (x,y) except: (0,0) (−∞,−∞) (−∞,+∞) (+∞,−∞) (+∞,+∞)" }
+      ]
+    },
+    {
+      "key": "% (float)",
+      "wgsl": "x % y",
+      "wgslOp": "%",
+      "params": ["x", "y"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "inherited", "expr": "x - y * trunc(x / y)" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x % y | Inherited from x - y * trunc(x/y)" },
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "If T is a floating point type, the result is equal to: e1 - e2 * trunc(e1 / e2)." }
+      ],
+      "note": "The 2.5 ULP of x / y can move trunc(x / y) to the neighbouring integer when x / y is within 2.5 ULP of an integer; the interval then spans both remainders, as WGSL allows."
+    },
+    {
+      "key": "neg (float)",
+      "wgsl": "-x",
+      "wgslOp": "neg",
+      "params": ["x"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "-x | Correctly rounded" }
+      ]
+    },
+    {
+      "key": "<",
+      "wgsl": "x < y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x < y | Correct result" },
+        { "section": "8.9", "anchor": "comparison-expr", "quote": "e1 < e2: TB | Less than. Component-wise when T is a vector." }
+      ]
+    },
+    {
+      "key": "<=",
+      "wgsl": "x <= y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x <= y | Correct result" },
+        { "section": "8.9", "anchor": "comparison-expr", "quote": "e1 <= e2: TB | Less than or equal. Component-wise when T is a vector." }
+      ]
+    },
+    {
+      "key": ">",
+      "wgsl": "x > y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x > y | Correct result" },
+        { "section": "8.9", "anchor": "comparison-expr", "quote": "e1 > e2: TB | Greater than. Component-wise when T is a vector." }
+      ]
+    },
+    {
+      "key": ">=",
+      "wgsl": "x >= y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x >= y | Correct result" },
+        { "section": "8.9", "anchor": "comparison-expr", "quote": "e1 >= e2: TB | Greater than or equal. Component-wise when T is a vector." }
+      ]
+    },
+    {
+      "key": "==",
+      "wgsl": "x == y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x == y | Correct result" },
+        { "section": "8.9", "anchor": "comparison-expr", "quote": "e1 == e2: TB | Equality. Component-wise when T is a vector." }
+      ]
+    },
+    {
+      "key": "!=",
+      "wgsl": "x != y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "x != y | Correct result" },
+        { "section": "8.9", "anchor": "comparison-expr", "quote": "e1 != e2: TB | Inequality. Component-wise when T is a vector." }
+      ]
+    },
+    {
+      "key": "+ (integer)",
+      "wgsl": "x + y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "e1 + e2 : T | Addition. Component-wise when T is a vector." }
+      ],
+      "note": "Integer arithmetic wraps modulo 2^32 in both domains (spec/language.md section 6.3; WGSL concrete integer arithmetic is two's complement)."
+    },
+    {
+      "key": "- (integer)",
+      "wgsl": "x - y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "e1 - e2 : T | Subtraction Component-wise when T is a vector." }
+      ]
+    },
+    {
+      "key": "* (integer)",
+      "wgsl": "x * y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "e1 * e2 : T | Multiplication. Component-wise when T is a vector." }
+      ]
+    },
+    {
+      "key": "/ (integer)",
+      "wgsl": "x / y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "If T is a signed integer scalar type, evaluates to: If e2 is zero: […] Otherwise, e1. If e1 is most negative value in T, and e2 is -1: […] Otherwise, e1. truncate(x) otherwise, where x is the real-valued quotient e1 ÷ e2." },
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "If T is an unsigned integer scalar type, evaluates to: If e2 is zero: […] Otherwise, e1. Otherwise, the integer q such that e1 = q × e2 + r, where 0 ≤ r < e2." }
+      ]
+    },
+    {
+      "key": "% (integer)",
+      "wgsl": "x % y",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "If T is a signed integer scalar type, evaluates e1 and e2 once, and evaluates to: if e2 is zero: […] Otherwise, 0. If e1 is the most negative value in T, and e2 is -1: […] Otherwise, 0. Otherwise, e1 - truncate(e1 ÷ e2) × e2 where the quotient is computed as a real value." },
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "If T is an unsigned integer scalar type, evaluates to: if e2 is zero: […] Otherwise, 0. Otherwise, the integer r such that e1 = q × e2 + r, where q is an integer and 0 ≤ r < e2." }
+      ]
+    },
+    {
+      "key": "neg (integer)",
+      "wgsl": "-x",
+      "params": ["x"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "-e: T | Negation. Component-wise when T is a vector. If T is an integer scalar type and e evaluates to the largest negative value, then the result is e." }
+      ]
+    },
+    {
+      "key": "f32 (integer)",
+      "wgsl": "f32(x)",
+      "params": ["x"],
+      "compare": "exact",
+      "accuracy": { "kind": "conversion" },
+      "cite": [
+        { "section": "15.7.6", "anchor": "floating-point-conversion", "quote": "If X is exactly representable in the destination type T, then XOut is the value in T equal to X. Additionally, if X is zero and of integer scalar type, then XOut has a zero sign bit." },
+        { "section": "15.7.6", "anchor": "floating-point-conversion", "quote": "If X lies between two adjacent finite values in T, then XOut is one of those two values. WGSL does not specify whether the higher or lower representable value is chosen, and different instances of such a conversion may choose differently." }
+      ],
+      "note": "Bit-exact when the integer is representable; otherwise either neighbour is accepted (spec/language.md section 6.5), the other neighbour reported separately."
+    },
+    {
+      "key": "i32 (float)",
+      "wgsl": "i32(x)",
+      "params": ["x"],
+      "compare": "exact",
+      "accuracy": { "kind": "conversion" },
+      "cite": [
+        { "section": "15.7.6", "anchor": "floating-point-conversion", "quote": "If X is a NaN, the result is an indeterminate value in T. If X is exactly representable in the target type T, then the result is that value. Otherwise, the result is the value in T closest to truncate(X) and also exactly representable in the original floating point type." },
+        { "section": "15.7.6", "anchor": "floating-point-conversion", "quote": "1e20f converted to i32 is the maximum i32 value, 2147483520i Note this is smaller than the maximum i32 value 2147483647i" }
+      ],
+      "note": "The WGSL result of an out-of-range input is the clamp to [-2^31, 2147483520], not to the i32 maximum; the CPU clamps to 2147483647 (decision 0037 item 6). Decision 0043 records the disagreement."
+    },
+    {
+      "key": "u32 (float)",
+      "wgsl": "u32(x)",
+      "params": ["x"],
+      "compare": "exact",
+      "accuracy": { "kind": "conversion" },
+      "cite": [
+        { "section": "15.7.6", "anchor": "floating-point-conversion", "quote": "If X is a NaN, the result is an indeterminate value in T. If X is exactly representable in the target type T, then the result is that value. Otherwise, the result is the value in T closest to truncate(X) and also exactly representable in the original floating point type." },
+        { "section": "15.7.6", "anchor": "floating-point-conversion", "quote": "1e20f converted to u32 is the largest float value representable in u32, 4294967040u Note this is smaller than the maximum u32 value 4294967295u" }
+      ],
+      "note": "As for i32: WGSL clamps to 4294967040, the CPU to 4294967295 (decision 0043)."
+    },
+    {
+      "key": "i32 (integer)",
+      "wgsl": "bitcast<i32>(x)",
+      "params": ["x"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "17.2.1", "anchor": "bitcast-builtin", "quote": "Reinterpretation of bits as T. The result is the reintepretation of bits in e as a T value." }
+      ]
+    },
+    {
+      "key": "u32 (integer)",
+      "wgsl": "bitcast<u32>(x)",
+      "params": ["x"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "17.2.1", "anchor": "bitcast-builtin", "quote": "Reinterpretation of bits as T. The result is the reintepretation of bits in e as a T value." }
+      ]
+    },
+    {
+      "key": "abs (float)",
+      "wgsl": "abs(x)",
+      "wgslOp": "abs",
+      "params": ["x"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "abs(x) | Correctly rounded" },
+        { "section": "17.5.1", "anchor": "abs-float-builtin", "quote": "If e is a floating-point type, then the result is e with a positive sign bit." }
+      ]
+    },
+    {
+      "key": "abs (integer)",
+      "wgsl": "abs(x)",
+      "params": ["x"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "17.5.1", "anchor": "abs-float-builtin", "quote": "If e is an unsigned integer scalar type, then the result is e. If e is a signed integer scalar type and evaluates to the largest negative value, then the result is e." }
+      ]
+    },
+    {
+      "key": "acos",
+      "wgsl": "acos(x)",
+      "wgslOp": "acos",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": {
+        "kind": "worseOf",
+        "of": [
+          { "kind": "absolute", "abs": 6.77e-5 },
+          { "kind": "inherited", "expr": "atan2(sqrt(1.0 - x * x), x)" }
+        ]
+      },
+      "domain": [{ "param": "x", "in": [-1, 1] }],
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "acos(x) | The worse of: Absolute error 6.77×10^-5 Inherited from atan2(sqrt(1.0 - x * x), x)" },
+        { "section": "17.5.2", "anchor": "acos-builtin", "quote": "Scalar domain | Interval [−1, 1]" }
+      ],
+      "note": "Where the inherited atan2 is outside its stated range (x = 0, or sqrt(1 - x*x) = 0, which is not a normal value) the worse of the two bounds is undefined and the row is not compared."
+    },
+    {
+      "key": "asin",
+      "wgsl": "asin(x)",
+      "wgslOp": "asin",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": {
+        "kind": "worseOf",
+        "of": [
+          { "kind": "absolute", "abs": 6.81e-5 },
+          { "kind": "inherited", "expr": "atan2(x, sqrt(1.0 - x * x))" }
+        ]
+      },
+      "domain": [{ "param": "x", "in": [-1, 1] }],
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "asin(x) | The worse of: Absolute error 6.81×10^-5 Inherited from atan2(x, sqrt(1.0 - x * x))" },
+        { "section": "17.5.4", "anchor": "asin-builtin", "quote": "Scalar domain | Interval [−1, 1]" }
+      ],
+      "note": "asin(0) inherits atan2(0, 1), whose y = 0 is not a normal value: not compared, as for acos."
+    },
+    {
+      "key": "atan",
+      "wgsl": "atan(x)",
+      "wgslOp": "atan",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "ulp", "ulp": 4096 },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "atan(x) | 4096 ULP" }
+      ]
+    },
+    {
+      "key": "atan2",
+      "wgsl": "atan2(y, x)",
+      "wgslOp": "atan2",
+      "params": ["y", "x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": {
+        "kind": "ulp",
+        "ulp": 4096,
+        "where": [
+          { "param": "x", "absIn": [1.1754943508222875e-38, 8.507059173023462e37] },
+          { "param": "y", "normal": true }
+        ]
+      },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "atan2(y, x) | 4096 ULP for |x| in the range [2^-126, 2^126], and y is finite and normal" },
+        { "section": "17.5.8", "anchor": "atan2-builtin", "quote": "Note: The error in the result is unbounded: When abs(x) is very small, e.g. subnormal for its type, At the origin (x,y) = (0,0), or When y is subnormal or infinite." }
+      ],
+      "note": "Zero is neither normal nor subnormal (15.7.1), so a row with y = 0 is outside the stated range and not compared."
+    },
+    {
+      "key": "ceil",
+      "wgsl": "ceil(x)",
+      "wgslOp": "ceil",
+      "params": ["x"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [{ "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "ceil(x) | Correctly rounded" }]
+    },
+    {
+      "key": "floor",
+      "wgsl": "floor(x)",
+      "wgslOp": "floor",
+      "params": ["x"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [{ "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "floor(x) | Correctly rounded" }]
+    },
+    {
+      "key": "trunc",
+      "wgsl": "trunc(x)",
+      "wgslOp": "trunc",
+      "params": ["x"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [{ "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "trunc(x) | Correctly rounded" }]
+    },
+    {
+      "key": "round",
+      "wgsl": "round(x)",
+      "wgslOp": "round",
+      "params": ["x"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "round(x) | Correctly rounded" },
+        { "section": "17.5.52", "anchor": "round-builtin", "quote": "Result is the integer k nearest to e, as a floating point value. When e lies halfway between integers k and k + 1, the result is k when k is even, and k + 1 when k is odd." }
+      ]
+    },
+    {
+      "key": "clamp (float)",
+      "wgsl": "clamp(x, low, high)",
+      "wgslOp": "clamp",
+      "params": ["x", "low", "high"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "clamp(x,low,high) | Correctly rounded. The infinitely precise result is computed as either min(max(x,low),high), or with a median-of-3-values formulation. These may differ when low > high. If x and either low or high are subnormal, the result may be any of the subnormal values." }
+      ],
+      "note": "low > high is non-portable in cpu.json."
+    },
+    {
+      "key": "clamp (integer)",
+      "wgsl": "clamp(x, low, high)",
+      "params": ["x", "low", "high"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [
+        { "section": "17.5.10", "anchor": "clamp", "quote": "If T is an integer type, then the result is min(max(e, low), high)." }
+      ]
+    },
+    {
+      "key": "cos",
+      "wgsl": "cos(x)",
+      "wgslOp": "cos",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "absolute", "abs": 0.00048828125, "where": [{ "param": "x", "in": [-3.141592653589793, 3.141592653589793] }] },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "cos(x) | Absolute error at most 2^-11 when x is in the interval [-π, π]" }
+      ],
+      "note": "The binary32 value nearest π (3.1415927) is above π, so it is outside [-π, π]."
+    },
+    {
+      "key": "sin",
+      "wgsl": "sin(x)",
+      "wgslOp": "sin",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "absolute", "abs": 0.00048828125, "where": [{ "param": "x", "in": [-3.141592653589793, 3.141592653589793] }] },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "sin(x) | Absolute error at most 2^-11 when x is in the interval [-π, π]" }
+      ]
+    },
+    {
+      "key": "tan",
+      "wgsl": "tan(x)",
+      "wgslOp": "tan",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "inherited", "expr": "sin(x) / cos(x)" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "tan(x) | Inherited from sin(x) / cos(x)" }
+      ]
+    },
+    {
+      "key": "cross",
+      "wgsl": "cross(x, y)",
+      "wgslOp": "cross",
+      "params": ["x", "y"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "vec3<f32>(x.y * y.z - x.z * y.y, x.z * y.x - x.x * y.z, x.x * y.y - x.y * y.x)" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "cross(x, x) | Inherited from (x[i] * y[j] - x[j] * y[i]) where i ≠ j" },
+        { "section": "17.5.16", "anchor": "cross-builtin", "quote": "Domain | Implied from linear terms given by a possible implementation: a[1] × b[2] − a[2] × b[1] a[2] × b[0] − a[0] × b[2] a[0] × b[1] − a[1] × b[0]" }
+      ]
+    },
+    {
+      "key": "degrees",
+      "wgsl": "degrees(x)",
+      "wgslOp": "degrees",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "inherited", "expr": "x * 57.295779513082322865" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "degrees(x) | Inherited from x * 57.295779513082322865" }
+      ],
+      "note": "The constant is an AbstractFloat; converted to f32 it may be either neighbour (15.7.6). The CPU multiplies by the binary32 value nearest 180/π (decision 0037 item 5)."
+    },
+    {
+      "key": "radians",
+      "wgsl": "radians(x)",
+      "wgslOp": "radians",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "inherited", "expr": "x * 0.017453292519943295474" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "radians(x) | Inherited from x * 0.017453292519943295474" }
+      ]
+    },
+    {
+      "key": "distance (f32, f32)",
+      "wgsl": "distance(x, y)",
+      "params": ["x", "y"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "length(x - y)" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "distance(x, y) | Inherited from length(x - y)" }
+      ]
+    },
+    {
+      "key": "distance",
+      "wgsl": "distance(x, y)",
+      "wgslOp": "distance",
+      "params": ["x", "y"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "length(x - y)" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "distance(x, y) | Inherited from length(x - y)" },
+        { "section": "17.5.19", "anchor": "distance-builtin", "quote": "The domain is all vectors (e1,e2) where the subtraction e1−e2 is valid." }
+      ]
+    },
+    {
+      "key": "dot",
+      "wgsl": "dot(x, y)",
+      "wgslOp": "dot",
+      "params": ["x", "y"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "sum_of_products(x, y)" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "dot(x, y) | Inherited from sum of x[i] * y[i]" },
+        { "section": "17.5.20", "anchor": "dot-builtin", "quote": "Domain | Implied from linear terms of the sum over terms e1[i] × e2[i]." }
+      ],
+      "note": "sum_of_products is the evaluator's name for 'sum of x[i] * y[i]': correctly rounded products summed under the reassociation rule."
+    },
+    {
+      "key": "exp",
+      "wgsl": "exp(x)",
+      "wgslOp": "exp",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "ulp", "ulp": { "base": 3, "perAbsOf": "x", "factor": 2 } },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "exp(x) | 3 + 2 * |x| ULP" }
+      ]
+    },
+    {
+      "key": "exp2",
+      "wgsl": "exp2(x)",
+      "wgslOp": "exp2",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "ulp", "ulp": { "base": 3, "perAbsOf": "x", "factor": 2 } },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "exp2(x) | 3 + 2 * |x| ULP" }
+      ]
+    },
+    {
+      "key": "fract",
+      "wgsl": "fract(x)",
+      "wgslOp": "fract",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "inherited", "expr": "x - floor(x)" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "fract(x) | Inherited from x - floor(x)" },
+        { "section": "17.5.33", "anchor": "fract-builtin", "quote": "Returns the fractional part of e, computed as e - floor(e)." }
+      ]
+    },
+    {
+      "key": "inverse_sqrt",
+      "wgsl": "inverseSqrt(x)",
+      "wgslOp": "inverseSqrt",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "ulp", "ulp": 2 },
+      "domain": [{ "param": "x", "in": [0, "Infinity"] }],
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "inverseSqrt(x) | 2 ULP" },
+        { "section": "17.5.36", "anchor": "inverseSqrt-builtin", "quote": "Scalar domain | Interval [0, +∞]" }
+      ]
+    },
+    {
+      "key": "length (f32)",
+      "wgsl": "length(x)",
+      "params": ["x"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "sqrt(x * x)" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "length(x) | Inherited from sqrt(dot(x, x)) in the vector case, and sqrt(x*x) in the scalar case." }
+      ]
+    },
+    {
+      "key": "length",
+      "wgsl": "length(x)",
+      "wgslOp": "length",
+      "params": ["x"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "sqrt(dot(x, x))" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "length(x) | Inherited from sqrt(dot(x, x)) in the vector case, and sqrt(x*x) in the scalar case." }
+      ]
+    },
+    {
+      "key": "log",
+      "wgsl": "log(x)",
+      "wgslOp": "log",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": {
+        "kind": "piecewise",
+        "inside": [{ "param": "x", "in": [0.5, 2] }],
+        "then": { "kind": "absolute", "abs": 4.76837158203125e-7 },
+        "else": { "kind": "ulp", "ulp": 3 }
+      },
+      "domain": [{ "param": "x", "in": [0, "Infinity"] }],
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "log(x) | Absolute error at most 2^-21 when x is in the interval [0.5, 2.0]. 3 ULP when x is outside the interval [0.5, 2.0]." },
+        { "section": "17.5.39", "anchor": "log-builtin", "quote": "Scalar domain | Interval [0, +∞]" }
+      ]
+    },
+    {
+      "key": "log2",
+      "wgsl": "log2(x)",
+      "wgslOp": "log2",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": {
+        "kind": "piecewise",
+        "inside": [{ "param": "x", "in": [0.5, 2] }],
+        "then": { "kind": "absolute", "abs": 4.76837158203125e-7 },
+        "else": { "kind": "ulp", "ulp": 3 }
+      },
+      "domain": [{ "param": "x", "in": [0, "Infinity"] }],
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "log2(x) | Absolute error at most 2^-21 when x is in the interval [0.5, 2.0]. 3 ULP when x is outside the interval [0.5, 2.0]." },
+        { "section": "17.5.40", "anchor": "log2-builtin", "quote": "Scalar domain | Interval [0, +∞]" }
+      ]
+    },
+    {
+      "key": "max (float)",
+      "wgsl": "max(x, y)",
+      "wgslOp": "max",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "max(x, y) | Correctly rounded If both x and y are subnormal, the result may be either input." },
+        { "section": "17.5.41", "anchor": "max-float-builtin", "quote": "Returns e2 if e1 is less than e2, and e1 otherwise." }
+      ]
+    },
+    {
+      "key": "min (float)",
+      "wgsl": "min(x, y)",
+      "wgslOp": "min",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "min(x, y) | Correctly rounded. If both x and y are subnormal, the result may be either input." },
+        { "section": "17.5.42", "anchor": "min-float-builtin", "quote": "Returns e2 if e2 is less than e1, and e1 otherwise." }
+      ]
+    },
+    {
+      "key": "max (integer)",
+      "wgsl": "max(x, y)",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [{ "section": "17.5.41", "anchor": "max-float-builtin", "quote": "Returns e2 if e1 is less than e2, and e1 otherwise." }]
+    },
+    {
+      "key": "min (integer)",
+      "wgsl": "min(x, y)",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "correct" },
+      "cite": [{ "section": "17.5.42", "anchor": "min-float-builtin", "quote": "Returns e2 if e2 is less than e1, and e1 otherwise." }]
+    },
+    {
+      "key": "mix",
+      "wgsl": "mix(x, y, z)",
+      "wgslOp": "mix",
+      "params": ["x", "y", "z"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "x * (1.0 - z) + y * z" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "mix(x, y, z) | Inherited from x * (1.0 - z) + y * z" },
+        { "section": "17.5.43", "anchor": "mix-builtin", "quote": "Domain | Implied from linear terms of the expressions: e1[i] × (1 − e3[i]) + e2[i] × e3[i]." }
+      ],
+      "note": "mix(vecN, vecN, f32) splats the f32 weight, as WGSL's overload does."
+    },
+    {
+      "key": "normalize",
+      "wgsl": "normalize(x)",
+      "wgslOp": "normalize",
+      "params": ["x"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "x / length(x)" },
+      "domain": [{ "param": "x", "nonZeroVector": true }],
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "normalize(x) | Inherited from x / length(x)" },
+        { "section": "17.5.45", "anchor": "normalize-builtin", "quote": "The domain is all vectors except the zero vector." }
+      ]
+    },
+    {
+      "key": "pow",
+      "wgsl": "pow(x, y)",
+      "wgslOp": "pow",
+      "params": ["x", "y"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "inherited", "expr": "exp2(y * log2(x))" },
+      "domain": [{ "param": "x", "in": [0, "Infinity"] }],
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "pow(x, y) | Inherited from exp2(y * log2(x))" },
+        { "section": "17.5.46", "anchor": "pow-builtin", "quote": "Scalar domain | The set of all pairs of extended reals (x,y) except: x < 0. x is 1 and y is infinite. x is infinite and y is 0." }
+      ]
+    },
+    {
+      "key": "reflect",
+      "wgsl": "reflect(x, y)",
+      "wgslOp": "reflect",
+      "params": ["x", "y"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "x - 2.0 * dot(x, y) * y" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "reflect(x, y) | Inherited from x - 2.0 * dot(x, y) * y" },
+        { "section": "17.5.49", "anchor": "reflect-builtin", "quote": "For the incident vector e1 and surface orientation e2, returns the reflection direction e1 - 2 * dot(e2, e1) * e2." }
+      ]
+    },
+    {
+      "key": "saturate",
+      "wgsl": "saturate(x)",
+      "wgslOp": "saturate",
+      "params": ["x"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "saturate(x) | Correctly rounded" },
+        { "section": "17.5.53", "anchor": "saturate-float-builtin", "quote": "Returns clamp(e, 0.0, 1.0)." }
+      ]
+    },
+    {
+      "key": "sign",
+      "wgsl": "sign(x)",
+      "wgslOp": "sign",
+      "params": ["x"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "sign(x) | Correctly rounded" },
+        { "section": "17.5.54", "anchor": "sign-builtin", "quote": "Result is: 1 when e > 0 0 when e = 0 -1 when e < 0" }
+      ]
+    },
+    {
+      "key": "smoothstep",
+      "wgsl": "smoothstep(edge0, edge1, x)",
+      "wgslOp": "smoothstep",
+      "params": ["edge0", "edge1", "x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": {
+        "kind": "inherited",
+        "lets": ["t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0)"],
+        "expr": "t * t * (3.0 - 2.0 * t)"
+      },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "smoothstep(edge0, edge1, x) | Inherited from t * t * (3.0 - 2.0 * t), where t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0)" },
+        { "section": "17.5.57", "anchor": "smoothstep-builtin", "quote": "If edge0 = edge1: […] Otherwise, the result is an indeterminate value for T." }
+      ]
+    },
+    {
+      "key": "sqrt",
+      "wgsl": "sqrt(x)",
+      "wgslOp": "sqrt",
+      "params": ["x"],
+      "compare": "tolerance",
+      "componentwise": true,
+      "accuracy": { "kind": "inherited", "expr": "1.0 / inverseSqrt(x)" },
+      "domain": [{ "param": "x", "in": [0, "Infinity"] }],
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "sqrt(x) | Inherited from 1.0 / inverseSqrt(x)" },
+        { "section": "17.5.58", "anchor": "sqrt-builtin", "quote": "Scalar domain | Interval [0, +∞]" }
+      ],
+      "note": "sqrt(0) inherits 1.0 / inverseSqrt(0) = 1.0 / +inf, whose divisor is outside [2^-126, 2^126]: not compared. The CPU's sqrt is correctly rounded; WGSL does not promise that."
+    },
+    {
+      "key": "step",
+      "wgsl": "step(edge, x)",
+      "wgslOp": "step",
+      "params": ["edge", "x"],
+      "compare": "exact",
+      "componentwise": true,
+      "accuracy": { "kind": "correctlyRounded" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "step(edge, x) | Correctly rounded" },
+        { "section": "17.5.59", "anchor": "step-builtin", "quote": "Returns 1.0 if edge ≤ x, and 0.0 otherwise." }
+      ]
+    },
+    {
+      "key": "transpose",
+      "wgsl": "transpose(x)",
+      "params": ["x"],
+      "compare": "exact",
+      "accuracy": { "kind": "noOperation" },
+      "cite": [
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "transpose(x) | Correctly rounded" }
+      ]
+    },
+    {
+      "key": "vec2",
+      "wgsl": "vec2<f32>(…)",
+      "params": ["x", "y"],
+      "compare": "exact",
+      "accuracy": { "kind": "noOperation" },
+      "cite": [
+        { "section": "17.1.2", "anchor": "value-constructor-builtin-function", "quote": "The built-in functions defined in following subsections create a constructible value by: Copying an existing value of the same type (i.e. the identity function), or Creating a composite value from an explicit list of components." }
+      ],
+      "note": "Constructors are not operations of 15.7.4, so they must preserve subnormals (15.7.2)."
+    },
+    {
+      "key": "vec3",
+      "wgsl": "vec3<f32>(…)",
+      "params": ["x", "y", "z"],
+      "compare": "exact",
+      "accuracy": { "kind": "noOperation" },
+      "cite": [
+        { "section": "17.1.2.18", "anchor": "vec3-builtin", "quote": "Component-wise construction of a three-component vector with e1, e2, and e3 as components." }
+      ]
+    },
+    {
+      "key": "vec4",
+      "wgsl": "vec4<f32>(…)",
+      "params": ["x", "y", "z", "w"],
+      "compare": "exact",
+      "accuracy": { "kind": "noOperation" },
+      "cite": [
+        { "section": "17.1.2", "anchor": "value-constructor-builtin-function", "quote": "Creating a composite value from an explicit list of components." }
+      ]
+    },
+    {
+      "key": "quat.identity",
+      "wgsl": "vec4<f32>(0.0, 0.0, 0.0, 1.0)",
+      "params": [],
+      "compare": "exact",
+      "accuracy": { "kind": "noOperation" },
+      "cite": [
+        { "section": "17.1.2", "anchor": "value-constructor-builtin-function", "quote": "Creating a composite value from an explicit list of components." }
+      ]
+    },
+    {
+      "key": "mat4.identity",
+      "wgsl": "mat4x4<f32>(…)",
+      "params": [],
+      "compare": "exact",
+      "accuracy": { "kind": "noOperation" },
+      "cite": [
+        { "section": "17.1.2.14", "anchor": "mat4x4-builtin", "quote": "Construct a 4x4 column-major matrix from column vectors." }
+      ]
+    },
+    {
+      "key": "mat4.translation",
+      "wgsl": "mtek_mat4_translation(v)",
+      "params": ["v"],
+      "compare": "exact",
+      "accuracy": { "kind": "noOperation" },
+      "cite": [
+        { "section": "17.1.2.14", "anchor": "mat4x4-builtin", "quote": "Construct a 4x4 column-major matrix from column vectors." }
+      ],
+      "note": "The helper (decision 0041 item 8) only places the components: mat4x4<f32>(vec4<f32>(1.0, 0.0, 0.0, 0.0), vec4<f32>(0.0, 1.0, 0.0, 0.0), vec4<f32>(0.0, 0.0, 1.0, 0.0), vec4<f32>(v, 1.0))."
+    },
+    {
+      "key": "mat4.scale",
+      "wgsl": "mtek_mat4_scale(v)",
+      "params": ["v"],
+      "compare": "exact",
+      "accuracy": { "kind": "noOperation" },
+      "cite": [
+        { "section": "17.1.2.14", "anchor": "mat4x4-builtin", "quote": "Construct a 4x4 column-major matrix from column vectors." }
+      ],
+      "note": "The helper only places the components (decision 0041 item 8)."
+    },
+    {
+      "key": "mat4.columns",
+      "wgsl": "mat4x4<f32>(c0, c1, c2, c3)",
+      "params": ["c0", "c1", "c2", "c3"],
+      "compare": "exact",
+      "accuracy": { "kind": "noOperation" },
+      "cite": [
+        { "section": "17.1.2.14", "anchor": "mat4x4-builtin", "quote": "Construct a 4x4 column-major matrix from column vectors." }
+      ]
+    },
+    {
+      "key": "color.linear",
+      "wgsl": "vec4<f32>(rgb, a)",
+      "params": ["rgb", "a"],
+      "compare": "exact",
+      "accuracy": { "kind": "noOperation" },
+      "cite": [
+        { "section": "17.1.2", "anchor": "value-constructor-builtin-function", "quote": "Creating a composite value from an explicit list of components." }
+      ]
+    },
+    {
+      "key": "* (mat4, vec4)",
+      "wgsl": "m * v",
+      "params": ["m", "v"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "m * v" },
+      "cite": [
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "m * v: vecR<T> | Linear algebra matrix-column-vector product: Component i of the result is dot(transpose(m)[i],v)" },
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "dot(x, y) | Inherited from sum of x[i] * y[i]" }
+      ],
+      "note": "15.7.4.1 has no row for matrix products; 8.8 defines each component as a dot product, so the bound is inherited from dot (the evaluator's matrix product is four sums of products)."
+    },
+    {
+      "key": "* (mat4, mat4)",
+      "wgsl": "a * b",
+      "params": ["a", "b"],
+      "compare": "tolerance",
+      "accuracy": { "kind": "inherited", "expr": "a * b" },
+      "cite": [
+        { "section": "8.8", "anchor": "arithmetic-expr", "quote": "e1 * e2: matCxR<T> | Linear algebra matrix product." },
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "dot(x, y) | Inherited from sum of x[i] * y[i]" }
+      ],
+      "note": "Element (j, i) of the linear algebra product is the dot product of row i of e1 and column j of e2; bounded like * (mat4, vec4)."
+    },
+    {
+      "key": "* (quat, quat)",
+      "wgsl": "mtek_quat_mul(a, b)",
+      "params": ["a", "b"],
+      "compare": "tolerance",
+      "helper": "mtek_quat_mul",
+      "accuracy": {
+        "kind": "inherited",
+        "expr": "vec4<f32>((((a.w * b.x) + (a.x * b.w)) + (a.y * b.z)) - (a.z * b.y), (((a.w * b.y) - (a.x * b.z)) + (a.y * b.w)) + (a.z * b.x), (((a.w * b.z) + (a.x * b.y)) - (a.y * b.x)) + (a.z * b.w), (((a.w * b.w) - (a.x * b.x)) - (a.y * b.y)) - (a.z * b.z))"
+      },
+      "cite": [
+        { "section": "15.7.4", "anchor": "floating-point-accuracy", "quote": "An expression that the accuracy is inherited from. That is, the accuracy of the operation is defined as the accuracy of evaluating the given WGSL expression." }
+      ],
+      "note": "A Mtek helper, not a WGSL built-in: its accuracy is that of evaluating its own WGSL body (decision 0041 item 8, the operation order of decision 0026 item 6), under the reassociation and fusion rules. The probe test checks that the compiled helper body is this expression."
+    },
+    {
+      "key": "* (quat, vec3)",
+      "wgsl": "mtek_quat_rotate(q, v)",
+      "params": ["q", "v"],
+      "compare": "tolerance",
+      "helper": "mtek_quat_rotate",
+      "accuracy": {
+        "kind": "inherited",
+        "lets": ["t = 2.0 * cross(q.xyz, v)"],
+        "expr": "(v + (q.w * t)) + cross(q.xyz, t)"
+      },
+      "cite": [
+        { "section": "15.7.4", "anchor": "floating-point-accuracy", "quote": "An expression that the accuracy is inherited from. That is, the accuracy of the operation is defined as the accuracy of evaluating the given WGSL expression." },
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "cross(x, x) | Inherited from (x[i] * y[j] - x[j] * y[i]) where i ≠ j" }
+      ],
+      "note": "Helper body of decision 0041 item 8; checked against the compiled shader."
+    },
+    {
+      "key": "quat.axis_angle",
+      "wgsl": "mtek_quat_axis_angle(axis, angle)",
+      "params": ["axis", "angle"],
+      "compare": "tolerance",
+      "helper": "mtek_quat_axis_angle",
+      "accuracy": {
+        "kind": "inherited",
+        "lets": [
+          "largest = max(max(abs(axis.x), abs(axis.y)), abs(axis.z))",
+          "scaled = axis / largest",
+          "unit = scaled / sqrt(((scaled.x * scaled.x) + (scaled.y * scaled.y)) + (scaled.z * scaled.z))",
+          "half = angle * 0.5"
+        ],
+        "expr": "vec4<f32>(unit * sin(half), cos(half))"
+      },
+      "cite": [
+        { "section": "15.7.4", "anchor": "floating-point-accuracy", "quote": "An expression that the accuracy is inherited from. That is, the accuracy of the operation is defined as the accuracy of evaluating the given WGSL expression." },
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "sin(x) | Absolute error at most 2^-11 when x is in the interval [-π, π]" }
+      ],
+      "note": "Helper body of decision 0041 item 8 for a non-zero axis (a zero axis takes the identity branch and is non-portable in cpu.json). The CPU folds with binary32 libm sinf/cosf (decision 0026 item 6)."
+    },
+    {
+      "key": "quat.euler",
+      "wgsl": "mtek_quat_euler(x, y, z)",
+      "params": ["x", "y", "z"],
+      "compare": "tolerance",
+      "accuracy": {
+        "kind": "inherited",
+        "expr": "mtek_quat_mul(mtek_quat_mul(mtek_quat_axis_angle(vec3<f32>(0.0, 1.0, 0.0), y), mtek_quat_axis_angle(vec3<f32>(1.0, 0.0, 0.0), x)), mtek_quat_axis_angle(vec3<f32>(0.0, 0.0, 1.0), z))"
+      },
+      "helper": "mtek_quat_euler",
+      "cite": [
+        { "section": "15.7.4", "anchor": "floating-point-accuracy", "quote": "An expression that the accuracy is inherited from. That is, the accuracy of the operation is defined as the accuracy of evaluating the given WGSL expression." }
+      ],
+      "note": "Helper body of decision 0041 item 8 (mtek_quat_mul and mtek_quat_axis_angle are the entries '* (quat, quat)' and 'quat.axis_angle'); checked against the compiled shader."
+    },
+    {
+      "key": "mat4.rotation",
+      "wgsl": "mtek_mat4_rotation(q)",
+      "params": ["q"],
+      "compare": "tolerance",
+      "helper": "mtek_mat4_rotation",
+      "accuracy": {
+        "kind": "inherited",
+        "lets": [
+          "xx = q.x * q.x",
+          "yy = q.y * q.y",
+          "zz = q.z * q.z",
+          "xy = q.x * q.y",
+          "xz = q.x * q.z",
+          "yz = q.y * q.z",
+          "wx = q.w * q.x",
+          "wy = q.w * q.y",
+          "wz = q.w * q.z"
+        ],
+        "expr": "mat4x4<f32>(vec4<f32>(1.0 - (2.0 * (yy + zz)), 2.0 * (xy + wz), 2.0 * (xz - wy), 0.0), vec4<f32>(2.0 * (xy - wz), 1.0 - (2.0 * (xx + zz)), 2.0 * (yz + wx), 0.0), vec4<f32>(2.0 * (xz + wy), 2.0 * (yz - wx), 1.0 - (2.0 * (xx + yy)), 0.0), vec4<f32>(0.0, 0.0, 0.0, 1.0))"
+      },
+      "cite": [
+        { "section": "15.7.4", "anchor": "floating-point-accuracy", "quote": "An expression that the accuracy is inherited from. That is, the accuracy of the operation is defined as the accuracy of evaluating the given WGSL expression." }
+      ],
+      "note": "Helper body of decision 0041 item 8 (decision 0037 item 7); checked against the compiled shader."
+    },
+    {
+      "key": "color.srgb",
+      "wgsl": "mtek_color_srgb(rgb, a)",
+      "params": ["rgb", "a"],
+      "compare": "tolerance",
+      "helper": "mtek_color_srgb",
+      "accuracy": {
+        "kind": "inherited",
+        "expr": "vec4<f32>(mtek_srgb_channel(rgb.x), mtek_srgb_channel(rgb.y), mtek_srgb_channel(rgb.z), a)"
+      },
+      "cite": [
+        { "section": "15.7.4", "anchor": "floating-point-accuracy", "quote": "An expression that the accuracy is inherited from. That is, the accuracy of the operation is defined as the accuracy of evaluating the given WGSL expression." },
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "pow(x, y) | Inherited from exp2(y * log2(x))" }
+      ],
+      "note": "Helper body of decision 0041 item 8 (decision 0024 item 6); checked against the compiled shader."
+    },
+    {
+      "key": "srgb channel (helper)",
+      "wgsl": "mtek_srgb_channel(c)",
+      "params": ["c"],
+      "compare": "tolerance",
+      "helper": "mtek_srgb_channel",
+      "helperCheck": "manual",
+      "accuracy": {
+        "kind": "inherited",
+        "expr": "select(pow((c + 0.055) / 1.055, 2.4), c / 12.92, c <= 0.04045)"
+      },
+      "cite": [
+        { "section": "15.7.4", "anchor": "floating-point-accuracy", "quote": "An expression that the accuracy is inherited from. That is, the accuracy of the operation is defined as the accuracy of evaluating the given WGSL expression." },
+        { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "pow(x, y) | Inherited from exp2(y * log2(x))" }
+      ],
+      "note": "Used only by color.srgb. The compiled helper is 'if c <= 0.04045 { return c / 12.92; } return pow((c + 0.055) / 1.055, 2.4);'; select(f, t, cond) is the same branch written as one expression (the comparison is exact, so one branch is taken). The probe test checks the compiled body contains both returns."
+    }
+  ]
+}
