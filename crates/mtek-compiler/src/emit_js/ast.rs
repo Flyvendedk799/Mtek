@@ -375,6 +375,16 @@ pub struct JsModule {
 /// Prints `module`.
 #[must_use]
 pub fn print(module: &Module) -> JsModule {
+    let mut printed = print_every_mapping(module);
+    // Stable: of several mappings at one position, the first recorded stays first.
+    printed.mappings.dedup_by_key(|m| (m.line, m.column));
+    printed
+}
+
+/// Prints `module` with every mapping recorded, sorted by position but not deduplicated (the
+/// source map coverage test checks with it that a node is only ever unmapped because an
+/// enclosing one starts at the same position).
+pub(super) fn print_every_mapping(module: &Module) -> JsModule {
     let mut out = Out {
         p: Printer::new(),
         mappings: Vec::new(),
@@ -383,9 +393,7 @@ pub fn print(module: &Module) -> JsModule {
         out.item(item);
     }
     let mut mappings = out.mappings;
-    // Stable: of several mappings at one position, the first recorded stays first.
     mappings.sort_by_key(|m| (m.line, m.column));
-    mappings.dedup_by_key(|m| (m.line, m.column));
     JsModule {
         text: out.p.finish(),
         mappings,

@@ -428,10 +428,11 @@ impl FnLowering<'_, '_> {
                 let is_matrix = base.ty == "mat4";
                 match constant {
                     Some(k) if k < length => {
+                        let position = Expr::Num(Number::U32(k)).spanned(index.span);
                         if is_matrix {
-                            rt("m4col", vec![object, Expr::Num(Number::U32(k))])
+                            rt("m4col", vec![object, position])
                         } else {
-                            object.index(k)
+                            Expr::Subscript(Box::new(object), Box::new(position))
                         }
                     }
                     Some(k) => {
@@ -604,6 +605,193 @@ mod tests {
             "f_e2cab98b_pulse"
         );
         assert!(function_name(&Symbol::item("", "pulse")).is_err());
+    }
+
+    /// The spans of a function: its declaration, its statements and its expressions.
+    fn spans_of(function: &Function, out: &mut Vec<Span>) {
+        fn expr(e: &ir::Expr, out: &mut Vec<Span>) {
+            out.push(e.span);
+            match &e.kind {
+                ir::ExprKind::Const { .. } | ir::ExprKind::Local { .. } => {}
+                ir::ExprKind::Unary { operand, .. } => expr(operand, out),
+                ir::ExprKind::Binary { lhs, rhs, .. } => {
+                    expr(lhs, out);
+                    expr(rhs, out);
+                }
+                ir::ExprKind::Call { args, .. }
+                | ir::ExprKind::Builtin { args, .. }
+                | ir::ExprKind::Construct { args } => args.iter().for_each(|a| expr(a, out)),
+                ir::ExprKind::Convert { arg } => expr(arg, out),
+                ir::ExprKind::Components { base, .. } | ir::ExprKind::Field { base, .. } => {
+                    expr(base, out);
+                }
+                ir::ExprKind::Index { base, index } => {
+                    expr(base, out);
+                    expr(index, out);
+                }
+                ir::ExprKind::Array { elements } => elements.iter().for_each(|a| expr(a, out)),
+                ir::ExprKind::Struct { fields } | ir::ExprKind::Descriptor { fields, .. } => {
+                    fields.iter().for_each(|f| expr(&f.value, out));
+                }
+            }
+        }
+        fn block(b: &ir::Block, out: &mut Vec<Span>) {
+            for s in &b.stmts {
+                match s {
+                    ir::Stmt::Let { value, span, .. }
+                    | ir::Stmt::Var { value, span, .. }
+                    | ir::Stmt::Assign { value, span, .. } => {
+                        out.push(*span);
+                        expr(value, out);
+                    }
+                    ir::Stmt::Const { .. } => {}
+                    ir::Stmt::If {
+                        branches,
+                        otherwise,
+                        span,
+                    } => {
+                        out.push(*span);
+                        for branch in branches {
+                            expr(&branch.cond, out);
+                            block(&branch.body, out);
+                        }
+                        if let Some(b) = otherwise {
+                            block(b, out);
+                        }
+                    }
+                    ir::Stmt::ForRange {
+                        start,
+                        end,
+                        body,
+                        span,
+                        ..
+                    } => {
+                        out.push(*span);
+                        expr(start, out);
+                        expr(end, out);
+                        block(body, out);
+                    }
+                    ir::Stmt::ForEach {
+                        array, body, span, ..
+                    } => {
+                        out.push(*span);
+                        expr(array, out);
+                        block(body, out);
+                    }
+                    ir::Stmt::Return { value, span } => {
+                        out.push(*span);
+                        if let Some(v) = value {
+                            expr(v, out);
+                        }
+                    }
+                    ir::Stmt::Break { span } | ir::Stmt::Continue { span } => out.push(*span),
+                    ir::Stmt::Block { body } => block(body, out),
+                    ir::Stmt::Expr { expr: e, span } => {
+                        out.push(*span);
+                        expr(e, out);
+                    }
+                }
+            }
+        }
+        out.push(function.span);
+        block(&function.body, out);
+    }
+
+    fn program_of(files: &[(&str, &str)]) -> Program {
+        let mut fs = crate::source::MemFs::new();
+        fs.insert(
+            crate::source::ProjectPath::new("mtek.toml").expect("path"),
+            "[project]\nname = \"demo\"\nlanguage = \"0.1\"\n",
+        );
+        for (path, text) in files {
+            fs.insert(crate::source::ProjectPath::new(path).expect("path"), *text);
+        }
+        let analysis = crate::analyze(&crate::project::ProjectRoot::at_base(), &fs);
+        assert_eq!(
+            analysis.report.summary.errors, 0,
+            "{:#?}",
+            analysis.report.diagnostics
+        );
+        crate::ir::lower_to_ir(&analysis).expect("lowered")
+    }
+
+    /// Every emitted function, statement and expression gets a mapping to its span; one is only
+    /// dropped from the source map where an enclosing node starts at the same generated
+    /// position.
+    #[test]
+    fn every_function_statement_and_expression_is_mapped() {
+        let programs = [
+            program_of(&[
+                (
+                    "src/main.mtek",
+                    include_str!("../../../../tests/codegen/cpu_functions/src/main.mtek"),
+                ),
+                (
+                    "src/util.mtek",
+                    include_str!("../../../../tests/codegen/cpu_functions/src/util.mtek"),
+                ),
+            ]),
+            program_of(&[(
+                "src/main.mtek",
+                include_str!("../../../../tests/codegen/numeric_cpu_table/src/main.mtek"),
+            )]),
+            program_of(&[(
+                "src/main.mtek",
+                include_str!(
+                    "../../../../tests/semantics/pass/functions_statements_and_calls/src/main.mtek"
+                ),
+            )]),
+        ];
+        let mut checked = 0;
+        for program in &programs {
+            let emitted = emit_functions(program, &mut |_| Ok(0)).expect("emitted");
+            let module = super::super::ast::Module {
+                items: emitted
+                    .stmts
+                    .into_iter()
+                    .map(super::super::ast::Item::Stmt)
+                    .collect(),
+            };
+            let every = super::super::ast::print_every_mapping(&module);
+            let kept = super::super::ast::print(&module);
+            assert_eq!(every.text, kept.text);
+            let mut expected = Vec::new();
+            for module in &program.modules {
+                for item in &module.items {
+                    if let Item::Function(function) = item
+                        && function.cpu_reachable
+                    {
+                        spans_of(function, &mut expected);
+                    }
+                }
+            }
+            let marked: Vec<Span> = every.mappings.iter().map(|m| m.span).collect();
+            for span in &expected {
+                assert!(marked.contains(span), "{span:?} has no mapping");
+            }
+            for mapping in &every.mappings {
+                assert!(
+                    expected.contains(&mapping.span),
+                    "{mapping:?} maps no IR node"
+                );
+                if kept.mappings.contains(mapping) {
+                    continue;
+                }
+                let winner = kept
+                    .mappings
+                    .iter()
+                    .find(|m| (m.line, m.column) == (mapping.line, mapping.column))
+                    .expect("a kept mapping at the same position");
+                assert!(
+                    winner.span.file == mapping.span.file
+                        && winner.span.start <= mapping.span.start
+                        && mapping.span.end <= winner.span.end,
+                    "{mapping:?} was dropped for {winner:?}, which does not enclose it"
+                );
+            }
+            checked += expected.len();
+        }
+        assert!(checked > 2000, "{checked}");
     }
 
     #[test]

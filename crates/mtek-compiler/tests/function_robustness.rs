@@ -6,7 +6,8 @@
 //! `mtek_compiler::analyze_with` on a thread with the compilation stack:
 //! nothing panics, every diagnostic has a catalogue code and severity and
 //! lies in its file, checking twice gives the same report, and a program
-//! without errors always lowers to the typed IR. Long call chains and
+//! without errors always lowers to the typed IR and builds, its CPU
+//! functions emitted (decision 0040). Long call chains and
 //! cycles are checked on a 1 MiB stack, and statements nested to the
 //! parser's limit on the compilation stack.
 
@@ -20,7 +21,7 @@ use mtek_compiler::diagnostics::{Code, Report};
 use mtek_compiler::ir::lower_to_ir;
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::source::{MemFs, ProjectPath};
-use mtek_compiler::{Analysis, AnalyzeOptions, analyze_with};
+use mtek_compiler::{Analysis, AnalyzeOptions, BuildMode, CompileOptions, analyze_with, build};
 
 /// The stack of the compilation thread (`spec/compiler-architecture.md` 3).
 const STACK: usize = 16 * 1024 * 1024;
@@ -346,6 +347,7 @@ fn random_function_programs_never_break_checking_or_lowering() {
     on_stack(STACK, "random function programs".to_owned(), move || {
         let mut codes = BTreeSet::new();
         let mut lowered = 0;
+        let mut emitted = 0;
         for (text, roots) in &cases {
             let first = check_text(text, roots);
             if let Err(problem) = invariants(text, &first.report) {
@@ -361,6 +363,16 @@ fn random_function_programs_never_break_checking_or_lowering() {
                     panic!("{error:?} for\n{text}");
                 }
                 lowered += 1;
+                // GPU roots only add errors, so the program also builds without them, and
+                // its CPU functions are emitted without a defect (decision 0040).
+                let built = build(
+                    &ProjectRoot::at_base(),
+                    &project(text),
+                    &CompileOptions::with_stub_runtime(BuildMode::Release),
+                );
+                assert!(!built.has_errors(), "{:#?} for\n{text}", built.report);
+                let app = std::str::from_utf8(&built.files["app.js"]).unwrap();
+                emitted += app.matches("\nfunction f_").count();
             }
             codes.extend(first.report.diagnostics.iter().map(|d| d.code.short()));
         }
@@ -373,6 +385,7 @@ fn random_function_programs_never_break_checking_or_lowering() {
             assert!(codes.contains(code), "{code} never reported: {codes:?}");
         }
         assert!(lowered > 0, "no program lowered");
+        assert!(emitted > 0, "no function emitted");
     });
 }
 
@@ -485,5 +498,49 @@ fn statements_nested_to_the_parser_limit_are_checked() {
             result.report.diagnostics.first().map(|d| d.code.short()),
             Some("E1050")
         );
+    });
+}
+
+#[test]
+fn deeply_nested_cpu_functions_are_emitted() {
+    // Statements and expressions nested close to the parser's limit, reached from a `cpu fn`,
+    // are emitted and printed on the compilation stack (decision 0040); an `else if` chain is a
+    // loop in the emitter and the printer.
+    let depth = 20;
+    let mut text = String::from("fn nested(x: i32) -> i32 {\nvar t = 0;\n");
+    for i in 0..depth {
+        text.push_str(&format!("if x > {i} {{\nfor n{i} in 0..2 {{\n{{\n"));
+    }
+    text.push_str("t += 1;\n");
+    for _ in 0..depth {
+        text.push_str("}\n}\n}\n");
+    }
+    text.push_str("return t;\n}\n");
+    let mut sum = String::from("x");
+    for _ in 0..100 {
+        sum = format!("({sum} + 1.0)");
+    }
+    text.push_str(&format!("fn deep(x: f32) -> f32 {{\nreturn {sum};\n}}\n"));
+    text.push_str("fn chain(x: i32) -> i32 {\nif x == 0 { return 0; }\n");
+    for i in 1..100 {
+        text.push_str(&format!("else if x == {i} {{ return {i}; }}\n"));
+    }
+    text.push_str("else { return -1; }\n}\n");
+    text.push_str(
+        "cpu fn root() -> f32 {\nreturn f32(nested(3) + chain(7)) + deep(0.5);\n}\n\
+         scene Demo {\n    camera Main {}\n}\n",
+    );
+    on_stack(STACK, "nested CPU functions".to_owned(), move || {
+        let built = build(
+            &ProjectRoot::at_base(),
+            &project(&text),
+            &CompileOptions::with_stub_runtime(BuildMode::Release),
+        );
+        assert!(!built.has_errors(), "{:#?}", built.report);
+        let app = std::str::from_utf8(&built.files["app.js"]).unwrap();
+        assert_eq!(app.matches("\nfunction f_").count(), 4);
+        assert_eq!(app.matches("} else if (").count(), 99);
+        // 100 additions in `deep`; in `root` the conversion and the addition.
+        assert_eq!(app.matches("fr(").count(), 100 + 2);
     });
 }
