@@ -27,8 +27,8 @@ All of the following are **proposals** (design choices), not external constraint
 
 - One new dependency, `clap` =4.6.7 (allow-listed in `spec/compiler-architecture.md` §2), and two dev-dependencies already in the workspace, recorded in decision 0007. One new diagnostic code, `E9031`, covered by `crates/mtek-cli/tests/cli.rs` (listed in `COVERED_BY_OTHER_TESTS` of `crates/mtek-compiler/tests/fixtures.rs`).
 - The CI `node` job runs `cargo test -p mtek-cli --locked` after `npm run build`, so the embedded path is tested there and the path without the bundle in the `rust` job.
-- M1-20 (browser fixtures): build each fixture with `mtek build --mode test --out <dir> <fixture>` from a CLI built **after** `npm run build`; exit `0` and the `dist/` tree of `spec/runtime-abi.md` §2 mean success, `--format json` gives a machine-readable report.
-- M1-21 (`mtek dev`): replace the hidden `Dev` stub in `crates/mtek-cli/src/args.rs`; reuse the build path in `commands.rs` (`build_project`, `dist::write_dist`), the `Outcome`/`Printer` model and `guard::run_guarded` per rebuild.
+- M1-21 (browser fixtures): build each fixture with `mtek build --mode test --out <dir> <fixture>` from a CLI built **after** `npm run build`; exit `0` and the `dist/` tree of `spec/runtime-abi.md` §2 mean success, `--format json` gives a machine-readable report.
+- M1-20 (`mtek dev`): replace the hidden `Dev` stub in `crates/mtek-cli/src/args.rs`; reuse the build path in `commands.rs` (`build_project`, `dist::write_dist`), the `Outcome`/`Printer` model and `guard::run_guarded` per rebuild.
 - `spec/tooling.md` §1 and `spec/diagnostics.md` §5.9 point here.
 
 ## Verification
