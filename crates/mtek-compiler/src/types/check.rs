@@ -43,7 +43,7 @@ use crate::resolve::{
 };
 use crate::source::Span;
 use crate::stdlib::{
-    ArgType, IntrinsicDef, NamespaceMember, Registry, SigType, TypeKind, registry,
+    ArgType, IntrinsicDef, NamespaceMember, Registry, SchemaCategory, SigType, TypeKind, registry,
 };
 use crate::syntax::ast::{
     BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr, ExprKind, FieldInit,
@@ -161,6 +161,18 @@ impl<'a> Checker<'a> {
         res: &'a Resolution,
         sink: &'a mut Diagnostics,
     ) -> Self {
+        Self::with_registry(module, text, res, sink, registry())
+    }
+
+    /// A checker that reads its schemas from `registry` (tests check the
+    /// schema rules against registries the v0.1 tables do not contain).
+    pub(super) fn with_registry(
+        module: &Module,
+        text: &'a str,
+        res: &'a Resolution,
+        sink: &'a mut Diagnostics,
+        registry: &'static Registry,
+    ) -> Self {
         let states = res
             .defs()
             .iter()
@@ -171,7 +183,7 @@ impl<'a> Checker<'a> {
             text,
             res,
             sink,
-            registry: registry(),
+            registry,
             out: Typeck::new(module.node_count),
             const_decls: BTreeMap::new(),
             in_progress: BTreeSet::new(),
@@ -774,6 +786,10 @@ impl<'a> Checker<'a> {
                 if !is_implemented(def.since) {
                     return TyId::ERROR;
                 }
+                if def.category == SchemaCategory::Object {
+                    self.object_descriptor(name, def.name, fields);
+                    return TyId::ERROR;
+                }
                 for field in fields {
                     let expected = match def.field(&field.name.name) {
                         Some(field_def) if !is_implemented(field_def.since) => continue,
@@ -843,6 +859,44 @@ impl<'a> Checker<'a> {
             }
             _ => TyId::ERROR,
         }
+    }
+
+    /// `Entity { … }`, `Scene { … }`, `Camera { … }`: the schemas of
+    /// declaration bodies have no descriptor literals (decision 0027). The
+    /// field values are still typed, so their own mistakes are reported.
+    fn object_descriptor(&mut self, name: &Ident, schema: &'static str, fields: &[DescField]) {
+        for field in fields {
+            if let FieldValue::Expr(value) = &field.value {
+                self.check(value, None);
+            }
+        }
+        let declarations = self.registry.declaration_schemas;
+        let keyword = if schema == declarations.scene {
+            Some("scene")
+        } else if schema == declarations.entity {
+            Some("entity")
+        } else {
+            self.registry
+                .scene_objects
+                .iter()
+                .find(|kind| kind.schema == schema)
+                .map(|kind| kind.keyword)
+        };
+        let mut diagnostic = Diagnostic::new(
+            Code::E3001,
+            format!(
+                "'{schema}' describes the fields of a declaration; it cannot be written as a descriptor literal."
+            ),
+        )
+        .at(name.span)
+        .expected("a descriptor of a mesh, material, light, body, collider or projection schema")
+        .actual(format!("the declaration schema {schema}"));
+        if let Some(keyword) = keyword {
+            diagnostic = diagnostic.help(format!(
+                "write its fields in a declaration: `{keyword} Name {{ … }}`"
+            ));
+        }
+        self.report(diagnostic);
     }
 
     // ----- operators -------------------------------------------------------

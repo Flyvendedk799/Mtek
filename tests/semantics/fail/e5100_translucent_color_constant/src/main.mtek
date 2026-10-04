@@ -1,0 +1,10 @@
+// The opaque-colour rule looks at the value, wherever it comes from.
+const GHOST = color.linear(vec3(1.0, 1.0, 1.0), 0.5);
+
+scene Demo {
+    camera Main {}
+    entity Glass {
+        mesh: Box {};
+        material: Unlit { color: GHOST };
+    }
+}

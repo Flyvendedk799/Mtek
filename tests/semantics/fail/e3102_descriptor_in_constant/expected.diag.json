@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 101,
+    "endByte": 115,
+    "message": "Field 'size' of Box expects vec3, but received vec2.",
+    "expected": "vec3",
+    "actual": "vec2",
+    "notes": [
+      "a vec3 has 3 components; this value has 2"
+    ]
+  }
+]

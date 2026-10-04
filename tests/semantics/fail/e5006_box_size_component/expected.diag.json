@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 76,
+    "endByte": 95,
+    "message": "Every component of field 'size' of Box must be greater than 0, but the value is vec3(1.0, 0.0, 1.0)."
+  }
+]

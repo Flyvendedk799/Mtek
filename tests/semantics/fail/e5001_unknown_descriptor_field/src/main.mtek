@@ -1,0 +1,7 @@
+scene Demo {
+    camera Main {}
+    entity Cube {
+        mesh: Box {};
+        material: Unlit { colour: #6b5cff };
+    }
+}

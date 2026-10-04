@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5010",
+    "file": "src/main.mtek",
+    "startByte": 115,
+    "endByte": 123,
+    "message": "Camera 'Main' declares both 'target' and 'rotation'.",
+    "related": [
+      {
+        "message": "'target' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 78,
+        "endByte": 84
+      }
+    ],
+    "notes": [
+      "'rotation' must not be declared together with 'target'"
+    ]
+  }
+]

@@ -639,11 +639,15 @@ fn descriptor_literals_have_their_schema_type() {
         "The constant 'M' is declared as mesh, but its value has type Unlit."
     );
     // A field value that cannot adopt the field's type: the literal is
-    // reported; whether a non-literal value fits is the schema checks'.
+    // reported by the type checker, once; a non-literal value of another
+    // type by the schema checks.
     let c = consts("const S = Sphere { segments: 2.5 };");
     assert_eq!(c.codes(), ["E3041"]);
     let c = consts("const S = Sphere { segments: vec3(1.0) };");
-    assert!(c.diagnostics.is_empty());
+    assert_eq!(
+        c.only("E3102").message,
+        "Field 'segments' of Sphere expects u32, but received vec3."
+    );
 }
 
 #[test]

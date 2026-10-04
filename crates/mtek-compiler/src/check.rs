@@ -218,7 +218,9 @@ mod tests {
     fn lexical_syntax_and_name_errors_are_all_reported() {
         let result = check(
             &ProjectRoot::at_base(),
-            &project("const A = 007;\nconst B = ;\nconst C = MISSING;\nscene Demo { }\n"),
+            &project(
+                "const A = 007;\nconst B = ;\nconst C = MISSING;\nscene Demo { camera Main {} }\n",
+            ),
         );
         let codes: Vec<&str> = result
             .report

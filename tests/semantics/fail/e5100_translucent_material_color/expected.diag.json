@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5100",
+    "file": "src/main.mtek",
+    "startByte": 106,
+    "endByte": 115,
+    "message": "Parameter 'color' of material Unlit must be an opaque colour, but its alpha is 0.5019608.",
+    "notes": [
+      "colour parameters of materials must have alpha 1.0 in v0.1: transparency is not supported",
+      "help: use a `#rrggbb` literal, or a vec4 for four components that are not a colour"
+    ]
+  }
+]

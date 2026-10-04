@@ -1,0 +1,4 @@
+scene Demo {
+    background: #101418;
+    camera Main {}
+}

@@ -1,0 +1,5 @@
+scene Demo {
+    camera Main {
+        projection: Orthographic { near: 10.0; far: 5.0 };
+    }
+}

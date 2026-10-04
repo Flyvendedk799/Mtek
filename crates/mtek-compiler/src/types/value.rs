@@ -391,6 +391,31 @@ pub fn quat_rotate(q: [f32; 4], v: [f32; 3]) -> [f32; 3] {
     ]
 }
 
+/// A registry default as a constant value. An empty descriptor (`Unlit {}`)
+/// becomes a [`ConstValue::Struct`] without fields (the schema checks fill in
+/// its defaults); the built-in textures and samplers have no constant value
+/// in this build (their fields are M4): `None`.
+#[must_use]
+pub fn from_registry(value: &crate::stdlib::ConstValue) -> Option<ConstValue> {
+    use crate::stdlib::ConstValue as R;
+    Some(match value {
+        R::Bool(v) => ConstValue::Bool(*v),
+        R::I32(v) => ConstValue::I32(*v),
+        R::U32(v) => ConstValue::U32(*v),
+        R::F32(v) => ConstValue::F32(*v),
+        R::Vec2(v) => ConstValue::Vec2(*v),
+        R::Vec3(v) => ConstValue::Vec3(*v),
+        R::Vec4(v) => ConstValue::Vec4(*v),
+        R::Color(c) => ConstValue::Color(c.linear),
+        R::QuatIdentity => quat_identity(),
+        R::EmptyDescriptor(name) => ConstValue::Struct {
+            name: (*name).to_owned(),
+            fields: Vec::new(),
+        },
+        R::Texture(_) | R::Sampler(_) => return None,
+    })
+}
+
 /// `quat.identity()`.
 #[must_use]
 pub fn quat_identity() -> ConstValue {

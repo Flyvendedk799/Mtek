@@ -1,0 +1,7 @@
+scene Demo {
+    camera Main {}
+    entity Cube { mesh: Box {}; }
+    entity Copy {
+        mesh: Box { size: Cube.scale };
+    }
+}

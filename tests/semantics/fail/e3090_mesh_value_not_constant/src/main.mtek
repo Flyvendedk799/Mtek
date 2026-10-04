@@ -1,0 +1,10 @@
+fn edge() -> f32 {
+    return 1.0;
+}
+
+scene Demo {
+    camera Main {}
+    entity Cube {
+        mesh: Box { size: vec3(edge()) };
+    }
+}

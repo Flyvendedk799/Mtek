@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 98,
+    "endByte": 104,
+    "message": "Unknown field 'colour' on Unlit. Valid fields: color.",
+    "notes": [
+      "help: did you mean 'color'?"
+    ]
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5081",
+    "file": "src/main.mtek",
+    "startByte": 104,
+    "endByte": 117,
+    "message": "The value of field 'position' of entity 'Shadow' cannot be computed during initialisation: it reads the field 'position' of the entity 'Cube'.",
+    "notes": [
+      "field initialisers may read constants, scene state and earlier state, but not the fields of entities or cameras"
+    ]
+  }
+]

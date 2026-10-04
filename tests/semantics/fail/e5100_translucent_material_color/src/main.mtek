@@ -1,0 +1,7 @@
+scene Demo {
+    camera Main {}
+    entity Glass {
+        mesh: Box {};
+        material: Unlit { color: #6b5cff80 };
+    }
+}

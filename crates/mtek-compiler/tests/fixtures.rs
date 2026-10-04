@@ -59,12 +59,14 @@ use mtek_compiler::diagnostics::{Code, Diagnostic, Diagnostics, Severity, to_rep
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::resolve::{Construct, IMPLEMENTED_MILESTONE, construct_gate, resolve_module};
 use mtek_compiler::source::{FileId, MemFs, ProjectPath, SourceMap};
-use mtek_compiler::stdlib::Milestone;
+use mtek_compiler::stdlib::{ColorValue, Milestone};
 use mtek_compiler::syntax::ast::Module;
 use mtek_compiler::syntax::{
     CandidateEdit, dump_expr, dump_module, lex, lex_str, parse_expression,
     parse_expression_no_desc, parse_module, walk_expr, walk_module,
 };
+use mtek_compiler::types::scene::MAX_STATIC_ENTITIES;
+use mtek_compiler::types::{CheckedEntity, CheckedField, CheckedScene, ConstValue};
 use mtek_compiler::{CheckResult, check};
 use serde_json::{Map, Value};
 
@@ -1060,6 +1062,42 @@ fn assert_report_schema_valid(label: &str, result: &CheckResult) {
     assert!(problems.is_empty(), "{label}: {problems:#?}");
 }
 
+/// The checked entry scene of `result`.
+fn entry_scene(result: &CheckResult) -> &CheckedScene {
+    let (Some(resolution), Some(types)) = (&result.resolution, &result.types) else {
+        panic!("the project was not checked")
+    };
+    resolution
+        .entry_scene()
+        .and_then(|def| types.scene(def))
+        .expect("a checked entry scene")
+}
+
+/// A program without errors has a complete checked entry scene, which the
+/// typed IR is built from: every field has a value and exactly one camera
+/// is active.
+fn assert_complete_scene(label: &str, result: &CheckResult) {
+    fn entity_complete(entity: &CheckedEntity) -> bool {
+        entity.fields.iter().all(|f| f.value.is_some())
+            && entity.children.iter().all(entity_complete)
+    }
+    let scene = entry_scene(result);
+    assert!(
+        scene.fields.iter().all(|f| f.value.is_some())
+            && scene
+                .objects
+                .iter()
+                .all(|o| o.fields.iter().all(|f| f.value.is_some()))
+            && scene.entities.iter().all(entity_complete),
+        "{label}: a checked field has no value: {scene:#?}"
+    );
+    assert_eq!(
+        scene.objects.iter().filter(|o| o.active).count(),
+        1,
+        "{label}: not exactly one active camera"
+    );
+}
+
 #[test]
 fn every_semantic_pass_fixture_checks_without_errors() {
     let names = semantic_fixtures("pass");
@@ -1083,6 +1121,7 @@ fn every_semantic_pass_fixture_checks_without_errors() {
                 .is_some_and(|r| r.entry_scene().is_some()),
             "semantics/pass/{name} has no entry scene"
         );
+        assert_complete_scene(&format!("pass/{name}"), &result);
         let expected = semantics_dir().join("pass").join(name).join(EXPECTED);
         if result.report.diagnostics.is_empty() {
             assert!(
@@ -1220,6 +1259,204 @@ fn semantic_pass_fixtures_fold_their_constants() {
         }
     }
     assert_eq!(constants, 9);
+}
+
+fn srgb(r: u8, g: u8, b: u8) -> ConstValue {
+    ConstValue::Color(ColorValue::from_srgb8(r, g, b, 255).linear)
+}
+
+fn descriptor(name: &str, fields: &[(&str, ConstValue)]) -> ConstValue {
+    ConstValue::Struct {
+        name: name.to_owned(),
+        fields: fields
+            .iter()
+            .map(|(n, v)| ((*n).to_owned(), v.clone()))
+            .collect(),
+    }
+}
+
+fn value_of<'a>(fields: &'a [CheckedField], name: &str) -> Option<&'a ConstValue> {
+    fields
+        .iter()
+        .find(|f| f.name == name)
+        .and_then(|f| f.value.as_ref())
+}
+
+#[test]
+fn pass_scene_a_target_camera_and_unlit_box() {
+    // M1-11 pass scene A: one camera with a target, one `Box` with `Unlit`.
+    let result = check_fixture("pass", "scene_a_target_camera_box");
+    let scene = entry_scene(&result);
+    assert_eq!(scene.name, "Gallery");
+    assert_eq!(
+        value_of(&scene.fields, "clear_color"),
+        Some(&srgb(0x20, 0x28, 0x30))
+    );
+    let camera = scene.active_object("camera").expect("an active camera");
+    assert_eq!(
+        value_of(&camera.fields, "target"),
+        Some(&ConstValue::Vec3([0.0, 0.5, 0.0]))
+    );
+    assert_eq!(
+        value_of(&camera.fields, "projection"),
+        Some(&descriptor(
+            "Perspective",
+            &[
+                ("fov_y", ConstValue::F32(0.9)),
+                ("near", ConstValue::F32(0.1)),
+                ("far", ConstValue::F32(1000.0)),
+            ]
+        ))
+    );
+    let [crate_entity] = scene.entities.as_slice() else {
+        panic!("one entity expected")
+    };
+    assert!(crate_entity.children.is_empty());
+    assert_eq!(
+        value_of(&crate_entity.fields, "mesh"),
+        Some(&descriptor("Box", &[("size", ConstValue::Vec3([1.0; 3]))]))
+    );
+    assert_eq!(
+        value_of(&crate_entity.fields, "material"),
+        Some(&descriptor("Unlit", &[("color", srgb(0x6b, 0x5c, 0xff))]))
+    );
+}
+
+#[test]
+fn pass_scene_b_orthographic_camera_and_nested_entities() {
+    // M1-11 pass scene B: an orthographic camera with a rotation, a `Sphere`
+    // and a `Plane`, a nested child with non-uniform positive scale, module
+    // constants in fields, defaults filled in.
+    let result = check_fixture("pass", "scene_b_orthographic_nested");
+    let scene = entry_scene(&result);
+    let camera = scene.active_object("camera").expect("an active camera");
+    assert!(camera.field("target").is_none());
+    assert!(matches!(
+        value_of(&camera.fields, "rotation"),
+        Some(ConstValue::Quat(_))
+    ));
+    assert_eq!(
+        value_of(&camera.fields, "projection"),
+        Some(&descriptor(
+            "Orthographic",
+            &[
+                ("height", ConstValue::F32(20.0)),
+                ("near", ConstValue::F32(0.5)),
+                ("far", ConstValue::F32(40.0)),
+            ]
+        ))
+    );
+    let [ground, lamp] = scene.entities.as_slice() else {
+        panic!("two root entities expected")
+    };
+    assert_eq!(
+        value_of(&ground.fields, "mesh"),
+        Some(&descriptor(
+            "Plane",
+            &[("size", ConstValue::Vec2([20.0; 2]))]
+        ))
+    );
+    let [fountain] = ground.children.as_slice() else {
+        panic!("one child expected")
+    };
+    assert_eq!(fountain.name, "Fountain");
+    assert_eq!(
+        value_of(&fountain.fields, "scale"),
+        Some(&ConstValue::Vec3([2.0, 0.5, 2.0]))
+    );
+    assert_eq!(
+        value_of(&fountain.fields, "mesh"),
+        Some(&descriptor(
+            "Sphere",
+            &[
+                ("radius", ConstValue::F32(1.0)),
+                ("segments", ConstValue::U32(24)),
+                ("rings", ConstValue::U32(12)),
+            ]
+        ))
+    );
+    assert_eq!(
+        value_of(&fountain.fields, "material"),
+        Some(&descriptor("Unlit", &[("color", srgb(0xff, 0xcc, 0x00))]))
+    );
+    // `Sphere {}` and the default material, every field at its default.
+    assert_eq!(
+        value_of(&lamp.fields, "mesh"),
+        Some(&descriptor(
+            "Sphere",
+            &[
+                ("radius", ConstValue::F32(0.5)),
+                ("segments", ConstValue::U32(32)),
+                ("rings", ConstValue::U32(16)),
+            ]
+        ))
+    );
+    assert_eq!(
+        value_of(&lamp.fields, "material"),
+        Some(&descriptor("Unlit", &[("color", srgb(0xff, 0xff, 0xff))]))
+    );
+    let order: Vec<&str> = scene
+        .entities_in_order()
+        .iter()
+        .map(|e| e.name.as_str())
+        .collect();
+    assert_eq!(order, ["Ground", "Fountain", "Lamp"]);
+}
+
+#[test]
+fn too_many_static_entities_is_e5092() {
+    // `spec/compiler-architecture.md` 9: at most 16 384 static entities per
+    // scene, nested ones included. Generated rather than a fixture file: a
+    // project of 16 385 entities is too large to review.
+    let program = |roots: usize, extra: bool| {
+        let mut text = String::from("scene Demo {\n    camera Main {}\n");
+        for index in 0..roots {
+            text.push_str(&format!("    entity R{index} {{ entity C{index} {{}} }}\n"));
+        }
+        if extra {
+            text.push_str("    entity Extra {}\n");
+        }
+        text.push_str("}\n");
+        text
+    };
+    let run = |text: String| {
+        let mut memory = MemFs::new();
+        memory
+            .insert(
+                ProjectPath::new("mtek.toml").unwrap(),
+                "[project]\nname = \"fixture\"\nlanguage = \"0.1\"\n",
+            )
+            .insert(ProjectPath::new("src/main.mtek").unwrap(), text.clone());
+        (check(&ProjectRoot::at_base(), &memory), text)
+    };
+    let (at_limit, _) = run(program(MAX_STATIC_ENTITIES / 2, false));
+    assert!(
+        at_limit.report.diagnostics.is_empty(),
+        "{}",
+        semantic_json(&at_limit)
+    );
+    let (over, text) = run(program(MAX_STATIC_ENTITIES / 2, true));
+    let found: Vec<(&str, &str, &str)> = over
+        .report
+        .diagnostics
+        .iter()
+        .map(|d| {
+            let span = d.primary.as_ref().unwrap().span;
+            (
+                d.code.short(),
+                text.get(span.range()).unwrap(),
+                d.message.as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        found,
+        [(
+            "E5092",
+            "Extra",
+            "Scene 'Demo' declares 16385 static entities, but at most 16384 are allowed."
+        )]
+    );
 }
 
 /// The `E9010` messages of every `gate_*` fail fixture.

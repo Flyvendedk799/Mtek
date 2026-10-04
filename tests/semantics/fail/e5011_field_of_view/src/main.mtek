@@ -1,0 +1,5 @@
+scene Demo {
+    camera Main {
+        projection: Perspective { fov_y: 3.5 };
+    }
+}

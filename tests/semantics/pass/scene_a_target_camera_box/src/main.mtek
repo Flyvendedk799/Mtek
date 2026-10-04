@@ -1,0 +1,14 @@
+// Pass scene A: one camera looking at a target, one box with an unlit
+// material.
+scene Gallery {
+    clear_color: #202830;
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+    entity Crate {
+        position: vec3(0.0, 0.5, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #6b5cff };
+    }
+}

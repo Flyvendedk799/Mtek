@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 105,
+    "endByte": 124,
+    "message": "Parameter 'color' of material Unlit expects color, but received vec3.",
+    "expected": "color",
+    "actual": "vec3"
+  }
+]
