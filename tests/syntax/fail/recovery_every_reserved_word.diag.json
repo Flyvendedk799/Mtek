@@ -1,0 +1,302 @@
+[
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 161,
+    "endByte": 163,
+    "message": "`as` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 174,
+    "endByte": 179,
+    "message": "`async` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 190,
+    "endByte": 195,
+    "message": "`await` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 206,
+    "endByte": 210,
+    "message": "`enum` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 221,
+    "endByte": 227,
+    "message": "`extern` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 238,
+    "endByte": 242,
+    "message": "`impl` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 253,
+    "endByte": 257,
+    "message": "`loop` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 268,
+    "endByte": 273,
+    "message": "`match` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 284,
+    "endByte": 287,
+    "message": "`mod` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 298,
+    "endByte": 302,
+    "message": "`move` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 313,
+    "endByte": 316,
+    "message": "`mut` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 327,
+    "endByte": 331,
+    "message": "`priv` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 342,
+    "endByte": 345,
+    "message": "`pub` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 356,
+    "endByte": 362,
+    "message": "`static` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 373,
+    "endByte": 378,
+    "message": "`super` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 389,
+    "endByte": 394,
+    "message": "`trait` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 405,
+    "endByte": 409,
+    "message": "`type` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 420,
+    "endByte": 426,
+    "message": "`unsafe` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 437,
+    "endByte": 440,
+    "message": "`use` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 451,
+    "endByte": 456,
+    "message": "`where` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 467,
+    "endByte": 472,
+    "message": "`while` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 483,
+    "endByte": 488,
+    "message": "`yield` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 499,
+    "endByte": 506,
+    "message": "`compute` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 517,
+    "endByte": 523,
+    "message": "`vertex` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 534,
+    "endByte": 541,
+    "message": "`storage` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 552,
+    "endByte": 559,
+    "message": "`uniform` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 570,
+    "endByte": 579,
+    "message": "`workgroup` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 590,
+    "endByte": 596,
+    "message": "`system` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 607,
+    "endByte": 612,
+    "message": "`query` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  },
+  {
+    "code": "MTEK-E0013",
+    "file": "recovery_every_reserved_word.mtek",
+    "startByte": 623,
+    "endByte": 632,
+    "message": "`component` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  }
+]

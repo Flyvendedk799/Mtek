@@ -7,3 +7,4 @@ material Typo {
 scene Demo {
     camera Main {}
 }
+// covers: [S: stage-name]

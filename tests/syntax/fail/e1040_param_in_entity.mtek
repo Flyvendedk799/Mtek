@@ -4,3 +4,4 @@ scene Main {
         position: vec3(0.0);
     }
 }
+// covers: [S: param-only-in-prefab]

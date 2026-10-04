@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E0011",
+    "file": "e0011_double_underscore_prefix.mtek",
+    "startByte": 76,
+    "endByte": 84,
+    "message": "Identifier `__hidden` starts with two underscores, which are reserved for generated code."
+  }
+]

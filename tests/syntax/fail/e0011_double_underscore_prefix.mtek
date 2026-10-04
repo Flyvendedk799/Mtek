@@ -1,0 +1,3 @@
+// Names starting with two underscores are reserved for the compiler.
+const __hidden = 1.0;
+// covers: [S: reserved-identifiers]

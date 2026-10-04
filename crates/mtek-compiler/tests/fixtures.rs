@@ -10,7 +10,9 @@
 //! * `pass/<name>.mtek` must lex and parse with **zero** diagnostics (also no
 //!   warnings), into a sound tree. Files are named after the grammar
 //!   production they exercise (`Handler.mtek`), or after the source they come
-//!   from (`blueprint_3_1.mtek`, `spec_scenes_entity.mtek`).
+//!   from (`blueprint_3_1.mtek`, `spec_scenes_entity.mtek`). The names are
+//!   for readers; `tools/grammar-coverage` measures which productions the
+//!   parser actually builds from them.
 //! * `ast/<name>.mtek` with `<name>.ast`: the golden S-expression dump of the
 //!   tree. A file whose first line starts with `---` holds expressions, a
 //!   case after each such line (see below); any other file is a whole module.
@@ -654,157 +656,11 @@ fn every_mtek_example_of_the_specification_is_in_the_corpus() {
 // ---------------------------------------------------------------------------
 // Production coverage
 // ---------------------------------------------------------------------------
-
-/// The productions of `spec/grammar.ebnf` that a positive fixture exercises:
-/// `pass/<Production>.mtek` must exist for each. (`tools/grammar-coverage` is
-/// M2; until then this test is the check.)
-const POSITIVE_PRODUCTIONS: &[&str] = &[
-    // 1. Lexical grammar
-    "Whitespace",
-    "LineComment",
-    "BlockComment",
-    "Ident",
-    "IdentStart",
-    "IdentContinue",
-    "Keyword",
-    "Int",
-    "Float",
-    "IntPart",
-    "Exponent",
-    "String",
-    "StringChar",
-    "Escape",
-    "Color",
-    "Hex",
-    "Bool",
-    // 2. Modules and items
-    "Module",
-    "Item",
-    "Import",
-    "ConstDecl",
-    "FnDecl",
-    "ParamList",
-    "Param",
-    "StructDecl",
-    "StructField",
-    // 3. Materials
-    "MaterialDecl",
-    "MaterialMember",
-    "ParamDecl",
-    "StageFn",
-    // 4. Scenes, entities, prefabs
-    "SceneDecl",
-    "SceneMember",
-    "PrefabDecl",
-    "EntityDecl",
-    "EntityMember",
-    "SceneObject",
-    "StateDecl",
-    "FieldInit",
-    "FieldValue",
-    "LifecycleFn",
-    "Handler",
-    "HandlerArgs",
-    "HandlerArg",
-    // 5. Types
-    "Type",
-    "ArrayLength",
-    // 6. Statements
-    "Block",
-    "Statement",
-    "LetStmt",
-    "VarStmt",
-    "SimpleStmt",
-    "AssignOp",
-    "IfStmt",
-    "ForStmt",
-    "ReturnStmt",
-    "BreakStmt",
-    "ContinueStmt",
-    // 7. Expressions
-    "Expr",
-    "OrExpr",
-    "AndExpr",
-    "EqExpr",
-    "RelExpr",
-    "AddExpr",
-    "MulExpr",
-    "UnaryExpr",
-    "PostfixExpr",
-    "PostfixOp",
-    "ArgList",
-    "Primary",
-    "ArrayLiteral",
-    "DescriptorLiteral",
-    "DescField",
-    "ExprNoDesc",
-];
-
-/// Productions that only have negative fixtures: the words reserved for
-/// future use are rejected wherever they would be a name (`E0013`).
-const NEGATIVE_PRODUCTIONS: &[(&str, &str)] = &[("Reserved", "E0013")];
-
-/// The names of the productions defined in `spec/grammar.ebnf`.
-fn grammar_productions() -> Vec<String> {
-    let text =
-        fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../spec/grammar.ebnf"))
-            .unwrap();
-    let mut names = Vec::new();
-    for line in text.lines() {
-        // `Name   ::= ...` at the start of a line, in the grammar proper.
-        let Some((head, _)) = line.split_once("::=") else {
-            continue;
-        };
-        let head = head.trim();
-        if !head.is_empty()
-            && !line.starts_with(char::is_whitespace)
-            && head.chars().all(|c| c.is_ascii_alphanumeric())
-        {
-            names.push(head.to_owned());
-        }
-    }
-    names
-}
-
-#[test]
-fn the_production_list_is_the_production_list_of_the_grammar() {
-    let mut listed: Vec<String> = POSITIVE_PRODUCTIONS
-        .iter()
-        .copied()
-        .chain(NEGATIVE_PRODUCTIONS.iter().map(|&(name, _)| name))
-        .map(str::to_owned)
-        .collect();
-    listed.sort();
-    let mut grammar = grammar_productions();
-    grammar.sort();
-    assert_eq!(
-        listed, grammar,
-        "the constant list and spec/grammar.ebnf disagree: a production was added or removed"
-    );
-}
-
-#[test]
-fn every_production_has_a_fixture() {
-    let pass: BTreeSet<String> = fixture_names("pass", ".mtek").into_iter().collect();
-    let missing: Vec<&str> = POSITIVE_PRODUCTIONS
-        .iter()
-        .copied()
-        .filter(|name| !pass.contains(*name))
-        .collect();
-    assert!(
-        missing.is_empty(),
-        "no tests/syntax/pass/<Production>.mtek for: {missing:?}"
-    );
-    for &(production, code) in NEGATIVE_PRODUCTIONS {
-        let found = fixture_names("fail", ".mtek").into_iter().any(|name| {
-            parse_fixture("fail", &name)
-                .diagnostics
-                .iter()
-                .any(|d| d.code.short() == code)
-        });
-        assert!(found, "no fail fixture produces {code} for {production}");
-    }
-}
+//
+// Which productions, alternatives and `[S: …]` rules of `spec/grammar.ebnf`
+// the corpus exercises is measured by `tools/grammar-coverage` (decision
+// 0042) on what the parser builds, not on file names; its test fails on
+// anything uncovered.
 
 // ---------------------------------------------------------------------------
 // Programs that exist elsewhere in the repository

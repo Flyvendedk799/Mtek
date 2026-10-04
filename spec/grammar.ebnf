@@ -3,8 +3,10 @@
    Authoritative parser: crates/mtek-compiler/src/syntax (handwritten,
    recursive descent + Pratt). This file is the reference used for the
    shared conformance corpus and for generated adapters (GBNF, tree-sitter).
-   Semantic restrictions are noted as [S: ...]; they are enforced by the
-   checker, not by this grammar.
+   Semantic restrictions are noted as [S: <rule-id>: ... (codes)]; they are
+   enforced by the compiler (lexer, parser or checker), not by this grammar.
+   A fail fixture that exercises one declares `// covers: [S: <rule-id>]`
+   (decision 0042; tools/grammar-coverage checks every rule is covered).
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -22,7 +24,7 @@ BlockComment    ::= '/*' ( BlockComment | [^*/] | '*' [^/] | '/' [^*] )* '*/'
 Ident           ::= IdentStart IdentContinue* - ( Keyword | Reserved )
 IdentStart      ::= [A-Za-z_]
 IdentContinue   ::= [A-Za-z0-9_]
-                    /* [S: '_' alone and names starting with '__' are rejected (E0012, E0011)] */
+                    /* [S: reserved-identifiers: '_' alone and names starting with '__' are rejected (E0012, E0011)] */
 
 Keyword         ::= 'bind' | 'break' | 'const' | 'continue' | 'cpu' | 'else' | 'entity'
                   | 'export' | 'false' | 'fn' | 'for' | 'if' | 'import' | 'in' | 'let'
@@ -69,7 +71,7 @@ Item            ::= Import
                               | PrefabDecl | SceneDecl )
 
 Import          ::= 'import' '{' Ident ( ',' Ident )* ','? '}' 'from' String ';'
-                    /* 'from' is contextual. [S: specifier rules E2030-E2034] */
+                    /* 'from' is contextual. [S: import-specifier: specifier rules E2030-E2034] */
 
 ConstDecl       ::= 'const' Ident ( ':' Type )? '=' Expr ';'
 FnDecl          ::= 'cpu'? 'fn' Ident '(' ParamList? ')' ( '->' Type )? Block
@@ -87,7 +89,7 @@ MaterialDecl    ::= 'material' Ident '{' MaterialMember* '}'
 MaterialMember  ::= ParamDecl | StageFn
 ParamDecl       ::= 'param' Ident ':' Type ( '=' Expr )? ';'
 StageFn         ::= Ident '(' ParamList? ')' ( '->' Type )? Block
-                    /* [S: Ident must be 'fragment' (E4020/E4021); 'vertex'/'compute'
+                    /* [S: stage-name: Ident must be 'fragment' (E4020/E4021); 'vertex'/'compute'
                         are reserved words and are reported as E4901 by the parser] */
 
 /* ---------------------------------------------------------------------
@@ -103,25 +105,26 @@ SceneMember     ::= FieldInit | ConstDecl | StateDecl | SceneObject | EntityDecl
                   | LifecycleFn | Handler
 
 PrefabDecl      ::= 'prefab' Ident '{' EntityMember* '}'
-                    /* [S: nested EntityDecl is E5040] */
+                    /* [S: prefab-no-nested-entity: nested EntityDecl is E5040] */
 
 EntityDecl      ::= 'entity' Ident ( ':' Ident )? '{' EntityMember* '}'
-                    /* ': Ident' instantiates a prefab. [S: then only FieldInit
+                    /* ': Ident' instantiates a prefab. [S: prefab-instance-params: then only FieldInit
                        naming prefab params is allowed (E5042)] */
 EntityMember    ::= FieldInit | ConstDecl | StateDecl | ParamDecl | EntityDecl
                   | LifecycleFn | Handler
-                    /* [S: ParamDecl only inside prefabs (E1040)] */
+                    /* [S: param-only-in-prefab: ParamDecl only inside prefabs (E1040)] */
 
 SceneObject     ::= Ident Ident '{' FieldInit* '}'
-                    /* [S: first Ident is a registered scene-object kind: 'camera' (E5014 "unknown scene object kind" otherwise)] */
+                    /* [S: scene-object-kind: first Ident is a registered scene-object kind: 'camera' (E5014 "unknown scene object kind" otherwise)] */
 
 StateDecl       ::= 'state' Ident ':' Type '=' Expr ';'
 FieldInit       ::= Ident ':' FieldValue ';'
 FieldValue      ::= 'bind' '(' Expr ')' | Expr
-                    /* [S: bind only on bindable fields (E5004)] */
+                    /* [S: bind-bindable-field: bind only on bindable fields (E5004)] */
 
 LifecycleFn     ::= Ident '(' ParamList? ')' Block
-                    /* [S: 'update' | 'fixed_update' with exactly (name: f32) (E5050-E5052)] */
+                    /* [S: lifecycle-signature: 'update' | 'fixed_update' with exactly (name: f32),
+                        at most one of each per body (E5050-E5052)] */
 
 Handler         ::= 'on' Ident '(' HandlerArgs? ')' Block
 HandlerArgs     ::= HandlerArg ( ',' HandlerArg )* ','?
@@ -135,7 +138,8 @@ HandlerArg      ::= Ident ':' Type            /* parameter form, e.g. other: ent
 
 Type            ::= Ident ( '<' Type ',' ArrayLength '>' )?
 ArrayLength     ::= Int | Ident
-                    /* [S: only 'array' takes arguments; Ident must name an integer constant] */
+                    /* [S: array-type-arguments: only 'array' takes arguments, and it needs them (E3003);
+                        Ident must name an integer constant, the length is 1 to 65 536 (E3031)] */
 
 /* ---------------------------------------------------------------------
    6. Statements
@@ -148,7 +152,7 @@ Statement       ::= LetStmt | VarStmt | ConstDecl | IfStmt | ForStmt | ReturnStm
 LetStmt         ::= 'let' Ident ( ':' Type )? '=' Expr ';'
 VarStmt         ::= 'var' Ident ( ':' Type )? '=' Expr ';'
 SimpleStmt      ::= Expr ( AssignOp Expr )? ';'
-                    /* [S: without AssignOp, Expr must be a call (E1020);
+                    /* [S: simple-statement: without AssignOp, Expr must be a call (E1020);
                         with AssignOp, the left side must be a place (E3061)] */
 AssignOp        ::= '=' | '+=' | '-=' | '*=' | '/='
 

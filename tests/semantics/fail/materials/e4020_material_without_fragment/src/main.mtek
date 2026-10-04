@@ -5,3 +5,4 @@ material Blank {
 scene Demo {
     camera Main {}
 }
+// covers: [S: stage-name]
