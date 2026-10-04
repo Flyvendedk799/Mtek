@@ -74,3 +74,45 @@ fn goldens_use_lf_line_endings_and_end_with_a_newline() {
         );
     }
 }
+
+#[test]
+fn the_shader_ir_printer_reproduces_every_golden() {
+    // The struct declarations the shader IR builds from a layout record, printed by the
+    // WGSL printer together with the block's uniform global, are byte for byte the block
+    // emitter's text: both consumers of the record agree (`spec/gpu-layout.md` section 1).
+    use mtek_compiler::emit_wgsl::print_module;
+    use mtek_compiler::lowering::shader_ir::{
+        GlobalDecl, GlobalKind, Name, ShaderModule, ShaderType,
+    };
+    use mtek_compiler::source::{FileId, Span};
+
+    let span = Span::new(FileId(0), 0, 1);
+    for name in fixture_names() {
+        let record = compute_fixture(&name);
+        let mut module = ShaderModule::new(format!("fixture:{name}"), span);
+        module.declare_block(&record, span);
+        module.globals.push(GlobalDecl {
+            name: Name::generated(
+                common::VAR_NAME
+                    .strip_prefix("mtek_")
+                    .unwrap_or(common::VAR_NAME),
+            ),
+            kind: GlobalKind::Uniform {
+                group: common::GROUP,
+                binding: common::BINDING,
+                ty: ShaderType::named(record.wgsl_struct.clone()),
+            },
+            span,
+        });
+        let printed = print_module(&module);
+        assert_eq!(
+            printed.text,
+            block_declarations(&record),
+            "fixture `{name}`"
+        );
+        assert!(
+            printed.span_map.entries.iter().all(|e| e.span == span),
+            "fixture `{name}`"
+        );
+    }
+}
