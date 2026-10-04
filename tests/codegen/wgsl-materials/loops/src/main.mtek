@@ -1,0 +1,59 @@
+// Counted loops with constant bounds, loops over arrays, break and
+// continue, nested blocks (spec/language.md 7.5, 7.6).
+const STEPS: i32 = 4;
+const LANES: u32 = 3;
+
+fn ripple(x: f32) -> f32 {
+    var sum = 0.0;
+    for i in 0..STEPS {
+        if i == 2 {
+            continue;
+        }
+        sum += sin(x * f32(i + 1));
+    }
+    for k in 0..LANES {
+        if sum > 2.0 {
+            break;
+        }
+        sum += f32(k) * 0.125;
+    }
+    return sum;
+}
+
+fn total(values: array<f32, 4>) -> f32 {
+    var acc = 0.0;
+    for v in values {
+        if v < 0.0 {
+            break;
+        }
+        acc += v;
+    }
+    return acc;
+}
+
+material Waves {
+    param scale: f32 = 1.0;
+    param samples: array<f32, 4> = [0.1, 0.2, 0.3, 0.4];
+
+    fragment(surface: SurfaceInput) -> color {
+        let r = ripple(surface.uv.x * scale);
+        let t = total(samples);
+        var g = 0.0;
+        for j in 0..2 {
+            g += samples[j];
+        }
+        {
+            let inner = g * 0.5;
+            g = inner + t;
+        }
+        return color.linear(vec3(r, g, t), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Sheet {
+        mesh: Plane { size: vec2(2.0, 2.0) };
+        material: Waves { scale: 3.0 };
+    }
+}

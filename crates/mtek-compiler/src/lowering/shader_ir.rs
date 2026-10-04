@@ -361,8 +361,12 @@ pub enum Statement {
     Continue { span: Span },
     /// `{ body }`.
     Block { body: Vec<Statement>, span: Span },
-    /// `call;`: a call of a function without a result.
-    Call { call: Expr, span: Span },
+    /// `function(args);`: a call of a function without a result.
+    Call {
+        function: Name,
+        args: Vec<Expr>,
+        span: Span,
+    },
     /// `_ = value;`: a value computed and discarded (a call with a result as a
     /// statement; WGSL's built-in functions must not be called as statements).
     Discard { value: Expr, span: Span },

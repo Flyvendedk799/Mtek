@@ -388,27 +388,26 @@ impl<'p> ShaderLowering<'p> {
                 body: self.block(body, block)?,
                 span: block.span,
             },
-            ir::Stmt::Expr { expr, span } => {
-                let unit_call = match &expr.kind {
-                    ir::ExprKind::Call { function, .. } => self
-                        .functions
-                        .get(function.as_str())
-                        .is_some_and(|f| f.result.is_none()),
-                    _ => false,
-                };
-                let lowered = self.expr(body, expr)?;
-                if unit_call {
-                    Statement::Call {
-                        call: lowered,
-                        span: *span,
-                    }
-                } else {
-                    Statement::Discard {
-                        value: lowered,
-                        span: *span,
+            ir::Stmt::Expr { expr, span } => match &expr.kind {
+                ir::ExprKind::Call { function, args } => {
+                    let (name, args, result) = self.call(body, function.as_str(), args)?;
+                    match result {
+                        Some(ty) => Statement::Discard {
+                            value: Expr::call(name, args, ty, expr.span),
+                            span: *span,
+                        },
+                        None => Statement::Call {
+                            function: name,
+                            args,
+                            span: *span,
+                        },
                     }
                 }
-            }
+                _ => Statement::Discard {
+                    value: self.expr(body, expr)?,
+                    span: *span,
+                },
+            },
         }))
     }
 
@@ -507,16 +506,10 @@ impl<'p> ShaderLowering<'p> {
                 self.binary(op, &lhs.ty, &rhs.ty, ty, left, right, span)?
             }
             ir::ExprKind::Call { function, args } => {
-                let symbol = function.as_str();
-                if !body.calls.iter().any(|c| c == symbol) {
-                    body.calls.push(symbol.to_owned());
-                }
-                let args = self.exprs(body, args)?;
-                let result = match self.functions.get(symbol).and_then(|f| f.result.as_ref()) {
-                    Some(result) => self.types.value_type(result)?,
-                    None => return Err(format!("the call of '{symbol}' as a value")),
-                };
-                Expr::call(function_name(symbol)?, args, result, span)
+                let (name, args, result) = self.call(body, function.as_str(), args)?;
+                let result =
+                    result.ok_or_else(|| format!("the call of '{function}' as a value"))?;
+                Expr::call(name, args, result, span)
             }
             ir::ExprKind::Builtin { function, args } => {
                 let args = self.exprs(body, args)?;
@@ -598,6 +591,29 @@ impl<'p> ShaderLowering<'p> {
                 return Err(format!("an instance of '{material}' in GPU code"));
             }
         })
+    }
+
+    /// A call of the user function `symbol`: its WGSL name, the lowered arguments and
+    /// its result type (`None` for a function without result). Records the call.
+    fn call(
+        &mut self,
+        body: &mut Body<'p>,
+        symbol: &str,
+        args: &[ir::Expr],
+    ) -> Result<(Name, Vec<Expr>, Option<ShaderType>), Defect> {
+        if !body.calls.iter().any(|c| c == symbol) {
+            body.calls.push(symbol.to_owned());
+        }
+        let args = self.exprs(body, args)?;
+        let function = *self
+            .functions
+            .get(symbol)
+            .ok_or_else(|| format!("the function '{symbol}' is not in the IR"))?;
+        let result = match &function.result {
+            Some(result) => Some(self.types.value_type(result)?),
+            None => None,
+        };
+        Ok((function_name(symbol)?, args, result))
     }
 
     /// The material param `index` (`name`, of IR type `ty`): `mtek_params.u_<name>`.

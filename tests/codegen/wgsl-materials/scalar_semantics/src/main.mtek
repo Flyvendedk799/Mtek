@@ -1,0 +1,51 @@
+// Integer and float semantics that WGSL implements natively (integer / and
+// %, f32 %, conversions), folded constants (the i32 minimum), the
+// intrinsics, a dynamic mat4 column, logic and an else-if chain.
+fn ints(a: i32, b: i32, u: u32, v: u32) -> f32 {
+    let q = a / b;
+    let r = a % b;
+    let uq = u / v;
+    let ur = u % v;
+    let neg = -a;
+    let m = -2147483648;
+    let mixed = max(a, m) + min(q, r) + clamp(neg, -4, 4) + abs(a);
+    let cu = clamp(uq + ur, 0, 10);
+    let back = i32(u) + i32(f32(a) * 0.5);
+    let flt = f32(u32(back));
+    return f32(mixed) + f32(cu) + flt + f32(a) % 2.5;
+}
+
+material Semantics {
+    param a: i32 = -7;
+    param b: i32 = 2;
+    param u: u32 = 9;
+    param v: u32 = 0;
+    param tint: color = #336699;
+
+    fragment(surface: SurfaceInput) -> color {
+        let x = ints(a, b, u, v);
+        let s = smoothstep(0.0, 1.0, fract(x)) + step(0.5, x) + mix(0.0, 1.0, saturate(x));
+        let g = vec3(pow(2.0, x), exp2(x), log2(abs(x) + 1.0));
+        let d = dot(normalize(g + vec3(1.0)), reflect(vec3(0.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0)));
+        let mt = transpose(mat4.columns(vec4(1.0), vec4(2.0), vec4(3.0), vec4(4.0)));
+        let col = mt[b];
+        let ok = x > 0.0 && (a != b || !(u == v));
+        var out = tint.rgb * s;
+        if ok {
+            out.y = d + col.x;
+        } else if x < -1.0 {
+            out = -out;
+        } else {
+            out = vec3(round(x), inverse_sqrt(4.0 + x * x), atan2(x, 1.0));
+        }
+        return color.linear(out, tint.a);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Probe {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Semantics { v: 3 };
+    }
+}

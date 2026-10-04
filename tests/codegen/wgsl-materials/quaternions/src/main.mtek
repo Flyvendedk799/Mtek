@@ -1,0 +1,30 @@
+// Quaternions, mat4 constructors and color.srgb through the generated
+// helper library (spec/compiler-architecture.md 7.3).
+fn spin(q: quat, v: vec3) -> vec3 {
+    return q * v;
+}
+
+material Spin {
+    param angle: f32 = 0.5;
+    param axis: vec3 = vec3(0.0, 1.0, 0.0);
+    param base: quat = quat.identity();
+    param tilt: vec3 = vec3(0.1, 0.2, 0.3);
+
+    fragment(surface: SurfaceInput) -> color {
+        let q = quat.axis_angle(axis, angle) * base;
+        let e = quat.euler(tilt.x, tilt.y, tilt.z);
+        let n = spin(q * e, surface.world_normal);
+        let m = mat4.rotation(q) * mat4.translation(tilt) * mat4.scale(vec3(angle));
+        let p = (m * vec4(surface.local_position, 1.0)).xyz;
+        let c = color.srgb(abs(n) * 0.5 + p * 0.1, 1.0);
+        return color.linear(c.rgb * q.w, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Top {
+        mesh: Sphere { radius: 0.5 };
+        material: Spin { angle: 1.25 };
+    }
+}

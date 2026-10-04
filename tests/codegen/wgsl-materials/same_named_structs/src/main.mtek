@@ -1,0 +1,27 @@
+// Two modules declare a struct `Wave`; a value of the other module's
+// `Wave` reaches this one through a call, without an import of the type.
+// The WGSL structs are module-qualified (S_<hash8>_Wave), so both coexist
+// in one shader (decision 0041).
+import { make_wave } from "./waves.mtek";
+
+struct Wave {
+    height: f32;
+}
+
+material Sea {
+    param level: f32 = 0.5;
+
+    fragment(surface: SurfaceInput) -> color {
+        let mine = Wave { height: level };
+        let theirs = make_wave(level);
+        return color.linear(vec3(mine.height, theirs.height, theirs.width), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Water {
+        mesh: Plane { size: vec2(4.0, 4.0) };
+        material: Sea {};
+    }
+}

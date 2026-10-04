@@ -424,8 +424,9 @@ impl Printer {
             }
             Statement::Break { .. } => self.push("break;"),
             Statement::Continue { .. } => self.push("continue;"),
-            Statement::Call { call, .. } => {
-                self.expr(call, symbol);
+            Statement::Call { function, args, .. } => {
+                self.push(&mangle(function));
+                self.arguments(args, symbol);
                 self.push(";");
             }
             Statement::Discard { value, .. } => {
