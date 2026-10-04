@@ -5,29 +5,18 @@
  * Matrices are `Float32Array(16)` in **column-major** order: the element at
  * (row `r`, column `c`) is stored at index `c * 4 + r`, so the translation of a
  * rigid transform is at indices 12, 13 and 14. Intermediate arithmetic runs in
- * f64 and every result is rounded once to f32 when it is stored.
+ * f64 and every result is rounded once to f32 when it is stored. That suits the
+ * renderer; Mtek-visible matrix operations (`rt`, `./matrix.ts`) instead round every
+ * operation, in the order constant folding uses.
  *
  * Coordinate system: right-handed, `+Y` up, cameras look along their local `-Z`,
  * clip-space depth is `[0, 1]`.
  */
 
-/** Column-major 4x4 matrix with `f32` storage. */
-export type Mat4 = Float32Array;
+import type { Mat4, Quat, Vec3 } from "./types.js";
 
-/** Vector in the CPU representation of `spec/runtime-abi.md` 4. */
-export interface Vec3 {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-}
-
-/** Unit quaternion `(x, y, z, w)` (`spec/language.md` 4). */
-export interface Quat {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-  readonly w: number;
-}
+/** The value types live in `./types.ts`; re-exported for the renderer and the scene code. */
+export type { Mat4, Quat, Vec3 } from "./types.js";
 
 /**
  * How a camera is oriented: looking at a `target` (look-at with up `+Y`) or by an
