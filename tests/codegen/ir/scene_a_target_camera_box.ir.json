@@ -1,0 +1,145 @@
+{
+  "entryScene": "src/main.mtek::Gallery",
+  "modules": [
+    {
+      "path": "src/main.mtek",
+      "file": 0,
+      "span": {"file": 0, "start": 0, "end": 385},
+      "items": [
+        {
+          "kind": "scene",
+          "name": "Gallery",
+          "symbol": "src/main.mtek::Gallery",
+          "span": {"file": 0, "start": 84, "end": 384},
+          "fields": {
+            "clearColor": {
+              "source": {
+                "const": {
+                  "color": [0.014443844, 0.02121901, 0.029556835, 1.0]
+                }
+              },
+              "origin": "written",
+              "span": {"file": 0, "start": 104, "end": 125}
+            }
+          },
+          "constants": [],
+          "cameras": [
+            {
+              "name": "Main",
+              "symbol": "src/main.mtek::Gallery.Main",
+              "span": {"file": 0, "start": 130, "end": 225},
+              "active": true,
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 2.0, 6.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 152, "end": 182}
+              },
+              "target": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.5, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 191, "end": 219}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 130, "end": 225}
+              },
+              "projection": {
+                "desc": {
+                  "kind": "perspective",
+                  "fovY": 0.9,
+                  "near": 0.1,
+                  "far": 1000.0
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 130, "end": 225}
+              }
+            }
+          ],
+          "entities": [
+            {
+              "index": 0,
+              "name": "Crate",
+              "symbol": "src/main.mtek::Gallery.Crate",
+              "parent": null,
+              "span": {"file": 0, "start": 230, "end": 382},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.5, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 253, "end": 283}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 230, "end": 382}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 230, "end": 382}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 230, "end": 382}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "box",
+                  "size": [1.0, 1.0, 1.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 292, "end": 332}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [0.14702727, 0.107023105, 1.0, 1.0]
+                      }
+                    },
+                    "span": {"file": 0, "start": 341, "end": 376}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 0, "start": 341, "end": 376}
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
