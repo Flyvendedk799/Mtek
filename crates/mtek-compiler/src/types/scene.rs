@@ -74,6 +74,8 @@ pub struct CheckedScene {
     pub def: Option<DefId>,
     pub name: String,
     pub name_span: Span,
+    /// The whole declaration, `scene Name { … }`.
+    pub span: Span,
     /// The scene fields (the registry's scene schema).
     pub fields: Vec<CheckedField>,
     /// The scene objects (cameras), in declaration order.
@@ -121,6 +123,8 @@ pub struct CheckedObject {
     pub kind: &'static str,
     pub name: String,
     pub name_span: Span,
+    /// The whole declaration, `camera Name { … }`.
+    pub span: Span,
     /// Whether this is the active object of its kind (the one camera, or the
     /// one that declares `active: true`).
     pub active: bool,
@@ -142,6 +146,8 @@ pub struct CheckedEntity {
     pub def: Option<DefId>,
     pub name: String,
     pub name_span: Span,
+    /// The whole declaration, `entity Name { … }`.
+    pub span: Span,
     /// The fields of the registry's entity schema.
     pub fields: Vec<CheckedField>,
     /// The nested entities, in declaration order.
@@ -414,6 +420,7 @@ impl Checker<'_> {
             def: self.res.def_of(decl.id),
             name: decl.name.name.clone(),
             name_span: decl.name.span,
+            span: decl.span,
             fields,
             objects,
             entities,
@@ -438,6 +445,7 @@ impl Checker<'_> {
             kind: kind.keyword,
             name: object.name.name.clone(),
             name_span: object.name.span,
+            span: object.span,
             active: false,
             fields,
         })
@@ -485,6 +493,7 @@ impl Checker<'_> {
             def: self.res.def_of(entity.id),
             name: entity.name.name.clone(),
             name_span: entity.name.span,
+            span: entity.span,
             fields,
             children,
         })

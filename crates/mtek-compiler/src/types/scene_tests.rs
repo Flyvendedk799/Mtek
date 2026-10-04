@@ -253,3 +253,30 @@ fn the_checker_names_no_schema_and_no_field() {
         }
     }
 }
+
+#[test]
+fn checked_declarations_carry_their_whole_spans() {
+    // The typed IR gives every scene, camera and entity node the span of its
+    // whole declaration (decision 0028).
+    let text = "scene Demo {\n    camera Main {}\n    entity A {\n        entity B {}\n    }\n}\n";
+    let result = checked(text);
+    assert!(result.diagnostics.is_empty(), "{:?}", result.codes());
+    let [scene] = result.typeck.scenes() else {
+        panic!("one scene expected")
+    };
+    let slice = |span: Span| text.get(span.range()).unwrap_or_default();
+    assert!(slice(scene.span).starts_with("scene Demo {") && slice(scene.span).ends_with('}'));
+    let [camera] = scene.objects.as_slice() else {
+        panic!("one camera expected")
+    };
+    assert_eq!(slice(camera.span), "camera Main {}");
+    let [a] = scene.entities.as_slice() else {
+        panic!("one root entity expected")
+    };
+    assert_eq!(slice(a.span), "entity A {\n        entity B {}\n    }");
+    let [b] = a.children.as_slice() else {
+        panic!("one child expected")
+    };
+    assert_eq!(slice(b.span), "entity B {}");
+    assert!(scene.span.contains_span(scene.name_span) && b.span.contains_span(b.name_span));
+}
