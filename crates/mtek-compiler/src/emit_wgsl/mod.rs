@@ -23,4 +23,4 @@ pub use blocks::{
 };
 pub use printer::{PrintedModule, print_module};
 pub use span_map::{SpanMap, SpanMapDocument, SpanMapEntry, WgslRange};
-pub use validate::{WgslErrorStage, WgslLabel, WgslValidationError, validate_wgsl};
+pub use validate::{WgslErrorStage, WgslLabel, WgslValidationError, validate, validate_wgsl};
