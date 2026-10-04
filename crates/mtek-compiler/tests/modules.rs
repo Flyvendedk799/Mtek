@@ -161,12 +161,15 @@ fn modules_load_depth_first_in_import_order_whatever_the_listing_order() {
 fn imported_names_point_at_the_exported_declaration() {
     let analysis = analyze_fixture("pass", "modules_imported_constant_and_material");
     assert!(!analysis.has_errors(), "{:#?}", analysis.report);
+    // The entities use `Unlit`, so the embedded prelude follows the project's
+    // modules (decision 0044).
     assert_eq!(
         module_paths(&analysis),
         [
             "src/main.mtek",
             "src/shared/palette.mtek",
-            "src/shared/sizes.mtek"
+            "src/shared/sizes.mtek",
+            "std/materials.mtek"
         ]
     );
     let resolution = analysis.resolution.as_ref().unwrap();

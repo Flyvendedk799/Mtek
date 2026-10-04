@@ -23,10 +23,10 @@ use super::model::{
 use std::collections::BTreeMap;
 
 use crate::layout::qualified_name;
+use crate::prelude::{MATERIALS_PATH, is_builtin_material};
 use crate::project::{ModuleId, Project};
 use crate::resolve::Resolution;
 use crate::source::{FileId, Span};
-use crate::stdlib::{SchemaCategory, registry};
 use crate::syntax::ast::{self, ConstDecl, EntityMember, ItemKind, SceneMember};
 use crate::types::MaterialKey;
 use crate::types::{
@@ -672,7 +672,7 @@ impl Lowering<'_> {
             material, params, ..
         } = value
         else {
-            return builtin_material_instance(what, value, origin, span);
+            return self.builtin_material_instance(what, value, origin, span);
         };
         let summary = self
             .materials
@@ -707,57 +707,61 @@ impl Lowering<'_> {
             span,
         })
     }
-}
 
-/// A completed descriptor of a built-in material: the material's symbol and
-/// every parameter in declaration order.
-fn builtin_material_instance(
-    what: &str,
-    value: &ConstValue,
-    origin: Origin,
-    span: Span,
-) -> Result<MaterialInstanceDesc, Defect> {
-    let (name, fields) = descriptor(what, value)?;
-    let schema = registry()
-        .schema(name)
-        .filter(|schema| schema.category == SchemaCategory::Material)
-        .ok_or_else(|| format!("the material {name} of {what} is not a registry material"))?;
-    let path = prelude_material_path(name)
-        .ok_or_else(|| format!("no prelude source declares the material {name}"))?;
-    let mut params = Vec::new();
-    for (param, value) in fields {
-        let def = schema
-            .field(param)
-            .ok_or_else(|| format!("the material {name} has no parameter '{param}'"))?;
-        params.push(Param {
-            name: param.clone(),
-            ty: def.ty.spelling().to_owned(),
-            source: Source::Const(Value::from(value)),
-            update: UpdateClass::Initial,
+    /// A completed descriptor of a built-in material: the material's symbol
+    /// and every parameter in declaration order. The material is the
+    /// declaration of the embedded prelude, compiled with the program
+    /// (decision 0044), so the instance names a material item of the IR as
+    /// a user material's instance does.
+    fn builtin_material_instance(
+        &self,
+        what: &str,
+        value: &ConstValue,
+        origin: Origin,
+        span: Span,
+    ) -> Result<MaterialInstanceDesc, Defect> {
+        let (name, fields) = descriptor(what, value)?;
+        if !is_builtin_material(name) {
+            return Err(format!(
+                "the material {name} of {what} is not a registry material"
+            ));
+        }
+        let symbol = Symbol::item(MATERIALS_PATH, name);
+        let summary = self
+            .materials
+            .values()
+            .find(|summary| summary.symbol == symbol)
+            .ok_or_else(|| {
+                format!(
+                    "the built-in material {symbol} of {what} was not compiled from the prelude"
+                )
+            })?;
+        if summary.params.len() != fields.len() {
+            return Err(format!(
+                "the material instance of {what} does not have every param of {symbol}"
+            ));
+        }
+        let mut params = Vec::with_capacity(fields.len());
+        for ((param, value), declared) in fields.iter().zip(&summary.params) {
+            if *param != declared.name {
+                return Err(format!(
+                    "the material instance of {what} lists '{param}' where {symbol} declares '{}'",
+                    declared.name
+                ));
+            }
+            params.push(Param {
+                name: param.clone(),
+                ty: declared.ty.clone(),
+                source: Source::Const(Value::from(value)),
+                update: UpdateClass::Initial,
+                span,
+            });
+        }
+        Ok(MaterialInstanceDesc {
+            material: symbol,
+            params,
+            origin,
             span,
-        });
-    }
-    Ok(MaterialInstanceDesc {
-        material: Symbol::item(path, name),
-        params,
-        origin,
-        span,
-    })
-}
-
-/// The prelude source that declares the built-in material `name`
-/// (`std/materials.mtek` for `Unlit`): its symbols are
-/// `std/materials.mtek::Unlit`, like a user material's
-/// `src/main.mtek::Pulse` (decision 0028).
-pub(super) fn prelude_material_path(name: &str) -> Option<&'static str> {
-    registry()
-        .prelude_sources
-        .iter()
-        .find(|(_, text)| {
-            let words: Vec<&str> = text.split_whitespace().collect();
-            words
-                .windows(2)
-                .any(|pair| pair[0] == "material" && pair[1] == name)
         })
-        .map(|(path, _)| *path)
+    }
 }

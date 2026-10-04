@@ -45,6 +45,15 @@ impl TargetProfile {
             TargetProfile::WebGpuCore2026 => "webgpu-core-2026",
         }
     }
+
+    /// `maxUniformBufferBindingSize` of the profile: the largest parameter block a material
+    /// may have (`spec/gpu-layout.md` section 8.3, `E6001`).
+    #[must_use]
+    pub const fn max_uniform_buffer_binding_size(self) -> u32 {
+        match self {
+            TargetProfile::WebGpuCore2026 => crate::plan::MAX_UNIFORM_BUFFER_BINDING_SIZE,
+        }
+    }
 }
 
 /// The build modes of `spec/tooling.md` section 2.
@@ -90,8 +99,8 @@ impl CompileOptions {
 pub struct BuildResult {
     /// The project name from `mtek.toml`; `None` if the project could not be loaded.
     pub project_name: Option<String>,
-    /// The build's source files (the project's sources plus the prelude modules a packaged
-    /// build uses), to render diagnostics with.
+    /// The build's source files (the project's sources plus the prelude modules the program
+    /// uses, decision 0044), to render diagnostics with.
     pub sources: SourceMap,
     /// Every diagnostic, in report order.
     pub report: Report,
@@ -140,7 +149,7 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
     }
 
     let mut packaged = None;
-    let mut sources = front
+    let sources = front
         .project
         .as_ref()
         .map_or_else(SourceMap::new, |project| project.sources.clone());
@@ -166,7 +175,7 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
                     runtime_bundle: bundle,
                     runtime_declarations: declarations,
                 };
-                match package(project, &program, &input, &mut sources) {
+                match package(project, &program, &input) {
                     Ok(result) => packaged = Some(result),
                     Err(diagnostics) => sink.extend(diagnostics),
                 }

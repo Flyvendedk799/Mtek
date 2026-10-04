@@ -10,8 +10,8 @@
 //! * Span maps: every entry of every golden resolves to the Mtek text it was generated
 //!   from (mangled locals to their names, calls to calls, statements to statements),
 //!   inside the declaration of its symbol; the Pulse material is checked entry by entry.
-//! * The prelude's `Unlit`, compiled from source by this lowering, gives the golden of
-//!   the temporary compiler-built `Unlit` (what M2-09 relies on).
+//! * The prelude's `Unlit` declaration copied into a user module gives the golden of
+//!   the built-in `Unlit` (`tests/unlit_shader.rs`) up to the name of its block.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -413,12 +413,12 @@ fn the_pulse_span_map_points_at_each_piece_of_the_material() {
 }
 
 #[test]
-fn unlit_lowered_from_source_matches_the_temporary_golden() {
-    // M2-09 compiles the prelude's `Unlit` through this lowering and deletes the
-    // compiler-built path; its golden `tests/codegen/wgsl/unlit.wgsl` must then stay
-    // equal. The prelude's declaration, compiled as a user module, gives the same text
-    // up to the name of the block (the prelude's name `Unlit` is reserved for it).
-    let prelude = mtek_compiler::lowering::builtin_unlit::prelude_text().unwrap();
+fn unlit_copied_into_a_user_module_matches_the_builtin_golden() {
+    // The built-in `Unlit` is the prelude's declaration compiled from source
+    // (`tests/unlit_shader.rs`, decision 0044); the same declaration in a user module
+    // gives the same text up to the name of the block (the name `Unlit` is reserved
+    // for the prelude).
+    let prelude = mtek_compiler::prelude::materials_text().unwrap();
     let start = prelude.find("export material Unlit").unwrap();
     let end = start + prelude[start..].find("\n}\n").unwrap() + 3;
     let source = format!(

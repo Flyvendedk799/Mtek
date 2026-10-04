@@ -171,7 +171,7 @@ export material Pbr {
 }
 ```
 
-The param named `color` in `Unlit` relies on the rule in `spec/language.md` §4.2: a material param may share a prelude type's name; inside `Unlit`, `color` in expression position is the param, `color` in type position is the type, and `color.linear(…)` would be `E2005` (the prelude does not use it). (Until M2 implements material source compilation, M1 provides `Unlit` through a minimal compiler-built shader IR; see the M1 tasks. That temporary path is removed in M2.)
+The param named `color` in `Unlit` relies on the rule in `spec/language.md` §4.2: a material param may share a prelude type's name; inside `Unlit`, `color` in expression position is the param, `color` in type position is the type, and `color.linear(…)` would be `E2005` (the prelude does not use it). (M1 provided `Unlit` through a minimal compiler-built shader IR; since M2 it is compiled from this source, and the temporary path is gone, decision 0044.)
 
 ## 10. Not in v0.1
 

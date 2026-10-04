@@ -1,0 +1,56 @@
+bindings of scene src/main.mtek::Harbour (target profile webgpu-core-2026)
+
+block builtin:frame MtekFrame  group 0 binding 0  visibility vertex+fragment  owner runtime  size 288 align 16
+  field            type                 wgsl                 offset  size  padding  array
+  view_proj        mat4                 mat4x4<f32>               0    64        0
+  camera_position  vec3                 vec3<f32>                64    12        0
+  light_count      u32                  u32                      76     4        0
+  ambient          vec3                 vec3<f32>                80    12        0
+  reserved0        f32                  f32                      92     4        0
+  lights           array<MtekLight, 4>  array<MtekLight, 4>      96   192        0  4 x stride 48
+
+block builtin:object MtekObject  group 2 binding 0 (dynamic offset)  visibility vertex  owner object  size 128 align 16
+  field          type  wgsl         offset  size  padding  array
+  model          mat4  mat4x4<f32>       0    64        0
+  normal_matrix  mat4  mat4x4<f32>      64    64        0
+
+block material:src/main.mtek::Ocean MtekParams_e2cab98b_Ocean  group 1 binding 0  visibility fragment  owner material instance  size 192 align 16
+  field           type                 wgsl                     offset  size  padding  array                   declared at
+  base            color                vec4<f32>                     0    16        0                          src/main.mtek:13:5-13:30
+  depth           f32                  f32                          16     4        0                          src/main.mtek:14:5-14:22
+  count           u32                  u32                          20     4        0                          src/main.mtek:15:5-15:30
+  enabled         bool                 u32                          24     4        0                          src/main.mtek:16:5-16:32
+  offset          i32                  i32                          28     4        0                          src/main.mtek:17:5-17:28
+  spin            quat                 vec4<f32>                    32    16        0                          src/main.mtek:18:5-18:40
+  warp            mat4                 mat4x4<f32>                  48    64        0                          src/main.mtek:19:5-19:40
+  tint            vec4                 vec4<f32>                   112    16        0                          src/main.mtek:20:5-20:49
+  wave            src/main.mtek::Wave  S_e2cab98b_Wave             128    16        0                          src/main.mtek:21:5-21:76
+  wave.amplitude  f32                  f32                         128     4        4
+  wave.direction  vec2                 vec2<f32>                   136     8        0
+  weights         array<f32, 3>        array<MtekPad16_f32, 3>     144    48        0  3 x stride 16 (padded)  src/main.mtek:22:5-22:52
+
+instance #0 of src/main.mtek::Ocean  entity src/main.mtek::Harbour.Bay (#0)  block material:src/main.mtek::Ocean  group 1 binding 0  storage shareable
+  param    type           update   dependencies  field    offset  size  declared at               instance at
+  base     color          initial  -             base          0    16  src/main.mtek:13:5-13:30  src/main.mtek:39:9-39:24
+  depth    f32            initial  -             depth        16     4  src/main.mtek:14:5-14:22  src/main.mtek:39:9-39:24
+  count    u32            initial  -             count        20     4  src/main.mtek:15:5-15:30  src/main.mtek:39:9-39:24
+  enabled  bool           initial  -             enabled      24     4  src/main.mtek:16:5-16:32  src/main.mtek:39:9-39:24
+  offset   i32            initial  -             offset       28     4  src/main.mtek:17:5-17:28  src/main.mtek:39:9-39:24
+  spin     quat           initial  -             spin         32    16  src/main.mtek:18:5-18:40  src/main.mtek:39:9-39:24
+  warp     mat4           initial  -             warp         48    64  src/main.mtek:19:5-19:40  src/main.mtek:39:9-39:24
+  tint     vec4           initial  -             tint        112    16  src/main.mtek:20:5-20:49  src/main.mtek:39:9-39:24
+  wave     Wave           initial  -             wave        128    16  src/main.mtek:21:5-21:76  src/main.mtek:39:9-39:24
+  weights  array<f32, 3>  initial  -             weights     144    48  src/main.mtek:22:5-22:52  src/main.mtek:39:9-39:24
+
+instance #1 of src/main.mtek::Ocean  entity src/main.mtek::Harbour.Reef (#1)  block material:src/main.mtek::Ocean  group 1 binding 0  storage shareable
+  param    type           update   dependencies  field    offset  size  declared at               instance at
+  base     color          initial  -             base          0    16  src/main.mtek:13:5-13:30  src/main.mtek:43:9-43:81
+  depth    f32            initial  -             depth        16     4  src/main.mtek:14:5-14:22  src/main.mtek:43:9-43:81
+  count    u32            initial  -             count        20     4  src/main.mtek:15:5-15:30  src/main.mtek:43:9-43:81
+  enabled  bool           initial  -             enabled      24     4  src/main.mtek:16:5-16:32  src/main.mtek:43:9-43:81
+  offset   i32            initial  -             offset       28     4  src/main.mtek:17:5-17:28  src/main.mtek:43:9-43:81
+  spin     quat           initial  -             spin         32    16  src/main.mtek:18:5-18:40  src/main.mtek:43:9-43:81
+  warp     mat4           initial  -             warp         48    64  src/main.mtek:19:5-19:40  src/main.mtek:43:9-43:81
+  tint     vec4           initial  -             tint        112    16  src/main.mtek:20:5-20:49  src/main.mtek:43:9-43:81
+  wave     Wave           initial  -             wave        128    16  src/main.mtek:21:5-21:76  src/main.mtek:43:9-43:81
+  weights  array<f32, 3>  initial  -             weights     144    48  src/main.mtek:22:5-22:52  src/main.mtek:43:9-43:81

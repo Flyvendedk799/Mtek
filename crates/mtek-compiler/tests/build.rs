@@ -621,3 +621,66 @@ fn a_program_with_errors_has_check_s_diagnostics_and_no_files() {
         );
     }
 }
+
+/// A project whose entity uses a material with a parameter block of `len` padded `f32`
+/// elements and an `f32` after them (`16 * len + 16` bytes, rounded to 16).
+fn big_block(len: usize) -> MemFs {
+    let zeros = vec!["0.0"; len].join(", ");
+    let mut memory = MemFs::new();
+    memory
+        .insert(
+            ProjectPath::new("mtek.toml").unwrap(),
+            "[project]\nname = \"big\"\nlanguage = \"0.1\"\n",
+        )
+        .insert(
+            ProjectPath::new("src/main.mtek").unwrap(),
+            format!(
+                "material Big {{\n    param samples: array<f32, {len}> = [{zeros}];\n    param gain: f32 = 1.0;\n    fragment(input: SurfaceInput) -> color {{ return #ffffff; }}\n}}\n\nscene Demo {{\n    camera Main {{}}\n    entity Crate {{ mesh: Box {{}}; material: Big {{}}; }}\n}}\n"
+            ),
+        );
+    memory
+}
+
+#[test]
+fn a_parameter_block_over_the_profile_limit_is_e6001_and_no_files() {
+    // 65 536 bytes exactly: builds.
+    let fits = build(
+        &ProjectRoot::at_base(),
+        &big_block(4095),
+        &stub(BuildMode::Release),
+    );
+    assert!(fits.report.diagnostics.is_empty(), "{:#?}", fits.report);
+    let manifest = manifest_of(&fits);
+    let layout = manifest
+        .layouts
+        .iter()
+        .find(|l| l.id == "material:src/main.mtek::Big")
+        .unwrap();
+    assert_eq!(layout.size, 65_536);
+    // 65 552 bytes: `E6001` (an emit-phase limit, so `check` does not report it), before
+    // any shader is lowered, and nothing is written.
+    let memory = big_block(4096);
+    let result = build(&ProjectRoot::at_base(), &memory, &stub(BuildMode::Release));
+    assert_eq!(codes(&result), ["E6001"]);
+    assert!(result.files.is_empty() && result.build_id.is_none());
+    let diagnostic = &result.report.diagnostics[0];
+    assert_eq!(
+        diagnostic.message,
+        "The parameter block of material 'Big' is 65552 bytes, more than the 65536 bytes a uniform block may have in the target profile 'webgpu-core-2026'."
+    );
+    assert_eq!(diagnostic.phase, mtek_compiler::diagnostics::Phase::Emit);
+    let primary = diagnostic.primary.as_ref().unwrap().span;
+    assert!(
+        result
+            .sources
+            .slice(primary)
+            .unwrap()
+            .starts_with("material Big {")
+    );
+    assert!(
+        check(&ProjectRoot::at_base(), &memory)
+            .report
+            .diagnostics
+            .is_empty()
+    );
+}

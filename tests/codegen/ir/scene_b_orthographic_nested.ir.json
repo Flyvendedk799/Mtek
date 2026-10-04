@@ -293,6 +293,87 @@
           ]
         }
       ]
+    },
+    {
+      "path": "std/materials.mtek",
+      "file": 1,
+      "span": {"file": 1, "start": 0, "end": 888},
+      "items": [
+        {
+          "kind": "material",
+          "name": "Unlit",
+          "symbol": "std/materials.mtek::Unlit",
+          "params": [
+            {
+              "name": "color",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 1, "start": 276, "end": 305}
+            }
+          ],
+          "layout": {
+            "id": "material:std/materials.mtek::Unlit",
+            "wgslStruct": "MtekParams_2b212d15_Unlit",
+            "size": 16,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "std/materials.mtek::Unlit",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "members": [
+                {
+                  "name": "color",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "std/materials.mtek::Unlit.fragment",
+            "surfaceInputs": [],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "surface",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 1, "start": 319, "end": 326}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "param",
+                    "param": 0,
+                    "name": "color",
+                    "type": "color",
+                    "span": {"file": 1, "start": 360, "end": 365}
+                  },
+                  "span": {"file": 1, "start": 353, "end": 366}
+                }
+              ],
+              "span": {"file": 1, "start": 351, "end": 368}
+            },
+            "span": {"file": 1, "start": 310, "end": 368}
+          },
+          "span": {"file": 1, "start": 255, "end": 370}
+        }
+      ]
     }
   ]
 }

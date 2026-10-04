@@ -1,6 +1,6 @@
 // The built-in materials (spec/materials.md section 9). Ordinary Mtek source, compiled by the
-// same pipeline as user materials (from milestone M2; until then the compiler renders `Unlit`
-// from a minimal shader IR, decision 0013).
+// same pipeline as user materials (decision 0044). A compiler build compiles the materials
+// whose milestone it has reached; `Pbr` is planned for M4.
 
 export material Unlit {
     param color: color = #ffffff;

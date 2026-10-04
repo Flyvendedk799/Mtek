@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 
 use super::lower::{
     CAMERA_FIELDS, ENTITY_FIELDS, MESH_SCHEMAS, OBJECT_KINDS, PROJECTION_SCHEMAS, SCENE_FIELDS,
-    mesh_desc, prelude_material_path, projection_desc,
+    mesh_desc, projection_desc,
 };
 use super::*;
 use crate::project::ProjectRoot;
@@ -171,14 +171,16 @@ fn every_implemented_descriptor_schema_is_lowered() {
     );
     let materials = implemented_schemas(SchemaCategory::Material);
     assert!(!materials.is_empty());
+    // Every implemented built-in material is declared by the embedded prelude,
+    // which the IR holds as a module when a scene uses one (decision 0044).
+    let text = crate::prelude::materials_text().unwrap();
     for material in materials {
-        assert_eq!(
-            prelude_material_path(material),
-            Some("std/materials.mtek"),
+        assert!(crate::prelude::is_builtin_material(material), "{material}");
+        assert!(
+            text.contains(&format!("export material {material} {{")),
             "{material}"
         );
     }
-    assert_eq!(prelude_material_path("Missing"), None);
 }
 
 #[test]
