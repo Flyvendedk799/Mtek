@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 60,
+    "endByte": 70,
+    "message": "Cannot assign to a part of the constant 'WEIGHTS'.",
+    "related": [
+      {
+        "message": "the constant 'WEIGHTS' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 6,
+        "endByte": 13
+      }
+    ],
+    "notes": [
+      "help: copy it into a `var` local and assign to that"
+    ]
+  }
+]

@@ -1,0 +1,1912 @@
+{
+  "entryScene": "src/main.mtek::Demo",
+  "modules": [
+    {
+      "path": "src/main.mtek",
+      "file": 0,
+      "span": {"file": 0, "start": 0, "end": 2115},
+      "items": [
+        {
+          "kind": "struct",
+          "name": "Probe",
+          "symbol": "src/main.mtek::Probe",
+          "fields": [
+            {
+              "name": "offset",
+              "type": "vec3"
+            },
+            {
+              "name": "weight",
+              "type": "f32"
+            },
+            {
+              "name": "enabled",
+              "type": "bool"
+            },
+            {
+              "name": "samples",
+              "type": "array<f32, 4>"
+            }
+          ],
+          "span": {"file": 0, "start": 232, "end": 330}
+        },
+        {
+          "kind": "struct",
+          "name": "Rig",
+          "symbol": "src/main.mtek::Rig",
+          "fields": [
+            {
+              "name": "probes",
+              "type": "array<src/main.mtek::Probe, 2>"
+            },
+            {
+              "name": "grid",
+              "type": "array<array<i32, 2>, 2>"
+            }
+          ],
+          "span": {"file": 0, "start": 332, "end": 410}
+        },
+        {
+          "kind": "function",
+          "name": "probe",
+          "symbol": "src/main.mtek::probe",
+          "effect": "pure",
+          "gpuReachable": true,
+          "cpuReachable": true,
+          "result": "src/main.mtek::Probe",
+          "locals": [
+            {
+              "index": 0,
+              "name": "w",
+              "type": "f32",
+              "kind": "param",
+              "span": {"file": 0, "start": 421, "end": 422}
+            }
+          ],
+          "body": {
+            "stmts": [
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "struct",
+                  "fields": [
+                    {
+                      "name": "offset",
+                      "value": {
+                        "kind": "const",
+                        "value": {
+                          "vec3": [0.0, 0.0, 0.0]
+                        },
+                        "type": "vec3",
+                        "span": {"file": 0, "start": 467, "end": 476}
+                      }
+                    },
+                    {
+                      "name": "weight",
+                      "value": {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "w",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 486, "end": 487}
+                      }
+                    },
+                    {
+                      "name": "enabled",
+                      "value": {
+                        "kind": "const",
+                        "value": {
+                          "bool": false
+                        },
+                        "type": "bool",
+                        "span": {"file": 0, "start": 498, "end": 503}
+                      }
+                    },
+                    {
+                      "name": "samples",
+                      "value": {
+                        "kind": "const",
+                        "value": {
+                          "array": [
+                            {"f32": 0.0},
+                            {"f32": 0.0},
+                            {"f32": 0.0},
+                            {"f32": 0.0}
+                          ]
+                        },
+                        "type": "array<f32, 4>",
+                        "span": {"file": 0, "start": 514, "end": 534}
+                      }
+                    }
+                  ],
+                  "type": "src/main.mtek::Probe",
+                  "span": {"file": 0, "start": 451, "end": 536}
+                },
+                "span": {"file": 0, "start": 444, "end": 537}
+              }
+            ],
+            "span": {"file": 0, "start": 438, "end": 539}
+          },
+          "span": {"file": 0, "start": 412, "end": 539}
+        },
+        {
+          "kind": "function",
+          "name": "fields",
+          "symbol": "src/main.mtek::fields",
+          "effect": "pure",
+          "gpuReachable": false,
+          "cpuReachable": true,
+          "result": "src/main.mtek::Probe",
+          "locals": [
+            {
+              "index": 0,
+              "name": "w",
+              "type": "f32",
+              "kind": "param",
+              "span": {"file": 0, "start": 551, "end": 552}
+            },
+            {
+              "index": 1,
+              "name": "p",
+              "type": "src/main.mtek::Probe",
+              "kind": "var",
+              "span": {"file": 0, "start": 578, "end": 579}
+            }
+          ],
+          "body": {
+            "stmts": [
+              {
+                "kind": "var",
+                "local": 1,
+                "value": {
+                  "kind": "call",
+                  "function": "src/main.mtek::probe",
+                  "args": [
+                    {
+                      "kind": "local",
+                      "local": 0,
+                      "name": "w",
+                      "type": "f32",
+                      "span": {"file": 0, "start": 588, "end": 589}
+                    }
+                  ],
+                  "type": "src/main.mtek::Probe",
+                  "span": {"file": 0, "start": 582, "end": 590}
+                },
+                "span": {"file": 0, "start": 574, "end": 591}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 1,
+                    "name": "p",
+                    "type": "src/main.mtek::Probe",
+                    "span": {"file": 0, "start": 596, "end": 597}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "offset",
+                      "index": 0,
+                      "type": "vec3",
+                      "span": {"file": 0, "start": 596, "end": 604}
+                    }
+                  ],
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 596, "end": 604}
+                },
+                "op": "=",
+                "value": {
+                  "kind": "const",
+                  "value": {
+                    "vec3": [1.0, 2.0, 3.0]
+                  },
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 607, "end": 626}
+                },
+                "span": {"file": 0, "start": 596, "end": 627}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 1,
+                    "name": "p",
+                    "type": "src/main.mtek::Probe",
+                    "span": {"file": 0, "start": 632, "end": 633}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "offset",
+                      "index": 0,
+                      "type": "vec3",
+                      "span": {"file": 0, "start": 632, "end": 640}
+                    },
+                    {
+                      "kind": "component",
+                      "component": 1,
+                      "type": "f32",
+                      "span": {"file": 0, "start": 632, "end": 642}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 632, "end": 642}
+                },
+                "op": "=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 5.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 645, "end": 648}
+                },
+                "span": {"file": 0, "start": 632, "end": 649}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 1,
+                    "name": "p",
+                    "type": "src/main.mtek::Probe",
+                    "span": {"file": 0, "start": 654, "end": 655}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "weight",
+                      "index": 1,
+                      "type": "f32",
+                      "span": {"file": 0, "start": 654, "end": 662}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 654, "end": 662}
+                },
+                "op": "+=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 0.5},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 666, "end": 669}
+                },
+                "span": {"file": 0, "start": 654, "end": 670}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 1,
+                    "name": "p",
+                    "type": "src/main.mtek::Probe",
+                    "span": {"file": 0, "start": 675, "end": 676}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "weight",
+                      "index": 1,
+                      "type": "f32",
+                      "span": {"file": 0, "start": 675, "end": 683}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 675, "end": 683}
+                },
+                "op": "*=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 2.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 687, "end": 690}
+                },
+                "span": {"file": 0, "start": 675, "end": 691}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 1,
+                    "name": "p",
+                    "type": "src/main.mtek::Probe",
+                    "span": {"file": 0, "start": 696, "end": 697}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "enabled",
+                      "index": 2,
+                      "type": "bool",
+                      "span": {"file": 0, "start": 696, "end": 705}
+                    }
+                  ],
+                  "type": "bool",
+                  "span": {"file": 0, "start": 696, "end": 705}
+                },
+                "op": "=",
+                "value": {
+                  "kind": "const",
+                  "value": {
+                    "bool": true
+                  },
+                  "type": "bool",
+                  "span": {"file": 0, "start": 708, "end": 712}
+                },
+                "span": {"file": 0, "start": 696, "end": 713}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 1,
+                    "name": "p",
+                    "type": "src/main.mtek::Probe",
+                    "span": {"file": 0, "start": 718, "end": 719}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "samples",
+                      "index": 3,
+                      "type": "array<f32, 4>",
+                      "span": {"file": 0, "start": 718, "end": 727}
+                    },
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "const",
+                        "value": {"i32": 1},
+                        "type": "i32",
+                        "span": {"file": 0, "start": 728, "end": 729}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 718, "end": 730}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 718, "end": 730}
+                },
+                "op": "=",
+                "value": {
+                  "kind": "local",
+                  "local": 0,
+                  "name": "w",
+                  "type": "f32",
+                  "span": {"file": 0, "start": 733, "end": 734}
+                },
+                "span": {"file": 0, "start": 718, "end": 735}
+              },
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "local",
+                  "local": 1,
+                  "name": "p",
+                  "type": "src/main.mtek::Probe",
+                  "span": {"file": 0, "start": 747, "end": 748}
+                },
+                "span": {"file": 0, "start": 740, "end": 749}
+              }
+            ],
+            "span": {"file": 0, "start": 568, "end": 751}
+          },
+          "span": {"file": 0, "start": 541, "end": 751}
+        },
+        {
+          "kind": "function",
+          "name": "elements",
+          "symbol": "src/main.mtek::elements",
+          "effect": "pure",
+          "gpuReachable": false,
+          "cpuReachable": true,
+          "result": "array<f32, 4>",
+          "locals": [
+            {
+              "index": 0,
+              "name": "i",
+              "type": "i32",
+              "kind": "param",
+              "span": {"file": 0, "start": 765, "end": 766}
+            },
+            {
+              "index": 1,
+              "name": "j",
+              "type": "u32",
+              "kind": "param",
+              "span": {"file": 0, "start": 773, "end": 774}
+            },
+            {
+              "index": 2,
+              "name": "xs",
+              "type": "array<f32, 4>",
+              "kind": "var",
+              "span": {"file": 0, "start": 808, "end": 810}
+            }
+          ],
+          "body": {
+            "stmts": [
+              {
+                "kind": "var",
+                "local": 2,
+                "value": {
+                  "kind": "const",
+                  "value": {
+                    "array": [
+                      {"f32": 1.0},
+                      {"f32": 2.0},
+                      {"f32": 3.0},
+                      {"f32": 4.0}
+                    ]
+                  },
+                  "type": "array<f32, 4>",
+                  "span": {"file": 0, "start": 813, "end": 833}
+                },
+                "span": {"file": 0, "start": 804, "end": 834}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 2,
+                    "name": "xs",
+                    "type": "array<f32, 4>",
+                    "span": {"file": 0, "start": 839, "end": 841}
+                  },
+                  "steps": [
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "const",
+                        "value": {"i32": 0},
+                        "type": "i32",
+                        "span": {"file": 0, "start": 842, "end": 843}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 839, "end": 844}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 839, "end": 844}
+                },
+                "op": "=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 10.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 847, "end": 851}
+                },
+                "span": {"file": 0, "start": 839, "end": 852}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 2,
+                    "name": "xs",
+                    "type": "array<f32, 4>",
+                    "span": {"file": 0, "start": 857, "end": 859}
+                  },
+                  "steps": [
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "i",
+                        "type": "i32",
+                        "span": {"file": 0, "start": 860, "end": 861}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 857, "end": 862}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 857, "end": 862}
+                },
+                "op": "=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 20.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 865, "end": 869}
+                },
+                "span": {"file": 0, "start": 857, "end": 870}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 2,
+                    "name": "xs",
+                    "type": "array<f32, 4>",
+                    "span": {"file": 0, "start": 875, "end": 877}
+                  },
+                  "steps": [
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "local",
+                        "local": 1,
+                        "name": "j",
+                        "type": "u32",
+                        "span": {"file": 0, "start": 878, "end": 879}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 875, "end": 880}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 875, "end": 880}
+                },
+                "op": "-=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 1.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 884, "end": 887}
+                },
+                "span": {"file": 0, "start": 875, "end": 888}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 2,
+                    "name": "xs",
+                    "type": "array<f32, 4>",
+                    "span": {"file": 0, "start": 893, "end": 895}
+                  },
+                  "steps": [
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "const",
+                        "value": {"i32": 3},
+                        "type": "i32",
+                        "span": {"file": 0, "start": 896, "end": 897}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 893, "end": 898}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 893, "end": 898}
+                },
+                "op": "/=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 2.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 902, "end": 905}
+                },
+                "span": {"file": 0, "start": 893, "end": 906}
+              },
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "local",
+                  "local": 2,
+                  "name": "xs",
+                  "type": "array<f32, 4>",
+                  "span": {"file": 0, "start": 918, "end": 920}
+                },
+                "span": {"file": 0, "start": 911, "end": 921}
+              }
+            ],
+            "span": {"file": 0, "start": 798, "end": 923}
+          },
+          "span": {"file": 0, "start": 753, "end": 923}
+        },
+        {
+          "kind": "function",
+          "name": "nested",
+          "symbol": "src/main.mtek::nested",
+          "effect": "pure",
+          "gpuReachable": false,
+          "cpuReachable": true,
+          "result": "src/main.mtek::Rig",
+          "locals": [
+            {
+              "index": 0,
+              "name": "i",
+              "type": "i32",
+              "kind": "param",
+              "span": {"file": 0, "start": 935, "end": 936}
+            },
+            {
+              "index": 1,
+              "name": "j",
+              "type": "u32",
+              "kind": "param",
+              "span": {"file": 0, "start": 943, "end": 944}
+            },
+            {
+              "index": 2,
+              "name": "rig",
+              "type": "src/main.mtek::Rig",
+              "kind": "var",
+              "span": {"file": 0, "start": 968, "end": 971}
+            }
+          ],
+          "body": {
+            "stmts": [
+              {
+                "kind": "var",
+                "local": 2,
+                "value": {
+                  "kind": "struct",
+                  "fields": [
+                    {
+                      "name": "probes",
+                      "value": {
+                        "kind": "array",
+                        "elements": [
+                          {
+                            "kind": "call",
+                            "function": "src/main.mtek::probe",
+                            "args": [
+                              {
+                                "kind": "const",
+                                "value": {"f32": 1.0},
+                                "type": "f32",
+                                "span": {"file": 0, "start": 995, "end": 998}
+                              }
+                            ],
+                            "type": "src/main.mtek::Probe",
+                            "span": {"file": 0, "start": 989, "end": 999}
+                          },
+                          {
+                            "kind": "call",
+                            "function": "src/main.mtek::probe",
+                            "args": [
+                              {
+                                "kind": "const",
+                                "value": {"f32": 2.0},
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1007, "end": 1010}
+                              }
+                            ],
+                            "type": "src/main.mtek::Probe",
+                            "span": {"file": 0, "start": 1001, "end": 1011}
+                          }
+                        ],
+                        "type": "array<src/main.mtek::Probe, 2>",
+                        "span": {"file": 0, "start": 988, "end": 1012}
+                      }
+                    },
+                    {
+                      "name": "grid",
+                      "value": {
+                        "kind": "const",
+                        "value": {
+                          "array": [
+                            {
+                              "array": [
+                                {"i32": 1},
+                                {"i32": 2}
+                              ]
+                            },
+                            {
+                              "array": [
+                                {"i32": 3},
+                                {"i32": 4}
+                              ]
+                            }
+                          ]
+                        },
+                        "type": "array<array<i32, 2>, 2>",
+                        "span": {"file": 0, "start": 1020, "end": 1036}
+                      }
+                    }
+                  ],
+                  "type": "src/main.mtek::Rig",
+                  "span": {"file": 0, "start": 974, "end": 1038}
+                },
+                "span": {"file": 0, "start": 964, "end": 1039}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 2,
+                    "name": "rig",
+                    "type": "src/main.mtek::Rig",
+                    "span": {"file": 0, "start": 1044, "end": 1047}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "probes",
+                      "index": 0,
+                      "type": "array<src/main.mtek::Probe, 2>",
+                      "span": {"file": 0, "start": 1044, "end": 1054}
+                    },
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "i",
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1055, "end": 1056}
+                      },
+                      "type": "src/main.mtek::Probe",
+                      "span": {"file": 0, "start": 1044, "end": 1057}
+                    },
+                    {
+                      "kind": "field",
+                      "field": "offset",
+                      "index": 0,
+                      "type": "vec3",
+                      "span": {"file": 0, "start": 1044, "end": 1064}
+                    },
+                    {
+                      "kind": "component",
+                      "component": 0,
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1044, "end": 1066}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1044, "end": 1066}
+                },
+                "op": "+=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 1.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1070, "end": 1073}
+                },
+                "span": {"file": 0, "start": 1044, "end": 1074}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 2,
+                    "name": "rig",
+                    "type": "src/main.mtek::Rig",
+                    "span": {"file": 0, "start": 1079, "end": 1082}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "probes",
+                      "index": 0,
+                      "type": "array<src/main.mtek::Probe, 2>",
+                      "span": {"file": 0, "start": 1079, "end": 1089}
+                    },
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "const",
+                        "value": {"i32": 1},
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1090, "end": 1091}
+                      },
+                      "type": "src/main.mtek::Probe",
+                      "span": {"file": 0, "start": 1079, "end": 1092}
+                    },
+                    {
+                      "kind": "field",
+                      "field": "samples",
+                      "index": 3,
+                      "type": "array<f32, 4>",
+                      "span": {"file": 0, "start": 1079, "end": 1100}
+                    },
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "local",
+                        "local": 1,
+                        "name": "j",
+                        "type": "u32",
+                        "span": {"file": 0, "start": 1101, "end": 1102}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1079, "end": 1103}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1079, "end": 1103}
+                },
+                "op": "=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 7.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1106, "end": 1109}
+                },
+                "span": {"file": 0, "start": 1079, "end": 1110}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 2,
+                    "name": "rig",
+                    "type": "src/main.mtek::Rig",
+                    "span": {"file": 0, "start": 1115, "end": 1118}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "probes",
+                      "index": 0,
+                      "type": "array<src/main.mtek::Probe, 2>",
+                      "span": {"file": 0, "start": 1115, "end": 1125}
+                    },
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "const",
+                        "value": {"i32": 0},
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1126, "end": 1127}
+                      },
+                      "type": "src/main.mtek::Probe",
+                      "span": {"file": 0, "start": 1115, "end": 1128}
+                    }
+                  ],
+                  "type": "src/main.mtek::Probe",
+                  "span": {"file": 0, "start": 1115, "end": 1128}
+                },
+                "op": "=",
+                "value": {
+                  "kind": "call",
+                  "function": "src/main.mtek::fields",
+                  "args": [
+                    {
+                      "kind": "const",
+                      "value": {"f32": 3.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1138, "end": 1141}
+                    }
+                  ],
+                  "type": "src/main.mtek::Probe",
+                  "span": {"file": 0, "start": 1131, "end": 1142}
+                },
+                "span": {"file": 0, "start": 1115, "end": 1143}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 2,
+                    "name": "rig",
+                    "type": "src/main.mtek::Rig",
+                    "span": {"file": 0, "start": 1148, "end": 1151}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "grid",
+                      "index": 1,
+                      "type": "array<array<i32, 2>, 2>",
+                      "span": {"file": 0, "start": 1148, "end": 1156}
+                    },
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "i",
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1157, "end": 1158}
+                      },
+                      "type": "array<i32, 2>",
+                      "span": {"file": 0, "start": 1148, "end": 1159}
+                    },
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "local",
+                        "local": 1,
+                        "name": "j",
+                        "type": "u32",
+                        "span": {"file": 0, "start": 1160, "end": 1161}
+                      },
+                      "type": "i32",
+                      "span": {"file": 0, "start": 1148, "end": 1162}
+                    }
+                  ],
+                  "type": "i32",
+                  "span": {"file": 0, "start": 1148, "end": 1162}
+                },
+                "op": "+=",
+                "value": {
+                  "kind": "const",
+                  "value": {"i32": 10},
+                  "type": "i32",
+                  "span": {"file": 0, "start": 1166, "end": 1168}
+                },
+                "span": {"file": 0, "start": 1148, "end": 1169}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 2,
+                    "name": "rig",
+                    "type": "src/main.mtek::Rig",
+                    "span": {"file": 0, "start": 1174, "end": 1177}
+                  },
+                  "steps": [
+                    {
+                      "kind": "field",
+                      "field": "grid",
+                      "index": 1,
+                      "type": "array<array<i32, 2>, 2>",
+                      "span": {"file": 0, "start": 1174, "end": 1182}
+                    },
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "const",
+                        "value": {"i32": 1},
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1183, "end": 1184}
+                      },
+                      "type": "array<i32, 2>",
+                      "span": {"file": 0, "start": 1174, "end": 1185}
+                    }
+                  ],
+                  "type": "array<i32, 2>",
+                  "span": {"file": 0, "start": 1174, "end": 1185}
+                },
+                "op": "=",
+                "value": {
+                  "kind": "const",
+                  "value": {
+                    "array": [
+                      {"i32": 5},
+                      {"i32": 6}
+                    ]
+                  },
+                  "type": "array<i32, 2>",
+                  "span": {"file": 0, "start": 1188, "end": 1194}
+                },
+                "span": {"file": 0, "start": 1174, "end": 1195}
+              },
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "local",
+                  "local": 2,
+                  "name": "rig",
+                  "type": "src/main.mtek::Rig",
+                  "span": {"file": 0, "start": 1207, "end": 1210}
+                },
+                "span": {"file": 0, "start": 1200, "end": 1211}
+              }
+            ],
+            "span": {"file": 0, "start": 958, "end": 1213}
+          },
+          "span": {"file": 0, "start": 925, "end": 1213}
+        },
+        {
+          "kind": "function",
+          "name": "vectors",
+          "symbol": "src/main.mtek::vectors",
+          "effect": "pure",
+          "gpuReachable": false,
+          "cpuReachable": true,
+          "result": "array<vec3, 3>",
+          "locals": [
+            {
+              "index": 0,
+              "name": "i",
+              "type": "i32",
+              "kind": "param",
+              "span": {"file": 0, "start": 1226, "end": 1227}
+            },
+            {
+              "index": 1,
+              "name": "vs",
+              "type": "array<vec3, 3>",
+              "kind": "var",
+              "span": {"file": 0, "start": 1262, "end": 1264}
+            }
+          ],
+          "body": {
+            "stmts": [
+              {
+                "kind": "var",
+                "local": 1,
+                "value": {
+                  "kind": "const",
+                  "value": {
+                    "array": [
+                      {
+                        "vec3": [0.0, 0.0, 0.0]
+                      },
+                      {
+                        "vec3": [1.0, 1.0, 1.0]
+                      },
+                      {
+                        "vec3": [2.0, 2.0, 2.0]
+                      }
+                    ]
+                  },
+                  "type": "array<vec3, 3>",
+                  "span": {"file": 0, "start": 1267, "end": 1300}
+                },
+                "span": {"file": 0, "start": 1258, "end": 1301}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 1,
+                    "name": "vs",
+                    "type": "array<vec3, 3>",
+                    "span": {"file": 0, "start": 1306, "end": 1308}
+                  },
+                  "steps": [
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "i",
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1309, "end": 1310}
+                      },
+                      "type": "vec3",
+                      "span": {"file": 0, "start": 1306, "end": 1311}
+                    },
+                    {
+                      "kind": "component",
+                      "component": 2,
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1306, "end": 1313}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1306, "end": 1313}
+                },
+                "op": "=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 9.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1316, "end": 1319}
+                },
+                "span": {"file": 0, "start": 1306, "end": 1320}
+              },
+              {
+                "kind": "assign",
+                "target": {
+                  "root": {
+                    "kind": "local",
+                    "local": 1,
+                    "name": "vs",
+                    "type": "array<vec3, 3>",
+                    "span": {"file": 0, "start": 1325, "end": 1327}
+                  },
+                  "steps": [
+                    {
+                      "kind": "index",
+                      "index": {
+                        "kind": "const",
+                        "value": {"i32": 2},
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1328, "end": 1329}
+                      },
+                      "type": "vec3",
+                      "span": {"file": 0, "start": 1325, "end": 1330}
+                    }
+                  ],
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 1325, "end": 1330}
+                },
+                "op": "*=",
+                "value": {
+                  "kind": "const",
+                  "value": {"f32": 2.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1334, "end": 1337}
+                },
+                "span": {"file": 0, "start": 1325, "end": 1338}
+              },
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "local",
+                  "local": 1,
+                  "name": "vs",
+                  "type": "array<vec3, 3>",
+                  "span": {"file": 0, "start": 1350, "end": 1352}
+                },
+                "span": {"file": 0, "start": 1343, "end": 1353}
+              }
+            ],
+            "span": {"file": 0, "start": 1252, "end": 1355}
+          },
+          "span": {"file": 0, "start": 1215, "end": 1355}
+        },
+        {
+          "kind": "material",
+          "name": "Stripes",
+          "symbol": "src/main.mtek::Stripes",
+          "params": [
+            {
+              "name": "index",
+              "type": "i32",
+              "default": {"i32": 1},
+              "span": {"file": 0, "start": 1380, "end": 1401}
+            }
+          ],
+          "layout": {
+            "id": "material:src/main.mtek::Stripes",
+            "wgslStruct": "MtekParams_e2cab98b_Stripes",
+            "size": 4,
+            "align": 4,
+            "root": {
+              "kind": "struct",
+              "name": "src/main.mtek::Stripes",
+              "offset": 0,
+              "size": 4,
+              "align": 4,
+              "members": [
+                {
+                  "name": "index",
+                  "mtekType": "i32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 0,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "i32"
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "src/main.mtek::Stripes.fragment",
+            "surfaceInputs": [
+              "uv"
+            ],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "input",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 0, "start": 1415, "end": 1420}
+              },
+              {
+                "index": 1,
+                "name": "rig",
+                "type": "src/main.mtek::Rig",
+                "kind": "var",
+                "span": {"file": 0, "start": 1459, "end": 1462}
+              },
+              {
+                "index": 2,
+                "name": "shade",
+                "type": "f32",
+                "kind": "var",
+                "span": {"file": 0, "start": 1690, "end": 1695}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "var",
+                  "local": 1,
+                  "value": {
+                    "kind": "struct",
+                    "fields": [
+                      {
+                        "name": "probes",
+                        "value": {
+                          "kind": "array",
+                          "elements": [
+                            {
+                              "kind": "call",
+                              "function": "src/main.mtek::probe",
+                              "args": [
+                                {
+                                  "kind": "const",
+                                  "value": {"f32": 1.0},
+                                  "type": "f32",
+                                  "span": {"file": 0, "start": 1486, "end": 1489}
+                                }
+                              ],
+                              "type": "src/main.mtek::Probe",
+                              "span": {"file": 0, "start": 1480, "end": 1490}
+                            },
+                            {
+                              "kind": "call",
+                              "function": "src/main.mtek::probe",
+                              "args": [
+                                {
+                                  "kind": "const",
+                                  "value": {"f32": 2.0},
+                                  "type": "f32",
+                                  "span": {"file": 0, "start": 1498, "end": 1501}
+                                }
+                              ],
+                              "type": "src/main.mtek::Probe",
+                              "span": {"file": 0, "start": 1492, "end": 1502}
+                            }
+                          ],
+                          "type": "array<src/main.mtek::Probe, 2>",
+                          "span": {"file": 0, "start": 1479, "end": 1503}
+                        }
+                      },
+                      {
+                        "name": "grid",
+                        "value": {
+                          "kind": "const",
+                          "value": {
+                            "array": [
+                              {
+                                "array": [
+                                  {"i32": 1},
+                                  {"i32": 2}
+                                ]
+                              },
+                              {
+                                "array": [
+                                  {"i32": 3},
+                                  {"i32": 4}
+                                ]
+                              }
+                            ]
+                          },
+                          "type": "array<array<i32, 2>, 2>",
+                          "span": {"file": 0, "start": 1511, "end": 1527}
+                        }
+                      }
+                    ],
+                    "type": "src/main.mtek::Rig",
+                    "span": {"file": 0, "start": 1465, "end": 1529}
+                  },
+                  "span": {"file": 0, "start": 1455, "end": 1530}
+                },
+                {
+                  "kind": "assign",
+                  "target": {
+                    "root": {
+                      "kind": "local",
+                      "local": 1,
+                      "name": "rig",
+                      "type": "src/main.mtek::Rig",
+                      "span": {"file": 0, "start": 1539, "end": 1542}
+                    },
+                    "steps": [
+                      {
+                        "kind": "field",
+                        "field": "probes",
+                        "index": 0,
+                        "type": "array<src/main.mtek::Probe, 2>",
+                        "span": {"file": 0, "start": 1539, "end": 1549}
+                      },
+                      {
+                        "kind": "index",
+                        "index": {
+                          "kind": "param",
+                          "param": 0,
+                          "name": "index",
+                          "type": "i32",
+                          "span": {"file": 0, "start": 1550, "end": 1555}
+                        },
+                        "type": "src/main.mtek::Probe",
+                        "span": {"file": 0, "start": 1539, "end": 1556}
+                      },
+                      {
+                        "kind": "field",
+                        "field": "weight",
+                        "index": 1,
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1539, "end": 1563}
+                      }
+                    ],
+                    "type": "f32",
+                    "span": {"file": 0, "start": 1539, "end": 1563}
+                  },
+                  "op": "=",
+                  "value": {
+                    "kind": "components",
+                    "base": {
+                      "kind": "field",
+                      "base": {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "input",
+                        "type": "SurfaceInput",
+                        "span": {"file": 0, "start": 1566, "end": 1571}
+                      },
+                      "field": "uv",
+                      "index": 3,
+                      "type": "vec2",
+                      "span": {"file": 0, "start": 1566, "end": 1574}
+                    },
+                    "components": [0],
+                    "type": "f32",
+                    "span": {"file": 0, "start": 1566, "end": 1576}
+                  },
+                  "span": {"file": 0, "start": 1539, "end": 1577}
+                },
+                {
+                  "kind": "assign",
+                  "target": {
+                    "root": {
+                      "kind": "local",
+                      "local": 1,
+                      "name": "rig",
+                      "type": "src/main.mtek::Rig",
+                      "span": {"file": 0, "start": 1586, "end": 1589}
+                    },
+                    "steps": [
+                      {
+                        "kind": "field",
+                        "field": "probes",
+                        "index": 0,
+                        "type": "array<src/main.mtek::Probe, 2>",
+                        "span": {"file": 0, "start": 1586, "end": 1596}
+                      },
+                      {
+                        "kind": "index",
+                        "index": {
+                          "kind": "param",
+                          "param": 0,
+                          "name": "index",
+                          "type": "i32",
+                          "span": {"file": 0, "start": 1597, "end": 1602}
+                        },
+                        "type": "src/main.mtek::Probe",
+                        "span": {"file": 0, "start": 1586, "end": 1603}
+                      },
+                      {
+                        "kind": "field",
+                        "field": "enabled",
+                        "index": 2,
+                        "type": "bool",
+                        "span": {"file": 0, "start": 1586, "end": 1611}
+                      }
+                    ],
+                    "type": "bool",
+                    "span": {"file": 0, "start": 1586, "end": 1611}
+                  },
+                  "op": "=",
+                  "value": {
+                    "kind": "binary",
+                    "op": ">",
+                    "lhs": {
+                      "kind": "components",
+                      "base": {
+                        "kind": "field",
+                        "base": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "input",
+                          "type": "SurfaceInput",
+                          "span": {"file": 0, "start": 1614, "end": 1619}
+                        },
+                        "field": "uv",
+                        "index": 3,
+                        "type": "vec2",
+                        "span": {"file": 0, "start": 1614, "end": 1622}
+                      },
+                      "components": [1],
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1614, "end": 1624}
+                    },
+                    "rhs": {
+                      "kind": "const",
+                      "value": {"f32": 0.5},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1627, "end": 1630}
+                    },
+                    "type": "bool",
+                    "span": {"file": 0, "start": 1614, "end": 1630}
+                  },
+                  "span": {"file": 0, "start": 1586, "end": 1631}
+                },
+                {
+                  "kind": "assign",
+                  "target": {
+                    "root": {
+                      "kind": "local",
+                      "local": 1,
+                      "name": "rig",
+                      "type": "src/main.mtek::Rig",
+                      "span": {"file": 0, "start": 1640, "end": 1643}
+                    },
+                    "steps": [
+                      {
+                        "kind": "field",
+                        "field": "probes",
+                        "index": 0,
+                        "type": "array<src/main.mtek::Probe, 2>",
+                        "span": {"file": 0, "start": 1640, "end": 1650}
+                      },
+                      {
+                        "kind": "index",
+                        "index": {
+                          "kind": "const",
+                          "value": {"i32": 0},
+                          "type": "i32",
+                          "span": {"file": 0, "start": 1651, "end": 1652}
+                        },
+                        "type": "src/main.mtek::Probe",
+                        "span": {"file": 0, "start": 1640, "end": 1653}
+                      },
+                      {
+                        "kind": "field",
+                        "field": "samples",
+                        "index": 3,
+                        "type": "array<f32, 4>",
+                        "span": {"file": 0, "start": 1640, "end": 1661}
+                      },
+                      {
+                        "kind": "index",
+                        "index": {
+                          "kind": "param",
+                          "param": 0,
+                          "name": "index",
+                          "type": "i32",
+                          "span": {"file": 0, "start": 1662, "end": 1667}
+                        },
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1640, "end": 1668}
+                      }
+                    ],
+                    "type": "f32",
+                    "span": {"file": 0, "start": 1640, "end": 1668}
+                  },
+                  "op": "+=",
+                  "value": {
+                    "kind": "const",
+                    "value": {"f32": 0.25},
+                    "type": "f32",
+                    "span": {"file": 0, "start": 1672, "end": 1676}
+                  },
+                  "span": {"file": 0, "start": 1640, "end": 1677}
+                },
+                {
+                  "kind": "var",
+                  "local": 2,
+                  "value": {
+                    "kind": "binary",
+                    "op": "+",
+                    "lhs": {
+                      "kind": "field",
+                      "base": {
+                        "kind": "index",
+                        "base": {
+                          "kind": "field",
+                          "base": {
+                            "kind": "local",
+                            "local": 1,
+                            "name": "rig",
+                            "type": "src/main.mtek::Rig",
+                            "span": {"file": 0, "start": 1698, "end": 1701}
+                          },
+                          "field": "probes",
+                          "index": 0,
+                          "type": "array<src/main.mtek::Probe, 2>",
+                          "span": {"file": 0, "start": 1698, "end": 1708}
+                        },
+                        "index": {
+                          "kind": "param",
+                          "param": 0,
+                          "name": "index",
+                          "type": "i32",
+                          "span": {"file": 0, "start": 1709, "end": 1714}
+                        },
+                        "type": "src/main.mtek::Probe",
+                        "span": {"file": 0, "start": 1698, "end": 1715}
+                      },
+                      "field": "weight",
+                      "index": 1,
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1698, "end": 1722}
+                    },
+                    "rhs": {
+                      "kind": "index",
+                      "base": {
+                        "kind": "field",
+                        "base": {
+                          "kind": "index",
+                          "base": {
+                            "kind": "field",
+                            "base": {
+                              "kind": "local",
+                              "local": 1,
+                              "name": "rig",
+                              "type": "src/main.mtek::Rig",
+                              "span": {"file": 0, "start": 1725, "end": 1728}
+                            },
+                            "field": "probes",
+                            "index": 0,
+                            "type": "array<src/main.mtek::Probe, 2>",
+                            "span": {"file": 0, "start": 1725, "end": 1735}
+                          },
+                          "index": {
+                            "kind": "const",
+                            "value": {"i32": 0},
+                            "type": "i32",
+                            "span": {"file": 0, "start": 1736, "end": 1737}
+                          },
+                          "type": "src/main.mtek::Probe",
+                          "span": {"file": 0, "start": 1725, "end": 1738}
+                        },
+                        "field": "samples",
+                        "index": 3,
+                        "type": "array<f32, 4>",
+                        "span": {"file": 0, "start": 1725, "end": 1746}
+                      },
+                      "index": {
+                        "kind": "const",
+                        "value": {"i32": 1},
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1747, "end": 1748}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1725, "end": 1749}
+                    },
+                    "type": "f32",
+                    "span": {"file": 0, "start": 1698, "end": 1749}
+                  },
+                  "span": {"file": 0, "start": 1686, "end": 1750}
+                },
+                {
+                  "kind": "if",
+                  "branches": [
+                    {
+                      "cond": {
+                        "kind": "field",
+                        "base": {
+                          "kind": "index",
+                          "base": {
+                            "kind": "field",
+                            "base": {
+                              "kind": "local",
+                              "local": 1,
+                              "name": "rig",
+                              "type": "src/main.mtek::Rig",
+                              "span": {"file": 0, "start": 1762, "end": 1765}
+                            },
+                            "field": "probes",
+                            "index": 0,
+                            "type": "array<src/main.mtek::Probe, 2>",
+                            "span": {"file": 0, "start": 1762, "end": 1772}
+                          },
+                          "index": {
+                            "kind": "param",
+                            "param": 0,
+                            "name": "index",
+                            "type": "i32",
+                            "span": {"file": 0, "start": 1773, "end": 1778}
+                          },
+                          "type": "src/main.mtek::Probe",
+                          "span": {"file": 0, "start": 1762, "end": 1779}
+                        },
+                        "field": "enabled",
+                        "index": 2,
+                        "type": "bool",
+                        "span": {"file": 0, "start": 1762, "end": 1787}
+                      },
+                      "body": {
+                        "stmts": [
+                          {
+                            "kind": "assign",
+                            "target": {
+                              "root": {
+                                "kind": "local",
+                                "local": 2,
+                                "name": "shade",
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1802, "end": 1807}
+                              },
+                              "steps": [],
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1802, "end": 1807}
+                            },
+                            "op": "*=",
+                            "value": {
+                              "kind": "const",
+                              "value": {"f32": 0.5},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1811, "end": 1814}
+                            },
+                            "span": {"file": 0, "start": 1802, "end": 1815}
+                          }
+                        ],
+                        "span": {"file": 0, "start": 1788, "end": 1825}
+                      }
+                    }
+                  ],
+                  "else": null,
+                  "span": {"file": 0, "start": 1759, "end": 1825}
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "builtin",
+                    "function": "color.linear",
+                    "args": [
+                      {
+                        "kind": "construct",
+                        "args": [
+                          {
+                            "kind": "local",
+                            "local": 2,
+                            "name": "shade",
+                            "type": "f32",
+                            "span": {"file": 0, "start": 1859, "end": 1864}
+                          }
+                        ],
+                        "type": "vec3",
+                        "span": {"file": 0, "start": 1854, "end": 1865}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1867, "end": 1870}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 0, "start": 1841, "end": 1871}
+                  },
+                  "span": {"file": 0, "start": 1834, "end": 1872}
+                }
+              ],
+              "span": {"file": 0, "start": 1445, "end": 1878}
+            },
+            "span": {"file": 0, "start": 1406, "end": 1878}
+          },
+          "span": {"file": 0, "start": 1357, "end": 1880}
+        },
+        {
+          "kind": "function",
+          "name": "reach_all",
+          "symbol": "src/main.mtek::reach_all",
+          "effect": "cpu",
+          "gpuReachable": false,
+          "cpuReachable": true,
+          "result": null,
+          "locals": [],
+          "body": {
+            "stmts": [
+              {
+                "kind": "expr",
+                "expr": {
+                  "kind": "call",
+                  "function": "src/main.mtek::fields",
+                  "args": [
+                    {
+                      "kind": "const",
+                      "value": {"f32": 1.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1914, "end": 1917}
+                    }
+                  ],
+                  "type": "src/main.mtek::Probe",
+                  "span": {"file": 0, "start": 1907, "end": 1918}
+                },
+                "span": {"file": 0, "start": 1907, "end": 1919}
+              },
+              {
+                "kind": "expr",
+                "expr": {
+                  "kind": "call",
+                  "function": "src/main.mtek::elements",
+                  "args": [
+                    {
+                      "kind": "const",
+                      "value": {"i32": 1},
+                      "type": "i32",
+                      "span": {"file": 0, "start": 1933, "end": 1934}
+                    },
+                    {
+                      "kind": "const",
+                      "value": {"u32": 2},
+                      "type": "u32",
+                      "span": {"file": 0, "start": 1936, "end": 1937}
+                    }
+                  ],
+                  "type": "array<f32, 4>",
+                  "span": {"file": 0, "start": 1924, "end": 1938}
+                },
+                "span": {"file": 0, "start": 1924, "end": 1939}
+              },
+              {
+                "kind": "expr",
+                "expr": {
+                  "kind": "call",
+                  "function": "src/main.mtek::nested",
+                  "args": [
+                    {
+                      "kind": "const",
+                      "value": {"i32": 0},
+                      "type": "i32",
+                      "span": {"file": 0, "start": 1951, "end": 1952}
+                    },
+                    {
+                      "kind": "const",
+                      "value": {"u32": 1},
+                      "type": "u32",
+                      "span": {"file": 0, "start": 1954, "end": 1955}
+                    }
+                  ],
+                  "type": "src/main.mtek::Rig",
+                  "span": {"file": 0, "start": 1944, "end": 1956}
+                },
+                "span": {"file": 0, "start": 1944, "end": 1957}
+              },
+              {
+                "kind": "expr",
+                "expr": {
+                  "kind": "call",
+                  "function": "src/main.mtek::vectors",
+                  "args": [
+                    {
+                      "kind": "const",
+                      "value": {"i32": 2},
+                      "type": "i32",
+                      "span": {"file": 0, "start": 1970, "end": 1971}
+                    }
+                  ],
+                  "type": "array<vec3, 3>",
+                  "span": {"file": 0, "start": 1962, "end": 1972}
+                },
+                "span": {"file": 0, "start": 1962, "end": 1973}
+              }
+            ],
+            "span": {"file": 0, "start": 1901, "end": 1975}
+          },
+          "span": {"file": 0, "start": 1882, "end": 1975}
+        },
+        {
+          "kind": "scene",
+          "name": "Demo",
+          "symbol": "src/main.mtek::Demo",
+          "span": {"file": 0, "start": 1977, "end": 2114},
+          "fields": {
+            "clearColor": {
+              "source": {
+                "const": {
+                  "color": [0.0, 0.0, 0.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 0, "start": 1977, "end": 2114}
+            }
+          },
+          "constants": [],
+          "cameras": [
+            {
+              "name": "Main",
+              "symbol": "src/main.mtek::Demo.Main",
+              "span": {"file": 0, "start": 1994, "end": 2008},
+              "active": true,
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.0, 5.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1994, "end": 2008}
+              },
+              "target": null,
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1994, "end": 2008}
+              },
+              "projection": {
+                "desc": {
+                  "kind": "perspective",
+                  "fovY": 0.9,
+                  "near": 0.1,
+                  "far": 1000.0
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1994, "end": 2008}
+              }
+            }
+          ],
+          "entities": [
+            {
+              "index": 0,
+              "name": "Panel",
+              "symbol": "src/main.mtek::Demo.Panel",
+              "parent": null,
+              "span": {"file": 0, "start": 2013, "end": 2112},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.0, 0.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 2013, "end": 2112}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 2013, "end": 2112}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 2013, "end": 2112}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 2013, "end": 2112}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "box",
+                  "size": [1.0, 1.0, 1.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 2036, "end": 2076}
+              },
+              "material": {
+                "material": "src/main.mtek::Stripes",
+                "params": [
+                  {
+                    "name": "index",
+                    "type": "i32",
+                    "source": {
+                      "const": {"i32": 1}
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 2085, "end": 2106}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 0, "start": 2085, "end": 2106}
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

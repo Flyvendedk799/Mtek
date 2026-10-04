@@ -1,0 +1,8 @@
+fn zeroed(xs: array<f32, 3>) -> array<f32, 3> {
+    xs[0] = 0.0;
+    return xs;
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -93,7 +93,8 @@ const ATOMS: &[&str] = &[
 ];
 
 const PLACES: &[&str] = &[
-    "x", "y", "v", "v.y", "v.xy", "p.a", "arr[0]", "K", "a0", "i", "q.x", "f0", "(x)",
+    "x", "y", "v", "v.y", "v.xy", "p.a", "p.v.z", "p.v.xy", "arr[0]", "arr[i]", "arr[x]", "arr[9]",
+    "arr[0].y", "K", "a0", "i", "q.x", "f0", "(x)", "f0().a",
 ];
 
 const ASSIGN_OPS: &[&str] = &["=", "+=", "-=", "*=", "/="];
@@ -260,7 +261,7 @@ fn valid_program(rng: &mut Rng) -> String {
         text.push_str(&format!("fn f{index}(x: f32) -> f32 {{\n"));
         for _ in 0..rng.below(6) {
             fresh += 1;
-            let line = match rng.below(6) {
+            let line = match rng.below(7) {
                 0 => format!("    let a{fresh} = x * 2.0 + 1.0;\n"),
                 1 => format!("    var t{fresh} = 0.0;\n    t{fresh} += x;\n"),
                 2 => format!(
@@ -268,6 +269,10 @@ fn valid_program(rng: &mut Rng) -> String {
                 ),
                 3 => "    if x > 1.0 {\n        return x;\n    }\n".to_owned(),
                 4 if index > 0 => format!("    let c{fresh} = f{}(x);\n", rng.below(index)),
+                // Element writes (decision 0045), one with a run-time index.
+                5 => format!(
+                    "    var w{fresh} = [x, 1.0, 2.0];\n    w{fresh}[1] = x;\n    w{fresh}[i32(x)] += 1.0;\n"
+                ),
                 _ => format!("    var v{fresh} = vec3(x);\n    v{fresh}.y = 2.0;\n"),
             };
             text.push_str(&line);
@@ -498,6 +503,54 @@ fn statements_nested_to_the_parser_limit_are_checked() {
             result.report.diagnostics.first().map(|d| d.code.short()),
             Some("E1050")
         );
+    });
+}
+
+#[test]
+fn long_place_chains_are_checked_lowered_and_emitted_for_both_domains() {
+    // Decision 0045: a place chain is walked with loops by the checker, the IR lowering and
+    // both emitters. Arrays nested 40 deep, written with constant and run-time indices (each
+    // clamped, the compound one hoisted into 40 temporaries), from a function a `cpu fn` and a
+    // material stage both reach; the shader validates with Naga.
+    let depth = 40;
+    let ty = (0..depth).fold("f32".to_owned(), |t, _| format!("array<{t}, 1>"));
+    let literal = (0..depth).fold("x".to_owned(), |e, _| format!("[{e}]"));
+    let constant = "[0]".repeat(depth);
+    let dynamic = "[i]".repeat(depth);
+    let text = format!(
+        "fn deep(x: f32, i: i32) -> f32 {{\n\
+         var a: {ty} = {literal};\n\
+         a{constant} = 2.0;\n\
+         a{dynamic} += x;\n\
+         a{dynamic} = a{constant} * 2.0;\n\
+         return a{constant};\n\
+         }}\n\
+         cpu fn root() -> f32 {{\n    return deep(0.5, 3);\n}}\n\
+         material Deep {{\n    param index: i32 = 0;\n\
+         \x20   fragment(input: SurfaceInput) -> color {{\n\
+         \x20       return color.linear(vec3(deep(input.uv.x, index)), 1.0);\n    }}\n}}\n\
+         scene Demo {{\n    camera Main {{}}\n    entity Panel {{\n\
+         \x20       mesh: Box {{ size: vec3(1.0, 1.0, 1.0) }};\n\
+         \x20       material: Deep {{}};\n    }}\n}}\n"
+    );
+    on_stack(STACK, "long place chains".to_owned(), move || {
+        let built = build(
+            &ProjectRoot::at_base(),
+            &project(&text),
+            &CompileOptions::with_stub_runtime(BuildMode::Release),
+        );
+        assert!(!built.has_errors(), "{:#?}", built.report);
+        let app = std::str::from_utf8(&built.files["app.js"]).unwrap();
+        // The plain dynamic write clamps inline, the compound one into temporaries.
+        assert_eq!(app.matches("rt.clampIndex(a_i, 1, ").count(), 2 * depth);
+        assert_eq!(app.matches("const t_").count(), depth);
+        let shader = built
+            .files
+            .iter()
+            .find(|(path, _)| path.ends_with(".wgsl"))
+            .map(|(_, bytes)| std::str::from_utf8(bytes).unwrap().to_owned())
+            .unwrap();
+        assert_eq!(shader.matches("let mtek_index_").count(), depth);
     });
 }
 

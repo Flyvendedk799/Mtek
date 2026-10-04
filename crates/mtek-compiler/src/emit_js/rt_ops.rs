@@ -14,8 +14,8 @@ use std::sync::OnceLock;
 
 /// The `rt` exports the emitter uses that implement no callee of the table
 /// (`RT_STRUCTURAL_EXPORTS` of the runtime): swizzles, single-component replacement, the
-/// colour's `.rgb`, a `mat4` column and index clamping.
-pub const STRUCTURAL_HELPERS: [&str; 9] = [
+/// colour's `.rgb`, a `mat4` column, index clamping and the value copy of assignable places.
+pub const STRUCTURAL_HELPERS: [&str; 10] = [
     "swizzle2",
     "swizzle3",
     "swizzle4",
@@ -25,6 +25,7 @@ pub const STRUCTURAL_HELPERS: [&str; 9] = [
     "crgb",
     "m4col",
     "clampIndex",
+    "copy",
 ];
 
 /// `"(a, b) -> r"`, the signature key of the table.

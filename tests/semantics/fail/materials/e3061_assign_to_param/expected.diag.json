@@ -4,7 +4,7 @@
     "file": "src/main.mtek",
     "startByte": 98,
     "endByte": 103,
-    "message": "Cannot assign to the param 'level'.",
+    "message": "Cannot assign to the material param 'level': params are read-only in the stage.",
     "related": [
       {
         "message": "the param 'level' is declared here",
@@ -12,6 +12,9 @@
         "startByte": 27,
         "endByte": 32
       }
+    ],
+    "notes": [
+      "help: copy it into a `var` local and assign to that"
     ]
   }
 ]

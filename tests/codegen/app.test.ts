@@ -158,6 +158,7 @@ function expectedCalls(ir: IrProgram): SetterCall[] {
 describe("the generated program module", () => {
   it("covers the M1 scene fixtures and the function fixtures", () => {
     expect(fixtures).toEqual([
+      "assignable_places",
       "cpu_functions",
       "numeric_cpu_table",
       "scene_a_target_camera_box",

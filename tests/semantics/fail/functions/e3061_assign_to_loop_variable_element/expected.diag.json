@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 98,
+    "endByte": 104,
+    "message": "Cannot assign to a part of the loop variable 'row': loop variables are immutable.",
+    "related": [
+      {
+        "message": "the loop variable 'row' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 76,
+        "endByte": 79
+      }
+    ],
+    "notes": [
+      "help: copy it into a `var` local and assign to that"
+    ]
+  }
+]

@@ -84,7 +84,7 @@ const execFixtures = codegenFixtures().filter((name) =>
 
 describe("exec.json: generated functions against the real runtime bundle", () => {
   it("covers the function fixtures", () => {
-    expect(execFixtures).toEqual(["cpu_functions", "numeric_cpu_table"]);
+    expect(execFixtures).toEqual(["assignable_places", "cpu_functions", "numeric_cpu_table"]);
   });
 
   for (const name of execFixtures) {

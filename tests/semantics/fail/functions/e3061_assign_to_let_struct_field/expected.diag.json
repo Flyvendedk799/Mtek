@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 111,
+    "endByte": 125,
+    "message": "Cannot assign to a part of the local 'copy': it is declared with `let`.",
+    "related": [
+      {
+        "message": "the local 'copy' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 97,
+        "endByte": 101
+      }
+    ],
+    "notes": [
+      "help: declare it with `var` to assign to it"
+    ]
+  }
+]

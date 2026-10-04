@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 119,
+    "endByte": 127,
+    "message": "Cannot assign to a part of the material param 'stops': params are read-only in the stage.",
+    "related": [
+      {
+        "message": "the param 'stops' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 26,
+        "endByte": 31
+      }
+    ],
+    "notes": [
+      "help: copy it into a `var` local and assign to that"
+    ]
+  }
+]

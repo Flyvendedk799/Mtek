@@ -1,0 +1,11 @@
+material Ramp {
+    param stops: array<f32, 3> = [0.0, 0.5, 1.0];
+    fragment(input: SurfaceInput) -> color {
+        stops[1] = 0.25;
+        return color.linear(vec3(stops[1]), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

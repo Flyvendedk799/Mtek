@@ -201,6 +201,39 @@ describe("integer helpers", () => {
   });
 });
 
+describe("value copies of assignable places (decision 0045)", () => {
+  it("make every array and struct new, at every depth, and keep scalars and mat4 values", () => {
+    const m = rt.m4identity();
+    const value = {
+      items: [1, -0, 2.5],
+      probes: [{ offset: { x: 1, y: 2, z: 3 }, on: true, grid: [[1, 2], [3, 4]] }],
+      transform: m,
+      name: "probe",
+    };
+    const copied = rt.copy(value);
+    expect(copied).toEqual(value);
+    expect(Object.keys(copied)).toEqual(Object.keys(value));
+    expect(copied).not.toBe(value);
+    expect(copied.items).not.toBe(value.items);
+    expect(Object.is(copied.items[1], -0)).toBe(true);
+    expect(copied.probes).not.toBe(value.probes);
+    expect(copied.probes[0]).not.toBe(value.probes[0]);
+    expect(copied.probes[0]?.grid[1]).not.toBe(value.probes[0]?.grid[1]);
+    expect(copied.transform).toBe(m);
+    // Writing into the copy leaves the original as it was.
+    copied.items[0] = 9;
+    const probe = copied.probes[0];
+    if (probe === undefined) throw new Error("no probe");
+    probe.grid[0] = [7, 7];
+    probe.on = false;
+    expect(value.items[0]).toBe(1);
+    expect(value.probes[0]?.grid[0]).toEqual([1, 2]);
+    expect(value.probes[0]?.on).toBe(true);
+    expect(rt.copy(3.5)).toBe(3.5);
+    expect(rt.copy(false)).toBe(false);
+  });
+});
+
 describe("f32 intrinsics", () => {
   it("round halves to even, never like Math.round", () => {
     const cases: [number, number][] = [

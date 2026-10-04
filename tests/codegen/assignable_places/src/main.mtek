@@ -1,0 +1,184 @@
+// Assignable places on the CPU (spec/language.md 7.2, decision 0045): struct
+// fields and array elements of `var` locals are written in place, run-time
+// write indices are clamped like reads (W8030 once per call site), and a
+// variable written that way never shares storage with another variable, a
+// parameter, a constant or a caller. exec.json computes every expectation by
+// hand.
+
+struct Probe {
+    offset: vec3;
+    weight: f32;
+    enabled: bool;
+    samples: array<f32, 4>;
+}
+
+struct Rig {
+    probes: array<Probe, 2>;
+    grid: array<array<i32, 2>, 2>;
+}
+
+const BASE = [1.0, 2.0, 3.0, 4.0];
+
+const RIG = Rig {
+    probes: [
+        Probe { offset: vec3(1.0, 2.0, 3.0); weight: 0.5; enabled: true; samples: [0.0, 0.25, 0.5, 0.75] },
+        Probe { offset: vec3(-1.0, 0.0, 1.0); weight: 2.0; enabled: false; samples: [1.0, 2.0, 3.0, 4.0] }
+    ];
+    grid: [[1, 2], [3, 4]]
+};
+
+// Struct fields: plain, compound, a vector component of a field, a bool, an
+// element of an array field.
+fn field_writes(p: Probe, w: f32) -> Probe {
+    var q = p;
+    q.weight = w;
+    q.offset.y = 5.0;
+    q.enabled = !q.enabled;
+    q.samples[2] = w;
+    q.weight += 1.0;
+    return q;
+}
+
+// Array elements with run-time indices, clamped like reads.
+fn set_at(i: i32, v: f32) -> array<f32, 4> {
+    var xs = BASE;
+    xs[i] = v;
+    return xs;
+}
+
+fn set_at_u(i: u32, v: f32) -> array<f32, 4> {
+    var xs = BASE;
+    xs[i] = v;
+    return xs;
+}
+
+fn flags(i: i32) -> array<bool, 3> {
+    var f = [false, false, false];
+    f[i] = true;
+    return f;
+}
+
+// Nested places: fields and elements to any depth, a final component.
+fn nested(i: i32, j: u32) -> Rig {
+    var rig = RIG;
+    rig.probes[i].offset.x += 1.0;
+    rig.probes[1].samples[j] = 7.0;
+    rig.grid[i][j] += 10;
+    return rig;
+}
+
+// Compound assignment on elements and their components.
+fn compound(i: i32) -> array<vec3, 3> {
+    var vs = [vec3(1.0), vec3(2.0), vec3(3.0)];
+    vs[i].z += 0.5;
+    vs[i] *= 2.0;
+    vs[0].x -= 1.0;
+    vs[2] /= 4.0;
+    return vs;
+}
+
+// One call site clamps on several iterations: W8030 once.
+fn fill(n: i32) -> array<i32, 5> {
+    var out = [0, 0, 0, 0, 0];
+    for k in 0..n {
+        out[k] += k * k;
+    }
+    return out;
+}
+
+// Aliasing: `var a = b; a[0] = …;` leaves b unchanged.
+fn alias_var() -> array<f32, 4> {
+    var b = BASE;
+    var a = b;
+    a[0] = 100.0;
+    return b;
+}
+
+fn alias_both() -> f32 {
+    var b = BASE;
+    var a = b;
+    a[0] = 100.0;
+    b[1] = 50.0;
+    return a[0] + a[1] + b[0] + b[1];
+}
+
+fn alias_let(i: i32) -> f32 {
+    var a = BASE;
+    let snapshot = a;
+    a[i] = 0.0;
+    return snapshot[i] + a[i];
+}
+
+fn alias_nested() -> f32 {
+    var rig = RIG;
+    var p = rig.probes[0];
+    p.weight = 9.0;
+    rig.probes[1] = p;
+    p.samples[0] = 5.0;
+    return rig.probes[0].weight + rig.probes[1].weight + rig.probes[1].samples[0] + p.samples[0];
+}
+
+fn alias_param(xs: array<f32, 4>) -> array<f32, 4> {
+    var ys = xs;
+    ys[3] = -1.0;
+    return ys;
+}
+
+// `for x in xs` runs over the array as it was when the loop started.
+fn alias_for(i: i32) -> f32 {
+    var xs = BASE;
+    var sum = 0.0;
+    for x in xs {
+        xs[i] = 100.0;
+        sum += x;
+    }
+    return sum + xs[i];
+}
+
+fn keep(xs: array<f32, 2>) -> array<f32, 2> {
+    return xs;
+}
+
+fn alias_through_call() -> f32 {
+    let b = [1.0, 2.0];
+    var a = keep(b);
+    a[0] = 9.0;
+    return b[0] + a[0];
+}
+
+// Constants are never changed by a write into a copy, call after call.
+fn constant_across_calls(i: i32) -> f32 {
+    var a = BASE;
+    a[i] += 10.0;
+    return a[i];
+}
+
+fn rig_weight(w: f32) -> f32 {
+    var r = RIG;
+    r.probes[0].weight += w;
+    return r.probes[0].weight;
+}
+
+cpu fn reach_all() {
+    field_writes(RIG.probes[0], 0.0);
+    set_at(0, 0.0);
+    set_at_u(0, 0.0);
+    flags(0);
+    nested(0, 0);
+    compound(0);
+    fill(0);
+    alias_var();
+    alias_both();
+    alias_let(0);
+    alias_nested();
+    alias_param(BASE);
+    alias_for(0);
+    keep([0.0, 0.0]);
+    alias_through_call();
+    constant_across_calls(0);
+    rig_weight(0.0);
+}
+
+scene Places {
+    camera Main {}
+}

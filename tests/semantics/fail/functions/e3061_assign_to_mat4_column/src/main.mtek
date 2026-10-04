@@ -1,0 +1,9 @@
+fn moved(m: mat4) -> mat4 {
+    var n = m;
+    n[3] = vec4(1.0, 2.0, 3.0, 1.0);
+    return n;
+}
+
+scene Demo {
+    camera Main {}
+}

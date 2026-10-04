@@ -1,0 +1,9 @@
+fn tilted(qs: array<quat, 2>) -> array<quat, 2> {
+    var out = qs;
+    out[1].w = 1.0;
+    return out;
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 use super::lower::{Defect, Lowering};
 use super::model::{
     Block, Branch, Expr, ExprKind, Function, LocalItem, LocalKind, MaterialItem, MaterialParamItem,
-    NamedExpr, Place, StageItem, Stmt, Symbol, Value,
+    NamedExpr, Place, PlaceRoot, PlaceStep, StageItem, Stmt, Symbol, Value,
 };
 use crate::layout::{
     LayoutType, compute, material_layout_id, material_params_struct, qualified_name,
@@ -382,32 +382,100 @@ impl FnLowering<'_, '_> {
         })
     }
 
-    /// An assignment target: a `var` local or one component of a vector
-    /// place (the checker accepted nothing else).
+    /// An assignment target (decision 0045): a `var` local followed by struct fields,
+    /// array elements and at most one final vector component (the checker accepted
+    /// nothing else). The chain is walked from the outside in with a loop.
     fn place(&self, target: &ast::Expr) -> Result<Place, Defect> {
-        match &target.kind {
-            AstExpr::Paren(inner) => self.place(inner),
-            AstExpr::Name(_) => {
-                let local = self.local_of(target)?;
-                let ty = self
-                    .locals
-                    .get(local as usize)
-                    .map(|l| l.ty.clone())
-                    .unwrap_or_default();
-                Ok(Place::Local { local, ty })
-            }
-            AstExpr::Field { base, .. } => match self.lowering.types.field_kind(target.id) {
-                Some(FieldKind::Components(indices)) if indices.len() == 1 => {
-                    let index = indices.first().copied().unwrap_or(0);
-                    Ok(Place::Component {
-                        base: Box::new(self.place(base)?),
-                        index: u32::try_from(index).unwrap_or(0),
-                    })
+        let types = self.lowering.types;
+        let not_assignable = || self.defect("an assignment to a place that is not assignable");
+        let type_of = |expr: &ast::Expr| {
+            types
+                .ty(expr.id)
+                .filter(|t| !types.interner().is_error(*t))
+                .map(|t| self.display(t))
+                .ok_or_else(|| self.defect("a place without a type"))
+        };
+        let mut steps = Vec::new();
+        let mut current = target;
+        let root = loop {
+            match &current.kind {
+                AstExpr::Paren(inner) => current = inner,
+                AstExpr::Name(_) => {
+                    let local = self.local_of(current)?;
+                    let item = self
+                        .locals
+                        .get(local as usize)
+                        .ok_or_else(|| self.defect("a place of an undeclared local"))?;
+                    if item.kind != LocalKind::Var {
+                        return Err(not_assignable());
+                    }
+                    break PlaceRoot::Local {
+                        local,
+                        name: item.name.clone(),
+                        ty: item.ty.clone(),
+                        span: current.span,
+                    };
                 }
-                _ => Err(self.defect("an assignment to a place that is not assignable")),
-            },
-            _ => Err(self.defect("an assignment to a place that is not assignable")),
-        }
+                AstExpr::Field { base, name } => {
+                    let ty = type_of(current)?;
+                    match types.field_kind(current.id) {
+                        Some(FieldKind::Components(indices))
+                            if indices.len() == 1 && steps.is_empty() =>
+                        {
+                            let index = indices.first().copied().unwrap_or(0);
+                            steps.push(PlaceStep::Component {
+                                component: u32::try_from(index)
+                                    .map_err(|_| self.defect("a component out of range"))?,
+                                ty,
+                                span: current.span,
+                            });
+                        }
+                        Some(FieldKind::StructField(field)) => {
+                            let base_ty = types.ty(base.id).unwrap_or(TyId::ERROR);
+                            let index = types
+                                .interner()
+                                .struct_def(base_ty)
+                                .and_then(|def| def.fields.iter().position(|(f, _)| f == field))
+                                .and_then(|i| u32::try_from(i).ok())
+                                .ok_or_else(|| {
+                                    self.defect(&format!("an unknown field '{}'", name.name))
+                                })?;
+                            steps.push(PlaceStep::Field {
+                                field: field.clone(),
+                                index,
+                                ty,
+                                span: current.span,
+                            });
+                        }
+                        _ => return Err(not_assignable()),
+                    }
+                    current = base;
+                }
+                AstExpr::Index { base, index } => {
+                    let base_ty = types.ty(base.id).unwrap_or(TyId::ERROR);
+                    if !matches!(types.interner().get(base_ty), Ty::Array { .. }) {
+                        return Err(not_assignable());
+                    }
+                    steps.push(PlaceStep::Index {
+                        index: self.expr(index)?,
+                        ty: type_of(current)?,
+                        span: current.span,
+                    });
+                    current = base;
+                }
+                _ => return Err(not_assignable()),
+            }
+        };
+        steps.reverse();
+        let ty = steps
+            .last()
+            .map_or_else(|| root.ty().to_owned(), |step| step.ty().to_owned());
+        Ok(Place {
+            root,
+            steps,
+            ty,
+            span: target.span,
+        })
     }
 
     /// The material param a name refers to, in a stage.

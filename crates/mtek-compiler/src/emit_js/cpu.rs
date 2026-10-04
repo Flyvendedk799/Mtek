@@ -20,6 +20,10 @@
 //! - every other operation calls the `rt` helper of [`super::rt_ops`];
 //! - swizzles construct new values (`rt.swizzle3(v, "z", "y", "x")`, `rt.crgb(c)`); a
 //!   component assignment builds a new vector (`l_v = rt.v3with(l_v, "y", value)`);
+//! - struct fields and array elements of a `var` are written in place (decision 0045): such a
+//!   variable owns its storage, so a value stored into it is copied (`rt.copy`) unless it is
+//!   fresh, and an array or struct read out of it is copied before it is used elsewhere; every
+//!   other value is never changed once built and is shared freely;
 //! - a constant index reads directly (it is in range, `E3030`), a run-time index goes through
 //!   `rt.clampIndex(i, N, spanId, ctx)`, `spanId` being the index expression's entry in the
 //!   manifest `spans` table;
@@ -27,6 +31,8 @@
 //!   value ([`super::ast::Number`]).
 //!
 //! Every statement and expression carries its Mtek span into the source map.
+
+use std::collections::BTreeSet;
 
 use crate::ir::{self, Function, Item, LocalKind, Place, Program, Symbol};
 use crate::layout::naming::hash8;
@@ -86,6 +92,7 @@ pub fn emit_functions(
                 function,
                 temps: 0,
                 span_id: &mut *span_id,
+                owned: owned_vars(&function.body),
             };
             let body = lowering
                 .block(&function.body)
@@ -174,6 +181,73 @@ struct FnLowering<'f, 's> {
     /// Temporaries used so far (`t_0`, `t_1`, …).
     temps: u32,
     span_id: &'s mut dyn FnMut(Span) -> Result<u32, String>,
+    /// The `var` locals written through a field or element ([`owned_vars`]).
+    owned: BTreeSet<u32>,
+}
+
+/// Whether values of the IR type `ty` are JavaScript arrays or objects that an element or
+/// field write changes in place: arrays and structs (spelled by their symbol, decision 0041).
+fn is_aggregate(ty: &str) -> bool {
+    ty.starts_with("array<") || ty.contains("::")
+}
+
+/// The value of an index that folded to a constant (a negative one is never in range).
+fn constant_index(index: &ir::Expr) -> Option<u32> {
+    match &index.kind {
+        ir::ExprKind::Const {
+            value: ir::Value::I32(k),
+        } => Some(u32::try_from(*k).unwrap_or(u32::MAX)),
+        ir::ExprKind::Const {
+            value: ir::Value::U32(k),
+        } => Some(*k),
+        _ => None,
+    }
+}
+
+/// The `var` locals of `body` that some assignment writes through a field or an element
+/// (decision 0045). Each owns its storage: it is written in place, so whatever is stored into
+/// it is a value no other binding refers to (a copy unless it is fresh), and an array or
+/// struct read out of it is copied before it goes anywhere else. Every other value is never
+/// changed once built, so it is shared freely. Blocks nest no deeper than the parser allows.
+fn owned_vars(body: &ir::Block) -> BTreeSet<u32> {
+    fn visit(block: &ir::Block, out: &mut BTreeSet<u32>) {
+        for stmt in &block.stmts {
+            match stmt {
+                ir::Stmt::Assign { target, .. } => {
+                    let partial = target.steps.iter().any(|step| {
+                        matches!(
+                            step,
+                            ir::PlaceStep::Field { .. } | ir::PlaceStep::Index { .. }
+                        )
+                    });
+                    let ir::PlaceRoot::Local { local, .. } = &target.root;
+                    if partial {
+                        out.insert(*local);
+                    }
+                }
+                ir::Stmt::If {
+                    branches,
+                    otherwise,
+                    ..
+                } => {
+                    for branch in branches {
+                        visit(&branch.body, out);
+                    }
+                    if let Some(block) = otherwise {
+                        visit(block, out);
+                    }
+                }
+                ir::Stmt::ForRange { body, .. } | ir::Stmt::ForEach { body, .. } => {
+                    visit(body, out);
+                }
+                ir::Stmt::Block { body } => visit(body, out),
+                _ => {}
+            }
+        }
+    }
+    let mut out = BTreeSet::new();
+    visit(body, &mut out);
+    out
 }
 
 impl FnLowering<'_, '_> {
@@ -213,7 +287,11 @@ impl FnLowering<'_, '_> {
             },
             ir::Stmt::Var { local, value, span } => Stmt::Let {
                 name: self.local_ident(*local)?,
-                value: self.expr(value)?,
+                value: if self.owned.contains(local) {
+                    self.stored(value)?
+                } else {
+                    self.expr(value)?
+                },
                 span: Some(*span),
             },
             // Its uses are folded; nothing to emit.
@@ -274,8 +352,9 @@ impl FnLowering<'_, '_> {
                 body: self.block(body)?,
                 span: Some(*span),
             },
+            // The function's variables end here: returned owned storage needs no copy.
             ir::Stmt::Return { value, span } => Stmt::Return {
-                value: value.as_ref().map(|v| self.expr(v)).transpose()?,
+                value: value.as_ref().map(|v| self.value(v)).transpose()?,
                 span: Some(*span),
             },
             ir::Stmt::Break { span } => Stmt::Break { span: Some(*span) },
@@ -290,8 +369,12 @@ impl FnLowering<'_, '_> {
         }))
     }
 
-    /// `target op= value`: `place = place op value` with the place evaluated once (a place is
-    /// a local or a component of one, so reading it twice evaluates nothing twice).
+    /// `target op= value` (decision 0045). The place is evaluated once, before the value: the
+    /// containers on its path (fields and elements, a run-time index clamped with
+    /// `rt.clampIndex` and the step's span) are written in place — the root is an owned `var`
+    /// ([`owned_vars`]) — and a final vector component builds a new vector
+    /// (`rt.v3with`). Where the place is read as well as written (a compound assignment or a
+    /// component), each run-time index is computed once into a temporary first.
     fn assign(
         &mut self,
         target: &Place,
@@ -299,10 +382,76 @@ impl FnLowering<'_, '_> {
         value: &ir::Expr,
         span: Span,
     ) -> Result<Stmt, String> {
-        let place_ty = self.place_ty(target)?;
-        let lowered = self.expr(value)?;
+        let (containers, component) = match target.steps.split_last() {
+            Some((
+                ir::PlaceStep::Component {
+                    component, span, ..
+                },
+                rest,
+            )) => (rest, Some((*component, *span))),
+            _ => (target.steps.as_slice(), None),
+        };
+        let reads_place = op != "=" || component.is_some();
+        let ir::PlaceRoot::Local {
+            local,
+            ty: root_ty,
+            span: root_span,
+            ..
+        } = &target.root;
+        let owned = self.owned.contains(local);
+        let mut prelude = Vec::new();
+        let mut path = Expr::Ident(self.local_ident(*local)?).spanned(*root_span);
+        let mut path_ty = root_ty.as_str();
+        for step in containers {
+            path = match step {
+                ir::PlaceStep::Field { field, .. } => path.member(field),
+                ir::PlaceStep::Index { index, span, .. } => {
+                    let length = indexed_length(path_ty)
+                        .filter(|_| path_ty != "mat4")
+                        .ok_or_else(|| {
+                            format!("an element write into a value of type {path_ty}")
+                        })?;
+                    let position = match constant_index(index) {
+                        Some(k) if k < length => Expr::Num(Number::U32(k)).spanned(index.span),
+                        Some(k) => {
+                            return Err(format!(
+                                "the constant index {k} into {path_ty} is out of range"
+                            ));
+                        }
+                        None => {
+                            let clamped = self.clamped(index, length, *span)?;
+                            if reads_place {
+                                let name = self.temp();
+                                prelude.push(Stmt::Const {
+                                    name: name.clone(),
+                                    value: clamped,
+                                    span: Some(*span),
+                                });
+                                Expr::Ident(name)
+                            } else {
+                                clamped
+                            }
+                        }
+                    };
+                    Expr::Subscript(Box::new(path), Box::new(position))
+                }
+                ir::PlaceStep::Component { .. } => {
+                    return Err("a vector component before the last step of a place".to_owned());
+                }
+            }
+            .spanned(step.span());
+            path_ty = step.ty();
+        }
+        let current = match component {
+            Some((index, component_span)) => path
+                .clone()
+                .member(component_key(path_ty, index)?)
+                .spanned(component_span),
+            None => path.clone(),
+        };
         let new_value = match op {
-            "=" => lowered,
+            "=" if owned && is_aggregate(&value.ty) => self.stored(value)?,
+            "=" => self.expr(value)?,
             "+=" | "-=" | "*=" | "/=" => {
                 let binary: &'static str = match op {
                     "+=" => "+",
@@ -310,64 +459,118 @@ impl FnLowering<'_, '_> {
                     "*=" => "*",
                     _ => "/",
                 };
-                let current = self.read_place(target)?;
-                binary_op(binary, &place_ty, &value.ty, &place_ty, current, lowered)?.spanned(span)
+                let lowered = self.expr(value)?;
+                binary_op(binary, &target.ty, &value.ty, &target.ty, current, lowered)?
+                    .spanned(span)
             }
             other => return Err(format!("the assignment operator '{other}'")),
         };
-        self.write_place(target, new_value, span)
-    }
-
-    fn place_ty(&self, place: &Place) -> Result<String, String> {
-        match place {
-            Place::Local { local, .. } => Ok(self.local(*local)?.ty.clone()),
-            Place::Component { .. } => Ok("f32".to_owned()),
-        }
-    }
-
-    fn read_place(&self, place: &Place) -> Result<Expr, String> {
-        match place {
-            Place::Local { local, .. } => Ok(Expr::Ident(self.local_ident(*local)?)),
-            Place::Component { base, index } => {
-                let base_ty = self.place_ty(base)?;
-                let key = component_key(&base_ty, *index)?;
-                Ok(self.read_place(base)?.member(key))
-            }
-        }
-    }
-
-    /// `place = value`; a component builds a new vector and assigns it to its base.
-    fn write_place(&self, place: &Place, value: Expr, span: Span) -> Result<Stmt, String> {
-        match place {
-            Place::Local { local, .. } => Ok(Stmt::Assign {
-                target: Expr::Ident(self.local_ident(*local)?),
-                value,
-                span: Some(span),
-            }),
-            Place::Component { base, index } => {
-                let base_ty = self.place_ty(base)?;
-                let helper = match base_ty.as_str() {
+        let new_value = match component {
+            Some((index, component_span)) => {
+                let helper = match path_ty {
                     "vec2" => "v2with",
                     "vec3" => "v3with",
                     "vec4" => "v4with",
                     other => return Err(format!("a component assignment to a {other}")),
                 };
-                let key = component_key(&base_ty, *index)?;
-                let rebuilt = rt(
-                    helper,
-                    vec![self.read_place(base)?, Expr::string(key), value],
-                );
-                self.write_place(base, rebuilt.spanned(span), span)
+                let key = component_key(path_ty, index)?;
+                rt(helper, vec![path.clone(), Expr::string(key), new_value]).spanned(component_span)
+            }
+            None => new_value,
+        };
+        let assign = Stmt::Assign {
+            target: path,
+            value: new_value,
+            span: Some(span),
+        };
+        if prelude.is_empty() {
+            return Ok(assign);
+        }
+        prelude.push(assign);
+        Ok(Stmt::Block { body: prelude })
+    }
+
+    /// `rt.clampIndex(index, length, spanId, ctx)`, `spanId` naming the indexing `site`.
+    fn clamped(&mut self, index: &ir::Expr, length: u32, site: Span) -> Result<Expr, String> {
+        let span_id = (self.span_id)(site)?;
+        let position = self.expr(index)?;
+        Ok(rt(
+            "clampIndex",
+            vec![
+                position,
+                Expr::Num(Number::U32(length)),
+                Expr::Num(Number::U32(span_id)),
+                Expr::ident("ctx"),
+            ],
+        ))
+    }
+
+    /// Whether `expr` reads (part of) an owned `var` ([`owned_vars`]) through fields and
+    /// elements only, so that its value is that variable's storage.
+    fn reads_owned(&self, expr: &ir::Expr) -> bool {
+        let mut current = expr;
+        loop {
+            match &current.kind {
+                ir::ExprKind::Field { base, .. } | ir::ExprKind::Index { base, .. } => {
+                    current = base;
+                }
+                ir::ExprKind::Local { local, .. } => return self.owned.contains(local),
+                _ => return false,
             }
         }
+    }
+
+    /// Whether the value of `expr` is an array or struct that shares storage with an owned
+    /// `var`, so that it must be copied before it is used anywhere else (decision 0045).
+    fn escapes_owned(&self, expr: &ir::Expr) -> bool {
+        is_aggregate(&expr.ty) && self.reads_owned(expr)
+    }
+
+    /// Whether the JavaScript of `expr` is a new value no other binding refers to: a constant
+    /// (emitted as a literal, so each evaluation builds a new one), a copy of an owned
+    /// variable's storage, or a literal whose array and struct parts all are.
+    fn fresh(&self, expr: &ir::Expr) -> bool {
+        match &expr.kind {
+            ir::ExprKind::Const { .. } => true,
+            ir::ExprKind::Array { elements } => elements
+                .iter()
+                .all(|e| !is_aggregate(&e.ty) || self.fresh(e)),
+            ir::ExprKind::Struct { fields } => fields
+                .iter()
+                .all(|f| !is_aggregate(&f.value.ty) || self.fresh(&f.value)),
+            _ => self.escapes_owned(expr),
+        }
+    }
+
+    /// A value about to be stored into an owned `var` (its initialiser, a whole assignment or
+    /// an element or field of it): copied with `rt.copy` unless it is fresh.
+    fn stored(&mut self, value: &ir::Expr) -> Result<Expr, String> {
+        let lowered = self.expr(value)?;
+        if !is_aggregate(&value.ty) || self.fresh(value) {
+            return Ok(lowered);
+        }
+        Ok(rt("copy", vec![lowered]).spanned(value.span))
     }
 
     fn exprs(&mut self, items: &[ir::Expr]) -> Result<Vec<Expr>, String> {
         items.iter().map(|item| self.expr(item)).collect()
     }
 
-    /// The JavaScript of `expr`, mapped to its span.
+    /// The JavaScript of `expr`, mapped to its span; an array or struct read out of an owned
+    /// `var` is copied (`rt.copy`), so that the variable's later in-place writes never reach
+    /// it (decision 0045).
     fn expr(&mut self, expr: &ir::Expr) -> Result<Expr, String> {
+        let lowered = self.value(expr)?;
+        if self.escapes_owned(expr) {
+            return Ok(rt("copy", vec![lowered]).spanned(expr.span));
+        }
+        Ok(lowered)
+    }
+
+    /// The JavaScript of `expr` without the copy of [`Self::expr`]: for the base of a field,
+    /// element or component read, and for a returned value (the function's variables end
+    /// with it).
+    fn value(&mut self, expr: &ir::Expr) -> Result<Expr, String> {
         let ty = expr.ty.as_str();
         let lowered = match &expr.kind {
             ir::ExprKind::Const { value } => value_expr(value)?,
@@ -408,25 +611,16 @@ impl FnLowering<'_, '_> {
                 convert(&arg.ty, ty, inner)?
             }
             ir::ExprKind::Components { base, components } => {
-                let inner = self.expr(base)?;
+                let inner = self.value(base)?;
                 swizzle(&base.ty, components, inner)?
             }
-            ir::ExprKind::Field { base, field, .. } => self.expr(base)?.member(field),
+            ir::ExprKind::Field { base, field, .. } => self.value(base)?.member(field),
             ir::ExprKind::Index { base, index } => {
                 let length = indexed_length(&base.ty)
                     .ok_or_else(|| format!("an index into a value of type {}", base.ty))?;
-                let object = self.expr(base)?;
-                let constant = match &index.kind {
-                    ir::ExprKind::Const {
-                        value: ir::Value::I32(k),
-                    } => u32::try_from(*k).ok(),
-                    ir::ExprKind::Const {
-                        value: ir::Value::U32(k),
-                    } => Some(*k),
-                    _ => None,
-                };
+                let object = self.value(base)?;
                 let is_matrix = base.ty == "mat4";
-                match constant {
+                match constant_index(index) {
                     Some(k) if k < length => {
                         let position = Expr::Num(Number::U32(k)).spanned(index.span);
                         if is_matrix {
@@ -442,17 +636,7 @@ impl FnLowering<'_, '_> {
                         ));
                     }
                     None => {
-                        let span_id = (self.span_id)(expr.span)?;
-                        let position = self.expr(index)?;
-                        let clamped = rt(
-                            "clampIndex",
-                            vec![
-                                position,
-                                Expr::Num(Number::U32(length)),
-                                Expr::Num(Number::U32(span_id)),
-                                Expr::ident("ctx"),
-                            ],
-                        );
+                        let clamped = self.clamped(index, length, expr.span)?;
                         if is_matrix {
                             rt("m4col", vec![object, clamped])
                         } else {
@@ -649,10 +833,25 @@ mod tests {
         fn block(b: &ir::Block, out: &mut Vec<Span>) {
             for s in &b.stmts {
                 match s {
-                    ir::Stmt::Let { value, span, .. }
-                    | ir::Stmt::Var { value, span, .. }
-                    | ir::Stmt::Assign { value, span, .. } => {
+                    ir::Stmt::Let { value, span, .. } | ir::Stmt::Var { value, span, .. } => {
                         out.push(*span);
+                        expr(value, out);
+                    }
+                    ir::Stmt::Assign {
+                        target,
+                        value,
+                        span,
+                        ..
+                    } => {
+                        out.push(*span);
+                        let ir::PlaceRoot::Local { span: root, .. } = &target.root;
+                        out.push(*root);
+                        for step in &target.steps {
+                            out.push(step.span());
+                            if let ir::PlaceStep::Index { index, .. } = step {
+                                expr(index, out);
+                            }
+                        }
                         expr(value, out);
                     }
                     ir::Stmt::Const { .. } => {}
@@ -751,6 +950,10 @@ mod tests {
                 include_str!(
                     "../../../../tests/semantics/pass/functions_statements_and_calls/src/main.mtek"
                 ),
+            )]),
+            program_of(&[(
+                "src/main.mtek",
+                include_str!("../../../../tests/codegen/assignable_places/src/main.mtek"),
             )]),
         ];
         let mut checked = 0;

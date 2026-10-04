@@ -27,13 +27,15 @@ use serde_json::Value;
 
 /// The fixtures with IR goldens: pass scenes A and B of M1-11, the
 /// function bodies of M2-02 and the materials of M2-04 (a group fixture
-/// `materials/pulse` has the golden `materials_pulse.ir.json`).
-const GOLDEN_FIXTURES: [&str; 5] = [
+/// `materials/pulse` has the golden `materials_pulse.ir.json`) and the assignable
+/// places of M2-13 (decision 0045).
+const GOLDEN_FIXTURES: [&str; 6] = [
     "scene_a_target_camera_box",
     "scene_b_orthographic_nested",
     "functions_statements_and_calls",
     "materials/pulse",
     "materials/params_and_defaults",
+    "functions/assignable_places",
 ];
 
 /// The file name stem of the golden of `fixture`.

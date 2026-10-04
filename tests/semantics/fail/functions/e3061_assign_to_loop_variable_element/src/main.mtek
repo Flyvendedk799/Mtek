@@ -1,0 +1,12 @@
+fn total(rows: array<array<f32, 2>, 3>) -> f32 {
+    var sum = 0.0;
+    for row in rows {
+        row[1] = 0.0;
+        sum += row[0];
+    }
+    return sum;
+}
+
+scene Demo {
+    camera Main {}
+}

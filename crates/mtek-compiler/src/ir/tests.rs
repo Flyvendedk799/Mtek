@@ -465,3 +465,73 @@ scene Demo { camera Main {} }
     assert_eq!(function.as_str(), "src/lib.mtek::ease");
     assert_eq!(args.len(), 1);
 }
+
+#[test]
+fn places_are_a_root_and_steps_each_spanning_its_own_text() {
+    // Decision 0045: `rig.items[i].offset.y` is the root `rig` and the steps `.items`,
+    // `[i]`, `.offset`, `.y`, typed, each spanning the text from the root to its end.
+    let source = "struct Item { offset: vec3; }
+struct Rig { items: array<Item, 2>; }
+fn f(i: i32) -> Rig {
+    var rig = Rig { items: [Item { offset: vec3(0.0) }, Item { offset: vec3(1.0) }] };
+    rig.items[i].offset.y = 2.0;
+    rig.items[1 + 0].offset += vec3(1.0);
+    return rig;
+}
+scene Demo { camera Main {} }
+";
+    let program = lowered(source).unwrap();
+    let f = functions(&program)
+        .into_iter()
+        .find(|f| f.name == "f")
+        .unwrap();
+    let places: Vec<&Place> = f
+        .body
+        .stmts
+        .iter()
+        .filter_map(|s| match s {
+            Stmt::Assign { target, .. } => Some(target),
+            _ => None,
+        })
+        .collect();
+    let text = |span: crate::source::Span| &source[span.range()];
+    let [first, second] = places.as_slice() else {
+        panic!("{places:?}");
+    };
+    let PlaceRoot::Local { name, ty, span, .. } = &first.root;
+    assert_eq!((name.as_str(), text(*span)), ("rig", "rig"));
+    assert_eq!(ty, "src/main.mtek::Rig");
+    let steps: Vec<(&str, &str)> = first
+        .steps
+        .iter()
+        .map(|s| (text(s.span()), s.ty()))
+        .collect();
+    assert_eq!(
+        steps,
+        [
+            ("rig.items", "array<src/main.mtek::Item, 2>"),
+            ("rig.items[i]", "src/main.mtek::Item"),
+            ("rig.items[i].offset", "vec3"),
+            ("rig.items[i].offset.y", "f32"),
+        ]
+    );
+    assert!(matches!(
+        &first.steps[1],
+        PlaceStep::Index { index, .. } if matches!(index.kind, ExprKind::Local { .. })
+    ));
+    assert!(matches!(
+        &first.steps[3],
+        PlaceStep::Component { component: 1, .. }
+    ));
+    assert_eq!(
+        (first.ty.as_str(), text(first.span)),
+        ("f32", "rig.items[i].offset.y")
+    );
+    // A constant index is folded.
+    assert!(matches!(
+        &second.steps[1],
+        PlaceStep::Index { index, .. }
+            if index.kind == (ExprKind::Const { value: Value::I32(1) })
+    ));
+    assert_eq!(second.ty, "vec3");
+}

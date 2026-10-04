@@ -195,8 +195,22 @@ fn stmt(s: &Stmt, out: &mut Expected) {
             expr(value, out);
         }
         Stmt::Const { .. } => {}
-        Stmt::Assign { value, span, .. } => {
+        Stmt::Assign {
+            target,
+            value,
+            span,
+            ..
+        } => {
             out.statements.push(*span);
+            // The place (decision 0045): its root and each step map to their own text.
+            let ir::PlaceRoot::Local { span: root, .. } = &target.root;
+            out.expressions.push(*root);
+            for step in &target.steps {
+                out.expressions.push(step.span());
+                if let ir::PlaceStep::Index { index, .. } = step {
+                    expr(index, out);
+                }
+            }
             expr(value, out);
         }
         Stmt::If {

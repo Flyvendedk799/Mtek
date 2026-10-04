@@ -12,6 +12,9 @@
         "startByte": 6,
         "endByte": 11
       }
+    ],
+    "notes": [
+      "help: copy it into a `var` local and assign to that"
     ]
   }
 ]

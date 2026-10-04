@@ -1,0 +1,717 @@
+{
+  "manifestSchema": 1,
+  "runtimeAbi": 1,
+  "languageVersion": "0.1",
+  "compilerVersion": "0.1.0-dev",
+  "buildId": "c68e4cb5308e52fba45bd73a6a0db847325ea2f1950eedc41bf36556b44bf560",
+  "targetProfile": "webgpu-core-2026",
+  "requiredCapabilities": {
+    "features": [],
+    "limits": {},
+    "wgslLanguageFeatures": []
+  },
+  "subsystems": {
+    "physics": false
+  },
+  "runtimeConfig": {
+    "fixedStep": 0.016666668,
+    "maxCatchUpSteps": 4,
+    "maxFrameDelta": 0.1,
+    "maxEntities": 16384,
+    "pauseWhenHidden": true
+  },
+  "entryScene": "Places",
+  "sources": [
+    {
+      "id": 0,
+      "path": "src/main.mtek",
+      "sha256": "83da66671a2ddf58a181b194e81715d72e72eedab0f9d2902b802622972f0038"
+    }
+  ],
+  "spans": [
+    {
+      "file": 0,
+      "start": 4061,
+      "end": 4096,
+      "startLine": 182,
+      "startColumn": 1,
+      "endLine": 184,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 4080,
+      "end": 4094,
+      "startLine": 183,
+      "startColumn": 5,
+      "endLine": 183,
+      "endColumn": 19
+    },
+    {
+      "file": 0,
+      "start": 999,
+      "end": 1185,
+      "startLine": 32,
+      "startColumn": 1,
+      "endLine": 40,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1248,
+      "end": 1343,
+      "startLine": 43,
+      "startColumn": 1,
+      "endLine": 47,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1345,
+      "end": 1442,
+      "startLine": 49,
+      "startColumn": 1,
+      "endLine": 53,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1444,
+      "end": 1548,
+      "startLine": 55,
+      "startColumn": 1,
+      "endLine": 59,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1621,
+      "end": 1789,
+      "startLine": 62,
+      "startColumn": 1,
+      "endLine": 68,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1848,
+      "end": 2028,
+      "startLine": 71,
+      "startColumn": 1,
+      "endLine": 78,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 2089,
+      "end": 2223,
+      "startLine": 81,
+      "startColumn": 1,
+      "endLine": 87,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 2283,
+      "end": 2383,
+      "startLine": 90,
+      "startColumn": 1,
+      "endLine": 95,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 2385,
+      "end": 2517,
+      "startLine": 97,
+      "startColumn": 1,
+      "endLine": 103,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 2519,
+      "end": 2637,
+      "startLine": 105,
+      "startColumn": 1,
+      "endLine": 110,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 2639,
+      "end": 2878,
+      "startLine": 112,
+      "startColumn": 1,
+      "endLine": 119,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 2880,
+      "end": 2984,
+      "startLine": 121,
+      "startColumn": 1,
+      "endLine": 125,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 3056,
+      "end": 3214,
+      "startLine": 128,
+      "startColumn": 1,
+      "endLine": 136,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 3216,
+      "end": 3278,
+      "startLine": 138,
+      "startColumn": 1,
+      "endLine": 140,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 3280,
+      "end": 3399,
+      "startLine": 142,
+      "startColumn": 1,
+      "endLine": 147,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 3473,
+      "end": 3569,
+      "startLine": 150,
+      "startColumn": 1,
+      "endLine": 154,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 3571,
+      "end": 3680,
+      "startLine": 156,
+      "startColumn": 1,
+      "endLine": 160,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 3682,
+      "end": 4059,
+      "startLine": 162,
+      "startColumn": 1,
+      "endLine": 180,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1316,
+      "end": 1321,
+      "startLine": 45,
+      "startColumn": 5,
+      "endLine": 45,
+      "endColumn": 10
+    },
+    {
+      "file": 0,
+      "start": 1415,
+      "end": 1420,
+      "startLine": 51,
+      "startColumn": 5,
+      "endLine": 51,
+      "endColumn": 10
+    },
+    {
+      "file": 0,
+      "start": 1520,
+      "end": 1524,
+      "startLine": 57,
+      "startColumn": 5,
+      "endLine": 57,
+      "endColumn": 9
+    },
+    {
+      "file": 0,
+      "start": 1679,
+      "end": 1692,
+      "startLine": 64,
+      "startColumn": 5,
+      "endLine": 64,
+      "endColumn": 18
+    },
+    {
+      "file": 0,
+      "start": 1714,
+      "end": 1738,
+      "startLine": 65,
+      "startColumn": 5,
+      "endLine": 65,
+      "endColumn": 29
+    },
+    {
+      "file": 0,
+      "start": 1750,
+      "end": 1761,
+      "startLine": 66,
+      "startColumn": 5,
+      "endLine": 66,
+      "endColumn": 16
+    },
+    {
+      "file": 0,
+      "start": 1750,
+      "end": 1764,
+      "startLine": 66,
+      "startColumn": 5,
+      "endLine": 66,
+      "endColumn": 19
+    },
+    {
+      "file": 0,
+      "start": 1940,
+      "end": 1945,
+      "startLine": 73,
+      "startColumn": 5,
+      "endLine": 73,
+      "endColumn": 10
+    },
+    {
+      "file": 0,
+      "start": 1960,
+      "end": 1965,
+      "startLine": 74,
+      "startColumn": 5,
+      "endLine": 74,
+      "endColumn": 10
+    },
+    {
+      "file": 0,
+      "start": 2183,
+      "end": 2189,
+      "startLine": 84,
+      "startColumn": 9,
+      "endLine": 84,
+      "endColumn": 15
+    },
+    {
+      "file": 0,
+      "start": 2593,
+      "end": 2597,
+      "startLine": 108,
+      "startColumn": 5,
+      "endLine": 108,
+      "endColumn": 9
+    },
+    {
+      "file": 0,
+      "start": 2616,
+      "end": 2627,
+      "startLine": 109,
+      "startColumn": 12,
+      "endLine": 109,
+      "endColumn": 23
+    },
+    {
+      "file": 0,
+      "start": 2630,
+      "end": 2634,
+      "startLine": 109,
+      "startColumn": 26,
+      "endLine": 109,
+      "endColumn": 30
+    },
+    {
+      "file": 0,
+      "start": 3150,
+      "end": 3155,
+      "startLine": 132,
+      "startColumn": 9,
+      "endLine": 132,
+      "endColumn": 14
+    },
+    {
+      "file": 0,
+      "start": 3206,
+      "end": 3211,
+      "startLine": 135,
+      "startColumn": 18,
+      "endLine": 135,
+      "endColumn": 23
+    },
+    {
+      "file": 0,
+      "start": 3537,
+      "end": 3541,
+      "startLine": 152,
+      "startColumn": 5,
+      "endLine": 152,
+      "endColumn": 9
+    },
+    {
+      "file": 0,
+      "start": 3562,
+      "end": 3566,
+      "startLine": 153,
+      "startColumn": 12,
+      "endLine": 153,
+      "endColumn": 16
+    }
+  ],
+  "symbols": [
+    {
+      "id": "src/main.mtek::Places",
+      "kind": "scene",
+      "span": 0
+    },
+    {
+      "id": "src/main.mtek::Places.Main",
+      "kind": "camera",
+      "span": 1
+    },
+    {
+      "id": "src/main.mtek::field_writes",
+      "kind": "function",
+      "span": 2
+    },
+    {
+      "id": "src/main.mtek::set_at",
+      "kind": "function",
+      "span": 3
+    },
+    {
+      "id": "src/main.mtek::set_at_u",
+      "kind": "function",
+      "span": 4
+    },
+    {
+      "id": "src/main.mtek::flags",
+      "kind": "function",
+      "span": 5
+    },
+    {
+      "id": "src/main.mtek::nested",
+      "kind": "function",
+      "span": 6
+    },
+    {
+      "id": "src/main.mtek::compound",
+      "kind": "function",
+      "span": 7
+    },
+    {
+      "id": "src/main.mtek::fill",
+      "kind": "function",
+      "span": 8
+    },
+    {
+      "id": "src/main.mtek::alias_var",
+      "kind": "function",
+      "span": 9
+    },
+    {
+      "id": "src/main.mtek::alias_both",
+      "kind": "function",
+      "span": 10
+    },
+    {
+      "id": "src/main.mtek::alias_let",
+      "kind": "function",
+      "span": 11
+    },
+    {
+      "id": "src/main.mtek::alias_nested",
+      "kind": "function",
+      "span": 12
+    },
+    {
+      "id": "src/main.mtek::alias_param",
+      "kind": "function",
+      "span": 13
+    },
+    {
+      "id": "src/main.mtek::alias_for",
+      "kind": "function",
+      "span": 14
+    },
+    {
+      "id": "src/main.mtek::keep",
+      "kind": "function",
+      "span": 15
+    },
+    {
+      "id": "src/main.mtek::alias_through_call",
+      "kind": "function",
+      "span": 16
+    },
+    {
+      "id": "src/main.mtek::constant_across_calls",
+      "kind": "function",
+      "span": 17
+    },
+    {
+      "id": "src/main.mtek::rig_weight",
+      "kind": "function",
+      "span": 18
+    },
+    {
+      "id": "src/main.mtek::reach_all",
+      "kind": "function",
+      "span": 19
+    }
+  ],
+  "layouts": [
+    {
+      "id": "builtin:frame",
+      "wgslStruct": "MtekFrame",
+      "size": 288,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 288,
+        "align": 16,
+        "members": [
+          {
+            "name": "view_proj",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "camera_position",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 64,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "light_count",
+            "mtekType": "u32",
+            "node": {
+              "kind": "scalar",
+              "offset": 76,
+              "size": 4,
+              "align": 4,
+              "scalar": "u32"
+            }
+          },
+          {
+            "name": "ambient",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 80,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "reserved0",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 92,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "lights",
+            "mtekType": "array<MtekLight, 4>",
+            "node": {
+              "kind": "array",
+              "offset": 96,
+              "size": 192,
+              "align": 16,
+              "length": 4,
+              "stride": 48,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "MtekLight",
+                "offset": 0,
+                "size": 48,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "color",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 0,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "kind",
+                    "mtekType": "u32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 12,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "u32"
+                    }
+                  },
+                  {
+                    "name": "position",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 16,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "range",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 28,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  },
+                  {
+                    "name": "direction",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 32,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "reserved",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 44,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin:object",
+      "wgslStruct": "MtekObject",
+      "size": 128,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 128,
+        "align": 16,
+        "members": [
+          {
+            "name": "model",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "normal_matrix",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 64,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "shaders": [],
+  "materials": [],
+  "meshes": [],
+  "assets": [],
+  "scene": {
+    "name": "Places",
+    "symbol": "src/main.mtek::Places",
+    "fields": {
+      "clearColor": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "ambientColor": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "ambientIntensity": 0.0,
+      "gravity": [
+        0.0,
+        -9.81,
+        0.0
+      ]
+    },
+    "state": [],
+    "cameras": [
+      {
+        "name": "Main",
+        "symbol": "src/main.mtek::Places.Main",
+        "projection": "perspective",
+        "hasTarget": false,
+        "active": true
+      }
+    ],
+    "entities": [],
+    "materialInstances": [],
+    "bindings": [],
+    "hostInputs": [],
+    "lights": []
+  }
+}

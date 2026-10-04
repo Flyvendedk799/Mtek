@@ -1,0 +1,67 @@
+// Assignable places on the GPU (spec/language.md 7.2, decision 0045): writes
+// to struct fields and array elements go through the same stored references
+// as reads. Run-time write indices are clamped exactly like reads, padded
+// elements are written through `.value`, a bool stored in a struct or array
+// is encoded on write, and a compound assignment clamps each run-time index
+// once, into a `let`, before it reads and writes the place.
+struct Light {
+    color: vec3;
+    active: bool;
+    weights: array<f32, 3>;
+}
+
+struct Rig {
+    lights: array<Light, 2>;
+    flags: array<bool, 4>;
+    offset: vec2;
+}
+
+fn dimmed(light: Light, k: i32, by: f32) -> Light {
+    var out = light;
+    out.weights[k] *= by;
+    out.color.y = 0.5;
+    out.active = by > 0.0;
+    return out;
+}
+
+material Stage {
+    param index: i32 = 1;
+    param slot: u32 = 2;
+    param gain: f32 = 0.5;
+
+    fragment(surface: SurfaceInput) -> color {
+        var rig = Rig {
+            lights: [
+                Light { color: vec3(1.0); active: true; weights: [0.5, 0.25, 0.25] },
+                Light { color: surface.world_normal; active: false; weights: [1.0, 0.0, 0.0] }
+            ];
+            flags: [false, false, false, false];
+            offset: vec2(0.0)
+        };
+        rig.offset = surface.uv;
+        rig.offset.x += gain;
+        rig.flags[slot] = surface.uv.y > 0.5;
+        rig.flags[2] = true;
+        rig.lights[index].active = rig.flags[slot];
+        rig.lights[index].weights[slot] = gain;
+        rig.lights[index].weights[slot] += 0.125;
+        rig.lights[1].color.z -= gain;
+        rig.lights[0] = dimmed(rig.lights[index], index, gain);
+        var ws = [0.0, 0.0, 0.0, 0.0];
+        ws[index] = 1.0;
+        ws[slot] /= 2.0;
+        var total = ws[0] + rig.offset.x + rig.lights[0].weights[1];
+        if rig.lights[index].active && rig.flags[2] {
+            total += rig.lights[1].color.z;
+        }
+        return color.linear(vec3(total), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Panel {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Stage {};
+    }
+}

@@ -1,0 +1,13 @@
+struct Probe {
+    samples: array<f32, 4>;
+}
+
+fn cleared(p: Probe) -> Probe {
+    var q = p;
+    q.samples[2] = true;
+    return q;
+}
+
+scene Demo {
+    camera Main {}
+}

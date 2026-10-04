@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 52,
+    "endByte": 57,
+    "message": "Cannot assign to a part of the parameter 'xs': parameters are immutable.",
+    "related": [
+      {
+        "message": "the parameter 'xs' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 10,
+        "endByte": 12
+      }
+    ],
+    "notes": [
+      "help: copy it into a `var` local and assign to that"
+    ]
+  }
+]
