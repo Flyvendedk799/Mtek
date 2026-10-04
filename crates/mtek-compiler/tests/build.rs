@@ -68,8 +68,30 @@ fn codegen_fixtures() -> Vec<String> {
     directories(&codegen_dir(), |path| path.join("mtek.toml").is_file())
 }
 
+/// The fixtures of a semantic suite: directories with an `mtek.toml`, and the
+/// fixtures of group directories (`types/`) as `group/name` (the rule of
+/// `tests/fixtures.rs`).
+fn semantic_fixtures(suite: &str) -> Vec<String> {
+    let root = repo().join("tests/semantics").join(suite);
+    let mut names = Vec::new();
+    for name in directories(&root, |_| true) {
+        let dir = root.join(&name);
+        if dir.join("mtek.toml").is_file() {
+            names.push(name);
+        } else {
+            names.extend(
+                directories(&dir, |_| true)
+                    .into_iter()
+                    .map(|fixture| format!("{name}/{fixture}")),
+            );
+        }
+    }
+    names.sort();
+    names
+}
+
 fn pass_fixtures() -> Vec<String> {
-    directories(&repo().join("tests/semantics/pass"), |_| true)
+    semantic_fixtures("pass")
 }
 
 /// Every file below `dir` relative to `root`, sorted, skipping `skip` (relative names).
@@ -580,7 +602,7 @@ fn preview_builds_are_not_implemented_yet() {
 
 #[test]
 fn a_program_with_errors_has_check_s_diagnostics_and_no_files() {
-    for name in directories(&repo().join("tests/semantics/fail"), |_| true) {
+    for name in semantic_fixtures("fail") {
         let root = repo().join("tests/semantics/fail").join(&name);
         let memory = project_fs(&root, None);
         let result = build(&ProjectRoot::at_base(), &memory, &stub(BuildMode::Release));

@@ -892,16 +892,38 @@ fn semantics_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/semantics")
 }
 
-/// The fixture directories of `suite` (`pass` or `fail`), in sorted order.
-fn semantic_fixtures(suite: &str) -> Vec<String> {
-    let mut names: Vec<String> = fs::read_dir(semantics_dir().join(suite))
-        .unwrap_or_else(|e| panic!("cannot list tests/semantics/{suite}: {e}"))
+/// The names of the subdirectories of `dir`, in sorted order.
+fn subdirectories(dir: &Path) -> Vec<String> {
+    let mut names: Vec<String> = fs::read_dir(dir)
+        .unwrap_or_else(|e| panic!("cannot list {}: {e}", dir.display()))
         .filter_map(|entry| {
             let entry = entry.ok()?;
             entry.file_type().ok()?.is_dir().then_some(())?;
             entry.file_name().into_string().ok()
         })
         .collect();
+    names.sort();
+    names
+}
+
+/// The fixture directories of `suite` (`pass` or `fail`), in sorted order. A
+/// directory with an `mtek.toml` is a fixture; a directory without one is a
+/// group (`types/`) whose subdirectories are fixtures, named `group/name`.
+fn semantic_fixtures(suite: &str) -> Vec<String> {
+    let root = semantics_dir().join(suite);
+    let mut names = Vec::new();
+    for name in subdirectories(&root) {
+        let dir = root.join(&name);
+        if dir.join("mtek.toml").is_file() {
+            names.push(name);
+        } else {
+            names.extend(
+                subdirectories(&dir)
+                    .into_iter()
+                    .map(|fixture| format!("{name}/{fixture}")),
+            );
+        }
+    }
     names.sort();
     names
 }
