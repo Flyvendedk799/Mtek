@@ -1,0 +1,552 @@
+{
+  "manifestSchema": 1,
+  "runtimeAbi": 1,
+  "languageVersion": "0.1",
+  "compilerVersion": "0.1.0-dev",
+  "buildId": "a539f8d280603da3f9d24d46fb4dacd29752df196d2c0755ba349f6f42f0b3d5",
+  "targetProfile": "webgpu-core-2026",
+  "requiredCapabilities": {
+    "features": [],
+    "limits": {},
+    "wgslLanguageFeatures": []
+  },
+  "subsystems": {
+    "physics": false
+  },
+  "runtimeConfig": {
+    "fixedStep": 0.016666668,
+    "maxCatchUpSteps": 4,
+    "maxFrameDelta": 0.1,
+    "maxEntities": 16384,
+    "pauseWhenHidden": true
+  },
+  "entryScene": "Courtyard",
+  "sources": [
+    {
+      "id": 0,
+      "path": "src/main.mtek",
+      "sha256": "01852647394b001bea3d9c299f71d86112e78343050bdc4761c728fc93f8385a"
+    },
+    {
+      "id": 1,
+      "path": "std/materials.mtek",
+      "sha256": "b3ec50261dd90563680fffe0d1556b7510aae8861a8e8f6385c8c16be8251989"
+    }
+  ],
+  "spans": [
+    {
+      "file": 0,
+      "start": 236,
+      "end": 909,
+      "startLine": 7,
+      "startColumn": 1,
+      "endLine": 27,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 258,
+      "end": 453,
+      "startLine": 8,
+      "startColumn": 5,
+      "endLine": 12,
+      "endColumn": 6
+    },
+    {
+      "file": 0,
+      "start": 458,
+      "end": 818,
+      "startLine": 13,
+      "startColumn": 5,
+      "endLine": 22,
+      "endColumn": 6
+    },
+    {
+      "file": 0,
+      "start": 588,
+      "end": 812,
+      "startLine": 16,
+      "startColumn": 9,
+      "endLine": 21,
+      "endColumn": 10
+    },
+    {
+      "file": 0,
+      "start": 823,
+      "end": 907,
+      "startLine": 23,
+      "startColumn": 5,
+      "endLine": 26,
+      "endColumn": 6
+    },
+    {
+      "file": 1,
+      "start": 236,
+      "end": 358,
+      "startLine": 5,
+      "startColumn": 1,
+      "endLine": 8,
+      "endColumn": 2
+    },
+    {
+      "file": 1,
+      "start": 264,
+      "end": 293,
+      "startLine": 6,
+      "startColumn": 5,
+      "endLine": 6,
+      "endColumn": 34
+    }
+  ],
+  "symbols": [
+    {
+      "id": "src/main.mtek::Courtyard",
+      "kind": "scene",
+      "span": 0
+    },
+    {
+      "id": "src/main.mtek::Courtyard.Overhead",
+      "kind": "camera",
+      "span": 1
+    },
+    {
+      "id": "src/main.mtek::Courtyard.Ground",
+      "kind": "entity",
+      "span": 2
+    },
+    {
+      "id": "src/main.mtek::Courtyard.Ground.Fountain",
+      "kind": "entity",
+      "span": 3
+    },
+    {
+      "id": "src/main.mtek::Courtyard.Lamp",
+      "kind": "entity",
+      "span": 4
+    },
+    {
+      "id": "std/materials.mtek::Unlit",
+      "kind": "material",
+      "span": 5
+    },
+    {
+      "id": "std/materials.mtek::Unlit.color",
+      "kind": "param",
+      "span": 6
+    }
+  ],
+  "layouts": [
+    {
+      "id": "builtin:frame",
+      "wgslStruct": "MtekFrame",
+      "size": 288,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 288,
+        "align": 16,
+        "members": [
+          {
+            "name": "view_proj",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "camera_position",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 64,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "light_count",
+            "mtekType": "u32",
+            "node": {
+              "kind": "scalar",
+              "offset": 76,
+              "size": 4,
+              "align": 4,
+              "scalar": "u32"
+            }
+          },
+          {
+            "name": "ambient",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 80,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "reserved0",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 92,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "lights",
+            "mtekType": "array<MtekLight, 4>",
+            "node": {
+              "kind": "array",
+              "offset": 96,
+              "size": 192,
+              "align": 16,
+              "length": 4,
+              "stride": 48,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "MtekLight",
+                "offset": 0,
+                "size": 48,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "color",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 0,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "kind",
+                    "mtekType": "u32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 12,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "u32"
+                    }
+                  },
+                  {
+                    "name": "position",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 16,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "range",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 28,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  },
+                  {
+                    "name": "direction",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 32,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "reserved",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 44,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin:object",
+      "wgslStruct": "MtekObject",
+      "size": 128,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 128,
+        "align": 16,
+        "members": [
+          {
+            "name": "model",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "normal_matrix",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 64,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "material:std/materials.mtek::Unlit",
+      "wgslStruct": "MtekParams_2b212d15_Unlit",
+      "size": 16,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 16,
+        "align": 16,
+        "members": [
+          {
+            "name": "color",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "shaders": [
+    {
+      "hash": "0c483313bae03955efdf9c236346c1df84ab2e47421e5361bc6347a941941101",
+      "url": "shaders/0c483313bae03955.wgsl",
+      "map": "shaders/0c483313bae03955.mtek-map.json",
+      "material": "std/materials.mtek::Unlit",
+      "vertexEntry": "mtek_vs",
+      "fragmentEntry": "mtek_fs",
+      "vertexAttributes": [
+        "position"
+      ],
+      "surfaceInputs": []
+    }
+  ],
+  "materials": [
+    {
+      "id": "std/materials.mtek::Unlit",
+      "layout": "material:std/materials.mtek::Unlit",
+      "shader": "0c483313bae03955efdf9c236346c1df84ab2e47421e5361bc6347a941941101",
+      "resources": [],
+      "params": [
+        {
+          "name": "color",
+          "type": "color",
+          "span": 6
+        }
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "id": "mesh:0",
+      "kind": "plane",
+      "size": [
+        20.0,
+        20.0
+      ]
+    },
+    {
+      "id": "mesh:1",
+      "kind": "sphere",
+      "radius": 1.0,
+      "segments": 24,
+      "rings": 12
+    },
+    {
+      "id": "mesh:2",
+      "kind": "sphere",
+      "radius": 0.5,
+      "segments": 32,
+      "rings": 16
+    }
+  ],
+  "assets": [],
+  "scene": {
+    "name": "Courtyard",
+    "symbol": "src/main.mtek::Courtyard",
+    "fields": {
+      "clearColor": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "ambientColor": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "ambientIntensity": 0.0,
+      "gravity": [
+        0.0,
+        -9.81,
+        0.0
+      ]
+    },
+    "state": [],
+    "cameras": [
+      {
+        "name": "Overhead",
+        "symbol": "src/main.mtek::Courtyard.Overhead",
+        "projection": "orthographic",
+        "hasTarget": false,
+        "active": true
+      }
+    ],
+    "entities": [
+      {
+        "index": 0,
+        "name": "Ground",
+        "symbol": "src/main.mtek::Courtyard.Ground",
+        "parent": null,
+        "mesh": "mesh:0",
+        "material": {
+          "id": "std/materials.mtek::Unlit",
+          "instance": 0
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 1,
+        "name": "Fountain",
+        "symbol": "src/main.mtek::Courtyard.Ground.Fountain",
+        "parent": 0,
+        "mesh": "mesh:1",
+        "material": {
+          "id": "std/materials.mtek::Unlit",
+          "instance": 1
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 2,
+        "name": "Lamp",
+        "symbol": "src/main.mtek::Courtyard.Lamp",
+        "parent": null,
+        "mesh": "mesh:2",
+        "material": {
+          "id": "std/materials.mtek::Unlit",
+          "instance": 2
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      }
+    ],
+    "materialInstances": [
+      {
+        "index": 0,
+        "material": "std/materials.mtek::Unlit",
+        "entity": 0,
+        "params": [
+          {
+            "name": "color",
+            "class": "initial"
+          }
+        ],
+        "shareable": true
+      },
+      {
+        "index": 1,
+        "material": "std/materials.mtek::Unlit",
+        "entity": 1,
+        "params": [
+          {
+            "name": "color",
+            "class": "initial"
+          }
+        ],
+        "shareable": true
+      },
+      {
+        "index": 2,
+        "material": "std/materials.mtek::Unlit",
+        "entity": 2,
+        "params": [
+          {
+            "name": "color",
+            "class": "initial"
+          }
+        ],
+        "shareable": true
+      }
+    ],
+    "bindings": [],
+    "hostInputs": [],
+    "lights": []
+  }
+}

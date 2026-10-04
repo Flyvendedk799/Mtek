@@ -5,6 +5,8 @@
 // crate uses only part of this module.
 #![allow(clippy::panic, dead_code)]
 
+pub mod manifest_schema;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 

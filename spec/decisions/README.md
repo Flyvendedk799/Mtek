@@ -50,3 +50,4 @@ recorded here before code depends on it (blueprint §15).
 | 0027 | Scene and schema checks: details the specification leaves open |
 | 0028 | Typed IR and the public `check`/`inspect` API: details the specification leaves open |
 | 0029 | Shader IR, standard stage and shader artifact: details the specification leaves open |
+| 0030 | Code generation and packaging: details the specification leaves open |

@@ -1629,7 +1629,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E8100", "M3: run-time field writes and host inputs"),
     ("E9020", "M3: host inputs (decision 0018)"),
     ("E9021", "M3: host inputs (decision 0018)"),
-    ("E9030", "M1: `mtek build` in the CLI"),
 ];
 
 /// Codes this build implements that no program checked by this build can
@@ -1670,6 +1669,8 @@ const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
     ("E0004", "src/project/load/tests.rs"),
     // A fixture is a project directory with `mtek.toml`.
     ("E9004", "src/project/load/tests.rs"),
+    // A fixture always builds with the stub runtime; only a caller without a bundle gets it.
+    ("E9030", "tests/build.rs"),
     // Too large to review as fixtures: more than 200 diagnostics in one
     // file, more than 16 384 entities (generated in this file).
     ("W9003", "src/diagnostics/sink.rs"),

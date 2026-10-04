@@ -16,6 +16,7 @@ const INDENT: &str = "  ";
 pub struct Printer {
     out: String,
     level: usize,
+    lines: usize,
 }
 
 impl Printer {
@@ -32,11 +33,35 @@ impl Printer {
         }
         self.out.push_str(text);
         self.out.push('\n');
+        self.lines += 1;
     }
 
     /// Writes an empty line.
     pub fn blank(&mut self) {
         self.out.push('\n');
+        self.lines += 1;
+    }
+
+    /// Writes every line of `text` (pre-printed code such as the writer functions) at the
+    /// current indentation; empty lines stay empty.
+    pub fn verbatim(&mut self, text: &str) {
+        for line in text.lines() {
+            if line.is_empty() {
+                self.blank();
+            } else {
+                self.line(line);
+            }
+        }
+    }
+
+    /// The number of lines written so far: the 0-based index of the next line.
+    pub fn line_count(&self) -> usize {
+        self.lines
+    }
+
+    /// The width of the current indentation in columns.
+    pub fn indent_width(&self) -> usize {
+        self.level * INDENT.len()
     }
 
     /// Increases the indentation by one level.

@@ -130,10 +130,10 @@ The **typed high-level IR**: the semantic contract between language and code gen
 - `shader_ir.rs`: the Shader IR types (§7.1); `standard_stage.rs`: the generated vertex stage and fragment wrapper of `spec/materials.md` §3.2–3.3; `builtin_unlit.rs`: the temporary compiler-built `Unlit` of decision 0013 (removed in M2-09). Files, generated names, the span map and the shader artifact are decision 0029.
 
 ### 4.10 `layout/` and `plan/`
-`layout/`: the algorithm of `spec/gpu-layout.md` §4 and the built-in blocks. `plan/`: material instances, update classes, sharing eligibility, bind group plan, host-input codecs, binding evaluation order.
+`layout/`: the algorithm of `spec/gpu-layout.md` §4 and the built-in blocks. `plan/`: material instances, update classes, sharing eligibility, bind group plan, host-input codecs, binding evaluation order. What the M1 plan decides (mesh deduplication, instance order, all params `initial`) is decision 0030.
 
 ### 4.11 `emit_js/`, `emit_wgsl/`, `package/`
-`emit_js`: JS AST printer (2-space indent, deterministic), writer emitter, Source Map v3 encoder (small in-house VLQ writer with unit tests against known vectors), `app.d.ts` emitter. `emit_wgsl`: Shader IR printer, span map, Naga validation and error mapping (§8). `package`: manifest builder (schema-valid by construction; a test validates every golden manifest against `spec/manifest.schema.json`), hashing, `index.html`, file set assembly as `BTreeMap<String, Vec<u8>>`.
+`emit_js`: JS AST printer (2-space indent, deterministic), writer emitter, Source Map v3 encoder (small in-house VLQ writer with unit tests against known vectors), `app.d.ts` emitter. `emit_wgsl`: Shader IR printer, span map, Naga validation and error mapping (§8). `package`: manifest builder (schema-valid by construction; a test validates every golden manifest against `spec/manifest.schema.json`), hashing, `index.html`, file set assembly as `BTreeMap<String, Vec<u8>>`. Module files, the generated names and statement order of `app.js`, the order of manifest arrays and spans, number printing, the canonical build identity, the reserved `std/` directory and replace-on-success as a pure plan are decision 0030.
 
 ### 4.12 Public API (`lib.rs`)
 
@@ -145,7 +145,7 @@ pub fn build(project: &ProjectRoot, fs: &dyn Fs, opts: &CompileOptions) -> Build
 pub fn inspect(project: &ProjectRoot, fs: &dyn Fs, what: Inspect) -> InspectResult;     // ir | bindings | shaders
 pub fn context(project: &ProjectRoot, fs: &dyn Fs, req: &ContextRequest) -> ContextResult; // M6
 ```
-The CLI, the tests and the LSP all call these; none re-implements compiler logic (blueprint §13). The result types of `check`, `analyze` and `inspect` are decision 0028.
+The CLI, the tests and the LSP all call these; none re-implements compiler logic (blueprint §13). The result types of `check`, `analyze` and `inspect` are decision 0028; `BuildResult` (files, build id, output directory, the build's source map) and the stub runtime constants are decision 0030.
 
 **Runtime bundle in tests.** Compiler fixture tests and codegen goldens pass a fixed **stub bundle** — the bytes `// mtek test runtime stub\n` — as `runtime_bundle`, so the hashed runtime file name inside golden `app.js` files never changes when the runtime is edited, and `cargo test` never needs a Node build. Execution tests (Node) and browser tests build with the real bundle. `build` without any bundle fails with `E9030`.
 

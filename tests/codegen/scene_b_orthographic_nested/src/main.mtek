@@ -1,0 +1,27 @@
+// Pass scene B: an orthographic camera oriented by a rotation, a plane with a
+// nested sphere of non-uniform positive scale, module constants in fields
+// and default materials.
+const GROUND_SIZE: f32 = 20.0;
+const ACCENT = #ffcc00;
+
+scene Courtyard {
+    camera Overhead {
+        position: vec3(0.0, 15.0, 0.0);
+        rotation: quat.euler(-1.5707964, 0.0, 0.0);
+        projection: Orthographic { height: GROUND_SIZE; near: 0.5; far: 40.0 };
+    }
+    entity Ground {
+        mesh: Plane { size: vec2(GROUND_SIZE, GROUND_SIZE) };
+        material: Unlit { color: #3a5f3a };
+        entity Fountain {
+            position: vec3(0.0, 1.0, 0.0);
+            scale: vec3(2.0, 0.5, 2.0);
+            mesh: Sphere { radius: 1.0; segments: 24; rings: 12 };
+            material: Unlit { color: ACCENT };
+        }
+    }
+    entity Lamp {
+        position: vec3(4.0, 0.25, 4.0);
+        mesh: Sphere {};
+    }
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E9001",
+    "file": null,
+    "startByte": null,
+    "endByte": null,
+    "message": "Invalid project configuration: 'project.entry' must be a path outside the directory 'std/', which is reserved for the embedded standard library, found \"std/materials.mtek\".",
+    "notes": [
+      "at mtek.toml:4:9"
+    ]
+  }
+]
