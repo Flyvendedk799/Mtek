@@ -23,7 +23,9 @@
  * `asDom` is the single documented place where a fake is presented as a nominally typed DOM interface.
  */
 /// <reference types="vite/client" />
+import { checkManifest } from "../abi/validate.js";
 import type { DocumentLike, FetchResponseLike, HostEnvironment, ResizeObserverLike } from "../host/environment.js";
+import { syntheticProgram, type TestProgram } from "./program.js";
 import {
   FakeAdapter,
   FakeBindGroup,
@@ -867,23 +869,41 @@ export function minimalManifestJson(): Record<string, unknown> {
 export const BASE_URL = "https://example.test/app/";
 export const MANIFEST_URL = `${BASE_URL}program.manifest.json`;
 
-/** A program module as `app.js` would export it (only the members M1 reads are meaningful). */
-export function fakeProgram(): {
-  readonly abi: 1;
-  readonly baseUrl: URL;
-  readonly manifestUrl: URL;
-  readonly writers: Record<string, never>;
-  readonly functions: Record<string, never>;
-  readonly scenes: Record<string, never>;
-  readonly prefabs: Record<string, never>;
-} {
-  return {
-    abi: 1,
-    baseUrl: new URL(BASE_URL),
-    manifestUrl: new URL(MANIFEST_URL),
-    writers: {},
-    functions: {},
-    scenes: {},
-    prefabs: {},
-  };
+/** The setters of the generated-code context, as generated code calls them. */
+export interface InitContext {
+  readonly e: readonly object[];
+  setCamera(field: string, value: unknown): void;
+  setTransform(entity: object | undefined, field: string, value: unknown): void;
+  setVisible(entity: object | undefined, value: boolean): void;
+  setParam(entity: object | undefined, name: string, value: unknown): void;
+}
+
+/** The colour `minimalSceneInit` gives every entity's material (linear, opaque). */
+export const MINIMAL_SCENE_COLOR = { r: 0.25, g: 0.5, b: 0.75, a: 1 };
+
+/**
+ * An `init` for the minimal manifest (and manifests derived from it), shaped like the compiler's output
+ * (decision 0030): the camera, then every entity's transform, visibility and material params.
+ */
+export function minimalSceneInit(context: object): void {
+  const ctx = context as InitContext;
+  ctx.setCamera("position", { x: 0, y: 2, z: 6 });
+  ctx.setCamera("target", { x: 0, y: 0.5, z: 0 });
+  ctx.setCamera("projection.fov_y", Math.fround(0.9));
+  ctx.setCamera("projection.near", Math.fround(0.1));
+  ctx.setCamera("projection.far", 1000);
+  for (const entity of ctx.e) {
+    ctx.setTransform(entity, "position", { x: 0, y: 0.5, z: 0 });
+    ctx.setTransform(entity, "rotation", { x: 0, y: 0, z: 0, w: 1 });
+    ctx.setTransform(entity, "scale", { x: 1, y: 1, z: 1 });
+    ctx.setVisible(entity, true);
+    ctx.setParam(entity, "color", MINIMAL_SCENE_COLOR);
+  }
+}
+
+/** A program module as `app.js` would export it for the minimal manifest, with writers built from its layouts. */
+export function fakeProgram(init: (ctx: object) => void = minimalSceneInit): TestProgram {
+  const parsed = checkManifest(minimalManifestJson());
+  if (!parsed.ok) throw new Error("the minimal manifest is not valid");
+  return syntheticProgram(parsed.manifest, init, BASE_URL);
 }

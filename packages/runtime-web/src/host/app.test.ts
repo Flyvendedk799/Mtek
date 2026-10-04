@@ -366,6 +366,7 @@ describe("debug API (options.test)", () => {
     // 50 px * 4 = 200 bytes per row, padded to 256 for the copy.
     const app = await mountManual(host, { width: 50, height: 3 });
     debugOf(app).step(1, 0.016);
+    const liveBuffers = debugOf(app).counters()["liveBuffers"];
     const pixels = await debugOf(app).readPixels();
     expect(pixels.format).toBe("rgba8unorm-srgb");
     expect([pixels.width, pixels.height]).toEqual([50, 3]);
@@ -377,7 +378,7 @@ describe("debug API (options.test)", () => {
       expect(Array.from(pixels.data.subarray(pixel * 4, pixel * 4 + 4)), `pixel ${String(pixel)}`).toEqual(expected);
     }
     // The staging buffer was released again.
-    expect(debugOf(app).counters()["liveBuffers"]).toBe(0);
+    expect(debugOf(app).counters()["liveBuffers"]).toBe(liveBuffers);
     app.dispose();
   });
 
@@ -452,12 +453,12 @@ describe("debug API (options.test)", () => {
     app.dispose();
   });
 
-  it("scene() lists the entities by manifest name with their identity transforms; state is empty before M3", async () => {
+  it("scene() lists the entities by manifest name with the transforms init set; state is empty before M3", async () => {
     const host = healthyHost();
     const app = await mountManual(host);
     expect(debugOf(app).scene()).toEqual({
       state: {},
-      entities: [{ name: "Cube", position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0, w: 1 } }],
+      entities: [{ name: "Cube", position: { x: 0, y: 0.5, z: 0 }, rotation: { x: 0, y: 0, z: 0, w: 1 } }],
     });
     app.dispose();
   });

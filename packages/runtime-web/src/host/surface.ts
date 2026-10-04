@@ -1,6 +1,7 @@
 /**
  * The drawing surface: canvas configuration with hardware sRGB encoding, the depth texture, resize and
- * the clear-only frame of M1 (`spec/runtime-abi.md` section 8.2; meshes are drawn from M1-18 on).
+ * the render pass of a frame (`spec/runtime-abi.md` section 8.2): clear, then the draws the renderer
+ * encodes (`render/renderer.ts`).
  *
  * With `test.renderTarget` the frame goes into an offscreen `rgba8unorm-srgb` texture of a fixed size
  * (independent of the canvas and of the platform's preferred format) so pixel tests are portable.
@@ -95,6 +96,11 @@ export class Surface {
     return { width: this.widthPx, height: this.heightPx };
   }
 
+  /** The format of the colour attachment: the offscreen target's, or the canvas's sRGB view format. */
+  get colorFormat(): GPUTextureFormat {
+    return this.options.renderTarget !== undefined ? OFFSCREEN_FORMAT : this.viewFormat;
+  }
+
   /** True when a frame can be drawn: the target has at least one pixel. */
   get renderable(): boolean {
     return this.widthPx > 0 && this.heightPx > 0;
@@ -174,10 +180,12 @@ export class Surface {
   }
 
   /**
-   * Draws one frame: clear colour (linear, encoded by the sRGB view) and depth 1.0. Returns false and
-   * draws nothing when the canvas has no pixels (a zero-sized canvas is not an error).
+   * Draws one frame: one render pass that clears to the RGB of `clearColor` (linear, encoded by the sRGB
+   * view; alpha 1, the canvas is opaque) and depth 1.0, then runs `encode` to record the draws, and
+   * submits. Returns false and draws nothing when the canvas has no pixels (a zero-sized canvas is not an
+   * error).
    */
-  render(clearColor: readonly [number, number, number, number]): boolean {
+  render(clearColor: readonly [number, number, number, number], encode?: (pass: GPURenderPassEncoder) => void): boolean {
     if (!this.renderable || this.depth === null) {
       this.skipped += 1;
       return false;
@@ -189,7 +197,7 @@ export class Surface {
       colorAttachments: [
         {
           view: target.createView({ format: this.offscreen !== null ? OFFSCREEN_FORMAT : this.viewFormat }),
-          clearValue: { r: clearColor[0], g: clearColor[1], b: clearColor[2], a: clearColor[3] },
+          clearValue: { r: clearColor[0], g: clearColor[1], b: clearColor[2], a: 1 },
           loadOp: "clear",
           storeOp: "store",
         },
@@ -201,6 +209,7 @@ export class Surface {
         depthStoreOp: "store",
       },
     });
+    encode?.(pass);
     pass.end();
     device.queue.submit([encoder.finish()]);
     this.rendered += 1;

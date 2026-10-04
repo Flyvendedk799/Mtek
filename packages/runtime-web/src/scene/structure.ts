@@ -72,6 +72,10 @@ export type StructureResult =
 export const FRAME_LAYOUT_ID = "builtin:frame";
 export const OBJECT_LAYOUT_ID = "builtin:object";
 
+/** Members of the built-in blocks the renderer writes (through the generated field writers). */
+export const FRAME_MEMBERS = ["view_proj", "camera_position", "light_count", "ambient"] as const;
+export const OBJECT_MEMBERS = ["model", "normal_matrix"] as const;
+
 /** The vertex attributes of `spec/materials.md` section 3.3, in vertex-buffer slot order. */
 export const VERTEX_ATTRIBUTE_ORDER: readonly MtekVertexAttribute[] = ["position", "normal", "uv"];
 
@@ -112,6 +116,17 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
   const objectLayout = layouts.get(OBJECT_LAYOUT_ID);
   if (frameLayout === undefined) diagnostics.push(broken("layouts", `the built-in layout '${FRAME_LAYOUT_ID}' is missing.`));
   if (objectLayout === undefined) diagnostics.push(broken("layouts", `the built-in layout '${OBJECT_LAYOUT_ID}' is missing.`));
+  for (const [layout, members] of [
+    [frameLayout, FRAME_MEMBERS],
+    [objectLayout, OBJECT_MEMBERS],
+  ] as const) {
+    if (layout === undefined) continue;
+    for (const member of members) {
+      if (!layout.root.members.some((candidate) => candidate.name === member)) {
+        diagnostics.push(broken("layouts", `the built-in layout '${layout.id}' lacks the member '${member}'.`));
+      }
+    }
+  }
 
   const active = scene.cameras.filter((camera) => camera.active);
   const camera = active[0];
@@ -142,6 +157,11 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
         return;
       }
       layout = found;
+      const missing = material.params.find((param) => !found.root.members.some((member) => member.name === param.name));
+      if (missing !== undefined) {
+        diagnostics.push(broken(`${field}.params`, `material '${material.id}' has the param '${missing.name}', which its layout '${found.id}' lacks.`));
+        return;
+      }
     }
     if (material.resources.length > 0) {
       diagnostics.push(unsupported(`${field}.resources`, `material '${material.id}' has texture or sampler params.`));

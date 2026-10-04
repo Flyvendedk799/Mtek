@@ -7,6 +7,7 @@
 import type { MtekManifest } from "../abi/manifest-types.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
+import type { Scene } from "../render/startup.js";
 import { Scheduler, type FramePhases } from "../schedule/scheduler.js";
 import type { HostEnvironment, ResizeObserverLike } from "./environment.js";
 import type { DiagnosticSink } from "./failures.js";
@@ -28,6 +29,8 @@ export interface AppDependencies {
   readonly test: MtekTestOptions | undefined;
   /** The resolved `random()` seed (consumed by the CPU runtime from M3 on). */
   readonly seed: number;
+  /** The initialised scene: world, material arenas, pipelines and renderer. */
+  readonly scene: Scene;
 }
 
 /** Why `setInput` rejects every key before M3 (the manifest declares no host inputs in M1). */
@@ -228,18 +231,23 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
 
   private createPhases(): FramePhases {
     const now = (): number => this.deps.environment.now();
+    const { world, renderer } = this.deps.scene;
     return {
       phase1_input: () => {
         this.frameStartMs = now();
+        world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex);
       },
+      // Fixed ticks, updates, the lifecycle queue and bindings run generated code from M3 on.
       phase2_tick: () => undefined,
       phase3_update: () => undefined,
       phase4_flush: () => undefined,
       phase5_bindings: () => undefined,
-      phase6_transforms: () => undefined,
+      phase6_transforms: () => {
+        world.propagate();
+      },
       phase7_render: () => {
         this.renderStartMs = now();
-        this.deps.surface.render(this.deps.manifest.scene.fields.clearColor);
+        renderer.frame();
         const end = now();
         this.cpuUpdateMs = this.renderStartMs - this.frameStartMs;
         this.renderPrepMs = end - this.renderStartMs;
@@ -271,13 +279,12 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         throw notYet("setParam", "M3");
       },
       scene: () => ({
-        // Scene state and entity transforms are created by scene initialisation (M3). Until then the
-        // records hold the pre-initialisation defaults: identity transforms and no state.
+        // Scene state arrives with M3; the entity transforms are the world's records.
         state: {},
-        entities: this.deps.manifest.scene.entities.map((entity) => ({
-          name: entity.name,
-          position: { x: 0, y: 0, z: 0 },
-          rotation: { x: 0, y: 0, z: 0, w: 1 },
+        entities: this.deps.scene.world.entities.map((record, index) => ({
+          name: this.deps.manifest.scene.entities[index]?.name ?? String(index),
+          position: record.position,
+          rotation: record.rotation,
         })),
       }),
     };
@@ -285,18 +292,20 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
 
   private counters(): Readonly<Record<string, number>> {
     const registry = this.deps.registry.snapshot();
+    const { renderer, materials, world } = this.deps.scene;
     return {
       ...registry,
       frameTimeMs: this.frameTimeMs,
       cpuUpdateMs: this.cpuUpdateMs,
       renderPrepMs: this.renderPrepMs,
-      drawCalls: 0,
+      drawCalls: renderer.drawCalls,
+      // Instancing and culling arrive with M4.
       instancedDraws: 0,
       culledObjects: 0,
-      sharedParamBlocks: 0,
-      ownedParamBlocks: 0,
+      sharedParamBlocks: materials.sharedParamBlocks,
+      ownedParamBlocks: materials.ownedParamBlocks,
       discardedSteps: this.scheduler.discardedSteps,
-      liveEntities: this.deps.manifest.scene.entities.length,
+      liveEntities: world.entities.length,
       framesRendered: this.deps.surface.framesRendered,
       framesSkipped: this.deps.surface.framesSkipped,
     };
