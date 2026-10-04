@@ -10,6 +10,8 @@
 //! * Span maps: every entry of every golden resolves to the Mtek text it was generated
 //!   from (mangled locals to their names, calls to calls, statements to statements),
 //!   inside the declaration of its symbol; the Pulse material is checked entry by entry.
+//! * The prelude's `Unlit`, compiled from source by this lowering, gives the golden of
+//!   the temporary compiler-built `Unlit` (what M2-09 relies on).
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -93,13 +95,13 @@ fn projects(dir: &Path) -> Vec<PathBuf> {
 
 /// The lowered program and sources of the project at `root`.
 fn lowered(root: &Path) -> (Program, SourceMap) {
-    let analysis = analyze(&ProjectRoot::at_base(), &project(root));
-    assert!(
-        !analysis.has_errors(),
-        "{}: {:#?}",
-        root.display(),
-        analysis.report
-    );
+    lowered_fs(&project(root), &root.display().to_string())
+}
+
+/// The lowered program and sources of the in-memory project `fs`.
+fn lowered_fs(fs: &MemFs, label: &str) -> (Program, SourceMap) {
+    let analysis = analyze(&ProjectRoot::at_base(), fs);
+    assert!(!analysis.has_errors(), "{label}: {:#?}", analysis.report);
     let program = lower_to_ir(&analysis).unwrap_or_else(|e| panic!("{e:?}"));
     let sources = analysis.project.as_ref().unwrap().sources.clone();
     (program, sources)
@@ -409,5 +411,39 @@ fn the_pulse_span_map_points_at_each_piece_of_the_material() {
     assert_eq!(
         sources.slice(artifact.span_map.resolve(line, column - 1).0),
         Some("0.35 * sin(t)")
+    );
+}
+
+#[test]
+fn unlit_lowered_from_source_matches_the_temporary_golden() {
+    // M2-09 compiles the prelude's `Unlit` through this lowering and deletes the
+    // compiler-built path; its golden `tests/codegen/wgsl/unlit.wgsl` must then stay
+    // equal. The prelude's declaration, compiled as a user module, gives the same text
+    // up to the name of the block (the prelude's name `Unlit` is reserved for it).
+    let prelude = mtek_compiler::lowering::builtin_unlit::prelude_text().unwrap();
+    let start = prelude.find("export material Unlit").unwrap();
+    let end = start + prelude[start..].find("\n}\n").unwrap() + 3;
+    let source = format!(
+        "{}\nscene Demo {{\n    camera Main {{}}\n}}\n",
+        prelude[start..end].replacen("export material Unlit", "material Plain", 1)
+    );
+    let mut fs = MemFs::new();
+    fs.insert(
+        ProjectPath::new("mtek.toml").unwrap(),
+        b"[project]\nname = \"fixture\"\nlanguage = \"0.1\"\n".to_vec(),
+    );
+    fs.insert(
+        ProjectPath::new("src/main.mtek").unwrap(),
+        source.into_bytes(),
+    );
+    let (program, _) = lowered_fs(&fs, "unlit");
+    let wgsl = shaders(&program)["main.Plain"].wgsl.clone();
+    let golden = fs::read_to_string(repo().join("tests/codegen/wgsl/unlit.wgsl")).unwrap();
+    assert_eq!(
+        wgsl.replace(
+            &format!("MtekParams_{}_Plain", hash8("src/main.mtek")),
+            &format!("MtekParams_{}_Unlit", hash8("std/materials.mtek"))
+        ),
+        golden
     );
 }
