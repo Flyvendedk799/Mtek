@@ -13,6 +13,11 @@
  *    a validation error; a command buffer can be submitted once.
  *  - clearing an `-srgb` view encodes the linear clear value to sRGB (the hardware conversion).
  *  - shader modules report compilation messages and raise a validation error for errors.
+ *  - render pipelines: a pipeline layout, one colour target, a depth format; `hooks.pipelineError` makes
+ *    creation fail. Render pass encoders check, at every `drawIndexed`, that the pipeline matches the
+ *    attachment formats, that every bind group of the pipeline layout is set with its own layout and the
+ *    right number of aligned dynamic offsets, that every vertex buffer slot and the index buffer are set
+ *    with the right usage, and that the indices fit; draws are recorded with the pass.
  *  - DOM listeners dedupe on (type, listener, capture) like `EventTarget`.
  *
  * `asDom` is the single documented place where a fake is presented as a nominally typed DOM interface.
@@ -21,6 +26,7 @@
 import type { DocumentLike, FetchResponseLike, HostEnvironment, ResizeObserverLike } from "../host/environment.js";
 import {
   FakeAdapter,
+  FakeBindGroup,
   FakeBuffer,
   FakeDevice,
   FakeGpu,
@@ -93,6 +99,19 @@ export class FakeShaderModule extends FakeResource {
   }
 }
 
+/** One recorded `drawIndexed` with the state it used. */
+export interface FakeDrawRecord {
+  readonly pipeline: FakeResource;
+  /** Bind groups 0..n-1 of the pipeline layout as set at the draw. */
+  readonly bindGroups: readonly FakeBindGroup[];
+  /** Dynamic offsets per group. */
+  readonly dynamicOffsets: readonly (readonly number[])[];
+  readonly vertexBuffers: readonly FakeBuffer[];
+  readonly indexBuffer: FakeBuffer;
+  readonly indexFormat: string;
+  readonly indexCount: number;
+}
+
 export interface FakeRenderPassRecord {
   readonly targetWidth: number;
   readonly targetHeight: number;
@@ -100,6 +119,149 @@ export interface FakeRenderPassRecord {
   readonly clearValue: { readonly r: number; readonly g: number; readonly b: number; readonly a: number };
   readonly depthWidth: number;
   readonly depthHeight: number;
+  readonly draws: readonly FakeDrawRecord[];
+}
+
+/** The fields of a render pipeline descriptor the fakes interpret. */
+export interface FakePipelineDescriptor {
+  readonly label?: string;
+  readonly layout: unknown;
+  readonly vertex: {
+    readonly module: unknown;
+    readonly entryPoint?: string;
+    readonly buffers?: readonly {
+      readonly arrayStride: number;
+      readonly stepMode?: string;
+      readonly attributes: readonly { readonly shaderLocation: number; readonly offset: number; readonly format: string }[];
+    }[];
+  };
+  readonly fragment?: { readonly module: unknown; readonly entryPoint?: string; readonly targets: readonly { readonly format: string }[] };
+  readonly primitive?: { readonly topology?: string; readonly cullMode?: string; readonly frontFace?: string };
+  readonly depthStencil?: { readonly format: string; readonly depthCompare?: string; readonly depthWriteEnabled?: boolean };
+}
+
+interface FakeLayoutEntry {
+  readonly binding: number;
+  readonly buffer?: { readonly type?: string; readonly hasDynamicOffset?: boolean; readonly minBindingSize?: number };
+}
+
+function layoutEntries(layout: unknown): readonly FakeLayoutEntry[] {
+  if (!(layout instanceof FakeResource) || layout.kind !== "bindGroupLayout") throw new Error("not a bind group layout");
+  return (layout.descriptor as { entries: readonly FakeLayoutEntry[] }).entries;
+}
+
+function pipelineGroupLayouts(pipeline: FakeResource): readonly unknown[] {
+  const layout = (pipeline.descriptor as FakePipelineDescriptor).layout;
+  if (!(layout instanceof FakeResource) || layout.kind !== "pipelineLayout") throw new Error("the pipeline has no explicit pipeline layout");
+  return (layout.descriptor as { bindGroupLayouts: readonly unknown[] }).bindGroupLayouts;
+}
+
+const USAGE_BUFFER_INDEX = 0x10;
+const USAGE_BUFFER_VERTEX = 0x20;
+
+/** A render pass encoder that validates its commands like a WebGPU implementation and records draws. */
+export class FakeRenderPassEncoder {
+  readonly draws: FakeDrawRecord[] = [];
+  ended = false;
+  private pipeline: FakeResource | null = null;
+  private readonly groups: (FakeBindGroup | undefined)[] = [];
+  private readonly offsets: (readonly number[])[] = [];
+  private readonly vertexBuffers: (FakeBuffer | undefined)[] = [];
+  private index: { buffer: FakeBuffer; format: string } | null = null;
+
+  constructor(
+    private readonly colorFormat: string,
+    private readonly depthFormat: string | undefined,
+    private readonly alignment: number,
+  ) {}
+
+  private recording(what: string): void {
+    if (this.ended) throw new Error(`${what}: the render pass has ended`);
+  }
+
+  setPipeline(pipeline: FakeResource): void {
+    this.recording("setPipeline");
+    if (!(pipeline instanceof FakeResource) || pipeline.kind !== "renderPipeline") throw new Error("setPipeline: not a render pipeline");
+    const descriptor = pipeline.descriptor as FakePipelineDescriptor;
+    const target = descriptor.fragment?.targets[0]?.format;
+    if (target !== this.colorFormat) throw new Error(`setPipeline: the pipeline targets ${String(target)} but the pass renders to ${this.colorFormat}`);
+    if (descriptor.depthStencil?.format !== this.depthFormat) {
+      throw new Error(`setPipeline: the pipeline depth format ${String(descriptor.depthStencil?.format)} differs from the pass depth format ${String(this.depthFormat)}`);
+    }
+    this.pipeline = pipeline;
+  }
+
+  setBindGroup(index: number, group: FakeBindGroup, dynamicOffsets: readonly number[] = []): void {
+    this.recording("setBindGroup");
+    if (!(group instanceof FakeBindGroup)) throw new Error("setBindGroup: not a bind group");
+    this.groups[index] = group;
+    this.offsets[index] = [...dynamicOffsets];
+  }
+
+  setVertexBuffer(slot: number, buffer: FakeBuffer): void {
+    this.recording("setVertexBuffer");
+    if ((buffer.usage & USAGE_BUFFER_VERTEX) === 0) throw new Error(`setVertexBuffer: buffer "${buffer.label}" lacks VERTEX`);
+    this.vertexBuffers[slot] = buffer;
+  }
+
+  setIndexBuffer(buffer: FakeBuffer, format: string): void {
+    this.recording("setIndexBuffer");
+    if ((buffer.usage & USAGE_BUFFER_INDEX) === 0) throw new Error(`setIndexBuffer: buffer "${buffer.label}" lacks INDEX`);
+    if (format !== "uint16" && format !== "uint32") throw new Error(`setIndexBuffer: invalid format ${format}`);
+    this.index = { buffer, format };
+  }
+
+  drawIndexed(indexCount: number): void {
+    this.recording("drawIndexed");
+    const pipeline = this.pipeline;
+    if (pipeline === null) throw new Error("drawIndexed: no pipeline is set");
+    const groupLayouts = pipelineGroupLayouts(pipeline);
+    const groups: FakeBindGroup[] = [];
+    groupLayouts.forEach((layout, i) => {
+      const group = this.groups[i];
+      if (group === undefined) throw new Error(`drawIndexed: bind group ${String(i)} is not set`);
+      if (group.descriptor.layout !== layout) throw new Error(`drawIndexed: bind group ${String(i)} was made for another layout`);
+      const dynamic = layoutEntries(layout).filter((entry) => entry.buffer?.hasDynamicOffset === true);
+      const offsets = this.offsets[i] ?? [];
+      if (offsets.length !== dynamic.length) {
+        throw new Error(`drawIndexed: bind group ${String(i)} needs ${String(dynamic.length)} dynamic offsets, got ${String(offsets.length)}`);
+      }
+      offsets.forEach((offset, k) => {
+        if (offset % this.alignment !== 0) throw new Error(`drawIndexed: dynamic offset ${String(offset)} is not aligned to ${String(this.alignment)}`);
+        const entry = group.descriptor.entries.find((e) => e.binding === dynamic[k]?.binding);
+        if (entry === undefined) throw new Error("drawIndexed: no entry for a dynamic binding");
+        const size = entry.resource.size ?? entry.resource.buffer.size;
+        if ((entry.resource.offset ?? 0) + offset + size > entry.resource.buffer.size) throw new Error("drawIndexed: dynamic offset beyond the buffer");
+      });
+      groups.push(group);
+    });
+    const buffers = (pipeline.descriptor as FakePipelineDescriptor).vertex.buffers ?? [];
+    const vertexBuffers = buffers.map((layout, slot) => {
+      const buffer = this.vertexBuffers[slot];
+      if (buffer === undefined) throw new Error(`drawIndexed: vertex buffer slot ${String(slot)} is not set`);
+      if (buffer.size % layout.arrayStride !== 0) {
+        throw new Error(`drawIndexed: vertex buffer slot ${String(slot)} is not a whole number of ${String(layout.arrayStride)}-byte vertices`);
+      }
+      return buffer;
+    });
+    if (this.index === null) throw new Error("drawIndexed: no index buffer is set");
+    const bytes = this.index.format === "uint16" ? 2 : 4;
+    if (indexCount * bytes > this.index.buffer.size) throw new Error("drawIndexed: the indices exceed the index buffer");
+    this.draws.push({
+      pipeline,
+      bindGroups: groups,
+      dynamicOffsets: groups.map((_, i) => this.offsets[i] ?? []),
+      vertexBuffers,
+      indexBuffer: this.index.buffer,
+      indexFormat: this.index.format,
+      indexCount,
+    });
+  }
+
+  end(): void {
+    if (this.ended) throw new Error("end: the render pass already ended");
+    this.ended = true;
+  }
 }
 
 interface ColorAttachment {
@@ -138,7 +300,7 @@ export class FakeCommandEncoder {
     if (this.passOpen) throw new Error(`${what}: a render pass is still open`);
   }
 
-  beginRenderPass(descriptor: RenderPassDescriptor): { end(): void } {
+  beginRenderPass(descriptor: RenderPassDescriptor): FakeRenderPassEncoder {
     this.ensureRecording("beginRenderPass");
     const color = descriptor.colorAttachments[0];
     if (color === undefined) throw new Error("beginRenderPass: at least one color attachment is required");
@@ -158,6 +320,7 @@ export class FakeCommandEncoder {
       }
     }
     this.passOpen = true;
+    const pass = new FakeRenderPassEncoder(color.view.format, depth?.view.format, this.device.limits["minUniformBufferOffsetAlignment"] ?? 256);
     const clear = color.clearValue ?? { r: 0, g: 0, b: 0, a: 0 };
     this.commands.push(() => {
       if (colorTexture.destroyed || (depth !== undefined && depth.view.texture.destroyed)) {
@@ -176,14 +339,15 @@ export class FakeCommandEncoder {
         clearValue: clear,
         depthWidth: depth?.view.texture.width ?? 0,
         depthHeight: depth?.view.texture.height ?? 0,
+        draws: [...pass.draws],
       });
     });
-    return {
-      end: () => {
-        if (!this.passOpen) throw new Error("end: the render pass already ended");
-        this.passOpen = false;
-      },
+    const end = pass.end.bind(pass);
+    pass.end = () => {
+      end();
+      this.passOpen = false;
     };
+    return pass;
   }
 
   copyTextureToBuffer(
@@ -222,6 +386,8 @@ export class FakeCommandEncoder {
 export interface FakeHostHooks {
   /** The fake shader compiler. Default: {@link defaultShaderMessages}. */
   readonly shaderMessages?: (code: string) => readonly FakeCompilationMessage[];
+  /** A message makes render pipeline creation fail (async creation rejects with a `GPUPipelineError`). */
+  readonly pipelineError?: (descriptor: FakePipelineDescriptor) => string | undefined;
 }
 
 export class FakeHostDevice extends FakeDevice {
@@ -252,6 +418,34 @@ export class FakeHostDevice extends FakeDevice {
 
   createCommandEncoder(): FakeCommandEncoder {
     return new FakeCommandEncoder(this);
+  }
+
+  /** Checks the parts of a pipeline descriptor the runtime relies on; returns the problem or undefined. */
+  private pipelineProblem(descriptor: FakePipelineDescriptor): string | undefined {
+    const layout = descriptor.layout;
+    if (!(layout instanceof FakeResource) || layout.kind !== "pipelineLayout") return "the layout is not a pipeline layout";
+    if (typeof descriptor.vertex.entryPoint !== "string" || !(descriptor.vertex.module instanceof FakeShaderModule)) {
+      return "the vertex stage has no module or entry point";
+    }
+    if (descriptor.fragment?.targets.length !== 1) return "exactly one colour target is required";
+    if (descriptor.depthStencil?.format.startsWith("depth") !== true) return "the depth format is not a depth format";
+    return this.hooks.pipelineError?.(descriptor);
+  }
+
+  override createRenderPipeline(descriptor: FakePipelineDescriptor): FakeResource {
+    const problem = this.pipelineProblem(descriptor);
+    if (problem !== undefined) this.raiseValidation(`createRenderPipeline: ${problem}`);
+    return new FakeResource("renderPipeline", descriptor);
+  }
+
+  override createRenderPipelineAsync(descriptor: FakePipelineDescriptor): Promise<FakeResource> {
+    const problem = this.pipelineProblem(descriptor);
+    if (problem !== undefined) {
+      const error = new Error(`createRenderPipelineAsync: ${problem}`);
+      error.name = "GPUPipelineError";
+      return Promise.reject(error);
+    }
+    return Promise.resolve(new FakeResource("renderPipeline", descriptor));
   }
 
   override createShaderModule(descriptor: { readonly code: string }): FakeShaderModule {
