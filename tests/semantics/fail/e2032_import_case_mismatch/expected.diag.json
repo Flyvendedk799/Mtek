@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E2032",
+    "file": "src/main.mtek",
+    "startByte": 23,
+    "endByte": 39,
+    "message": "The import \"./palette.mtek\" names 'src/palette.mtek', but the file is spelled 'src/Palette.mtek'.",
+    "notes": [
+      "file names in imports must match the file system exactly, even where it ignores case, so that the project builds everywhere",
+      "help: use the spelling 'src/Palette.mtek' in the specifier"
+    ]
+  }
+]

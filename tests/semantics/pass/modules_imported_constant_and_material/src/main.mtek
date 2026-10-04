@@ -1,0 +1,17 @@
+// Constants and a material instance imported from other files: uses fold
+// exactly like uses of the module's own constants (decision 0036).
+import { BACKDROP, GLOW, LIFT } from "./shared/palette.mtek";
+import { CRATE_SIZE } from "./shared/sizes.mtek";
+
+scene Gallery {
+    clear_color: BACKDROP;
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+    entity Crate {
+        position: vec3(0.0, LIFT, 0.0);
+        mesh: Box { size: vec3(CRATE_SIZE) };
+        material: GLOW;
+    }
+}

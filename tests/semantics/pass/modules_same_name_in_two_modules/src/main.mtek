@@ -1,0 +1,18 @@
+// Two modules both declare `Pulse`. Names are module-qualified
+// (`src/pulse_a.mtek::Pulse`, `src/pulse_b.mtek::Pulse`), so they never
+// collide; the entry module imports one of them and a constant of the other
+// module that is computed from that module's own `Pulse`.
+import { Pulse } from "./pulse_a.mtek";
+import { DOUBLED } from "./pulse_b.mtek";
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+    entity Beacon {
+        position: vec3(Pulse, DOUBLED, 0.0);
+        mesh: Sphere { radius: 0.5 };
+        material: Unlit { color: #ffcc00 };
+    }
+}

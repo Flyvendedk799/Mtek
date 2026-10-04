@@ -1549,13 +1549,6 @@ fn the_syntax_corpus_resolves_without_panicking() {
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
     ("W2010", "M2-02: functions and statements"),
-    ("E2030", "M2-03: imports"),
-    ("E2031", "M2-03: imports"),
-    ("E2032", "M2-03: imports"),
-    ("E2033", "M2-03: imports"),
-    ("E2034", "M2-03: imports"),
-    ("E2035", "M2-03: imports"),
-    ("E2036", "M2-03: imports"),
     ("E3012", "M2: equality operators (decision 0026)"),
     ("E3020", "M2-01: structs"),
     ("E3021", "M2-01: structs"),
@@ -1640,11 +1633,6 @@ const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
         "src/types/scene_tests.rs",
     ),
     (
-        "E9002",
-        "imports are M2: a project this build checks has one module",
-        "src/source/map.rs",
-    ),
-    (
         "E6100",
         "only a compiler defect produces it (Naga rejecting generated WGSL)",
         "src/emit_wgsl/validate.rs",
@@ -1669,6 +1657,8 @@ const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
     ("E0004", "src/project/load/tests.rs"),
     // A fixture is a project directory with `mtek.toml`.
     ("E9004", "src/project/load/tests.rs"),
+    // More than 1 024 modules (generated in that file).
+    ("E9002", "src/project/modules/tests.rs"),
     // A fixture always builds with the stub runtime; only a caller without a bundle gets it.
     ("E9030", "tests/build.rs"),
     // An I/O failure of the command line tool while writing `dist/`.

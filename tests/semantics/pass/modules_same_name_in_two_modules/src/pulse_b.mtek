@@ -1,0 +1,2 @@
+export const Pulse = 0.25;
+export const DOUBLED = Pulse * 2.0;

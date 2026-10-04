@@ -1,0 +1,2 @@
+import { A } from "./a.mtek";
+export const B = #6b5cff;

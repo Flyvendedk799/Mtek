@@ -17,12 +17,19 @@ struct Resolved {
 }
 
 fn resolve_text(text: &str) -> Resolved {
+    resolve_text_with(text, |_| ImportBindings::new())
+}
+
+/// Resolve `text` with the import bindings `bind` computes from the parsed
+/// module.
+fn resolve_text_with(text: &str, bind: impl Fn(&Module) -> ImportBindings) -> Resolved {
     let mut lexed = lex_str(FileId(0), text);
     let mut sink = Diagnostics::new();
     lexed.report_into(&mut sink);
     let parsed = parse_module(text, &lexed.tokens, &lexed.trivia, &mut sink);
     let syntax_errors = sink.len();
-    let resolution = resolve_module(&parsed.module, &mut sink);
+    let bindings = bind(&parsed.module);
+    let resolution = resolve_module_with_imports(&parsed.module, &bindings, &mut sink);
     Resolved {
         text: text.to_owned(),
         module: parsed.module,
@@ -287,12 +294,90 @@ fn self_means_the_enclosing_entity_or_prefab() {
 
 #[test]
 fn imported_names_are_declared_in_the_module() {
+    // Without a binding (the import was reported where it failed), the name
+    // is declared, and its uses resolve to `Error` without a diagnostic.
     let r =
         resolve_text("import { Tint } from \"./tint.mtek\";\nscene Demo { clear_color: Tint; }\n");
-    assert_eq!(r.codes(), ["E9010"]);
+    assert!(r.codes().is_empty(), "{:?}", r.diagnostics);
     let tint = r.def_named("Tint");
     assert_eq!(tint.kind, DefKind::Import);
-    assert_eq!(r.res("name", "Tint", 0), Some(Res::Def(tint.id)));
+    assert_eq!(r.res("name", "Tint", 0), Some(Res::Error));
+    assert!(r.resolution.import_target(tint.id).is_none());
+}
+
+/// Bindings that make every imported name of `module` a declaration of
+/// module 1 of the kind `kind_of` gives it.
+fn bind_all(module: &Module, kind_of: impl Fn(&str) -> DefKind) -> ImportBindings {
+    let mut bindings = ImportBindings::new();
+    for item in &module.items {
+        if let crate::syntax::ast::ItemKind::Import(decl) = &item.kind {
+            for name in &decl.names {
+                bindings.insert(
+                    name.id,
+                    ImportTarget {
+                        module: crate::project::ModuleId::from_index(1),
+                        node: NodeId(0),
+                        kind: kind_of(&name.name),
+                        span: crate::source::Span::new(FileId(1), 0, 1),
+                    },
+                );
+            }
+        }
+    }
+    bindings
+}
+
+#[test]
+fn bound_imported_names_resolve_to_the_import_with_the_target_kind() {
+    let text = "import { TINT, Shape } from \"./lib.mtek\";\n\
+                const C: Shape = TINT;\n\
+                scene Demo { clear_color: TINT; }\n";
+    let r = resolve_text_with(text, |module| {
+        bind_all(module, |name| {
+            if name == "Shape" {
+                DefKind::Struct
+            } else {
+                DefKind::Const
+            }
+        })
+    });
+    // Only the struct item itself is gated; its imported name is a type.
+    assert!(!r.codes().contains(&"E3003"), "{:?}", r.diagnostics);
+    let tint = r.def_named("TINT");
+    let shape = r.def_named("Shape");
+    assert_eq!(r.res("name", "TINT", 0), Some(Res::Def(tint.id)));
+    assert_eq!(r.res("name", "TINT", 1), Some(Res::Def(tint.id)));
+    assert_eq!(r.res("ident", "Shape", 1), Some(Res::Def(shape.id)));
+    let target = r.resolution.import_target(tint.id).unwrap();
+    assert_eq!(target.kind, DefKind::Const);
+    assert_eq!(r.resolution.imports().count(), 2);
+
+    // A constant is not a type, wherever it is declared.
+    let r = resolve_text_with(
+        "import { TINT } from \"./lib.mtek\";\nconst C: TINT = 1.0;\n",
+        |m| bind_all(m, |_| DefKind::Const),
+    );
+    assert_eq!(r.codes(), ["E3003"]);
+    assert_eq!(
+        r.diagnostics[0].message,
+        "'TINT' is a constant, not a type."
+    );
+}
+
+#[test]
+fn importing_a_name_twice_is_e2002() {
+    let r = resolve_text(
+        "import { A } from \"./a.mtek\";\nimport { B, A } from \"./b.mtek\";\nconst B = 1;\n",
+    );
+    assert_eq!(r.codes(), ["E2002", "E2002"], "{:?}", r.diagnostics);
+    assert_eq!(
+        r.diagnostics[0].message,
+        "Duplicate import of 'A': the name is already imported in this module."
+    );
+    assert_eq!(
+        r.diagnostics[1].message,
+        "Duplicate declaration of 'B': an imported name of that name is already declared in this module."
+    );
 }
 
 #[test]

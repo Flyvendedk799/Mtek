@@ -691,17 +691,48 @@ impl<'a> Checker<'a> {
                 );
                 TyId::ERROR
             }
-            // An unknown scene-object kind was reported (`E5014`); imports,
-            // `state`, params, parameters and locals are declared by
-            // constructs that are gated in this build.
+            DefKind::Import => self.imported_value(expr, id),
+            // An unknown scene-object kind was reported (`E5014`); `state`,
+            // params, parameters and locals are declared by constructs that
+            // are gated in this build.
             DefKind::SceneObject { kind: None }
-            | DefKind::Import
             | DefKind::State
             | DefKind::Param
             | DefKind::FnParam
             | DefKind::Local { .. }
             | DefKind::LoopVar => TyId::ERROR,
         }
+    }
+
+    /// An imported name used as a value (decision 0036): an imported
+    /// constant has the type the caller seeded ([`super::check_module_with_imports`]);
+    /// an imported scene, function, struct, material or prefab is not a
+    /// value, as it would not be in its own module.
+    fn imported_value(&mut self, expr: &Expr, id: DefId) -> TyId {
+        if let Some(info) = self.out.consts.get(&id) {
+            return info.ty;
+        }
+        let Some(target) = self.res.import_target(id) else {
+            return TyId::ERROR;
+        };
+        if matches!(
+            target.kind,
+            DefKind::Scene | DefKind::Fn | DefKind::Struct | DefKind::Material | DefKind::Prefab
+        ) {
+            let name = self
+                .res
+                .def(id)
+                .map_or_else(String::new, |d| d.name.clone());
+            let (noun, span) = (target.kind.noun(), target.span);
+            self.report(
+                Diagnostic::new(Code::E3001, format!("'{name}' is a {noun}, not a value."))
+                    .at(expr.span)
+                    .expected("a value")
+                    .actual(noun)
+                    .related(span, format!("the {noun} '{name}' is declared here")),
+            );
+        }
+        TyId::ERROR
     }
 
     /// A prelude name used as a value: types, schemas, enums, namespaces and

@@ -75,6 +75,7 @@ pub fn inspect(root: &ProjectRoot, fs: &dyn Fs, what: Inspect) -> InspectResult 
             front.module.as_ref(),
             front.resolution.as_ref(),
             front.types.as_ref(),
+            &front.dependencies,
         ) {
             Ok(program) => Some(program),
             Err(LowerError::Internal(defect)) => {

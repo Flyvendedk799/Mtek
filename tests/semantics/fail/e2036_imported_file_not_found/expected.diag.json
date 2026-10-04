@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E2036",
+    "file": "src/main.mtek",
+    "startByte": 97,
+    "endByte": 113,
+    "message": "The imported file 'src/palette.mtek' was not found.",
+    "notes": [
+      "\"./palette.mtek\" is resolved relative to the directory of the importing file"
+    ]
+  }
+]

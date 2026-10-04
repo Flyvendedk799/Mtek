@@ -1,0 +1,6 @@
+import { ACCENT } from "./theme.mtek";
+
+scene Demo {
+    clear_color: ACCENT;
+    camera Main {}
+}

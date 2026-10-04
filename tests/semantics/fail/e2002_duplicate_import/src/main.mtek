@@ -1,0 +1,7 @@
+import { ACCENT } from "./palette.mtek";
+import { ACCENT } from "./palette.mtek";
+
+scene Demo {
+    clear_color: ACCENT;
+    camera Main {}
+}

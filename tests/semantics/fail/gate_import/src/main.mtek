@@ -1,6 +1,0 @@
-import { Palette } from "./palette.mtek";
-
-scene Demo {
-    clear_color: Palette;
-    camera Main {}
-}

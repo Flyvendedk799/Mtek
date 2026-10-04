@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E2031",
+    "file": "src/main.mtek",
+    "startByte": 23,
+    "endByte": 50,
+    "message": "The import \"../../shared/palette.mtek\" resolves to a path outside the project root.",
+    "notes": [
+      "relative to 'src/main.mtek', the path climbs above the directory that contains mtek.toml",
+      "help: modules can only import files inside the project"
+    ]
+  }
+]

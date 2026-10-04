@@ -1,0 +1,2 @@
+// A project file where the embedded standard library lives (decision 0030).
+export const SHADE = 1.0;

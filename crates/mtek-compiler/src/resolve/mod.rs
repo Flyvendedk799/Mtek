@@ -16,6 +16,8 @@
 //!   name of an `Entity` field);
 //! * `E2003` an unknown name, with a "did you mean" when exactly one visible
 //!   name is within edit distance 2;
+//! * `E2033` an imported name the imported module does not export, and
+//!   `E2002` for a name imported twice ([`bind_imports`], decision 0036);
 //! * `E0012` `_` used as a name, `E3003` a name in type position that is not a
 //!   type, `E5014` an unknown scene-object kind;
 //! * `E9010` every construct and registry item this build does not implement
@@ -49,24 +51,41 @@
 
 mod defs;
 pub mod gate;
+mod imports;
 mod resolver;
 #[cfg(test)]
 mod tests;
 
-pub use defs::{Def, DefId, DefKind, PreludeItem, Res, Resolution};
+pub use defs::{Def, DefId, DefKind, ImportTarget, PreludeItem, Res, Resolution};
 pub use gate::{
     Construct, ConstructGate, IMPLEMENTED_MILESTONE, binary_construct, construct_gate,
     construct_implemented, unary_construct,
 };
 
+pub use imports::{ImportBindings, bind_imports};
+
 use crate::diagnostics::Diagnostics;
 use crate::syntax::ast::Module;
 
-/// Resolve every name of `module`, reporting to `sink`. The tree may contain
-/// `Error` nodes from recovery; they are skipped. Never panics.
+/// Resolve every name of `module`, a module without imports (or whose imports
+/// bind nothing), reporting to `sink`. The tree may contain `Error` nodes
+/// from recovery; they are skipped. Never panics.
 #[must_use]
 pub fn resolve_module(module: &Module, sink: &mut Diagnostics) -> Resolution {
-    let mut resolver = resolver::Resolver::new(module.node_count, sink);
+    resolve_module_with_imports(module, &ImportBindings::new(), sink)
+}
+
+/// Resolve every name of `module`, whose imported names denote what
+/// `bindings` says ([`bind_imports`]), reporting to `sink`. An imported name
+/// is a [`DefKind::Import`] declaration of the module; its target is
+/// [`Resolution::import_target`]. Never panics.
+#[must_use]
+pub fn resolve_module_with_imports(
+    module: &Module,
+    bindings: &ImportBindings,
+    sink: &mut Diagnostics,
+) -> Resolution {
+    let mut resolver = resolver::Resolver::new(module.node_count, bindings, sink);
     resolver.module(module);
     resolver.finish()
 }

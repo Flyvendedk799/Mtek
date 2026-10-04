@@ -1,0 +1,5 @@
+import { SHADE } from "../std/materials.mtek";
+
+scene Demo {
+    camera Main {}
+}

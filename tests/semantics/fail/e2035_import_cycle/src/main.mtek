@@ -1,0 +1,7 @@
+// main -> a -> b -> a: reported once, at the import that closes the cycle.
+import { A } from "./a.mtek";
+
+scene Demo {
+    clear_color: A;
+    camera Main {}
+}

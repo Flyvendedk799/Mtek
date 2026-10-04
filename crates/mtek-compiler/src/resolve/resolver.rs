@@ -8,6 +8,7 @@ use super::gate::{
     Construct, binary_construct, construct_gate, gate_message, gate_note, is_implemented,
     unary_construct,
 };
+use super::imports::ImportBindings;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
 use crate::project::edit_distance;
 use crate::source::Span;
@@ -68,6 +69,8 @@ enum Want {
 pub(super) struct Resolver<'a> {
     registry: &'static Registry,
     sink: &'a mut Diagnostics,
+    /// What the module's imported names denote ([`super::bind_imports`]).
+    bindings: &'a ImportBindings,
     out: Resolution,
     scopes: Vec<Scope>,
     /// How many gated constructs enclose the current position. Inside one,
@@ -84,16 +87,22 @@ pub(super) struct Resolver<'a> {
 }
 
 impl<'a> Resolver<'a> {
-    pub(super) fn new(node_count: u32, sink: &'a mut Diagnostics) -> Self {
+    pub(super) fn new(
+        node_count: u32,
+        bindings: &'a ImportBindings,
+        sink: &'a mut Diagnostics,
+    ) -> Self {
         let slots = node_count as usize;
         Self {
             registry: registry(),
             sink,
+            bindings,
             out: Resolution {
                 defs: Vec::new(),
                 res: vec![None; slots],
                 decls: vec![None; slots],
                 entry_scene: None,
+                imports: BTreeMap::new(),
             },
             scopes: Vec::new(),
             gated: 0,
@@ -118,8 +127,26 @@ impl<'a> Resolver<'a> {
         self.out.defs.get(id.index())
     }
 
+    /// What `id` declares; for an imported name, what its target declares.
     fn def_kind(&self, id: DefId) -> Option<DefKind> {
-        self.def(id).map(|def| def.kind)
+        let def = self.def(id)?;
+        match def.kind {
+            DefKind::Import => self.out.imports.get(&id).map(|target| target.kind),
+            kind => Some(kind),
+        }
+    }
+
+    /// What a name that denotes the declaration `id` resolves to: the
+    /// declaration, or [`Res::Error`] for an imported name whose import was
+    /// reported (it denotes nothing, and its uses must not be reported
+    /// again).
+    fn def_res(&self, id: DefId) -> Res {
+        match self.def(id) {
+            Some(def) if def.kind == DefKind::Import && !self.out.imports.contains_key(&id) => {
+                Res::Error
+            }
+            _ => Res::Def(id),
+        }
     }
 
     // ----- scopes ----------------------------------------------------------
@@ -257,6 +284,24 @@ impl<'a> Resolver<'a> {
             None => return,
         };
         let first_noun = first_kind.noun();
+        if kind == DefKind::Import && first_kind == DefKind::Import {
+            self.sink.push(
+                Diagnostic::new(
+                    Code::E2002,
+                    format!(
+                        "Duplicate import of '{}': the name is already imported in this module.",
+                        name.name
+                    ),
+                )
+                .at(name.span)
+                .related(
+                    first_span,
+                    format!("'{}' is first imported here", name.name),
+                )
+                .help("import each name once"),
+            );
+            return;
+        }
         let mut diagnostic = Diagnostic::new(
             Code::E2002,
             format!(
@@ -492,7 +537,10 @@ impl<'a> Resolver<'a> {
         match &item.kind {
             ItemKind::Import(decl) => {
                 for name in &decl.names {
-                    self.declare(DefKind::Import, name, name.id, None);
+                    let id = self.declare(DefKind::Import, name, name.id, None);
+                    if let (Some(id), Some(target)) = (id, self.bindings.get(&name.id)) {
+                        self.out.imports.insert(id, *target);
+                    }
                 }
             }
             ItemKind::Const(decl) => {
@@ -881,7 +929,7 @@ impl<'a> Resolver<'a> {
             return;
         }
         let res = match self.lookup(&name.name) {
-            Some(id) => Res::Def(id),
+            Some(id) => self.def_res(id),
             None => {
                 let candidates = self.visible_names(|k| k == Some(DefKind::Prefab));
                 self.report_unknown(
@@ -1052,10 +1100,12 @@ impl<'a> Resolver<'a> {
         }
         let prelude = self.registry.type_def(&name.name).map(|t| t.name);
         if let Some(id) = self.lookup(&name.name) {
-            let Some(def) = self.def(id) else {
+            let (Res::Def(_), Some(def), Some(kind)) =
+                (self.def_res(id), self.def(id), self.def_kind(id))
+            else {
                 return Res::Error;
             };
-            if def.kind == DefKind::Struct {
+            if kind == DefKind::Struct {
                 return Res::Def(id);
             }
             if let Some(type_name) = prelude {
@@ -1063,7 +1113,7 @@ impl<'a> Resolver<'a> {
                 self.gate_prelude(item, name.span);
                 return Res::Prelude(item);
             }
-            let (noun, span) = (def.kind.noun(), def.span);
+            let (noun, span) = (kind.noun(), def.span);
             self.sink.push(
                 Diagnostic::new(
                     Code::E3003,
@@ -1189,7 +1239,7 @@ impl<'a> Resolver<'a> {
             return Res::Error;
         }
         if let Some(id) = self.lookup(name) {
-            return Res::Def(id);
+            return self.def_res(id);
         }
         if let Some(item) = self.prelude_lookup(name, want) {
             self.gate_prelude(item, span);
@@ -1403,7 +1453,7 @@ impl<'a> Resolver<'a> {
             return Res::Error;
         }
         if let Some(id) = self.lookup(&name.name) {
-            return Res::Def(id);
+            return self.def_res(id);
         }
         let kinds = self.registry.prelude_name_kinds(&name.name);
         let kind = if kinds.contains(&PreludeNameKind::Schema) {

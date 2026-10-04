@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E2030",
+    "file": "src/main.mtek",
+    "startByte": 23,
+    "endByte": 42,
+    "message": "Invalid import specifier \"/src/palette.mtek\": absolute paths are not allowed; a specifier starts with `./` or `../`.",
+    "notes": [
+      "help: a specifier is a relative path that starts with `./` or `../`, uses `/` and ends in `.mtek`, for example \"./palette.mtek\""
+    ]
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E2030",
+    "file": "src/main.mtek",
+    "startByte": 23,
+    "endByte": 34,
+    "message": "Invalid import specifier \"./palette\": the imported file must be named with the extension `.mtek`.",
+    "notes": [
+      "help: a specifier is a relative path that starts with `./` or `../`, uses `/` and ends in `.mtek`, for example \"./palette.mtek\""
+    ]
+  }
+]

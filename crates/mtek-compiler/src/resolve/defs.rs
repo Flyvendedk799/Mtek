@@ -2,6 +2,9 @@
 //! side table `NodeId -> Res` for every name (`spec/compiler-architecture.md`
 //! section 4.6).
 
+use std::collections::BTreeMap;
+
+use crate::project::ModuleId;
 use crate::source::Span;
 use crate::stdlib::{Milestone, registry};
 use crate::syntax::ast::NodeId;
@@ -114,6 +117,21 @@ pub struct Def {
     pub parent: Option<DefId>,
 }
 
+/// The exported declaration an imported name denotes (decision 0036).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct ImportTarget {
+    /// The module that declares it.
+    pub module: ModuleId,
+    /// The declaring node in that module's syntax tree (its `DefId` there is
+    /// that module's [`Resolution::def_of`] of this node).
+    pub node: NodeId,
+    /// What it declares: a module item (`Const`, `Fn`, `Struct`, `Material`,
+    /// `Prefab` or `Scene`).
+    pub kind: DefKind,
+    /// The declared name in the declaring module.
+    pub span: Span,
+}
+
 /// A prelude (standard library) item a name denotes. The names are the
 /// registry's (`spec/stdlib.md`).
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -186,6 +204,7 @@ pub struct Resolution {
     pub(super) res: Vec<Option<Res>>,
     pub(super) decls: Vec<Option<DefId>>,
     pub(super) entry_scene: Option<DefId>,
+    pub(super) imports: BTreeMap<DefId, ImportTarget>,
 }
 
 impl Resolution {
@@ -227,6 +246,20 @@ impl Resolution {
     /// Record the selected entry scene.
     pub fn set_entry_scene(&mut self, scene: Option<DefId>) {
         self.entry_scene = scene;
+    }
+
+    /// The declaration the imported name `def` (a [`DefKind::Import`])
+    /// denotes; `None` if the import was reported (its file could not be
+    /// loaded, or the target does not export the name), in which case uses
+    /// of the name resolve to [`Res::Error`].
+    #[must_use]
+    pub fn import_target(&self, def: DefId) -> Option<&ImportTarget> {
+        self.imports.get(&def)
+    }
+
+    /// Every imported name with its target, in `DefId` order.
+    pub fn imports(&self) -> impl Iterator<Item = (DefId, &ImportTarget)> + '_ {
+        self.imports.iter().map(|(def, target)| (*def, target))
     }
 
     /// Every `(node, res)` entry of the side table in node order.

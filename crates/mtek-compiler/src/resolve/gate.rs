@@ -144,8 +144,10 @@ const fn row(subject: &'static str, plural: bool, since: Milestone) -> Construct
 pub const fn construct_gate(construct: Construct) -> ConstructGate {
     use Milestone::{M1, M2, M3, M5};
     match construct {
-        Construct::Import => row("Imports", true, M2),
-        Construct::Export => row("`export`", false, M2),
+        // Modules (task M2-03, decision 0036) are implemented ahead of the M2
+        // gate; this build still reports milestone M1, so the rows say M1.
+        Construct::Import => row("Imports", true, M1),
+        Construct::Export => row("`export`", false, M1),
         Construct::ConstItem => row("`const` items", true, M1),
         Construct::BodyConst => row("`const` declarations in bodies", true, M1),
         Construct::Fn => row("`fn` declarations", true, M2),
@@ -265,6 +267,8 @@ mod tests {
             Construct::Descriptor,
             Construct::Negation,
             Construct::Arithmetic,
+            Construct::Import,
+            Construct::Export,
         ] {
             assert!(
                 is_implemented(construct_gate(construct).since),
@@ -272,8 +276,6 @@ mod tests {
             );
         }
         for construct in [
-            Construct::Import,
-            Construct::Export,
             Construct::Fn,
             Construct::CpuFn,
             Construct::Struct,
@@ -357,10 +359,10 @@ mod tests {
 
     #[test]
     fn messages_follow_the_specified_wording() {
-        let gate = construct_gate(Construct::Import);
+        let gate = construct_gate(Construct::Fn);
         assert_eq!(
             gate_message(gate.subject, gate.plural, gate.since),
-            "Imports are specified for v0.1 but not implemented by this compiler build yet (planned for M2)."
+            "`fn` declarations are specified for v0.1 but not implemented by this compiler build yet (planned for M2)."
         );
         let gate = construct_gate(Construct::Bind);
         assert_eq!(
