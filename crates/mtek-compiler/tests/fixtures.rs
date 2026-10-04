@@ -50,7 +50,7 @@
 // Test-only code: helper functions outside `#[test]` functions may unwrap.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -371,27 +371,6 @@ fn a_single_mistake_is_a_single_error() {
         assert!(
             errors <= 1,
             "fail/{name}.mtek: one mistake, at most one error, got {errors}"
-        );
-    }
-}
-
-#[test]
-fn every_syntax_code_has_a_fail_fixture() {
-    // `spec/testing.md` 3.2: every diagnostic code needs at least one
-    // negative fixture. These are the codes the parser reports.
-    let mut seen = BTreeSet::new();
-    for name in fixture_names("fail", ".mtek") {
-        for d in parse_fixture("fail", &name).diagnostics {
-            seen.insert(d.code.short());
-        }
-    }
-    for code in [
-        "E1001", "E1002", "E1003", "E1004", "E1010", "E1011", "E1020", "E1030", "E1040", "E1050",
-        "E1901", "E4901", "E0013", "W0007",
-    ] {
-        assert!(
-            seen.contains(code),
-            "no fail fixture produces {code}: {seen:?}"
         );
     }
 }
@@ -1192,56 +1171,6 @@ fn semantic_results_are_deterministic() {
 }
 
 #[test]
-fn every_resolver_code_has_a_semantic_fail_fixture() {
-    // `spec/testing.md` 3.2: every diagnostic code needs a negative fixture.
-    // These are the codes of name resolution and of the `check` wiring
-    // (`E0013` is the parser's, reported once even where the resolver meets
-    // the word as a declared name).
-    let mut seen = BTreeSet::new();
-    for name in semantic_fixtures("fail") {
-        for d in check_fixture("fail", &name).report.diagnostics {
-            seen.insert(d.code.short());
-        }
-    }
-    for code in [
-        "E0012", "E0013", "E2001", "E2002", "E2003", "E2004", "E2005", "E3003", "E5014", "E9006",
-        "E9010",
-    ] {
-        assert!(
-            seen.contains(code),
-            "no semantics/fail fixture produces {code}: {seen:?}"
-        );
-    }
-}
-
-#[test]
-fn every_type_checker_code_has_a_semantic_fixture() {
-    // The codes of type checking and constant evaluation (M1-10): errors in
-    // `fail/`, the warning `W3050` in a `pass/` fixture.
-    let mut seen = BTreeSet::new();
-    for suite in ["pass", "fail"] {
-        for name in semantic_fixtures(suite) {
-            for d in check_fixture(suite, &name).report.diagnostics {
-                seen.insert((suite, d.code.short()));
-            }
-        }
-    }
-    for code in [
-        "E2020", "E3001", "E3002", "E3003", "E3010", "E3011", "E3013", "E3014", "E3040", "E3041",
-        "E3090", "E5001",
-    ] {
-        assert!(
-            seen.contains(&("fail", code)),
-            "no semantics/fail fixture produces {code}: {seen:?}"
-        );
-    }
-    assert!(
-        seen.contains(&("pass", "W3050")),
-        "no semantics/pass fixture produces W3050: {seen:?}"
-    );
-}
-
-#[test]
 fn semantic_pass_fixtures_fold_their_constants() {
     // Every constant of the typed-constants fixture is folded, and the
     // fixture's values are the exact results (`tests/consteval_goldens.rs`
@@ -1598,4 +1527,279 @@ fn the_syntax_corpus_resolves_without_panicking() {
             }
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Diagnostic-code coverage (`spec/testing.md` section 3.2)
+// ---------------------------------------------------------------------------
+//
+// Every catalogue code needs at least one negative fixture. The expected
+// files of the fixtures are compared with the compiler's output by the tests
+// above, so the codes they list are exactly the codes the fixtures produce:
+// `tests/syntax/lex/*.diag.json`, `tests/syntax/fail/*.diag.json`, the
+// diagnostic lines of `tests/syntax/ast/*.ast` and
+// `tests/semantics/{pass,fail}/*/expected.diag.json`. A catalogue code that no
+// fixture produces must be listed below with its reason, and only then: the
+// lists are exact, so a code that gains a fixture fails the test until it
+// leaves its list. `NOT_YET_IMPLEMENTED` is the allow-list later milestones
+// shrink; M7 requires it to be empty.
+
+/// Codes this build does not report yet, with the milestone and work item
+/// that implement them.
+const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
+    ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
+    ("W2010", "M2-02: functions and statements"),
+    ("E2030", "M2-03: imports"),
+    ("E2031", "M2-03: imports"),
+    ("E2032", "M2-03: imports"),
+    ("E2033", "M2-03: imports"),
+    ("E2034", "M2-03: imports"),
+    ("E2035", "M2-03: imports"),
+    ("E2036", "M2-03: imports"),
+    ("E3012", "M2: equality operators (decision 0026)"),
+    ("E3020", "M2-01: structs"),
+    ("E3021", "M2-01: structs"),
+    ("E3022", "M2-01: structs"),
+    ("E3023", "M2-01: structs"),
+    ("E3030", "M2: arrays"),
+    ("E3031", "M2: arrays"),
+    ("E3060", "M2-02: functions and statements"),
+    ("E3061", "M2-02: functions and statements"),
+    ("E3070", "M2-02: functions and statements"),
+    ("E3080", "M2-02: functions and statements"),
+    ("W3081", "M2-02: functions and statements"),
+    ("E4001", "M2-02: functions and statements"),
+    ("E4002", "M2-02: functions and statements"),
+    ("W4003", "M2-02: functions and statements"),
+    ("E4010", "M2-04: materials"),
+    ("E4011", "M2-04: materials"),
+    ("E4012", "M2-04: materials"),
+    ("E4013", "M2-04: materials"),
+    ("E4020", "M2-04: materials"),
+    ("E4021", "M2-04: materials"),
+    ("E4030", "M2-04: materials"),
+    ("E4031", "M2-04: materials"),
+    ("E4032", "M2-04: materials"),
+    ("E4040", "M2-04: materials"),
+    ("E4041", "M2-04: materials"),
+    ("E5004", "M3-05: bind"),
+    ("E5005", "M3-05: bind"),
+    ("E5030", "M5: spawn and destroy"),
+    ("E5040", "M5-01: prefabs"),
+    ("E5041", "M5-01: prefabs"),
+    ("E5042", "M5-01: prefabs"),
+    ("E5050", "M3-02: lifecycle functions and handlers"),
+    ("E5051", "M3-02: lifecycle functions and handlers"),
+    ("E5052", "M3-02: lifecycle functions and handlers"),
+    ("E5060", "M3-02: lifecycle functions and handlers"),
+    ("E5061", "M3-02: lifecycle functions and handlers"),
+    ("E5062", "M5: collision events"),
+    ("E5070", "M3-05: bind"),
+    ("E5071", "M5: physics"),
+    ("E5072", "M5: physics"),
+    ("E5073", "M3-02: field writes in handlers"),
+    ("E5074", "M5: entity_ref"),
+    ("E5075", "M3-05: bind"),
+    ("E5080", "M5: spawn and destroy"),
+    ("E5091", "M5: physics"),
+    ("W5101", "M2-04: materials"),
+    ("E5110", "M5: lights in prefabs"),
+    ("E5111", "M4: lights"),
+    (
+        "E5901",
+        "no v0.1 construct switches scenes (`spec/scenes.md` section 1)",
+    ),
+    ("E5902", "M2-04: materials"),
+    ("E6001", "M2-04: materials"),
+    ("E6002", "M2-04: materials"),
+    ("E6003", "M2-04: materials"),
+    ("E6100", "M2-04: materials (generated WGSL)"),
+    ("E7010", "M4: assets"),
+    ("E8011", "M3: run-time field writes"),
+    ("W8030", "M2: arrays (run-time index clamping)"),
+    ("E8030", "M5: spawn and destroy"),
+    ("W8031", "M5: spawn and destroy"),
+    ("W8032", "M5: spawn and destroy"),
+    ("E8033", "M5: spawn and destroy"),
+    ("E8041", "M3: host inputs (decision 0018)"),
+    ("W8061", "M4-09: device-loss recovery (decision 0020)"),
+    ("E8062", "M4-09: device-loss recovery (decision 0020)"),
+    ("W8070", "M3: candidate-based hot reload"),
+    ("E8080", "M6: preview builds"),
+    ("E8090", "M3: run-time field writes"),
+    ("E8100", "M3: run-time field writes and host inputs"),
+    ("E9020", "M3: host inputs (decision 0018)"),
+    ("E9021", "M3: host inputs (decision 0018)"),
+    ("E9030", "M1: `mtek build` in the CLI"),
+];
+
+/// Codes this build implements that no program checked by this build can
+/// produce, with the reason and the test file that covers them instead.
+const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
+    (
+        "E5003",
+        "no M1 schema has a required field (the first are the M5 colliders)",
+        "src/types/scene_tests.rs",
+    ),
+    (
+        "E9002",
+        "imports are M2: a project this build checks has one module",
+        "src/source/map.rs",
+    ),
+    (
+        "E9999",
+        "only a compiler defect produces it",
+        "src/check.rs",
+    ),
+];
+
+/// Codes a fixture cannot express (the bytes a fixture would need do not
+/// survive `.gitattributes`, or the code concerns the project directory
+/// itself), with the test file that covers them; that file must name the
+/// code.
+const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
+    // Files the source manager rejects before they have an id; a carriage
+    // return would not survive `.gitattributes` in a fixture file.
+    ("E0001", "src/project/load/tests.rs"),
+    ("E0002", "src/syntax/lexer_tests.rs"),
+    ("E0003", "src/syntax/lexer_tests.rs"),
+    ("E0004", "src/project/load/tests.rs"),
+    // A fixture is a project directory with `mtek.toml`.
+    ("E9004", "src/project/load/tests.rs"),
+    // Too large to review as fixtures: more than 200 diagnostics in one
+    // file, more than 16 384 entities (generated in this file).
+    ("W9003", "src/diagnostics/sink.rs"),
+    ("E5092", "tests/fixtures.rs"),
+    // Runtime diagnostics: produced by `@mtek/runtime-web`, whose unit tests
+    // are their fixtures (`spec/testing.md` section 2).
+    ("E8001", "../../packages/runtime-web/src/gpu/device.test.ts"),
+    ("E8002", "../../packages/runtime-web/src/gpu/device.test.ts"),
+    ("E8003", "../../packages/runtime-web/src/abi/abi.test.ts"),
+    ("E8004", "../../packages/runtime-web/src/gpu/device.test.ts"),
+    ("E8005", "../../packages/runtime-web/src/gpu/device.test.ts"),
+    ("E8006", "../../packages/runtime-web/src/abi/abi.test.ts"),
+    ("E8040", "../../packages/runtime-web/src/host/app.test.ts"),
+    ("E8050", "../../packages/runtime-web/src/host/app.test.ts"),
+    (
+        "E8051",
+        "../../packages/runtime-web/src/host/shaders.test.ts",
+    ),
+    ("W8060", "../../packages/runtime-web/src/host/app.test.ts"),
+    (
+        "E8063",
+        "../../packages/runtime-web/src/gpu/registry.test.ts",
+    ),
+];
+
+/// The JSON diagnostics files of the fixture suites, and the codes in them.
+fn fixture_codes() -> BTreeMap<String, BTreeSet<String>> {
+    fn add_json(path: &Path, label: &str, out: &mut BTreeMap<String, BTreeSet<String>>) {
+        let text = fs::read_to_string(path).unwrap();
+        let items: Vec<Value> = serde_json::from_str(&text)
+            .unwrap_or_else(|e| panic!("{} is not valid JSON: {e}", path.display()));
+        for item in items {
+            if let Some(code) = item.get("code").and_then(Value::as_str) {
+                out.entry(code.to_owned())
+                    .or_default()
+                    .insert(label.to_owned());
+            }
+        }
+    }
+    let mut codes: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for dir in ["lex", "fail"] {
+        for name in fixture_names(dir, ".diag.json") {
+            let path = syntax_dir().join(dir).join(format!("{name}.diag.json"));
+            add_json(&path, &format!("syntax/{dir}/{name}"), &mut codes);
+        }
+    }
+    for name in fixture_names("ast", ".ast") {
+        let text =
+            fs::read_to_string(syntax_dir().join("ast").join(format!("{name}.ast"))).unwrap();
+        for line in text.lines() {
+            if let Some(code) = line
+                .strip_prefix("; ")
+                .and_then(|rest| rest.split_whitespace().next())
+                .filter(|word| word.starts_with("MTEK-"))
+            {
+                codes
+                    .entry(code.to_owned())
+                    .or_default()
+                    .insert(format!("syntax/ast/{name}"));
+            }
+        }
+    }
+    for suite in ["pass", "fail"] {
+        for name in semantic_fixtures(suite) {
+            let path = semantics_dir().join(suite).join(&name).join(EXPECTED);
+            if path.exists() {
+                add_json(&path, &format!("semantics/{suite}/{name}"), &mut codes);
+            }
+        }
+    }
+    codes
+}
+
+#[test]
+fn every_catalogue_code_has_a_fixture_or_a_listed_reason() {
+    let produced = fixture_codes();
+    let crate_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut listed: BTreeMap<&str, &str> = BTreeMap::new();
+    let mut problems = Vec::new();
+    let lists = NOT_YET_IMPLEMENTED
+        .iter()
+        .map(|(code, _)| (*code, "NOT_YET_IMPLEMENTED"))
+        .chain(
+            UNREACHABLE_IN_THIS_BUILD
+                .iter()
+                .map(|(code, _, _)| (*code, "UNREACHABLE_IN_THIS_BUILD")),
+        )
+        .chain(
+            COVERED_BY_OTHER_TESTS
+                .iter()
+                .map(|(code, _)| (*code, "COVERED_BY_OTHER_TESTS")),
+        );
+    for (code, list) in lists {
+        if Code::parse_short(code).is_none() {
+            problems.push(format!(
+                "{list} lists {code}, which is not a catalogue code"
+            ));
+        }
+        if let Some(other) = listed.insert(code, list) {
+            problems.push(format!("{code} is listed in {other} and {list}"));
+        }
+    }
+    for (code, file) in UNREACHABLE_IN_THIS_BUILD
+        .iter()
+        .map(|(code, _, file)| (*code, *file))
+        .chain(COVERED_BY_OTHER_TESTS.iter().copied())
+    {
+        match fs::read_to_string(crate_dir.join(file)) {
+            Ok(text) if text.contains(code) => {}
+            Ok(_) => problems.push(format!("{code}: {file} does not name it")),
+            Err(e) => problems.push(format!("{code}: cannot read {file}: {e}")),
+        }
+    }
+    for code in Code::ALL {
+        let short = code.short();
+        let by_fixture = produced.contains_key(code.as_str());
+        match (by_fixture, listed.get(short)) {
+            (true, Some(list)) => problems.push(format!(
+                "{short} now has a fixture ({:?}); remove it from {list}",
+                produced.get(code.as_str())
+            )),
+            (false, None) => problems.push(format!(
+                "no fixture produces {short} ({}); add one, or list it with its reason",
+                code.title()
+            )),
+            _ => {}
+        }
+    }
+    for code in produced.keys() {
+        if Code::parse(code).is_none() {
+            problems.push(format!(
+                "a fixture expects {code}, which is not a catalogue code"
+            ));
+        }
+    }
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
 }

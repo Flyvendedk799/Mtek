@@ -154,30 +154,3 @@ fn the_blueprint_example_lexes_cleanly_with_the_expected_shape() {
     assert!(lexed.trivia.is_empty());
     assert_eq!(lexed.tokens.len(), 218, "217 tokens and Eof");
 }
-
-#[test]
-fn every_lexer_diagnostic_code_has_a_fixture() {
-    // `spec/testing.md` section 3.2: every diagnostic code needs at least one
-    // negative fixture. E0001, E0002 and E0004 belong to the source map
-    // (`src/source`); E0003 needs carriage returns, which `.gitattributes`
-    // would normalise in a fixture file, so it is covered by the unit tests in
-    // `src/syntax/lexer_tests.rs`; E0012 and E0013 are reported by the
-    // resolver and parser, not the lexer.
-    let mut seen = std::collections::BTreeSet::new();
-    for name in fixture_names() {
-        let bytes = fs::read(fixture_dir().join(format!("{name}.mtek"))).unwrap();
-        let mut map = SourceMap::new();
-        let id = map
-            .add(ProjectPath::new(&format!("{name}.mtek")).unwrap(), &bytes)
-            .unwrap();
-        for diagnostic in lex(map.get(id).unwrap()).diagnostics {
-            seen.insert(diagnostic.code.short());
-        }
-    }
-    let expected = [
-        "E0005", "E0006", "E0010", "E0011", "E0020", "E0021", "E0022", "E0023", "E0024", "E0025",
-    ];
-    for code in expected {
-        assert!(seen.contains(code), "no fixture produces {code}: {seen:?}");
-    }
-}

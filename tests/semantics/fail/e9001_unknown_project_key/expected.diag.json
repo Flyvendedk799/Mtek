@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E9001",
+    "file": null,
+    "startByte": null,
+    "endByte": null,
+    "message": "Invalid project configuration: unknown key 'project.colour' in mtek.toml.",
+    "notes": [
+      "help: valid keys: name, language, entry, scene",
+      "at mtek.toml:4:1"
+    ]
+  }
+]
