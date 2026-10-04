@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3014",
+    "file": "src/main.mtek",
+    "startByte": 54,
+    "endByte": 66,
+    "message": "The operator `*` is not defined for f32 and i32.",
+    "notes": [
+      "help: v0.1 has no implicit conversions; convert one operand explicitly, for example `f32(…)`"
+    ]
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3002",
+    "file": "src/main.mtek",
+    "startByte": 49,
+    "endByte": 73,
+    "message": "The constructor `vec3` takes 1, 2 or 3 arguments, but 4 were given.",
+    "notes": [
+      "the forms are vec3(s: f32), vec3(xy: vec2, z: f32), vec3(x: f32, y: f32, z: f32)"
+    ]
+  }
+]

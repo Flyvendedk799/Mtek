@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 73,
+    "endByte": 77,
+    "message": "Argument 1 of `vec3(x: f32, y: f32, z: f32)` expects f32, but received bool.",
+    "expected": "f32",
+    "actual": "bool"
+  }
+]

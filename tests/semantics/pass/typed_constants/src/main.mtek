@@ -1,0 +1,24 @@
+// Constant expressions of every M1 kind, folded at compile time.
+const LOWEST: i32 = -2147483648;
+const SEGMENTS: u32 = 16 * 2;
+const HALF: f32 = 1 / 2;
+const UP = vec3(0, 1, 0);
+const TILT = quat.euler(-0.2, 0.0, 0.0);
+const SPIN = quat.axis_angle(UP * 2.0, 0.5) * TILT;
+const BRAND = #6b5cff;
+const DIM = color.linear(BRAND.rgb * 0.5, BRAND.a);
+const FLAT = vec4(UP.xz, -1.0, HALF);
+
+scene Demo {
+    clear_color: color.srgb(vec3(0.1, 0.1, 0.12), 1.0);
+    camera Main {
+        position: vec3(0.0, f32(SEGMENTS) / 8.0, 5.0);
+        rotation: SPIN;
+    }
+    entity Ball {
+        position: UP * HALF + vec3(FLAT.w);
+        scale: vec3(2.0) - vec3(FLAT.xy, 0.5);
+        mesh: Sphere { radius: HALF; segments: SEGMENTS; rings: SEGMENTS / 2 };
+        material: Unlit { color: DIM };
+    }
+}

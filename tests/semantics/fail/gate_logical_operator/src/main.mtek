@@ -1,0 +1,6 @@
+// Only the outermost operator is reported.
+const B = !(true && false);
+
+scene Demo {
+    camera Main {}
+}

@@ -117,6 +117,7 @@ Scopes per `spec/language.md` §4; `DefId(u32)` for every declaration; side tabl
 - `Ty` interned (`TyId(u32)` into a `TyInterner`); kinds per `spec/language.md` §5 plus `Ty::Error`.
 - Checker: expressions, literal resolution (bidirectional: expected type flows into literals and constructor arguments), conversions, operators table, statements, returns.
 - `consteval.rs`: exact `f32`/`i32`/`u32` evaluation in Rust for constant expressions — every constant expression wherever it appears (`spec/language.md` §6.3). `+ - * /` and `sqrt` use Rust `f32` (IEEE binary32, correctly rounded); transcendental functions and the sRGB conversion of colour literals use the `libm` crate (Rust's `std` transcendental functions are platform-dependent and would make goldens differ between Windows and Linux). Overflow or division by zero → `E3040`.
+- The choices the specification leaves open (which operators M1 implements, how literals meet operators, non-finite folds, the operation order of the folded quaternion functions, the type of a descriptor literal, the evaluation order of constants) are decision 0026.
 - `effects.rs`: call graph, recursion detection (`E4001`), transitive effect levels, GPU reachability checks (§8.4 of the language reference).
 - `scene.rs`: schema field checks, scene-object kinds, nesting/body rules, lifecycle/event signatures, single-writer analysis (every assignment and `bind` site is collected first, then conflicts reported with both spans), binding dependency graph with cycle detection (`E5075`, full cycle path).
 

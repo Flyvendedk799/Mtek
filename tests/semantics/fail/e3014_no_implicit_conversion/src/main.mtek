@@ -1,0 +1,7 @@
+const HALF: f32 = 0.5;
+const COUNT = 2;
+const TOTAL = HALF * COUNT;
+
+scene Demo {
+    camera Main {}
+}

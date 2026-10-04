@@ -1,0 +1,8 @@
+// Three constants that depend on each other: reported once, with the path.
+const A: f32 = B + 1.0;
+const B: f32 = C * 2.0;
+const C: f32 = A;
+
+scene Demo {
+    camera Main {}
+}

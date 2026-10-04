@@ -1,0 +1,5 @@
+const HUGE = 1.0e39;
+
+scene Demo {
+    camera Main {}
+}

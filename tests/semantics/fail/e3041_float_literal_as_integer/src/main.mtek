@@ -1,0 +1,5 @@
+const COUNT: i32 = 3.5;
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,4 @@
+scene Demo {
+    clear_color: #202020 * 2.0;
+    camera Main {}
+}

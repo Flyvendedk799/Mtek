@@ -22,6 +22,7 @@ pub mod project;
 pub mod resolve;
 pub mod source;
 pub mod syntax;
+pub mod types;
 
 mod check;
 pub use check::{CheckResult, check};

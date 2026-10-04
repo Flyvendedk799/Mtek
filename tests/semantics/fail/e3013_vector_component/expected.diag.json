@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3013",
+    "file": "src/main.mtek",
+    "startByte": 48,
+    "endByte": 49,
+    "message": "The type vec2 has no component 'z'.",
+    "notes": [
+      "vec2 components are .x and .y, and swizzles of 2 to 4 of them"
+    ]
+  }
+]

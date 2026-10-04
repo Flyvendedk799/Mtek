@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E3041",
+    "file": "src/main.mtek",
+    "startByte": 117,
+    "endByte": 128,
+    "message": "The integer literal -2147483649 is not representable as i32.",
+    "expected": "i32",
+    "notes": [
+      "i32 values range from -2147483648 to 2147483647"
+    ]
+  }
+]

@@ -1,0 +1,7 @@
+scene Demo {
+    camera Main {}
+    entity Cube {
+        visible: 1 == 1;
+        mesh: Box {};
+    }
+}

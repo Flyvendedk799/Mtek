@@ -1,0 +1,5 @@
+scene Demo {
+    camera Main {}
+    const START = Cube.position;
+    entity Cube { mesh: Box {}; }
+}

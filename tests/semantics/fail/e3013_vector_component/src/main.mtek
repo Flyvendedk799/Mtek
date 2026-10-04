@@ -1,0 +1,6 @@
+const SIZE = vec2(1.0, 2.0);
+const DEPTH = SIZE.z;
+
+scene Demo {
+    camera Main {}
+}

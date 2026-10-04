@@ -1,0 +1,5 @@
+scene Demo {
+    camera Main {
+        rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0));
+    }
+}

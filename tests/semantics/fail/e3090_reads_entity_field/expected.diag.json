@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3090",
+    "file": "src/main.mtek",
+    "startByte": 50,
+    "endByte": 63,
+    "message": "The value of the constant 'START' is not a constant expression: it reads the field 'position' of the entity 'Cube'.",
+    "related": [
+      {
+        "message": "the constant 'START' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 42,
+        "endByte": 47
+      }
+    ],
+    "notes": [
+      "a constant may use only literals, other constants, operators, conversions, constructors and const-eligible built-in functions"
+    ]
+  }
+]

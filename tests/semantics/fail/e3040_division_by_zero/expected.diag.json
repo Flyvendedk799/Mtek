@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3040",
+    "file": "src/main.mtek",
+    "startByte": 22,
+    "endByte": 28,
+    "message": "Division by zero in a constant expression: 32 / 0.",
+    "notes": [
+      "constant expressions are evaluated at compile time, where division by zero is an error"
+    ]
+  }
+]

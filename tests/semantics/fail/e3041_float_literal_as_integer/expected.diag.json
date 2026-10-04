@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E3041",
+    "file": "src/main.mtek",
+    "startByte": 19,
+    "endByte": 22,
+    "message": "The float literal 3.5 is not representable as i32: a float literal always has type f32.",
+    "expected": "i32",
+    "actual": "f32",
+    "notes": [
+      "help: write an integer literal, or convert explicitly: `i32(3.5)`"
+    ]
+  }
+]

@@ -1,0 +1,5 @@
+scene Demo {
+    camera Main {}
+    const SPEED = Cube.speed;
+    entity Cube { mesh: Box {}; }
+}

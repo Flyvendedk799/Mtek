@@ -1,0 +1,5 @@
+const AXIS = vec3;
+
+scene Demo {
+    camera Main {}
+}

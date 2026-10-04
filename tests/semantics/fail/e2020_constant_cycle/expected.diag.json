@@ -1,0 +1,32 @@
+[
+  {
+    "code": "MTEK-E2020",
+    "file": "src/main.mtek",
+    "startByte": 82,
+    "endByte": 83,
+    "message": "The constant 'A' is defined in terms of itself: A → B → C → A.",
+    "related": [
+      {
+        "message": "'A' uses 'B' here",
+        "file": "src/main.mtek",
+        "startByte": 91,
+        "endByte": 92
+      },
+      {
+        "message": "'B' uses 'C' here",
+        "file": "src/main.mtek",
+        "startByte": 115,
+        "endByte": 116
+      },
+      {
+        "message": "'C' uses 'A' here",
+        "file": "src/main.mtek",
+        "startByte": 139,
+        "endByte": 140
+      }
+    ],
+    "notes": [
+      "help: a constant cannot depend on itself; give one constant of the cycle a value that does not refer back"
+    ]
+  }
+]

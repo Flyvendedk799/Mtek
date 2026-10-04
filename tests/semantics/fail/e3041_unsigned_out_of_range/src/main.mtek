@@ -1,0 +1,6 @@
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere { segments: 4294967296 };
+    }
+}

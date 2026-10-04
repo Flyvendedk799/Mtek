@@ -3,6 +3,7 @@
 //! section 4.6).
 
 use crate::source::Span;
+use crate::stdlib::{Milestone, registry};
 use crate::syntax::ast::NodeId;
 
 /// Identity of one declaration of the module, dense from 0 in the order the
@@ -136,6 +137,30 @@ pub enum PreludeItem {
     SceneObject(&'static str),
     /// The event after `on`.
     Event(&'static str),
+}
+
+impl PreludeItem {
+    /// The milestone in which the registry says the item is implemented
+    /// (`None` for a name the registry does not have).
+    #[must_use]
+    pub fn since(self) -> Option<Milestone> {
+        let registry = registry();
+        match self {
+            PreludeItem::Type(name) => registry.type_def(name).map(|t| t.since),
+            PreludeItem::Schema(name) => registry.schema(name).map(|s| s.since),
+            PreludeItem::Enum(name) => registry.enum_def(name).map(|e| e.since),
+            PreludeItem::Namespace(name) => registry.namespace(name).map(|n| n.since),
+            PreludeItem::Function(name) => registry.intrinsic(name).map(|i| i.since),
+            PreludeItem::NamespaceMember { namespace, member } => registry
+                .namespace_member(namespace, member)
+                .map(|m| m.since()),
+            PreludeItem::EnumMember { enum_name, member } => {
+                registry.enum_member(enum_name, member).map(|m| m.since)
+            }
+            PreludeItem::SceneObject(keyword) => registry.scene_object(keyword).map(|k| k.since),
+            PreludeItem::Event(name) => registry.event(name).map(|e| e.since),
+        }
+    }
 }
 
 /// What a name resolves to.

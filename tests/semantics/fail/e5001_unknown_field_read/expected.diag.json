@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 55,
+    "endByte": 60,
+    "message": "The entity 'Cube' has no field 'speed'.",
+    "notes": [
+      "the fields of Entity are position, rotation, scale, visible, mesh, material"
+    ]
+  }
+]

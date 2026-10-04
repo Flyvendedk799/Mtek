@@ -1,6 +1,7 @@
 //! Name resolution over the fixture corpora: side-table coverage of every
 //! declaration and name in the positive syntax corpus, and robustness of the
-//! whole front end (lexer, parser, resolver) against mutated programs
+//! whole front end (lexer, parser, resolver, type checker and constant
+//! evaluator) against mutated programs
 //! (`spec/testing.md` section 3.3). These tests read the corpora from disk,
 //! which library code may not do (`no_direct_io.rs`), so they live here.
 
@@ -14,6 +15,7 @@ use mtek_compiler::resolve::{Resolution, resolve_module};
 use mtek_compiler::source::FileId;
 use mtek_compiler::syntax::ast::Module;
 use mtek_compiler::syntax::{lex_str, parse_module, walk_module};
+use mtek_compiler::types::check_module;
 
 struct Resolved {
     module: Module,
@@ -29,6 +31,8 @@ fn resolve_text(text: &str) -> Resolved {
     let parsed = parse_module(text, &lexed.tokens, &lexed.trivia, &mut sink);
     let syntax_errors = sink.len();
     let resolution = resolve_module(&parsed.module, &mut sink);
+    // Type checking and constant evaluation run on whatever was recovered.
+    let _types = check_module(&parsed.module, text, &resolution, &mut sink);
     Resolved {
         module: parsed.module,
         resolution,
@@ -127,8 +131,8 @@ fn mtek_files(dir: &Path, out: &mut Vec<String>) {
 fn mutated_programs_resolve_without_panicking() {
     // `spec/testing.md` 3.3 for this stage: token-level mutations (delete,
     // duplicate, swap) and truncations of the syntax and semantic corpora go
-    // through lexing, parsing and resolution. Nothing panics, every span lies
-    // in its file, every diagnostic has a catalogue code.
+    // through lexing, parsing, resolution and type checking. Nothing panics,
+    // every span lies in its file, every diagnostic has a catalogue code.
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests");
     let mut corpus = Vec::new();
     mtek_files(&root.join("syntax/pass"), &mut corpus);

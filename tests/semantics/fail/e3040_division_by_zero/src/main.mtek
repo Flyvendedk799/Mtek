@@ -1,0 +1,5 @@
+const SEGMENTS: u32 = 32 / 0;
+
+scene Demo {
+    camera Main {}
+}

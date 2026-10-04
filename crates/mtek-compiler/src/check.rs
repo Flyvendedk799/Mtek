@@ -2,7 +2,8 @@
 //! (`spec/compiler-architecture.md` sections 3 and 4.12).
 //!
 //! Load the project (`mtek.toml`, the entry module), lex and parse the entry
-//! module, resolve its names, and select the entry scene. Every stage reports
+//! module, resolve its names, select the entry scene, type-check the module
+//! and fold its constant expressions. Every stage reports
 //! to one [`Diagnostics`] sink and the next stage runs on whatever the
 //! previous one recovered.
 
@@ -12,8 +13,9 @@ use crate::resolve::{Resolution, resolve_module};
 use crate::source::Fs;
 use crate::syntax::ast::{ItemKind, Module};
 use crate::syntax::{lex, parse_module};
+use crate::types::{Typeck, check_module};
 
-/// What [`check`] produced. Later stages (types, M1-10) extend it.
+/// What [`check`] produced.
 #[derive(Debug)]
 pub struct CheckResult {
     /// The loaded project; `None` if it could not be loaded (`E9001`,
@@ -23,6 +25,8 @@ pub struct CheckResult {
     pub module: Option<Module>,
     /// The names of the entry module, with the selected entry scene.
     pub resolution: Option<Resolution>,
+    /// The types and folded constants of the entry module.
+    pub types: Option<Typeck>,
     /// Every diagnostic, in report order.
     pub report: Report,
 }
@@ -36,6 +40,7 @@ pub fn check(root: &ProjectRoot, fs: &dyn Fs) -> CheckResult {
             project: None,
             module: None,
             resolution: None,
+            types: None,
             report: sink.finish(),
         };
     };
@@ -48,6 +53,7 @@ pub fn check(root: &ProjectRoot, fs: &dyn Fs) -> CheckResult {
             project: Some(project),
             module: None,
             resolution: None,
+            types: None,
             report: sink.finish(),
         };
     };
@@ -65,10 +71,12 @@ pub fn check(root: &ProjectRoot, fs: &dyn Fs) -> CheckResult {
         &entry,
         &mut sink,
     );
+    let types = check_module(&module, source.text(), &resolution, &mut sink);
     CheckResult {
         project: Some(project),
         module: Some(module),
         resolution: Some(resolution),
+        types: Some(types),
         report: sink.finish(),
     }
 }

@@ -1,0 +1,5 @@
+scene Demo {
+    camera Main {
+        position: vec3(3.0e38 * 10.0, 0.0, 0.0);
+    }
+}

@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E3011",
+    "file": "src/main.mtek",
+    "startByte": 35,
+    "endByte": 41,
+    "message": "A value of type u32 cannot be negated.",
+    "actual": "u32",
+    "notes": [
+      "unsigned integers have no negative values"
+    ]
+  }
+]

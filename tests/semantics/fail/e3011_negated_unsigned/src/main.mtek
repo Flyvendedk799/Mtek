@@ -1,0 +1,6 @@
+const COUNT: u32 = 3;
+const BACK = -COUNT;
+
+scene Demo {
+    camera Main {}
+}
