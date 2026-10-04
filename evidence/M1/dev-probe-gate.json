@@ -1,0 +1,43 @@
+{
+  "adapter": {
+    "description": "AMD Radeon RX 7900 XTX",
+    "isFallbackAdapter": false
+  },
+  "before": {
+    "overlay": 0,
+    "clear": 19884,
+    "dock": 492,
+    "sea": 56000,
+    "buoy": 424,
+    "other": 0,
+    "dockX": 161.8,
+    "dockY": 123
+  },
+  "after": {
+    "overlay": 0,
+    "clear": 19884,
+    "dock": 603,
+    "sea": 55966,
+    "buoy": 347,
+    "other": 0,
+    "dockX": 162,
+    "dockY": 73.9
+  },
+  "brokenEdit": {
+    "overlayCount": 0,
+    "text": "mtek: build failed\n\nsrc/main.mtek:11:16: error[MTEK-E3102]: Field 'scale' of entity 'Dock' expects vec3, but received vec2.\n  = a vec3 has 3 components; this value has 2"
+  },
+  "devOutput": [
+    "mtek dev: serving http://127.0.0.1:47311/ (Ctrl+C to stop)",
+    "built 'probe' (dev): 9 files in dist, build 456fb900e885c89f; 0 errors, 0 warnings (19 ms)",
+    "built 'probe' (dev): 9 files in dist, build 4d4d34f65e92d351; 0 errors, 0 warnings (19 ms)",
+    "error[MTEK-E3102]: Field 'scale' of entity 'Dock' expects vec3, but received vec2.",
+    "  --> src/main.mtek:11:16",
+    "   |",
+    "11 |         scale: vec2(W, 0.2);",
+    "   |                ^^^^^^^^^^^^ expected vec3, found vec2",
+    "   = note: a vec3 has 3 components; this value has 2",
+    "build failed: 1 error, 0 warnings (1 ms)",
+    "built 'probe' (dev): 9 files in dist, build 456fb900e885c89f; 0 errors, 0 warnings (20 ms)"
+  ]
+}
