@@ -59,6 +59,7 @@ export const writers = {   // keyed by layout id (spec/gpu-layout.md §5); write
 };
 
 // Every user function (pure fn and cpu fn) takes ctx first: f_pulse(ctx, t). Keyed by symbol.
+// (The generated name is module-qualified, f_<hash8>_pulse: decision 0040.)
 export const functions = { "src/main.mtek::pulse": f_pulse };
 
 export const scenes = {

@@ -125,7 +125,7 @@ Scopes per `spec/language.md` §4; `DefId(u32)` for every declaration; side tabl
 The **typed high-level IR**: the semantic contract between language and code generation (blueprint §5.1). Self-contained (no AST references), every node carries a `Span`, every expression its `TyId`, every name a resolved `DefId`/symbol. Contents: modules; functions (params, result, effect, body); materials (params with types/defaults, fragment function, used `SurfaceInput` fields); prefabs; the entry scene (fields, state, cameras, entity tree, components with descriptor values, handlers, lifecycle functions, bindings with explicit dependency edges, host inputs). `serde::Serialize` with stable field order → `mtek inspect --ir --format json`. The node shapes, symbols, spans and value encoding of the M1 subset, `lower_to_ir` and the two inspect formats are decision 0028; function items with their typed bodies are decision 0038.
 
 ### 4.9 `lowering/`
-- `cpu.rs`: IR → JS AST (§6).
+- `cpu.rs`: IR → JS AST (§6); this build keeps it in `emit_js/cpu.rs`, next to the JS AST it produces (decision 0040).
 - `shader.rs`: IR (fragment + GPU-reachable pure functions) → Shader IR (§7).
 - `shader_ir.rs`: the Shader IR types (§7.1); `standard_stage.rs`: the generated vertex stage and fragment wrapper of `spec/materials.md` §3.2–3.3; `builtin_unlit.rs`: the temporary compiler-built `Unlit` of decision 0013 (removed in M2-09). Files, generated names, the span map and the shader artifact are decision 0029.
 
@@ -133,7 +133,7 @@ The **typed high-level IR**: the semantic contract between language and code gen
 `layout/`: the algorithm of `spec/gpu-layout.md` §4 and the built-in blocks. `plan/`: material instances, update classes, sharing eligibility, bind group plan, host-input codecs, binding evaluation order. What the M1 plan decides (mesh deduplication, instance order, all params `initial`) is decision 0030.
 
 ### 4.11 `emit_js/`, `emit_wgsl/`, `package/`
-`emit_js`: JS AST printer (2-space indent, deterministic), writer emitter, Source Map v3 encoder (small in-house VLQ writer with unit tests against known vectors), `app.d.ts` emitter. `emit_wgsl`: Shader IR printer, span map, Naga validation and error mapping (§8). `package`: manifest builder (schema-valid by construction; a test validates every golden manifest against `spec/manifest.schema.json`), hashing, `index.html`, file set assembly as `BTreeMap<String, Vec<u8>>`. Module files, the generated names and statement order of `app.js`, the order of manifest arrays and spans, number printing, the canonical build identity, the reserved `std/` directory and replace-on-success as a pure plan are decision 0030.
+`emit_js`: JS AST printer (2-space indent, deterministic), writer emitter, Source Map v3 encoder (small in-house VLQ writer with unit tests against known vectors), `app.d.ts` emitter. `emit_wgsl`: Shader IR printer, span map, Naga validation and error mapping (§8). `package`: manifest builder (schema-valid by construction; a test validates every golden manifest against `spec/manifest.schema.json`), hashing, `index.html`, file set assembly as `BTreeMap<String, Vec<u8>>`. Module files, the generated names and statement order of `app.js`, the order of manifest arrays and spans, number printing, the canonical build identity, the reserved `std/` directory and replace-on-success as a pure plan are decision 0030; the CPU functions, the compiler's copy of the `rt` operation index and the expression-level source map are decision 0040.
 
 ### 4.12 Public API (`lib.rs`)
 
@@ -164,7 +164,7 @@ The CLI, the tests and the LSP all call these; none re-implements compiler logic
 - Dynamic array indexing emits `a[rt.clampIndex(i, N, spanId, ctx)]` (clamps and reports `W8030` once per span in dev builds).
 - Handlers and lifecycle functions become functions taking `(ctx, …)`; entity handlers take `self` = the entity record. Scene state is `ctx.s.<name>`; writes to entity fields go through `ctx` setters.
 - Untrusted-preview builds (M6) insert a loop-budget check at each loop back-edge: `if (--ctx.budget < 0) rt.budgetExceeded(spanId)`.
-- Every emitted statement and expression with a source origin adds a Source Map v3 mapping to its Mtek span.
+- Every emitted statement and expression with a source origin adds a Source Map v3 mapping to its Mtek span. Function naming (`f_<hash8>_<name>`), the inline forms, span ids of clamped indices, the mapping of nested expressions and the `exec.json` row format are decision 0040.
 
 ## 7. Shader IR and WGSL emission
 
