@@ -1,5 +1,12 @@
 //! The `mtek` command line tool (milestone M0: `--version` only).
 
+// The replace-on-success writer of `mtek build`; the command itself arrives with M1-19.
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "called by `mtek build` (M1-19)")
+)]
+mod dist;
+
 use std::io::Write;
 use std::process::ExitCode;
 
