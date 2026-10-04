@@ -3,13 +3,15 @@
 // (shaders, writers and layout records of every layout fixture, `.out/bridge/`) with the
 // compiler's `bridge_spike` example, bundles the bridge page and prepares the mount fixture. It builds
 // the CLI (`cargo build -p mtek-cli --locked`) and every M1 fixture (`fixtures/m1/*`) with
-// `mtek build --mode test` into `.out/m1/`, plus the post-build failure variants (support/m1-fixtures.ts).
+// `mtek build --mode test` into `.out/m1/`, plus the post-build failure variants (support/m1-fixtures.ts),
+// and the numeric probe (`.out/numeric/`, support/numeric-probe.ts) with its page.
 import { execFileSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { build } from "esbuild";
 import { BROWSER_ROOT, REPO_ROOT } from "./environment.ts";
 import { buildCli, buildM1Fixtures } from "./m1-fixtures.ts";
+import { buildNumericProbe } from "./numeric-probe.ts";
 import { startStaticServer } from "./serve.ts";
 
 /** Bundles one page script into `.out/<name>.js` and copies its HTML next to it. */
@@ -84,6 +86,10 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   const cli = buildCli();
   process.env["MTEK_CLI"] = cli;
   buildM1Fixtures(cli);
+
+  // The numeric probe (M2-08): the compiler's WGSL for every operation of cpu.json plus a test-only harness.
+  buildNumericProbe(cli, join(out, "numeric"));
+  await buildPage(out, join("pages", "numeric.ts"), "numeric.html", "numeric");
 
   const server = await startStaticServer(out);
   // Workers are started after global setup and inherit this variable.
