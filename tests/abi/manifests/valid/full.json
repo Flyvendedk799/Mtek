@@ -873,10 +873,6 @@
       "sha256": "b7f9a53a15a88547fd0e55a920c2ee23c17e029db786da9a3cb3d1a39621f46a",
       "bytes": 1296,
       "kind": "mesh-data",
-      "span": 21,
-      "preprocessing": [
-        "u8 indices widened to u16"
-      ],
       "primitives": [
         {
           "source": {
@@ -907,7 +903,11 @@
             "radius": 0.866
           }
         }
-      ]
+      ],
+      "preprocessing": [
+        "u8 indices widened to u16"
+      ],
+      "span": 21
     },
     {
       "url": "assets/de7030234493a8be.png",
@@ -915,10 +915,10 @@
       "bytes": 2048,
       "kind": "image",
       "colorSpace": "srgb",
-      "span": 22,
       "preprocessing": [
         "mipmaps not generated"
-      ]
+      ],
+      "span": 22
     },
     {
       "url": "assets/e29579ce6430e703.png",
@@ -926,8 +926,8 @@
       "bytes": 512,
       "kind": "image",
       "colorSpace": "linear",
-      "span": 23,
-      "preprocessing": []
+      "preprocessing": [],
+      "span": 23
     }
   ],
   "scene": {
@@ -1130,7 +1130,6 @@
         "index": 0,
         "material": "src/main.mtek::Pulse",
         "entity": 0,
-        "shareable": false,
         "params": [
           {
             "name": "tint",
@@ -1141,13 +1140,13 @@
             "name": "phase",
             "class": "imperative"
           }
-        ]
+        ],
+        "shareable": false
       },
       {
         "index": 1,
         "material": "std/materials.mtek::Pbr",
         "entity": 1,
-        "shareable": true,
         "params": [
           {
             "name": "base_color",
@@ -1177,13 +1176,13 @@
               "name": "sampler.linear_repeat"
             }
           }
-        ]
+        ],
+        "shareable": true
       },
       {
         "index": 2,
         "material": "src/main.mtek::Glow",
         "entity": 2,
-        "shareable": false,
         "params": [
           {
             "name": "mask",
@@ -1201,13 +1200,13 @@
               "name": "sampler.nearest_clamp"
             }
           }
-        ]
+        ],
+        "shareable": false
       },
       {
         "index": 3,
         "material": "std/materials.mtek::Pbr",
         "entity": 5,
-        "shareable": false,
         "params": [
           {
             "name": "base_color",
@@ -1238,7 +1237,8 @@
               "name": "sampler.linear_clamp"
             }
           }
-        ]
+        ],
+        "shareable": false
       }
     ],
     "bindings": [
