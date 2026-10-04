@@ -1,0 +1,11 @@
+fn sum(v: vec3) -> f32 {
+    var total = 0.0;
+    for x in v {
+        total += x;
+    }
+    return total;
+}
+
+scene Demo {
+    camera Main {}
+}

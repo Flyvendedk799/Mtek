@@ -1,0 +1,10 @@
+const LIMIT: f32 = 10.0;
+
+fn raise(x: f32) -> f32 {
+    LIMIT = x;
+    return LIMIT;
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 91,
+    "endByte": 96,
+    "message": "Argument 1 of `brighten(x: f32)` expects f32, but received i32.",
+    "expected": "f32",
+    "actual": "i32"
+  }
+]

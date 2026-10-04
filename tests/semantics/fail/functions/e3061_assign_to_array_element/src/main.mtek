@@ -1,0 +1,9 @@
+fn zeroed() -> array<f32, 3> {
+    var xs = [1.0, 2.0, 3.0];
+    xs[0] = 0.0;
+    return xs;
+}
+
+scene Demo {
+    camera Main {}
+}

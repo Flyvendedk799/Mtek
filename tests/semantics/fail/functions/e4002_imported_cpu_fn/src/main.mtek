@@ -1,0 +1,9 @@
+import { roll } from "./dice.mtek";
+
+fn jitter(x: f32) -> f32 {
+    return x + roll(x);
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 37,
+    "endByte": 38,
+    "message": "The function 'count' returns f32, but this value has type i32.",
+    "expected": "f32",
+    "actual": "i32"
+  }
+]

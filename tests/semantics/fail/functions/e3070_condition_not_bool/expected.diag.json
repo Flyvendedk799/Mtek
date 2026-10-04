@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E3070",
+    "file": "src/main.mtek",
+    "startByte": 39,
+    "endByte": 40,
+    "message": "The condition of `if` must be bool, but it has type i32.",
+    "expected": "bool",
+    "actual": "i32",
+    "notes": [
+      "there is no truthiness in v0.1; compare explicitly, for example `x != 0`"
+    ]
+  }
+]

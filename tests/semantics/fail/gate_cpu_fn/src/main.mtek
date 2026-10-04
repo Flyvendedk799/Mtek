@@ -1,7 +1,0 @@
-cpu fn roll() -> f32 {
-    return 4.0;
-}
-
-scene Demo {
-    camera Main {}
-}

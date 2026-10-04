@@ -1,0 +1,21 @@
+fn is_even(n: u32) -> bool {
+    if n == 0 {
+        return true;
+    }
+    return is_odd(n - 1);
+}
+
+fn is_odd(n: u32) -> bool {
+    if n == 0 {
+        return false;
+    }
+    return check(n - 1);
+}
+
+fn check(n: u32) -> bool {
+    return is_even(n);
+}
+
+scene Demo {
+    camera Main {}
+}

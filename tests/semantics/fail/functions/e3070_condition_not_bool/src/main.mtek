@@ -1,0 +1,10 @@
+fn clamp_count(n: i32) -> i32 {
+    if n {
+        return n;
+    }
+    return 0;
+}
+
+scene Demo {
+    camera Main {}
+}

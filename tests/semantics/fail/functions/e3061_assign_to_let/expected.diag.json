@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 55,
+    "endByte": 58,
+    "message": "Cannot assign to the local 'sum': it is declared with `let`.",
+    "related": [
+      {
+        "message": "the local 'sum' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 42,
+        "endByte": 45
+      }
+    ],
+    "notes": [
+      "help: declare it with `var` to assign to it"
+    ]
+  }
+]

@@ -1,0 +1,28 @@
+const TAPS: i32 = 4;
+
+fn blur(x: f32) -> f32 {
+    var total = 0.0;
+    for i in 0..TAPS * 2 {
+        total += x * f32(i);
+    }
+    for w in [0.25, 0.5, 0.25] {
+        total += w;
+    }
+    return total;
+}
+
+fn shade(x: f32) -> f32 {
+    return blur(x);
+}
+
+cpu fn report(label: string, steps: i32) -> f32 {
+    var total = 0.0;
+    for i in 0..steps {
+        total += shade(1.0);
+    }
+    return total;
+}
+
+scene Demo {
+    camera Main {}
+}

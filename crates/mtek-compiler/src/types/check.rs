@@ -31,12 +31,14 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::Typeck;
+use super::body::BodyState;
+use super::facts::{BuiltinCall, CallFact, Callee};
 use super::ops::{
     arithmetic_result, comparison_result, literal_operand_type, logical_result, negation_result,
 };
 use super::ty::{MAX_TYPE_DEPTH, Ty, TyId};
 use super::value::{ArithOp, CompareOp, ConstValue, LogicOp, Scalar};
+use super::{FnSig, Typeck};
 
 /// The largest length of `array<T, N>` (`spec/language.md` 5.1).
 pub(super) const MAX_ARRAY_LENGTH: u32 = 65_536;
@@ -48,7 +50,8 @@ use crate::resolve::{
 };
 use crate::source::Span;
 use crate::stdlib::{
-    ArgType, IntrinsicDef, NamespaceMember, Registry, SchemaCategory, SigType, TypeKind, registry,
+    ArgType, Domain, IntrinsicDef, NamespaceMember, Registry, SchemaCategory, SigType, TypeKind,
+    registry,
 };
 use crate::syntax::ast::{
     ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr,
@@ -125,9 +128,9 @@ pub(super) fn binary_class(op: BinaryOp) -> BinaryClass {
     }
 }
 
-/// What a call turned out to be, for constant evaluation.
+/// What a call turned out to be (for constant evaluation and the typed IR).
 #[derive(Clone, Debug, PartialEq)]
-pub(super) enum CallKind {
+pub enum CallKind {
     /// `vecN(..)`.
     Vector(usize),
     /// `f32(x)`, `i32(x)`, `u32(x)`.
@@ -143,13 +146,16 @@ pub(super) enum CallKind {
         name: &'static str,
         const_eligible: bool,
     },
-    /// A user function (never constant in v0.1, section 8.1).
-    UserFunction(String),
+    /// A user function (never constant in v0.1, section 8.1): its name and
+    /// the declaration the callee resolved to (a `fn` of this module or the
+    /// imported name).
+    UserFunction { name: String, def: DefId },
 }
 
-/// What a field access turned out to be, for constant evaluation.
+/// What a field access turned out to be (for constant evaluation and the
+/// typed IR).
 #[derive(Clone, Debug, PartialEq)]
-pub(super) enum FieldKind {
+pub enum FieldKind {
     /// Components of a vector, quaternion or colour (a swizzle when several).
     Components(Vec<usize>),
     /// A field of a named entity or scene object (`Cube.position`).
@@ -192,6 +198,11 @@ pub(super) struct Checker<'a> {
     pub(super) imported_structs: BTreeMap<DefId, TyId>,
     /// Struct literals without errors, with their type (for folding).
     pub(super) struct_literals: BTreeMap<NodeId, TyId>,
+    /// The signatures of imported functions, by the `DefId` of the imported
+    /// name (seeded by [`super::check_module_with_imports`]).
+    pub(super) imported_fns: BTreeMap<DefId, FnSig>,
+    /// The function body being checked.
+    pub(super) body: Option<BodyState>,
 }
 
 impl<'a> Checker<'a> {
@@ -236,10 +247,14 @@ impl<'a> Checker<'a> {
             struct_done: BTreeSet::new(),
             imported_structs: BTreeMap::new(),
             struct_literals: BTreeMap::new(),
+            imported_fns: BTreeMap::new(),
+            body: None,
         }
     }
 
-    pub(super) fn finish(self) -> Typeck {
+    pub(super) fn finish(mut self) -> Typeck {
+        self.out.calls = std::mem::take(&mut self.calls);
+        self.out.fields = std::mem::take(&mut self.fields);
         self.out
     }
 
@@ -281,6 +296,14 @@ impl<'a> Checker<'a> {
     pub(super) fn module(&mut self, module: &'a Module) {
         self.collect_constants(module);
         self.evaluate_constants();
+        // Every signature before any body or call is checked.
+        for item in &module.items {
+            if let ItemKind::Fn(decl) = &item.kind
+                && construct_implemented(fn_construct(decl))
+            {
+                self.function_signature(decl);
+            }
+        }
         for item in &module.items {
             match &item.kind {
                 ItemKind::Const(decl) if construct_implemented(Construct::ConstItem) => {
@@ -294,8 +317,11 @@ impl<'a> Checker<'a> {
                         self.struct_info(def);
                     }
                 }
-                // Functions, materials and prefabs are gated in this build
-                // (see the tests); imports have nothing to check here.
+                ItemKind::Fn(decl) if construct_implemented(fn_construct(decl)) => {
+                    self.function_body(decl);
+                }
+                // Materials and prefabs are gated in this build (see the
+                // tests); imports have nothing to check here.
                 _ => {}
             }
         }
@@ -309,6 +335,9 @@ impl<'a> Checker<'a> {
                 ItemKind::Const(decl) => self.collect_constant(decl),
                 ItemKind::Struct(decl) if construct_implemented(Construct::Struct) => {
                     self.collect_struct(decl);
+                }
+                ItemKind::Fn(decl) if construct_implemented(fn_construct(decl)) => {
+                    self.collect_block_constants(&decl.body);
                 }
                 ItemKind::Scene(scene) => {
                     for member in &scene.members {
@@ -854,15 +883,15 @@ impl<'a> Checker<'a> {
                 TyId::ERROR
             }
             DefKind::Import => self.imported_value(expr, id),
-            // An unknown scene-object kind was reported (`E5014`); `state`,
-            // params, parameters and locals are declared by constructs that
-            // are gated in this build.
-            DefKind::SceneObject { kind: None }
-            | DefKind::State
-            | DefKind::Param
-            | DefKind::FnParam
-            | DefKind::Local { .. }
-            | DefKind::LoopVar => TyId::ERROR,
+            // Parameters and locals of functions have the types their
+            // declarations gave them (decision 0038); those of constructs
+            // gated in this build are untyped.
+            DefKind::FnParam | DefKind::Local { .. } | DefKind::LoopVar => {
+                self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR)
+            }
+            // An unknown scene-object kind was reported (`E5014`); `state` and
+            // params are declared by constructs that are gated in this build.
+            DefKind::SceneObject { kind: None } | DefKind::State | DefKind::Param => TyId::ERROR,
         }
     }
 
@@ -1378,7 +1407,7 @@ impl<'a> Checker<'a> {
     }
 
     /// The type a literal operand adopts next to an operand of type `other`.
-    fn operand_literal_target(
+    pub(super) fn operand_literal_target(
         &mut self,
         op: ArithOp,
         other: TyId,
@@ -1394,7 +1423,13 @@ impl<'a> Checker<'a> {
         }
     }
 
-    fn arithmetic_type(&mut self, span: Span, op: ArithOp, lhs: TyId, rhs: TyId) -> TyId {
+    pub(super) fn arithmetic_type(
+        &mut self,
+        span: Span,
+        op: ArithOp,
+        lhs: TyId,
+        rhs: TyId,
+    ) -> TyId {
         let (l, r) = (self.out.interner.get(lhs), self.out.interner.get(rhs));
         if l == Ty::Error || r == Ty::Error {
             return TyId::ERROR;
@@ -1415,7 +1450,7 @@ impl<'a> Checker<'a> {
     /// scalar type of the other operand (a float literal next to an integer
     /// is asked to become that integer, which is `E3041`); two literal
     /// operands are `f32` if either is a float literal, `i32` otherwise.
-    fn same_typed_operands(&mut self, lhs: &Expr, rhs: &Expr) -> (TyId, TyId) {
+    pub(super) fn same_typed_operands(&mut self, lhs: &Expr, rhs: &Expr) -> (TyId, TyId) {
         match (literal_kind(lhs), literal_kind(rhs)) {
             (None, Some(kind)) => {
                 let lhs_ty = self.check(lhs, None);
@@ -1573,21 +1608,15 @@ impl<'a> Checker<'a> {
                     if !is_implemented(function.since) {
                         return TyId::ERROR;
                     }
+                    self.record_builtin_call(expr.span, name.to_owned(), function);
                     let kind = CallKind::Intrinsic {
                         name: function.name,
                         const_eligible: function.const_eligible,
                     };
                     return self.function_call(expr, name, function, args, kind, expected);
                 }
-                Some(Res::Def(id))
-                    if self.res.def(id).is_some_and(|def| def.kind == DefKind::Fn) =>
-                {
-                    // Functions are gated in this build: their signatures are
-                    // not typed, but the call is known not to be constant.
-                    self.synth_args(args);
-                    let name = self.res.def(id).map(|d| d.name.clone()).unwrap_or_default();
-                    self.calls.insert(expr.id, CallKind::UserFunction(name));
-                    return TyId::ERROR;
+                Some(Res::Def(id)) if self.names_function(id) => {
+                    return self.user_call(expr, id, args);
                 }
                 Some(Res::Error) | None => {
                     self.synth_args(args);
@@ -1738,7 +1767,7 @@ impl<'a> Checker<'a> {
         ty
     }
 
-    fn report_argument(
+    pub(super) fn report_argument(
         &mut self,
         span: Span,
         index: usize,
@@ -1839,6 +1868,7 @@ impl<'a> Checker<'a> {
                     const_eligible: function.const_eligible,
                 };
                 let name = format!("{namespace}.{member}");
+                self.record_builtin_call(expr.span, name.clone(), function);
                 self.function_call(expr, &name, function, args, kind, None)
             }
             Some(NamespaceMember::Value(value)) => {
@@ -2291,6 +2321,109 @@ impl<'a> Checker<'a> {
         };
         self.fields.insert(expr.id, FieldKind::Components(indices));
         result
+    }
+}
+
+/// The construct of a function declaration.
+pub(super) fn fn_construct(decl: &crate::syntax::ast::FnDecl) -> Construct {
+    if decl.cpu {
+        Construct::CpuFn
+    } else {
+        Construct::Fn
+    }
+}
+
+impl Checker<'_> {
+    /// Whether `id` names a user function (of this module or imported).
+    pub(super) fn names_function(&self, id: DefId) -> bool {
+        match self.res.def(id).map(|d| d.kind) {
+            Some(DefKind::Fn) => true,
+            Some(DefKind::Import) => self
+                .res
+                .import_target(id)
+                .is_some_and(|t| t.kind == DefKind::Fn),
+            _ => false,
+        }
+    }
+
+    /// Record, for the program-wide passes, a call of a built-in function
+    /// whose domain or handler restriction matters (decision 0038).
+    fn record_builtin_call(&mut self, span: Span, name: String, function: &IntrinsicDef) {
+        if function.domain == Domain::Both && !function.handlers_only {
+            return;
+        }
+        if let Some(body) = &mut self.body {
+            body.facts.calls.push(CallFact {
+                span,
+                callee: Callee::Builtin(BuiltinCall {
+                    name,
+                    domain: function.domain,
+                    handlers_only: function.handlers_only,
+                }),
+            });
+        }
+    }
+
+    /// A call of the user function `id` (section 6.10): positional
+    /// arguments, all required, each checked against its parameter.
+    fn user_call(&mut self, expr: &Expr, id: DefId, args: &[Expr]) -> TyId {
+        let name = self.res.def(id).map(|d| d.name.clone()).unwrap_or_default();
+        if let Some(body) = &mut self.body {
+            body.facts.calls.push(CallFact {
+                span: expr.span,
+                callee: Callee::Function(id),
+            });
+        }
+        let sig = match self.res.def(id).map(|d| d.kind) {
+            Some(DefKind::Fn) => self.out.functions.get(&id).map(|info| info.sig.clone()),
+            _ => self.imported_fns.get(&id).cloned(),
+        };
+        let Some(sig) = sig else {
+            // An imported function of a module not checked first (only an
+            // import cycle causes it): untyped, still not constant.
+            self.synth_args(args);
+            self.calls
+                .insert(expr.id, CallKind::UserFunction { name, def: id });
+            return TyId::ERROR;
+        };
+        let params_text: Vec<String> = sig
+            .params
+            .iter()
+            .map(|(param, ty)| format!("{param}: {}", self.display(*ty)))
+            .collect();
+        let text = format!("{name}({})", params_text.join(", "));
+        if args.len() != sig.params.len() {
+            self.synth_args(args);
+            let count = sig.params.len();
+            let ret = if sig.ret == TyId::UNIT {
+                String::new()
+            } else {
+                format!(" -> {}", self.display(sig.ret))
+            };
+            self.report(
+                Diagnostic::new(
+                    Code::E3002,
+                    format!(
+                        "`{name}` takes {count} argument{}, but {} {} given.",
+                        if count == 1 { "" } else { "s" },
+                        args.len(),
+                        if args.len() == 1 { "was" } else { "were" }
+                    ),
+                )
+                .at(expr.span)
+                .note(format!("signature: {text}{ret}")),
+            );
+        } else {
+            for (index, (arg, (_, param))) in args.iter().zip(&sig.params).enumerate() {
+                let actual = self.check(arg, Some(*param));
+                if !self.assignable(actual, *param) {
+                    self.report_argument(arg.span, index, &text, *param, actual);
+                }
+            }
+        }
+        self.calls
+            .insert(expr.id, CallKind::UserFunction { name, def: id });
+        sig.ret
     }
 }
 

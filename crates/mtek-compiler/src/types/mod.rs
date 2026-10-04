@@ -1,5 +1,5 @@
 //! Types and constant evaluation (`spec/compiler-architecture.md` section
-//! 4.7, `spec/language.md` sections 5, 6 and 8.1, decisions 0026 and 0035).
+//! 4.7, `spec/language.md` sections 5–8, decisions 0026, 0035 and 0038).
 //!
 //! [`check_module`] types every expression of the constructs this build
 //! implements and folds every constant expression. It reports to the
@@ -23,7 +23,16 @@
 //! * `W3050` a conversion to the type the value already has;
 //! * `E3040` overflow, division by zero or a non-finite `f32` while folding;
 //! * `E2020` a constant that depends on itself; `E3090` a constant whose
-//!   value is not a constant expression.
+//!   value is not a constant expression;
+//! * in functions (`body`, decision 0038): `E3061` an assignment to a place
+//!   that is not assignable, `E3060` to a multi-component swizzle, `W2010`
+//!   a `var` never assigned, `E3070` a condition that is not `bool`, `E3080`
+//!   a missing return, `W3081` unreachable code.
+//!
+//! The program-wide pass ([`effects`]) then joins the functions of every
+//! module into one call graph: `E4001` recursion, `E4002`/`W4003` effect
+//! levels, `E5080` handler-only built-ins, and the GPU reachability rules
+//! `E4010`–`E4013`.
 //!
 //! The scene checks ([`scene`], decision 0027) then validate every scene,
 //! camera and entity body and every descriptor literal against the registry
@@ -39,10 +48,17 @@
 //! - `ops`: the operator typing table;
 //! - `check`: the checker; `consteval`: folding and constant declarations;
 //!   `intrinsics`: the compile-time semantics of the global intrinsics;
+//!   `body`: function signatures and statements; [`facts`]: what a body
+//!   calls and declares; [`effects`]: the program-wide pass;
 //! - [`scene`]: the scene and schema checks and their result.
 
+mod body;
 mod check;
 mod consteval;
+pub mod effects;
+#[cfg(test)]
+mod effects_tests;
+pub mod facts;
 mod intrinsics;
 mod ops;
 pub mod scene;
@@ -56,6 +72,9 @@ pub mod value;
 
 use std::collections::BTreeMap;
 
+pub use check::{CallKind, FieldKind};
+pub use effects::{EffectLevel, FnEffect, FnRef, ProgramEffects, Roots};
+pub use facts::{BodyFacts, BuiltinCall, CallFact, Callee, CpuOnlySite};
 pub use scene::{CheckedEntity, CheckedField, CheckedObject, CheckedScene, FieldOrigin};
 pub use ty::{StructDef, StructKey, Ty, TyId, TyInterner};
 pub use value::{ArithOp, ConstValue, EvalError, EvalResult, Scalar};
@@ -103,6 +122,31 @@ pub enum NonConstantKind {
     RunTimeValue,
 }
 
+/// The signature of a function: its parameters and result, in its module's
+/// interner.
+#[derive(Clone, Debug, PartialEq)]
+pub struct FnSig {
+    /// The parameters' names and types, in order.
+    pub params: Vec<(String, TyId)>,
+    /// The result type; [`TyId::UNIT`] for a function without `->`.
+    pub ret: TyId,
+    /// Declared `cpu fn`.
+    pub cpu: bool,
+}
+
+/// A checked function declaration (decision 0038).
+#[derive(Clone, Debug, PartialEq)]
+pub struct FnInfo {
+    pub name: String,
+    /// The declared name.
+    pub name_span: Span,
+    /// The whole declaration.
+    pub span: Span,
+    pub sig: FnSig,
+    /// What its body calls and declares, for the program-wide passes.
+    pub facts: BodyFacts,
+}
+
 /// What type checking and constant evaluation produced for one module.
 #[derive(Clone, Debug)]
 pub struct Typeck {
@@ -114,6 +158,14 @@ pub struct Typeck {
     /// The type of every struct the module declares, by its `DefId`.
     structs: BTreeMap<DefId, TyId>,
     scenes: Vec<CheckedScene>,
+    /// Every function the module declares, by its `DefId`.
+    functions: BTreeMap<DefId, FnInfo>,
+    /// The type of every parameter, local and loop variable of a function.
+    locals: BTreeMap<DefId, TyId>,
+    /// What each call expression without errors calls.
+    calls: BTreeMap<NodeId, CallKind>,
+    /// What each field expression without errors reads.
+    fields: BTreeMap<NodeId, FieldKind>,
 }
 
 impl Typeck {
@@ -127,6 +179,10 @@ impl Typeck {
             consts: BTreeMap::new(),
             structs: BTreeMap::new(),
             scenes: Vec::new(),
+            functions: BTreeMap::new(),
+            locals: BTreeMap::new(),
+            calls: BTreeMap::new(),
+            fields: BTreeMap::new(),
         }
     }
 
@@ -189,6 +245,36 @@ impl Typeck {
     pub fn display(&self, ty: TyId) -> String {
         self.interner.display(ty)
     }
+
+    /// The function declared as `def`.
+    #[must_use]
+    pub fn function(&self, def: DefId) -> Option<&FnInfo> {
+        self.functions.get(&def)
+    }
+
+    /// Every function the module declares, in `DefId` (source) order.
+    pub fn functions(&self) -> impl Iterator<Item = (DefId, &FnInfo)> + '_ {
+        self.functions.iter().map(|(def, info)| (*def, info))
+    }
+
+    /// The type of the parameter, local or loop variable `def`.
+    #[must_use]
+    pub fn local_ty(&self, def: DefId) -> Option<TyId> {
+        self.locals.get(&def).copied()
+    }
+
+    /// What the call expression `node` calls, if it was typed without errors.
+    #[must_use]
+    pub fn call_kind(&self, node: NodeId) -> Option<&CallKind> {
+        self.calls.get(&node)
+    }
+
+    /// What the field expression `node` reads, if it was typed without
+    /// errors.
+    #[must_use]
+    pub fn field_kind(&self, node: NodeId) -> Option<&FieldKind> {
+        self.fields.get(&node)
+    }
 }
 
 /// A constant another module exports, as the module that imports it sees
@@ -216,12 +302,23 @@ pub struct ImportedStruct<'a> {
     pub ty: TyId,
 }
 
-/// Everything a module imports that has a type: constants and structs, by
-/// the `DefId` of the imported name in the importing module.
+/// A function another module exports (decision 0038): its signature in the
+/// exporting module's interner.
+#[derive(Clone, Copy, Debug)]
+pub struct ImportedFn<'a> {
+    /// The exporting module's types.
+    pub interner: &'a TyInterner,
+    /// The function's signature (ids of `interner`).
+    pub sig: &'a FnSig,
+}
+
+/// Everything a module imports that has a type: constants, structs and
+/// functions, by the `DefId` of the imported name in the importing module.
 #[derive(Clone, Debug, Default)]
 pub struct Imports<'a> {
     pub consts: ImportedConsts<'a>,
     pub structs: BTreeMap<DefId, ImportedStruct<'a>>,
+    pub fns: BTreeMap<DefId, ImportedFn<'a>>,
 }
 
 /// Type-check `module` (whose source text is `text`) and fold its constant
@@ -275,6 +372,29 @@ pub fn check_module_with_imports(
             imported.info.value.clone()
         };
         checker.out.consts.insert(*def, ConstInfo { ty, value });
+    }
+    for (def, imported) in &imports.fns {
+        let params = imported
+            .sig
+            .params
+            .iter()
+            .map(|(name, ty)| {
+                let ty = checker.out.interner.import_from(imported.interner, *ty);
+                (name.clone(), ty)
+            })
+            .collect();
+        let ret = checker
+            .out
+            .interner
+            .import_from(imported.interner, imported.sig.ret);
+        checker.imported_fns.insert(
+            *def,
+            FnSig {
+                params,
+                ret,
+                cpu: imported.sig.cpu,
+            },
+        );
     }
     checker.module(module);
     checker.scene_checks(module);

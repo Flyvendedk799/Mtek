@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 32,
+    "endByte": 36,
+    "message": "Cannot assign to the parameter 'size': parameters are immutable.",
+    "related": [
+      {
+        "message": "the parameter 'size' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 8,
+        "endByte": 12
+      }
+    ],
+    "notes": [
+      "help: copy it into a `var` local and assign to that"
+    ]
+  }
+]

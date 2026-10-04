@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 34,
+    "endByte": 35,
+    "message": "The function 'log_level' has no result type, so its `return` takes no value.",
+    "expected": "()",
+    "actual": "f32",
+    "notes": [
+      "help: declare the result type: `fn log_level(…) -> T`, or write `return;`"
+    ]
+  }
+]

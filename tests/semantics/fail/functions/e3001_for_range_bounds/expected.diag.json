@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 60,
+    "endByte": 66,
+    "message": "The bounds of a `for` range must both be i32 or both be u32, but they are f32 and f32.",
+    "expected": "i32 or u32",
+    "actual": "f32"
+  }
+]

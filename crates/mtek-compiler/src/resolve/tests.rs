@@ -186,22 +186,22 @@ fn locals_are_visible_from_the_end_of_their_declaration() {
 #[test]
 fn sibling_blocks_may_reuse_a_name_but_nested_ones_may_not() {
     let r = resolve_text("fn f() { { let a = 1.0; } { let a = 2.0; } }\n");
-    assert_eq!(r.codes(), ["E9010"]);
+    assert!(r.codes().is_empty(), "{:?}", r.diagnostics);
     let r = resolve_text("fn f(i: i32) { for i in 0..3 { } }\n");
-    assert_eq!(r.codes(), ["E9010", "E2001"]);
+    assert_eq!(r.codes(), ["E2001"]);
     let r = resolve_text("fn f() { for i in 0..3 { let i = 1; } }\n");
-    assert_eq!(r.codes(), ["E9010", "E2001"]);
+    assert_eq!(r.codes(), ["E2001"]);
 }
 
 #[test]
 fn a_local_or_parameter_may_reuse_a_prelude_function_but_calling_it_is_e2004() {
     let r = resolve_text("fn f(length: f32) -> f32 { let step = length; return step; }\n");
-    assert_eq!(r.codes(), ["E9010"], "{:?}", r.diagnostics);
+    assert!(r.codes().is_empty(), "{:?}", r.diagnostics);
     let length = r.def_named("length");
     assert_eq!(r.res("name", "length", 0), Some(Res::Def(length.id)));
 
     let r = resolve_text("fn f(length: f32) -> f32 { return length(vec3(1.0)); }\n");
-    assert_eq!(r.codes(), ["E9010", "E2004"]);
+    assert_eq!(r.codes(), ["E2004"]);
     assert_eq!(r.res("name", "length", 0), Some(Res::Error));
 }
 
@@ -209,14 +209,14 @@ fn a_local_or_parameter_may_reuse_a_prelude_function_but_calling_it_is_e2004() {
 fn only_locals_parameters_state_and_param_may_reuse_a_prelude_function() {
     for (source, codes) in [
         ("const sin = 1.0;", vec!["E2001"]),
-        ("fn sin() {}", vec!["E9010", "E2001"]),
+        ("fn sin() {}", vec!["E2001"]),
         ("scene Demo { entity sin {} }", vec!["E2001"]),
         ("scene Demo { camera sin {} }", vec!["E2001"]),
         ("scene Demo { state sin: f32 = 0.0; }", vec!["E9010"]),
         ("prefab P { param sin: f32 = 0.0; }", vec!["E9010"]),
         (
             "fn f() { let sin = 1.0; var cos = 2.0; for tan in 0..2 { } }",
-            vec!["E9010"],
+            vec![],
         ),
     ] {
         assert_eq!(resolve_text(source).codes(), codes, "{source}");
@@ -264,7 +264,7 @@ fn a_material_or_prefab_param_may_share_its_name_with_a_prelude_type() {
     assert_eq!(r.codes(), ["E9010", "E2001"]);
     // A local may not share a prelude type name.
     let r = resolve_text("fn f() { let color = 1.0; }\n");
-    assert_eq!(r.codes(), ["E9010", "E2001"]);
+    assert_eq!(r.codes(), ["E2001"]);
 }
 
 #[test]
@@ -289,7 +289,7 @@ fn self_means_the_enclosing_entity_or_prefab() {
     assert_eq!(r.res("self", "self", 0), Some(Res::Def(crate_def.id)));
 
     let r = resolve_text("fn f() -> f32 { return self; }\n");
-    assert_eq!(r.codes(), ["E9010", "E2003"]);
+    assert_eq!(r.codes(), ["E2003"], "{:?}", r.diagnostics);
 }
 
 #[test]
@@ -384,8 +384,8 @@ fn importing_a_name_twice_is_e2002() {
 fn type_names_resolve_to_structs_and_prelude_types() {
     let r =
         resolve_text("struct Pair { a: f32; b: vec3; }\nfn f(p: Pair) -> f32 { return p.a; }\n");
-    // Only the function is gated (structs are implemented, decision 0035).
-    assert_eq!(r.codes(), ["E9010"]);
+    // Structs (decision 0035) and functions (decision 0038) are implemented.
+    assert!(r.codes().is_empty(), "{:?}", r.diagnostics);
     let pair = r.def_named("Pair");
     assert_eq!(r.res("ident", "Pair", 1), Some(Res::Def(pair.id)));
     assert_eq!(

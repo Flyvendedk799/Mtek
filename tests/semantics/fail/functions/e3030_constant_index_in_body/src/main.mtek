@@ -1,0 +1,7 @@
+fn third(xs: array<f32, 2>) -> f32 {
+    return xs[2];
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,12 @@
+fn sum_to(n: i32) -> i32 {
+    var total = 0;
+    for i in 0..n {
+        i = i + 1;
+        total += i;
+    }
+    return total;
+}
+
+scene Demo {
+    camera Main {}
+}

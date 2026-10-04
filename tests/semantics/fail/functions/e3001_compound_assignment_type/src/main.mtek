@@ -1,0 +1,9 @@
+fn shrink(v: vec3, m: mat4) -> f32 {
+    var s = 1.0;
+    s *= v;
+    return s;
+}
+
+scene Demo {
+    camera Main {}
+}

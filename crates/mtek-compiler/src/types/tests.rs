@@ -659,9 +659,9 @@ fn constants_that_are_not_constant_expressions_are_e3090() {
     );
     // Reading the field has the field's type.
     assert_eq!(c.ty("X"), "vec3");
-    // A call of a user function (which is gated in this build).
+    // A call of a user function (decision 0038: never constant in v0.1).
     let c = consts("fn f() -> f32 { return 1.0; }\nconst X = f();");
-    assert_eq!(c.codes(), ["E9010", "E3090"]);
+    assert_eq!(c.codes(), ["E3090"]);
 }
 
 #[test]
@@ -1125,8 +1125,6 @@ fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
     // so the resolver reports them. When a milestone implements one, this
     // test fails until the checker types it.
     for construct in [
-        Construct::Fn,
-        Construct::CpuFn,
         Construct::Material,
         Construct::Prefab,
         Construct::State,
@@ -1147,4 +1145,153 @@ fn diagnostics_have_the_catalogue_severity() {
         assert_eq!(d.severity, d.code.severity());
         assert!(matches!(d.code, Code::W3050 | Code::E3013));
     }
+}
+
+// ----- functions and statements (decision 0038) ---------------------------
+
+/// The type of the local, parameter or loop variable `name`.
+fn local_ty(c: &Checked, name: &str) -> String {
+    let def = c
+        .resolution
+        .defs()
+        .iter()
+        .find(|d| {
+            d.name == name
+                && matches!(
+                    d.kind,
+                    DefKind::Local { .. } | DefKind::FnParam | DefKind::LoopVar
+                )
+        })
+        .unwrap_or_else(|| panic!("no local {name}"));
+    c.typeck.display(c.typeck.local_ty(def.id).expect("typed"))
+}
+
+#[test]
+fn a_function_using_every_statement_checks_cleanly() {
+    let c = clean(
+        "struct Pair { a: f32; b: vec3; }
+const N: u32 = 3;
+fn helper(x: f32) -> f32 { return x * 0.5; }
+fn every(p: Pair, xs: array<f32, 3>, flag: bool) -> vec3 {
+    let k = 2;
+    let half = helper(p.a);
+    var v = p.b;
+    var count: u32 = 0;
+    const LOCAL: f32 = 4.0 * 2.0;
+    v.y = half + LOCAL;
+    v *= 2.0;
+    v += vec3(1.0);
+    for i in 0..N {
+        count += i;
+        if i == 2 { break; } else if i == 7 { continue; }
+    }
+    for x in xs {
+        v.x -= x;
+    }
+    { let inner = k * 2; v.z /= f32(inner); }
+    if flag && count > 1 {
+        return v;
+    } else {
+        return -v;
+    }
+}
+cpu fn noisy() { helper(1.0); }",
+    );
+    assert_eq!(local_ty(&c, "k"), "i32");
+    assert_eq!(local_ty(&c, "half"), "f32");
+    assert_eq!(local_ty(&c, "v"), "vec3");
+    assert_eq!(local_ty(&c, "count"), "u32");
+    assert_eq!(local_ty(&c, "i"), "u32");
+    assert_eq!(local_ty(&c, "x"), "f32");
+    assert_eq!(local_ty(&c, "p"), "Pair");
+    assert_eq!(c.value("LOCAL"), Some(ConstValue::F32(8.0)));
+    let every = c
+        .typeck
+        .functions()
+        .find(|(_, f)| f.name == "every")
+        .map(|(_, f)| f)
+        .unwrap();
+    assert_eq!(every.sig.params.len(), 3);
+    assert_eq!(c.typeck.display(every.sig.ret), "vec3");
+    assert_eq!(every.facts.calls.len(), 1, "{:?}", every.facts);
+    assert!(every.facts.unbounded_loops.is_empty());
+}
+
+#[test]
+fn statements_after_a_leaving_statement_are_w3081_once_per_block() {
+    let c = consts(
+        "fn f(x: f32) -> f32 {
+    for i in 0..3 { break; let a = 1; let b = 2; }
+    if x > 0.0 { return 1.0; } else { return 2.0; }
+    let dead = 3.0;
+    return dead;
+}",
+    );
+    assert_eq!(c.codes(), ["W3081", "W3081"], "{:#?}", c.diagnostics);
+    assert_eq!(
+        c.diagnostics[0].message,
+        "Unreachable code: it follows a `break`, which always leaves the block."
+    );
+    assert_eq!(
+        c.diagnostics[1].message,
+        "Unreachable code: it follows an `if` whose every branch leaves the block, which always leaves the block."
+    );
+}
+
+#[test]
+fn a_var_never_assigned_is_w2010_and_one_assigned_through_a_component_is_not() {
+    let c = consts("fn f() -> f32 { var a = 1.0; var v = vec3(0.0); v.x = 2.0; return a + v.x; }");
+    assert_eq!(c.codes(), ["W2010"], "{:#?}", c.diagnostics);
+    assert_eq!(
+        c.diagnostics[0].message,
+        "The variable 'a' is never reassigned; declare it with `let`."
+    );
+}
+
+#[test]
+fn component_assignment_needs_a_vector_var() {
+    for (source, message) in [
+        (
+            "fn f(q: quat) -> quat { var r = q; r.x = 1.0; return r; }",
+            "Cannot assign to a component of a quat value: only single components of vectors are assignable.",
+        ),
+        (
+            "fn f(v: vec3) -> vec3 { let w = v; w.x = 1.0; return w; }",
+            "Cannot assign to the local 'w': it is declared with `let`.",
+        ),
+        (
+            "fn f() { helper() = 1.0; }\nfn helper() -> f32 { return 1.0; }",
+            "This expression is not an assignable place.",
+        ),
+    ] {
+        let c = consts(source);
+        assert_eq!(c.only("E3061").message, message, "{source}");
+    }
+}
+
+#[test]
+fn literals_in_bodies_adopt_the_type_their_context_needs() {
+    // A range of literals is i32; a literal bound next to u32 is u32; a
+    // compound assignment's literal adopts the place's type.
+    let c = clean(
+        "fn f(n: u32) -> u32 { var t: u32 = 0; for i in 0..n { t += 1; } for j in 0..4 { t *= 2; } return t; }",
+    );
+    assert_eq!(local_ty(&c, "i"), "u32");
+    assert_eq!(local_ty(&c, "j"), "i32");
+}
+
+#[test]
+fn calls_type_against_imported_and_local_signatures_in_any_order() {
+    // A call before the declaration it calls.
+    let c = clean("fn a() -> f32 { return b(2.0); }\nfn b(x: f32) -> f32 { return x; }");
+    let calls: Vec<_> = c
+        .typeck
+        .functions()
+        .flat_map(|(_, f)| f.facts.calls.clone())
+        .collect();
+    assert_eq!(calls.len(), 1);
+    // Unknown parameter types are errors once (the resolver's), and the
+    // function is still checked.
+    let c = consts("fn f(x: Nope) -> f32 { return 1.0; }");
+    assert_eq!(c.codes(), ["E3003"]);
 }

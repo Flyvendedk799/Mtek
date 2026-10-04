@@ -38,7 +38,7 @@ pub use build::{
     BuildMode, BuildResult, CompileOptions, STUB_RUNTIME_BUNDLE, STUB_RUNTIME_DECLARATIONS,
     TargetProfile, build,
 };
-pub use check::{Analysis, CheckResult, ModuleUnit, analyze, check};
+pub use check::{Analysis, AnalyzeOptions, CheckResult, ModuleUnit, analyze, analyze_with, check};
 pub use inspect::{Inspect, InspectFormat, InspectResult, inspect};
 
 #[cfg(test)]

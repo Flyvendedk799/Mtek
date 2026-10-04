@@ -28,8 +28,10 @@ use crate::project::{
 use crate::resolve::{DefId, DefKind, Resolution, bind_imports, resolve_module_with_imports};
 use crate::source::{Fs, SourceMap};
 use crate::syntax::ast::{ItemKind, Module};
+use crate::types::effects::{ProgramUnit, check_program};
 use crate::types::{
-    ImportedConst, ImportedConsts, ImportedStruct, Imports, Typeck, check_module_with_imports,
+    FnRef, ImportedConst, ImportedConsts, ImportedFn, ImportedStruct, Imports, ProgramEffects,
+    Roots, Typeck, check_module_with_imports,
 };
 
 /// What [`check`] produced: diagnostics only (`spec/compiler-architecture.md`
@@ -69,8 +71,21 @@ pub struct Analysis {
     pub types: Option<Typeck>,
     /// Every other module of the project, in load order (`ModuleId` 1, 2, …).
     pub dependencies: Vec<ModuleUnit>,
+    /// The effect level and reachability of every function of the program
+    /// (decision 0038).
+    pub effects: ProgramEffects,
     /// Every diagnostic, in report order.
     pub report: Report,
+}
+
+/// Options of the front end that are not part of the project.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct AnalyzeOptions {
+    /// Functions, by symbol (`src/main.mtek::shade`), to treat as called
+    /// from a material stage function: the GPU roots of decision 0038
+    /// until M2-04 implements stage functions. A test hook; a symbol that
+    /// names no function is ignored.
+    pub gpu_root_functions: Vec<String>,
 }
 
 /// A module other than the entry module, as the front end left it.
@@ -118,6 +133,7 @@ pub(crate) struct FrontEnd {
     pub(crate) resolution: Option<Resolution>,
     pub(crate) types: Option<Typeck>,
     pub(crate) dependencies: Vec<ModuleUnit>,
+    pub(crate) effects: ProgramEffects,
 }
 
 impl FrontEnd {
@@ -129,6 +145,7 @@ impl FrontEnd {
             resolution: None,
             types: None,
             dependencies: Vec::new(),
+            effects: ProgramEffects::default(),
         }
     }
 
@@ -140,6 +157,7 @@ impl FrontEnd {
             resolution: self.resolution,
             types: self.types,
             dependencies: self.dependencies,
+            effects: self.effects,
             report,
         }
     }
@@ -156,13 +174,29 @@ pub fn check(root: &ProjectRoot, fs: &dyn Fs) -> CheckResult {
 /// produced. Never panics; problems are diagnostics.
 #[must_use]
 pub fn analyze(root: &ProjectRoot, fs: &dyn Fs) -> Analysis {
+    analyze_with(root, fs, &AnalyzeOptions::default())
+}
+
+/// [`analyze`] with `options` (the GPU-root test hook of decision 0038).
+#[must_use]
+pub fn analyze_with(root: &ProjectRoot, fs: &dyn Fs, options: &AnalyzeOptions) -> Analysis {
     let mut sink = Diagnostics::new();
-    let front = front_end(root, fs, &mut sink);
+    let front = front_end_with(root, fs, options, &mut sink);
     front.finish(sink.finish())
 }
 
 /// The front end, reporting to `sink`.
 pub(crate) fn front_end(root: &ProjectRoot, fs: &dyn Fs, sink: &mut Diagnostics) -> FrontEnd {
+    front_end_with(root, fs, &AnalyzeOptions::default(), sink)
+}
+
+/// The front end with `options`, reporting to `sink`.
+pub(crate) fn front_end_with(
+    root: &ProjectRoot,
+    fs: &dyn Fs,
+    options: &AnalyzeOptions,
+    sink: &mut Diagnostics,
+) -> FrontEnd {
     let Some(mut project) = Project::load(root, fs, sink) else {
         return FrontEnd::stopped(None);
     };
@@ -211,6 +245,7 @@ pub(crate) fn front_end(root: &ProjectRoot, fs: &dyn Fs, sink: &mut Diagnostics)
         let imports = Imports {
             consts: imported_consts(resolution, &resolutions, &types),
             structs: imported_structs(resolution, &resolutions, &types),
+            fns: imported_fns(resolution, &resolutions, &types),
         };
         let checked =
             check_module_with_imports(&unit.ast, source.text(), resolution, &imports, sink);
@@ -218,6 +253,28 @@ pub(crate) fn front_end(root: &ProjectRoot, fs: &dyn Fs, sink: &mut Diagnostics)
             *slot = Some(checked);
         }
     }
+
+    // Effects, recursion and reachability over the whole program, once every
+    // module is checked (decision 0038).
+    let program: Vec<ProgramUnit<'_>> = project
+        .modules
+        .modules()
+        .iter()
+        .filter_map(|module| {
+            let index = module.id().index();
+            Some(ProgramUnit {
+                id: module.id(),
+                resolution: resolutions.get(index)?,
+                types: types.get(index)?.as_ref()?,
+            })
+        })
+        .collect();
+    let roots = Roots {
+        gpu_functions: gpu_root_functions(&project, &program, &options.gpu_root_functions),
+        ..Roots::default()
+    };
+    let effects = check_program(&program, &roots, sink);
+    drop(program);
 
     let mut units = loaded
         .into_iter()
@@ -245,7 +302,69 @@ pub(crate) fn front_end(root: &ProjectRoot, fs: &dyn Fs, sink: &mut Diagnostics)
         resolution: Some(resolution),
         types: entry_types,
         dependencies,
+        effects,
     }
+}
+
+/// The functions `symbols` name (`path::name`), for [`Roots::gpu_functions`].
+fn gpu_root_functions(
+    project: &Project,
+    program: &[ProgramUnit<'_>],
+    symbols: &[String],
+) -> Vec<FnRef> {
+    let mut roots = Vec::new();
+    for symbol in symbols {
+        let Some((path, name)) = symbol.split_once("::") else {
+            continue;
+        };
+        for unit in program {
+            let unit_path = project
+                .modules
+                .get(unit.id)
+                .and_then(|m| project.sources.get(m.file()))
+                .map(|source| source.path().as_str().to_owned());
+            if unit_path.as_deref() != Some(path) {
+                continue;
+            }
+            roots.extend(
+                unit.types
+                    .functions()
+                    .filter(|(_, info)| info.name == name)
+                    .map(|(def, _)| FnRef {
+                        module: unit.id,
+                        def,
+                    }),
+            );
+        }
+    }
+    roots
+}
+
+/// The functions `resolution`'s module imports, with their signatures in
+/// the exporting modules (decision 0038).
+fn imported_fns<'a>(
+    resolution: &Resolution,
+    resolutions: &[Resolution],
+    types: &'a [Option<Typeck>],
+) -> BTreeMap<DefId, ImportedFn<'a>> {
+    resolution
+        .imports()
+        .filter(|(_, target)| target.kind == DefKind::Fn)
+        .filter_map(|(def, target)| {
+            let exporter = types.get(target.module.index())?.as_ref()?;
+            let exported = resolutions
+                .get(target.module.index())?
+                .def_of(target.node)?;
+            let info = exporter.function(exported)?;
+            Some((
+                def,
+                ImportedFn {
+                    interner: exporter.interner(),
+                    sig: &info.sig,
+                },
+            ))
+        })
+        .collect()
 }
 
 /// The constants the module resolved as `resolution` imports from modules

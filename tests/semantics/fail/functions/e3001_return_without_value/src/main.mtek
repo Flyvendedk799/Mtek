@@ -1,0 +1,10 @@
+fn pick(a: f32) -> f32 {
+    if a > 0.0 {
+        return;
+    }
+    return a;
+}
+
+scene Demo {
+    camera Main {}
+}

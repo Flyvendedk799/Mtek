@@ -1,0 +1,12 @@
+fn label(name: string) -> f32 {
+    return 1.0;
+}
+
+fn tint(m: mesh, x: f32) -> f32 {
+    let title = "tint";
+    return label(title) * x;
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 56,
+    "endByte": 61,
+    "message": "Cannot assign to the constant 'LIMIT'.",
+    "related": [
+      {
+        "message": "the constant 'LIMIT' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 6,
+        "endByte": 11
+      }
+    ]
+  }
+]

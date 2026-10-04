@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 50,
+    "endByte": 57,
+    "message": "The function 'pick' returns f32, but this `return` gives no value.",
+    "expected": "f32",
+    "actual": "()"
+  }
+]

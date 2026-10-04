@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E4001",
+    "file": "src/main.mtek",
+    "startByte": 3,
+    "endByte": 12,
+    "message": "The function 'factorial' calls itself: factorial → factorial.",
+    "related": [
+      {
+        "message": "'factorial' calls 'factorial' here",
+        "file": "src/main.mtek",
+        "startByte": 85,
+        "endByte": 101
+      }
+    ],
+    "notes": [
+      "help: recursion is not supported in v0.1, in either domain; rewrite it with a `for` loop"
+    ]
+  }
+]

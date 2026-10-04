@@ -1,0 +1,7 @@
+fn count(n: i32) -> f32 {
+    return n;
+}
+
+scene Demo {
+    camera Main {}
+}
