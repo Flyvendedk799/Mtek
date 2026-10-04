@@ -1,0 +1,7 @@
+// The schema checks apply to every descriptor literal, also in constants.
+const CRATE = Box { size: vec2(1.0, 1.0) };
+
+scene Demo {
+    camera Main {}
+    entity Cube { mesh: CRATE; }
+}

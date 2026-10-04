@@ -1,0 +1,8 @@
+fn tint() -> color {
+    return #101418;
+}
+
+scene Demo {
+    clear_color: tint();
+    camera Main {}
+}

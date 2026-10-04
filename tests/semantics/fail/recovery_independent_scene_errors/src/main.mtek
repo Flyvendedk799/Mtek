@@ -1,0 +1,16 @@
+// Independent mistakes in one scene are all reported, each once.
+scene Demo {
+    camera Main {
+        target: vec3(0.0, 0.0, 0.0);
+        rotation: quat.identity();
+    }
+    entity Cube {
+        position: vec2(1.0, 2.0);
+        mesh: Sphere { segments: 2; rimgs: 8 };
+        material: Unlit { color: #6b5cff80 };
+        scale: vec3(-1.0);
+        entity Badge {
+            material: Unlit {};
+        }
+    }
+}

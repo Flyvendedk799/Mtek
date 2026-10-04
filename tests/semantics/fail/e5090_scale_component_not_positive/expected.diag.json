@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E5090",
+    "file": "src/main.mtek",
+    "startByte": 66,
+    "endByte": 87,
+    "message": "Every component of field 'scale' of entity 'Floor' must be greater than 0 and finite, but the value is vec3(10.0, 0.0, 10.0)."
+  }
+]

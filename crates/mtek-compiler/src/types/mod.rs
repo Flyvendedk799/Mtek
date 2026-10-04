@@ -20,17 +20,27 @@
 //! * `E2020` a constant that depends on itself; `E3090` a constant whose
 //!   value is not a constant expression.
 //!
+//! The scene checks ([`scene`], decision 0027) then validate every scene,
+//! camera and entity body and every descriptor literal against the registry
+//! (`E5001`–`E5003`, `E3102`, `E5006`, `E5010`–`E5013`, `E5020`, `E5081`,
+//! `E5090`, `E5092`, `E5100`, `E3090` for fields) and record a
+//! [`CheckedScene`] per scene ([`Typeck::scenes`]), the input of the typed IR.
+//!
 //! Modules:
 //!
 //! - [`ty`]: the type catalogue ([`Ty`]) and the [`TyInterner`];
 //! - [`value`]: constant values ([`ConstValue`]) and the exact operations on
 //!   them;
 //! - `ops`: the operator typing table;
-//! - `check`: the checker; `consteval`: folding and constant declarations.
+//! - `check`: the checker; `consteval`: folding and constant declarations;
+//! - [`scene`]: the scene and schema checks and their result.
 
 mod check;
 mod consteval;
 mod ops;
+pub mod scene;
+#[cfg(test)]
+mod scene_tests;
 #[cfg(test)]
 mod tests;
 pub mod ty;
@@ -38,6 +48,7 @@ pub mod value;
 
 use std::collections::BTreeMap;
 
+pub use scene::{CheckedEntity, CheckedField, CheckedObject, CheckedScene, FieldOrigin};
 pub use ty::{Ty, TyId, TyInterner};
 pub use value::{ArithOp, ConstValue, EvalError, EvalResult, Scalar};
 
@@ -62,8 +73,26 @@ pub struct ConstInfo {
 pub struct NonConstant {
     /// The non-constant form (a call, a field read, a name).
     pub span: Span,
+    /// What kind of form it is.
+    pub kind: NonConstantKind,
     /// A clause for a diagnostic: "it calls the function 'f', …".
     pub reason: String,
+}
+
+/// The kinds of form that make an expression non-constant.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NonConstantKind {
+    /// A call of a user function or of a built-in function that is not
+    /// const-eligible.
+    Call,
+    /// The name of a declaration without a constant value: `state`, a param,
+    /// a parameter, a local, a bare entity name.
+    Declaration,
+    /// A read of a field of a named entity or scene object (`Cube.position`);
+    /// in a field initialiser that is `E5081` (`spec/scenes.md` section 11).
+    ObjectField,
+    /// A value that changes at run time (`frame.time`).
+    RunTimeValue,
 }
 
 /// What type checking and constant evaluation produced for one module.
@@ -74,6 +103,7 @@ pub struct Typeck {
     values: Vec<Option<ConstValue>>,
     non_constant: BTreeMap<NodeId, NonConstant>,
     consts: BTreeMap<DefId, ConstInfo>,
+    scenes: Vec<CheckedScene>,
 }
 
 impl Typeck {
@@ -85,7 +115,22 @@ impl Typeck {
             values: vec![None; slots],
             non_constant: BTreeMap::new(),
             consts: BTreeMap::new(),
+            scenes: Vec::new(),
         }
+    }
+
+    /// Every scene the build checks, in source order, as the scene checks
+    /// left it (decision 0027).
+    #[must_use]
+    pub fn scenes(&self) -> &[CheckedScene] {
+        &self.scenes
+    }
+
+    /// The checked scene declared as `def` (for the entry scene, pass
+    /// [`Resolution::entry_scene`]).
+    #[must_use]
+    pub fn scene(&self, def: DefId) -> Option<&CheckedScene> {
+        self.scenes.iter().find(|scene| scene.def == Some(def))
     }
 
     /// The types of this module.
@@ -108,7 +153,8 @@ impl Typeck {
     }
 
     /// Why the field value `node` (the root of a scene, entity or camera field
-    /// value) is not a constant expression, if it is not.
+    /// value, or the value of a field of a descriptor literal) is not a
+    /// constant expression, if it is not.
     #[must_use]
     pub fn non_constant(&self, node: NodeId) -> Option<&NonConstant> {
         self.non_constant.get(&node)
@@ -140,5 +186,6 @@ pub fn check_module(
 ) -> Typeck {
     let mut checker = check::Checker::new(module, text, resolution, sink);
     checker.module(module);
+    checker.scene_checks(module);
     checker.finish()
 }

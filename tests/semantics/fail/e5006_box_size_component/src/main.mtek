@@ -1,0 +1,6 @@
+scene Demo {
+    camera Main {}
+    entity Slab {
+        mesh: Box { size: vec3(1.0, 0.0, 1.0) };
+    }
+}

@@ -29,7 +29,7 @@ use super::value::{
     self, ConstValue, EvalError, EvalResult, color_literal, construct_vector, convert,
     namespace_function, select_components,
 };
-use super::{ConstInfo, NonConstant};
+use super::{ConstInfo, NonConstant, NonConstantKind};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::resolve::{DefId, DefKind, Res};
 use crate::source::Span;
@@ -424,6 +424,7 @@ impl Checker<'_> {
             | DefKind::LoopVar
             | DefKind::Entity => Folded::NotConstant(NonConstant {
                 span: expr.span,
+                kind: NonConstantKind::Declaration,
                 reason: format!("it refers to the {} '{}'", def.kind.noun(), def.name),
             }),
             // Imported constants (imports are gated in this build) and names
@@ -440,6 +441,7 @@ impl Checker<'_> {
         match kind {
             CallKind::UserFunction(name) => Folded::NotConstant(NonConstant {
                 span: expr.span,
+                kind: NonConstantKind::Call,
                 reason: format!(
                     "it calls the function '{name}', and calls of user functions are not constant in v0.1"
                 ),
@@ -450,6 +452,7 @@ impl Checker<'_> {
                 const_eligible: false,
             } => Folded::NotConstant(NonConstant {
                 span: expr.span,
+                kind: NonConstantKind::Call,
                 reason: format!("`{namespace}.{member}` is not a constant function"),
             }),
             CallKind::Intrinsic {
@@ -457,6 +460,7 @@ impl Checker<'_> {
                 const_eligible: false,
             } => Folded::NotConstant(NonConstant {
                 span: expr.span,
+                kind: NonConstantKind::Call,
                 reason: format!("`{name}` is not a constant function"),
             }),
             CallKind::Vector(dim) => {
@@ -495,15 +499,21 @@ impl Checker<'_> {
                 field,
             } => Folded::NotConstant(NonConstant {
                 span: expr.span,
+                kind: NonConstantKind::ObjectField,
                 reason: format!("it reads the field '{field}' of the {noun} '{object}'"),
             }),
             FieldKind::NamespaceValue(name) => Folded::NotConstant(NonConstant {
                 span: expr.span,
+                kind: NonConstantKind::RunTimeValue,
                 reason: format!("it reads `{name}`, which changes at run time"),
             }),
         }
     }
 
+    /// A descriptor literal folds to the fields as written. The reason each
+    /// field value is not constant is recorded, because the schema checks
+    /// require constants field by field (the values of a mesh descriptor,
+    /// not the parameters of a material).
     fn fold_descriptor(&mut self, expr: &Expr, fields: &[DescField]) -> Folded {
         let schema = match self.typed(expr).map(|t| self.out.interner.get(t)) {
             Some(Ty::Schema(schema)) => schema,
@@ -515,7 +525,13 @@ impl Checker<'_> {
             names.push(field.name.name.clone());
             folded.push(match &field.value {
                 // A field the checker skipped (gated) has no type.
-                FieldValue::Expr(value) if self.ty_of(value.id).is_some() => self.fold(value),
+                FieldValue::Expr(value) if self.ty_of(value.id).is_some() => {
+                    let value_folded = self.fold(value);
+                    if let Folded::NotConstant(reason) = &value_folded {
+                        self.out.non_constant.insert(value.id, reason.clone());
+                    }
+                    value_folded
+                }
                 _ => Folded::Unknown,
             });
         }

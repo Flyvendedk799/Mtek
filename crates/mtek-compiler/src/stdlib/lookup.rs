@@ -49,6 +49,16 @@ impl Registry {
         self.scene_objects.iter().find(|k| k.keyword == keyword)
     }
 
+    /// The schema of scene fields.
+    pub fn scene_schema(&self) -> Option<&SchemaDef> {
+        self.schema(self.declaration_schemas.scene)
+    }
+
+    /// The schema of entity and prefab fields.
+    pub fn entity_schema(&self) -> Option<&SchemaDef> {
+        self.schema(self.declaration_schemas.entity)
+    }
+
     /// The event named `name`.
     pub fn event(&self, name: &str) -> Option<&EventDef> {
         self.events.iter().find(|e| e.name == name)

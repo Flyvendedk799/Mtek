@@ -1,0 +1,4 @@
+scene Demo {
+    clear_color: #101418;
+    entity Cube { mesh: Box {}; }
+}

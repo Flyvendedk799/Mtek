@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 83,
+    "endByte": 84,
+    "message": "Field 'segments' of Sphere must be between 3 and 256, but the value is 2."
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E9005",
+    "file": null,
+    "startByte": null,
+    "endByte": null,
+    "message": "Entry file 'src/app.mtek' not found.",
+    "notes": [
+      "help: create the file or set project.entry in mtek.toml to the entry module"
+    ]
+  }
+]

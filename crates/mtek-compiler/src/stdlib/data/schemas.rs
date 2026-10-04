@@ -1,19 +1,35 @@
 //! Schemas (`spec/stdlib.md` section 3) and scene-object kinds.
 
 use super::build::{field, schema, writable_bindable};
+use crate::diagnostics::Code;
 use crate::stdlib::model::{
-    FieldFlags, Milestone, SceneObjectKind, SchemaCategory, SchemaDef, TypeRef,
+    ActiveObject, DeclarationSchemas, FieldFlags, FieldRule, Milestone, SceneObjectKind,
+    SchemaCategory, SchemaDef, TypeRef,
 };
 use crate::stdlib::value::{Bound, ConstValue, Limit, ValueRange};
 
 const C: FieldFlags = FieldFlags::CONSTRUCTION_ONLY;
 const R_C: FieldFlags = FieldFlags::REQUIRED.union(FieldFlags::CONSTRUCTION_ONLY);
 
+/// The schemas of scene and entity bodies.
+pub(super) fn declaration_schemas() -> DeclarationSchemas {
+    DeclarationSchemas {
+        scene: "Scene",
+        entity: "Entity",
+    }
+}
+
 /// The scene-object kinds: scene members introduced by a contextual keyword.
 pub(super) fn scene_objects() -> Vec<SceneObjectKind> {
     vec![SceneObjectKind {
         keyword: "camera",
         schema: "Camera",
+        // `spec/scenes.md` section 3: exactly one active camera.
+        active: Some(ActiveObject {
+            field: "active",
+            missing: Code::E5012,
+            ambiguous: Code::E5013,
+        }),
         since: Milestone::M1,
         doc: "Declares a camera: `camera Main { .. }`. A scene needs exactly one active camera.",
     }]
@@ -101,7 +117,8 @@ fn objects() -> Vec<SchemaDef> {
                 "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body; that rule belongs to the checker, not to this field.",
             )
             .default(ConstValue::splat3(1.0))
-            .range(ValueRange::positive().and_finite()),
+            .range(ValueRange::positive().and_finite())
+            .range_code(Code::E5090),
             field(
                 "visible",
                 TypeRef::Bool,
@@ -145,7 +162,13 @@ fn objects() -> Vec<SchemaDef> {
             )
             .since(Milestone::M5),
         ],
-    );
+    )
+    // `spec/scenes.md` section 4.1: a material without a mesh is `E5020`.
+    .rule(FieldRule::Requires {
+        field: "material",
+        requires: "mesh",
+        code: Code::E5020,
+    });
 
     let camera = schema(
         "Camera",
@@ -187,7 +210,13 @@ fn objects() -> Vec<SchemaDef> {
                 "Marks the active camera. Optional when the scene has exactly one camera; with several cameras exactly one must declare `active: true`.",
             ),
         ],
-    );
+    )
+    // `spec/scenes.md` section 3: with a `target`, `rotation` must not be declared.
+    .rule(FieldRule::ExcludedBy {
+        field: "rotation",
+        excluded_by: "target",
+        code: Code::E5010,
+    });
 
     vec![scene, entity, camera]
 }
@@ -197,15 +226,19 @@ fn projections() -> Vec<SchemaDef> {
         Some(Bound::exclusive(Limit::Int(0))),
         Some(Bound::exclusive(Limit::Pi)),
     );
+    // `spec/scenes.md` section 3: constant violations of the projection constraints are
+    // `E5011`.
     let near = |doc| {
         field("near", TypeRef::F32, writable_bindable(), doc)
             .default(ConstValue::F32(0.1))
             .range(ValueRange::positive())
+            .range_code(Code::E5011)
     };
     let far = |doc| {
         field("far", TypeRef::F32, writable_bindable(), doc)
             .default(ConstValue::F32(1000.0))
             .range(ValueRange::above_field("near"))
+            .range_code(Code::E5011)
     };
     vec![
         schema(
@@ -221,7 +254,8 @@ fn projections() -> Vec<SchemaDef> {
                     "Full vertical field of view in radians.",
                 )
                 .default(ConstValue::F32(0.9))
-                .range(fov),
+                .range(fov)
+                .range_code(Code::E5011),
                 near("Distance to the near plane."),
                 far("Distance to the far plane."),
             ],
@@ -239,7 +273,8 @@ fn projections() -> Vec<SchemaDef> {
                     "Height of the view volume in world units; the width follows from the aspect ratio.",
                 )
                 .default(ConstValue::F32(10.0))
-                .range(ValueRange::positive()),
+                .range(ValueRange::positive())
+                .range_code(Code::E5011),
                 near("Distance to the near plane."),
                 far("Distance to the far plane."),
             ],

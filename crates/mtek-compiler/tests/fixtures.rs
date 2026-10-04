@@ -50,7 +50,7 @@
 // Test-only code: helper functions outside `#[test]` functions may unwrap.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -59,12 +59,14 @@ use mtek_compiler::diagnostics::{Code, Diagnostic, Diagnostics, Severity, to_rep
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::resolve::{Construct, IMPLEMENTED_MILESTONE, construct_gate, resolve_module};
 use mtek_compiler::source::{FileId, MemFs, ProjectPath, SourceMap};
-use mtek_compiler::stdlib::Milestone;
+use mtek_compiler::stdlib::{ColorValue, Milestone};
 use mtek_compiler::syntax::ast::Module;
 use mtek_compiler::syntax::{
     CandidateEdit, dump_expr, dump_module, lex, lex_str, parse_expression,
     parse_expression_no_desc, parse_module, walk_expr, walk_module,
 };
+use mtek_compiler::types::scene::MAX_STATIC_ENTITIES;
+use mtek_compiler::types::{CheckedEntity, CheckedField, CheckedScene, ConstValue};
 use mtek_compiler::{CheckResult, check};
 use serde_json::{Map, Value};
 
@@ -369,27 +371,6 @@ fn a_single_mistake_is_a_single_error() {
         assert!(
             errors <= 1,
             "fail/{name}.mtek: one mistake, at most one error, got {errors}"
-        );
-    }
-}
-
-#[test]
-fn every_syntax_code_has_a_fail_fixture() {
-    // `spec/testing.md` 3.2: every diagnostic code needs at least one
-    // negative fixture. These are the codes the parser reports.
-    let mut seen = BTreeSet::new();
-    for name in fixture_names("fail", ".mtek") {
-        for d in parse_fixture("fail", &name).diagnostics {
-            seen.insert(d.code.short());
-        }
-    }
-    for code in [
-        "E1001", "E1002", "E1003", "E1004", "E1010", "E1011", "E1020", "E1030", "E1040", "E1050",
-        "E1901", "E4901", "E0013", "W0007",
-    ] {
-        assert!(
-            seen.contains(code),
-            "no fail fixture produces {code}: {seen:?}"
         );
     }
 }
@@ -1060,6 +1041,42 @@ fn assert_report_schema_valid(label: &str, result: &CheckResult) {
     assert!(problems.is_empty(), "{label}: {problems:#?}");
 }
 
+/// The checked entry scene of `result`.
+fn entry_scene(result: &CheckResult) -> &CheckedScene {
+    let (Some(resolution), Some(types)) = (&result.resolution, &result.types) else {
+        panic!("the project was not checked")
+    };
+    resolution
+        .entry_scene()
+        .and_then(|def| types.scene(def))
+        .expect("a checked entry scene")
+}
+
+/// A program without errors has a complete checked entry scene, which the
+/// typed IR is built from: every field has a value and exactly one camera
+/// is active.
+fn assert_complete_scene(label: &str, result: &CheckResult) {
+    fn entity_complete(entity: &CheckedEntity) -> bool {
+        entity.fields.iter().all(|f| f.value.is_some())
+            && entity.children.iter().all(entity_complete)
+    }
+    let scene = entry_scene(result);
+    assert!(
+        scene.fields.iter().all(|f| f.value.is_some())
+            && scene
+                .objects
+                .iter()
+                .all(|o| o.fields.iter().all(|f| f.value.is_some()))
+            && scene.entities.iter().all(entity_complete),
+        "{label}: a checked field has no value: {scene:#?}"
+    );
+    assert_eq!(
+        scene.objects.iter().filter(|o| o.active).count(),
+        1,
+        "{label}: not exactly one active camera"
+    );
+}
+
 #[test]
 fn every_semantic_pass_fixture_checks_without_errors() {
     let names = semantic_fixtures("pass");
@@ -1083,6 +1100,7 @@ fn every_semantic_pass_fixture_checks_without_errors() {
                 .is_some_and(|r| r.entry_scene().is_some()),
             "semantics/pass/{name} has no entry scene"
         );
+        assert_complete_scene(&format!("pass/{name}"), &result);
         let expected = semantics_dir().join("pass").join(name).join(EXPECTED);
         if result.report.diagnostics.is_empty() {
             assert!(
@@ -1153,56 +1171,6 @@ fn semantic_results_are_deterministic() {
 }
 
 #[test]
-fn every_resolver_code_has_a_semantic_fail_fixture() {
-    // `spec/testing.md` 3.2: every diagnostic code needs a negative fixture.
-    // These are the codes of name resolution and of the `check` wiring
-    // (`E0013` is the parser's, reported once even where the resolver meets
-    // the word as a declared name).
-    let mut seen = BTreeSet::new();
-    for name in semantic_fixtures("fail") {
-        for d in check_fixture("fail", &name).report.diagnostics {
-            seen.insert(d.code.short());
-        }
-    }
-    for code in [
-        "E0012", "E0013", "E2001", "E2002", "E2003", "E2004", "E2005", "E3003", "E5014", "E9006",
-        "E9010",
-    ] {
-        assert!(
-            seen.contains(code),
-            "no semantics/fail fixture produces {code}: {seen:?}"
-        );
-    }
-}
-
-#[test]
-fn every_type_checker_code_has_a_semantic_fixture() {
-    // The codes of type checking and constant evaluation (M1-10): errors in
-    // `fail/`, the warning `W3050` in a `pass/` fixture.
-    let mut seen = BTreeSet::new();
-    for suite in ["pass", "fail"] {
-        for name in semantic_fixtures(suite) {
-            for d in check_fixture(suite, &name).report.diagnostics {
-                seen.insert((suite, d.code.short()));
-            }
-        }
-    }
-    for code in [
-        "E2020", "E3001", "E3002", "E3003", "E3010", "E3011", "E3013", "E3014", "E3040", "E3041",
-        "E3090", "E5001",
-    ] {
-        assert!(
-            seen.contains(&("fail", code)),
-            "no semantics/fail fixture produces {code}: {seen:?}"
-        );
-    }
-    assert!(
-        seen.contains(&("pass", "W3050")),
-        "no semantics/pass fixture produces W3050: {seen:?}"
-    );
-}
-
-#[test]
 fn semantic_pass_fixtures_fold_their_constants() {
     // Every constant of the typed-constants fixture is folded, and the
     // fixture's values are the exact results (`tests/consteval_goldens.rs`
@@ -1220,6 +1188,204 @@ fn semantic_pass_fixtures_fold_their_constants() {
         }
     }
     assert_eq!(constants, 9);
+}
+
+fn srgb(r: u8, g: u8, b: u8) -> ConstValue {
+    ConstValue::Color(ColorValue::from_srgb8(r, g, b, 255).linear)
+}
+
+fn descriptor(name: &str, fields: &[(&str, ConstValue)]) -> ConstValue {
+    ConstValue::Struct {
+        name: name.to_owned(),
+        fields: fields
+            .iter()
+            .map(|(n, v)| ((*n).to_owned(), v.clone()))
+            .collect(),
+    }
+}
+
+fn value_of<'a>(fields: &'a [CheckedField], name: &str) -> Option<&'a ConstValue> {
+    fields
+        .iter()
+        .find(|f| f.name == name)
+        .and_then(|f| f.value.as_ref())
+}
+
+#[test]
+fn pass_scene_a_target_camera_and_unlit_box() {
+    // M1-11 pass scene A: one camera with a target, one `Box` with `Unlit`.
+    let result = check_fixture("pass", "scene_a_target_camera_box");
+    let scene = entry_scene(&result);
+    assert_eq!(scene.name, "Gallery");
+    assert_eq!(
+        value_of(&scene.fields, "clear_color"),
+        Some(&srgb(0x20, 0x28, 0x30))
+    );
+    let camera = scene.active_object("camera").expect("an active camera");
+    assert_eq!(
+        value_of(&camera.fields, "target"),
+        Some(&ConstValue::Vec3([0.0, 0.5, 0.0]))
+    );
+    assert_eq!(
+        value_of(&camera.fields, "projection"),
+        Some(&descriptor(
+            "Perspective",
+            &[
+                ("fov_y", ConstValue::F32(0.9)),
+                ("near", ConstValue::F32(0.1)),
+                ("far", ConstValue::F32(1000.0)),
+            ]
+        ))
+    );
+    let [crate_entity] = scene.entities.as_slice() else {
+        panic!("one entity expected")
+    };
+    assert!(crate_entity.children.is_empty());
+    assert_eq!(
+        value_of(&crate_entity.fields, "mesh"),
+        Some(&descriptor("Box", &[("size", ConstValue::Vec3([1.0; 3]))]))
+    );
+    assert_eq!(
+        value_of(&crate_entity.fields, "material"),
+        Some(&descriptor("Unlit", &[("color", srgb(0x6b, 0x5c, 0xff))]))
+    );
+}
+
+#[test]
+fn pass_scene_b_orthographic_camera_and_nested_entities() {
+    // M1-11 pass scene B: an orthographic camera with a rotation, a `Sphere`
+    // and a `Plane`, a nested child with non-uniform positive scale, module
+    // constants in fields, defaults filled in.
+    let result = check_fixture("pass", "scene_b_orthographic_nested");
+    let scene = entry_scene(&result);
+    let camera = scene.active_object("camera").expect("an active camera");
+    assert!(camera.field("target").is_none());
+    assert!(matches!(
+        value_of(&camera.fields, "rotation"),
+        Some(ConstValue::Quat(_))
+    ));
+    assert_eq!(
+        value_of(&camera.fields, "projection"),
+        Some(&descriptor(
+            "Orthographic",
+            &[
+                ("height", ConstValue::F32(20.0)),
+                ("near", ConstValue::F32(0.5)),
+                ("far", ConstValue::F32(40.0)),
+            ]
+        ))
+    );
+    let [ground, lamp] = scene.entities.as_slice() else {
+        panic!("two root entities expected")
+    };
+    assert_eq!(
+        value_of(&ground.fields, "mesh"),
+        Some(&descriptor(
+            "Plane",
+            &[("size", ConstValue::Vec2([20.0; 2]))]
+        ))
+    );
+    let [fountain] = ground.children.as_slice() else {
+        panic!("one child expected")
+    };
+    assert_eq!(fountain.name, "Fountain");
+    assert_eq!(
+        value_of(&fountain.fields, "scale"),
+        Some(&ConstValue::Vec3([2.0, 0.5, 2.0]))
+    );
+    assert_eq!(
+        value_of(&fountain.fields, "mesh"),
+        Some(&descriptor(
+            "Sphere",
+            &[
+                ("radius", ConstValue::F32(1.0)),
+                ("segments", ConstValue::U32(24)),
+                ("rings", ConstValue::U32(12)),
+            ]
+        ))
+    );
+    assert_eq!(
+        value_of(&fountain.fields, "material"),
+        Some(&descriptor("Unlit", &[("color", srgb(0xff, 0xcc, 0x00))]))
+    );
+    // `Sphere {}` and the default material, every field at its default.
+    assert_eq!(
+        value_of(&lamp.fields, "mesh"),
+        Some(&descriptor(
+            "Sphere",
+            &[
+                ("radius", ConstValue::F32(0.5)),
+                ("segments", ConstValue::U32(32)),
+                ("rings", ConstValue::U32(16)),
+            ]
+        ))
+    );
+    assert_eq!(
+        value_of(&lamp.fields, "material"),
+        Some(&descriptor("Unlit", &[("color", srgb(0xff, 0xff, 0xff))]))
+    );
+    let order: Vec<&str> = scene
+        .entities_in_order()
+        .iter()
+        .map(|e| e.name.as_str())
+        .collect();
+    assert_eq!(order, ["Ground", "Fountain", "Lamp"]);
+}
+
+#[test]
+fn too_many_static_entities_is_e5092() {
+    // `spec/compiler-architecture.md` 9: at most 16 384 static entities per
+    // scene, nested ones included. Generated rather than a fixture file: a
+    // project of 16 385 entities is too large to review.
+    let program = |roots: usize, extra: bool| {
+        let mut text = String::from("scene Demo {\n    camera Main {}\n");
+        for index in 0..roots {
+            text.push_str(&format!("    entity R{index} {{ entity C{index} {{}} }}\n"));
+        }
+        if extra {
+            text.push_str("    entity Extra {}\n");
+        }
+        text.push_str("}\n");
+        text
+    };
+    let run = |text: String| {
+        let mut memory = MemFs::new();
+        memory
+            .insert(
+                ProjectPath::new("mtek.toml").unwrap(),
+                "[project]\nname = \"fixture\"\nlanguage = \"0.1\"\n",
+            )
+            .insert(ProjectPath::new("src/main.mtek").unwrap(), text.clone());
+        (check(&ProjectRoot::at_base(), &memory), text)
+    };
+    let (at_limit, _) = run(program(MAX_STATIC_ENTITIES / 2, false));
+    assert!(
+        at_limit.report.diagnostics.is_empty(),
+        "{}",
+        semantic_json(&at_limit)
+    );
+    let (over, text) = run(program(MAX_STATIC_ENTITIES / 2, true));
+    let found: Vec<(&str, &str, &str)> = over
+        .report
+        .diagnostics
+        .iter()
+        .map(|d| {
+            let span = d.primary.as_ref().unwrap().span;
+            (
+                d.code.short(),
+                text.get(span.range()).unwrap(),
+                d.message.as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        found,
+        [(
+            "E5092",
+            "Extra",
+            "Scene 'Demo' declares 16385 static entities, but at most 16384 are allowed."
+        )]
+    );
 }
 
 /// The `E9010` messages of every `gate_*` fail fixture.
@@ -1361,4 +1527,279 @@ fn the_syntax_corpus_resolves_without_panicking() {
             }
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Diagnostic-code coverage (`spec/testing.md` section 3.2)
+// ---------------------------------------------------------------------------
+//
+// Every catalogue code needs at least one negative fixture. The expected
+// files of the fixtures are compared with the compiler's output by the tests
+// above, so the codes they list are exactly the codes the fixtures produce:
+// `tests/syntax/lex/*.diag.json`, `tests/syntax/fail/*.diag.json`, the
+// diagnostic lines of `tests/syntax/ast/*.ast` and
+// `tests/semantics/{pass,fail}/*/expected.diag.json`. A catalogue code that no
+// fixture produces must be listed below with its reason, and only then: the
+// lists are exact, so a code that gains a fixture fails the test until it
+// leaves its list. `NOT_YET_IMPLEMENTED` is the allow-list later milestones
+// shrink; M7 requires it to be empty.
+
+/// Codes this build does not report yet, with the milestone and work item
+/// that implement them.
+const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
+    ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
+    ("W2010", "M2-02: functions and statements"),
+    ("E2030", "M2-03: imports"),
+    ("E2031", "M2-03: imports"),
+    ("E2032", "M2-03: imports"),
+    ("E2033", "M2-03: imports"),
+    ("E2034", "M2-03: imports"),
+    ("E2035", "M2-03: imports"),
+    ("E2036", "M2-03: imports"),
+    ("E3012", "M2: equality operators (decision 0026)"),
+    ("E3020", "M2-01: structs"),
+    ("E3021", "M2-01: structs"),
+    ("E3022", "M2-01: structs"),
+    ("E3023", "M2-01: structs"),
+    ("E3030", "M2: arrays"),
+    ("E3031", "M2: arrays"),
+    ("E3060", "M2-02: functions and statements"),
+    ("E3061", "M2-02: functions and statements"),
+    ("E3070", "M2-02: functions and statements"),
+    ("E3080", "M2-02: functions and statements"),
+    ("W3081", "M2-02: functions and statements"),
+    ("E4001", "M2-02: functions and statements"),
+    ("E4002", "M2-02: functions and statements"),
+    ("W4003", "M2-02: functions and statements"),
+    ("E4010", "M2-04: materials"),
+    ("E4011", "M2-04: materials"),
+    ("E4012", "M2-04: materials"),
+    ("E4013", "M2-04: materials"),
+    ("E4020", "M2-04: materials"),
+    ("E4021", "M2-04: materials"),
+    ("E4030", "M2-04: materials"),
+    ("E4031", "M2-04: materials"),
+    ("E4032", "M2-04: materials"),
+    ("E4040", "M2-04: materials"),
+    ("E4041", "M2-04: materials"),
+    ("E5004", "M3-05: bind"),
+    ("E5005", "M3-05: bind"),
+    ("E5030", "M5: spawn and destroy"),
+    ("E5040", "M5-01: prefabs"),
+    ("E5041", "M5-01: prefabs"),
+    ("E5042", "M5-01: prefabs"),
+    ("E5050", "M3-02: lifecycle functions and handlers"),
+    ("E5051", "M3-02: lifecycle functions and handlers"),
+    ("E5052", "M3-02: lifecycle functions and handlers"),
+    ("E5060", "M3-02: lifecycle functions and handlers"),
+    ("E5061", "M3-02: lifecycle functions and handlers"),
+    ("E5062", "M5: collision events"),
+    ("E5070", "M3-05: bind"),
+    ("E5071", "M5: physics"),
+    ("E5072", "M5: physics"),
+    ("E5073", "M3-02: field writes in handlers"),
+    ("E5074", "M5: entity_ref"),
+    ("E5075", "M3-05: bind"),
+    ("E5080", "M5: spawn and destroy"),
+    ("E5091", "M5: physics"),
+    ("W5101", "M2-04: materials"),
+    ("E5110", "M5: lights in prefabs"),
+    ("E5111", "M4: lights"),
+    (
+        "E5901",
+        "no v0.1 construct switches scenes (`spec/scenes.md` section 1)",
+    ),
+    ("E5902", "M2-04: materials"),
+    ("E6001", "M2-04: materials"),
+    ("E6002", "M2-04: materials"),
+    ("E6003", "M2-04: materials"),
+    ("E6100", "M2-04: materials (generated WGSL)"),
+    ("E7010", "M4: assets"),
+    ("E8011", "M3: run-time field writes"),
+    ("W8030", "M2: arrays (run-time index clamping)"),
+    ("E8030", "M5: spawn and destroy"),
+    ("W8031", "M5: spawn and destroy"),
+    ("W8032", "M5: spawn and destroy"),
+    ("E8033", "M5: spawn and destroy"),
+    ("E8041", "M3: host inputs (decision 0018)"),
+    ("W8061", "M4-09: device-loss recovery (decision 0020)"),
+    ("E8062", "M4-09: device-loss recovery (decision 0020)"),
+    ("W8070", "M3: candidate-based hot reload"),
+    ("E8080", "M6: preview builds"),
+    ("E8090", "M3: run-time field writes"),
+    ("E8100", "M3: run-time field writes and host inputs"),
+    ("E9020", "M3: host inputs (decision 0018)"),
+    ("E9021", "M3: host inputs (decision 0018)"),
+    ("E9030", "M1: `mtek build` in the CLI"),
+];
+
+/// Codes this build implements that no program checked by this build can
+/// produce, with the reason and the test file that covers them instead.
+const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
+    (
+        "E5003",
+        "no M1 schema has a required field (the first are the M5 colliders)",
+        "src/types/scene_tests.rs",
+    ),
+    (
+        "E9002",
+        "imports are M2: a project this build checks has one module",
+        "src/source/map.rs",
+    ),
+    (
+        "E9999",
+        "only a compiler defect produces it",
+        "src/check.rs",
+    ),
+];
+
+/// Codes a fixture cannot express (the bytes a fixture would need do not
+/// survive `.gitattributes`, or the code concerns the project directory
+/// itself), with the test file that covers them; that file must name the
+/// code.
+const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
+    // Files the source manager rejects before they have an id; a carriage
+    // return would not survive `.gitattributes` in a fixture file.
+    ("E0001", "src/project/load/tests.rs"),
+    ("E0002", "src/syntax/lexer_tests.rs"),
+    ("E0003", "src/syntax/lexer_tests.rs"),
+    ("E0004", "src/project/load/tests.rs"),
+    // A fixture is a project directory with `mtek.toml`.
+    ("E9004", "src/project/load/tests.rs"),
+    // Too large to review as fixtures: more than 200 diagnostics in one
+    // file, more than 16 384 entities (generated in this file).
+    ("W9003", "src/diagnostics/sink.rs"),
+    ("E5092", "tests/fixtures.rs"),
+    // Runtime diagnostics: produced by `@mtek/runtime-web`, whose unit tests
+    // are their fixtures (`spec/testing.md` section 2).
+    ("E8001", "../../packages/runtime-web/src/gpu/device.test.ts"),
+    ("E8002", "../../packages/runtime-web/src/gpu/device.test.ts"),
+    ("E8003", "../../packages/runtime-web/src/abi/abi.test.ts"),
+    ("E8004", "../../packages/runtime-web/src/gpu/device.test.ts"),
+    ("E8005", "../../packages/runtime-web/src/gpu/device.test.ts"),
+    ("E8006", "../../packages/runtime-web/src/abi/abi.test.ts"),
+    ("E8040", "../../packages/runtime-web/src/host/app.test.ts"),
+    ("E8050", "../../packages/runtime-web/src/host/app.test.ts"),
+    (
+        "E8051",
+        "../../packages/runtime-web/src/host/shaders.test.ts",
+    ),
+    ("W8060", "../../packages/runtime-web/src/host/app.test.ts"),
+    (
+        "E8063",
+        "../../packages/runtime-web/src/gpu/registry.test.ts",
+    ),
+];
+
+/// The JSON diagnostics files of the fixture suites, and the codes in them.
+fn fixture_codes() -> BTreeMap<String, BTreeSet<String>> {
+    fn add_json(path: &Path, label: &str, out: &mut BTreeMap<String, BTreeSet<String>>) {
+        let text = fs::read_to_string(path).unwrap();
+        let items: Vec<Value> = serde_json::from_str(&text)
+            .unwrap_or_else(|e| panic!("{} is not valid JSON: {e}", path.display()));
+        for item in items {
+            if let Some(code) = item.get("code").and_then(Value::as_str) {
+                out.entry(code.to_owned())
+                    .or_default()
+                    .insert(label.to_owned());
+            }
+        }
+    }
+    let mut codes: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for dir in ["lex", "fail"] {
+        for name in fixture_names(dir, ".diag.json") {
+            let path = syntax_dir().join(dir).join(format!("{name}.diag.json"));
+            add_json(&path, &format!("syntax/{dir}/{name}"), &mut codes);
+        }
+    }
+    for name in fixture_names("ast", ".ast") {
+        let text =
+            fs::read_to_string(syntax_dir().join("ast").join(format!("{name}.ast"))).unwrap();
+        for line in text.lines() {
+            if let Some(code) = line
+                .strip_prefix("; ")
+                .and_then(|rest| rest.split_whitespace().next())
+                .filter(|word| word.starts_with("MTEK-"))
+            {
+                codes
+                    .entry(code.to_owned())
+                    .or_default()
+                    .insert(format!("syntax/ast/{name}"));
+            }
+        }
+    }
+    for suite in ["pass", "fail"] {
+        for name in semantic_fixtures(suite) {
+            let path = semantics_dir().join(suite).join(&name).join(EXPECTED);
+            if path.exists() {
+                add_json(&path, &format!("semantics/{suite}/{name}"), &mut codes);
+            }
+        }
+    }
+    codes
+}
+
+#[test]
+fn every_catalogue_code_has_a_fixture_or_a_listed_reason() {
+    let produced = fixture_codes();
+    let crate_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut listed: BTreeMap<&str, &str> = BTreeMap::new();
+    let mut problems = Vec::new();
+    let lists = NOT_YET_IMPLEMENTED
+        .iter()
+        .map(|(code, _)| (*code, "NOT_YET_IMPLEMENTED"))
+        .chain(
+            UNREACHABLE_IN_THIS_BUILD
+                .iter()
+                .map(|(code, _, _)| (*code, "UNREACHABLE_IN_THIS_BUILD")),
+        )
+        .chain(
+            COVERED_BY_OTHER_TESTS
+                .iter()
+                .map(|(code, _)| (*code, "COVERED_BY_OTHER_TESTS")),
+        );
+    for (code, list) in lists {
+        if Code::parse_short(code).is_none() {
+            problems.push(format!(
+                "{list} lists {code}, which is not a catalogue code"
+            ));
+        }
+        if let Some(other) = listed.insert(code, list) {
+            problems.push(format!("{code} is listed in {other} and {list}"));
+        }
+    }
+    for (code, file) in UNREACHABLE_IN_THIS_BUILD
+        .iter()
+        .map(|(code, _, file)| (*code, *file))
+        .chain(COVERED_BY_OTHER_TESTS.iter().copied())
+    {
+        match fs::read_to_string(crate_dir.join(file)) {
+            Ok(text) if text.contains(code) => {}
+            Ok(_) => problems.push(format!("{code}: {file} does not name it")),
+            Err(e) => problems.push(format!("{code}: cannot read {file}: {e}")),
+        }
+    }
+    for code in Code::ALL {
+        let short = code.short();
+        let by_fixture = produced.contains_key(code.as_str());
+        match (by_fixture, listed.get(short)) {
+            (true, Some(list)) => problems.push(format!(
+                "{short} now has a fixture ({:?}); remove it from {list}",
+                produced.get(code.as_str())
+            )),
+            (false, None) => problems.push(format!(
+                "no fixture produces {short} ({}); add one, or list it with its reason",
+                code.title()
+            )),
+            _ => {}
+        }
+    }
+    for code in produced.keys() {
+        if Code::parse(code).is_none() {
+            problems.push(format!(
+                "a fixture expects {code}, which is not a catalogue code"
+            ));
+        }
+    }
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
 }

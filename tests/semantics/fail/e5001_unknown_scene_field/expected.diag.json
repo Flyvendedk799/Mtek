@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 17,
+    "endByte": 27,
+    "message": "Unknown field 'background' on scene 'Demo'. Valid fields: clear_color."
+  }
+]

@@ -1,0 +1,78 @@
+[
+  {
+    "code": "MTEK-E5010",
+    "file": "src/main.mtek",
+    "startByte": 142,
+    "endByte": 150,
+    "message": "Camera 'Main' declares both 'target' and 'rotation'.",
+    "related": [
+      {
+        "message": "'target' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 105,
+        "endByte": 111
+      }
+    ],
+    "notes": [
+      "'rotation' must not be declared together with 'target'"
+    ]
+  },
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 211,
+    "endByte": 225,
+    "message": "Field 'position' of entity 'Cube' expects vec3, but received vec2.",
+    "expected": "vec3",
+    "actual": "vec2",
+    "notes": [
+      "a vec3 has 3 components; this value has 2"
+    ]
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 260,
+    "endByte": 261,
+    "message": "Field 'segments' of Sphere must be between 3 and 256, but the value is 2."
+  },
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 263,
+    "endByte": 268,
+    "message": "Unknown field 'rimgs' on Sphere. Valid fields: radius, segments, rings.",
+    "notes": [
+      "help: did you mean 'rings'?"
+    ]
+  },
+  {
+    "code": "MTEK-E5100",
+    "file": "src/main.mtek",
+    "startByte": 308,
+    "endByte": 317,
+    "message": "Parameter 'color' of material Unlit must be an opaque colour, but its alpha is 0.5019608.",
+    "notes": [
+      "colour parameters of materials must have alpha 1.0 in v0.1: transparency is not supported",
+      "help: use a `#rrggbb` literal, or a vec4 for four components that are not a colour"
+    ]
+  },
+  {
+    "code": "MTEK-E5090",
+    "file": "src/main.mtek",
+    "startByte": 336,
+    "endByte": 346,
+    "message": "Every component of field 'scale' of entity 'Cube' must be greater than 0 and finite, but the value is vec3(-1.0, -1.0, -1.0)."
+  },
+  {
+    "code": "MTEK-E5020",
+    "file": "src/main.mtek",
+    "startByte": 383,
+    "endByte": 391,
+    "message": "Entity 'Badge' declares 'material' without 'mesh'.",
+    "notes": [
+      "'material' is used only together with 'mesh'",
+      "help: declare 'mesh', or remove 'material'"
+    ]
+  }
+]

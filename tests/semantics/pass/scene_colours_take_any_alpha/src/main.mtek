@@ -1,0 +1,10 @@
+// The renderer uses only the RGB channels of scene colours, so any alpha is
+// accepted; only material colour parameters must be opaque (E5100).
+scene Dusk {
+    clear_color: #10141880;
+    camera Main {}
+    entity Cube {
+        mesh: Box {};
+        material: Unlit { color: #6b5cffff };
+    }
+}

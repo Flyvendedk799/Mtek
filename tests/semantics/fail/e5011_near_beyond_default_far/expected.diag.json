@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E5011",
+    "file": "src/main.mtek",
+    "startByte": 71,
+    "endByte": 77,
+    "message": "Field 'near' of Perspective must be less than 'far' (1000.0, its default), but the value is 2000.0."
+  }
+]

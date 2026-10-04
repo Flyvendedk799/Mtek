@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E5011",
+    "file": "src/main.mtek",
+    "startByte": 72,
+    "endByte": 75,
+    "message": "Field 'fov_y' of Perspective must be greater than 0 and less than π, but the value is 3.5."
+  }
+]

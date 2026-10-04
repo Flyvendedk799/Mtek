@@ -6,10 +6,17 @@
 use std::collections::BTreeSet;
 
 use super::model::{
-    EventForm, FieldDef, IntrinsicDef, NamespaceMember, Registry, SceneObjectKind, SchemaCategory,
-    SchemaDef, SigType, Signature, TypeKind, TypeRef,
+    EventForm, FieldDef, FieldRule, IntrinsicDef, NamespaceMember, Registry, SceneObjectKind,
+    SchemaCategory, SchemaDef, SigType, Signature, TypeKind, TypeRef,
 };
 use super::value::ConstValue;
+use crate::diagnostics::{Code, Severity};
+
+/// Whether `code` is an error of the scene and schema range (`5xxx`), the only codes the
+/// registry's rules may name.
+fn is_scene_error(code: Code) -> bool {
+    code.range() == 5 && code.severity() == Severity::Error
+}
 
 /// The type a descriptor of a schema of `category` has.
 pub fn descriptor_type(category: SchemaCategory) -> TypeRef {
@@ -36,6 +43,7 @@ impl Registry {
     pub fn validate(&self) -> Vec<String> {
         let mut problems = Vec::new();
         self.validate_names(&mut problems);
+        self.validate_declaration_schemas(&mut problems);
         for schema in &self.schemas {
             self.validate_schema(schema, &mut problems);
         }
@@ -127,6 +135,7 @@ impl Registry {
         for field in &schema.fields {
             self.validate_field(schema, field, problems);
         }
+        self.validate_rules(schema, problems);
     }
 
     fn validate_field(&self, schema: &SchemaDef, field: &FieldDef, problems: &mut Vec<String>) {
@@ -159,6 +168,15 @@ impl Registry {
         }
         if let Some(default) = field.default {
             self.validate_default(&at, field, default, problems);
+        }
+        if !is_scene_error(field.range_code) {
+            problems.push(format!(
+                "{at}: range code {} is not a scene error code",
+                field.range_code
+            ));
+        }
+        if field.range.is_none() && field.range_code != Code::E5006 {
+            problems.push(format!("{at}: range code without a range"));
         }
         if let Some(range) = field.range {
             let numeric = matches!(
@@ -226,18 +244,84 @@ impl Registry {
     }
 
     fn validate_scene_object(&self, kind: &SceneObjectKind, problems: &mut Vec<String>) {
-        match self.schema(kind.schema) {
-            None => problems.push(format!(
-                "scene object `{}`: unknown schema `{}`",
-                kind.keyword, kind.schema
-            )),
-            Some(schema) if schema.category != SchemaCategory::Object => {
+        let schema = match self.schema(kind.schema) {
+            None => {
                 problems.push(format!(
-                    "scene object `{}`: schema is not an object schema",
-                    kind.keyword
+                    "scene object `{}`: unknown schema `{}`",
+                    kind.keyword, kind.schema
                 ));
+                return;
             }
-            Some(_) => {}
+            Some(schema) => schema,
+        };
+        if schema.category != SchemaCategory::Object {
+            problems.push(format!(
+                "scene object `{}`: schema is not an object schema",
+                kind.keyword
+            ));
+        }
+        if let Some(active) = kind.active {
+            match schema.field(active.field) {
+                Some(field) if field.ty == TypeRef::Bool => {}
+                Some(_) => problems.push(format!(
+                    "scene object `{}`: active field `{}` is not a bool",
+                    kind.keyword, active.field
+                )),
+                None => problems.push(format!(
+                    "scene object `{}`: unknown active field `{}`",
+                    kind.keyword, active.field
+                )),
+            }
+            for code in [active.missing, active.ambiguous] {
+                if !is_scene_error(code) {
+                    problems.push(format!(
+                        "scene object `{}`: {code} is not a scene error code",
+                        kind.keyword
+                    ));
+                }
+            }
+        }
+    }
+
+    fn validate_declaration_schemas(&self, problems: &mut Vec<String>) {
+        let schemas = self.declaration_schemas;
+        for (what, name) in [("scene", schemas.scene), ("entity", schemas.entity)] {
+            match self.schema(name) {
+                None => problems.push(format!("{what} declarations: unknown schema `{name}`")),
+                Some(schema) if schema.category != SchemaCategory::Object => problems.push(
+                    format!("{what} declarations: schema `{name}` is not an object schema"),
+                ),
+                Some(_) => {}
+            }
+        }
+    }
+
+    fn validate_rules(&self, schema: &SchemaDef, problems: &mut Vec<String>) {
+        for rule in &schema.rules {
+            let (field, other, code) = match *rule {
+                FieldRule::Requires {
+                    field,
+                    requires,
+                    code,
+                } => (field, requires, code),
+                FieldRule::ExcludedBy {
+                    field,
+                    excluded_by,
+                    code,
+                } => (field, excluded_by, code),
+            };
+            let at = format!("{}: rule on `{field}`", schema.name);
+            for name in [field, other] {
+                if schema.field(name).is_none() {
+                    problems.push(format!("{at} names unknown field `{name}`"));
+                }
+            }
+            if field == other {
+                problems.push(format!("{at} relates the field to itself"));
+            }
+            if !is_scene_error(code) {
+                problems.push(format!("{at}: {code} is not a scene error code"));
+            }
         }
     }
 

@@ -1,0 +1,8 @@
+scene Demo {
+    camera Main {}
+    entity Cube { mesh: Box {}; }
+    entity Shadow {
+        position: Cube.position;
+        mesh: Plane {};
+    }
+}

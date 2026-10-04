@@ -6,9 +6,11 @@
 // Test-only code: helper functions outside `#[test]` functions may panic.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use mtek_compiler::diagnostics::Code;
 use mtek_compiler::stdlib::{
-    BuiltinSampler, BuiltinTexture, ColorValue, ConstValue, Domain, EventForm, FieldDef, Milestone,
-    NamespaceMember, Registry, SchemaCategory, SigType, TypeKind, TypeRef, format_f32, registry,
+    BuiltinSampler, BuiltinTexture, ColorValue, ConstValue, Domain, EventForm, FieldDef, FieldRule,
+    Milestone, NamespaceMember, Registry, SchemaCategory, SigType, TypeKind, TypeRef, format_f32,
+    registry,
 };
 
 fn flags(field: &FieldDef) -> String {
@@ -431,6 +433,65 @@ fn the_camera_is_the_one_scene_object_kind() {
     let camera = registry.scene_object("camera").unwrap();
     assert_eq!(camera.schema, "Camera");
     assert_eq!(camera.since, Milestone::M1);
+    // `spec/scenes.md` section 3: exactly one active camera (`E5012`, `E5013`).
+    let active = camera.active.unwrap();
+    assert_eq!(
+        (active.field, active.missing, active.ambiguous),
+        ("active", Code::E5012, Code::E5013)
+    );
+}
+
+#[test]
+fn scene_and_entity_bodies_have_their_schemas() {
+    let registry = registry();
+    assert_eq!(registry.scene_schema().map(|s| s.name), Some("Scene"));
+    assert_eq!(registry.entity_schema().map(|s| s.name), Some("Entity"));
+}
+
+#[test]
+fn field_rules_and_range_codes_follow_the_scene_specification() {
+    // Decision 0027: the rules of `spec/scenes.md` sections 3, 4.1 and 12 are registry
+    // data, so the checker names no schema or field.
+    let registry = registry();
+    assert_eq!(
+        registry.schema("Entity").unwrap().rules,
+        vec![FieldRule::Requires {
+            field: "material",
+            requires: "mesh",
+            code: Code::E5020,
+        }]
+    );
+    assert_eq!(
+        registry.schema("Camera").unwrap().rules,
+        vec![FieldRule::ExcludedBy {
+            field: "rotation",
+            excluded_by: "target",
+            code: Code::E5010,
+        }]
+    );
+    let mut dedicated = Vec::new();
+    for schema in &registry.schemas {
+        if schema.name != "Entity" && schema.name != "Camera" {
+            assert!(schema.rules.is_empty(), "{}", schema.name);
+        }
+        for field in &schema.fields {
+            if field.range_code != Code::E5006 {
+                dedicated.push((schema.name, field.name, field.range_code.short()));
+            }
+        }
+    }
+    assert_eq!(
+        dedicated,
+        [
+            ("Entity", "scale", "E5090"),
+            ("Perspective", "fov_y", "E5011"),
+            ("Perspective", "near", "E5011"),
+            ("Perspective", "far", "E5011"),
+            ("Orthographic", "height", "E5011"),
+            ("Orthographic", "near", "E5011"),
+            ("Orthographic", "far", "E5011"),
+        ]
+    );
 }
 
 #[test]
@@ -946,6 +1007,23 @@ fn validation_reports_broken_tables() {
         .unwrap();
     broken.schemas[sphere].fields[0].default = Some(ConstValue::F32(-1.0));
     broken.events[0].hosts = &[];
+    // Rules, range codes and the active-object selection must name real fields and codes
+    // of the scene range.
+    broken.schemas[sphere].rules.push(FieldRule::Requires {
+        field: "radius",
+        requires: "colour",
+        code: Code::E5020,
+    });
+    broken.schemas[sphere].fields[1].range_code = Code::E3001;
+    broken.schemas[schema].rules.push(FieldRule::ExcludedBy {
+        field: "size",
+        excluded_by: "size",
+        code: Code::E5010,
+    });
+    if let Some(active) = broken.scene_objects[0].active.as_mut() {
+        active.field = "position";
+    }
+    broken.declaration_schemas.entity = "Box";
     let problems = broken.validate();
     let joined = problems.join("\n");
     assert!(joined.contains("duplicate field of `Box`"), "{joined}");
@@ -961,6 +1039,15 @@ fn validation_reports_broken_tables() {
         joined.contains("event `key_down`: no allowed hosts"),
         "{joined}"
     );
+    for expected in [
+        "Sphere: rule on `radius` names unknown field `colour`",
+        "Sphere.segments: range code MTEK-E3001 is not a scene error code",
+        "Box: rule on `size` relates the field to itself",
+        "scene object `camera`: active field `position` is not a bool",
+        "entity declarations: schema `Box` is not an object schema",
+    ] {
+        assert!(joined.contains(expected), "{expected}: {joined}");
+    }
 }
 
 // ---------------------------------------------------------------------------------------

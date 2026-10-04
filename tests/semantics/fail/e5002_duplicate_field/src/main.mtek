@@ -1,0 +1,8 @@
+scene Demo {
+    camera Main {}
+    entity Cube {
+        position: vec3(0.0, 1.0, 0.0);
+        mesh: Box {};
+        position: vec3(0.0, 2.0, 0.0);
+    }
+}

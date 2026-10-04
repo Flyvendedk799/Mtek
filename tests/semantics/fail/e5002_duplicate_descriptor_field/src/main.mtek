@@ -1,0 +1,6 @@
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere { radius: 1.0; radius: 2.0 };
+    }
+}

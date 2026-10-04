@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 13,
+    "endByte": 19,
+    "message": "'Camera' describes the fields of a declaration; it cannot be written as a descriptor literal.",
+    "expected": "a descriptor of a mesh, material, light, body, collider or projection schema",
+    "actual": "the declaration schema Camera",
+    "notes": [
+      "help: write its fields in a declaration: `camera Name { … }`"
+    ]
+  }
+]

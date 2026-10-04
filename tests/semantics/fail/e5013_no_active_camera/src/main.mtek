@@ -1,0 +1,4 @@
+scene Demo {
+    camera Front { position: vec3(0.0, 0.0, 5.0); }
+    camera Side { position: vec3(5.0, 0.0, 0.0); }
+}

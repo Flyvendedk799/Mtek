@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5013",
+    "file": "src/main.mtek",
+    "startByte": 31,
+    "endByte": 45,
+    "message": "The only camera of scene 'Demo', 'Main', declares `active: false`.",
+    "notes": [
+      "a scene renders through exactly one active camera",
+      "help: remove `active: false`; with one camera, it is the active one"
+    ]
+  }
+]

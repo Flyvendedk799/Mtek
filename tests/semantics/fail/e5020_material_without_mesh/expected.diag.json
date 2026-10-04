@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5020",
+    "file": "src/main.mtek",
+    "startByte": 99,
+    "endByte": 107,
+    "message": "Entity 'Marker' declares 'material' without 'mesh'.",
+    "notes": [
+      "'material' is used only together with 'mesh'",
+      "help: declare 'mesh', or remove 'material'"
+    ]
+  }
+]

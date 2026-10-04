@@ -1,0 +1,5 @@
+const VIEW = Camera { position: vec3(0.0, 0.0, 5.0) };
+
+scene Demo {
+    camera Main {}
+}
