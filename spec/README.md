@@ -12,7 +12,7 @@ which its subject is delivered.
 | `grammar.ebnf` | Mtek Grammar v0.1 (EBNF reference) | M1 |
 | `grammar-notes.md` | Notes for implementers of the grammar | M1 |
 | `scenes.md` | Scenes, Entities and Behaviour | M1 |
-| `materials.md` | Materials, GPU Stages and Lighting | M1 (temporary Unlit path), M2 |
+| `materials.md` | Materials, GPU Stages and Lighting | M1 (temporary Unlit path, removed in M2: decision 0044), M2 |
 | `stdlib.md` | Standard Library Registry | M1 |
 | `gpu-layout.md` | GPU Data Layout and Transport | M0 |
 | `runtime-abi.md` | Program Format and Browser Runtime Contract | M0 (bridge spike), M1 |
