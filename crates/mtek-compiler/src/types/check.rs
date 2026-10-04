@@ -818,7 +818,12 @@ impl<'a> Checker<'a> {
                 let Some(def) = self.res.def(id) else {
                     return TyId::ERROR;
                 };
+                // A declaration that took the name of a prelude schema was
+                // reported by the resolver (`E2001`); its uses are not
+                // reported again.
+                let reused_prelude_name = !self.registry.prelude_name_kinds(&def.name).is_empty();
                 match def.kind {
+                    _ if reused_prelude_name => TyId::ERROR,
                     // Gated in this build.
                     DefKind::Struct | DefKind::Material | DefKind::Prefab => TyId::ERROR,
                     DefKind::SceneObject { kind: None } => TyId::ERROR,

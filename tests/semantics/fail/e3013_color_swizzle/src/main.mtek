@@ -1,0 +1,6 @@
+const ORANGE = #ff8000;
+const RGB = ORANGE.xyz;
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "code": "MTEK-E3003",
+    "file": "src/main.mtek",
+    "startByte": 146,
+    "endByte": 150,
+    "message": "Unknown type 'vec5'."
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 192,
+    "endByte": 199,
+    "message": "Unknown name 'missing'."
+  },
+  {
+    "code": "MTEK-E3041",
+    "file": "src/main.mtek",
+    "startByte": 231,
+    "endByte": 233,
+    "message": "The integer literal -1 is not representable as u32.",
+    "expected": "u32",
+    "notes": [
+      "u32 values range from 0 to 4294967295"
+    ]
+  }
+]

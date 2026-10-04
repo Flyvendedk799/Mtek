@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-W3050",
+    "file": "src/main.mtek",
+    "startByte": 135,
+    "endByte": 145,
+    "message": "The conversion `f32(…)` is redundant: its argument already has type f32.",
+    "notes": [
+      "help: remove the conversion"
+    ]
+  }
+]

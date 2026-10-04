@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3040",
+    "file": "src/main.mtek",
+    "startByte": 12,
+    "endByte": 26,
+    "message": "Integer overflow in a constant expression: 2147483647 + 1 does not fit in i32.",
+    "notes": [
+      "constant expressions are evaluated at compile time, where integer overflow is an error"
+    ]
+  }
+]

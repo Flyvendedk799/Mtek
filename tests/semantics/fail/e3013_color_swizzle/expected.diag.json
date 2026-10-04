@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3013",
+    "file": "src/main.mtek",
+    "startByte": 43,
+    "endByte": 46,
+    "message": "The type color has no component 'xyz'.",
+    "notes": [
+      "color components are .r, .g, .b, .a and .rgb"
+    ]
+  }
+]

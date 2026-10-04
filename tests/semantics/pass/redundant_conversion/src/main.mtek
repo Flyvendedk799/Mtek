@@ -1,0 +1,8 @@
+// A conversion to the type the value already has is a warning (W3050).
+const COUNT = 10;
+const WIDTH = f32(COUNT) * 0.5;
+const SAME = f32(WIDTH);
+
+scene Demo {
+    camera Main { position: vec3(0.0, SAME, 5.0); }
+}

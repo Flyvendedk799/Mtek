@@ -1,0 +1,11 @@
+// Each mistake is reported once: an unknown type, an unknown name and an
+// unrepresentable literal do not make their users fail again.
+const A: vec5 = 1.0;
+const B = A * 2.0;
+const C = vec3(missing, 1.0, 2.0) * B;
+const D: u32 = -1;
+const E = D + 1;
+
+scene Demo {
+    camera Main {}
+}

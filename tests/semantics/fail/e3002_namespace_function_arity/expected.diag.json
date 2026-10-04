@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3002",
+    "file": "src/main.mtek",
+    "startByte": 49,
+    "endByte": 85,
+    "message": "`quat.axis_angle` takes 2 arguments, but 1 was given.",
+    "notes": [
+      "signature: quat.axis_angle(axis: vec3, angle: f32) -> quat"
+    ]
+  }
+]

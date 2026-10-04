@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 13,
+    "endByte": 17,
+    "message": "'vec3' is a type, not a value.",
+    "expected": "a value",
+    "actual": "type"
+  }
+]

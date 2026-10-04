@@ -267,8 +267,9 @@ fn diagnostics_json(file_name: &str, parsed: &Parsed) -> String {
 }
 
 /// Compare the actual diagnostics with the expected file: the code, file,
-/// primary span and message of each exactly, and `related`, `notes` and
-/// `candidateEdits` when the expected diagnostic has them.
+/// primary span and message of each exactly, and `expected`, `actual`,
+/// `related`, `notes` and `candidateEdits` when the expected diagnostic has
+/// them.
 fn check_diagnostics(path: &Path, actual: &str) {
     if blessing() {
         fs::write(path, actual).unwrap();
@@ -301,7 +302,7 @@ fn check_diagnostics(path: &Path, actual: &str) {
                 path.display()
             );
         }
-        for key in ["related", "notes", "candidateEdits"] {
+        for key in ["expected", "actual", "related", "notes", "candidateEdits"] {
             if let Some(want_value) = want.get(key) {
                 assert_eq!(
                     Some(want_value),
@@ -999,6 +1000,12 @@ fn semantic_json(result: &CheckResult) -> String {
             );
             object.insert("endByte".into(), span.map_or(Value::Null, |s| s.end.into()));
             object.insert("message".into(), d.message.as_str().into());
+            if let Some(expected) = &d.expected {
+                object.insert("expected".into(), expected.as_str().into());
+            }
+            if let Some(actual) = &d.actual {
+                object.insert("actual".into(), actual.as_str().into());
+            }
             if !d.related.is_empty() {
                 let related: Vec<Value> = d
                     .related
@@ -1166,6 +1173,53 @@ fn every_resolver_code_has_a_semantic_fail_fixture() {
             "no semantics/fail fixture produces {code}: {seen:?}"
         );
     }
+}
+
+#[test]
+fn every_type_checker_code_has_a_semantic_fixture() {
+    // The codes of type checking and constant evaluation (M1-10): errors in
+    // `fail/`, the warning `W3050` in a `pass/` fixture.
+    let mut seen = BTreeSet::new();
+    for suite in ["pass", "fail"] {
+        for name in semantic_fixtures(suite) {
+            for d in check_fixture(suite, &name).report.diagnostics {
+                seen.insert((suite, d.code.short()));
+            }
+        }
+    }
+    for code in [
+        "E2020", "E3001", "E3002", "E3003", "E3010", "E3011", "E3013", "E3014", "E3040", "E3041",
+        "E3090", "E5001",
+    ] {
+        assert!(
+            seen.contains(&("fail", code)),
+            "no semantics/fail fixture produces {code}: {seen:?}"
+        );
+    }
+    assert!(
+        seen.contains(&("pass", "W3050")),
+        "no semantics/pass fixture produces W3050: {seen:?}"
+    );
+}
+
+#[test]
+fn semantic_pass_fixtures_fold_their_constants() {
+    // Every constant of the typed-constants fixture is folded, and the
+    // fixture's values are the exact results (`tests/consteval_goldens.rs`
+    // has the bit-pattern table).
+    let result = check_fixture("pass", "typed_constants");
+    let (Some(resolution), Some(types)) = (&result.resolution, &result.types) else {
+        panic!("typed_constants was not checked");
+    };
+    let mut constants = 0;
+    for def in resolution.defs() {
+        if def.kind == mtek_compiler::resolve::DefKind::Const {
+            let info = types.const_info(def.id).unwrap();
+            assert!(info.value.is_some(), "{} was not folded", def.name);
+            constants += 1;
+        }
+    }
+    assert_eq!(constants, 9);
 }
 
 /// The `E9010` messages of every `gate_*` fail fixture.

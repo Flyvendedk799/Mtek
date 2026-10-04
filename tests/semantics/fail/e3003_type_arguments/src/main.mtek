@@ -1,0 +1,5 @@
+const OFFSET: vec3<f32, 3> = vec3(1.0);
+
+scene Demo {
+    camera Main {}
+}

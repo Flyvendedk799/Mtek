@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E3003",
+    "file": "src/main.mtek",
+    "startByte": 14,
+    "endByte": 26,
+    "message": "The type 'vec3' takes no type arguments; only `array<T, N>` does."
+  }
+]

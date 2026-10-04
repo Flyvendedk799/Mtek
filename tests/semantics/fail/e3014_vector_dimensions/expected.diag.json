@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3014",
+    "file": "src/main.mtek",
+    "startByte": 49,
+    "endByte": 70,
+    "message": "The operator `+` is not defined for vec3 and vec2.",
+    "notes": [
+      "vector operands must have the same dimension"
+    ]
+  }
+]

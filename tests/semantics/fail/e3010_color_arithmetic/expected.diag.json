@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3010",
+    "file": "src/main.mtek",
+    "startByte": 30,
+    "endByte": 43,
+    "message": "The operator `*` is not defined for color: colours have no arithmetic.",
+    "notes": [
+      "help: compute with the linear components `.rgb` (a vec3) and build the colour with `color.linear(rgb, a)`"
+    ]
+  }
+]

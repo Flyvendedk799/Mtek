@@ -1,0 +1,9 @@
+fn half(x: f32) -> f32 {
+    return x * 0.5;
+}
+
+const H = half(2.0);
+
+scene Demo {
+    camera Main {}
+}

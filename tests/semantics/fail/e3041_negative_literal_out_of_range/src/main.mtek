@@ -1,0 +1,7 @@
+// -2147483648 is the smallest i32 literal; one less is not representable.
+const LOWEST = -2147483648;
+const BELOW = -2147483649;
+
+scene Demo {
+    camera Main {}
+}

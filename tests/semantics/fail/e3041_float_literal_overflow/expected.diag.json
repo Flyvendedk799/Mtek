@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E3041",
+    "file": "src/main.mtek",
+    "startByte": 13,
+    "endByte": 19,
+    "message": "The float literal 1.0e39 is not representable as f32: it rounds to infinity.",
+    "expected": "f32",
+    "notes": [
+      "the largest finite f32 is 3.4028235e38"
+    ]
+  }
+]

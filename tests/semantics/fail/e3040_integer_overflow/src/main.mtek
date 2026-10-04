@@ -1,0 +1,5 @@
+const BIG = 2147483647 + 1;
+
+scene Demo {
+    camera Main {}
+}
