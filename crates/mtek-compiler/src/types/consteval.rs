@@ -73,6 +73,11 @@ impl Checker<'_> {
                     .iter()
                     .map(|(def, decl)| (decl.span.start, *def)),
             )
+            .chain(
+                self.material_decls
+                    .iter()
+                    .map(|(def, decl)| (decl.span.start, *def)),
+            )
             .collect();
         roots.sort_unstable();
         let mut edges: BTreeMap<DefId, Vec<(DefId, Span)>> = BTreeMap::new();
@@ -89,6 +94,14 @@ impl Checker<'_> {
             for field in &decl.fields {
                 self.annotation_uses(&field.ty, &mut uses);
             }
+            edges.insert(*def, uses);
+        }
+        // Materials too (decision 0039): a material after the constants and
+        // structs its params name, a constant after the materials its
+        // descriptor literals name (their defaults complete the values).
+        for (def, decl) in &self.material_decls {
+            let mut uses = Vec::new();
+            self.material_uses(decl, &mut uses);
             edges.insert(*def, uses);
         }
         // One edge per dependency (its first reference), so a cycle is
@@ -146,6 +159,8 @@ impl Checker<'_> {
         for def in order {
             if self.struct_decls.contains_key(&def) {
                 self.struct_info(def);
+            } else if self.material_decls.contains_key(&def) {
+                self.material_params(def);
             } else {
                 self.const_info(def, None);
             }
@@ -208,7 +223,7 @@ impl Checker<'_> {
 
     /// The names in `expr` that denote constants the checker may evaluate,
     /// with their spans, in source order.
-    fn constant_uses(&self, expr: &Expr, uses: &mut Vec<(DefId, Span)>) {
+    pub(super) fn constant_uses(&self, expr: &Expr, uses: &mut Vec<(DefId, Span)>) {
         match &expr.kind {
             ExprKind::Name(_) => {
                 if let Some(Res::Def(id)) = self.res.res(expr.id)
@@ -242,7 +257,8 @@ impl Checker<'_> {
             }
             ExprKind::Descriptor { name, fields } => {
                 if let Some(Res::Def(id)) = self.res.res(name.id)
-                    && self.struct_decls.contains_key(&id)
+                    && (self.struct_decls.contains_key(&id)
+                        || self.material_decls.contains_key(&id))
                 {
                     uses.push((id, name.span));
                 }
@@ -616,6 +632,11 @@ impl Checker<'_> {
                 kind: NonConstantKind::RunTimeValue,
                 reason: format!("it reads `{name}`, which changes at run time"),
             }),
+            // A record value (the stage input) is never constant.
+            FieldKind::RecordField { .. } => match self.fold(base) {
+                Folded::NotConstant(reason) => Folded::NotConstant(reason),
+                _ => Folded::Unknown,
+            },
             FieldKind::StructField(name) => {
                 let base = self.fold(base);
                 self.combine(expr, vec![base], |values| match values {
@@ -733,6 +754,9 @@ impl Checker<'_> {
     fn fold_descriptor(&mut self, expr: &Expr, fields: &[DescField]) -> Folded {
         if let Some(&ty) = self.struct_literals.get(&expr.id) {
             return self.fold_struct_literal(expr, ty, fields);
+        }
+        if self.material_literals.contains_key(&expr.id) {
+            return self.fold_material_literal(expr, fields);
         }
         let schema = match self.typed(expr).map(|t| self.out.interner.get(t)) {
             Some(Ty::Schema(schema)) => schema,

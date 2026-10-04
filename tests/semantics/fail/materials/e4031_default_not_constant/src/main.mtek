@@ -1,0 +1,15 @@
+fn half(x: f32) -> f32 {
+    return x * 0.5;
+}
+
+material Dim {
+    param level: f32 = half(1.0);
+    param other: f32 = level;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(level * other), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,14 @@
+material Haze {
+    param tint: color = #ffffff;
+    fragment(input: SurfaceInput) -> color {
+        return tint;
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Fog {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Haze { tint: color.linear(vec3(1.0, 1.0, 1.0), 0.5) };
+    }
+}

@@ -38,7 +38,7 @@ use super::ops::{
 };
 use super::ty::{MAX_TYPE_DEPTH, Ty, TyId};
 use super::value::{ArithOp, CompareOp, ConstValue, LogicOp, Scalar};
-use super::{FnSig, Typeck};
+use super::{FnSig, MaterialInfo, Typeck};
 
 /// The largest length of `array<T, N>` (`spec/language.md` 5.1).
 pub(super) const MAX_ARRAY_LENGTH: u32 = 65_536;
@@ -55,8 +55,8 @@ use crate::stdlib::{
 };
 use crate::syntax::ast::{
     ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr,
-    ExprKind, FieldInit, FieldValue, Ident, ItemKind, Module, NodeId, SceneDecl, SceneMember,
-    SceneObject, StructDecl, Type, TypeKind as AstTypeKind, UnaryOp,
+    ExprKind, FieldInit, FieldValue, Ident, ItemKind, MaterialDecl, Module, NodeId, SceneDecl,
+    SceneMember, SceneObject, StructDecl, Type, TypeKind as AstTypeKind, UnaryOp,
 };
 
 /// Whether a literal expression is made of integer literals only, or holds a
@@ -168,6 +168,9 @@ pub enum FieldKind {
     NamespaceValue(String),
     /// A field of a user struct value.
     StructField(String),
+    /// A field of a registry record value (`input.uv` of a `SurfaceInput`,
+    /// decision 0039), with its position in the record.
+    RecordField { field: &'static str, index: usize },
 }
 
 pub(super) struct Checker<'a> {
@@ -203,6 +206,16 @@ pub(super) struct Checker<'a> {
     pub(super) imported_fns: BTreeMap<DefId, FnSig>,
     /// The function body being checked.
     pub(super) body: Option<BodyState>,
+    /// Every material declaration of the module, by its `DefId`.
+    pub(super) material_decls: BTreeMap<DefId, &'a MaterialDecl>,
+    /// Materials whose params have been checked.
+    pub(super) material_done: BTreeSet<DefId>,
+    /// The materials this module imports, by the `DefId` of the imported
+    /// name (seeded by [`super::check_module_with_imports`]).
+    pub(super) imported_materials: BTreeMap<DefId, MaterialInfo>,
+    /// Descriptor literals of user materials without errors, with their
+    /// material (for folding).
+    pub(super) material_literals: BTreeMap<NodeId, MaterialInfo>,
 }
 
 impl<'a> Checker<'a> {
@@ -249,6 +262,10 @@ impl<'a> Checker<'a> {
             struct_literals: BTreeMap::new(),
             imported_fns: BTreeMap::new(),
             body: None,
+            material_decls: BTreeMap::new(),
+            material_done: BTreeSet::new(),
+            imported_materials: BTreeMap::new(),
+            material_literals: BTreeMap::new(),
         }
     }
 
@@ -320,8 +337,11 @@ impl<'a> Checker<'a> {
                 ItemKind::Fn(decl) if construct_implemented(fn_construct(decl)) => {
                     self.function_body(decl);
                 }
-                // Materials and prefabs are gated in this build (see the
-                // tests); imports have nothing to check here.
+                ItemKind::Material(decl) if construct_implemented(Construct::Material) => {
+                    self.material_stages(decl);
+                }
+                // Prefabs are gated in this build (see the tests); imports
+                // have nothing to check here.
                 _ => {}
             }
         }
@@ -338,6 +358,9 @@ impl<'a> Checker<'a> {
                 }
                 ItemKind::Fn(decl) if construct_implemented(fn_construct(decl)) => {
                     self.collect_block_constants(&decl.body);
+                }
+                ItemKind::Material(decl) if construct_implemented(Construct::Material) => {
+                    self.collect_material(decl);
                 }
                 ItemKind::Scene(scene) => {
                     for member in &scene.members {
@@ -861,7 +884,11 @@ impl<'a> Checker<'a> {
             return TyId::ERROR;
         };
         match def.kind {
-            DefKind::Const => self.const_info(id, Some(expr.span)),
+            DefKind::Const => {
+                let ty = self.const_info(id, Some(expr.span));
+                self.note_stage_capture(expr, id, ty);
+                ty
+            }
             // A named entity converts to `entity_ref` where one is expected
             // (`spec/scenes.md` 8.3); that is the only meaning of a bare
             // entity name.
@@ -883,15 +910,17 @@ impl<'a> Checker<'a> {
                 TyId::ERROR
             }
             DefKind::Import => self.imported_value(expr, id),
-            // Parameters and locals of functions have the types their
-            // declarations gave them (decision 0038); those of constructs
-            // gated in this build are untyped.
-            DefKind::FnParam | DefKind::Local { .. } | DefKind::LoopVar => {
+            // Parameters and locals of functions and stage functions, and the
+            // params of materials, have the types their declarations gave
+            // them (decisions 0038, 0039); those of constructs gated in this
+            // build (prefab params) are untyped.
+            DefKind::FnParam | DefKind::Local { .. } | DefKind::LoopVar | DefKind::Param => {
+                self.note_surface_use(id);
                 self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR)
             }
-            // An unknown scene-object kind was reported (`E5014`); `state` and
-            // params are declared by constructs that are gated in this build.
-            DefKind::SceneObject { kind: None } | DefKind::State | DefKind::Param => TyId::ERROR,
+            // An unknown scene-object kind was reported (`E5014`); `state` is
+            // gated in this build.
+            DefKind::SceneObject { kind: None } | DefKind::State => TyId::ERROR,
         }
     }
 
@@ -900,8 +929,9 @@ impl<'a> Checker<'a> {
     /// an imported scene, function, struct, material or prefab is not a
     /// value, as it would not be in its own module.
     fn imported_value(&mut self, expr: &Expr, id: DefId) -> TyId {
-        if let Some(info) = self.out.consts.get(&id) {
-            return info.ty;
+        if let Some(ty) = self.out.consts.get(&id).map(|info| info.ty) {
+            self.note_stage_capture(expr, id, ty);
+            return ty;
         }
         let Some(target) = self.res.import_target(id) else {
             return TyId::ERROR;
@@ -1072,8 +1102,9 @@ impl<'a> Checker<'a> {
                         // An imported struct whose type is not known.
                         None => TyId::ERROR,
                     },
+                    DefKind::Material => self.material_instance(expr, name, id, fields),
                     // Gated in this build.
-                    DefKind::Material | DefKind::Prefab => TyId::ERROR,
+                    DefKind::Prefab => TyId::ERROR,
                     DefKind::SceneObject { kind: None } => TyId::ERROR,
                     kind => {
                         let (def_name, noun, span) = (def.name.clone(), kind.noun(), def.span);
@@ -2127,6 +2158,9 @@ impl<'a> Checker<'a> {
         if self.out.interner.struct_def(base_ty).is_some() {
             return self.struct_field(expr, base_ty, name);
         }
+        if let Ty::Record(record) = self.out.interner.get(base_ty) {
+            return self.record_field(expr, base, record, name);
+        }
         self.components(expr, base_ty, name)
     }
 
@@ -2378,6 +2412,9 @@ impl Checker<'_> {
             Some(DefKind::Fn) => self.out.functions.get(&id).map(|info| info.sig.clone()),
             _ => self.imported_fns.get(&id).cloned(),
         };
+        if sig.as_ref().is_some_and(|sig| sig.cpu) {
+            self.note_stage_cpu_call(expr, id, &name);
+        }
         let Some(sig) = sig else {
             // An imported function of a module not checked first (only an
             // import cycle causes it): untyped, still not constant.

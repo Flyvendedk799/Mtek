@@ -113,6 +113,10 @@ pub enum Ty {
     Descriptor(SchemaCategory),
     /// The argument of `spawn`: a prefab descriptor.
     PrefabDescriptor,
+    /// The value of a descriptor literal of a user material (`Pulse { .. }`,
+    /// decision 0039): nominal, identified by the material's declaration in
+    /// any module, and accepted wherever a `material` is expected.
+    MaterialInstance(MaterialKey),
 }
 
 /// The types with fixed ids, in id order.
@@ -173,6 +177,16 @@ pub struct StructKey {
     pub def: DefId,
 }
 
+/// The identity of a user material: its declaration, by the file that
+/// declares it and its `DefId` there, like [`StructKey`] (decision 0039).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct MaterialKey {
+    /// The file of the declaring module.
+    pub file: FileId,
+    /// The declaration in that module's resolution.
+    pub def: DefId,
+}
+
 /// The fields of a user struct type, in declaration order, with their types
 /// in the interner that holds the definition.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -209,6 +223,8 @@ pub struct TyInterner {
     ids: BTreeMap<Ty, TyId>,
     /// The names and fields of struct types.
     structs: BTreeMap<StructKey, StructDef>,
+    /// The names of user material types.
+    materials: BTreeMap<MaterialKey, String>,
 }
 
 impl Default for TyInterner {
@@ -225,6 +241,7 @@ impl TyInterner {
             types: Vec::new(),
             ids: BTreeMap::new(),
             structs: BTreeMap::new(),
+            materials: BTreeMap::new(),
         };
         for ty in PRIMITIVES {
             interner.intern(ty);
@@ -258,6 +275,13 @@ impl TyInterner {
             broken: false,
         });
         self.intern(Ty::Struct(key))
+    }
+
+    /// The instance type of the user material declared as `key`, named
+    /// `name` in diagnostics.
+    pub fn intern_material(&mut self, key: MaterialKey, name: &str) -> TyId {
+        self.materials.entry(key).or_insert_with(|| name.to_owned());
+        self.intern(Ty::MaterialInstance(key))
     }
 
     /// Record the fields of the struct type `key` (its nesting depth is 1
@@ -379,6 +403,13 @@ impl TyInterner {
                 }
                 self.intern(Ty::Struct(key))
             }
+            Ty::MaterialInstance(key) => {
+                let name = other
+                    .materials
+                    .get(&key)
+                    .map_or_else(|| "material".to_owned(), Clone::clone);
+                self.intern_material(key, &name)
+            }
             Ty::Array { element, len } => {
                 let element = self.import_shallow(other, element, pending);
                 if self.is_error(element) {
@@ -465,7 +496,11 @@ impl TyInterner {
             Ty::Enum(name) => TypeRef::Enum(name),
             Ty::Descriptor(category) => TypeRef::Descriptor(category),
             Ty::PrefabDescriptor => TypeRef::PrefabDescriptor,
-            Ty::Error | Ty::Array { .. } | Ty::Struct(_) | Ty::Schema(_) => return None,
+            Ty::Error
+            | Ty::Array { .. }
+            | Ty::Struct(_)
+            | Ty::Schema(_)
+            | Ty::MaterialInstance(_) => return None,
         })
     }
 
@@ -520,8 +555,11 @@ impl TyInterner {
         if actual == expected || self.is_error(actual) || self.is_error(expected) {
             return true;
         }
-        let Ty::Schema(schema) = self.get(actual) else {
-            return false;
+        let schema = match self.get(actual) {
+            Ty::Schema(schema) => schema,
+            // A user material instance is a `material` (decision 0039).
+            Ty::MaterialInstance(_) => return self.get(expected) == Ty::Material,
+            _ => return false,
         };
         let Some(category) = registry().schema(schema).map(|s| s.category) else {
             return false;
@@ -546,6 +584,10 @@ impl TyInterner {
                 .get(&key)
                 .map_or_else(|| "struct".to_owned(), |def| def.name.clone()),
             Ty::Schema(name) => name.to_owned(),
+            Ty::MaterialInstance(key) => self
+                .materials
+                .get(&key)
+                .map_or_else(|| "material".to_owned(), Clone::clone),
             _ => self
                 .to_type_ref(id)
                 .map_or_else(|| "{error}".to_owned(), |t| t.spelling().to_owned()),
@@ -716,6 +758,32 @@ mod tests {
         assert!(!interner.assignable(TyId::VEC3, TyId::VEC4));
         assert!(!interner.assignable(TyId::VEC4, TyId::QUAT));
         assert!(!interner.assignable(TyId::VEC4, TyId::COLOR));
+    }
+
+    #[test]
+    fn material_instances_are_nominal_materials_across_modules() {
+        let key = |file, def| MaterialKey {
+            file: FileId(file),
+            def: DefId(def),
+        };
+        let mut exporter = TyInterner::new();
+        let pulse_a = exporter.intern_material(key(1, 3), "Pulse");
+        let pulse_b = exporter.intern_material(key(2, 3), "Pulse");
+        assert_ne!(pulse_a, pulse_b);
+        assert_eq!(exporter.display(pulse_a), "Pulse");
+        assert!(exporter.assignable(pulse_a, TyId::MATERIAL));
+        assert!(!exporter.assignable(pulse_a, pulse_b));
+        assert!(!exporter.assignable(TyId::MATERIAL, pulse_a));
+        assert_eq!(exporter.to_type_ref(pulse_a), None);
+        // Crossing an import keeps the identity and the name.
+        let mut importer = TyInterner::new();
+        importer.intern(Ty::Array {
+            element: TyId::BOOL,
+            len: 2,
+        });
+        let imported = importer.import_from(&exporter, pulse_b);
+        assert_eq!(importer.get(imported), Ty::MaterialInstance(key(2, 3)));
+        assert_eq!(importer.display(imported), "Pulse");
     }
 
     #[test]

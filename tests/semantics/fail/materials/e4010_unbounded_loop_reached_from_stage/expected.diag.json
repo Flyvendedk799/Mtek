@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E4010",
+    "file": "src/main.mtek",
+    "startByte": 167,
+    "endByte": 171,
+    "message": "The bounds of this `for` loop are not constant expressions, but the function 'sum' runs on the GPU.",
+    "related": [
+      {
+        "message": "the fragment stage of material 'Bands' runs on the GPU",
+        "file": "src/main.mtek",
+        "startByte": 270,
+        "endByte": 278
+      },
+      {
+        "message": "'the fragment stage of material 'Bands'' calls 'sum' here",
+        "file": "src/main.mtek",
+        "startByte": 344,
+        "endByte": 354
+      }
+    ],
+    "notes": [
+      "loops in GPU code need bounds that are constant expressions"
+    ]
+  }
+]

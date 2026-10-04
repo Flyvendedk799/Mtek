@@ -60,6 +60,7 @@ pub mod effects;
 mod effects_tests;
 pub mod facts;
 mod intrinsics;
+mod material;
 mod ops;
 pub mod scene;
 #[cfg(test)]
@@ -75,8 +76,9 @@ use std::collections::BTreeMap;
 pub use check::{CallKind, FieldKind};
 pub use effects::{EffectLevel, FnEffect, FnRef, ProgramEffects, Roots};
 pub use facts::{BodyFacts, BuiltinCall, CallFact, Callee, CpuOnlySite};
+pub use material::MAX_MATERIAL_PARAMS;
 pub use scene::{CheckedEntity, CheckedField, CheckedObject, CheckedScene, FieldOrigin};
-pub use ty::{StructDef, StructKey, Ty, TyId, TyInterner};
+pub use ty::{MaterialKey, StructDef, StructKey, Ty, TyId, TyInterner};
 pub use value::{ArithOp, ConstValue, EvalError, EvalResult, Scalar};
 
 use crate::diagnostics::Diagnostics;
@@ -147,6 +149,69 @@ pub struct FnInfo {
     pub facts: BodyFacts,
 }
 
+/// A checked material declaration (`spec/materials.md` sections 1–3,
+/// decision 0039).
+#[derive(Clone, Debug, PartialEq)]
+pub struct MaterialInfo {
+    pub name: String,
+    /// Its identity in every module.
+    pub key: MaterialKey,
+    /// The declared name.
+    pub name_span: Span,
+    /// The whole declaration.
+    pub span: Span,
+    /// The params in declaration order.
+    pub params: Vec<MaterialParam>,
+    /// The fragment stage, if the material declares one (the first stage
+    /// function; any further one is an error).
+    pub fragment: Option<StageInfo>,
+}
+
+impl MaterialInfo {
+    /// The param `name`.
+    #[must_use]
+    pub fn param(&self, name: &str) -> Option<&MaterialParam> {
+        self.params.iter().find(|p| p.name == name)
+    }
+}
+
+/// One `param` of a material.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MaterialParam {
+    pub name: String,
+    /// The param's declaration (`None` for a material imported from another
+    /// module, whose declarations live in that module's resolution).
+    pub def: Option<DefId>,
+    /// Its type; `Error` if the annotation has an error.
+    pub ty: TyId,
+    /// The folded default, if one is written and valid.
+    pub default: Option<ConstValue>,
+    /// A default is written (valid or not): an instance need not supply the
+    /// param.
+    pub has_default: bool,
+    /// The declared name.
+    pub name_span: Span,
+    /// The whole `param name: T = default;`.
+    pub span: Span,
+}
+
+/// The checked stage function of a material.
+#[derive(Clone, Debug, PartialEq)]
+pub struct StageInfo {
+    /// The declared name.
+    pub name_span: Span,
+    /// The whole stage function.
+    pub span: Span,
+    /// The `SurfaceInput` parameter (a function parameter of the stage).
+    pub surface: Option<DefId>,
+    /// The `SurfaceInput` fields the stage reads, in the registry's field
+    /// order (`spec/materials.md` section 3.1).
+    pub surface_inputs: Vec<&'static str>,
+    /// What the body calls and declares: the stage is a GPU root
+    /// ([`effects::Roots::gpu_bodies`]).
+    pub facts: BodyFacts,
+}
+
 /// What type checking and constant evaluation produced for one module.
 #[derive(Clone, Debug)]
 pub struct Typeck {
@@ -166,6 +231,8 @@ pub struct Typeck {
     calls: BTreeMap<NodeId, CallKind>,
     /// What each field expression without errors reads.
     fields: BTreeMap<NodeId, FieldKind>,
+    /// Every material the module declares, by its `DefId`.
+    materials: BTreeMap<DefId, MaterialInfo>,
 }
 
 impl Typeck {
@@ -183,7 +250,19 @@ impl Typeck {
             locals: BTreeMap::new(),
             calls: BTreeMap::new(),
             fields: BTreeMap::new(),
+            materials: BTreeMap::new(),
         }
+    }
+
+    /// The material declared as `def`.
+    #[must_use]
+    pub fn material(&self, def: DefId) -> Option<&MaterialInfo> {
+        self.materials.get(&def)
+    }
+
+    /// Every material the module declares, in `DefId` (source) order.
+    pub fn materials(&self) -> impl Iterator<Item = (DefId, &MaterialInfo)> + '_ {
+        self.materials.iter().map(|(def, info)| (*def, info))
     }
 
     /// Every scene the build checks, in source order, as the scene checks
@@ -312,13 +391,24 @@ pub struct ImportedFn<'a> {
     pub sig: &'a FnSig,
 }
 
-/// Everything a module imports that has a type: constants, structs and
-/// functions, by the `DefId` of the imported name in the importing module.
+/// A material another module exports (decision 0039): its params in the
+/// exporting module's interner.
+#[derive(Clone, Copy, Debug)]
+pub struct ImportedMaterial<'a> {
+    /// The exporting module's types.
+    pub interner: &'a TyInterner,
+    pub info: &'a MaterialInfo,
+}
+
+/// Everything a module imports that has a type: constants, structs,
+/// functions and materials, by the `DefId` of the imported name in the
+/// importing module.
 #[derive(Clone, Debug, Default)]
 pub struct Imports<'a> {
     pub consts: ImportedConsts<'a>,
     pub structs: BTreeMap<DefId, ImportedStruct<'a>>,
     pub fns: BTreeMap<DefId, ImportedFn<'a>>,
+    pub materials: BTreeMap<DefId, ImportedMaterial<'a>>,
 }
 
 /// Type-check `module` (whose source text is `text`) and fold its constant
@@ -393,6 +483,30 @@ pub fn check_module_with_imports(
                 params,
                 ret,
                 cpu: imported.sig.cpu,
+            },
+        );
+    }
+    for (def, imported) in &imports.materials {
+        let info = imported.info;
+        let params = info
+            .params
+            .iter()
+            .map(|param| MaterialParam {
+                def: None,
+                ty: checker
+                    .out
+                    .interner
+                    .import_from(imported.interner, param.ty),
+                ..param.clone()
+            })
+            .collect();
+        checker.out.interner.intern_material(info.key, &info.name);
+        checker.imported_materials.insert(
+            *def,
+            MaterialInfo {
+                params,
+                fragment: None,
+                ..info.clone()
             },
         );
     }

@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E2002",
+    "file": "src/main.mtek",
+    "startByte": 96,
+    "endByte": 104,
+    "message": "Duplicate stage function 'fragment': material 'Twice' already has its stage function.",
+    "related": [
+      {
+        "message": "the stage function is declared here",
+        "file": "src/main.mtek",
+        "startByte": 21,
+        "endByte": 29
+      }
+    ],
+    "notes": [
+      "a material has exactly one stage function, `fragment`"
+    ]
+  }
+]

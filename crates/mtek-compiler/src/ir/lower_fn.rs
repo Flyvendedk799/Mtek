@@ -8,7 +8,11 @@ use std::collections::BTreeMap;
 
 use super::lower::{Defect, Lowering};
 use super::model::{
-    Block, Branch, Expr, ExprKind, Function, LocalItem, LocalKind, NamedExpr, Place, Stmt, Symbol,
+    Block, Branch, Expr, ExprKind, Function, LocalItem, LocalKind, MaterialItem, MaterialParamItem,
+    NamedExpr, Place, StageItem, Stmt, Symbol, Value,
+};
+use crate::layout::{
+    LayoutType, compute, material_layout_id, material_params_struct, qualified_name,
 };
 use crate::resolve::{DefId, DefKind, Res};
 use crate::syntax::ast::{self, ElseBranch, ExprKind as AstExpr, FieldValue, ForIter};
@@ -21,6 +25,9 @@ struct FnLowering<'l, 'a> {
     name: String,
     locals: Vec<LocalItem>,
     index: BTreeMap<DefId, u32>,
+    /// In a material's stage: the material's params, by their declaration,
+    /// with their position (decision 0039).
+    params: BTreeMap<DefId, u32>,
 }
 
 impl Lowering<'_> {
@@ -47,6 +54,7 @@ impl Lowering<'_> {
             name: name.clone(),
             locals: Vec::new(),
             index: BTreeMap::new(),
+            params: BTreeMap::new(),
         };
         if info.sig.params.len() != decl.params.len() {
             return Err(format!("function '{name}' has parameters with errors"));
@@ -72,6 +80,135 @@ impl Lowering<'_> {
             locals: lowering.locals,
             body,
             span: decl.span,
+        })
+    }
+
+    /// The material `decl` (decision 0039): its params with their defaults,
+    /// its parameter block, and its fragment stage with the typed body.
+    pub(super) fn material(
+        &self,
+        decl: &ast::MaterialDecl,
+        symbol: Symbol,
+    ) -> Result<MaterialItem, Defect> {
+        let name = decl.name.name.clone();
+        let info = self
+            .resolution
+            .def_of(decl.id)
+            .and_then(|def| self.types.material(def))
+            .ok_or_else(|| format!("material '{name}' was not checked"))?;
+        let mut params = Vec::with_capacity(info.params.len());
+        let mut members = Vec::with_capacity(info.params.len());
+        let mut positions = BTreeMap::new();
+        for (index, param) in info.params.iter().enumerate() {
+            if param.has_default != param.default.is_some() {
+                return Err(format!(
+                    "the param '{}' of material '{name}' has a default with errors",
+                    param.name
+                ));
+            }
+            members.push((param.name.clone(), self.layout_type(param.ty)?));
+            if let Some(def) = param.def {
+                positions.insert(
+                    def,
+                    u32::try_from(index).map_err(|_| "too many params".to_owned())?,
+                );
+            }
+            params.push(MaterialParamItem {
+                name: param.name.clone(),
+                ty: self.types.display(param.ty),
+                default: param.default.as_ref().map(Value::from),
+                span: param.span,
+            });
+        }
+        let layout = if members.is_empty() {
+            None
+        } else {
+            let block = LayoutType::new_struct(qualified_name(self.path, &name), members);
+            let record = compute(
+                &block,
+                &material_layout_id(self.path, &name),
+                &material_params_struct(self.path, &name),
+            )
+            .map_err(|e| format!("the parameter block of material '{name}' has no layout: {e}"))?;
+            Some(record)
+        };
+        let stage_info = info
+            .fragment
+            .as_ref()
+            .ok_or_else(|| format!("material '{name}' has no fragment stage"))?;
+        let stage = decl
+            .members
+            .iter()
+            .find_map(|member| match member {
+                ast::MaterialMember::Stage(stage) => Some(stage),
+                _ => None,
+            })
+            .ok_or_else(|| format!("material '{name}' has no stage function"))?;
+        let mut lowering = FnLowering {
+            lowering: self,
+            name: format!("{name}.fragment"),
+            locals: Vec::new(),
+            index: BTreeMap::new(),
+            params: positions,
+        };
+        for param in &stage.params {
+            lowering.declare_node(param.id, &param.name, LocalKind::Param)?;
+        }
+        let body = lowering.block(&stage.body)?;
+        Ok(MaterialItem {
+            name,
+            symbol: symbol.clone(),
+            params,
+            layout,
+            fragment: StageItem {
+                symbol: symbol.child(&stage.name.name),
+                surface_inputs: stage_info.surface_inputs.clone(),
+                result: self.types.display(TyId::COLOR),
+                locals: lowering.locals,
+                body,
+                span: stage.span,
+            },
+            span: decl.span,
+        })
+    }
+
+    /// The layout type of a param of type `ty`: user structs are named by
+    /// their symbol in the module that declares them (decision 0036 item 11).
+    /// Types nest at most 256 levels (`E3032`), so the recursion is bounded.
+    fn layout_type(&self, ty: TyId) -> Result<LayoutType, Defect> {
+        let interner = self.types.interner();
+        Ok(match interner.get(ty) {
+            Ty::Bool => LayoutType::Bool,
+            Ty::I32 => LayoutType::I32,
+            Ty::U32 => LayoutType::U32,
+            Ty::F32 => LayoutType::F32,
+            Ty::Vec2 => LayoutType::Vec2,
+            Ty::Vec3 => LayoutType::Vec3,
+            Ty::Vec4 => LayoutType::Vec4,
+            Ty::Mat4 => LayoutType::Mat4,
+            Ty::Quat => LayoutType::Quat,
+            Ty::Color => LayoutType::Color,
+            Ty::Array { element, len } => LayoutType::new_array(self.layout_type(element)?, len),
+            Ty::Struct(key) => {
+                let def = interner
+                    .struct_def(ty)
+                    .ok_or("a param of a struct type without a definition")?;
+                let path = self
+                    .file_paths
+                    .get(&key.file)
+                    .ok_or("a struct of a module without a path")?;
+                let mut members = Vec::with_capacity(def.fields.len());
+                for (field, field_ty) in &def.fields {
+                    members.push((field.clone(), self.layout_type(*field_ty)?));
+                }
+                LayoutType::new_struct(qualified_name(path, &def.name), members)
+            }
+            _ => {
+                return Err(format!(
+                    "a material param of type {}, which has no layout",
+                    self.types.display(ty)
+                ));
+            }
         })
     }
 }
@@ -273,6 +410,14 @@ impl FnLowering<'_, '_> {
         }
     }
 
+    /// The material param a name refers to, in a stage.
+    fn param_of(&self, name: &ast::Expr) -> Option<u32> {
+        match self.lowering.resolution.res(name.id) {
+            Some(Res::Def(def)) => self.params.get(&def).copied(),
+            _ => None,
+        }
+    }
+
     /// The local a name refers to.
     fn local_of(&self, name: &ast::Expr) -> Result<u32, Defect> {
         match self.lowering.resolution.res(name.id) {
@@ -307,10 +452,16 @@ impl FnLowering<'_, '_> {
         };
         Ok(match &expr.kind {
             AstExpr::Paren(inner) => return self.expr(inner),
-            AstExpr::Name(_) => make(ExprKind::Local {
-                local: self.local_of(expr)?,
-                name: self.lowering.text_name(expr),
-            }),
+            AstExpr::Name(_) => match self.param_of(expr) {
+                Some(param) => make(ExprKind::Param {
+                    param,
+                    name: self.lowering.text_name(expr),
+                }),
+                None => make(ExprKind::Local {
+                    local: self.local_of(expr)?,
+                    name: self.lowering.text_name(expr),
+                }),
+            },
             AstExpr::Unary { op, operand } => make(ExprKind::Unary {
                 op: op.symbol(),
                 operand: boxed(operand)?,
@@ -364,6 +515,11 @@ impl FnLowering<'_, '_> {
                         index,
                     })
                 }
+                Some(FieldKind::RecordField { field, index }) => make(ExprKind::Field {
+                    base: boxed(base)?,
+                    field: (*field).to_owned(),
+                    index: u32::try_from(*index).unwrap_or(0),
+                }),
                 _ => return Err(self.defect("a field read this build does not lower")),
             },
             AstExpr::Index { base, index } => make(ExprKind::Index {
@@ -414,6 +570,34 @@ impl FnLowering<'_, '_> {
                         make(ExprKind::Descriptor {
                             schema: schema.to_owned(),
                             fields: out,
+                        })
+                    }
+                    Ty::MaterialInstance(key) => {
+                        let summary = self.lowering.materials.get(&key).ok_or_else(|| {
+                            self.defect("a material literal of an unknown material")
+                        })?;
+                        let mut out = Vec::with_capacity(summary.params.len());
+                        for param in &summary.params {
+                            let value = match written.iter().find(|(n, _)| *n == param.name) {
+                                Some((_, value)) => self.expr(value)?,
+                                None => Expr {
+                                    kind: ExprKind::Const {
+                                        value: param.default.clone().ok_or_else(|| {
+                                            self.defect("a material literal without a param")
+                                        })?,
+                                    },
+                                    ty: param.ty.clone(),
+                                    span: expr.span,
+                                },
+                            };
+                            out.push(NamedExpr {
+                                name: param.name.clone(),
+                                value,
+                            });
+                        }
+                        make(ExprKind::Material {
+                            material: summary.symbol.clone(),
+                            params: out,
                         })
                     }
                     _ => {

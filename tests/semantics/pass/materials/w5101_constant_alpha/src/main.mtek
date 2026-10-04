@@ -1,0 +1,16 @@
+// The alpha a fragment stage returns is ignored in v0.1 (spec/materials.md
+// 3.2): a constant alpha other than 1.0 is a warning, whether the colour is
+// a constant or a constructor with a constant alpha.
+material Ghost {
+    param tint: color = #ffffff;
+    fragment(input: SurfaceInput) -> color {
+        if input.uv.x > 0.5 {
+            return #ffffff80;
+        }
+        return color.linear(tint.rgb, 0.25);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

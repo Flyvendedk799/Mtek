@@ -1,0 +1,11 @@
+material Clamp {
+    param level: f32 = 2.0;
+    fragment(input: SurfaceInput) -> color {
+        level = min(level, 1.0);
+        return color.linear(vec3(level), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

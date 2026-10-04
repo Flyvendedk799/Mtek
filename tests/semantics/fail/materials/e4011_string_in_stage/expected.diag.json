@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E4011",
+    "file": "src/main.mtek",
+    "startByte": 74,
+    "endByte": 79,
+    "message": "The local 'label' has type string, which does not exist on the GPU, but the fragment stage of material 'Words' runs on the GPU.",
+    "actual": "string",
+    "related": [
+      {
+        "message": "the fragment stage of material 'Words' runs on the GPU",
+        "file": "src/main.mtek",
+        "startByte": 21,
+        "endByte": 29
+      }
+    ],
+    "notes": [
+      "GPU code uses only bool, i32, u32, f32, vectors, mat4, quat, color, and structs and arrays of them"
+    ]
+  }
+]

@@ -1,0 +1,12 @@
+material Twice {
+    fragment(input: SurfaceInput) -> color {
+        return #ffffff;
+    }
+    fragment(input: SurfaceInput) -> color {
+        return #000000;
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

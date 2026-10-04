@@ -14,6 +14,7 @@
 
 use std::fmt;
 
+use super::ty::MaterialKey;
 use crate::stdlib::{ColorValue, srgb_channel_to_linear_f32};
 
 /// A value computed at compile time.
@@ -42,6 +43,13 @@ pub enum ConstValue {
     Array(Vec<ConstValue>),
     /// A string (CPU only, `spec/language.md` 5.1).
     Str(String),
+    /// An instance of a user material (decision 0039): the material, its
+    /// name, and every parameter in declaration order, written or defaulted.
+    Material {
+        material: MaterialKey,
+        name: String,
+        params: Vec<(String, ConstValue)>,
+    },
 }
 
 impl ConstValue {
@@ -101,7 +109,9 @@ impl fmt::Display for ConstValue {
             ConstValue::Quat(v) => list(f, "quat", v),
             ConstValue::Color(v) => list(f, "color", v),
             ConstValue::Mat4(_) => write!(f, "mat4(…)"),
-            ConstValue::Struct { name, .. } => write!(f, "{name} {{ … }}"),
+            ConstValue::Struct { name, .. } | ConstValue::Material { name, .. } => {
+                write!(f, "{name} {{ … }}")
+            }
             ConstValue::Array(items) => write!(f, "[… {} elements]", items.len()),
             ConstValue::Str(text) => write!(f, "{text:?}"),
         }

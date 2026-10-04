@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5003",
+    "file": "src/main.mtek",
+    "startByte": 329,
+    "endByte": 333,
+    "message": "Missing required parameter 'height' on material Ramp.",
+    "notes": [
+      "the param 'height' has no default",
+      "help: add `height: …`"
+    ]
+  }
+]

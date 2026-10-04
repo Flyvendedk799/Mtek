@@ -1,0 +1,10 @@
+material Pulse {
+    param tint: color = #6b5cff;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * sin(frame.time), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

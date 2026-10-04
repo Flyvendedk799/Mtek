@@ -217,6 +217,7 @@ mod tests {
                     name: "color".to_owned(),
                     ty: "color".to_owned(),
                     source: Source::Const(Value::Color(c)),
+                    update: crate::ir::UpdateClass::Initial,
                     span: span(),
                 }],
                 origin: Origin::Written,

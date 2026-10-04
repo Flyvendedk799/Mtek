@@ -1,0 +1,20 @@
+// GPU reachability starts at the fragment stage (decision 0038): a function
+// the stage calls is GPU code.
+fn sum(n: i32) -> f32 {
+    var total = 0.0;
+    for i in 0..n {
+        total += 1.0;
+    }
+    return total;
+}
+
+material Bands {
+    param count: i32 = 3;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(sum(count) * 0.1), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,9 @@
+material Typo {
+    fragmnt(input: SurfaceInput) -> color {
+        return #ffffff;
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

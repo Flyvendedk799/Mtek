@@ -1,0 +1,15 @@
+const SHAPE = Box { size: vec3(1.0, 1.0, 1.0) };
+
+fn width(m: mesh) -> f32 {
+    return 1.0;
+}
+
+material Outline {
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(width(SHAPE)), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -161,7 +161,7 @@ fn expr(e: &Expr, out: &mut Expected) {
     out.expressions.push(e.span);
     let mut children: Vec<&Expr> = Vec::new();
     match &e.kind {
-        ExprKind::Const { .. } | ExprKind::Local { .. } => {}
+        ExprKind::Const { .. } | ExprKind::Local { .. } | ExprKind::Param { .. } => {}
         ExprKind::Unary { operand, .. } => children.push(operand),
         ExprKind::Binary { lhs, rhs, .. } => children.extend([&**lhs, &**rhs]),
         ExprKind::Call { args, .. }
@@ -171,7 +171,9 @@ fn expr(e: &Expr, out: &mut Expected) {
         ExprKind::Components { base, .. } | ExprKind::Field { base, .. } => children.push(base),
         ExprKind::Index { base, index } => children.extend([&**base, &**index]),
         ExprKind::Array { elements } => children.extend(elements),
-        ExprKind::Struct { fields } | ExprKind::Descriptor { fields, .. } => {
+        ExprKind::Struct { fields }
+        | ExprKind::Descriptor { fields, .. }
+        | ExprKind::Material { params: fields, .. } => {
             children.extend(fields.iter().map(|f| &f.value));
         }
     }
@@ -284,6 +286,18 @@ fn app_js_maps_every_emitted_statement_and_expression() {
             &memory,
             &CompileOptions::with_stub_runtime(BuildMode::Release),
         );
+        // A program that uses a user material does not build until shader
+        // lowering (M2-05, decision 0039); `tests/build.rs` asserts its
+        // diagnostics.
+        if result
+            .report
+            .diagnostics
+            .iter()
+            .all(|d| d.message.starts_with("Builds with user materials"))
+            && result.has_errors()
+        {
+            continue;
+        }
         assert!(!result.has_errors(), "{label}");
         let app = std::str::from_utf8(&result.files["app.js"]).unwrap();
         let map: Value = serde_json::from_slice(&result.files["app.js.map"]).unwrap();

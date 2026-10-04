@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E4021",
+    "file": "src/main.mtek",
+    "startByte": 20,
+    "endByte": 27,
+    "message": "Unknown stage function 'fragmnt': the stage function of a material is `fragment`.",
+    "notes": [
+      "custom vertex and compute stages are planned for v0.2",
+      "help: did you mean 'fragment'?"
+    ]
+  }
+]

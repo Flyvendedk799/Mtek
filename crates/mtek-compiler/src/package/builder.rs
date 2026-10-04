@@ -33,8 +33,9 @@ use crate::lowering::builtin_unlit::{
 };
 use crate::plan::{ParamClass, PlannedInstance, ResourcePlan, plan_scene};
 use crate::project::Project;
+use crate::resolve::gate::{gate_message, gate_note};
 use crate::source::{ProjectPath, SourceMap, Span};
-use crate::stdlib::registry;
+use crate::stdlib::{Milestone, registry};
 use crate::types::ConstValue;
 use crate::{BuildMode, COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI, TargetProfile};
 
@@ -120,6 +121,7 @@ pub fn package(
         ))
     })?;
     let plan = plan_scene(scene).map_err(defect)?;
+    user_materials_gate(program, &plan)?;
     let materials = build_materials(&plan, sources)?;
     let sources: &SourceMap = sources;
 
@@ -289,6 +291,37 @@ pub fn package(
         build_id,
         manifest,
     })
+}
+
+/// `E9010` at every user material the plan uses (decision 0039): user materials check and
+/// lower to the typed IR, but their shaders need the shader lowering of task M2-05 and their
+/// parameter blocks the resource plan of M2-09, so this build cannot package them yet.
+fn user_materials_gate(program: &Program, plan: &ResourcePlan) -> Result<(), Vec<Diagnostic>> {
+    let diagnostics: Vec<Diagnostic> = program
+        .materials()
+        .filter(|material| plan.materials.contains(&material.symbol))
+        .map(|material| {
+            Diagnostic::new(
+                Code::E9010,
+                gate_message(
+                    "Builds with user materials (shaders generated from their fragment stage)",
+                    true,
+                    Milestone::M2,
+                ),
+            )
+            .at(material.span)
+            .note(format!(
+                "'{}' checks without errors (`mtek check`, `mtek inspect --ir`); its shader needs the shader lowering of M2",
+                material.symbol
+            ))
+            .note(gate_note())
+        })
+        .collect();
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
 }
 
 /// The shader and declarations of every material of the plan, sorted by symbol. Adds the

@@ -25,13 +25,21 @@ use mtek_compiler::source::{MemFs, ProjectPath};
 use mtek_compiler::{Inspect, InspectFormat, InspectResult, check, inspect};
 use serde_json::Value;
 
-/// The fixtures with IR goldens: pass scenes A and B of M1-11 and the
-/// function bodies of M2-02.
-const GOLDEN_FIXTURES: [&str; 3] = [
+/// The fixtures with IR goldens: pass scenes A and B of M1-11, the
+/// function bodies of M2-02 and the materials of M2-04 (a group fixture
+/// `materials/pulse` has the golden `materials_pulse.ir.json`).
+const GOLDEN_FIXTURES: [&str; 5] = [
     "scene_a_target_camera_box",
     "scene_b_orthographic_nested",
     "functions_statements_and_calls",
+    "materials/pulse",
+    "materials/params_and_defaults",
 ];
+
+/// The file name stem of the golden of `fixture`.
+fn golden_stem(fixture: &str) -> String {
+    fixture.replace('/', "_")
+}
 
 fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -166,8 +174,9 @@ fn ir_goldens_of_the_m1_scene_fixtures() {
     for name in GOLDEN_FIXTURES {
         let result = inspect_fixture("pass", name, None);
         let (json, human) = rendered(&result, name);
-        check_golden(&dir.join(format!("{name}.ir.json")), &json);
-        check_golden(&dir.join(format!("{name}.ir.txt")), &human);
+        let stem = golden_stem(name);
+        check_golden(&dir.join(format!("{stem}.ir.json")), &json);
+        check_golden(&dir.join(format!("{stem}.ir.txt")), &human);
     }
     // No stray goldens: every file in the directory belongs to a fixture.
     let mut stray: Vec<String> = fs::read_dir(&dir)
@@ -176,7 +185,8 @@ fn ir_goldens_of_the_m1_scene_fixtures() {
         .filter(|file| {
             !GOLDEN_FIXTURES
                 .iter()
-                .any(|name| *file == format!("{name}.ir.json") || *file == format!("{name}.ir.txt"))
+                .map(|name| golden_stem(name))
+                .any(|stem| *file == format!("{stem}.ir.json") || *file == format!("{stem}.ir.txt"))
         })
         .collect();
     stray.sort();

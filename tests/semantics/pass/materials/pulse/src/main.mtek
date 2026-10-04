@@ -1,0 +1,32 @@
+// The material of blueprint section 3.1, with its `bind` uses replaced by
+// constants until `bind` lands (M3); `state`, `update` and the handler of the
+// blueprint scene are M3 constructs and are left out.
+fn pulse(t: f32) -> f32 {
+    return 0.65 + 0.35 * sin(t);
+}
+
+material Pulse {
+    param tint: color = #6b5cff;
+    param phase: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * pulse(phase), tint.a);
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Pulse {
+            tint: #6b5cff;
+            phase: 0.0;
+        };
+        position: vec3(0.0, 0.5, 0.0);
+        rotation: quat.identity();
+    }
+}

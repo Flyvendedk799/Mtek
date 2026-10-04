@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5100",
+    "file": "src/main.mtek",
+    "startByte": 253,
+    "endByte": 291,
+    "message": "Parameter 'tint' of material Haze must be an opaque colour, but its alpha is 0.5.",
+    "notes": [
+      "colour parameters of materials must have alpha 1.0 in v0.1: transparency is not supported",
+      "help: use a `#rrggbb` literal, or a vec4 for four components that are not a colour"
+    ]
+  }
+]

@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use mtek_compiler::emit_js::{emit_writer_parts, writer_qualifier};
 use mtek_compiler::emit_wgsl::{emit_bindings, emit_block_structs, validate_wgsl};
-use mtek_compiler::ir::{lower_to_ir, to_json};
+use mtek_compiler::ir::{MaterialItem, lower_to_ir, to_json};
 use mtek_compiler::layout::{
     LayoutRecord, LayoutType, compute, hash8, material_layout_id, material_params_struct,
     qualified_name,
@@ -457,40 +457,125 @@ fn same_named_materials() -> MemFs {
 fn same_named_materials_of_two_modules_build_to_distinct_names() {
     let fs = same_named_materials();
     let (ha, hb) = (hash8("src/pulse_a.mtek"), hash8("src/pulse_b.mtek"));
-    if !construct_implemented(Construct::Material) {
-        // Until material declarations are compiled from source (M2-04), the
-        // modules part of this project is already complete: the imports
-        // resolve and the only diagnostics are the two gated declarations.
-        let analysis = analyze(&ProjectRoot::at_base(), &fs);
-        let located: Vec<(&str, u32)> = analysis
-            .report
-            .diagnostics
-            .iter()
-            .map(|d| (d.code.short(), d.primary.as_ref().unwrap().span.file.0))
-            .collect();
-        assert_eq!(
-            located,
-            [("E9010", 1), ("E9010", 2)],
-            "{:#?}",
-            analysis.report
-        );
-        assert_eq!(
-            module_paths(&analysis),
-            ["src/main.mtek", "src/pulse_a.mtek", "src/pulse_b.mtek"]
-        );
-        let resolution = analysis.resolution.as_ref().unwrap();
-        let kinds: Vec<DefKind> = resolution.imports().map(|(_, t)| t.kind).collect();
-        assert_eq!(kinds, [DefKind::Material, DefKind::Const]);
-        return;
+    assert!(construct_implemented(Construct::Material));
+    // M2-04 (decision 0039): both materials are compiled from source and
+    // check without diagnostics, the entry module imports one of them and an
+    // instance of the other.
+    let analysis = analyze(&ProjectRoot::at_base(), &fs);
+    assert!(
+        analysis.report.diagnostics.is_empty(),
+        "{:#?}",
+        analysis.report
+    );
+    assert_eq!(
+        module_paths(&analysis),
+        ["src/main.mtek", "src/pulse_a.mtek", "src/pulse_b.mtek"]
+    );
+    let resolution = analysis.resolution.as_ref().unwrap();
+    let kinds: Vec<DefKind> = resolution.imports().map(|(_, t)| t.kind).collect();
+    assert_eq!(kinds, [DefKind::Material, DefKind::Const]);
+
+    // The typed IR lists each material once, in its module, with a parameter
+    // block named from the declaring module's path (`layout::naming`).
+    let program = lower_to_ir(&analysis).expect("the program lowers");
+    let materials: Vec<&MaterialItem> = program.materials().collect();
+    let symbols: Vec<&str> = materials.iter().map(|m| m.symbol.as_str()).collect();
+    assert_eq!(
+        symbols,
+        ["src/pulse_a.mtek::Pulse", "src/pulse_b.mtek::Pulse"]
+    );
+    let records: Vec<&LayoutRecord> = materials
+        .iter()
+        .map(|m| m.layout.as_ref().expect("a parameter block"))
+        .collect();
+    for (record, module, hash) in [
+        (records[0], "src/pulse_a.mtek", &ha),
+        (records[1], "src/pulse_b.mtek", &hb),
+    ] {
+        assert_eq!(record.id, material_layout_id(module, "Pulse"));
+        assert_eq!(record.wgsl_struct, material_params_struct(module, "Pulse"));
+        assert_eq!(record.wgsl_struct, format!("MtekParams_{hash}_Pulse"));
     }
-    // Once materials are implemented, the build must name both blocks by
-    // their own module.
+    // The entities use one material each: `Left` the imported one, `Right`
+    // the other through the imported instance, with its defaults filled in.
+    let scene = program.entry().unwrap();
+    let used: Vec<(&str, &str)> = scene
+        .entities
+        .iter()
+        .map(|e| {
+            let material = e.material.as_ref().unwrap();
+            (e.name.as_str(), material.material.as_str())
+        })
+        .collect();
+    assert_eq!(
+        used,
+        [
+            ("Left", "src/pulse_a.mtek::Pulse"),
+            ("Right", "src/pulse_b.mtek::Pulse")
+        ]
+    );
+    let right: Vec<&str> = scene.entities[1]
+        .material
+        .as_ref()
+        .unwrap()
+        .params
+        .iter()
+        .map(|p| p.name.as_str())
+        .collect();
+    assert_eq!(right, ["glow", "base"]);
+
+    // The WGSL structs and the writers generated from the two real blocks:
+    // distinct names, accepted together by Naga, no common writer name.
+    let wgsl = format!(
+        "{}\n{}\n{}\n{}",
+        emit_block_structs(records[0]),
+        emit_bindings(2, 0, "params_a", &records[0].wgsl_struct),
+        emit_block_structs(records[1]),
+        emit_bindings(2, 1, "params_b", &records[1].wgsl_struct),
+    );
+    validate_wgsl(&wgsl).unwrap_or_else(|e| panic!("{e:?}\n{wgsl}"));
+    let parts_a = emit_writer_parts(records[0], &writer_qualifier(records[0]));
+    let parts_b = emit_writer_parts(records[1], &writer_qualifier(records[1]));
+    assert_eq!(parts_a.function_names[0], format!("w_{ha}_Pulse"));
+    assert_eq!(parts_b.function_names[0], format!("w_{hb}_Pulse"));
+    assert!(
+        parts_a
+            .function_names
+            .iter()
+            .all(|name| !parts_b.function_names.contains(name))
+    );
+
+    // The build: shaders of user materials need the shader lowering of M2-05,
+    // so until then the build reports exactly one `E9010` per material, at
+    // its declaration in its own module. When M2-05 lands, the build must
+    // carry the same names into the shaders, `app.js` and the manifest.
     let built = build(
         &ProjectRoot::at_base(),
         &fs,
         &CompileOptions::with_stub_runtime(BuildMode::Release),
     );
-    assert!(!built.has_errors(), "{:#?}", built.report);
+    if built.has_errors() {
+        let located: Vec<(&str, u32, bool)> = built
+            .report
+            .diagnostics
+            .iter()
+            .map(|d| {
+                (
+                    d.code.short(),
+                    d.primary.as_ref().unwrap().span.file.0,
+                    d.message.starts_with("Builds with user materials"),
+                )
+            })
+            .collect();
+        assert_eq!(
+            located,
+            [("E9010", 1, true), ("E9010", 2, true)],
+            "{:#?}",
+            built.report
+        );
+        assert!(built.files.is_empty());
+        return;
+    }
     let wgsl: String = built
         .files
         .iter()

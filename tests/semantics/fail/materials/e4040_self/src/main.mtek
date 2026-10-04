@@ -1,0 +1,9 @@
+material Mirror {
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(self.position, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

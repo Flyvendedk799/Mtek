@@ -1,0 +1,16 @@
+// A material declared in another module, imported and used directly, and an
+// instance of it exported as a constant (decisions 0036, 0039).
+import { Glow, BRIGHT } from "./lib/glow.mtek";
+
+scene Demo {
+    camera Main {}
+    entity Lamp {
+        mesh: Sphere { radius: 0.5 };
+        material: BRIGHT;
+    }
+    entity Ember {
+        position: vec3(1.5, 0.0, 0.0);
+        mesh: Sphere { radius: 0.25 };
+        material: Glow { strength: 0.25 };
+    }
+}

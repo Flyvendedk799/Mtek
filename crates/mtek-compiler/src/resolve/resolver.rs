@@ -12,7 +12,7 @@ use super::imports::ImportBindings;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
 use crate::project::edit_distance;
 use crate::source::Span;
-use crate::stdlib::{Milestone, PreludeNameKind, Registry, registry};
+use crate::stdlib::{Domain, Milestone, NamespaceMember, PreludeNameKind, Registry, registry};
 use crate::syntax::ast::{
     ArrayLength, ArrayLengthKind, Block, ConstDecl, DescField, ElseBranch, EntityDecl,
     EntityMember, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter, Handler, HandlerArg,
@@ -84,6 +84,13 @@ pub(super) struct Resolver<'a> {
     /// their parent entity: nesting is parenting, not inheritance,
     /// `spec/scenes.md` 4.3).
     body_base: usize,
+    /// The material whose stage function is being resolved: names that
+    /// stage code can never read there are captures (`E4040`).
+    stage_material: Option<String>,
+    /// The names of the scene state, scene objects and entities of every
+    /// scene of the module, with a noun for messages: a stage that names
+    /// one captures it (`E4040`, `spec/materials.md` section 3).
+    scene_names: BTreeMap<String, &'static str>,
 }
 
 impl<'a> Resolver<'a> {
@@ -108,6 +115,8 @@ impl<'a> Resolver<'a> {
             gated: 0,
             self_def: None,
             body_base: 0,
+            stage_material: None,
+            scene_names: BTreeMap::new(),
         }
     }
 
@@ -523,6 +532,7 @@ impl<'a> Resolver<'a> {
     // ----- module ----------------------------------------------------------
 
     pub(super) fn module(&mut self, module: &Module) {
+        self.collect_scene_names(module);
         self.push(ScopeKind::Module);
         for item in &module.items {
             self.declare_item(item);
@@ -531,6 +541,68 @@ impl<'a> Resolver<'a> {
             self.item(item);
         }
         self.pop();
+    }
+
+    /// The names scene bodies declare, for `E4040` in stage functions (an
+    /// explicit worklist over nested entities).
+    fn collect_scene_names(&mut self, module: &Module) {
+        let mut entities: Vec<&EntityDecl> = Vec::new();
+        for item in &module.items {
+            let ItemKind::Scene(scene) = &item.kind else {
+                continue;
+            };
+            for member in &scene.members {
+                match member {
+                    SceneMember::State(state) => {
+                        self.scene_names
+                            .entry(state.name.name.clone())
+                            .or_insert("scene state");
+                    }
+                    SceneMember::Object(object) => {
+                        let noun = self
+                            .registry
+                            .scene_object(&object.kind.name)
+                            .map_or("scene object", |kind| kind.keyword);
+                        self.scene_names
+                            .entry(object.name.name.clone())
+                            .or_insert(noun);
+                    }
+                    SceneMember::Entity(entity) => entities.push(entity),
+                    _ => {}
+                }
+            }
+        }
+        while let Some(entity) = entities.pop() {
+            self.scene_names
+                .entry(entity.name.name.clone())
+                .or_insert("entity");
+            for member in &entity.members {
+                match member {
+                    EntityMember::State(state) => {
+                        self.scene_names
+                            .entry(state.name.name.clone())
+                            .or_insert("entity state");
+                    }
+                    EntityMember::Entity(child) => entities.push(child),
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    /// `E4040` for a name stage code can never read (`spec/materials.md`
+    /// section 3): `what` is "the entity 'Cube'", "`frame.time`".
+    fn report_capture(&mut self, what: &str, span: Span) {
+        let material = self.stage_material.clone().unwrap_or_default();
+        self.sink.push(
+            Diagnostic::new(
+                Code::E4040,
+                format!("The fragment stage of material '{material}' cannot read {what}."),
+            )
+            .at(span)
+            .note("stage code may read only its input, the material's params, and constants and `fn`s that exist on the GPU")
+            .note(super::STAGE_CAPTURE_NOTE),
+        );
     }
 
     fn declare_item(&mut self, item: &Item) {
@@ -652,7 +724,9 @@ impl<'a> Resolver<'a> {
                     if let Some(ret) = &stage.ret {
                         self.ty(ret);
                     }
+                    let saved = self.stage_material.replace(decl.name.name.clone());
                     self.block(&stage.body);
+                    self.stage_material = saved;
                     self.pop();
                 }
                 MaterialMember::Error(_) => {}
@@ -1219,6 +1293,11 @@ impl<'a> Resolver<'a> {
                 self.leave(entered);
                 Res::Def(id)
             }
+            // In a stage function `self` is a capture (`E4040`).
+            None if self.stage_material.is_some() => {
+                self.report_capture("`self`: a material belongs to no entity", expr.span);
+                Res::Error
+            }
             // Outside an entity or prefab `self` would be wrong in every
             // build: only `E2003`, not `E9010` as well.
             None => {
@@ -1248,6 +1327,12 @@ impl<'a> Resolver<'a> {
         if let Some(item) = self.prelude_lookup(name, want) {
             self.gate_prelude(item, span);
             return Res::Prelude(item);
+        }
+        if self.stage_material.is_some()
+            && let Some(noun) = self.scene_names.get(name).copied()
+        {
+            self.report_capture(&format!("the {noun} '{name}'"), span);
+            return Res::Error;
         }
         let mut candidates = self.visible_names(|_| true);
         for (prelude, _) in self.registry.prelude_names() {
@@ -1300,6 +1385,20 @@ impl<'a> Resolver<'a> {
             self.set_res(name.id, Res::Field);
             return;
         };
+        // A CPU value of a namespace (`frame.time`) read by stage code is a
+        // capture (`E4040`), whatever milestone implements it.
+        if self.stage_material.is_some()
+            && self.lookup(base_name).is_none()
+            && matches!(
+                self.registry.namespace_member(base_name, &name.name),
+                Some(NamespaceMember::Value(value)) if value.domain == Domain::Cpu
+            )
+        {
+            self.report_capture(&format!("`{base_name}.{}`", name.name), span);
+            self.set_res(base.id, Res::Error);
+            self.set_res(name.id, Res::Error);
+            return;
+        }
         let res = self.value_name(base_name, base.span, Want::Path);
         match res {
             Res::Prelude(PreludeItem::Namespace(namespace)) => {

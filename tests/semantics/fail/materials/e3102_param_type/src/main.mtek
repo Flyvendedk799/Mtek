@@ -1,0 +1,15 @@
+material Pulse {
+    param tint: color = #6b5cff;
+    param phase: f32 = 0.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * phase, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Pulse { phase: vec3(0.0, 0.0, 0.0) };
+    }
+}

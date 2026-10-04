@@ -1,0 +1,23 @@
+[
+  {
+    "code": "MTEK-E4040",
+    "file": "src/main.mtek",
+    "startByte": 96,
+    "endByte": 101,
+    "message": "The fragment stage of material 'Tinted' cannot read the scene state 'speed'.",
+    "notes": [
+      "stage code may read only its input, the material's params, and constants and `fn`s that exist on the GPU",
+      "to use `frame.time` in a material, add a param and bind it: `phase: bind(frame.time)`"
+    ]
+  },
+  {
+    "code": "MTEK-E9010",
+    "file": "src/main.mtek",
+    "startByte": 136,
+    "endByte": 159,
+    "message": "`state` declarations are specified for v0.1 but not implemented by this compiler build yet (planned for M3).",
+    "notes": [
+      "this compiler build implements the language up to milestone M1"
+    ]
+  }
+]

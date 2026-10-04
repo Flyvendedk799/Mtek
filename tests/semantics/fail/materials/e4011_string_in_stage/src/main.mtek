@@ -1,0 +1,10 @@
+material Words {
+    fragment(input: SurfaceInput) -> color {
+        let label = "hello";
+        return #ffffff;
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

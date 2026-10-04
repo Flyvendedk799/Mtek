@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E3023",
+    "file": "src/main.mtek",
+    "startByte": 98,
+    "endByte": 101,
+    "message": "The type SurfaceInput has no field 'uvw'.",
+    "notes": [
+      "the fields of SurfaceInput are local_position, world_position, world_normal, uv",
+      "help: did you mean 'uv'?"
+    ]
+  }
+]

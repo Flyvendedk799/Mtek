@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E4032",
+    "file": "src/main.mtek",
+    "startByte": 1683,
+    "endByte": 1686,
+    "message": "Material 'Crowded' declares more than 64 params.",
+    "notes": [
+      "a material has at most 64 params; this is the 65th",
+      "help: group related values into a struct or an array param"
+    ]
+  }
+]

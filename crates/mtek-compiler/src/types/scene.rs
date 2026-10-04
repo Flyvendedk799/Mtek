@@ -39,9 +39,10 @@ use super::value::{ConstValue, from_registry};
 use super::{NonConstant, NonConstantKind};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::project::edit_distance;
-use crate::resolve::gate::is_implemented;
+use crate::resolve::gate::{gate_message, gate_note, is_implemented};
 use crate::resolve::{Construct, DefId, construct_implemented};
 use crate::source::Span;
+use crate::stdlib::Milestone;
 use crate::stdlib::{
     ActiveObject, FieldDef, FieldRule, Limit, SceneObjectKind, SchemaCategory, SchemaDef, TypeRef,
     ValueRange,
@@ -752,14 +753,28 @@ impl Checker<'_> {
             }
             return;
         }
+        // A user material instance (decision 0039): each param on its own;
+        // none is construction-only.
+        if let ExprKind::Descriptor { fields, .. } = &inner.kind
+            && let Some(Ty::MaterialInstance(_)) =
+                self.ty_of(inner.id).map(|t| self.out.interner.get(t))
+        {
+            let material = self.display(self.ty_of(inner.id).unwrap_or(super::TyId::ERROR));
+            for field in fields {
+                if let FieldValue::Expr(field_value) = &field.value
+                    && let Some(reason) = self.out.non_constant(field_value.id).cloned()
+                {
+                    let what = format!("parameter '{}' of material {material}", field.name.name);
+                    self.non_constant_initial(&what, &reason);
+                }
+            }
+            return;
+        }
         let Some(reason) = self.out.non_constant(value.id).cloned() else {
             return;
         };
-        if reason.kind == NonConstantKind::ObjectField {
-            self.report_object_field_read(holder, def, &reason);
-            return;
-        }
-        if !def.flags.is_construction_only() {
+        if reason.kind == NonConstantKind::ObjectField || !def.flags.is_construction_only() {
+            self.non_constant_initial(&holder.field(def.name), &reason);
             return;
         }
         self.sink.push(
@@ -776,23 +791,41 @@ impl Checker<'_> {
         );
     }
 
-    fn report_object_field_read(
-        &mut self,
-        holder: Holder<'_>,
-        def: &'static FieldDef,
-        reason: &NonConstant,
-    ) {
+    /// The initial value of `what` ("field 'position' of entity 'Cube'") is
+    /// not a constant expression, and need not be: `E5081` where it reads a
+    /// field of an entity or camera; otherwise it is valid v0.1 (evaluated
+    /// once at construction) that this build does not implement yet, because
+    /// it folds every initial value (`E9010`, decision 0039).
+    fn non_constant_initial(&mut self, what: &str, reason: &NonConstant) {
+        if reason.kind == NonConstantKind::ObjectField {
+            self.sink.push(
+                Diagnostic::new(
+                    Code::E5081,
+                    format!(
+                        "The value of {what} cannot be computed during initialisation: {}.",
+                        reason.reason
+                    ),
+                )
+                .at(reason.span)
+                .note("field initialisers may read constants, scene state and earlier state, but not the fields of entities or cameras"),
+            );
+            return;
+        }
         self.sink.push(
             Diagnostic::new(
-                Code::E5081,
-                format!(
-                    "The value of {} cannot be computed during initialisation: {}.",
-                    holder.field(def.name),
-                    reason.reason
+                Code::E9010,
+                gate_message(
+                    "Initial values that are not constant expressions",
+                    true,
+                    Milestone::M3,
                 ),
             )
             .at(reason.span)
-            .note("field initialisers may read constants, scene state and earlier state, but not the fields of entities or cameras"),
+            .note(format!(
+                "the value of {what} is not a constant expression: {}",
+                reason.reason
+            ))
+            .note(gate_note()),
         );
     }
 

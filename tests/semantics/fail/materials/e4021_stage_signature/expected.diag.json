@@ -1,0 +1,46 @@
+[
+  {
+    "code": "MTEK-E4021",
+    "file": "src/main.mtek",
+    "startByte": 17,
+    "endByte": 58,
+    "message": "The fragment stage of material 'A' takes exactly one parameter, of type SurfaceInput, but it declares 2.",
+    "notes": [
+      "help: write `fragment(input: SurfaceInput) -> color`"
+    ]
+  },
+  {
+    "code": "MTEK-E4021",
+    "file": "src/main.mtek",
+    "startByte": 136,
+    "endByte": 140,
+    "message": "The parameter of the fragment stage of material 'B' must have type SurfaceInput, but 'input' has type vec3.",
+    "expected": "SurfaceInput",
+    "actual": "vec3",
+    "notes": [
+      "help: write `fragment(input: SurfaceInput) -> color`"
+    ]
+  },
+  {
+    "code": "MTEK-E4021",
+    "file": "src/main.mtek",
+    "startByte": 203,
+    "endByte": 232,
+    "message": "The fragment stage of material 'C' must return color, but it declares no result type.",
+    "notes": [
+      "help: add `-> color` after the parameter list"
+    ]
+  },
+  {
+    "code": "MTEK-E4021",
+    "file": "src/main.mtek",
+    "startByte": 318,
+    "endByte": 322,
+    "message": "The fragment stage of material 'D' must return color, but it is declared to return vec4.",
+    "expected": "color",
+    "actual": "vec4",
+    "notes": [
+      "help: write `-> color`; the alpha of the result is ignored in v0.1"
+    ]
+  }
+]

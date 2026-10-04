@@ -4,8 +4,8 @@
 
 use super::model::{
     Block, Camera, Const, Entity, Expr, ExprKind, Field, Function, Item, LocalItem, LocalKind,
-    MaterialInstanceDesc, Mesh, MeshDesc, NamedExpr, Origin, Place, Program, Projection,
-    ProjectionDesc, Scene, Source, Stmt, StructItem,
+    MaterialInstanceDesc, MaterialItem, Mesh, MeshDesc, NamedExpr, Origin, Place, Program,
+    Projection, ProjectionDesc, Scene, Source, Stmt, StructItem,
 };
 use crate::source::{SourceMap, Span};
 
@@ -105,6 +105,7 @@ pub fn to_human(program: &Program, sources: &SourceMap) -> String {
                 Item::Scene(scene) => out.scene(2, scene),
                 Item::Struct(item) => out.structure(2, item),
                 Item::Function(function) => out.function(2, function),
+                Item::Material(material) => out.material_item(2, material),
             }
         }
     }
@@ -204,7 +205,12 @@ impl Tree<'_> {
                 function.effect
             ),
         );
-        for local in &function.locals {
+        self.locals(depth + 1, &function.locals);
+        self.block(depth + 1, &function.body, &function.locals);
+    }
+
+    fn locals(&mut self, depth: usize, locals: &[LocalItem]) {
+        for local in locals {
             let location = self.location(local.span);
             let kind = match local.kind {
                 LocalKind::Param => "param",
@@ -213,14 +219,63 @@ impl Tree<'_> {
                 LocalKind::Loop => "loop",
             };
             self.line(
-                depth + 1,
+                depth,
                 format!(
                     "local #{} {}: {} ({kind}) {location}",
                     local.index, local.name, local.ty
                 ),
             );
         }
-        self.block(depth + 1, &function.body, &function.locals);
+    }
+
+    fn material_item(&mut self, depth: usize, material: &MaterialItem) {
+        let location = self.location(material.span);
+        self.line(
+            depth,
+            format!(
+                "material {} [{}] {location}",
+                material.name, material.symbol
+            ),
+        );
+        for (index, param) in material.params.iter().enumerate() {
+            let location = self.location(param.span);
+            let default = param
+                .default
+                .as_ref()
+                .map_or_else(String::new, |value| format!(" = {value}"));
+            self.line(
+                depth + 1,
+                format!(
+                    "param #{index} {}: {}{default} {location}",
+                    param.name, param.ty
+                ),
+            );
+        }
+        if let Some(layout) = &material.layout {
+            self.line(
+                depth + 1,
+                format!(
+                    "block {} {} (size {}, align {})",
+                    layout.id, layout.wgsl_struct, layout.size, layout.align
+                ),
+            );
+        }
+        let stage = &material.fragment;
+        let location = self.location(stage.span);
+        let inputs = if stage.surface_inputs.is_empty() {
+            "none".to_owned()
+        } else {
+            stage.surface_inputs.join(", ")
+        };
+        self.line(
+            depth + 1,
+            format!(
+                "fragment -> {} [{}] reads {inputs} {location}",
+                stage.result, stage.symbol
+            ),
+        );
+        self.locals(depth + 2, &stage.locals);
+        self.block(depth + 2, &stage.body, &stage.locals);
     }
 
     fn block(&mut self, depth: usize, block: &Block, locals: &[LocalItem]) {
@@ -539,6 +594,10 @@ fn expr_text(expr: &Expr) -> String {
         ExprKind::Array { elements } => format!("[{}]", list(elements)),
         ExprKind::Struct { fields } => format!("{} {{ {} }}", expr.ty, named(fields)),
         ExprKind::Descriptor { schema, fields } => format!("{schema} {{ {} }}", named(fields)),
+        ExprKind::Param { param, name } => return format!("param {name}#{param}"),
+        ExprKind::Material { material, params } => {
+            format!("{material} {{ {} }}", named(params))
+        }
     };
     format!("({text}): {}", expr.ty)
 }

@@ -1,0 +1,45 @@
+// Which `SurfaceInput` fields a stage reads (spec/materials.md 3.1): only
+// the fields read as `input.field`; a stage that uses the input otherwise
+// (here: passing it to a function) reads every field. No material here has
+// an instance, so the program builds.
+fn shade(surface: SurfaceInput, base: vec3) -> vec3 {
+    return base * max(dot(surface.world_normal, vec3(0.0, 1.0, 0.0)), 0.2);
+}
+
+material Checker {
+    param scale: f32 = 4.0;
+    fragment(input: SurfaceInput) -> color {
+        let cell = floor(input.uv * scale);
+        let parity = (cell.x + cell.y) % 2.0;
+        return color.linear(vec3(parity), 1.0);
+    }
+}
+
+material Lit {
+    param albedo: color = #c0c0c0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(shade(input, albedo.rgb), 1.0);
+    }
+}
+
+material Gradient {
+    fragment(input: SurfaceInput) -> color {
+        let height = clamp((input).world_position.y, 0.0, 1.0);
+        return color.linear(vec3(height, 0.2, 1.0 - height), 1.0);
+    }
+}
+
+material Flat {
+    param tint: color = #ff8800;
+    fragment(unused: SurfaceInput) -> color {
+        return tint;
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Floor {
+        mesh: Plane { size: vec2(4.0, 4.0) };
+        material: Unlit { color: #808080 };
+    }
+}

@@ -2005,7 +2005,7 @@
       "name": "SurfaceInput",
       "kind": "record",
       "gpu": true,
-      "since": "M2",
+      "since": "M1",
       "doc": "The interpolated inputs of a material fragment stage; the compiler records which fields a material reads.",
       "fields": [
         {

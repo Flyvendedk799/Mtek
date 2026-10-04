@@ -1,0 +1,13 @@
+material Follow {
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(Cube.position, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Follow {};
+    }
+}

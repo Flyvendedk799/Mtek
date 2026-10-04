@@ -1,0 +1,30 @@
+[
+  {
+    "code": "MTEK-W4003",
+    "file": "src/main.mtek",
+    "startByte": 7,
+    "endByte": 17,
+    "message": "The `cpu fn` 'brightness' uses no CPU-only operation; it could be a `fn`.",
+    "notes": [
+      "help: declare it with `fn`, so that pure functions and GPU code can call it"
+    ]
+  },
+  {
+    "code": "MTEK-E4040",
+    "file": "src/main.mtek",
+    "startByte": 142,
+    "endByte": 154,
+    "message": "The fragment stage of material 'Lamp' calls the `cpu fn` 'brightness': stage code runs on the GPU and may call only `fn`s.",
+    "related": [
+      {
+        "message": "'brightness' is declared `cpu fn`",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 17
+      }
+    ],
+    "notes": [
+      "to use `frame.time` in a material, add a param and bind it: `phase: bind(frame.time)`"
+    ]
+  }
+]

@@ -1,0 +1,10 @@
+material Tinted {
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(speed), 1.0);
+    }
+}
+
+scene Demo {
+    state speed: f32 = 0.7;
+    camera Main {}
+}
