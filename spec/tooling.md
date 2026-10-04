@@ -78,6 +78,8 @@ Unknown tables or keys, wrong types and out-of-range values are `E9001` with the
 - M1 behaviour: on `build-succeeded` the page reloads fully. From M3: candidate-based hot reload keeps the last valid program running; on `build-failed` the overlay shows the diagnostics over the still-running last valid scene ("last valid preview", blueprint §10).
 - Terminal output: one line per build with duration and counts; diagnostics in human format.
 
+What is served before the first successful build, the replay of a failure to new clients, request-path rules and the full MIME table, which file-system events count, the reload client's overlay, the terminal lines, exit codes, shutdown and `--open` are decision 0033.
+
 ## 5. Formatter (`mtek fmt`, M6)
 
 Canonical (no options), idempotent, comment-preserving, AST-based printer with comments attached by span.

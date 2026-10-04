@@ -1,7 +1,7 @@
 //! Command line arguments (`spec/tooling.md` section 1), parsed with `clap`.
 //!
 //! [`parse`] turns the arguments into a [`Request`] or a [`UsageError`] (exit code 2). Commands
-//! and options that the specification names but this build does not implement yet (`mtek dev`,
+//! and options that the specification names but this build does not implement yet (`mtek new`,
 //! `--mode preview`, `inspect --bindings`, …) are usage errors that say so, rather than clap's
 //! generic "unrecognized subcommand".
 
@@ -128,8 +128,17 @@ enum CliCommand {
         /// The project directory or a directory inside it [default: the current directory]
         path: Option<PathBuf>,
     },
-    #[command(hide = true)]
-    Dev(Unimplemented),
+    /// Build, serve and rebuild a project on every change (development server)
+    Dev {
+        /// The port on 127.0.0.1 [default: `dev.port` of mtek.toml]; if it is taken, the next free port is used
+        #[arg(long, value_name = "N", value_parser = clap::value_parser!(u16).range(1..))]
+        port: Option<u16>,
+        /// Open the page in the default browser after the first build
+        #[arg(long)]
+        open: bool,
+        /// The project directory or a directory inside it [default: the current directory]
+        path: Option<PathBuf>,
+    },
     #[command(hide = true)]
     New(Unimplemented),
     #[command(hide = true)]
@@ -168,13 +177,19 @@ pub enum Request {
         format: Format,
         path: Option<PathBuf>,
     },
+    /// `mtek dev`: `port` overrides `dev.port` of `mtek.toml`.
+    Dev {
+        port: Option<u16>,
+        open: bool,
+        path: Option<PathBuf>,
+    },
 }
 
 impl Request {
     /// The `--format` of the request (human for `--version` and `--help`).
     pub fn format(&self) -> Format {
         match self {
-            Request::Version | Request::Help(_) => Format::Human,
+            Request::Version | Request::Help(_) | Request::Dev { .. } => Format::Human,
             Request::Check { format, .. }
             | Request::Build { format, .. }
             | Request::InspectIr { format, .. } => *format,
@@ -188,6 +203,7 @@ impl Request {
             Request::Check { .. } => "check",
             Request::Build { .. } => "build",
             Request::InspectIr { .. } => "inspect",
+            Request::Dev { .. } => "dev",
         }
     }
 }
@@ -269,7 +285,7 @@ where
                 Ok(Request::InspectIr { format, path })
             }
         }
-        CliCommand::Dev(_) => Err(not_yet("mtek dev", "M1")),
+        CliCommand::Dev { port, open, path } => Ok(Request::Dev { port, open, path }),
         CliCommand::New(_) => Err(not_yet("mtek new", "M3")),
         CliCommand::Fmt(_) => Err(not_yet("mtek fmt", "M6")),
         CliCommand::Test(_) => Err(not_yet("mtek test", "M6")),
@@ -372,9 +388,39 @@ mod tests {
     }
 
     #[test]
+    fn dev_defaults_and_options() {
+        assert_eq!(
+            parse_args(&["dev"]),
+            Ok(Request::Dev {
+                port: None,
+                open: false,
+                path: None
+            })
+        );
+        let request = parse_args(&["dev", "--port", "8080", "--open", "proj"]);
+        assert_eq!(
+            request,
+            Ok(Request::Dev {
+                port: Some(8080),
+                open: true,
+                path: Some(PathBuf::from("proj"))
+            })
+        );
+        assert_eq!(
+            request.map(|r| (r.format(), r.verb())),
+            Ok((Format::Human, "dev"))
+        );
+        assert!(usage(&["dev", "--port", "0"]).contains("--port"));
+        assert!(usage(&["dev", "--port", "65536"]).contains("--port"));
+        assert!(usage(&["dev", "--port", "x"]).contains("--port"));
+        usage(&["dev", "--format", "json"]);
+        usage(&["dev", "--host", "0.0.0.0"]);
+        usage(&["dev", "a", "b"]);
+    }
+
+    #[test]
     fn later_commands_are_named_in_the_error() {
         for (command, milestone) in [
-            ("dev", "M1"),
             ("new", "M3"),
             ("fmt", "M6"),
             ("test", "M6"),
@@ -408,6 +454,7 @@ mod tests {
         match parse_args(&["--help"]) {
             Ok(Request::Help(text)) => {
                 assert!(text.contains("check") && text.contains("inspect"));
+                assert!(text.contains("dev"), "{text}");
                 assert!(!text.contains("lsp"), "unimplemented commands are hidden");
             }
             other => panic!("{other:?}"),

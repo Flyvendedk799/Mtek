@@ -6,6 +6,7 @@
 
 mod args;
 mod commands;
+mod dev;
 mod dist;
 mod guard;
 mod real_fs;
@@ -41,6 +42,13 @@ fn run(request: Request) -> Outcome {
                 color,
                 runtime: runtime::embedded(),
             };
+            if let Request::Dev { port, open, path } = request {
+                // Long-running: it prints as it goes and guards each build on its own.
+                return Outcome {
+                    code: dev::run(port, open, path.as_deref(), context),
+                    ..Outcome::default()
+                };
+            }
             let (format, verb) = (request.format(), request.verb());
             match guard::run_guarded(move || commands::execute(&request, &context)) {
                 Ok(outcome) => outcome,

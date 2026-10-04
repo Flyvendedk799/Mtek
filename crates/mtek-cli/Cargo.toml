@@ -15,10 +15,17 @@ mtek-compiler = { path = "../mtek-compiler" }
 # Argument parsing (decision 0007). No `color` feature: usage errors are plain text, and the
 # only coloured output, the diagnostics, follows `spec/diagnostics.md` section 4.
 clap = { version = "=4.6.7", default-features = false, features = ["std", "derive", "help", "usage", "error-context", "suggestions"] }
+# `mtek dev` (decision 0007, `spec/compiler-architecture.md` section 2): the HTTP server and its
+# event stream, the async runtime and Ctrl+C, the file watcher.
+axum = { version = "=0.8.9", default-features = false, features = ["http1", "tokio"] }
+tokio = { version = "=1.53.2", features = ["rt-multi-thread", "macros", "fs", "net", "signal", "sync", "time"] }
+tokio-stream = { version = "=0.1.19", default-features = false, features = ["sync"] }
+notify = { version = "=8.2.0" }
+# Already in the workspace (decision 0007): the JSON of the `mtek dev` events.
+serde_json = { version = "=1.0.151", features = ["preserve_order"] }
 
 [dev-dependencies]
-# Both already in the workspace (decision 0007): reading and validating the JSON the binary prints.
-serde_json = { version = "=1.0.151", features = ["preserve_order"] }
+# Already in the workspace (decision 0007): validating the JSON the binary prints.
 jsonschema = { version = "=0.58.5", default-features = false }
 
 [lints]
