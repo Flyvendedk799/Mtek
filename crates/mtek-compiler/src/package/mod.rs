@@ -6,3 +6,4 @@
 //!   `spec/manifest.schema.json`.
 
 pub mod manifest;
+pub mod spans;
