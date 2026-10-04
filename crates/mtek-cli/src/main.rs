@@ -1,83 +1,80 @@
-//! The `mtek` command line tool (milestone M0: `--version` only).
+//! The `mtek` command line tool (`spec/tooling.md` section 1).
+//!
+//! `main` parses the arguments (usage errors exit with 2), runs the command on the compiler
+//! thread inside the panic guard ([`guard`]), and writes the outcome: stdout first, then
+//! stderr, then the exit code.
 
-// The replace-on-success writer of `mtek build`; the command itself arrives with M1-19.
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "called by `mtek build` (M1-19)")
-)]
+mod args;
+mod commands;
 mod dist;
+mod guard;
+mod real_fs;
+mod runtime;
 
-use std::io::Write;
+use std::io::{IsTerminal, Write};
 use std::process::ExitCode;
 
 use mtek_compiler::{COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI};
 
-/// Exit code for a usage error (bad arguments), see `spec/tooling.md` section 1.
-const EXIT_USAGE: u8 = 2;
-/// Exit code for an I/O failure, see `spec/tooling.md` section 1.
-const EXIT_IO: u8 = 3;
+use args::{Request, UsageError};
+use commands::{Context, EXIT_INTERNAL, EXIT_USAGE, Outcome};
 
 /// The single line printed by `mtek --version`.
 fn version_line() -> String {
     format!("mtek {COMPILER_VERSION} (language {LANGUAGE_VERSION}, runtime ABI {RUNTIME_ABI})")
 }
 
-/// The usage text printed for any invocation other than `--version`.
-fn usage() -> &'static str {
-    "usage: mtek --version\n"
-}
-
-/// What the program was asked to do.
-#[derive(Debug, PartialEq, Eq)]
-enum Command {
-    Version,
-    Usage,
-}
-
-/// Interpret the arguments after the program name.
-fn parse_args<I: IntoIterator<Item = String>>(args: I) -> Command {
-    let mut args = args.into_iter();
-    match (args.next().as_deref(), args.next()) {
-        (Some("--version"), None) => Command::Version,
-        _ => Command::Usage,
+/// Run a parsed request.
+fn run(request: Request) -> Outcome {
+    match request {
+        Request::Version => Outcome::stdout(format!("{}\n", version_line())),
+        Request::Help(text) => Outcome::stdout(text),
+        request => {
+            guard::install_panic_hook();
+            let color = commands::color_enabled(
+                std::io::stderr().is_terminal(),
+                std::env::var_os("NO_COLOR").as_deref(),
+            );
+            let context = Context {
+                // Without a working directory, relative paths are tried as they are.
+                cwd: std::env::current_dir().unwrap_or_default(),
+                color,
+                runtime: runtime::embedded(),
+            };
+            let (format, verb) = (request.format(), request.verb());
+            match guard::run_guarded(move || commands::execute(&request, &context)) {
+                Ok(outcome) => outcome,
+                Err(panic) => commands::internal_error(verb, format, color, &panic),
+            }
+        }
     }
 }
 
 fn main() -> ExitCode {
-    match parse_args(std::env::args().skip(1)) {
-        Command::Version => {
-            if writeln!(std::io::stdout(), "{}", version_line()).is_err() {
-                return ExitCode::from(EXIT_IO);
-            }
-            ExitCode::SUCCESS
-        }
-        Command::Usage => {
-            // A failed write to stderr cannot be reported anywhere else; the exit code stays 2.
-            let _ = std::io::stderr().write_all(usage().as_bytes());
-            ExitCode::from(EXIT_USAGE)
-        }
+    let outcome = match args::parse(std::env::args_os()) {
+        Ok(request) => run(request),
+        Err(UsageError(text)) => Outcome {
+            stdout: String::new(),
+            stderr: text,
+            code: EXIT_USAGE,
+        },
+    };
+    let mut stdout = std::io::stdout().lock();
+    if stdout
+        .write_all(outcome.stdout.as_bytes())
+        .and_then(|()| stdout.flush())
+        .is_err()
+    {
+        return ExitCode::from(EXIT_INTERNAL);
     }
+    // A failed write to stderr cannot be reported anywhere else; the exit code stands.
+    let _ = std::io::stderr().write_all(outcome.stderr.as_bytes());
+    ExitCode::from(outcome.code)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn args(items: &[&str]) -> Vec<String> {
-        items.iter().map(|s| (*s).to_owned()).collect()
-    }
-
-    #[test]
-    fn version_flag_is_recognised() {
-        assert_eq!(parse_args(args(&["--version"])), Command::Version);
-    }
-
-    #[test]
-    fn anything_else_is_usage() {
-        assert_eq!(parse_args(args(&[])), Command::Usage);
-        assert_eq!(parse_args(args(&["--version", "x"])), Command::Usage);
-        assert_eq!(parse_args(args(&["check"])), Command::Usage);
-    }
 
     #[test]
     fn version_line_is_exact() {

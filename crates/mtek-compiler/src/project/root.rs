@@ -56,13 +56,7 @@ impl ProjectRoot {
                     FsError::NotFound(_) | FsError::IsADirectory(_) | FsError::NotADirectory(_),
                 ) => {}
                 Err(error @ FsError::Other { .. }) => {
-                    diagnostics.push(
-                        Diagnostic::new(
-                            Code::E9004,
-                            format!("Could not read the project file: {error}."),
-                        )
-                        .help("check the permissions of the file"),
-                    );
+                    diagnostics.push(Self::unreadable(&error));
                     return None;
                 }
             }
@@ -76,16 +70,32 @@ impl ProjectRoot {
         } else {
             format!("'{start}'")
         };
-        diagnostics.push(
-            Diagnostic::new(
-                Code::E9004,
-                format!("No {PROJECT_FILE} found in {place} or any of its parent directories."),
-            )
-            .help(format!(
-                "create a {PROJECT_FILE} in the project directory with a [project] table that sets `name` and `language`"
-            )),
-        );
+        diagnostics.push(Self::not_found(&place));
         None
+    }
+
+    /// The `E9004` of a search that found no project file. `place` describes where the
+    /// search started: "the current directory" or a quoted path. Shared with the command
+    /// line tool, which searches the real file system above its `PATH` argument itself.
+    #[must_use]
+    pub fn not_found(place: &str) -> Diagnostic {
+        Diagnostic::new(
+            Code::E9004,
+            format!("No {PROJECT_FILE} found in {place} or any of its parent directories."),
+        )
+        .help(format!(
+            "create a {PROJECT_FILE} in the project directory with a [project] table that sets `name` and `language`"
+        ))
+    }
+
+    /// The `E9004` of a project file that exists but cannot be read.
+    #[must_use]
+    pub fn unreadable(error: &FsError) -> Diagnostic {
+        Diagnostic::new(
+            Code::E9004,
+            format!("Could not read the project file: {error}."),
+        )
+        .help("check the permissions of the file")
     }
 
     /// The project directory relative to the base of the file system.

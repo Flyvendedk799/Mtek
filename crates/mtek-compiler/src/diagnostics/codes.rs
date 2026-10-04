@@ -228,6 +228,7 @@ catalogue! {
     E9020 Error "host input target not exposable",
     E9021 Error "unknown host input target",
     E9030 Error "runtime bundle not embedded",
+    E9031 Error "build output not written",
     E9999 Error "internal compiler error",
 }
 

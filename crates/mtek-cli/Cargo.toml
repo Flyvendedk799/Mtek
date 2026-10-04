@@ -12,6 +12,14 @@ path = "src/main.rs"
 
 [dependencies]
 mtek-compiler = { path = "../mtek-compiler" }
+# Argument parsing (decision 0007). No `color` feature: usage errors are plain text, and the
+# only coloured output, the diagnostics, follows `spec/diagnostics.md` section 4.
+clap = { version = "=4.6.7", default-features = false, features = ["std", "derive", "help", "usage", "error-context", "suggestions"] }
+
+[dev-dependencies]
+# Both already in the workspace (decision 0007): reading and validating the JSON the binary prints.
+serde_json = { version = "=1.0.151", features = ["preserve_order"] }
+jsonschema = { version = "=0.58.5", default-features = false }
 
 [lints]
 workspace = true

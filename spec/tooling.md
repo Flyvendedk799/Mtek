@@ -27,6 +27,8 @@
 
 `mtek build` embeds the runtime bundle compiled into the CLI binary (`mtek-cli/build.rs` reads `packages/runtime-web/dist/runtime.js` if present). A CLI built without it still checks and inspects, but `build` fails with `E9030` explaining how to build the runtime first (`npm run build`).
 
+What the commands print besides diagnostics, the colour rule for stderr, `--out` resolution, the project search on disk, `E9031` for an output directory that cannot be written, and the embedding mechanics are decision 0032.
+
 ## 2. Build modes
 
 | Mode | Differences |
