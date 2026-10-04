@@ -1,6 +1,6 @@
 # M1 completion report
 
-- Milestone: **M1 — Compile source into a real browser scene** (blueprint §11, M1). The blueprint text still says `aura`/`.au`; the language is now Mtek with `.mtek` files ([decision 0017](../../spec/decisions/0017-language-name.md)).
+- Milestone: **M1 — Compile source into a real browser scene** (blueprint §11, M1). The blueprint text still uses the retired placeholder name and file extension; the language is now Mtek with `.mtek` files ([decision 0017](../../spec/decisions/0017-language-name.md)).
 - Gate task: M1-GATE
 - Gate run: clean `git clone` of `main` at commit `909ae4b` (`git status` clean, `gitDirty: false` in every environment record), 2026-10-04
 - Decision: **passed**. Each exit criterion and the guardrail below links to evidence from this gate run. Every rendering criterion was proved on a hardware WebGPU adapter (`isFallbackAdapter: false`). None rests on a NOT-RUN result or a software-adapter result.
