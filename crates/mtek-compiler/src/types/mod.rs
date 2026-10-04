@@ -34,10 +34,12 @@
 //!   them;
 //! - `ops`: the operator typing table;
 //! - `check`: the checker; `consteval`: folding and constant declarations;
+//!   `intrinsics`: the compile-time semantics of the global intrinsics;
 //! - [`scene`]: the scene and schema checks and their result.
 
 mod check;
 mod consteval;
+mod intrinsics;
 mod ops;
 pub mod scene;
 #[cfg(test)]

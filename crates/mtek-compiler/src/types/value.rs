@@ -480,7 +480,7 @@ pub fn quat_mul(a: [f32; 4], b: [f32; 4]) -> [f32; 4] {
     ]
 }
 
-fn cross(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
+pub(super) fn cross(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
     [
         a[1] * b[2] - a[2] * b[1],
         a[2] * b[0] - a[0] * b[2],
@@ -663,8 +663,60 @@ pub fn select_components(value: &ConstValue, indices: &[usize]) -> EvalResult {
 pub fn has_namespace_evaluator(namespace: &str, member: &str) -> bool {
     matches!(
         (namespace, member),
-        ("quat", "identity" | "axis_angle" | "euler") | ("color", "linear" | "srgb")
+        ("quat", "identity" | "axis_angle" | "euler")
+            | ("color", "linear" | "srgb")
+            | (
+                "mat4",
+                "identity" | "translation" | "rotation" | "scale" | "columns"
+            )
     )
+}
+
+/// `mat4.identity()`.
+pub const MAT4_IDENTITY: [[f32; 4]; 4] = [
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0, 0.0],
+    [0.0, 0.0, 1.0, 0.0],
+    [0.0, 0.0, 0.0, 1.0],
+];
+
+/// `mat4.translation(v)`: the identity with `(v, 1)` as its last column.
+#[must_use]
+pub fn mat4_translation(v: [f32; 3]) -> [[f32; 4]; 4] {
+    let mut m = MAT4_IDENTITY;
+    m[3] = [v[0], v[1], v[2], 1.0];
+    m
+}
+
+/// `mat4.scale(v)`: `v` on the diagonal, 1 in the corner.
+#[must_use]
+pub fn mat4_scale(v: [f32; 3]) -> [[f32; 4]; 4] {
+    let mut m = MAT4_IDENTITY;
+    m[0][0] = v[0];
+    m[1][1] = v[1];
+    m[2][2] = v[2];
+    m
+}
+
+/// `mat4.rotation(q)`: the rotation matrix of the unit quaternion `q`
+/// (decision 0035), column-major, with the products `xx = x*x`, `xy = x*y`,
+/// `wz = w*z`, … and each element one expression left to right in binary32:
+/// column 0 is `(1 - 2*(yy + zz), 2*(xy + wz), 2*(xz - wy), 0)`, column 1
+/// `(2*(xy - wz), 1 - 2*(xx + zz), 2*(yz + wx), 0)`, column 2
+/// `(2*(xz + wy), 2*(yz - wx), 1 - 2*(xx + yy), 0)`, column 3 `(0, 0, 0, 1)`
+/// (the formula of the runtime's `math/mat4.ts`).
+#[must_use]
+pub fn mat4_rotation(q: [f32; 4]) -> [[f32; 4]; 4] {
+    let [x, y, z, w] = q;
+    let (xx, yy, zz) = (x * x, y * y, z * z);
+    let (xy, xz, yz) = (x * y, x * z, y * z);
+    let (wx, wy, wz) = (w * x, w * y, w * z);
+    [
+        [1.0 - 2.0 * (yy + zz), 2.0 * (xy + wz), 2.0 * (xz - wy), 0.0],
+        [2.0 * (xy - wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz + wx), 0.0],
+        [2.0 * (xz + wy), 2.0 * (yz - wx), 1.0 - 2.0 * (xx + yy), 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ]
 }
 
 /// Evaluates the const-eligible namespace function `namespace.member` (the
@@ -685,6 +737,19 @@ pub fn namespace_function(
         ("quat", "euler", [V::F32(x), V::F32(y), V::F32(z)]) => quat_euler(*x, *y, *z),
         ("color", "linear", [V::Vec3(rgb), V::F32(a)]) => Ok(color_linear(*rgb, *a)),
         ("color", "srgb", [V::Vec3(rgb), V::F32(a)]) => color_srgb(*rgb, *a),
+        ("mat4", "identity", []) => Ok(V::Mat4(MAT4_IDENTITY)),
+        ("mat4", "translation", [V::Vec3(v)]) => Ok(V::Mat4(mat4_translation(*v))),
+        ("mat4", "scale", [V::Vec3(v)]) => Ok(V::Mat4(mat4_scale(*v))),
+        ("mat4", "rotation", [V::Quat(q)]) => {
+            let m = mat4_rotation(*q);
+            finite(m.as_flattened(), || {
+                "mat4.rotation(q) is not finite".to_owned()
+            })
+            .map(|()| V::Mat4(m))
+        }
+        ("mat4", "columns", [V::Vec4(c0), V::Vec4(c1), V::Vec4(c2), V::Vec4(c3)]) => {
+            Ok(V::Mat4([*c0, *c1, *c2, *c3]))
+        }
         _ if has_namespace_evaluator(namespace, member) => Err(EvalError::Mismatch),
         _ => return None,
     };
@@ -1037,7 +1102,7 @@ mod tests {
                 }
             }
         }
-        assert!(namespace_function("mat4", "identity", &[]).is_none());
+        assert!(namespace_function("texture", "white", &[]).is_none());
         assert_eq!(
             namespace_function("quat", "euler", &[]),
             Some(Err(EvalError::Mismatch))

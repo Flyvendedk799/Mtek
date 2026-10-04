@@ -676,7 +676,7 @@ impl<'a> Checker<'a> {
             ExprKind::Descriptor { name, fields } => self.descriptor(name, fields),
             ExprKind::Unary { op, operand } => self.unary(expr, *op, operand, expected),
             ExprKind::Binary { op, lhs, rhs, .. } => self.binary(expr, *op, lhs, rhs, expected),
-            ExprKind::Call { callee, args } => self.call(expr, callee, args),
+            ExprKind::Call { callee, args } => self.call(expr, callee, args, expected),
             ExprKind::Field { base, name } => self.field(expr, base, name),
         }
     }
@@ -1248,7 +1248,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    fn call(&mut self, expr: &Expr, callee: &Expr, args: &[Expr]) -> TyId {
+    fn call(&mut self, expr: &Expr, callee: &Expr, args: &[Expr], expected: Option<TyId>) -> TyId {
         if let ExprKind::Name(_) = &callee.kind {
             match self.res.res(callee.id) {
                 Some(Res::Prelude(PreludeItem::Type(name))) => {
@@ -1265,7 +1265,7 @@ impl<'a> Checker<'a> {
                         name: function.name,
                         const_eligible: function.const_eligible,
                     };
-                    return self.function_call(expr, name, function, args, kind);
+                    return self.function_call(expr, name, function, args, kind, expected);
                 }
                 Some(Res::Def(id))
                     if self.res.def(id).is_some_and(|def| def.kind == DefKind::Fn) =>
@@ -1527,7 +1527,7 @@ impl<'a> Checker<'a> {
                     const_eligible: function.const_eligible,
                 };
                 let name = format!("{namespace}.{member}");
-                self.function_call(expr, &name, function, args, kind)
+                self.function_call(expr, &name, function, args, kind, None)
             }
             Some(NamespaceMember::Value(value)) => {
                 if !is_implemented(value.since) {
@@ -1563,6 +1563,7 @@ impl<'a> Checker<'a> {
         function: &IntrinsicDef,
         args: &[Expr],
         kind: CallKind,
+        expected: Option<TyId>,
     ) -> TyId {
         let same_arity: Vec<_> = function
             .signatures
@@ -1635,7 +1636,33 @@ impl<'a> Checker<'a> {
                 return self.out.interner.from_type_ref(ret);
             }
         }
-        self.overloaded_call(expr, name, function, args, kind)
+        self.overloaded_call(expr, name, function, args, kind, expected)
+    }
+
+    /// A call whose arguments are all literals takes the scalar type its
+    /// context expects when an overload with that result accepts them
+    /// (decision 0035 item 3): `const N: u32 = max(1, 2);` is the `u32`
+    /// overload, where the literal costs of decision 0024 item 8 alone
+    /// would choose `i32`.
+    fn literal_call_for(
+        &self,
+        function: &IntrinsicDef,
+        args: &[ArgType],
+        expected: Option<TyId>,
+    ) -> Option<crate::stdlib::Resolution> {
+        let expected = expected.filter(|t| self.out.interner.is_numeric_scalar(*t))?;
+        let target = self.out.interner.to_type_ref(expected)?;
+        let adopted: Option<Vec<ArgType>> = args
+            .iter()
+            .map(|arg| match (arg, target) {
+                (ArgType::IntLiteral, _) | (ArgType::FloatLiteral, crate::stdlib::TypeRef::F32) => {
+                    Some(ArgType::Concrete(target))
+                }
+                _ => None,
+            })
+            .collect();
+        let resolution = function.resolve(&adopted?).ok()?;
+        (resolution.ret == target).then_some(resolution)
     }
 
     /// Overload resolution against class-typed signatures: literal arguments
@@ -1647,6 +1674,7 @@ impl<'a> Checker<'a> {
         function: &IntrinsicDef,
         args: &[Expr],
         kind: CallKind,
+        expected: Option<TyId>,
     ) -> TyId {
         let mut arg_types = Vec::with_capacity(args.len());
         let mut failed = false;
@@ -1670,7 +1698,8 @@ impl<'a> Checker<'a> {
         let resolution = if failed {
             None
         } else {
-            function.resolve(&arg_types).ok()
+            self.literal_call_for(function, &arg_types, expected)
+                .or_else(|| function.resolve(&arg_types).ok())
         };
         let Some(resolution) = resolution else {
             for arg in args {

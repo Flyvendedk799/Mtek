@@ -5,7 +5,6 @@ use super::*;
 use crate::diagnostics::{Code, Diagnostic, Severity};
 use crate::resolve::{Construct, DefKind, construct_implemented, resolve_module};
 use crate::source::FileId;
-use crate::stdlib::registry;
 use crate::syntax::{lex_str, parse_module};
 
 struct Checked {
@@ -785,11 +784,124 @@ fn field_values_are_typed_and_folded() {
 }
 
 #[test]
+fn intrinsics_resolve_their_overload_from_the_registry_and_fold() {
+    let c = clean(
+        "const A = sin(1.0);\nconst B = max(1, 2);\nconst C: u32 = max(1, 2);\nconst D = abs(-3);\nconst E = mix(vec3(0.0), vec3(2.0), 0.25);\nconst F = length(vec2(3, 4));\nconst G = dot(vec3(1.0), vec3(1.0, 2.0, 3.0));\nconst H = clamp(1.5, 0, 1);\nconst I: f32 = min(1, 2);\nconst J = cross(vec3(1, 0, 0), vec3(0, 1, 0));\nconst K = round(2.5);\nconst L = transpose(mat4.translation(vec3(1, 2, 3)));",
+    );
+    assert_eq!(c.value("A"), Some(ConstValue::F32(libm::sinf(1.0))));
+    assert_eq!(
+        (c.ty("B"), c.value("B")),
+        ("i32".into(), Some(ConstValue::I32(2)))
+    );
+    // All-literal arguments take the expected scalar type.
+    assert_eq!(
+        (c.ty("C"), c.value("C")),
+        ("u32".into(), Some(ConstValue::U32(2)))
+    );
+    assert_eq!(c.value("D"), Some(ConstValue::I32(3)));
+    assert_eq!(c.value("E"), Some(ConstValue::Vec3([0.5; 3])));
+    assert_eq!(
+        (c.ty("F"), c.value("F")),
+        ("f32".into(), Some(ConstValue::F32(5.0)))
+    );
+    assert_eq!(c.value("G"), Some(ConstValue::F32(6.0)));
+    assert_eq!(c.value("H"), Some(ConstValue::F32(1.0)));
+    assert_eq!(c.value("I"), Some(ConstValue::F32(1.0)));
+    assert_eq!(c.value("J"), Some(ConstValue::Vec3([0.0, 0.0, 1.0])));
+    assert_eq!(c.value("K"), Some(ConstValue::F32(2.0)));
+    let Some(ConstValue::Mat4(l)) = c.value("L") else {
+        panic!()
+    };
+    assert_eq!(l[0], [1.0, 0.0, 0.0, 1.0]);
+
+    for (source, code, message) in [
+        (
+            "const A = sin(true);",
+            "E3001",
+            "No signature of `sin` accepts (bool).",
+        ),
+        (
+            "const A = max(vec3(1.0), 2.0);",
+            "E3001",
+            "No signature of `max` accepts (vec3, f32).",
+        ),
+        (
+            "const A = dot(1.0, 2.0);",
+            "E3001",
+            "No signature of `dot` accepts (f32, f32).",
+        ),
+        (
+            "const A = cross(vec2(1.0), vec3(1.0));",
+            "E3001",
+            "Argument 1 of `cross(a: vec3, b: vec3)` expects vec3, but received vec2.",
+        ),
+        (
+            "const A = clamp(1.0, 2.0);",
+            "E3002",
+            "`clamp` takes 3 arguments, but 2 were given.",
+        ),
+        (
+            "const A = sin();",
+            "E3002",
+            "`sin` takes 1 argument, but 0 were given.",
+        ),
+        (
+            "const A = sqrt(-1.0);",
+            "E3040",
+            "A constant expression has no finite f32 value: sqrt(-1.0) is not finite.",
+        ),
+        (
+            "const A = log(0.0);",
+            "E3040",
+            "A constant expression has no finite f32 value: log(0.0) is not finite.",
+        ),
+    ] {
+        let c = consts(source);
+        assert_eq!(c.codes(), [code], "{source}");
+        assert_eq!(c.only(code).message, message, "{source}");
+    }
+}
+
+#[test]
+fn mat4_constructors_fold_column_major() {
+    let c = clean(
+        "const I = mat4.identity();\nconst T = mat4.translation(vec3(1, 2, 3));\nconst S = mat4.scale(vec3(2.0));\nconst R = mat4.rotation(quat.identity());\nconst C = mat4.columns(vec4(1.0), vec4(2.0), vec4(3.0), vec4(4.0));\nconst P = T * vec4(0, 0, 0, 1);\nconst M = T * S;",
+    );
+    assert_eq!(c.ty("I"), "mat4");
+    assert_eq!(c.value("I"), c.value("R"));
+    let Some(ConstValue::Mat4(t)) = c.value("T") else {
+        panic!()
+    };
+    assert_eq!(t[3], [1.0, 2.0, 3.0, 1.0]);
+    let Some(ConstValue::Mat4(columns)) = c.value("C") else {
+        panic!()
+    };
+    assert_eq!(columns[2], [3.0; 4]);
+    assert_eq!(c.value("P"), Some(ConstValue::Vec4([1.0, 2.0, 3.0, 1.0])));
+    let Some(ConstValue::Mat4(m)) = c.value("M") else {
+        panic!()
+    };
+    assert_eq!(m[0], [2.0, 0.0, 0.0, 0.0]);
+    assert_eq!(m[3], [1.0, 2.0, 3.0, 1.0]);
+    // A rotation matrix rotates like its quaternion.
+    let c = clean(
+        "const Q = quat.axis_angle(vec3(0, 0, 1), 1.5707964);\nconst V = mat4.rotation(Q) * vec4(1, 0, 0, 0);",
+    );
+    let Some(ConstValue::Vec4(v)) = c.value("V") else {
+        panic!()
+    };
+    assert!(v[0].abs() < 1.0e-6 && (v[1] - 1.0).abs() < 1.0e-6, "{v:?}");
+    let c = consts("const A = mat4.translation(vec4(1.0));");
+    assert_eq!(
+        c.only("E3001").message,
+        "Argument 1 of `mat4.translation(v: vec3)` expects vec3, but received vec4."
+    );
+}
+
+#[test]
 fn gated_constructs_are_not_typed_or_reported_again() {
     for source in [
-        "const S = sin(1.0);",
         "const T = \"text\";",
-        "const M = mat4.identity();",
         "const F = frame.time;",
         "const K = Key.A;",
         "const X = [1.0, 2.0];",
@@ -821,16 +933,6 @@ fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
         Construct::Index,
     ] {
         assert!(!construct_implemented(construct), "{construct:?}");
-    }
-    // Global intrinsics are not folded by this build.
-    for intrinsic in &registry().intrinsics {
-        assert!(
-            !intrinsic
-                .since
-                .is_reached_by(crate::resolve::IMPLEMENTED_MILESTONE),
-            "{}",
-            intrinsic.name
-        );
     }
 }
 

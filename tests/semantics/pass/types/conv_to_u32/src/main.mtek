@@ -1,0 +1,9 @@
+// D02 6.5: `u32(x)` from f32 (clamp, then truncate) and i32 (bits).
+const FROM_F32 = u32(-0.5);
+const FROM_I32 = u32(-1);
+
+scene Demo {
+    camera Main {
+        position: vec3(f32(FROM_F32), f32(FROM_I32 / 858993459), 5.0);
+    }
+}

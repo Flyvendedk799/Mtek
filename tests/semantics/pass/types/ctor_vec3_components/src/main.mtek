@@ -1,0 +1,8 @@
+// D02 6.7: `vec3(x, y, z)` from f32 components.
+const V = vec3(0, 1.5, 5);
+
+scene Demo {
+    camera Main {
+        position: V;
+    }
+}

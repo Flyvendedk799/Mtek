@@ -3,8 +3,8 @@
     "code": "MTEK-E9010",
     "file": "src/main.mtek",
     "startByte": 9,
-    "endByte": 13,
-    "message": "The built-in type `mat4` is specified for v0.1 but not implemented by this compiler build yet (planned for M2).",
+    "endByte": 16,
+    "message": "The built-in type `sampler` is specified for v0.1 but not implemented by this compiler build yet (planned for M4).",
     "notes": [
       "this compiler build implements the language up to milestone M1"
     ]
@@ -12,9 +12,9 @@
   {
     "code": "MTEK-E9010",
     "file": "src/main.mtek",
-    "startByte": 16,
-    "endByte": 20,
-    "message": "The built-in namespace `mat4` is specified for v0.1 but not implemented by this compiler build yet (planned for M2).",
+    "startByte": 19,
+    "endByte": 26,
+    "message": "The built-in namespace `sampler` is specified for v0.1 but not implemented by this compiler build yet (planned for M4).",
     "notes": [
       "this compiler build implements the language up to milestone M1"
     ]

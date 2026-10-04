@@ -1456,8 +1456,8 @@ fn every_gated_construct_has_a_gating_fixture() {
     assert!(gated >= 14, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
-        ("The built-in type `mat4`", "M2"),
-        ("The built-in function `sin`", "M2"),
+        ("The built-in type `sampler`", "M4"),
+        ("The built-in function `random`", "M3"),
         ("The built-in namespace `frame`", "M3"),
         ("The built-in enum `Key`", "M3"),
         ("The built-in schema `Pbr`", "M4"),

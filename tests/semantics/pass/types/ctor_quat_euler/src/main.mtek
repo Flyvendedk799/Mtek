@@ -1,0 +1,8 @@
+// D02 6.7: `quat.euler(x, y, z)` = Y * X * Z about fixed world axes.
+const Q = quat.euler(-0.2, 0.5, 0.1);
+
+scene Demo {
+    camera Main {
+        rotation: Q;
+    }
+}

@@ -1,0 +1,5 @@
+const SPREAD = max(vec3(1.0), 2.0);
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 15,
+    "endByte": 34,
+    "message": "No signature of `max` accepts (vec3, f32).",
+    "expected": "max(a: T, b: T) -> T or max(a: I, b: I) -> I",
+    "actual": "(vec3, f32)"
+  }
+]

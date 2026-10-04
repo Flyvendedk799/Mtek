@@ -1,4 +1,4 @@
-const S = sin(1.0);
+const R = random();
 
 scene Demo {
     camera Main {}

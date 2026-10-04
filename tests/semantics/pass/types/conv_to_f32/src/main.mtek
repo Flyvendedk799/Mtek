@@ -1,0 +1,10 @@
+// D02 6.5: `f32(x)` from i32 and u32 (round to nearest, ties to even).
+const N: u32 = 16777217;
+const FROM_I32 = f32(-3);
+const FROM_U32 = f32(N);
+
+scene Demo {
+    camera Main {
+        position: vec3(FROM_I32, FROM_U32 / 16777216.0, 5.0);
+    }
+}

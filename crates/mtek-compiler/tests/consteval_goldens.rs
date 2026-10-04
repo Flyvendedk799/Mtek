@@ -377,3 +377,104 @@ fn descriptors_fold_to_struct_values() {
         }
     );
 }
+
+#[test]
+fn intrinsics_fold_with_libm_in_binary32() {
+    // Each expected value is the documented formula (decision 0035 item 3)
+    // evaluated here with Rust binary32 operations and `libm` directly.
+    for (decl, expected) in [
+        (" = sin(1.0)", libm::sinf(1.0)),
+        (" = cos(0.5)", libm::cosf(0.5)),
+        (" = tan(0.5)", libm::tanf(0.5)),
+        (" = asin(0.5)", libm::asinf(0.5)),
+        (" = acos(0.5)", libm::acosf(0.5)),
+        (" = atan(2.0)", libm::atanf(2.0)),
+        (" = atan2(1.0, -1.0)", libm::atan2f(1.0, -1.0)),
+        (" = pow(2.0, 0.5)", libm::powf(2.0, 0.5)),
+        (" = exp(1.0)", libm::expf(1.0)),
+        (" = exp2(0.5)", libm::exp2f(0.5)),
+        (" = log(2.0)", libm::logf(2.0)),
+        (" = log2(10.0)", libm::log2f(10.0)),
+        (" = sqrt(2.0)", 2.0_f32.sqrt()),
+        (" = inverse_sqrt(2.0)", 1.0 / 2.0_f32.sqrt()),
+        (" = radians(90.0)", 90.0 * (std::f32::consts::PI / 180.0)),
+        (" = degrees(1.0)", 180.0 / std::f32::consts::PI),
+        (" = fract(-1.1)", -1.1_f32 - (-2.0)),
+        (" = round(2.5)", 2.0),
+        (" = round(-3.5)", -4.0),
+        (" = mix(0.1, 0.7, 0.3)", 0.1 * (1.0 - 0.3) + 0.7 * 0.3),
+        (" = smoothstep(0.0, 2.0, 0.5)", {
+            let t = 0.5_f32 / 2.0;
+            t * t * (3.0 - 2.0 * t)
+        }),
+        (" = length(vec3(1.0, 2.0, 2.0))", 3.0),
+        (
+            " = length(vec2(0.1, 0.2))",
+            (0.1_f32 * 0.1 + 0.2 * 0.2).sqrt(),
+        ),
+        (" = distance(vec2(0.5), vec2(0.1, 0.9))", {
+            let (dx, dy) = (0.5_f32 - 0.1, 0.5_f32 - 0.9);
+            (dx * dx + dy * dy).sqrt()
+        }),
+        (" = dot(vec3(0.1, 0.2, 0.3), vec3(0.4, 0.5, 0.6))", {
+            0.1_f32 * 0.4 + 0.2 * 0.5 + 0.3 * 0.6
+        }),
+    ] {
+        assert_eq!(
+            bits(&floats(&fold(decl))),
+            [expected.to_bits()],
+            "const X{decl}"
+        );
+    }
+    // Pinned on every host: sin(1) and pow(2, 0.5) in binary32.
+    assert_eq!(bits(&floats(&fold(" = sin(1.0)"))), [0x3f57_6aa4]);
+    assert_eq!(bits(&floats(&fold(" = pow(2.0, 0.5)"))), [0x3fb5_04f3]);
+    // Component-wise and integer overloads.
+    let v = fold(" = normalize(vec3(1.0, 2.0, 2.0))");
+    assert_eq!(bits(&floats(&v)), bits(&[1.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]));
+    let v = fold(" = sin(vec2(0.25, 0.75))");
+    assert_eq!(
+        bits(&floats(&v)),
+        bits(&[libm::sinf(0.25), libm::sinf(0.75)])
+    );
+    assert_eq!(fold(" = abs(-2147483648)"), ConstValue::I32(i32::MIN));
+    assert_eq!(fold(": u32 = clamp(9, 2, 5)"), ConstValue::U32(5));
+}
+
+#[test]
+fn mat4_constructors_fold_column_major() {
+    let ConstValue::Mat4(r) = fold(" = mat4.rotation(quat.axis_angle(vec3(0, 1, 0), 0.5))") else {
+        panic!()
+    };
+    // The rotation matrix of q = (0, s, 0, c), from the documented formula.
+    let (s, c) = (libm::sinf(0.25), libm::cosf(0.25));
+    let (yy, wy) = (s * s, c * s);
+    let expected = [
+        [
+            1.0 - 2.0 * (yy + 0.0),
+            2.0 * (0.0 + 0.0),
+            2.0 * (0.0 - wy),
+            0.0,
+        ],
+        [
+            2.0 * (0.0 - 0.0),
+            1.0 - 2.0 * (0.0 + 0.0),
+            2.0 * (0.0 + 0.0),
+            0.0,
+        ],
+        [
+            2.0 * (0.0 + wy),
+            2.0 * (0.0 - 0.0),
+            1.0 - 2.0 * (0.0 + yy),
+            0.0,
+        ],
+        [0.0, 0.0, 0.0, 1.0],
+    ];
+    for (column, want) in r.iter().zip(&expected) {
+        assert_eq!(bits(column), bits(want));
+    }
+    assert_eq!(
+        fold(" = mat4.translation(vec3(1, 2, 3)) * vec4(1, 1, 1, 1)"),
+        ConstValue::Vec4([2.0, 3.0, 4.0, 1.0])
+    );
+}

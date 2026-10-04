@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3002",
+    "file": "src/main.mtek",
+    "startByte": 16,
+    "endByte": 31,
+    "message": "`clamp` takes 3 arguments, but 2 were given.",
+    "notes": [
+      "signature: clamp(x: T, lo: T, hi: T) -> T or clamp(x: I, lo: I, hi: I) -> I"
+    ]
+  }
+]

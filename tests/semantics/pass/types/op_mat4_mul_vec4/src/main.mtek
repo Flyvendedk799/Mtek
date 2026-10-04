@@ -1,0 +1,9 @@
+// D02 6.2 row 5: `mat4 * vec4` (column vector on the right).
+const M = mat4.translation(vec3(0, 1, 5));
+const P = M * vec4(0, 0, 0, 1);
+
+scene Demo {
+    camera Main {
+        position: P.xyz;
+    }
+}

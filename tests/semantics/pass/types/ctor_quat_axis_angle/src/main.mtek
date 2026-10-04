@@ -1,0 +1,8 @@
+// D02 6.7: `quat.axis_angle(axis, angle)` normalises the axis.
+const Q = quat.axis_angle(vec3(0, 2, 0), 0.5);
+
+scene Demo {
+    camera Main {
+        rotation: Q;
+    }
+}

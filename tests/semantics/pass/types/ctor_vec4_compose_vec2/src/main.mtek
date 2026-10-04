@@ -1,0 +1,8 @@
+// D02 6.7: `vec4(xy: vec2, z, w)` composes.
+const V = vec4(vec2(0.0, 1.0), 5.0, 1);
+
+scene Demo {
+    camera Main {
+        position: V.xyz;
+    }
+}

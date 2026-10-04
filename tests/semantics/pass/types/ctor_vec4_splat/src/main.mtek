@@ -1,0 +1,8 @@
+// D02 6.7: `vec4(s)` splats one f32.
+const V = vec4(3.0);
+
+scene Demo {
+    camera Main {
+        position: V.xyz;
+    }
+}

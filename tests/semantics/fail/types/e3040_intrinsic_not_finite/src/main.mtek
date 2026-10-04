@@ -1,0 +1,5 @@
+const ROOT = sqrt(-4.0);
+
+scene Demo {
+    camera Main {}
+}

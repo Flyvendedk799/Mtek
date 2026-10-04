@@ -24,6 +24,7 @@
 use std::collections::BTreeMap;
 
 use super::check::{BinaryClass, CallKind, Checker, FieldKind, binary_class};
+use super::intrinsics::intrinsic_function;
 use super::ty::{Ty, TyId};
 use super::value::{
     self, ConstValue, EvalError, EvalResult, color_literal, construct_vector, convert,
@@ -488,9 +489,9 @@ impl Checker<'_> {
             } => self.combine(expr, folded, |values| {
                 namespace_function(namespace, member, values).unwrap_or(Err(EvalError::Mismatch))
             }),
-            // Global intrinsics are gated in this build, and with them their
-            // folding (see the tests).
-            CallKind::Intrinsic { .. } => Folded::Unknown,
+            CallKind::Intrinsic { name, .. } => self.combine(expr, folded, |values| {
+                intrinsic_function(name, values).unwrap_or(Err(EvalError::Mismatch))
+            }),
         }
     }
 
