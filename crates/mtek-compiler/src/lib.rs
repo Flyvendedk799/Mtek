@@ -9,6 +9,7 @@ pub mod emit_js;
 pub mod emit_wgsl;
 pub mod ir;
 pub mod layout;
+pub mod lowering;
 pub mod stdlib;
 
 /// Version of this compiler build (the workspace package version).

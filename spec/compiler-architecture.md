@@ -127,6 +127,7 @@ The **typed high-level IR**: the semantic contract between language and code gen
 ### 4.9 `lowering/`
 - `cpu.rs`: IR → JS AST (§6).
 - `shader.rs`: IR (fragment + GPU-reachable pure functions) → Shader IR (§7).
+- `shader_ir.rs`: the Shader IR types (§7.1); `standard_stage.rs`: the generated vertex stage and fragment wrapper of `spec/materials.md` §3.2–3.3; `builtin_unlit.rs`: the temporary compiler-built `Unlit` of decision 0013 (removed in M2-09). Files, generated names, the span map and the shader artifact are decision 0029.
 
 ### 4.10 `layout/` and `plan/`
 `layout/`: the algorithm of `spec/gpu-layout.md` §4 and the built-in blocks. `plan/`: material instances, update classes, sharing eligibility, bind group plan, host-input codecs, binding evaluation order.
@@ -180,7 +181,7 @@ Every node carries its Mtek `Span`.
 
 ## 8. Naga integration
 
-- `emit_wgsl::validate(module_text) -> Result<(), Vec<Diagnostic>>` uses `naga::front::wgsl::parse_str` and `naga::valid::Validator::new(ValidationFlags::all(), Capabilities::default())`.
+- `emit_wgsl::validate(module_text, span_map) -> Result<(), Vec<Diagnostic>>` (the span map translates the error position, decision 0029) uses `naga::front::wgsl::parse_str` and `naga::valid::Validator::new(ValidationFlags::all(), Capabilities::default())`.
 - Because Mtek type-checks first, **any** Naga parse or validation error on emitted code is a compiler defect: it is reported as `E6100` ("generated WGSL failed validation — this is a compiler bug") with the Naga message as a note, the WGSL location translated through the span map to the originating Mtek span (falling back to the material declaration), and a request to report it. User-caused GPU limits are caught before emission by Mtek's own checks (`E6001`–`E6003`).
 - Naga's IR is never exposed or serialised as part of Mtek's specification (blueprint §5.2).
 - A Naga pass is not proof of browser compatibility: the runtime still creates real pipelines inside error scopes and maps `GPUCompilationInfo` messages back through the same span map (`E8051`, `spec/runtime-abi.md` §5.4).

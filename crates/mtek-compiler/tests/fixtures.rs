@@ -1613,7 +1613,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E6001", "M2-04: materials"),
     ("E6002", "M2-04: materials"),
     ("E6003", "M2-04: materials"),
-    ("E6100", "M2-04: materials (generated WGSL)"),
     ("E7010", "M4: assets"),
     ("E8011", "M3: run-time field writes"),
     ("W8030", "M2: arrays (run-time index clamping)"),
@@ -1645,6 +1644,11 @@ const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
         "E9002",
         "imports are M2: a project this build checks has one module",
         "src/source/map.rs",
+    ),
+    (
+        "E6100",
+        "only a compiler defect produces it (Naga rejecting generated WGSL)",
+        "src/emit_wgsl/validate.rs",
     ),
     (
         "E9999",
