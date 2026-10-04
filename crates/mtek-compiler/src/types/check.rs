@@ -53,7 +53,7 @@ use crate::stdlib::{
 use crate::syntax::ast::{
     ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr,
     ExprKind, FieldInit, FieldValue, Ident, ItemKind, Module, NodeId, SceneDecl, SceneMember,
-    SceneObject, Type, TypeKind as AstTypeKind, UnaryOp,
+    SceneObject, StructDecl, Type, TypeKind as AstTypeKind, UnaryOp,
 };
 
 /// Whether a literal expression is made of integer literals only, or holds a
@@ -160,6 +160,8 @@ pub(super) enum FieldKind {
     },
     /// A value member of a namespace (`frame.time`).
     NamespaceValue(String),
+    /// A field of a user struct value.
+    StructField(String),
 }
 
 pub(super) struct Checker<'a> {
@@ -181,6 +183,15 @@ pub(super) struct Checker<'a> {
     pub(super) states: BTreeSet<(DefId, String)>,
     pub(super) calls: BTreeMap<NodeId, CallKind>,
     pub(super) fields: BTreeMap<NodeId, FieldKind>,
+    /// Every struct declaration of the module, by its `DefId`.
+    pub(super) struct_decls: BTreeMap<DefId, &'a StructDecl>,
+    /// Struct declarations already checked.
+    pub(super) struct_done: BTreeSet<DefId>,
+    /// The types of imported structs, by the `DefId` of the imported name
+    /// (seeded by [`super::check_module_with_imports`]).
+    pub(super) imported_structs: BTreeMap<DefId, TyId>,
+    /// Struct literals without errors, with their type (for folding).
+    pub(super) struct_literals: BTreeMap<NodeId, TyId>,
 }
 
 impl<'a> Checker<'a> {
@@ -221,6 +232,10 @@ impl<'a> Checker<'a> {
             states,
             calls: BTreeMap::new(),
             fields: BTreeMap::new(),
+            struct_decls: BTreeMap::new(),
+            struct_done: BTreeSet::new(),
+            imported_structs: BTreeMap::new(),
+            struct_literals: BTreeMap::new(),
         }
     }
 
@@ -274,8 +289,13 @@ impl<'a> Checker<'a> {
                 ItemKind::Scene(decl) if construct_implemented(Construct::Scene) => {
                     self.scene(decl);
                 }
-                // Imports, functions, structs, materials and prefabs are gated
-                // in this build (see the tests).
+                ItemKind::Struct(decl) if construct_implemented(Construct::Struct) => {
+                    if let Some(def) = self.res.def_of(decl.id) {
+                        self.struct_info(def);
+                    }
+                }
+                // Functions, materials and prefabs are gated in this build
+                // (see the tests); imports have nothing to check here.
                 _ => {}
             }
         }
@@ -287,6 +307,9 @@ impl<'a> Checker<'a> {
         for item in &module.items {
             match &item.kind {
                 ItemKind::Const(decl) => self.collect_constant(decl),
+                ItemKind::Struct(decl) if construct_implemented(Construct::Struct) => {
+                    self.collect_struct(decl);
+                }
                 ItemKind::Scene(scene) => {
                     for member in &scene.members {
                         match member {
@@ -424,8 +447,9 @@ impl<'a> Checker<'a> {
                     );
                     TyId::ERROR
                 }
-                // Struct types are gated in this build; anything else was
+                // A user struct, of this module or imported; anything else was
                 // reported by the resolver.
+                Some(Res::Def(id)) => self.struct_type(id).unwrap_or(TyId::ERROR),
                 _ => TyId::ERROR,
             },
             AstTypeKind::Generic {
@@ -462,7 +486,20 @@ impl<'a> Checker<'a> {
                             .at(ty.span),
                         );
                     }
-                    // `array<T, N>` is gated in this build.
+                    // Gated, or reported just now.
+                    TyId::ERROR
+                }
+                Some(Res::Def(id)) if self.names_struct(id) => {
+                    let struct_name = self.snippet(name.span).to_owned();
+                    self.report(
+                        Diagnostic::new(
+                            Code::E3003,
+                            format!(
+                                "The type '{struct_name}' takes no type arguments; only `array<T, N>` does."
+                            ),
+                        )
+                        .at(ty.span),
+                    );
                     TyId::ERROR
                 }
                 _ => TyId::ERROR,
@@ -771,7 +808,7 @@ impl<'a> Checker<'a> {
             | ExprKind::Error => TyId::ERROR,
             ExprKind::Name(_) => self.name_value(expr),
             ExprKind::Paren(inner) => self.check(inner, expected),
-            ExprKind::Descriptor { name, fields } => self.descriptor(name, fields),
+            ExprKind::Descriptor { name, fields } => self.descriptor(expr, name, fields),
             ExprKind::Unary { op, operand } => self.unary(expr, *op, operand, expected),
             ExprKind::Binary { op, lhs, rhs, .. } => self.binary(expr, *op, lhs, rhs, expected),
             ExprKind::Call { callee, args } => self.call(expr, callee, args, expected),
@@ -932,7 +969,7 @@ impl<'a> Checker<'a> {
     /// schema's type and each field value is checked with the field's type as
     /// expected type; unknown, duplicate, missing and mistyped fields are the
     /// schema checks' business.
-    fn descriptor(&mut self, name: &Ident, fields: &[DescField]) -> TyId {
+    fn descriptor(&mut self, expr: &Expr, name: &Ident, fields: &[DescField]) -> TyId {
         match self.res.res(name.id) {
             Some(Res::Prelude(PreludeItem::Schema(schema))) => {
                 let Some(def) = self.registry.schema(schema) else {
@@ -1000,8 +1037,13 @@ impl<'a> Checker<'a> {
                 };
                 match kind {
                     _ if reused_prelude_name => TyId::ERROR,
+                    DefKind::Struct => match self.struct_type(id) {
+                        Some(ty) => self.struct_literal(expr, name, ty, fields),
+                        // An imported struct whose type is not known.
+                        None => TyId::ERROR,
+                    },
                     // Gated in this build.
-                    DefKind::Struct | DefKind::Material | DefKind::Prefab => TyId::ERROR,
+                    DefKind::Material | DefKind::Prefab => TyId::ERROR,
                     DefKind::SceneObject { kind: None } => TyId::ERROR,
                     kind => {
                         let (def_name, noun, span) = (def.name.clone(), kind.noun(), def.span);
@@ -2024,6 +2066,9 @@ impl<'a> Checker<'a> {
             }
         }
         let base_ty = self.check(base, None);
+        if self.out.interner.struct_def(base_ty).is_some() {
+            return self.struct_field(expr, base_ty, name);
+        }
         self.components(expr, base_ty, name)
     }
 

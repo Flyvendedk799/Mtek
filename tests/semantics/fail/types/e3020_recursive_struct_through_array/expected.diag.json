@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E3020",
+    "file": "src/main.mtek",
+    "startByte": 7,
+    "endByte": 11,
+    "message": "The struct 'Tree' contains itself: Tree → Branch → Tree.",
+    "related": [
+      {
+        "message": "'Tree' contains 'Branch' here",
+        "file": "src/main.mtek",
+        "startByte": 34,
+        "endByte": 40
+      },
+      {
+        "message": "'Branch' contains 'Tree' here",
+        "file": "src/main.mtek",
+        "startByte": 75,
+        "endByte": 79
+      }
+    ],
+    "notes": [
+      "help: a struct cannot contain itself, not even through an array: v0.1 has no references"
+    ]
+  }
+]

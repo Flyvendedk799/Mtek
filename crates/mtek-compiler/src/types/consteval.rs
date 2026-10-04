@@ -61,10 +61,18 @@ impl Checker<'_> {
     /// from one constant into another: a chain of thousands of constants
     /// needs no deeper stack than one.
     pub(super) fn evaluate_constants(&mut self) {
+        // Struct declarations take part (decision 0035 item 5): a struct
+        // after the structs and constants its field types name, a constant
+        // after the structs its type and its struct literals name.
         let mut roots: Vec<(u32, DefId)> = self
             .const_decls
             .iter()
             .map(|(def, decl)| (decl.span.start, *def))
+            .chain(
+                self.struct_decls
+                    .iter()
+                    .map(|(def, decl)| (decl.span.start, *def)),
+            )
             .collect();
         roots.sort_unstable();
         let mut edges: BTreeMap<DefId, Vec<(DefId, Span)>> = BTreeMap::new();
@@ -75,6 +83,19 @@ impl Checker<'_> {
             }
             self.constant_uses(&decl.value, &mut uses);
             edges.insert(*def, uses);
+        }
+        for (def, decl) in &self.struct_decls {
+            let mut uses = Vec::new();
+            for field in &decl.fields {
+                self.annotation_uses(&field.ty, &mut uses);
+            }
+            edges.insert(*def, uses);
+        }
+        // One edge per dependency (its first reference), so a cycle is
+        // reported once however often it is referred to.
+        for uses in edges.values_mut() {
+            let mut seen = std::collections::BTreeSet::new();
+            uses.retain(|(target, _)| seen.insert(*target));
         }
 
         #[derive(Clone, Copy, PartialEq, Eq)]
@@ -109,7 +130,7 @@ impl Checker<'_> {
                                     .iter()
                                     .map(|(d, via, _)| (*d, *via))
                                     .collect();
-                                self.report_cycle(&cycle, span);
+                                self.report_dependency_cycle(cycle, span);
                             }
                         }
                         Some(Mark::Done) => {}
@@ -123,13 +144,54 @@ impl Checker<'_> {
             }
         }
         for def in order {
-            self.const_info(def, None);
+            if self.struct_decls.contains_key(&def) {
+                self.struct_info(def);
+            } else {
+                self.const_info(def, None);
+            }
         }
     }
 
+    /// Report a cycle of the dependency search: of structs only, `E3020`; with
+    /// a constant on it, `E2020`, starting at its first constant.
+    fn report_dependency_cycle(&mut self, cycle: Vec<(DefId, Option<Span>)>, closing: Span) {
+        let Some(start) = cycle
+            .iter()
+            .position(|(def, _)| self.const_decls.contains_key(def))
+        else {
+            self.report_struct_cycle(&cycle, closing);
+            return;
+        };
+        if start == 0 {
+            self.report_cycle(&cycle, closing);
+            return;
+        }
+        // Rotate: entry `i` holds the reference from entry `i - 1`, and
+        // `closing` the one from the last entry back to the first.
+        let mut rotated = Vec::with_capacity(cycle.len());
+        let new_closing = cycle
+            .get(start)
+            .and_then(|(_, via)| *via)
+            .unwrap_or(closing);
+        for (index, (def, via)) in cycle.iter().enumerate().skip(start) {
+            rotated.push((*def, if index == start { None } else { *via }));
+        }
+        for (index, (def, via)) in cycle.iter().enumerate().take(start) {
+            rotated.push((*def, if index == 0 { Some(closing) } else { *via }));
+        }
+        self.report_cycle(&rotated, new_closing);
+    }
+
     /// The constants named as array lengths in the type annotation `ty`
-    /// (`array<f32, N>`): a constant's type may depend on another constant.
+    /// (`array<f32, N>`) and the structs of this module it names: a type
+    /// may depend on constants and structs.
     pub(super) fn annotation_uses(&self, ty: &Type, uses: &mut Vec<(DefId, Span)>) {
+        if let TypeKind::Named(name) = &ty.kind
+            && let Some(Res::Def(id)) = self.res.res(name.id)
+            && self.struct_decls.contains_key(&id)
+        {
+            uses.push((id, name.span));
+        }
         if let TypeKind::Generic {
             element, length, ..
         } = &ty.kind
@@ -178,7 +240,12 @@ impl Checker<'_> {
                     self.constant_uses(item, uses);
                 }
             }
-            ExprKind::Descriptor { fields, .. } => {
+            ExprKind::Descriptor { name, fields } => {
+                if let Some(Res::Def(id)) = self.res.res(name.id)
+                    && self.struct_decls.contains_key(&id)
+                {
+                    uses.push((id, name.span));
+                }
                 for field in fields {
                     match &field.value {
                         FieldValue::Expr(value) => self.constant_uses(value, uses),
@@ -549,6 +616,17 @@ impl Checker<'_> {
                 kind: NonConstantKind::RunTimeValue,
                 reason: format!("it reads `{name}`, which changes at run time"),
             }),
+            FieldKind::StructField(name) => {
+                let base = self.fold(base);
+                self.combine(expr, vec![base], |values| match values {
+                    [ConstValue::Struct { fields, .. }] => fields
+                        .iter()
+                        .find(|(field, _)| *field == name)
+                        .map(|(_, value)| value.clone())
+                        .ok_or(EvalError::Mismatch),
+                    _ => Err(EvalError::Mismatch),
+                })
+            }
         }
     }
 
@@ -605,14 +683,71 @@ impl Checker<'_> {
         })
     }
 
+    /// A struct literal (every field given once, checked) folds to a
+    /// [`ConstValue::Struct`] of its fields in **declaration** order
+    /// (decision 0035 item 5), whatever order the literal writes them in.
+    fn fold_struct_literal(&mut self, expr: &Expr, ty: TyId, fields: &[DescField]) -> Folded {
+        let Some(declared) = self.out.interner.struct_def(ty).cloned() else {
+            return Folded::Unknown;
+        };
+        let mut folded = Vec::with_capacity(declared.fields.len());
+        let mut written: Vec<(&str, usize)> = Vec::with_capacity(fields.len());
+        for field in fields {
+            if let FieldValue::Expr(value) = &field.value {
+                written.push((field.name.name.as_str(), folded.len()));
+                folded.push(self.fold(value));
+            }
+        }
+        // The position in `folded` of each declared field.
+        let order: Option<Vec<usize>> = declared
+            .fields
+            .iter()
+            .map(|(name, _)| {
+                written
+                    .iter()
+                    .find(|(n, _)| *n == name)
+                    .map(|(_, index)| *index)
+            })
+            .collect();
+        let Some(order) = order else {
+            return Folded::Unknown;
+        };
+        let name = declared.name.clone();
+        self.combine(expr, folded, |values| {
+            let fields: Option<Vec<(String, ConstValue)>> = declared
+                .fields
+                .iter()
+                .zip(&order)
+                .map(|((field, _), index)| values.get(*index).map(|v| (field.clone(), v.clone())))
+                .collect();
+            fields
+                .map(|fields| ConstValue::Struct { name, fields })
+                .ok_or(EvalError::Mismatch)
+        })
+    }
+
     /// A descriptor literal folds to the fields as written. The reason each
     /// field value is not constant is recorded, because the schema checks
     /// require constants field by field (the values of a mesh descriptor,
     /// not the parameters of a material).
     fn fold_descriptor(&mut self, expr: &Expr, fields: &[DescField]) -> Folded {
+        if let Some(&ty) = self.struct_literals.get(&expr.id) {
+            return self.fold_struct_literal(expr, ty, fields);
+        }
         let schema = match self.typed(expr).map(|t| self.out.interner.get(t)) {
             Some(Ty::Schema(schema)) => schema,
-            _ => return Folded::Unknown,
+            _ => {
+                // A struct literal with errors: its field values are still
+                // constant expressions to fold.
+                for field in fields {
+                    if let FieldValue::Expr(value) = &field.value
+                        && self.ty_of(value.id).is_some()
+                    {
+                        self.fold(value);
+                    }
+                }
+                return Folded::Unknown;
+            }
         };
         let mut names = Vec::with_capacity(fields.len());
         let mut folded = Vec::with_capacity(fields.len());

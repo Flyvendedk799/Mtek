@@ -1,0 +1,11 @@
+struct Tree {
+    children: array<Branch, 2>;
+}
+
+struct Branch {
+    tree: Tree;
+}
+
+scene Demo {
+    camera Main {}
+}

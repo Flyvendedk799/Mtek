@@ -1014,6 +1014,104 @@ fn arrays_literals_lengths_and_indexing() {
 }
 
 #[test]
+fn structs_declare_types_literals_fold_in_declaration_order() {
+    let c = clean(
+        "const P = Pair { b: vec3(1, 2, 3); a: 0.5 };\nstruct Pair { a: f32; b: vec3; }\nconst B = P.b.y;\nconst W: Wrap = Wrap { pairs: [P, Pair { a: 1; b: vec3(0.0) }]; n: N };\nstruct Wrap { pairs: array<Pair, N>; n: u32; }\nconst N: u32 = 2;\nconst A = W.pairs[1].a;",
+    );
+    assert_eq!(c.ty("P"), "Pair");
+    assert_eq!(
+        c.value("P"),
+        Some(ConstValue::Struct {
+            name: "Pair".into(),
+            fields: vec![
+                ("a".into(), ConstValue::F32(0.5)),
+                ("b".into(), ConstValue::Vec3([1.0, 2.0, 3.0])),
+            ],
+        })
+    );
+    assert_eq!(c.value("B"), Some(ConstValue::F32(2.0)));
+    assert_eq!(c.ty("W"), "Wrap");
+    assert_eq!(c.value("A"), Some(ConstValue::F32(1.0)));
+
+    for (source, code, message) in [
+        (
+            "struct Node { value: f32; next: Node; }",
+            "E3020",
+            "The struct 'Node' contains itself: Node → Node.",
+        ),
+        (
+            "struct A { b: array<B, 2>; }\nstruct B { a: A; }",
+            "E3020",
+            "The struct 'A' contains itself: A → B → A.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair { a: 1.0 };",
+            "E3021",
+            "The struct literal Pair is missing the field 'b'.",
+        ),
+        (
+            "struct Trio { a: f32; b: f32; c: f32; }\nconst P = Trio { a: 1.0 };",
+            "E3021",
+            "The struct literal Trio is missing the fields 'b' and 'c'.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair { a: 1.0; b: 2.0; a: 3.0 };",
+            "E3022",
+            "The field 'a' of struct Pair is given twice.",
+        ),
+        (
+            "struct Pair { a: f32; a: vec3; }",
+            "E3022",
+            "The struct 'Pair' declares the field 'a' twice.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair { a: 1.0; b: 2.0; c: 3.0 };",
+            "E3023",
+            "The struct Pair has no field 'c'.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair { a: 1.0; b: 2.0 };\nconst C = P.c;",
+            "E3023",
+            "The struct Pair has no field 'c'.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair { a: vec3(1.0); b: 2.0 };",
+            "E3001",
+            "Field 'a' of struct Pair expects f32, but received vec3.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P: Pair<f32, 2> = Pair { a: 1.0; b: 2.0 };",
+            "E3003",
+            "The type 'Pair' takes no type arguments; only `array<T, N>` does.",
+        ),
+        (
+            "struct Pair { a: f32; b: f32; }\nconst P = Pair;",
+            "E3001",
+            "'Pair' is a struct, not a value.",
+        ),
+        (
+            "struct Sized { v: array<f32, L>; }\nconst L: Sized = Sized { v: [1.0] };",
+            "E2020",
+            "The constant 'L' is defined in terms of itself: L → Sized → L.",
+        ),
+    ] {
+        let c = consts(source);
+        assert_eq!(c.codes(), [code], "{source}");
+        assert_eq!(c.only(code).message, message, "{source}");
+    }
+    // A did-you-mean for an unknown field.
+    let c = consts("struct Pair { alpha: f32; }\nconst P = Pair { alpah: 1.0 };");
+    assert_eq!(c.codes(), ["E3023"]);
+    assert!(
+        c.only("E3023")
+            .notes
+            .contains(&"help: did you mean 'alpha'?".to_owned()),
+        "{:?}",
+        c.only("E3023").notes
+    );
+}
+
+#[test]
 fn gated_constructs_are_not_typed_or_reported_again() {
     for source in ["const F = frame.time;", "const K = Key.A;"] {
         let c = consts(source);
@@ -1029,7 +1127,6 @@ fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
     for construct in [
         Construct::Fn,
         Construct::CpuFn,
-        Construct::Struct,
         Construct::Material,
         Construct::Prefab,
         Construct::State,

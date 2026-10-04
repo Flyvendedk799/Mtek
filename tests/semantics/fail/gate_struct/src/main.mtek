@@ -1,8 +1,0 @@
-struct Pair {
-    a: f32;
-    b: f32;
-}
-
-scene Demo {
-    camera Main {}
-}

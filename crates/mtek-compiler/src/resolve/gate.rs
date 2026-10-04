@@ -152,7 +152,8 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::BodyConst => row("`const` declarations in bodies", true, M1),
         Construct::Fn => row("`fn` declarations", true, M2),
         Construct::CpuFn => row("`cpu fn` declarations", true, M2),
-        Construct::Struct => row("`struct` declarations", true, M2),
+        // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
+        Construct::Struct => row("`struct` declarations", true, M1),
         Construct::Material => row("`material` declarations", true, M2),
         Construct::Prefab => row("`prefab` declarations", true, M5),
         Construct::Scene => row("Scenes", true, M1),
@@ -279,6 +280,7 @@ mod tests {
             Construct::StringLiteral,
             Construct::ArrayLiteral,
             Construct::Index,
+            Construct::Struct,
         ] {
             assert!(
                 is_implemented(construct_gate(construct).since),
@@ -288,7 +290,6 @@ mod tests {
         for construct in [
             Construct::Fn,
             Construct::CpuFn,
-            Construct::Struct,
             Construct::Material,
             Construct::Prefab,
             Construct::State,

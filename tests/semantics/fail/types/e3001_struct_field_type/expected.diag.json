@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 100,
+    "endByte": 109,
+    "message": "Field 'offset' of struct Light expects vec3, but received vec2.",
+    "expected": "vec3",
+    "actual": "vec2"
+  }
+]

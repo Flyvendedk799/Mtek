@@ -4,7 +4,7 @@
 
 use super::model::{
     Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Origin, Program,
-    Projection, ProjectionDesc, Scene, Source,
+    Projection, ProjectionDesc, Scene, Source, StructItem,
 };
 use crate::source::{SourceMap, Span};
 
@@ -102,6 +102,7 @@ pub fn to_human(program: &Program, sources: &SourceMap) -> String {
             match item {
                 Item::Const(constant) => out.constant(2, constant),
                 Item::Scene(scene) => out.scene(2, scene),
+                Item::Struct(item) => out.structure(2, item),
             }
         }
     }
@@ -142,6 +143,24 @@ impl Tree<'_> {
             format!(
                 "const {}: {} = {} [{}] {location}",
                 constant.name, constant.ty, constant.value, constant.symbol
+            ),
+        );
+    }
+
+    fn structure(&mut self, depth: usize, item: &StructItem) {
+        let location = self.location(item.span);
+        let fields: Vec<String> = item
+            .fields
+            .iter()
+            .map(|f| format!("{}: {}", f.name, f.ty))
+            .collect();
+        self.line(
+            depth,
+            format!(
+                "struct {} {{ {} }} [{}] {location}",
+                item.name,
+                fields.join("; "),
+                item.symbol
             ),
         );
     }

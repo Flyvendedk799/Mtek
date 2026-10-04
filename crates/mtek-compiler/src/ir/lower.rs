@@ -17,7 +17,8 @@
 
 use super::model::{
     Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin,
-    Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, Symbol, Value,
+    Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StructFieldItem,
+    StructItem, Symbol, Value,
 };
 use crate::project::{ModuleId, Project};
 use crate::resolve::Resolution;
@@ -121,13 +122,13 @@ fn lower_module(
                 items.push(Item::Scene(scene));
             }
             ItemKind::Import(_) => {}
+            ItemKind::Struct(decl) => {
+                let symbol = Symbol::item(&path, &decl.name.name);
+                items.push(Item::Struct(lowering.structure(decl, symbol)?));
+            }
             // Everything else is gated in this build (`E9010`), so a program
             // without errors has none of it.
-            ItemKind::Fn(_)
-            | ItemKind::Struct(_)
-            | ItemKind::Material(_)
-            | ItemKind::Prefab(_)
-            | ItemKind::Error => {
+            ItemKind::Fn(_) | ItemKind::Material(_) | ItemKind::Prefab(_) | ItemKind::Error => {
                 return Err("a module item of a kind this build does not lower".to_owned());
             }
         }
@@ -168,6 +169,33 @@ impl Lowering<'_> {
             symbol,
             ty: self.types.display(info.ty),
             value: value.into(),
+            span: decl.span,
+        })
+    }
+
+    /// A struct declaration with its checked field types.
+    fn structure(&self, decl: &ast::StructDecl, symbol: Symbol) -> Result<StructItem, Defect> {
+        let name = &decl.name.name;
+        let declared = self
+            .resolution
+            .def_of(decl.id)
+            .and_then(|def| self.types.struct_ty(def))
+            .and_then(|ty| self.types.interner().struct_def(ty))
+            .ok_or_else(|| format!("struct '{name}' was not checked"))?;
+        if declared.fields.len() != decl.fields.len() {
+            return Err(format!("struct '{name}' has fields with errors"));
+        }
+        Ok(StructItem {
+            name: name.clone(),
+            symbol,
+            fields: declared
+                .fields
+                .iter()
+                .map(|(field, ty)| StructFieldItem {
+                    name: field.clone(),
+                    ty: self.types.display(*ty),
+                })
+                .collect(),
             span: decl.span,
         })
     }
