@@ -77,6 +77,7 @@ struct InspectWhat {
     name = "mtek",
     bin_name = "mtek",
     about = "The Mtek compiler and tools.",
+    override_usage = "mtek <COMMAND> [OPTIONS] [PATH]\n       mtek --version",
     disable_version_flag = true,
     disable_help_subcommand = true,
     args_conflicts_with_subcommands = true
