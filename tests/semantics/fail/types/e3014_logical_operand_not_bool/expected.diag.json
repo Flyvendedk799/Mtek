@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E3014",
+    "file": "src/main.mtek",
+    "startByte": 14,
+    "endByte": 23,
+    "message": "The operator `&&` is not defined for i32 and bool."
+  }
+]

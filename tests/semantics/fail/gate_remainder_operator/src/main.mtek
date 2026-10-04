@@ -1,6 +1,0 @@
-// `%` is not typed by M1 (decision 0026).
-const R = 7.0 % 2.0;
-
-scene Demo {
-    camera Main {}
-}

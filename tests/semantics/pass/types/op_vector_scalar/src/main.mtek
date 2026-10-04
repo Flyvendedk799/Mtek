@@ -1,0 +1,11 @@
+// D02 6.2 row 3: `V * f32`, `V / f32` and `f32 * V`.
+const SCALED2 = vec2(1.0, 2.0) * 2.0;
+const SCALED3 = vec3(1.0, 2.0, 3.0) / 4.0;
+const SCALED4 = 0.5 * vec4(2.0);
+const LITERAL = 2 * vec3(1.0, 0.5, 0.25);
+
+scene Demo {
+    camera Main {
+        position: SCALED3 + LITERAL + vec3(SCALED2, SCALED4.x);
+    }
+}

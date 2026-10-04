@@ -122,13 +122,14 @@ pub enum EvalError {
 /// The result of one operation.
 pub type EvalResult = Result<ConstValue, EvalError>;
 
-/// The four arithmetic operators.
+/// The arithmetic operators: the four of `+ - * /` and the remainder `%`.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum ArithOp {
     Add,
     Sub,
     Mul,
     Div,
+    Rem,
 }
 
 impl ArithOp {
@@ -140,6 +141,7 @@ impl ArithOp {
             ArithOp::Sub => "-",
             ArithOp::Mul => "*",
             ArithOp::Div => "/",
+            ArithOp::Rem => "%",
         }
     }
 
@@ -149,7 +151,115 @@ impl ArithOp {
             ArithOp::Sub => a - b,
             ArithOp::Mul => a * b,
             ArithOp::Div => a / b,
+            ArithOp::Rem => f32_remainder(a, b),
         }
+    }
+}
+
+/// `x % y` on `f32`: the truncated remainder `x - y * trunc(x / y)`
+/// (`spec/language.md` 6.2), each of the four operations one binary32
+/// operation, in that order (decision 0035). `x % 0.0` is NaN.
+#[must_use]
+pub fn f32_remainder(x: f32, y: f32) -> f32 {
+    let quotient = x / y;
+    let whole = libm::truncf(quotient);
+    let product = y * whole;
+    x - product
+}
+
+/// The comparison and equality operators (`spec/language.md` 6.2).
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum CompareOp {
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    Eq,
+    Ne,
+}
+
+impl CompareOp {
+    /// The operator as written.
+    #[must_use]
+    pub fn symbol(self) -> &'static str {
+        match self {
+            CompareOp::Lt => "<",
+            CompareOp::Le => "<=",
+            CompareOp::Gt => ">",
+            CompareOp::Ge => ">=",
+            CompareOp::Eq => "==",
+            CompareOp::Ne => "!=",
+        }
+    }
+
+    /// Whether the operator is `==` or `!=` (the others order their operands).
+    #[must_use]
+    pub fn is_equality(self) -> bool {
+        matches!(self, CompareOp::Eq | CompareOp::Ne)
+    }
+
+    fn holds<T: PartialOrd>(self, a: T, b: T) -> bool {
+        match self {
+            CompareOp::Lt => a < b,
+            CompareOp::Le => a <= b,
+            CompareOp::Gt => a > b,
+            CompareOp::Ge => a >= b,
+            CompareOp::Eq => a == b,
+            CompareOp::Ne => a != b,
+        }
+    }
+}
+
+/// The short-circuit operators `&&` and `||`.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum LogicOp {
+    And,
+    Or,
+}
+
+impl LogicOp {
+    /// The operator as written.
+    #[must_use]
+    pub fn symbol(self) -> &'static str {
+        match self {
+            LogicOp::And => "&&",
+            LogicOp::Or => "||",
+        }
+    }
+}
+
+/// `l op r` for a comparison or equality operator: same-typed `f32`, `i32`,
+/// `u32`, and for equality also `bool` (`spec/language.md` 6.2). `f32`
+/// compares as IEEE 754 does (`-0.0 == 0.0`; folded values are finite).
+pub fn compare(op: CompareOp, l: &ConstValue, r: &ConstValue) -> EvalResult {
+    use ConstValue as V;
+    let result = match (l, r) {
+        (V::F32(a), V::F32(b)) => op.holds(*a, *b),
+        (V::I32(a), V::I32(b)) => op.holds(*a, *b),
+        (V::U32(a), V::U32(b)) => op.holds(*a, *b),
+        (V::Bool(a), V::Bool(b)) if op.is_equality() => op.holds(*a, *b),
+        _ => return Err(EvalError::Mismatch),
+    };
+    Ok(V::Bool(result))
+}
+
+/// `l && r`, `l || r` on `bool`. Both operands are constant expressions and
+/// were folded (and checked) already; the result is the logical value.
+pub fn logic(op: LogicOp, l: &ConstValue, r: &ConstValue) -> EvalResult {
+    match (l, r) {
+        (ConstValue::Bool(a), ConstValue::Bool(b)) => Ok(ConstValue::Bool(match op {
+            LogicOp::And => *a && *b,
+            LogicOp::Or => *a || *b,
+        })),
+        _ => Err(EvalError::Mismatch),
+    }
+}
+
+/// `!v` on `bool`.
+pub fn not(value: &ConstValue) -> EvalResult {
+    match value {
+        ConstValue::Bool(v) => Ok(ConstValue::Bool(!v)),
+        _ => Err(EvalError::Mismatch),
     }
 }
 
@@ -197,18 +307,22 @@ pub fn negate(value: &ConstValue) -> EvalResult {
     })
 }
 
+/// Integer `/` and `%` by zero during folding (`E3040`).
+fn by_zero(op: ArithOp, a: impl fmt::Display) -> EvalError {
+    EvalError::DivisionByZero(format!("{a} {} 0", op.symbol()))
+}
+
 fn int_i32(op: ArithOp, a: i32, b: i32) -> EvalResult {
     let symbol = op.symbol();
     let result = match op {
         ArithOp::Add => a.checked_add(b),
         ArithOp::Sub => a.checked_sub(b),
         ArithOp::Mul => a.checked_mul(b),
-        ArithOp::Div => {
-            if b == 0 {
-                return Err(EvalError::DivisionByZero(format!("{a} / 0")));
-            }
-            a.checked_div(b)
-        }
+        // `i32::MIN / -1` and `i32::MIN % -1` overflow (`checked_*` gives
+        // `None`), which WGSL const-evaluation rejects as well.
+        ArithOp::Div | ArithOp::Rem if b == 0 => return Err(by_zero(op, a)),
+        ArithOp::Div => a.checked_div(b),
+        ArithOp::Rem => a.checked_rem(b),
     };
     result
         .map(ConstValue::I32)
@@ -221,12 +335,9 @@ fn int_u32(op: ArithOp, a: u32, b: u32) -> EvalResult {
         ArithOp::Add => a.checked_add(b),
         ArithOp::Sub => a.checked_sub(b),
         ArithOp::Mul => a.checked_mul(b),
-        ArithOp::Div => {
-            if b == 0 {
-                return Err(EvalError::DivisionByZero(format!("{a} / 0")));
-            }
-            a.checked_div(b)
-        }
+        ArithOp::Div | ArithOp::Rem if b == 0 => return Err(by_zero(op, a)),
+        ArithOp::Div => a.checked_div(b),
+        ArithOp::Rem => a.checked_rem(b),
     };
     result
         .map(ConstValue::U32)
@@ -275,6 +386,8 @@ pub fn arithmetic(op: ArithOp, l: &ConstValue, r: &ConstValue) -> EvalResult {
     use ConstValue as V;
     let mul = op == ArithOp::Mul;
     let scales = matches!(op, ArithOp::Mul | ArithOp::Div);
+    // `%` is defined on scalars only (`spec/language.md` 6.2).
+    let component_wise = op != ArithOp::Rem;
     match (l, r) {
         (V::F32(a), V::F32(b)) => {
             let out = op.apply(*a, *b);
@@ -285,9 +398,9 @@ pub fn arithmetic(op: ArithOp, l: &ConstValue, r: &ConstValue) -> EvalResult {
         }
         (V::I32(a), V::I32(b)) => int_i32(op, *a, *b),
         (V::U32(a), V::U32(b)) => int_u32(op, *a, *b),
-        (V::Vec2(a), V::Vec2(b)) => vector_op(op, *a, *b, V::Vec2, "vec2"),
-        (V::Vec3(a), V::Vec3(b)) => vector_op(op, *a, *b, V::Vec3, "vec3"),
-        (V::Vec4(a), V::Vec4(b)) => vector_op(op, *a, *b, V::Vec4, "vec4"),
+        (V::Vec2(a), V::Vec2(b)) if component_wise => vector_op(op, *a, *b, V::Vec2, "vec2"),
+        (V::Vec3(a), V::Vec3(b)) if component_wise => vector_op(op, *a, *b, V::Vec3, "vec3"),
+        (V::Vec4(a), V::Vec4(b)) if component_wise => vector_op(op, *a, *b, V::Vec4, "vec4"),
         (V::Vec2(v), V::F32(s)) if scales => vector_scalar(op, *v, *s, false, V::Vec2, "vec2"),
         (V::Vec3(v), V::F32(s)) if scales => vector_scalar(op, *v, *s, false, V::Vec3, "vec3"),
         (V::Vec4(v), V::F32(s)) if scales => vector_scalar(op, *v, *s, false, V::Vec4, "vec4"),

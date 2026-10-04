@@ -23,7 +23,7 @@
 
 use std::collections::BTreeMap;
 
-use super::check::{CallKind, Checker, FieldKind};
+use super::check::{BinaryClass, CallKind, Checker, FieldKind, binary_class};
 use super::ty::{Ty, TyId};
 use super::value::{
     self, ConstValue, EvalError, EvalResult, color_literal, construct_vector, convert,
@@ -351,23 +351,35 @@ impl Checker<'_> {
                     _ => Err(EvalError::Mismatch),
                 })
             }
+            ExprKind::Unary {
+                op: UnaryOp::Not,
+                operand,
+            } => {
+                let operand = self.fold(operand);
+                self.combine(expr, vec![operand], |values| match values {
+                    [v] => value::not(v),
+                    _ => Err(EvalError::Mismatch),
+                })
+            }
             ExprKind::Binary { op, lhs, rhs, .. } => {
+                // Both operands of `&&` and `||` are folded too: each is a
+                // constant expression in its own right (section 6.3), so an
+                // overflow on the right of `false && …` is still `E3040`.
                 let (lhs, rhs) = (self.fold(lhs), self.fold(rhs));
-                let Some(op) = super::check::arith_op(*op) else {
-                    return Folded::Unknown;
-                };
-                self.combine(expr, vec![lhs, rhs], |values| match values {
-                    [l, r] => value::arithmetic(op, l, r),
+                let class = binary_class(*op);
+                self.combine(expr, vec![lhs, rhs], |values| match (class, values) {
+                    (BinaryClass::Arith(op), [l, r]) => value::arithmetic(op, l, r),
+                    (BinaryClass::Compare(op), [l, r]) => value::compare(op, l, r),
+                    (BinaryClass::Logic(op), [l, r]) => value::logic(op, l, r),
                     _ => Err(EvalError::Mismatch),
                 })
             }
             ExprKind::Call { args, .. } => self.fold_call(expr, args),
             ExprKind::Field { base, .. } => self.fold_field(expr, base),
             ExprKind::Descriptor { fields, .. } => self.fold_descriptor(expr, fields),
-            // `!`, string and array literals, indexing and `self` are gated in
+            // String and array literals, indexing and `self` are gated in
             // this build; `Error` nodes were reported.
-            ExprKind::Unary { .. }
-            | ExprKind::Str { .. }
+            ExprKind::Str { .. }
             | ExprKind::Array(_)
             | ExprKind::Index { .. }
             | ExprKind::SelfValue

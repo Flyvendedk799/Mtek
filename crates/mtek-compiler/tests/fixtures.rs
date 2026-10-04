@@ -1453,7 +1453,7 @@ fn every_gated_construct_has_a_gating_fixture() {
             "no gate_* fixture reports {construct:?}: {messages:#?}"
         );
     }
-    assert!(gated >= 16, "{gated} gated constructs");
+    assert!(gated >= 14, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
         ("The built-in type `mat4`", "M2"),
@@ -1571,7 +1571,6 @@ fn the_syntax_corpus_resolves_without_panicking() {
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
     ("W2010", "M2-02: functions and statements"),
-    ("E3012", "M2: equality operators (decision 0026)"),
     ("E3020", "M2-01: structs"),
     ("E3021", "M2-01: structs"),
     ("E3022", "M2-01: structs"),

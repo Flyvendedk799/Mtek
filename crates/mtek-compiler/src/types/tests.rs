@@ -223,6 +223,126 @@ fn operators_without_a_row_are_e3014() {
 }
 
 #[test]
+fn remainders_fold_with_the_specified_semantics() {
+    let c = clean(
+        "const A = 7 % 3;\nconst B = -7 % 3;\nconst C: u32 = 7 % 4;\nconst D = 7.5 % 2.0;\nconst E = -7.5 % 2;\nconst F: f32 = 9 % 4;\nconst G = 2147483647 % -1;",
+    );
+    assert_eq!(c.value("A"), Some(ConstValue::I32(1)));
+    // The remainder has the sign of the dividend.
+    assert_eq!(c.value("B"), Some(ConstValue::I32(-1)));
+    assert_eq!(c.value("C"), Some(ConstValue::U32(3)));
+    assert_eq!(c.value("D"), Some(ConstValue::F32(1.5)));
+    assert_eq!(c.value("E"), Some(ConstValue::F32(-1.5)));
+    assert_eq!(c.value("F"), Some(ConstValue::F32(1.0)));
+    assert_eq!(c.value("G"), Some(ConstValue::I32(0)));
+    for (source, message) in [
+        (
+            "const A = 7 % 0;",
+            "Division by zero in a constant expression: 7 % 0.",
+        ),
+        (
+            "const A: u32 = 7 % 0;",
+            "Division by zero in a constant expression: 7 % 0.",
+        ),
+        (
+            "const A = -2147483648 % -1;",
+            "Integer overflow in a constant expression: -2147483648 % -1 does not fit in i32.",
+        ),
+        (
+            "const A = 1.0 % 0.0;",
+            "A constant expression has no finite f32 value: 1.0 % 0.0 is not finite.",
+        ),
+    ] {
+        let c = consts(source);
+        assert_eq!(c.codes(), ["E3040"], "{source}");
+        assert_eq!(c.only("E3040").message, message, "{source}");
+    }
+    let c = consts("const A = vec3(1.0) % vec3(2.0);");
+    let d = c.only("E3014");
+    assert_eq!(
+        d.message,
+        "The operator `%` is not defined for vec3 and vec3."
+    );
+    assert_eq!(
+        d.notes,
+        ["`%` is defined for f32, i32 and u32 operands of one type"]
+    );
+}
+
+#[test]
+fn comparisons_equality_and_logic_give_bool() {
+    let c = clean(
+        "const N: u32 = 3;\nconst A = 1 < 2;\nconst B = 2.5 >= 2;\nconst C = N <= 3;\nconst D = 1.0 > 2.0;\nconst E = N == 3;\nconst F = true != false;\nconst G = -0.0 == 0.0;\nconst H = !(A && D) || false;\nconst I = !true;",
+    );
+    for (name, value) in [
+        ("A", true),
+        ("B", true),
+        ("C", true),
+        ("D", false),
+        ("E", true),
+        ("F", true),
+        ("G", true),
+        ("H", true),
+        ("I", false),
+    ] {
+        assert_eq!(
+            (c.ty(name), c.value(name)),
+            ("bool".into(), Some(ConstValue::Bool(value))),
+            "{name}"
+        );
+    }
+    for (source, code, message) in [
+        (
+            "const A = vec2(1.0) == vec2(1.0);",
+            "E3012",
+            "The operator `==` is not defined for vectors (vec2 and vec2) in v0.1.",
+        ),
+        (
+            "const A = vec3(1.0) < vec3(2.0);",
+            "E3014",
+            "The operator `<` is not defined for vec3 and vec3.",
+        ),
+        (
+            "const A = true < false;",
+            "E3014",
+            "The operator `<` is not defined for bool and bool.",
+        ),
+        (
+            "const N: u32 = 1;\nconst A = N == 1.5;",
+            "E3041",
+            "The float literal 1.5 is not representable as u32: a float literal always has type f32.",
+        ),
+        (
+            "const H = 1.0;\nconst N = 1;\nconst A = H == N;",
+            "E3014",
+            "The operator `==` is not defined for f32 and i32.",
+        ),
+        (
+            "const A = 1 && true;",
+            "E3014",
+            "The operator `&&` is not defined for i32 and bool.",
+        ),
+        (
+            "const A = !1.0;",
+            "E3014",
+            "The operator `!` is not defined for f32.",
+        ),
+        (
+            "const A = #ffffff == #ffffff;",
+            "E3014",
+            "The operator `==` is not defined for color and color.",
+        ),
+    ] {
+        let c = consts(source);
+        assert_eq!(c.codes(), [code], "{source}");
+        assert_eq!(c.only(code).message, message, "{source}");
+    }
+    // Both operands are folded: an overflow behind `false &&` is reported.
+    let c = consts("const A = false && 2147483647 + 1 > 0;");
+    assert_eq!(c.codes(), ["E3040"]);
+}
+
+#[test]
 fn colours_have_no_arithmetic() {
     let c = consts("const A = #ffffff * 0.5;");
     assert_eq!(c.codes(), ["E3010"]);
@@ -667,9 +787,7 @@ fn field_values_are_typed_and_folded() {
 #[test]
 fn gated_constructs_are_not_typed_or_reported_again() {
     for source in [
-        "const R = 7.0 % 2.0;",
         "const S = sin(1.0);",
-        "const B = 1.0 < 2.0;",
         "const T = \"text\";",
         "const M = mat4.identity();",
         "const F = frame.time;",
@@ -701,10 +819,6 @@ fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
         Construct::StringLiteral,
         Construct::ArrayLiteral,
         Construct::Index,
-        Construct::Remainder,
-        Construct::Comparison,
-        Construct::Equality,
-        Construct::Logical,
     ] {
         assert!(!construct_implemented(construct), "{construct:?}");
     }

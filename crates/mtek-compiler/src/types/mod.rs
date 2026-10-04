@@ -1,5 +1,5 @@
 //! Types and constant evaluation (`spec/compiler-architecture.md` section
-//! 4.7, `spec/language.md` sections 5, 6 and 8.1, decision 0026).
+//! 4.7, `spec/language.md` sections 5, 6 and 8.1, decisions 0026 and 0035).
 //!
 //! [`check_module`] types every expression of the constructs this build
 //! implements and folds every constant expression. It reports to the
@@ -10,8 +10,9 @@
 //!   not a value, a call of something that is not a function;
 //! * `E3002` the wrong number of arguments; `E3003` type arguments on a type
 //!   that takes none (unknown type names are the resolver's `E3003`);
-//! * `E3010` arithmetic on `color`, `E3011` negation of `u32`, `E3014` an
-//!   operator without a row for its operand types;
+//! * `E3010` arithmetic on `color`, `E3011` negation of `u32`, `E3012`
+//!   equality of vectors, `E3014` an operator without a row for its operand
+//!   types;
 //! * `E3013` an invalid component or swizzle; `E5001` a field a named entity
 //!   or camera does not have;
 //! * `E3041` a literal not representable in the type its context requires;

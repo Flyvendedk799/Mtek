@@ -1,0 +1,12 @@
+// D02 6.2 row 10: `&&` and `||` on bool.
+const A = true && false;
+const B = false || true;
+const C = A || B && !A;
+
+scene Demo {
+    camera Main {}
+    entity Cube {
+        visible: C && B;
+        mesh: Box {};
+    }
+}

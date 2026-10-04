@@ -1,4 +1,4 @@
-const BIG = 2.0 > 1.0;
+const WRAP = -2147483648 % -1;
 
 scene Demo {
     camera Main {}

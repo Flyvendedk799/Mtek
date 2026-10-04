@@ -1,0 +1,10 @@
+// D02 6.2 row 6: `quat * quat`, the Hamilton product.
+const YAW = quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.5);
+const PITCH = quat.axis_angle(vec3(1.0, 0.0, 0.0), -0.25);
+const BOTH = YAW * PITCH;
+
+scene Demo {
+    camera Main {
+        rotation: BOTH * quat.identity();
+    }
+}

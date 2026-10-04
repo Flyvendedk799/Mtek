@@ -1,0 +1,11 @@
+// D02 6.2 row 9: `!` on bool.
+const SHOWN = true;
+const HIDDEN = !SHOWN;
+
+scene Demo {
+    camera Main {}
+    entity Cube {
+        visible: !HIDDEN;
+        mesh: Box {};
+    }
+}

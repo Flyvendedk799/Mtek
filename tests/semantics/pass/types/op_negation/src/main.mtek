@@ -1,0 +1,13 @@
+// D02 6.2 row 8: unary `-` on f32, i32 and vectors.
+const F = -(1.5);
+const I = -(7);
+const LOWEST = -2147483648;
+const V2 = -vec2(1.0, -2.0);
+const V3 = -vec3(1.0);
+const V4 = -vec4(0.5);
+
+scene Demo {
+    camera Main {
+        position: V3 + vec3(V2, F + f32(I) + V4.z + f32(LOWEST / 2147483647));
+    }
+}

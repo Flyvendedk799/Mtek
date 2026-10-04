@@ -1,0 +1,16 @@
+// D02 6.2 row 11: `< <= > >=` on same-typed f32, i32 and u32 operands.
+const COUNT: u32 = 3;
+const F_LESS = 1.5 < 2.0;
+const F_AT_MOST = 2.0 <= 2;
+const I_MORE = -1 > -2;
+const I_AT_LEAST = 7 >= 8;
+const U_LESS = COUNT < 4;
+const U_AT_LEAST = COUNT >= 3;
+
+scene Demo {
+    camera Main {}
+    entity Cube {
+        visible: F_LESS && F_AT_MOST && I_MORE && !I_AT_LEAST && U_LESS && U_AT_LEAST;
+        mesh: Box {};
+    }
+}

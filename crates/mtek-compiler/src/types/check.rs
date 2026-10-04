@@ -32,9 +32,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::Typeck;
-use super::ops::{arithmetic_result, literal_operand_type, negation_result};
+use super::ops::{
+    arithmetic_result, comparison_result, literal_operand_type, logical_result, negation_result,
+};
 use super::ty::{Ty, TyId};
-use super::value::{ArithOp, Scalar};
+use super::value::{ArithOp, CompareOp, LogicOp, Scalar};
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
 use crate::resolve::gate::is_implemented;
 use crate::resolve::{
@@ -87,12 +89,36 @@ pub(super) fn literal_kind(expr: &Expr) -> Option<LiteralKind> {
 
 /// The arithmetic operator of a binary operator, if it is one.
 pub(super) fn arith_op(op: BinaryOp) -> Option<ArithOp> {
-    match op {
-        BinaryOp::Add => Some(ArithOp::Add),
-        BinaryOp::Sub => Some(ArithOp::Sub),
-        BinaryOp::Mul => Some(ArithOp::Mul),
-        BinaryOp::Div => Some(ArithOp::Div),
+    match binary_class(op) {
+        BinaryClass::Arith(arith) => Some(arith),
         _ => None,
+    }
+}
+
+/// The three families of binary operators, by how they are typed.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(super) enum BinaryClass {
+    Arith(ArithOp),
+    Compare(CompareOp),
+    Logic(LogicOp),
+}
+
+/// The family of a binary operator.
+pub(super) fn binary_class(op: BinaryOp) -> BinaryClass {
+    match op {
+        BinaryOp::Add => BinaryClass::Arith(ArithOp::Add),
+        BinaryOp::Sub => BinaryClass::Arith(ArithOp::Sub),
+        BinaryOp::Mul => BinaryClass::Arith(ArithOp::Mul),
+        BinaryOp::Div => BinaryClass::Arith(ArithOp::Div),
+        BinaryOp::Rem => BinaryClass::Arith(ArithOp::Rem),
+        BinaryOp::Lt => BinaryClass::Compare(CompareOp::Lt),
+        BinaryOp::Le => BinaryClass::Compare(CompareOp::Le),
+        BinaryOp::Gt => BinaryClass::Compare(CompareOp::Gt),
+        BinaryOp::Ge => BinaryClass::Compare(CompareOp::Ge),
+        BinaryOp::Eq => BinaryClass::Compare(CompareOp::Eq),
+        BinaryOp::Ne => BinaryClass::Compare(CompareOp::Ne),
+        BinaryOp::And => BinaryClass::Logic(LogicOp::And),
+        BinaryOp::Or => BinaryClass::Logic(LogicOp::Or),
     }
 }
 
@@ -942,8 +968,28 @@ impl<'a> Checker<'a> {
     // ----- operators -------------------------------------------------------
 
     fn unary(&mut self, expr: &Expr, op: UnaryOp, operand: &Expr, expected: Option<TyId>) -> TyId {
-        if !construct_implemented(unary_construct(op)) || op != UnaryOp::Neg {
-            // `!` is gated in this build.
+        if !construct_implemented(unary_construct(op)) {
+            return TyId::ERROR;
+        }
+        if op == UnaryOp::Not {
+            let operand_ty = self.check(operand, Some(TyId::BOOL));
+            let ty = self.out.interner.get(operand_ty);
+            if ty == Ty::Error {
+                return TyId::ERROR;
+            }
+            if logical_result(&[ty]).is_some() {
+                return TyId::BOOL;
+            }
+            let name = self.display(operand_ty);
+            self.report(
+                Diagnostic::new(
+                    Code::E3014,
+                    format!("The operator `!` is not defined for {name}."),
+                )
+                .at(expr.span)
+                .actual(name)
+                .note("`!` negates a bool; v0.1 has no truthiness"),
+            );
             return TyId::ERROR;
         }
         let operand_ty = self.check(operand, expected);
@@ -986,14 +1032,16 @@ impl<'a> Checker<'a> {
         if !construct_implemented(binary_construct(op)) {
             return TyId::ERROR;
         }
-        let Some(arith) = arith_op(op) else {
-            // The other operators are gated in this build.
-            return TyId::ERROR;
+        let arith = match binary_class(op) {
+            BinaryClass::Arith(arith) => arith,
+            BinaryClass::Compare(compare) => return self.comparison(expr, compare, lhs, rhs),
+            BinaryClass::Logic(logic) => return self.logical(expr, logic, lhs, rhs),
         };
-        // `+` and `-` give their operands' type, so the expected type flows
-        // into both; `*` and `/` mix types (`vec3 * f32`), so it does not.
+        // `+`, `-` and `%` give their operands' type, so the expected type
+        // flows into both; `*` and `/` mix types (`vec3 * f32`), so it does
+        // not.
         let operand_expected = match arith {
-            ArithOp::Add | ArithOp::Sub => expected,
+            ArithOp::Add | ArithOp::Sub | ArithOp::Rem => expected,
             ArithOp::Mul | ArithOp::Div => None,
         };
         let (lhs_ty, rhs_ty) = match (literal_kind(lhs), literal_kind(rhs)) {
@@ -1046,29 +1094,126 @@ impl<'a> Checker<'a> {
         if let Some(result) = arithmetic_result(op, l, r) {
             return self.out.interner.intern(result);
         }
-        let (lhs_name, rhs_name) = (self.display(lhs), self.display(rhs));
+        self.report_no_row(span, op.symbol(), lhs, rhs);
+        TyId::ERROR
+    }
+
+    /// The operand types of a binary operator whose operands must have one
+    /// type (comparison, equality): a literal operand adopts the numeric
+    /// scalar type of the other operand (a float literal next to an integer
+    /// is asked to become that integer, which is `E3041`); two literal
+    /// operands are `f32` if either is a float literal, `i32` otherwise.
+    fn same_typed_operands(&mut self, lhs: &Expr, rhs: &Expr) -> (TyId, TyId) {
+        match (literal_kind(lhs), literal_kind(rhs)) {
+            (None, Some(kind)) => {
+                let lhs_ty = self.check(lhs, None);
+                let target = self.literal_partner_type(lhs_ty, kind);
+                self.assign_literal(rhs, target);
+                (lhs_ty, target)
+            }
+            (Some(kind), None) => {
+                let rhs_ty = self.check(rhs, None);
+                let target = self.literal_partner_type(rhs_ty, kind);
+                self.assign_literal(lhs, target);
+                (target, rhs_ty)
+            }
+            (Some(a), Some(b)) => {
+                let target = if a == LiteralKind::Float || b == LiteralKind::Float {
+                    TyId::F32
+                } else {
+                    TyId::I32
+                };
+                self.assign_literal(lhs, target);
+                self.assign_literal(rhs, target);
+                (target, target)
+            }
+            (None, None) => (self.check(lhs, None), self.check(rhs, None)),
+        }
+    }
+
+    /// The type a literal of `kind` adopts next to an operand of type
+    /// `other` that it must equal.
+    fn literal_partner_type(&self, other: TyId, kind: LiteralKind) -> TyId {
+        if self.out.interner.is_numeric_scalar(other) {
+            other
+        } else {
+            Self::literal_default(kind)
+        }
+    }
+
+    /// `< <= > >= == !=` (section 6.2): same-typed operands, `bool` result.
+    fn comparison(&mut self, expr: &Expr, op: CompareOp, lhs: &Expr, rhs: &Expr) -> TyId {
+        let (lhs_ty, rhs_ty) = self.same_typed_operands(lhs, rhs);
+        let (l, r) = (self.out.interner.get(lhs_ty), self.out.interner.get(rhs_ty));
+        if l == Ty::Error || r == Ty::Error {
+            return TyId::ERROR;
+        }
+        if comparison_result(op, l, r).is_some() {
+            return TyId::BOOL;
+        }
         let symbol = op.symbol();
+        let vector = |t: TyId| self.out.interner.vector_dim(t).is_some();
+        if op.is_equality() && vector(lhs_ty) && vector(rhs_ty) {
+            let (lhs_name, rhs_name) = (self.display(lhs_ty), self.display(rhs_ty));
+            self.report(
+                Diagnostic::new(
+                    Code::E3012,
+                    format!(
+                        "The operator `{symbol}` is not defined for vectors ({lhs_name} and {rhs_name}) in v0.1."
+                    ),
+                )
+                .at(expr.span)
+                .help("compare the components one by one, for example `a.x == b.x && a.y == b.y`"),
+            );
+            return TyId::ERROR;
+        }
+        self.report_no_row(expr.span, symbol, lhs_ty, rhs_ty);
+        TyId::ERROR
+    }
+
+    /// `&& ||` (section 6.2): `bool` operands, `bool` result.
+    fn logical(&mut self, expr: &Expr, op: LogicOp, lhs: &Expr, rhs: &Expr) -> TyId {
+        let lhs_ty = self.check(lhs, Some(TyId::BOOL));
+        let rhs_ty = self.check(rhs, Some(TyId::BOOL));
+        let (l, r) = (self.out.interner.get(lhs_ty), self.out.interner.get(rhs_ty));
+        if l == Ty::Error || r == Ty::Error {
+            return TyId::ERROR;
+        }
+        if logical_result(&[l, r]).is_some() {
+            return TyId::BOOL;
+        }
+        self.report_no_row(expr.span, op.symbol(), lhs_ty, rhs_ty);
+        TyId::ERROR
+    }
+
+    /// `E3014`: the operator table has no row for these operand types.
+    fn report_no_row(&mut self, span: Span, symbol: &str, lhs: TyId, rhs: TyId) {
+        let (lhs_name, rhs_name) = (self.display(lhs), self.display(rhs));
         let mut diagnostic = Diagnostic::new(
             Code::E3014,
             format!("The operator `{symbol}` is not defined for {lhs_name} and {rhs_name}."),
         )
         .at(span);
         let interner = &self.out.interner;
+        let vectors = (interner.vector_dim(lhs), interner.vector_dim(rhs));
+        let component_wise = matches!(symbol, "+" | "-" | "*" | "/");
         if interner.is_numeric_scalar(lhs) && interner.is_numeric_scalar(rhs) {
             diagnostic = diagnostic.help(format!(
                 "v0.1 has no implicit conversions; convert one operand explicitly, for example `{lhs_name}(…)`"
             ));
-        } else if let (Some(a), Some(b)) = (interner.vector_dim(lhs), interner.vector_dim(rhs)) {
+        } else if symbol == "%" {
+            diagnostic =
+                diagnostic.note("`%` is defined for f32, i32 and u32 operands of one type");
+        } else if let (true, Some(a), Some(b)) = (component_wise, vectors.0, vectors.1) {
             if a != b {
                 diagnostic = diagnostic.note("vector operands must have the same dimension");
             }
-        } else if interner.vector_dim(lhs).is_some() || interner.vector_dim(rhs).is_some() {
+        } else if component_wise && (vectors.0.is_some() || vectors.1.is_some()) {
             diagnostic = diagnostic.note(
                 "a vector combines with a vector of the same dimension, is multiplied or divided by an f32, or multiplies an f32",
             );
         }
         self.report(diagnostic);
-        TyId::ERROR
     }
 
     fn report_color_arithmetic(&mut self, span: Span, symbol: &str) {

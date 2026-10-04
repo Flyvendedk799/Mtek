@@ -179,6 +179,38 @@ fn scalar_arithmetic_has_these_bits() {
 }
 
 #[test]
+fn remainders_and_boolean_operators() {
+    // `%` on f32 is `x - y * trunc(x / y)` with each operation one binary32
+    // operation (decision 0035), written out here with Rust f32 operations.
+    let rem = |x: f32, y: f32| x - y * (x / y).trunc();
+    for (decl, x, y) in [
+        (" = 7.5 % 2.0", 7.5_f32, 2.0_f32),
+        (" = 5.3 % 1.1", 5.3, 1.1),
+        (" = -5.3 % 1.1", -5.3, 1.1),
+        (" = 0.7 % -0.2", 0.7, -0.2),
+        (" = 1.0e30 % 3.0", 1.0e30, 3.0),
+    ] {
+        assert_eq!(bits(&floats(&fold(decl))), [rem(x, y).to_bits()], "{decl}");
+    }
+    // Pinned: 5.3 % 1.1 in binary32.
+    assert_eq!(bits(&floats(&fold(" = 5.3 % 1.1"))), [0x3f66_6668]);
+    for (decl, expected) in [
+        (" = 7 % 3", ConstValue::I32(1)),
+        (" = -7 % 3", ConstValue::I32(-1)),
+        (" = 7 % -3", ConstValue::I32(1)),
+        (" = 2147483647 % -1", ConstValue::I32(0)),
+        (": u32 = 4294967295 % 10", ConstValue::U32(5)),
+        (" = 1 < 2", ConstValue::Bool(true)),
+        (" = 2.0 <= 1.5", ConstValue::Bool(false)),
+        (" = -0.0 == 0.0", ConstValue::Bool(true)),
+        (" = 16777217 == 16777216", ConstValue::Bool(false)),
+        (": bool = !(true && false) || false", ConstValue::Bool(true)),
+    ] {
+        assert_eq!(fold(decl), expected, "const X{decl}");
+    }
+}
+
+#[test]
 fn integer_constants() {
     for (decl, expected) in [
         (" = -2147483648", ConstValue::I32(i32::MIN)),

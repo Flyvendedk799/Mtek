@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3012",
+    "file": "src/main.mtek",
+    "startByte": 13,
+    "endByte": 45,
+    "message": "The operator `==` is not defined for vectors (vec3 and vec3) in v0.1.",
+    "notes": [
+      "help: compare the components one by one, for example `a.x == b.x && a.y == b.y`"
+    ]
+  }
+]
