@@ -4,17 +4,17 @@
 //! here, and every node carries the Mtek [`Span`] it originates from (the material
 //! declaration for generated code).
 //!
-//! This is the subset that the standard vertex stage, the fragment wrapper and the
-//! temporary compiler-built `Unlit` need (decision 0013). The enums are shaped for the
-//! whole v0.1 IR so that M2 adds variants rather than replacing types:
+//! It covers the v0.1 GPU subset (decision 0041 extends the M1 subset of decision 0029):
 //!
-//! - [`ShaderType`] already covers every WGSL type of `spec/gpu-layout.md` section 3
-//!   (a `bool` stored in a block is the `u32` scalar; padded array elements are the
-//!   `MtekPad16_*` wrapper structs);
-//! - [`GlobalKind`] gains texture and sampler globals (M4);
-//! - [`Statement`] gains `var`, assignment, `if`, counted `for`, `break`, `continue`;
-//! - [`ExprKind`] gains index, unary operators, `bool32` encode/decode, and
-//!   [`BinaryOp`] and [`Intrinsic`] gain the remaining operators and intrinsics.
+//! - [`ShaderType`] covers every WGSL type of `spec/gpu-layout.md` section 3 (a `bool`
+//!   stored in a struct, array or block is the `u32` scalar; padded array elements are
+//!   the `MtekPad16_*` wrapper structs);
+//! - [`GlobalKind`] gains texture and sampler globals in M4;
+//! - [`Statement`]: `let`, `var`, assignment, `if`, counted `for`, `break`,
+//!   `continue`, blocks, call statements and `return`;
+//! - [`ExprKind`]: literals, locals, globals, field, swizzle and index access, unary
+//!   and binary operators, constructors (also the scalar conversions `f32(x)`),
+//!   `bitcast`, `bool32` encode/decode, built-in and user function calls.
 //!
 //! Names: a [`Name`] keeps the Mtek view of an identifier (generated, or a user name of a
 //! kind) and the printer mangles it (`spec/compiler-architecture.md` section 7.2):
@@ -91,6 +91,8 @@ pub enum ShaderType {
 }
 
 impl ShaderType {
+    pub const BOOL: ShaderType = ShaderType::Scalar(Scalar::Bool);
+    pub const I32: ShaderType = ShaderType::Scalar(Scalar::I32);
     pub const F32: ShaderType = ShaderType::Scalar(Scalar::F32);
     pub const U32: ShaderType = ShaderType::Scalar(Scalar::U32);
     pub const VEC2: ShaderType = ShaderType::Vector {
@@ -323,11 +325,47 @@ pub struct Function {
     pub span: Span,
 }
 
-/// A statement. One statement prints as one line.
+/// A statement. A simple statement prints as one line; `if`, `for` and blocks print
+/// their header and closing brace on lines of their own, with the nested statements
+/// indented between them.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement {
     /// `let name = value;`
     Let { name: Name, value: Expr, span: Span },
+    /// `var name = value;`
+    Var { name: Name, value: Expr, span: Span },
+    /// `target = value;`; `target` is a reference: a `var` local or one component of one.
+    Assign {
+        target: Expr,
+        value: Expr,
+        span: Span,
+    },
+    /// `if c0 { .. } else if c1 { .. } else { .. }`.
+    If {
+        branches: Vec<(Expr, Vec<Statement>)>,
+        otherwise: Option<Vec<Statement>>,
+        span: Span,
+    },
+    /// `for (var name = start; name < end; name++) { body }`: a counted loop over the
+    /// integer range `start..end` (`spec/compiler-architecture.md` section 7.1).
+    For {
+        name: Name,
+        start: Expr,
+        end: Expr,
+        body: Vec<Statement>,
+        span: Span,
+    },
+    /// `break;`
+    Break { span: Span },
+    /// `continue;`
+    Continue { span: Span },
+    /// `{ body }`.
+    Block { body: Vec<Statement>, span: Span },
+    /// `call;`: a call of a function without a result.
+    Call { call: Expr, span: Span },
+    /// `_ = value;`: a value computed and discarded (a call with a result as a
+    /// statement; WGSL's built-in functions must not be called as statements).
+    Discard { value: Expr, span: Span },
     /// `return value;` or `return;`
     Return { value: Option<Expr>, span: Span },
 }
@@ -336,7 +374,17 @@ impl Statement {
     /// The Mtek span of the statement.
     pub fn span(&self) -> Span {
         match self {
-            Statement::Let { span, .. } | Statement::Return { span, .. } => *span,
+            Statement::Let { span, .. }
+            | Statement::Var { span, .. }
+            | Statement::Assign { span, .. }
+            | Statement::If { span, .. }
+            | Statement::For { span, .. }
+            | Statement::Break { span }
+            | Statement::Continue { span }
+            | Statement::Block { span, .. }
+            | Statement::Call { span, .. }
+            | Statement::Discard { span, .. }
+            | Statement::Return { span, .. } => *span,
         }
     }
 }
@@ -403,26 +451,275 @@ impl Component {
 }
 
 /// A binary operator. WGSL's typing rules apply (for example `mat4x4<f32> * vec4<f32>`
-/// is a `vec4<f32>`).
+/// is a `vec4<f32>`); WGSL's integer `/` and `%` already implement the Mtek rules
+/// (`spec/language.md` section 6.3), and so does its `f32` `%` (truncated remainder).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum BinaryOp {
+    /// `+`
+    Add,
+    /// `-`
+    Subtract,
     /// `*`: component-wise, scalar-vector or matrix-vector multiplication.
     Multiply,
+    /// `/`
+    Divide,
+    /// `%`
+    Remainder,
+    /// `<`
+    Less,
+    /// `<=`
+    LessEqual,
+    /// `>`
+    Greater,
+    /// `>=`
+    GreaterEqual,
+    /// `==`
+    Equal,
+    /// `!=`
+    NotEqual,
+    /// `&&`
+    LogicalAnd,
+    /// `||`
+    LogicalOr,
 }
 
-/// A built-in function.
+impl BinaryOp {
+    /// The operator of the Mtek spelling `op` (`+`, `<=`, `&&`, ...).
+    pub fn from_mtek(op: &str) -> Option<BinaryOp> {
+        Some(match op {
+            "+" => BinaryOp::Add,
+            "-" => BinaryOp::Subtract,
+            "*" => BinaryOp::Multiply,
+            "/" => BinaryOp::Divide,
+            "%" => BinaryOp::Remainder,
+            "<" => BinaryOp::Less,
+            "<=" => BinaryOp::LessEqual,
+            ">" => BinaryOp::Greater,
+            ">=" => BinaryOp::GreaterEqual,
+            "==" => BinaryOp::Equal,
+            "!=" => BinaryOp::NotEqual,
+            "&&" => BinaryOp::LogicalAnd,
+            "||" => BinaryOp::LogicalOr,
+            _ => return None,
+        })
+    }
+
+    /// The WGSL spelling.
+    pub fn text(self) -> &'static str {
+        match self {
+            BinaryOp::Add => "+",
+            BinaryOp::Subtract => "-",
+            BinaryOp::Multiply => "*",
+            BinaryOp::Divide => "/",
+            BinaryOp::Remainder => "%",
+            BinaryOp::Less => "<",
+            BinaryOp::LessEqual => "<=",
+            BinaryOp::Greater => ">",
+            BinaryOp::GreaterEqual => ">=",
+            BinaryOp::Equal => "==",
+            BinaryOp::NotEqual => "!=",
+            BinaryOp::LogicalAnd => "&&",
+            BinaryOp::LogicalOr => "||",
+        }
+    }
+}
+
+/// A unary operator.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum UnaryOp {
+    /// `-x` (`f32`, `i32`, vectors; the `i32` minimum negates to itself, as in Mtek).
+    Negate,
+    /// `!x` (`bool`).
+    Not,
+}
+
+impl UnaryOp {
+    /// The WGSL spelling.
+    pub fn text(self) -> &'static str {
+        match self {
+            UnaryOp::Negate => "-",
+            UnaryOp::Not => "!",
+        }
+    }
+}
+
+/// A WGSL built-in function. The Mtek intrinsics of `spec/stdlib.md` section 6 that
+/// WGSL implements with the same meaning map one to one; the others (quaternions,
+/// `color.srgb`, the `mat4` constructors) are generated helper functions
+/// ([`crate::lowering::shader`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Intrinsic {
-    /// `normalize(v)`.
+    Abs,
+    Acos,
+    Asin,
+    Atan,
+    Atan2,
+    Ceil,
+    Clamp,
+    Cos,
+    Cross,
+    Degrees,
+    Distance,
+    Dot,
+    Exp,
+    Exp2,
+    Floor,
+    Fract,
+    InverseSqrt,
+    Length,
+    Log,
+    Log2,
+    Max,
+    Min,
+    Mix,
     Normalize,
+    Pow,
+    Radians,
+    Reflect,
+    Round,
+    Saturate,
+    /// `select(f, t, cond)`.
+    Select,
+    Sign,
+    Sin,
+    Smoothstep,
+    Sqrt,
+    Step,
+    Tan,
+    Transpose,
+    Trunc,
 }
 
 impl Intrinsic {
+    /// Every intrinsic, for tests and lookups.
+    pub const ALL: [Intrinsic; 38] = [
+        Intrinsic::Abs,
+        Intrinsic::Acos,
+        Intrinsic::Asin,
+        Intrinsic::Atan,
+        Intrinsic::Atan2,
+        Intrinsic::Ceil,
+        Intrinsic::Clamp,
+        Intrinsic::Cos,
+        Intrinsic::Cross,
+        Intrinsic::Degrees,
+        Intrinsic::Distance,
+        Intrinsic::Dot,
+        Intrinsic::Exp,
+        Intrinsic::Exp2,
+        Intrinsic::Floor,
+        Intrinsic::Fract,
+        Intrinsic::InverseSqrt,
+        Intrinsic::Length,
+        Intrinsic::Log,
+        Intrinsic::Log2,
+        Intrinsic::Max,
+        Intrinsic::Min,
+        Intrinsic::Mix,
+        Intrinsic::Normalize,
+        Intrinsic::Pow,
+        Intrinsic::Radians,
+        Intrinsic::Reflect,
+        Intrinsic::Round,
+        Intrinsic::Saturate,
+        Intrinsic::Select,
+        Intrinsic::Sign,
+        Intrinsic::Sin,
+        Intrinsic::Smoothstep,
+        Intrinsic::Sqrt,
+        Intrinsic::Step,
+        Intrinsic::Tan,
+        Intrinsic::Transpose,
+        Intrinsic::Trunc,
+    ];
+
     /// The WGSL function name.
     pub fn wgsl_name(self) -> &'static str {
         match self {
+            Intrinsic::Abs => "abs",
+            Intrinsic::Acos => "acos",
+            Intrinsic::Asin => "asin",
+            Intrinsic::Atan => "atan",
+            Intrinsic::Atan2 => "atan2",
+            Intrinsic::Ceil => "ceil",
+            Intrinsic::Clamp => "clamp",
+            Intrinsic::Cos => "cos",
+            Intrinsic::Cross => "cross",
+            Intrinsic::Degrees => "degrees",
+            Intrinsic::Distance => "distance",
+            Intrinsic::Dot => "dot",
+            Intrinsic::Exp => "exp",
+            Intrinsic::Exp2 => "exp2",
+            Intrinsic::Floor => "floor",
+            Intrinsic::Fract => "fract",
+            Intrinsic::InverseSqrt => "inverseSqrt",
+            Intrinsic::Length => "length",
+            Intrinsic::Log => "log",
+            Intrinsic::Log2 => "log2",
+            Intrinsic::Max => "max",
+            Intrinsic::Min => "min",
+            Intrinsic::Mix => "mix",
             Intrinsic::Normalize => "normalize",
+            Intrinsic::Pow => "pow",
+            Intrinsic::Radians => "radians",
+            Intrinsic::Reflect => "reflect",
+            Intrinsic::Round => "round",
+            Intrinsic::Saturate => "saturate",
+            Intrinsic::Select => "select",
+            Intrinsic::Sign => "sign",
+            Intrinsic::Sin => "sin",
+            Intrinsic::Smoothstep => "smoothstep",
+            Intrinsic::Sqrt => "sqrt",
+            Intrinsic::Step => "step",
+            Intrinsic::Tan => "tan",
+            Intrinsic::Transpose => "transpose",
+            Intrinsic::Trunc => "trunc",
         }
+    }
+
+    /// The intrinsic implementing the Mtek built-in function `name` (`inverse_sqrt`),
+    /// if WGSL has one with the same meaning.
+    pub fn from_mtek(name: &str) -> Option<Intrinsic> {
+        Some(match name {
+            "abs" => Intrinsic::Abs,
+            "acos" => Intrinsic::Acos,
+            "asin" => Intrinsic::Asin,
+            "atan" => Intrinsic::Atan,
+            "atan2" => Intrinsic::Atan2,
+            "ceil" => Intrinsic::Ceil,
+            "clamp" => Intrinsic::Clamp,
+            "cos" => Intrinsic::Cos,
+            "cross" => Intrinsic::Cross,
+            "degrees" => Intrinsic::Degrees,
+            "distance" => Intrinsic::Distance,
+            "dot" => Intrinsic::Dot,
+            "exp" => Intrinsic::Exp,
+            "exp2" => Intrinsic::Exp2,
+            "floor" => Intrinsic::Floor,
+            "fract" => Intrinsic::Fract,
+            "inverse_sqrt" => Intrinsic::InverseSqrt,
+            "length" => Intrinsic::Length,
+            "log" => Intrinsic::Log,
+            "log2" => Intrinsic::Log2,
+            "max" => Intrinsic::Max,
+            "min" => Intrinsic::Min,
+            "mix" => Intrinsic::Mix,
+            "normalize" => Intrinsic::Normalize,
+            "pow" => Intrinsic::Pow,
+            "radians" => Intrinsic::Radians,
+            "reflect" => Intrinsic::Reflect,
+            "round" => Intrinsic::Round,
+            "saturate" => Intrinsic::Saturate,
+            "sign" => Intrinsic::Sign,
+            "sin" => Intrinsic::Sin,
+            "smoothstep" => Intrinsic::Smoothstep,
+            "sqrt" => Intrinsic::Sqrt,
+            "step" => Intrinsic::Step,
+            "tan" => Intrinsic::Tan,
+            "transpose" => Intrinsic::Transpose,
+            "trunc" => Intrinsic::Trunc,
+            _ => return None,
+        })
     }
 }
 
@@ -461,6 +758,29 @@ pub enum ExprKind {
         op: BinaryOp,
         left: Box<Expr>,
         right: Box<Expr>,
+    },
+    /// `op operand`.
+    Unary {
+        op: UnaryOp,
+        operand: Box<Expr>,
+    },
+    /// `base[index]`: an array element or a matrix column. The lowering clamps every
+    /// index that is not a constant (`spec/language.md` section 5.6).
+    Index {
+        base: Box<Expr>,
+        index: Box<Expr>,
+    },
+    /// `bitcast<T>(arg)` where `T` is the expression's type (`i32` <-> `u32`).
+    Bitcast {
+        arg: Box<Expr>,
+    },
+    /// `select(0u, 1u, value)`: a `bool` stored as `u32` (`spec/gpu-layout.md` section 3).
+    Bool32Encode {
+        value: Box<Expr>,
+    },
+    /// `(value != 0u)`: a stored `u32` read as `bool`.
+    Bool32Decode {
+        value: Box<Expr>,
     },
     /// A built-in function call.
     Intrinsic {
@@ -576,6 +896,73 @@ impl Expr {
         Expr {
             kind: ExprKind::Call { function, args },
             ty,
+            span,
+        }
+    }
+
+    /// The built-in `function(args)` of type `ty`.
+    pub fn intrinsic(function: Intrinsic, args: Vec<Expr>, ty: ShaderType, span: Span) -> Expr {
+        Expr {
+            kind: ExprKind::Intrinsic { function, args },
+            ty,
+            span,
+        }
+    }
+
+    /// `op self`, of the operand's type.
+    pub fn unary(self, op: UnaryOp, span: Span) -> Expr {
+        let ty = self.ty.clone();
+        Expr {
+            kind: ExprKind::Unary {
+                op,
+                operand: Box::new(self),
+            },
+            ty,
+            span,
+        }
+    }
+
+    /// `self[index]` of type `ty`.
+    pub fn index(self, index: Expr, ty: ShaderType, span: Span) -> Expr {
+        Expr {
+            kind: ExprKind::Index {
+                base: Box::new(self),
+                index: Box::new(index),
+            },
+            ty,
+            span,
+        }
+    }
+
+    /// `bitcast<ty>(self)`.
+    pub fn bitcast(self, ty: ShaderType, span: Span) -> Expr {
+        Expr {
+            kind: ExprKind::Bitcast {
+                arg: Box::new(self),
+            },
+            ty,
+            span,
+        }
+    }
+
+    /// `select(0u, 1u, self)`: the stored form of a `bool`.
+    pub fn bool32_encode(self, span: Span) -> Expr {
+        Expr {
+            kind: ExprKind::Bool32Encode {
+                value: Box::new(self),
+            },
+            ty: ShaderType::U32,
+            span,
+        }
+    }
+
+    /// `(self != 0u)`: a stored `bool` read as a value.
+    pub fn bool32_decode(self, span: Span) -> Expr {
+        Expr {
+            kind: ExprKind::Bool32Decode {
+                value: Box::new(self),
+            },
+            ty: ShaderType::BOOL,
             span,
         }
     }

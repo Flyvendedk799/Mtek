@@ -22,12 +22,12 @@ use super::model::{
 };
 use std::collections::BTreeMap;
 
+use crate::layout::qualified_name;
 use crate::project::{ModuleId, Project};
 use crate::resolve::Resolution;
 use crate::source::{FileId, Span};
 use crate::stdlib::{SchemaCategory, registry};
 use crate::syntax::ast::{self, ConstDecl, EntityMember, ItemKind, SceneMember};
-use crate::layout::qualified_name;
 use crate::types::MaterialKey;
 use crate::types::{
     CheckedEntity, CheckedField, CheckedObject, CheckedScene, ConstValue, ProgramEffects, Ty, TyId,
@@ -62,11 +62,7 @@ pub(super) type Defect = String;
 /// value of either can reach the other through a call or a constant without
 /// an import. Types nest at most 256 levels (`E3032`), which bounds the
 /// recursion.
-pub(super) fn type_name(
-    types: &Typeck,
-    file_paths: &BTreeMap<FileId, String>,
-    ty: TyId,
-) -> String {
+pub(super) fn type_name(types: &Typeck, file_paths: &BTreeMap<FileId, String>, ty: TyId) -> String {
     let interner = types.interner();
     match interner.get(ty) {
         Ty::Array { element, len } => {
