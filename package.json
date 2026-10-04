@@ -26,5 +26,8 @@
     "test:benchmarks": "npm run test:benchmarks -w @mtek/browser-tests --",
     "test:browser:hardware": "npm run build && npm run test:hardware -w @mtek/browser-tests --",
     "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run test:browser"
+  },
+  "allowScripts": {
+    "esbuild": false
   }
 }
