@@ -4,11 +4,11 @@
 //! [`package`] runs after the typed IR exists. In a fixed order it
 //!
 //! 1. plans the entry scene's resources ([`crate::plan`]);
-//! 2. emits one shader per material: a user material through the shader lowering
-//!    ([`crate::lowering::shader`], decision 0041), the built-in `Unlit` through the
-//!    temporary compiler-built path (decision 0029, until M2-09), for which the embedded
-//!    prelude is added to the build's source map as `std/materials.mtek`, so the manifest's
-//!    `sources` and `spans` cover it;
+//! 2. emits one shader per material through the shader lowering
+//!    ([`crate::lowering::shader`], decision 0041): user materials and the built-in ones,
+//!    which the front end compiled from the embedded prelude `std/materials.mtek` (decision
+//!    0044) and added to the project's source map, so the manifest's `sources` and `spans`
+//!    cover it;
 //! 3. interns the manifest's spans in this order: symbols (scene, cameras, entities, per
 //!    material its declaration and its params, then the functions compiled for the CPU),
 //!    material params, shader span maps;
@@ -30,13 +30,10 @@ use crate::emit_js::{ProgramParts, emit_app_dts, emit_program, source_map};
 use crate::emit_wgsl::{ShaderArtifact, emit_shader};
 use crate::ir::{self, MeshDesc, Program, Symbol};
 use crate::layout::{LayoutRecord, builtin_blocks, compute};
-use crate::lowering::builtin_unlit::{
-    PRELUDE_PATH, prelude_text, unlit_declarations, unlit_shader, unlit_symbol,
-};
 use crate::lowering::shader::lower_material;
-use crate::plan::{ParamClass, PlannedInstance, ResourcePlan, plan_scene};
+use crate::plan::{ParamClass, ResourcePlan, plan_scene};
 use crate::project::Project;
-use crate::source::{ProjectPath, SourceMap, Span};
+use crate::source::Span;
 use crate::stdlib::registry;
 use crate::types::ConstValue;
 use crate::{BuildMode, COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI, TargetProfile};
@@ -103,9 +100,8 @@ struct BuiltMaterial {
     params: Vec<(String, String, Span)>,
 }
 
-/// Packages the checked `program` of `project`. `sources` starts as the project's source map;
-/// the prelude modules the build uses are added to it (so the caller can render any
-/// diagnostic, including one that points into the prelude).
+/// Packages the checked `program` of `project`. The project's source map holds the prelude
+/// modules the program uses (the front end added them, decision 0044).
 ///
 /// # Errors
 /// `E9999` (or `E6100` from Naga) for a compiler defect, `E9010` for a build mode this build
@@ -114,8 +110,8 @@ pub fn package(
     project: &Project,
     program: &Program,
     input: &PackageInput<'_>,
-    sources: &mut SourceMap,
 ) -> Result<Package, Vec<Diagnostic>> {
+    let sources = &project.sources;
     let scene = program.entry().ok_or_else(|| {
         defect(format!(
             "the entry scene '{}' is not in the IR",
@@ -123,8 +119,7 @@ pub fn package(
         ))
     })?;
     let plan = plan_scene(scene).map_err(defect)?;
-    let materials = build_materials(program, &plan, sources)?;
-    let sources: &SourceMap = sources;
+    let materials = build_materials(program, &plan)?;
 
     let mut layouts = Vec::new();
     for block in builtin_blocks() {
@@ -312,8 +307,8 @@ fn written_type(ty: &str) -> String {
     out
 }
 
-/// The shader and declarations of the user material `symbol` of `program` (decision 0041).
-fn user_material(program: &Program, symbol: &Symbol) -> Result<BuiltMaterial, Vec<Diagnostic>> {
+/// The shader and declarations of the material `symbol` of `program` (decision 0041).
+fn build_material(program: &Program, symbol: &Symbol) -> Result<BuiltMaterial, Vec<Diagnostic>> {
     let material = program
         .materials()
         .find(|m| &m.symbol == symbol)
@@ -333,66 +328,16 @@ fn user_material(program: &Program, symbol: &Symbol) -> Result<BuiltMaterial, Ve
 }
 
 /// The shader and declarations of every material of the plan, sorted by symbol: user
-/// materials through the shader lowering, the built-in `Unlit` through its temporary
-/// compiler-built path (decision 0013, until M2-09). Adds the prelude to `sources` when a
-/// built-in material is used.
+/// materials and the built-in ones of the embedded prelude alike, through the shader lowering
+/// (decisions 0041 and 0044).
 fn build_materials(
     program: &Program,
     plan: &ResourcePlan,
-    sources: &mut SourceMap,
 ) -> Result<Vec<BuiltMaterial>, Vec<Diagnostic>> {
-    let mut built = Vec::with_capacity(plan.materials.len());
-    for symbol in &plan.materials {
-        if symbol.as_str() != unlit_symbol() {
-            built.push(user_material(program, symbol)?);
-            continue;
-        }
-        let path = ProjectPath::new(PRELUDE_PATH)
-            .map_err(|e| defect(format!("the prelude path is not a project path: {e}")))?;
-        let file = match sources.id_of(&path) {
-            Some(id) => id,
-            None => {
-                let text = prelude_text().ok_or_else(|| {
-                    defect(format!("the prelude '{PRELUDE_PATH}' is not embedded"))
-                })?;
-                sources
-                    .add(path, text.as_bytes())
-                    .map_err(|e| defect(format!("the prelude could not be added: {e}")))?
-            }
-        };
-        let prelude = sources
-            .get(file)
-            .ok_or_else(|| defect("the prelude is missing from the source map"))?;
-        let shader = unlit_shader(prelude)?;
-        let declarations = unlit_declarations(prelude)?;
-        let instance: &PlannedInstance = plan
-            .instances
-            .iter()
-            .find(|i| &i.material == symbol)
-            .ok_or_else(|| defect(format!("no instance uses the material '{symbol}'")))?;
-        let mut params = Vec::with_capacity(instance.params.len());
-        for param in &instance.params {
-            let span = declarations
-                .params
-                .iter()
-                .find(|(name, _)| *name == param.name)
-                .map(|(_, span)| *span)
-                .ok_or_else(|| {
-                    defect(format!(
-                        "the param '{}' of '{symbol}' is not declared in the prelude",
-                        param.name
-                    ))
-                })?;
-            params.push((param.name.clone(), param.ty.clone(), span));
-        }
-        built.push(BuiltMaterial {
-            symbol: symbol.clone(),
-            shader,
-            declaration: declarations.declaration,
-            params,
-        });
-    }
-    Ok(built)
+    plan.materials
+        .iter()
+        .map(|symbol| build_material(program, symbol))
+        .collect()
 }
 
 /// The manifest's `symbols`: the scene, its cameras and entities, then every material and its

@@ -12,7 +12,9 @@ use super::imports::ImportBindings;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
 use crate::project::edit_distance;
 use crate::source::Span;
-use crate::stdlib::{Domain, Milestone, NamespaceMember, PreludeNameKind, Registry, registry};
+use crate::stdlib::{
+    Domain, Milestone, NamespaceMember, PreludeNameKind, Registry, SchemaCategory, registry,
+};
 use crate::syntax::ast::{
     ArrayLength, ArrayLengthKind, Block, ConstDecl, DescField, ElseBranch, EntityDecl,
     EntityMember, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter, Handler, HandlerArg,
@@ -91,6 +93,10 @@ pub(super) struct Resolver<'a> {
     /// scene of the module, with a noun for messages: a stage that names
     /// one captures it (`E4040`, `spec/materials.md` section 3).
     scene_names: BTreeMap<String, &'static str>,
+    /// Resolving the embedded prelude (`std/materials.mtek`, decision 0044):
+    /// its material declarations are the built-in materials of the registry,
+    /// so declaring one is not hiding a prelude name.
+    prelude: bool,
 }
 
 impl<'a> Resolver<'a> {
@@ -117,7 +123,14 @@ impl<'a> Resolver<'a> {
             body_base: 0,
             stage_material: None,
             scene_names: BTreeMap::new(),
+            prelude: false,
         }
+    }
+
+    /// Resolve the embedded prelude module (decision 0044).
+    pub(super) fn for_prelude(mut self) -> Self {
+        self.prelude = true;
+        self
     }
 
     pub(super) fn finish(self) -> Resolution {
@@ -257,6 +270,16 @@ impl<'a> Resolver<'a> {
     fn prelude_conflict(&self, kind: DefKind, name: &str) -> Option<Vec<PreludeNameKind>> {
         let kinds = self.registry.prelude_name_kinds(name);
         if kinds.is_empty() {
+            return None;
+        }
+        // The prelude declares the built-in materials of the registry.
+        if self.prelude
+            && kind == DefKind::Material
+            && self
+                .registry
+                .schema(name)
+                .is_some_and(|schema| schema.category == SchemaCategory::Material)
+        {
             return None;
         }
         // A local, parameter, `state` or `param` may reuse a prelude function.

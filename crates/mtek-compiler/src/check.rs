@@ -21,9 +21,10 @@
 use std::collections::BTreeMap;
 
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report};
+use crate::prelude::{compile_materials, uses_builtin_material};
 use crate::project::{
-    ModuleId, Project, ProjectRoot, SceneSelection, edit_distance, load_modules, report_cycles,
-    select_scene,
+    LoadedModule, ModuleId, Project, ProjectRoot, SceneSelection, edit_distance, load_modules,
+    report_cycles, select_scene,
 };
 use crate::resolve::{DefId, DefKind, Resolution, bind_imports, resolve_module_with_imports};
 use crate::source::{Fs, SourceMap};
@@ -252,6 +253,28 @@ pub(crate) fn front_end_with(
             check_module_with_imports(&unit.ast, source.text(), resolution, &imports, sink);
         if let Some(slot) = types.get_mut(index) {
             *slot = Some(checked);
+        }
+    }
+
+    // The embedded prelude, when the program uses a built-in material: one
+    // more module, after the project's (decision 0044).
+    let mut loaded = loaded;
+    if uses_builtin_material(&types)
+        && let Some(prelude) = compile_materials(&mut project, sink)
+    {
+        let index = prelude.id.index();
+        if index == loaded.len() && index == resolutions.len() && index == types.len() {
+            loaded.push(LoadedModule {
+                ast: prelude.module,
+                imports: Vec::new(),
+            });
+            resolutions.push(prelude.resolution);
+            types.push(Some(prelude.types));
+        } else {
+            sink.push(Diagnostic::new(
+                Code::E9999,
+                "The embedded prelude got a module id out of load order; this is a compiler bug.",
+            ));
         }
     }
 

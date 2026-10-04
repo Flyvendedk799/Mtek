@@ -13,6 +13,7 @@ pub mod layout;
 pub mod lowering;
 pub mod package;
 pub mod plan;
+pub mod prelude;
 pub mod stdlib;
 
 /// Version of this compiler build (the workspace package version).

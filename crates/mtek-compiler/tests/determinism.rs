@@ -14,7 +14,7 @@ const FORBIDDEN: [&str; 2] = ["HashMap", "HashSet"];
 fn is_guarded(stem: &str) -> bool {
     matches!(
         stem,
-        "layout" | "package" | "plan" | "ir" | "inspect" | "lowering"
+        "layout" | "package" | "plan" | "ir" | "inspect" | "lowering" | "prelude"
     ) || stem.starts_with("emit_")
 }
 

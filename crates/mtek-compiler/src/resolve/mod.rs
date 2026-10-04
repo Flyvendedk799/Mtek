@@ -95,3 +95,15 @@ pub fn resolve_module_with_imports(
     resolver.module(module);
     resolver.finish()
 }
+
+/// Resolve the embedded prelude module (`std/materials.mtek`, decision 0044):
+/// like [`resolve_module`], except that its material declarations may take
+/// the names of the registry's built-in materials, which they define. Never
+/// panics.
+#[must_use]
+pub fn resolve_prelude_module(module: &Module, sink: &mut Diagnostics) -> Resolution {
+    let bindings = ImportBindings::new();
+    let mut resolver = resolver::Resolver::new(module.node_count, &bindings, sink).for_prelude();
+    resolver.module(module);
+    resolver.finish()
+}

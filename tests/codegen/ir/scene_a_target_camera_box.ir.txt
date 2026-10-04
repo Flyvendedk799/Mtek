@@ -16,3 +16,10 @@ program (entry scene src/main.mtek::Gallery)
         mesh = Box { size: vec3(1.0, 1.0, 1.0) } (written @11:9-11:49)
         material = std/materials.mtek::Unlit (written @12:9-12:44)
           color: color = color(0.14702727, 0.107023105, 1.0, 1.0)
+  module std/materials.mtek @1:1-22:1
+    material Unlit [std/materials.mtek::Unlit] @5:8-8:2
+      param #0 color: color = color(1.0, 1.0, 1.0, 1.0) @6:5-6:34
+      block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit (size 16, align 16)
+      fragment -> color [std/materials.mtek::Unlit.fragment] reads none @7:5-7:63
+        local #0 surface: SurfaceInput (param) @7:14-7:21
+        return param color#0 @7:48-7:61

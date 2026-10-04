@@ -128,7 +128,7 @@ The **typed high-level IR**: the semantic contract between language and code gen
 ### 4.9 `lowering/`
 - `cpu.rs`: IR → JS AST (§6); this build keeps it in `emit_js/cpu.rs`, next to the JS AST it produces (decision 0040).
 - `shader.rs`: IR (fragment + GPU-reachable pure functions) → Shader IR (§7).
-- `shader_ir.rs`: the Shader IR types (§7.1); `standard_stage.rs`: the generated vertex stage and fragment wrapper of `spec/materials.md` §3.2–3.3; `builtin_unlit.rs`: the temporary compiler-built `Unlit` of decision 0013 (removed in M2-09). Files, generated names, the span map and the shader artifact are decision 0029; the lowering of user materials (names, function order, statements, helpers, literals, the build) is decision 0041.
+- `shader_ir.rs`: the Shader IR types (§7.1); `standard_stage.rs`: the generated vertex stage and fragment wrapper of `spec/materials.md` §3.2–3.3. The built-in materials are not special here: the front end compiles the embedded prelude `std/materials.mtek` like a project module and `shader.rs` lowers its materials (decision 0044). Files, generated names, the span map and the shader artifact are decision 0029; the lowering of user materials (names, function order, statements, helpers, literals, the build) is decision 0041.
 
 ### 4.10 `layout/` and `plan/`
 `layout/`: the algorithm of `spec/gpu-layout.md` §4 and the built-in blocks. `plan/`: material instances, update classes, sharing eligibility, bind group plan, host-input codecs, binding evaluation order. What the M1 plan decides (mesh deduplication, instance order, all params `initial`) is decision 0030.

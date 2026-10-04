@@ -223,7 +223,7 @@
         "colStart": 1,
         "colEnd": 34
       },
-      "span": 3,
+      "span": 5,
       "symbol": "std/materials.mtek::Unlit.fragment"
     },
     {
@@ -232,7 +232,7 @@
         "colStart": 5,
         "colEnd": 32
       },
-      "span": 3,
+      "span": 6,
       "symbol": "std/materials.mtek::Unlit.fragment"
     },
     {
@@ -241,7 +241,7 @@
         "colStart": 12,
         "colEnd": 31
       },
-      "span": 3,
+      "span": 7,
       "symbol": "std/materials.mtek::Unlit.fragment"
     },
     {
@@ -250,7 +250,7 @@
         "colStart": 12,
         "colEnd": 23
       },
-      "span": 3,
+      "span": 7,
       "symbol": "std/materials.mtek::Unlit.fragment"
     },
     {
