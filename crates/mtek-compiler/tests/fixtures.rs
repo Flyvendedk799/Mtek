@@ -1,4 +1,5 @@
-//! The syntax fixture runner (`spec/testing.md` section 3.1,
+//! The compiler fixture runner for `tests/syntax/` and `tests/semantics/`
+//! (`spec/testing.md` section 3.1,
 //! `spec/compiler-architecture.md` section 10): directory-driven, fixtures
 //! discovered in sorted order, expected files rewritten only with
 //! `MTEK_BLESS=1 cargo test` (review the diff like code). No snapshot library:
@@ -19,7 +20,10 @@
 //!   expected file has them).
 //!
 //! The lexer fixtures of `tests/syntax/lex` have their own runner
-//! (`lexer_fixtures.rs`); M1-09 extends this one to `tests/semantics/`.
+//! (`lexer_fixtures.rs`). The semantic suites, `tests/semantics/pass/<name>/`
+//! and `tests/semantics/fail/<name>/` (a project directory with `mtek.toml`
+//! and an exact `expected.diag.json`), are described where their tests start,
+//! below the syntax tests.
 //!
 //! Expression files: cases are introduced by a line starting with `---`; the
 //! text up to the next such line (without its trailing line break) is one
@@ -51,13 +55,17 @@ use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use mtek_compiler::diagnostics::{Diagnostic, Diagnostics};
-use mtek_compiler::source::{FileId, ProjectPath, SourceMap};
+use mtek_compiler::diagnostics::{Code, Diagnostic, Diagnostics, Severity, to_report};
+use mtek_compiler::project::ProjectRoot;
+use mtek_compiler::resolve::{Construct, IMPLEMENTED_MILESTONE, construct_gate, resolve_module};
+use mtek_compiler::source::{FileId, MemFs, ProjectPath, SourceMap};
+use mtek_compiler::stdlib::Milestone;
 use mtek_compiler::syntax::ast::Module;
 use mtek_compiler::syntax::{
     CandidateEdit, dump_expr, dump_module, lex, lex_str, parse_expression,
     parse_expression_no_desc, parse_module, walk_expr, walk_module,
 };
+use mtek_compiler::{CheckResult, check};
 use serde_json::{Map, Value};
 
 fn syntax_dir() -> PathBuf {
@@ -873,4 +881,430 @@ fn the_benchmark_programs_parse() {
     }
     // The starters are comments; the reference solutions are scenes.
     assert!(items >= 4, "{items} items");
+}
+
+// ---------------------------------------------------------------------------
+// Semantic fixtures (`tests/semantics/`)
+// ---------------------------------------------------------------------------
+//
+// A semantic fixture is a directory: `mtek.toml`, the sources (`src/main.mtek`
+// unless the project file says otherwise) and `expected.diag.json`. Every
+// file of the directory except `expected.diag.json` is put into an in-memory
+// file system rooted at the directory, and the project is checked with
+// `mtek_compiler::check`.
+//
+// * `pass/<name>/` must check with zero errors; warnings, if any, are listed
+//   in `expected.diag.json`, which is absent when there are no diagnostics.
+// * `fail/<name>/` must report at least one error, and its diagnostics must
+//   match `expected.diag.json` exactly (code, file, primary span, message and
+//   order; `related` and `notes` when the expected diagnostic has them).
+//
+// Fixtures named `gate_*` hold constructs this build does not implement
+// (`E9010`); a test below checks that every gated construct of the
+// resolver's table has one.
+
+/// The file that holds a semantic fixture's expected diagnostics.
+const EXPECTED: &str = "expected.diag.json";
+
+fn semantics_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/semantics")
+}
+
+/// The fixture directories of `suite` (`pass` or `fail`), in sorted order.
+fn semantic_fixtures(suite: &str) -> Vec<String> {
+    let mut names: Vec<String> = fs::read_dir(semantics_dir().join(suite))
+        .unwrap_or_else(|e| panic!("cannot list tests/semantics/{suite}: {e}"))
+        .filter_map(|entry| {
+            let entry = entry.ok()?;
+            entry.file_type().ok()?.is_dir().then_some(())?;
+            entry.file_name().into_string().ok()
+        })
+        .collect();
+    names.sort();
+    names
+}
+
+/// Every file under `dir` except the expected diagnostics, with its path
+/// relative to the fixture root, in sorted order.
+fn fixture_files(root: &Path, dir: &Path, out: &mut Vec<(String, Vec<u8>)>) {
+    let mut entries: Vec<PathBuf> = fs::read_dir(dir)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .collect();
+    entries.sort();
+    for path in entries {
+        if path.is_dir() {
+            fixture_files(root, &path, out);
+            continue;
+        }
+        let relative = path
+            .strip_prefix(root)
+            .unwrap()
+            .components()
+            .map(|c| c.as_os_str().to_str().unwrap().to_owned())
+            .collect::<Vec<_>>()
+            .join("/");
+        if relative != EXPECTED {
+            out.push((relative, fs::read(&path).unwrap()));
+        }
+    }
+}
+
+/// The in-memory project of the fixture `<suite>/<name>`.
+fn fixture_fs(suite: &str, name: &str, shuffle: Option<u64>) -> MemFs {
+    let root = semantics_dir().join(suite).join(name);
+    let mut files = Vec::new();
+    fixture_files(&root, &root, &mut files);
+    let mut memory = match shuffle {
+        Some(seed) => MemFs::new().with_shuffled_listing(seed),
+        None => MemFs::new(),
+    };
+    for (path, bytes) in files {
+        memory.insert(ProjectPath::new(&path).unwrap(), bytes);
+    }
+    memory
+}
+
+/// Check the fixture `<suite>/<name>`.
+fn check_fixture(suite: &str, name: &str) -> CheckResult {
+    check(&ProjectRoot::at_base(), &fixture_fs(suite, name, None))
+}
+
+/// The project-relative path of `file`.
+fn path_of(result: &CheckResult, file: FileId) -> Value {
+    result
+        .project
+        .as_ref()
+        .and_then(|project| project.sources.get(file))
+        .map_or(Value::Null, |source| source.path().as_str().into())
+}
+
+/// The `expected.diag.json` content of a check result.
+fn semantic_json(result: &CheckResult) -> String {
+    let items: Vec<Value> = result
+        .report
+        .diagnostics
+        .iter()
+        .map(|d| {
+            let mut object = Map::new();
+            object.insert("code".into(), d.code.as_str().into());
+            let span = d.primary.as_ref().map(|label| label.span);
+            object.insert(
+                "file".into(),
+                span.map_or(Value::Null, |s| path_of(result, s.file)),
+            );
+            object.insert(
+                "startByte".into(),
+                span.map_or(Value::Null, |s| s.start.into()),
+            );
+            object.insert("endByte".into(), span.map_or(Value::Null, |s| s.end.into()));
+            object.insert("message".into(), d.message.as_str().into());
+            if !d.related.is_empty() {
+                let related: Vec<Value> = d
+                    .related
+                    .iter()
+                    .map(|label| {
+                        let mut related = Map::new();
+                        related.insert(
+                            "message".into(),
+                            label.message.clone().unwrap_or_default().into(),
+                        );
+                        related.insert("file".into(), path_of(result, label.span.file));
+                        related.insert("startByte".into(), label.span.start.into());
+                        related.insert("endByte".into(), label.span.end.into());
+                        Value::Object(related)
+                    })
+                    .collect();
+                object.insert("related".into(), Value::Array(related));
+            }
+            if !d.notes.is_empty() {
+                object.insert("notes".into(), d.notes.clone().into());
+            }
+            Value::Object(object)
+        })
+        .collect();
+    let mut text = serde_json::to_string_pretty(&Value::Array(items)).unwrap();
+    text.push('\n');
+    text
+}
+
+fn error_count(result: &CheckResult) -> usize {
+    result
+        .report
+        .diagnostics
+        .iter()
+        .filter(|d| d.severity == Severity::Error)
+        .count()
+}
+
+/// The report of `result` must be valid against `spec/diagnostic.schema.json`
+/// (`spec/diagnostics.md` 2.2: every golden diagnostic fixture is validated).
+fn assert_report_schema_valid(label: &str, result: &CheckResult) {
+    let schema: Value =
+        serde_json::from_str(include_str!("../../../spec/diagnostic.schema.json")).unwrap();
+    let validator = jsonschema::draft202012::new(&schema).unwrap();
+    let empty = SourceMap::new();
+    let map = result.project.as_ref().map_or(&empty, |p| &p.sources);
+    let json = to_report(&result.report, None, map);
+    let problems: Vec<String> = validator
+        .iter_errors(&json)
+        .map(|e| format!("{e} at {}", e.instance_path()))
+        .collect();
+    assert!(problems.is_empty(), "{label}: {problems:#?}");
+}
+
+#[test]
+fn every_semantic_pass_fixture_checks_without_errors() {
+    let names = semantic_fixtures("pass");
+    assert!(names.len() >= 5, "fixtures are missing: {names:?}");
+    for name in &names {
+        let result = check_fixture("pass", name);
+        let json = semantic_json(&result);
+        assert_eq!(
+            error_count(&result),
+            0,
+            "semantics/pass/{name} has errors:\n{json}"
+        );
+        assert!(
+            result.resolution.is_some(),
+            "semantics/pass/{name} was not resolved"
+        );
+        assert!(
+            result
+                .resolution
+                .as_ref()
+                .is_some_and(|r| r.entry_scene().is_some()),
+            "semantics/pass/{name} has no entry scene"
+        );
+        let expected = semantics_dir().join("pass").join(name).join(EXPECTED);
+        if result.report.diagnostics.is_empty() {
+            assert!(
+                !expected.exists(),
+                "semantics/pass/{name}: {EXPECTED} lists diagnostics, but there are none"
+            );
+        } else {
+            check_diagnostics(&expected, &json);
+        }
+        assert_report_schema_valid(&format!("pass/{name}"), &result);
+    }
+}
+
+#[test]
+fn every_semantic_fail_fixture_has_exactly_the_expected_diagnostics() {
+    let names = semantic_fixtures("fail");
+    assert!(names.len() >= 30, "fixtures are missing: {names:?}");
+    for name in &names {
+        let result = check_fixture("fail", name);
+        assert!(
+            error_count(&result) > 0,
+            "semantics/fail/{name} reports no error"
+        );
+        let json = semantic_json(&result);
+        check_diagnostics(
+            &semantics_dir().join("fail").join(name).join(EXPECTED),
+            &json,
+        );
+        assert_report_schema_valid(&format!("fail/{name}"), &result);
+    }
+}
+
+#[test]
+fn every_semantic_fixture_directory_is_a_project() {
+    for suite in ["pass", "fail"] {
+        for name in semantic_fixtures(suite) {
+            let dir = semantics_dir().join(suite).join(&name);
+            assert!(
+                dir.join("mtek.toml").is_file(),
+                "semantics/{suite}/{name} has no mtek.toml"
+            );
+            if suite == "fail" {
+                assert!(
+                    dir.join(EXPECTED).is_file(),
+                    "semantics/fail/{name} has no {EXPECTED}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn semantic_results_are_deterministic() {
+    // The same fixture checked twice, and with shuffled directory listings,
+    // gives identical diagnostics (`spec/compiler-architecture.md` 5).
+    for suite in ["pass", "fail"] {
+        for name in semantic_fixtures(suite) {
+            let first = semantic_json(&check_fixture(suite, &name));
+            let second = semantic_json(&check_fixture(suite, &name));
+            assert_eq!(first, second, "{suite}/{name}");
+            for seed in [1, 2, 3] {
+                let memory = fixture_fs(suite, &name, Some(seed));
+                let shuffled = semantic_json(&check(&ProjectRoot::at_base(), &memory));
+                assert_eq!(first, shuffled, "{suite}/{name} with seed {seed}");
+            }
+        }
+    }
+}
+
+#[test]
+fn every_resolver_code_has_a_semantic_fail_fixture() {
+    // `spec/testing.md` 3.2: every diagnostic code needs a negative fixture.
+    // These are the codes of name resolution and of the `check` wiring
+    // (`E0013` is the parser's, reported once even where the resolver meets
+    // the word as a declared name).
+    let mut seen = BTreeSet::new();
+    for name in semantic_fixtures("fail") {
+        for d in check_fixture("fail", &name).report.diagnostics {
+            seen.insert(d.code.short());
+        }
+    }
+    for code in [
+        "E0012", "E0013", "E2001", "E2002", "E2003", "E2004", "E2005", "E3003", "E5014", "E9006",
+        "E9010",
+    ] {
+        assert!(
+            seen.contains(code),
+            "no semantics/fail fixture produces {code}: {seen:?}"
+        );
+    }
+}
+
+/// The `E9010` messages of every `gate_*` fail fixture.
+fn gate_messages() -> Vec<(String, String)> {
+    let mut messages = Vec::new();
+    for name in semantic_fixtures("fail") {
+        if !name.starts_with("gate_") {
+            continue;
+        }
+        for d in check_fixture("fail", &name).report.diagnostics {
+            if d.code == Code::E9010 {
+                messages.push((name.clone(), d.message));
+            }
+        }
+    }
+    messages
+}
+
+#[test]
+fn every_gated_construct_has_a_gating_fixture() {
+    // Acceptance criterion of M1-09: every gated construct produces `E9010`
+    // naming its planned milestone. One `gate_*` fixture per construct of the
+    // table that this build does not implement, and per kind of registry
+    // item.
+    let messages = gate_messages();
+    let produced = |prefix: &str, milestone: &str| {
+        let ending = format!("(planned for {milestone}).");
+        messages
+            .iter()
+            .any(|(_, message)| message.starts_with(prefix) && message.ends_with(&ending))
+    };
+    let mut gated = 0;
+    for construct in Construct::ALL {
+        let gate = construct_gate(construct);
+        if gate.since.is_reached_by(IMPLEMENTED_MILESTONE) {
+            continue;
+        }
+        gated += 1;
+        // The subject may be followed by detail: "Event handlers (`on
+        // key_down`) are specified …".
+        assert!(
+            produced(gate.subject, gate.since.as_str()),
+            "no gate_* fixture reports {construct:?}: {messages:#?}"
+        );
+    }
+    assert!(gated >= 16, "{gated} gated constructs");
+    // Registry items, by kind (each message names the item and its `since`).
+    for (prefix, milestone) in [
+        ("The built-in type `mat4`", "M2"),
+        ("The built-in function `sin`", "M2"),
+        ("The built-in namespace `frame`", "M3"),
+        ("The built-in enum `Key`", "M3"),
+        ("The built-in schema `Pbr`", "M4"),
+        ("The `Entity` field `light`", "M4"),
+        ("The `Scene` field `gravity`", "M5"),
+        ("Event handlers (`on collision_enter`)", "M5"),
+    ] {
+        assert!(
+            produced(prefix, milestone),
+            "no gate_* fixture reports {prefix}: {messages:#?}"
+        );
+    }
+}
+
+#[test]
+fn registry_gates_without_a_fixture_are_unreachable_in_this_build() {
+    // Scene-object kinds and namespace/enum members are gated by their own
+    // `since` too, but today no kind is later than M1 and no member is later
+    // than its owner (whose own `E9010` covers it). When that changes, this
+    // test fails as a reminder to add a `gate_*` fixture for it.
+    let registry = mtek_compiler::stdlib::registry();
+    let implemented = |m: Milestone| m.is_reached_by(IMPLEMENTED_MILESTONE);
+    for kind in &registry.scene_objects {
+        assert!(
+            implemented(kind.since),
+            "scene object kind {}",
+            kind.keyword
+        );
+    }
+    for namespace in &registry.namespaces {
+        for member in &namespace.members {
+            assert!(
+                !implemented(namespace.since) || implemented(member.since()),
+                "{}.{}",
+                namespace.name,
+                member.name()
+            );
+        }
+    }
+    for enumeration in &registry.enums {
+        for member in &enumeration.members {
+            assert!(
+                !implemented(enumeration.since) || implemented(member.since),
+                "{}.{}",
+                enumeration.name,
+                member.name
+            );
+        }
+    }
+}
+
+#[test]
+fn a_construct_inside_a_gated_construct_is_not_reported_again() {
+    // The outermost unimplemented construct is reported once; what it
+    // contains is not gated again (no cascades), but its names are still
+    // resolved.
+    let result = check_fixture("fail", "gate_nested_reported_once");
+    let codes: Vec<&str> = result
+        .report
+        .diagnostics
+        .iter()
+        .map(|d| d.code.short())
+        .collect();
+    assert_eq!(codes, ["E9010", "E2003"], "{}", semantic_json(&result));
+}
+
+#[test]
+fn the_syntax_corpus_resolves_without_panicking() {
+    // Every file of the syntax corpus, including the erroneous ones whose
+    // trees are full of `Error` nodes, goes through name resolution; nothing
+    // panics and every reported span lies inside its file.
+    for (dir, extension) in [("pass", ".mtek"), ("fail", ".mtek"), ("ast", ".mtek")] {
+        for name in fixture_names(dir, extension) {
+            let parsed = parse_fixture(dir, &name);
+            let mut sink = Diagnostics::new();
+            let resolution = resolve_module(&parsed.module, &mut sink);
+            for d in sink.finish().diagnostics {
+                let span = d.primary.as_ref().map(|label| label.span).unwrap();
+                assert!(
+                    span.end as usize <= parsed.text.len(),
+                    "{dir}/{name}: {d:?} is outside the text"
+                );
+                for related in &d.related {
+                    assert!(related.span.end as usize <= parsed.text.len());
+                }
+            }
+            for def in resolution.defs() {
+                assert!(def.span.end as usize <= parsed.text.len());
+            }
+        }
+    }
 }

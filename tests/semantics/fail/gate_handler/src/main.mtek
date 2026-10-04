@@ -1,0 +1,5 @@
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+    }
+}

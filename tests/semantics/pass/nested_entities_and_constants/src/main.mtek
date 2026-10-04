@@ -1,0 +1,34 @@
+// Module constants, scene and entity constants, nested entities and the
+// M1 registry schemas and namespaces.
+const HEIGHT: f32 = 0.5;
+const TINT = #ffcc00;
+
+scene Showroom {
+    const SPACING = 2.0;
+    clear_color: TINT;
+    camera Main {
+        position: vec3(0.0, HEIGHT * 4.0, 8.0);
+        rotation: quat.euler(-0.2, 0.0, 0.0);
+        projection: Perspective { fov_y: 0.9; near: 0.1; far: 100.0 };
+    }
+    entity Table {
+        const LEG = 0.25;
+        position: vec3(0.0, HEIGHT + LEG, 0.0);
+        mesh: Box { size: vec3(SPACING, 0.1, 1.0) };
+        material: Unlit { color: color.srgb(vec3(0.5, 0.5, 0.5), 1.0) };
+        entity Lamp {
+            // A child entity does not see its parent's body, so it may
+            // declare a constant of the same name.
+            const LEG = 0.1;
+            position: vec3(0.0, LEG + HEIGHT, 0.0);
+            rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.5);
+            mesh: Sphere { radius: 0.2; segments: 16; rings: 8 };
+            material: Unlit { color: color.linear(vec3(1.0, 0.9, 0.7), 1.0) };
+        }
+    }
+    entity Floor {
+        scale: vec3(f32(10), 1.0, 10.0);
+        mesh: Plane { size: vec2(10.0, 10.0) };
+        visible: true;
+    }
+}

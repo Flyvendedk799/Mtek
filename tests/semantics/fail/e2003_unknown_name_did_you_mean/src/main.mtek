@@ -1,0 +1,5 @@
+const SPEED = 1.0;
+
+scene Demo {
+    camera Main { position: vec3(0.0, 0.0, SPEDE); }
+}

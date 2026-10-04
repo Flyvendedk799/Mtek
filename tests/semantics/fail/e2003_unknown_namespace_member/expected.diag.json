@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 46,
+    "endByte": 53,
+    "message": "The built-in namespace `quat` has no member 'identty'.",
+    "notes": [
+      "help: did you mean the built-in 'quat.identity'?"
+    ]
+  }
+]

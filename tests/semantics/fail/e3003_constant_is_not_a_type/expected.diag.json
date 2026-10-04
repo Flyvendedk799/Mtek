@@ -1,0 +1,17 @@
+[
+  {
+    "code": "MTEK-E3003",
+    "file": "src/main.mtek",
+    "startByte": 27,
+    "endByte": 31,
+    "message": "'SIZE' is a constant, not a type.",
+    "related": [
+      {
+        "message": "the constant 'SIZE' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 6,
+        "endByte": 10
+      }
+    ]
+  }
+]

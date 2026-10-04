@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E2002",
+    "file": "src/main.mtek",
+    "startByte": 125,
+    "endByte": 129,
+    "message": "Duplicate declaration of 'Lamp': an entity of that name is already declared in this scene.",
+    "related": [
+      {
+        "message": "the entity 'Lamp' is first declared here",
+        "file": "src/main.mtek",
+        "startByte": 43,
+        "endByte": 47
+      }
+    ],
+    "notes": [
+      "entity names are unique within the scene, including nested entities, and share the scene scope with state and cameras"
+    ]
+  }
+]

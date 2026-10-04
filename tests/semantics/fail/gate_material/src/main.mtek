@@ -1,0 +1,10 @@
+material Flat {
+    param tint: color = #ff0000;
+    fragment(surface: SurfaceInput) -> color {
+        return tint;
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

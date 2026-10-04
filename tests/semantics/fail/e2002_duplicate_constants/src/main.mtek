@@ -1,0 +1,6 @@
+const LIMIT = 1;
+const LIMIT = 2;
+
+scene Demo {
+    camera Main {}
+}

@@ -45,3 +45,4 @@ recorded here before code depends on it (blueprint §15).
 | 0022 | The parser's nesting limit also bounds the height of the expression tree |
 | 0023 | Parser conventions for the full grammar |
 | 0024 | Standard library registry: details the specification leaves open |
+| 0025 | Name resolution and milestone gating: details the specification leaves open |

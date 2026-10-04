@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E2001",
+    "file": "src/main.mtek",
+    "startByte": 6,
+    "endByte": 11,
+    "message": "The scene 'color' would hide the built-in type and namespace 'color'.",
+    "notes": [
+      "'color' is a built-in type and namespace of the standard library, visible in every module",
+      "help: names cannot be shadowed in v0.1; choose another name"
+    ]
+  }
+]

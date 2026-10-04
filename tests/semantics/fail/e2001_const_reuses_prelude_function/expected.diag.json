@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E2001",
+    "file": "src/main.mtek",
+    "startByte": 6,
+    "endByte": 12,
+    "message": "The constant 'length' would hide the built-in function 'length'.",
+    "notes": [
+      "'length' is a built-in function of the standard library, visible in every module",
+      "only locals, parameters, `state` and `param` declarations may reuse the name of a built-in function",
+      "help: names cannot be shadowed in v0.1; choose another name"
+    ]
+  }
+]

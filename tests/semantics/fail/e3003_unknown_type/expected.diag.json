@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3003",
+    "file": "src/main.mtek",
+    "startByte": 9,
+    "endByte": 12,
+    "message": "Unknown type 'f23'.",
+    "notes": [
+      "help: did you mean the built-in 'f32'?"
+    ]
+  }
+]

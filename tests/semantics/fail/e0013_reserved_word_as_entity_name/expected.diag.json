@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E0013",
+    "file": "src/main.mtek",
+    "startByte": 43,
+    "endByte": 48,
+    "message": "`match` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: choose another name"
+    ]
+  }
+]

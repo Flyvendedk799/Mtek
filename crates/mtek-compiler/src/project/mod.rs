@@ -12,7 +12,7 @@
 //! 3. the entry module is read into the [`SourceMap`](crate::source::SourceMap)
 //!    (`E9005`) and becomes the first module of the [`ModuleGraph`].
 //!
-//! Parsing, `import` handling and entry scene selection are wired in M1-09;
+//! Parsing, `import` gating and entry scene selection happen in [`crate::check`];
 //! [`select_scene`] is the parser-independent rule it applies.
 
 mod config;
@@ -31,6 +31,7 @@ pub use config::{
 };
 pub use graph::{GraphError, Import, ImportCycle, MAX_MODULES, Module, ModuleGraph, ModuleId};
 pub use load::Project;
+pub(crate) use parse::edit_distance;
 pub use parse::parse_config;
 pub use root::{ProjectFs, ProjectRoot};
 pub use scene::{SceneSelection, select_scene};

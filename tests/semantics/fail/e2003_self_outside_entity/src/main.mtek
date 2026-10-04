@@ -1,0 +1,3 @@
+scene Demo {
+    camera Main { position: self; }
+}

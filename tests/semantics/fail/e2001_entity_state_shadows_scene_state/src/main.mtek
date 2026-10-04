@@ -1,0 +1,8 @@
+scene Demo {
+    state hits: i32 = 0;
+    camera Main {}
+    entity Cube {
+        state hits: i32 = 0;
+        mesh: Box {};
+    }
+}

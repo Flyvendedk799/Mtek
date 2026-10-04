@@ -1,0 +1,5 @@
+const T = frame.time;
+
+scene Demo {
+    camera Main {}
+}

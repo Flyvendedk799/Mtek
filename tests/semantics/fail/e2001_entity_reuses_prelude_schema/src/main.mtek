@@ -1,0 +1,4 @@
+scene Demo {
+    camera Main {}
+    entity Box { mesh: Box {}; }
+}

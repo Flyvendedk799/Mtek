@@ -1,0 +1,6 @@
+scene Demo {
+    camera Main {}
+    entity Sun {
+        light: DirectionalLight { intensity: 2.0 };
+    }
+}

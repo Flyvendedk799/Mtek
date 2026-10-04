@@ -1,0 +1,8 @@
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        on collision_enter(other: entity_ref) {
+        }
+    }
+}

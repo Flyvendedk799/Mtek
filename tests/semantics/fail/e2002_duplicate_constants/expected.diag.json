@@ -1,0 +1,17 @@
+[
+  {
+    "code": "MTEK-E2002",
+    "file": "src/main.mtek",
+    "startByte": 23,
+    "endByte": 28,
+    "message": "Duplicate declaration of 'LIMIT': a constant of that name is already declared in this module.",
+    "related": [
+      {
+        "message": "the constant 'LIMIT' is first declared here",
+        "file": "src/main.mtek",
+        "startByte": 6,
+        "endByte": 11
+      }
+    ]
+  }
+]

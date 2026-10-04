@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E9006",
+    "file": null,
+    "startByte": null,
+    "endByte": null,
+    "message": "The entry module 'src/main.mtek' declares no scene.",
+    "notes": [
+      "help: declare the scene to run, for example `scene Demo { … }`"
+    ]
+  }
+]

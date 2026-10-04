@@ -1,0 +1,7 @@
+prefab Crate {
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+}

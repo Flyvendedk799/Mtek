@@ -1,0 +1,9 @@
+prefab Crate {
+    param lift: f32 = 1.0;
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate { lift: 2.0; }
+}

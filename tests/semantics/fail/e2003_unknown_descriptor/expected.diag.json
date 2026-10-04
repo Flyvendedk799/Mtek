@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 56,
+    "endByte": 60,
+    "message": "Unknown descriptor type 'Boxx': no schema, struct, material or prefab has that name.",
+    "notes": [
+      "help: did you mean the built-in 'Box'?"
+    ]
+  }
+]

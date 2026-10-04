@@ -1,0 +1,8 @@
+scene Demo {
+    camera Main {}
+    entity Lamp { mesh: Sphere {}; }
+    entity Table {
+        mesh: Box {};
+        entity Lamp { mesh: Sphere {}; }
+    }
+}
