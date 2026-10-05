@@ -29,6 +29,7 @@ import {
   isFiniteVec3,
   isQuat,
   isVec3,
+  paramValueProblem,
   type Quat,
   type Vec3,
 } from "./values.js";
@@ -401,6 +402,36 @@ export class World {
       record.visible = value;
       this.visibility += 1;
     }
+  }
+
+  /**
+   * `app.debug.setParam` (`spec/runtime-abi.md` section 10.2): writes a material param of the entity called
+   * `entityName` (its name, or its qualified symbol when several entities share the name) through the same
+   * path as `ctx.setParam`, so the generated field writer, the mirror and the opaque-colour rule
+   * (`E8100`) apply. Mistakes of the caller throw plain errors naming what exists; they are not diagnostics.
+   */
+  setParamByName(entityName: string, param: string, value: unknown): void {
+    const matches = this.structure.entities.filter((entity) => entity.name === entityName || entity.symbol === entityName);
+    if (matches.length === 0) {
+      throw new RangeError(`debug.setParam: no entity named '${entityName}' (entities: ${this.structure.entities.map((entity) => entity.name).join(", ")}).`);
+    }
+    if (matches.length > 1) {
+      throw new RangeError(`debug.setParam: '${entityName}' names ${String(matches.length)} entities; use one of ${matches.map((entity) => `'${entity.symbol}'`).join(", ")}.`);
+    }
+    const entity = matches[0];
+    const record = entity === undefined ? undefined : this.entities[entity.index];
+    if (entity === undefined || record === undefined) return;
+    if (entity.instance === null) throw new RangeError(`debug.setParam: entity '${entityName}' has no material.`);
+    const declared = entity.instance.material.params.find((candidate) => candidate.name === param);
+    if (declared === undefined) {
+      const names = entity.instance.material.params.map((candidate) => candidate.name).join(", ");
+      throw new RangeError(`debug.setParam: material '${entity.instance.material.id}' declares no param '${param}' (params: ${names === "" ? "none" : names}).`);
+    }
+    const problem = paramValueProblem(declared.type, value);
+    if (problem !== undefined) {
+      throw new TypeError(`debug.setParam: param '${param}' of '${entityName}' is a ${declared.type}; got ${describeValue(value)}: ${problem}.`);
+    }
+    this.setParam(record, param, value);
   }
 
   private setParam(entity: unknown, name: unknown, value: unknown): void {

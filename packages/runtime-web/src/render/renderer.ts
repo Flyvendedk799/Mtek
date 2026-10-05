@@ -110,6 +110,8 @@ export class Renderer {
   private draws: readonly DrawItem[] = [];
   private drawsVersion = -1;
   private drawCallsLastFrame = 0;
+  /** Materials that failed after mount (`failMaterial`): never drawn. */
+  private readonly failedMaterials = new Set<string>();
 
   constructor(options: RendererOptions) {
     this.options = options;
@@ -139,7 +141,24 @@ export class Renderer {
     return this.drawCallsLastFrame;
   }
 
-  /** The current draw list (rebuilt when visibility changed). */
+  /** Number of materials taken out of the draw list by `failMaterial`. */
+  get failedMaterialCount(): number {
+    return this.failedMaterials.size;
+  }
+
+  /**
+   * A material whose shader or pipeline failed after mount (`spec/runtime-abi.md` section 12): reports
+   * `diagnostic` and stops drawing every entity that uses it. The rest of the scene keeps running; the
+   * entities stay in the world and their params stay writable. Idempotent.
+   */
+  failMaterial(materialId: string, diagnostic: MtekDiagnostic): void {
+    if (this.failedMaterials.has(materialId)) return;
+    this.failedMaterials.add(materialId);
+    this.drawsVersion = -1;
+    this.options.report(diagnostic);
+  }
+
+  /** The current draw list (rebuilt when visibility or the set of failed materials changed). */
   drawList(): readonly DrawItem[] {
     const { world, structure, pipelines, meshes } = this.options;
     if (this.drawsVersion === world.visibilityVersion) return this.draws;
@@ -148,6 +167,7 @@ export class Renderer {
       const record = world.entities[entity.index];
       const objectSlot = this.objectSlots[entity.index];
       if (record?.visible !== true || entity.mesh === null || entity.instance === null || objectSlot === undefined) continue;
+      if (this.failedMaterials.has(entity.instance.material.id)) continue;
       const pipeline = pipelines.get(entity.instance.material.id);
       if (pipeline === undefined) throw new Error(`internal error: no pipeline for material '${entity.instance.material.id}'`);
       const gpuMesh = meshes.get(entity.mesh.id);

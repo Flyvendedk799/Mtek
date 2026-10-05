@@ -181,6 +181,17 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     this.fail(diagnostic);
   }
 
+  /**
+   * A material whose shader or pipeline failed after mount (hot reload, device recovery): the diagnostic
+   * is reported and the material is no longer drawn; the scene keeps running (`spec/runtime-abi.md` section 12).
+   * Mount-time failures never get here: they reject `mountMtek` with `shader-failed`.
+   */
+  handleMaterialFailure(materialId: string, diagnostic: MtekDiagnostic): void {
+    if (this.current === "disposed") return;
+    // The renderer reports through app.report, which also shows errors in the overlay.
+    this.deps.scene.renderer.failMaterial(materialId, diagnostic);
+  }
+
   /** Delivers a diagnostic to the host; errors also appear in the overlay. */
   report(diagnostic: MtekDiagnostic): void {
     if (!this.deps.sink.report(diagnostic)) return;
@@ -275,8 +286,12 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       releaseKey: () => {
         throw notYet("releaseKey", "M3");
       },
-      setParam: () => {
-        throw notYet("setParam", "M3");
+      setParam: (entityName, param, value) => {
+        if (this.current === "disposed" || this.current === "failed") {
+          throw new Error(`debug.setParam: the application is ${this.current}`);
+        }
+        // Uploaded by the next frame's render phase; never creates a shader, pipeline or bind group.
+        this.deps.scene.world.setParamByName(entityName, param, value);
       },
       scene: () => ({
         // Scene state arrives with M3; the entity transforms are the world's records.
@@ -299,6 +314,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       cpuUpdateMs: this.cpuUpdateMs,
       renderPrepMs: this.renderPrepMs,
       drawCalls: renderer.drawCalls,
+      failedMaterials: renderer.failedMaterialCount,
       // Instancing and culling arrive with M4.
       instancedDraws: 0,
       culledObjects: 0,

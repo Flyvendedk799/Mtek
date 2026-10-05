@@ -463,12 +463,19 @@ describe("debug API (options.test)", () => {
     app.dispose();
   });
 
-  it("pressKey, releaseKey and setParam say plainly that they arrive later", async () => {
+  it("pressKey and releaseKey say plainly that they arrive later", async () => {
     const host = healthyHost();
     const app = await mountManual(host);
     expect(() => debugOf(app).pressKey("Space")).toThrow(/M3/);
     expect(() => debugOf(app).releaseKey("Space")).toThrow(/M3/);
-    expect(() => debugOf(app).setParam("Cube", "tint", 1)).toThrow(/M3/);
+    app.dispose();
+  });
+
+  it("setParam changes the entity's material mirror and reports what the program does not declare", async () => {
+    const host = healthyHost();
+    const app = await mountManual(host);
+    debugOf(app).setParam("Cube", "color", { r: 0.5, g: 0.5, b: 0.5, a: 1 });
+    expect(() => debugOf(app).setParam("Cube", "tint", 1)).toThrow(/declares no param .tint./);
     app.dispose();
   });
 });

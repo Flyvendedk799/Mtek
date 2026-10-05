@@ -23,7 +23,11 @@ export interface MtekDebug {
   /** Input injection arrives with M3; calling it before then throws. */
   pressKey(code: string): void;
   releaseKey(code: string): void;
-  /** Arrives with M2/M3; calling it before then throws. */
+  /**
+   * Writes a material param of the named entity (its name, or its qualified symbol when the name is shared)
+   * without `bind`: uploaded by the next frame, never creates a shader, pipeline or bind group; a non-opaque
+   * colour is `E8100` and the previous value stays. A wrong entity, param or value throws (decision 0046).
+   */
   setParam(entityName: string, param: string, value: unknown): void;
   scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }> };
 }

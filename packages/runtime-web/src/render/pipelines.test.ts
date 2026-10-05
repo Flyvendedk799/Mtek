@@ -158,6 +158,14 @@ describe("PipelineCache", () => {
     expect(cache.size).toBe(0);
   });
 
+  it("records the phase of a later failure (hot reload) instead of claiming the mount", async () => {
+    const { cache, material, module } = setup({ pipelineError: () => "bad" }, validManifest());
+    const later = await cache.obtain({ material, module, colorFormat: "rgba8unorm-srgb", phase: "runtime:reload" });
+    const startup = await cache.obtain({ material, module, colorFormat: "rgba8unorm-srgb" });
+    expect(later.ok ? null : later.diagnostic.phase).toBe("runtime:reload");
+    expect(startup.ok ? null : startup.diagnostic.phase).toBe("runtime:mount");
+  });
+
   it("without a material symbol the diagnostic has no source", async () => {
     const { cache, material, module } = setup({ pipelineError: () => "bad" }, minimalManifestJson());
     const result = await cache.obtain({ material, module, colorFormat: "rgba8unorm-srgb" });

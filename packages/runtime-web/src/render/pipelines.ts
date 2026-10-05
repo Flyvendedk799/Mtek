@@ -15,7 +15,7 @@
  *    created, `host/shaders.ts`).
  */
 import type { MtekLayoutRecord, MtekManifest, MtekVertexAttribute } from "../abi/manifest-types.js";
-import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
+import { makeRuntimeDiagnostic, type MtekDiagnostic, type MtekRuntimePhase } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { DEPTH_FORMAT } from "../host/surface.js";
@@ -123,6 +123,8 @@ export interface PipelineRequest {
   readonly material: ResolvedMaterial;
   readonly module: GPUShaderModule;
   readonly colorFormat: GPUTextureFormat;
+  /** The phase recorded in a failure diagnostic. Default `runtime:mount`. */
+  readonly phase?: MtekRuntimePhase;
 }
 
 export type PipelineResult =
@@ -207,7 +209,7 @@ export class PipelineCache {
   private failure(request: PipelineRequest, message: string): MtekDiagnostic {
     const spanId = spanOfSymbol(this.manifest, request.material.id);
     return makeRuntimeDiagnostic("E8051", {
-      phase: "runtime:mount",
+      phase: request.phase ?? "runtime:mount",
       message: `The render pipeline for material '${request.material.id}' could not be created: ${message}`,
       source: spanId === undefined ? null : resolveSpan(this.manifest, spanId),
       notes: [`pipeline key: ${materialPipelineKey(request.material, request.colorFormat)}`],
