@@ -398,3 +398,84 @@ describe("the compiler's state_and_handlers program, end to end", () => {
     expect(cube?.position).toMatchObject({ y: 0.5 });
   });
 });
+
+describe("transform writes from update reach the GPU object blocks (spec/scenes.md section 12)", () => {
+  /** E0 > E1 > E2 and an unrelated root E3: the hierarchy of `nestedManifest` in the world tests. */
+  function hierarchy(): MtekManifest {
+    const json = minimalManifestJson() as Json;
+    const scene = json["scene"] as { entities: Json[]; materialInstances: Json[] };
+    const template = scene.entities[0] ?? {};
+    const instance = (scene.materialInstances[0] ?? {});
+    const parents = [null, 0, 1, null];
+    scene.entities = parents.map((parent, index) => ({
+      ...template,
+      index,
+      name: `E${String(index)}`,
+      symbol: `src/main.mtek::Demo.E${String(index)}`,
+      parent,
+      material: { id: "std/materials.mtek::Unlit", instance: index },
+      update: false,
+      fixedUpdate: false,
+    }));
+    scene.materialInstances = parents.map((_, index) => ({ ...instance, index, entity: index }));
+    const checked = checkManifest(json);
+    if (!checked.ok) throw new Error(JSON.stringify(checked.failures));
+    return checked.manifest;
+  }
+
+  interface MoveCtx {
+    readonly e: readonly object[];
+    setTransform(entity: object | undefined, field: string, value: unknown): void;
+  }
+
+  async function mountMoving(moves: (frame: number, ctx: MoveCtx) => void): Promise<Mounted> {
+    const manifest = hierarchy();
+    const base = fakeProgram(minimalSceneInit, manifest);
+    const entry = (base.scenes as Record<string, MtekProgramScene>)[manifest.entryScene];
+    if (entry === undefined) throw new Error("no entry scene");
+    let frame = 0;
+    const scene = {
+      ...entry,
+      update: (ctx: MoveCtx) => {
+        moves(frame, ctx);
+        frame += 1;
+      },
+    } as unknown as MtekProgramScene;
+    return mountProgram({ ...base, scenes: { [manifest.entryScene]: scene } }, manifest);
+  }
+
+  const uploads = (debug: MtekDebug): number => debug.counters()["uploads"] ?? Number.NaN;
+
+  it("a static scene uploads once; moving a child uploads that child and its descendants only; a repeated value uploads nothing", async () => {
+    const { debug, app } = await mountMoving((frame, ctx) => {
+      // Frame 1 moves E1 (and so E2); frame 2 writes the same value again; frame 3 moves E3.
+      if (frame === 1) ctx.setTransform(ctx.e[1], "position", { x: 0, y: 2, z: 0 });
+      if (frame === 2) ctx.setTransform(ctx.e[1], "position", { x: 0, y: 2, z: 0 });
+      if (frame === 3) ctx.setTransform(ctx.e[3], "position", { x: 1, y: 0, z: 0 });
+    });
+    debug.step(1, 0.016); // frame 0: everything uploads once
+    const afterFirst = uploads(debug);
+    debug.step(1, 0.016); // E1 and E2
+    expect(uploads(debug) - afterFirst).toBe(2);
+    const afterMove = uploads(debug);
+    debug.step(1, 0.016); // same value: the world matrix is recomputed but byte-identical
+    expect(uploads(debug) - afterMove).toBe(0);
+    const afterRepeat = uploads(debug);
+    debug.step(1, 0.016); // E3 alone
+    expect(uploads(debug) - afterRepeat).toBe(1);
+    debug.step(5, 0.016);
+    expect(uploads(debug) - afterRepeat).toBe(1);
+    app.dispose();
+  });
+
+  it("a rejected scale (E8090) writes nothing and uploads nothing", async () => {
+    const { debug, app } = await mountMoving((frame, ctx) => {
+      if (frame === 1) ctx.setTransform(ctx.e[0], "scale", { x: 0, y: 1, z: 1 });
+    });
+    debug.step(1, 0.016);
+    const before = uploads(debug);
+    debug.step(1, 0.016);
+    expect(uploads(debug) - before).toBe(0);
+    app.dispose();
+  });
+});

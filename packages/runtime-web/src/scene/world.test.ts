@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { checkManifest } from "../abi/validate.js";
 import type { MtekManifest } from "../abi/manifest-types.js";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
-import { fromRotationTranslationScale, multiply } from "../math/mat4.js";
+import { fromRotationTranslationScale, multiply, normalMatrix } from "../math/mat4.js";
 import { minimalManifestJson } from "../test-support/fake-host.js";
 import { CODEGEN_FIXTURES, loadGoldenProgram } from "../test-support/program.js";
 import { checkProgram } from "./program.js";
@@ -327,6 +327,33 @@ describe("world-matrix propagation", () => {
     expect(world.propagate()).toBe(1);
     expect(world.takeWorldChanges()).toEqual([3]);
     expect(world.worldMatrix(3)[0]).toBe(3);
+  });
+
+  it("a child of a non-uniformly scaled, rotated parent has the inverse-transpose normal matrix of its world matrix", () => {
+    const { world, ctx } = makeWorld(nestedManifest());
+    const quarterTurn = { x: 0, y: 0, z: Math.SQRT1_2, w: Math.SQRT1_2 };
+    world.initialise((c) => {
+      const context = c as Ctx;
+      context.setTransform(context.e[0], "rotation", quarterTurn);
+      context.setTransform(context.e[0], "scale", { x: 2, y: 1, z: 4 });
+    });
+    const m = world.worldMatrix(1);
+    // Independent 3x3 inverse-transpose by cofactors (column-major: m[col * 4 + row]).
+    const a = [[m[0], m[4], m[8]], [m[1], m[5], m[9]], [m[2], m[6], m[10]]] as number[][];
+    const cof = (r: number, c: number): number => {
+      const rows = [0, 1, 2].filter((i) => i !== r);
+      const cols = [0, 1, 2].filter((i) => i !== c);
+      const [r0, r1] = rows as [number, number];
+      const [c0, c1] = cols as [number, number];
+      const minor = (a[r0]?.[c0] ?? 0) * (a[r1]?.[c1] ?? 0) - (a[r0]?.[c1] ?? 0) * (a[r1]?.[c0] ?? 0);
+      return (r + c) % 2 === 0 ? minor : -minor;
+    };
+    const det = (a[0]?.[0] ?? 0) * cof(0, 0) + (a[0]?.[1] ?? 0) * cof(0, 1) + (a[0]?.[2] ?? 0) * cof(0, 2);
+    const normal = normalMatrix(m);
+    for (let r = 0; r < 3; r += 1) {
+      for (let c = 0; c < 3; c += 1) expect(normal[c * 4 + r] ?? Number.NaN).toBeCloseTo(cof(r, c) / det, 5);
+    }
+    expect(ctx.e).toHaveLength(4);
   });
 
   it("visibility changes bump the visibility version only when the value changes", () => {
