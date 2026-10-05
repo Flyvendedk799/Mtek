@@ -7,7 +7,12 @@
 import type { MtekManifest } from "../abi/manifest-types.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
+import type { MtekProgramScene } from "../abi/program.js";
+import { attachInputListeners } from "../input/dom.js";
+import { InputState } from "../input/input.js";
+import { isMappedKeyCode } from "../input/keys.js";
 import type { Scene } from "../render/startup.js";
+import { Behaviors } from "../scene/behavior.js";
 import { Scheduler, type FramePhases } from "../schedule/scheduler.js";
 import type { HostEnvironment, ResizeObserverLike } from "./environment.js";
 import type { DiagnosticSink } from "./failures.js";
@@ -27,8 +32,12 @@ export interface AppDependencies {
   readonly canvas: HTMLCanvasElement;
   readonly pauseWhenHidden: boolean;
   readonly test: MtekTestOptions | undefined;
-  /** The resolved `random()` seed (consumed by the CPU runtime from M3 on). */
+  /** The resolved `random()` seed (the generator itself is in the CPU services). */
   readonly seed: number;
+  /** The input state `random`/`is_key_down` services and the DOM listeners share. */
+  readonly input: InputState;
+  /** The entry scene's generated functions (lifecycle functions and handlers). */
+  readonly sceneFunctions: MtekProgramScene;
   /** The initialised scene: world, material arenas, pipelines and renderer. */
   readonly scene: Scene;
 }
@@ -55,6 +64,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private current: MtekAppState = "running";
   private pausedByVisibility = false;
   private readonly scheduler: Scheduler;
+  private readonly input: InputState;
+  private readonly behaviors: Behaviors;
   private readonly resizeObserver: ResizeObserverLike | undefined;
   private frameStartMs = 0;
   private renderStartMs = 0;
@@ -65,6 +76,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   constructor(private readonly deps: AppDependencies) {
     const { manifest, environment, registry, test } = deps;
     this.seed = deps.seed;
+    this.input = deps.input;
+    this.behaviors = new Behaviors(deps.sceneFunctions, deps.scene.world);
     registry.phase = "runtime:render";
 
     const manual = test?.manualClock === true;
@@ -90,13 +103,22 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       this.resizeObserver.observe(deps.canvas);
     }
 
-    if (environment.document !== undefined && deps.pauseWhenHidden) {
+    attachInputListeners(this.input, {
+      canvas: deps.canvas,
+      document: environment.document,
+      window: environment.window,
+      registry,
+      handledKeys: this.behaviors.handledKeys(),
+    });
+
+    if (environment.document !== undefined) {
       registry.addEventListener(environment.document, "visibilitychange", () => {
         this.onVisibilityChange();
       });
-      if (environment.document.visibilityState === "hidden") {
+      if (deps.pauseWhenHidden && environment.document.visibilityState === "hidden") {
         this.current = "paused";
         this.pausedByVisibility = true;
+        this.input.pause();
         this.scheduler.pause();
       }
     }
@@ -123,6 +145,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     if (this.current !== "running") return;
     this.current = "paused";
     this.pausedByVisibility = false;
+    this.input.pause();
     this.scheduler.pause();
   }
 
@@ -130,6 +153,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     if (this.current !== "paused") return;
     this.current = "running";
     this.pausedByVisibility = false;
+    this.input.resume();
     this.scheduler.resume();
   }
 
@@ -230,11 +254,16 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     const document = this.deps.environment.document;
     if (document === undefined) return;
     if (document.visibilityState === "hidden") {
-      if (this.current === "running") {
+      // Whether or not the app pauses, a hidden document never delivers the key-ups: release everything.
+      this.input.focusLost();
+      if (this.current === "running" && this.deps.pauseWhenHidden) {
         this.current = "paused";
         this.pausedByVisibility = true;
+        this.input.pause();
         this.scheduler.pause();
       }
+    } else if (!this.deps.pauseWhenHidden) {
+      return;
     } else if (this.pausedByVisibility && this.current === "paused") {
       this.resume();
     }
@@ -247,10 +276,16 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       phase1_input: () => {
         this.frameStartMs = now();
         world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex);
+        // Host inputs arrive with M3-06; input transitions are delivered in arrival order.
+        this.behaviors.dispatchInput(this.input.deliver());
       },
-      // Fixed ticks, updates, the lifecycle queue and bindings run generated code from M3 on.
-      phase2_tick: () => undefined,
-      phase3_update: () => undefined,
+      phase2_tick: (step) => {
+        this.behaviors.fixedUpdate(step);
+      },
+      phase3_update: (delta) => {
+        this.behaviors.update(delta);
+      },
+      // The lifecycle queue (M5) and bindings (M3-05) run generated code from here on.
       phase4_flush: () => undefined,
       phase5_bindings: () => undefined,
       phase6_transforms: () => {
@@ -268,8 +303,6 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   }
 
   private createDebug(manual: boolean): MtekDebug {
-    const notYet = (what: string, milestone: string): Error =>
-      new Error(`debug.${what} is not available before ${milestone}: this runtime build has no input or material state yet.`);
     return {
       step: (frames, dtSeconds) => {
         if (!manual) throw new Error("debug.step requires mountMtek options test.manualClock");
@@ -280,11 +313,13 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         return this.deps.surface.readPixels();
       },
       counters: () => this.counters(),
-      pressKey: () => {
-        throw notYet("pressKey", "M3");
+      pressKey: (code) => {
+        if (!isMappedKeyCode(code)) throw new RangeError(`debug.pressKey: '${String(code)}' is not the DOM code of a Key member`);
+        this.input.keyDown(code);
       },
-      releaseKey: () => {
-        throw notYet("releaseKey", "M3");
+      releaseKey: (code) => {
+        if (!isMappedKeyCode(code)) throw new RangeError(`debug.releaseKey: '${String(code)}' is not the DOM code of a Key member`);
+        this.input.keyUp(code);
       },
       setParam: (entityName, param, value) => {
         if (this.current === "disposed" || this.current === "failed") {
@@ -294,8 +329,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         this.deps.scene.world.setParamByName(entityName, param, value);
       },
       scene: () => ({
-        // Scene state arrives with M3; the entity transforms are the world's records.
-        state: {},
+        state: { ...this.deps.scene.world.sceneState },
         entities: this.deps.scene.world.entities.map((record, index) => ({
           name: this.deps.manifest.scene.entities[index]?.name ?? String(index),
           position: record.position,

@@ -107,12 +107,14 @@ describe("mountMtek success", () => {
   it("takes pauseWhenHidden from the manifest unless the option overrides it", async () => {
     const hostA = healthyHost();
     const appA = await mountOn(hostA);
-    expect(hostA.document.listenerCount).toBe(1); // manifest default is true
+    hostA.document.setVisibility("hidden"); // manifest default is true
+    expect(appA.state).toBe("paused");
     appA.dispose();
 
     const hostB = healthyHost();
     const appB = await mountOn(hostB, { pauseWhenHidden: false });
-    expect(hostB.document.listenerCount).toBe(0);
+    hostB.document.setVisibility("hidden");
+    expect(appB.state).toBe("running");
     appB.dispose();
   });
 

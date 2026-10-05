@@ -88,6 +88,7 @@ describe("compiled manifests (tests/codegen/*/expected)", () => {
       "numeric_cpu_table",
       "scene_a_target_camera_box",
       "scene_b_orthographic_nested",
+      "state_and_handlers",
     ]);
   });
 

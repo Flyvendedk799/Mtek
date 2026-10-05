@@ -31,6 +31,10 @@ export interface HostEnvironment {
   /** `undefined` when there is no document (the overlay and the visibility pause are then unavailable). */
   readonly document: DocumentLike | undefined;
   readonly ResizeObserver: ResizeObserverFactory | undefined;
+  /** The window, whose `blur` releases every held key (`spec/scenes.md` section 7.4); absent outside a browser. */
+  readonly window?: EventTarget | undefined;
+  /** Where `print` goes (the development console); absent means nowhere. */
+  log?(message: string): void;
   requestAnimationFrame(callback: (nowMs: number) => void): number;
   cancelAnimationFrame(handle: number): void;
   /** `window.devicePixelRatio`, read each time the backing size is computed. */
@@ -47,6 +51,10 @@ export function defaultEnvironment(): HostEnvironment {
     fetch: (url) => fetch(url),
     document: typeof document === "undefined" ? undefined : document,
     ResizeObserver: typeof ResizeObserver === "undefined" ? undefined : ResizeObserver,
+    window: typeof window === "undefined" ? undefined : window,
+    log: (message) => {
+      console.log(message);
+    },
     requestAnimationFrame: (callback) => requestAnimationFrame(callback),
     cancelAnimationFrame: (handle) => {
       cancelAnimationFrame(handle);

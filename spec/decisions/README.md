@@ -70,3 +70,4 @@ recorded here before code depends on it (blueprint §15).
 | 0047 | CPU/GPU numeric agreement: WGSL's conversion clamp everywhere and CPU-order helpers (owner decision) |
 | 0048 | M2 exit-gate browser tests: details the specification leaves open |
 | 0049 | `state`, lifecycle functions, handlers and writes: details the specification leaves open |
+| 0050 | Running generated code: input delivery, `random`, `print` and the scene object check: details the specification leaves open |

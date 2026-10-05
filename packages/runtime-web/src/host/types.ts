@@ -20,7 +20,10 @@ export interface MtekDebug {
   /** Requires `test.renderTarget`. Returns tightly packed rows. */
   readPixels(): Promise<{ width: number; height: number; format: "rgba8unorm-srgb"; data: Uint8Array }>;
   counters(): Readonly<Record<string, number>>;
-  /** Input injection arrives with M3; calling it before then throws. */
+  /**
+   * Inject a key transition as the browser would: `code` is a DOM `KeyboardEvent.code` of a `Key` member
+   * (anything else throws). Delivered in phase 1 of the next frame; ignored while paused.
+   */
   pressKey(code: string): void;
   releaseKey(code: string): void;
   /**
