@@ -15,7 +15,7 @@ import type { MtekDiagnostic } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import type { CheckedProgram } from "../scene/program.js";
 import type { SceneStructure } from "../scene/structure.js";
-import { World } from "../scene/world.js";
+import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
 import { BindingPlan, PipelineCache } from "./pipelines.js";
@@ -32,6 +32,8 @@ export interface SceneStartupOptions {
   readonly modules: ReadonlyMap<string, GPUShaderModule>;
   /** Run-time diagnostics of initialisation and of later frames. */
   readonly report: (diagnostic: MtekDiagnostic) => void;
+  /** `random`, `is_key_down` and `print` for generated code, including `init`. */
+  readonly services?: CpuServices;
 }
 
 /** The running scene: its CPU world, its GPU state and its renderer. */
@@ -46,11 +48,11 @@ export type SceneStartupResult = { readonly ok: true; readonly scene: Scene } | 
 
 /** Builds and initialises the scene. Errors thrown by generated code (internal errors) propagate. */
 export async function startScene(options: SceneStartupOptions): Promise<SceneStartupResult> {
-  const { manifest, structure, program, device, registry, surface, modules, report } = options;
+  const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
 
   const plan = new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
   const materials = new MaterialStore(device, registry, plan, structure, program.writers);
-  const world = new World({ manifest, structure, params: materials, report });
+  const world = new World({ manifest, structure, params: materials, report, ...(services === undefined ? {} : { services }) });
   world.initialise(program.scene.init);
 
   const meshes = new MeshStore(registry, device.queue);

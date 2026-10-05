@@ -42,8 +42,21 @@ export class RuntimeInternalError extends Error {
   }
 }
 
-/** The members of `ctx` this runtime build provides (decision 0031). */
-export const M1_CONTEXT_MEMBERS = ["e", "cam", "frame", "setTransform", "setVisible", "setParam", "setCamera", "warn"] as const;
+/** The members of `ctx` this runtime build provides (decisions 0031 and 0050). */
+export const CONTEXT_MEMBERS = [
+  "s",
+  "e",
+  "cam",
+  "frame",
+  "setTransform",
+  "setVisible",
+  "setParam",
+  "setCamera",
+  "warn",
+  "random",
+  "isKeyDown",
+  "print",
+] as const;
 
 /** `entity_ref` (`spec/runtime-abi.md` section 4.1). Static entities: slot = static index, generation 0. */
 export interface EntityRef {
@@ -60,7 +73,7 @@ export interface EntityRecord {
   rotation: Quat;
   scale: Vec3;
   visible: boolean;
-  /** Entity state; empty until M3. */
+  /** Entity state: every declared name, at its zero value until `init`; generated code writes it directly. */
   readonly state: Record<string, unknown>;
   /** Prefab params; static entities have none. */
   readonly params: Readonly<Record<string, unknown>>;
@@ -104,12 +117,31 @@ export interface ParamSink {
   writeParam(instance: number, name: string, value: unknown): void;
 }
 
+/** The CPU intrinsics generated code reaches through `ctx` (`spec/runtime-abi.md` section 4.2). */
+export interface CpuServices {
+  /** `random()`: an f32 in `[0, 1)`. */
+  random(): number;
+  /** `is_key_down`: the delivered key state. `code` is a DOM `KeyboardEvent.code`. */
+  isKeyDown(code: string): boolean;
+  /** `print`: development console output; `spanId` indexes the manifest spans table. */
+  print(message: string, spanId: number): void;
+}
+
+/** Services for a world nothing drives: no keys held, a fixed sequence of zeros, no output. */
+export const INERT_SERVICES: CpuServices = Object.freeze({
+  random: () => 0,
+  isKeyDown: () => false,
+  print: () => undefined,
+});
+
 export interface WorldOptions {
   readonly manifest: MtekManifest;
   readonly structure: SceneStructure;
   readonly params: ParamSink;
   /** Receives run-time diagnostics (`E8011`, `E8090`, `E8100`, warnings from `ctx.warn`). */
   readonly report: (diagnostic: MtekDiagnostic) => void;
+  /** Defaults to {@link INERT_SERVICES}. */
+  readonly services?: CpuServices;
 }
 
 const CAMERA_FIELDS = [
@@ -146,6 +178,8 @@ function zeroValue(type: string): unknown {
       return 0;
     case "bool":
       return false;
+    case "string":
+      return "";
     case "vec2":
       return Object.freeze({ x: 0, y: 0 });
     case "vec3":
@@ -171,13 +205,23 @@ function isWarningCode(code: string): code is RuntimeDiagnosticCode {
   return code.startsWith("W") && Object.hasOwn(RUNTIME_DIAGNOSTIC_CATALOGUE, code);
 }
 
+/**
+ * A state object: every declared name set to the zero value of its type. It has no prototype, so a
+ * state named like an `Object.prototype` member (`constructor`, `__proto__`) is an ordinary entry.
+ */
+function stateObject(entries: readonly { readonly name: string; readonly type: string }[]): Record<string, unknown> {
+  const state: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+  for (const entry of entries) state[entry.name] = zeroValue(entry.type);
+  return state;
+}
+
 /** Wraps `members` so that reading or assigning any other member throws an internal error naming it. */
 function guarded<T extends object>(members: T, name: string): T {
   return new Proxy(members, {
     get(target, property, receiver) {
       if (typeof property === "symbol" || Object.hasOwn(target, property)) return Reflect.get(target, property, receiver) as unknown;
       throw new RuntimeInternalError(
-        `generated code read ${name}.${property}, which this runtime build does not provide (the M1 context has ${M1_CONTEXT_MEMBERS.join(", ")}).`,
+        `generated code read ${name}.${property}, which this runtime build does not provide (the context has ${CONTEXT_MEMBERS.join(", ")}).`,
       );
     },
     set(_target, property) {
@@ -198,6 +242,8 @@ export class World {
   /** Entity records by static index. */
   readonly entities: readonly EntityRecord[];
   readonly camera: CameraRecord;
+  /** The scene state (`ctx.s`). */
+  readonly sceneState: Record<string, unknown>;
   /** Phase recorded in diagnostics. `runtime:mount` during initialisation. */
   phase: MtekRuntimePhase = "runtime:mount";
 
@@ -228,7 +274,7 @@ export class World {
           rotation: IDENTITY,
           scale: UNIT_SCALE,
           visible: true,
-          state: {},
+          state: stateObject(this.manifest.scene.entities[entity.index]?.state ?? []),
           params: Object.freeze({}),
           mat: params === undefined ? null : { p: Object.fromEntries(params.map((param) => [param.name, zeroValue(param.type)])) },
           ref: Object.freeze({ slot: entity.index, gen: 0 }),
@@ -253,7 +299,10 @@ export class World {
           : { kind: "orthographic", height: DEFAULT_HEIGHT, near: DEFAULT_NEAR, far: DEFAULT_FAR },
     };
 
+    this.sceneState = stateObject(this.manifest.scene.state);
+    const services = options.services ?? INERT_SERVICES;
     const members = {
+      s: this.sceneState,
       e: this.entities,
       cam: this.camera,
       setTransform: (entity: unknown, field: unknown, value: unknown): void => {
@@ -270,6 +319,14 @@ export class World {
       },
       warn: (code: unknown, spanId: unknown): void => {
         this.warn(code, spanId);
+      },
+      random: (): number => services.random(),
+      isKeyDown: (code: unknown): boolean => {
+        if (typeof code !== "string") throw new RuntimeInternalError(`ctx.isKeyDown got ${describeValue(code)}; expected a DOM key code.`);
+        return services.isKeyDown(code);
+      },
+      print: (message: unknown, spanId: unknown): void => {
+        services.print(typeof message === "string" ? message : describeValue(message), typeof spanId === "number" ? spanId : -1);
       },
     };
     Object.defineProperty(members, "frame", { enumerable: true, get: () => this.frameValues });

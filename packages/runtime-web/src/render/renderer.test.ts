@@ -50,7 +50,7 @@ async function mountScene(
   const parsed = checkManifest(json);
   if (!parsed.ok) throw new Error(JSON.stringify(parsed.failures));
   const reported: MtekDiagnostic[] = [];
-  const app = await mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), fakeProgram(setup.init), {
+  const app = await mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), fakeProgram(setup.init, parsed.manifest), {
     test: { manualClock: true, renderTarget: TARGET },
     onDiagnostic: (d) => reported.push(d),
     ...setup.options,
@@ -142,7 +142,7 @@ describe("startup (spec/runtime-abi.md section 6.1)", () => {
     const host = new FakeHost();
     installProgram(host);
     const program = fakeProgram((context) => {
-      void (context as Record<string, unknown>)["s"];
+      void (context as Record<string, unknown>)["spawn"];
     });
     await expect(mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), program)).rejects.toThrow(RuntimeInternalError);
     expect(host.device.destroyed).toBe(true);

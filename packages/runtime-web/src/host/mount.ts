@@ -30,6 +30,9 @@ import { DiagnosticSink, abiFailureToDiagnostic, mountError } from "./failures.j
 import { FailureOverlay } from "./overlay.js";
 import { loadStartupShaders } from "./shaders.js";
 import { startScene } from "../render/startup.js";
+import { InputState } from "../input/input.js";
+import { Xoshiro128 } from "../random/xoshiro.js";
+import type { CpuServices } from "../scene/world.js";
 import { checkProgram } from "../scene/program.js";
 import { resolveStructure } from "../scene/structure.js";
 import { Surface, srgbViewFormat, type CanvasFormat } from "./surface.js";
@@ -245,6 +248,19 @@ export async function mountMtekWith<I = Record<string, unknown>>(
     });
     if (shaders.diagnostics.length > 0) throw mountError(shaders.diagnostics);
 
+    // The CPU services generated code reaches through ctx, from `init` on: the seeded generator, the
+    // delivered key state and the development console.
+    const seed = options.seed === undefined ? (Math.floor(environment.now() * 1000) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0;
+    const generator = new Xoshiro128(seed);
+    const input = new InputState();
+    const services: CpuServices = {
+      random: () => generator.nextF32(),
+      isKeyDown: (code) => input.isKeyDown(code),
+      print: (message) => {
+        environment.log?.(message);
+      },
+    };
+
     // The scene: init(ctx), meshes and every startup pipeline. Run-time diagnostics of init (E8090,
     // E8011, E8100) are not fatal; they are delivered once the application exists.
     const started = await startScene({
@@ -255,6 +271,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       registry,
       surface,
       modules: shaders.modules,
+      services,
       report: (diagnostic) => {
         if (app !== undefined) app.report(diagnostic);
         else earlyReports.push(diagnostic);
@@ -282,7 +299,6 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       );
     }
 
-    const seed = options.seed === undefined ? (Math.floor(environment.now() * 1000) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0;
     app = new MountedApp<I>({
       manifest,
       device,
@@ -295,6 +311,8 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       pauseWhenHidden: options.pauseWhenHidden ?? manifest.runtimeConfig.pauseWhenHidden,
       test: options.test,
       seed,
+      input,
+      sceneFunctions: checked.program.scene,
       scene: started.scene,
     });
     for (const diagnostic of earlyReports) app.report(diagnostic);

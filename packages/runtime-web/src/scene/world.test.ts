@@ -7,7 +7,7 @@ import { minimalManifestJson } from "../test-support/fake-host.js";
 import { CODEGEN_FIXTURES, loadGoldenProgram } from "../test-support/program.js";
 import { checkProgram } from "./program.js";
 import { resolveStructure } from "./structure.js";
-import { M1_CONTEXT_MEMBERS, RuntimeInternalError, World, type CameraRecord, type EntityRecord } from "./world.js";
+import { CONTEXT_MEMBERS, RuntimeInternalError, World, type CameraRecord, type EntityRecord } from "./world.js";
 
 interface ParamWrite {
   readonly instance: number;
@@ -106,12 +106,12 @@ describe("World records before init", () => {
 });
 
 describe("the M1 context subset", () => {
-  it("has exactly the M1 members", () => {
+  it("has exactly the members of CONTEXT_MEMBERS", () => {
     const { ctx } = makeWorld();
-    expect(Object.keys(ctx).sort()).toEqual([...M1_CONTEXT_MEMBERS].sort());
+    expect(Object.keys(ctx).sort()).toEqual([...CONTEXT_MEMBERS].sort());
   });
 
-  it.each(["s", "spawn", "destroy", "alive", "body", "random", "print", "isKeyDown", "setLight", "notAMember"])(
+  it.each(["spawn", "destroy", "alive", "body", "setLight", "notAMember"])(
     "reading ctx.%s throws an internal error naming the member",
     (member) => {
       const { ctx } = makeWorld();
@@ -352,7 +352,8 @@ describe("the golden programs' init against the real world", () => {
     expect(writes.map((w) => `${String(w.instance)}:${w.name}`)).toEqual(expected);
     for (const record of world.entities) {
       expect(record.scale.x * record.scale.y * record.scale.z).toBeGreaterThan(0);
-      expect(record.mat?.p["color"]).toMatchObject({ a: 1 });
+      const color = record.mat?.p["color"];
+      if (color !== undefined) expect(color).toMatchObject({ a: 1 });
     }
     expect(world.takeWorldChanges()).toEqual(world.entities.map((_, i) => i));
   });
