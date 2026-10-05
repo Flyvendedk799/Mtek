@@ -28,7 +28,7 @@ use std::collections::BTreeMap;
 use crate::diagnostics::{Code, Diagnostic};
 use crate::emit_js::{ProgramParts, emit_app_dts, emit_program, source_map};
 use crate::emit_wgsl::{ShaderArtifact, emit_shader};
-use crate::ir::{self, MeshDesc, Program};
+use crate::ir::{self, BehaviorKind, MeshDesc, Owner, Program};
 use crate::layout::{LayoutRecord, builtin_blocks, compute};
 use crate::lowering::shader::lower_material;
 use crate::plan::{ParamClass, PlannedMaterial, ResourcePlan, check_limits, plan_program};
@@ -43,8 +43,8 @@ use super::identity::{BuildIdentity, h16};
 use super::manifest::{
     Camera, Entity, EntityMaterial, InstanceParam, Layout, MANIFEST_SCHEMA, Manifest, Material,
     MaterialInstance, MaterialParam, Mesh, MeshShape, Num, ParamClass as ManifestClass,
-    RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, Subsystems,
-    SymbolEntry, SymbolKind,
+    RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, StateEntry,
+    Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -201,6 +201,7 @@ pub fn package(
         &ProgramParts {
             runtime_file: &runtime_file,
             layouts: &layouts,
+            release: input.mode == BuildMode::Release,
         },
         &mut |span| spans.intern(span),
     )
@@ -355,6 +356,9 @@ fn symbols(
         Ok(())
     };
     add(scene.symbol.to_string(), SymbolKind::Scene, scene.span)?;
+    for state in &scene.state {
+        add(state.symbol.to_string(), SymbolKind::State, state.span)?;
+    }
     for camera in &scene.cameras {
         add(camera.symbol.to_string(), SymbolKind::Camera, camera.span)?;
     }
@@ -501,9 +505,14 @@ fn manifest_scene(scene: &ir::Scene, plan: &ResourcePlan) -> Result<Scene, Strin
             light: None,
             body: None,
             collider: None,
-            state: Vec::new(),
-            update: false,
-            fixed_update: false,
+            state: state_entries(
+                scene,
+                Owner::Entity {
+                    index: entity.index,
+                },
+            ),
+            update: has_behavior(scene, entity.index, &BehaviorKind::Update),
+            fixed_update: has_behavior(scene, entity.index, &BehaviorKind::FixedUpdate),
         });
     }
     let material_instances = plan
@@ -520,6 +529,7 @@ fn manifest_scene(scene: &ir::Scene, plan: &ResourcePlan) -> Result<Scene, Strin
                     name: param.name.clone(),
                     class: match param.class {
                         ParamClass::Initial => ManifestClass::Initial,
+                        ParamClass::Imperative => ManifestClass::Imperative,
                     },
                 })
                 .collect(),
@@ -530,7 +540,7 @@ fn manifest_scene(scene: &ir::Scene, plan: &ResourcePlan) -> Result<Scene, Strin
         name: scene.name.clone(),
         symbol: scene.symbol.to_string(),
         fields,
-        state: Vec::new(),
+        state: state_entries(scene, Owner::Scene),
         cameras,
         entities,
         material_instances,
@@ -538,4 +548,26 @@ fn manifest_scene(scene: &ir::Scene, plan: &ResourcePlan) -> Result<Scene, Strin
         host_inputs: Vec::new(),
         lights: Vec::new(),
     })
+}
+
+/// The manifest's `state` entries of `owner`, in declaration order.
+fn state_entries(scene: &crate::ir::Scene, owner: Owner) -> Vec<StateEntry> {
+    scene
+        .state
+        .iter()
+        .filter(|state| state.owner == owner)
+        .map(|state| StateEntry {
+            name: state.name.clone(),
+            ty: state.ty.clone(),
+            symbol: state.symbol.to_string(),
+        })
+        .collect()
+}
+
+/// Whether the entity `index` has a lifecycle function of `kind`.
+fn has_behavior(scene: &crate::ir::Scene, index: u32, kind: &BehaviorKind) -> bool {
+    scene
+        .behaviors
+        .iter()
+        .any(|b| b.owner == (Owner::Entity { index }) && b.kind == *kind)
 }

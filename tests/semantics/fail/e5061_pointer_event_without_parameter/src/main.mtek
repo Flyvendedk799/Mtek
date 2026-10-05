@@ -1,0 +1,6 @@
+// `on pointer_down` takes exactly one `PointerEvent` parameter (E5061).
+scene Demo {
+    camera Main {}
+    on pointer_down() {
+    }
+}

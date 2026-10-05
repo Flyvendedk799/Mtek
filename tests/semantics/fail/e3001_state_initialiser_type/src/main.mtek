@@ -1,0 +1,5 @@
+// The initialiser of a `state` has the declared type (E3001).
+scene Demo {
+    camera Main {}
+    state speed: f32 = true;
+}

@@ -1,0 +1,7 @@
+// `start` is not a lifecycle function (E5052): v0.1 has `update` and `fixed_update`.
+scene Demo {
+    camera Main {}
+    start(dt: f32) {
+    }
+}
+// covers: [S: lifecycle-signature]

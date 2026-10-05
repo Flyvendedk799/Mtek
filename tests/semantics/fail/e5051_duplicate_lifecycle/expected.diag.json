@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E5051",
+    "file": "src/main.mtek",
+    "startByte": 106,
+    "endByte": 112,
+    "message": "The scene 'Demo' declares `update` more than once."
+  }
+]

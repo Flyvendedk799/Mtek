@@ -8,15 +8,25 @@ use std::collections::BTreeMap;
 
 use super::lower::{Defect, Lowering};
 use super::model::{
-    Block, Branch, Expr, ExprKind, Function, LocalItem, LocalKind, MaterialItem, MaterialParamItem,
-    NamedExpr, Place, PlaceRoot, PlaceStep, StageItem, Stmt, Symbol, Value,
+    Behavior, BehaviorKind, Block, Branch, Expr, ExprKind, Function, LocalItem, LocalKind,
+    MaterialItem, MaterialParamItem, NamedExpr, Owner, Place, PlaceRoot, PlaceStep, StageItem,
+    State, Stmt, Symbol, Value,
 };
 use crate::layout::{
     LayoutType, compute, material_layout_id, material_params_struct, qualified_name,
 };
 use crate::resolve::{DefId, DefKind, Res};
-use crate::syntax::ast::{self, ElseBranch, ExprKind as AstExpr, FieldValue, ForIter};
+use crate::stdlib::{EventForm, registry};
+use crate::syntax::ast::{self, ElseBranch, ExprKind as AstExpr, FieldValue, ForIter, HandlerArg};
 use crate::types::{CallKind, EffectLevel, FieldKind, FnRef, Ty, TyId};
+
+/// What the lowering of a scene body needs to name entities and cameras: the static index of
+/// every entity declaration and the name of every camera.
+#[derive(Default)]
+pub(super) struct SceneCtx {
+    pub(super) entities: BTreeMap<DefId, u32>,
+    pub(super) cameras: BTreeMap<DefId, String>,
+}
 
 /// The state of one function's lowering: its locals so far.
 struct FnLowering<'l, 'a> {
@@ -28,6 +38,8 @@ struct FnLowering<'l, 'a> {
     /// In a material's stage: the material's params, by their declaration,
     /// with their position (decision 0039).
     params: BTreeMap<DefId, u32>,
+    /// In a scene body: the entities and cameras it can name.
+    scene: Option<&'l SceneCtx>,
 }
 
 impl Lowering<'_> {
@@ -55,6 +67,7 @@ impl Lowering<'_> {
             locals: Vec::new(),
             index: BTreeMap::new(),
             params: BTreeMap::new(),
+            scene: None,
         };
         if info.sig.params.len() != decl.params.len() {
             return Err(format!("function '{name}' has parameters with errors"));
@@ -150,6 +163,7 @@ impl Lowering<'_> {
             locals: Vec::new(),
             index: BTreeMap::new(),
             params: positions,
+            scene: None,
         };
         for param in &stage.params {
             lowering.declare_node(param.id, &param.name, LocalKind::Param)?;
@@ -213,7 +227,224 @@ impl Lowering<'_> {
     }
 }
 
+impl Lowering<'_> {
+    /// The `state` `decl` of `owner` with its initialiser lowered as an expression without
+    /// locals.
+    pub(super) fn state(
+        &self,
+        decl: &ast::StateDecl,
+        owner: Owner,
+        scope: &Symbol,
+        ctx: &SceneCtx,
+    ) -> Result<State, Defect> {
+        let name = decl.name.name.clone();
+        let info = self
+            .resolution
+            .def_of(decl.id)
+            .and_then(|def| self.types.state(def))
+            .ok_or_else(|| format!("state '{name}' was not checked"))?;
+        let lowering = FnLowering {
+            lowering: self,
+            name: format!("state '{name}'"),
+            locals: Vec::new(),
+            index: BTreeMap::new(),
+            params: BTreeMap::new(),
+            scene: Some(ctx),
+        };
+        Ok(State {
+            name: name.clone(),
+            symbol: scope.child(&name),
+            ty: self.type_name(info.ty),
+            owner,
+            init: lowering.expr(&decl.value)?,
+            span: decl.span,
+        })
+    }
+
+    /// A lifecycle function of `owner` with its typed body.
+    pub(super) fn lifecycle(
+        &self,
+        decl: &ast::LifecycleFn,
+        owner: Owner,
+        scope: &Symbol,
+        ctx: &SceneCtx,
+    ) -> Result<Behavior, Defect> {
+        let kind = match decl.name.name.as_str() {
+            "update" => BehaviorKind::Update,
+            "fixed_update" => BehaviorKind::FixedUpdate,
+            other => return Err(format!("a lifecycle function named '{other}'")),
+        };
+        let mut lowering = FnLowering {
+            lowering: self,
+            name: format!("{} of {scope}", decl.name.name),
+            locals: Vec::new(),
+            index: BTreeMap::new(),
+            params: BTreeMap::new(),
+            scene: Some(ctx),
+        };
+        for param in &decl.params {
+            lowering.declare_node(param.id, &param.name, LocalKind::Param)?;
+        }
+        let body = lowering.block(&decl.body)?;
+        Ok(Behavior {
+            kind,
+            owner,
+            symbol: scope.child(&decl.name.name),
+            locals: lowering.locals,
+            body,
+            span: decl.span,
+        })
+    }
+
+    /// An event handler of `owner` with its typed body; `ordinal` numbers handlers of the same
+    /// name within one body.
+    pub(super) fn handler(
+        &self,
+        decl: &ast::Handler,
+        owner: Owner,
+        scope: &Symbol,
+        ctx: &SceneCtx,
+        ordinal: usize,
+    ) -> Result<Behavior, Defect> {
+        let event = decl.event.name.clone();
+        let mut filter = None;
+        let mut lowering = FnLowering {
+            lowering: self,
+            name: format!("on {event} of {scope}"),
+            locals: Vec::new(),
+            index: BTreeMap::new(),
+            params: BTreeMap::new(),
+            scene: Some(ctx),
+        };
+        let mut member_name = None;
+        let definition = registry()
+            .event(&event)
+            .ok_or_else(|| format!("an unknown event '{event}'"))?;
+        for arg in &decl.args {
+            match (arg, definition.form) {
+                (HandlerArg::Param(param), EventForm::Parameter(_)) => {
+                    lowering.declare_node(param.id, &param.name, LocalKind::Param)?;
+                }
+                (HandlerArg::Filter(expr), EventForm::Filter(_)) => {
+                    let (_, member, code) = lowering.enum_member(expr).ok_or_else(|| {
+                        lowering.defect("an event filter that is not an enum member")
+                    })?;
+                    filter = Some(code);
+                    member_name = Some(member);
+                }
+                _ => return Err(lowering.defect("an event argument of the wrong form")),
+            }
+        }
+        let body = lowering.block(&decl.body)?;
+        let mut name = format!("on_{event}");
+        if let Some(member) = member_name {
+            name.push('_');
+            name.push_str(&member);
+        }
+        if ordinal > 0 {
+            name.push_str(&format!("_{}", ordinal + 1));
+        }
+        Ok(Behavior {
+            kind: BehaviorKind::Event { event, filter },
+            owner,
+            symbol: scope.child(&name),
+            locals: lowering.locals,
+            body,
+            span: decl.span,
+        })
+    }
+}
+
 impl FnLowering<'_, '_> {
+    /// `Key.Space`: the enum, the member and the DOM code it maps from.
+    fn enum_member(&self, expr: &ast::Expr) -> Option<(String, String, String)> {
+        let mut inner = expr;
+        while let AstExpr::Paren(next) = &inner.kind {
+            inner = next;
+        }
+        let AstExpr::Field { name, .. } = &inner.kind else {
+            return None;
+        };
+        let Some(Res::Prelude(crate::resolve::PreludeItem::EnumMember { enum_name, member })) =
+            self.lowering.resolution.res(name.id)
+        else {
+            return None;
+        };
+        let code = registry().enum_member(enum_name, member)?.code;
+        Some((enum_name.to_owned(), member.to_owned(), code.to_owned()))
+    }
+
+    /// The owner of the `state` declaration `def`.
+    fn state_owner(&self, def: DefId) -> Result<Owner, Defect> {
+        let parent = self
+            .lowering
+            .resolution
+            .def(def)
+            .and_then(|d| d.parent)
+            .ok_or_else(|| self.defect("a state without an owner"))?;
+        match self.lowering.resolution.def(parent).map(|d| d.kind) {
+            Some(DefKind::Scene) => Ok(Owner::Scene),
+            Some(DefKind::Entity) => self.entity_owner(parent),
+            _ => Err(self.defect("a state of a construct this build does not lower")),
+        }
+    }
+
+    fn entity_owner(&self, entity: DefId) -> Result<Owner, Defect> {
+        let index = self
+            .scene
+            .and_then(|ctx| ctx.entities.get(&entity))
+            .copied()
+            .ok_or_else(|| self.defect("an entity that is not in the scene"))?;
+        Ok(Owner::Entity { index })
+    }
+
+    fn entity_index(&self, entity: DefId) -> Result<u32, Defect> {
+        match self.entity_owner(entity)? {
+            Owner::Entity { index } => Ok(index),
+            Owner::Scene => Err(self.defect("a scene used as an entity")),
+        }
+    }
+
+    /// What a field read or write of a named entity or camera, entity state or a material
+    /// param is, as an expression kind.
+    fn object_read(&self, kind: &FieldKind) -> Result<ExprKind, Defect> {
+        Ok(match kind {
+            FieldKind::EntityState { entity, name, .. } => ExprKind::State {
+                owner: self.entity_owner(*entity)?,
+                name: name.clone(),
+            },
+            FieldKind::ObjectField {
+                noun,
+                object,
+                object_def,
+                field,
+            } => {
+                let def = object_def.ok_or_else(|| self.defect("a field of an unknown object"))?;
+                if *noun == "entity" {
+                    ExprKind::EntityField {
+                        entity: self.entity_index(def)?,
+                        field: field.clone(),
+                    }
+                } else {
+                    let camera = self
+                        .scene
+                        .and_then(|ctx| ctx.cameras.get(&def))
+                        .cloned()
+                        .unwrap_or_else(|| object.clone());
+                    ExprKind::CameraField {
+                        camera,
+                        field: field.clone(),
+                    }
+                }
+            }
+            FieldKind::MaterialParam { entity, param } => ExprKind::InstanceParam {
+                entity: self.entity_index(*entity)?,
+                param: param.clone(),
+            },
+            _ => return Err(self.defect("a field read this build does not lower")),
+        })
+    }
+
     fn defect(&self, what: &str) -> Defect {
         format!("function '{}': {what}", self.name)
     }
@@ -400,6 +631,23 @@ impl FnLowering<'_, '_> {
         let root = loop {
             match &current.kind {
                 AstExpr::Paren(inner) => current = inner,
+                AstExpr::Name(_)
+                    if matches!(
+                        self.lowering.resolution.res(current.id),
+                        Some(Res::Def(def))
+                            if self.lowering.resolution.def(def).map(|d| d.kind) == Some(DefKind::State)
+                    ) =>
+                {
+                    let Some(Res::Def(def)) = self.lowering.resolution.res(current.id) else {
+                        return Err(not_assignable());
+                    };
+                    break PlaceRoot::State {
+                        owner: self.state_owner(def)?,
+                        name: self.lowering.text_name(current),
+                        ty: type_of(current)?,
+                        span: current.span,
+                    };
+                }
                 AstExpr::Name(_) => {
                     let local = self.local_of(current)?;
                     let item = self
@@ -418,6 +666,40 @@ impl FnLowering<'_, '_> {
                 }
                 AstExpr::Field { base, name } => {
                     let ty = type_of(current)?;
+                    if let Some(
+                        kind @ (FieldKind::EntityState { .. }
+                        | FieldKind::ObjectField { .. }
+                        | FieldKind::MaterialParam { .. }),
+                    ) = types.field_kind(current.id)
+                    {
+                        break match self.object_read(kind)? {
+                            ExprKind::State { owner, name } => PlaceRoot::State {
+                                owner,
+                                name,
+                                ty,
+                                span: current.span,
+                            },
+                            ExprKind::EntityField { entity, field } => PlaceRoot::EntityField {
+                                entity,
+                                field,
+                                ty,
+                                span: current.span,
+                            },
+                            ExprKind::CameraField { camera, field } => PlaceRoot::CameraField {
+                                camera,
+                                field,
+                                ty,
+                                span: current.span,
+                            },
+                            ExprKind::InstanceParam { entity, param } => PlaceRoot::InstanceParam {
+                                entity,
+                                param,
+                                ty,
+                                span: current.span,
+                            },
+                            _ => return Err(not_assignable()),
+                        };
+                    }
                     match types.field_kind(current.id) {
                         Some(FieldKind::Components(indices))
                             if indices.len() == 1 && steps.is_empty() =>
@@ -525,10 +807,21 @@ impl FnLowering<'_, '_> {
                     param,
                     name: self.lowering.text_name(expr),
                 }),
-                None => make(ExprKind::Local {
-                    local: self.local_of(expr)?,
-                    name: self.lowering.text_name(expr),
-                }),
+                None => match self.lowering.resolution.res(expr.id) {
+                    Some(Res::Def(def))
+                        if self.lowering.resolution.def(def).map(|d| d.kind)
+                            == Some(DefKind::State) =>
+                    {
+                        make(ExprKind::State {
+                            owner: self.state_owner(def)?,
+                            name: self.lowering.text_name(expr),
+                        })
+                    }
+                    _ => make(ExprKind::Local {
+                        local: self.local_of(expr)?,
+                        name: self.lowering.text_name(expr),
+                    }),
+                },
             },
             AstExpr::Unary { op, operand } => make(ExprKind::Unary {
                 op: op.symbol(),
@@ -561,7 +854,28 @@ impl FnLowering<'_, '_> {
                 },
                 None => return Err(self.defect("a call that was not resolved")),
             },
+            AstExpr::Field { .. } if self.enum_member(expr).is_some() => {
+                let (enumeration, member, code) = self
+                    .enum_member(expr)
+                    .ok_or_else(|| self.defect("an enum member that vanished"))?;
+                make(ExprKind::EnumMember {
+                    enumeration,
+                    member,
+                    code,
+                })
+            }
             AstExpr::Field { base, name } => match types.field_kind(expr.id) {
+                Some(
+                    kind @ (FieldKind::EntityState { .. }
+                    | FieldKind::ObjectField { .. }
+                    | FieldKind::MaterialParam { .. }),
+                ) => make(self.object_read(kind)?),
+                Some(FieldKind::NamespaceValue(full)) => match full.strip_prefix("frame.") {
+                    Some(member) => make(ExprKind::Frame {
+                        member: member.to_owned(),
+                    }),
+                    None => return Err(self.defect("a namespace value this build does not lower")),
+                },
                 Some(FieldKind::Components(indices)) => make(ExprKind::Components {
                     base: boxed(base)?,
                     components: indices

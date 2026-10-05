@@ -1,0 +1,6 @@
+// `key_press` is not an event (E5060): the keyboard events are `key_down` and `key_up`.
+scene Demo {
+    camera Main {}
+    on key_press(Key.Space) {
+    }
+}

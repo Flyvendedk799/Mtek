@@ -1078,7 +1078,9 @@
                 "span": {"file": 0, "start": 1237, "end": 1309}
               }
             }
-          ]
+          ],
+          "state": [],
+          "behaviors": []
         }
       ]
     }

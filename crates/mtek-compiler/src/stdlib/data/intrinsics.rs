@@ -173,7 +173,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             "random",
             Domain::Cpu,
             false,
-            Milestone::M3,
+            Milestone::M1,
             "A pseudo-random number in `[0, 1)`.",
             vec![sig(&[], F32)],
         )
@@ -182,7 +182,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             "print",
             Domain::Cpu,
             false,
-            Milestone::M3,
+            Milestone::M1,
             "Writes a message to the development console.",
             vec![sig(&[p("message", exact(TypeRef::String))], exact(TypeRef::Unit))],
         )
@@ -191,7 +191,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             "is_key_down",
             Domain::Cpu,
             false,
-            Milestone::M3,
+            Milestone::M1,
             "Whether the key was down at the end of input handling in the current frame.",
             vec![sig(&[p("key", exact(TypeRef::Enum("Key")))], exact(TypeRef::Bool))],
         ),

@@ -138,7 +138,9 @@
                 "span": {"file": 0, "start": 341, "end": 376}
               }
             }
-          ]
+          ],
+          "state": [],
+          "behaviors": []
         }
       ]
     },

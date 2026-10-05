@@ -69,3 +69,4 @@ recorded here before code depends on it (blueprint §15).
 | 0046 | Runtime materials: arenas by layout id, `debug.setParam` and materials that fail after mount: details the specification leaves open |
 | 0047 | CPU/GPU numeric agreement: WGSL's conversion clamp everywhere and CPU-order helpers (owner decision) |
 | 0048 | M2 exit-gate browser tests: details the specification leaves open |
+| 0049 | `state`, lifecycle functions, handlers and writes: details the specification leaves open |

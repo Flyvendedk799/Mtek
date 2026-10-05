@@ -296,7 +296,7 @@ pub(crate) fn front_end_with(
     let roots = Roots {
         gpu_bodies: stage_roots(&program),
         gpu_functions: gpu_root_functions(&project, &program, &options.gpu_root_functions),
-        ..Roots::default()
+        cpu_bodies: cpu_roots(&program),
     };
     let effects = check_program(&program, &roots, sink);
     drop(program);
@@ -345,6 +345,22 @@ fn stage_roots(program: &[ProgramUnit<'_>]) -> Vec<RootBody> {
                     span: stage.name_span,
                     facts: stage.facts.clone(),
                 })
+            })
+        })
+        .collect()
+}
+
+/// The state initialisers, lifecycle functions and handlers of every module: bodies that run on
+/// the CPU and are not functions (decision 0049).
+fn cpu_roots(program: &[ProgramUnit<'_>]) -> Vec<RootBody> {
+    program
+        .iter()
+        .flat_map(|unit| {
+            unit.types.cpu_bodies().iter().map(|body| RootBody {
+                module: unit.id,
+                label: body.label.clone(),
+                span: body.span,
+                facts: body.facts.clone(),
             })
         })
         .collect()

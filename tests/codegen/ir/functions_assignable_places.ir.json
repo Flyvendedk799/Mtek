@@ -1904,7 +1904,9 @@
                 "span": {"file": 0, "start": 2085, "end": 2106}
               }
             }
-          ]
+          ],
+          "state": [],
+          "behaviors": []
         }
       ]
     }

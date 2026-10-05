@@ -353,7 +353,9 @@
                 "span": {"file": 0, "start": 655, "end": 734}
               }
             }
-          ]
+          ],
+          "state": [],
+          "behaviors": []
         }
       ]
     }

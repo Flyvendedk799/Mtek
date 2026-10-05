@@ -1356,13 +1356,10 @@ fn every_gated_construct_has_a_gating_fixture() {
             "no gate_* fixture reports {construct:?}: {messages:#?}"
         );
     }
-    assert!(gated >= 7, "{gated} gated constructs");
+    assert!(gated >= 3, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
         ("The built-in type `sampler`", "M4"),
-        ("The built-in function `random`", "M3"),
-        ("The built-in namespace `frame`", "M3"),
-        ("The built-in enum `Key`", "M3"),
         ("The built-in schema `Pbr`", "M4"),
         ("The `Entity` field `light`", "M4"),
         ("The `Scene` field `gravity`", "M5"),
@@ -1480,16 +1477,10 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E5040", "M5-01: prefabs"),
     ("E5041", "M5-01: prefabs"),
     ("E5042", "M5-01: prefabs"),
-    ("E5050", "M3-02: lifecycle functions and handlers"),
-    ("E5051", "M3-02: lifecycle functions and handlers"),
-    ("E5052", "M3-02: lifecycle functions and handlers"),
-    ("E5060", "M3-02: lifecycle functions and handlers"),
-    ("E5061", "M3-02: lifecycle functions and handlers"),
     ("E5062", "M5: collision events"),
     ("E5070", "M3-05: bind"),
     ("E5071", "M5: physics"),
     ("E5072", "M5: physics"),
-    ("E5073", "M3-02: field writes in handlers"),
     ("E5074", "M5: entity_ref"),
     ("E5075", "M3-05: bind"),
     ("E5091", "M5: physics"),

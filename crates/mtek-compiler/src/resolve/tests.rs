@@ -212,7 +212,7 @@ fn only_locals_parameters_state_and_param_may_reuse_a_prelude_function() {
         ("fn sin() {}", vec!["E2001"]),
         ("scene Demo { entity sin {} }", vec!["E2001"]),
         ("scene Demo { camera sin {} }", vec!["E2001"]),
-        ("scene Demo { state sin: f32 = 0.0; }", vec!["E9010"]),
+        ("scene Demo { state sin: f32 = 0.0; }", vec![]),
         ("prefab P { param sin: f32 = 0.0; }", vec!["E9010"]),
         (
             "fn f() { let sin = 1.0; var cos = 2.0; for tan in 0..2 { } }",
@@ -280,7 +280,7 @@ fn a_component_of_a_param_named_like_a_namespace_is_not_e2005() {
 #[test]
 fn self_means_the_enclosing_entity_or_prefab() {
     let r = resolve_text("scene Demo { entity Cube { scale: self.scale; } }\n");
-    assert_eq!(r.codes(), ["E9010"]);
+    assert!(r.codes().is_empty(), "{:?}", r.diagnostics);
     let cube = r.def_named("Cube");
     assert_eq!(r.res("self", "self", 0), Some(Res::Def(cube.id)));
 
@@ -409,7 +409,7 @@ fn type_names_resolve_to_structs_and_prelude_types() {
 #[test]
 fn enum_members_and_unknown_members_are_resolved() {
     let r = resolve_text("scene Demo { on key_down(Key.Space) { } on key_up(Key.Spcae) { } }\n");
-    assert_eq!(r.codes(), ["E9010", "E9010", "E2003"]);
+    assert_eq!(r.codes(), ["E2003"]);
     assert_eq!(
         r.res("ident", "Space", 0),
         Some(Res::Prelude(PreludeItem::EnumMember {
@@ -422,7 +422,7 @@ fn enum_members_and_unknown_members_are_resolved() {
         Some(Res::Prelude(PreludeItem::Event("key_down")))
     );
     assert_eq!(
-        r.diagnostics[2].notes,
+        r.diagnostics[0].notes,
         ["help: did you mean the built-in 'Key.Space'?"]
     );
 }

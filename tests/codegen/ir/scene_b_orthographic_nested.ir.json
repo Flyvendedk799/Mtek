@@ -290,7 +290,9 @@
                 "span": {"file": 0, "start": 823, "end": 907}
               }
             }
-          ]
+          ],
+          "state": [],
+          "behaviors": []
         }
       ]
     },

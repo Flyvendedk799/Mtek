@@ -194,7 +194,8 @@ fn the_two_m1_scenes_are_codegen_fixtures_with_the_semantic_sources() {
             "cpu_functions",
             "numeric_cpu_table",
             "scene_a_target_camera_box",
-            "scene_b_orthographic_nested"
+            "scene_b_orthographic_nested",
+            "state_and_handlers"
         ]
     );
     for name in ["scene_a_target_camera_box", "scene_b_orthographic_nested"] {
@@ -520,10 +521,22 @@ fn the_manifest_carries_structure_but_no_entity_or_camera_values() {
             }
         }
         for instance in manifest["scene"]["materialInstances"].as_array().unwrap() {
-            for param in instance["params"].as_array().unwrap() {
-                assert_eq!(param["class"], "initial", "{label}");
+            let classes: Vec<&Value> = instance["params"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|param| &param["class"])
+                .collect();
+            // `imperative` once a handler writes the param (task M3-01); every other param is
+            // `initial` (`bound` arrives with `bind`, M3-05).
+            for class in &classes {
+                assert!(
+                    *class == "initial" || *class == "imperative",
+                    "{label}: {class}"
+                );
             }
-            assert_eq!(instance["shareable"], true, "{label}");
+            let shareable = classes.iter().all(|class| *class == "initial");
+            assert_eq!(instance["shareable"], shareable, "{label}");
         }
     }
 }

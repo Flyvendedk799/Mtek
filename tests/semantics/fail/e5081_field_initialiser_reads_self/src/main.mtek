@@ -1,0 +1,8 @@
+// A field initialiser may not read the fields of entities, `self` included (E5081).
+scene Demo {
+    camera Main {}
+    entity Cube {
+        scale: self.scale;
+        mesh: Box {};
+    }
+}

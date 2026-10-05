@@ -34,7 +34,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::ir::{self, Function, Item, LocalKind, Place, Program, Symbol};
+use crate::ir::{self, Item, LocalKind, Place, Program, Symbol};
 use crate::layout::naming::hash8;
 use crate::source::Span;
 
@@ -89,7 +89,9 @@ pub fn emit_functions(
             }
             let name = function_name(&function.symbol)?;
             let mut lowering = FnLowering {
-                function,
+                locals: &function.locals,
+                owner: None,
+                release: false,
                 temps: 0,
                 span_id: &mut *span_id,
                 owned: owned_vars(&function.body),
@@ -177,7 +179,13 @@ fn indexed_length(ty: &str) -> Option<u32> {
 }
 
 struct FnLowering<'f, 's> {
-    function: &'f Function,
+    /// The parameters and locals of the body: a function's, or a lifecycle function's or
+    /// handler's.
+    locals: &'f [ir::LocalItem],
+    /// The scene or entity whose behaviour this is: `self` inside an entity's own body.
+    owner: Option<ir::Owner>,
+    /// A release build: `print` is compiled out.
+    release: bool,
     /// Temporaries used so far (`t_0`, `t_1`, …).
     temps: u32,
     span_id: &'s mut dyn FnMut(Span) -> Result<u32, String>,
@@ -220,8 +228,9 @@ fn owned_vars(body: &ir::Block) -> BTreeSet<u32> {
                             ir::PlaceStep::Field { .. } | ir::PlaceStep::Index { .. }
                         )
                     });
-                    let ir::PlaceRoot::Local { local, .. } = &target.root;
-                    if partial {
+                    if let ir::PlaceRoot::Local { local, .. } = &target.root
+                        && partial
+                    {
                         out.insert(*local);
                     }
                 }
@@ -252,8 +261,7 @@ fn owned_vars(body: &ir::Block) -> BTreeSet<u32> {
 
 impl FnLowering<'_, '_> {
     fn local(&self, index: u32) -> Result<&ir::LocalItem, String> {
-        self.function
-            .locals
+        self.locals
             .get(index as usize)
             .ok_or_else(|| format!("the local #{index} is not declared"))
     }
@@ -362,6 +370,12 @@ impl FnLowering<'_, '_> {
             ir::Stmt::Block { body } => Stmt::Block {
                 body: self.block(body)?,
             },
+            ir::Stmt::Expr { expr, .. }
+                if self.release
+                    && matches!(&expr.kind, ir::ExprKind::Builtin { function, .. } if function == "print") =>
+            {
+                return Ok(None);
+            }
             ir::Stmt::Expr { expr, span } => Stmt::Expr {
                 expr: self.expr(expr)?,
                 span: Some(*span),
@@ -392,16 +406,50 @@ impl FnLowering<'_, '_> {
             _ => (target.steps.as_slice(), None),
         };
         let reads_place = op != "=" || component.is_some();
-        let ir::PlaceRoot::Local {
-            local,
-            ty: root_ty,
-            span: root_span,
-            ..
-        } = &target.root;
-        let owned = self.owned.contains(local);
         let mut prelude = Vec::new();
-        let mut path = Expr::Ident(self.local_ident(*local)?).spanned(*root_span);
-        let mut path_ty = root_ty.as_str();
+        let (mut path, owned, root_ty) = match &target.root {
+            ir::PlaceRoot::Local {
+                local,
+                ty,
+                span: root_span,
+                ..
+            } => (
+                Expr::Ident(self.local_ident(*local)?).spanned(*root_span),
+                self.owned.contains(local),
+                ty.as_str(),
+            ),
+            // State is the runtime's object: containers on the path are written in place.
+            ir::PlaceRoot::State {
+                owner,
+                name,
+                ty,
+                span,
+            } => (
+                self.state_path(*owner, name).spanned(*span),
+                true,
+                ty.as_str(),
+            ),
+            // Entity and camera fields and material params are written through the context's
+            // setters; with containers on the path the setter receives a copy of the value
+            // with the write applied.
+            root @ (ir::PlaceRoot::EntityField { ty, span, .. }
+            | ir::PlaceRoot::CameraField { ty, span, .. }
+            | ir::PlaceRoot::InstanceParam { ty, span, .. }) => {
+                let current = self.root_read(root)?.spanned(*span);
+                if containers.is_empty() {
+                    (current, false, ty.as_str())
+                } else {
+                    let name = self.temp();
+                    prelude.push(Stmt::Const {
+                        name: name.clone(),
+                        value: rt("copy", vec![current]).spanned(*span),
+                        span: Some(*span),
+                    });
+                    (Expr::Ident(name), true, ty.as_str())
+                }
+            }
+        };
+        let mut path_ty = root_ty;
         for step in containers {
             path = match step {
                 ir::PlaceStep::Field { field, .. } => path.member(field),
@@ -478,16 +526,100 @@ impl FnLowering<'_, '_> {
             }
             None => new_value,
         };
-        let assign = Stmt::Assign {
-            target: path,
-            value: new_value,
-            span: Some(span),
+        let setter_root = match &target.root {
+            root @ (ir::PlaceRoot::EntityField { .. }
+            | ir::PlaceRoot::CameraField { .. }
+            | ir::PlaceRoot::InstanceParam { .. }) => Some(root),
+            _ => None,
+        };
+        let finish = match setter_root {
+            // No containers: the whole field is written through its setter.
+            Some(root) if containers.is_empty() => self.setter(root, new_value, span)?,
+            // Containers: the copy was changed in place; hand it to the setter.
+            Some(root) => {
+                let temp = match &path_root(&path) {
+                    Some(name) => name.clone(),
+                    None => return Err("a setter write without its copy".to_owned()),
+                };
+                prelude.push(Stmt::Assign {
+                    target: path,
+                    value: new_value,
+                    span: Some(span),
+                });
+                self.setter(root, Expr::Ident(temp), span)?
+            }
+            None => Stmt::Assign {
+                target: path,
+                value: new_value,
+                span: Some(span),
+            },
         };
         if prelude.is_empty() {
-            return Ok(assign);
+            return Ok(finish);
         }
-        prelude.push(assign);
+        prelude.push(finish);
         Ok(Stmt::Block { body: prelude })
+    }
+
+    /// `ctx.s.name` for scene state; `self.state.name` for an entity's own state inside its
+    /// bodies, `ctx.e[i].state.name` elsewhere.
+    fn state_path(&self, owner: ir::Owner, name: &str) -> Expr {
+        match owner {
+            ir::Owner::Scene => Expr::ident("ctx").member("s").member(name),
+            ir::Owner::Entity { index } => self.entity(index).member("state").member(name),
+        }
+    }
+
+    /// The entity record `index`: `self` inside its own bodies, `ctx.e[index]` elsewhere.
+    fn entity(&self, index: u32) -> Expr {
+        if self.owner == Some(ir::Owner::Entity { index }) {
+            Expr::ident("self")
+        } else {
+            Expr::ident("ctx").member("e").index(index)
+        }
+    }
+
+    /// The current value of a field or param root (`spec/runtime-abi.md` section 4.2: the
+    /// records are read directly).
+    fn root_read(&self, root: &ir::PlaceRoot) -> Result<Expr, String> {
+        Ok(match root {
+            ir::PlaceRoot::State { owner, name, .. } => self.state_path(*owner, name),
+            ir::PlaceRoot::EntityField { entity, field, .. } => self.entity(*entity).member(field),
+            ir::PlaceRoot::CameraField { field, .. } => {
+                Expr::ident("ctx").member("cam").member(field)
+            }
+            ir::PlaceRoot::InstanceParam { entity, param, .. } => {
+                self.entity(*entity).member("mat").member("p").member(param)
+            }
+            ir::PlaceRoot::Local { .. } => return Err("a local read as a root".to_owned()),
+        })
+    }
+
+    /// `ctx.setTransform(e, "position", v)`, `ctx.setVisible(e, v)`, `ctx.setCamera("position", v)`
+    /// or `ctx.setParam(e, "name", v)`: the context validates the value (`E8090`, `E8100`).
+    fn setter(&self, root: &ir::PlaceRoot, value: Expr, span: Span) -> Result<Stmt, String> {
+        let call = match root {
+            ir::PlaceRoot::EntityField { entity, field, .. } => match field.as_str() {
+                "position" | "rotation" | "scale" => Expr::ident("ctx")
+                    .member("setTransform")
+                    .call(vec![self.entity(*entity), Expr::string(field), value]),
+                "visible" => Expr::ident("ctx")
+                    .member("setVisible")
+                    .call(vec![self.entity(*entity), value]),
+                other => return Err(format!("a write to the entity field '{other}'")),
+            },
+            ir::PlaceRoot::CameraField { field, .. } => Expr::ident("ctx")
+                .member("setCamera")
+                .call(vec![Expr::string(field), value]),
+            ir::PlaceRoot::InstanceParam { entity, param, .. } => Expr::ident("ctx")
+                .member("setParam")
+                .call(vec![self.entity(*entity), Expr::string(param), value]),
+            _ => return Err("a setter for a root that has none".to_owned()),
+        };
+        Ok(Stmt::Expr {
+            expr: call,
+            span: Some(span),
+        })
     }
 
     /// `rt.clampIndex(index, length, spanId, ctx)`, `spanId` naming the indexing `site`.
@@ -515,6 +647,9 @@ impl FnLowering<'_, '_> {
                     current = base;
                 }
                 ir::ExprKind::Local { local, .. } => return self.owned.contains(local),
+                // State and material params live in the runtime's objects: an aggregate read
+                // out of them is copied like one read out of an owned `var`.
+                ir::ExprKind::State { .. } | ir::ExprKind::InstanceParam { .. } => return true,
                 _ => return false,
             }
         }
@@ -596,11 +731,35 @@ impl FnLowering<'_, '_> {
                 arguments.extend(self.exprs(args)?);
                 Expr::Ident(function_name(function)?).call(arguments)
             }
+            ir::ExprKind::Builtin { function, args } if function == "random" => {
+                let _ = args;
+                Expr::ident("ctx").member("random").call(Vec::new())
+            }
+            ir::ExprKind::Builtin { function, args } if function == "is_key_down" => {
+                let arguments = self.exprs(args)?;
+                Expr::ident("ctx").member("isKeyDown").call(arguments)
+            }
+            ir::ExprKind::Builtin { function, args } if function == "print" => {
+                let mut arguments = self.exprs(args)?;
+                let span_id = (self.span_id)(expr.span)?;
+                arguments.push(Expr::Num(Number::U32(span_id)));
+                Expr::ident("ctx").member("print").call(arguments)
+            }
             ir::ExprKind::Builtin { function, args } => {
                 let types: Vec<&str> = args.iter().map(|a| a.ty.as_str()).collect();
                 let arguments = self.exprs(args)?;
                 rt_call(function, &types, ty, arguments)?
             }
+            ir::ExprKind::State { owner, name } => self.state_path(*owner, name),
+            ir::ExprKind::EntityField { entity, field } => self.entity(*entity).member(field),
+            ir::ExprKind::CameraField { field, .. } => {
+                Expr::ident("ctx").member("cam").member(field)
+            }
+            ir::ExprKind::InstanceParam { entity, param } => {
+                self.entity(*entity).member("mat").member("p").member(param)
+            }
+            ir::ExprKind::Frame { member } => Expr::ident("ctx").member("frame").member(member),
+            ir::ExprKind::EnumMember { code, .. } => Expr::string(code),
             ir::ExprKind::Construct { args } => {
                 let types: Vec<&str> = args.iter().map(|a| a.ty.as_str()).collect();
                 let arguments = self.exprs(args)?;
@@ -787,6 +946,7 @@ fn swizzle(ty: &str, components: &[u32], value: Expr) -> Result<Expr, String> {
 mod tests {
     use super::*;
     use crate::emit_js::ast::inline;
+    use crate::ir::Function;
 
     #[test]
     fn function_names_are_module_qualified() {
@@ -804,7 +964,14 @@ mod tests {
         fn expr(e: &ir::Expr, out: &mut Vec<Span>) {
             out.push(e.span);
             match &e.kind {
-                ir::ExprKind::Const { .. } | ir::ExprKind::Local { .. } => {}
+                ir::ExprKind::Const { .. }
+                | ir::ExprKind::Local { .. }
+                | ir::ExprKind::State { .. }
+                | ir::ExprKind::EntityField { .. }
+                | ir::ExprKind::CameraField { .. }
+                | ir::ExprKind::InstanceParam { .. }
+                | ir::ExprKind::Frame { .. }
+                | ir::ExprKind::EnumMember { .. } => {}
                 ir::ExprKind::Unary { operand, .. } => expr(operand, out),
                 ir::ExprKind::Binary { lhs, rhs, .. } => {
                     expr(lhs, out);
@@ -844,8 +1011,9 @@ mod tests {
                         ..
                     } => {
                         out.push(*span);
-                        let ir::PlaceRoot::Local { span: root, .. } = &target.root;
-                        out.push(*root);
+                        if let ir::PlaceRoot::Local { span: root, .. } = &target.root {
+                            out.push(*root);
+                        }
                         for step in &target.steps {
                             out.push(step.span());
                             if let ir::PlaceStep::Index { index, .. } = step {
@@ -1098,4 +1266,155 @@ mod tests {
             assert!(rt_ops::STRUCTURAL_HELPERS.contains(&helper));
         }
     }
+}
+
+/// The name of the temporary a place path starts at (`t_0` in `t_0.items[1]`).
+fn path_root(path: &Expr) -> Option<String> {
+    let mut current = path;
+    loop {
+        match current {
+            Expr::Ident(name) => return Some(name.clone()),
+            Expr::Member(base, _) | Expr::Subscript(base, _) => current = base,
+            Expr::Spanned(inner, _) => current = inner,
+            _ => return None,
+        }
+    }
+}
+
+/// The lowered initialiser of `state` (an expression without locals), for `init`.
+///
+/// # Errors
+/// A text describing a compiler defect.
+pub fn emit_state_init(
+    state: &ir::State,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
+) -> Result<Expr, String> {
+    let mut lowering = FnLowering {
+        locals: &[],
+        owner: None,
+        release: false,
+        temps: 0,
+        span_id,
+        owned: BTreeSet::new(),
+    };
+    lowering
+        .expr(&state.init)
+        .map_err(|e| format!("the initialiser of '{}': {e}", state.symbol))
+}
+
+/// The lifecycle functions and handlers of a scene as JavaScript functions, and where the
+/// `scenes` table finds them (`spec/runtime-abi.md` section 3).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct EmittedBehaviors {
+    /// A comment and a `function` statement per behaviour, in IR order.
+    pub stmts: Vec<Stmt>,
+    /// The scene's `update`: `(ctx, dt)`.
+    pub update: Option<String>,
+    /// The scene's `fixed_update`.
+    pub fixed_update: Option<String>,
+    /// By static entity index: `(ctx, self, dt)`.
+    pub entity_update: Vec<Option<String>>,
+    pub entity_fixed_update: Vec<Option<String>>,
+    /// `(event, DOM code or none, owner index or -1 for the scene, function)`, in IR order.
+    pub events: Vec<EmittedEvent>,
+}
+
+/// One entry of the `events` table.
+#[derive(Clone, Debug, PartialEq)]
+pub struct EmittedEvent {
+    pub event: String,
+    pub key: Option<String>,
+    /// The static entity index, or `None` for a scene handler.
+    pub owner: Option<u32>,
+    pub function: String,
+}
+
+/// Lowers every behaviour of `scene`. `release` compiles `print` out.
+///
+/// # Errors
+/// A text describing a compiler defect: an IR node the CPU emitter does not know.
+pub fn emit_behaviors(
+    scene: &ir::Scene,
+    release: bool,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
+) -> Result<EmittedBehaviors, String> {
+    let mut emitted = EmittedBehaviors {
+        entity_update: vec![None; scene.entities.len()],
+        entity_fixed_update: vec![None; scene.entities.len()],
+        ..EmittedBehaviors::default()
+    };
+    for (position, behavior) in scene.behaviors.iter().enumerate() {
+        let label = match &behavior.kind {
+            ir::BehaviorKind::Update => "update".to_owned(),
+            ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
+            ir::BehaviorKind::Event { event, .. } => format!("on {event}"),
+        };
+        let base = match &behavior.kind {
+            ir::BehaviorKind::Update => "update".to_owned(),
+            ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
+            ir::BehaviorKind::Event { event, .. } => format!("on_{event}"),
+        };
+        let name = format!("b_{position}_{}", identifier_part(&base));
+        let mut lowering = FnLowering {
+            locals: &behavior.locals,
+            owner: Some(behavior.owner),
+            release,
+            temps: 0,
+            span_id: &mut *span_id,
+            owned: owned_vars(&behavior.body),
+        };
+        let body = lowering
+            .block(&behavior.body)
+            .map_err(|e| format!("behaviour '{}': {e}", behavior.symbol))?;
+        let owner_index = match behavior.owner {
+            ir::Owner::Scene => None,
+            ir::Owner::Entity { index } => Some(index),
+        };
+        let mut params = vec!["ctx".to_owned()];
+        // Scene lifecycle functions are `(ctx, dt)`; everything else starts with `self`.
+        let is_lifecycle = !matches!(behavior.kind, ir::BehaviorKind::Event { .. });
+        if owner_index.is_some() || !is_lifecycle {
+            params.push("self".to_owned());
+        }
+        params.extend(
+            behavior
+                .locals
+                .iter()
+                .filter(|l| l.kind == LocalKind::Param)
+                .map(local_name),
+        );
+        emitted.stmts.push(Stmt::Blank);
+        emitted
+            .stmts
+            .push(Stmt::Comment(format!("{label} ({})", behavior.symbol)));
+        emitted.stmts.push(Stmt::Function {
+            name: name.clone(),
+            params,
+            body,
+            span: Some(behavior.span),
+        });
+        match (&behavior.kind, owner_index) {
+            (ir::BehaviorKind::Update, None) => emitted.update = Some(name),
+            (ir::BehaviorKind::FixedUpdate, None) => emitted.fixed_update = Some(name),
+            (ir::BehaviorKind::Update, Some(index)) => {
+                if let Some(slot) = emitted.entity_update.get_mut(index as usize) {
+                    *slot = Some(name);
+                }
+            }
+            (ir::BehaviorKind::FixedUpdate, Some(index)) => {
+                if let Some(slot) = emitted.entity_fixed_update.get_mut(index as usize) {
+                    *slot = Some(name);
+                }
+            }
+            (ir::BehaviorKind::Event { event, filter }, owner) => {
+                emitted.events.push(EmittedEvent {
+                    event: event.clone(),
+                    key: filter.clone(),
+                    owner,
+                    function: name,
+                });
+            }
+        }
+    }
+    Ok(emitted)
 }
