@@ -15,6 +15,7 @@ import type { MtekDiagnostic } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import type { CheckedProgram } from "../scene/program.js";
 import type { SceneStructure } from "../scene/structure.js";
+import { Bindings } from "../scene/bindings.js";
 import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
@@ -39,6 +40,8 @@ export interface SceneStartupOptions {
 /** The running scene: its CPU world, its GPU state and its renderer. */
 export interface Scene {
   readonly world: World;
+  /** The `bind(..)` of the scene, evaluated in phase 5. */
+  readonly bindings: Bindings;
   readonly materials: MaterialStore;
   readonly pipelines: PipelineCache;
   readonly renderer: Renderer;
@@ -53,7 +56,10 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   const plan = new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
   const materials = new MaterialStore(device, registry, plan, structure, program.writers);
   const world = new World({ manifest, structure, params: materials, report, ...(services === undefined ? {} : { services }) });
-  world.initialise(program.scene.init);
+  const bindings = new Bindings(manifest, program.scene.bindings as readonly ((ctx: object) => unknown)[], world);
+  world.initialise(program.scene.init, () => {
+    bindings.evaluate();
+  });
 
   const meshes = new MeshStore(registry, device.queue);
   meshes.upload(structure.meshes);
@@ -77,5 +83,5 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
 
   world.phase = "runtime:update";
   const renderer = new Renderer({ device, registry, surface, manifest, structure, world, writers: program.writers, plan, materials, meshes, pipelines: byMaterial, report });
-  return { ok: true, scene: { world, materials, pipelines, renderer } };
+  return { ok: true, scene: { world, bindings, materials, pipelines, renderer } };
 }

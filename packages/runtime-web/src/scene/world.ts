@@ -197,6 +197,10 @@ function zeroValue(type: string): unknown {
   }
 }
 
+function sameQuat(a: Quat, b: Quat): boolean {
+  return a.x === b.x && a.y === b.y && a.z === b.z && a.w === b.w;
+}
+
 function sameVec3(a: Vec3, b: Vec3): boolean {
   return a.x === b.x && a.y === b.y && a.z === b.z;
 }
@@ -348,10 +352,12 @@ export class World {
    * relations between fields are checked on later writes; during initialisation the compiler has
    * already checked them, `E5010`/`E5011`) and propagates transforms. Errors thrown by `init` propagate.
    */
-  initialise(init: (ctx: object) => void): void {
+  initialise(init: (ctx: object) => void, afterInit?: () => void): void {
     this.initialising = true;
     try {
       init(this.ctx);
+      // Bindings are evaluated once after `init`, so bound fields have values before the first frame.
+      afterInit?.();
     } finally {
       this.initialising = false;
     }
@@ -431,6 +437,7 @@ export class World {
     const name = field as TransformField;
     if (name === "rotation") {
       if (!isQuat(value)) throw new RuntimeInternalError(`ctx.setTransform(…, "rotation", ${describeValue(value)}) expects a quat.`);
+      if (sameQuat(record.rotation, value)) return;
       record.rotation = value;
     } else {
       if (!isVec3(value)) throw new RuntimeInternalError(`ctx.setTransform(…, "${name}", ${describeValue(value)}) expects a vec3.`);
@@ -444,6 +451,7 @@ export class World {
         );
         return;
       }
+      if (sameVec3(name === "position" ? record.position : record.scale, value)) return;
       if (name === "position") record.position = value;
       else record.scale = value;
     }
