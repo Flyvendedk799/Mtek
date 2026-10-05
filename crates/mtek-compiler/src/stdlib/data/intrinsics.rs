@@ -139,7 +139,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
         math(
             "normalize",
             "The vector scaled to length 1.",
-            "A zero vector gives the zero vector on the CPU; non-portable on the GPU.",
+            "A zero vector, or one whose squared length underflows or overflows, gives the zero vector on the CPU and the GPU (decision 0047).",
             vec![sig(&[p("v", V)], V)],
         ),
         math(

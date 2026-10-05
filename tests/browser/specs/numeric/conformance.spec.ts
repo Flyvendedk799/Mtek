@@ -55,6 +55,33 @@ test("the compiled helpers are the expressions whose accuracy tolerances.json bo
   ]);
 });
 
+test("the compiled helper families are the CPU-order expressions of decision 0047", () => {
+  const wgsl = readFileSync(join(NUMERIC_OUT, "material.wgsl"), "utf8");
+  const tolerances = parseTolerances(readFileSync(TOLERANCES_PATH, "utf8"));
+  const families = tolerances.entries.filter((entry) => entry.helperFamily !== undefined);
+  expect(families.map((entry) => entry.key).sort()).toEqual(["mix", "normalize"]);
+  const names = (prefix: string): string[] => [...wgsl.matchAll(new RegExp(`\\nfn (${prefix}\\w+)\\(`, "g"))].map((match) => match[1] ?? "");
+
+  // mix: x * (1.0 - z) + y * z, in the order of decision 0037 item 7, for f32 and every vector form.
+  const mixes = names("mtek_mix_");
+  expect(mixes.length).toBeGreaterThan(0);
+  for (const name of mixes) {
+    expect(helperBody(wgsl, name), name).toContain("return (mtek_a * (1.0 - mtek_t)) + (mtek_b * mtek_t);");
+  }
+
+  // normalize: the squares summed left to right, the zero vector for length 0.
+  const normalizes = names("mtek_normalize_");
+  expect(normalizes.length).toBeGreaterThan(0);
+  for (const name of normalizes) {
+    const body = helperBody(wgsl, name);
+    expect(body, name).toContain("let mtek_length = sqrt(");
+    expect(body, name).toContain("return select(mtek_v / mtek_length, ");
+    expect(body, name).toContain(", mtek_length == 0.0);");
+    // The first two squares are summed first; each further square is added to the running sum.
+    expect(body, name).toContain("(mtek_v.x * mtek_v.x) + (mtek_v.y * mtek_v.y)");
+  }
+});
+
 test("every portable case of cpu.json agrees on the GPU: bit-exact rows exactly, the rest within the WGSL tolerances", async ({ page, gpu }, testInfo) => {
   const table = parseCpuTable(readFileSync(CPU_TABLE_PATH, "utf8"));
   const evaluator = new AccuracyEvaluator(parseTolerances(readFileSync(TOLERANCES_PATH, "utf8")));

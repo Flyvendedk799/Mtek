@@ -612,10 +612,12 @@ pub fn color_srgb(rgb: [f32; 3], a: f32) -> EvalResult {
 }
 
 /// A numeric conversion `T(x)` (`spec/language.md` 6.5): `i32`/`u32` to
-/// `f32` rounds to nearest, ties to even; `f32` to an integer clamps to the
-/// target range, then truncates toward zero (NaN cannot occur: constants are
-/// finite); between `i32` and `u32` the bits are reinterpreted. Rust's `as`
-/// implements exactly these rules.
+/// `f32` rounds to nearest, ties to even; `f32` to an integer truncates toward
+/// zero and, out of range, takes WGSL's value (15.7.6, decision 0047): the
+/// integer closest to the truncated value that an `f32` also represents exactly,
+/// `[i32::MIN, 2147483520]` and `[0, 4294967040]` (NaN cannot occur: constants
+/// are finite); between `i32` and `u32` the bits are reinterpreted. Rust's `as`
+/// implements the rest of these rules.
 pub fn convert(value: &ConstValue, target: Scalar) -> EvalResult {
     use ConstValue as V;
     Ok(match (value, target) {
@@ -625,11 +627,29 @@ pub fn convert(value: &ConstValue, target: Scalar) -> EvalResult {
         (V::U32(v), Scalar::I32) => V::I32(*v as i32),
         (V::U32(v), Scalar::U32) => V::U32(*v),
         (V::U32(v), Scalar::F32) => V::F32(*v as f32),
-        (V::F32(v), Scalar::I32) => V::I32(*v as i32),
-        (V::F32(v), Scalar::U32) => V::U32(*v as u32),
+        (V::F32(v), Scalar::I32) => V::I32(f32_to_i32(*v)),
+        (V::F32(v), Scalar::U32) => V::U32(f32_to_u32(*v)),
         (V::F32(v), Scalar::F32) => V::F32(*v),
         _ => return Err(EvalError::Mismatch),
     })
+}
+
+/// WGSL's `i32(x)` (15.7.6): saturates to the largest `f32` not above `i32::MAX`.
+pub fn f32_to_i32(x: f32) -> i32 {
+    if x >= 2_147_483_520.0 {
+        2_147_483_520
+    } else {
+        x as i32
+    }
+}
+
+/// WGSL's `u32(x)` (15.7.6): saturates to the largest `f32` not above `u32::MAX`.
+pub fn f32_to_u32(x: f32) -> u32 {
+    if x >= 4_294_967_040.0 {
+        4_294_967_040
+    } else {
+        x as u32
+    }
 }
 
 /// A vector constructor `vecN(..)` (`spec/language.md` 6.7): a single `f32`
@@ -1048,10 +1068,29 @@ mod tests {
             Ok(V::F32(4_294_967_296.0))
         );
         assert_eq!(convert(&V::F32(-2.9), Scalar::I32), Ok(V::I32(-2)));
-        assert_eq!(convert(&V::F32(3.0e9), Scalar::I32), Ok(V::I32(i32::MAX)));
+        // WGSL 15.7.6 (decision 0047): the closest integer an f32 also represents exactly.
+        assert_eq!(
+            convert(&V::F32(3.0e9), Scalar::I32),
+            Ok(V::I32(2_147_483_520))
+        );
+        assert_eq!(
+            convert(&V::F32(2_147_483_520.0), Scalar::I32),
+            Ok(V::I32(2_147_483_520))
+        );
+        assert_eq!(
+            convert(&V::F32(2_147_483_648.0), Scalar::I32),
+            Ok(V::I32(2_147_483_520))
+        );
         assert_eq!(convert(&V::F32(-3.0e9), Scalar::I32), Ok(V::I32(i32::MIN)));
         assert_eq!(convert(&V::F32(-1.5), Scalar::U32), Ok(V::U32(0)));
-        assert_eq!(convert(&V::F32(5.0e9), Scalar::U32), Ok(V::U32(u32::MAX)));
+        assert_eq!(
+            convert(&V::F32(5.0e9), Scalar::U32),
+            Ok(V::U32(4_294_967_040))
+        );
+        assert_eq!(
+            convert(&V::F32(4_294_967_040.0), Scalar::U32),
+            Ok(V::U32(4_294_967_040))
+        );
         assert_eq!(convert(&V::I32(-1), Scalar::U32), Ok(V::U32(u32::MAX)));
         assert_eq!(
             convert(&V::U32(0x8000_0000), Scalar::I32),

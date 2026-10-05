@@ -67,3 +67,4 @@ recorded here before code depends on it (blueprint §15).
 | 0044 | Prelude materials, the resource plan and the inspect views: details the specification leaves open |
 | 0045 | Assignable places: struct fields and array elements (owner decision) |
 | 0046 | Runtime materials: arenas by layout id, `debug.setParam` and materials that fail after mount: details the specification leaves open |
+| 0047 | CPU/GPU numeric agreement: WGSL's conversion clamp everywhere and CPU-order helpers (owner decision) |

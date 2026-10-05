@@ -21,8 +21,14 @@
 //!   0.04045`, else `pow((c + 0.055) / 1.055, 2.4)` (decision 0024 item 6), alpha
 //!   unchanged.
 //!
+//! - `mtek_mix_*(a, b, t)` = `a * (1.0 - t) + b * t`: WGSL bounds `mix` by this expression, but
+//!   the backends evaluate `x + t * (y - x)`, whose `y - x` overflows near the largest
+//!   floats (decision 0047);
+//! - `mtek_normalize_*(v)` = `v / sqrt(v.x*v.x + v.y*v.y + ...)` summed left to right, the
+//!   zero vector when that length is 0 (the CPU rule), not the built-in's `v * inverseSqrt(...)`;
+//!
 //! WGSL's own `/` and `%` already implement the Mtek integer rules, its conversions
-//! clamp, its `round` rounds half to even and it has `saturate`, so none of those needs a
+//! saturate like the CPU's (decision 0047), its `round` rounds half to even and it has `saturate`, so none of those needs a
 //! helper. Helper code carries the material declaration's span.
 
 use crate::lowering::shader_ir::{
@@ -44,35 +50,92 @@ pub(super) enum Helper {
     Mat4Translation,
     Mat4Scale,
     Mat4Rotation,
+    /// `mix` over `dim` components (1 = `f32`); `scalar_t`: the weight is an `f32` for a vector.
+    Mix {
+        dim: u8,
+        scalar_t: bool,
+    },
+    /// `normalize` of a vector of `dim` (2 to 4) components.
+    Normalize {
+        dim: u8,
+    },
+}
+
+/// The type of `dim` `f32` components: 1 is `f32`, 2 to 4 a vector.
+fn float_type(dim: u8) -> ShaderType {
+    match dim {
+        2 => ShaderType::VEC2,
+        3 => ShaderType::VEC3,
+        4 => ShaderType::VEC4,
+        _ => ShaderType::F32,
+    }
+}
+
+/// The `dim` of a type of `float_type`, if it is one.
+pub(super) fn float_dim(ty: &ShaderType) -> Option<u8> {
+    [1, 2, 3, 4].into_iter().find(|dim| &float_type(*dim) == ty)
+}
+
+fn dim_name(dim: u8) -> String {
+    if dim == 1 {
+        "f32".to_owned()
+    } else {
+        format!("vec{dim}")
+    }
 }
 
 impl Helper {
     /// Every helper, in emission order.
     #[cfg(test)]
-    pub const ALL: [Helper; 9] = [
-        Helper::SrgbChannel,
-        Helper::ColorSrgb,
-        Helper::QuatMul,
-        Helper::QuatRotate,
-        Helper::QuatAxisAngle,
-        Helper::QuatEuler,
-        Helper::Mat4Translation,
-        Helper::Mat4Scale,
-        Helper::Mat4Rotation,
-    ];
+    pub fn all() -> Vec<Helper> {
+        let mut all = vec![
+            Helper::SrgbChannel,
+            Helper::ColorSrgb,
+            Helper::QuatMul,
+            Helper::QuatRotate,
+            Helper::QuatAxisAngle,
+            Helper::QuatEuler,
+            Helper::Mat4Translation,
+            Helper::Mat4Scale,
+            Helper::Mat4Rotation,
+        ];
+        for dim in 1..=4 {
+            all.push(Helper::Mix {
+                dim,
+                scalar_t: false,
+            });
+            if dim > 1 {
+                all.push(Helper::Mix {
+                    dim,
+                    scalar_t: true,
+                });
+            }
+        }
+        all.extend((2..=4).map(|dim| Helper::Normalize { dim }));
+        all
+    }
 
     /// The generated name (printed with the reserved `mtek_` prefix).
     pub fn name(self) -> Name {
         Name::generated(match self {
-            Helper::SrgbChannel => "srgb_channel",
-            Helper::ColorSrgb => "color_srgb",
-            Helper::QuatMul => "quat_mul",
-            Helper::QuatRotate => "quat_rotate",
-            Helper::QuatAxisAngle => "quat_axis_angle",
-            Helper::QuatEuler => "quat_euler",
-            Helper::Mat4Translation => "mat4_translation",
-            Helper::Mat4Scale => "mat4_scale",
-            Helper::Mat4Rotation => "mat4_rotation",
+            Helper::SrgbChannel => "srgb_channel".to_owned(),
+            Helper::ColorSrgb => "color_srgb".to_owned(),
+            Helper::QuatMul => "quat_mul".to_owned(),
+            Helper::QuatRotate => "quat_rotate".to_owned(),
+            Helper::QuatAxisAngle => "quat_axis_angle".to_owned(),
+            Helper::QuatEuler => "quat_euler".to_owned(),
+            Helper::Mat4Translation => "mat4_translation".to_owned(),
+            Helper::Mat4Scale => "mat4_scale".to_owned(),
+            Helper::Mat4Rotation => "mat4_rotation".to_owned(),
+            Helper::Mix {
+                dim,
+                scalar_t: false,
+            } => format!("mix_{}", dim_name(dim)),
+            Helper::Mix {
+                dim,
+                scalar_t: true,
+            } => format!("mix_{}_f32", dim_name(dim)),
+            Helper::Normalize { dim } => format!("normalize_{}", dim_name(dim)),
         })
     }
 
@@ -89,6 +152,7 @@ impl Helper {
     pub fn result(self) -> ShaderType {
         match self {
             Helper::SrgbChannel => ShaderType::F32,
+            Helper::Mix { dim, .. } | Helper::Normalize { dim } => float_type(dim),
             Helper::QuatRotate => ShaderType::VEC3,
             Helper::Mat4Translation | Helper::Mat4Scale | Helper::Mat4Rotation => ShaderType::Mat4,
             Helper::ColorSrgb | Helper::QuatMul | Helper::QuatAxisAngle | Helper::QuatEuler => {
@@ -134,6 +198,29 @@ impl Helper {
             Helper::Mat4Translation => (vec![("v", ShaderType::VEC3)], b.mat4_translation()),
             Helper::Mat4Scale => (vec![("v", ShaderType::VEC3)], b.mat4_scale()),
             Helper::Mat4Rotation => (vec![("q", ShaderType::VEC4)], b.mat4_rotation()),
+            Helper::Mix { dim, scalar_t } => (
+                vec![
+                    ("a", float_type(dim)),
+                    ("b", float_type(dim)),
+                    (
+                        "t",
+                        if scalar_t {
+                            ShaderType::F32
+                        } else {
+                            float_type(dim)
+                        },
+                    ),
+                ],
+                b.mix(
+                    dim,
+                    if scalar_t {
+                        ShaderType::F32
+                    } else {
+                        float_type(dim)
+                    },
+                ),
+            ),
+            Helper::Normalize { dim } => (vec![("v", float_type(dim))], b.normalize(dim)),
         };
         Function {
             name: self.name(),
@@ -401,6 +488,47 @@ impl Builder {
         ))]
     }
 
+    /// `a * (1.0 - t) + b * t`; `t_ty` is the weight's type.
+    fn mix(&self, dim: u8, t_ty: ShaderType) -> Vec<Statement> {
+        let a = || self.local("a", float_type(dim));
+        let b = || self.local("b", float_type(dim));
+        let t = || self.local("t", t_ty.clone());
+        vec![self.ret(self.add(
+            self.mul(a(), self.sub(self.f(1.0), t())),
+            self.mul(b(), t()),
+        ))]
+    }
+
+    /// `v / sqrt(v.x*v.x + v.y*v.y + ...)` (squares summed left to right), the zero vector for length 0.
+    fn normalize(&self, dim: u8) -> Vec<Statement> {
+        use Component::{W, X, Y, Z};
+        let ty = float_type(dim);
+        let v = || self.local("v", float_type(dim));
+        let square = |c| self.mul(self.component(v(), c), self.component(v(), c));
+        let components = [X, Y, Z, W];
+        let mut sum = self.add(square(X), square(Y));
+        for c in &components[2..usize::from(dim)] {
+            sum = self.add(sum, square(*c));
+        }
+        let length = || self.scalar("length");
+        let zero = Expr::construct(ty.clone(), vec![self.f(0.0)], self.span);
+        vec![
+            self.let_(
+                "length",
+                self.call(Intrinsic::Sqrt, vec![sum], ShaderType::F32),
+            ),
+            self.ret(self.call(
+                Intrinsic::Select,
+                vec![
+                    self.div(v(), length()),
+                    zero,
+                    self.bin(BinaryOp::Equal, length(), self.f(0.0)),
+                ],
+                ty,
+            )),
+        ]
+    }
+
     fn mat4(&self, columns: Vec<Expr>) -> Expr {
         Expr::construct(ShaderType::Mat4, columns, self.span)
     }
@@ -482,7 +610,7 @@ mod tests {
     fn every_helper_validates_and_comes_after_its_dependencies() {
         let span = Span::new(FileId(0), 0, 1);
         let mut module = ShaderModule::new("src/main.mtek::M", span);
-        for helper in Helper::ALL {
+        for helper in Helper::all() {
             for dependency in helper.dependencies() {
                 assert!(dependency < &helper, "{helper:?} after {dependency:?}");
             }
@@ -504,5 +632,22 @@ mod tests {
             "{}",
             printed.text
         );
+        // The CPU's operation order (decision 0047): mix, and normalize with the zero-length rule.
+        for expected in [
+            "fn mtek_mix_f32(mtek_a: f32, mtek_b: f32, mtek_t: f32) -> f32 {\n    \
+             return (mtek_a * (1.0 - mtek_t)) + (mtek_b * mtek_t);\n}\n",
+            "fn mtek_mix_vec3_f32(mtek_a: vec3<f32>, mtek_b: vec3<f32>, mtek_t: f32) -> vec3<f32> {",
+            "fn mtek_mix_vec2(mtek_a: vec2<f32>, mtek_b: vec2<f32>, mtek_t: vec2<f32>) -> vec2<f32> {",
+            "fn mtek_normalize_vec2(mtek_v: vec2<f32>) -> vec2<f32> {\n    \
+             let mtek_length = sqrt((mtek_v.x * mtek_v.x) + (mtek_v.y * mtek_v.y));\n    \
+             return select(mtek_v / mtek_length, vec2<f32>(0.0), mtek_length == 0.0);\n}\n",
+            "let mtek_length = sqrt((((mtek_v.x * mtek_v.x) + (mtek_v.y * mtek_v.y)) + (mtek_v.z * mtek_v.z)) + (mtek_v.w * mtek_v.w));",
+        ] {
+            assert!(
+                printed.text.contains(expected),
+                "{expected}\n{}",
+                printed.text
+            );
+        }
     }
 }

@@ -858,6 +858,26 @@ impl<'p> ShaderLowering<'p> {
             "mat4.translation" => Helper::Mat4Translation,
             "mat4.scale" => Helper::Mat4Scale,
             "mat4.rotation" => Helper::Mat4Rotation,
+            // The CPU's operation order (decision 0047); the other forms stay WGSL built-ins.
+            "mix" | "normalize" => match (
+                function,
+                args.iter()
+                    .map(|a| helpers::float_dim(&a.ty))
+                    .collect::<Vec<_>>()
+                    .as_slice(),
+            ) {
+                ("mix", [Some(dim), Some(_), Some(weight)]) => Helper::Mix {
+                    dim: *dim,
+                    scalar_t: *dim > 1 && *weight == 1,
+                },
+                ("normalize", [Some(dim)]) if *dim > 1 => Helper::Normalize { dim: *dim },
+                _ => {
+                    let intrinsic = Intrinsic::from_mtek(function).ok_or_else(|| {
+                        format!("the built-in function '{function}' has no GPU form")
+                    })?;
+                    return Ok(Expr::intrinsic(intrinsic, args, result, span));
+                }
+            },
             name => {
                 let intrinsic = Intrinsic::from_mtek(name)
                     .ok_or_else(|| format!("the built-in function '{name}' has no GPU form"))?;

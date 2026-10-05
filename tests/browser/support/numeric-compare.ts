@@ -146,7 +146,8 @@ function compareRowAgainstBounds(row: TableCase, words: readonly number[], evalu
   const expect = decodeTyped(row.expect, `${row.id} expect`);
   const type = expect.type;
   const gpu = expect.components.map((_, index) => wordComponent(type, words[index] ?? 0));
-  const base = { id: row.id, fn: row.fn, key: entry.key, portable: row.portable, compare: entry.compare } as const;
+  const compare = evaluator.tolerances.exactRows?.some((exact) => exact.id === row.id) === true ? "exact" : entry.compare;
+  const base = { id: row.id, fn: row.fn, key: entry.key, portable: row.portable, compare } as const;
   const plain = (): ComponentResult[] =>
     expect.components.map((cpu, index) => {
       const value = gpu[index] ?? NaN;
@@ -157,7 +158,7 @@ function compareRowAgainstBounds(row: TableCase, words: readonly number[], evalu
     return { ...base, status: "not-compared", reason: `non-portable in cpu.json${row.note === undefined ? "" : `: ${row.note}`}`, components: plain() };
   }
 
-  if (entry.compare === "exact") {
+  if (compare === "exact") {
     const components = plain();
     if (expect.components.every((cpu, index) => sameWord(type, cpu, gpu[index] ?? NaN))) {
       return { ...base, status: "match", components };

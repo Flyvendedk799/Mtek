@@ -86,9 +86,9 @@ A test scans every generated `app.js` for forbidden identifiers (`globalThis`, `
 - **GPU comparison.** `tests/browser/specs/numeric/` evaluates the same inputs on the GPU (probe shader writing `bitcast<u32>` results to an `rgba32uint` target) for every case marked portable, and compares with the CPU result:
   - integer operations, conversions of in-range values, `+ - *` of finite `f32`: **bit-exact**;
   - everything else: within the tolerance recorded in `tests/semantics/numeric/tolerances.json`, where each function's tolerance is **transcribed from the WGSL "Floating Point Accuracy" section** of [S5] for `f32` (absolute or ULP bound, with its input domain), plus 1 ULP for CPU rounding. Each entry cites the spec section it came from. Inputs outside the stated domain are not compared (non-portable by definition).
-- Non-portable cases (NaN, infinity, division by zero for `f32`, `normalize(0)`) are tested on the CPU only and listed as non-portable in the language reference.
+- Non-portable cases (NaN, infinity, division by zero for `f32`) are tested on the CPU only and listed as non-portable in the language reference.
 - Tolerances are never widened to make a failing test pass without a decision record explaining the measured cause (blueprint §14: "do not weaken tests casually").
-- How the WGSL bounds are read and evaluated (interval arithmetic over inherited expressions, the rounding, reassociation, fusion, flush-to-zero and zero-sign rules, one binary32 step for CPU rounding), how the probe is generated from the compiler's own WGSL, the generated list of uncompared cases `tests/semantics/numeric/gpu-not-compared.json`, measured known deviations and the per-run report `numeric-conformance-<project>.json` are decision 0043.
+- How the WGSL bounds are read and evaluated (interval arithmetic over inherited expressions, the rounding, reassociation, fusion, flush-to-zero and zero-sign rules, one binary32 step for CPU rounding), how the probe is generated from the compiler's own WGSL, the generated list of uncompared cases `tests/semantics/numeric/gpu-not-compared.json`, measured known deviations and the per-run report `numeric-conformance-<project>.json` are decision 0043; the conversion clamp, the `mix` and `normalize` helpers, `exactRows` and the before/after counts are decision 0047.
 
 ## 6. Browser tests
 
