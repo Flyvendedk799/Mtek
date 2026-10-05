@@ -1,0 +1,30 @@
+// The Pulse material of blueprint section 3.1 with a pure `pulse` function (M2 exit gate). `phase` is
+// driven by `app.debug.setParam` in the browser tests because `bind` arrives with M3. The box fills the
+// middle of the view, so its centre pixel is the material's colour.
+fn pulse(t: f32) -> f32 {
+    return 0.65 + 0.35 * sin(t);
+}
+
+material Pulse {
+    param tint: color = #6b5cff;
+    param phase: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * pulse(phase), tint.a);
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(2.0, 2.0, 2.0) };
+        material: Pulse {
+            tint: #6b5cff;
+            phase: 0.0;
+        };
+    }
+}

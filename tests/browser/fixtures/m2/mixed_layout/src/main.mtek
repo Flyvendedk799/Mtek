@@ -1,0 +1,54 @@
+// The `mixed` layout of spec/gpu-layout.md section 4.5 B (f32, vec3, u32, vec2, bool, color) in a real
+// scene. The fragment reads every param through its typed WGSL path and compares it with the constant
+// the CPU wrote, so a writer/reader disagreement of one bit shows as a black channel:
+// red = a and b, green = c and d, blue = e and f. `Match` keeps the defaults (the checked values),
+// `Mutated` changes every param.
+fn flag(ok: bool) -> f32 {
+    if ok {
+        return 1.0;
+    }
+    return 0.0;
+}
+
+material Mixed {
+    param a: f32 = 1.5;
+    param b: vec3 = vec3(0.1, -2.5, 1234.5);
+    param c: u32 = 3000000000;
+    param d: vec2 = vec2(0.3, -0.7);
+    param e: bool = true;
+    param f: color = color.linear(vec3(0.25, 0.5, 0.125), 1.0);
+
+    fragment(input: SurfaceInput) -> color {
+        let ab = a == 1.5 && b.x == 0.1 && b.y == -2.5 && b.z == 1234.5;
+        let cd = c == 3000000000 && d.x == 0.3 && d.y == -0.7;
+        let ef = e && f.rgb.x == 0.25 && f.rgb.y == 0.5 && f.rgb.z == 0.125 && f.a == 1.0;
+        return color.linear(vec3(flag(ab), flag(cd), flag(ef)), 1.0);
+    }
+}
+
+scene Probe {
+    clear_color: #202830;
+    camera Main {
+        position: vec3(0.0, 0.0, 5.0);
+        projection: Orthographic { height: 4.0; near: 0.5; far: 20.0 };
+    }
+
+    entity Match {
+        position: vec3(-1.5, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 2.0) };
+        material: Mixed {};
+    }
+
+    entity Mutated {
+        position: vec3(1.5, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 2.0) };
+        material: Mixed {
+            a: -1.5;
+            b: vec3(0.2, 2.5, 1.0);
+            c: 7;
+            d: vec2(0.5, 0.7);
+            e: false;
+            f: color.linear(vec3(0.5, 0.25, 0.0625), 1.0);
+        };
+    }
+}
