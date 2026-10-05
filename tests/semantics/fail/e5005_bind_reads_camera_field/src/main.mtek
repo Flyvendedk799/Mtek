@@ -1,0 +1,10 @@
+// A binding may not depend on a camera field (spec/scenes.md section 8.4).
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+    }
+    entity Cube {
+        position: bind(Main.position);
+        mesh: Box {};
+    }
+}

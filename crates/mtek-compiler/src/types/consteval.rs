@@ -814,6 +814,12 @@ impl Checker<'_> {
                     }
                     value_folded
                 }
+                // A bound field's value arrives at run time; a stand-in keeps the descriptor complete.
+                FieldValue::Bind(_) => self
+                    .registry
+                    .schema_field(schema, &field.name.name)
+                    .and_then(|def| super::bind::placeholder(def.ty))
+                    .map_or(Folded::Unknown, Folded::Value),
                 _ => Folded::Unknown,
             });
         }

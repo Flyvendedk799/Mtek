@@ -1,0 +1,12 @@
+// Two bindings that read each other's field: E5075 at the first, the whole cycle as related spans.
+scene Demo {
+    camera Main {}
+    entity A {
+        position: bind(B.position + vec3(1.0, 0.0, 0.0));
+        mesh: Box {};
+    }
+    entity B {
+        position: bind(A.position - vec3(1.0, 0.0, 0.0));
+        mesh: Box {};
+    }
+}

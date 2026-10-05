@@ -1,0 +1,43 @@
+// bind(..): entity fields, camera fields and material params, reading state, `frame` and other
+// entities' fields; dependencies and the evaluation order are inspectable.
+material Pulse {
+    param tint: color = #6b5cff;
+    param phase: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * (0.65 + 0.35 * sin(phase)), tint.a);
+    }
+}
+
+fn wobble(t: f32) -> f32 {
+    return sin(t) * 0.5;
+}
+
+scene Demo {
+    clear_color: #101418;
+    state speed: f32 = 0.7;
+    state lift: f32 = 1.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: bind(Cube.position);
+    }
+
+    entity Cube {
+        position: bind(vec3(0.0, wobble(frame.time) * speed, 0.0));
+        rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.5);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Pulse { phase: bind(frame.time * speed); tint: #ff8800; };
+
+        update(dt: f32) {
+            speed = speed + dt * 0.0;
+        }
+    }
+
+    entity Marker {
+        position: bind(Cube.position + vec3(0.0, lift, 0.0));
+        visible: bind(speed > 0.5);
+        mesh: Box { size: vec3(0.2, 0.2, 0.2) };
+        material: Unlit { color: bind(Cube.material.tint) };
+    }
+}

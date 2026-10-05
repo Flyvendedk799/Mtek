@@ -185,7 +185,16 @@ pub fn emit_program(
                     entity_functions(&behaviors.entity_fixed_update),
                 ),
                 ("events".to_owned(), events_table(&behaviors)),
-                ("bindings".to_owned(), Expr::Array(Vec::new())),
+                (
+                    "bindings".to_owned(),
+                    Expr::Array(
+                        behaviors
+                            .bindings
+                            .iter()
+                            .map(|name| Expr::Ident(name.clone()))
+                            .collect(),
+                    ),
+                ),
             ]),
         )]),
     });
@@ -352,13 +361,6 @@ fn ctx_call(method: &str, arguments: Vec<Expr>) -> Expr {
     Expr::ident("ctx").member(method).call(arguments)
 }
 
-fn constant<'a>(field: &'a crate::ir::Field, what: &str) -> Result<&'a Value, String> {
-    field
-        .source
-        .as_const()
-        .ok_or_else(|| format!("{what} has no constant value"))
-}
-
 fn camera_statements(camera: &Camera, body: &mut Vec<Stmt>) -> Result<(), String> {
     body.push(Stmt::Comment(format!(
         "camera {} ({}), active",
@@ -370,16 +372,20 @@ fn camera_statements(camera: &Camera, body: &mut Vec<Stmt>) -> Result<(), String
             span: Some(span),
         });
     };
-    let position = constant(&camera.position, "the camera position")?;
-    set("position", value_expr(position)?, camera.position.span);
+    // A bound field has no constant: the runtime evaluates its binding after `init`.
+    if let Some(position) = camera.position.source.as_const() {
+        set("position", value_expr(position)?, camera.position.span);
+    }
     match &camera.target {
         Some(target) => {
-            let value = constant(target, "the camera target")?;
-            set("target", value_expr(value)?, target.span);
+            if let Some(value) = target.source.as_const() {
+                set("target", value_expr(value)?, target.span);
+            }
         }
         None => {
-            let value = constant(&camera.rotation, "the camera rotation")?;
-            set("rotation", value_expr(value)?, camera.rotation.span);
+            if let Some(value) = camera.rotation.source.as_const() {
+                set("rotation", value_expr(value)?, camera.rotation.span);
+            }
         }
     }
     let span = camera.projection.span;
@@ -419,7 +425,9 @@ fn entity_statements(
         ("rotation", &entity.rotation),
         ("scale", &entity.scale),
     ] {
-        let value = constant(field, &format!("the {name} of '{}'", entity.symbol))?;
+        let Some(value) = field.source.as_const() else {
+            continue;
+        };
         body.push(Stmt::Expr {
             expr: ctx_call(
                 "setTransform",
@@ -428,17 +436,15 @@ fn entity_statements(
             span: Some(field.span),
         });
     }
-    let visible = constant(
-        &entity.visible,
-        &format!("the visibility of '{}'", entity.symbol),
-    )?;
-    body.push(Stmt::Expr {
-        expr: ctx_call(
-            "setVisible",
-            vec![Expr::ident(&record), value_expr(visible)?],
-        ),
-        span: Some(entity.visible.span),
-    });
+    if let Some(visible) = entity.visible.source.as_const() {
+        body.push(Stmt::Expr {
+            expr: ctx_call(
+                "setVisible",
+                vec![Expr::ident(&record), value_expr(visible)?],
+            ),
+            span: Some(entity.visible.span),
+        });
+    }
     let instance = plan
         .entity_instances
         .get(entity.index as usize)
@@ -449,13 +455,17 @@ fn entity_statements(
             .get(*index as usize)
             .ok_or_else(|| format!("the material instance {index} is not in the plan"))?;
         for (param, desc) in planned.params.iter().zip(&material.params) {
+            // A bound param's value is the binding's, written after `init`.
+            let Some(value) = &param.value else {
+                continue;
+            };
             body.push(Stmt::Expr {
                 expr: ctx_call(
                     "setParam",
                     vec![
                         Expr::ident(&record),
                         Expr::string(&param.name),
-                        value_expr(&param.value)?,
+                        value_expr(value)?,
                     ],
                 ),
                 span: Some(desc.span),

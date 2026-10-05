@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5075",
+    "file": "src/main.mtek",
+    "startByte": 68,
+    "endByte": 109,
+    "message": "The bindings of Cube.position depend on each other.",
+    "related": [
+      {
+        "message": "binds Cube.position, which reads Cube.position",
+        "file": "src/main.mtek",
+        "startByte": 68,
+        "endByte": 109
+      }
+    ],
+    "notes": [
+      "help: break the cycle: bind one of them to something else, or update it from `update`"
+    ]
+  }
+]

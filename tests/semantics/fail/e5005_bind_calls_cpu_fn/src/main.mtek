@@ -1,0 +1,12 @@
+// A binding is re-evaluated every frame and must be pure: it cannot call a `cpu fn`.
+cpu fn noisy() -> f32 {
+    return random();
+}
+
+scene Demo {
+    camera Main {}
+    entity Cube {
+        position: bind(vec3(0.0, noisy(), 0.0));
+        mesh: Box {};
+    }
+}

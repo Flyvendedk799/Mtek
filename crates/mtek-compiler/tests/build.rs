@@ -527,11 +527,11 @@ fn the_manifest_carries_structure_but_no_entity_or_camera_values() {
                 .iter()
                 .map(|param| &param["class"])
                 .collect();
-            // `imperative` once a handler writes the param (task M3-01); every other param is
-            // `initial` (`bound` arrives with `bind`, M3-05).
+            // `imperative` once a handler writes the param (task M3-01), `bound` once a `bind`
+            // supplies it (M3-05); every other param is `initial`.
             for class in &classes {
                 assert!(
-                    *class == "initial" || *class == "imperative",
+                    ["initial", "imperative", "bound"].contains(&class.as_str().unwrap_or("")),
                     "{label}: {class}"
                 );
             }

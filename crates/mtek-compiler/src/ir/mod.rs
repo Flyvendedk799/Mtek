@@ -27,7 +27,7 @@ mod render;
 mod tests;
 
 pub use model::{
-    Behavior, BehaviorKind, Block, Branch, Camera, Const, Entity, Expr, ExprKind, Field, Function,
+    Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Branch, Camera, Const, Entity, Expr, ExprKind, Field, Function,
     Item, LocalItem, LocalKind, MaterialInstanceDesc, MaterialItem, MaterialParamItem, Mesh,
     MeshDesc, Module, NamedExpr, NamedValue, Origin, Owner, Param, Place, PlaceRoot, PlaceStep,
     Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StageItem, State, Stmt,

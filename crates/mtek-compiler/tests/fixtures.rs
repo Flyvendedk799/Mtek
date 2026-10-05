@@ -1356,7 +1356,7 @@ fn every_gated_construct_has_a_gating_fixture() {
             "no gate_* fixture reports {construct:?}: {messages:#?}"
         );
     }
-    assert!(gated >= 3, "{gated} gated constructs");
+    assert!(gated >= 2, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
         ("The built-in type `sampler`", "M4"),
@@ -1471,18 +1471,14 @@ fn the_syntax_corpus_resolves_without_panicking() {
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
     ("E4041", "M4: texture and sampler params"),
-    ("E5004", "M3-05: bind"),
-    ("E5005", "M3-05: bind"),
     ("E5030", "M5: spawn and destroy"),
     ("E5040", "M5-01: prefabs"),
     ("E5041", "M5-01: prefabs"),
     ("E5042", "M5-01: prefabs"),
     ("E5062", "M5: collision events"),
-    ("E5070", "M3-05: bind"),
     ("E5071", "M5: physics"),
     ("E5072", "M5: physics"),
     ("E5074", "M5: entity_ref"),
-    ("E5075", "M3-05: bind"),
     ("E5091", "M5: physics"),
     ("E5110", "M5: lights in prefabs"),
     ("E5111", "M4: lights"),

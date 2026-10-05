@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 use super::lower::{Defect, Lowering};
 use super::model::{
-    Behavior, BehaviorKind, Block, Branch, Expr, ExprKind, Function, LocalItem, LocalKind,
+    Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Branch, Expr, ExprKind, Function, LocalItem, LocalKind,
     MaterialItem, MaterialParamItem, NamedExpr, Owner, Place, PlaceRoot, PlaceStep, StageItem,
     State, Stmt, Symbol, Value,
 };
@@ -1032,6 +1032,166 @@ impl Lowering<'_> {
         match &expr.kind {
             AstExpr::Name(name) => name.clone(),
             _ => String::new(),
+        }
+    }
+}
+
+impl Lowering<'_> {
+    /// The `bind(..)` of `decl`, in id order, each with its expression lowered (no locals), its
+    /// target and dependencies named by static entity index.
+    pub(super) fn bindings(
+        &self,
+        decl: &ast::SceneDecl,
+        checked: &crate::types::CheckedScene,
+        scene: &Symbol,
+        ctx: &SceneCtx,
+    ) -> Result<Vec<Binding>, Defect> {
+        let infos: Vec<&crate::types::BindInfo> = self
+            .types
+            .bindings()
+            .iter()
+            .filter(|b| b.scene == checked.def)
+            .collect();
+        if infos.is_empty() {
+            return Ok(Vec::new());
+        }
+        let mut sources: BTreeMap<ast::NodeId, &ast::Bind> = BTreeMap::new();
+        collect_binds(decl, &mut sources);
+        let entity = |def: DefId| -> Result<u32, Defect> {
+            ctx.entities
+                .get(&def)
+                .copied()
+                .ok_or_else(|| "a binding names an entity the scene does not have".to_owned())
+        };
+        let mut out = Vec::with_capacity(infos.len());
+        for info in infos {
+            let bind = sources
+                .get(&info.node)
+                .ok_or_else(|| format!("the binding {} has no source", info.id))?;
+            let target = match &info.target {
+                crate::types::BindTarget::Field { object, field } => {
+                    if ctx.cameras.contains_key(object) {
+                        BindingTarget::Camera {
+                            field: field.clone(),
+                        }
+                    } else if field == "visible" {
+                        BindingTarget::Visible {
+                            entity: entity(*object)?,
+                        }
+                    } else {
+                        BindingTarget::Transform {
+                            entity: entity(*object)?,
+                            field: field.clone(),
+                        }
+                    }
+                }
+                crate::types::BindTarget::MaterialParam { entity: e, param } => {
+                    BindingTarget::Param {
+                        entity: entity(*e)?,
+                        name: param.clone(),
+                    }
+                }
+            };
+            let mut deps = Vec::with_capacity(info.deps.len());
+            for dep in &info.deps {
+                deps.push(match dep {
+                    crate::types::BindDep::State(def) => BindingDep::State {
+                        name: self
+                            .types
+                            .state(*def)
+                            .map(|s| s.name.clone())
+                            .ok_or("a binding reads a state that was not checked")?,
+                    },
+                    crate::types::BindDep::Frame(name) => BindingDep::Frame { name: name.clone() },
+                    crate::types::BindDep::Field { object, field } => BindingDep::EntityField {
+                        entity: entity(*object)?,
+                        field: field.clone(),
+                    },
+                    crate::types::BindDep::EntityState { entity: e, state } => {
+                        BindingDep::EntityState {
+                            entity: entity(*e)?,
+                            name: self
+                                .types
+                                .state(*state)
+                                .map(|s| s.name.clone())
+                                .ok_or("a binding reads a state that was not checked")?,
+                        }
+                    }
+                    crate::types::BindDep::MaterialParam { entity: e, param } => {
+                        BindingDep::Param {
+                            entity: entity(*e)?,
+                            name: param.clone(),
+                        }
+                    }
+                });
+            }
+            let lowering = FnLowering {
+                lowering: self,
+                name: format!("binding {}", info.id),
+                locals: Vec::new(),
+                index: BTreeMap::new(),
+                params: BTreeMap::new(),
+                scene: Some(ctx),
+            };
+            out.push(Binding {
+                id: info.id,
+                symbol: scene.child(&format!("bind_{}", info.id)),
+                target,
+                deps,
+                order: info.order,
+                ty: self.type_name(info.ty),
+                expr: lowering.expr(&bind.source)?,
+                span: info.span,
+            });
+        }
+        Ok(out)
+    }
+}
+
+/// Every `bind(..)` of the scene's fields, cameras and entities (and their `material` params).
+fn collect_binds<'a>(decl: &'a ast::SceneDecl, out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>) {
+    use ast::{EntityMember, SceneMember};
+    fn field_binds<'a>(
+        field: &'a ast::FieldInit,
+        out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>,
+    ) {
+        match &field.value {
+            FieldValue::Bind(bind) => {
+                out.insert(bind.id, bind);
+            }
+            FieldValue::Expr(value) => {
+                if let AstExpr::Descriptor { fields, .. } = &value.kind {
+                    for param in fields {
+                        if let FieldValue::Bind(bind) = &param.value {
+                            out.insert(bind.id, bind);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    fn entity_binds<'a>(
+        decl: &'a ast::EntityDecl,
+        out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>,
+    ) {
+        for member in &decl.members {
+            match member {
+                EntityMember::Field(f) => field_binds(f, out),
+                EntityMember::Entity(child) => entity_binds(child, out),
+                _ => {}
+            }
+        }
+    }
+    for member in &decl.members {
+        match member {
+            SceneMember::Field(f) => field_binds(f, out),
+            SceneMember::Object(object) => {
+                for f in &object.fields {
+                    field_binds(f, out);
+                }
+            }
+            SceneMember::Entity(e) => entity_binds(e, out),
+            _ => {}
         }
     }
 }

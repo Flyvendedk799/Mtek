@@ -859,7 +859,8 @@
           ],
           "entities": [],
           "state": [],
-          "behaviors": []
+          "behaviors": [],
+          "bindings": []
         }
       ]
     }

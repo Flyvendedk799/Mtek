@@ -1,0 +1,15 @@
+material Glow {
+    param strength: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(strength), 1.0);
+    }
+}
+
+scene Demo {
+    state level: f32 = 0.5;
+    camera Main {}
+    const SPARE = Glow { strength: bind(level); };
+    entity Lamp {
+        mesh: Box {};
+    }
+}

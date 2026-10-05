@@ -1,0 +1,38 @@
+[
+  {
+    "code": "MTEK-E5070",
+    "file": "src/main.mtek",
+    "startByte": 286,
+    "endByte": 299,
+    "message": "`Cube.position` is bound, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "`Cube.position` is bound here",
+        "file": "src/main.mtek",
+        "startByte": 197,
+        "endByte": 225
+      }
+    ],
+    "notes": [
+      "help: update the binding's source instead"
+    ]
+  },
+  {
+    "code": "MTEK-E5070",
+    "file": "src/main.mtek",
+    "startByte": 331,
+    "endByte": 346,
+    "message": "`Cube.position` is bound, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "`Cube.position` is bound here",
+        "file": "src/main.mtek",
+        "startByte": 197,
+        "endByte": 225
+      }
+    ],
+    "notes": [
+      "help: update the binding's source instead"
+    ]
+  }
+]

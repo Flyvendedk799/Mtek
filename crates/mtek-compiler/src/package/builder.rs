@@ -41,7 +41,7 @@ use crate::{BuildMode, COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI, TargetPr
 use super::html::index_html;
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
-    Camera, Entity, EntityMaterial, InstanceParam, Layout, MANIFEST_SCHEMA, Manifest, Material,
+    Binding, BindingDep, BindingTarget, Camera, Entity, EntityMaterial, InstanceParam, Layout, MANIFEST_SCHEMA, Manifest, Material,
     MaterialInstance, MaterialParam, Mesh, MeshShape, Num, ParamClass as ManifestClass,
     RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, StateEntry,
     Subsystems, SymbolEntry, SymbolKind,
@@ -192,6 +192,9 @@ pub fn package(
         shader_files.push((artifact.map_path(), map_text.into_bytes()));
     }
 
+    // The binding spans come before app.js too, for the same reason.
+    let manifest_scene = manifest_scene(scene, &plan, &mut spans).map_err(defect)?;
+
     // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
     // other span, so a program's span ids do not depend on its function bodies.
     let runtime_file = format!("runtime.{}.js", h16(input.runtime_bundle));
@@ -266,7 +269,7 @@ pub fn package(
         materials: manifest_materials,
         meshes: meshes(&plan).map_err(defect)?,
         assets: Vec::new(),
-        scene: manifest_scene(scene, &plan).map_err(defect)?,
+        scene: manifest_scene,
     };
 
     let html = index_html(&project.config.build.title, input.mode).ok_or_else(|| {
@@ -449,7 +452,11 @@ fn color_nums(value: &ConstValue, what: &str) -> Result<Vec<Num>, String> {
 }
 
 /// The manifest's `scene`.
-fn manifest_scene(scene: &ir::Scene, plan: &ResourcePlan) -> Result<Scene, String> {
+fn manifest_scene(
+    scene: &ir::Scene,
+    plan: &ResourcePlan,
+    spans: &mut SpanTable,
+) -> Result<Scene, String> {
     let clear_color = match scene.fields.clear_color.source.as_const() {
         Some(ir::Value::Color(rgba)) => nums(rgba)?,
         _ => return Err("the scene's clear_color is not a constant colour".to_owned()),
@@ -518,24 +525,36 @@ fn manifest_scene(scene: &ir::Scene, plan: &ResourcePlan) -> Result<Scene, Strin
     let material_instances = plan
         .instances
         .iter()
-        .map(|instance| MaterialInstance {
+        .map(|instance| {
+            Ok(MaterialInstance {
             index: instance.index,
             material: instance.material.to_string(),
             entity: instance.entity,
             params: instance
                 .params
                 .iter()
-                .map(|param| InstanceParam {
-                    name: param.name.clone(),
-                    class: match param.class {
-                        ParamClass::Initial => ManifestClass::Initial,
-                        ParamClass::Imperative => ManifestClass::Imperative,
-                    },
+                .map(|param| {
+                    Ok(InstanceParam {
+                        name: param.name.clone(),
+                        class: match (param.class, param.binding) {
+                            (ParamClass::Initial, _) => ManifestClass::Initial,
+                            (ParamClass::Imperative, _) => ManifestClass::Imperative,
+                            (ParamClass::Bound, Some(binding)) => ManifestClass::Bound { binding },
+                            (ParamClass::Bound, None) => {
+                                return Err(format!(
+                                    "the bound parameter '{}' has no binding",
+                                    param.name
+                                ));
+                            }
+                        },
+                    })
                 })
-                .collect(),
+                .collect::<Result<Vec<_>, String>>()?,
             shareable: instance.shareable(),
+            })
         })
-        .collect();
+        .collect::<Result<Vec<_>, String>>()?;
+    let bindings = manifest_bindings(scene, plan, spans)?;
     Ok(Scene {
         name: scene.name.clone(),
         symbol: scene.symbol.to_string(),
@@ -544,10 +563,70 @@ fn manifest_scene(scene: &ir::Scene, plan: &ResourcePlan) -> Result<Scene, Strin
         cameras,
         entities,
         material_instances,
-        bindings: Vec::new(),
+        bindings,
         host_inputs: Vec::new(),
         lights: Vec::new(),
     })
+}
+
+/// The manifest's `bindings`, by id: targets and dependencies by static entity index, material
+/// params by instance index (`spec/runtime-abi.md` section 5.2).
+fn manifest_bindings(
+    scene: &ir::Scene,
+    plan: &ResourcePlan,
+    spans: &mut SpanTable,
+) -> Result<Vec<Binding>, String> {
+    let instance = |entity: u32| -> Result<u32, String> {
+        plan.entity_instances
+            .get(entity as usize)
+            .copied()
+            .flatten()
+            .ok_or_else(|| format!("the entity {entity} has no material instance to bind"))
+    };
+    let mut out = Vec::with_capacity(scene.bindings.len());
+    for binding in &scene.bindings {
+        let target = match &binding.target {
+            ir::BindingTarget::Transform { entity, field } => BindingTarget::Transform {
+                entity: *entity,
+                field: field.clone(),
+            },
+            ir::BindingTarget::Visible { entity } => BindingTarget::Visible { entity: *entity },
+            ir::BindingTarget::Param { entity, name } => BindingTarget::Param {
+                instance: instance(*entity)?,
+                name: name.clone(),
+            },
+            ir::BindingTarget::Camera { field } => BindingTarget::Camera {
+                field: field.clone(),
+            },
+        };
+        let mut deps = Vec::with_capacity(binding.deps.len());
+        for dep in &binding.deps {
+            deps.push(match dep {
+                ir::BindingDep::State { name } => BindingDep::State { name: name.clone() },
+                ir::BindingDep::Frame { name } => BindingDep::Frame { name: name.clone() },
+                ir::BindingDep::EntityField { entity, field } => BindingDep::EntityField {
+                    entity: *entity,
+                    field: field.clone(),
+                },
+                ir::BindingDep::EntityState { entity, name } => BindingDep::EntityState {
+                    entity: *entity,
+                    name: name.clone(),
+                },
+                ir::BindingDep::Param { entity, name } => BindingDep::Param {
+                    instance: instance(*entity)?,
+                    name: name.clone(),
+                },
+            });
+        }
+        out.push(Binding {
+            id: binding.id,
+            target,
+            deps,
+            order: binding.order,
+            span: spans.intern(binding.span)?,
+        });
+    }
+    Ok(out)
 }
 
 /// The manifest's `state` entries of `owner`, in declaration order.
