@@ -192,7 +192,7 @@ Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated rema
 | From → To | Rule (identical on CPU and GPU) |
 |---|---|
 | `i32 → f32`, `u32 → f32` | Round to nearest representable (CPU: ties-to-even. GPU may choose either neighbour — inside tolerance). |
-| `f32 → i32` / `f32 → u32` | **Clamp** to the target range, then truncate toward zero (WGSL rule, [S5]). NaN → `0` on the CPU; on the GPU NaN yields an indeterminate value (non-portable). Out of range, the CPU clamps to the integer maxima while WGSL clamps to the largest value representable in both types (2147483520, 4294967040): an open spec issue, decision 0043 item 8. |
+| `f32 → i32` / `f32 → u32` | **Clamp** to the target range, then truncate toward zero (WGSL rule, [S5]). NaN → `0` on the CPU; on the GPU NaN yields an indeterminate value (non-portable). Out of range, the result is the integer closest to the truncated value that an `f32` also represents exactly — `[-2147483648, 2147483520]` and `[0, 4294967040]` — on the CPU, in folded constants and on the GPU (decision 0047). |
 | `i32 ↔ u32` | Bit reinterpretation (two's complement). |
 | same → same | Identity (allowed; lint `W3050` "redundant conversion"). |
 
@@ -277,7 +277,7 @@ The authoritative list with signatures, domains, const-eligibility and CPU seman
 - `round` rounds half to **even** (JavaScript's `Math.round` rounds half up — the runtime math library must implement ties-to-even).
 - `fract(x) = x - floor(x)`.
 - `clamp(x, lo, hi) = min(max(x, lo), hi)`; `lo > hi` is non-portable.
-- `normalize(v)` of a zero vector is non-portable (CPU returns the zero vector; documented).
+- `normalize(v)` of a zero vector, or of a vector whose squared length underflows or overflows, is the zero vector on the CPU and on the GPU (a generated helper, decision 0047); NaN and infinite components stay non-portable.
 - `sign(0.0) = 0.0`.
 - Integer `abs(i32::MIN) = i32::MIN`.
 

@@ -153,23 +153,24 @@ describe("integer helpers", () => {
     expect(rt.uclamp(0, 1, 5)).toBe(1);
   });
 
-  it("convert f32 to integers by clamping, then truncating; NaN gives 0", () => {
+  it("convert f32 to integers by truncating, saturating at WGSL's values (decision 0047); NaN gives 0", () => {
     expect(rt.f2i(-2.9)).toBe(-2);
     expect(rt.f2i(2.9)).toBe(2);
     expect(Object.is(rt.f2i(-0.5), 0)).toBe(true);
-    expect(rt.f2i(3e9)).toBe(rt.I32_MAX);
+    expect(rt.f2i(3e9)).toBe(2147483520);
     expect(rt.f2i(-3e9)).toBe(rt.I32_MIN);
-    expect(rt.f2i(2147483648)).toBe(rt.I32_MAX);
+    expect(rt.f2i(2147483648)).toBe(2147483520);
     expect(rt.f2i(-2147483648)).toBe(rt.I32_MIN);
     expect(rt.f2i(2147483520)).toBe(2147483520);
-    expect(rt.f2i(Infinity)).toBe(rt.I32_MAX);
+    expect(rt.f2i(Infinity)).toBe(2147483520);
     expect(rt.f2i(-Infinity)).toBe(rt.I32_MIN);
     expect(rt.f2i(NaN)).toBe(0);
     expect(rt.f2u(-1.5)).toBe(0);
-    expect(rt.f2u(5e9)).toBe(rt.U32_MAX);
+    expect(rt.f2u(5e9)).toBe(4294967040);
+    expect(rt.f2u(4294967296)).toBe(4294967040);
     expect(rt.f2u(4294967040)).toBe(4294967040);
     expect(rt.f2u(3.99)).toBe(3);
-    expect(rt.f2u(Infinity)).toBe(rt.U32_MAX);
+    expect(rt.f2u(Infinity)).toBe(4294967040);
     expect(rt.f2u(NaN)).toBe(0);
   });
 

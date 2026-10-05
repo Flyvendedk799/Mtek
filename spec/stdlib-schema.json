@@ -1431,7 +1431,7 @@
       "domain": "both",
       "constEligible": true,
       "handlersOnly": false,
-      "cpuSemantics": "A zero vector gives the zero vector on the CPU; non-portable on the GPU.",
+      "cpuSemantics": "A zero vector, or one whose squared length underflows or overflows, gives the zero vector on the CPU and the GPU (decision 0047).",
       "since": "M1",
       "doc": "The vector scaled to length 1."
     },

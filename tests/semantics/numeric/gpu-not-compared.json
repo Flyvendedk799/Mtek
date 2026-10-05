@@ -130,17 +130,8 @@
     {"id":"pow_vec4#1","expression":"pow(vec4(0.5, 10.0, 3.0, 2.0), vec4(2.4000000953674316, -2.0, 0.699999988079071, 128.0))","reason":"non-portable in cpu.json"},
     {"id":"min_vec2#2","expression":"min(vec2(1.0, NaN), vec2(NaN, 2.0))","reason":"non-portable in cpu.json: NaN gives the other operand on the CPU"},
     {"id":"div_vec2_f32#2","expression":"vec2(1.0, -1.0) / 0.0","reason":"non-portable in cpu.json: division by zero"},
-    {"id":"normalize_vec2#2","expression":"normalize(vec2(0.0, 0.0))","reason":"non-portable in cpu.json: zero vector gives the zero vector on the CPU"},
-    {"id":"normalize_vec2#3","expression":"normalize(vec2(1.0000000031710769e-30, 0.0))","reason":"non-portable in cpu.json: squared length underflows: zero vector on the CPU"},
-    {"id":"normalize_vec2#4","expression":"normalize(vec2(3.0000000054977558e+38, 1.0))","reason":"non-portable in cpu.json: squared length overflows"},
     {"id":"div_vec3_f32#2","expression":"vec3(1.0, -1.0, 0.0) / 0.0","reason":"non-portable in cpu.json: division by zero"},
-    {"id":"normalize_vec3#2","expression":"normalize(vec3(0.0, 0.0, 0.0))","reason":"non-portable in cpu.json: zero vector gives the zero vector on the CPU"},
-    {"id":"normalize_vec3#3","expression":"normalize(vec3(1.0000000031710769e-30, 0.0, 0.0))","reason":"non-portable in cpu.json: squared length underflows: zero vector on the CPU"},
-    {"id":"normalize_vec3#4","expression":"normalize(vec3(3.0000000054977558e+38, 1.0, 1.0))","reason":"non-portable in cpu.json: squared length overflows"},
     {"id":"div_vec4_f32#2","expression":"vec4(1.0, -1.0, 0.0, 2.0) / 0.0","reason":"non-portable in cpu.json: division by zero"},
-    {"id":"normalize_vec4#2","expression":"normalize(vec4(0.0, 0.0, 0.0, 0.0))","reason":"non-portable in cpu.json: zero vector gives the zero vector on the CPU"},
-    {"id":"normalize_vec4#3","expression":"normalize(vec4(1.0000000031710769e-30, 0.0, 0.0, 0.0))","reason":"non-portable in cpu.json: squared length underflows: zero vector on the CPU"},
-    {"id":"normalize_vec4#4","expression":"normalize(vec4(3.0000000054977558e+38, 1.0, 1.0, 1.0))","reason":"non-portable in cpu.json: squared length overflows"},
     {"id":"quat_axis_angle#11","expression":"quat.axis_angle(vec3(0.0, 0.0, 0.0), 1.0)","reason":"non-portable in cpu.json: a zero axis gives the identity on the CPU"}
   ],
   "outsideAccuracyDomain": [
@@ -178,13 +169,6 @@
     {"id":"quat_axis_angle#7","expression":"quat.axis_angle(vec3(0.0, 0.0, -3.0000000054977558e+38), 1.0)","reason":"outside the WGSL accuracy domain: / (float): accuracy is stated only for |y| in [2^-126, 2^126]"},
     {"id":"quat_axis_angle#10","expression":"quat.axis_angle(vec3(0.30000001192092896, -0.4000000059604645, 0.5), 10.0)","reason":"outside the WGSL accuracy domain: sin: accuracy is stated only for x in [-3.141592653589793, 3.141592653589793]"}
   ],
-  "cpuDiffersFromWgsl": [
-    {"id":"i32_from_f32#9","cpu":2147483647,"wgsl":2147483520,"decision":"0043"},
-    {"id":"i32_from_f32#11","cpu":2147483647,"wgsl":2147483520,"decision":"0043"},
-    {"id":"u32_from_f32#8","cpu":4294967295,"wgsl":4294967040,"decision":"0043"},
-    {"id":"u32_from_f32#9","cpu":4294967295,"wgsl":4294967040,"decision":"0043"}
-  ],
-  "knownDeviations": [
-    {"id":"mix_f32#7","decision":"0043"}
-  ]
+  "cpuDiffersFromWgsl": [],
+  "knownDeviations": []
 }

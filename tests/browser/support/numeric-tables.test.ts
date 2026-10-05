@@ -76,6 +76,15 @@ describe("tolerances.json", () => {
     expect(failures).toEqual([]);
   });
 
+  it("lists exact rows only for portable rows of tolerance entries", () => {
+    for (const exact of tolerances.exactRows ?? []) {
+      const row = table.cases.find((c) => c.id === exact.id);
+      expect(row?.portable, exact.id).toBe(true);
+      if (row !== undefined) expect(resolveEntry(row, evaluator).compare, exact.id).toBe("tolerance");
+      expect(exact.decision).toMatch(/^\d{4}$/);
+    }
+  });
+
   it("lists known deviations only for portable tolerance rows", () => {
     for (const deviation of tolerances.knownDeviations) {
       const row = table.cases.find((c) => c.id === deviation.id);

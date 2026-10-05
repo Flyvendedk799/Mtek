@@ -60,6 +60,11 @@ export interface ToleranceEntry {
   readonly wgslOp?: string;
   /** The generated helper (decision 0041 item 8) whose body `accuracy.expr` transcribes. */
   readonly helper?: string;
+  /**
+   * Prefix of a family of generated helpers (one per operand shape: `mtek_mix_vec3`, ...) whose bodies are
+   * checked by the conformance spec to be the CPU-order expressions this entry bounds (decision 0047).
+   */
+  readonly helperFamily?: string;
   readonly helperCheck?: "manual";
   readonly params: readonly string[];
   readonly compare: "exact" | "tolerance";
@@ -88,6 +93,11 @@ export interface Tolerances {
   readonly source: { readonly ref: string; readonly url: string; readonly status: string; readonly retrieved: string };
   readonly cpuRoundingUlp: number;
   readonly knownDeviations: readonly KnownDeviation[];
+  /**
+   * Rows of a tolerance entry that are compared bit for bit anyway: the lowering makes CPU and GPU agree
+   * exactly there (decision 0047), including rows outside the WGSL accuracy domain.
+   */
+  readonly exactRows?: readonly { readonly id: string; readonly decision: string }[];
   readonly rules: readonly Rule[];
   readonly entries: readonly ToleranceEntry[];
 }

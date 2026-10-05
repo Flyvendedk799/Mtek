@@ -172,7 +172,7 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `distance` | `(T, T) → f32` | both | ✓ | |
 | `dot` | `(V, V) → f32` | both | ✓ | |
 | `cross` | `(vec3, vec3) → vec3` | both | ✓ | |
-| `normalize` | `V → V` | both | ✓ | zero vector → zero vector on CPU; non-portable on GPU |
+| `normalize` | `V → V` | both | ✓ | a zero vector, or one whose squared length underflows or overflows, → zero vector on CPU and GPU (decision 0047) |
 | `reflect` | `(V, V) → V` | both | ✓ | `i − 2·dot(n, i)·n` |
 | `transpose` | `mat4 → mat4` | both | ✓ | |
 | `sample` | `(texture, sampler, vec2) → vec4` | gpu | — | `spec/materials.md` §5 |
