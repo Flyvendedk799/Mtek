@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { checkManifest } from "../abi/validate.js";
 import type { MtekManifest } from "../abi/manifest-types.js";
-import type { MtekDiagnostic } from "../diagnostics/types.js";
+import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
+import type { MountedApp } from "../host/app.js";
 import { mountMtekWith } from "../host/mount.js";
 import type { MtekApp, MtekDebug, MtekMountOptions } from "../host/types.js";
 import { lookAt, multiply, normalMatrix, perspective, translation } from "../math/mat4.js";
@@ -342,6 +343,113 @@ describe("the draw list", () => {
     expect(draws[0]?.pipeline).not.toBe(draws[2]?.pipeline);
     expect(draws.map((d) => d.bindGroups[1]?.descriptor.label)).toEqual([1, 4, 0, 2].map((i) => `material:std/materials.mtek::Unlit#${String(i)}`));
     expect(debug.counters()).toMatchObject({ drawCalls: 4, ownedParamBlocks: 5, liveEntities: 5 });
+    app.dispose();
+  });
+});
+
+const UNLIT_ARENA = "mtek:uniform-arena:material:std/materials.mtek::Unlit";
+
+async function mountTwoMaterials(init?: (ctx: object) => void): Promise<Mounted> {
+  return mountScene({
+    edit: twoMaterialEdit,
+    files: (h) => {
+      h.files.set(`${BASE_URL}shaders/${OTHER_HASH.slice(0, 16)}.wgsl`, "// other material\n");
+      h.files.set(`${BASE_URL}shaders/${OTHER_HASH.slice(0, 16)}.mtek-map.json`, JSON.stringify({ shader: OTHER_HASH, entries: [] }));
+    },
+    ...(init === undefined ? {} : { init }),
+  });
+}
+
+describe("debug.setParam (the M2 gate hook, spec/runtime-abi.md section 10.2)", () => {
+  it("writes one instance through the generated writer, uploads it next frame and creates nothing", async () => {
+    const { host, debug, app, manifest } = await mountTwoMaterials();
+    debug.step(1, 0.016);
+    const before = debug.counters();
+    const arena = bufferLabelled(host, UNLIT_ARENA);
+    const color = memberOffset(manifest, "material:std/materials.mtek::Unlit", "color");
+    // Entities 0 and 2 use the other material, which shares the Unlit layout: one arena, five slots.
+    expect(floats(arena, 1 * 256 + color, 4)).toEqual(new Float32Array([0.25, 0.5, 0.75, 1]));
+
+    debug.setParam("E1", "color", { r: 1, g: 0.5, b: 0.25, a: 1 });
+    // Written to the mirror, not to the GPU: nothing uploads before the render phase.
+    expect(debug.counters()["uploads"]).toBe(before["uploads"]);
+    debug.step(1, 0.016);
+
+    expect(floats(arena, 1 * 256 + color, 4)).toEqual(new Float32Array([1, 0.5, 0.25, 1]));
+    for (const other of [0, 2, 3, 4]) expect(floats(arena, other * 256 + color, 4), `instance ${String(other)}`).toEqual(new Float32Array([0.25, 0.5, 0.75, 1]));
+    const after = debug.counters();
+    expect(after["uploads"]).toBe((before["uploads"] ?? 0) + 1);
+    for (const name of ["pipelinesCreated", "shaderModulesCreated", "bindGroupsCreated", "buffersAllocated", "livePipelines", "liveBindGroups"]) {
+      expect(after[name], name).toBe(before[name]);
+    }
+    app.dispose();
+  });
+
+  it("an unchanged value uploads nothing", async () => {
+    const { debug, app } = await mountTwoMaterials();
+    debug.step(1, 0.016);
+    const before = debug.counters()["uploads"];
+    debug.setParam("E1", "color", { r: 0.25, g: 0.5, b: 0.75, a: 1 });
+    debug.step(1, 0.016);
+    expect(debug.counters()["uploads"]).toBe(before);
+    app.dispose();
+  });
+
+  it("a non-opaque colour is E8100 and the previous value stays", async () => {
+    const { host, debug, app, reported, manifest } = await mountTwoMaterials();
+    debug.step(1, 0.016);
+    debug.setParam("E3", "color", { r: 0, g: 1, b: 0, a: 0.5 });
+    debug.step(1, 0.016);
+    expect(reported.map((d) => d.code)).toEqual(["MTEK-E8100"]);
+    expect(reported[0]?.message).toContain("E3");
+    const color = memberOffset(manifest, "material:std/materials.mtek::Unlit", "color");
+    expect(floats(bufferLabelled(host, UNLIT_ARENA), 3 * 256 + color, 4)).toEqual(new Float32Array([0.25, 0.5, 0.75, 1]));
+    app.dispose();
+  });
+
+  it("names what exists when the entity, the param or the value is wrong", async () => {
+    const { debug, app } = await mountTwoMaterials();
+    const ok = { r: 1, g: 1, b: 1, a: 1 };
+    expect(() => debug.setParam("Nope", "color", ok)).toThrow("no entity named 'Nope' (entities: E0, E1, E2, E3, E4)");
+    expect(() => debug.setParam("E0", "tint", ok)).toThrow("declares no param 'tint' (params: color)");
+    expect(() => debug.setParam("E0", "color", { x: 1, y: 1, z: 1 })).toThrow("is a color; got");
+    expect(() => debug.setParam("E0", "color", { r: 1, g: Number.NaN, b: 1, a: 1 })).toThrow(TypeError);
+    app.dispose();
+  });
+
+  it("refuses to run on a disposed application", async () => {
+    const { debug, app } = await mountTwoMaterials();
+    app.dispose();
+    expect(() => debug.setParam("E0", "color", { r: 1, g: 1, b: 1, a: 1 })).toThrow(/disposed/);
+  });
+});
+
+describe("a material that fails after mount", () => {
+  const failure = (): MtekDiagnostic =>
+    makeRuntimeDiagnostic("E8051", {
+      phase: "runtime:reload",
+      message: `Shader for material ${OTHER_MATERIAL} failed to compile: unexpected token`,
+    });
+
+  it("is reported once and its entities are no longer drawn; the rest of the scene keeps running", async () => {
+    const { host, debug, app, reported } = await mountTwoMaterials();
+    debug.step(1, 0.016);
+    expect(lastDraws(host)).toHaveLength(5);
+
+    (app as MountedApp).handleMaterialFailure(OTHER_MATERIAL, failure());
+    (app as MountedApp).handleMaterialFailure(OTHER_MATERIAL, failure());
+    debug.step(1, 0.016);
+
+    // Entities 0 and 2 used the failed material; 1, 3 and 4 (Unlit) are still drawn, in the same order.
+    expect(lastDraws(host).map((d) => (d.dynamicOffsets[2]?.[0] ?? -1) / 256)).toEqual([1, 3, 4]);
+    expect(reported.map((d) => d.code)).toEqual(["MTEK-E8051"]);
+    expect(debug.counters()).toMatchObject({ failedMaterials: 1, drawCalls: 3, liveEntities: 5 });
+    expect(app.state).toBe("running");
+
+    // Params of a failed material stay writable (the entity still exists); nothing throws.
+    debug.setParam("E0", "color", { r: 0, g: 0, b: 1, a: 1 });
+    debug.step(1, 0.016);
+    expect(lastDraws(host)).toHaveLength(3);
     app.dispose();
   });
 });

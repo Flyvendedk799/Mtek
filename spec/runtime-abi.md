@@ -385,7 +385,7 @@ The M1 context subset, setter validation during `init`, the program/structure ch
 
 ## 10. Counters, overlay and test control
 
-10.1 **Counters** (per frame and cumulative): `frameTimeMs`, `cpuUpdateMs`, `renderPrepMs`, `drawCalls`, `instancedDraws`, `culledObjects`, `uploads`, `uploadBytes`, `pipelinesCreated`, `shaderModulesCreated`, `bindGroupsCreated`, `buffersAllocated`, `texturesAllocated`, live counts `liveBuffers`, `liveTextures`, `liveSamplers`, `liveShaderModules`, `livePipelines`, `liveBindGroups`, `liveListeners`, `sharedParamBlocks`, `ownedParamBlocks`, `discardedSteps`, `liveEntities`. GPU time is reported only when the `timestamp-query` feature is available and requested; otherwise the overlay says "GPU time unavailable" (blueprint §12.3 — never relabel CPU submission time as GPU time).
+10.1 **Counters** (per frame and cumulative): `frameTimeMs`, `cpuUpdateMs`, `renderPrepMs`, `drawCalls`, `instancedDraws`, `culledObjects`, `uploads`, `uploadBytes`, `pipelinesCreated`, `shaderModulesCreated`, `bindGroupsCreated`, `buffersAllocated`, `texturesAllocated`, live counts `liveBuffers`, `liveTextures`, `liveSamplers`, `liveShaderModules`, `livePipelines`, `liveBindGroups`, `liveListeners`, `sharedParamBlocks`, `ownedParamBlocks`, `discardedSteps`, `liveEntities`, `failedMaterials` (materials no longer drawn after a later shader or pipeline failure, §12). GPU time is reported only when the `timestamp-query` feature is available and requested; otherwise the overlay says "GPU time unavailable" (blueprint §12.3 — never relabel CPU submission time as GPU time).
 
 10.2 **Test control** (`options.test`, never in production builds of examples):
 ```ts
@@ -395,7 +395,7 @@ interface MtekDebug {
   readPixels(): Promise<{ width: number; height: number; format: "rgba8unorm-srgb"; data: Uint8Array }>;
   counters(): Readonly<Record<string, number>>;
   pressKey(code: string): void; releaseKey(code: string): void;      // injects input transitions
-  setParam(entityName: string, param: string, value: unknown): void;  // M2 gate: change a param without `bind`
+  setParam(entityName: string, param: string, value: unknown): void;  // M2 gate: change a param without `bind` (decision 0046)
   scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }> };
 }
 ```
@@ -412,3 +412,5 @@ With `renderTarget`, frames render into an offscreen `rgba8unorm-srgb` texture o
 ## 12. Runtime diagnostics
 
 Runtime diagnostics use the same envelope as compiler diagnostics (`spec/diagnostics.md` §2) with codes in the `8xxx` range, source spans resolved through the manifest `spans` table (byte range and line/column range, decision 0019), and `"phase"` set to the scheduler phase where they arose. Each distinct `(code, span)` is reported once per mount unless its documentation says otherwise. They are delivered to `onDiagnostic`, to the overlay (errors only, or all in dev builds), and to `console` in dev builds.
+
+**Shader and pipeline failures.** At mount, `E8051` rejects `mountMtek` with `shader-failed`. After mount (hot reload, device recovery) a material whose shader or pipeline fails is reported with `E8051` (phase `runtime:reload` or `runtime:device`) and is **no longer drawn**; the scene keeps running, the entities and their params stay, and the `failedMaterials` counter counts it (decision 0046).

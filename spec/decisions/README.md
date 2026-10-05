@@ -66,3 +66,4 @@ recorded here before code depends on it (blueprint §15).
 | 0043 | CPU/GPU numeric conformance: details the specification leaves open |
 | 0044 | Prelude materials, the resource plan and the inspect views: details the specification leaves open |
 | 0045 | Assignable places: struct fields and array elements (owner decision) |
+| 0046 | Runtime materials: arenas by layout id, `debug.setParam` and materials that fail after mount: details the specification leaves open |
