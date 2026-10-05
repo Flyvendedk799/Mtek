@@ -687,7 +687,7 @@ fn events_follow_section_5_1() {
     for name in ["key_down", "key_up"] {
         let event = registry.event(name).unwrap();
         assert_eq!(event.form, EventForm::Filter(TypeRef::Enum("Key")));
-        assert_eq!(event.since, Milestone::M3);
+        assert_eq!(event.since, Milestone::M1);
         assert!(!event.requires_collider);
         assert_eq!(event.hosts.len(), 3);
     }
@@ -697,7 +697,7 @@ fn events_follow_section_5_1() {
             event.form,
             EventForm::Parameter(TypeRef::Record("PointerEvent"))
         );
-        assert_eq!(event.since, Milestone::M3);
+        assert_eq!(event.since, Milestone::M1);
         assert_eq!(event.hosts.len(), 3);
     }
     for name in ["collision_enter", "collision_exit"] {
@@ -962,13 +962,15 @@ fn since_milestones_follow_the_work_plan() {
         registry.type_def("SurfaceInput").unwrap().since,
         Milestone::M1
     );
-    // M3: state, events, bind, frame values, input and diagnostics output.
-    assert_eq!(intrinsic_since("is_key_down"), Milestone::M3);
-    assert_eq!(intrinsic_since("random"), Milestone::M3);
-    assert_eq!(intrinsic_since("print"), Milestone::M3);
-    assert_eq!(registry.namespace("frame").unwrap().since, Milestone::M3);
-    assert_eq!(registry.event("key_down").unwrap().since, Milestone::M3);
-    assert_eq!(registry.enum_def("Key").unwrap().since, Milestone::M3);
+    // M3: state, events, frame values, input and diagnostics output landed with tasks M3-01 and
+    // M3-02, before the M3 gate; they are marked as implemented by the current build
+    // (decision 0049). `bind` is still M3 (a construct row, not a registry item).
+    assert_eq!(intrinsic_since("is_key_down"), Milestone::M1);
+    assert_eq!(intrinsic_since("random"), Milestone::M1);
+    assert_eq!(intrinsic_since("print"), Milestone::M1);
+    assert_eq!(registry.namespace("frame").unwrap().since, Milestone::M1);
+    assert_eq!(registry.event("key_down").unwrap().since, Milestone::M1);
+    assert_eq!(registry.enum_def("Key").unwrap().since, Milestone::M1);
     // M4: textures, samplers, assets, lighting.
     assert_eq!(intrinsic_since("sample"), Milestone::M4);
     for name in ["texture", "sampler", "asset", "lighting"] {

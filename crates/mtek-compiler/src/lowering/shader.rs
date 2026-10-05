@@ -488,7 +488,9 @@ impl<'p> ShaderLowering<'p> {
         hoist: bool,
         lets: &mut Vec<Statement>,
     ) -> Result<(Expr, bool), Defect> {
-        let ir::PlaceRoot::Local { local, span, .. } = &place.root;
+        let ir::PlaceRoot::Local { local, span, .. } = &place.root else {
+            return Err("an assignment to scene state or an entity in GPU code".to_owned());
+        };
         let item = local_item(body, *local)?;
         let mut reference = Expr::local(local_name(item), self.types.value_type(&item.ty)?, *span);
         let mut reference_ty = item.ty.clone();
@@ -645,6 +647,14 @@ impl<'p> ShaderLowering<'p> {
             }
             ir::ExprKind::Material { material, .. } => {
                 return Err(format!("an instance of '{material}' in GPU code"));
+            }
+            ir::ExprKind::State { .. }
+            | ir::ExprKind::EntityField { .. }
+            | ir::ExprKind::CameraField { .. }
+            | ir::ExprKind::InstanceParam { .. }
+            | ir::ExprKind::Frame { .. }
+            | ir::ExprKind::EnumMember { .. } => {
+                return Err("a scene value in GPU code".to_owned());
             }
         })
     }

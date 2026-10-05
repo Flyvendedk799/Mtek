@@ -15,10 +15,11 @@
 //! compared with the registry by unit tests, so a milestone that implements
 //! a new field or schema fails those tests until the IR represents it.
 
+use super::lower_fn::SceneCtx;
 use super::model::{
-    Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin,
-    Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StructFieldItem,
-    StructItem, Symbol, UpdateClass, Value,
+    Behavior, Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module,
+    Origin, Owner, Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, State,
+    StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 
@@ -263,6 +264,31 @@ fn lower_module(
     ))
 }
 
+/// How many handlers of the same event (and filter) the body of `owner` has declared before
+/// `handler`: the number that keeps their symbols apart.
+fn handler_ordinal(
+    counts: &mut BTreeMap<String, usize>,
+    owner: Owner,
+    handler: &ast::Handler,
+) -> usize {
+    let filter = handler
+        .args
+        .iter()
+        .find_map(|arg| match arg {
+            ast::HandlerArg::Filter(expr) => match &expr.kind {
+                ast::ExprKind::Field { name, .. } => Some(name.name.clone()),
+                _ => Some(String::new()),
+            },
+            ast::HandlerArg::Param(_) => None,
+        })
+        .unwrap_or_default();
+    let key = format!("{owner:?}|{}|{filter}", handler.event.name);
+    let slot = counts.entry(key).or_insert(0);
+    let ordinal = *slot;
+    *slot += 1;
+    ordinal
+}
+
 pub(super) struct Lowering<'a> {
     /// The normalised path of the module, the prefix of its symbols.
     pub(super) path: &'a str,
@@ -352,6 +378,8 @@ impl Lowering<'_> {
         for entity in &checked.entities {
             self.entity(entity, &symbol, None, &mut entities)?;
         }
+        let (state, behaviors) = self.state_and_behaviors(decl, checked, &symbol)?;
+        self.mark_imperative(checked, &mut entities);
         Ok(Scene {
             name: checked.name.clone(),
             symbol,
@@ -360,7 +388,123 @@ impl Lowering<'_> {
             constants,
             cameras,
             entities,
+            state,
+            behaviors,
         })
+    }
+
+    /// A material param that some lifecycle function or handler writes is `imperative`
+    /// (`spec/materials.md` section 4).
+    fn mark_imperative(&self, checked: &CheckedScene, entities: &mut [Entity]) {
+        let order = checked.entities_in_order();
+        for write in self.types.writes() {
+            let crate::types::WriteTarget::MaterialParam { entity, param } = &write.target else {
+                continue;
+            };
+            let Some(index) = order.iter().position(|e| e.def == Some(*entity)) else {
+                continue;
+            };
+            let params = entities
+                .get_mut(index)
+                .and_then(|e| e.material.as_mut())
+                .map(|m| &mut m.params);
+            if let Some(slot) = params.and_then(|p| p.iter_mut().find(|p| p.name == *param)) {
+                slot.update = UpdateClass::Imperative;
+            }
+        }
+    }
+
+    /// The `state` and the lifecycle functions and handlers of the scene and, in stable instance
+    /// order, of its entities.
+    fn state_and_behaviors(
+        &self,
+        decl: &ast::SceneDecl,
+        checked: &CheckedScene,
+        scene: &Symbol,
+    ) -> Result<(Vec<State>, Vec<Behavior>), Defect> {
+        let mut ctx = SceneCtx::default();
+        for (index, entity) in checked.entities_in_order().iter().enumerate() {
+            if let Some(def) = entity.def {
+                let index = u32::try_from(index).map_err(|_| "too many entities".to_owned())?;
+                ctx.entities.insert(def, index);
+            }
+        }
+        for object in &checked.objects {
+            if let Some(def) = object.def {
+                ctx.cameras.insert(def, object.name.clone());
+            }
+        }
+        let mut state = Vec::new();
+        let mut behaviors = Vec::new();
+        let mut counts = BTreeMap::new();
+        for member in &decl.members {
+            match member {
+                SceneMember::State(declaration) => {
+                    state.push(self.state(declaration, Owner::Scene, scene, &ctx)?);
+                }
+                SceneMember::Lifecycle(function) => {
+                    behaviors.push(self.lifecycle(function, Owner::Scene, scene, &ctx)?);
+                }
+                SceneMember::Handler(handler) => {
+                    let ordinal = handler_ordinal(&mut counts, Owner::Scene, handler);
+                    behaviors.push(self.handler(handler, Owner::Scene, scene, &ctx, ordinal)?);
+                }
+                _ => {}
+            }
+        }
+        let mut next = 0;
+        for member in &decl.members {
+            if let SceneMember::Entity(entity) = member {
+                self.entity_bodies(
+                    entity,
+                    scene,
+                    &mut next,
+                    &ctx,
+                    &mut counts,
+                    &mut state,
+                    &mut behaviors,
+                )?;
+            }
+        }
+        Ok((state, behaviors))
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn entity_bodies(
+        &self,
+        entity: &ast::EntityDecl,
+        owner: &Symbol,
+        next: &mut u32,
+        ctx: &SceneCtx,
+        counts: &mut BTreeMap<String, usize>,
+        state: &mut Vec<State>,
+        behaviors: &mut Vec<Behavior>,
+    ) -> Result<(), Defect> {
+        let index = *next;
+        *next += 1;
+        let who = Owner::Entity { index };
+        let symbol = owner.child(&entity.name.name);
+        for member in &entity.members {
+            match member {
+                EntityMember::State(declaration) => {
+                    state.push(self.state(declaration, who, &symbol, ctx)?);
+                }
+                EntityMember::Lifecycle(function) => {
+                    behaviors.push(self.lifecycle(function, who, &symbol, ctx)?);
+                }
+                EntityMember::Handler(handler) => {
+                    let ordinal = handler_ordinal(counts, who, handler);
+                    behaviors.push(self.handler(handler, who, &symbol, ctx, ordinal)?);
+                }
+                _ => {}
+            }
+        }
+        for member in &entity.members {
+            if let EntityMember::Entity(child) = member {
+                self.entity_bodies(child, &symbol, next, ctx, counts, state, behaviors)?;
+            }
+        }
+        Ok(())
     }
 
     /// The constants of a scene body and, depth first, of its entities'

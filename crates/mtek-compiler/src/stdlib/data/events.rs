@@ -15,7 +15,7 @@ pub(super) fn events() -> Vec<EventDef> {
         form: EventForm::Filter(KEY),
         hosts: ANY_BODY,
         requires_collider: false,
-        since: Milestone::M3,
+        since: Milestone::M1,
         doc,
     };
     let pointer = |name, doc| EventDef {
@@ -23,7 +23,7 @@ pub(super) fn events() -> Vec<EventDef> {
         form: EventForm::Parameter(TypeRef::Record("PointerEvent")),
         hosts: ANY_BODY,
         requires_collider: false,
-        since: Milestone::M3,
+        since: Milestone::M1,
         doc,
     };
     let collision = |name, doc| EventDef {
@@ -125,10 +125,10 @@ pub(super) fn enums() -> Vec<EnumDef> {
             .map(|&(name, code)| EnumMember {
                 name,
                 code,
-                since: Milestone::M3,
+                since: Milestone::M1,
             })
             .collect(),
-        since: Milestone::M3,
+        since: Milestone::M1,
         doc: "A physical keyboard key, independent of the keyboard layout. Maps from the DOM `KeyboardEvent.code`; events with any other code are ignored by the runtime.",
     }]
 }

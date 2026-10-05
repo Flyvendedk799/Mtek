@@ -160,15 +160,17 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::Prefab => row("`prefab` declarations", true, M5),
         Construct::Scene => row("Scenes", true, M1),
         Construct::SceneField => row("Scene fields", true, M1),
-        Construct::State => row("`state` declarations", true, M3),
+        // Planned for M3; implemented by task M3-01 before the M3 gate (decision 0049).
+        Construct::State => row("`state` declarations", true, M1),
         Construct::SceneObject => row("Scene objects", true, M1),
         Construct::Entity => row("Entities", true, M1),
         Construct::EntityField => row("Entity fields", true, M1),
         Construct::PrefabInstance => row("Prefab instances (`entity Name: Prefab`)", true, M5),
-        Construct::LifecycleFn => row("Lifecycle functions", true, M3),
-        Construct::Handler => row("Event handlers", true, M3),
+        // Planned for M3; implemented by tasks M3-01 and M3-02 before the M3 gate (decision 0049).
+        Construct::LifecycleFn => row("Lifecycle functions", true, M1),
+        Construct::Handler => row("Event handlers", true, M1),
         Construct::Bind => row("`bind`", false, M3),
-        Construct::SelfValue => row("`self`", false, M3),
+        Construct::SelfValue => row("`self`", false, M1),
         Construct::Descriptor => row("Descriptor literals", true, M1),
         // Planned for M2 with the registry types `string` and `array`; implemented by
         // task M2-01 before the M2 gate (decision 0035).
@@ -293,13 +295,20 @@ mod tests {
             );
         }
         for construct in [
-            Construct::Prefab,
             Construct::State,
-            Construct::PrefabInstance,
             Construct::LifecycleFn,
             Construct::Handler,
-            Construct::Bind,
             Construct::SelfValue,
+        ] {
+            assert!(
+                is_implemented(construct_gate(construct).since),
+                "{construct:?}"
+            );
+        }
+        for construct in [
+            Construct::Prefab,
+            Construct::PrefabInstance,
+            Construct::Bind,
         ] {
             assert!(
                 !is_implemented(construct_gate(construct).since),

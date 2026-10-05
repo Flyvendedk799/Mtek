@@ -1,0 +1,7 @@
+// A lifecycle function takes exactly one `f32` (E5050).
+scene Demo {
+    camera Main {}
+    update(dt: i32) {
+    }
+}
+// covers: [S: lifecycle-signature]

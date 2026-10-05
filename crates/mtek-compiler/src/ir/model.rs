@@ -401,15 +401,67 @@ pub enum PlaceRoot {
         #[serde(serialize_with = "self::span")]
         span: Span,
     },
+    /// Scene or entity `state` (`spec/scenes.md` section 8.1).
+    State {
+        owner: Owner,
+        name: String,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// A field of a named entity (`Cube.position`, `self.rotation`), written through the
+    /// context's setters.
+    EntityField {
+        entity: u32,
+        field: String,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// A field of a camera (`Main.position`).
+    CameraField {
+        camera: String,
+        field: String,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// A param of the material instance of a named entity (`Cube.material.phase`).
+    InstanceParam {
+        entity: u32,
+        param: String,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
 }
 
 impl PlaceRoot {
     /// The root's type.
     pub fn ty(&self) -> &str {
         match self {
-            PlaceRoot::Local { ty, .. } => ty,
+            PlaceRoot::Local { ty, .. }
+            | PlaceRoot::State { ty, .. }
+            | PlaceRoot::EntityField { ty, .. }
+            | PlaceRoot::CameraField { ty, .. }
+            | PlaceRoot::InstanceParam { ty, .. } => ty,
         }
     }
+}
+
+/// The scene or entity that owns a `state`, or whose body a behaviour is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum Owner {
+    Scene,
+    /// An entity, by its static index ([`Scene::entities`]).
+    Entity {
+        index: u32,
+    },
 }
 
 /// One step of a [`Place`]; `ty` is the type of the place up to and including this step,
@@ -533,6 +585,22 @@ pub enum ExprKind {
         schema: String,
         fields: Vec<NamedExpr>,
     },
+    /// A read of scene or entity `state`.
+    State { owner: Owner, name: String },
+    /// A read of a field of a named entity (`Cube.position`) or of `self`.
+    EntityField { entity: u32, field: String },
+    /// A read of a camera field (`Main.position`).
+    CameraField { camera: String, field: String },
+    /// A read of a param of the material instance of a named entity.
+    InstanceParam { entity: u32, param: String },
+    /// `frame.time`, `frame.delta`, `frame.index`.
+    Frame { member: String },
+    /// A member of a registry enum (`Key.Space`) with the DOM code it maps from.
+    EnumMember {
+        enumeration: String,
+        member: String,
+        code: String,
+    },
     /// A param of the material whose stage this is (decision 0039): its
     /// position in [`MaterialItem::params`] and its name. Params are read
     /// from the instance's parameter block, never folded.
@@ -613,6 +681,60 @@ pub struct Scene {
     /// over the nesting, `spec/scenes.md` section 10.1): `entities[i].index
     /// == i`, and a child follows its parent.
     pub entities: Vec<Entity>,
+    /// The `state` of the scene and of its entities in initialisation order
+    /// (`spec/scenes.md` section 11): scene state in declaration order, then each
+    /// entity's state in stable instance order.
+    pub state: Vec<State>,
+    /// Lifecycle functions and event handlers: the scene's in declaration order,
+    /// then each entity's in stable instance order.
+    pub behaviors: Vec<Behavior>,
+}
+
+/// A `state` declaration with its initialiser (`spec/scenes.md` sections 2, 4.4 and 11).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct State {
+    pub name: String,
+    /// `path::Scene.name` or `path::Scene.Entity.name`.
+    pub symbol: Symbol,
+    #[serde(rename = "type")]
+    pub ty: String,
+    pub owner: Owner,
+    /// The initialiser; it has no locals.
+    pub init: Expr,
+    /// The whole `state name: T = value;`.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// A lifecycle function or an event handler with its typed body.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Behavior {
+    pub kind: BehaviorKind,
+    pub owner: Owner,
+    /// `path::Scene.update`, `path::Scene.Cube.on_key_down`, with a number when a body
+    /// has several handlers of one event.
+    pub symbol: Symbol,
+    /// The parameter first (`dt`, the event parameter), then the locals.
+    pub locals: Vec<LocalItem>,
+    pub body: Block,
+    /// The whole `update(dt: f32) { … }` or `on …` member.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// What a [`Behavior`] is.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum BehaviorKind {
+    Update,
+    FixedUpdate,
+    /// `on event(…)`: a filter (`Key.Space` as its DOM `code`) or a parameter (local 0).
+    Event {
+        event: String,
+        filter: Option<String>,
+    },
 }
 
 impl Scene {
@@ -834,6 +956,9 @@ pub enum UpdateClass {
     /// A default or constant initialiser, never written: uploaded once at
     /// creation.
     Initial,
+    /// Some lifecycle function or handler writes it: uploaded in the render
+    /// phase of a frame in which it was written.
+    Imperative,
 }
 
 /// A constant value. Externally tagged by its type in JSON:

@@ -51,8 +51,14 @@ interface IrEntity {
   } | null;
 }
 
+interface IrBehavior {
+  readonly kind: { readonly kind: string; readonly event?: string; readonly filter?: string | null };
+  readonly owner: { readonly kind: string; readonly index?: number };
+}
+
 interface IrItem {
   readonly kind: string;
+  readonly behaviors?: readonly IrBehavior[];
   readonly symbol: string;
   readonly cpuReachable?: boolean;
   readonly cameras: readonly IrCamera[];
@@ -163,6 +169,7 @@ describe("the generated program module", () => {
       "numeric_cpu_table",
       "scene_a_target_camera_box",
       "scene_b_orthographic_nested",
+      "state_and_handlers",
     ]);
   });
 
@@ -226,12 +233,25 @@ describe("the generated program module", () => {
           "bindings",
         ]);
         expect(typeof scene["init"]).toBe("function");
-        expect(scene["update"]).toBeNull();
-        expect(scene["fixedUpdate"]).toBeNull();
-        const nulls = manifest.scene.entities.map(() => null);
-        expect(scene["entityUpdate"]).toEqual(nulls);
-        expect(scene["entityFixedUpdate"]).toEqual(nulls);
-        expect(scene["events"]).toEqual({});
+        // Which lifecycle functions exist is read off the typed IR's behaviours.
+        const behaviors = irOf(await loadProgram(name))
+          .modules.flatMap((m) => m.items)
+          .find((item) => item.kind === "scene")?.behaviors ?? [];
+        const has = (kind: string, owner: number): boolean =>
+          behaviors.some(
+            (b) => b.kind.kind === kind && (b.owner.kind === "scene" ? -1 : b.owner.index) === owner,
+          );
+        expect(scene["update"] === null).toBe(!has("update", -1));
+        expect(scene["fixedUpdate"] === null).toBe(!has("fixedUpdate", -1));
+        const perEntity = (kind: string): (boolean)[] =>
+          manifest.scene.entities.map((entity) => has(kind, entity.index));
+        expect((scene["entityUpdate"] as unknown[]).map((f) => f !== null)).toEqual(perEntity("update"));
+        expect((scene["entityFixedUpdate"] as unknown[]).map((f) => f !== null)).toEqual(
+          perEntity("fixedUpdate"),
+        );
+        expect(Object.keys(record(scene["events"], "events"))).toEqual(
+          [...new Set(behaviors.filter((b) => b.kind.kind === "event").map((b) => b.kind.event))],
+        );
         expect(scene["bindings"]).toEqual([]);
       });
 

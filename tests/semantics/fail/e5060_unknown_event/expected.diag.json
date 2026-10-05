@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5060",
+    "file": "src/main.mtek",
+    "startByte": 128,
+    "endByte": 137,
+    "message": "Unknown event 'key_press'.",
+    "notes": [
+      "help: v0.1 events: key_down, key_up, pointer_down, pointer_up, pointer_move, collision_enter, collision_exit"
+    ]
+  }
+]

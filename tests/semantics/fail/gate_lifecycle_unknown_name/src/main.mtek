@@ -1,8 +1,0 @@
-// `start` is not a lifecycle function: E5052 once lifecycle functions are
-// implemented (M3-02); until then it is gated as one.
-scene Demo {
-    camera Main {}
-    start(dt: f32) {
-    }
-}
-// covers: [S: lifecycle-signature]

@@ -31,6 +31,8 @@ use crate::source::Span;
 pub enum ParamClass {
     /// A default or constant initialiser, never written: uploaded once at creation.
     Initial,
+    /// Some lifecycle function or handler writes it.
+    Imperative,
 }
 
 impl ParamClass {
@@ -39,6 +41,7 @@ impl ParamClass {
     pub const fn as_str(self) -> &'static str {
         match self {
             ParamClass::Initial => "initial",
+            ParamClass::Imperative => "imperative",
         }
     }
 }
@@ -47,6 +50,7 @@ impl From<ir::UpdateClass> for ParamClass {
     fn from(class: ir::UpdateClass) -> Self {
         match class {
             ir::UpdateClass::Initial => ParamClass::Initial,
+            ir::UpdateClass::Imperative => ParamClass::Imperative,
         }
     }
 }

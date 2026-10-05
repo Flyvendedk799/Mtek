@@ -1,0 +1,7 @@
+// `active` of a camera is construction-only and cannot be assigned (E5073).
+scene Demo {
+    camera Main {}
+    update(dt: f32) {
+        Main.active = false;
+    }
+}

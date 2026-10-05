@@ -1,0 +1,6 @@
+// A `state` initialiser may read only earlier state (E2003).
+scene Demo {
+    camera Main {}
+    state first: f32 = second;
+    state second: f32 = 1.0;
+}

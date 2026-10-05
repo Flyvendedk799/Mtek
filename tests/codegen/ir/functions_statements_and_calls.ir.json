@@ -857,7 +857,9 @@
               }
             }
           ],
-          "entities": []
+          "entities": [],
+          "state": [],
+          "behaviors": []
         }
       ]
     }

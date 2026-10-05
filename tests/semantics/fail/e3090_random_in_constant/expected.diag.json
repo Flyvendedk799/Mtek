@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3090",
+    "file": "src/main.mtek",
+    "startByte": 10,
+    "endByte": 18,
+    "message": "The value of the constant 'R' is not a constant expression: `random` is not a constant function.",
+    "related": [
+      {
+        "message": "the constant 'R' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 6,
+        "endByte": 7
+      }
+    ],
+    "notes": [
+      "a constant may use only literals, other constants, operators, conversions, constructors and const-eligible built-in functions"
+    ]
+  }
+]

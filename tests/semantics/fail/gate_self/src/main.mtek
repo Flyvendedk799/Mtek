@@ -1,7 +1,0 @@
-scene Demo {
-    camera Main {}
-    entity Cube {
-        scale: self.scale;
-        mesh: Box {};
-    }
-}

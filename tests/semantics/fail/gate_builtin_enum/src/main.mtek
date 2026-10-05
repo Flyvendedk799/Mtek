@@ -1,5 +1,0 @@
-const K = Key.Space;
-
-scene Demo {
-    camera Main {}
-}

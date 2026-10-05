@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 117,
+    "endByte": 123,
+    "message": "The state 'second' is used before it is initialised.",
+    "related": [
+      {
+        "message": "the state 'second' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 135,
+        "endByte": 141
+      }
+    ],
+    "notes": [
+      "an initialiser may read constants, earlier scene state and its own earlier state"
+    ]
+  }
+]

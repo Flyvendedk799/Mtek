@@ -870,6 +870,25 @@ impl<'a> Checker<'a> {
         ty
     }
 
+    /// The params of the material instance type `instance`, in declaration order, with their types.
+    pub(super) fn instance_params(&self, instance: TyId) -> Vec<(String, TyId)> {
+        let Ty::MaterialInstance(key) = self.out.interner.get(instance) else {
+            return Vec::new();
+        };
+        let info = self
+            .out
+            .materials
+            .values()
+            .chain(self.imported_materials.values())
+            .find(|info| info.key == key);
+        info.map_or_else(Vec::new, |info| {
+            info.params
+                .iter()
+                .map(|param| (param.name.clone(), param.ty))
+                .collect()
+        })
+    }
+
     /// `E5001` for a param the material does not declare.
     fn unknown_param(&mut self, info: &MaterialInfo, name: &Ident) {
         let names: Vec<&str> = info.params.iter().map(|p| p.name.as_str()).collect();

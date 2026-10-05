@@ -1,0 +1,6 @@
+// `on key_down` takes a `Key` member as its filter (E5061).
+scene Demo {
+    camera Main {}
+    on key_down(1.0) {
+    }
+}

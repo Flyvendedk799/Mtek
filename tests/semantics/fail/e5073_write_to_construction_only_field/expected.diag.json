@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5073",
+    "file": "src/main.mtek",
+    "startByte": 139,
+    "endByte": 150,
+    "message": "The field 'active' of 'Main' is construction-only and cannot be assigned.",
+    "notes": [
+      "construction-only fields are set where the object is declared"
+    ]
+  }
+]

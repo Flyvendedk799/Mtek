@@ -1,0 +1,60 @@
+// Scene and entity state, lifecycle functions and handlers: the program of the M3-01/M3-02
+// execution tests (a fake context runs the generated functions; no browser).
+material Pulse {
+    param phase: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(0.5 + 0.5 * sin(phase)), 1.0);
+    }
+}
+
+cpu fn bump(x: i32) -> i32 {
+    return x + 1;
+}
+
+scene Demo {
+    clear_color: #101418;
+    state speed: f32 = 0.5;
+    state angle: f32 = 0.0;
+    state ticks: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        state hits: i32 = bump(0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Pulse { phase: 0.25 };
+
+        update(dt: f32) {
+            self.hits = bump(self.hits);
+        }
+
+        on key_down(Key.Enter) {
+            hits += 1;
+        }
+    }
+
+    update(dt: f32) {
+        angle += speed * dt;
+        ticks = bump(ticks);
+        Cube.position.y = 0.5;
+        Cube.material.phase = angle;
+        Main.position = vec3(0.0, f32(Cube.hits), 6.0);
+    }
+
+    fixed_update(step: f32) {
+        speed = speed - step;
+    }
+
+    on key_down(Key.Space) {
+        speed = -speed;
+        Cube.hits = 0;
+    }
+
+    on pointer_down(event: PointerEvent) {
+        angle = event.position.x;
+    }
+}

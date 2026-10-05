@@ -161,7 +161,15 @@ fn expr(e: &Expr, out: &mut Expected) {
     out.expressions.push(e.span);
     let mut children: Vec<&Expr> = Vec::new();
     match &e.kind {
-        ExprKind::Const { .. } | ExprKind::Local { .. } | ExprKind::Param { .. } => {}
+        ExprKind::Const { .. }
+        | ExprKind::Local { .. }
+        | ExprKind::Param { .. }
+        | ExprKind::State { .. }
+        | ExprKind::EntityField { .. }
+        | ExprKind::CameraField { .. }
+        | ExprKind::InstanceParam { .. }
+        | ExprKind::Frame { .. }
+        | ExprKind::EnumMember { .. } => {}
         ExprKind::Unary { operand, .. } => children.push(operand),
         ExprKind::Binary { lhs, rhs, .. } => children.extend([&**lhs, &**rhs]),
         ExprKind::Call { args, .. }
@@ -203,8 +211,9 @@ fn stmt(s: &Stmt, out: &mut Expected) {
         } => {
             out.statements.push(*span);
             // The place (decision 0045): its root and each step map to their own text.
-            let ir::PlaceRoot::Local { span: root, .. } = &target.root;
-            out.expressions.push(*root);
+            if let ir::PlaceRoot::Local { span: root, .. } = &target.root {
+                out.expressions.push(*root);
+            }
             for step in &target.steps {
                 out.expressions.push(step.span());
                 if let ir::PlaceStep::Index { index, .. } = step {

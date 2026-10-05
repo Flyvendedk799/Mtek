@@ -1,0 +1,7 @@
+// A member of a built-in enum is a value of the CPU runtime, not a constant: a `const` cannot
+// hold one (E3090). Use it where a `Key` is expected: `on key_down(Key.Space)`.
+const K = Key.Space;
+
+scene Demo {
+    camera Main {}
+}

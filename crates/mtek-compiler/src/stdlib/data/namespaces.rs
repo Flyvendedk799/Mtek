@@ -80,7 +80,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
             name,
             ty,
             domain: Domain::Cpu,
-            since: Milestone::M3,
+            since: Milestone::M1,
             doc,
         })
     };
@@ -222,7 +222,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         ),
         namespace(
             "frame",
-            Milestone::M3,
+            Milestone::M1,
             "Per-frame values. Readable in CPU code and in `bind` expressions, not in GPU stage code: route them through material parameters.",
             vec![
                 value(
@@ -533,7 +533,7 @@ pub(super) fn types() -> Vec<TypeDef> {
             ..simple(
                 "PointerEvent",
                 TypeKind::Record,
-                Milestone::M3,
+                Milestone::M1,
                 false,
                 "A pointer event: `position` in normalised canvas coordinates (x right, y up, both in -1..1) and the `button` (0 primary, 1 middle, 2 secondary).",
             )

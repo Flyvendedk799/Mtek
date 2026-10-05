@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3090",
+    "file": "src/main.mtek",
+    "startByte": 186,
+    "endByte": 195,
+    "message": "The value of the constant 'K' is not a constant expression: it is a member of a built-in enum, and enum values are not constants in v0.1.",
+    "related": [
+      {
+        "message": "the constant 'K' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 182,
+        "endByte": 183
+      }
+    ],
+    "notes": [
+      "a constant may use only literals, other constants, operators, conversions, constructors and const-eligible built-in functions"
+    ]
+  }
+]

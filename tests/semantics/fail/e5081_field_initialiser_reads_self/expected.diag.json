@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5081",
+    "file": "src/main.mtek",
+    "startByte": 150,
+    "endByte": 160,
+    "message": "The value of field 'scale' of entity 'Cube' cannot be computed during initialisation: it reads the field 'scale' of the entity 'Cube'.",
+    "notes": [
+      "field initialisers may read constants, scene state and earlier state, but not the fields of entities or cameras"
+    ]
+  }
+]

@@ -27,7 +27,7 @@
 //! `null`, `entityUpdate`/`entityFixedUpdate` hold `null` per entity, `events` is `{}` and
 //! `bindings` `[]` (the shapes of the runtime's `MtekProgramScene`).
 
-use crate::ir::{Camera, Entity, Program, ProjectionDesc, Scene, Value};
+use crate::ir::{Camera, Entity, Owner, Program, ProjectionDesc, Scene, State, Value};
 use crate::layout::{LayoutNode, LayoutRecord};
 use crate::plan::ResourcePlan;
 use crate::{COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI};
@@ -35,7 +35,7 @@ use crate::{COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI};
 use crate::source::Span;
 
 use super::ast::{Expr, Item, JsModule, Module, Number, Stmt, print};
-use super::cpu::emit_functions;
+use super::cpu::{emit_behaviors, emit_functions, emit_state_init};
 use super::printer::identifier_part;
 use super::writers::{emit_writer_parts, writer_qualifier};
 
@@ -50,6 +50,8 @@ pub struct ProgramParts<'a> {
     /// The layout records whose writers the module carries, in `writers` table order
     /// (`builtin:frame`, `builtin:object`, then the material blocks by id).
     pub layouts: &'a [LayoutRecord],
+    /// A release build: `print` is compiled out of lifecycle functions and handlers.
+    pub release: bool,
 }
 
 /// The comment on the first line of every generated file.
@@ -142,6 +144,8 @@ pub fn emit_program(
         ),
     });
 
+    let behaviors = emit_behaviors(scene, parts.release, span_id)?;
+    items.extend(behaviors.stmts.iter().cloned().map(Item::Stmt));
     let init = init_function_name(scene);
     items.push(Item::Stmt(Stmt::Blank));
     items.push(Item::Stmt(Stmt::Comment(format!(
@@ -151,10 +155,15 @@ pub fn emit_program(
     items.push(Item::Stmt(Stmt::Function {
         name: init.clone(),
         params: vec!["ctx".to_owned()],
-        body: init_body(scene, plan)?,
+        body: init_body(scene, plan, span_id)?,
         span: Some(scene.span),
     }));
-    let nulls = Expr::Array(vec![Expr::Null; scene.entities.len()]);
+    let function_or_null = |name: &Option<String>| match name {
+        Some(name) => Expr::Ident(name.clone()),
+        None => Expr::Null,
+    };
+    let entity_functions =
+        |names: &[Option<String>]| Expr::Array(names.iter().map(function_or_null).collect());
     items.push(Item::Stmt(Stmt::Blank));
     items.push(Item::ExportConst {
         name: "scenes".to_owned(),
@@ -162,11 +171,20 @@ pub fn emit_program(
             scene.name.clone(),
             Expr::object_lines(vec![
                 ("init".to_owned(), Expr::Ident(init)),
-                ("update".to_owned(), Expr::Null),
-                ("fixedUpdate".to_owned(), Expr::Null),
-                ("entityUpdate".to_owned(), nulls.clone()),
-                ("entityFixedUpdate".to_owned(), nulls),
-                ("events".to_owned(), Expr::object(Vec::new())),
+                ("update".to_owned(), function_or_null(&behaviors.update)),
+                (
+                    "fixedUpdate".to_owned(),
+                    function_or_null(&behaviors.fixed_update),
+                ),
+                (
+                    "entityUpdate".to_owned(),
+                    entity_functions(&behaviors.entity_update),
+                ),
+                (
+                    "entityFixedUpdate".to_owned(),
+                    entity_functions(&behaviors.entity_fixed_update),
+                ),
+                ("events".to_owned(), events_table(&behaviors)),
                 ("bindings".to_owned(), Expr::Array(Vec::new())),
             ]),
         )]),
@@ -227,6 +245,36 @@ fn writer_entry(record: &LayoutRecord, function_names: &[String]) -> Expr {
     ])
 }
 
+/// `{ key_down: [{ key: "Space", owner: -1, fn: b_3_on_key_down }], … }`: the handlers per event
+/// in declaration order (the scene's, then each entity's in stable instance order);
+/// `key` is the DOM `KeyboardEvent.code`, never the Mtek name.
+fn events_table(behaviors: &super::cpu::EmittedBehaviors) -> Expr {
+    let mut events: Vec<(String, Vec<Expr>)> = Vec::new();
+    for entry in &behaviors.events {
+        let mut fields = Vec::new();
+        if let Some(key) = &entry.key {
+            fields.push(("key".to_owned(), Expr::string(key)));
+        }
+        let owner = match entry.owner {
+            Some(index) => Expr::Num(Number::U32(index)),
+            None => Expr::Num(Number::I32(-1)),
+        };
+        fields.push(("owner".to_owned(), owner));
+        fields.push(("fn".to_owned(), Expr::Ident(entry.function.clone())));
+        let object = Expr::object(fields);
+        match events.iter_mut().find(|(name, _)| *name == entry.event) {
+            Some((_, list)) => list.push(object),
+            None => events.push((entry.event.clone(), vec![object])),
+        }
+    }
+    Expr::object(
+        events
+            .into_iter()
+            .map(|(name, list)| (name, Expr::Array(list)))
+            .collect(),
+    )
+}
+
 /// A declaration of the scene body that `init` initialises.
 enum Declaration<'a> {
     Camera(&'a Camera),
@@ -242,8 +290,32 @@ impl Declaration<'_> {
     }
 }
 
+/// `target = initialiser;` for `state`: `ctx.s.name` or `e<i>.state.name`.
+fn state_statement(
+    state: &State,
+    span_id: &mut dyn FnMut(crate::source::Span) -> Result<u32, String>,
+) -> Result<Stmt, String> {
+    let target = match state.owner {
+        Owner::Scene => Expr::ident("ctx").member("s").member(&state.name),
+        Owner::Entity { index } => Expr::ident("ctx")
+            .member("e")
+            .index(index)
+            .member("state")
+            .member(&state.name),
+    };
+    Ok(Stmt::Assign {
+        target,
+        value: emit_state_init(state, span_id)?,
+        span: Some(state.span),
+    })
+}
+
 /// The body of `init(ctx)`.
-fn init_body(scene: &Scene, plan: &ResourcePlan) -> Result<Vec<Stmt>, String> {
+fn init_body(
+    scene: &Scene,
+    plan: &ResourcePlan,
+    span_id: &mut dyn FnMut(crate::source::Span) -> Result<u32, String>,
+) -> Result<Vec<Stmt>, String> {
     // The active camera and the entities, in declaration order. Entities are already in
     // pre-order (increasing start); a stable sort places the camera among them.
     let mut declarations: Vec<Declaration<'_>> = Vec::with_capacity(scene.entities.len() + 1);
@@ -254,10 +326,23 @@ fn init_body(scene: &Scene, plan: &ResourcePlan) -> Result<Vec<Stmt>, String> {
     declarations.sort_by_key(Declaration::start);
 
     let mut body = Vec::new();
+    // Scene state first, in declaration order (`spec/scenes.md` section 11, step 2).
+    for state in scene.state.iter().filter(|s| s.owner == Owner::Scene) {
+        body.push(state_statement(state, span_id)?);
+    }
     for declaration in declarations {
         match declaration {
             Declaration::Camera(camera) => camera_statements(camera, &mut body)?,
-            Declaration::Entity(entity) => entity_statements(entity, plan, &mut body)?,
+            Declaration::Entity(entity) => {
+                // An entity's state, then its fields (step 3).
+                let owner = Owner::Entity {
+                    index: entity.index,
+                };
+                for state in scene.state.iter().filter(|s| s.owner == owner) {
+                    body.push(state_statement(state, span_id)?);
+                }
+                entity_statements(entity, plan, &mut body)?;
+            }
         }
     }
     Ok(body)
