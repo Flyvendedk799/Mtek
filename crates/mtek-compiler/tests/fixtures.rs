@@ -1356,7 +1356,7 @@ fn every_gated_construct_has_a_gating_fixture() {
             "no gate_* fixture reports {construct:?}: {messages:#?}"
         );
     }
-    assert!(gated >= 7, "{gated} gated constructs");
+    assert!(gated >= 6, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
         ("The built-in type `sampler`", "M4"),
@@ -1515,16 +1515,12 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W8031", "M5: spawn and destroy"),
     ("W8032", "M5: spawn and destroy"),
     ("E8033", "M5: spawn and destroy"),
-    ("E8041", "M3: host inputs (decision 0018)"),
-    ("W8061", "M4-09: device-loss recovery (decision 0020)"),
+        ("W8061", "M4-09: device-loss recovery (decision 0020)"),
     ("E8062", "M4-09: device-loss recovery (decision 0020)"),
     ("W8070", "M3: candidate-based hot reload"),
     ("E8080", "M6: preview builds"),
     ("E8090", "M3: run-time field writes"),
-    ("E8100", "M3: run-time field writes and host inputs"),
-    ("E9020", "M3: host inputs (decision 0018)"),
-    ("E9021", "M3: host inputs (decision 0018)"),
-];
+        ];
 
 /// Codes this build implements that no program checked by this build can
 /// produce, with the reason and the test file that covers them instead.
@@ -1591,6 +1587,8 @@ const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
     ("E8005", "../../packages/runtime-web/src/gpu/device.test.ts"),
     ("E8006", "../../packages/runtime-web/src/abi/abi.test.ts"),
     ("E8040", "../../packages/runtime-web/src/host/app.test.ts"),
+    ("E8041", "../../packages/runtime-web/src/host/codecs.test.ts"),
+    ("E8100", "../../packages/runtime-web/src/host/codecs.test.ts"),
     ("E8050", "../../packages/runtime-web/src/host/app.test.ts"),
     (
         "E8051",

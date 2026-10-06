@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E9020",
+    "file": null,
+    "startByte": null,
+    "endByte": null,
+    "message": "Host input target 'Demo.pose' is not exposable: type 'mat4' cannot be a host input.",
+    "notes": [
+      "host.inputs.xform",
+      "exposable types: f32, i32, u32, bool, vec2, vec3, vec4, color, string"
+    ]
+  }
+]

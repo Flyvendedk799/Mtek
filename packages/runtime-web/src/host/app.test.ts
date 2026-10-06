@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
 import { FakeHost, type FakeHostDevice } from "../test-support/fake-host.js";
-import { healthyHost, mountOn } from "../test-support/mount-fixture.js";
+import { healthyHost, installProgram, mountOn } from "../test-support/mount-fixture.js";
 import type { MtekApp } from "./types.js";
 
 function overlayOf(host: FakeHost): ReturnType<FakeHost["document"]["body"]["find"]> {
@@ -24,8 +24,11 @@ function debugOf<I>(app: MtekApp<I>): NonNullable<MtekApp<I>["debug"]> {
   return app.debug;
 }
 
-async function mountManual(host: FakeHost, extra: { width?: number; height?: number } = {}): Promise<MtekApp> {
-  return mountOn(host, { test: { manualClock: true, renderTarget: { width: extra.width ?? 16, height: extra.height ?? 8 } } });
+async function mountManual<I = Record<string, unknown>>(
+  host: FakeHost,
+  extra: { width?: number; height?: number } = {},
+): Promise<MtekApp<I>> {
+  return mountOn<I>(host, { test: { manualClock: true, renderTarget: { width: extra.width ?? 16, height: extra.height ?? 8 } } });
 }
 
 describe("lifecycle: pause, resume and the paused interval", () => {
@@ -301,8 +304,8 @@ describe("runtime failures", () => {
   });
 });
 
-describe("setInput before M3", () => {
-  it("never throws and answers MTEK-E8040 for every key", async () => {
+describe("setInput", () => {
+  it("never throws and answers MTEK-E8040 for an undeclared key", async () => {
     const host = healthyHost();
     const app = await mountOn<{ tint: string }>(host);
     const result = app.setInput("tint", "#ff0000");
@@ -311,6 +314,25 @@ describe("setInput before M3", () => {
       expect(result.error.code).toBe("MTEK-E8040");
       expect(result.error.message).toContain("'tint'");
     }
+    app.dispose();
+  });
+
+  it("queues a valid value and applies it only at the next frame boundary", async () => {
+    const host = new FakeHost();
+    installProgram(host, (manifest) => {
+      const scene = manifest["scene"] as Record<string, unknown>;
+      scene["state"] = [{ name: "speed", type: "f32", symbol: "src/main.mtek::Demo.speed" }];
+      scene["hostInputs"] = [
+        { name: "speed", target: { kind: "state", name: "speed" }, type: "f32", codec: "f32" },
+      ];
+    });
+    const app = await mountManual<{ speed: number }>(host);
+    expect(debugOf(app).scene().state["speed"]).toBe(0);
+    const result = app.setInput("speed", 2.5);
+    expect(result).toEqual({ ok: true });
+    expect(debugOf(app).scene().state["speed"]).toBe(0);
+    debugOf(app).step(1, 0.016);
+    expect(debugOf(app).scene().state["speed"]).toBe(Math.fround(2.5));
     app.dispose();
   });
 });

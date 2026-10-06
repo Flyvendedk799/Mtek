@@ -14,6 +14,9 @@ import type { DiagnosticSink } from "./failures.js";
 import type { FailureOverlay } from "./overlay.js";
 import type { Surface } from "./surface.js";
 import type { MtekApp, MtekAppState, MtekDebug, MtekInputResult, MtekTestOptions } from "./types.js";
+import { HostInputs } from "./inputs.js";
+
+export { unknownInputResult } from "./inputs.js";
 
 export interface AppDependencies {
   readonly manifest: MtekManifest;
@@ -33,17 +36,6 @@ export interface AppDependencies {
   readonly scene: Scene;
 }
 
-/** Why `setInput` rejects every key before M3 (the manifest declares no host inputs in M1). */
-export function unknownInputResult(name: string): Extract<MtekInputResult, { ok: false }> {
-  return {
-    ok: false,
-    error: {
-      code: "MTEK-E8040",
-      message: `Unknown host input '${name}': this runtime build does not accept host inputs yet (they arrive with M3), and the program declares none.`,
-    },
-  };
-}
-
 function errorText(error: unknown): string {
   return error instanceof Error ? (error.message === "" ? error.name : error.message) : String(error);
 }
@@ -61,10 +53,12 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private frameTimeMs = 0;
   private cpuUpdateMs = 0;
   private renderPrepMs = 0;
+  private readonly hostInputs: HostInputs;
 
   constructor(private readonly deps: AppDependencies) {
     const { manifest, environment, registry, test } = deps;
     this.seed = deps.seed;
+    this.hostInputs = new HostInputs(manifest);
     registry.phase = "runtime:render";
 
     const manual = test?.manualClock === true;
@@ -114,9 +108,9 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     return this.scheduler.activeTime;
   }
 
-  /** Never throws. Before M3 every key is unknown (the manifest declares no host inputs). */
-  setInput<K extends keyof I & string>(name: K): MtekInputResult {
-    return unknownInputResult(name);
+  /** Never throws. Valid values are queued and applied in phase 1 of the next frame. */
+  setInput<K extends keyof I & string>(name: K, value: I[K]): MtekInputResult {
+    return this.hostInputs.setInput(name, value);
   }
 
   pause(): void {
@@ -235,6 +229,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     return {
       phase1_input: () => {
         this.frameStartMs = now();
+        this.hostInputs.applyQueued(world);
         world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex);
       },
       // Fixed ticks, updates, the lifecycle queue and bindings run generated code from M3 on.
@@ -279,8 +274,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         throw notYet("setParam", "M3");
       },
       scene: () => ({
-        // Scene state arrives with M3; the entity transforms are the world's records.
-        state: {},
+        state: { ...this.deps.scene.world.state },
         entities: this.deps.scene.world.entities.map((record, index) => ({
           name: this.deps.manifest.scene.entities[index]?.name ?? String(index),
           position: record.position,

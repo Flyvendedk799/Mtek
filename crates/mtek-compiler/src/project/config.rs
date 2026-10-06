@@ -165,8 +165,7 @@ pub struct ProjectConfig {
     pub build: BuildSection,
     /// `[host.inputs]`: input name to the text `Scene.state_name`, sorted by
     /// name. Only the TOML type is checked here; the targets are validated
-    /// against the scene in M3 (`E9020`, `E9021`), and until then a non-empty
-    /// table is reported as `E9010`.
+    /// against the entry scene after type-checking (`E9020`, `E9021`).
     pub host_inputs: BTreeMap<String, String>,
     pub runtime: RuntimeSection,
     pub dev: DevSection,

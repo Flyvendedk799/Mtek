@@ -24,7 +24,7 @@ use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report};
 use crate::prelude::{compile_materials, uses_builtin_material};
 use crate::project::{
     LoadedModule, ModuleId, Project, ProjectRoot, SceneSelection, edit_distance, load_modules,
-    report_cycles, select_scene,
+    report_cycles, select_scene, states_feeding_opaque_color, validate_host_inputs,
 };
 use crate::resolve::{DefId, DefKind, Resolution, bind_imports, resolve_module_with_imports};
 use crate::source::{Fs, SourceMap};
@@ -300,6 +300,28 @@ pub(crate) fn front_end_with(
     };
     let effects = check_program(&program, &roots, sink);
     drop(program);
+
+    // Host inputs against the entry scene (task M3-06).
+    if let (Some(entry_resolution), Some(Some(entry_types))) =
+        (resolutions.first(), types.first())
+    {
+        if let Some(entry_def) = entry_resolution.entry_scene() {
+            if let Some(scene) = entry_types.scene(entry_def) {
+                let opaque = loaded
+                    .first()
+                    .map(|unit| states_feeding_opaque_color(&unit.ast, &scene.name))
+                    .unwrap_or_default();
+                let _resolved = validate_host_inputs(
+                    &project.config.host_inputs,
+                    scene,
+                    &opaque,
+                    sink,
+                );
+                // Resolved inputs are re-derived at package time from the same sources.
+                let _ = _resolved;
+            }
+        }
+    }
 
     let mut units = loaded
         .into_iter()

@@ -42,9 +42,8 @@ impl Project {
     /// Returns `None` if the project cannot be loaded: the configuration is
     /// invalid (`E9001`) or missing (`E9004`), or the entry module cannot be
     /// read (`E9005`, or `E0001`, `E0002`, `E0004` for its text). A
-    /// `[host.inputs]` table is kept in the configuration but reported as
-    /// `E9010`, and loading continues, so the program's own errors are still
-    /// found.
+    /// `[host.inputs]` are kept in the configuration; targets are validated
+    /// after type-checking (`E9020` / `E9021`).
     pub fn load(root: &ProjectRoot, fs: &dyn Fs, diagnostics: &mut Diagnostics) -> Option<Project> {
         let view = root.view(fs);
         let (config, config_text) = load_config(&view, diagnostics)?;

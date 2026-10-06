@@ -160,7 +160,8 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::Prefab => row("`prefab` declarations", true, M5),
         Construct::Scene => row("Scenes", true, M1),
         Construct::SceneField => row("Scene fields", true, M1),
-        Construct::State => row("`state` declarations", true, M3),
+        // Planned for M3; implemented by task M3-06 (host inputs need scene state).
+        Construct::State => row("`state` declarations", true, M1),
         Construct::SceneObject => row("Scene objects", true, M1),
         Construct::Entity => row("Entities", true, M1),
         Construct::EntityField => row("Entity fields", true, M1),
@@ -286,6 +287,7 @@ mod tests {
             Construct::Fn,
             Construct::CpuFn,
             Construct::Material,
+            Construct::State,
         ] {
             assert!(
                 is_implemented(construct_gate(construct).since),
@@ -294,7 +296,6 @@ mod tests {
         }
         for construct in [
             Construct::Prefab,
-            Construct::State,
             Construct::PrefabInstance,
             Construct::LifecycleFn,
             Construct::Handler,

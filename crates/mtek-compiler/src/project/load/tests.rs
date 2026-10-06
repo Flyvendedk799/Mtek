@@ -180,14 +180,19 @@ fn an_invalid_configuration_stops_loading_and_reports_every_problem() {
 }
 
 #[test]
-fn host_inputs_are_reported_but_loading_continues() {
+fn host_inputs_are_kept_while_loading() {
     let fs = project_fs(
-        &format!("{MINIMAL}[host.inputs]\ntint = \"Demo.tint\"\n"),
-        "scene Demo { }\n",
+        &format!("{MINIMAL}[host.inputs]
+tint = \"Demo.tint\"
+"),
+        "scene Demo { }
+",
     );
     let (project, diagnostics) = load(&fs, &ProjectRoot::at_base());
-    assert_eq!(diagnostics.len(), 1);
-    assert_eq!(diagnostics[0].code, Code::E9010);
+    assert!(
+        diagnostics.iter().all(|d| d.code != Code::E9010),
+        "{diagnostics:#?}"
+    );
     let project = project.unwrap();
     assert_eq!(
         project.config.host_inputs.get("tint").map(String::as_str),

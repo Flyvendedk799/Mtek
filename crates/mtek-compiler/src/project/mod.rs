@@ -8,7 +8,7 @@
 //!
 //! 1. [`ProjectRoot::discover`] finds the project directory (`E9004`);
 //! 2. [`parse_config`] validates `mtek.toml` into a [`ProjectConfig`]
-//!    (`E9001`, `E9010` for `[host.inputs]`);
+//!    (`E9001`; host-input targets `E9020`/`E9021`);
 //! 3. the entry module is read into the [`SourceMap`](crate::source::SourceMap)
 //!    (`E9005`) and becomes the first module of the [`ModuleGraph`];
 //! 4. [`load_modules`] parses the entry module and follows its imports
@@ -19,6 +19,7 @@
 //! parser-independent rule it applies.
 
 mod config;
+mod host_inputs;
 mod graph;
 mod load;
 mod modules;
@@ -27,6 +28,7 @@ mod root;
 mod scene;
 mod specifier;
 
+pub use host_inputs::{ResolvedHostInput, states_feeding_opaque_color, validate_host_inputs};
 pub use config::{
     AssetsSection, BuildSection, BuildTarget, DEFAULT_DEV_PORT, DEFAULT_ENTRY, DEFAULT_FIXED_STEP,
     DEFAULT_MAX_ASSET_FILE_BYTES, DEFAULT_MAX_CATCH_UP_STEPS, DEFAULT_MAX_ENTITIES,

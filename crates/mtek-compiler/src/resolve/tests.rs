@@ -212,7 +212,7 @@ fn only_locals_parameters_state_and_param_may_reuse_a_prelude_function() {
         ("fn sin() {}", vec!["E2001"]),
         ("scene Demo { entity sin {} }", vec!["E2001"]),
         ("scene Demo { camera sin {} }", vec!["E2001"]),
-        ("scene Demo { state sin: f32 = 0.0; }", vec!["E9010"]),
+        ("scene Demo { state sin: f32 = 0.0; }", vec![]),
         ("prefab P { param sin: f32 = 0.0; }", vec!["E9010"]),
         (
             "fn f() { let sin = 1.0; var cos = 2.0; for tan in 0..2 { } }",

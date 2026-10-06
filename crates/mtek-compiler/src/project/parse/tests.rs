@@ -848,11 +848,13 @@ fn out_dir_must_not_contain_the_entry() {
 // ---- host.inputs -------------------------------------------------------
 
 #[test]
-fn host_inputs_are_parsed_kept_and_reported_as_not_implemented() {
-    let (config, diagnostics) = parse(&format!(
-        "{MINIMAL}[host.inputs]\ntint = \"Demo.tint\"\nspeed = \"Demo.speed\"\n"
+fn host_inputs_are_parsed_and_kept() {
+    let config = valid(&format!(
+        "{MINIMAL}[host.inputs]
+tint = \"Demo.tint\"
+speed = \"Demo.speed\"
+"
     ));
-    let config = config.unwrap();
     let kept: Vec<(&str, &str)> = config
         .host_inputs
         .iter()
@@ -862,22 +864,6 @@ fn host_inputs_are_parsed_kept_and_reported_as_not_implemented() {
         kept,
         [("speed", "Demo.speed"), ("tint", "Demo.tint")],
         "sorted by name"
-    );
-    assert_eq!(diagnostics.len(), 1);
-    let d = &diagnostics[0];
-    assert_eq!(d.code, Code::E9010);
-    assert_eq!(
-        d.message,
-        "The [host.inputs] table is specified for v0.1 but not implemented by this compiler build yet."
-    );
-    assert!(
-        d.notes
-            .contains(&"host inputs declared here: speed, tint".to_owned())
-    );
-    assert!(
-        d.notes
-            .last()
-            .is_some_and(|n| n.starts_with("at mtek.toml:"))
     );
 }
 
@@ -890,7 +876,7 @@ fn an_empty_host_inputs_table_is_fine() {
 }
 
 #[test]
-fn invalid_host_inputs_do_not_also_report_e9010() {
+fn invalid_host_inputs_report_only_e9001() {
     let (config, diagnostics) = parse(&format!("{MINIMAL}[host.inputs]\ntint = 1\n"));
     assert!(config.is_none());
     assert_eq!(diagnostics.len(), 1);

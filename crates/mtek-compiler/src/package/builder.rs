@@ -32,7 +32,7 @@ use crate::ir::{self, MeshDesc, Program};
 use crate::layout::{LayoutRecord, builtin_blocks, compute};
 use crate::lowering::shader::lower_material;
 use crate::plan::{ParamClass, PlannedMaterial, ResourcePlan, check_limits, plan_program};
-use crate::project::Project;
+use crate::project::{Project, ResolvedHostInput, validate_host_inputs};
 use crate::source::Span;
 use crate::stdlib::registry;
 use crate::types::ConstValue;
@@ -43,8 +43,8 @@ use super::identity::{BuildIdentity, h16};
 use super::manifest::{
     Camera, Entity, EntityMaterial, InstanceParam, Layout, MANIFEST_SCHEMA, Manifest, Material,
     MaterialInstance, MaterialParam, Mesh, MeshShape, Num, ParamClass as ManifestClass,
-    RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, Subsystems,
-    SymbolEntry, SymbolKind,
+    RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, StateEntry,
+    Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -115,6 +115,8 @@ pub fn package(
         ))
     })?;
     let plan = checked_plan(program, input.profile)?;
+    let host_inputs = resolve_host_inputs(project, program, scene);
+
     let materials: Vec<BuiltMaterial<'_>> = plan
         .materials
         .iter()
@@ -265,7 +267,7 @@ pub fn package(
         materials: manifest_materials,
         meshes: meshes(&plan).map_err(defect)?,
         assets: Vec::new(),
-        scene: manifest_scene(scene, &plan).map_err(defect)?,
+        scene: manifest_scene(scene, &plan, &host_inputs).map_err(defect)?,
     };
 
     let html = index_html(&project.config.build.title, input.mode).ok_or_else(|| {
@@ -278,7 +280,7 @@ pub fn package(
     files.insert(INDEX_HTML.to_owned(), html.into_bytes());
     files.insert(APP_JS.to_owned(), app.text.into_bytes());
     files.insert(APP_JS_MAP.to_owned(), app_map.to_json().into_bytes());
-    files.insert(APP_DTS.to_owned(), emit_app_dts().into_bytes());
+    files.insert(APP_DTS.to_owned(), emit_app_dts(&host_inputs).into_bytes());
     files.insert(RUNTIME_DTS.to_owned(), input.runtime_declarations.to_vec());
     files.insert(runtime_file, input.runtime_bundle.to_vec());
     files.insert(MANIFEST_JSON.to_owned(), manifest.to_json().into_bytes());
@@ -445,7 +447,49 @@ fn color_nums(value: &ConstValue, what: &str) -> Result<Vec<Num>, String> {
 }
 
 /// The manifest's `scene`.
-fn manifest_scene(scene: &ir::Scene, plan: &ResourcePlan) -> Result<Scene, String> {
+fn resolve_host_inputs(
+    project: &Project,
+    _program: &Program,
+    scene: &ir::Scene,
+) -> Vec<ResolvedHostInput> {
+    let mut sink = crate::diagnostics::Diagnostics::new();
+    let checked = crate::types::CheckedScene {
+        def: None,
+        name: scene.name.clone(),
+        name_span: scene.span,
+        span: scene.span,
+        fields: Vec::new(),
+        state: scene
+            .state
+            .iter()
+            .map(|s| crate::types::CheckedState {
+                def: None,
+                name: s.name.clone(),
+                name_span: s.span,
+                span: s.span,
+                ty: s.ty.clone(),
+            })
+            .collect(),
+        objects: Vec::new(),
+        entities: Vec::new(),
+    };
+    // Binding-aware opaque selection runs during `check`; packaging rebuilds from
+    // config + IR state types (color → color-hex). Opaque codecs from a successful
+    // check with bindings can be re-derived when the AST is available; until then
+    // colour host inputs use color-hex unless the type check already failed.
+    validate_host_inputs(
+        &project.config.host_inputs,
+        &checked,
+        &std::collections::BTreeSet::new(),
+        &mut sink,
+    )
+}
+
+fn manifest_scene(
+    scene: &ir::Scene,
+    plan: &ResourcePlan,
+    host_inputs: &[ResolvedHostInput],
+) -> Result<Scene, String> {
     let clear_color = match scene.fields.clear_color.source.as_const() {
         Some(ir::Value::Color(rgba)) => nums(rgba)?,
         _ => return Err("the scene's clear_color is not a constant colour".to_owned()),
@@ -526,16 +570,26 @@ fn manifest_scene(scene: &ir::Scene, plan: &ResourcePlan) -> Result<Scene, Strin
             shareable: instance.shareable(),
         })
         .collect();
+    let state = scene
+        .state
+        .iter()
+        .map(|entry| StateEntry {
+            name: entry.name.clone(),
+            ty: entry.ty.clone(),
+            symbol: entry.symbol.to_string(),
+        })
+        .collect();
+    let host_inputs = host_inputs.iter().map(ResolvedHostInput::to_manifest).collect();
     Ok(Scene {
         name: scene.name.clone(),
         symbol: scene.symbol.to_string(),
         fields,
-        state: Vec::new(),
+        state,
         cameras,
         entities,
         material_instances,
         bindings: Vec::new(),
-        host_inputs: Vec::new(),
+        host_inputs,
         lights: Vec::new(),
     })
 }

@@ -414,10 +414,22 @@ impl<'a> Checker<'a> {
                 SceneMember::Object(object) if construct_implemented(Construct::SceneObject) => {
                     self.scene_object(object);
                 }
+                SceneMember::State(decl) if construct_implemented(Construct::State) => {
+                    self.state_member(decl);
+                }
                 SceneMember::Entity(entity) => self.entity(entity),
-                // `state`, lifecycle functions and handlers are gated.
+                // Lifecycle functions and handlers are still gated.
                 _ => {}
             }
+        }
+    }
+
+    fn state_member(&mut self, decl: &crate::syntax::ast::StateDecl) {
+        let ty = self.annotation(&decl.ty);
+        self.check(&decl.value, Some(ty));
+        self.fold_root(&decl.value);
+        if let Some(def) = self.res.def_of(decl.id) {
+            self.out.locals.insert(def, ty);
         }
     }
 
@@ -446,8 +458,11 @@ impl<'a> Checker<'a> {
                 EntityMember::Const(decl) if construct_implemented(Construct::BodyConst) => {
                     self.const_decl(decl);
                 }
+                EntityMember::State(decl) if construct_implemented(Construct::State) => {
+                    self.state_member(decl);
+                }
                 EntityMember::Entity(child) => self.entity(child),
-                // `state`, `param`, lifecycle functions and handlers are gated.
+                // `param`, lifecycle functions and handlers are still gated.
                 _ => {}
             }
         }
@@ -918,9 +933,10 @@ impl<'a> Checker<'a> {
                 self.note_surface_use(id);
                 self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR)
             }
-            // An unknown scene-object kind was reported (`E5014`); `state` is
-            // gated in this build.
-            DefKind::SceneObject { kind: None } | DefKind::State => TyId::ERROR,
+            // An unknown scene-object kind was reported (`E5014`).
+            DefKind::SceneObject { kind: None } => TyId::ERROR,
+            // Scene / entity state (task M3-06).
+            DefKind::State => self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR),
         }
     }
 

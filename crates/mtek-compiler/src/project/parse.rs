@@ -49,9 +49,8 @@ const SCHEMA: [(&str, &[&str]); 6] = [
 ///
 /// Returns the configuration if the file has no problem. Otherwise every
 /// problem is reported as `E9001` (ordered by position in the file) and the
-/// result is `None`. A well-formed non-empty `[host.inputs]` table is
-/// additionally reported as `E9010` (it is parsed and kept in the result, but
-/// the feature arrives with M3).
+/// result is `None`. A well-formed `[host.inputs]` table is parsed and kept;
+/// target validation (`E9020` / `E9021`) happens later against the entry scene.
 ///
 /// A leading byte-order mark is ignored; byte offsets in the notes are not
 /// reported, only lines and columns of the file as stored.
@@ -633,21 +632,8 @@ impl Validator {
                 None => valid = false,
             }
         }
-        if valid && !parsed.is_empty() {
-            // Host inputs are parsed and kept, but nothing consumes them
-            // before M3 (`spec/tooling.md` section 3, task M1-07). This
-            // report goes away with M3.
-            let names: Vec<&str> = parsed.keys().map(String::as_str).collect();
-            self.problem(
-                inputs.span().start,
-                Diagnostic::new(
-                    Code::E9010,
-                    "The [host.inputs] table is specified for v0.1 but not implemented by this compiler build yet.",
-                )
-                .note(format!("host inputs declared here: {}", names.join(", ")))
-                .help("remove the [host.inputs] table until host inputs are supported (milestone M3)"),
-            );
-        }
+        // Host-input targets are validated against the entry scene after
+        // type-checking (`E9020` / `E9021`, task M3-06).
         valid.then_some(parsed)
     }
 

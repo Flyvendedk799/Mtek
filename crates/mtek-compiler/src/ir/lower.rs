@@ -17,7 +17,7 @@
 
 use super::model::{
     Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin,
-    Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StructFieldItem,
+    Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StateEntry, StructFieldItem,
     StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
@@ -352,11 +352,22 @@ impl Lowering<'_> {
         for entity in &checked.entities {
             self.entity(entity, &symbol, None, &mut entities)?;
         }
+        let state = checked
+            .state
+            .iter()
+            .map(|entry| StateEntry {
+                name: entry.name.clone(),
+                symbol: symbol.child(&entry.name),
+                ty: entry.ty.clone(),
+                span: entry.span,
+            })
+            .collect();
         Ok(Scene {
             name: checked.name.clone(),
             symbol,
             span: checked.span,
             fields,
+            state,
             constants,
             cameras,
             entities,

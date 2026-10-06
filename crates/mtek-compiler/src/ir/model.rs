@@ -594,7 +594,7 @@ pub struct Const {
     pub span: Span,
 }
 
-/// A scene: its fields, constants, cameras and entities.
+/// A scene: its fields, state, constants, cameras and entities.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Scene {
@@ -604,6 +604,8 @@ pub struct Scene {
     #[serde(serialize_with = "span")]
     pub span: Span,
     pub fields: SceneFields,
+    /// Scene state, in declaration order.
+    pub state: Vec<StateEntry>,
     /// The constants declared in the scene body and in the bodies of its
     /// entities, in source order.
     pub constants: Vec<Const>,
@@ -613,6 +615,18 @@ pub struct Scene {
     /// over the nesting, `spec/scenes.md` section 10.1): `entities[i].index
     /// == i`, and a child follows its parent.
     pub entities: Vec<Entity>,
+}
+
+/// One scene-state slot (`spec/scenes.md` section 2).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StateEntry {
+    pub name: String,
+    pub symbol: Symbol,
+    #[serde(rename = "type")]
+    pub ty: String,
+    #[serde(serialize_with = "span")]
+    pub span: Span,
 }
 
 impl Scene {

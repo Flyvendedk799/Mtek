@@ -819,6 +819,7 @@
               "span": {"file": 0, "start": 980, "end": 1013}
             }
           },
+          "state": [],
           "constants": [],
           "cameras": [
             {

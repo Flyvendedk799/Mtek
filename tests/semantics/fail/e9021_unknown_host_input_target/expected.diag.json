@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E9021",
+    "file": null,
+    "startByte": null,
+    "endByte": null,
+    "message": "Unknown host input target 'Demo.missing': scene 'Demo' has no state 'missing'.",
+    "notes": [
+      "host.inputs.tint"
+    ]
+  }
+]

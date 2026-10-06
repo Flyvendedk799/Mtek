@@ -24,7 +24,7 @@ import {
 import { MtekMountError, makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import { acquireDevice, type AcquiredDevice } from "../gpu/device.js";
 import { ResourceRegistry } from "../gpu/registry.js";
-import { MountedApp, unknownInputResult } from "./app.js";
+import { MountedApp } from "./app.js";
 import { defaultEnvironment, type HostEnvironment } from "./environment.js";
 import { DiagnosticSink, abiFailureToDiagnostic, mountError } from "./failures.js";
 import { FailureOverlay } from "./overlay.js";
@@ -272,16 +272,6 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       ]);
     }
 
-    // Host inputs: M1 manifests declare none, so every key is unknown. Reported, not fatal.
-    for (const name of Object.keys(options.inputs ?? {}).sort()) {
-      sink.report(
-        makeRuntimeDiagnostic("E8040", {
-          phase: "runtime:input",
-          message: unknownInputResult(name).error.message,
-        }),
-      );
-    }
-
     const seed = options.seed === undefined ? (Math.floor(environment.now() * 1000) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0;
     app = new MountedApp<I>({
       manifest,
@@ -297,6 +287,19 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       seed,
       scene: started.scene,
     });
+    // Initial host inputs: validated like setInput (queued for the first phase 1).
+    for (const name of Object.keys(options.inputs ?? {}).sort()) {
+      const value = (options.inputs as Record<string, unknown>)[name];
+      const result = app.setInput(name as keyof I & string, value as I[keyof I & string]);
+      if (!result.ok) {
+        sink.report(
+          makeRuntimeDiagnostic(result.error.code === "MTEK-E8100" ? "E8100" : result.error.code === "MTEK-E8041" ? "E8041" : "E8040", {
+            phase: "runtime:input",
+            message: result.error.message,
+          }),
+        );
+      }
+    }
     for (const diagnostic of earlyReports) app.report(diagnostic);
     return app;
   } catch (error) {

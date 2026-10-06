@@ -1126,7 +1126,6 @@ fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
     // test fails until the checker types it.
     for construct in [
         Construct::Prefab,
-        Construct::State,
         Construct::PrefabInstance,
         Construct::LifecycleFn,
         Construct::Handler,

@@ -146,7 +146,7 @@ error[MTEK-E9005]: Entry file 'src/main.mtek' not found.
 }
 
 #[test]
-fn host_inputs_render_as_e9010_and_the_project_still_loads() {
+fn host_inputs_are_kept_and_the_project_still_loads() {
     let mut fs = MemFs::new();
     fs.insert(
         p("mtek.toml"),
@@ -154,19 +154,11 @@ fn host_inputs_render_as_e9010_and_the_project_still_loads() {
     )
     .insert(p("src/main.mtek"), "");
     let (project, report) = run(&fs, "");
-    assert!(project.is_some());
-    assert_eq!(report.summary.errors, 1);
-    let json = assert_schema_valid(&report, &SourceMap::new());
-    assert_eq!(json["diagnostics"][0]["code"], "MTEK-E9010");
+    let project = project.expect("project loads with host.inputs");
+    assert!(report.diagnostics.is_empty());
     assert_eq!(
-        human(&report),
-        "\
-error[MTEK-E9010]: The [host.inputs] table is specified for v0.1 but not implemented by this compiler build yet.
-  = note: host inputs declared here: tint
-  = help: remove the [host.inputs] table until host inputs are supported (milestone M3)
-  = note: at mtek.toml:4:1
-
-"
+        project.config.host_inputs.get("tint").map(String::as_str),
+        Some("Demo.tint")
     );
 }
 

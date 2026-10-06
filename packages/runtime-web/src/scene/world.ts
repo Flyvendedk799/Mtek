@@ -197,6 +197,11 @@ export class World {
   /** Entity records by static index. */
   readonly entities: readonly EntityRecord[];
   readonly camera: CameraRecord;
+  /**
+   * Scene state (`spec/runtime-abi.md` section 5.2). Host inputs write here in phase 1;
+   * generated code reads and writes from M3 on.
+   */
+  readonly state: Record<string, unknown>;
   /** Phase recorded in diagnostics. `runtime:mount` during initialisation. */
   phase: MtekRuntimePhase = "runtime:mount";
 
@@ -217,6 +222,10 @@ export class World {
     this.structure = options.structure;
     this.params = options.params;
     this.report = options.report;
+    this.state = Object.create(null) as Record<string, unknown>;
+    for (const entry of options.manifest.scene.state) {
+      this.state[entry.name] = zeroValue(entry.type);
+    }
 
     const materialParams = new Map(this.structure.materials.map((material) => [material.id, material.params]));
     this.entities = Object.freeze(
