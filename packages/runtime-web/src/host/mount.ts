@@ -286,6 +286,8 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       test: options.test,
       seed,
       scene: started.scene,
+      modules: new Map(shaders.modules),
+      program: program as import("./types.js").MtekMountProgram<Record<string, unknown>>,
     });
     // Initial host inputs: validated like setInput (queued for the first phase 1).
     for (const name of Object.keys(options.inputs ?? {}).sort()) {

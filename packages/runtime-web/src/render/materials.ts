@@ -97,6 +97,13 @@ export class MaterialStore implements ParamSink {
     return uploads;
   }
 
+  /** Releases every arena (hot reload: discard a retired scene). */
+  dispose(): void {
+    for (const arena of this.arenas.values()) arena.dispose();
+    this.arenas.clear();
+    this.storage.length = 0;
+  }
+
   private storageOf(instance: number): InstanceStorage | null {
     const storage = this.storage[instance];
     if (storage === undefined) throw new Error(`internal error: no material instance ${String(instance)}`);

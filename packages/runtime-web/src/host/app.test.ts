@@ -480,7 +480,14 @@ describe("debug API (options.test)", () => {
     const app = await mountManual(host);
     expect(debugOf(app).scene()).toEqual({
       state: {},
-      entities: [{ name: "Cube", position: { x: 0, y: 0.5, z: 0 }, rotation: { x: 0, y: 0, z: 0, w: 1 } }],
+      entities: [
+        {
+          name: "Cube",
+          position: { x: 0, y: 0.5, z: 0 },
+          rotation: { x: 0, y: 0, z: 0, w: 1 },
+          mat: { p: { color: { r: 0.25, g: 0.5, b: 0.75, a: 1 } } },
+        },
+      ],
     });
     app.dispose();
   });

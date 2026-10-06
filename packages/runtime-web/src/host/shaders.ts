@@ -107,23 +107,31 @@ function describeFailure(manifest: MtekManifest, shader: MtekShader, message: st
   });
 }
 
-/** Loads every startup shader. Never throws for shader problems; they come back as diagnostics. */
-export async function loadStartupShaders(options: ShaderLoadOptions): Promise<ShaderLoadResult> {
+/**
+ * Loads shaders for a candidate (or initial) program. Hashes already present in `existing` are
+ * reused unchanged — so a colour edit that keeps the same WGSL creates no shader module.
+ * Modules created for this call are listed in `created` so a failed candidate can discard them.
+ */
+export async function loadCandidateShaders(
+  options: ShaderLoadOptions,
+  existing: ReadonlyMap<string, GPUShaderModule> = new Map(),
+): Promise<ShaderLoadResult & { readonly created: readonly GPUShaderModule[] }> {
   const { manifest, device, registry } = options;
-  const modules = new Map<string, GPUShaderModule>();
+  const modules = new Map<string, GPUShaderModule>(existing);
+  const created: GPUShaderModule[] = [];
   const diagnostics: MtekDiagnostic[] = [];
 
-  // Fetch everything concurrently, process in manifest order so diagnostics are deterministic.
+  const needed = manifest.shaders.filter((shader) => !modules.has(shader.hash));
   const fetched = await Promise.all(
-    manifest.shaders.map(async (shader) => ({
+    needed.map(async (shader) => ({
+      shader,
       wgsl: await fetchText(options, shader.url),
       map: await fetchText(options, shader.map),
     })),
   );
 
-  for (const [index, shader] of manifest.shaders.entries()) {
-    const files = fetched[index];
-    if (files === undefined) continue;
+  for (const files of fetched) {
+    const shader = files.shader;
     if (!files.wgsl.ok) {
       diagnostics.push(describeFailure(manifest, shader, `the WGSL file could not be loaded (${files.wgsl.reason}).`, []));
       continue;
@@ -157,7 +165,10 @@ export async function loadStartupShaders(options: ShaderLoadOptions): Promise<Sh
     } catch {
       // popErrorScope rejects when the device is lost; the loss is reported through device.lost.
     }
-    if (module !== undefined) modules.set(shader.hash, module);
+    if (module !== undefined) {
+      modules.set(shader.hash, module);
+      created.push(module);
+    }
 
     for (const message of compileErrors) {
       const notes: string[] = [];
@@ -189,5 +200,11 @@ export async function loadStartupShaders(options: ShaderLoadOptions): Promise<Sh
     }
   }
 
-  return { modules, diagnostics };
+  return { modules, diagnostics, created };
+}
+
+/** Loads every startup shader. Never throws for shader problems; they come back as diagnostics. */
+export async function loadStartupShaders(options: ShaderLoadOptions): Promise<ShaderLoadResult> {
+  const result = await loadCandidateShaders(options);
+  return { modules: result.modules, diagnostics: result.diagnostics };
 }

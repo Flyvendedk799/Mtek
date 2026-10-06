@@ -139,6 +139,12 @@ export class Renderer {
     return this.drawCallsLastFrame;
   }
 
+  /** Releases frame and object arenas (hot reload: discard a retired scene). */
+  dispose(): void {
+    this.frameArena.dispose();
+    this.objectArena.dispose();
+  }
+
   /** The current draw list (rebuilt when visibility changed). */
   drawList(): readonly DrawItem[] {
     const { world, structure, pipelines, meshes } = this.options;

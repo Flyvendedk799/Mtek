@@ -5,21 +5,33 @@
  * every GPU resource (through the registry). Everything it adds is removed by `dispose()`.
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
+import { checkManifest } from "../abi/validate.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
-import type { Scene } from "../render/startup.js";
+import { startScene, type Scene } from "../render/startup.js";
 import { Scheduler, type FramePhases } from "../schedule/scheduler.js";
+import { checkProgram } from "../scene/program.js";
+import { resolveStructure } from "../scene/structure.js";
 import type { HostEnvironment, ResizeObserverLike } from "./environment.js";
 import type { DiagnosticSink } from "./failures.js";
 import type { FailureOverlay } from "./overlay.js";
+import {
+  findStructuralChange,
+  migrateWorld,
+  prefabNames,
+  restartDiagnostic,
+  type StructuralChange,
+} from "./reload.js";
+import { loadCandidateShaders } from "./shaders.js";
 import type { Surface } from "./surface.js";
-import type { MtekApp, MtekAppState, MtekDebug, MtekInputResult, MtekTestOptions } from "./types.js";
+import type { MtekApp, MtekAppState, MtekDebug, MtekInputResult, MtekMountProgram, MtekTestOptions } from "./types.js";
 import { HostInputs } from "./inputs.js";
 
 export { unknownInputResult } from "./inputs.js";
 
 export interface AppDependencies {
-  readonly manifest: MtekManifest;
+  /** Mutable: updated on a successful hot-reload swap. */
+  manifest: MtekManifest;
   readonly device: GPUDevice;
   readonly registry: ResourceRegistry;
   readonly surface: Surface;
@@ -32,8 +44,12 @@ export interface AppDependencies {
   readonly test: MtekTestOptions | undefined;
   /** The resolved `random()` seed (consumed by the CPU runtime from M3 on). */
   readonly seed: number;
-  /** The initialised scene: world, material arenas, pipelines and renderer. */
-  readonly scene: Scene;
+  /** The initialised scene: world, material arenas, pipelines and renderer. Mutable on hot reload. */
+  scene: Scene;
+  /** Shader modules by hash; reused across reloads when the WGSL is unchanged. */
+  modules: Map<string, GPUShaderModule>;
+  /** The mounted program module; updated on a successful hot-reload swap. */
+  program: MtekMountProgram<Record<string, unknown>>;
 }
 
 function errorText(error: unknown): string {
@@ -53,7 +69,17 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private frameTimeMs = 0;
   private cpuUpdateMs = 0;
   private renderPrepMs = 0;
-  private readonly hostInputs: HostInputs;
+  private hostInputs: HostInputs;
+  /** Validated candidate waiting to become the live scene at the next frame start. */
+  private pendingSwap:
+    | {
+        readonly scene: Scene;
+        readonly manifest: MtekManifest;
+        readonly program: MtekMountProgram<Record<string, unknown>>;
+        readonly modules: Map<string, GPUShaderModule>;
+        readonly restart: StructuralChange | undefined;
+      }
+    | undefined;
 
   constructor(private readonly deps: AppDependencies) {
     const { manifest, environment, registry, test } = deps;
@@ -113,6 +139,173 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     return this.hostInputs.setInput(name, value);
   }
 
+  /**
+   * Candidate-based hot reload (`spec/runtime-abi.md` section 11): validate the candidate fully;
+   * on failure discard it and keep the running program; on success queue an atomic swap for the
+   * next frame start.
+   */
+  async replaceProgram(
+    candidate: MtekMountProgram<I>,
+  ): Promise<{ ok: true } | { ok: false; diagnostics: readonly MtekDiagnostic[] }> {
+    if (this.current === "disposed" || this.current === "failed") {
+      const diagnostic = makeRuntimeDiagnostic("E8050", {
+        phase: "runtime:reload",
+        message: `replaceProgram was called while the application is ${this.current}.`,
+      });
+      this.report(diagnostic);
+      return { ok: false, diagnostics: [diagnostic] };
+    }
+
+    const { environment, device, registry, surface } = this.deps;
+    const createdModules: GPUShaderModule[] = [];
+    try {
+      if ((candidate.abi as number) !== 1) {
+        const diagnostic = makeRuntimeDiagnostic("E8003", {
+          phase: "runtime:reload",
+          message: `Incompatible program: the program module's \`abi\` is ${String(candidate.abi)}, this runtime implements 1.`,
+          notes: ["field: abi"],
+        });
+        this.report(diagnostic);
+        return { ok: false, diagnostics: [diagnostic] };
+      }
+
+      let text: string;
+      try {
+        const response = await environment.fetch(candidate.manifestUrl.href);
+        if (!response.ok) {
+          const diagnostic = makeRuntimeDiagnostic("E8006", {
+            phase: "runtime:reload",
+            message: `The candidate manifest could not be loaded: HTTP ${String(response.status)} for ${candidate.manifestUrl.href}.`,
+            notes: ["field: manifestUrl"],
+          });
+          this.report(diagnostic);
+          return { ok: false, diagnostics: [diagnostic] };
+        }
+        text = await response.text();
+      } catch (error) {
+        const diagnostic = makeRuntimeDiagnostic("E8006", {
+          phase: "runtime:reload",
+          message: `The candidate manifest could not be loaded from ${candidate.manifestUrl.href}: ${errorText(error)}`,
+          notes: ["field: manifestUrl"],
+        });
+        this.report(diagnostic);
+        return { ok: false, diagnostics: [diagnostic] };
+      }
+
+      let json: unknown;
+      try {
+        json = JSON.parse(text);
+      } catch (error) {
+        const diagnostic = makeRuntimeDiagnostic("E8006", {
+          phase: "runtime:reload",
+          message: `The candidate manifest is not valid JSON: ${errorText(error)}`,
+          notes: ["field: manifest"],
+        });
+        this.report(diagnostic);
+        return { ok: false, diagnostics: [diagnostic] };
+      }
+
+      const checkedManifest = checkManifest(json);
+      if (!checkedManifest.ok) {
+        const diagnostics = checkedManifest.failures.map((failure) =>
+          makeRuntimeDiagnostic(failure.code, {
+            phase: "runtime:reload",
+            message: failure.message,
+            notes: [`field: ${failure.field}`],
+          }),
+        );
+        for (const diagnostic of diagnostics) this.report(diagnostic);
+        return { ok: false, diagnostics };
+      }
+      const manifest = checkedManifest.manifest;
+
+      const structure = resolveStructure(manifest);
+      if (!structure.ok) {
+        for (const diagnostic of structure.diagnostics) this.report(diagnostic);
+        return { ok: false, diagnostics: structure.diagnostics };
+      }
+      const checked = checkProgram(candidate, manifest);
+      if (!checked.ok) {
+        for (const diagnostic of checked.diagnostics) this.report(diagnostic);
+        return { ok: false, diagnostics: checked.diagnostics };
+      }
+
+      const shaders = await loadCandidateShaders(
+        {
+          manifest,
+          baseUrl: candidate.baseUrl,
+          device,
+          registry,
+          fetch: (url) => environment.fetch(url),
+        },
+        this.deps.modules,
+      );
+      createdModules.push(...shaders.created);
+      if (shaders.diagnostics.length > 0) {
+        for (const module of shaders.created) registry.release(module);
+        for (const diagnostic of shaders.diagnostics) this.report(diagnostic);
+        return { ok: false, diagnostics: shaders.diagnostics };
+      }
+
+      const restart = findStructuralChange(
+        this.deps.manifest.scene,
+        manifest.scene,
+        prefabNames(this.deps.program.prefabs),
+        prefabNames(candidate.prefabs),
+      );
+
+      const started = await startScene({
+        manifest,
+        structure: structure.structure,
+        program: checked.program,
+        device,
+        registry,
+        surface,
+        modules: shaders.modules,
+        report: (diagnostic) => {
+          this.report(diagnostic);
+        },
+        pipelineCache: this.deps.scene.pipelines,
+        bindingPlan: this.deps.scene.plan,
+      });
+      if (!started.ok) {
+        for (const module of shaders.created) registry.release(module);
+        // Pipelines newly created for a failing overall start stay in the shared cache by hash;
+        // they remain valid for a later successful candidate with the same shader.
+        for (const diagnostic of started.diagnostics) this.report(diagnostic);
+        return { ok: false, diagnostics: started.diagnostics };
+      }
+
+      if (this.pendingSwap !== undefined) {
+        this.pendingSwap.scene.materials.dispose();
+        this.pendingSwap.scene.meshes.dispose();
+        this.pendingSwap.scene.renderer.dispose();
+      }
+      this.pendingSwap = {
+        scene: started.scene,
+        manifest,
+        program: candidate as MtekMountProgram<Record<string, unknown>>,
+        modules: new Map(shaders.modules),
+        restart,
+      };
+      return { ok: true };
+    } catch (error) {
+      for (const module of createdModules) {
+        try {
+          registry.release(module);
+        } catch {
+          // Already released or never registered.
+        }
+      }
+      const diagnostic = makeRuntimeDiagnostic("E8050", {
+        phase: "runtime:reload",
+        message: `replaceProgram failed: ${errorText(error)}`,
+      });
+      this.report(diagnostic);
+      return { ok: false, diagnostics: [diagnostic] };
+    }
+  }
+
   pause(): void {
     if (this.current !== "running") return;
     this.current = "paused";
@@ -135,6 +328,12 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   dispose(): void {
     if (this.current === "disposed") return;
     this.current = "disposed";
+    if (this.pendingSwap !== undefined) {
+      this.pendingSwap.scene.materials.dispose();
+      this.pendingSwap.scene.meshes.dispose();
+      this.pendingSwap.scene.renderer.dispose();
+      this.pendingSwap = undefined;
+    }
     const { device, registry, surface, overlay } = this.deps;
     this.scheduler.stop();
     this.resizeObserver?.disconnect();
@@ -225,10 +424,11 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
 
   private createPhases(): FramePhases {
     const now = (): number => this.deps.environment.now();
-    const { world, renderer } = this.deps.scene;
     return {
       phase1_input: () => {
+        this.applyPendingSwap();
         this.frameStartMs = now();
+        const { world } = this.deps.scene;
         this.hostInputs.applyQueued(world);
         world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex);
       },
@@ -238,17 +438,48 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       phase4_flush: () => undefined,
       phase5_bindings: () => undefined,
       phase6_transforms: () => {
-        world.propagate();
+        this.deps.scene.world.propagate();
       },
       phase7_render: () => {
         this.renderStartMs = now();
-        renderer.frame();
+        this.deps.scene.renderer.frame();
         const end = now();
         this.cpuUpdateMs = this.renderStartMs - this.frameStartMs;
         this.renderPrepMs = end - this.renderStartMs;
         this.frameTimeMs = end - this.frameStartMs;
       },
     };
+  }
+
+  /** Applies a queued candidate at the start of the next frame, before phase 1 work. */
+  private applyPendingSwap(): void {
+    const pending = this.pendingSwap;
+    if (pending === undefined) return;
+    this.pendingSwap = undefined;
+
+    const previous = this.deps.scene;
+    const previousManifest = this.deps.manifest;
+
+    if (pending.restart === undefined) {
+      migrateWorld(previous.world, previousManifest, pending.scene.world, pending.manifest);
+    } else {
+      const diagnostic = restartDiagnostic(pending.manifest, pending.restart);
+      this.deps.sink.report(diagnostic);
+      // W8070 explains the restart over the still-visible new scene.
+      this.deps.overlay?.add(diagnostic);
+    }
+
+    this.deps.scene = pending.scene;
+    this.deps.manifest = pending.manifest;
+    this.deps.program = pending.program;
+    this.deps.modules = pending.modules;
+    this.hostInputs = new HostInputs(pending.manifest);
+
+    // Retire GPU resources of the previous scene (pipelines and reused shader modules stay alive).
+    previous.materials.dispose();
+    previous.renderer.dispose();
+    // Mesh buffers of the previous scene: release when the MeshStore supports dispose.
+    previous.meshes.dispose();
   }
 
   private createDebug(manual: boolean): MtekDebug {
@@ -279,6 +510,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
           name: this.deps.manifest.scene.entities[index]?.name ?? String(index),
           position: record.position,
           rotation: record.rotation,
+          ...(record.mat === null ? {} : { mat: { p: { ...record.mat.p } } }),
         })),
       }),
     };
