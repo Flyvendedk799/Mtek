@@ -103,7 +103,6 @@ pub const NEGATIVE_PRODUCTIONS: &[(&str, &str)] = &[("Reserved", "E0013")];
 pub const GATED_RULES: &[(&str, Construct)] = &[
     ("prefab-no-nested-entity", Construct::Prefab),
     ("prefab-instance-params", Construct::PrefabInstance),
-    ("bind-bindable-field", Construct::Bind),
 ];
 
 /// The gates of [`GATED_RULES`] in this build.

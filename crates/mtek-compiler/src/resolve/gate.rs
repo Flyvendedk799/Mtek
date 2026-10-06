@@ -142,7 +142,7 @@ const fn row(subject: &'static str, plural: bool, since: Milestone) -> Construct
 /// 0026).
 #[must_use]
 pub const fn construct_gate(construct: Construct) -> ConstructGate {
-    use Milestone::{M1, M3, M5};
+    use Milestone::{M1, M5};
     match construct {
         // Modules (task M2-03, decision 0036) are implemented ahead of the M2
         // gate; this build still reports milestone M1, so the rows say M1.
@@ -169,7 +169,8 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         // Planned for M3; implemented by tasks M3-01 and M3-02 before the M3 gate (decision 0049).
         Construct::LifecycleFn => row("Lifecycle functions", true, M1),
         Construct::Handler => row("Event handlers", true, M1),
-        Construct::Bind => row("`bind`", false, M3),
+        // Planned for M3; implemented by task M3-05 before the M3 gate (decision 0051).
+        Construct::Bind => row("`bind`", false, M1),
         Construct::SelfValue => row("`self`", false, M1),
         Construct::Descriptor => row("Descriptor literals", true, M1),
         // Planned for M2 with the registry types `string` and `array`; implemented by
@@ -299,17 +300,14 @@ mod tests {
             Construct::LifecycleFn,
             Construct::Handler,
             Construct::SelfValue,
+            Construct::Bind,
         ] {
             assert!(
                 is_implemented(construct_gate(construct).since),
                 "{construct:?}"
             );
         }
-        for construct in [
-            Construct::Prefab,
-            Construct::PrefabInstance,
-            Construct::Bind,
-        ] {
+        for construct in [Construct::Prefab, Construct::PrefabInstance] {
             assert!(
                 !is_implemented(construct_gate(construct).since),
                 "{construct:?}"
@@ -381,10 +379,10 @@ mod tests {
             gate_message(gate.subject, gate.plural, gate.since),
             "`prefab` declarations are specified for v0.1 but not implemented by this compiler build yet (planned for M5)."
         );
-        let gate = construct_gate(Construct::Bind);
+        let gate = construct_gate(Construct::PrefabInstance);
         assert_eq!(
             gate_message(gate.subject, gate.plural, gate.since),
-            "`bind` is specified for v0.1 but not implemented by this compiler build yet (planned for M3)."
+            "Prefab instances (`entity Name: Prefab`) are specified for v0.1 but not implemented by this compiler build yet (planned for M5)."
         );
         assert_eq!(
             gate_note(),

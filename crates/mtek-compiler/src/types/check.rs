@@ -204,6 +204,9 @@ pub(super) struct Checker<'a> {
     pub(super) states: BTreeMap<(DefId, String), DefId>,
     /// What the scene body or state initialiser being checked belongs to.
     pub(super) scope: Option<super::scene_body::ScopeCtx>,
+    /// Set while the `material` field of an entity is checked: the params of its instance literal
+    /// may be `bind(..)` (`E5004` elsewhere).
+    pub(super) allow_param_bind: bool,
     pub(super) calls: BTreeMap<NodeId, CallKind>,
     pub(super) fields: BTreeMap<NodeId, FieldKind>,
     /// Every struct declaration of the module, by its `DefId`.
@@ -272,6 +275,7 @@ impl<'a> Checker<'a> {
             cyclic: BTreeSet::new(),
             states,
             scope: None,
+            allow_param_bind: false,
             calls: BTreeMap::new(),
             fields: BTreeMap::new(),
             struct_decls: BTreeMap::new(),
@@ -443,7 +447,9 @@ impl<'a> Checker<'a> {
                 _ => {}
             }
         }
+        self.scene_binds(decl);
         self.scene_bodies(decl);
+        self.binding_conflicts(self.res.def_of(decl.id));
     }
 
     fn scene_object(&mut self, object: &SceneObject) {
@@ -466,7 +472,9 @@ impl<'a> Checker<'a> {
         for member in &entity.members {
             match member {
                 EntityMember::Field(field) if construct_implemented(Construct::EntityField) => {
+                    self.allow_param_bind = self.is_material_field(&field.name.name);
                     self.schema_field(self.registry.declaration_schemas.entity, field);
+                    self.allow_param_bind = false;
                     self.note_entity_material(entity, field);
                 }
                 EntityMember::Const(decl) if construct_implemented(Construct::BodyConst) => {
@@ -1122,15 +1130,23 @@ impl<'a> Checker<'a> {
                     self.object_descriptor(name, def.name, fields);
                     return TyId::ERROR;
                 }
+                let binds_allowed = std::mem::take(&mut self.allow_param_bind);
                 for field in fields {
                     let expected = match def.field(&field.name.name) {
                         Some(field_def) if !is_implemented(field_def.since) => continue,
                         Some(field_def) => Some(self.out.interner.from_type_ref(field_def.ty)),
                         None => None,
                     };
-                    // `bind(..)` is gated in this build.
-                    if let FieldValue::Expr(value) = &field.value {
-                        self.check(value, expected);
+                    match &field.value {
+                        FieldValue::Expr(value) => {
+                            self.check(value, expected);
+                        }
+                        FieldValue::Bind(bind) => {
+                            // The params of the registry material of an entity's `material`.
+                            if !(binds_allowed && def.category == SchemaCategory::Material) {
+                                self.bind_not_allowed(bind, "inside a descriptor literal");
+                            }
+                        }
                     }
                 }
                 self.out.interner.intern(Ty::Schema(def.name))
@@ -1213,8 +1229,13 @@ impl<'a> Checker<'a> {
     /// field values are still typed, so their own mistakes are reported.
     fn object_descriptor(&mut self, name: &Ident, schema: &'static str, fields: &[DescField]) {
         for field in fields {
-            if let FieldValue::Expr(value) = &field.value {
-                self.check(value, None);
+            match &field.value {
+                FieldValue::Expr(value) => {
+                    self.check(value, None);
+                }
+                FieldValue::Bind(bind) => {
+                    self.bind_not_allowed(bind, "inside a descriptor literal");
+                }
             }
         }
         let declarations = self.registry.declaration_schemas;

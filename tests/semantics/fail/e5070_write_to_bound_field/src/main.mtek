@@ -1,0 +1,15 @@
+// A bound field has one writer, the binding: assigning it is E5070 with the bind as related span.
+scene Demo {
+    camera Main {}
+    state height: f32 = 1.0;
+
+    entity Cube {
+        position: bind(vec3(0.0, height, 0.0));
+        mesh: Box {};
+    }
+
+    update(dt: f32) {
+        Cube.position = vec3(0.0, 2.0, 0.0);
+        Cube.position.x = 1.0;
+    }
+}

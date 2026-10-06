@@ -1,0 +1,482 @@
+{
+  "shader": "0c483313bae03955efdf9c236346c1df84ab2e47421e5361bc6347a941941101",
+  "entries": [
+    {
+      "wgsl": {
+        "line": 1,
+        "colStart": 1,
+        "colEnd": 19
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 2,
+        "colStart": 5,
+        "colEnd": 22
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 3,
+        "colStart": 5,
+        "colEnd": 15
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 4,
+        "colStart": 5,
+        "colEnd": 25
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 5,
+        "colStart": 5,
+        "colEnd": 16
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 6,
+        "colStart": 5,
+        "colEnd": 26
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 7,
+        "colStart": 5,
+        "colEnd": 19
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 10,
+        "colStart": 1,
+        "colEnd": 19
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 11,
+        "colStart": 5,
+        "colEnd": 28
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 12,
+        "colStart": 5,
+        "colEnd": 32
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 13,
+        "colStart": 5,
+        "colEnd": 22
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 14,
+        "colStart": 5,
+        "colEnd": 24
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 15,
+        "colStart": 5,
+        "colEnd": 20
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 16,
+        "colStart": 5,
+        "colEnd": 44
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 19,
+        "colStart": 1,
+        "colEnd": 35
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 20,
+        "colStart": 5,
+        "colEnd": 24
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 23,
+        "colStart": 1,
+        "colEnd": 20
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 24,
+        "colStart": 5,
+        "colEnd": 24
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 25,
+        "colStart": 5,
+        "colEnd": 32
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 28,
+        "colStart": 1,
+        "colEnd": 26
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 29,
+        "colStart": 5,
+        "colEnd": 49
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 32,
+        "colStart": 1,
+        "colEnd": 58
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 33,
+        "colStart": 1,
+        "colEnd": 75
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 34,
+        "colStart": 1,
+        "colEnd": 60
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 36,
+        "colStart": 1,
+        "colEnd": 34
+      },
+      "span": 8,
+      "symbol": "std/materials.mtek::Unlit.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 5,
+        "colEnd": 32
+      },
+      "span": 9,
+      "symbol": "std/materials.mtek::Unlit.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 12,
+        "colEnd": 31
+      },
+      "span": 10,
+      "symbol": "std/materials.mtek::Unlit.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 12,
+        "colEnd": 23
+      },
+      "span": 10,
+      "symbol": "std/materials.mtek::Unlit.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 40,
+        "colStart": 1,
+        "colEnd": 8
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 41,
+        "colStart": 1,
+        "colEnd": 72
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 41,
+        "colStart": 12,
+        "colEnd": 49
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 42,
+        "colStart": 5,
+        "colEnd": 72
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 42,
+        "colStart": 22,
+        "colEnd": 71
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 42,
+        "colStart": 22,
+        "colEnd": 39
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 42,
+        "colStart": 22,
+        "colEnd": 33
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 42,
+        "colStart": 42,
+        "colEnd": 71
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 42,
+        "colStart": 52,
+        "colEnd": 65
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 42,
+        "colStart": 67,
+        "colEnd": 70
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 43,
+        "colStart": 5,
+        "colEnd": 64
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 43,
+        "colStart": 12,
+        "colEnd": 63
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 43,
+        "colStart": 29,
+        "colEnd": 62
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 43,
+        "colStart": 29,
+        "colEnd": 49
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 43,
+        "colStart": 29,
+        "colEnd": 39
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 43,
+        "colStart": 52,
+        "colEnd": 62
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 46,
+        "colStart": 1,
+        "colEnd": 10
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 47,
+        "colStart": 1,
+        "colEnd": 41
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 48,
+        "colStart": 5,
+        "colEnd": 38
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 48,
+        "colStart": 22,
+        "colEnd": 37
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 49,
+        "colStart": 5,
+        "colEnd": 43
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 49,
+        "colStart": 12,
+        "colEnd": 42
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 49,
+        "colStart": 22,
+        "colEnd": 36
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 49,
+        "colStart": 22,
+        "colEnd": 32
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    },
+    {
+      "wgsl": {
+        "line": 49,
+        "colStart": 38,
+        "colEnd": 41
+      },
+      "span": 6,
+      "symbol": "std/materials.mtek::Unlit"
+    }
+  ]
+}

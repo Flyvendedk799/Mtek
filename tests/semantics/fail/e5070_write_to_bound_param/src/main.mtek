@@ -1,0 +1,19 @@
+material Glow {
+    param strength: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(strength), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    state level: f32 = 0.5;
+
+    entity Lamp {
+        mesh: Box {};
+        material: Glow { strength: bind(level); };
+        update(dt: f32) {
+            self.material.strength = 2.0;
+        }
+    }
+}

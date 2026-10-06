@@ -33,6 +33,7 @@
 
 use std::collections::BTreeSet;
 
+use super::bind::placeholder;
 use super::check::Checker;
 use super::ty::Ty;
 use super::value::{ConstValue, from_registry};
@@ -179,6 +180,10 @@ pub struct CheckedField {
     /// rejected (an error was reported).
     pub value: Option<ConstValue>,
     pub origin: FieldOrigin,
+    /// The value is `bind(..)`: [`FieldOrigin::Written`]'s `value` is the `bind` node (see
+    /// [`crate::types::Typeck::binding_of`]) and `value` above is only a placeholder (the registry
+    /// default, or zero) that the run-time evaluation of the binding replaces before the first frame.
+    pub bound: bool,
 }
 
 /// Where the value of a [`CheckedField`] comes from.
@@ -322,6 +327,8 @@ struct Written<'e> {
     node: NodeId,
     /// The value expression; `None` for `bind(..)`.
     value: Option<&'e Expr>,
+    /// The value is a `bind(..)`.
+    bound: bool,
     /// The value passed the per-value checks; `None` until they ran.
     valid: Option<ConstValue>,
 }
@@ -606,6 +613,7 @@ impl Checker<'_> {
                 span,
                 node,
                 value: expr,
+                bound: matches!(value, FieldValue::Bind(_)),
                 valid: None,
             });
         }
@@ -999,14 +1007,22 @@ impl Checker<'_> {
         let mut fields = Vec::new();
         for def in schema.fields.iter().filter(|f| is_implemented(f.since)) {
             if let Some(w) = written.iter().find(|w| w.def.name == def.name) {
+                let value = if w.bound {
+                    // A binding's value arrives at run time; keep a stand-in of the right type.
+                    self.default_of(def, &present, 0)
+                        .or_else(|| placeholder(def.ty))
+                } else {
+                    w.valid.clone().map(|v| self.normalize(v, 0))
+                };
                 fields.push(CheckedField {
                     name: def.name,
                     ty: def.ty,
-                    value: w.valid.clone().map(|v| self.normalize(v, 0)),
+                    value,
                     origin: FieldOrigin::Written {
                         span: w.span,
                         value: w.node,
                     },
+                    bound: w.bound,
                 });
             } else if let Some(value) = self.default_of(def, &present, 0) {
                 fields.push(CheckedField {
@@ -1014,6 +1030,7 @@ impl Checker<'_> {
                     ty: def.ty,
                     value: Some(value),
                     origin: FieldOrigin::Default,
+                    bound: false,
                 });
             }
         }

@@ -1317,6 +1317,8 @@ pub struct EmittedBehaviors {
     pub entity_fixed_update: Vec<Option<String>>,
     /// `(event, DOM code or none, owner index or -1 for the scene, function)`, in IR order.
     pub events: Vec<EmittedEvent>,
+    /// The function of each binding, by binding id: `(ctx) => value`.
+    pub bindings: Vec<String>,
 }
 
 /// One entry of the `events` table.
@@ -1415,6 +1417,35 @@ pub fn emit_behaviors(
                 });
             }
         }
+    }
+    for binding in &scene.bindings {
+        let name = format!("bd_{}", binding.id);
+        let mut lowering = FnLowering {
+            locals: &[],
+            owner: None,
+            release,
+            temps: 0,
+            span_id: &mut *span_id,
+            owned: BTreeSet::new(),
+        };
+        let value = lowering
+            .expr(&binding.expr)
+            .map_err(|e| format!("binding '{}': {e}", binding.symbol))?;
+        emitted.stmts.push(Stmt::Blank);
+        emitted.stmts.push(Stmt::Comment(format!(
+            "bind ({}): evaluated every frame in the order of the manifest",
+            binding.symbol
+        )));
+        emitted.stmts.push(Stmt::Function {
+            name: name.clone(),
+            params: vec!["ctx".to_owned()],
+            body: vec![Stmt::Return {
+                value: Some(value),
+                span: Some(binding.span),
+            }],
+            span: Some(binding.span),
+        });
+        emitted.bindings.push(name);
     }
     Ok(emitted)
 }

@@ -688,6 +688,77 @@ pub struct Scene {
     /// Lifecycle functions and event handlers: the scene's in declaration order,
     /// then each entity's in stable instance order.
     pub behaviors: Vec<Behavior>,
+    /// The `bind(..)` of the scene, by id (declaration order).
+    pub bindings: Vec<Binding>,
+}
+
+/// A `bind(expr)` (`spec/scenes.md` section 8.4).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Binding {
+    /// The index into the scene's `bindings` (declaration order).
+    pub id: u32,
+    /// `path::Scene.bind_<id>`.
+    pub symbol: Symbol,
+    pub target: BindingTarget,
+    /// What the expression reads, in source order.
+    pub deps: Vec<BindingDep>,
+    /// Its position in the phase 5 evaluation order.
+    pub order: u32,
+    /// The target's type.
+    #[serde(rename = "type")]
+    pub ty: String,
+    /// The bound expression; it has no locals.
+    pub expr: Expr,
+    /// The whole `bind(..)`.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// What a binding writes (`spec/runtime-abi.md` section 5.2).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum BindingTarget {
+    Transform {
+        entity: u32,
+        field: String,
+    },
+    Visible {
+        entity: u32,
+    },
+    /// A param of the material instance of an entity.
+    Param {
+        entity: u32,
+        name: String,
+    },
+    Camera {
+        field: String,
+    },
+}
+
+/// What a binding reads.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum BindingDep {
+    /// Scene state.
+    State {
+        name: String,
+    },
+    Frame {
+        name: String,
+    },
+    EntityField {
+        entity: u32,
+        field: String,
+    },
+    EntityState {
+        entity: u32,
+        name: String,
+    },
+    Param {
+        entity: u32,
+        name: String,
+    },
 }
 
 /// A `state` declaration with its initialiser (`spec/scenes.md` sections 2, 4.4 and 11).
@@ -774,6 +845,9 @@ pub struct Field {
 pub enum Source {
     /// A compile-time constant.
     Const(Value),
+    /// The value of binding `id` of the scene, evaluated at run time (`bind(..)`): the field or
+    /// param has no initial constant, the runtime evaluates every binding once after `init`.
+    Bound(u32),
 }
 
 impl Source {
@@ -782,6 +856,7 @@ impl Source {
     pub fn as_const(&self) -> Option<&Value> {
         match self {
             Source::Const(value) => Some(value),
+            Source::Bound(_) => None,
         }
     }
 }
@@ -959,6 +1034,8 @@ pub enum UpdateClass {
     /// Some lifecycle function or handler writes it: uploaded in the render
     /// phase of a frame in which it was written.
     Imperative,
+    /// A `bind(..)` supplies it: evaluated every frame, uploaded when the value changed.
+    Bound,
 }
 
 /// A constant value. Externally tagged by its type in JSON:

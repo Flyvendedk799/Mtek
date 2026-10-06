@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5004",
+    "file": "src/main.mtek",
+    "startByte": 246,
+    "endByte": 257,
+    "message": "`bind` cannot be used here: only the params of the `material` of an entity can be bound.",
+    "notes": [
+      "`bind(expr)` is the whole value of a bindable field of an entity or camera, or of a param in the `material` of an entity",
+      "help: write the expression without `bind`, or move it into a bindable field"
+    ]
+  }
+]

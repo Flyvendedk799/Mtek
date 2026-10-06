@@ -479,3 +479,45 @@ describe("transform writes from update reach the GPU object blocks (spec/scenes.
     app.dispose();
   });
 });
+
+describe("the compiler's bindings program, end to end (decision 0051)", () => {
+  async function mountBindings(): Promise<Mounted> {
+    const golden = await loadGoldenProgram("bindings");
+    const host = new FakeHost();
+    for (const [url, text] of golden.files) host.files.set(url, text);
+    const app = await mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), golden.program, {
+      test: { manualClock: true, renderTarget: TARGET },
+      seed: 1,
+    });
+    if (app.debug === undefined) throw new Error("no debug API");
+    return { host, app, debug: app.debug };
+  }
+
+  it("evaluates every binding once after init, before the first frame", async () => {
+    const { debug } = await mountBindings();
+    const [mover, still] = debug.scene().entities;
+    // frame.time is 0 at init: the mover starts at x = 0; the still entity has its bound y.
+    expect(mover?.position).toMatchObject({ x: 0, y: 0, z: 0 });
+    expect(still?.position).toMatchObject({ x: 0, y: 2, z: 0 });
+  });
+
+  it("re-evaluates every frame: the mover follows frame.time * speed", async () => {
+    const { debug } = await mountBindings();
+    debug.step(1, 0.05);
+    expect(debug.scene().entities[0]?.position).toMatchObject({ x: fr(fr(0.05) * 2) });
+    debug.step(1, 0.05);
+    expect(debug.scene().entities[0]?.position).toMatchObject({ x: fr(fr(0.1) * 2) });
+  });
+
+  it("bound values that did not change cause no uploads, while the moving one uploads each frame", async () => {
+    const { debug } = await mountBindings();
+    debug.step(2, 0.016);
+    const before = debug.counters()["uploads"] ?? Number.NaN;
+    debug.step(1, 0.016);
+    const moving = (debug.counters()["uploads"] ?? Number.NaN) - before;
+    // Exactly one object block (the mover) and the camera's frame block (it targets the mover).
+    expect(moving).toBe(2);
+    // Nothing the still entity's bindings write changed: its color param uploaded once, at init.
+    expect(debug.counters()["ownedParamBlocks"]).toBe(2);
+  });
+});

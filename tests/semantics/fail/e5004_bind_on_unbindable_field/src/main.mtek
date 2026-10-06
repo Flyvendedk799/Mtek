@@ -1,5 +1,4 @@
-// `mesh` is construction-only, not bindable: E5004 once `bind` is
-// implemented (M3-05); until then `bind` is gated.
+// `mesh` is construction-only, not bindable: `bind` is E5004 there.
 scene Demo {
     camera Main {}
     entity Cube {

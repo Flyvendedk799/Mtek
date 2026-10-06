@@ -1,7 +1,7 @@
 scene Demo {
     camera Main {}
     entity Cube {
-        position: bind(vec3(0.0, 1.0, 0.0));
+        position: bind(Cube.position + vec3(0.0, 1.0, 0.0));
         mesh: Box {};
     }
 }

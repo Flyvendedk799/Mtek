@@ -1,0 +1,8 @@
+// The expression of a binding has exactly the field's type.
+scene Demo {
+    camera Main {}
+    entity Cube {
+        position: bind(1.0);
+        mesh: Box {};
+    }
+}

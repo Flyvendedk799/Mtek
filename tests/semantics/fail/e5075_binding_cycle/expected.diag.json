@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E5075",
+    "file": "src/main.mtek",
+    "startByte": 165,
+    "endByte": 203,
+    "message": "The bindings of A.position, B.position depend on each other.",
+    "related": [
+      {
+        "message": "binds A.position, which reads B.position",
+        "file": "src/main.mtek",
+        "startByte": 165,
+        "endByte": 203
+      },
+      {
+        "message": "binds B.position, which reads A.position",
+        "file": "src/main.mtek",
+        "startByte": 266,
+        "endByte": 304
+      }
+    ],
+    "notes": [
+      "help: break the cycle: bind one of them to something else, or update it from `update`"
+    ]
+  }
+]

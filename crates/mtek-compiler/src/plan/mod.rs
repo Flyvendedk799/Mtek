@@ -33,6 +33,8 @@ pub enum ParamClass {
     Initial,
     /// Some lifecycle function or handler writes it.
     Imperative,
+    /// A `bind(..)` supplies it.
+    Bound,
 }
 
 impl ParamClass {
@@ -42,6 +44,7 @@ impl ParamClass {
         match self {
             ParamClass::Initial => "initial",
             ParamClass::Imperative => "imperative",
+            ParamClass::Bound => "bound",
         }
     }
 }
@@ -51,6 +54,7 @@ impl From<ir::UpdateClass> for ParamClass {
         match class {
             ir::UpdateClass::Initial => ParamClass::Initial,
             ir::UpdateClass::Imperative => ParamClass::Imperative,
+            ir::UpdateClass::Bound => ParamClass::Bound,
         }
     }
 }
@@ -61,9 +65,13 @@ pub struct PlannedParam {
     pub name: String,
     /// The Mtek type spelling (`color`).
     pub ty: String,
-    /// The constant initial value.
-    pub value: Value,
+    /// The constant initial value; `None` for a bound param, whose value the binding supplies.
+    pub value: Option<Value>,
     pub class: ParamClass,
+    /// The binding that supplies a bound param (its id in the scene's `bindings`).
+    pub binding: Option<u32>,
+    /// What the binding reads, as `mtek inspect --bindings` prints it (empty unless bound).
+    pub dependencies: Vec<String>,
     /// The material instance's span (decision 0028).
     pub span: Span,
 }
@@ -272,17 +280,29 @@ pub fn plan_scene(program: &Program, scene: &Scene) -> Result<ResourcePlan, Stri
                 let index = index_u32(instances.len())?;
                 let mut params = Vec::with_capacity(material.params.len());
                 for param in &material.params {
-                    let value = param.source.as_const().ok_or_else(|| {
-                        format!(
-                            "the parameter '{}' of the material instance of '{}' has no constant value",
-                            param.name, entity.symbol
-                        )
-                    })?;
+                    let (value, binding, dependencies) = match &param.source {
+                        ir::Source::Const(value) => (Some(value.clone()), None, Vec::new()),
+                        ir::Source::Bound(id) => {
+                            let bound = scene.bindings.iter().find(|b| b.id == *id).ok_or_else(|| {
+                                format!(
+                                    "the parameter '{}' of the material instance of '{}' names the missing binding {id}",
+                                    param.name, entity.symbol
+                                )
+                            })?;
+                            (
+                                None,
+                                Some(*id),
+                                bound.deps.iter().map(dependency_text).collect(),
+                            )
+                        }
+                    };
                     params.push(PlannedParam {
                         name: param.name.clone(),
                         ty: param.ty.clone(),
-                        value: value.clone(),
+                        value,
                         class: param.update.into(),
+                        binding,
+                        dependencies,
                         span: param.span,
                     });
                 }
@@ -307,6 +327,17 @@ pub fn plan_scene(program: &Program, scene: &Scene) -> Result<ResourcePlan, Stri
         entity_instances,
         materials,
     })
+}
+
+/// How `mtek inspect --bindings` names what a binding reads.
+fn dependency_text(dep: &ir::BindingDep) -> String {
+    match dep {
+        ir::BindingDep::State { name } => format!("state {name}"),
+        ir::BindingDep::Frame { name } => format!("frame.{name}"),
+        ir::BindingDep::EntityField { entity, field } => format!("entity#{entity}.{field}"),
+        ir::BindingDep::EntityState { entity, name } => format!("entity#{entity}.{name}"),
+        ir::BindingDep::Param { entity, name } => format!("entity#{entity}.material.{name}"),
+    }
 }
 
 fn index_u32(index: usize) -> Result<u32, String> {

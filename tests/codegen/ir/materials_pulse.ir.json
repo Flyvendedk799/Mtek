@@ -355,7 +355,8 @@
             }
           ],
           "state": [],
-          "behaviors": []
+          "behaviors": [],
+          "bindings": []
         }
       ]
     }

@@ -95,7 +95,11 @@ function functionOrNull(value: unknown): boolean {
  * The shape of the scene object beyond `init` (`spec/runtime-abi.md` section 3): lifecycle functions or
  * `null`, one slot per static entity, and an events table of well-formed handlers.
  */
-function sceneShapeProblem(scene: Readonly<Record<string, unknown>>, entityCount: number): { field: string; problem: string } | undefined {
+function sceneShapeProblem(
+  scene: Readonly<Record<string, unknown>>,
+  entityCount: number,
+  bindingCount: number,
+): { field: string; problem: string } | undefined {
   for (const name of ["update", "fixedUpdate"] as const) {
     if (!functionOrNull(own(scene, name))) return { field: name, problem: `has a \`${name}\` that is neither a function nor null` };
   }
@@ -104,6 +108,10 @@ function sceneShapeProblem(scene: Readonly<Record<string, unknown>>, entityCount
     if (!Array.isArray(list) || list.length !== entityCount || !list.every(functionOrNull)) {
       return { field: name, problem: `needs \`${name}\` to be an array of ${String(entityCount)} functions or nulls (one per static entity)` };
     }
+  }
+  const bindings = own(scene, "bindings");
+  if (!Array.isArray(bindings) || bindings.length !== bindingCount || !bindings.every((fn: unknown) => typeof fn === "function")) {
+    return { field: "bindings", problem: `needs 'bindings' to be an array of ${String(bindingCount)} functions (one per binding of the manifest)` };
   }
   const events = own(scene, "events");
   if (!isRecord(events)) return { field: "events", problem: "has no `events` table" };
@@ -142,7 +150,7 @@ export function checkProgram(program: ProgramModuleParts, manifest: MtekManifest
   if (!isRecord(candidate) || typeof own(candidate, "init") !== "function") {
     diagnostics.push(incompatible(`scenes.${entry}`, `the program module has no scene '${entry}' with an \`init\` function.`));
   } else {
-    const shape = sceneShapeProblem(candidate, manifest.scene.entities.length);
+    const shape = sceneShapeProblem(candidate, manifest.scene.entities.length, manifest.scene.bindings.length);
     if (shape === undefined) scene = candidate as unknown as MtekProgramScene;
     else diagnostics.push(incompatible(`scenes.${entry}.${shape.field}`, `the scene '${entry}' ${shape.problem}.`));
   }

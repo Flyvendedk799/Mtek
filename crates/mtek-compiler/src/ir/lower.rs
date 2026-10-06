@@ -17,16 +17,16 @@
 
 use super::lower_fn::SceneCtx;
 use super::model::{
-    Behavior, Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module,
-    Origin, Owner, Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, State,
-    StructFieldItem, StructItem, Symbol, UpdateClass, Value,
+    Behavior, Binding, Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc,
+    Module, Origin, Owner, Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source,
+    State, StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 
 use crate::layout::qualified_name;
 use crate::prelude::{MATERIALS_PATH, is_builtin_material};
 use crate::project::{ModuleId, Project};
-use crate::resolve::Resolution;
+use crate::resolve::{DefId, Resolution};
 use crate::source::{FileId, Span};
 use crate::syntax::ast::{self, ConstDecl, EntityMember, ItemKind, SceneMember};
 use crate::types::MaterialKey;
@@ -289,6 +289,9 @@ fn handler_ordinal(
     ordinal
 }
 
+/// The `state`, behaviours and bindings of a scene.
+type SceneBodies = (Vec<State>, Vec<Behavior>, Vec<Binding>);
+
 pub(super) struct Lowering<'a> {
     /// The normalised path of the module, the prefix of its symbols.
     pub(super) path: &'a str,
@@ -366,7 +369,13 @@ impl Lowering<'_> {
         let what = format!("scene '{}'", checked.name);
         known_fields(&what, &checked.fields, &SCENE_FIELDS)?;
         let fields = SceneFields {
-            clear_color: required(&what, &checked.fields, "clear_color", checked.span)?,
+            clear_color: required(
+                self.types,
+                &what,
+                &checked.fields,
+                "clear_color",
+                checked.span,
+            )?,
         };
         let mut constants = Vec::new();
         self.body_constants(&decl.members, &symbol, &mut constants)?;
@@ -378,7 +387,7 @@ impl Lowering<'_> {
         for entity in &checked.entities {
             self.entity(entity, &symbol, None, &mut entities)?;
         }
-        let (state, behaviors) = self.state_and_behaviors(decl, checked, &symbol)?;
+        let (state, behaviors, bindings) = self.state_and_behaviors(decl, checked, &symbol)?;
         self.mark_imperative(checked, &mut entities);
         Ok(Scene {
             name: checked.name.clone(),
@@ -390,6 +399,7 @@ impl Lowering<'_> {
             entities,
             state,
             behaviors,
+            bindings,
         })
     }
 
@@ -421,7 +431,7 @@ impl Lowering<'_> {
         decl: &ast::SceneDecl,
         checked: &CheckedScene,
         scene: &Symbol,
-    ) -> Result<(Vec<State>, Vec<Behavior>), Defect> {
+    ) -> Result<SceneBodies, Defect> {
         let mut ctx = SceneCtx::default();
         for (index, entity) in checked.entities_in_order().iter().enumerate() {
             if let Some(def) = entity.def {
@@ -466,7 +476,8 @@ impl Lowering<'_> {
                 )?;
             }
         }
-        Ok((state, behaviors))
+        let bindings = self.bindings(decl, checked, scene, &ctx)?;
+        Ok((state, behaviors, bindings))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -566,9 +577,9 @@ impl Lowering<'_> {
             symbol: scene.child(&object.name),
             span: object.span,
             active: object.active,
-            position: required(&what, fields, "position", object.span)?,
-            target: optional(&what, fields, "target", object.span)?,
-            rotation: required(&what, fields, "rotation", object.span)?,
+            position: required(self.types, &what, fields, "position", object.span)?,
+            target: optional(self.types, &what, fields, "target", object.span)?,
+            rotation: required(self.types, &what, fields, "rotation", object.span)?,
             projection: Projection { desc, origin, span },
         })
     }
@@ -600,7 +611,7 @@ impl Lowering<'_> {
         let material = match fields.iter().find(|f| f.name == "material") {
             Some(field) => {
                 let (value, origin, span) = parts(&what, field, checked.span)?;
-                Some(self.material_instance(&what, value, origin, span)?)
+                Some(self.material_instance(&what, value, origin, span, checked.def)?)
             }
             None => None,
         };
@@ -615,10 +626,10 @@ impl Lowering<'_> {
             symbol: symbol.clone(),
             parent,
             span: checked.span,
-            position: required(&what, fields, "position", checked.span)?,
-            rotation: required(&what, fields, "rotation", checked.span)?,
-            scale: required(&what, fields, "scale", checked.span)?,
-            visible: required(&what, fields, "visible", checked.span)?,
+            position: required(self.types, &what, fields, "position", checked.span)?,
+            rotation: required(self.types, &what, fields, "rotation", checked.span)?,
+            scale: required(self.types, &what, fields, "scale", checked.span)?,
+            visible: required(self.types, &what, fields, "visible", checked.span)?,
             mesh,
             material,
         });
@@ -672,22 +683,45 @@ fn parts<'f>(
     })
 }
 
-fn lower_field(what: &str, field: &CheckedField, owner: Span) -> Result<Field, Defect> {
+fn lower_field(
+    types: &crate::types::Typeck,
+    what: &str,
+    field: &CheckedField,
+    owner: Span,
+) -> Result<Field, Defect> {
     let (value, origin, span) = parts(what, field, owner)?;
+    let source = match (field.bound, field.origin) {
+        (true, crate::types::FieldOrigin::Written { value: node, .. }) => Source::Bound(
+            types
+                .binding_of(node)
+                .map(|binding| binding.id)
+                .ok_or_else(|| {
+                    format!("the bound field '{}' of {what} has no binding", field.name)
+                })?,
+        ),
+        _ => Source::Const(value.into()),
+    };
     Ok(Field {
-        source: Source::Const(value.into()),
+        source,
         origin,
         span,
     })
 }
 
 /// A field every checked body of its kind has (written or defaulted).
-fn required(what: &str, fields: &[CheckedField], name: &str, owner: Span) -> Result<Field, Defect> {
-    lower_field(what, find(what, fields, name)?, owner)
+fn required(
+    types: &crate::types::Typeck,
+    what: &str,
+    fields: &[CheckedField],
+    name: &str,
+    owner: Span,
+) -> Result<Field, Defect> {
+    lower_field(types, what, find(what, fields, name)?, owner)
 }
 
 /// A field without a default: present only when written.
 fn optional(
+    types: &crate::types::Typeck,
     what: &str,
     fields: &[CheckedField],
     name: &str,
@@ -696,7 +730,7 @@ fn optional(
     fields
         .iter()
         .find(|f| f.name == name)
-        .map(|field| lower_field(what, field, owner))
+        .map(|field| lower_field(types, what, field, owner))
         .transpose()
 }
 
@@ -811,12 +845,13 @@ impl Lowering<'_> {
         value: &ConstValue,
         origin: Origin,
         span: Span,
+        entity: Option<DefId>,
     ) -> Result<MaterialInstanceDesc, Defect> {
         let ConstValue::Material {
             material, params, ..
         } = value
         else {
-            return self.builtin_material_instance(what, value, origin, span);
+            return self.builtin_material_instance(what, value, origin, span, entity);
         };
         let summary = self
             .materials
@@ -836,13 +871,7 @@ impl Lowering<'_> {
                     summary.symbol, declared.name
                 ));
             }
-            out.push(Param {
-                name: name.clone(),
-                ty: declared.ty.clone(),
-                source: Source::Const(Value::from(value)),
-                update: UpdateClass::Initial,
-                span,
-            });
+            out.push(self.param(name, &declared.ty, value, span, entity));
         }
         Ok(MaterialInstanceDesc {
             material: summary.symbol.clone(),
@@ -850,6 +879,38 @@ impl Lowering<'_> {
             origin,
             span,
         })
+    }
+
+    /// One param of the instance owned by `entity`: its constant, or the binding that writes it.
+    fn param(
+        &self,
+        name: &str,
+        ty: &str,
+        value: &ConstValue,
+        span: Span,
+        entity: Option<DefId>,
+    ) -> Param {
+        let binding = entity.and_then(|entity| {
+            self.types.bindings().iter().find(|b| {
+                matches!(&b.target, crate::types::BindTarget::MaterialParam { entity: e, param } if *e == entity && param == name)
+            })
+        });
+        match binding {
+            Some(binding) => Param {
+                name: name.to_owned(),
+                ty: ty.to_owned(),
+                source: Source::Bound(binding.id),
+                update: UpdateClass::Bound,
+                span,
+            },
+            None => Param {
+                name: name.to_owned(),
+                ty: ty.to_owned(),
+                source: Source::Const(Value::from(value)),
+                update: UpdateClass::Initial,
+                span,
+            },
+        }
     }
 
     /// A completed descriptor of a built-in material: the material's symbol
@@ -863,6 +924,7 @@ impl Lowering<'_> {
         value: &ConstValue,
         origin: Origin,
         span: Span,
+        entity: Option<DefId>,
     ) -> Result<MaterialInstanceDesc, Defect> {
         let (name, fields) = descriptor(what, value)?;
         if !is_builtin_material(name) {
@@ -893,13 +955,7 @@ impl Lowering<'_> {
                     declared.name
                 ));
             }
-            params.push(Param {
-                name: param.clone(),
-                ty: declared.ty.clone(),
-                source: Source::Const(Value::from(value)),
-                update: UpdateClass::Initial,
-                span,
-            });
+            params.push(self.param(param, &declared.ty, value, span, entity));
         }
         Ok(MaterialInstanceDesc {
             material: symbol,

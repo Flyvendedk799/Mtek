@@ -271,7 +271,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
 
   private createPhases(): FramePhases {
     const now = (): number => this.deps.environment.now();
-    const { world, renderer } = this.deps.scene;
+    const { world, renderer, bindings } = this.deps.scene;
     return {
       phase1_input: () => {
         this.frameStartMs = now();
@@ -285,9 +285,11 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       phase3_update: (delta) => {
         this.behaviors.update(delta);
       },
-      // The lifecycle queue (M5) and bindings (M3-05) run generated code from here on.
+      // The lifecycle queue (spawn and destroy) is M5.
       phase4_flush: () => undefined,
-      phase5_bindings: () => undefined,
+      phase5_bindings: () => {
+        bindings.evaluate();
+      },
       phase6_transforms: () => {
         world.propagate();
       },

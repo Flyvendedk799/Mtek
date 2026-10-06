@@ -3,10 +3,10 @@
 //! deterministic: they depend only on the program and the source text.
 
 use super::model::{
-    Behavior, BehaviorKind, Block, Camera, Const, Entity, Expr, ExprKind, Field, Function, Item,
-    LocalItem, LocalKind, MaterialInstanceDesc, MaterialItem, Mesh, MeshDesc, NamedExpr, Origin,
-    Owner, Place, PlaceRoot, PlaceStep, Program, Projection, ProjectionDesc, Scene, Source, State,
-    Stmt, StructItem,
+    Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Camera, Const, Entity, Expr,
+    ExprKind, Field, Function, Item, LocalItem, LocalKind, MaterialInstanceDesc, MaterialItem,
+    Mesh, MeshDesc, NamedExpr, Origin, Owner, Place, PlaceRoot, PlaceStep, Program, Projection,
+    ProjectionDesc, Scene, Source, State, Stmt, StructItem,
 };
 use crate::source::{SourceMap, Span};
 
@@ -446,6 +446,44 @@ impl Tree<'_> {
         for behavior in &scene.behaviors {
             self.behavior(depth + 1, behavior);
         }
+        for binding in &scene.bindings {
+            self.binding(depth + 1, binding);
+        }
+    }
+
+    fn binding(&mut self, depth: usize, binding: &Binding) {
+        let location = self.location(binding.span);
+        let target = match &binding.target {
+            BindingTarget::Transform { entity, field } => format!("entity#{entity}.{field}"),
+            BindingTarget::Visible { entity } => format!("entity#{entity}.visible"),
+            BindingTarget::Param { entity, name } => format!("entity#{entity}.material.{name}"),
+            BindingTarget::Camera { field } => format!("camera.{field}"),
+        };
+        let deps: Vec<String> = binding
+            .deps
+            .iter()
+            .map(|dep| match dep {
+                BindingDep::State { name } => format!("state {name}"),
+                BindingDep::Frame { name } => format!("frame.{name}"),
+                BindingDep::EntityField { entity, field } => format!("entity#{entity}.{field}"),
+                BindingDep::EntityState { entity, name } => format!("entity#{entity}.state {name}"),
+                BindingDep::Param { entity, name } => format!("entity#{entity}.material.{name}"),
+            })
+            .collect();
+        self.line(
+            depth,
+            format!(
+                "bind#{} {target} = {} [order {}; reads {}] {location}",
+                binding.id,
+                expr_text(&binding.expr),
+                binding.order,
+                if deps.is_empty() {
+                    "nothing".to_owned()
+                } else {
+                    deps.join(", ")
+                }
+            ),
+        );
     }
 
     fn state(&mut self, depth: usize, state: &State) {
@@ -486,7 +524,7 @@ impl Tree<'_> {
 
     fn field(&mut self, depth: usize, name: &str, field: &Field) {
         let location = self.location(field.span);
-        let Source::Const(value) = &field.source;
+        let value = source_text(&field.source);
         self.line(
             depth,
             format!("{name} = {value} ({} {location})", origin(field.origin)),
@@ -585,9 +623,17 @@ impl Tree<'_> {
             ),
         );
         for param in &material.params {
-            let Source::Const(value) = &param.source;
+            let value = source_text(&param.source);
             self.line(depth + 1, format!("{}: {} = {value}", param.name, param.ty));
         }
+    }
+}
+
+/// A field or param's source: its constant, or the binding that supplies it.
+fn source_text(source: &Source) -> String {
+    match source {
+        Source::Const(value) => value.to_string(),
+        Source::Bound(id) => format!("bind#{id}"),
     }
 }
 
