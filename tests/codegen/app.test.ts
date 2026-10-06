@@ -23,7 +23,8 @@ import { type BuiltProgram, codegenFixtures, loadProgram, record } from "./suppo
 type IrValue = Readonly<Record<string, unknown>>;
 
 interface IrField {
-  readonly source: { readonly const: IrValue };
+  /** A constant, or `{ bound: id }` for a field a `bind` supplies after init. */
+  readonly source: { readonly const?: IrValue; readonly bound?: number };
 }
 
 interface IrSpan {
@@ -47,7 +48,7 @@ interface IrEntity {
   readonly scale: IrField;
   readonly visible: IrField;
   readonly material: {
-    readonly params: readonly { readonly name: string; readonly source: { readonly const: IrValue } }[];
+    readonly params: readonly { readonly name: string; readonly source: { readonly const?: IrValue; readonly bound?: number } }[];
   } | null;
 }
 
@@ -121,9 +122,11 @@ function expectedCalls(ir: IrProgram): SetterCall[] {
       const set = (field: string, value: unknown): void => {
         calls.push({ method: "setCamera", entity: -1, field, value });
       };
-      set("position", cpuValue(camera.position.source.const));
-      if (camera.target === null) set("rotation", cpuValue(camera.rotation.source.const));
-      else set("target", cpuValue(camera.target.source.const));
+      // A bound field is set by the runtime after init, not by `init`.
+      if (camera.position.source.const !== undefined) set("position", cpuValue(camera.position.source.const));
+      if (camera.target === null) {
+        if (camera.rotation.source.const !== undefined) set("rotation", cpuValue(camera.rotation.source.const));
+      } else if (camera.target.source.const !== undefined) set("target", cpuValue(camera.target.source.const));
       const desc = camera.projection.desc;
       const fields =
         desc["kind"] === "perspective"
@@ -136,6 +139,7 @@ function expectedCalls(ir: IrProgram): SetterCall[] {
     }
     const entity = declaration.entity;
     for (const field of ["position", "rotation", "scale"] as const) {
+      if (entity[field].source.const === undefined) continue;
       calls.push({
         method: "setTransform",
         entity: entity.index,
@@ -143,13 +147,16 @@ function expectedCalls(ir: IrProgram): SetterCall[] {
         value: cpuValue(entity[field].source.const),
       });
     }
-    calls.push({
-      method: "setVisible",
-      entity: entity.index,
-      field: "visible",
-      value: cpuValue(entity.visible.source.const),
-    });
+    if (entity.visible.source.const !== undefined) {
+      calls.push({
+        method: "setVisible",
+        entity: entity.index,
+        field: "visible",
+        value: cpuValue(entity.visible.source.const),
+      });
+    }
     for (const param of entity.material?.params ?? []) {
+      if (param.source.const === undefined) continue;
       calls.push({
         method: "setParam",
         entity: entity.index,
@@ -165,6 +172,7 @@ describe("the generated program module", () => {
   it("covers the M1 scene fixtures and the function fixtures", () => {
     expect(fixtures).toEqual([
       "assignable_places",
+      "bindings",
       "cpu_functions",
       "numeric_cpu_table",
       "scene_a_target_camera_box",
@@ -252,7 +260,7 @@ describe("the generated program module", () => {
         expect(Object.keys(record(scene["events"], "events"))).toEqual(
           [...new Set(behaviors.filter((b) => b.kind.kind === "event").map((b) => b.kind.event))],
         );
-        expect(scene["bindings"]).toEqual([]);
+        expect((scene["bindings"] as unknown[]).length).toBe(manifest.scene.bindings.length);
       });
 
       it("registers every CPU-reachable function by symbol and as a manifest symbol", async () => {
@@ -297,6 +305,8 @@ describe("the generated program module", () => {
         const calls = expectedCalls(irOf(program));
         for (const entity of manifest.scene.entities) {
           if (entity.material === null) continue;
+          // A fully bound instance is written by the runtime after init, not by `init`.
+          if (!calls.some((c) => c.method === "setParam" && c.entity === entity.index)) continue;
           const materialId = entity.material.id;
           const layoutId = manifest.materials.find((m) => m.id === materialId)?.layout;
           const layout = manifest.layouts.find((l) => l.id === layoutId);

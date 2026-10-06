@@ -17,9 +17,9 @@
 
 use super::lower_fn::SceneCtx;
 use super::model::{
-    Behavior, Binding, Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module,
-    Origin, Owner, Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, State,
-    StructFieldItem, StructItem, Symbol, UpdateClass, Value,
+    Behavior, Binding, Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc,
+    Module, Origin, Owner, Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source,
+    State, StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 
@@ -289,6 +289,9 @@ fn handler_ordinal(
     ordinal
 }
 
+/// The `state`, behaviours and bindings of a scene.
+type SceneBodies = (Vec<State>, Vec<Behavior>, Vec<Binding>);
+
 pub(super) struct Lowering<'a> {
     /// The normalised path of the module, the prefix of its symbols.
     pub(super) path: &'a str,
@@ -366,7 +369,13 @@ impl Lowering<'_> {
         let what = format!("scene '{}'", checked.name);
         known_fields(&what, &checked.fields, &SCENE_FIELDS)?;
         let fields = SceneFields {
-            clear_color: required(self.types, &what, &checked.fields, "clear_color", checked.span)?,
+            clear_color: required(
+                self.types,
+                &what,
+                &checked.fields,
+                "clear_color",
+                checked.span,
+            )?,
         };
         let mut constants = Vec::new();
         self.body_constants(&decl.members, &symbol, &mut constants)?;
@@ -422,7 +431,7 @@ impl Lowering<'_> {
         decl: &ast::SceneDecl,
         checked: &CheckedScene,
         scene: &Symbol,
-    ) -> Result<(Vec<State>, Vec<Behavior>, Vec<Binding>), Defect> {
+    ) -> Result<SceneBodies, Defect> {
         let mut ctx = SceneCtx::default();
         for (index, entity) in checked.entities_in_order().iter().enumerate() {
             if let Some(def) = entity.def {
@@ -686,7 +695,9 @@ fn lower_field(
             types
                 .binding_of(node)
                 .map(|binding| binding.id)
-                .ok_or_else(|| format!("the bound field '{}' of {what} has no binding", field.name))?,
+                .ok_or_else(|| {
+                    format!("the bound field '{}' of {what} has no binding", field.name)
+                })?,
         ),
         _ => Source::Const(value.into()),
     };

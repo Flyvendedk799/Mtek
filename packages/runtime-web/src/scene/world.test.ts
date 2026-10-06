@@ -375,12 +375,14 @@ describe("the golden programs' init against the real world", () => {
     world.initialise(checked.program.scene.init);
     expect(reported).toEqual([]);
     // Every material param of every instance is written exactly once, opaque.
-    const expected = golden.manifest.scene.materialInstances.flatMap((instance) => instance.params.map((p) => `${String(instance.index)}:${p.name}`));
+    const expected = golden.manifest.scene.materialInstances.flatMap((instance) => instance.params.filter((p) => p.class !== "bound").map((p) => `${String(instance.index)}:${p.name}`));
     expect(writes.map((w) => `${String(w.instance)}:${w.name}`)).toEqual(expected);
     for (const record of world.entities) {
       expect(record.scale.x * record.scale.y * record.scale.z).toBeGreaterThan(0);
       const color = record.mat?.p["color"];
-      if (color !== undefined) expect(color).toMatchObject({ a: 1 });
+      // A bound param is written by the runtime's first binding evaluation, not by init.
+      const bound = golden.manifest.scene.materialInstances.some((i) => i.entity === record.ref.slot && i.params.some((p) => p.class === "bound"));
+      if (color !== undefined && !bound) expect(color).toMatchObject({ a: 1 });
     }
     expect(world.takeWorldChanges()).toEqual(world.entities.map((_, i) => i));
   });

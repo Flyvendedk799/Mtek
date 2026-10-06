@@ -84,6 +84,7 @@ describe("compiled manifests (tests/codegen/*/expected)", () => {
   it("exist for the two M1 scene fixtures and the three function fixtures", () => {
     expect(paths.map((path) => path.split("/").at(-3))).toEqual([
       "assignable_places",
+      "bindings",
       "cpu_functions",
       "numeric_cpu_table",
       "scene_a_target_camera_box",

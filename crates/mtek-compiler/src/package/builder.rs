@@ -41,10 +41,10 @@ use crate::{BuildMode, COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI, TargetPr
 use super::html::index_html;
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
-    Binding, BindingDep, BindingTarget, Camera, Entity, EntityMaterial, InstanceParam, Layout, MANIFEST_SCHEMA, Manifest, Material,
-    MaterialInstance, MaterialParam, Mesh, MeshShape, Num, ParamClass as ManifestClass,
-    RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, StateEntry,
-    Subsystems, SymbolEntry, SymbolKind,
+    Binding, BindingDep, BindingTarget, Camera, Entity, EntityMaterial, InstanceParam, Layout,
+    MANIFEST_SCHEMA, Manifest, Material, MaterialInstance, MaterialParam, Mesh, MeshShape, Num,
+    ParamClass as ManifestClass, RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader,
+    SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -527,30 +527,32 @@ fn manifest_scene(
         .iter()
         .map(|instance| {
             Ok(MaterialInstance {
-            index: instance.index,
-            material: instance.material.to_string(),
-            entity: instance.entity,
-            params: instance
-                .params
-                .iter()
-                .map(|param| {
-                    Ok(InstanceParam {
-                        name: param.name.clone(),
-                        class: match (param.class, param.binding) {
-                            (ParamClass::Initial, _) => ManifestClass::Initial,
-                            (ParamClass::Imperative, _) => ManifestClass::Imperative,
-                            (ParamClass::Bound, Some(binding)) => ManifestClass::Bound { binding },
-                            (ParamClass::Bound, None) => {
-                                return Err(format!(
-                                    "the bound parameter '{}' has no binding",
-                                    param.name
-                                ));
-                            }
-                        },
+                index: instance.index,
+                material: instance.material.to_string(),
+                entity: instance.entity,
+                params: instance
+                    .params
+                    .iter()
+                    .map(|param| {
+                        Ok(InstanceParam {
+                            name: param.name.clone(),
+                            class: match (param.class, param.binding) {
+                                (ParamClass::Initial, _) => ManifestClass::Initial,
+                                (ParamClass::Imperative, _) => ManifestClass::Imperative,
+                                (ParamClass::Bound, Some(binding)) => {
+                                    ManifestClass::Bound { binding }
+                                }
+                                (ParamClass::Bound, None) => {
+                                    return Err(format!(
+                                        "the bound parameter '{}' has no binding",
+                                        param.name
+                                    ));
+                                }
+                            },
+                        })
                     })
-                })
-                .collect::<Result<Vec<_>, String>>()?,
-            shareable: instance.shareable(),
+                    .collect::<Result<Vec<_>, String>>()?,
+                shareable: instance.shareable(),
             })
         })
         .collect::<Result<Vec<_>, String>>()?;

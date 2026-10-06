@@ -969,10 +969,9 @@ impl<'a> Checker<'a> {
                 Some((_, Folded::Value(value))) => Some(value.clone()),
                 Some(_) => None,
                 // A bound param's value is the binding's: the default (or zero) only stands in for it.
-                None if bound.contains(&param.name.as_str()) => param
-                    .default
-                    .clone()
-                    .or_else(|| self.zero_const(param.ty)),
+                None if bound.contains(&param.name.as_str()) => {
+                    param.default.clone().or_else(|| self.zero_const(param.ty))
+                }
                 None => param.default.clone(),
             };
             match value {

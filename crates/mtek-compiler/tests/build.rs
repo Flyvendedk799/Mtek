@@ -191,6 +191,7 @@ fn the_two_m1_scenes_are_codegen_fixtures_with_the_semantic_sources() {
         fixtures,
         [
             "assignable_places",
+            "bindings",
             "cpu_functions",
             "numeric_cpu_table",
             "scene_a_target_camera_box",

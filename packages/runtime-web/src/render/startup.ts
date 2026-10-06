@@ -56,7 +56,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   const plan = new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
   const materials = new MaterialStore(device, registry, plan, structure, program.writers);
   const world = new World({ manifest, structure, params: materials, report, ...(services === undefined ? {} : { services }) });
-  const bindings = new Bindings(manifest, program.scene.bindings as readonly ((ctx: object) => unknown)[], world);
+  const bindings = new Bindings(manifest, program.scene.bindings, world);
   world.initialise(program.scene.init, () => {
     bindings.evaluate();
   });

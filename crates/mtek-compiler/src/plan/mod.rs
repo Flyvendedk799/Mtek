@@ -289,7 +289,11 @@ pub fn plan_scene(program: &Program, scene: &Scene) -> Result<ResourcePlan, Stri
                                     param.name, entity.symbol
                                 )
                             })?;
-                            (None, Some(*id), bound.deps.iter().map(dependency_text).collect())
+                            (
+                                None,
+                                Some(*id),
+                                bound.deps.iter().map(dependency_text).collect(),
+                            )
                         }
                     };
                     params.push(PlannedParam {

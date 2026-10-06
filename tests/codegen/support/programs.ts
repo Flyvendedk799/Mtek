@@ -29,6 +29,7 @@ export interface Manifest {
   }[];
   readonly materials: readonly { readonly id: string; readonly layout: string | null }[];
   readonly scene: {
+    readonly bindings: readonly unknown[];
     readonly entities: readonly {
       readonly index: number;
       readonly material: { readonly id: string; readonly instance: number } | null;

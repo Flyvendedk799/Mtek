@@ -8,9 +8,9 @@ use std::collections::BTreeMap;
 
 use super::lower::{Defect, Lowering};
 use super::model::{
-    Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Branch, Expr, ExprKind, Function, LocalItem, LocalKind,
-    MaterialItem, MaterialParamItem, NamedExpr, Owner, Place, PlaceRoot, PlaceStep, StageItem,
-    State, Stmt, Symbol, Value,
+    Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Branch, Expr, ExprKind,
+    Function, LocalItem, LocalKind, MaterialItem, MaterialParamItem, NamedExpr, Owner, Place,
+    PlaceRoot, PlaceStep, StageItem, State, Stmt, Symbol, Value,
 };
 use crate::layout::{
     LayoutType, compute, material_layout_id, material_params_struct, qualified_name,
@@ -1151,10 +1151,7 @@ impl Lowering<'_> {
 /// Every `bind(..)` of the scene's fields, cameras and entities (and their `material` params).
 fn collect_binds<'a>(decl: &'a ast::SceneDecl, out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>) {
     use ast::{EntityMember, SceneMember};
-    fn field_binds<'a>(
-        field: &'a ast::FieldInit,
-        out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>,
-    ) {
+    fn field_binds<'a>(field: &'a ast::FieldInit, out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>) {
         match &field.value {
             FieldValue::Bind(bind) => {
                 out.insert(bind.id, bind);
@@ -1170,10 +1167,7 @@ fn collect_binds<'a>(decl: &'a ast::SceneDecl, out: &mut BTreeMap<ast::NodeId, &
             }
         }
     }
-    fn entity_binds<'a>(
-        decl: &'a ast::EntityDecl,
-        out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>,
-    ) {
+    fn entity_binds<'a>(decl: &'a ast::EntityDecl, out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>) {
         for member in &decl.members {
             match member {
                 EntityMember::Field(f) => field_binds(f, out),

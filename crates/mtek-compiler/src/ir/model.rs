@@ -719,11 +719,21 @@ pub struct Binding {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum BindingTarget {
-    Transform { entity: u32, field: String },
-    Visible { entity: u32 },
+    Transform {
+        entity: u32,
+        field: String,
+    },
+    Visible {
+        entity: u32,
+    },
     /// A param of the material instance of an entity.
-    Param { entity: u32, name: String },
-    Camera { field: String },
+    Param {
+        entity: u32,
+        name: String,
+    },
+    Camera {
+        field: String,
+    },
 }
 
 /// What a binding reads.
@@ -731,11 +741,24 @@ pub enum BindingTarget {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum BindingDep {
     /// Scene state.
-    State { name: String },
-    Frame { name: String },
-    EntityField { entity: u32, field: String },
-    EntityState { entity: u32, name: String },
-    Param { entity: u32, name: String },
+    State {
+        name: String,
+    },
+    Frame {
+        name: String,
+    },
+    EntityField {
+        entity: u32,
+        field: String,
+    },
+    EntityState {
+        entity: u32,
+        name: String,
+    },
+    Param {
+        entity: u32,
+        name: String,
+    },
 }
 
 /// A `state` declaration with its initialiser (`spec/scenes.md` sections 2, 4.4 and 11).

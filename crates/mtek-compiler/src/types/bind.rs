@@ -19,7 +19,7 @@
 use std::collections::BTreeSet;
 
 use super::check::{Checker, FieldKind};
-use super::facts::{Callee, CallFact};
+use super::facts::{CallFact, Callee};
 use super::scene_body::ScopeCtx;
 use super::ty::TyId;
 use super::{BindDep, BindInfo, BindTarget, CpuBody, CpuBodyKind, WriteTarget};
@@ -44,7 +44,14 @@ impl Checker<'_> {
         for member in &decl.members {
             match member {
                 SceneMember::Field(field) => {
-                    self.field_bind(scene_schema, None, "scene", &decl.name.name, field, &mut found);
+                    self.field_bind(
+                        scene_schema,
+                        None,
+                        "scene",
+                        &decl.name.name,
+                        field,
+                        &mut found,
+                    );
                 }
                 SceneMember::Object(object) => self.object_binds(object, &mut found),
                 SceneMember::Entity(entity) => self.entity_binds(entity, &mut found),
@@ -63,7 +70,14 @@ impl Checker<'_> {
         }
         let owner = self.res.def_of(object.id);
         for field in &object.fields {
-            self.field_bind(kind.schema, owner, kind.keyword, &object.name.name, field, found);
+            self.field_bind(
+                kind.schema,
+                owner,
+                kind.keyword,
+                &object.name.name,
+                field,
+                found,
+            );
         }
     }
 
@@ -316,7 +330,11 @@ impl Checker<'_> {
                     Some(DefKind::Fn) => self.out.functions.get(def).is_some_and(|i| i.sig.cpu),
                     _ => self.imported_fns.get(def).is_some_and(|sig| sig.cpu),
                 };
-                let name = self.res.def(*def).map(|d| d.name.clone()).unwrap_or_default();
+                let name = self
+                    .res
+                    .def(*def)
+                    .map(|d| d.name.clone())
+                    .unwrap_or_default();
                 cpu.then(|| format!("the `cpu fn` '{name}'"))
             }
             Callee::Builtin(builtin) => (builtin.domain == Domain::Cpu || builtin.handlers_only)
@@ -479,7 +497,9 @@ impl Checker<'_> {
                     format!("binds {}, which reads {next}", names[position]),
                 );
             }
-            self.report(diagnostic.help("break the cycle: bind one of them to something else, or update it from `update`"));
+            self.report(diagnostic.help(
+                "break the cycle: bind one of them to something else, or update it from `update`",
+            ));
         }
     }
 

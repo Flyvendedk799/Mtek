@@ -52,6 +52,7 @@
 //!   calls and declares; [`effects`]: the program-wide pass;
 //! - [`scene`]: the scene and schema checks and their result.
 
+mod bind;
 mod body;
 mod check;
 mod consteval;
@@ -63,7 +64,6 @@ mod intrinsics;
 mod material;
 mod ops;
 pub mod scene;
-mod bind;
 mod scene_body;
 #[cfg(test)]
 mod scene_tests;

@@ -4,10 +4,9 @@
 
 use super::model::{
     Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Camera, Const, Entity, Expr,
-    ExprKind, Field, Function, Item,
-    LocalItem, LocalKind, MaterialInstanceDesc, MaterialItem, Mesh, MeshDesc, NamedExpr, Origin,
-    Owner, Place, PlaceRoot, PlaceStep, Program, Projection, ProjectionDesc, Scene, Source, State,
-    Stmt, StructItem,
+    ExprKind, Field, Function, Item, LocalItem, LocalKind, MaterialInstanceDesc, MaterialItem,
+    Mesh, MeshDesc, NamedExpr, Origin, Owner, Place, PlaceRoot, PlaceStep, Program, Projection,
+    ProjectionDesc, Scene, Source, State, Stmt, StructItem,
 };
 use crate::source::{SourceMap, Span};
 
@@ -478,7 +477,11 @@ impl Tree<'_> {
                 binding.id,
                 expr_text(&binding.expr),
                 binding.order,
-                if deps.is_empty() { "nothing".to_owned() } else { deps.join(", ") }
+                if deps.is_empty() {
+                    "nothing".to_owned()
+                } else {
+                    deps.join(", ")
+                }
             ),
         );
     }
