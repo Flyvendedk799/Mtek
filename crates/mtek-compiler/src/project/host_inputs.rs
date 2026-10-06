@@ -6,9 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
 use crate::package::manifest::{HostInput, HostInputTarget};
-use crate::syntax::ast::{
-    EntityMember, ExprKind, FieldValue, Module, SceneDecl, SceneMember,
-};
+use crate::syntax::ast::{EntityMember, ExprKind, FieldValue, Module, SceneDecl, SceneMember};
 use crate::types::CheckedScene;
 
 /// One validated host input ready for the manifest and `app.d.ts`.
@@ -114,9 +112,7 @@ pub fn validate_host_inputs(
             sink.push(
                 Diagnostic::new(
                     Code::E9021,
-                    format!(
-                        "Unknown host input target '{target}': expected 'Scene.state_name'."
-                    ),
+                    format!("Unknown host input target '{target}': expected 'Scene.state_name'."),
                 )
                 .note(format!("host.inputs.{name}"))
                 .help("use the form SceneName.stateName, naming scene state of the entry scene"),

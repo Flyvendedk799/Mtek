@@ -189,15 +189,8 @@ describe("replaceProgram", () => {
     host.files.set(SHADER_URL, VALID_WGSL);
     host.files.set(SHADER_MAP_URL, spanMapJson());
 
-    const initWithSpeed = (ctx: object): void => {
-      minimalSceneInit(ctx);
-      (ctx as { /* world state is on the World, not ctx in M1 */ });
-    };
     // Mount with a program whose init also sets scene state through a side channel is hard in M1
-    // because ctx has no state setter yet. Write state after mount via the world exposed by debug...
-    // debug.scene().state is a copy. We'll set state through a custom path: after mount, mutate via
-    // replaceProgram migration from a world that had state written.
-    // Simpler: use HostInputs — add a host input targeting speed.
+    // because ctx has no state setter yet. Use HostInputs — add a host input targeting speed.
     const withInput = cloneManifest((m) => {
       const scene = m["scene"] as Record<string, unknown>;
       scene["state"] = [{ name: "speed", type: "f32", symbol: "src/main.mtek::Demo.speed" }];

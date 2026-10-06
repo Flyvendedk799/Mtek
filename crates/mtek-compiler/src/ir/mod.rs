@@ -30,8 +30,8 @@ pub use model::{
     Block, Branch, Camera, Const, Entity, Expr, ExprKind, Field, Function, Item, LocalItem,
     LocalKind, MaterialInstanceDesc, MaterialItem, MaterialParamItem, Mesh, MeshDesc, Module,
     NamedExpr, NamedValue, Origin, Param, Place, PlaceRoot, PlaceStep, Program, Projection,
-    ProjectionDesc, Scene, StateEntry, SceneFields, Source, StageItem, Stmt, StructFieldItem, StructItem,
-    Symbol, UpdateClass, Value,
+    ProjectionDesc, Scene, SceneFields, Source, StageItem, StateEntry, Stmt, StructFieldItem,
+    StructItem, Symbol, UpdateClass, Value,
 };
 pub use render::{to_human, to_json};
 

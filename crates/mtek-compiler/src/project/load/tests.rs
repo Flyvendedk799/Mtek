@@ -182,9 +182,11 @@ fn an_invalid_configuration_stops_loading_and_reports_every_problem() {
 #[test]
 fn host_inputs_are_kept_while_loading() {
     let fs = project_fs(
-        &format!("{MINIMAL}[host.inputs]
+        &format!(
+            "{MINIMAL}[host.inputs]
 tint = \"Demo.tint\"
-"),
+"
+        ),
         "scene Demo { }
 ",
     );

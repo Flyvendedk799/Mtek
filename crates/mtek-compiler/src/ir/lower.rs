@@ -17,8 +17,8 @@
 
 use super::model::{
     Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin,
-    Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StateEntry, StructFieldItem,
-    StructItem, Symbol, UpdateClass, Value,
+    Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StateEntry,
+    StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 

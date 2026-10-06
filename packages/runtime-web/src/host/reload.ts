@@ -212,5 +212,5 @@ export function restartDiagnostic(manifest: MtekManifest, change: StructuralChan
 /** Prefab names from a program module's `prefabs` table. */
 export function prefabNames(prefabs: unknown): ReadonlySet<string> {
   if (typeof prefabs !== "object" || prefabs === null || Array.isArray(prefabs)) return new Set();
-  return new Set(Object.keys(prefabs as Record<string, unknown>));
+  return new Set(Object.keys(prefabs));
 }

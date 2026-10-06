@@ -449,11 +449,12 @@ impl Checker<'_> {
         })
     }
 
-
     /// Record scene state already typed by the module walk (task M3-06).
     fn state_decl(&mut self, decl: &StateDecl) -> Option<CheckedState> {
         let def = self.res.def_of(decl.id);
-        let ty = def.and_then(|id| self.out.locals.get(&id).copied()).unwrap_or(TyId::ERROR);
+        let ty = def
+            .and_then(|id| self.out.locals.get(&id).copied())
+            .unwrap_or(TyId::ERROR);
         if self.out.interner.is_error(ty) {
             return None;
         }

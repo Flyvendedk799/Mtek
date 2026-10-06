@@ -19,8 +19,8 @@
 //! parser-independent rule it applies.
 
 mod config;
-mod host_inputs;
 mod graph;
+mod host_inputs;
 mod load;
 mod modules;
 mod parse;
@@ -28,7 +28,6 @@ mod root;
 mod scene;
 mod specifier;
 
-pub use host_inputs::{ResolvedHostInput, states_feeding_opaque_color, validate_host_inputs};
 pub use config::{
     AssetsSection, BuildSection, BuildTarget, DEFAULT_DEV_PORT, DEFAULT_ENTRY, DEFAULT_FIXED_STEP,
     DEFAULT_MAX_ASSET_FILE_BYTES, DEFAULT_MAX_CATCH_UP_STEPS, DEFAULT_MAX_ENTITIES,
@@ -38,6 +37,7 @@ pub use config::{
     SOURCE_EXTENSION,
 };
 pub use graph::{GraphError, Import, ImportCycle, MAX_MODULES, Module, ModuleGraph, ModuleId};
+pub use host_inputs::{ResolvedHostInput, states_feeding_opaque_color, validate_host_inputs};
 pub use load::Project;
 pub use modules::{ImportLink, LoadedModule, load_modules, report_cycles};
 pub(crate) use parse::edit_distance;

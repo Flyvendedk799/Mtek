@@ -225,7 +225,7 @@ test.describe("pulse-cube hot-reload exit criteria", () => {
     test.skip(!hasReplace, `${NOT_RUN_PREFIX} replaceProgram is only present in dev builds; pulse-cube is built in test mode`);
   });
 
-  test("failed shader edit keeps the last valid scene", async ({ page }) => {
+  test("failed shader edit keeps the last valid scene", ({ page }) => {
     // See hot-reload.spec.ts — requires a candidate with a broken shader URL.
     // Re-stated here so M3 gate docs list every exit criterion against pulse-cube.
     void page;
@@ -233,7 +233,7 @@ test.describe("pulse-cube hot-reload exit criteria", () => {
     test.skip(true, `${NOT_RUN_PREFIX} failed-shader keep-alive is covered by specs/m3/hot-reload.spec.ts (mount fixture); pulse-cube test-mode build has no SSE reload client`);
   });
 
-  test("compatible state survives reload; incompatible change restarts with W8070", async ({ page }) => {
+  test("compatible state survives reload; incompatible change restarts with W8070", ({ page }) => {
     void page;
     test.skip(true, `${NOT_RUN_PREFIX} state migration / W8070 covered by specs/m3/hot-reload.spec.ts; needs replaceProgram on a running Demo`);
   });

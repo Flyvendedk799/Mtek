@@ -579,7 +579,10 @@ fn manifest_scene(
             symbol: entry.symbol.to_string(),
         })
         .collect();
-    let host_inputs = host_inputs.iter().map(ResolvedHostInput::to_manifest).collect();
+    let host_inputs = host_inputs
+        .iter()
+        .map(ResolvedHostInput::to_manifest)
+        .collect();
     Ok(Scene {
         name: scene.name.clone(),
         symbol: scene.symbol.to_string(),
