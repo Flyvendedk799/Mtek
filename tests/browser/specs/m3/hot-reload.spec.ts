@@ -201,7 +201,23 @@ test.describe("hot reload (replaceProgram)", () => {
     const result = await page.evaluate(async () => {
       const w = window as unknown as MountWindow;
       const app = w.__app!;
-      const outcome = await app.replaceProgram!(w.__mtek.drawingProgram);
+      const base = w.__mtek.drawingProgram;
+      const entry = Object.keys(base.scenes)[0]!;
+      const scene = base.scenes[entry]!;
+      // Manifest now has two entities; checkProgram requires entityUpdate length to match.
+      const entitySlots = [null, null];
+      const candidate = {
+        ...base,
+        scenes: {
+          ...base.scenes,
+          [entry]: {
+            ...scene,
+            entityUpdate: entitySlots,
+            entityFixedUpdate: entitySlots,
+          },
+        },
+      };
+      const outcome = await app.replaceProgram!(candidate);
       app.debug.step(1, 0.016);
       return {
         outcome,
