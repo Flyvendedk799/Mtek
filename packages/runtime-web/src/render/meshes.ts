@@ -96,4 +96,16 @@ export class MeshStore {
     if (mesh === undefined) throw new Error(`internal error: mesh '${id}' was not uploaded`);
     return mesh;
   }
+
+  /** Releases every uploaded buffer (hot reload: discard a retired scene). */
+  dispose(): void {
+    for (const gpu of this.byKey.values()) {
+      this.registry.release(gpu.vertexBuffers.position);
+      this.registry.release(gpu.vertexBuffers.normal);
+      this.registry.release(gpu.vertexBuffers.uv);
+      this.registry.release(gpu.indexBuffer);
+    }
+    this.byKey.clear();
+    this.byId.clear();
+  }
 }

@@ -35,7 +35,7 @@ use std::collections::BTreeSet;
 
 use super::bind::placeholder;
 use super::check::Checker;
-use super::ty::Ty;
+use super::ty::{Ty, TyId};
 use super::value::{ConstValue, from_registry};
 use super::{NonConstant, NonConstantKind};
 use crate::diagnostics::{Code, Diagnostic};
@@ -50,7 +50,7 @@ use crate::stdlib::{
 };
 use crate::syntax::ast::{
     DescField, EntityDecl, EntityMember, Expr, ExprKind, FieldInit, FieldValue, Ident, ItemKind,
-    Module, NodeId, SceneDecl, SceneMember, SceneObject,
+    Module, NodeId, SceneDecl, SceneMember, SceneObject, StateDecl,
 };
 
 /// The most static entities one scene may declare, nested ones included
@@ -80,6 +80,8 @@ pub struct CheckedScene {
     pub span: Span,
     /// The scene fields (the registry's scene schema).
     pub fields: Vec<CheckedField>,
+    /// Scene state, in declaration order.
+    pub state: Vec<CheckedState>,
     /// The scene objects (cameras), in declaration order.
     pub objects: Vec<CheckedObject>,
     /// The root entities, in declaration order; nested entities are their
@@ -115,6 +117,18 @@ impl CheckedScene {
         }
         out
     }
+}
+
+/// Scene state after the scene checks (task M3-06).
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckedState {
+    pub def: Option<DefId>,
+    pub name: String,
+    pub name_span: Span,
+    /// The whole declaration, `state name: T = expr;`.
+    pub span: Span,
+    /// The Mtek spelling of the type (`f32`, `color`, …).
+    pub ty: String,
 }
 
 /// A scene object (a camera) after the scene checks.
@@ -377,6 +391,7 @@ impl Checker<'_> {
         let mut objects = Vec::new();
         let mut entities = Vec::new();
         let mut count = EntityCount::default();
+        let mut state = Vec::new();
         for member in &decl.members {
             match member {
                 SceneMember::Field(field) if construct_implemented(Construct::SceneField) => {
@@ -384,6 +399,11 @@ impl Checker<'_> {
                 }
                 SceneMember::Const(constant) if construct_implemented(Construct::BodyConst) => {
                     self.descriptors_in(&constant.value);
+                }
+                SceneMember::State(decl) if construct_implemented(Construct::State) => {
+                    if let Some(entry) = self.state_decl(decl) {
+                        state.push(entry);
+                    }
                 }
                 SceneMember::Object(object) if construct_implemented(Construct::SceneObject) => {
                     if let Some(object) = self.scene_object_decl(object) {
@@ -395,7 +415,7 @@ impl Checker<'_> {
                         entities.push(entity);
                     }
                 }
-                // `state`, lifecycle functions and handlers are gated.
+                // Lifecycle functions and handlers are still gated.
                 _ => {}
             }
         }
@@ -430,8 +450,30 @@ impl Checker<'_> {
             name_span: decl.name.span,
             span: decl.span,
             fields,
+            state,
             objects,
             entities,
+        })
+    }
+
+    /// Record scene state already typed by the module walk (task M3-06).
+    fn state_decl(&mut self, decl: &StateDecl) -> Option<CheckedState> {
+        let def = self.res.def_of(decl.id);
+        let ty = def
+            .and_then(|id| self.out.locals.get(&id).copied())
+            .unwrap_or(TyId::ERROR);
+        if self.out.interner.is_error(ty) {
+            return None;
+        }
+        if let Some(reason) = self.out.non_constant(decl.value.id).cloned() {
+            self.non_constant_initial(&format!("state '{}'", decl.name.name), &reason);
+        }
+        Some(CheckedState {
+            def,
+            name: decl.name.name.clone(),
+            name_span: decl.name.span,
+            span: decl.span,
+            ty: self.display(ty),
         })
     }
 

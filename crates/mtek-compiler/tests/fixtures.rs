@@ -1509,8 +1509,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E8080", "M6: preview builds"),
     ("E8090", "M3: run-time field writes"),
     ("E8100", "M3: run-time field writes and host inputs"),
-    ("E9020", "M3: host inputs (decision 0018)"),
-    ("E9021", "M3: host inputs (decision 0018)"),
 ];
 
 /// Codes this build implements that no program checked by this build can

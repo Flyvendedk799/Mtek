@@ -79,7 +79,9 @@ pub use check::{CallKind, FieldKind};
 pub use effects::{EffectLevel, FnEffect, FnRef, ProgramEffects, Roots};
 pub use facts::{BodyFacts, BuiltinCall, CallFact, Callee, CpuOnlySite};
 pub use material::MAX_MATERIAL_PARAMS;
-pub use scene::{CheckedEntity, CheckedField, CheckedObject, CheckedScene, FieldOrigin};
+pub use scene::{
+    CheckedEntity, CheckedField, CheckedObject, CheckedScene, CheckedState, FieldOrigin,
+};
 pub use ty::{MaterialKey, StructDef, StructKey, Ty, TyId, TyInterner};
 pub use value::{ArithOp, ConstValue, EvalError, EvalResult, Scalar};
 

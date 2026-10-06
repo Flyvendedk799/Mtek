@@ -72,3 +72,4 @@ recorded here before code depends on it (blueprint §15).
 | 0049 | `state`, lifecycle functions, handlers and writes: details the specification leaves open |
 | 0050 | Running generated code: input delivery, `random`, `print` and the scene object check: details the specification leaves open |
 | 0051 | `bind`: checks, dependency graph and per-frame evaluation: details the specification leaves open |
+| 0052 | Host inputs and scene state: codecs, queue-to-frame-boundary apply, and `app.d.ts` Inputs |

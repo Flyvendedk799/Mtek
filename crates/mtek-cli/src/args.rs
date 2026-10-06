@@ -1,8 +1,8 @@
 //! Command line arguments (`spec/tooling.md` section 1), parsed with `clap`.
 //!
 //! [`parse`] turns the arguments into a [`Request`] or a [`UsageError`] (exit code 2). Commands
-//! and options that the specification names but this build does not implement yet (`mtek new`,
-//! `--mode preview`, `mtek fmt`, …) are usage errors that say so, rather than clap's
+//! and options that the specification names but this build does not implement yet (`--mode preview`,
+//! `mtek fmt`, …) are usage errors that say so, rather than clap's
 //! generic "unrecognized subcommand".
 
 use std::ffi::OsString;
@@ -139,8 +139,11 @@ enum CliCommand {
         /// The project directory or a directory inside it [default: the current directory]
         path: Option<PathBuf>,
     },
-    #[command(hide = true)]
-    New(Unimplemented),
+    /// Scaffold a project from the built-in Demo template
+    New {
+        /// Project name (`[a-z0-9-]+`); also the directory created in the working directory
+        name: String,
+    },
     #[command(hide = true)]
     Fmt(Unimplemented),
     #[command(hide = true)]
@@ -184,13 +187,17 @@ pub enum Request {
         open: bool,
         path: Option<PathBuf>,
     },
+    /// `mtek new NAME`.
+    New { name: String },
 }
 
 impl Request {
     /// The `--format` of the request (human for `--version` and `--help`).
     pub fn format(&self) -> Format {
         match self {
-            Request::Version | Request::Help(_) | Request::Dev { .. } => Format::Human,
+            Request::Version | Request::Help(_) | Request::Dev { .. } | Request::New { .. } => {
+                Format::Human
+            }
             Request::Check { format, .. }
             | Request::Build { format, .. }
             | Request::Inspect { format, .. } => *format,
@@ -205,6 +212,7 @@ impl Request {
             Request::Build { .. } => "build",
             Request::Inspect { .. } => "inspect",
             Request::Dev { .. } => "dev",
+            Request::New { .. } => "new",
         }
     }
 }
@@ -288,7 +296,7 @@ where
             Ok(Request::Inspect { view, format, path })
         }
         CliCommand::Dev { port, open, path } => Ok(Request::Dev { port, open, path }),
-        CliCommand::New(_) => Err(not_yet("mtek new", "M3")),
+        CliCommand::New { name } => Ok(Request::New { name }),
         CliCommand::Fmt(_) => Err(not_yet("mtek fmt", "M6")),
         CliCommand::Test(_) => Err(not_yet("mtek test", "M6")),
         CliCommand::Context(_) => Err(not_yet("mtek context", "M6")),
@@ -437,9 +445,20 @@ mod tests {
     }
 
     #[test]
+    fn new_takes_a_name() {
+        assert_eq!(
+            parse_args(&["new", "pulse-cube"]),
+            Ok(Request::New {
+                name: "pulse-cube".into()
+            })
+        );
+        usage(&["new"]);
+        usage(&["new", "a", "b"]);
+    }
+
+    #[test]
     fn later_commands_are_named_in_the_error() {
         for (command, milestone) in [
-            ("new", "M3"),
             ("fmt", "M6"),
             ("test", "M6"),
             ("context", "M6"),
@@ -473,6 +492,7 @@ mod tests {
             Ok(Request::Help(text)) => {
                 assert!(text.contains("check") && text.contains("inspect"));
                 assert!(text.contains("dev"), "{text}");
+                assert!(text.contains("new"), "{text}");
                 assert!(!text.contains("lsp"), "unimplemented commands are hidden");
             }
             other => panic!("{other:?}"),

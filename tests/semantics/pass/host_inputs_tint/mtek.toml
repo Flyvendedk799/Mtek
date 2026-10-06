@@ -1,0 +1,9 @@
+[project]
+name = "host-tint"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Demo"
+
+[host.inputs]
+tint = "Demo.tint"
+speed = "Demo.speed"

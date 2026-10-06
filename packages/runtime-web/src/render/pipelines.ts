@@ -179,6 +179,19 @@ export class PipelineCache {
     return this.pipelines.get(key);
   }
 
+  /**
+   * Seeds the cache with pipelines from a previous program so unchanged shader hashes reuse them
+   * (`spec/runtime-abi.md` section 11.3 — a colour edit creates no pipeline).
+   */
+  adopt(key: string, pipeline: GPURenderPipeline): void {
+    if (!this.pipelines.has(key)) this.pipelines.set(key, pipeline);
+  }
+
+  /** Copies every entry of `other` into this cache (for hot reload reuse). */
+  adoptAll(other: PipelineCache): void {
+    for (const [key, pipeline] of other.pipelines) this.adopt(key, pipeline);
+  }
+
   /** Returns the cached pipeline of the request's key, or creates it inside a validation error scope. */
   async obtain(request: PipelineRequest): Promise<PipelineResult> {
     const key = materialPipelineKey(request.material, request.colorFormat);

@@ -13,6 +13,7 @@ import { build } from "esbuild";
 import { BROWSER_ROOT, REPO_ROOT } from "./environment.ts";
 import { buildCli, buildM1Fixtures } from "./m1-fixtures.ts";
 import { buildM2Fixtures } from "./m2-fixtures.ts";
+import { buildPulseCube } from "./m3-fixtures.ts";
 import { buildNumericProbe } from "./numeric-probe.ts";
 import { startStaticServer } from "./serve.ts";
 
@@ -90,6 +91,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   buildM1Fixtures(cli);
   // M2 fixtures (M2-12): the Pulse material, the mixed layout and the shader-corruption variants, in `.out/m2/`.
   buildM2Fixtures(cli);
+  buildPulseCube(cli);
 
   // The numeric probe (M2-08): the compiler's WGSL for every operation of cpu.json plus a test-only harness.
   buildNumericProbe(cli, join(out, "numeric"));

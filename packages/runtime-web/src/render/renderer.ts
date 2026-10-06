@@ -151,6 +151,12 @@ export class Renderer {
    * `diagnostic` and stops drawing every entity that uses it. The rest of the scene keeps running; the
    * entities stay in the world and their params stay writable. Idempotent.
    */
+  /** Releases frame and object arenas (hot reload: discard a retired scene). */
+  dispose(): void {
+    this.frameArena.dispose();
+    this.objectArena.dispose();
+  }
+
   failMaterial(materialId: string, diagnostic: MtekDiagnostic): void {
     if (this.failedMaterials.has(materialId)) return;
     this.failedMaterials.add(materialId);

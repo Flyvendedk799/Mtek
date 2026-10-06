@@ -35,6 +35,14 @@ export interface SceneStartupOptions {
   readonly report: (diagnostic: MtekDiagnostic) => void;
   /** `random`, `is_key_down` and `print` for generated code, including `init`. */
   readonly services?: CpuServices;
+  /**
+   * When set (hot reload), new materials reuse pipelines already in this cache for unchanged
+   * shader hashes so a colour edit creates no pipeline (`spec/runtime-abi.md` section 11.3).
+   * Must be paired with `bindingPlan` from the same previous scene (bind groups stay compatible).
+   */
+  readonly pipelineCache?: PipelineCache;
+  /** Reused with `pipelineCache` so new bind groups match the cached pipelines. */
+  readonly bindingPlan?: BindingPlan;
 }
 
 /** The running scene: its CPU world, its GPU state and its renderer. */
@@ -43,6 +51,8 @@ export interface Scene {
   /** The `bind(..)` of the scene, evaluated in phase 5. */
   readonly bindings: Bindings;
   readonly materials: MaterialStore;
+  readonly meshes: MeshStore;
+  readonly plan: BindingPlan;
   readonly pipelines: PipelineCache;
   readonly renderer: Renderer;
 }
@@ -53,7 +63,7 @@ export type SceneStartupResult = { readonly ok: true; readonly scene: Scene } | 
 export async function startScene(options: SceneStartupOptions): Promise<SceneStartupResult> {
   const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
 
-  const plan = new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
+  const plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
   const materials = new MaterialStore(device, registry, plan, structure, program.writers);
   const world = new World({ manifest, structure, params: materials, report, ...(services === undefined ? {} : { services }) });
   const bindings = new Bindings(manifest, program.scene.bindings, world);
@@ -64,7 +74,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   const meshes = new MeshStore(registry, device.queue);
   meshes.upload(structure.meshes);
 
-  const pipelines = new PipelineCache(device, registry, plan, manifest);
+  const pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest);
   const results = await Promise.all(
     structure.materials.map((material) => {
       const module = modules.get(material.shader.hash);
@@ -79,9 +89,13 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     if (!result.ok) diagnostics.push(result.diagnostic);
     else if (material !== undefined) byMaterial.set(material.id, { key: result.key, pipeline: result.pipeline });
   });
-  if (diagnostics.length > 0) return { ok: false, diagnostics };
+  if (diagnostics.length > 0) {
+    materials.dispose();
+    meshes.dispose();
+    return { ok: false, diagnostics };
+  }
 
   world.phase = "runtime:update";
   const renderer = new Renderer({ device, registry, surface, manifest, structure, world, writers: program.writers, plan, materials, meshes, pipelines: byMaterial, report });
-  return { ok: true, scene: { world, bindings, materials, pipelines, renderer } };
+  return { ok: true, scene: { world, bindings, materials, meshes, plan, pipelines, renderer } };
 }
