@@ -500,7 +500,9 @@ scene Demo { camera Main {} }
     let [first, second] = places.as_slice() else {
         panic!("{places:?}");
     };
-    let PlaceRoot::Local { name, ty, span, .. } = &first.root;
+    let PlaceRoot::Local { name, ty, span, .. } = &first.root else {
+        panic!("{:?}", first.root);
+    };
     assert_eq!((name.as_str(), text(*span)), ("rig", "rig"));
     assert_eq!(ty, "src/main.mtek::Rig");
     let steps: Vec<(&str, &str)> = first

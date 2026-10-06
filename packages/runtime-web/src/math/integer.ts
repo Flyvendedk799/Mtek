@@ -118,21 +118,27 @@ export const umax: (a: number, b: number) => number = imax;
 /** `clamp(x, lo, hi)` for `u32`. */
 export const uclamp: (x: number, lo: number, hi: number) => number = iclamp;
 
+/** The largest f32 not above `i32::MAX`: WGSL's saturation value for `i32(x)` (WGSL 15.7.6). */
+const I32_MAX_F32 = 2147483520;
+/** The largest f32 not above `u32::MAX`: WGSL's saturation value for `u32(x)` (WGSL 15.7.6). */
+const U32_MAX_F32 = 4294967040;
+
 /**
- * `i32(x)` of an `f32`: clamp to `[i32::MIN, i32::MAX]`, then truncate toward zero; NaN gives `0`
- * on the CPU (`spec/language.md` 6.5; NaN is non-portable on the GPU).
+ * `i32(x)` of an `f32`: truncate toward zero; out of range, the value of the integer type closest to
+ * `trunc(x)` that is also exactly representable as an `f32` (WGSL 15.7.6, decision 0047): `[-2147483648,
+ * 2147483520]`. NaN gives `0` on the CPU (`spec/language.md` 6.5; NaN is non-portable on the GPU).
  */
 export function f2i(x: number): number {
   if (x !== x) return 0;
-  if (x >= I32_MAX) return I32_MAX;
+  if (x >= I32_MAX_F32) return I32_MAX_F32;
   if (x <= I32_MIN) return I32_MIN;
   return x | 0; // ToInt32 truncates toward zero; in range, nothing wraps
 }
 
-/** `u32(x)` of an `f32`: clamp to `[0, u32::MAX]`, then truncate toward zero; NaN gives `0`. */
+/** `u32(x)` of an `f32`: truncate toward zero, saturating to `[0, 4294967040]` (as `f2i`); NaN gives `0`. */
 export function f2u(x: number): number {
   if (x !== x) return 0;
-  if (x >= U32_MAX) return U32_MAX;
+  if (x >= U32_MAX_F32) return U32_MAX_F32;
   if (x <= 0) return 0;
   return x >>> 0;
 }

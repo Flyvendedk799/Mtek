@@ -1,0 +1,24 @@
+// bind(): one moving entity and one whose bound values never change (the runtime tests assert
+// that the second uploads nothing after its first frame).
+scene Demo {
+    clear_color: #101418;
+    state speed: f32 = 2.0;
+    state tint: color = #ff8800;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: bind(Mover.position);
+    }
+
+    entity Mover {
+        position: bind(vec3(frame.time * speed, 0.0, 0.0));
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    }
+
+    entity Still {
+        position: bind(vec3(0.0, 2.0, 0.0));
+        visible: bind(speed > 1.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: bind(tint); };
+    }
+}

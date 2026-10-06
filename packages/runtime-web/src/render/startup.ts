@@ -15,7 +15,8 @@ import type { MtekDiagnostic } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import type { CheckedProgram } from "../scene/program.js";
 import type { SceneStructure } from "../scene/structure.js";
-import { World } from "../scene/world.js";
+import { Bindings } from "../scene/bindings.js";
+import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
 import { BindingPlan, PipelineCache } from "./pipelines.js";
@@ -32,6 +33,8 @@ export interface SceneStartupOptions {
   readonly modules: ReadonlyMap<string, GPUShaderModule>;
   /** Run-time diagnostics of initialisation and of later frames. */
   readonly report: (diagnostic: MtekDiagnostic) => void;
+  /** `random`, `is_key_down` and `print` for generated code, including `init`. */
+  readonly services?: CpuServices;
   /**
    * When set (hot reload), new materials reuse pipelines already in this cache for unchanged
    * shader hashes so a colour edit creates no pipeline (`spec/runtime-abi.md` section 11.3).
@@ -45,6 +48,8 @@ export interface SceneStartupOptions {
 /** The running scene: its CPU world, its GPU state and its renderer. */
 export interface Scene {
   readonly world: World;
+  /** The `bind(..)` of the scene, evaluated in phase 5. */
+  readonly bindings: Bindings;
   readonly materials: MaterialStore;
   readonly meshes: MeshStore;
   readonly plan: BindingPlan;
@@ -56,12 +61,15 @@ export type SceneStartupResult = { readonly ok: true; readonly scene: Scene } | 
 
 /** Builds and initialises the scene. Errors thrown by generated code (internal errors) propagate. */
 export async function startScene(options: SceneStartupOptions): Promise<SceneStartupResult> {
-  const { manifest, structure, program, device, registry, surface, modules, report } = options;
+  const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
 
   const plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
   const materials = new MaterialStore(device, registry, plan, structure, program.writers);
-  const world = new World({ manifest, structure, params: materials, report });
-  world.initialise(program.scene.init);
+  const world = new World({ manifest, structure, params: materials, report, ...(services === undefined ? {} : { services }) });
+  const bindings = new Bindings(manifest, program.scene.bindings, world);
+  world.initialise(program.scene.init, () => {
+    bindings.evaluate();
+  });
 
   const meshes = new MeshStore(registry, device.queue);
   meshes.upload(structure.meshes);
@@ -82,7 +90,6 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     else if (material !== undefined) byMaterial.set(material.id, { key: result.key, pipeline: result.pipeline });
   });
   if (diagnostics.length > 0) {
-    // Discard the candidate's arenas and meshes; shared pipelines/modules stay in the registry.
     materials.dispose();
     meshes.dispose();
     return { ok: false, diagnostics };
@@ -90,5 +97,5 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
 
   world.phase = "runtime:update";
   const renderer = new Renderer({ device, registry, surface, manifest, structure, world, writers: program.writers, plan, materials, meshes, pipelines: byMaterial, report });
-  return { ok: true, scene: { world, materials, meshes, plan, pipelines, renderer } };
+  return { ok: true, scene: { world, bindings, materials, meshes, plan, pipelines, renderer } };
 }

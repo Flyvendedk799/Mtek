@@ -3,9 +3,10 @@
 //! deterministic: they depend only on the program and the source text.
 
 use super::model::{
-    Block, Camera, Const, Entity, Expr, ExprKind, Field, Function, Item, LocalItem, LocalKind,
-    MaterialInstanceDesc, MaterialItem, Mesh, MeshDesc, NamedExpr, Origin, Place, PlaceRoot,
-    PlaceStep, Program, Projection, ProjectionDesc, Scene, Source, Stmt, StructItem,
+    Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Camera, Const, Entity, Expr,
+    ExprKind, Field, Function, Item, LocalItem, LocalKind, MaterialInstanceDesc, MaterialItem,
+    Mesh, MeshDesc, NamedExpr, Origin, Owner, Place, PlaceRoot, PlaceStep, Program, Projection,
+    ProjectionDesc, Scene, Source, State, Stmt, StructItem,
 };
 use crate::source::{SourceMap, Span};
 
@@ -439,11 +440,91 @@ impl Tree<'_> {
         for entity in &scene.entities {
             self.entity(depth + 1, entity);
         }
+        for state in &scene.state {
+            self.state(depth + 1, state);
+        }
+        for behavior in &scene.behaviors {
+            self.behavior(depth + 1, behavior);
+        }
+        for binding in &scene.bindings {
+            self.binding(depth + 1, binding);
+        }
+    }
+
+    fn binding(&mut self, depth: usize, binding: &Binding) {
+        let location = self.location(binding.span);
+        let target = match &binding.target {
+            BindingTarget::Transform { entity, field } => format!("entity#{entity}.{field}"),
+            BindingTarget::Visible { entity } => format!("entity#{entity}.visible"),
+            BindingTarget::Param { entity, name } => format!("entity#{entity}.material.{name}"),
+            BindingTarget::Camera { field } => format!("camera.{field}"),
+        };
+        let deps: Vec<String> = binding
+            .deps
+            .iter()
+            .map(|dep| match dep {
+                BindingDep::State { name } => format!("state {name}"),
+                BindingDep::Frame { name } => format!("frame.{name}"),
+                BindingDep::EntityField { entity, field } => format!("entity#{entity}.{field}"),
+                BindingDep::EntityState { entity, name } => format!("entity#{entity}.state {name}"),
+                BindingDep::Param { entity, name } => format!("entity#{entity}.material.{name}"),
+            })
+            .collect();
+        self.line(
+            depth,
+            format!(
+                "bind#{} {target} = {} [order {}; reads {}] {location}",
+                binding.id,
+                expr_text(&binding.expr),
+                binding.order,
+                if deps.is_empty() {
+                    "nothing".to_owned()
+                } else {
+                    deps.join(", ")
+                }
+            ),
+        );
+    }
+
+    fn state(&mut self, depth: usize, state: &State) {
+        let location = self.location(state.span);
+        self.line(
+            depth,
+            format!(
+                "state {}: {} = {} [{}] {location}",
+                state.name,
+                state.ty,
+                expr_text(&state.init),
+                state.symbol
+            ),
+        );
+    }
+
+    fn behavior(&mut self, depth: usize, behavior: &Behavior) {
+        let location = self.location(behavior.span);
+        let what = match &behavior.kind {
+            BehaviorKind::Update => "update".to_owned(),
+            BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
+            BehaviorKind::Event { event, filter } => match filter {
+                Some(code) => format!("on {event}({code})"),
+                None => format!("on {event}"),
+            },
+        };
+        let owner = match behavior.owner {
+            Owner::Scene => "scene".to_owned(),
+            Owner::Entity { index } => format!("entity#{index}"),
+        };
+        self.line(
+            depth,
+            format!("{what} of {owner} [{}] {location}", behavior.symbol),
+        );
+        self.locals(depth + 1, &behavior.locals);
+        self.block(depth + 1, &behavior.body, &behavior.locals);
     }
 
     fn field(&mut self, depth: usize, name: &str, field: &Field) {
         let location = self.location(field.span);
-        let Source::Const(value) = &field.source;
+        let value = source_text(&field.source);
         self.line(
             depth,
             format!("{name} = {value} ({} {location})", origin(field.origin)),
@@ -542,9 +623,17 @@ impl Tree<'_> {
             ),
         );
         for param in &material.params {
-            let Source::Const(value) = &param.source;
+            let value = source_text(&param.source);
             self.line(depth + 1, format!("{}: {} = {value}", param.name, param.ty));
         }
+    }
+}
+
+/// A field or param's source: its constant, or the binding that supplies it.
+fn source_text(source: &Source) -> String {
+    match source {
+        Source::Const(value) => value.to_string(),
+        Source::Bound(id) => format!("bind#{id}"),
     }
 }
 
@@ -552,6 +641,12 @@ impl Tree<'_> {
 fn place_text(place: &Place, local_name: &dyn Fn(u32) -> String) -> String {
     let mut text = match &place.root {
         PlaceRoot::Local { local, .. } => local_name(*local),
+        PlaceRoot::State { owner, name, .. } => format!("{}{name}", owner_prefix(*owner)),
+        PlaceRoot::EntityField { entity, field, .. } => format!("entity#{entity}.{field}"),
+        PlaceRoot::CameraField { camera, field, .. } => format!("{camera}.{field}"),
+        PlaceRoot::InstanceParam { entity, param, .. } => {
+            format!("entity#{entity}.material.{param}")
+        }
     };
     for step in &place.steps {
         match step {
@@ -612,11 +707,31 @@ fn expr_text(expr: &Expr) -> String {
         ExprKind::Struct { fields } => format!("{} {{ {} }}", expr.ty, named(fields)),
         ExprKind::Descriptor { schema, fields } => format!("{schema} {{ {} }}", named(fields)),
         ExprKind::Param { param, name } => return format!("param {name}#{param}"),
+        ExprKind::State { owner, name } => return format!("{}{name}", owner_prefix(*owner)),
+        ExprKind::EntityField { entity, field } => return format!("entity#{entity}.{field}"),
+        ExprKind::CameraField { camera, field } => return format!("{camera}.{field}"),
+        ExprKind::InstanceParam { entity, param } => {
+            return format!("entity#{entity}.material.{param}");
+        }
+        ExprKind::Frame { member } => return format!("frame.{member}"),
+        ExprKind::EnumMember {
+            enumeration,
+            member,
+            ..
+        } => return format!("{enumeration}.{member}"),
         ExprKind::Material { material, params } => {
             format!("{material} {{ {} }}", named(params))
         }
     };
     format!("({text}): {}", expr.ty)
+}
+
+/// `state.` for scene state and `entity#2.state.` for an entity's.
+fn owner_prefix(owner: Owner) -> String {
+    match owner {
+        Owner::Scene => "state.".to_owned(),
+        Owner::Entity { index } => format!("entity#{index}.state."),
+    }
 }
 
 fn origin(origin: Origin) -> &'static str {

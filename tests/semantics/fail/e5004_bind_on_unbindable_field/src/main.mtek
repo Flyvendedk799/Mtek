@@ -1,0 +1,8 @@
+// `mesh` is construction-only, not bindable: `bind` is E5004 there.
+scene Demo {
+    camera Main {}
+    entity Cube {
+        mesh: bind(Box {});
+    }
+}
+// covers: [S: bind-bindable-field]

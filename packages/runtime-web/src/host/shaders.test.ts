@@ -13,7 +13,7 @@ import {
   validManifest,
 } from "../test-support/mount-fixture.js";
 import { BASE_URL } from "../test-support/fake-host.js";
-import { findSpanMapEntry, loadStartupShaders, parseSpanMap, type SpanMapEntry } from "./shaders.js";
+import { findSpanMapEntry, loadStartupShaders, parseSpanMap, type ShaderLoadOptions, type SpanMapEntry } from "./shaders.js";
 
 const entry = (line: number, colStart: number, colEnd: number, span: number): SpanMapEntry => ({ wgsl: { line, colStart, colEnd }, span });
 
@@ -64,7 +64,7 @@ describe("loadStartupShaders", () => {
     const device = new FakeHostDevice();
     const registry = new ResourceRegistry(asGpu(device));
     const fetched: string[] = [];
-    const load = () =>
+    const load = (extra: Partial<ShaderLoadOptions> = {}) =>
       loadStartupShaders({
         manifest,
         baseUrl: new URL(BASE_URL),
@@ -75,6 +75,7 @@ describe("loadStartupShaders", () => {
           const text = files[url];
           return Promise.resolve({ ok: text !== undefined, status: text === undefined ? 404 : 200, text: () => Promise.resolve(text ?? "") });
         },
+        ...extra,
       });
     return { device, registry, fetched, load };
   }
@@ -138,6 +139,18 @@ describe("loadStartupShaders", () => {
     expect(result.diagnostics[0]?.message).toContain("could not be loaded");
     expect(result.diagnostics[0]?.message).toContain("HTTP 404");
     expect(result.modules.size).toBe(0);
+  });
+
+  it("a later load records its phase and loads only the shaders asked for", async () => {
+    const manifest = validManifest() as unknown as MtekManifest;
+    const { load } = setup({ [SHADER_URL]: BROKEN_WGSL, [SHADER_MAP_URL]: spanMapJson() }, manifest);
+    const reload = await load({ phase: "runtime:reload" });
+    expect(reload.diagnostics.map((d) => [d.code, d.phase])).toEqual([["MTEK-E8051", "runtime:reload"]]);
+    expect(reload.diagnostics[0]?.source?.startByte).toBe(40);
+
+    const none = await setup({}, manifest).load({ shaders: [] });
+    expect(none.diagnostics).toEqual([]);
+    expect(none.modules.size).toBe(0);
   });
 
   it("is deterministic: the same inputs give identical diagnostics", async () => {

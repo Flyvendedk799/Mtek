@@ -738,17 +738,12 @@ fn new_matches_examples_pulse_cube_aside_from_the_name() {
 /// records that, so a green run never pretends the Demo already type-checks.
 #[cfg(mtek_runtime_embedded)]
 #[test]
-fn scaffold_check_reports_e9010_until_m3_gates_open() {
+fn scaffold_check_succeeds_for_the_demo() {
     let scratch = Scratch::new("new-check");
     assert_eq!(run_in(&scratch.0, &["new", "demo"]).status.code(), Some(0));
     let project = scratch.path("demo");
     let out = run_in(&project, &["check", "--format", "json"]);
-    // Exit 1: the program has errors (gated constructs).
-    assert_eq!(out.status.code(), Some(1), "{}", stderr(&out));
-    let report = report_of(&out, &scratch);
-    let found = codes(&report);
-    assert!(
-        found.iter().any(|c| c == "MTEK-E9010"),
-        "expected E9010 for gated Demo constructs, got {found:?}"
-    );
+    // M3-01..M3-06: the Demo template (state + host.inputs tint) type-checks cleanly.
+    assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+    assert_eq!(codes(&report_of(&out, &scratch)), [] as [&str; 0]);
 }

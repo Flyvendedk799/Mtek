@@ -401,15 +401,67 @@ pub enum PlaceRoot {
         #[serde(serialize_with = "self::span")]
         span: Span,
     },
+    /// Scene or entity `state` (`spec/scenes.md` section 8.1).
+    State {
+        owner: Owner,
+        name: String,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// A field of a named entity (`Cube.position`, `self.rotation`), written through the
+    /// context's setters.
+    EntityField {
+        entity: u32,
+        field: String,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// A field of a camera (`Main.position`).
+    CameraField {
+        camera: String,
+        field: String,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// A param of the material instance of a named entity (`Cube.material.phase`).
+    InstanceParam {
+        entity: u32,
+        param: String,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
 }
 
 impl PlaceRoot {
     /// The root's type.
     pub fn ty(&self) -> &str {
         match self {
-            PlaceRoot::Local { ty, .. } => ty,
+            PlaceRoot::Local { ty, .. }
+            | PlaceRoot::State { ty, .. }
+            | PlaceRoot::EntityField { ty, .. }
+            | PlaceRoot::CameraField { ty, .. }
+            | PlaceRoot::InstanceParam { ty, .. } => ty,
         }
     }
+}
+
+/// The scene or entity that owns a `state`, or whose body a behaviour is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum Owner {
+    Scene,
+    /// An entity, by its static index ([`Scene::entities`]).
+    Entity {
+        index: u32,
+    },
 }
 
 /// One step of a [`Place`]; `ty` is the type of the place up to and including this step,
@@ -533,6 +585,22 @@ pub enum ExprKind {
         schema: String,
         fields: Vec<NamedExpr>,
     },
+    /// A read of scene or entity `state`.
+    State { owner: Owner, name: String },
+    /// A read of a field of a named entity (`Cube.position`) or of `self`.
+    EntityField { entity: u32, field: String },
+    /// A read of a camera field (`Main.position`).
+    CameraField { camera: String, field: String },
+    /// A read of a param of the material instance of a named entity.
+    InstanceParam { entity: u32, param: String },
+    /// `frame.time`, `frame.delta`, `frame.index`.
+    Frame { member: String },
+    /// A member of a registry enum (`Key.Space`) with the DOM code it maps from.
+    EnumMember {
+        enumeration: String,
+        member: String,
+        code: String,
+    },
     /// A param of the material whose stage this is (decision 0039): its
     /// position in [`MaterialItem::params`] and its name. Params are read
     /// from the instance's parameter block, never folded.
@@ -594,7 +662,7 @@ pub struct Const {
     pub span: Span,
 }
 
-/// A scene: its fields, state, constants, cameras and entities.
+/// A scene: its fields, constants, cameras and entities.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Scene {
@@ -604,8 +672,6 @@ pub struct Scene {
     #[serde(serialize_with = "span")]
     pub span: Span,
     pub fields: SceneFields,
-    /// Scene state, in declaration order.
-    pub state: Vec<StateEntry>,
     /// The constants declared in the scene body and in the bodies of its
     /// entities, in source order.
     pub constants: Vec<Const>,
@@ -615,18 +681,131 @@ pub struct Scene {
     /// over the nesting, `spec/scenes.md` section 10.1): `entities[i].index
     /// == i`, and a child follows its parent.
     pub entities: Vec<Entity>,
+    /// The `state` of the scene and of its entities in initialisation order
+    /// (`spec/scenes.md` section 11): scene state in declaration order, then each
+    /// entity's state in stable instance order.
+    pub state: Vec<State>,
+    /// Lifecycle functions and event handlers: the scene's in declaration order,
+    /// then each entity's in stable instance order.
+    pub behaviors: Vec<Behavior>,
+    /// The `bind(..)` of the scene, by id (declaration order).
+    pub bindings: Vec<Binding>,
 }
 
-/// One scene-state slot (`spec/scenes.md` section 2).
+/// A `bind(expr)` (`spec/scenes.md` section 8.4).
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StateEntry {
+pub struct Binding {
+    /// The index into the scene's `bindings` (declaration order).
+    pub id: u32,
+    /// `path::Scene.bind_<id>`.
+    pub symbol: Symbol,
+    pub target: BindingTarget,
+    /// What the expression reads, in source order.
+    pub deps: Vec<BindingDep>,
+    /// Its position in the phase 5 evaluation order.
+    pub order: u32,
+    /// The target's type.
+    #[serde(rename = "type")]
+    pub ty: String,
+    /// The bound expression; it has no locals.
+    pub expr: Expr,
+    /// The whole `bind(..)`.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// What a binding writes (`spec/runtime-abi.md` section 5.2).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum BindingTarget {
+    Transform {
+        entity: u32,
+        field: String,
+    },
+    Visible {
+        entity: u32,
+    },
+    /// A param of the material instance of an entity.
+    Param {
+        entity: u32,
+        name: String,
+    },
+    Camera {
+        field: String,
+    },
+}
+
+/// What a binding reads.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum BindingDep {
+    /// Scene state.
+    State {
+        name: String,
+    },
+    Frame {
+        name: String,
+    },
+    EntityField {
+        entity: u32,
+        field: String,
+    },
+    EntityState {
+        entity: u32,
+        name: String,
+    },
+    Param {
+        entity: u32,
+        name: String,
+    },
+}
+
+/// A `state` declaration with its initialiser (`spec/scenes.md` sections 2, 4.4 and 11).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct State {
     pub name: String,
+    /// `path::Scene.name` or `path::Scene.Entity.name`.
     pub symbol: Symbol,
     #[serde(rename = "type")]
     pub ty: String,
+    pub owner: Owner,
+    /// The initialiser; it has no locals.
+    pub init: Expr,
+    /// The whole `state name: T = value;`.
     #[serde(serialize_with = "span")]
     pub span: Span,
+}
+
+/// A lifecycle function or an event handler with its typed body.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Behavior {
+    pub kind: BehaviorKind,
+    pub owner: Owner,
+    /// `path::Scene.update`, `path::Scene.Cube.on_key_down`, with a number when a body
+    /// has several handlers of one event.
+    pub symbol: Symbol,
+    /// The parameter first (`dt`, the event parameter), then the locals.
+    pub locals: Vec<LocalItem>,
+    pub body: Block,
+    /// The whole `update(dt: f32) { … }` or `on …` member.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// What a [`Behavior`] is.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum BehaviorKind {
+    Update,
+    FixedUpdate,
+    /// `on event(…)`: a filter (`Key.Space` as its DOM `code`) or a parameter (local 0).
+    Event {
+        event: String,
+        filter: Option<String>,
+    },
 }
 
 impl Scene {
@@ -666,6 +845,9 @@ pub struct Field {
 pub enum Source {
     /// A compile-time constant.
     Const(Value),
+    /// The value of binding `id` of the scene, evaluated at run time (`bind(..)`): the field or
+    /// param has no initial constant, the runtime evaluates every binding once after `init`.
+    Bound(u32),
 }
 
 impl Source {
@@ -674,6 +856,7 @@ impl Source {
     pub fn as_const(&self) -> Option<&Value> {
         match self {
             Source::Const(value) => Some(value),
+            Source::Bound(_) => None,
         }
     }
 }
@@ -848,6 +1031,11 @@ pub enum UpdateClass {
     /// A default or constant initialiser, never written: uploaded once at
     /// creation.
     Initial,
+    /// Some lifecycle function or handler writes it: uploaded in the render
+    /// phase of a frame in which it was written.
+    Imperative,
+    /// A `bind(..)` supplies it: evaluated every frame, uploaded when the value changed.
+    Bound,
 }
 
 /// A constant value. Externally tagged by its type in JSON:

@@ -772,6 +772,8 @@ impl<'a> Checker<'a> {
             }
             return TyId::ERROR;
         };
+        // Only the instance written as the `material` of an entity may bind its params.
+        let binds_allowed = std::mem::take(&mut self.allow_param_bind);
         let ty = self.out.interner.intern_material(info.key, &info.name);
         let mut ok = true;
         let mut unknown = false;
@@ -780,9 +782,15 @@ impl<'a> Checker<'a> {
             let param = info.param(&field.name.name);
             let value = match &field.value {
                 FieldValue::Expr(value) => Some(&**value),
-                // `bind(..)` is gated in this build (the resolver's `E9010`).
-                FieldValue::Bind(_) => {
-                    ok = false;
+                // A bound param is checked with the scene's bindings (`types/bind.rs`).
+                FieldValue::Bind(bind) => {
+                    if !binds_allowed {
+                        self.bind_not_allowed(
+                            bind,
+                            "here: only the params of the `material` of an entity can be bound",
+                        );
+                        ok = false;
+                    }
                     None
                 }
             };
@@ -870,6 +878,25 @@ impl<'a> Checker<'a> {
         ty
     }
 
+    /// The params of the material instance type `instance`, in declaration order, with their types.
+    pub(super) fn instance_params(&self, instance: TyId) -> Vec<(String, TyId)> {
+        let Ty::MaterialInstance(key) = self.out.interner.get(instance) else {
+            return Vec::new();
+        };
+        let info = self
+            .out
+            .materials
+            .values()
+            .chain(self.imported_materials.values())
+            .find(|info| info.key == key);
+        info.map_or_else(Vec::new, |info| {
+            info.params
+                .iter()
+                .map(|param| (param.name.clone(), param.ty))
+                .collect()
+        })
+    }
+
     /// `E5001` for a param the material does not declare.
     fn unknown_param(&mut self, info: &MaterialInfo, name: &Ident) {
         let names: Vec<&str> = info.params.iter().map(|p| p.name.as_str()).collect();
@@ -907,8 +934,10 @@ impl<'a> Checker<'a> {
         };
         let mut written: Vec<(&str, Folded)> = Vec::with_capacity(fields.len());
         let mut rejected = false;
+        let mut bound: Vec<&str> = Vec::new();
         for field in fields {
             let FieldValue::Expr(value) = &field.value else {
+                bound.push(field.name.name.as_str());
                 continue;
             };
             let folded = self.fold(value);
@@ -939,6 +968,10 @@ impl<'a> Checker<'a> {
             let value = match written.iter().find(|(n, _)| *n == param.name) {
                 Some((_, Folded::Value(value))) => Some(value.clone()),
                 Some(_) => None,
+                // A bound param's value is the binding's: the default (or zero) only stands in for it.
+                None if bound.contains(&param.name.as_str()) => {
+                    param.default.clone().or_else(|| self.zero_const(param.ty))
+                }
                 None => param.default.clone(),
             };
             match value {

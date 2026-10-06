@@ -202,8 +202,8 @@ impl<'a> Checker<'a> {
             let expected = declared.field(field_name);
             let value = match &field.value {
                 FieldValue::Expr(value) => Some(value),
-                // `bind(..)` is gated in this build (reported by the resolver).
-                FieldValue::Bind(_) => {
+                FieldValue::Bind(bind) => {
+                    self.bind_not_allowed(bind, "in a struct literal");
                     ok = false;
                     None
                 }

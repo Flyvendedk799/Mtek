@@ -1112,11 +1112,11 @@ fn structs_declare_types_literals_fold_in_declaration_order() {
 }
 
 #[test]
-fn gated_constructs_are_not_typed_or_reported_again() {
-    for source in ["const F = frame.time;", "const K = Key.A;"] {
-        let c = consts(source);
-        assert_eq!(c.codes(), ["E9010"], "{source}");
-    }
+fn run_time_values_are_typed_and_never_constant() {
+    // M3 (decision 0049): the frame values and the registry enums exist; a constant cannot read
+    // a value that changes at run time.
+    let c = consts("const F = frame.time;");
+    assert_eq!(c.codes(), ["E3090"]);
 }
 
 #[test]
@@ -1124,14 +1124,7 @@ fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
     // The checker skips these (`Ty::Error`, no descent): they must be gated,
     // so the resolver reports them. When a milestone implements one, this
     // test fails until the checker types it.
-    for construct in [
-        Construct::Prefab,
-        Construct::PrefabInstance,
-        Construct::LifecycleFn,
-        Construct::Handler,
-        Construct::Bind,
-        Construct::SelfValue,
-    ] {
+    for construct in [Construct::Prefab, Construct::PrefabInstance] {
         assert!(!construct_implemented(construct), "{construct:?}");
     }
 }

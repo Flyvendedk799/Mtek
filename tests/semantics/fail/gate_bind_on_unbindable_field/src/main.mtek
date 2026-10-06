@@ -1,9 +1,0 @@
-// `mesh` is construction-only, not bindable: E5004 once `bind` is
-// implemented (M3-05); until then `bind` is gated.
-scene Demo {
-    camera Main {}
-    entity Cube {
-        mesh: bind(Box {});
-    }
-}
-// covers: [S: bind-bindable-field]

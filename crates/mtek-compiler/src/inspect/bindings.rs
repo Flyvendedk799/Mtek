@@ -213,7 +213,7 @@ pub fn bindings_view(
                 declaration: SourceLocation::of(declared.span, sources)?,
                 instance: SourceLocation::of(param.span, sources)?,
                 update: param.class.as_str(),
-                dependencies: Vec::new(),
+                dependencies: param.dependencies.clone(),
                 field: member.name.clone(),
                 offset: member.node.offset(),
                 size: member.node.size(),

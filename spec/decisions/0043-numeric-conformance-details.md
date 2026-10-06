@@ -1,6 +1,6 @@
 # 0043. CPU/GPU numeric conformance: details the specification leaves open
 
-- Status: Accepted (items 8 and 9 are open questions on the board)
+- Status: Accepted (items 8 and 9 were answered by decision 0047)
 - Date: 2026-10-04
 - Blueprint origin: §4.1 (numeric semantics), §12.1 (CPU/GPU tests), §14 (do not weaken tests casually); `spec/testing.md` §5; `spec/language.md` §6.3–§6.5; `spec/compiler-architecture.md` §7.3; decisions 0009, 0012, 0026, 0034, 0035, 0037, 0040, 0041.
 

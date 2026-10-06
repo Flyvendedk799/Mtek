@@ -608,6 +608,23 @@ impl Checker<'_> {
 
     fn fold_field(&mut self, expr: &Expr, base: &Expr) -> Folded {
         let Some(kind) = self.fields.get(&expr.id).cloned() else {
+            // A member of a registry enum (`Key.Space`) is a value of the CPU runtime (an event
+            // filter, an argument of `is_key_down`), not a constant of the language.
+            if let ExprKind::Field { name, .. } = &expr.kind
+                && matches!(
+                    self.res.res(name.id),
+                    Some(crate::resolve::Res::Prelude(
+                        crate::resolve::PreludeItem::EnumMember { .. }
+                    ))
+                )
+            {
+                return Folded::NotConstant(NonConstant {
+                    span: expr.span,
+                    kind: NonConstantKind::Declaration,
+                    reason: "it is a member of a built-in enum, and enum values are not constants in v0.1"
+                        .to_owned(),
+                });
+            }
             return Folded::Unknown;
         };
         match kind {
@@ -622,10 +639,21 @@ impl Checker<'_> {
                 noun,
                 object,
                 field,
+                ..
             } => Folded::NotConstant(NonConstant {
                 span: expr.span,
                 kind: NonConstantKind::ObjectField,
                 reason: format!("it reads the field '{field}' of the {noun} '{object}'"),
+            }),
+            FieldKind::EntityState { name, .. } => Folded::NotConstant(NonConstant {
+                span: expr.span,
+                kind: NonConstantKind::ObjectField,
+                reason: format!("it reads the state '{name}' of an entity"),
+            }),
+            FieldKind::MaterialParam { param, .. } => Folded::NotConstant(NonConstant {
+                span: expr.span,
+                kind: NonConstantKind::ObjectField,
+                reason: format!("it reads the param '{param}' of an entity's material"),
             }),
             FieldKind::NamespaceValue(name) => Folded::NotConstant(NonConstant {
                 span: expr.span,
@@ -786,6 +814,12 @@ impl Checker<'_> {
                     }
                     value_folded
                 }
+                // A bound field's value arrives at run time; a stand-in keeps the descriptor complete.
+                FieldValue::Bind(_) => self
+                    .registry
+                    .schema_field(schema, &field.name.name)
+                    .and_then(|def| super::bind::placeholder(def.ty))
+                    .map_or(Folded::Unknown, Folded::Value),
                 _ => Folded::Unknown,
             });
         }

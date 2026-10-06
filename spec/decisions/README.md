@@ -66,3 +66,10 @@ recorded here before code depends on it (blueprint §15).
 | 0043 | CPU/GPU numeric conformance: details the specification leaves open |
 | 0044 | Prelude materials, the resource plan and the inspect views: details the specification leaves open |
 | 0045 | Assignable places: struct fields and array elements (owner decision) |
+| 0046 | Runtime materials: arenas by layout id, `debug.setParam` and materials that fail after mount: details the specification leaves open |
+| 0047 | CPU/GPU numeric agreement: WGSL's conversion clamp everywhere and CPU-order helpers (owner decision) |
+| 0048 | M2 exit-gate browser tests: details the specification leaves open |
+| 0049 | `state`, lifecycle functions, handlers and writes: details the specification leaves open |
+| 0050 | Running generated code: input delivery, `random`, `print` and the scene object check: details the specification leaves open |
+| 0051 | `bind`: checks, dependency graph and per-frame evaluation: details the specification leaves open |
+| 0052 | Host inputs and scene state: codecs, queue-to-frame-boundary apply, and `app.d.ts` Inputs |

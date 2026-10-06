@@ -15,17 +15,18 @@
 //! compared with the registry by unit tests, so a milestone that implements
 //! a new field or schema fails those tests until the IR represents it.
 
+use super::lower_fn::SceneCtx;
 use super::model::{
-    Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin,
-    Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StateEntry,
-    StructFieldItem, StructItem, Symbol, UpdateClass, Value,
+    Behavior, Binding, Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc,
+    Module, Origin, Owner, Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source,
+    State, StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 
 use crate::layout::qualified_name;
 use crate::prelude::{MATERIALS_PATH, is_builtin_material};
 use crate::project::{ModuleId, Project};
-use crate::resolve::Resolution;
+use crate::resolve::{DefId, Resolution};
 use crate::source::{FileId, Span};
 use crate::syntax::ast::{self, ConstDecl, EntityMember, ItemKind, SceneMember};
 use crate::types::MaterialKey;
@@ -263,6 +264,34 @@ fn lower_module(
     ))
 }
 
+/// How many handlers of the same event (and filter) the body of `owner` has declared before
+/// `handler`: the number that keeps their symbols apart.
+fn handler_ordinal(
+    counts: &mut BTreeMap<String, usize>,
+    owner: Owner,
+    handler: &ast::Handler,
+) -> usize {
+    let filter = handler
+        .args
+        .iter()
+        .find_map(|arg| match arg {
+            ast::HandlerArg::Filter(expr) => match &expr.kind {
+                ast::ExprKind::Field { name, .. } => Some(name.name.clone()),
+                _ => Some(String::new()),
+            },
+            ast::HandlerArg::Param(_) => None,
+        })
+        .unwrap_or_default();
+    let key = format!("{owner:?}|{}|{filter}", handler.event.name);
+    let slot = counts.entry(key).or_insert(0);
+    let ordinal = *slot;
+    *slot += 1;
+    ordinal
+}
+
+/// The `state`, behaviours and bindings of a scene.
+type SceneBodies = (Vec<State>, Vec<Behavior>, Vec<Binding>);
+
 pub(super) struct Lowering<'a> {
     /// The normalised path of the module, the prefix of its symbols.
     pub(super) path: &'a str,
@@ -340,7 +369,13 @@ impl Lowering<'_> {
         let what = format!("scene '{}'", checked.name);
         known_fields(&what, &checked.fields, &SCENE_FIELDS)?;
         let fields = SceneFields {
-            clear_color: required(&what, &checked.fields, "clear_color", checked.span)?,
+            clear_color: required(
+                self.types,
+                &what,
+                &checked.fields,
+                "clear_color",
+                checked.span,
+            )?,
         };
         let mut constants = Vec::new();
         self.body_constants(&decl.members, &symbol, &mut constants)?;
@@ -352,26 +387,135 @@ impl Lowering<'_> {
         for entity in &checked.entities {
             self.entity(entity, &symbol, None, &mut entities)?;
         }
-        let state = checked
-            .state
-            .iter()
-            .map(|entry| StateEntry {
-                name: entry.name.clone(),
-                symbol: symbol.child(&entry.name),
-                ty: entry.ty.clone(),
-                span: entry.span,
-            })
-            .collect();
+        let (state, behaviors, bindings) = self.state_and_behaviors(decl, checked, &symbol)?;
+        self.mark_imperative(checked, &mut entities);
         Ok(Scene {
             name: checked.name.clone(),
             symbol,
             span: checked.span,
             fields,
-            state,
             constants,
             cameras,
             entities,
+            state,
+            behaviors,
+            bindings,
         })
+    }
+
+    /// A material param that some lifecycle function or handler writes is `imperative`
+    /// (`spec/materials.md` section 4).
+    fn mark_imperative(&self, checked: &CheckedScene, entities: &mut [Entity]) {
+        let order = checked.entities_in_order();
+        for write in self.types.writes() {
+            let crate::types::WriteTarget::MaterialParam { entity, param } = &write.target else {
+                continue;
+            };
+            let Some(index) = order.iter().position(|e| e.def == Some(*entity)) else {
+                continue;
+            };
+            let params = entities
+                .get_mut(index)
+                .and_then(|e| e.material.as_mut())
+                .map(|m| &mut m.params);
+            if let Some(slot) = params.and_then(|p| p.iter_mut().find(|p| p.name == *param)) {
+                slot.update = UpdateClass::Imperative;
+            }
+        }
+    }
+
+    /// The `state` and the lifecycle functions and handlers of the scene and, in stable instance
+    /// order, of its entities.
+    fn state_and_behaviors(
+        &self,
+        decl: &ast::SceneDecl,
+        checked: &CheckedScene,
+        scene: &Symbol,
+    ) -> Result<SceneBodies, Defect> {
+        let mut ctx = SceneCtx::default();
+        for (index, entity) in checked.entities_in_order().iter().enumerate() {
+            if let Some(def) = entity.def {
+                let index = u32::try_from(index).map_err(|_| "too many entities".to_owned())?;
+                ctx.entities.insert(def, index);
+            }
+        }
+        for object in &checked.objects {
+            if let Some(def) = object.def {
+                ctx.cameras.insert(def, object.name.clone());
+            }
+        }
+        let mut state = Vec::new();
+        let mut behaviors = Vec::new();
+        let mut counts = BTreeMap::new();
+        for member in &decl.members {
+            match member {
+                SceneMember::State(declaration) => {
+                    state.push(self.state(declaration, Owner::Scene, scene, &ctx)?);
+                }
+                SceneMember::Lifecycle(function) => {
+                    behaviors.push(self.lifecycle(function, Owner::Scene, scene, &ctx)?);
+                }
+                SceneMember::Handler(handler) => {
+                    let ordinal = handler_ordinal(&mut counts, Owner::Scene, handler);
+                    behaviors.push(self.handler(handler, Owner::Scene, scene, &ctx, ordinal)?);
+                }
+                _ => {}
+            }
+        }
+        let mut next = 0;
+        for member in &decl.members {
+            if let SceneMember::Entity(entity) = member {
+                self.entity_bodies(
+                    entity,
+                    scene,
+                    &mut next,
+                    &ctx,
+                    &mut counts,
+                    &mut state,
+                    &mut behaviors,
+                )?;
+            }
+        }
+        let bindings = self.bindings(decl, checked, scene, &ctx)?;
+        Ok((state, behaviors, bindings))
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn entity_bodies(
+        &self,
+        entity: &ast::EntityDecl,
+        owner: &Symbol,
+        next: &mut u32,
+        ctx: &SceneCtx,
+        counts: &mut BTreeMap<String, usize>,
+        state: &mut Vec<State>,
+        behaviors: &mut Vec<Behavior>,
+    ) -> Result<(), Defect> {
+        let index = *next;
+        *next += 1;
+        let who = Owner::Entity { index };
+        let symbol = owner.child(&entity.name.name);
+        for member in &entity.members {
+            match member {
+                EntityMember::State(declaration) => {
+                    state.push(self.state(declaration, who, &symbol, ctx)?);
+                }
+                EntityMember::Lifecycle(function) => {
+                    behaviors.push(self.lifecycle(function, who, &symbol, ctx)?);
+                }
+                EntityMember::Handler(handler) => {
+                    let ordinal = handler_ordinal(counts, who, handler);
+                    behaviors.push(self.handler(handler, who, &symbol, ctx, ordinal)?);
+                }
+                _ => {}
+            }
+        }
+        for member in &entity.members {
+            if let EntityMember::Entity(child) = member {
+                self.entity_bodies(child, &symbol, next, ctx, counts, state, behaviors)?;
+            }
+        }
+        Ok(())
     }
 
     /// The constants of a scene body and, depth first, of its entities'
@@ -433,9 +577,9 @@ impl Lowering<'_> {
             symbol: scene.child(&object.name),
             span: object.span,
             active: object.active,
-            position: required(&what, fields, "position", object.span)?,
-            target: optional(&what, fields, "target", object.span)?,
-            rotation: required(&what, fields, "rotation", object.span)?,
+            position: required(self.types, &what, fields, "position", object.span)?,
+            target: optional(self.types, &what, fields, "target", object.span)?,
+            rotation: required(self.types, &what, fields, "rotation", object.span)?,
             projection: Projection { desc, origin, span },
         })
     }
@@ -467,7 +611,7 @@ impl Lowering<'_> {
         let material = match fields.iter().find(|f| f.name == "material") {
             Some(field) => {
                 let (value, origin, span) = parts(&what, field, checked.span)?;
-                Some(self.material_instance(&what, value, origin, span)?)
+                Some(self.material_instance(&what, value, origin, span, checked.def)?)
             }
             None => None,
         };
@@ -482,10 +626,10 @@ impl Lowering<'_> {
             symbol: symbol.clone(),
             parent,
             span: checked.span,
-            position: required(&what, fields, "position", checked.span)?,
-            rotation: required(&what, fields, "rotation", checked.span)?,
-            scale: required(&what, fields, "scale", checked.span)?,
-            visible: required(&what, fields, "visible", checked.span)?,
+            position: required(self.types, &what, fields, "position", checked.span)?,
+            rotation: required(self.types, &what, fields, "rotation", checked.span)?,
+            scale: required(self.types, &what, fields, "scale", checked.span)?,
+            visible: required(self.types, &what, fields, "visible", checked.span)?,
             mesh,
             material,
         });
@@ -539,22 +683,45 @@ fn parts<'f>(
     })
 }
 
-fn lower_field(what: &str, field: &CheckedField, owner: Span) -> Result<Field, Defect> {
+fn lower_field(
+    types: &crate::types::Typeck,
+    what: &str,
+    field: &CheckedField,
+    owner: Span,
+) -> Result<Field, Defect> {
     let (value, origin, span) = parts(what, field, owner)?;
+    let source = match (field.bound, field.origin) {
+        (true, crate::types::FieldOrigin::Written { value: node, .. }) => Source::Bound(
+            types
+                .binding_of(node)
+                .map(|binding| binding.id)
+                .ok_or_else(|| {
+                    format!("the bound field '{}' of {what} has no binding", field.name)
+                })?,
+        ),
+        _ => Source::Const(value.into()),
+    };
     Ok(Field {
-        source: Source::Const(value.into()),
+        source,
         origin,
         span,
     })
 }
 
 /// A field every checked body of its kind has (written or defaulted).
-fn required(what: &str, fields: &[CheckedField], name: &str, owner: Span) -> Result<Field, Defect> {
-    lower_field(what, find(what, fields, name)?, owner)
+fn required(
+    types: &crate::types::Typeck,
+    what: &str,
+    fields: &[CheckedField],
+    name: &str,
+    owner: Span,
+) -> Result<Field, Defect> {
+    lower_field(types, what, find(what, fields, name)?, owner)
 }
 
 /// A field without a default: present only when written.
 fn optional(
+    types: &crate::types::Typeck,
     what: &str,
     fields: &[CheckedField],
     name: &str,
@@ -563,7 +730,7 @@ fn optional(
     fields
         .iter()
         .find(|f| f.name == name)
-        .map(|field| lower_field(what, field, owner))
+        .map(|field| lower_field(types, what, field, owner))
         .transpose()
 }
 
@@ -678,12 +845,13 @@ impl Lowering<'_> {
         value: &ConstValue,
         origin: Origin,
         span: Span,
+        entity: Option<DefId>,
     ) -> Result<MaterialInstanceDesc, Defect> {
         let ConstValue::Material {
             material, params, ..
         } = value
         else {
-            return self.builtin_material_instance(what, value, origin, span);
+            return self.builtin_material_instance(what, value, origin, span, entity);
         };
         let summary = self
             .materials
@@ -703,13 +871,7 @@ impl Lowering<'_> {
                     summary.symbol, declared.name
                 ));
             }
-            out.push(Param {
-                name: name.clone(),
-                ty: declared.ty.clone(),
-                source: Source::Const(Value::from(value)),
-                update: UpdateClass::Initial,
-                span,
-            });
+            out.push(self.param(name, &declared.ty, value, span, entity));
         }
         Ok(MaterialInstanceDesc {
             material: summary.symbol.clone(),
@@ -717,6 +879,38 @@ impl Lowering<'_> {
             origin,
             span,
         })
+    }
+
+    /// One param of the instance owned by `entity`: its constant, or the binding that writes it.
+    fn param(
+        &self,
+        name: &str,
+        ty: &str,
+        value: &ConstValue,
+        span: Span,
+        entity: Option<DefId>,
+    ) -> Param {
+        let binding = entity.and_then(|entity| {
+            self.types.bindings().iter().find(|b| {
+                matches!(&b.target, crate::types::BindTarget::MaterialParam { entity: e, param } if *e == entity && param == name)
+            })
+        });
+        match binding {
+            Some(binding) => Param {
+                name: name.to_owned(),
+                ty: ty.to_owned(),
+                source: Source::Bound(binding.id),
+                update: UpdateClass::Bound,
+                span,
+            },
+            None => Param {
+                name: name.to_owned(),
+                ty: ty.to_owned(),
+                source: Source::Const(Value::from(value)),
+                update: UpdateClass::Initial,
+                span,
+            },
+        }
     }
 
     /// A completed descriptor of a built-in material: the material's symbol
@@ -730,6 +924,7 @@ impl Lowering<'_> {
         value: &ConstValue,
         origin: Origin,
         span: Span,
+        entity: Option<DefId>,
     ) -> Result<MaterialInstanceDesc, Defect> {
         let (name, fields) = descriptor(what, value)?;
         if !is_builtin_material(name) {
@@ -760,13 +955,7 @@ impl Lowering<'_> {
                     declared.name
                 ));
             }
-            params.push(Param {
-                name: param.clone(),
-                ty: declared.ty.clone(),
-                source: Source::Const(Value::from(value)),
-                update: UpdateClass::Initial,
-                span,
-            });
+            params.push(self.param(param, &declared.ty, value, span, entity));
         }
         Ok(MaterialInstanceDesc {
             material: symbol,

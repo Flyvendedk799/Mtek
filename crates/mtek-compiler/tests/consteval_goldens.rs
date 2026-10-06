@@ -219,7 +219,7 @@ fn integer_constants() {
         (": u32 = 16 * 2", ConstValue::U32(32)),
         (" = -7 / 2", ConstValue::I32(-3)),
         (" = i32(-2.9)", ConstValue::I32(-2)),
-        (" = i32(3.0e9)", ConstValue::I32(i32::MAX)),
+        (" = i32(3.0e9)", ConstValue::I32(2_147_483_520)),
         (" = u32(-1)", ConstValue::U32(u32::MAX)),
         (" = u32(-0.5)", ConstValue::U32(0)),
     ] {

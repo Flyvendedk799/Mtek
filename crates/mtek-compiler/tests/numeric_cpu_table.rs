@@ -406,8 +406,16 @@ fn evaluate(callee: &str, args: &[Val]) -> Val {
             compare(op, a, b).map(V::Bool)
         }
         // Conversions.
-        ("i32", [V::F32(x)]) => Some(V::I32(*x as i32)),
-        ("u32", [V::F32(x)]) => Some(V::U32(*x as u32)),
+        ("i32", [V::F32(x)]) => Some(V::I32(if *x >= 2_147_483_520.0 {
+            2_147_483_520
+        } else {
+            *x as i32
+        })),
+        ("u32", [V::F32(x)]) => Some(V::U32(if *x >= 4_294_967_040.0 {
+            4_294_967_040
+        } else {
+            *x as u32
+        })),
         ("f32", [V::I32(x)]) => Some(V::F32(*x as f32)),
         ("f32", [V::U32(x)]) => Some(V::F32(*x as f32)),
         ("i32", [V::U32(x)]) => Some(V::I32(*x as i32)),

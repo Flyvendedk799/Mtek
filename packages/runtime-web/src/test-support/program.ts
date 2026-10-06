@@ -13,6 +13,7 @@ import { cpSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "n
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { buildSync } from "esbuild";
 import { checkManifest } from "../abi/validate.js";
 import type { MtekLayoutNode, MtekLayoutRecord, MtekManifest } from "../abi/manifest-types.js";
 import type { MtekWriterMemory } from "../abi/program.js";
@@ -61,6 +62,24 @@ function listFiles(dir: string): string[] {
   );
 }
 
+let rtModule: string | undefined;
+
+/**
+ * The runtime's math library as one self-contained ES module: what generated code imports as `rt`, so
+ * golden programs can run their lifecycle functions in Node.
+ */
+function rtBundle(): string {
+  rtModule ??= buildSync({
+    entryPoints: [resolve(REPO_ROOT, "packages", "runtime-web", "src", "math", "rt.ts")],
+    bundle: true,
+    format: "esm",
+    write: false,
+    logLevel: "silent",
+  }).outputFiles[0]?.text;
+  if (rtModule === undefined) throw new Error("esbuild produced no output for the rt module");
+  return rtModule;
+}
+
 /** Imports `tests/codegen/<name>/expected/app.js` from a temporary copy with a stand-in runtime bundle. */
 export async function loadGoldenProgram(name: string): Promise<GoldenProgram> {
   const source = resolve(CODEGEN_DIR, name, "expected");
@@ -71,7 +90,8 @@ export async function loadGoldenProgram(name: string): Promise<GoldenProgram> {
   const appFile = join(target, "app.js");
   const bundle = RUNTIME_LINE.exec(readFileSync(appFile, "utf8"))?.[1];
   if (bundle === undefined) throw new Error(`${name}: app.js has no runtime re-export line`);
-  writeFileSync(join(target, bundle), 'export function mountMtek() { throw new Error("test stand-in for the runtime"); }\n');
+  const standIn = 'export function mountMtek() { throw new Error("test stand-in for the runtime"); }\n';
+  writeFileSync(join(target, bundle), `${rtBundle()}\n${standIn}`);
   const module = (await import(/* @vite-ignore */ pathToFileURL(appFile).href)) as { default: TestProgram };
   const program = module.default;
   const parsed = checkManifest(JSON.parse(readFileSync(join(target, "program.manifest.json"), "utf8")));

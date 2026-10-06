@@ -28,7 +28,7 @@ use std::collections::BTreeMap;
 use crate::diagnostics::{Code, Diagnostic};
 use crate::emit_js::{ProgramParts, emit_app_dts, emit_program, source_map};
 use crate::emit_wgsl::{ShaderArtifact, emit_shader};
-use crate::ir::{self, MeshDesc, Program};
+use crate::ir::{self, BehaviorKind, MeshDesc, Owner, Program};
 use crate::layout::{LayoutRecord, builtin_blocks, compute};
 use crate::lowering::shader::lower_material;
 use crate::plan::{ParamClass, PlannedMaterial, ResourcePlan, check_limits, plan_program};
@@ -41,10 +41,10 @@ use crate::{BuildMode, COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI, TargetPr
 use super::html::index_html;
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
-    Camera, Entity, EntityMaterial, InstanceParam, Layout, MANIFEST_SCHEMA, Manifest, Material,
-    MaterialInstance, MaterialParam, Mesh, MeshShape, Num, ParamClass as ManifestClass,
-    RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, StateEntry,
-    Subsystems, SymbolEntry, SymbolKind,
+    Binding, BindingDep, BindingTarget, Camera, Entity, EntityMaterial, InstanceParam, Layout,
+    MANIFEST_SCHEMA, Manifest, Material, MaterialInstance, MaterialParam, Mesh, MeshShape, Num,
+    ParamClass as ManifestClass, RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader,
+    SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -115,8 +115,7 @@ pub fn package(
         ))
     })?;
     let plan = checked_plan(program, input.profile)?;
-    let host_inputs = resolve_host_inputs(project, program, scene);
-
+    let host_inputs = resolve_host_inputs(project, scene);
     let materials: Vec<BuiltMaterial<'_>> = plan
         .materials
         .iter()
@@ -194,6 +193,9 @@ pub fn package(
         shader_files.push((artifact.map_path(), map_text.into_bytes()));
     }
 
+    // The binding spans come before app.js too, for the same reason.
+    let manifest_scene = manifest_scene(scene, &plan, &mut spans, &host_inputs).map_err(defect)?;
+
     // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
     // other span, so a program's span ids do not depend on its function bodies.
     let runtime_file = format!("runtime.{}.js", h16(input.runtime_bundle));
@@ -203,6 +205,7 @@ pub fn package(
         &ProgramParts {
             runtime_file: &runtime_file,
             layouts: &layouts,
+            release: input.mode == BuildMode::Release,
         },
         &mut |span| spans.intern(span),
     )
@@ -267,7 +270,7 @@ pub fn package(
         materials: manifest_materials,
         meshes: meshes(&plan).map_err(defect)?,
         assets: Vec::new(),
-        scene: manifest_scene(scene, &plan, &host_inputs).map_err(defect)?,
+        scene: manifest_scene,
     };
 
     let html = index_html(&project.config.build.title, input.mode).ok_or_else(|| {
@@ -357,6 +360,9 @@ fn symbols(
         Ok(())
     };
     add(scene.symbol.to_string(), SymbolKind::Scene, scene.span)?;
+    for state in &scene.state {
+        add(state.symbol.to_string(), SymbolKind::State, state.span)?;
+    }
     for camera in &scene.cameras {
         add(camera.symbol.to_string(), SymbolKind::Camera, camera.span)?;
     }
@@ -447,11 +453,7 @@ fn color_nums(value: &ConstValue, what: &str) -> Result<Vec<Num>, String> {
 }
 
 /// The manifest's `scene`.
-fn resolve_host_inputs(
-    project: &Project,
-    _program: &Program,
-    scene: &ir::Scene,
-) -> Vec<ResolvedHostInput> {
+fn resolve_host_inputs(project: &Project, scene: &ir::Scene) -> Vec<ResolvedHostInput> {
     let mut sink = crate::diagnostics::Diagnostics::new();
     let checked = crate::types::CheckedScene {
         def: None,
@@ -462,6 +464,7 @@ fn resolve_host_inputs(
         state: scene
             .state
             .iter()
+            .filter(|s| s.owner == ir::Owner::Scene)
             .map(|s| crate::types::CheckedState {
                 def: None,
                 name: s.name.clone(),
@@ -473,10 +476,6 @@ fn resolve_host_inputs(
         objects: Vec::new(),
         entities: Vec::new(),
     };
-    // Binding-aware opaque selection runs during `check`; packaging rebuilds from
-    // config + IR state types (color → color-hex). Opaque codecs from a successful
-    // check with bindings can be re-derived when the AST is available; until then
-    // colour host inputs use color-hex unless the type check already failed.
     validate_host_inputs(
         &project.config.host_inputs,
         &checked,
@@ -488,6 +487,7 @@ fn resolve_host_inputs(
 fn manifest_scene(
     scene: &ir::Scene,
     plan: &ResourcePlan,
+    spans: &mut SpanTable,
     host_inputs: &[ResolvedHostInput],
 ) -> Result<Scene, String> {
     let clear_color = match scene.fields.clear_color.source.as_const() {
@@ -545,54 +545,146 @@ fn manifest_scene(
             light: None,
             body: None,
             collider: None,
-            state: Vec::new(),
-            update: false,
-            fixed_update: false,
+            state: state_entries(
+                scene,
+                Owner::Entity {
+                    index: entity.index,
+                },
+            ),
+            update: has_behavior(scene, entity.index, &BehaviorKind::Update),
+            fixed_update: has_behavior(scene, entity.index, &BehaviorKind::FixedUpdate),
         });
     }
     let material_instances = plan
         .instances
         .iter()
-        .map(|instance| MaterialInstance {
-            index: instance.index,
-            material: instance.material.to_string(),
-            entity: instance.entity,
-            params: instance
-                .params
-                .iter()
-                .map(|param| InstanceParam {
-                    name: param.name.clone(),
-                    class: match param.class {
-                        ParamClass::Initial => ManifestClass::Initial,
-                    },
-                })
-                .collect(),
-            shareable: instance.shareable(),
+        .map(|instance| {
+            Ok(MaterialInstance {
+                index: instance.index,
+                material: instance.material.to_string(),
+                entity: instance.entity,
+                params: instance
+                    .params
+                    .iter()
+                    .map(|param| {
+                        Ok(InstanceParam {
+                            name: param.name.clone(),
+                            class: match (param.class, param.binding) {
+                                (ParamClass::Initial, _) => ManifestClass::Initial,
+                                (ParamClass::Imperative, _) => ManifestClass::Imperative,
+                                (ParamClass::Bound, Some(binding)) => {
+                                    ManifestClass::Bound { binding }
+                                }
+                                (ParamClass::Bound, None) => {
+                                    return Err(format!(
+                                        "the bound parameter '{}' has no binding",
+                                        param.name
+                                    ));
+                                }
+                            },
+                        })
+                    })
+                    .collect::<Result<Vec<_>, String>>()?,
+                shareable: instance.shareable(),
+            })
         })
-        .collect();
-    let state = scene
-        .state
-        .iter()
-        .map(|entry| StateEntry {
-            name: entry.name.clone(),
-            ty: entry.ty.clone(),
-            symbol: entry.symbol.to_string(),
-        })
-        .collect();
-    let host_inputs = host_inputs
-        .iter()
-        .map(ResolvedHostInput::to_manifest)
-        .collect();
+        .collect::<Result<Vec<_>, String>>()?;
+    let bindings = manifest_bindings(scene, plan, spans)?;
     Ok(Scene {
         name: scene.name.clone(),
         symbol: scene.symbol.to_string(),
         fields,
-        state,
+        state: state_entries(scene, Owner::Scene),
         cameras,
         entities,
         material_instances,
-        bindings: Vec::new(),
-        host_inputs,
+        bindings,
+        host_inputs: host_inputs
+            .iter()
+            .map(ResolvedHostInput::to_manifest)
+            .collect(),
         lights: Vec::new(),
     })
+}
+
+/// The manifest's `bindings`, by id: targets and dependencies by static entity index, material
+/// params by instance index (`spec/runtime-abi.md` section 5.2).
+fn manifest_bindings(
+    scene: &ir::Scene,
+    plan: &ResourcePlan,
+    spans: &mut SpanTable,
+) -> Result<Vec<Binding>, String> {
+    let instance = |entity: u32| -> Result<u32, String> {
+        plan.entity_instances
+            .get(entity as usize)
+            .copied()
+            .flatten()
+            .ok_or_else(|| format!("the entity {entity} has no material instance to bind"))
+    };
+    let mut out = Vec::with_capacity(scene.bindings.len());
+    for binding in &scene.bindings {
+        let target = match &binding.target {
+            ir::BindingTarget::Transform { entity, field } => BindingTarget::Transform {
+                entity: *entity,
+                field: field.clone(),
+            },
+            ir::BindingTarget::Visible { entity } => BindingTarget::Visible { entity: *entity },
+            ir::BindingTarget::Param { entity, name } => BindingTarget::Param {
+                instance: instance(*entity)?,
+                name: name.clone(),
+            },
+            ir::BindingTarget::Camera { field } => BindingTarget::Camera {
+                field: field.clone(),
+            },
+        };
+        let mut deps = Vec::with_capacity(binding.deps.len());
+        for dep in &binding.deps {
+            deps.push(match dep {
+                ir::BindingDep::State { name } => BindingDep::State { name: name.clone() },
+                ir::BindingDep::Frame { name } => BindingDep::Frame { name: name.clone() },
+                ir::BindingDep::EntityField { entity, field } => BindingDep::EntityField {
+                    entity: *entity,
+                    field: field.clone(),
+                },
+                ir::BindingDep::EntityState { entity, name } => BindingDep::EntityState {
+                    entity: *entity,
+                    name: name.clone(),
+                },
+                ir::BindingDep::Param { entity, name } => BindingDep::Param {
+                    instance: instance(*entity)?,
+                    name: name.clone(),
+                },
+            });
+        }
+        out.push(Binding {
+            id: binding.id,
+            target,
+            deps,
+            order: binding.order,
+            span: spans.intern(binding.span)?,
+        });
+    }
+    Ok(out)
+}
+
+/// The manifest's `state` entries of `owner`, in declaration order.
+fn state_entries(scene: &crate::ir::Scene, owner: Owner) -> Vec<StateEntry> {
+    scene
+        .state
+        .iter()
+        .filter(|state| state.owner == owner)
+        .map(|state| StateEntry {
+            name: state.name.clone(),
+            ty: state.ty.clone(),
+            symbol: state.symbol.to_string(),
+        })
+        .collect()
+}
+
+/// Whether the entity `index` has a lifecycle function of `kind`.
+fn has_behavior(scene: &crate::ir::Scene, index: u32, kind: &BehaviorKind) -> bool {
+    scene
+        .behaviors
+        .iter()
+        .any(|b| b.owner == (Owner::Entity { index }) && b.kind == *kind)
 }

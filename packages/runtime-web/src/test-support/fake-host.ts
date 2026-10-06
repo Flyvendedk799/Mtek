@@ -23,6 +23,7 @@
  * `asDom` is the single documented place where a fake is presented as a nominally typed DOM interface.
  */
 /// <reference types="vite/client" />
+import type { MtekManifest } from "../abi/manifest-types.js";
 import { checkManifest } from "../abi/validate.js";
 import type { DocumentLike, FetchResponseLike, HostEnvironment, ResizeObserverLike } from "../host/environment.js";
 import { syntheticProgram, type TestProgram } from "./program.js";
@@ -592,13 +593,25 @@ export class FakeEventTarget {
     return this.entries.length;
   }
 
-  dispatch(type: string): void {
+  /**
+   * Calls every listener of `type` with an event carrying `props` (`code`, `clientX`, …). The returned event
+   * says whether a listener called `preventDefault()`.
+   */
+  dispatch(type: string, props: Record<string, unknown> = {}): { defaultPrevented: boolean } {
+    const event = {
+      type,
+      defaultPrevented: false,
+      preventDefault(): void {
+        event.defaultPrevented = true;
+      },
+      ...props,
+    };
     for (const entry of [...this.entries]) {
       if (entry.type !== type) continue;
-      const event = { type };
-      if (typeof entry.listener === "function") entry.listener(event as Event);
-      else entry.listener.handleEvent(event as Event);
+      if (typeof entry.listener === "function") entry.listener(event as unknown as Event);
+      else entry.listener.handleEvent(event as unknown as Event);
     }
+    return event;
   }
 }
 
@@ -624,6 +637,11 @@ export class FakeElement extends FakeEventTarget {
 
   setAttribute(name: string, value: string): void {
     this.attributes.set(name, value);
+  }
+
+  /** The element's box in client coordinates: at the origin, `clientWidth` by `clientHeight`. */
+  getBoundingClientRect(): { left: number; top: number; width: number; height: number } {
+    return { left: 0, top: 0, width: this.clientWidth, height: this.clientHeight };
   }
 
   getAttribute(name: string): string | null {
@@ -772,6 +790,10 @@ export class FakeHost {
   readonly files = new Map<string, FakeFile>();
   readonly fetched: string[] = [];
   readonly resizeObservers: FakeResizeObserver[] = [];
+  /** The fake window: `blur` is dispatched on it. */
+  readonly window = new FakeEventTarget();
+  /** What `print` wrote. */
+  readonly logged: string[] = [];
   devicePixelRatio: number;
   nowMs = 0;
   private nextFrame = 1;
@@ -801,6 +823,10 @@ export class FakeHost {
       ...(options.littleEndian === undefined ? {} : { littleEndian: options.littleEndian }),
       fetch: (url) => this.fetch(url),
       document: asDom<DocumentLike>(this.document),
+      window: asDom<EventTarget>(this.window),
+      log: (message) => {
+        this.logged.push(message);
+      },
       ResizeObserver: observerFactory === undefined ? undefined : asDom<new (callback: () => void) => ResizeObserverLike>(observerFactory),
       requestAnimationFrame: (callback) => {
         const id = this.nextFrame++;
@@ -902,7 +928,8 @@ export function minimalSceneInit(context: object): void {
 }
 
 /** A program module as `app.js` would export it for the minimal manifest, with writers built from its layouts. */
-export function fakeProgram(init: (ctx: object) => void = minimalSceneInit): TestProgram {
+export function fakeProgram(init: (ctx: object) => void = minimalSceneInit, edited?: MtekManifest): TestProgram {
+  if (edited !== undefined) return syntheticProgram(edited, init, BASE_URL);
   const parsed = checkManifest(minimalManifestJson());
   if (!parsed.ok) throw new Error("the minimal manifest is not valid");
   return syntheticProgram(parsed.manifest, init, BASE_URL);

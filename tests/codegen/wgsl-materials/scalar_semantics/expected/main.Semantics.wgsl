@@ -37,6 +37,15 @@ struct MtekVertexOutput {
 @group(1) @binding(0) var<uniform> mtek_params: MtekParams_e2cab98b_Semantics;
 @group(2) @binding(0) var<uniform> mtek_object: MtekObject;
 
+fn mtek_mix_f32(mtek_a: f32, mtek_b: f32, mtek_t: f32) -> f32 {
+    return (mtek_a * (1.0 - mtek_t)) + (mtek_b * mtek_t);
+}
+
+fn mtek_normalize_vec3(mtek_v: vec3<f32>) -> vec3<f32> {
+    let mtek_length = sqrt(((mtek_v.x * mtek_v.x) + (mtek_v.y * mtek_v.y)) + (mtek_v.z * mtek_v.z));
+    return select(mtek_v / mtek_length, vec3<f32>(0.0), mtek_length == 0.0);
+}
+
 fn u_fn_e2cab98b_ints(u_p_a: i32, u_p_b: i32, u_p_u: u32, u_p_v: u32) -> f32 {
     let u_l_q = u_p_a / u_p_b;
     let u_l_r = u_p_a % u_p_b;
@@ -53,9 +62,9 @@ fn u_fn_e2cab98b_ints(u_p_a: i32, u_p_b: i32, u_p_u: u32, u_p_v: u32) -> f32 {
 
 fn mtek_fragment() -> vec4<f32> {
     let u_l_x = u_fn_e2cab98b_ints(mtek_params.u_a, mtek_params.u_b, mtek_params.u_u, mtek_params.u_v);
-    let u_l_s = (smoothstep(0.0, 1.0, fract(u_l_x)) + step(0.5, u_l_x)) + mix(0.0, 1.0, saturate(u_l_x));
+    let u_l_s = (smoothstep(0.0, 1.0, fract(u_l_x)) + step(0.5, u_l_x)) + mtek_mix_f32(0.0, 1.0, saturate(u_l_x));
     let u_l_g = vec3<f32>(pow(2.0, u_l_x), exp2(u_l_x), log2(abs(u_l_x) + 1.0));
-    let u_l_d = dot(normalize(u_l_g + vec3<f32>(1.0, 1.0, 1.0)), vec3<f32>(0.0, 1.0, 0.0));
+    let u_l_d = dot(mtek_normalize_vec3(u_l_g + vec3<f32>(1.0, 1.0, 1.0)), vec3<f32>(0.0, 1.0, 0.0));
     let u_l_mt = mat4x4<f32>(vec4<f32>(1.0, 2.0, 3.0, 4.0), vec4<f32>(1.0, 2.0, 3.0, 4.0), vec4<f32>(1.0, 2.0, 3.0, 4.0), vec4<f32>(1.0, 2.0, 3.0, 4.0));
     let u_l_col = u_l_mt[clamp(mtek_params.u_b, 0i, 3i)];
     let u_l_ok = (u_l_x > 0.0) && ((mtek_params.u_a != mtek_params.u_b) || (!(mtek_params.u_u == mtek_params.u_v)));

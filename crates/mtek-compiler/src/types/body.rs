@@ -689,6 +689,11 @@ impl<'a> Checker<'a> {
         if let (Some(var), Some(body)) = (root, &mut self.body) {
             body.assigned.insert(var);
         }
+        // State, entity and camera fields and material params: the writes of the single-writer
+        // analysis (`E5073` for a construction-only field).
+        if self.scope.is_some() {
+            self.record_write(&stmt.target);
+        }
         let Some(arith) = (match stmt.op {
             AssignOp::Assign => None,
             AssignOp::Add => arith_op(crate::syntax::ast::BinaryOp::Add),
@@ -802,6 +807,14 @@ impl<'a> Checker<'a> {
                         nested = true;
                         current = base;
                     }
+                    // Fields of entities and cameras, entity state and material params are places
+                    // of handler bodies (`spec/scenes.md` section 8); whether the field may be
+                    // written is `record_write`'s business.
+                    Some(
+                        FieldKind::ObjectField { .. }
+                        | FieldKind::EntityState { .. }
+                        | FieldKind::MaterialParam { .. },
+                    ) if self.scope.is_some() => return None,
                     Some(_) => {
                         self.report_not_a_place(
                             current.span,
@@ -859,6 +872,8 @@ impl<'a> Checker<'a> {
         let def = self.res.def(id)?.clone();
         match def.kind {
             DefKind::Local { mutable: true } => Some(id),
+            // Scene and entity state are written by lifecycle functions and handlers.
+            DefKind::State if self.scope.is_some() => None,
             DefKind::Local { mutable: false }
             | DefKind::FnParam
             | DefKind::LoopVar

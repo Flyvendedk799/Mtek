@@ -1,15 +1,13 @@
-// Everything in this lifecycle function is unimplemented in M1 (`frame`,
-// `print`, the lifecycle function itself), but the lifecycle function is
+// Everything in this prefab is unimplemented in this build (prefabs are M5), but the prefab is
 // reported once. Its names are still resolved.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 0.0, 0.0);
+    position: origin;
+    update(dt: f32) {
+        let total = missing;
+    }
+}
+
 scene Demo {
     camera Main {}
-    update(dt: f32) {
-        let xs = [1.0, 2.0];
-        var total = 0.0;
-        for i in 0..2 {
-            total += sin(xs[i]) + frame.time;
-        }
-        print("done");
-        total = total + missing;
-    }
 }

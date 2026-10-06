@@ -122,11 +122,11 @@ function stateBySymbol(entries: readonly MtekStateEntry[], values: Record<string
  * `init` left them (so a changed literal default is applied); imperative mirrors are migrated.
  */
 export function migrateWorld(previous: World, previousManifest: MtekManifest, next: World, nextManifest: MtekManifest): void {
-  const previousSceneState = stateBySymbol(previousManifest.scene.state, previous.state);
+  const previousSceneState = stateBySymbol(previousManifest.scene.state, previous.sceneState);
   for (const entry of nextManifest.scene.state) {
     const before = previousSceneState.get(entry.symbol);
     if (before !== undefined && before.type === entry.type) {
-      next.state[entry.name] = copyValue(before.value);
+      next.sceneState[entry.name] = copyValue(before.value);
     }
   }
 

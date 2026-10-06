@@ -785,7 +785,7 @@
         "prefab"
       ],
       "requiresCollider": false,
-      "since": "M3",
+      "since": "M1",
       "doc": "Delivered when the filtered key transitions to pressed. Auto-repeat is ignored."
     },
     {
@@ -798,7 +798,7 @@
         "prefab"
       ],
       "requiresCollider": false,
-      "since": "M3",
+      "since": "M1",
       "doc": "Delivered when the filtered key is released."
     },
     {
@@ -811,7 +811,7 @@
         "prefab"
       ],
       "requiresCollider": false,
-      "since": "M3",
+      "since": "M1",
       "doc": "A pointer button was pressed on the canvas."
     },
     {
@@ -824,7 +824,7 @@
         "prefab"
       ],
       "requiresCollider": false,
-      "since": "M3",
+      "since": "M1",
       "doc": "The pointer moved; at most once per frame with the latest position."
     },
     {
@@ -837,270 +837,270 @@
         "prefab"
       ],
       "requiresCollider": false,
-      "since": "M3",
+      "since": "M1",
       "doc": "A pointer button was released."
     }
   ],
   "enums": [
     {
       "name": "Key",
-      "since": "M3",
+      "since": "M1",
       "doc": "A physical keyboard key, independent of the keyboard layout. Maps from the DOM `KeyboardEvent.code`; events with any other code are ignored by the runtime.",
       "members": [
         {
           "name": "A",
           "code": "KeyA",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "AltLeft",
           "code": "AltLeft",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "AltRight",
           "code": "AltRight",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "ArrowDown",
           "code": "ArrowDown",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "ArrowLeft",
           "code": "ArrowLeft",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "ArrowRight",
           "code": "ArrowRight",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "ArrowUp",
           "code": "ArrowUp",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "B",
           "code": "KeyB",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Backspace",
           "code": "Backspace",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "C",
           "code": "KeyC",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "ControlLeft",
           "code": "ControlLeft",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "ControlRight",
           "code": "ControlRight",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "D",
           "code": "KeyD",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Digit0",
           "code": "Digit0",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Digit1",
           "code": "Digit1",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Digit2",
           "code": "Digit2",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Digit3",
           "code": "Digit3",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Digit4",
           "code": "Digit4",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Digit5",
           "code": "Digit5",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Digit6",
           "code": "Digit6",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Digit7",
           "code": "Digit7",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Digit8",
           "code": "Digit8",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Digit9",
           "code": "Digit9",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "E",
           "code": "KeyE",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Enter",
           "code": "Enter",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Escape",
           "code": "Escape",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "F",
           "code": "KeyF",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "G",
           "code": "KeyG",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "H",
           "code": "KeyH",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "I",
           "code": "KeyI",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "J",
           "code": "KeyJ",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "K",
           "code": "KeyK",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "L",
           "code": "KeyL",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "M",
           "code": "KeyM",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "N",
           "code": "KeyN",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "O",
           "code": "KeyO",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "P",
           "code": "KeyP",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Q",
           "code": "KeyQ",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "R",
           "code": "KeyR",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "S",
           "code": "KeyS",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "ShiftLeft",
           "code": "ShiftLeft",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "ShiftRight",
           "code": "ShiftRight",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Space",
           "code": "Space",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "T",
           "code": "KeyT",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Tab",
           "code": "Tab",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "U",
           "code": "KeyU",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "V",
           "code": "KeyV",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "W",
           "code": "KeyW",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "X",
           "code": "KeyX",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Y",
           "code": "KeyY",
-          "since": "M3"
+          "since": "M1"
         },
         {
           "name": "Z",
           "code": "KeyZ",
-          "since": "M3"
+          "since": "M1"
         }
       ]
     }
@@ -1345,7 +1345,7 @@
       "constEligible": false,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M3",
+      "since": "M1",
       "doc": "Whether the key was down at the end of input handling in the current frame."
     },
     {
@@ -1431,7 +1431,7 @@
       "domain": "both",
       "constEligible": true,
       "handlersOnly": false,
-      "cpuSemantics": "A zero vector gives the zero vector on the CPU; non-portable on the GPU.",
+      "cpuSemantics": "A zero vector, or one whose squared length underflows or overflows, gives the zero vector on the CPU and the GPU (decision 0047).",
       "since": "M1",
       "doc": "The vector scaled to length 1."
     },
@@ -1456,7 +1456,7 @@
       "constEligible": false,
       "handlersOnly": false,
       "cpuSemantics": "No-op in release builds.",
-      "since": "M3",
+      "since": "M1",
       "doc": "Writes a message to the development console."
     },
     {
@@ -1480,7 +1480,7 @@
       "constEligible": false,
       "handlersOnly": false,
       "cpuSemantics": "Seeded PRNG (xoshiro128**, seed from the mount options); deterministic under a fixed seed.",
-      "since": "M3",
+      "since": "M1",
       "doc": "A pseudo-random number in `[0, 1)`."
     },
     {
@@ -1722,7 +1722,7 @@
     },
     {
       "name": "frame",
-      "since": "M3",
+      "since": "M1",
       "doc": "Per-frame values. Readable in CPU code and in `bind` expressions, not in GPU stage code: route them through material parameters.",
       "members": [
         {
@@ -1730,7 +1730,7 @@
           "kind": "value",
           "type": "f32",
           "domain": "cpu",
-          "since": "M3",
+          "since": "M1",
           "doc": "The clamped frame delta of the current rendered frame; the value passed to `update`."
         },
         {
@@ -1738,7 +1738,7 @@
           "kind": "value",
           "type": "u32",
           "domain": "cpu",
-          "since": "M3",
+          "since": "M1",
           "doc": "Rendered frame counter since mount, wrapping."
         },
         {
@@ -1746,7 +1746,7 @@
           "kind": "value",
           "type": "f32",
           "domain": "cpu",
-          "since": "M3",
+          "since": "M1",
           "doc": "Active application time in seconds since mount, excluding paused time."
         }
       ]
@@ -1987,7 +1987,7 @@
       "name": "PointerEvent",
       "kind": "record",
       "gpu": false,
-      "since": "M3",
+      "since": "M1",
       "doc": "A pointer event: `position` in normalised canvas coordinates (x right, y up, both in -1..1) and the `button` (0 primary, 1 middle, 2 secondary).",
       "fields": [
         {

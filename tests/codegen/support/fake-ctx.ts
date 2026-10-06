@@ -20,9 +20,15 @@ export interface WarningCall {
 /** An entity record as the fake hands it to generated code. */
 export interface FakeEntityRecord {
   readonly index: number;
+  /** The entity's `state` (spec/runtime-abi.md section 4.2): generated code assigns into it. */
+  readonly state: Record<string, unknown>;
+  /** The entity's current position, as the runtime keeps it (read by `Entity.position.y = …`). */
+  readonly position: { readonly x: number; readonly y: number; readonly z: number };
 }
 
 export interface FakeContext {
+  /** The scene's `state`. */
+  readonly s: Record<string, unknown>;
   readonly e: readonly FakeEntityRecord[];
   setCamera(field: string, value: unknown): void;
   setTransform(entity: FakeEntityRecord, field: string, value: unknown): void;
@@ -40,7 +46,7 @@ export function createFakeContext(entityCount: number): {
   const calls: SetterCall[] = [];
   const warnings: WarningCall[] = [];
   const e: FakeEntityRecord[] = Array.from({ length: entityCount }, (_, index) =>
-    Object.freeze({ index }),
+    Object.freeze({ index, state: {}, position: { x: 0, y: 0, z: 0 } }),
   );
   const indexOf = (entity: FakeEntityRecord): number => {
     const index = e.indexOf(entity);
@@ -48,6 +54,7 @@ export function createFakeContext(entityCount: number): {
     return index;
   };
   const ctx: FakeContext = Object.freeze({
+    s: {},
     e: Object.freeze(e),
     setCamera(field: string, value: unknown): void {
       calls.push({ method: "setCamera", entity: -1, field, value });

@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5005",
+    "file": "src/main.mtek",
+    "startByte": 217,
+    "endByte": 224,
+    "message": "The binding of the field 'position' of entity 'Cube' must be pure, but it calls the `cpu fn` 'noisy'.",
+    "notes": [
+      "a binding is re-evaluated every frame; it may read state, entity fields and `frame`, and call pure functions",
+      "help: compute the value in `update` and assign it to a state, then bind the state"
+    ]
+  }
+]

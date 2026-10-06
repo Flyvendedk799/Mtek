@@ -4,6 +4,7 @@
 // compiler's `bridge_spike` example, bundles the bridge page and prepares the mount fixture. It builds
 // the CLI (`cargo build -p mtek-cli --locked`) and every M1 fixture (`fixtures/m1/*`) with
 // `mtek build --mode test` into `.out/m1/`, plus the post-build failure variants (support/m1-fixtures.ts),
+// likewise the M2 fixtures (`fixtures/m2/*` into `.out/m2/`, support/m2-fixtures.ts),
 // and the numeric probe (`.out/numeric/`, support/numeric-probe.ts) with its page.
 import { execFileSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -11,6 +12,7 @@ import { join } from "node:path";
 import { build } from "esbuild";
 import { BROWSER_ROOT, REPO_ROOT } from "./environment.ts";
 import { buildCli, buildM1Fixtures } from "./m1-fixtures.ts";
+import { buildM2Fixtures } from "./m2-fixtures.ts";
 import { buildPulseCube } from "./m3-fixtures.ts";
 import { buildNumericProbe } from "./numeric-probe.ts";
 import { startStaticServer } from "./serve.ts";
@@ -87,8 +89,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   const cli = buildCli();
   process.env["MTEK_CLI"] = cli;
   buildM1Fixtures(cli);
-
-  // M3-08 pulse-cube (may NOT-RUN until M3-01..05 open gated Demo constructs).
+  // M2 fixtures (M2-12): the Pulse material, the mixed layout and the shader-corruption variants, in `.out/m2/`.
+  buildM2Fixtures(cli);
   buildPulseCube(cli);
 
   // The numeric probe (M2-08): the compiler's WGSL for every operation of cpu.json plus a test-only harness.

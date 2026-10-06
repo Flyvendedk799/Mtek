@@ -25,13 +25,17 @@
     "retrieved": "2026-10-04"
   },
   "cpuRoundingUlp": 1,
-  "knownDeviations": [
-    {
-      "id": "mix_f32#7",
-      "decision": "0043",
-      "observed": "-Infinity on D3D12 (AMD Radeon RX 7900 XTX, Chrome) and on SwiftShader (Vulkan, Chrome); the CPU and the WGSL bound give 0",
-      "cause": "Both backends evaluate mix(x, y, t) as x + t * (y - x) (HLSL lerp, SPIR-V FMix), and y - x = -6e38 overflows. WGSL bounds mix by x * (1.0 - z) + y * z, which does not overflow for these inputs: the platforms do not meet the WGSL bound. Pending the decision 0043 question (lower mix to its reference expression, or document near-overflow mix as non-portable)."
-    }
+  "knownDeviations": [],
+  "exactRows": [
+    { "id": "normalize_vec2#2", "decision": "0047" },
+    { "id": "normalize_vec2#3", "decision": "0047" },
+    { "id": "normalize_vec2#4", "decision": "0047" },
+    { "id": "normalize_vec3#2", "decision": "0047" },
+    { "id": "normalize_vec3#3", "decision": "0047" },
+    { "id": "normalize_vec3#4", "decision": "0047" },
+    { "id": "normalize_vec4#2", "decision": "0047" },
+    { "id": "normalize_vec4#3", "decision": "0047" },
+    { "id": "normalize_vec4#4", "decision": "0047" }
   ],
   "rules": [
     {
@@ -792,13 +796,14 @@
       "wgsl": "mix(x, y, z)",
       "wgslOp": "mix",
       "params": ["x", "y", "z"],
-      "compare": "tolerance",
+      "compare": "exact",
+      "helperFamily": "mtek_mix_",
       "accuracy": { "kind": "inherited", "expr": "x * (1.0 - z) + y * z" },
       "cite": [
         { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "mix(x, y, z) | Inherited from x * (1.0 - z) + y * z" },
         { "section": "17.5.43", "anchor": "mix-builtin", "quote": "Domain | Implied from linear terms of the expressions: e1[i] × (1 − e3[i]) + e2[i] × e3[i]." }
       ],
-      "note": "mix(vecN, vecN, f32) splats the f32 weight, as WGSL's overload does."
+      "note": "mix(vecN, vecN, f32) splats the f32 weight, as WGSL's overload does. Lowered to the generated helpers mtek_mix_*, x * (1.0 - z) + y * z in the CPU's order (decision 0047): CPU and GPU agree bit for bit on both adapters measured, so the entry is exact."
     },
     {
       "key": "normalize",
@@ -806,12 +811,14 @@
       "wgslOp": "normalize",
       "params": ["x"],
       "compare": "tolerance",
+      "helperFamily": "mtek_normalize_",
       "accuracy": { "kind": "inherited", "expr": "x / length(x)" },
       "domain": [{ "param": "x", "nonZeroVector": true }],
       "cite": [
         { "section": "15.7.4.1", "anchor": "concrete-float-accuracy", "quote": "normalize(x) | Inherited from x / length(x)" },
         { "section": "17.5.45", "anchor": "normalize-builtin", "quote": "The domain is all vectors except the zero vector." }
-      ]
+      ],
+      "note": "Lowered to the generated helpers mtek_normalize_*: x / sqrt(x.x*x.x + x.y*x.y + ...) summed left to right, the zero vector when that length is 0 (decision 0047). The exactRows are the zero, underflowing and overflowing vectors, outside the WGSL domain, where CPU and GPU agree bit for bit; the other rows stay within the tolerance because the GPU divider is not correctly rounded."
     },
     {
       "key": "pow",

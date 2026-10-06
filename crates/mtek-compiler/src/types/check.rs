@@ -162,8 +162,20 @@ pub enum FieldKind {
     ObjectField {
         noun: &'static str,
         object: String,
+        /// The declaration of the named entity or camera.
+        object_def: Option<DefId>,
         field: String,
     },
+    /// The `state` of an entity read through its name or `self` (`Cube.hits`, `self.hits`).
+    EntityState {
+        /// The entity.
+        entity: DefId,
+        /// The `state` declaration.
+        state: DefId,
+        name: String,
+    },
+    /// A param of the material instance of a named entity (`Cube.material.phase`).
+    MaterialParam { entity: DefId, param: String },
     /// A value member of a namespace (`frame.time`).
     NamespaceValue(String),
     /// A field of a user struct value.
@@ -189,7 +201,12 @@ pub(super) struct Checker<'a> {
     /// Constants found on a cycle (`E2020`).
     pub(super) cyclic: BTreeSet<DefId>,
     /// The `state` declarations of each entity, by `(entity, name)`.
-    pub(super) states: BTreeSet<(DefId, String)>,
+    pub(super) states: BTreeMap<(DefId, String), DefId>,
+    /// What the scene body or state initialiser being checked belongs to.
+    pub(super) scope: Option<super::scene_body::ScopeCtx>,
+    /// Set while the `material` field of an entity is checked: the params of its instance literal
+    /// may be `bind(..)` (`E5004` elsewhere).
+    pub(super) allow_param_bind: bool,
     pub(super) calls: BTreeMap<NodeId, CallKind>,
     pub(super) fields: BTreeMap<NodeId, FieldKind>,
     /// Every struct declaration of the module, by its `DefId`.
@@ -241,7 +258,10 @@ impl<'a> Checker<'a> {
             .defs()
             .iter()
             .filter(|def| def.kind == DefKind::State)
-            .filter_map(|def| def.parent.map(|parent| (parent, def.name.clone())))
+            .filter_map(|def| {
+                def.parent
+                    .map(|parent| ((parent, def.name.clone()), def.id))
+            })
             .collect();
         Self {
             text,
@@ -254,6 +274,8 @@ impl<'a> Checker<'a> {
             const_stack: Vec::new(),
             cyclic: BTreeSet::new(),
             states,
+            scope: None,
+            allow_param_bind: false,
             calls: BTreeMap::new(),
             fields: BTreeMap::new(),
             struct_decls: BTreeMap::new(),
@@ -304,7 +326,7 @@ impl<'a> Checker<'a> {
         self.text.get(span.range()).unwrap_or("")
     }
 
-    fn report(&mut self, diagnostic: Diagnostic) {
+    pub(super) fn report(&mut self, diagnostic: Diagnostic) {
         self.sink.push(diagnostic);
     }
 
@@ -403,6 +425,9 @@ impl<'a> Checker<'a> {
     }
 
     fn scene(&mut self, decl: &SceneDecl) {
+        if construct_implemented(Construct::State) {
+            self.declare_scene_states(decl);
+        }
         for member in &decl.members {
             match member {
                 SceneMember::Field(field) if construct_implemented(Construct::SceneField) => {
@@ -414,23 +439,17 @@ impl<'a> Checker<'a> {
                 SceneMember::Object(object) if construct_implemented(Construct::SceneObject) => {
                     self.scene_object(object);
                 }
-                SceneMember::State(decl) if construct_implemented(Construct::State) => {
-                    self.state_member(decl);
-                }
                 SceneMember::Entity(entity) => self.entity(entity),
-                // Lifecycle functions and handlers are still gated.
+                SceneMember::State(state) if construct_implemented(Construct::State) => {
+                    self.state_init(state, None);
+                }
+                // Lifecycle functions and handlers are checked after the whole scene.
                 _ => {}
             }
         }
-    }
-
-    fn state_member(&mut self, decl: &crate::syntax::ast::StateDecl) {
-        let ty = self.annotation(&decl.ty);
-        self.check(&decl.value, Some(ty));
-        self.fold_root(&decl.value);
-        if let Some(def) = self.res.def_of(decl.id) {
-            self.out.locals.insert(def, ty);
-        }
+        self.scene_binds(decl);
+        self.scene_bodies(decl);
+        self.binding_conflicts(self.res.def_of(decl.id));
     }
 
     fn scene_object(&mut self, object: &SceneObject) {
@@ -453,16 +472,19 @@ impl<'a> Checker<'a> {
         for member in &entity.members {
             match member {
                 EntityMember::Field(field) if construct_implemented(Construct::EntityField) => {
+                    self.allow_param_bind = self.is_material_field(&field.name.name);
                     self.schema_field(self.registry.declaration_schemas.entity, field);
+                    self.allow_param_bind = false;
+                    self.note_entity_material(entity, field);
                 }
                 EntityMember::Const(decl) if construct_implemented(Construct::BodyConst) => {
                     self.const_decl(decl);
                 }
-                EntityMember::State(decl) if construct_implemented(Construct::State) => {
-                    self.state_member(decl);
-                }
                 EntityMember::Entity(child) => self.entity(child),
-                // `param`, lifecycle functions and handlers are still gated.
+                EntityMember::State(state) if construct_implemented(Construct::State) => {
+                    self.state_init(state, self.res.def_of(entity.id));
+                }
+                // `param`, lifecycle functions and handlers are gated or checked after the scene.
                 _ => {}
             }
         }
@@ -868,7 +890,14 @@ impl<'a> Checker<'a> {
             ExprKind::Index { base, index } if construct_implemented(Construct::Index) => {
                 self.index(base, index)
             }
-            // `self` is gated in this build (see the tests).
+            // `self` is the entity whose body this is (`spec/scenes.md` section 8.3): as a bare
+            // value it is an `entity_ref`; its fields and state are read as `self.name`.
+            ExprKind::SelfValue if construct_implemented(Construct::SelfValue) => {
+                match self.res.res(expr.id) {
+                    Some(Res::Def(_)) => TyId::ENTITY_REF,
+                    _ => TyId::ERROR,
+                }
+            }
             ExprKind::Str { .. }
             | ExprKind::Array(_)
             | ExprKind::Index { .. }
@@ -933,11 +962,54 @@ impl<'a> Checker<'a> {
                 self.note_surface_use(id);
                 self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR)
             }
+            DefKind::State => self.state_value(expr, id),
             // An unknown scene-object kind was reported (`E5014`).
             DefKind::SceneObject { kind: None } => TyId::ERROR,
-            // Scene / entity state (task M3-06).
-            DefKind::State => self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR),
         }
+    }
+
+    /// A bare `state` name used as a value: scene state, or the entity's own state inside the
+    /// entity (`spec/scenes.md` sections 4.4 and 8.1). An initialiser reads only earlier state.
+    fn state_value(&mut self, expr: &Expr, id: DefId) -> TyId {
+        let ty = self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR);
+        if !self.state_readable_here(id) {
+            let name = self
+                .res
+                .def(id)
+                .map_or_else(String::new, |d| d.name.clone());
+            let span = self.res.def(id).map_or(expr.span, |d| d.span);
+            self.report(
+                Diagnostic::new(
+                    Code::E2003,
+                    format!("The state '{name}' is used before it is initialised."),
+                )
+                .at(expr.span)
+                .related(span, format!("the state '{name}' is declared here"))
+                .note("an initialiser may read constants, earlier scene state and its own earlier state"),
+            );
+            return TyId::ERROR;
+        }
+        ty
+    }
+
+    /// `E5081`: an initialiser reads a field or the state of an entity or camera.
+    pub(super) fn report_initialiser_read(
+        &mut self,
+        expr: &Expr,
+        object: &str,
+        noun: &str,
+        field: &str,
+    ) {
+        self.report(
+            Diagnostic::new(
+                Code::E5081,
+                format!(
+                    "This initialiser reads '{field}' of the {noun} '{object}', but entity and camera fields cannot be read during initialisation."
+                ),
+            )
+            .at(expr.span)
+            .note("initialisers may read constants, scene state and earlier state, but not the fields of entities or cameras"),
+        );
     }
 
     /// An imported name used as a value (decision 0036): an imported
@@ -1058,15 +1130,23 @@ impl<'a> Checker<'a> {
                     self.object_descriptor(name, def.name, fields);
                     return TyId::ERROR;
                 }
+                let binds_allowed = std::mem::take(&mut self.allow_param_bind);
                 for field in fields {
                     let expected = match def.field(&field.name.name) {
                         Some(field_def) if !is_implemented(field_def.since) => continue,
                         Some(field_def) => Some(self.out.interner.from_type_ref(field_def.ty)),
                         None => None,
                     };
-                    // `bind(..)` is gated in this build.
-                    if let FieldValue::Expr(value) = &field.value {
-                        self.check(value, expected);
+                    match &field.value {
+                        FieldValue::Expr(value) => {
+                            self.check(value, expected);
+                        }
+                        FieldValue::Bind(bind) => {
+                            // The params of the registry material of an entity's `material`.
+                            if !(binds_allowed && def.category == SchemaCategory::Material) {
+                                self.bind_not_allowed(bind, "inside a descriptor literal");
+                            }
+                        }
                     }
                 }
                 self.out.interner.intern(Ty::Schema(def.name))
@@ -1149,8 +1229,13 @@ impl<'a> Checker<'a> {
     /// field values are still typed, so their own mistakes are reported.
     fn object_descriptor(&mut self, name: &Ident, schema: &'static str, fields: &[DescField]) {
         for field in fields {
-            if let FieldValue::Expr(value) = &field.value {
-                self.check(value, None);
+            match &field.value {
+                FieldValue::Expr(value) => {
+                    self.check(value, None);
+                }
+                FieldValue::Bind(bind) => {
+                    self.bind_not_allowed(bind, "inside a descriptor literal");
+                }
             }
         }
         let declarations = self.registry.declaration_schemas;
@@ -2152,7 +2237,10 @@ impl<'a> Checker<'a> {
             Some(Res::Error) => return TyId::ERROR,
             _ => {}
         }
-        if let ExprKind::Name(_) = &base.kind
+        if let Some(ty) = self.material_param(expr, base, name) {
+            return ty;
+        }
+        if let ExprKind::Name(_) | ExprKind::SelfValue = &base.kind
             && let Some(Res::Def(id)) = self.res.res(base.id)
             && let Some(def) = self.res.def(id)
         {
@@ -2236,9 +2324,20 @@ impl<'a> Checker<'a> {
         schema: &'static str,
         name: &Ident,
     ) -> TyId {
-        if self.states.contains(&(owner, name.name.clone())) {
-            // Entity `state` is gated in this build.
+        if self.scope.is_some_and(|scope| scope.initialiser.is_some()) {
+            self.report_initialiser_read(expr, object, noun, &name.name);
             return TyId::ERROR;
+        }
+        if let Some(&state) = self.states.get(&(owner, name.name.clone())) {
+            self.fields.insert(
+                expr.id,
+                FieldKind::EntityState {
+                    entity: owner,
+                    state,
+                    name: name.name.clone(),
+                },
+            );
+            return self.out.locals.get(&state).copied().unwrap_or(TyId::ERROR);
         }
         match self.registry.schema_field(schema, &name.name) {
             Some(field) if !is_implemented(field.since) => TyId::ERROR,
@@ -2248,6 +2347,7 @@ impl<'a> Checker<'a> {
                     FieldKind::ObjectField {
                         noun,
                         object: object.to_owned(),
+                        object_def: Some(owner),
                         field: field.name.to_owned(),
                     },
                 );

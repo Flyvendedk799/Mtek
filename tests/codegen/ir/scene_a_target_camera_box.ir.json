@@ -22,7 +22,6 @@
               "span": {"file": 0, "start": 104, "end": 125}
             }
           },
-          "state": [],
           "constants": [],
           "cameras": [
             {
@@ -139,7 +138,10 @@
                 "span": {"file": 0, "start": 341, "end": 376}
               }
             }
-          ]
+          ],
+          "state": [],
+          "behaviors": [],
+          "bindings": []
         }
       ]
     },

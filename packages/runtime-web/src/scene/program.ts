@@ -85,6 +85,60 @@ function checkWriters(layout: MtekLayoutRecord, entry: unknown, diagnostics: Mte
   return { all: asBlockWriter(all as (...args: never[]) => unknown), fields: byName };
 }
 
+const EVENT_NAMES = ["key_down", "key_up", "pointer_down", "pointer_up", "pointer_move", "collision_enter", "collision_exit"] as const;
+
+function functionOrNull(value: unknown): boolean {
+  return value === null || typeof value === "function";
+}
+
+/**
+ * The shape of the scene object beyond `init` (`spec/runtime-abi.md` section 3): lifecycle functions or
+ * `null`, one slot per static entity, and an events table of well-formed handlers.
+ */
+function sceneShapeProblem(
+  scene: Readonly<Record<string, unknown>>,
+  entityCount: number,
+  bindingCount: number,
+): { field: string; problem: string } | undefined {
+  for (const name of ["update", "fixedUpdate"] as const) {
+    if (!functionOrNull(own(scene, name))) return { field: name, problem: `has a \`${name}\` that is neither a function nor null` };
+  }
+  for (const name of ["entityUpdate", "entityFixedUpdate"] as const) {
+    const list = own(scene, name);
+    if (!Array.isArray(list) || list.length !== entityCount || !list.every(functionOrNull)) {
+      return { field: name, problem: `needs \`${name}\` to be an array of ${String(entityCount)} functions or nulls (one per static entity)` };
+    }
+  }
+  const bindings = own(scene, "bindings");
+  if (!Array.isArray(bindings) || bindings.length !== bindingCount || !bindings.every((fn: unknown) => typeof fn === "function")) {
+    return { field: "bindings", problem: `needs 'bindings' to be an array of ${String(bindingCount)} functions (one per binding of the manifest)` };
+  }
+  const events = own(scene, "events");
+  if (!isRecord(events)) return { field: "events", problem: "has no `events` table" };
+  for (const name of EVENT_NAMES) {
+    const list = own(events, name);
+    if (list === undefined) continue;
+    const keyed = name === "key_down" || name === "key_up";
+    const valid =
+      Array.isArray(list) &&
+      list.every((handler: unknown) => {
+        if (!isRecord(handler)) return false;
+        const key = own(handler, "key");
+        const owner = own(handler, "owner");
+        return (
+          typeof own(handler, "fn") === "function" &&
+          typeof owner === "number" &&
+          Number.isInteger(owner) &&
+          owner >= -1 &&
+          owner < entityCount &&
+          (keyed ? typeof key === "string" : key === undefined)
+        );
+      });
+    if (!valid) return { field: `events.${name}`, problem: `has a malformed \`${name}\` handler list` };
+  }
+  return undefined;
+}
+
 /** Checks `program` against `manifest`; reports every mismatch found. */
 export function checkProgram(program: ProgramModuleParts, manifest: MtekManifest): ProgramResult {
   const diagnostics: MtekDiagnostic[] = [];
@@ -96,8 +150,9 @@ export function checkProgram(program: ProgramModuleParts, manifest: MtekManifest
   if (!isRecord(candidate) || typeof own(candidate, "init") !== "function") {
     diagnostics.push(incompatible(`scenes.${entry}`, `the program module has no scene '${entry}' with an \`init\` function.`));
   } else {
-    // The shape beyond `init` (update, handlers, bindings) is executed from M3 on; M1 only runs `init`.
-    scene = candidate as unknown as MtekProgramScene;
+    const shape = sceneShapeProblem(candidate, manifest.scene.entities.length, manifest.scene.bindings.length);
+    if (shape === undefined) scene = candidate as unknown as MtekProgramScene;
+    else diagnostics.push(incompatible(`scenes.${entry}.${shape.field}`, `the scene '${entry}' ${shape.problem}.`));
   }
 
   const writers = new Map<string, LayoutWriters>();

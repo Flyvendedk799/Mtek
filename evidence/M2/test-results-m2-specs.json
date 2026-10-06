@@ -1,0 +1,730 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=hardware",
+      "specs/m2"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "m2\\failures.spec.ts",
+      "file": "m2/failures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "M2 browser shader failures name the originating Mtek declaration",
+          "file": "m2/failures.spec.ts",
+          "line": 51,
+          "column": 6,
+          "specs": [
+            {
+              "title": "a corrupted shader file (no mapped position) rejects with shader-failed and names the material declaration: file, line",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 349,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:16.954Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af9723647023626f53ae-a1fb5d5f0c02515479bc",
+              "file": "m2/failures.spec.ts",
+              "line": 52,
+              "column": 3
+            },
+            {
+              "title": "a misspelled built-in inside the Mtek function pulse rejects with shader-failed and names that expression of the Mtek source",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 304,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:17.936Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af9723647023626f53ae-9d6258ded2df151ee1c2",
+              "file": "m2/failures.spec.ts",
+              "line": 75,
+              "column": 3
+            },
+            {
+              "title": "the uncorrupted program mounts: the failures above are caused by the corruption alone",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 199,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:18.248Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af9723647023626f53ae-2cd7231277e8ee81a0ee",
+              "file": "m2/failures.spec.ts",
+              "line": 103,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m2\\mixed-layout.spec.ts",
+      "file": "m2/mixed-layout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "the manifest's layout of the material is the mixed layout of spec/gpu-layout.md (size 64, align 16)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-05T09:01:18.471Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a234cb799a0dac3278b9-36cd4c349bf15bfde695",
+          "file": "m2/mixed-layout.spec.ts",
+          "line": 79,
+          "column": 1
+        },
+        {
+          "title": "the Mixed material's params round-trip bit-exactly from the CPU writers to the typed WGSL reads, in a real scene",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "m2-roundtrip",
+                  "description": "initial: Match rgb(255,255,255) Mutated rgb(0,0,0); a changed: Match rgb(0,255,255) expected rgb(0,255,255); a restored: Match rgb(255,255,255) expected rgb(255,255,255); b.z changed by one binary32 step: Match rgb(0,255,255) expected rgb(0,255,255); b restored: Match rgb(255,255,255) expected rgb(255,255,255); c changed by one: Match rgb(255,0,255) expected rgb(255,0,255); c restored: Match rgb(255,255,255) expected rgb(255,255,255); d changed: Match rgb(255,0,255) expected rgb(255,0,255); d restored: Match rgb(255,255,255) expected rgb(255,255,255); e changed: Match rgb(255,255,0) expected rgb(255,255,0); e restored: Match rgb(255,255,255) expected rgb(255,255,255); f changed: Match rgb(255,255,0) expected rgb(255,255,0); f restored: Match rgb(255,255,255) expected rgb(255,255,255); all changed: Match rgb(0,0,0) expected rgb(0,0,0); all restored: Match rgb(255,255,255) expected rgb(255,255,255)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 267,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-05T09:01:18.477Z",
+                  "annotations": [
+                    {
+                      "type": "m2-roundtrip",
+                      "description": "initial: Match rgb(255,255,255) Mutated rgb(0,0,0); a changed: Match rgb(0,255,255) expected rgb(0,255,255); a restored: Match rgb(255,255,255) expected rgb(255,255,255); b.z changed by one binary32 step: Match rgb(0,255,255) expected rgb(0,255,255); b restored: Match rgb(255,255,255) expected rgb(255,255,255); c changed by one: Match rgb(255,0,255) expected rgb(255,0,255); c restored: Match rgb(255,255,255) expected rgb(255,255,255); d changed: Match rgb(255,0,255) expected rgb(255,0,255); d restored: Match rgb(255,255,255) expected rgb(255,255,255); e changed: Match rgb(255,255,0) expected rgb(255,255,0); e restored: Match rgb(255,255,255) expected rgb(255,255,255); f changed: Match rgb(255,255,0) expected rgb(255,255,0); f restored: Match rgb(255,255,255) expected rgb(255,255,255); all changed: Match rgb(0,0,0) expected rgb(0,0,0); all restored: Match rgb(255,255,255) expected rgb(255,255,255)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a234cb799a0dac3278b9-fdfee2cad8274ea9468e",
+          "file": "m2/mixed-layout.spec.ts",
+          "line": 89,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "m2\\pulse.spec.ts",
+      "file": "m2/pulse.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Pulse follows tint * (0.65 + 0.35 sin(phase)) while phase changes, and creates no pipeline or shader module",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "m2-pixel",
+                  "description": "initial at (32, 32): expected rgb(87,75,211) actual rgb(87,75,211); initial at (26, 26): expected rgb(87,75,211) actual rgb(87,75,211); initial at (38, 38): expected rgb(87,75,211) actual rgb(87,75,211); initial at (32, 24): expected rgb(87,75,211) actual rgb(87,75,211); phase 0.5000 at (32, 32): expected rgb(97,83,233) actual rgb(97,84,233); phase 0.5000 at (26, 26): expected rgb(97,83,233) actual rgb(97,84,233); phase 0.5000 at (38, 38): expected rgb(97,83,233) actual rgb(97,84,233); phase 0.5000 at (32, 24): expected rgb(97,83,233) actual rgb(97,84,233); phase 1.5708 at (32, 32): expected rgb(107,92,255) actual rgb(107,92,255); phase 1.5708 at (26, 26): expected rgb(107,92,255) actual rgb(107,92,255); phase 1.5708 at (38, 38): expected rgb(107,92,255) actual rgb(107,92,255); phase 1.5708 at (32, 24): expected rgb(107,92,255) actual rgb(107,92,255); phase 2.0000 at (32, 32): expected rgb(105,91,251) actual rgb(105,91,251); phase 2.0000 at (26, 26): expected rgb(105,91,251) actual rgb(105,91,251); phase 2.0000 at (38, 38): expected rgb(105,91,251) actual rgb(105,91,251); phase 2.0000 at (32, 24): expected rgb(105,91,251) actual rgb(105,91,251); phase 3.1416 at (32, 32): expected rgb(87,75,211) actual rgb(87,75,211); phase 3.1416 at (26, 26): expected rgb(87,75,211) actual rgb(87,75,211); phase 3.1416 at (38, 38): expected rgb(87,75,211) actual rgb(87,75,211); phase 3.1416 at (32, 24): expected rgb(87,75,211) actual rgb(87,75,211); phase 4.0000 at (32, 32): expected rgb(67,57,167) actual rgb(67,57,167); phase 4.0000 at (26, 26): expected rgb(67,57,167) actual rgb(67,57,167); phase 4.0000 at (38, 38): expected rgb(67,57,167) actual rgb(67,57,167); phase 4.0000 at (32, 24): expected rgb(67,57,167) actual rgb(67,57,167); phase 5.5000 at (32, 32): expected rgb(69,59,170) actual rgb(69,59,170); phase 5.5000 at (26, 26): expected rgb(69,59,170) actual rgb(69,59,170); phase 5.5000 at (38, 38): expected rgb(69,59,170) actual rgb(69,59,170); phase 5.5000 at (32, 24): expected rgb(69,59,170) actual rgb(69,59,170); phase 0.0000 at (32, 32): expected rgb(87,75,211) actual rgb(87,75,211); phase 0.0000 at (26, 26): expected rgb(87,75,211) actual rgb(87,75,211); phase 0.0000 at (38, 38): expected rgb(87,75,211) actual rgb(87,75,211); phase 0.0000 at (32, 24): expected rgb(87,75,211) actual rgb(87,75,211)"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 248,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-05T09:01:18.756Z",
+                  "annotations": [
+                    {
+                      "type": "m2-pixel",
+                      "description": "initial at (32, 32): expected rgb(87,75,211) actual rgb(87,75,211); initial at (26, 26): expected rgb(87,75,211) actual rgb(87,75,211); initial at (38, 38): expected rgb(87,75,211) actual rgb(87,75,211); initial at (32, 24): expected rgb(87,75,211) actual rgb(87,75,211); phase 0.5000 at (32, 32): expected rgb(97,83,233) actual rgb(97,84,233); phase 0.5000 at (26, 26): expected rgb(97,83,233) actual rgb(97,84,233); phase 0.5000 at (38, 38): expected rgb(97,83,233) actual rgb(97,84,233); phase 0.5000 at (32, 24): expected rgb(97,83,233) actual rgb(97,84,233); phase 1.5708 at (32, 32): expected rgb(107,92,255) actual rgb(107,92,255); phase 1.5708 at (26, 26): expected rgb(107,92,255) actual rgb(107,92,255); phase 1.5708 at (38, 38): expected rgb(107,92,255) actual rgb(107,92,255); phase 1.5708 at (32, 24): expected rgb(107,92,255) actual rgb(107,92,255); phase 2.0000 at (32, 32): expected rgb(105,91,251) actual rgb(105,91,251); phase 2.0000 at (26, 26): expected rgb(105,91,251) actual rgb(105,91,251); phase 2.0000 at (38, 38): expected rgb(105,91,251) actual rgb(105,91,251); phase 2.0000 at (32, 24): expected rgb(105,91,251) actual rgb(105,91,251); phase 3.1416 at (32, 32): expected rgb(87,75,211) actual rgb(87,75,211); phase 3.1416 at (26, 26): expected rgb(87,75,211) actual rgb(87,75,211); phase 3.1416 at (38, 38): expected rgb(87,75,211) actual rgb(87,75,211); phase 3.1416 at (32, 24): expected rgb(87,75,211) actual rgb(87,75,211); phase 4.0000 at (32, 32): expected rgb(67,57,167) actual rgb(67,57,167); phase 4.0000 at (26, 26): expected rgb(67,57,167) actual rgb(67,57,167); phase 4.0000 at (38, 38): expected rgb(67,57,167) actual rgb(67,57,167); phase 4.0000 at (32, 24): expected rgb(67,57,167) actual rgb(67,57,167); phase 5.5000 at (32, 32): expected rgb(69,59,170) actual rgb(69,59,170); phase 5.5000 at (26, 26): expected rgb(69,59,170) actual rgb(69,59,170); phase 5.5000 at (38, 38): expected rgb(69,59,170) actual rgb(69,59,170); phase 5.5000 at (32, 24): expected rgb(69,59,170) actual rgb(69,59,170); phase 0.0000 at (32, 32): expected rgb(87,75,211) actual rgb(87,75,211); phase 0.0000 at (26, 26): expected rgb(87,75,211) actual rgb(87,75,211); phase 0.0000 at (38, 38): expected rgb(87,75,211) actual rgb(87,75,211); phase 0.0000 at (32, 24): expected rgb(87,75,211) actual rgb(87,75,211)"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d345ec3f036d4e2ef6cc-d1d16da90ca8924da990",
+          "file": "m2/pulse.spec.ts",
+          "line": 40,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "m2\\rejections.spec.ts",
+      "file": "m2/rejections.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "M2 invalid captures and CPU-only calls from shader code fail before launch (mtek check --format json)",
+          "file": "m2/rejections.spec.ts",
+          "line": 104,
+          "column": 6,
+          "specs": [
+            {
+              "title": "materials/e4040_scene_state: a fragment captures scene state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 158,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:19.056Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2511df0954a201589eb6-d1a9917d66a01ef911bf",
+              "file": "m2/rejections.spec.ts",
+              "line": 106,
+              "column": 5
+            },
+            {
+              "title": "materials/e4040_frame_time: a fragment captures frame.time (the note says to add a param and bind it)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 161,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:19.219Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2511df0954a201589eb6-2fe14ce0d68cfe3dcef6",
+              "file": "m2/rejections.spec.ts",
+              "line": 106,
+              "column": 5
+            },
+            {
+              "title": "materials/e4040_entity_field: a fragment captures an entity field",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 165,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:19.385Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2511df0954a201589eb6-c890bb3989b1d2230b74",
+              "file": "m2/rejections.spec.ts",
+              "line": 106,
+              "column": 5
+            },
+            {
+              "title": "materials/e4040_self: a fragment captures self",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 157,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:19.556Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2511df0954a201589eb6-8762cc1cbc215f6a2fd9",
+              "file": "m2/rejections.spec.ts",
+              "line": 106,
+              "column": 5
+            },
+            {
+              "title": "materials/e4040_cpu_fn_call: a fragment calls a cpu fn",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 154,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:19.719Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2511df0954a201589eb6-aecaa78b61e34505d0e8",
+              "file": "m2/rejections.spec.ts",
+              "line": 106,
+              "column": 5
+            },
+            {
+              "title": "materials/e4002_stage_reaches_cpu_fn_through_fn: shader code reaches a cpu fn through a pure fn",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 156,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:19.878Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2511df0954a201589eb6-7d14a94075643894e1ab",
+              "file": "m2/rejections.spec.ts",
+              "line": 106,
+              "column": 5
+            },
+            {
+              "title": "functions/e4002_calls_cpu_fn: a pure fn calls a cpu fn",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 156,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:20.039Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2511df0954a201589eb6-ca76b1d535ab8c9c6785",
+              "file": "m2/rejections.spec.ts",
+              "line": 106,
+              "column": 5
+            },
+            {
+              "title": "functions/e4002_call_chain: a pure fn reaches a cpu fn through a chain",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 155,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:20.200Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2511df0954a201589eb6-43fe28d7addb9c42a4b9",
+              "file": "m2/rejections.spec.ts",
+              "line": 106,
+              "column": 5
+            },
+            {
+              "title": "functions/e4002_imported_cpu_fn: a pure fn calls an imported cpu fn",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 160,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:20.360Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2511df0954a201589eb6-03f9de573d9346cf270c",
+              "file": "m2/rejections.spec.ts",
+              "line": 106,
+              "column": 5
+            },
+            {
+              "title": "a GPU-only built-in called from CPU code is rejected (E9010: gated to M4; the E4013 rule is covered by the compiler's unit tests)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 158,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T09:01:20.525Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2511df0954a201589eb6-99a547df25d7bf740e46",
+              "file": "m2/rejections.spec.ts",
+              "line": 118,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-05T09:01:14.660Z",
+    "duration": 6150.525,
+    "expected": 16,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

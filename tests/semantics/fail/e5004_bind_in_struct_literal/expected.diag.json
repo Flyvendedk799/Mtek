@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5004",
+    "file": "src/main.mtek",
+    "startByte": 174,
+    "endByte": 181,
+    "message": "`bind` cannot be used in a struct literal.",
+    "notes": [
+      "`bind(expr)` is the whole value of a bindable field of an entity or camera, or of a param in the `material` of an entity",
+      "help: write the expression without `bind`, or move it into a bindable field"
+    ]
+  }
+]

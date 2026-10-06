@@ -1,0 +1,9 @@
+// A `state` initialiser may not read the fields of entities (E5081).
+scene Demo {
+    camera Main {}
+    entity Cube {
+        position: vec3(1.0, 2.0, 3.0);
+        mesh: Box {};
+    }
+    state height: f32 = Cube.position.y;
+}

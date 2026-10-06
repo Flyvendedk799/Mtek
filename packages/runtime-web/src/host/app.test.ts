@@ -149,8 +149,11 @@ describe("dispose", () => {
       await debug.readPixels();
       // Alive while mounted.
       expect(debug.counters()["liveTextures"]).toBeGreaterThan(0);
-      expect(host.document.listenerCount).toBe(1);
+      expect(host.document.listenerCount).toBe(3); // visibilitychange, keydown, keyup
       app.dispose();
+      expect(host.document.listenerCount).toBe(0);
+      expect(host.canvas.listenerCount).toBe(0);
+      expect(host.window.listenerCount).toBe(0);
 
       const counters = debug.counters();
       for (const name of LIVE_COUNTERS) expect(counters[name], `${name} after cycle ${String(cycle)}`).toBe(0);
@@ -471,7 +474,8 @@ describe("debug API (options.test)", () => {
     expect(counters["frameTimeMs"]).toBeGreaterThan(0);
     // render target + depth
     expect(counters["liveTextures"]).toBe(2);
-    expect(counters["liveListeners"]).toBe(1); // the visibilitychange listener
+    // The document's visibilitychange, keydown and keyup; the window's blur; the canvas's four pointer events.
+    expect(counters["liveListeners"]).toBe(8);
     app.dispose();
   });
 
@@ -492,12 +496,21 @@ describe("debug API (options.test)", () => {
     app.dispose();
   });
 
-  it("pressKey, releaseKey and setParam say plainly that they arrive later", async () => {
+  it("pressKey and releaseKey accept DOM codes of Key members and reject anything else", async () => {
     const host = healthyHost();
     const app = await mountManual(host);
-    expect(() => debugOf(app).pressKey("Space")).toThrow(/M3/);
-    expect(() => debugOf(app).releaseKey("Space")).toThrow(/M3/);
-    expect(() => debugOf(app).setParam("Cube", "tint", 1)).toThrow(/M3/);
+    expect(() => { debugOf(app).pressKey("Space"); }).not.toThrow();
+    expect(() => { debugOf(app).releaseKey("Space"); }).not.toThrow();
+    expect(() => { debugOf(app).pressKey("Space "); }).toThrow(RangeError);
+    expect(() => { debugOf(app).releaseKey("Spacebar"); }).toThrow(RangeError);
+    app.dispose();
+  });
+
+  it("setParam changes the entity's material mirror and reports what the program does not declare", async () => {
+    const host = healthyHost();
+    const app = await mountManual(host);
+    debugOf(app).setParam("Cube", "color", { r: 0.5, g: 0.5, b: 0.5, a: 1 });
+    expect(() => debugOf(app).setParam("Cube", "tint", 1)).toThrow(/declares no param .tint./);
     app.dispose();
   });
 });

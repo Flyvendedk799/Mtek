@@ -1356,13 +1356,10 @@ fn every_gated_construct_has_a_gating_fixture() {
             "no gate_* fixture reports {construct:?}: {messages:#?}"
         );
     }
-    assert!(gated >= 6, "{gated} gated constructs");
+    assert!(gated >= 2, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
         ("The built-in type `sampler`", "M4"),
-        ("The built-in function `random`", "M3"),
-        ("The built-in namespace `frame`", "M3"),
-        ("The built-in enum `Key`", "M3"),
         ("The built-in schema `Pbr`", "M4"),
         ("The `Entity` field `light`", "M4"),
         ("The `Scene` field `gravity`", "M5"),
@@ -1474,24 +1471,14 @@ fn the_syntax_corpus_resolves_without_panicking() {
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
     ("E4041", "M4: texture and sampler params"),
-    ("E5004", "M3-05: bind"),
-    ("E5005", "M3-05: bind"),
     ("E5030", "M5: spawn and destroy"),
     ("E5040", "M5-01: prefabs"),
     ("E5041", "M5-01: prefabs"),
     ("E5042", "M5-01: prefabs"),
-    ("E5050", "M3-02: lifecycle functions and handlers"),
-    ("E5051", "M3-02: lifecycle functions and handlers"),
-    ("E5052", "M3-02: lifecycle functions and handlers"),
-    ("E5060", "M3-02: lifecycle functions and handlers"),
-    ("E5061", "M3-02: lifecycle functions and handlers"),
     ("E5062", "M5: collision events"),
-    ("E5070", "M3-05: bind"),
     ("E5071", "M5: physics"),
     ("E5072", "M5: physics"),
-    ("E5073", "M3-02: field writes in handlers"),
     ("E5074", "M5: entity_ref"),
-    ("E5075", "M3-05: bind"),
     ("E5091", "M5: physics"),
     ("E5110", "M5: lights in prefabs"),
     ("E5111", "M4: lights"),
@@ -1515,11 +1502,13 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W8031", "M5: spawn and destroy"),
     ("W8032", "M5: spawn and destroy"),
     ("E8033", "M5: spawn and destroy"),
+    ("E8041", "M3: host inputs (decision 0018)"),
     ("W8061", "M4-09: device-loss recovery (decision 0020)"),
     ("E8062", "M4-09: device-loss recovery (decision 0020)"),
     ("W8070", "M3: candidate-based hot reload"),
     ("E8080", "M6: preview builds"),
     ("E8090", "M3: run-time field writes"),
+    ("E8100", "M3: run-time field writes and host inputs"),
 ];
 
 /// Codes this build implements that no program checked by this build can
@@ -1587,14 +1576,6 @@ const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
     ("E8005", "../../packages/runtime-web/src/gpu/device.test.ts"),
     ("E8006", "../../packages/runtime-web/src/abi/abi.test.ts"),
     ("E8040", "../../packages/runtime-web/src/host/app.test.ts"),
-    (
-        "E8041",
-        "../../packages/runtime-web/src/host/codecs.test.ts",
-    ),
-    (
-        "E8100",
-        "../../packages/runtime-web/src/host/codecs.test.ts",
-    ),
     ("E8050", "../../packages/runtime-web/src/host/app.test.ts"),
     (
         "E8051",

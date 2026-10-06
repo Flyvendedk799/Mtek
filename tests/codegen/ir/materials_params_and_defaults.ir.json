@@ -669,7 +669,6 @@
               "span": {"file": 0, "start": 1034, "end": 1317}
             }
           },
-          "state": [],
           "constants": [],
           "cameras": [
             {
@@ -1079,7 +1078,10 @@
                 "span": {"file": 0, "start": 1237, "end": 1309}
               }
             }
-          ]
+          ],
+          "state": [],
+          "behaviors": [],
+          "bindings": []
         }
       ]
     }

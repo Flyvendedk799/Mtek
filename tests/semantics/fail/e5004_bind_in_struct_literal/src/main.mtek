@@ -1,0 +1,12 @@
+struct Wave {
+    amplitude: f32;
+}
+
+scene Demo {
+    state a: f32 = 1.0;
+    camera Main {}
+    entity Cube {
+        mesh: Box {};
+        position: vec3(Wave { amplitude: bind(a); }.amplitude, 0.0, 0.0);
+    }
+}

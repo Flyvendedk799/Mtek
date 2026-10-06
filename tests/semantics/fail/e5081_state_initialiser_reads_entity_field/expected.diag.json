@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5081",
+    "file": "src/main.mtek",
+    "startByte": 211,
+    "endByte": 224,
+    "message": "This initialiser reads 'position' of the entity 'Cube', but entity and camera fields cannot be read during initialisation.",
+    "notes": [
+      "initialisers may read constants, scene state and earlier state, but not the fields of entities or cameras"
+    ]
+  }
+]

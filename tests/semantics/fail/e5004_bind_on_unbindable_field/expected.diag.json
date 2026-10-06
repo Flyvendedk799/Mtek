@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5004",
+    "file": "src/main.mtek",
+    "startByte": 133,
+    "endByte": 145,
+    "message": "`bind` cannot be the value of the field 'mesh' of entity 'Cube': the field is not bindable.",
+    "notes": [
+      "bindable fields: position, rotation, scale, visible"
+    ]
+  }
+]

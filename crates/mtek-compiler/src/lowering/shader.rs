@@ -488,7 +488,9 @@ impl<'p> ShaderLowering<'p> {
         hoist: bool,
         lets: &mut Vec<Statement>,
     ) -> Result<(Expr, bool), Defect> {
-        let ir::PlaceRoot::Local { local, span, .. } = &place.root;
+        let ir::PlaceRoot::Local { local, span, .. } = &place.root else {
+            return Err("an assignment to scene state or an entity in GPU code".to_owned());
+        };
         let item = local_item(body, *local)?;
         let mut reference = Expr::local(local_name(item), self.types.value_type(&item.ty)?, *span);
         let mut reference_ty = item.ty.clone();
@@ -645,6 +647,14 @@ impl<'p> ShaderLowering<'p> {
             }
             ir::ExprKind::Material { material, .. } => {
                 return Err(format!("an instance of '{material}' in GPU code"));
+            }
+            ir::ExprKind::State { .. }
+            | ir::ExprKind::EntityField { .. }
+            | ir::ExprKind::CameraField { .. }
+            | ir::ExprKind::InstanceParam { .. }
+            | ir::ExprKind::Frame { .. }
+            | ir::ExprKind::EnumMember { .. } => {
+                return Err("a scene value in GPU code".to_owned());
             }
         })
     }
@@ -858,6 +868,26 @@ impl<'p> ShaderLowering<'p> {
             "mat4.translation" => Helper::Mat4Translation,
             "mat4.scale" => Helper::Mat4Scale,
             "mat4.rotation" => Helper::Mat4Rotation,
+            // The CPU's operation order (decision 0047); the other forms stay WGSL built-ins.
+            "mix" | "normalize" => match (
+                function,
+                args.iter()
+                    .map(|a| helpers::float_dim(&a.ty))
+                    .collect::<Vec<_>>()
+                    .as_slice(),
+            ) {
+                ("mix", [Some(dim), Some(_), Some(weight)]) => Helper::Mix {
+                    dim: *dim,
+                    scalar_t: *dim > 1 && *weight == 1,
+                },
+                ("normalize", [Some(dim)]) if *dim > 1 => Helper::Normalize { dim: *dim },
+                _ => {
+                    let intrinsic = Intrinsic::from_mtek(function).ok_or_else(|| {
+                        format!("the built-in function '{function}' has no GPU form")
+                    })?;
+                    return Ok(Expr::intrinsic(intrinsic, args, result, span));
+                }
+            },
             name => {
                 let intrinsic = Intrinsic::from_mtek(name)
                     .ok_or_else(|| format!("the built-in function '{name}' has no GPU form"))?;

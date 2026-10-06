@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5005",
+    "file": "src/main.mtek",
+    "startByte": 193,
+    "endByte": 206,
+    "message": "The binding of the field 'position' of entity 'Cube' reads the camera field `Main.position`, which a binding cannot depend on.",
+    "notes": [
+      "a binding may read constants, state, `frame` and the fields and state of named entities"
+    ]
+  }
+]

@@ -52,6 +52,7 @@
 //!   calls and declares; [`effects`]: the program-wide pass;
 //! - [`scene`]: the scene and schema checks and their result.
 
+mod bind;
 mod body;
 mod check;
 mod consteval;
@@ -63,6 +64,7 @@ mod intrinsics;
 mod material;
 mod ops;
 pub mod scene;
+mod scene_body;
 #[cfg(test)]
 mod scene_tests;
 mod structs;
@@ -214,6 +216,146 @@ pub struct StageInfo {
     pub facts: BodyFacts,
 }
 
+/// A `state` declaration of a scene or an entity (`spec/scenes.md` sections 2 and 4.4).
+#[derive(Clone, Debug, PartialEq)]
+pub struct StateInfo {
+    pub def: DefId,
+    pub name: String,
+    /// The declared name.
+    pub name_span: Span,
+    /// The whole `state name: T = value;`.
+    pub span: Span,
+    /// The declared type; `Error` if the annotation has an error.
+    pub ty: TyId,
+    /// The scene or entity that declares it.
+    pub owner: Option<DefId>,
+    /// The initialiser expression.
+    pub init: NodeId,
+    /// Its position among the state of its owner, in declaration order.
+    pub index: u32,
+}
+
+/// What kind of CPU root body a [`CpuBody`] is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CpuBodyKind {
+    /// The initialiser of a `state`.
+    StateInit,
+    /// `update` or `fixed_update`.
+    Lifecycle,
+    /// `on event(…)`.
+    Handler,
+    /// The expression of a `bind(..)`.
+    Binding,
+}
+
+/// A body that runs on the CPU and is not a function: a state initialiser, a
+/// lifecycle function or an event handler (a CPU root of the program-wide
+/// pass, [`effects::Roots::cpu_bodies`]).
+#[derive(Clone, Debug, PartialEq)]
+pub struct CpuBody {
+    pub kind: CpuBodyKind,
+    /// The syntax node: the `StateDecl`, `LifecycleFn` or `Handler`.
+    pub node: NodeId,
+    /// The scene or entity that holds it.
+    pub owner: Option<DefId>,
+    /// How diagnostics name it: "the handler `on key_down` of scene 'Demo'".
+    pub label: String,
+    pub span: Span,
+    /// What it calls and declares.
+    pub facts: BodyFacts,
+}
+
+/// What an assignment in a handler writes (single-writer analysis,
+/// `spec/scenes.md` section 8.2).
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum WriteTarget {
+    /// Scene or entity `state`.
+    State(DefId),
+    /// A field of a named entity or camera (`Cube.position`, `Main.target`), by the
+    /// declaration of the object and the registry field name.
+    Field { object: DefId, field: String },
+    /// A param of the material instance of a named entity (`Cube.material.phase`).
+    MaterialParam { entity: DefId, param: String },
+}
+
+/// What a `bind(..)` writes (`spec/scenes.md` section 8.4).
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum BindTarget {
+    /// A field of a named entity or camera (`Cube.position`, `Main.target`).
+    Field { object: DefId, field: String },
+    /// A param of the material instance of a named entity.
+    MaterialParam { entity: DefId, param: String },
+}
+
+/// What a binding expression reads: its dependencies (`spec/runtime-abi.md` section 5.2).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum BindDep {
+    /// Scene state.
+    State(DefId),
+    /// `frame.time`, `frame.delta`, `frame.index` (the member name).
+    Frame(String),
+    /// A field of a named entity or camera.
+    Field { object: DefId, field: String },
+    /// The state of an entity.
+    EntityState { entity: DefId, state: DefId },
+    /// A param of the material instance of a named entity.
+    MaterialParam { entity: DefId, param: String },
+}
+
+impl BindDep {
+    /// Whether reading this dependency reads what `target` writes.
+    #[must_use]
+    pub fn reads(&self, target: &BindTarget) -> bool {
+        match (self, target) {
+            (
+                BindDep::Field { object, field },
+                BindTarget::Field {
+                    object: o,
+                    field: f,
+                },
+            ) => object == o && field == f,
+            (
+                BindDep::MaterialParam { entity, param },
+                BindTarget::MaterialParam {
+                    entity: e,
+                    param: p,
+                },
+            ) => entity == e && param == p,
+            _ => false,
+        }
+    }
+}
+
+/// One `bind(expr)` of a scene, after the checks (decision 0051).
+#[derive(Clone, Debug, PartialEq)]
+pub struct BindInfo {
+    /// The scene it belongs to.
+    pub scene: Option<DefId>,
+    /// The `bind(..)` node.
+    pub node: NodeId,
+    /// The whole `bind(..)`.
+    pub span: Span,
+    /// The bound expression.
+    pub source: NodeId,
+    /// The field or param's type, which the expression has exactly.
+    pub ty: TyId,
+    pub target: BindTarget,
+    /// What the expression reads, in source order, each once.
+    pub deps: Vec<BindDep>,
+    /// The binding's index among the bindings of its scene, in declaration order.
+    pub id: u32,
+    /// Its position in the evaluation order of phase 5 (topological, ties by declaration order).
+    pub order: u32,
+}
+
+/// One assignment to a [`WriteTarget`].
+#[derive(Clone, Debug, PartialEq)]
+pub struct WriteSite {
+    pub target: WriteTarget,
+    /// The whole assignment target as written.
+    pub span: Span,
+}
+
 /// What type checking and constant evaluation produced for one module.
 #[derive(Clone, Debug)]
 pub struct Typeck {
@@ -235,6 +377,17 @@ pub struct Typeck {
     fields: BTreeMap<NodeId, FieldKind>,
     /// Every material the module declares, by its `DefId`.
     materials: BTreeMap<DefId, MaterialInfo>,
+    /// Every `state` declaration, by its `DefId`.
+    states: BTreeMap<DefId, StateInfo>,
+    /// State initialisers, lifecycle functions and handlers, in source order.
+    cpu_bodies: Vec<CpuBody>,
+    /// Every assignment to state, entity and camera fields and material
+    /// params, in source order.
+    writes: Vec<WriteSite>,
+    /// The type of the material instance of each named entity that has one.
+    entity_materials: BTreeMap<DefId, TyId>,
+    /// Every `bind(..)` of every scene, scene by scene in declaration order.
+    bindings: Vec<BindInfo>,
 }
 
 impl Typeck {
@@ -253,7 +406,55 @@ impl Typeck {
             calls: BTreeMap::new(),
             fields: BTreeMap::new(),
             materials: BTreeMap::new(),
+            states: BTreeMap::new(),
+            cpu_bodies: Vec::new(),
+            writes: Vec::new(),
+            entity_materials: BTreeMap::new(),
+            bindings: Vec::new(),
         }
+    }
+
+    /// Every `bind(..)` of the module, scene by scene, in declaration order.
+    #[must_use]
+    pub fn bindings(&self) -> &[BindInfo] {
+        &self.bindings
+    }
+
+    /// The binding declared by the `bind` node `node`.
+    #[must_use]
+    pub fn binding_of(&self, node: NodeId) -> Option<&BindInfo> {
+        self.bindings.iter().find(|b| b.node == node)
+    }
+
+    /// The `state` declared as `def`.
+    #[must_use]
+    pub fn state(&self, def: DefId) -> Option<&StateInfo> {
+        self.states.get(&def)
+    }
+
+    /// Every `state` declaration, in `DefId` (source) order.
+    pub fn states(&self) -> impl Iterator<Item = &StateInfo> + '_ {
+        self.states.values()
+    }
+
+    /// The state initialisers, lifecycle functions and handlers of the
+    /// module, in source order.
+    #[must_use]
+    pub fn cpu_bodies(&self) -> &[CpuBody] {
+        &self.cpu_bodies
+    }
+
+    /// Every assignment to state, fields and material params, in source
+    /// order.
+    #[must_use]
+    pub fn writes(&self) -> &[WriteSite] {
+        &self.writes
+    }
+
+    /// The material instance type of the named entity `entity`.
+    #[must_use]
+    pub fn entity_material(&self, entity: DefId) -> Option<TyId> {
+        self.entity_materials.get(&entity).copied()
     }
 
     /// The material declared as `def`.
