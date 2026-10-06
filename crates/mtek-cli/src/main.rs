@@ -11,6 +11,7 @@ mod dist;
 mod guard;
 mod real_fs;
 mod runtime;
+mod scaffold;
 
 use std::io::{IsTerminal, Write};
 use std::process::ExitCode;
@@ -48,6 +49,9 @@ fn run(request: Request) -> Outcome {
                     code: dev::run(port, open, path.as_deref(), context),
                     ..Outcome::default()
                 };
+            }
+            if let Request::New { name } = request {
+                return scaffold::create(&context.cwd, &name);
             }
             let (format, verb) = (request.format(), request.verb());
             match guard::run_guarded(move || commands::execute(&request, &context)) {

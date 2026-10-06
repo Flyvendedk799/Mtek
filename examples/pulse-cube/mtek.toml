@@ -1,0 +1,12 @@
+[project]
+name = "pulse-cube"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Demo"
+
+[build]
+target = "web"
+title = "Pulse Cube"
+
+[host.inputs]
+tint = "Demo.tint"

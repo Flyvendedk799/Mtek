@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { build } from "esbuild";
 import { BROWSER_ROOT, REPO_ROOT } from "./environment.ts";
 import { buildCli, buildM1Fixtures } from "./m1-fixtures.ts";
+import { buildPulseCube } from "./m3-fixtures.ts";
 import { buildNumericProbe } from "./numeric-probe.ts";
 import { startStaticServer } from "./serve.ts";
 
@@ -86,6 +87,9 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   const cli = buildCli();
   process.env["MTEK_CLI"] = cli;
   buildM1Fixtures(cli);
+
+  // M3-08 pulse-cube (may NOT-RUN until M3-01..05 open gated Demo constructs).
+  buildPulseCube(cli);
 
   // The numeric probe (M2-08): the compiler's WGSL for every operation of cpu.json plus a test-only harness.
   buildNumericProbe(cli, join(out, "numeric"));

@@ -304,23 +304,21 @@ pub(crate) fn front_end_with(
     // Host inputs against the entry scene (task M3-06).
     if let (Some(entry_resolution), Some(Some(entry_types))) =
         (resolutions.first(), types.first())
+        && let Some(entry_def) = entry_resolution.entry_scene()
+        && let Some(scene) = entry_types.scene(entry_def)
     {
-        if let Some(entry_def) = entry_resolution.entry_scene() {
-            if let Some(scene) = entry_types.scene(entry_def) {
-                let opaque = loaded
-                    .first()
-                    .map(|unit| states_feeding_opaque_color(&unit.ast, &scene.name))
-                    .unwrap_or_default();
-                let _resolved = validate_host_inputs(
-                    &project.config.host_inputs,
-                    scene,
-                    &opaque,
-                    sink,
-                );
-                // Resolved inputs are re-derived at package time from the same sources.
-                let _ = _resolved;
-            }
-        }
+        let opaque = loaded
+            .first()
+            .map(|unit| states_feeding_opaque_color(&unit.ast, &scene.name))
+            .unwrap_or_default();
+        let _resolved = validate_host_inputs(
+            &project.config.host_inputs,
+            scene,
+            &opaque,
+            sink,
+        );
+        // Resolved inputs are re-derived at package time from the same sources.
+        let _ = _resolved;
     }
 
     let mut units = loaded
