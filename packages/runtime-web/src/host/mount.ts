@@ -24,8 +24,8 @@ import {
 import { MtekMountError, makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import { acquireDevice, type AcquiredDevice } from "../gpu/device.js";
 import { ResourceRegistry } from "../gpu/registry.js";
-import { MountedApp } from "./app.js";
-import { defaultEnvironment, type HostEnvironment } from "./environment.js";
+import { MountedApp, RECOVERY_ATTEMPTS } from "./app.js";
+import { defaultEnvironment, type FetchResponseLike, type HostEnvironment } from "./environment.js";
 import { DiagnosticSink, abiFailureToDiagnostic, mountError } from "./failures.js";
 import { FailureOverlay } from "./overlay.js";
 import { loadStartupShaders } from "./shaders.js";
@@ -69,6 +69,40 @@ function validateOptions(options: MtekMountOptions<never>): void {
       }
     }
   }
+  if (test?.canvasRenderTarget === true && target !== undefined) {
+    throw new TypeError("mountMtek: test.canvasRenderTarget and test.renderTarget exclude each other");
+  }
+  const recovery = test?.recovery;
+  if (recovery?.delaysMs !== undefined) {
+    const delays: readonly unknown[] = recovery.delaysMs;
+    if (delays.length !== RECOVERY_ATTEMPTS || !delays.every((delay) => typeof delay === "number" && Number.isFinite(delay) && delay >= 0)) {
+      throw new RangeError(
+        `mountMtek: test.recovery.delaysMs must be ${String(RECOVERY_ATTEMPTS)} non-negative finite numbers, got ${JSON.stringify(recovery.delaysMs)}`,
+      );
+    }
+  }
+  const injected = recovery?.failDeviceRequests;
+  if (injected !== undefined && !(Number.isInteger(injected) && injected >= 0)) {
+    throw new RangeError(`mountMtek: test.recovery.failDeviceRequests must be a non-negative integer, got ${String(injected)}`);
+  }
+}
+
+/**
+ * Fetches shader files and remembers the text of every success, so rebuilding the shaders after a device
+ * loss does not depend on the network (decision 0056). Shader URLs are named by content hash, so a cached
+ * body never goes stale.
+ */
+function rememberingFetch(environment: HostEnvironment): (url: string) => Promise<FetchResponseLike> {
+  const bodies = new Map<string, string>();
+  return async (url) => {
+    const known = bodies.get(url);
+    if (known !== undefined) return { ok: true, status: 200, text: () => Promise.resolve(known) };
+    const response = await environment.fetch(url);
+    if (!response.ok) return response;
+    const text = await response.text();
+    bodies.set(url, text);
+    return { ok: true, status: response.status, text: () => Promise.resolve(text) };
+  };
 }
 
 async function loadManifest(environment: HostEnvironment, url: URL): Promise<MtekManifest> {
@@ -218,6 +252,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       registry,
       format: format as CanvasFormat,
       renderTarget: options.test?.renderTarget,
+      canvasRenderTarget: options.test?.canvasRenderTarget === true,
       devicePixelRatio: typeof dprOption === "number" ? () => dprOption : () => environment.devicePixelRatio(),
     });
     const maxDimension = device.limits.maxTextureDimension2D;
@@ -238,13 +273,14 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       throw mountError(allocationFailures);
     }
 
-    // Startup shaders.
+    // Startup shaders. The files are remembered for the rebuild after a device loss.
+    const fetchShaderFile = rememberingFetch(environment);
     const shaders = await loadStartupShaders({
       manifest,
       baseUrl: program.baseUrl,
       device,
       registry,
-      fetch: (url) => environment.fetch(url),
+      fetch: fetchShaderFile,
     });
     if (shaders.diagnostics.length > 0) throw mountError(shaders.diagnostics);
 
@@ -300,6 +336,19 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       canvas,
       pauseWhenHidden: options.pauseWhenHidden ?? manifest.runtimeConfig.pauseWhenHidden,
       test: options.test,
+      watchPixelRatio: dprOption === "auto",
+      fetchShaderFile,
+      acquireDevice: (handlers) =>
+        acquireDevice({
+          requiredFeatures: [...required.features] as GPUFeatureName[],
+          requiredLimits: { ...required.limits },
+          onDeviceLost: handlers.onDeviceLost,
+          onUncapturedError: handlers.onUncapturedError,
+          environment: {
+            gpu: environment.gpu,
+            ...(environment.littleEndian === undefined ? {} : { littleEndian: environment.littleEndian }),
+          },
+        }),
       seed,
       input,
       services,

@@ -11,6 +11,18 @@ export interface MtekTestOptions {
   manualClock?: boolean;
   /** Render into an offscreen `rgba8unorm-srgb` texture of this size (fixed format on every platform). */
   renderTarget?: { width: number; height: number };
+  /**
+   * Render into an offscreen `rgba8unorm-srgb` texture that always has the canvas's backing size, so
+   * resize, pixel ratio and zero-size handling can be read back (decision 0056). Excludes `renderTarget`.
+   */
+  canvasRenderTarget?: boolean;
+  /** Device recovery (`spec/runtime-abi.md` section 9.4, decision 0056). */
+  recovery?: {
+    /** Delays before recovery attempts 1 to 3, in milliseconds. Default `[250, 1000, 4000]`. */
+    delaysMs?: [number, number, number];
+    /** The next `n` device requests of a recovery attempt fail as if `requestDevice` had rejected. */
+    failDeviceRequests?: number;
+  };
 }
 
 /** `spec/runtime-abi.md` section 10.2. */
@@ -32,6 +44,13 @@ export interface MtekDebug {
    * colour is `E8100` and the previous value stays. A wrong entity, param or value throws (decision 0046).
    */
   setParam(entityName: string, param: string, value: unknown): void;
+  /**
+   * Destroys the GPU device. The `lost` event that follows has reason `destroyed`, which the runtime
+   * ignores when it comes from `dispose()`; this call marks it as a loss to recover from (decision 0056).
+   */
+  loseDevice(): void;
+  /** Reports `E8063` as an out-of-memory error scope would, so the failure path can be driven on hardware. */
+  failAllocation(): void;
   scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }> };
 }
 

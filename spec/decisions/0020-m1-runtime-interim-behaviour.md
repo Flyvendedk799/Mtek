@@ -1,6 +1,6 @@
 # 0020. M1 runtime: interim behaviour where a later task is not ready
 
-- Status: Accepted
+- Status: Superseded by 0056
 - Date: 2026-10-03
 - Blueprint origin: §7.4 (device loss); `spec/runtime-abi.md` §9.4.
 
@@ -14,8 +14,8 @@
 
 ## Consequences
 
-This decision is superseded by the record that accompanies M4-09.
+This decision is superseded by decision 0056 (task M4-09): device loss is recovered with a bounded rebuild.
 
 ## Verification
 
-`src/host/app.test.ts` (device loss: `W8060`, state `failed`, overlay, loop stopped, still disposable).
+`src/host/app.test.ts` (device loss: `W8060`, state `failed`, overlay, loop stopped, still disposable) until M4-09; the recovery tests are in `src/host/recovery.test.ts` (decision 0056).

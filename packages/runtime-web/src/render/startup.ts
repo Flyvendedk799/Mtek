@@ -11,15 +11,15 @@
  *  5. The renderer allocates the frame and object blocks.
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
-import type { MtekDiagnostic } from "../diagnostics/types.js";
+import { makeRuntimeDiagnostic, type MtekDiagnostic, type MtekRuntimePhase } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import type { CheckedProgram } from "../scene/program.js";
-import type { SceneStructure } from "../scene/structure.js";
+import type { ResolvedMaterial, SceneStructure } from "../scene/structure.js";
 import { Bindings } from "../scene/bindings.js";
 import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
-import { BindingPlan, PipelineCache } from "./pipelines.js";
+import { BindingPlan, PipelineCache, type PipelineResult } from "./pipelines.js";
 import { Renderer, type MaterialPipeline, type RenderSurface } from "./renderer.js";
 
 export interface SceneStartupOptions {
@@ -43,6 +43,13 @@ export interface SceneStartupOptions {
   readonly pipelineCache?: PipelineCache;
   /** Reused with `pipelineCache` so new bind groups match the cached pipelines. */
   readonly bindingPlan?: BindingPlan;
+  /**
+   * Device recovery (`spec/runtime-abi.md` section 9.4, decision 0056): rebuild every GPU resource for a new
+   * device around the retained CPU state. `init` does not run again; the world is pointed at the new
+   * material arenas and refills them from its mirrors. A material whose shader module is missing or whose
+   * pipeline cannot be created is reported (phase `runtime:device`) and not drawn instead of failing the rebuild.
+   */
+  readonly recover?: { readonly world: World; readonly bindings: Bindings };
 }
 
 /** The running scene: its CPU world, its GPU state and its renderer. */
@@ -59,35 +66,63 @@ export interface Scene {
 
 export type SceneStartupResult = { readonly ok: true; readonly scene: Scene } | { readonly ok: false; readonly diagnostics: readonly MtekDiagnostic[] };
 
+/** The result for a material whose shader module could not be created while recovering from a device loss. */
+function missingModule(material: ResolvedMaterial, phase: MtekRuntimePhase | undefined): PipelineResult {
+  return {
+    ok: false,
+    diagnostic: makeRuntimeDiagnostic("E8051", {
+      phase: phase ?? "runtime:mount",
+      message: `The shader of material '${material.id}' could not be loaded after the GPU device was recreated.`,
+    }),
+  };
+}
+
 /** Builds and initialises the scene. Errors thrown by generated code (internal errors) propagate. */
 export async function startScene(options: SceneStartupOptions): Promise<SceneStartupResult> {
   const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
 
   const plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
   const materials = new MaterialStore(device, registry, plan, structure, program.writers);
-  const world = new World({ manifest, structure, params: materials, report, ...(services === undefined ? {} : { services }) });
-  const bindings = new Bindings(manifest, program.scene.bindings, world);
-  world.initialise(program.scene.init, () => {
-    bindings.evaluate();
-  });
+  const { recover } = options;
+  let world: World;
+  let bindings: Bindings;
+  if (recover === undefined) {
+    const fresh = new World({ manifest, structure, params: materials, report, ...(services === undefined ? {} : { services }) });
+    const freshBindings = new Bindings(manifest, program.scene.bindings, fresh);
+    fresh.initialise(program.scene.init, () => {
+      freshBindings.evaluate();
+    });
+    world = fresh;
+    bindings = freshBindings;
+  } else {
+    ({ world, bindings } = recover);
+    world.rebindParams(materials);
+  }
 
   const meshes = new MeshStore(registry, device.queue);
   meshes.upload(structure.meshes);
 
   const pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest);
+  const phase = recover === undefined ? undefined : "runtime:device";
   const results = await Promise.all(
     structure.materials.map((material) => {
       const module = modules.get(material.shader.hash);
-      if (module === undefined) throw new Error(`internal error: no shader module for '${material.id}'`);
-      return pipelines.obtain({ material, module, colorFormat: surface.colorFormat });
+      if (module === undefined) {
+        if (recover !== undefined) return Promise.resolve(missingModule(material, phase));
+        throw new Error(`internal error: no shader module for '${material.id}'`);
+      }
+      return pipelines.obtain({ material, module, colorFormat: surface.colorFormat, ...(phase === undefined ? {} : { phase }) });
     }),
   );
   const diagnostics: MtekDiagnostic[] = [];
+  const failed: { readonly id: string; readonly diagnostic: MtekDiagnostic }[] = [];
   const byMaterial = new Map<string, MaterialPipeline>();
   results.forEach((result, index) => {
     const material = structure.materials[index];
-    if (!result.ok) diagnostics.push(result.diagnostic);
-    else if (material !== undefined) byMaterial.set(material.id, { key: result.key, pipeline: result.pipeline });
+    if (material === undefined) return;
+    if (result.ok) byMaterial.set(material.id, { key: result.key, pipeline: result.pipeline });
+    else if (recover === undefined) diagnostics.push(result.diagnostic);
+    else failed.push({ id: material.id, diagnostic: result.diagnostic });
   });
   if (diagnostics.length > 0) {
     materials.dispose();
@@ -97,5 +132,6 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
 
   world.phase = "runtime:update";
   const renderer = new Renderer({ device, registry, surface, manifest, structure, world, writers: program.writers, plan, materials, meshes, pipelines: byMaterial, report });
+  for (const { id, diagnostic } of failed) renderer.failMaterial(id, diagnostic);
   return { ok: true, scene: { world, bindings, materials, meshes, plan, pipelines, renderer } };
 }

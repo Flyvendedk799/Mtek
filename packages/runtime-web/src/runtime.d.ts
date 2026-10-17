@@ -100,6 +100,15 @@ export interface MtekTestOptions {
   manualClock?: boolean;
   /** Render into an offscreen rgba8unorm-srgb texture of this size. */
   renderTarget?: { width: number; height: number };
+  /** Render into an offscreen rgba8unorm-srgb texture that always has the canvas's backing size (resize, pixel ratio). */
+  canvasRenderTarget?: boolean;
+  /** Device recovery (spec/runtime-abi.md section 9.4). */
+  recovery?: {
+    /** Delays before recovery attempts 1 to 3, in milliseconds. Default [250, 1000, 4000]. */
+    delaysMs?: [number, number, number];
+    /** The next n device requests of a recovery attempt fail as if requestDevice had rejected. */
+    failDeviceRequests?: number;
+  };
 }
 
 export interface MtekDebug {
@@ -109,6 +118,10 @@ export interface MtekDebug {
   pressKey(code: string): void;
   releaseKey(code: string): void;
   setParam(entityName: string, param: string, value: unknown): void;
+  /** Destroys the GPU device; the runtime handles it as a device loss (spec/runtime-abi.md section 9.4). */
+  loseDevice(): void;
+  /** Reports an allocation failure as the out-of-memory error scope would (spec/runtime-abi.md section 9.5). */
+  failAllocation(): void;
   scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }> };
 }
 

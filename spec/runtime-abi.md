@@ -383,23 +383,31 @@ The M1 context subset, setter validation during `init`, the program/structure ch
 
 9.5 **Allocation failure.** Buffer and texture creation inside `pushErrorScope("out-of-memory")`; failure during mount rejects with `allocation-failed`; failure later (e.g. arena growth) reports `E8063` and stops the scene with the overlay rather than rendering stale data.
 
+The resize and pixel-ratio watchers, the device-loss rebuild (what is retained, what is recreated, the timers, the state restored afterwards) and the test hooks that drive them are fixed in `spec/decisions/0056-resilience.md`.
+
 ## 10. Counters, overlay and test control
 
-10.1 **Counters** (per frame and cumulative): `frameTimeMs`, `cpuUpdateMs`, `renderPrepMs`, `drawCalls`, `instancedDraws`, `culledObjects`, `uploads`, `uploadBytes`, `pipelinesCreated`, `shaderModulesCreated`, `bindGroupsCreated`, `buffersAllocated`, `texturesAllocated`, live counts `liveBuffers`, `liveTextures`, `liveSamplers`, `liveShaderModules`, `livePipelines`, `liveBindGroups`, `liveListeners`, `sharedParamBlocks`, `ownedParamBlocks`, `discardedSteps`, `liveEntities`, `failedMaterials` (materials no longer drawn after a later shader or pipeline failure, §12). GPU time is reported only when the `timestamp-query` feature is available and requested; otherwise the overlay says "GPU time unavailable" (blueprint §12.3 — never relabel CPU submission time as GPU time).
+10.1 **Counters** (per frame and cumulative): `frameTimeMs`, `cpuUpdateMs`, `renderPrepMs`, `drawCalls`, `instancedDraws`, `culledObjects`, `uploads`, `uploadBytes`, `pipelinesCreated`, `shaderModulesCreated`, `bindGroupsCreated`, `buffersAllocated`, `texturesAllocated`, live counts `liveBuffers`, `liveTextures`, `liveSamplers`, `liveShaderModules`, `livePipelines`, `liveBindGroups`, `liveListeners`, `sharedParamBlocks`, `ownedParamBlocks`, `discardedSteps`, `liveEntities`, `failedMaterials` (materials no longer drawn after a later shader or pipeline failure, §12), `deviceLosses`, `deviceRecoveries`, `recoveryAttempts` (cumulative, §9.4). GPU time is reported only when the `timestamp-query` feature is available and requested; otherwise the overlay says "GPU time unavailable" (blueprint §12.3 — never relabel CPU submission time as GPU time).
 
 10.2 **Test control** (`options.test`, never in production builds of examples):
 ```ts
-interface MtekTestOptions { manualClock?: boolean; renderTarget?: { width: number; height: number }; }
+interface MtekTestOptions {
+  manualClock?: boolean; renderTarget?: { width: number; height: number };
+  canvasRenderTarget?: boolean;   // offscreen target that follows the canvas backing size (resize, pixel ratio); excludes renderTarget
+  recovery?: { delaysMs?: [number, number, number]; failDeviceRequests?: number };   // §9.4: default [250, 1000, 4000]
+}
 interface MtekDebug {
   step(frames: number, dtSeconds: number): void;
   readPixels(): Promise<{ width: number; height: number; format: "rgba8unorm-srgb"; data: Uint8Array }>;
   counters(): Readonly<Record<string, number>>;
   pressKey(code: string): void; releaseKey(code: string): void;      // injects input transitions
   setParam(entityName: string, param: string, value: unknown): void;  // M2 gate: change a param without `bind` (decision 0046)
+  loseDevice(): void;      // destroys the GPU device; handled as a device loss (§9.4, decision 0056)
+  failAllocation(): void;  // reports E8063 as an out-of-memory scope would (§9.5)
   scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }> };
 }
 ```
-With `renderTarget`, frames render into an offscreen `rgba8unorm-srgb` texture of that size (fixed format regardless of the platform's preferred canvas format); `readPixels` copies it to a buffer (`bytesPerRow` padded to 256), maps it and returns tightly packed rows.
+With `renderTarget`, frames render into an offscreen `rgba8unorm-srgb` texture of that size (fixed format regardless of the platform's preferred canvas format); `readPixels` copies it to a buffer (`bytesPerRow` padded to 256), maps it and returns tightly packed rows. With `canvasRenderTarget` the offscreen texture always has the canvas's backing size and is recreated with the depth texture whenever that size changes (`readPixels` rejects while the canvas has no pixels).
 
 ## 11. Hot reload (development only)
 

@@ -518,6 +518,25 @@ describe("growth", () => {
     expect(arena.allocate()).toBe(0);
   });
 
+  it("reports an out-of-memory result of the grown buffer as E8063 (arrives after a round trip), keeping the mirror intact for the owner to stop", async () => {
+    const h = harness();
+    const arena = h.makeArena(16, { initialCapacity: 2 });
+    arena.allocate();
+    arena.allocate();
+    poke(arena, 1, 0, 0xabcd);
+    h.fake.failNextAllocations(1);
+    const slot = arena.allocate(); // grows: the new buffer cannot be allocated
+    expect(slot).toBe(2);
+    expect(arena.capacity).toBe(4);
+    // The out-of-memory scope resolves asynchronously; the owner (MountedApp) turns the report into the failed state.
+    expect(h.failures).toEqual([]);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(h.failures.map((f) => f.code)).toEqual(["MTEK-E8063"]);
+    expect(h.failures[0]?.message).toContain("mtek:uniform-arena:material:test::Mat");
+    expect(arena.views.u32[arena.slotOffset(1) >>> 2]).toBe(0xabcd);
+  });
+
   it("rejects an initial capacity beyond maxBufferSize", () => {
     const h = harness({ maxBufferSize: 256 });
     expect(() => h.makeArena(16, { initialCapacity: 2 })).toThrow(RangeError);
