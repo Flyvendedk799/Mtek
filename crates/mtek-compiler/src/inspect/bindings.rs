@@ -431,6 +431,10 @@ impl BindingsView {
                 (Some(layout), Some(binding)) => {
                     format!("block {layout}  group {} binding {binding}", instance.group)
                 }
+                _ if instance.params.iter().any(|p| p.binding.is_some()) => format!(
+                    "no parameter block (group {} holds the textures and samplers)",
+                    instance.group
+                ),
                 _ => format!("no parameter block (empty group {})", instance.group),
             };
             out.push_str(&format!(

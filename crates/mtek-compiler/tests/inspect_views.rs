@@ -370,3 +370,42 @@ fn a_parameter_block_over_the_profile_limit_is_e6001_and_no_view() {
     assert!(ir.report.diagnostics.is_empty());
     assert!(ir.render(InspectFormat::Json).is_some());
 }
+
+#[test]
+fn a_material_with_resources_only_has_bindings_and_no_block() {
+    // Decision 0054: the instance's params are resources with a binding and the built-in they hold;
+    // there is no block, no field, offset or size, and group 1 is not "empty".
+    let mut memory = MemFs::new();
+    memory
+        .insert(
+            ProjectPath::new("mtek.toml").unwrap(),
+            "[project]\nname = \"flat\"\nlanguage = \"0.1\"\n",
+        )
+        .insert(
+            ProjectPath::new("src/main.mtek").unwrap(),
+            "material Flat {\n    param base: texture = texture.white();\n    param filter: sampler = sampler.linear_clamp();\n    fragment(input: SurfaceInput) -> color { return color.linear(sample(base, filter, input.uv).xyz, 1.0); }\n}\nscene Demo {\n    camera Main {}\n    entity A { mesh: Box {}; material: Flat { base: texture.black() }; }\n}\n",
+        );
+    let result = inspected(&memory, Inspect::Bindings);
+    assert!(!result.has_errors(), "{:#?}", result.report);
+    let json: Value = serde_json::from_str(&result.render(InspectFormat::Json).unwrap()).unwrap();
+    let instance = &json["instances"][0];
+    assert_eq!(instance["layout"], Value::Null);
+    assert_eq!(instance["binding"], Value::Null);
+    let params = instance["params"].as_array().unwrap();
+    assert_eq!(params[0]["binding"], 1);
+    assert_eq!(params[0]["resource"], "texture.black");
+    assert_eq!(params[1]["binding"], 2);
+    assert_eq!(params[1]["resource"], "sampler.linear_clamp");
+    for param in params {
+        assert_eq!(param["update"], "resource");
+        for absent in ["field", "offset", "size"] {
+            assert!(param.get(absent).is_none(), "{param}");
+        }
+    }
+    let human = result.render(InspectFormat::Human).unwrap();
+    assert!(
+        human.contains("no parameter block (group 1 holds the textures and samplers)"),
+        "{human}"
+    );
+    assert!(human.contains("binding 1 = texture.black"), "{human}");
+}
