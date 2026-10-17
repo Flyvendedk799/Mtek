@@ -5,7 +5,8 @@
 //!   runtime's overlay.
 //! - `test`: does not mount; defines `window.__mtekMount(options)`, which mounts `program` on
 //!   `#mtek` with the given options (Playwright passes `test` options).
-//! - `dev`: mounts like `release` and adds the development reload client: it subscribes to
+//! - `dev`: mounts like `release`, with `{ devOverlay: true }` for the development runtime's
+//!   overlay (decision 0055), and adds the development reload client: it subscribes to
 //!   `/__mtek/events` and, on `build-succeeded`, `import()`s the candidate and calls
 //!   `app.replaceProgram` (candidate-based hot reload, `spec/runtime-abi.md` section 11); on
 //!   `build-failed` it shows the diagnostics in an overlay over the still-running scene. The
@@ -36,8 +37,9 @@ pub fn escape_html(text: &str) -> String {
 
 const MOUNT: &str = "  mountMtek(document.getElementById(\"mtek\"), program).catch(() => {}); // failures are shown by the overlay\n";
 
-/// Dev mount: assigns the live `MtekApp` into the `app` binding declared by [`RELOAD_CLIENT`].
-const DEV_MOUNT: &str = "  mountMtek(document.getElementById(\"mtek\"), program).then((mounted) => { app = mounted; }).catch(() => {});\n";
+/// Dev mount: asks the development runtime for its overlay (`devOverlay`, decision 0055) and
+/// assigns the live `MtekApp` into the `app` binding declared by [`RELOAD_CLIENT`].
+const DEV_MOUNT: &str = "  mountMtek(document.getElementById(\"mtek\"), program, { devOverlay: true }).then((mounted) => { app = mounted; }).catch(() => {});\n";
 
 const TEST_MOUNT: &str = "  window.__mtekMount = (options) => mountMtek(document.getElementById(\"mtek\"), program, options);\n";
 
@@ -169,6 +171,12 @@ mod tests {
     fn dev_mode_adds_the_reload_client() {
         let page = index_html("t", BuildMode::Dev).expect("page");
         assert!(page.contains(".catch(() => {});"), "{page}");
+        // Only the dev page asks for the development overlay; the others never mention it.
+        assert!(page.contains("program, { devOverlay: true })"), "{page}");
+        for mode in [BuildMode::Release, BuildMode::Test] {
+            let other = index_html("t", mode).expect("page");
+            assert!(!other.contains("devOverlay"), "{other}");
+        }
         assert!(
             page.contains("new EventSource(\"/__mtek/events\")"),
             "{page}"

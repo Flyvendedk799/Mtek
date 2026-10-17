@@ -25,7 +25,7 @@
 
 **Exit codes:** `0` success (warnings allowed) · `1` the program has errors · `2` usage error (bad arguments) · `3` internal error (`E9999`) or I/O failure. **Output:** human diagnostics on stderr; `--format json` prints exactly one JSON document (the report of `spec/diagnostics.md` §2.2) on stdout and nothing else on stdout. `mtek check` never touches the GPU; target-device validation is a separate operation (`mtek build` + runtime, blueprint §10).
 
-`mtek build` embeds the runtime bundle compiled into the CLI binary (`mtek-cli/build.rs` reads `packages/runtime-web/dist/runtime.js` if present). A CLI built without it still checks and inspects, but `build` fails with `E9030` explaining how to build the runtime first (`npm run build`).
+`mtek build` embeds the runtime bundle compiled into the CLI binary (`mtek-cli/build.rs` reads `packages/runtime-web/dist/runtime.js` and `runtime.dev.js` if present; `release` builds embed the former, which has no development code, and `dev` and `test` builds the latter, decision 0055). A CLI built without it still checks and inspects, but `build` fails with `E9030` explaining how to build the runtime first (`npm run build`).
 
 What the commands print besides diagnostics, the colour rule for stderr, `--out` resolution, the project search on disk, `E9031` for an output directory that cannot be written, and the embedding mechanics are decision 0032.
 
@@ -123,4 +123,4 @@ LSP client launching `mtek lsp` (path configurable, default `mtek` on `PATH`), T
 
 ## 9. Development overlay (dev builds, M4)
 
-Fixed panel in a corner of the canvas: active scene, selected entity (cycled with a key combination documented in the panel), its source declaration (`file:line`), frame time (ms, p50/p95 over the last 120 frames), draw calls, culled objects, upload bytes, pipelines created, live resource counts, discarded fixed steps, and the latest validation errors. Toggled with `` ` ``. Not present in release builds.
+Fixed panel in a corner of the canvas: active scene, selected entity (cycled with a key combination documented in the panel), its source declaration (`file:line`), frame time (ms, p50/p95 over the last 120 frames), draw calls, culled objects, upload bytes, pipelines created, live resource counts, discarded fixed steps, and the latest validation errors. Toggled with `` ` ``. Not present in release builds. The key to cycle the entity, the exact lines and how the release runtime is kept free of this code are decision 0055.

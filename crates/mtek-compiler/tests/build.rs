@@ -610,6 +610,71 @@ fn a_build_without_the_runtime_is_e9030() {
     assert!(app.contains(&format!("export {{ mountMtek }} from \"./{name}\";")));
 }
 
+/// Options whose release and development bundles are distinguishable.
+fn two_flavours(mode: BuildMode) -> CompileOptions {
+    let mut options = stub(mode);
+    options.runtime_bundle = Some(Arc::from(&b"// release flavour\n"[..]));
+    options.dev_runtime_bundle = Some(Arc::from(&b"// development flavour\n"[..]));
+    options
+}
+
+#[test]
+fn dev_and_test_builds_embed_the_development_runtime_and_release_the_release_one() {
+    let root = codegen_dir().join("scene_a_target_camera_box");
+    let memory = project_fs(&root, None);
+    for (mode, expected) in [
+        (BuildMode::Release, &b"// release flavour\n"[..]),
+        (BuildMode::Dev, &b"// development flavour\n"[..]),
+        (BuildMode::Test, &b"// development flavour\n"[..]),
+    ] {
+        let result = build(&ProjectRoot::at_base(), &memory, &two_flavours(mode));
+        assert!(codes(&result).is_empty(), "{mode:?}: {:?}", codes(&result));
+        let name = format!("runtime.{}.js", h16(expected));
+        assert_eq!(result.files[&name], expected, "{mode:?}");
+        // Exactly one runtime file, and app.js imports that one.
+        let runtimes: Vec<&String> = result
+            .files
+            .keys()
+            .filter(|path| path.starts_with("runtime.") && path.ends_with(".js"))
+            .collect();
+        assert_eq!(runtimes, [&name], "{mode:?}");
+        let app = std::str::from_utf8(&result.files["app.js"]).unwrap();
+        assert!(
+            app.contains(&format!("export {{ mountMtek }} from \"./{name}\";")),
+            "{mode:?}"
+        );
+    }
+}
+
+#[test]
+fn without_a_development_bundle_every_mode_uses_the_release_bundle() {
+    let root = codegen_dir().join("scene_a_target_camera_box");
+    let memory = project_fs(&root, None);
+    let mut options = two_flavours(BuildMode::Dev);
+    options.dev_runtime_bundle = None;
+    let result = build(&ProjectRoot::at_base(), &memory, &options);
+    assert!(
+        result
+            .files
+            .contains_key(&format!("runtime.{}.js", h16(b"// release flavour\n")))
+    );
+}
+
+#[test]
+fn each_mode_needs_its_own_bundle_for_e9030() {
+    let root = codegen_dir().join("scene_a_target_camera_box");
+    let memory = project_fs(&root, None);
+    // Only the development flavour: dev builds work, release builds cannot.
+    let mut options = two_flavours(BuildMode::Dev);
+    options.runtime_bundle = None;
+    assert!(codes(&build(&ProjectRoot::at_base(), &memory, &options)).is_empty());
+    options.mode = BuildMode::Release;
+    assert_eq!(
+        codes(&build(&ProjectRoot::at_base(), &memory, &options)),
+        ["E9030"]
+    );
+}
+
 #[test]
 fn preview_builds_are_not_implemented_yet() {
     let root = codegen_dir().join("scene_a_target_camera_box");

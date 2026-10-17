@@ -1,0 +1,23 @@
+// M4-07 frustum culling fixture: a row of nine spheres on the z = 0 plane at x = -8, -6, ..., 8, each with
+// its own colour (so no two share a parameter block), seen by a camera that looks down -Z from z = 10 and
+// is moved sideways through the host input `camera_x`. With the default field of view (0.9 rad) and a 2:1
+// target the view on z = 0 is 19.3 units wide, so from x = 0 every sphere is in view and from a large x none is.
+scene Culling {
+    clear_color: #202830;
+    state camera_x: f32 = 0.0;
+
+    camera Main {
+        position: bind(vec3(camera_x, 0.0, 10.0));
+        target: bind(vec3(camera_x, 0.0, 0.0));
+    }
+
+    entity S0 { position: vec3(-8.0, 0.0, 0.0); mesh: Sphere { radius: 0.9 }; material: Unlit { color: #ff3030 }; }
+    entity S1 { position: vec3(-6.0, 0.0, 0.0); mesh: Sphere { radius: 0.9 }; material: Unlit { color: #ff9a30 }; }
+    entity S2 { position: vec3(-4.0, 0.0, 0.0); mesh: Sphere { radius: 0.9 }; material: Unlit { color: #f0e030 }; }
+    entity S3 { position: vec3(-2.0, 0.0, 0.0); mesh: Sphere { radius: 0.9 }; material: Unlit { color: #60e030 }; }
+    entity S4 { position: vec3(0.0, 0.0, 0.0); mesh: Sphere { radius: 0.9 }; material: Unlit { color: #30e0c0 }; }
+    entity S5 { position: vec3(2.0, 0.0, 0.0); mesh: Sphere { radius: 0.9 }; material: Unlit { color: #30a0ff }; }
+    entity S6 { position: vec3(4.0, 0.0, 0.0); mesh: Sphere { radius: 0.9 }; material: Unlit { color: #4050ff }; }
+    entity S7 { position: vec3(6.0, 0.0, 0.0); mesh: Sphere { radius: 0.9 }; material: Unlit { color: #b050ff }; }
+    entity S8 { position: vec3(8.0, 0.0, 0.0); mesh: Sphere { radius: 0.9 }; material: Unlit { color: #ff50c0 }; }
+}

@@ -42,6 +42,26 @@ describe("acquireDevice success", () => {
     expect(acquired.device).toBe(adapter.devices[0]);
   });
 
+  it("requests optional features only when the adapter offers them, and never twice", async () => {
+    const offered = gpuWith({ features: ["timestamp-query"] });
+    await acquireDevice({ requiredFeatures: [], requiredLimits: {}, optionalFeatures: ["timestamp-query"], environment: { gpu: offered.gpu } });
+    expect(offered.adapter.deviceRequests[0]?.requiredFeatures).toEqual(["timestamp-query"]);
+
+    const absent = gpuWith({});
+    const acquired = await acquireDevice({ requiredFeatures: [], requiredLimits: {}, optionalFeatures: ["timestamp-query"], environment: { gpu: absent.gpu } });
+    expect(absent.adapter.deviceRequests[0]?.requiredFeatures).toEqual([]);
+    expect(acquired.device).toBe(absent.adapter.devices[0]);
+
+    const already = gpuWith({ features: ["timestamp-query"] });
+    await acquireDevice({
+      requiredFeatures: ["timestamp-query"],
+      requiredLimits: {},
+      optionalFeatures: ["timestamp-query"],
+      environment: { gpu: already.gpu },
+    });
+    expect(already.adapter.deviceRequests[0]?.requiredFeatures).toEqual(["timestamp-query"]);
+  });
+
   it("reads adapter information from adapter.info", async () => {
     const { gpu } = gpuWith({
       info: { vendor: "acme", architecture: "gen9", device: "x1", description: "Acme X1", isFallbackAdapter: true },

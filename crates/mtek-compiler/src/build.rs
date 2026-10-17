@@ -75,8 +75,14 @@ pub enum BuildMode {
 pub struct CompileOptions {
     pub profile: TargetProfile,
     pub mode: BuildMode,
-    /// The runtime bundle written as `runtime.<h16>.js`.
+    /// The runtime bundle written as `runtime.<h16>.js`: the release flavour, without the
+    /// development overlay (decision 0055). Used by `release` (and `preview`) builds, and by
+    /// every mode when `dev_runtime_bundle` is `None`.
     pub runtime_bundle: Option<Arc<[u8]>>,
+    /// The development flavour of the runtime bundle (overlay and GPU timing), written instead
+    /// of `runtime_bundle` by `dev` and `test` builds. `None`: one bundle serves every mode
+    /// (compiler tests and codegen goldens).
+    pub dev_runtime_bundle: Option<Arc<[u8]>>,
     /// `runtime.d.ts`, written next to `app.d.ts`.
     pub runtime_declarations: Option<Arc<[u8]>>,
 }
@@ -89,6 +95,7 @@ impl CompileOptions {
             profile: TargetProfile::WebGpuCore2026,
             mode,
             runtime_bundle: Some(Arc::from(STUB_RUNTIME_BUNDLE)),
+            dev_runtime_bundle: None,
             runtime_declarations: Some(Arc::from(STUB_RUNTIME_DECLARATIONS)),
         }
     }
@@ -127,8 +134,15 @@ impl BuildResult {
 pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> BuildResult {
     let mut sink = Diagnostics::new();
     let front = front_end(root, fs, &mut sink);
+    let runtime_bundle = match options.mode {
+        BuildMode::Dev | BuildMode::Test => options
+            .dev_runtime_bundle
+            .as_ref()
+            .or(options.runtime_bundle.as_ref()),
+        BuildMode::Release | BuildMode::Preview => options.runtime_bundle.as_ref(),
+    };
     let missing: Vec<&str> = [
-        ("the runtime bundle", options.runtime_bundle.is_none()),
+        ("the runtime bundle", runtime_bundle.is_none()),
         ("runtime.d.ts", options.runtime_declarations.is_none()),
     ]
     .into_iter()
@@ -156,7 +170,7 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
     if !sink.has_errors()
         && let (Some(project), Some(bundle), Some(declarations)) = (
             front.project.as_ref(),
-            options.runtime_bundle.as_deref(),
+            runtime_bundle.map(|bundle| &**bundle),
             options.runtime_declarations.as_deref(),
         )
     {
