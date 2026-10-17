@@ -1,0 +1,56 @@
+{
+  "mounted": {
+    "uploads": 4,
+    "uploadBytes": 840
+  },
+  "scenarios": [
+    {
+      "scenario": "first frame (every block is written once)",
+      "frames": 1,
+      "uploads": 3,
+      "uploadBytes": 448,
+      "uploadsPerFrame": 3,
+      "bytesPerFrame": 448
+    },
+    {
+      "scenario": "60 rotating frames (dt = 1/60)",
+      "frames": 60,
+      "uploads": 120,
+      "uploadBytes": 9600,
+      "uploadsPerFrame": 2,
+      "bytesPerFrame": 160
+    },
+    {
+      "scenario": "60 frames with dt = 0 (nothing changes)",
+      "frames": 60,
+      "uploads": 0,
+      "uploadBytes": 0,
+      "uploadsPerFrame": 0,
+      "bytesPerFrame": 0
+    },
+    {
+      "scenario": "Space pressed, then 1 frame at dt = 0",
+      "frames": 1,
+      "uploads": 0,
+      "uploadBytes": 0,
+      "uploadsPerFrame": 0,
+      "bytesPerFrame": 0
+    },
+    {
+      "scenario": "setInput(\"tint\") then 1 frame at dt = 0",
+      "frames": 1,
+      "uploads": 1,
+      "uploadBytes": 32,
+      "uploadsPerFrame": 1,
+      "bytesPerFrame": 32
+    },
+    {
+      "scenario": "60 frames with dt = 0 after the edits",
+      "frames": 60,
+      "uploads": 0,
+      "uploadBytes": 0,
+      "uploadsPerFrame": 0,
+      "bytesPerFrame": 0
+    }
+  ]
+}
