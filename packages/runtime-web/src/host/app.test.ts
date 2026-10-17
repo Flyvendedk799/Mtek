@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
-import { FakeHost, type FakeHostDevice } from "../test-support/fake-host.js";
+import { FakeHost, asDom, fakeProgram, type FakeHostDevice } from "../test-support/fake-host.js";
 import { healthyHost, installProgram, mountOn } from "../test-support/mount-fixture.js";
+import { mountMtekWith } from "./mount.js";
 import type { MtekApp } from "./types.js";
 
 function overlayOf(host: FakeHost): ReturnType<FakeHost["document"]["body"]["find"]> {
@@ -220,45 +221,6 @@ describe("dispose", () => {
 });
 
 describe("runtime failures", () => {
-  it("device loss reports W8060, sets state failed, shows the overlay and stops the loop (no recovery before M4-09)", async () => {
-    const host = healthyHost();
-    const seen: MtekDiagnostic[] = [];
-    const app = await mountOn(host, { onDiagnostic: (d) => seen.push(d) });
-    host.tickFrames(1000);
-    host.device.loseDevice("unknown", "the GPU process crashed");
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(app.state).toBe("failed");
-    expect(seen.map((d) => d.code)).toEqual(["MTEK-W8060"]);
-    expect(seen[0]?.phase).toBe("runtime:device");
-    expect(seen[0]?.severity).toBe("warning");
-    expect(seen[0]?.message).toContain("the GPU process crashed");
-    expect(seen[0]?.notes.join(" ")).toContain("M4-09");
-    const overlay = overlayOf(host);
-    expect(overlay?.getAttribute("role")).toBe("alert");
-    expect(overlay?.textContent).toContain("MTEK-W8060");
-    expect(host.pendingFrames).toBe(0);
-
-    // Still disposable.
-    app.dispose();
-    expect(app.state).toBe("disposed");
-    expect(overlayOf(host)).toBeUndefined();
-  });
-
-  it("device loss with failureDisplay 'none' reports but shows no overlay", async () => {
-    const host = healthyHost();
-    const seen: MtekDiagnostic[] = [];
-    const app = await mountOn(host, { failureDisplay: "none", onDiagnostic: (d) => seen.push(d) });
-    host.device.loseDevice("unknown", "gone");
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(app.state).toBe("failed");
-    expect(seen).toHaveLength(1);
-    expect(overlayOf(host)).toBeUndefined();
-    app.dispose();
-  });
-
   it("an uncaptured GPU error is reported as E8050 once per message and shown, but does not stop the app", async () => {
     const host = healthyHost();
     const seen: MtekDiagnostic[] = [];
@@ -474,8 +436,9 @@ describe("debug API (options.test)", () => {
     expect(counters["frameTimeMs"]).toBeGreaterThan(0);
     // render target + depth
     expect(counters["liveTextures"]).toBe(2);
-    // The document's visibilitychange, keydown and keyup; the window's blur; the canvas's four pointer events.
-    expect(counters["liveListeners"]).toBe(8);
+    // The document's visibilitychange, keydown and keyup; the window's blur; the canvas's four pointer events;
+    // the change event of the pixel-ratio media query.
+    expect(counters["liveListeners"]).toBe(9);
     app.dispose();
   });
 
@@ -614,5 +577,111 @@ describe("resize and zero-sized canvases", () => {
     host.canvas.clientWidth = 999;
     observer?.trigger();
     expect(host.canvas.width).toBe(200);
+  });
+});
+
+describe("pixel ratio changes (devicePixelRatio 'auto')", () => {
+  it("recomputes the backing size and recreates the depth texture when the ratio changes, then watches the new ratio", async () => {
+    const host = healthyHost();
+    const app = await mountOn(host, { test: { manualClock: true } });
+    expect(host.mediaQueries.map((media) => media.query)).toEqual(["(resolution: 1dppx)"]);
+    expect([host.canvas.width, host.canvas.height]).toEqual([200, 100]);
+
+    host.setDevicePixelRatio(2);
+    expect([host.canvas.width, host.canvas.height]).toEqual([400, 200]);
+    const depth = host.device.textures.filter((t) => t.format === "depth24plus");
+    expect(depth).toHaveLength(2);
+    expect([depth[1]?.width, depth[1]?.height]).toEqual([400, 200]);
+    expect(host.mediaQueries.map((media) => media.query)).toEqual(["(resolution: 1dppx)", "(resolution: 2dppx)"]);
+    // The old query no longer has a listener, the new one has exactly one.
+    expect(host.mediaQueries.map((media) => media.listenerCount)).toEqual([0, 1]);
+
+    host.setDevicePixelRatio(1.5);
+    expect([host.canvas.width, host.canvas.height]).toEqual([300, 150]);
+    expect(app.state).toBe("running");
+    app.dispose();
+    expect(host.mediaQueries.every((media) => media.listenerCount === 0)).toBe(true);
+  });
+
+  it("is not watched with a fixed devicePixelRatio or without matchMedia", async () => {
+    const fixed = healthyHost();
+    const fixedApp = await mountOn(fixed, { devicePixelRatio: 1.5 });
+    expect(fixed.mediaQueries).toEqual([]);
+    expect(fixed.canvas.width).toBe(300);
+    fixed.devicePixelRatio = 3;
+    fixedApp.dispose();
+
+    const host = healthyHost();
+    const withoutMedia = { ...host.environment };
+    delete (withoutMedia as { matchMedia?: unknown }).matchMedia;
+    const app = await mountMtekWith(withoutMedia, asDom<HTMLCanvasElement>(host.canvas), fakeProgram());
+    expect(app.state).toBe("running");
+    expect(host.mediaQueries).toEqual([]);
+    app.dispose();
+  });
+
+  it("ignores a ratio change after dispose", async () => {
+    const host = healthyHost();
+    const app = await mountOn(host);
+    app.dispose();
+    host.setDevicePixelRatio(2);
+    expect(host.canvas.width).toBe(200);
+  });
+});
+
+describe("test.canvasRenderTarget: the offscreen target follows the canvas", () => {
+  const options = { test: { manualClock: true, canvasRenderTarget: true } } as const;
+
+  it("renders into an offscreen target of the backing size and recreates it on resize and on a ratio change", async () => {
+    const host = healthyHost();
+    const app = await mountOn(host, options);
+    debugOf(app).step(1, 0.016);
+    expect(host.device.renderPasses.at(-1)).toMatchObject({ targetWidth: 200, targetHeight: 100, viewFormat: "rgba8unorm-srgb" });
+    expect(host.context.currentTextureCalls).toBe(0); // the canvas texture is not used
+    const first = await debugOf(app).readPixels();
+    expect([first.width, first.height]).toEqual([200, 100]);
+
+    host.canvas.clientWidth = 120;
+    host.canvas.clientHeight = 60;
+    host.resizeObservers[0]?.trigger();
+    debugOf(app).step(1, 0.016);
+    expect(host.device.renderPasses.at(-1)).toMatchObject({ targetWidth: 120, targetHeight: 60, depthWidth: 120, depthHeight: 60 });
+    const second = await debugOf(app).readPixels();
+    expect([second.width, second.height]).toEqual([120, 60]);
+
+    host.setDevicePixelRatio(2);
+    debugOf(app).step(1, 0.016);
+    expect(host.device.renderPasses.at(-1)).toMatchObject({ targetWidth: 240, targetHeight: 120 });
+    // One offscreen target and one depth texture are live; the replaced ones were released.
+    expect(debugOf(app).counters()["liveTextures"]).toBe(2);
+    app.dispose();
+  });
+
+  it("skips frames at zero size, refuses readPixels there, and draws again when sized", async () => {
+    const host = healthyHost();
+    const app = await mountOn(host, options);
+    debugOf(app).step(1, 0.016);
+    host.canvas.clientHeight = 0;
+    host.resizeObservers[0]?.trigger();
+    const passes = host.device.renderPasses.length;
+    debugOf(app).step(2, 0.016);
+    expect(host.device.renderPasses).toHaveLength(passes);
+    expect(debugOf(app).counters()["framesSkipped"]).toBe(2);
+    expect(app.state).toBe("running");
+    await expect(debugOf(app).readPixels()).rejects.toThrow(/no pixels/);
+
+    host.canvas.clientHeight = 50;
+    host.resizeObservers[0]?.trigger();
+    debugOf(app).step(1, 0.016);
+    expect(host.device.renderPasses.at(-1)).toMatchObject({ targetWidth: 200, targetHeight: 50 });
+    expect((await debugOf(app).readPixels()).height).toBe(50);
+    app.dispose();
+  });
+
+  it("is a different test mode than a plain canvas: readPixels says which option is missing", async () => {
+    const host = healthyHost();
+    const app = await mountOn(host, { test: { manualClock: true } });
+    await expect(debugOf(app).readPixels()).rejects.toThrow(/renderTarget or test\.canvasRenderTarget/);
+    app.dispose();
   });
 });

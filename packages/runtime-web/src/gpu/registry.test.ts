@@ -264,6 +264,40 @@ describe("out-of-memory error scopes", () => {
   });
 });
 
+describe("recycle (device recovery)", () => {
+  it("destroys and forgets every GPU object, keeps listeners and cumulative counters, and creates on the new device", () => {
+    const { registry, fake } = setup();
+    const b = buffer(registry, 64, "old");
+    registry.createTexture({ size: [4, 4], format: "rgba8unorm", usage: 0x04 });
+    registry.createSampler({});
+    registry.createShaderModule({ code: "// wgsl" });
+    registry.addEventListener(new EventTarget(), "change", () => undefined);
+
+    const next = new FakeDevice();
+    registry.recycle(asGpu<RegistryDevice>(next));
+    expect((b as unknown as { destroyed: boolean }).destroyed).toBe(true);
+    expect(fake.textures[0]?.destroyed).toBe(true);
+    expect(registry.snapshot()).toMatchObject({
+      buffersAllocated: 1,
+      texturesAllocated: 1,
+      shaderModulesCreated: 1,
+      liveBuffers: 0,
+      liveTextures: 0,
+      liveSamplers: 0,
+      liveShaderModules: 0,
+      liveListeners: 1,
+    });
+    // An old object cannot be released twice through the registry; the new device receives new objects.
+    expect(() => {
+      registry.release(b);
+    }).toThrow(/not registered/);
+    buffer(registry, 32, "new");
+    expect(next.buffers).toHaveLength(1);
+    expect(fake.buffers).toHaveLength(1);
+    expect(registry.snapshot()).toMatchObject({ buffersAllocated: 2, liveBuffers: 1 });
+  });
+});
+
 describe("writeBuffer", () => {
   it("writes through the queue and counts uploads and uploadBytes", () => {
     const { registry, fake } = setup();

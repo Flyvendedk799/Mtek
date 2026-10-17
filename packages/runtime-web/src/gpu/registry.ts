@@ -96,7 +96,7 @@ export class ResourceRegistry {
   private readonly onAllocationFailure: ((diagnostic: MtekDiagnostic) => void) | undefined;
 
   constructor(
-    private readonly device: RegistryDevice,
+    private device: RegistryDevice,
     options: RegistryOptions = {},
   ) {
     this.onAllocationFailure = options.onAllocationFailure;
@@ -271,6 +271,24 @@ export class ResourceRegistry {
     ) {
       throw new Error("ResourceRegistry.release: the resource is not registered or was already released");
     }
+  }
+
+  /**
+   * Device recovery (`spec/runtime-abi.md` section 9.4): every GPU object belongs to the lost device, so
+   * the buffers and textures are destroyed (a no-op on a lost device) and everything is dropped; creation
+   * now goes to `device`. DOM listeners and the cumulative counters stay, so the live counts describe the
+   * rebuilt scene and the totals describe the whole session.
+   */
+  recycle(device: RegistryDevice): void {
+    for (const buffer of this.buffers) buffer.destroy();
+    this.buffers.clear();
+    for (const texture of this.textures) texture.destroy();
+    this.textures.clear();
+    this.samplers.clear();
+    this.shaderModules.clear();
+    this.pipelines.clear();
+    this.bindGroups.clear();
+    this.device = device;
   }
 
   /** Destroys every buffer and texture, drops everything else and removes every listener. Cumulative counters are kept. */

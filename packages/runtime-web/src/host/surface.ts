@@ -4,7 +4,11 @@
  * encodes (`render/renderer.ts`).
  *
  * With `test.renderTarget` the frame goes into an offscreen `rgba8unorm-srgb` texture of a fixed size
- * (independent of the canvas and of the platform's preferred format) so pixel tests are portable.
+ * (independent of the canvas and of the platform's preferred format) so pixel tests are portable. With
+ * `test.canvasRenderTarget` the offscreen texture follows the canvas's backing size instead, so resize,
+ * pixel ratio and zero-size handling can be asserted through the pixels (decision 0056).
+ *
+ * After a device loss `recover` moves the surface to the new device (`spec/runtime-abi.md` section 9.4).
  */
 import type { ResourceRegistry } from "../gpu/registry.js";
 
@@ -60,6 +64,8 @@ export interface SurfaceOptions {
   /** `navigator.gpu.getPreferredCanvasFormat()`; must have an sRGB view format. */
   readonly format: CanvasFormat;
   readonly renderTarget: { readonly width: number; readonly height: number } | undefined;
+  /** `test.canvasRenderTarget`: an offscreen target that always has the canvas's backing size. */
+  readonly canvasRenderTarget?: boolean;
   /** Called each time the backing size is computed. */
   readonly devicePixelRatio: () => number;
 }
@@ -72,6 +78,10 @@ export class Surface {
   private depthWidth = 0;
   private depthHeight = 0;
   private offscreen: GPUTexture | null = null;
+  private offscreenWidth = 0;
+  private offscreenHeight = 0;
+  /** Replaced by `recover`. */
+  private device: GPUDevice;
   private rendered = 0;
   private skipped = 0;
   private configured = false;
@@ -80,6 +90,7 @@ export class Surface {
     const view = srgbViewFormat(options.format);
     if (view === undefined) throw new Error(`Surface: no sRGB view format for ${options.format}`);
     this.viewFormat = view;
+    this.device = options.device;
   }
 
   /** Frames that were drawn / skipped because the canvas has no pixels. */
@@ -98,7 +109,11 @@ export class Surface {
 
   /** The format of the colour attachment: the offscreen target's, or the canvas's sRGB view format. */
   get colorFormat(): GPUTextureFormat {
-    return this.options.renderTarget !== undefined ? OFFSCREEN_FORMAT : this.viewFormat;
+    return this.drawsOffscreen ? OFFSCREEN_FORMAT : this.viewFormat;
+  }
+
+  private get drawsOffscreen(): boolean {
+    return this.options.renderTarget !== undefined || this.options.canvasRenderTarget === true;
   }
 
   /** True when a frame can be drawn: the target has at least one pixel. */
@@ -111,7 +126,8 @@ export class Surface {
    * encodes linear to sRGB (`spec/runtime-abi.md` section 8.2). Throws what the browser throws.
    */
   configure(): void {
-    const { context, device, format } = this.options;
+    const { context, format } = this.options;
+    const { device } = this;
     context.configure({ device, format, viewFormats: [this.viewFormat], alphaMode: "opaque" });
     this.configured = true;
   }
@@ -121,16 +137,11 @@ export class Surface {
    * with `test.renderTarget`). Throws the registry's error when an allocation fails.
    */
   allocate(): void {
-    const { renderTarget, registry } = this.options;
+    const { renderTarget } = this.options;
     if (renderTarget !== undefined) {
       this.widthPx = renderTarget.width;
       this.heightPx = renderTarget.height;
-      this.offscreen = registry.createTexture({
-        label: "mtek render target",
-        size: [renderTarget.width, renderTarget.height],
-        format: OFFSCREEN_FORMAT,
-        usage: TEXTURE_USAGE_RENDER_ATTACHMENT | TEXTURE_USAGE_COPY_SRC,
-      });
+      this.ensureOffscreen();
       this.ensureDepth();
       return;
     }
@@ -147,8 +158,8 @@ export class Surface {
   }
 
   private applyCanvasSize(): boolean {
-    const { canvas, device, devicePixelRatio } = this.options;
-    const max = device.limits.maxTextureDimension2D;
+    const { canvas, devicePixelRatio } = this.options;
+    const max = this.device.limits.maxTextureDimension2D;
     const { width, height } = backingSize(canvas.clientWidth, canvas.clientHeight, devicePixelRatio(), max);
     const changed = width !== this.widthPx || height !== this.heightPx;
     this.widthPx = width;
@@ -156,8 +167,50 @@ export class Surface {
     // Assigning width/height resets the canvas, so only do it when the value changed.
     if (canvas.width !== width) canvas.width = width;
     if (canvas.height !== height) canvas.height = height;
+    if (this.options.canvasRenderTarget === true) this.ensureOffscreen();
     this.ensureDepth();
     return changed;
+  }
+
+  /**
+   * Creates the offscreen target for the current size unless one of that size exists; the old texture is
+   * released after the new one is in place (section 9.2). A zero-sized target keeps the old texture: nothing
+   * is drawn while `renderable` is false.
+   */
+  private ensureOffscreen(): void {
+    if (!this.renderable) return;
+    if (this.offscreen !== null && this.offscreenWidth === this.widthPx && this.offscreenHeight === this.heightPx) return;
+    const next = this.options.registry.createTexture({
+      label: "mtek render target",
+      size: [this.widthPx, this.heightPx],
+      format: OFFSCREEN_FORMAT,
+      usage: TEXTURE_USAGE_RENDER_ATTACHMENT | TEXTURE_USAGE_COPY_SRC,
+    });
+    const previous = this.offscreen;
+    this.offscreen = next;
+    this.offscreenWidth = this.widthPx;
+    this.offscreenHeight = this.heightPx;
+    if (previous !== null) this.options.registry.release(previous);
+  }
+
+  /**
+   * Device recovery: forgets every texture of the lost device, configures the canvas for `device` and
+   * allocates the depth texture (and the offscreen target) again at the canvas's current size. Throws what
+   * the browser or the registry throws; the caller treats that as a failed recovery attempt.
+   */
+  recover(device: GPUDevice): void {
+    this.device = device;
+    this.depth = null;
+    this.depthWidth = 0;
+    this.depthHeight = 0;
+    this.offscreen = null;
+    this.offscreenWidth = 0;
+    this.offscreenHeight = 0;
+    this.widthPx = 0;
+    this.heightPx = 0;
+    this.configured = false;
+    this.configure();
+    this.allocate();
   }
 
   /** Creates the depth texture for the current size; the old one is released only after the new one exists. */
@@ -190,7 +243,8 @@ export class Surface {
       this.skipped += 1;
       return false;
     }
-    const { device, context } = this.options;
+    const { context } = this.options;
+    const { device } = this;
     const target = this.offscreen ?? context.getCurrentTexture();
     const encoder = device.createCommandEncoder({ label: "mtek frame" });
     const pass = encoder.beginRenderPass({
@@ -221,10 +275,18 @@ export class Surface {
    * tightly packed rows (`spec/runtime-abi.md` section 10.2). The staging buffer is released either way.
    */
   async readPixels(): Promise<PixelData> {
-    const { device, registry } = this.options;
+    const { registry } = this.options;
+    const { device } = this;
     const offscreen = this.offscreen;
-    if (offscreen === null) throw new Error("readPixels requires mountMtek options test.renderTarget");
-    const { width, height } = this.size;
+    if (offscreen === null || !this.renderable) {
+      throw new Error(
+        this.drawsOffscreen
+          ? "readPixels: the canvas has no pixels"
+          : "readPixels requires mountMtek options test.renderTarget or test.canvasRenderTarget",
+      );
+    }
+    const width = this.offscreenWidth;
+    const height = this.offscreenHeight;
     const bytesPerRow = paddedBytesPerRow(width);
     const staging = registry.createBuffer({
       label: "mtek readback",

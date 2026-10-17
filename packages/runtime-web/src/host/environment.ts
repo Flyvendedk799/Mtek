@@ -19,6 +19,9 @@ export interface ResizeObserverLike {
 
 export type ResizeObserverFactory = new (callback: () => void) => ResizeObserverLike;
 
+/** The part of `MediaQueryList` the runtime uses: the `change` event of a resolution query. */
+export type MediaQueryListLike = EventTarget;
+
 /** The part of `document` the runtime uses: visibility and its events. */
 export type DocumentLike = EventTarget & { readonly visibilityState: DocumentVisibilityState };
 
@@ -39,8 +42,13 @@ export interface HostEnvironment {
   cancelAnimationFrame(handle: number): void;
   /** `window.devicePixelRatio`, read each time the backing size is computed. */
   devicePixelRatio(): number;
+  /** `window.matchMedia`; `undefined` without it (a changed pixel ratio is then noticed at the next resize). */
+  matchMedia?(query: string): MediaQueryListLike;
   /** Monotonic milliseconds (`performance.now`). */
   now(): number;
+  /** `setTimeout`; the device recovery delays (`spec/runtime-abi.md` section 9.4) run on it so tests can fake time. */
+  setTimeout(callback: () => void, delayMs: number): unknown;
+  clearTimeout(handle: unknown): void;
 }
 
 /** Reads the browser globals. Fields whose global is missing become `null`/`undefined`, so mounting fails with a typed error rather than a `ReferenceError`. */
@@ -60,6 +68,11 @@ export function defaultEnvironment(): HostEnvironment {
       cancelAnimationFrame(handle);
     },
     devicePixelRatio: () => (typeof devicePixelRatio === "number" ? devicePixelRatio : 1),
+    ...(typeof matchMedia === "function" ? { matchMedia: (query: string): MediaQueryListLike => matchMedia(query) } : {}),
     now: () => performance.now(),
+    setTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
+    clearTimeout: (handle) => {
+      clearTimeout(handle as ReturnType<typeof setTimeout>);
+    },
   };
 }

@@ -765,6 +765,55 @@ export class FakeResizeObserver {
   }
 }
 
+/** A `MediaQueryList` stand-in: its `change` event is dispatched by `FakeHost.setDevicePixelRatio`. */
+export class FakeMediaQuery extends FakeEventTarget {
+  constructor(readonly query: string) {
+    super();
+  }
+}
+
+/** One scheduled `setTimeout` of the fake environment. */
+export interface FakeTimer {
+  readonly id: number;
+  readonly delayMs: number;
+  readonly callback: () => void;
+}
+
+/**
+ * `setTimeout` without waiting: timers run only when a test says so, in the order they were scheduled.
+ * `pending` lists what is waiting, so a test can assert the delays and that nothing is left behind.
+ */
+export class FakeTimers {
+  private nextId = 1;
+  private readonly waiting = new Map<number, FakeTimer>();
+  /** Every delay ever requested, in order. */
+  readonly requestedDelays: number[] = [];
+
+  schedule(callback: () => void, delayMs: number): number {
+    const id = this.nextId++;
+    this.waiting.set(id, { id, delayMs, callback });
+    this.requestedDelays.push(delayMs);
+    return id;
+  }
+
+  cancel(id: number): void {
+    this.waiting.delete(id);
+  }
+
+  get pending(): readonly FakeTimer[] {
+    return [...this.waiting.values()];
+  }
+
+  /** Runs the oldest waiting timer; returns false when none waits. */
+  runNext(): boolean {
+    const next = this.waiting.values().next();
+    if (next.done === true) return false;
+    this.waiting.delete(next.value.id);
+    next.value.callback();
+    return true;
+  }
+}
+
 // ---------------------------------------------------------------- environment
 
 /** A scripted file server: a string is a 200 response, a number an HTTP error status, an Error a network failure. */
@@ -790,6 +839,9 @@ export class FakeHost {
   readonly files = new Map<string, FakeFile>();
   readonly fetched: string[] = [];
   readonly resizeObservers: FakeResizeObserver[] = [];
+  /** Every `matchMedia` query the runtime made, in order. */
+  readonly mediaQueries: FakeMediaQuery[] = [];
+  readonly timers = new FakeTimers();
   /** The fake window: `blur` is dispatched on it. */
   readonly window = new FakeEventTarget();
   /** What `print` wrote. */
@@ -837,15 +889,42 @@ export class FakeHost {
         this.frames.delete(handle);
       },
       devicePixelRatio: () => this.devicePixelRatio,
+      matchMedia: (query) => {
+        const media = new FakeMediaQuery(query);
+        this.mediaQueries.push(media);
+        return asDom<EventTarget>(media);
+      },
+      setTimeout: (callback, delayMs) => this.timers.schedule(callback, delayMs),
+      clearTimeout: (handle) => {
+        this.timers.cancel(handle as number);
+      },
       // Advances a little on every read so frame timing counters are non-zero and deterministic.
       now: () => (this.nowMs += 0.25),
     };
+  }
+
+  /**
+   * Changes `window.devicePixelRatio` the way moving the window to another display does: the media query
+   * `(resolution: <old>dppx)` stops matching, so every query that no longer matches fires `change`.
+   */
+  setDevicePixelRatio(ratio: number): void {
+    this.devicePixelRatio = ratio;
+    for (const media of this.mediaQueries) {
+      if (media.query !== `(resolution: ${String(ratio)}dppx)`) media.dispatch("change");
+    }
   }
 
   /** The first device the runtime created. */
   get device(): FakeHostDevice {
     const device = this.adapter?.devices[0];
     if (!(device instanceof FakeHostDevice)) throw new Error("no device was created");
+    return device;
+  }
+
+  /** The device the runtime created last (the recreated one after a device loss). */
+  get latestDevice(): FakeHostDevice {
+    const device = this.adapter?.hostDevices.at(-1);
+    if (device === undefined) throw new Error("no device was created");
     return device;
   }
 

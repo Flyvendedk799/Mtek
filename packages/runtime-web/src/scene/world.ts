@@ -253,7 +253,7 @@ export class World {
 
   private readonly manifest: MtekManifest;
   private readonly structure: SceneStructure;
-  private readonly params: ParamSink;
+  private params: ParamSink;
   private readonly report: (diagnostic: MtekDiagnostic) => void;
   private readonly indexByRecord = new Map<object, number>();
   private readonly worlds: Mat4[];
@@ -364,6 +364,22 @@ export class World {
     const problem = this.cameraProblem(this.camera);
     if (problem !== undefined) this.reportCamera(`after initialisation ${problem}.`);
     this.propagate();
+  }
+
+  /**
+   * Device recovery (`spec/runtime-abi.md` section 9.4): the records are the retained CPU state, so the world
+   * survives a lost device. This points it at the rebuilt parameter store, writes every mirrored param value
+   * into it through the generated writers (the bytes the lost device held), and marks every world matrix as
+   * changed so the rebuilt object arena is filled by the next frame.
+   */
+  rebindParams(sink: ParamSink): void {
+    this.params = sink;
+    for (const entity of this.structure.entities) {
+      const record = this.entities[entity.index];
+      if (entity.instance === null || record?.mat == null) continue;
+      for (const param of entity.instance.material.params) sink.writeParam(entity.instance.index, param.name, record.mat.p[param.name]);
+    }
+    this.worldChanged.fill(1);
   }
 
   /** Sets `ctx.frame` for the frame about to run. */
