@@ -17,9 +17,9 @@
 
 use super::lower_fn::SceneCtx;
 use super::model::{
-    Behavior, Binding, Camera, Const, Entity, Field, Item, MaterialInstanceDesc, Mesh, MeshDesc,
-    Module, Origin, Owner, Param, Program, Projection, ProjectionDesc, Scene, SceneFields, Source,
-    State, StructFieldItem, StructItem, Symbol, UpdateClass, Value,
+    Behavior, Binding, Camera, Const, Entity, Field, Item, Light, LightKind, MaterialInstanceDesc,
+    Mesh, MeshDesc, Module, Origin, Owner, Param, Program, Projection, ProjectionDesc, Scene,
+    SceneFields, Source, State, StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 
@@ -36,14 +36,14 @@ use crate::types::{
 };
 
 /// The scene fields lowered into [`SceneFields`].
-pub(super) const SCENE_FIELDS: [&str; 1] = ["clear_color"];
+pub(super) const SCENE_FIELDS: [&str; 3] = ["clear_color", "ambient_color", "ambient_intensity"];
 /// The camera fields lowered into [`Camera`]; `active` is represented by
 /// [`Camera::active`], which the scene checks computed.
 pub(super) const CAMERA_FIELDS: [&str; 5] =
     ["position", "target", "rotation", "projection", "active"];
 /// The entity fields lowered into [`Entity`].
-pub(super) const ENTITY_FIELDS: [&str; 6] = [
-    "position", "rotation", "scale", "visible", "mesh", "material",
+pub(super) const ENTITY_FIELDS: [&str; 7] = [
+    "position", "rotation", "scale", "visible", "mesh", "material", "light",
 ];
 /// The scene-object kinds lowered (into [`Camera`]).
 pub(super) const OBJECT_KINDS: [&str; 1] = ["camera"];
@@ -51,6 +51,8 @@ pub(super) const OBJECT_KINDS: [&str; 1] = ["camera"];
 pub(super) const MESH_SCHEMAS: [&str; 3] = ["Box", "Sphere", "Plane"];
 /// The projection schemas lowered into [`ProjectionDesc`].
 pub(super) const PROJECTION_SCHEMAS: [&str; 2] = ["Perspective", "Orthographic"];
+/// The light schemas lowered into [`LightKind`].
+pub(super) const LIGHT_SCHEMAS: [&str; 2] = ["DirectionalLight", "PointLight"];
 
 /// Why lowering failed: a description of the compiler defect.
 pub(super) type Defect = String;
@@ -376,6 +378,20 @@ impl Lowering<'_> {
                 "clear_color",
                 checked.span,
             )?,
+            ambient_color: required(
+                self.types,
+                &what,
+                &checked.fields,
+                "ambient_color",
+                checked.span,
+            )?,
+            ambient_intensity: required(
+                self.types,
+                &what,
+                &checked.fields,
+                "ambient_intensity",
+                checked.span,
+            )?,
         };
         let mut constants = Vec::new();
         self.body_constants(&decl.members, &symbol, &mut constants)?;
@@ -620,6 +636,13 @@ impl Lowering<'_> {
                 "{what} has a mesh without a material or the reverse"
             ));
         }
+        let light = match fields.iter().find(|f| f.name == "light") {
+            Some(field) => {
+                let (value, origin, span) = parts(&what, field, checked.span)?;
+                Some(self.light(&what, value, origin, span, checked.def)?)
+            }
+            None => None,
+        };
         out.push(Entity {
             index,
             name: checked.name.clone(),
@@ -632,6 +655,7 @@ impl Lowering<'_> {
             visible: required(self.types, &what, fields, "visible", checked.span)?,
             mesh,
             material,
+            light,
         });
         for child in &checked.children {
             self.entity(child, &symbol, Some(index), out)?;
@@ -837,6 +861,58 @@ pub(super) fn projection_desc(what: &str, value: &ConstValue) -> Result<Projecti
 }
 
 impl Lowering<'_> {
+    /// A completed light descriptor: its kind and `range`, and `color` and `intensity` as a
+    /// constant or the binding that writes them.
+    fn light(
+        &self,
+        what: &str,
+        value: &ConstValue,
+        origin: Origin,
+        span: Span,
+        entity: Option<DefId>,
+    ) -> Result<Light, Defect> {
+        let (schema, fields) = descriptor(what, value)?;
+        if !LIGHT_SCHEMAS.contains(&schema) {
+            return Err(format!(
+                "the light {schema} of {what} is not lowered by this build"
+            ));
+        }
+        let kind = match schema {
+            "DirectionalLight" => LightKind::Directional,
+            "PointLight" => LightKind::Point {
+                range: f32_member(schema, fields, "range")?,
+            },
+            other => {
+                return Err(format!(
+                    "the light {other} of {what} is not lowered by this build"
+                ));
+            }
+        };
+        let field = |name: &str| -> Result<Field, Defect> {
+            let binding = entity.and_then(|entity| {
+                self.types.bindings().iter().find(|b| {
+                    matches!(&b.target, crate::types::BindTarget::LightField { entity: e, field } if *e == entity && field == name)
+                })
+            });
+            let source = match binding {
+                Some(binding) => Source::Bound(binding.id),
+                None => Source::Const(Value::from(member(schema, fields, name)?)),
+            };
+            Ok(Field {
+                source,
+                origin,
+                span,
+            })
+        };
+        Ok(Light {
+            kind,
+            color: field("color")?,
+            intensity: field("intensity")?,
+            origin,
+            span,
+        })
+    }
+
     /// A completed material instance: the material's symbol and every
     /// parameter in declaration order, each `initial` (decision 0039).
     fn material_instance(

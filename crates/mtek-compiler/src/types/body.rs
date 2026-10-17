@@ -813,7 +813,8 @@ impl<'a> Checker<'a> {
                     Some(
                         FieldKind::ObjectField { .. }
                         | FieldKind::EntityState { .. }
-                        | FieldKind::MaterialParam { .. },
+                        | FieldKind::MaterialParam { .. }
+                        | FieldKind::LightField { .. },
                     ) if self.scope.is_some() => return None,
                     Some(_) => {
                         self.report_not_a_place(

@@ -193,6 +193,7 @@ fn the_two_m1_scenes_are_codegen_fixtures_with_the_semantic_sources() {
             "assignable_places",
             "bindings",
             "cpu_functions",
+            "lights",
             "numeric_cpu_table",
             "scene_a_target_camera_box",
             "scene_b_orthographic_nested",

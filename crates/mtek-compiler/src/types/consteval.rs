@@ -655,6 +655,11 @@ impl Checker<'_> {
                 kind: NonConstantKind::ObjectField,
                 reason: format!("it reads the param '{param}' of an entity's material"),
             }),
+            FieldKind::LightField { field, .. } => Folded::NotConstant(NonConstant {
+                span: expr.span,
+                kind: NonConstantKind::ObjectField,
+                reason: format!("it reads the field '{field}' of an entity's light"),
+            }),
             FieldKind::NamespaceValue(name) => Folded::NotConstant(NonConstant {
                 span: expr.span,
                 kind: NonConstantKind::RunTimeValue,

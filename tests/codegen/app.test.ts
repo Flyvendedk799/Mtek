@@ -50,6 +50,8 @@ interface IrEntity {
   readonly material: {
     readonly params: readonly { readonly name: string; readonly source: { readonly const?: IrValue; readonly bound?: number } }[];
   } | null;
+  /** The light component: `color` and `intensity` are constants or bound. */
+  readonly light?: { readonly color: IrField; readonly intensity: IrField };
 }
 
 interface IrBehavior {
@@ -164,6 +166,11 @@ function expectedCalls(ir: IrProgram): SetterCall[] {
         value: cpuValue(param.source.const),
       });
     }
+    for (const field of ["color", "intensity"] as const) {
+      const constant = entity.light?.[field].source.const;
+      if (constant === undefined) continue;
+      calls.push({ method: "setLight", entity: entity.index, field, value: cpuValue(constant) });
+    }
   }
   return calls;
 }
@@ -174,6 +181,7 @@ describe("the generated program module", () => {
       "assignable_places",
       "bindings",
       "cpu_functions",
+      "lights",
       "numeric_cpu_table",
       "scene_a_target_camera_box",
       "scene_b_orthographic_nested",

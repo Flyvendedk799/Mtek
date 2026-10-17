@@ -77,6 +77,45 @@ function floats(buffer: FakeBuffer, byteOffset: number, count: number): Float32A
   return new Float32Array(buffer.contents.buffer.slice(byteOffset, byteOffset + count * 4));
 }
 
+/** One `MtekLight` read back from the frame block, vectors as arrays. */
+interface ReadLight {
+  readonly color: number[];
+  readonly kind: number;
+  readonly position: number[];
+  readonly range: number;
+  readonly direction: number[];
+}
+
+const ZERO_LIGHT: ReadLight = { color: [0, 0, 0], kind: 0, position: [0, 0, 0], range: 0, direction: [0, 0, 0] };
+
+/** `light_count` of the frame block. */
+function frameLightCount(manifest: MtekManifest, frame: FakeBuffer): number {
+  const at = memberOffset(manifest, "builtin:frame", "light_count");
+  return new Uint32Array(frame.contents.buffer.slice(at, at + 4))[0] ?? -1;
+}
+
+/**
+ * Every `MtekLight` of the frame block, from the offsets and stride of the manifest's layout record (the
+ * test, like the runtime, never hard-codes them).
+ */
+function frameLights(manifest: MtekManifest, frame: FakeBuffer): ReadLight[] {
+  const node = manifest.layouts.find((layout) => layout.id === "builtin:frame")?.root.members.find((m) => m.name === "lights")?.node;
+  if (node?.kind !== "array" || node.element.kind !== "struct") throw new Error("the lights member is not an array of structs");
+  const element = node.element;
+  const at = (slot: number, member: string): number => {
+    const found = element.members.find((m) => m.name === member);
+    if (found === undefined) throw new Error(`no MtekLight member ${member}`);
+    return node.offset + slot * node.stride + found.node.offset;
+  };
+  return Array.from({ length: node.length }, (_, slot) => ({
+    color: Array.from(floats(frame, at(slot, "color"), 3)),
+    kind: new Uint32Array(frame.contents.buffer.slice(at(slot, "kind"), at(slot, "kind") + 4))[0] ?? -1,
+    position: Array.from(floats(frame, at(slot, "position"), 3)),
+    range: floats(frame, at(slot, "range"), 1)[0] ?? Number.NaN,
+    direction: Array.from(floats(frame, at(slot, "direction"), 3)),
+  }));
+}
+
 function lastDraws(host: FakeHost): readonly FakeDrawRecord[] {
   const pass = host.device.renderPasses.at(-1);
   if (pass === undefined) throw new Error("no render pass");
@@ -194,6 +233,14 @@ describe("a rendered frame", () => {
     app.dispose();
   });
 
+  it("writes no lights when the scene has none: light_count 0 and an all-zero lights array", async () => {
+    const { host, debug, app, manifest } = await mountScene();
+    debug.step(1, 0.016);
+    const frame = bufferLabelled(host, "mtek:uniform-arena:builtin:frame");
+    expect(frameLights(manifest, frame)).toEqual(Array.from({ length: 4 }, () => ZERO_LIGHT));
+    app.dispose();
+  });
+
   it("writes MtekObject (model, normal matrix) through the builtin:object writers at the object's slot", async () => {
     const { host, debug, app, manifest } = await mountScene({
       init: (context) => {
@@ -271,6 +318,119 @@ describe("a rendered frame", () => {
     });
     debug.step(1, 0.016);
     expect(host.device.renderPasses.at(-1)?.clearValue).toEqual({ r: 0.5, g: 0.25, b: 0.125, a: 1 });
+    app.dispose();
+  });
+});
+
+/**
+ * Three entities: `Cube` (the box of the minimal manifest) carries a directional light, `Rig` has no mesh,
+ * no material and no light, and its child `Lamp` carries a point light.
+ */
+function lightsEdit(json: Json): void {
+  const scene = json["scene"] as { entities: Json[]; lights: Json[] };
+  const template = scene.entities[0] ?? {};
+  const bare = { ...template, mesh: null, material: null, light: null };
+  scene.entities = [
+    { ...template, light: 0 },
+    { ...bare, index: 1, name: "Rig", symbol: "src/main.mtek::Demo.Rig" },
+    { ...bare, index: 2, name: "Lamp", symbol: "src/main.mtek::Demo.Rig.Lamp", parent: 1, light: 1 },
+  ];
+  scene.lights = [
+    { index: 0, entity: 0, kind: "directional" },
+    { index: 1, entity: 2, kind: "point", range: 6.5 },
+  ];
+}
+
+/** `init` for {@link lightsEdit}: the rig is turned about +Y by PHI and scaled non-uniformly. */
+const THETA = 0.9;
+const PHI = 1.2;
+function lightsInit(context: object): void {
+  const ctx = context as InitContext;
+  ctx.setCamera("position", { x: 0, y: 2, z: 6 });
+  ctx.setCamera("target", { x: 0, y: 0.5, z: 0 });
+  ctx.setCamera("projection.fov_y", Math.fround(0.9));
+  ctx.setCamera("projection.near", Math.fround(0.1));
+  ctx.setCamera("projection.far", 1000);
+  const [cube, rig, lamp] = ctx.e;
+  const about = (angle: number): object => ({ x: 0, y: Math.sin(angle / 2), z: 0, w: Math.cos(angle / 2) });
+  ctx.setTransform(cube, "position", { x: 0, y: 0, z: 0 });
+  ctx.setTransform(cube, "rotation", about(THETA));
+  ctx.setTransform(cube, "scale", { x: 1, y: 1, z: 1 });
+  ctx.setVisible(cube, true);
+  ctx.setParam(cube, "color", MINIMAL_SCENE_COLOR);
+  ctx.setLight(cube, "color", { r: 1, g: 0.5, b: 0.25, a: 0.1 });
+  ctx.setLight(cube, "intensity", 3);
+  ctx.setTransform(rig, "position", { x: 4, y: 0, z: 0 });
+  ctx.setTransform(rig, "rotation", about(PHI));
+  ctx.setTransform(rig, "scale", { x: 2, y: 3, z: 0.5 });
+  ctx.setVisible(rig, true);
+  ctx.setTransform(lamp, "position", { x: 1, y: 0.5, z: 0 });
+  ctx.setTransform(lamp, "rotation", { x: 0, y: 0, z: 0, w: 1 });
+  ctx.setTransform(lamp, "scale", { x: 1, y: 1, z: 1 });
+  ctx.setVisible(lamp, true);
+  ctx.setLight(lamp, "color", { r: 0.5, g: 0.25, b: 1, a: 1 });
+  ctx.setLight(lamp, "intensity", 8);
+}
+
+describe("lights in the frame block (decision 0053)", () => {
+  // The expected values are derived by hand, not with the runtime's matrix code. A rotation about +Y by
+  // angle t maps (x, y, z) to (x cos t + z sin t, y, -x sin t + z cos t); an entity's -Z axis (0, 0, -1)
+  // therefore becomes (-sin t, 0, -cos t). The lamp's world position is the rig's position plus the
+  // rotated, scaled local position.
+  it("packs count, premultiplied colour, kind, world position, range and world -Z direction", async () => {
+    const { host, debug, app, manifest } = await mountScene({ edit: lightsEdit, init: lightsInit });
+    debug.step(1, 0.016);
+    const frame = bufferLabelled(host, "mtek:uniform-arena:builtin:frame");
+    expect(frameLightCount(manifest, frame)).toBe(2);
+    const [sun, lamp, ...unused] = frameLights(manifest, frame);
+    expect(unused).toEqual([ZERO_LIGHT, ZERO_LIGHT]);
+
+    // The directional light: colour (1, 0.5, 0.25) x 3, alpha 0.1 ignored; aimed down the rotated -Z.
+    expect(sun?.color).toEqual([3, 1.5, 0.75]);
+    expect(sun?.kind).toBe(0);
+    expect(sun?.range).toBe(0);
+    expect(sun?.direction[0]).toBeCloseTo(-Math.sin(THETA), 6);
+    expect(sun?.direction[1]).toBeCloseTo(0, 6);
+    expect(sun?.direction[2]).toBeCloseTo(-Math.cos(THETA), 6);
+
+    // The point light under the rotated, scaled rig: local (1, 0.5, 0) scaled by (2, 3, 0.5) is (2, 1.5, 0),
+    // turned about +Y by PHI and moved by (4, 0, 0).
+    expect(lamp?.color).toEqual([4, 2, 8]);
+    expect(lamp?.kind).toBe(1);
+    expect(lamp?.range).toBe(6.5);
+    expect(lamp?.position[0]).toBeCloseTo(4 + 2 * Math.cos(PHI), 5);
+    expect(lamp?.position[1]).toBeCloseTo(1.5, 5);
+    expect(lamp?.position[2]).toBeCloseTo(-2 * Math.sin(PHI), 5);
+    // The non-uniform scale of the parent does not change the direction: the unit -Z of the rig.
+    expect(lamp?.direction[0]).toBeCloseTo(-Math.sin(PHI), 6);
+    expect(lamp?.direction[1]).toBeCloseTo(0, 6);
+    expect(lamp?.direction[2]).toBeCloseTo(-Math.cos(PHI), 6);
+    app.dispose();
+  });
+
+  it("uploads nothing more for static lights after the first frame", async () => {
+    const { debug, app } = await mountScene({ edit: lightsEdit, init: lightsInit });
+    debug.step(1, 0.016);
+    const uploads = debug.counters()["uploads"];
+    debug.step(3, 0.016);
+    expect(debug.counters()["uploads"]).toBe(uploads);
+    app.dispose();
+  });
+
+  it("puts the ambient colour times its intensity in the frame block next to the lights", async () => {
+    const { host, debug, app, manifest } = await mountScene({
+      edit: (json) => {
+        lightsEdit(json);
+        const fields = (json["scene"] as { fields: Json }).fields;
+        fields["ambientColor"] = [0.2, 0.4, 0.6, 1];
+        fields["ambientIntensity"] = 0.5;
+      },
+      init: lightsInit,
+    });
+    debug.step(1, 0.016);
+    const frame = bufferLabelled(host, "mtek:uniform-arena:builtin:frame");
+    expect(floats(frame, memberOffset(manifest, "builtin:frame", "ambient"), 3)).toEqual(new Float32Array([0.1, 0.2, 0.3]));
+    expect(frameLightCount(manifest, frame)).toBe(2);
     app.dispose();
   });
 });
@@ -491,5 +651,89 @@ describe("the golden programs end to end on the fake GPU", () => {
     expect(reported).toEqual([]);
     app.dispose();
     expect(debug.counters()).toMatchObject({ liveBuffers: 0, livePipelines: 0, liveBindGroups: 0 });
+  });
+});
+
+describe("the compiler's lights program, end to end (decision 0053)", () => {
+  const f = Math.fround;
+  /** sRGB byte to linear light, from the transfer function of the standard (not from the compiler's output). */
+  const linear = (byte: number): number => {
+    const c = byte / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const SUN_LINEAR = [linear(0xff), linear(0xe0), linear(0xb0)].map(f);
+  const LAMP_COLOUR = [0.25, 0.5, 0.75];
+
+  async function mountLights(): Promise<{ host: FakeHost; debug: MtekDebug; app: MtekApp; manifest: MtekManifest; reported: MtekDiagnostic[] }> {
+    const golden = await loadGoldenProgram("lights");
+    const host = new FakeHost();
+    for (const [url, text] of golden.files) host.files.set(url, text);
+    const reported: MtekDiagnostic[] = [];
+    const app = await mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), golden.program, {
+      test: { manualClock: true, renderTarget: TARGET },
+      onDiagnostic: (d) => reported.push(d),
+    });
+    if (app.debug === undefined) throw new Error("no debug API");
+    return { host, debug: app.debug, app, manifest: golden.manifest, reported };
+  }
+
+  function expectColor(actual: readonly number[] | undefined, linearColor: readonly number[], intensity: number): void {
+    expect(actual).toHaveLength(3);
+    actual?.forEach((value, i) => expect(value).toBeCloseTo(f(linearColor[i] ?? Number.NaN) * intensity, 5));
+  }
+
+  it("declares the lights in the manifest, in instance order, with the ambient fields", async () => {
+    const { manifest, app } = await mountLights();
+    expect(manifest.scene.lights).toEqual([
+      { index: 0, entity: 0, kind: "directional" },
+      { index: 1, entity: 2, kind: "point", range: 6.5 },
+    ]);
+    expect(manifest.scene.entities.map((entity) => entity.light)).toEqual([0, null, 1]);
+    expect(manifest.scene.bindings.map((binding) => binding.target)).toEqual([{ kind: "light", entity: 0, field: "intensity" }]);
+    expect(manifest.scene.fields.ambientIntensity).toBe(0.25);
+    app.dispose();
+  });
+
+  it("evaluates the bound intensity before the first frame and packs init's values", async () => {
+    const { host, debug, app, manifest, reported } = await mountLights();
+    debug.step(1, 0);
+    const frame = bufferLabelled(host, "mtek:uniform-arena:builtin:frame");
+    expect(frameLightCount(manifest, frame)).toBe(2);
+    const [sun, lamp] = frameLights(manifest, frame);
+    // Sun: #ffe0b0 times the bound intensity level * 1.5 = 3 (the first frame has delta 0: level is still 2).
+    expectColor(sun?.color, SUN_LINEAR, 3);
+    expect(sun?.kind).toBe(0);
+    expect(sun?.direction[0]).toBeCloseTo(-Math.sin(0.9), 6);
+    expect(sun?.direction[1]).toBeCloseTo(0, 6);
+    expect(sun?.direction[2]).toBeCloseTo(-Math.cos(0.9), 6);
+    // Lamp: the update of the first frame ran with dt 0 (intensity 4, colour (0.25, warmth, 0.75)); the
+    // rig is at (4, 0, 0), the lamp 1 right and 0.5 up of it, nothing is rotated.
+    expect(lamp?.kind).toBe(1);
+    expect(lamp?.range).toBe(6.5);
+    expect(lamp?.position).toEqual([5, 0.5, 0]);
+    expect(lamp?.direction[0]).toBeCloseTo(0, 6);
+    expect(lamp?.direction[1]).toBeCloseTo(0, 6);
+    expect(lamp?.direction[2]).toBeCloseTo(-1, 6);
+    expectColor(lamp?.color, LAMP_COLOUR, 4);
+    expect(reported).toEqual([]);
+    app.dispose();
+  });
+
+  it("follows the bound intensity and the handler's writes frame by frame", async () => {
+    const { host, debug, app, manifest } = await mountLights();
+    const frame = bufferLabelled(host, "mtek:uniform-arena:builtin:frame");
+    // Per frame, in phase order: the scene's update (level += dt), the lamp's update (intensity += dt,
+    // colour), then the binding (intensity = level * 1.5).
+    let level = 2;
+    let lampIntensity = 4;
+    for (let frameNumber = 0; frameNumber < 3; frameNumber += 1) {
+      debug.step(1, 0.1);
+      level = f(level + f(0.1));
+      lampIntensity = f(lampIntensity + f(0.1));
+      const [sun, lamp] = frameLights(manifest, frame);
+      expectColor(sun?.color, SUN_LINEAR, f(level * 1.5));
+      expectColor(lamp?.color, LAMP_COLOUR, lampIntensity);
+    }
+    app.dispose();
   });
 });

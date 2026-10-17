@@ -1,0 +1,8 @@
+// The range of a light is construction-only, so its value is a constant expression (E3090).
+scene Demo {
+    state reach: f32 = 4.0;
+    camera Main {}
+    entity Lamp {
+        light: PointLight { range: reach; };
+    }
+}

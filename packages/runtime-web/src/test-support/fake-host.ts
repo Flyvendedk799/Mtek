@@ -902,6 +902,7 @@ export interface InitContext {
   setTransform(entity: object | undefined, field: string, value: unknown): void;
   setVisible(entity: object | undefined, value: boolean): void;
   setParam(entity: object | undefined, name: string, value: unknown): void;
+  setLight(entity: object | undefined, field: string, value: unknown): void;
 }
 
 /** The colour `minimalSceneInit` gives every entity's material (linear, opaque). */

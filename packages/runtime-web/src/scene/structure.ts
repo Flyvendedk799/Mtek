@@ -52,6 +52,17 @@ export interface ResolvedEntity {
   readonly instance: ResolvedInstance | null;
 }
 
+/** A light of `scene.lights`: which entity carries it and what it was constructed with. */
+export interface ResolvedLight {
+  /** Position in `scene.lights`, which is the order of `MtekFrame.lights`. */
+  readonly index: number;
+  /** Static entity index. */
+  readonly entity: number;
+  readonly kind: "directional" | "point";
+  /** 0 = unlimited; always 0 for a directional light. */
+  readonly range: number;
+}
+
 export interface SceneStructure {
   readonly frameLayout: MtekLayoutRecord;
   readonly objectLayout: MtekLayoutRecord;
@@ -63,6 +74,10 @@ export interface SceneStructure {
   readonly instances: readonly ResolvedInstance[];
   /** In manifest order. */
   readonly meshes: readonly ResolvedMesh[];
+  /** In `scene.lights` order; at most {@link SceneStructure.lightCapacity}. */
+  readonly lights: readonly ResolvedLight[];
+  /** The length of `MtekFrame.lights`, read from the frame layout. */
+  readonly lightCapacity: number;
 }
 
 export type StructureResult =
@@ -73,7 +88,7 @@ export const FRAME_LAYOUT_ID = "builtin:frame";
 export const OBJECT_LAYOUT_ID = "builtin:object";
 
 /** Members of the built-in blocks the renderer writes (through the generated field writers). */
-export const FRAME_MEMBERS = ["view_proj", "camera_position", "light_count", "ambient"] as const;
+export const FRAME_MEMBERS = ["view_proj", "camera_position", "light_count", "ambient", "lights"] as const;
 export const OBJECT_MEMBERS = ["model", "normal_matrix"] as const;
 
 /** The vertex attributes of `spec/materials.md` section 3.3, in vertex-buffer slot order. */
@@ -245,8 +260,41 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
     entities.push({ index, name: entity.name, symbol: entity.symbol, parent: entity.parent, mesh, instance });
   });
 
+  const lightsNode = frameLayout?.root.members.find((member) => member.name === "lights")?.node;
+  const lightCapacity = lightsNode?.kind === "array" ? lightsNode.length : 0;
+  if (frameLayout !== undefined && lightsNode?.kind !== "array") {
+    diagnostics.push(broken("layouts", `the member 'lights' of the built-in layout '${FRAME_LAYOUT_ID}' is not an array.`));
+  }
+  const lights: ResolvedLight[] = [];
+  if (scene.lights.length > lightCapacity) {
+    diagnostics.push(
+      broken("scene.lights", `the scene declares ${String(scene.lights.length)} lights, but the frame block holds ${String(lightCapacity)}.`),
+    );
+  } else {
+    scene.lights.forEach((light, index) => {
+      const field = `scene.lights[${String(index)}]`;
+      if (light.index !== index) {
+        diagnostics.push(broken(`${field}.index`, `light ${String(index)} carries index ${String(light.index)}.`));
+        return;
+      }
+      const carrier = scene.entities[light.entity];
+      if (carrier?.light !== index) {
+        diagnostics.push(broken(`${field}.entity`, `light ${String(index)} names entity ${String(light.entity)}, which does not carry it.`));
+        return;
+      }
+      lights.push({ index, entity: light.entity, kind: light.kind, range: light.kind === "point" ? light.range : 0 });
+    });
+    scene.entities.forEach((entity, index) => {
+      if (entity.light !== null && scene.lights[entity.light]?.entity !== index) {
+        diagnostics.push(
+          broken(`scene.entities[${String(index)}].light`, `entity '${entity.name}' names light ${String(entity.light)}, which another entity carries.`),
+        );
+      }
+    });
+  }
+
   if (diagnostics.length > 0 || frameLayout === undefined || objectLayout === undefined || camera === undefined) {
     return { ok: false, diagnostics };
   }
-  return { ok: true, structure: { frameLayout, objectLayout, camera, entities, materials, instances, meshes } };
+  return { ok: true, structure: { frameLayout, objectLayout, camera, entities, materials, instances, meshes, lights, lightCapacity } };
 }

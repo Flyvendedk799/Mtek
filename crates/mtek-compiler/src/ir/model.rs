@@ -438,6 +438,16 @@ pub enum PlaceRoot {
         #[serde(serialize_with = "self::span")]
         span: Span,
     },
+    /// A field of the light of a named entity (`Sun.light.intensity`), written through
+    /// `ctx.setLight`.
+    LightField {
+        entity: u32,
+        field: String,
+        #[serde(rename = "type")]
+        ty: String,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
 }
 
 impl PlaceRoot {
@@ -448,7 +458,8 @@ impl PlaceRoot {
             | PlaceRoot::State { ty, .. }
             | PlaceRoot::EntityField { ty, .. }
             | PlaceRoot::CameraField { ty, .. }
-            | PlaceRoot::InstanceParam { ty, .. } => ty,
+            | PlaceRoot::InstanceParam { ty, .. }
+            | PlaceRoot::LightField { ty, .. } => ty,
         }
     }
 }
@@ -593,6 +604,8 @@ pub enum ExprKind {
     CameraField { camera: String, field: String },
     /// A read of a param of the material instance of a named entity.
     InstanceParam { entity: u32, param: String },
+    /// A read of a field of the light of a named entity (`Sun.light.intensity`).
+    LightField { entity: u32, field: String },
     /// `frame.time`, `frame.delta`, `frame.index`.
     Frame { member: String },
     /// A member of a registry enum (`Key.Space`) with the DOM code it maps from.
@@ -734,6 +747,11 @@ pub enum BindingTarget {
     Camera {
         field: String,
     },
+    /// `color` or `intensity` of the light of an entity.
+    Light {
+        entity: u32,
+        field: String,
+    },
 }
 
 /// What a binding reads.
@@ -822,6 +840,13 @@ impl Scene {
 pub struct SceneFields {
     /// `clear_color`: a linear colour.
     pub clear_color: Field,
+    /// `ambient_color`: a linear colour (the runtime uses its RGB channels). Listed in the
+    /// serialised IR only when the source writes it, like the entity `light`.
+    #[serde(skip_serializing_if = "Field::is_default")]
+    pub ambient_color: Field,
+    /// `ambient_intensity`: an `f32` of at least 0. Listed like `ambient_color`.
+    #[serde(skip_serializing_if = "Field::is_default")]
+    pub ambient_intensity: Field,
 }
 
 /// The value of one field of a scene, camera or entity body.
@@ -835,6 +860,13 @@ pub struct Field {
     /// declaration that holds the field.
     #[serde(serialize_with = "span")]
     pub span: Span,
+}
+
+impl Field {
+    /// Whether the value is the registry default (nothing in the source writes it).
+    fn is_default(&self) -> bool {
+        self.origin == Origin::Default
+    }
 }
 
 /// How a field or material parameter gets its initial value. M1 has only
@@ -958,6 +990,35 @@ pub struct Entity {
     pub mesh: Option<Mesh>,
     /// The material instance; present exactly when `mesh` is.
     pub material: Option<MaterialInstanceDesc>,
+    /// The light component, if the entity has one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub light: Option<Light>,
+}
+
+/// An entity's light component (`spec/materials.md` section 7, decision 0053).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Light {
+    pub kind: LightKind,
+    /// `color`: a linear colour, a constant or the value of a binding.
+    pub color: Field,
+    /// `intensity`: an `f32`, a constant or the value of a binding.
+    pub intensity: Field,
+    pub origin: Origin,
+    /// The `light: …;` member.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// The kinds of light and what each is constructed with.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum LightKind {
+    Directional,
+    /// `range`: 0 for unlimited.
+    Point {
+        range: f32,
+    },
 }
 
 /// An entity's mesh descriptor.

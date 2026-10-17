@@ -176,6 +176,8 @@ pub enum FieldKind {
     },
     /// A param of the material instance of a named entity (`Cube.material.phase`).
     MaterialParam { entity: DefId, param: String },
+    /// A field of the light of a named entity (`Sun.light.intensity`).
+    LightField { entity: DefId, field: String },
     /// A value member of a namespace (`frame.time`).
     NamespaceValue(String),
     /// A field of a user struct value.
@@ -204,8 +206,8 @@ pub(super) struct Checker<'a> {
     pub(super) states: BTreeMap<(DefId, String), DefId>,
     /// What the scene body or state initialiser being checked belongs to.
     pub(super) scope: Option<super::scene_body::ScopeCtx>,
-    /// Set while the `material` field of an entity is checked: the params of its instance literal
-    /// may be `bind(..)` (`E5004` elsewhere).
+    /// Set while the `material` or `light` field of an entity is checked: the params of its
+    /// instance literal and the fields of its light may be `bind(..)` (`E5004` elsewhere).
     pub(super) allow_param_bind: bool,
     pub(super) calls: BTreeMap<NodeId, CallKind>,
     pub(super) fields: BTreeMap<NodeId, FieldKind>,
@@ -472,10 +474,12 @@ impl<'a> Checker<'a> {
         for member in &entity.members {
             match member {
                 EntityMember::Field(field) if construct_implemented(Construct::EntityField) => {
-                    self.allow_param_bind = self.is_material_field(&field.name.name);
+                    self.allow_param_bind = self.is_material_field(&field.name.name)
+                        || self.is_light_field(&field.name.name);
                     self.schema_field(self.registry.declaration_schemas.entity, field);
                     self.allow_param_bind = false;
                     self.note_entity_material(entity, field);
+                    self.note_entity_light(entity, field);
                 }
                 EntityMember::Const(decl) if construct_implemented(Construct::BodyConst) => {
                     self.const_decl(decl);
@@ -1142,8 +1146,14 @@ impl<'a> Checker<'a> {
                             self.check(value, expected);
                         }
                         FieldValue::Bind(bind) => {
-                            // The params of the registry material of an entity's `material`.
-                            if !(binds_allowed && def.category == SchemaCategory::Material) {
+                            // The params of the registry material of an entity's `material`, the
+                            // fields of its `light`.
+                            if !(binds_allowed
+                                && matches!(
+                                    def.category,
+                                    SchemaCategory::Material | SchemaCategory::Light
+                                ))
+                            {
                                 self.bind_not_allowed(bind, "inside a descriptor literal");
                             }
                         }
@@ -2238,6 +2248,9 @@ impl<'a> Checker<'a> {
             _ => {}
         }
         if let Some(ty) = self.material_param(expr, base, name) {
+            return ty;
+        }
+        if let Some(ty) = self.light_field(expr, base, name) {
             return ty;
         }
         if let ExprKind::Name(_) | ExprKind::SelfValue = &base.kind

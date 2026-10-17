@@ -1,0 +1,12 @@
+// A bound light field has its binding as the only writer (E5070); `color` is not bound.
+scene Demo {
+    state level: f32 = 2.0;
+    camera Main {}
+    entity Lamp {
+        light: PointLight { intensity: bind(level * 2.0); };
+        update(dt: f32) {
+            Lamp.light.intensity = 1.0;
+            Lamp.light.color = #ff0000;
+        }
+    }
+}

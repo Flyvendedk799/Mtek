@@ -1,0 +1,40 @@
+// Lights and ambient light: the program of the M4-02 execution tests (the real runtime and a fake GPU
+// run the generated code and read back the frame block).
+scene Demo {
+    clear_color: #101418;
+    ambient_color: #8090ff;
+    ambient_intensity: 0.25;
+    state level: f32 = 2.0;
+    state warmth: f32 = 0.5;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Sun {
+        rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.9);
+        mesh: Box { size: vec3(0.2, 0.2, 0.2) };
+        light: DirectionalLight { color: #ffe0b0; intensity: bind(level * 1.5); };
+    }
+
+    entity Rig {
+        position: vec3(4.0, 0.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+
+        entity Lamp {
+            position: vec3(1.0, 0.5, 0.0);
+            mesh: Sphere {};
+            light: PointLight { color: #ff8040; intensity: 4.0; range: 6.5; };
+
+            update(dt: f32) {
+                self.light.intensity = Lamp.light.intensity + dt;
+                Lamp.light.color = color.linear(vec3(0.25, warmth, 0.75), 1.0);
+            }
+        }
+    }
+
+    update(dt: f32) {
+        level = level + dt;
+    }
+}

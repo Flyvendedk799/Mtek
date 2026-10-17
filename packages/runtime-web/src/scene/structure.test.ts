@@ -86,6 +86,72 @@ describe("resolveStructure", () => {
     ).toEqual(["MTEK-E8006 field: shaders.vertexAttributes"]);
   });
 
+  it("resolves the lights and reads the frame block's capacity from the layout", () => {
+    const result = resolveStructure(
+      manifestWith((_, scene) => {
+        const entity = scene.entities[0] ?? {};
+        entity["light"] = 0;
+        scene["lights"] = [{ index: 0, entity: 0, kind: "point", range: 6.5 }];
+      }),
+    );
+    if (!result.ok) throw new Error(JSON.stringify(result.diagnostics));
+    expect(result.structure.lights).toEqual([{ index: 0, entity: 0, kind: "point", range: 6.5 }]);
+    expect(result.structure.lightCapacity).toBe(4);
+    expect(
+      resolveStructure(manifestWith(() => undefined)),
+    ).toMatchObject({ ok: true, structure: { lights: [], lightCapacity: 4 } });
+  });
+
+  it("reports lights that do not fit the frame block or do not match their entities as E8006", () => {
+    const five = manifestWith((_, scene) => {
+      const template = scene.entities[0] ?? {};
+      scene.entities = [0, 1, 2, 3, 4].map((index) => ({ ...template, index, name: `L${String(index)}`, symbol: `src/main.mtek::Demo.L${String(index)}`, mesh: null, material: null, light: index }));
+      scene.materialInstances = [];
+      scene["lights"] = [0, 1, 2, 3, 4].map((index) => ({ index, entity: index, kind: "directional" }));
+    });
+    expect(problems(five)).toEqual(["MTEK-E8006 field: scene.lights"]);
+    // The light names an entity that does not name it back.
+    expect(
+      problems(
+        manifestWith((_, scene) => {
+          scene["lights"] = [{ index: 0, entity: 0, kind: "directional" }];
+        }),
+      ),
+    ).toEqual(["MTEK-E8006 field: scene.lights[0].entity"]);
+    // The entity names a light that another entity carries (and that entity does not name it back).
+    expect(
+      problems(
+        manifestWith((_, scene) => {
+          const template = scene.entities[0] ?? {};
+          scene.entities = [
+            { ...template, light: 0 },
+            { ...template, index: 1, name: "Other", symbol: "src/main.mtek::Demo.Other", mesh: null, material: null, light: null },
+          ];
+          scene["lights"] = [{ index: 0, entity: 1, kind: "directional" }];
+        }),
+      ),
+    ).toEqual(["MTEK-E8006 field: scene.lights[0].entity", "MTEK-E8006 field: scene.entities[0].light"]);
+    expect(
+      problems(
+        manifestWith((_, scene) => {
+          (scene.entities[0] ?? {})["light"] = 0;
+          scene["lights"] = [{ index: 1, entity: 0, kind: "directional" }];
+        }),
+      ),
+    ).toEqual(["MTEK-E8006 field: scene.lights[0].index"]);
+    // The frame layout's `lights` is not an array.
+    expect(
+      problems(
+        manifestWith((json) => {
+          const frame = (json["layouts"] as Json[]).find((layout) => layout["id"] === "builtin:frame");
+          const root = (frame ?? {})["root"] as { members: Json[] };
+          const lights = root.members.find((member) => member["name"] === "lights");
+          if (lights !== undefined) lights["node"] = { kind: "scalar", offset: 96, size: 4, align: 4, scalar: "f32" };
+        }),
+      ),
+    ).toContain("MTEK-E8006 field: layouts");
+  });
+
   it("reports what this runtime build cannot render as E8003", () => {
     const assetMesh = manifestWith((json) => {
       json["meshes"] = [{ id: "mesh:0", kind: "asset", asset: "assets/0000000000000000.bin", primitive: 0 }];

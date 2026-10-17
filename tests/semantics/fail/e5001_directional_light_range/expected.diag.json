@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 132,
+    "endByte": 137,
+    "message": "Unknown field 'range' on DirectionalLight. Valid fields: color, intensity."
+  }
+]

@@ -1,0 +1,10 @@
+// The `light` component itself is construction-only (E5073).
+scene Demo {
+    camera Main {}
+    entity Lamp {
+        light: PointLight {};
+        update(dt: f32) {
+            Lamp.light = DirectionalLight {};
+        }
+    }
+}

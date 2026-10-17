@@ -1,0 +1,38 @@
+[
+  {
+    "code": "MTEK-E5111",
+    "file": "src/main.mtek",
+    "startByte": 302,
+    "endByte": 323,
+    "message": "Scene 'Demo' declares 6 lights, but at most 4 are allowed.",
+    "related": [
+      {
+        "message": "the light of entity 'A'",
+        "file": "src/main.mtek",
+        "startByte": 124,
+        "endByte": 151
+      },
+      {
+        "message": "the light of entity 'B'",
+        "file": "src/main.mtek",
+        "startByte": 169,
+        "endByte": 190
+      },
+      {
+        "message": "the light of entity 'C'",
+        "file": "src/main.mtek",
+        "startByte": 216,
+        "endByte": 237
+      },
+      {
+        "message": "the light of entity 'D'",
+        "file": "src/main.mtek",
+        "startByte": 257,
+        "endByte": 278
+      }
+    ],
+    "notes": [
+      "the light of entity 'E' is the first beyond the limit; the frame block holds 4 lights"
+    ]
+  }
+]

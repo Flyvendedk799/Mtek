@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E3090",
+    "file": "src/main.mtek",
+    "startByte": 206,
+    "endByte": 211,
+    "message": "The value of field 'range' of PointLight is not a constant expression: it refers to the state 'reach'.",
+    "notes": [
+      "construction-only values may use only literals, constants, operators, conversions, constructors and const-eligible built-in functions"
+    ]
+  }
+]

@@ -1,0 +1,8 @@
+// A state initialiser cannot read a light field (E5081).
+scene Demo {
+    state copy: f32 = Lamp.light.intensity;
+    camera Main {}
+    entity Lamp {
+        light: PointLight {};
+    }
+}

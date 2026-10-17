@@ -4,7 +4,8 @@
 //! read any entity, camera, state or material param of the scene, wherever it is declared:
 //!
 //! * **Where.** `bind` is the whole value of a field the registry marks bindable, or of a param of
-//!   the material instance written as the `material` of an entity; anywhere else it is `E5004`.
+//!   the material instance written as the `material` of an entity, or of a bindable field of the
+//!   light written as the `light` of an entity (decision 0053); anywhere else it is `E5004`.
 //! * **What.** The expression is typed against the field's type exactly (`E3102`) as a CPU root
 //!   body, so the functions it calls are reachable CPU code, and it is pure: a call of a `cpu fn` or
 //!   of a CPU intrinsic is `E5005`.
@@ -98,6 +99,12 @@ impl Checker<'_> {
                         let params = self.descriptor_params(value, entity_def);
                         self.param_binds(entity_def, &entity.name.name, &params, fields, found);
                     }
+                    if self.is_light_field(&field.name.name)
+                        && let (FieldValue::Expr(value), Some(entity_def)) = (&field.value, owner)
+                        && let ExprKind::Descriptor { fields, .. } = &value.kind
+                    {
+                        self.light_binds(entity_def, &entity.name.name, value, fields, found);
+                    }
                 }
                 EntityMember::Entity(child) => self.entity_binds(child, found),
                 _ => {}
@@ -189,6 +196,68 @@ impl Checker<'_> {
                 param: name.clone(),
             };
             self.check_bind(bind, *ty, &subject, target, found);
+        }
+    }
+
+    /// `field: bind(..)` in the light of the entity `entity`: `color` and `intensity` (a field the
+    /// schema does not mark bindable, `range`, is `E5004`).
+    fn light_binds(
+        &mut self,
+        entity: DefId,
+        entity_name: &str,
+        value: &Expr,
+        fields: &[DescField],
+        found: &mut Vec<BindInfo>,
+    ) {
+        let Some(ty) = self.ty_of(value.id) else {
+            return;
+        };
+        let super::ty::Ty::Schema(schema) = self.out.interner.get(ty) else {
+            return;
+        };
+        for field in fields {
+            let FieldValue::Bind(bind) = &field.value else {
+                continue;
+            };
+            // An unknown field was reported (`E5001`).
+            let Some(def) = self.registry.schema_field(schema, &field.name.name) else {
+                continue;
+            };
+            if !def.flags.contains(FieldFlags::BINDABLE) {
+                let bindable: Vec<&str> = self
+                    .registry
+                    .schema(schema)
+                    .map(|s| {
+                        s.fields
+                            .iter()
+                            .filter(|f| f.flags.contains(FieldFlags::BINDABLE))
+                            .map(|f| f.name)
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                self.report(
+                    Diagnostic::new(
+                        Code::E5004,
+                        format!(
+                            "`bind` cannot be the value of the field '{}' of the light of entity '{entity_name}': the field is not bindable.",
+                            def.name
+                        ),
+                    )
+                    .at(bind.span)
+                    .note(format!("bindable fields of {schema}: {}", bindable.join(", "))),
+                );
+                continue;
+            }
+            let expected = self.out.interner.from_type_ref(def.ty);
+            let subject = format!(
+                "the field '{}' of the light of entity '{entity_name}'",
+                def.name
+            );
+            let target = BindTarget::LightField {
+                entity,
+                field: def.name.to_owned(),
+            };
+            self.check_bind(bind, expected, &subject, target, found);
         }
     }
 
@@ -301,7 +370,7 @@ impl Checker<'_> {
                 self.report(
                     Diagnostic::new(
                         Code::E5005,
-                        format!("The binding of {subject} reads the camera field `{name}`, which a binding cannot depend on."),
+                        format!("The binding of {subject} reads {name}, which a binding cannot depend on."),
                     )
                     .at(span)
                     .note("a binding may read constants, state, `frame` and the fields and state of named entities"),
@@ -372,7 +441,8 @@ impl Checker<'_> {
                                 field: field.clone(),
                             });
                         } else {
-                            camera_reads.push((span, format!("{object_name}.{field}")));
+                            camera_reads
+                                .push((span, format!("the camera field `{object_name}.{field}`")));
                         }
                     }
                     FieldKind::EntityState { entity, state, .. } => push(BindDep::EntityState {
@@ -383,6 +453,16 @@ impl Checker<'_> {
                         entity: *entity,
                         param: param.clone(),
                     }),
+                    // The manifest has no light dependency kind (decision 0053), like cameras.
+                    FieldKind::LightField { entity, field } => {
+                        let name = self
+                            .res
+                            .def(*entity)
+                            .map(|d| d.name.clone())
+                            .unwrap_or_default();
+                        camera_reads
+                            .push((span, format!("the light field `{name}.light.{field}`")));
+                    }
                     FieldKind::NamespaceValue(name) => {
                         if let Some(member) = name.strip_prefix("frame.") {
                             push(BindDep::Frame(member.to_owned()));
@@ -516,6 +596,9 @@ impl Checker<'_> {
             BindTarget::MaterialParam { entity, param } => {
                 format!("{}.material.{param}", name(*entity))
             }
+            BindTarget::LightField { entity, field } => {
+                format!("{}.light.{field}", name(*entity))
+            }
         }
     }
 
@@ -553,6 +636,13 @@ impl Checker<'_> {
                         param: p,
                     },
                 ) => entity == e && param == p,
+                (
+                    WriteTarget::LightField { entity, field },
+                    BindTarget::LightField {
+                        entity: e,
+                        field: f,
+                    },
+                ) => entity == e && field == f,
                 _ => false,
             });
             if let Some(binding) = hit {
@@ -589,6 +679,11 @@ impl Checker<'_> {
     /// Whether `name` is the field that holds an entity's material instance.
     pub(super) fn is_material_field(&self, name: &str) -> bool {
         name == "material"
+    }
+
+    /// Whether `name` is the field that holds an entity's light.
+    pub(super) fn is_light_field(&self, name: &str) -> bool {
+        name == "light"
     }
 
     /// A stand-in constant of `ty` for a value a binding supplies at run time: zero, the identity

@@ -7,9 +7,9 @@
  * (`spec/stdlib.md` section 3), then `scenes.<Entry>.init(ctx)` sets every camera field, transform,
  * visibility and material param through the setters of the context.
  *
- * The context implements the M1 subset of ABI 1 (decision 0031): `e`, `cam`, `frame`, `setTransform`,
- * `setVisible`, `setParam`, `setCamera` and `warn`. Any other member throws a `RuntimeInternalError`
- * naming it: M1 programs never use one (the compiler gates them by milestone), so reaching one is a bug.
+ * The context implements the subset of ABI 1 listed in {@link CONTEXT_MEMBERS} (decisions 0031, 0050,
+ * 0053). Any other member throws a `RuntimeInternalError` naming it: programs never use one (the
+ * compiler gates them by milestone), so reaching one is a bug.
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
 import {
@@ -25,6 +25,7 @@ import type { SceneStructure } from "./structure.js";
 import {
   describeValue,
   isColor,
+  type Color,
   isFiniteQuat,
   isFiniteVec3,
   isQuat,
@@ -52,6 +53,7 @@ export const CONTEXT_MEMBERS = [
   "setVisible",
   "setParam",
   "setCamera",
+  "setLight",
   "warn",
   "random",
   "isKeyDown",
@@ -62,6 +64,16 @@ export const CONTEXT_MEMBERS = [
 export interface EntityRef {
   readonly slot: number;
   readonly gen: number;
+}
+
+/**
+ * The light of an entity (`entity.light`, `spec/materials.md` section 7). `color` and `intensity` are
+ * written only through `ctx.setLight`; `range` is construction-only (0 = unlimited, 0 for directional lights).
+ */
+export interface LightRecord {
+  color: Color;
+  intensity: number;
+  readonly range: number;
 }
 
 /**
@@ -79,6 +91,8 @@ export interface EntityRecord {
   readonly params: Readonly<Record<string, unknown>>;
   /** The material instance: `p` holds the current param values. `null` without a material. */
   readonly mat: { readonly p: Record<string, unknown> } | null;
+  /** The light component, or `null` without one. */
+  readonly light: LightRecord | null;
   readonly ref: EntityRef;
 }
 
@@ -168,6 +182,8 @@ const DEFAULT_FOV_Y = f32(0.9);
 const DEFAULT_HEIGHT = 10;
 const DEFAULT_NEAR = f32(0.1);
 const DEFAULT_FAR = 1000;
+const WHITE: Color = Object.freeze({ r: 1, g: 1, b: 1, a: 1 });
+const LIGHT_FIELDS = ["color", "intensity"] as const;
 
 /** The zero value of a param type, the mirror's content before `init` writes it. */
 function zeroValue(type: string): unknown {
@@ -270,9 +286,11 @@ export class World {
     this.report = options.report;
 
     const materialParams = new Map(this.structure.materials.map((material) => [material.id, material.params]));
+    const lightOf = new Map(this.structure.lights.map((light) => [light.entity, light]));
     this.entities = Object.freeze(
       this.structure.entities.map((entity): EntityRecord => {
         const params = entity.instance === null ? undefined : materialParams.get(entity.instance.material.id);
+        const light = lightOf.get(entity.index);
         const record: EntityRecord = {
           position: ORIGIN,
           rotation: IDENTITY,
@@ -281,6 +299,8 @@ export class World {
           state: stateObject(this.manifest.scene.entities[entity.index]?.state ?? []),
           params: Object.freeze({}),
           mat: params === undefined ? null : { p: Object.fromEntries(params.map((param) => [param.name, zeroValue(param.type)])) },
+          // The registry defaults (`spec/stdlib.md` section 3.6); `init` sets every unbound field.
+          light: light === undefined ? null : { color: WHITE, intensity: 1, range: light.range },
           ref: Object.freeze({ slot: entity.index, gen: 0 }),
         };
         this.indexByRecord.set(record, entity.index);
@@ -320,6 +340,9 @@ export class World {
       },
       setCamera: (field: unknown, value: unknown): void => {
         this.setCamera(field, value);
+      },
+      setLight: (entity: unknown, field: unknown, value: unknown): void => {
+        this.setLight(entity, field, value);
       },
       warn: (code: unknown, spanId: unknown): void => {
         this.warn(code, spanId);
@@ -525,6 +548,25 @@ export class World {
     }
     this.params.writeParam(instance.index, param.name, value);
     record.mat.p[param.name] = value;
+  }
+
+  /** `ctx.setLight(e, "color" | "intensity", value)`; `range` is construction-only and never written. */
+  private setLight(entity: unknown, field: unknown, value: unknown): void {
+    const index = this.indexOf(entity, "setLight");
+    const light = this.entities[index]?.light;
+    if (light === null || light === undefined) {
+      throw new RuntimeInternalError(`ctx.setLight was called for entity ${String(index)}, which has no light.`);
+    }
+    if (!LIGHT_FIELDS.includes(field as (typeof LIGHT_FIELDS)[number])) {
+      throw new RuntimeInternalError(`ctx.setLight got the field ${describeValue(field)}; expected color or intensity.`);
+    }
+    if (field === "color") {
+      if (!isColor(value)) throw new RuntimeInternalError(`ctx.setLight(…, "color", ${describeValue(value)}) expects a color.`);
+      light.color = value;
+    } else {
+      if (typeof value !== "number") throw new RuntimeInternalError(`ctx.setLight(…, "intensity", ${describeValue(value)}) expects an f32.`);
+      light.intensity = value;
+    }
   }
 
   private setCamera(field: unknown, value: unknown): void {

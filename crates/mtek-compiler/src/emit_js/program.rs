@@ -18,7 +18,8 @@
 //!   `"projection.height"`, `"projection.near"`, `"projection.far"`);
 //! - each entity: `ctx.setTransform(e, "position" | "rotation" | "scale", v)`,
 //!   `ctx.setVisible(e, v)`, then `ctx.setParam(e, name, v)` for every parameter of its
-//!   material instance, which the runtime writes through the generated field writer.
+//!   material instance, which the runtime writes through the generated field writer, then
+//!   `ctx.setLight(e, "color" | "intensity", v)` when it has a light.
 //!
 //! Every value is set, defaults included: the runtime pre-creates entity records with zero
 //! values, and a zero scale is not a valid transform. In M1 every value is a constant, so the
@@ -469,6 +470,21 @@ fn entity_statements(
                     ],
                 ),
                 span: Some(desc.span),
+            });
+        }
+    }
+    if let Some(light) = &entity.light {
+        for (name, field) in [("color", &light.color), ("intensity", &light.intensity)] {
+            // A bound field's value is the binding's, written after `init`.
+            let Some(value) = field.source.as_const() else {
+                continue;
+            };
+            body.push(Stmt::Expr {
+                expr: ctx_call(
+                    "setLight",
+                    vec![Expr::ident(&record), Expr::string(name), value_expr(value)?],
+                ),
+                span: Some(field.span),
             });
         }
     }

@@ -24,8 +24,9 @@
 //!   opaque (`E5100`, `spec/materials.md` section 2); other colour fields
 //!   (`clear_color`) take any alpha.
 //! * **Rules** between fields (`E5020`, `E5010`), the active object of a
-//!   scene-object kind (`E5012`, `E5013`) and the static entity limit
-//!   (`E5092`).
+//!   scene-object kind (`E5012`, `E5013`), the static entity limit
+//!   (`E5092`) and the light rules: at most four per scene (`E5111`), none in
+//!   a prefab (`E5110`).
 //!
 //! The result, [`CheckedScene`], is what the typed IR is built from: every
 //! scene with its fields, scene objects and entity tree, each field with its
@@ -39,6 +40,7 @@ use super::ty::{Ty, TyId};
 use super::value::{ConstValue, from_registry};
 use super::{NonConstant, NonConstantKind};
 use crate::diagnostics::{Code, Diagnostic};
+use crate::layout::builtin::MAX_LIGHTS;
 use crate::project::edit_distance;
 use crate::resolve::gate::{gate_message, gate_note, is_implemented};
 use crate::resolve::{Construct, DefId, construct_implemented};
@@ -50,7 +52,7 @@ use crate::stdlib::{
 };
 use crate::syntax::ast::{
     DescField, EntityDecl, EntityMember, Expr, ExprKind, FieldInit, FieldValue, Ident, ItemKind,
-    Module, NodeId, SceneDecl, SceneMember, SceneObject, StateDecl,
+    Module, NodeId, PrefabDecl, SceneDecl, SceneMember, SceneObject, StateDecl,
 };
 
 /// The most static entities one scene may declare, nested ones included
@@ -380,9 +382,91 @@ impl Checker<'_> {
                         self.out.scenes.push(scene);
                     }
                 }
+                // Prefabs are gated in this build (`E9010`); the one rule about lights in them is
+                // syntactic and holds already (decision 0053).
+                ItemKind::Prefab(decl) => self.prefab_lights(decl),
                 _ => {}
             }
         }
+    }
+
+    /// The implemented fields of an entity that hold a light component.
+    fn light_fields(&self) -> Vec<&'static str> {
+        self.registry
+            .entity_schema()
+            .map(|schema| {
+                schema
+                    .fields
+                    .iter()
+                    .filter(|f| {
+                        is_implemented(f.since)
+                            && f.ty == TypeRef::Descriptor(SchemaCategory::Light)
+                    })
+                    .map(|f| f.name)
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// `E5110`: a prefab declares a `light`. Lights belong to the named entities of a scene, so
+    /// that the light count is static (`spec/materials.md` section 7).
+    fn prefab_lights(&mut self, decl: &PrefabDecl) {
+        let light_fields = self.light_fields();
+        for member in &decl.members {
+            if let EntityMember::Field(field) = member
+                && light_fields.contains(&field.name.name.as_str())
+            {
+                self.sink.push(
+                    Diagnostic::new(
+                        Code::E5110,
+                        format!(
+                            "The prefab '{}' declares a light, but lights are allowed only on the named entities of a scene.",
+                            decl.name.name
+                        ),
+                    )
+                    .at(field.name.span)
+                    .note("a prefab can be spawned any number of times, so the number of lights would not be static")
+                    .help("declare the light on a named entity of the scene"),
+                );
+            }
+        }
+    }
+
+    /// `E5111`: the scene declares more lights than `MtekFrame.lights` holds.
+    fn light_limit(&mut self, scene: &str, entities: &[CheckedEntity]) {
+        fn collect(entities: &[CheckedEntity], fields: &[&str], out: &mut Vec<(Span, String)>) {
+            for entity in entities {
+                for field in &entity.fields {
+                    if let FieldOrigin::Written { span, .. } = field.origin
+                        && fields.contains(&field.name)
+                    {
+                        out.push((span, entity.name.clone()));
+                    }
+                }
+                collect(&entity.children, fields, out);
+            }
+        }
+        let mut lights = Vec::new();
+        collect(entities, &self.light_fields(), &mut lights);
+        let limit = MAX_LIGHTS as usize;
+        let Some((over, name)) = lights.get(limit) else {
+            return;
+        };
+        let mut diagnostic = Diagnostic::new(
+            Code::E5111,
+            format!(
+                "Scene '{scene}' declares {} lights, but at most {limit} are allowed.",
+                lights.len()
+            ),
+        )
+        .at(*over)
+        .note(format!(
+            "the light of entity '{name}' is the first beyond the limit; the frame block holds {limit} lights"
+        ));
+        for (span, name) in lights.iter().take(limit) {
+            diagnostic = diagnostic.related(*span, format!("the light of entity '{name}'"));
+        }
+        self.sink.push(diagnostic);
     }
 
     fn scene_decl(&mut self, decl: &SceneDecl) -> Option<CheckedScene> {
@@ -431,6 +515,7 @@ impl Checker<'_> {
                 self.select_active(decl, kind, active, &mut objects);
             }
         }
+        self.light_limit(&decl.name.name, &entities);
         if let Some(span) = count.first_over {
             self.sink.push(
                 Diagnostic::new(

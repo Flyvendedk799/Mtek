@@ -1,0 +1,7 @@
+// `range` exists only on a point light (E5001).
+scene Demo {
+    camera Main {}
+    entity Sun {
+        light: DirectionalLight { range: 5.0; };
+    }
+}

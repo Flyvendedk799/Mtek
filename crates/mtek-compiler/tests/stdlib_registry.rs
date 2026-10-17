@@ -939,10 +939,14 @@ fn since_milestones_follow_the_work_plan() {
     ] {
         assert_eq!(since(schema, field), Milestone::M1, "{schema}.{field}");
     }
-    // M4: lights, Pbr, textures, assets.
-    assert_eq!(since("Entity", "light"), Milestone::M4);
+    // M4: Pbr, textures, assets. Lights and the ambient scene fields landed with task M4-02,
+    // before the M4 gate; they are marked as implemented by the current build (decision 0053).
+    assert_eq!(since("Entity", "light"), Milestone::M1);
+    assert_eq!(since("Scene", "ambient_color"), Milestone::M1);
+    assert_eq!(since("Scene", "ambient_intensity"), Milestone::M1);
+    assert_eq!(since("DirectionalLight", "intensity"), Milestone::M1);
+    assert_eq!(since("PointLight", "range"), Milestone::M1);
     assert_eq!(since("Pbr", "roughness"), Milestone::M4);
-    assert_eq!(since("DirectionalLight", "intensity"), Milestone::M4);
     // M5: physics.
     assert_eq!(since("Entity", "body"), Milestone::M5);
     assert_eq!(since("Dynamic", "mass"), Milestone::M5);
@@ -950,7 +954,8 @@ fn since_milestones_follow_the_work_plan() {
     let schema_since = |name: &str| registry.schema(name).unwrap().since;
     assert_eq!(schema_since("Unlit"), Milestone::M1);
     assert_eq!(schema_since("Pbr"), Milestone::M4);
-    assert_eq!(schema_since("PointLight"), Milestone::M4);
+    assert_eq!(schema_since("PointLight"), Milestone::M1);
+    assert_eq!(schema_since("DirectionalLight"), Milestone::M1);
     assert_eq!(schema_since("Static"), Milestone::M5);
     let intrinsic_since = |name: &str| registry.intrinsic(name).unwrap().since;
     // M2: functions and materials. The math intrinsics and `mat4` landed with task M2-01,

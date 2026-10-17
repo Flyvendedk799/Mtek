@@ -1361,7 +1361,7 @@ fn every_gated_construct_has_a_gating_fixture() {
     for (prefix, milestone) in [
         ("The built-in type `sampler`", "M4"),
         ("The built-in schema `Pbr`", "M4"),
-        ("The `Entity` field `light`", "M4"),
+        ("The `Entity` field `body`", "M5"),
         ("The `Scene` field `gravity`", "M5"),
         ("Event handlers (`on collision_enter`)", "M5"),
     ] {
@@ -1480,8 +1480,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E5072", "M5: physics"),
     ("E5074", "M5: entity_ref"),
     ("E5091", "M5: physics"),
-    ("E5110", "M5: lights in prefabs"),
-    ("E5111", "M4: lights"),
     (
         "E5901",
         "no v0.1 construct switches scenes (`spec/scenes.md` section 1)",

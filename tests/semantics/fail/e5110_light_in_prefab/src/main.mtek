@@ -1,0 +1,9 @@
+// A prefab may not declare a light: the light count must be static (E5110). Prefabs themselves
+// are not implemented yet (E9010).
+prefab Lamp {
+    light: PointLight {};
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,7 @@
+// The range of a light is zero (unlimited) or positive (E5006).
+scene Demo {
+    camera Main {}
+    entity Lamp {
+        light: PointLight { range: -1.0; };
+    }
+}
