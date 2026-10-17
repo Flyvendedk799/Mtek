@@ -1,0 +1,18 @@
+// A texture or sampler is a param of its own: not an element of an array (E4030) and
+// not a field of a struct (E4030).
+struct Pair {
+    map: texture;
+    gain: f32;
+}
+
+material Atlas {
+    param maps: array<texture, 2>;
+    param pair: Pair;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(0.0), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

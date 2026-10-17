@@ -15,7 +15,7 @@
 use std::fmt;
 
 use super::ty::MaterialKey;
-use crate::stdlib::{ColorValue, srgb_channel_to_linear_f32};
+use crate::stdlib::{BuiltinSampler, BuiltinTexture, ColorValue, srgb_channel_to_linear_f32};
 
 /// A value computed at compile time.
 #[derive(Clone, Debug, PartialEq)]
@@ -43,6 +43,10 @@ pub enum ConstValue {
     Array(Vec<ConstValue>),
     /// A string (CPU only, `spec/language.md` 5.1).
     Str(String),
+    /// A built-in texture, `texture.white()` or `texture.black()` (decision 0054).
+    Texture(BuiltinTexture),
+    /// A built-in sampler preset, `sampler.linear_repeat()` and friends (decision 0054).
+    Sampler(BuiltinSampler),
     /// An instance of a user material (decision 0039): the material, its
     /// name, and every parameter in declaration order, written or defaulted.
     Material {
@@ -114,6 +118,20 @@ impl fmt::Display for ConstValue {
             }
             ConstValue::Array(items) => write!(f, "[… {} elements]", items.len()),
             ConstValue::Str(text) => write!(f, "{text:?}"),
+            ConstValue::Texture(texture) => {
+                write!(
+                    f,
+                    "{}",
+                    crate::stdlib::ConstValue::Texture(*texture).canonical_text()
+                )
+            }
+            ConstValue::Sampler(sampler) => {
+                write!(
+                    f,
+                    "{}",
+                    crate::stdlib::ConstValue::Sampler(*sampler).canonical_text()
+                )
+            }
         }
     }
 }
@@ -518,8 +536,8 @@ pub fn quat_rotate(q: [f32; 4], v: [f32; 3]) -> [f32; 3] {
 
 /// A registry default as a constant value. An empty descriptor (`Unlit {}`)
 /// becomes a [`ConstValue::Struct`] without fields (the schema checks fill in
-/// its defaults); the built-in textures and samplers have no constant value
-/// in this build (their fields are M4): `None`.
+/// its defaults); the built-in textures and samplers are the handle values of
+/// decision 0054.
 #[must_use]
 pub fn from_registry(value: &crate::stdlib::ConstValue) -> Option<ConstValue> {
     use crate::stdlib::ConstValue as R;
@@ -537,7 +555,8 @@ pub fn from_registry(value: &crate::stdlib::ConstValue) -> Option<ConstValue> {
             name: (*name).to_owned(),
             fields: Vec::new(),
         },
-        R::Texture(_) | R::Sampler(_) => return None,
+        R::Texture(texture) => ConstValue::Texture(*texture),
+        R::Sampler(sampler) => ConstValue::Sampler(*sampler),
     })
 }
 
@@ -701,6 +720,11 @@ pub fn has_namespace_evaluator(namespace: &str, member: &str) -> bool {
                 "mat4",
                 "identity" | "translation" | "rotation" | "scale" | "columns"
             )
+            | ("texture", "white" | "black")
+            | (
+                "sampler",
+                "linear_repeat" | "linear_clamp" | "nearest_repeat" | "nearest_clamp"
+            )
     )
 }
 
@@ -782,6 +806,12 @@ pub fn namespace_function(
         ("mat4", "columns", [V::Vec4(c0), V::Vec4(c1), V::Vec4(c2), V::Vec4(c3)]) => {
             Ok(V::Mat4([*c0, *c1, *c2, *c3]))
         }
+        ("texture", "white", []) => Ok(V::Texture(BuiltinTexture::White)),
+        ("texture", "black", []) => Ok(V::Texture(BuiltinTexture::Black)),
+        ("sampler", "linear_repeat", []) => Ok(V::Sampler(BuiltinSampler::LinearRepeat)),
+        ("sampler", "linear_clamp", []) => Ok(V::Sampler(BuiltinSampler::LinearClamp)),
+        ("sampler", "nearest_repeat", []) => Ok(V::Sampler(BuiltinSampler::NearestRepeat)),
+        ("sampler", "nearest_clamp", []) => Ok(V::Sampler(BuiltinSampler::NearestClamp)),
         _ if has_namespace_evaluator(namespace, member) => Err(EvalError::Mismatch),
         _ => return None,
     };
@@ -1153,7 +1183,10 @@ mod tests {
                 }
             }
         }
-        assert!(namespace_function("texture", "white", &[]).is_none());
+        assert_eq!(
+            namespace_function("texture", "white", &[]),
+            Some(Ok(ConstValue::Texture(BuiltinTexture::White)))
+        );
         assert_eq!(
             namespace_function("quat", "euler", &[]),
             Some(Err(EvalError::Mismatch))

@@ -1,0 +1,1700 @@
+{
+  "scene": "src/main.mtek::Gallery",
+  "targetProfile": "webgpu-core-2026",
+  "shaders": [
+    {
+      "material": "src/main.mtek::Textured",
+      "declaration": {
+        "file": "src/main.mtek",
+        "startByte": 197,
+        "endByte": 713,
+        "startLine": 4,
+        "startColumn": 1,
+        "endLine": 17,
+        "endColumn": 2
+      },
+      "hash": "bb7709f3102e4341d40392459699d96690c7a5dbac4b637c328ddead3e5e1751",
+      "url": "shaders/bb7709f3102e4341.wgsl",
+      "map": "shaders/bb7709f3102e4341.mtek-map.json",
+      "vertexEntry": "mtek_vs",
+      "fragmentEntry": "mtek_fs",
+      "vertexAttributes": [
+        "position",
+        "uv"
+      ],
+      "surfaceInputs": [
+        "uv"
+      ],
+      "layout": "material:src/main.mtek::Textured",
+      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_e2cab98b_Textured {\n    u_tint: vec4<f32>,\n    u_strength: f32,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n    @location(3) uv: vec2<f32>,\n}\n\nstruct MtekSurfaceInput {\n    uv: vec2<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_e2cab98b_Textured;\n@group(1) @binding(1) var mtek_texture_base: texture_2d<f32>;\n@group(1) @binding(2) var mtek_sampler_filter: sampler;\n@group(1) @binding(3) var mtek_texture_mask: texture_2d<f32>;\n@group(1) @binding(4) var mtek_sampler_crisp: sampler;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_fragment(u_p_input: MtekSurfaceInput) -> vec4<f32> {\n    let u_l_soft = textureSampleLevel(mtek_texture_base, mtek_sampler_filter, u_p_input.uv, 0.0);\n    let u_l_hard = textureSampleLevel(mtek_texture_mask, mtek_sampler_crisp, u_p_input.uv * 2.0, 0.0);\n    return vec4<f32>(((mtek_params.u_tint.xyz * u_l_soft.xyz) * mtek_params.u_strength) + u_l_hard.xyz, 1.0);\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(2) mtek_uv: vec2<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_uv);\n}\n\n@fragment\nfn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {\n    let mtek_surface = MtekSurfaceInput(mtek_in.uv);\n    let mtek_color = mtek_fragment(mtek_surface);\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
+      "spanMap": [
+        {
+          "wgsl": {
+            "line": 1,
+            "colStart": 1,
+            "colEnd": 19
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 2,
+            "colStart": 5,
+            "colEnd": 22
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 3,
+            "colStart": 5,
+            "colEnd": 15
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 4,
+            "colStart": 5,
+            "colEnd": 25
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 5,
+            "colStart": 5,
+            "colEnd": 16
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 6,
+            "colStart": 5,
+            "colEnd": 26
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 7,
+            "colStart": 5,
+            "colEnd": 19
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 10,
+            "colStart": 1,
+            "colEnd": 19
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 11,
+            "colStart": 5,
+            "colEnd": 28
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 12,
+            "colStart": 5,
+            "colEnd": 32
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 13,
+            "colStart": 5,
+            "colEnd": 22
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 14,
+            "colStart": 5,
+            "colEnd": 24
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 15,
+            "colStart": 5,
+            "colEnd": 20
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 16,
+            "colStart": 5,
+            "colEnd": 44
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 19,
+            "colStart": 1,
+            "colEnd": 38
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 20,
+            "colStart": 5,
+            "colEnd": 23
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 21,
+            "colStart": 5,
+            "colEnd": 21
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 24,
+            "colStart": 1,
+            "colEnd": 20
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 25,
+            "colStart": 5,
+            "colEnd": 24
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 26,
+            "colStart": 5,
+            "colEnd": 32
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 29,
+            "colStart": 1,
+            "colEnd": 26
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 30,
+            "colStart": 5,
+            "colEnd": 49
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 31,
+            "colStart": 5,
+            "colEnd": 32
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 34,
+            "colStart": 1,
+            "colEnd": 26
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 35,
+            "colStart": 5,
+            "colEnd": 19
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 38,
+            "colStart": 1,
+            "colEnd": 58
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 39,
+            "colStart": 1,
+            "colEnd": 78
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 40,
+            "colStart": 1,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 41,
+            "colStart": 1,
+            "colEnd": 56
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 42,
+            "colStart": 1,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 43,
+            "colStart": 1,
+            "colEnd": 55
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 44,
+            "colStart": 1,
+            "colEnd": 60
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 46,
+            "colStart": 1,
+            "colEnd": 61
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 477,
+            "endByte": 711,
+            "startLine": 12,
+            "startColumn": 5,
+            "endLine": 16,
+            "endColumn": 6
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 46,
+            "colStart": 18,
+            "colEnd": 45
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 477,
+            "endByte": 711,
+            "startLine": 12,
+            "startColumn": 5,
+            "endLine": 16,
+            "endColumn": 6
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 5,
+            "colEnd": 98
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 526,
+            "endByte": 568,
+            "startLine": 13,
+            "startColumn": 9,
+            "endLine": 13,
+            "endColumn": 51
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 20,
+            "colEnd": 97
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 537,
+            "endByte": 567,
+            "startLine": 13,
+            "startColumn": 20,
+            "endLine": 13,
+            "endColumn": 50
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 39,
+            "colEnd": 56
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 544,
+            "endByte": 548,
+            "startLine": 13,
+            "startColumn": 27,
+            "endLine": 13,
+            "endColumn": 31
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 58,
+            "colEnd": 77
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 550,
+            "endByte": 556,
+            "startLine": 13,
+            "startColumn": 33,
+            "endLine": 13,
+            "endColumn": 39
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 79,
+            "colEnd": 91
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 558,
+            "endByte": 566,
+            "startLine": 13,
+            "startColumn": 41,
+            "endLine": 13,
+            "endColumn": 49
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 79,
+            "colEnd": 88
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 558,
+            "endByte": 563,
+            "startLine": 13,
+            "startColumn": 41,
+            "endLine": 13,
+            "endColumn": 46
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 93,
+            "colEnd": 96
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 537,
+            "endByte": 567,
+            "startLine": 13,
+            "startColumn": 20,
+            "endLine": 13,
+            "endColumn": 50
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 5,
+            "colEnd": 103
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 577,
+            "endByte": 628,
+            "startLine": 14,
+            "startColumn": 9,
+            "endLine": 14,
+            "endColumn": 60
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 20,
+            "colEnd": 102
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 588,
+            "endByte": 627,
+            "startLine": 14,
+            "startColumn": 20,
+            "endLine": 14,
+            "endColumn": 59
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 39,
+            "colEnd": 56
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 596,
+            "endByte": 600,
+            "startLine": 14,
+            "startColumn": 28,
+            "endLine": 14,
+            "endColumn": 32
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 58,
+            "colEnd": 76
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 604,
+            "endByte": 609,
+            "startLine": 14,
+            "startColumn": 36,
+            "endLine": 14,
+            "endColumn": 41
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 78,
+            "colEnd": 96
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 612,
+            "endByte": 626,
+            "startLine": 14,
+            "startColumn": 44,
+            "endLine": 14,
+            "endColumn": 58
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 78,
+            "colEnd": 90
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 612,
+            "endByte": 620,
+            "startLine": 14,
+            "startColumn": 44,
+            "endLine": 14,
+            "endColumn": 52
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 78,
+            "colEnd": 87
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 612,
+            "endByte": 617,
+            "startLine": 14,
+            "startColumn": 44,
+            "endLine": 14,
+            "endColumn": 49
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 93,
+            "colEnd": 96
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 623,
+            "endByte": 626,
+            "startLine": 14,
+            "startColumn": 55,
+            "endLine": 14,
+            "endColumn": 58
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 98,
+            "colEnd": 101
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 588,
+            "endByte": 627,
+            "startLine": 14,
+            "startColumn": 20,
+            "endLine": 14,
+            "endColumn": 59
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 5,
+            "colEnd": 110
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 637,
+            "endByte": 705,
+            "startLine": 15,
+            "startColumn": 9,
+            "endLine": 15,
+            "endColumn": 77
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 12,
+            "colEnd": 109
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 644,
+            "endByte": 704,
+            "startLine": 15,
+            "startColumn": 16,
+            "endLine": 15,
+            "endColumn": 76
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 22,
+            "colEnd": 103
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 657,
+            "endByte": 698,
+            "startLine": 15,
+            "startColumn": 29,
+            "endLine": 15,
+            "endColumn": 70
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 23,
+            "colEnd": 87
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 657,
+            "endByte": 687,
+            "startLine": 15,
+            "startColumn": 29,
+            "endLine": 15,
+            "endColumn": 59
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 24,
+            "colEnd": 61
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 657,
+            "endByte": 676,
+            "startLine": 15,
+            "startColumn": 29,
+            "endLine": 15,
+            "endColumn": 48
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 24,
+            "colEnd": 46
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 657,
+            "endByte": 665,
+            "startLine": 15,
+            "startColumn": 29,
+            "endLine": 15,
+            "endColumn": 37
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 24,
+            "colEnd": 42
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 657,
+            "endByte": 661,
+            "startLine": 15,
+            "startColumn": 29,
+            "endLine": 15,
+            "endColumn": 33
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 24,
+            "colEnd": 35
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 657,
+            "endByte": 661,
+            "startLine": 15,
+            "startColumn": 29,
+            "endLine": 15,
+            "endColumn": 33
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 49,
+            "colEnd": 61
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 668,
+            "endByte": 676,
+            "startLine": 15,
+            "startColumn": 40,
+            "endLine": 15,
+            "endColumn": 48
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 49,
+            "colEnd": 57
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 668,
+            "endByte": 672,
+            "startLine": 15,
+            "startColumn": 40,
+            "endLine": 15,
+            "endColumn": 44
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 65,
+            "colEnd": 87
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 679,
+            "endByte": 687,
+            "startLine": 15,
+            "startColumn": 51,
+            "endLine": 15,
+            "endColumn": 59
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 65,
+            "colEnd": 76
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 679,
+            "endByte": 687,
+            "startLine": 15,
+            "startColumn": 51,
+            "endLine": 15,
+            "endColumn": 59
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 91,
+            "colEnd": 103
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 690,
+            "endByte": 698,
+            "startLine": 15,
+            "startColumn": 62,
+            "endLine": 15,
+            "endColumn": 70
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 91,
+            "colEnd": 99
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 690,
+            "endByte": 694,
+            "startLine": 15,
+            "startColumn": 62,
+            "endLine": 15,
+            "endColumn": 66
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 105,
+            "colEnd": 108
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 700,
+            "endByte": 703,
+            "startLine": 15,
+            "startColumn": 72,
+            "endLine": 15,
+            "endColumn": 75
+          },
+          "symbol": "src/main.mtek::Textured.fragment"
+        },
+        {
+          "wgsl": {
+            "line": 52,
+            "colStart": 1,
+            "colEnd": 8
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 53,
+            "colStart": 1,
+            "colEnd": 105
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 53,
+            "colStart": 12,
+            "colEnd": 49
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 53,
+            "colStart": 51,
+            "colEnd": 82
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 54,
+            "colStart": 5,
+            "colEnd": 72
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 54,
+            "colStart": 22,
+            "colEnd": 71
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 54,
+            "colStart": 22,
+            "colEnd": 39
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 54,
+            "colStart": 22,
+            "colEnd": 33
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 54,
+            "colStart": 42,
+            "colEnd": 71
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 54,
+            "colStart": 52,
+            "colEnd": 65
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 54,
+            "colStart": 67,
+            "colEnd": 70
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 55,
+            "colStart": 5,
+            "colEnd": 73
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 55,
+            "colStart": 12,
+            "colEnd": 72
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 55,
+            "colStart": 29,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 55,
+            "colStart": 29,
+            "colEnd": 49
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 55,
+            "colStart": 29,
+            "colEnd": 39
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 55,
+            "colStart": 52,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 55,
+            "colStart": 64,
+            "colEnd": 71
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 58,
+            "colStart": 1,
+            "colEnd": 10
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 59,
+            "colStart": 1,
+            "colEnd": 66
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 59,
+            "colStart": 12,
+            "colEnd": 37
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 60,
+            "colStart": 5,
+            "colEnd": 53
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 60,
+            "colStart": 24,
+            "colEnd": 52
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 60,
+            "colStart": 41,
+            "colEnd": 51
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 60,
+            "colStart": 41,
+            "colEnd": 48
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 61,
+            "colStart": 5,
+            "colEnd": 50
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 61,
+            "colStart": 22,
+            "colEnd": 49
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 61,
+            "colStart": 36,
+            "colEnd": 48
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 62,
+            "colStart": 5,
+            "colEnd": 43
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 62,
+            "colStart": 12,
+            "colEnd": 42
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 62,
+            "colStart": 22,
+            "colEnd": 36
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 62,
+            "colStart": 22,
+            "colEnd": 32
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        },
+        {
+          "wgsl": {
+            "line": 62,
+            "colStart": 38,
+            "colEnd": 41
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 197,
+            "endByte": 713,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 17,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Textured"
+        }
+      ]
+    }
+  ]
+}

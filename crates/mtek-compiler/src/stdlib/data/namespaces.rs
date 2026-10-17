@@ -45,7 +45,8 @@ fn builtin_handle(name: &'static str, ret: TypeRef, doc: &'static str) -> Namesp
         name,
         Domain::Cpu,
         true,
-        Milestone::M4,
+        // Textures and samplers landed with task M4-04, before the M4 gate (decision 0054).
+        Milestone::M1,
         doc,
         vec![sig(&[], exact(ret))],
     ))
@@ -186,7 +187,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         ),
         namespace(
             "texture",
-            Milestone::M4,
+            Milestone::M1,
             "Built-in textures.",
             vec![
                 builtin_handle("white", TypeRef::Texture, "A 1x1 opaque white texture."),
@@ -195,7 +196,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         ),
         namespace(
             "sampler",
-            Milestone::M4,
+            Milestone::M1,
             "Built-in sampler presets.",
             vec![
                 builtin_handle(
@@ -470,12 +471,12 @@ pub(super) fn types() -> Vec<TypeDef> {
         ),
         handle(
             "texture",
-            Milestone::M4,
+            Milestone::M1,
             "An immutable texture. Usable only as a material parameter.",
         ),
         handle(
             "sampler",
-            Milestone::M4,
+            Milestone::M1,
             "A sampler preset. Usable only as a material parameter.",
         ),
         handle(

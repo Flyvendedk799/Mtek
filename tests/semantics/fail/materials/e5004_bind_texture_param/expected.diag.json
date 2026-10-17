@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5004",
+    "file": "src/main.mtek",
+    "startByte": 456,
+    "endByte": 477,
+    "message": "`bind` cannot be used for the texture or sampler param 'map': resource params are construction-only in v0.1.",
+    "notes": [
+      "`bind(expr)` is the whole value of a bindable field of an entity or camera, or of a param in the `material` of an entity",
+      "help: write the expression without `bind`, or move it into a bindable field"
+    ]
+  }
+]

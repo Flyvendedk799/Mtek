@@ -200,6 +200,8 @@ WGSL declarations are always:
 
 A material with no params and no resources still gets an empty group-1 layout, so group numbering never shifts. 3 of the 4 default bind groups are used.
 
+Resources are declared as `@group(1) @binding(n) var mtek_texture_<param>: texture_2d<f32>;` and `@group(1) @binding(n) var mtek_sampler_<param>: sampler;`, `n = 1, 2, …` in param declaration order (a texture and a sampler each take one binding), and are not members of the block; a material with resources only has no binding 0 (decision 0054).
+
 ### 6.1 `MtekFrame` (runtime-owned, laid out by the same engine)
 
 ```mtek
@@ -281,7 +283,7 @@ Rules:
 
 ### 8.3 Limits checked at compile time
 
-Against the target profile's limits (v0.1 profile `webgpu-core-2026` = WebGPU default limits): block `size ≤ maxUniformBufferBindingSize` (65 536) — else `E6001`; texture+sampler params per material ≤ 8 — else `E6002`; vertex outputs used ≤ `maxInterStageShaderVariables` (16) — else `E6003`. The runtime re-checks against the actual device and fails mount with `E8002` if the device is smaller than the profile.
+Against the target profile's limits (v0.1 profile `webgpu-core-2026` = WebGPU default limits): block `size ≤ maxUniformBufferBindingSize` (65 536) — else `E6001`; texture+sampler params per material ≤ 8 — else `E6002` (reported by `check` at the ninth, decision 0054); vertex outputs used ≤ `maxInterStageShaderVariables` (16) — else `E6003`. The runtime re-checks against the actual device and fails mount with `E8002` if the device is smaller than the profile.
 
 ## 9. Verification (the oracles)
 

@@ -183,6 +183,10 @@ impl Checker<'_> {
             let Some((name, ty)) = params.iter().find(|(name, _)| *name == field.name.name) else {
                 continue;
             };
+            // A bound texture or sampler was reported (`E5004`) where the instance was typed.
+            if self.is_resource(*ty) {
+                continue;
+            }
             let subject = format!("the param '{name}' of the material of entity '{entity_name}'");
             let target = BindTarget::MaterialParam {
                 entity,

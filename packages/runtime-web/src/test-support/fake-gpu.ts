@@ -25,6 +25,8 @@ export function asGpu<T>(fake: object): T {
 }
 
 const USAGE_COPY_DST = 0x08;
+/** `GPUTextureUsage.COPY_DST` (texture usage flags are a different set than buffer usage flags). */
+const USAGE_COPY_DST_TEXTURE = 0x02;
 const USAGE_UNIFORM = 0x40;
 
 export const DEFAULT_LIMITS: Readonly<Record<string, number>> = {
@@ -158,6 +160,27 @@ export class FakeQueue {
     return Promise.resolve();
   }
 
+  /** `writeTexture` of one tightly packed 8-bit RGBA image into mip level 0 at the origin. */
+  readonly textureWrites: FakeTextureWrite[] = [];
+
+  writeTexture(
+    destination: { readonly texture: FakeTexture },
+    data: Uint8Array,
+    layout: { readonly bytesPerRow: number; readonly rowsPerImage?: number },
+    size: { readonly width: number; readonly height: number },
+  ): void {
+    const { texture } = destination;
+    if (texture.destroyed) throw new Error("writeTexture: the texture is destroyed");
+    if ((texture.usage & USAGE_COPY_DST_TEXTURE) === 0) throw new Error("writeTexture: the texture lacks COPY_DST");
+    if (size.width > texture.width || size.height > texture.height) throw new Error("writeTexture: the copy exceeds the texture");
+    if (layout.bytesPerRow < size.width * 4) throw new Error("writeTexture: bytesPerRow is smaller than a row");
+    if (data.byteLength < layout.bytesPerRow * (size.height - 1) + size.width * 4) throw new Error("writeTexture: the data is too short");
+    for (let row = 0; row < size.height; row += 1) {
+      texture.pixels.set(data.subarray(row * layout.bytesPerRow, row * layout.bytesPerRow + size.width * 4), row * texture.width * 4);
+    }
+    this.textureWrites.push({ texture, bytes: data.byteLength, width: size.width, height: size.height });
+  }
+
   writeBuffer(
     buffer: FakeBuffer,
     bufferOffset: number,
@@ -185,6 +208,14 @@ export class FakeQueue {
     buffer.contents.set(sourceBytes.subarray(byteOffset, byteOffset + byteSize), bufferOffset);
     this.writes.push({ buffer, bufferOffset, size: byteSize });
   }
+}
+
+/** One `writeTexture` call: the texture and the bytes it received. */
+export interface FakeTextureWrite {
+  readonly texture: FakeTexture;
+  readonly bytes: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 export interface FakeBindGroupEntry {
@@ -389,6 +420,8 @@ export class FakeDevice {
   createBindGroup(descriptor: FakeBindGroupDescriptor): FakeBindGroup {
     const alignment = this.limits["minUniformBufferOffsetAlignment"] ?? 256;
     for (const entry of descriptor.entries) {
+      // Texture views and samplers are entries too; only buffer bindings have a range to check.
+      if (!("buffer" in (entry.resource as object))) continue;
       const { buffer, offset = 0, size } = entry.resource;
       if (buffer.destroyed) throw new Error(`createBindGroup: buffer "${buffer.label}" is destroyed`);
       const bound = size ?? buffer.size - offset;

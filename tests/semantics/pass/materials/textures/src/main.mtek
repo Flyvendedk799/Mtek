@@ -1,0 +1,35 @@
+// Texture and sampler params (spec/materials.md 5): built-in defaults, two samples with
+// different samplers, resources declared between value params, and instances that pick
+// other built-ins.
+material Textured {
+    param tint: color = #ffffff;
+    param base: texture = texture.white();
+    param filter: sampler = sampler.linear_repeat();
+    param strength: f32 = 1.0;
+    param mask: texture = texture.black();
+    param crisp: sampler = sampler.nearest_clamp();
+
+    fragment(input: SurfaceInput) -> color {
+        let soft = sample(base, filter, input.uv);
+        let hard = sample((mask), (crisp), input.uv * 2.0);
+        return color.linear(tint.rgb * soft.xyz * strength + hard.xyz, 1.0);
+    }
+}
+
+const SHARP = Textured { filter: sampler.nearest_repeat(); mask: texture.white() };
+
+scene Gallery {
+    camera Main {}
+    entity Plain {
+        mesh: Plane { size: vec2(2.0, 2.0) };
+        material: Textured {};
+    }
+    entity Sharp {
+        mesh: Plane { size: vec2(2.0, 2.0) };
+        material: SHARP;
+    }
+    entity Dark {
+        mesh: Box {};
+        material: Textured { base: texture.black(); strength: 2.0; tint: #ff8800 };
+    }
+}

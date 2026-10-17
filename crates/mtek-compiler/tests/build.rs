@@ -529,17 +529,101 @@ fn the_manifest_carries_structure_but_no_entity_or_camera_values() {
                 .map(|param| &param["class"])
                 .collect();
             // `imperative` once a handler writes the param (task M3-01), `bound` once a `bind`
-            // supplies it (M3-05); every other param is `initial`.
+            // supplies it (M3-05), `resource` for a texture or sampler (M4-04); every other
+            // param is `initial`.
             for class in &classes {
                 assert!(
-                    ["initial", "imperative", "bound"].contains(&class.as_str().unwrap_or("")),
+                    ["initial", "imperative", "bound", "resource"]
+                        .contains(&class.as_str().unwrap_or("")),
                     "{label}: {class}"
                 );
             }
-            let shareable = classes.iter().all(|class| *class == "initial");
+            let shareable = classes
+                .iter()
+                .all(|class| *class == "initial" || *class == "resource");
             assert_eq!(instance["shareable"], shareable, "{label}");
         }
     }
+}
+
+#[test]
+fn textures_and_samplers_reach_the_manifest_the_instances_and_the_shader() {
+    // Decision 0054: `materials[].resources` lists the bindings of group 1 in param order, each instance
+    // names the built-in it holds as a `resource` param, the layout holds the value params only, and
+    // `app.js` writes no resource param.
+    let root = repo().join("tests/semantics/pass/materials/textures");
+    let result = built(&root, BuildMode::Release);
+    let manifest: Value = serde_json::from_slice(&result.files["program.manifest.json"]).unwrap();
+    let material = &manifest["materials"][0];
+    assert_eq!(material["id"], "src/main.mtek::Textured");
+    let resources: Vec<(&str, &str, u64)> = material["resources"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|r| {
+            (
+                r["name"].as_str().unwrap(),
+                r["kind"].as_str().unwrap(),
+                r["binding"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        resources,
+        [
+            ("base", "texture", 1),
+            ("filter", "sampler", 2),
+            ("mask", "texture", 3),
+            ("crisp", "sampler", 4)
+        ]
+    );
+    let layout = manifest["layouts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|l| l["id"] == material["layout"])
+        .unwrap();
+    let members: Vec<&str> = layout["root"]["members"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|m| m["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(members, ["tint", "strength"]);
+    let instances = manifest["scene"]["materialInstances"].as_array().unwrap();
+    let resource = |instance: usize, param: &str| {
+        let found = instances[instance]["params"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|p| p["name"] == param)
+            .unwrap();
+        assert_eq!(found["class"], "resource", "{param}");
+        assert_eq!(found["value"]["kind"], "builtin");
+        found["value"]["name"].as_str().unwrap().to_owned()
+    };
+    assert_eq!(resource(0, "base"), "texture.white");
+    assert_eq!(resource(0, "filter"), "sampler.linear_repeat");
+    assert_eq!(resource(1, "filter"), "sampler.nearest_repeat");
+    assert_eq!(resource(1, "mask"), "texture.white");
+    assert_eq!(resource(2, "base"), "texture.black");
+    assert_eq!(resource(2, "crisp"), "sampler.nearest_clamp");
+    // Value params stay `initial`, and every instance may share its block (resources are immutable).
+    assert_eq!(instances[2]["params"][0]["class"], "initial");
+    assert_eq!(instances[2]["shareable"], true);
+
+    let shader = &manifest["shaders"][0];
+    let wgsl = String::from_utf8(result.files[shader["url"].as_str().unwrap()].clone()).unwrap();
+    assert!(wgsl.contains("@group(1) @binding(1) var mtek_texture_base: texture_2d<f32>;"));
+    assert!(wgsl.contains("@group(1) @binding(4) var mtek_sampler_crisp: sampler;"));
+    let app = String::from_utf8(result.files["app.js"].clone()).unwrap();
+    for param in ["base", "filter", "mask", "crisp"] {
+        assert!(
+            !app.contains(&format!("\"{param}\"")),
+            "app.js writes the resource param {param}"
+        );
+    }
+    assert!(app.contains("setParam(") && app.contains("\"strength\""));
 }
 
 #[test]

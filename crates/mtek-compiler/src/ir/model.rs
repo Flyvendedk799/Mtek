@@ -1023,8 +1023,8 @@ pub struct Param {
 }
 
 /// The update class of a material instance param (`spec/materials.md`
-/// section 4). `imperative` and `bound` arrive with handlers and `bind`
-/// (M3), `resource` with textures (M4).
+/// section 4). `imperative` and `bound` came with handlers and `bind`
+/// (M3), `resource` with textures and samplers (M4, decision 0054).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum UpdateClass {
@@ -1036,6 +1036,9 @@ pub enum UpdateClass {
     Imperative,
     /// A `bind(..)` supplies it: evaluated every frame, uploaded when the value changed.
     Bound,
+    /// A `texture` or `sampler` param: part of the instance's bind group, created with the
+    /// instance and never written.
+    Resource,
 }
 
 /// A constant value. Externally tagged by its type in JSON:
@@ -1063,6 +1066,10 @@ pub enum Value {
     Array(Vec<Value>),
     /// A string (CPU only): `{ "string": "Showroom" }`.
     String(String),
+    /// A built-in texture, by the manifest's name: `{ "texture": "texture.white" }`.
+    Texture(String),
+    /// A built-in sampler preset: `{ "sampler": "sampler.linear_repeat" }`.
+    Sampler(String),
 }
 
 /// A field of a [`Value::Struct`].
@@ -1098,6 +1105,8 @@ impl From<&crate::types::ConstValue> for Value {
             },
             C::Array(items) => Value::Array(items.iter().map(Value::from).collect()),
             C::Str(text) => Value::String(text.clone()),
+            C::Texture(texture) => Value::Texture(texture.name().to_owned()),
+            C::Sampler(sampler) => Value::Sampler(sampler.name().to_owned()),
             // A material instance as a value: the material's name and its
             // parameters, like a descriptor (decision 0039); entities carry
             // instances as `MaterialInstanceDesc` with the material's symbol.
@@ -1168,6 +1177,7 @@ impl fmt::Display for Value {
                 }
                 f.write_str("]")
             }
+            Value::Texture(name) | Value::Sampler(name) => write!(f, "{name}()"),
             Value::String(text) => {
                 f.write_str("\"")?;
                 for c in text.chars() {

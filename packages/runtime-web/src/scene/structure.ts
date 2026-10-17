@@ -4,13 +4,15 @@
  *
  * The schema validates shapes, not cross references. A reference that does not resolve is a broken
  * manifest (`E8006`, `manifest-invalid`). A structure this runtime build cannot render yet (asset meshes,
- * texture and sampler params) is an incompatible program (`E8003`, decision 0031).
+ * texture params that come from an asset) is an incompatible program (`E8003`, decisions 0031 and 0054).
  */
 import type {
+  MtekBuiltinResourceName,
   MtekCamera,
   MtekLayoutRecord,
   MtekManifest,
   MtekMaterialParam,
+  MtekMaterialResource,
   MtekShader,
   MtekVertexAttribute,
 } from "../abi/manifest-types.js";
@@ -26,6 +28,16 @@ export interface ResolvedMaterial {
   readonly layout: MtekLayoutRecord | null;
   readonly shader: MtekShader;
   readonly params: readonly MtekMaterialParam[];
+  /** The texture and sampler bindings of group 1, in param declaration order (bindings 1, 2, ...). */
+  readonly resources: readonly MtekMaterialResource[];
+}
+
+/** A texture or sampler of a material instance: what group 1 binds at `binding` (decision 0054). */
+export interface ResolvedInstanceResource {
+  readonly name: string;
+  readonly kind: "texture" | "sampler";
+  readonly binding: number;
+  readonly value: MtekBuiltinResourceName;
 }
 
 export interface ResolvedInstance {
@@ -33,6 +45,8 @@ export interface ResolvedInstance {
   readonly index: number;
   readonly material: ResolvedMaterial;
   readonly entity: number;
+  /** In the order of `material.resources`. */
+  readonly resources: readonly ResolvedInstanceResource[];
 }
 
 /** A primitive mesh of the manifest's `meshes` table. */
@@ -87,7 +101,7 @@ function unsupported(field: string, message: string): MtekDiagnostic {
   return makeRuntimeDiagnostic("E8003", {
     phase: "runtime:mount",
     message: `Incompatible program: ${message}`,
-    notes: [`field: ${field}`, "this runtime build renders primitive meshes and value params only (M1)"],
+    notes: [`field: ${field}`, "this runtime build renders primitive meshes, value params and built-in textures and samplers only"],
   });
 }
 
@@ -157,17 +171,30 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
         return;
       }
       layout = found;
-      const missing = material.params.find((param) => !found.root.members.some((member) => member.name === param.name));
+      // The block holds the value params: a texture or sampler is a binding of its own.
+      const missing = material.params.find(
+        (param) => !material.resources.some((resource) => resource.name === param.name) && !found.root.members.some((member) => member.name === param.name),
+      );
       if (missing !== undefined) {
         diagnostics.push(broken(`${field}.params`, `material '${material.id}' has the param '${missing.name}', which its layout '${found.id}' lacks.`));
         return;
       }
     }
-    if (material.resources.length > 0) {
-      diagnostics.push(unsupported(`${field}.resources`, `material '${material.id}' has texture or sampler params.`));
+    const badResource = material.resources.find(
+      (resource, position) =>
+        resource.binding !== position + 1 ||
+        material.params.find((param) => param.name === resource.name)?.type !== resource.kind,
+    );
+    if (badResource !== undefined) {
+      diagnostics.push(
+        broken(
+          `${field}.resources`,
+          `material '${material.id}' lists the ${badResource.kind} '${badResource.name}' at binding ${String(badResource.binding)}, which is not a ${badResource.kind} param bound in declaration order from binding 1.`,
+        ),
+      );
       return;
     }
-    materials.push({ id: material.id, index, layout, shader, params: material.params });
+    materials.push({ id: material.id, index, layout, shader, params: material.params, resources: material.resources });
   });
   const materialById = new Map(materials.map((material) => [material.id, material]));
 
@@ -195,7 +222,28 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
       }
       return;
     }
-    instances[index] = { index, material, entity: instance.entity };
+    const resources: ResolvedInstanceResource[] = [];
+    for (const resource of material.resources) {
+      const param = instance.params.find((candidate) => candidate.name === resource.name);
+      if (param?.class !== "resource") {
+        diagnostics.push(
+          broken(`${field}.params`, `material instance ${String(index)} gives the ${resource.kind} param '${resource.name}' no resource value.`),
+        );
+        return;
+      }
+      if (param.value.kind === "asset") {
+        diagnostics.push(unsupported(`${field}.params`, `the ${resource.kind} param '${resource.name}' of material instance ${String(index)} comes from an asset.`));
+        return;
+      }
+      if (!param.value.name.startsWith(`${resource.kind}.`)) {
+        diagnostics.push(
+          broken(`${field}.params`, `the ${resource.kind} param '${resource.name}' of material instance ${String(index)} holds '${param.value.name}'.`),
+        );
+        return;
+      }
+      resources.push({ name: resource.name, kind: resource.kind, binding: resource.binding, value: param.value.name });
+    }
+    instances[index] = { index, material, entity: instance.entity, resources };
   });
 
   const entities: ResolvedEntity[] = [];

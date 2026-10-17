@@ -960,7 +960,11 @@ impl<'a> Checker<'a> {
             // build (prefab params) are untyped.
             DefKind::FnParam | DefKind::Local { .. } | DefKind::LoopVar | DefKind::Param => {
                 self.note_surface_use(id);
-                self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR)
+                let ty = self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR);
+                if matches!(def.kind, DefKind::Param) && self.misused_resource(expr, ty) {
+                    return TyId::ERROR;
+                }
+                ty
             }
             DefKind::State => self.state_value(expr, id),
             // An unknown scene-object kind was reported (`E5014`).
@@ -1741,6 +1745,9 @@ impl<'a> Checker<'a> {
                         return TyId::ERROR;
                     }
                     self.record_builtin_call(expr.span, name.to_owned(), function);
+                    if name == "sample" {
+                        self.note_sample_operands(args);
+                    }
                     let kind = CallKind::Intrinsic {
                         name: function.name,
                         const_eligible: function.const_eligible,

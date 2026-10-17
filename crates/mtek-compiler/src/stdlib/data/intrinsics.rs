@@ -158,7 +158,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             "sample",
             Domain::Gpu,
             false,
-            Milestone::M4,
+            Milestone::M1,
             "Filtered texel of `t` at `uv`. `texture` and `sampler` parameters may be used only as direct arguments to `sample`.",
             vec![sig(
                 &[

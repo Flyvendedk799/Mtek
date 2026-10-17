@@ -11,6 +11,18 @@ export interface MtekTestOptions {
   manualClock?: boolean;
   /** Render into an offscreen `rgba8unorm-srgb` texture of this size (fixed format on every platform). */
   renderTarget?: { width: number; height: number };
+  /** Replace the pixels of a built-in texture (a generated texture for a test; no asset needed). */
+  textures?: { "texture.white"?: MtekTestTexture; "texture.black"?: MtekTestTexture };
+}
+
+/** `spec/runtime-abi.md` section 10.2. */
+export interface MtekTestTexture {
+  width: number;
+  height: number;
+  /** Tightly packed RGBA8 texels, row-major, top row first: width x height x 4 bytes. */
+  data: Uint8Array;
+  /** `"srgb"` (default): an `rgba8unorm-srgb` texture, sampled as linear values. `"linear"`: `rgba8unorm`, as stored. */
+  colorSpace?: "srgb" | "linear";
 }
 
 /** `spec/runtime-abi.md` section 10.2. */

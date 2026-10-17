@@ -12,8 +12,9 @@
 use serde::Serialize;
 
 use crate::emit_wgsl::blocks::type_expr;
+use crate::ir::Value;
 use crate::layout::{LayoutMember, LayoutNode, LayoutRecord, builtin_blocks, compute};
-use crate::plan::ResourcePlan;
+use crate::plan::{ParamClass, ResourcePlan};
 use crate::source::SourceMap;
 
 use super::view::{Align, SourceLocation, table, to_json};
@@ -115,10 +116,19 @@ pub struct InstanceParam {
     pub update: &'static str,
     /// What a `bound` param's binding reads (empty before `bind`, M3).
     pub dependencies: Vec<String>,
-    /// The field the param is written to.
-    pub field: String,
-    pub offset: u32,
-    pub size: u32,
+    /// The field the param is written to; `None` for a texture or sampler.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub field: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<u32>,
+    /// The binding in group 1 of a texture or sampler (`spec/gpu-layout.md` section 6).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub binding: Option<u32>,
+    /// The built-in texture or sampler a resource param holds (`texture.white`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resource: Option<String>,
 }
 
 /// The view of `plan` (the entry scene `scene`), with locations resolved through `sources`.
@@ -198,15 +208,41 @@ pub fn bindings_view(
         };
         let mut params = Vec::with_capacity(instance.params.len());
         for (param, declared) in instance.params.iter().zip(&material.params) {
-            let member = members
-                .iter()
-                .find(|m| m.name == param.name)
-                .ok_or_else(|| {
-                    format!(
-                        "the param '{}' of '{}' has no field in its block",
-                        param.name, material.symbol
-                    )
-                })?;
+            let (field, offset, size, binding, resource) = if param.class == ParamClass::Resource {
+                let binding = material
+                    .resources
+                    .iter()
+                    .find(|r| r.name == param.name)
+                    .map(|r| r.binding)
+                    .ok_or_else(|| {
+                        format!(
+                            "the resource param '{}' of '{}' has no binding",
+                            param.name, material.symbol
+                        )
+                    })?;
+                let value = match &param.value {
+                    Some(Value::Texture(name) | Value::Sampler(name)) => Some(name.clone()),
+                    _ => None,
+                };
+                (None, None, None, Some(binding), value)
+            } else {
+                let member = members
+                    .iter()
+                    .find(|m| m.name == param.name)
+                    .ok_or_else(|| {
+                        format!(
+                            "the param '{}' of '{}' has no field in its block",
+                            param.name, material.symbol
+                        )
+                    })?;
+                (
+                    Some(member.name.clone()),
+                    Some(member.node.offset()),
+                    Some(member.node.size()),
+                    None,
+                    None,
+                )
+            };
             params.push(InstanceParam {
                 name: param.name.clone(),
                 ty: declared.ty.clone(),
@@ -214,9 +250,11 @@ pub fn bindings_view(
                 instance: SourceLocation::of(param.span, sources)?,
                 update: param.class.as_str(),
                 dependencies: param.dependencies.clone(),
-                field: member.name.clone(),
-                offset: member.node.offset(),
-                size: member.node.size(),
+                field,
+                offset,
+                size,
+                binding,
+                resource,
             });
         }
         instances.push(Instance {
@@ -411,6 +449,17 @@ impl BindingsView {
                 .params
                 .iter()
                 .map(|param| {
+                    // A texture or sampler has a binding and a value, not a field.
+                    let number =
+                        |value: Option<u32>| value.map_or("-".to_owned(), |v| v.to_string());
+                    let field = match (&param.field, param.binding) {
+                        (Some(field), _) => field.clone(),
+                        (None, Some(binding)) => format!(
+                            "binding {binding} = {}",
+                            param.resource.as_deref().unwrap_or("?")
+                        ),
+                        (None, None) => "-".to_owned(),
+                    };
                     vec![
                         param.name.clone(),
                         param.ty.clone(),
@@ -420,9 +469,9 @@ impl BindingsView {
                         } else {
                             param.dependencies.join(", ")
                         },
-                        param.field.clone(),
-                        param.offset.to_string(),
-                        param.size.to_string(),
+                        field,
+                        number(param.offset),
+                        number(param.size),
                         param.declaration.human(),
                         param.instance.human(),
                     ]

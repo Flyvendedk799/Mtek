@@ -94,6 +94,56 @@ describe("resolveStructure", () => {
   });
 });
 
+describe("resolveStructure: textures and samplers", () => {
+  /** The minimal manifest's material with a texture at binding 1 and a sampler at binding 2. */
+  function textured(edit: (material: Json, instance: Json) => void = () => undefined): MtekManifest {
+    return manifestWith((json, scene) => {
+      const material = (json["materials"] as Json[])[0] ?? {};
+      const instance = scene.materialInstances[0] ?? {};
+      material["resources"] = [
+        { name: "map", kind: "texture", binding: 1 },
+        { name: "filter", kind: "sampler", binding: 2 },
+      ];
+      (material["params"] as Json[]).push({ name: "map", type: "texture", span: 3 }, { name: "filter", type: "sampler", span: 3 });
+      (instance["params"] as Json[]).push(
+        { name: "map", class: "resource", value: { kind: "builtin", name: "texture.black" } },
+        { name: "filter", class: "resource", value: { kind: "builtin", name: "sampler.nearest_clamp" } },
+      );
+      edit(material, instance);
+    });
+  }
+
+  it("resolves the resources of a material and of its instances, in declaration order", () => {
+    const result = resolveStructure(textured());
+    if (!result.ok) throw new Error(JSON.stringify(result.diagnostics));
+    expect(result.structure.materials[0]?.resources).toEqual([
+      { name: "map", kind: "texture", binding: 1 },
+      { name: "filter", kind: "sampler", binding: 2 },
+    ]);
+    expect(result.structure.instances[0]?.resources).toEqual([
+      { name: "map", kind: "texture", binding: 1, value: "texture.black" },
+      { name: "filter", kind: "sampler", binding: 2, value: "sampler.nearest_clamp" },
+    ]);
+  });
+
+  it("reports resources that do not match the params as E8006", () => {
+    // A binding out of order, a kind that differs from the param's type, and an instance without a value.
+    expect(problems(textured((material) => ((material["resources"] as Json[])[0] ??= {})["binding"] = 2))).toEqual(["MTEK-E8006 field: materials[0].resources"]);
+    expect(problems(textured((material) => ((material["resources"] as Json[])[1] ??= {})["kind"] = "texture"))).toEqual(["MTEK-E8006 field: materials[0].resources"]);
+    expect(problems(textured((_, instance) => ((instance["params"] as Json[]).length = 1)))).toEqual(["MTEK-E8006 field: scene.materialInstances[0].params"]);
+    expect(problems(textured((_, instance) => ((instance["params"] as Json[])[1] = { name: "filter", class: "resource", value: { kind: "builtin", name: "texture.white" } })))).toEqual([
+      "MTEK-E8006 field: scene.materialInstances[0].params",
+    ]);
+  });
+
+  it("reports a texture from an asset as E8003 until assets are loaded", () => {
+    const asset = textured((_, instance) => {
+      (instance["params"] as Json[])[0] = { name: "map", class: "resource", value: { kind: "asset", asset: "assets/0123456789abcdef.png" } };
+    });
+    expect(problems(asset)).toEqual(["MTEK-E8003 field: scene.materialInstances[0].params"]);
+  });
+});
+
 describe("checkProgram", () => {
   it("accepts the golden programs and a synthetic program", async () => {
     for (const name of CODEGEN_FIXTURES) {

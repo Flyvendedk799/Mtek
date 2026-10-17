@@ -6,14 +6,13 @@
 //!   instance order (`spec/scenes.md` section 10.1), so equal descriptors share one
 //!   `mesh:<n>` and the runtime builds the geometry once;
 //! - the **material instances**: one per entity that has a material, in entity order, each
-//!   param with the update class the IR recorded for it (`initial` in M2; `imperative` and
-//!   `bound` arrive with handlers and `bind` in M3, `resource` with textures in M4), and
-//!   whether the instance may share its parameter slot (every param `initial`,
-//!   `spec/gpu-layout.md` section 8.2);
+//!   param with the update class the IR recorded for it (`initial`, `imperative`, `bound`, and
+//!   `resource` for a texture or sampler, decision 0054), and whether the instance may share its
+//!   parameter slot (every param `initial` or `resource`, `spec/gpu-layout.md` section 8.2);
 //! - the **materials**: the distinct materials the instances use, sorted by symbol, each with
 //!   its parameter block (the `layout` the IR computed with `layout::compute`), its
-//!   declaration and its params — built-in materials of the embedded prelude exactly like
-//!   user materials (decision 0044).
+//!   texture and sampler bindings, its declaration and its params — built-in materials of the
+//!   embedded prelude exactly like user materials (decision 0044).
 //!
 //! [`check_limits`] checks the plan against the target profile's limits before any shader is
 //! lowered (`spec/gpu-layout.md` section 8.3): a parameter block larger than
@@ -35,6 +34,8 @@ pub enum ParamClass {
     Imperative,
     /// A `bind(..)` supplies it.
     Bound,
+    /// A texture or sampler: part of the instance's bind group, fixed at creation.
+    Resource,
 }
 
 impl ParamClass {
@@ -45,6 +46,7 @@ impl ParamClass {
             ParamClass::Initial => "initial",
             ParamClass::Imperative => "imperative",
             ParamClass::Bound => "bound",
+            ParamClass::Resource => "resource",
         }
     }
 }
@@ -55,6 +57,7 @@ impl From<ir::UpdateClass> for ParamClass {
             ir::UpdateClass::Initial => ParamClass::Initial,
             ir::UpdateClass::Imperative => ParamClass::Imperative,
             ir::UpdateClass::Bound => ParamClass::Bound,
+            ir::UpdateClass::Resource => ParamClass::Resource,
         }
     }
 }
@@ -92,11 +95,14 @@ pub struct PlannedInstance {
 }
 
 impl PlannedInstance {
-    /// True when every parameter is `initial`: the instance may share a parameter slot with
-    /// byte-identical instances of the same material (`spec/gpu-layout.md` section 8.2).
+    /// True when every parameter is `initial` or a resource (fixed at creation): the instance
+    /// may share a parameter slot with byte-identical instances of the same material
+    /// (`spec/gpu-layout.md` section 8.2).
     #[must_use]
     pub fn shareable(&self) -> bool {
-        self.params.iter().all(|p| p.class == ParamClass::Initial)
+        self.params
+            .iter()
+            .all(|p| matches!(p.class, ParamClass::Initial | ParamClass::Resource))
     }
 }
 
@@ -107,6 +113,19 @@ pub struct MaterialParam {
     /// The type as written in source (`array<Wave, 2>`): the IR's spelling without module
     /// paths (decision 0041 item 1).
     pub ty: String,
+    /// The `param name: T = default;` declaration.
+    pub span: Span,
+}
+
+/// One texture or sampler binding of a planned material (`spec/gpu-layout.md` section 6).
+#[derive(Clone, Debug, PartialEq)]
+pub struct PlannedResource {
+    /// The param's name; it is also the WGSL global's name suffix (`u_p_<name>`).
+    pub name: String,
+    /// `texture` or `sampler`.
+    pub kind: &'static str,
+    /// The binding in group 1: `1…` in param declaration order.
+    pub binding: u32,
     /// The `param name: T = default;` declaration.
     pub span: Span,
 }
@@ -122,8 +141,10 @@ pub struct PlannedMaterial {
     pub declaration: Span,
     /// The params in declaration order.
     pub params: Vec<MaterialParam>,
-    /// The parameter block; `None` for a material without params.
+    /// The parameter block; `None` for a material without value params.
     pub layout: Option<LayoutRecord>,
+    /// The textures and samplers, in param declaration order.
+    pub resources: Vec<PlannedResource>,
 }
 
 /// The resource plan of a scene.
@@ -213,7 +234,32 @@ fn planned_material(item: &MaterialItem) -> PlannedMaterial {
             })
             .collect(),
         layout: item.layout.clone(),
+        resources: resources(item),
     }
+}
+
+/// The texture and sampler params of `item` with their bindings: group 1, from binding 1, in
+/// declaration order (`spec/gpu-layout.md` section 6).
+#[must_use]
+pub fn resources(item: &MaterialItem) -> Vec<PlannedResource> {
+    let mut binding = 0;
+    item.params
+        .iter()
+        .filter_map(|param| {
+            let kind = match param.ty.as_str() {
+                "texture" => "texture",
+                "sampler" => "sampler",
+                _ => return None,
+            };
+            binding += 1;
+            Some(PlannedResource {
+                name: param.name.clone(),
+                kind,
+                binding,
+                span: param.span,
+            })
+        })
+        .collect()
 }
 
 /// Plans the resources of the entry scene of `program`.
@@ -352,9 +398,9 @@ pub const MAX_UNIFORM_BUFFER_BINDING_SIZE: u32 = 65_536;
 /// The limits of `spec/gpu-layout.md` section 8.3 that the plan decides, checked before any
 /// shader is lowered: `E6001` for every planned material whose parameter block is larger
 /// than `max_block` bytes (`maxUniformBufferBindingSize` of the target profile `profile`), at
-/// the material declaration, with the largest param as a related location. `E6002` (texture
-/// and sampler params, M4) and `E6003` (custom vertex stages, v0.2) cannot occur in this
-/// build.
+/// the material declaration, with the largest param as a related location. `E6002` (more than
+/// 8 texture and sampler params) is decided by the checker, where the params are declared
+/// (decision 0054), and `E6003` (custom vertex stages, v0.2) cannot occur in this build.
 #[must_use]
 pub fn check_limits(plan: &ResourcePlan, profile: &str, max_block: u32) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
@@ -399,7 +445,12 @@ fn largest_param<'m>(
         return None;
     };
     let mut best: Option<(&MaterialParam, u32)> = None;
-    for (param, member) in material.params.iter().zip(members) {
+    // The block's members are the value params: a texture or sampler is a binding of its own.
+    let values = material
+        .params
+        .iter()
+        .filter(|p| !matches!(p.ty.as_str(), "texture" | "sampler"));
+    for (param, member) in values.zip(members) {
         let size = member.node.size();
         if best.is_none_or(|(_, largest)| size > largest) {
             best = Some((param, size));

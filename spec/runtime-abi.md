@@ -389,7 +389,11 @@ The M1 context subset, setter validation during `init`, the program/structure ch
 
 10.2 **Test control** (`options.test`, never in production builds of examples):
 ```ts
-interface MtekTestOptions { manualClock?: boolean; renderTarget?: { width: number; height: number }; }
+interface MtekTestOptions {
+  manualClock?: boolean; renderTarget?: { width: number; height: number };
+  textures?: { "texture.white"?: MtekTestTexture; "texture.black"?: MtekTestTexture };  // M4-04: a generated texture in place of a built-in (decision 0054)
+}
+interface MtekTestTexture { width: number; height: number; data: Uint8Array; colorSpace?: "srgb" | "linear"; }  // RGBA8, top row first, width x height x 4 bytes
 interface MtekDebug {
   step(frames: number, dtSeconds: number): void;
   readPixels(): Promise<{ width: number; height: number; format: "rgba8unorm-srgb"; data: Uint8Array }>;

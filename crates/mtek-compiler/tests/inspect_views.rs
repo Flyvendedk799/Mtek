@@ -24,10 +24,11 @@ use mtek_compiler::{
 };
 use serde_json::Value;
 
-const GOLDEN_FIXTURES: [&str; 3] = [
+const GOLDEN_FIXTURES: [&str; 4] = [
     "scene_a_target_camera_box",
     "materials/pulse",
     "materials/params_and_defaults",
+    "materials/textures",
 ];
 
 const VIEWS: [(Inspect, &str); 2] = [
@@ -268,6 +269,34 @@ fn the_views_agree_with_the_build() {
                 .map(|p| &p["class"])
                 .collect();
             assert_eq!(classes, expected, "{fixture}");
+            // A texture or sampler is a binding of the manifest's material, with the built-in value
+            // the instance names; the view gives the same binding and value.
+            let material = manifest["materials"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|m| m["id"] == entry["material"])
+                .unwrap();
+            for (param, planned) in instance["params"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .zip(entry["params"].as_array().unwrap())
+            {
+                let resource = material["resources"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .find(|r| r["name"] == param["name"]);
+                match resource {
+                    Some(resource) => {
+                        assert_eq!(param["binding"], resource["binding"], "{fixture}");
+                        assert_eq!(param["resource"], planned["value"]["name"], "{fixture}");
+                        assert!(param.get("field").is_none(), "{fixture}");
+                    }
+                    None => assert!(param.get("binding").is_none(), "{fixture}"),
+                }
+            }
         }
     }
 }

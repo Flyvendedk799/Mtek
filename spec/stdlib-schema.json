@@ -1516,7 +1516,7 @@
       "constEligible": false,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M4",
+      "since": "M1",
       "doc": "Filtered texel of `t` at `uv`. `texture` and `sampler` parameters may be used only as direct arguments to `sample`."
     },
     {
@@ -1891,7 +1891,7 @@
     },
     {
       "name": "sampler",
-      "since": "M4",
+      "since": "M1",
       "doc": "Built-in sampler presets.",
       "members": [
         {
@@ -1904,7 +1904,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "Bilinear filtering, texture coordinates clamp to the edge."
         },
         {
@@ -1917,7 +1917,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "Bilinear filtering, texture coordinates wrap."
         },
         {
@@ -1930,7 +1930,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "Nearest-texel filtering, texture coordinates clamp to the edge."
         },
         {
@@ -1943,14 +1943,14 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "Nearest-texel filtering, texture coordinates wrap."
         }
       ]
     },
     {
       "name": "texture",
-      "since": "M4",
+      "since": "M1",
       "doc": "Built-in textures.",
       "members": [
         {
@@ -1963,7 +1963,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "A 1x1 opaque black texture."
         },
         {
@@ -1976,7 +1976,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "A 1x1 opaque white texture."
         }
       ]
@@ -2251,7 +2251,7 @@
       "name": "sampler",
       "kind": "handle",
       "gpu": false,
-      "since": "M4",
+      "since": "M1",
       "doc": "A sampler preset. Usable only as a material parameter.",
       "fields": [],
       "methods": []
@@ -2269,7 +2269,7 @@
       "name": "texture",
       "kind": "handle",
       "gpu": false,
-      "since": "M4",
+      "since": "M1",
       "doc": "An immutable texture. Usable only as a material parameter.",
       "fields": [],
       "methods": []

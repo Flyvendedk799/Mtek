@@ -20,6 +20,7 @@ import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
 import { BindingPlan, PipelineCache } from "./pipelines.js";
+import type { TextureOverrides } from "./resources.js";
 import { Renderer, type MaterialPipeline, type RenderSurface } from "./renderer.js";
 
 export interface SceneStartupOptions {
@@ -43,6 +44,8 @@ export interface SceneStartupOptions {
   readonly pipelineCache?: PipelineCache;
   /** Reused with `pipelineCache` so new bind groups match the cached pipelines. */
   readonly bindingPlan?: BindingPlan;
+  /** `options.test.textures`: replacement pixels for the built-in textures (`spec/runtime-abi.md` section 10.2). */
+  readonly textures?: TextureOverrides;
 }
 
 /** The running scene: its CPU world, its GPU state and its renderer. */
@@ -64,7 +67,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
 
   const plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
-  const materials = new MaterialStore(device, registry, plan, structure, program.writers);
+  const materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures);
   const world = new World({ manifest, structure, params: materials, report, ...(services === undefined ? {} : { services }) });
   const bindings = new Bindings(manifest, program.scene.bindings, world);
   world.initialise(program.scene.init, () => {

@@ -30,7 +30,7 @@ All of the following are **proposals** (design choices), not external constraint
 - No new dependency and no new diagnostic code; `E6001` leaves the not-yet-implemented list.
 - The IR goldens of programs with built-in materials gain the module `std/materials.mtek`; the manifests' `Unlit` declaration span starts at `material`, and their span maps reference three more spans. Goldens of programs without built-in materials are unchanged.
 - **M2-10** (the M2 gate) can assert that no file or symbol of the temporary path remains (`tests/temporary_unlit_is_gone.rs`) and use `inspect --bindings`/`--shaders` as evidence; every material of a program builds through one path.
-- **M2-12** and **M3**: `ParamClass` gains `imperative` and `bound` (with the binding's dependencies in `--bindings`) when the IR records them; `shareable` then follows. `E6002` arrives with texture params (M4), and `Pbr` compiles by itself when its registry milestone is reached.
+- **M2-12** and **M3**: `ParamClass` gains `imperative` and `bound` (with the binding's dependencies in `--bindings`) when the IR records them; `shareable` then follows. `E6002` arrives with texture params (M4; the checker reports it, decision 0054 item 3), and `Pbr` compiles by itself when its registry milestone is reached.
 - `spec/compiler-architecture.md` §4.9, §4.10 and §4.12, `spec/gpu-layout.md` §10 and `spec/materials.md` §9 point here.
 
 ## Verification

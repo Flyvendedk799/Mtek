@@ -7,7 +7,7 @@
     "message": "The param 'caption' has type string, which a material cannot hold.",
     "notes": [
       "params are uploaded to the GPU in the material's parameter block",
-      "help: material params are bool, i32, u32, f32, vec2, vec3, vec4, mat4, quat, color, and structs and arrays of those (texture and sampler arrive in M4)"
+      "help: material params are bool, i32, u32, f32, vec2, vec3, vec4, mat4, quat, color, structs and arrays of those, and texture and sampler (as params of their own)"
     ]
   },
   {
@@ -18,7 +18,7 @@
     "message": "The param 'label' has type Label, which a material cannot hold (it contains string).",
     "notes": [
       "params are uploaded to the GPU in the material's parameter block",
-      "help: material params are bool, i32, u32, f32, vec2, vec3, vec4, mat4, quat, color, and structs and arrays of those (texture and sampler arrive in M4)"
+      "help: material params are bool, i32, u32, f32, vec2, vec3, vec4, mat4, quat, color, structs and arrays of those, and texture and sampler (as params of their own)"
     ]
   }
 ]

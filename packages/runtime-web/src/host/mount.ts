@@ -29,6 +29,7 @@ import { defaultEnvironment, type HostEnvironment } from "./environment.js";
 import { DiagnosticSink, abiFailureToDiagnostic, mountError } from "./failures.js";
 import { FailureOverlay } from "./overlay.js";
 import { loadStartupShaders } from "./shaders.js";
+import { checkTestTextures } from "../render/resources.js";
 import { startScene } from "../render/startup.js";
 import { InputState } from "../input/input.js";
 import { Xoshiro128 } from "../random/xoshiro.js";
@@ -61,6 +62,7 @@ function validateOptions(options: MtekMountOptions<never>): void {
   if (seed !== undefined && !Number.isFinite(seed)) {
     throw new RangeError(`mountMtek: seed must be a finite number, got ${String(seed)}`);
   }
+  if (test?.textures !== undefined) checkTestTextures(test.textures);
   const target = test?.renderTarget;
   if (target !== undefined) {
     for (const [name, value] of [["width", target.width], ["height", target.height]] as const) {
@@ -276,6 +278,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
         if (app !== undefined) app.report(diagnostic);
         else earlyReports.push(diagnostic);
       },
+      ...(options.test?.textures === undefined ? {} : { textures: options.test.textures }),
     });
     if (!started.ok) throw mountError(started.diagnostics);
 
