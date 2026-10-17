@@ -564,6 +564,42 @@ fn build_writes_the_output_tree_with_the_embedded_runtime() {
     assert_eq!(tree(&project.join("again")), built);
 }
 
+/// The release output contains no development overlay code; the dev and test outputs carry the
+/// development runtime (decision 0055). This inspects the real files `mtek build` writes.
+#[cfg(mtek_runtime_embedded)]
+#[test]
+fn a_release_build_has_no_overlay_code_and_dev_and_test_builds_do() {
+    const MARKERS: [&str; 2] = ["data-mtek-dev-overlay", "GPU time unavailable"];
+    let scratch = Scratch::new("build-flavours");
+    let project = scratch.project("app", VALID);
+    for (mode, flavour) in [
+        ("release", "runtime.js"),
+        ("dev", "runtime.dev.js"),
+        ("test", "runtime.dev.js"),
+    ] {
+        let out = run_in(&project, &["build", "--mode", mode, "--out", mode]);
+        assert_eq!(out.status.code(), Some(0), "{mode}: {}", stderr(&out));
+        let built = tree(&project.join(mode));
+        let runtime_name = built
+            .keys()
+            .find(|k| k.starts_with("runtime.") && k.ends_with(".js"))
+            .unwrap();
+        assert_eq!(built[runtime_name], runtime_file(flavour), "{mode}");
+        for (file, bytes) in &built {
+            let text = String::from_utf8_lossy(bytes);
+            for marker in MARKERS {
+                assert_eq!(
+                    text.contains(marker),
+                    mode != "release" && file == runtime_name,
+                    "{mode}: {file} and {marker:?}"
+                );
+            }
+        }
+        let page = String::from_utf8_lossy(&built["index.html"]).into_owned();
+        assert_eq!(page.contains("devOverlay"), mode == "dev", "{mode}: {page}");
+    }
+}
+
 #[cfg(mtek_runtime_embedded)]
 #[test]
 fn build_json_test_mode_and_out() {

@@ -1,0 +1,6 @@
+[project]
+name = "fixture"
+language = "0.1"
+
+[host.inputs]
+camera_x = "Culling.camera_x"

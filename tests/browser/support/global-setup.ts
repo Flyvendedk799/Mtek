@@ -14,6 +14,7 @@ import { BROWSER_ROOT, REPO_ROOT } from "./environment.ts";
 import { buildCli, buildM1Fixtures } from "./m1-fixtures.ts";
 import { buildM2Fixtures } from "./m2-fixtures.ts";
 import { buildPulseCube, buildPulseCubeVariants } from "./m3-fixtures.ts";
+import { buildM4Fixtures } from "./m4-fixtures.ts";
 import { buildNumericProbe } from "./numeric-probe.ts";
 import { startStaticServer } from "./serve.ts";
 
@@ -92,6 +93,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   // M2 fixtures (M2-12): the Pulse material, the mixed layout and the shader-corruption variants, in `.out/m2/`.
   buildM2Fixtures(cli);
   if (buildPulseCube(cli).ok) buildPulseCubeVariants(cli);
+  // M4 fixtures (culling, dev overlay): `.out/m4/` (test mode) and `.out/m4-release/` (release mode).
+  buildM4Fixtures(cli);
 
   // The numeric probe (M2-08): the compiler's WGSL for every operation of cpu.json plus a test-only harness.
   buildNumericProbe(cli, join(out, "numeric"));

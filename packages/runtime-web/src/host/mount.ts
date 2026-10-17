@@ -28,6 +28,8 @@ import { MountedApp, RECOVERY_ATTEMPTS } from "./app.js";
 import { defaultEnvironment, type FetchResponseLike, type HostEnvironment } from "./environment.js";
 import { DiagnosticSink, abiFailureToDiagnostic, mountError } from "./failures.js";
 import { FailureOverlay } from "./overlay.js";
+import { GpuTimer, hasTimestampQuery, TIMESTAMP_FEATURE } from "../dev/gpu-timer.js";
+import { DevTools } from "../dev/tools.js";
 import { loadStartupShaders } from "./shaders.js";
 import { startScene } from "../render/startup.js";
 import { InputState } from "../input/input.js";
@@ -200,6 +202,8 @@ export async function mountMtekWith<I = Record<string, unknown>>(
     acquired = await acquireDevice({
       requiredFeatures: [...required.features] as GPUFeatureName[],
       requiredLimits: { ...required.limits },
+      // Development builds ask for timestamp-query when the adapter has it (section 8.1); never required.
+      ...(__MTEK_DEV__ ? { optionalFeatures: [TIMESTAMP_FEATURE] as GPUFeatureName[] } : {}),
       onDeviceLost: (info) => {
         if (app !== undefined) app.handleDeviceLost(info);
         else if (info.reason !== "destroyed") early.lost = info;
@@ -245,7 +249,11 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       ]);
     }
     const dprOption = options.devicePixelRatio ?? "auto";
+    // GPU time is measured only when the development overlay was asked for and the device has the feature;
+    // otherwise no timer exists and GPU time is reported as unavailable (section 10.1).
+    const timer = __MTEK_DEV__ && options.devOverlay === true && hasTimestampQuery(device) ? new GpuTimer(device, registry) : null;
     surface = new Surface({
+      timer: timer ?? undefined,
       canvas,
       context,
       device,
@@ -325,7 +333,24 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       ]);
     }
 
+    // The development overlay (development flavour only; `options.devOverlay`): its key listener goes
+    // through the registry, so it is counted and removed by dispose.
+    const live = registry;
+    const devTools =
+      __MTEK_DEV__ && options.devOverlay === true && environment.document !== undefined
+        ? new DevTools({
+            canvas,
+            keyTarget: environment.document,
+            listen: (target, type, listener) => {
+              live.addEventListener(target, type, listener);
+            },
+            manifest,
+            timer,
+          })
+        : null;
+
     app = new MountedApp<I>({
+      devTools,
       manifest,
       device,
       registry,

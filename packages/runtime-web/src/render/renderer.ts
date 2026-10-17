@@ -10,11 +10,14 @@
  *     written through the generated `builtin:object` writers into its slot of the object arena.
  *  3. The frame, object and material arenas upload their dirty slots (`writeIfChanged` keeps unchanged
  *     blocks clean, so a static scene uploads nothing after its first frame).
- *  4. One render pass clears to the scene clear colour and draws the draw list: visible entities with a
- *     mesh, sorted by (pipeline key, material instance, mesh), ties by instance order. Group 0 is bound
- *     once, group 1 when the material instance changes, vertex and index buffers when the mesh changes,
- *     group 2 per draw with the object's dynamic offset.
- *  5. The command buffer is submitted (by the surface).
+ *  4. The draw list (visible entities with a mesh, sorted by (pipeline key, material instance, mesh),
+ *     ties by instance order) is frustum-culled: an entity whose world-space bounding sphere lies
+ *     outside one of the six planes of `view_proj` is not drawn (section 8.4, decision 0055). Its
+ *     object block is still written, so it is correct when it comes back into view.
+ *  5. One render pass clears to the scene clear colour and draws the remaining entities. Group 0 is
+ *     bound once, group 1 when the material instance changes, vertex and index buffers when the mesh
+ *     changes, group 2 per draw with the object's dynamic offset.
+ *  6. The command buffer is submitted (by the surface).
  *
  * The runtime never computes an offset inside `MtekFrame` or `MtekObject`: only the generated writers
  * know the layout.
@@ -28,6 +31,7 @@ import { multiply, normalMatrix, orthographic, perspective, viewMatrix, identity
 import type { BlockWriter, LayoutWriters } from "../scene/program.js";
 import type { SceneStructure } from "../scene/structure.js";
 import type { World } from "../scene/world.js";
+import { extractFrustumPlanes, sphereIntersectsFrustum, worldBoundingSphere, type WorldSphere } from "./frustum.js";
 import type { MaterialStore } from "./materials.js";
 import type { GpuMesh, MeshStore } from "./meshes.js";
 import type { BindingPlan } from "./pipelines.js";
@@ -110,6 +114,17 @@ export class Renderer {
   private draws: readonly DrawItem[] = [];
   private drawsVersion = -1;
   private drawCallsLastFrame = 0;
+  private culledLastFrame = 0;
+  private drawCallsTotal = 0;
+  private culledTotal = 0;
+  /** The draws that survived culling this frame (reused between frames). */
+  private readonly drawn: DrawItem[] = [];
+  private readonly planes = new Float64Array(24);
+  /** Per static entity index, from its last object-block write: world-space sphere centre (x, y, z) and largest world scale. */
+  private readonly sphereCentres: Float64Array;
+  private readonly sphereScales: Float64Array;
+  private readonly sphere: WorldSphere = { x: 0, y: 0, z: 0, radius: 0 };
+  private cullingEnabled = true;
   /** Materials that failed after mount (`failMaterial`): never drawn. */
   private readonly failedMaterials = new Set<string>();
 
@@ -134,11 +149,33 @@ export class Renderer {
     const drawable = structure.entities.filter((entity) => entity.mesh !== null);
     this.objectArena = new UniformArena(device, registry, structure.objectLayout, { dynamicOffset: true, initialCapacity: Math.max(1, drawable.length) });
     for (const entity of drawable) this.objectSlots[entity.index] = this.objectArena.allocate();
+    this.sphereCentres = new Float64Array(structure.entities.length * 3);
+    this.sphereScales = new Float64Array(structure.entities.length);
   }
 
   /** Draw calls encoded by the last rendered frame. */
   get drawCalls(): number {
     return this.drawCallsLastFrame;
+  }
+
+  /** Drawable entities (visible, with a mesh) outside the frustum in the last rendered frame; 0 when no frame was drawn. */
+  get culledObjects(): number {
+    return this.culledLastFrame;
+  }
+
+  /** Draw calls encoded since the scene started. */
+  get drawCallsCumulative(): number {
+    return this.drawCallsTotal;
+  }
+
+  /** Entity culls since the scene started (an entity culled in ten frames counts ten times). */
+  get culledObjectsCumulative(): number {
+    return this.culledTotal;
+  }
+
+  /** Turns frustum culling on (the default) or off. Off exists for tests that compare culled and unculled frames. */
+  setFrustumCulling(enabled: boolean): void {
+    this.cullingEnabled = enabled;
   }
 
   /** Number of materials taken out of the draw list by `failMaterial`. */
@@ -198,20 +235,42 @@ export class Renderer {
     const { surface, manifest, device, materials } = this.options;
     const clearColor = manifest.scene.fields.clearColor;
     // A zero-sized target skips the frame; the surface counts the skip.
-    if (!surface.renderable) return surface.render(clearColor);
+    if (!surface.renderable) {
+      this.drawCallsLastFrame = 0;
+      this.culledLastFrame = 0;
+      return surface.render(clearColor);
+    }
 
-    this.writeFrameBlock();
+    const viewProj = this.writeFrameBlock();
     this.writeObjectBlocks();
     this.frameArena.flush(device.queue);
     this.objectArena.flush(device.queue);
     materials.flush(device.queue);
 
-    const draws = this.drawList();
+    const listed = this.drawList();
+    const draws = this.cull(listed, viewProj);
     const rendered = surface.render(clearColor, (pass) => {
       this.encode(pass, draws);
     });
     this.drawCallsLastFrame = rendered ? draws.length : 0;
+    this.culledLastFrame = rendered ? listed.length - draws.length : 0;
+    this.drawCallsTotal += this.drawCallsLastFrame;
+    this.culledTotal += this.culledLastFrame;
     return rendered;
+  }
+
+  /** The draws whose world-space bounding sphere is not entirely outside one of the six planes of `viewProj`, in draw-list order. */
+  private cull(draws: readonly DrawItem[], viewProj: Mat4): readonly DrawItem[] {
+    if (!this.cullingEnabled) return draws;
+    const { planes, drawn, sphereCentres, sphereScales } = this;
+    extractFrustumPlanes(viewProj, planes);
+    drawn.length = 0;
+    for (const draw of draws) {
+      const e = draw.entity;
+      const radius = draw.gpuMesh.boundingRadius * (sphereScales[e] ?? 0);
+      if (sphereIntersectsFrustum(planes, sphereCentres[e * 3] ?? 0, sphereCentres[e * 3 + 1] ?? 0, sphereCentres[e * 3 + 2] ?? 0, radius)) drawn.push(draw);
+    }
+    return drawn;
   }
 
   /** `P * V` of the active camera for the target's aspect ratio. */
@@ -243,7 +302,8 @@ export class Renderer {
     );
   }
 
-  private writeFrameBlock(): void {
+  /** Writes `MtekFrame` and returns the `view_proj` it holds. */
+  private writeFrameBlock(): Mat4 {
     const { width, height } = this.options.surface.size;
     const viewProj = this.viewProjection(width / height);
     const position = this.options.world.camera.position;
@@ -253,6 +313,7 @@ export class Renderer {
       this.writeLightCount(memory, base, 0);
       this.writeAmbient(memory, base, this.ambient);
     });
+    return viewProj;
   }
 
   private writeObjectBlocks(): void {
@@ -261,6 +322,12 @@ export class Renderer {
       const slot = this.objectSlots[index];
       if (slot === undefined) continue;
       const model = world.worldMatrix(index);
+      // The mesh-independent part of the bounding sphere: the centre, and the largest scale (radius of a unit-radius mesh).
+      worldBoundingSphere(model, 1, this.sphere);
+      this.sphereCentres[index * 3] = this.sphere.x;
+      this.sphereCentres[index * 3 + 1] = this.sphere.y;
+      this.sphereCentres[index * 3 + 2] = this.sphere.z;
+      this.sphereScales[index] = this.sphere.radius;
       const normal = normalMatrix(model);
       this.objectArena.writeIfChanged(slot, (memory, base) => {
         this.writeModel(memory, base, model);

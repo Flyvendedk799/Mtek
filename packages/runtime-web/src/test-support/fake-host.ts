@@ -48,6 +48,22 @@ export function asDom<T>(fake: object): T {
 const USAGE_TEXTURE_COPY_SRC = 0x01;
 const USAGE_TEXTURE_RENDER_ATTACHMENT = 0x10;
 const USAGE_BUFFER_COPY_DST = 0x08;
+const USAGE_BUFFER_COPY_SRC = 0x04;
+const USAGE_BUFFER_QUERY_RESOLVE = 0x200;
+
+/** A `GPUQuerySet` (timestamps only). */
+export class FakeQuerySet {
+  destroyed = false;
+
+  constructor(
+    readonly count: number,
+    readonly label: string,
+  ) {}
+
+  destroy(): void {
+    this.destroyed = true;
+  }
+}
 
 /** Linear to sRGB transfer function, 0..1 to a byte. */
 export function encodeSrgbByte(linear: number): number {
@@ -379,6 +395,34 @@ export class FakeCommandEncoder {
     });
   }
 
+  /** Writes the device's `timestampNanoseconds` (default begin 1_000_000, end 3_500_000) into `destination`. */
+  resolveQuerySet(querySet: FakeQuerySet, firstQuery: number, queryCount: number, destination: FakeBuffer, destinationOffset: number): void {
+    this.ensureRecording("resolveQuerySet");
+    if ((destination.usage & USAGE_BUFFER_QUERY_RESOLVE) === 0) throw new Error("resolveQuerySet: the buffer lacks QUERY_RESOLVE");
+    if (firstQuery + queryCount > querySet.count) throw new Error("resolveQuerySet: the range exceeds the query set");
+    this.commands.push(() => {
+      if (querySet.destroyed || destination.destroyed) {
+        this.device.raiseValidation("resolveQuerySet uses a destroyed resource");
+        return;
+      }
+      const view = new BigUint64Array(destination.contents.buffer, destinationOffset, queryCount);
+      for (let i = 0; i < queryCount; i += 1) view[i] = BigInt(this.device.timestampNanoseconds[firstQuery + i] ?? 0);
+    });
+  }
+
+  copyBufferToBuffer(source: FakeBuffer, sourceOffset: number, destination: FakeBuffer, destinationOffset: number, size: number): void {
+    this.ensureRecording("copyBufferToBuffer");
+    if ((source.usage & USAGE_BUFFER_COPY_SRC) === 0) throw new Error("copyBufferToBuffer: the source lacks COPY_SRC");
+    if ((destination.usage & USAGE_BUFFER_COPY_DST) === 0) throw new Error("copyBufferToBuffer: the destination lacks COPY_DST");
+    this.commands.push(() => {
+      if (source.destroyed || destination.destroyed) {
+        this.device.raiseValidation("copyBufferToBuffer uses a destroyed buffer");
+        return;
+      }
+      destination.contents.set(source.contents.subarray(sourceOffset, sourceOffset + size), destinationOffset);
+    });
+  }
+
   finish(): FakeCommandBuffer {
     this.ensureRecording("finish");
     this.finished = true;
@@ -397,6 +441,9 @@ export class FakeHostDevice extends FakeDevice {
   readonly features = new Set<string>();
   readonly renderPasses: FakeRenderPassRecord[] = [];
   readonly shaderModules: FakeShaderModule[] = [];
+  readonly querySets: FakeQuerySet[] = [];
+  /** What `resolveQuerySet` writes for query 0, 1, ...: a 2.5 ms pass by default. */
+  timestampNanoseconds: number[] = [1_000_000, 3_500_000];
   destroyed = false;
 
   constructor(
@@ -421,6 +468,15 @@ export class FakeHostDevice extends FakeDevice {
 
   createCommandEncoder(): FakeCommandEncoder {
     return new FakeCommandEncoder(this);
+  }
+
+  /** `GPUDevice.createQuerySet`: needs the `timestamp-query` feature the device was created with. */
+  createQuerySet(descriptor: { readonly type: string; readonly count: number; readonly label?: string }): FakeQuerySet {
+    if (descriptor.type !== "timestamp") throw new Error("createQuerySet: only timestamp query sets are modelled");
+    if (!this.features.has("timestamp-query")) throw new Error("createQuerySet: the device was created without timestamp-query");
+    const set = new FakeQuerySet(descriptor.count, descriptor.label ?? "");
+    this.querySets.push(set);
+    return set;
   }
 
   /** Checks the parts of a pipeline descriptor the runtime relies on; returns the problem or undefined. */

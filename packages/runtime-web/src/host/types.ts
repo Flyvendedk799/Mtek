@@ -23,6 +23,11 @@ export interface MtekTestOptions {
     /** The next `n` device requests of a recovery attempt fail as if `requestDevice` had rejected. */
     failDeviceRequests?: number;
   };
+  /**
+   * Draw every visible entity, as if frustum culling did not exist (`spec/runtime-abi.md` section 8.4):
+   * lets a test compare a culled frame with an unculled one. `culledObjects` stays 0.
+   */
+  disableCulling?: boolean;
 }
 
 /** `spec/runtime-abi.md` section 10.2. */
@@ -78,6 +83,12 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
   seed?: number;
   pauseWhenHidden?: boolean;
   devicePixelRatio?: number | "auto";
+  /**
+   * Show the development overlay (`spec/tooling.md` section 9) and measure GPU time when the device has
+   * `timestamp-query`. Honoured only by the development flavour of the runtime; the release flavour
+   * contains no overlay code and ignores it. `mtek dev` pages pass `true` (decision 0055).
+   */
+  devOverlay?: boolean;
   test?: MtekTestOptions;
 }
 

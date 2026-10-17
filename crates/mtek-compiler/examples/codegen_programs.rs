@@ -85,6 +85,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         profile: TargetProfile::WebGpuCore2026,
         mode: BuildMode::Release,
         runtime_bundle: Some(Arc::from(bundle)),
+        dev_runtime_bundle: None,
         runtime_declarations: Some(Arc::from(declarations)),
     };
 

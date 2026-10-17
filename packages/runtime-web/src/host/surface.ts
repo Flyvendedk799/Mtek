@@ -56,6 +56,19 @@ export interface PixelData {
   data: Uint8Array;
 }
 
+/**
+ * Measures the GPU time of the frame's render pass (`dev/gpu-timer.ts`, development builds only; the
+ * implementation is not part of a release bundle, only this interface is).
+ */
+export interface PassTimer {
+  /** The timestamp writes for this frame's pass, or `undefined` when this frame is not measured. */
+  passTimestampWrites(): GPURenderPassTimestampWrites | undefined;
+  /** Called after `pass.end()` of a measured frame, to record the resolve commands. */
+  resolve(encoder: GPUCommandEncoder): void;
+  /** Called after the frame's command buffer was submitted. */
+  submitted(): void;
+}
+
 export interface SurfaceOptions {
   readonly canvas: HTMLCanvasElement;
   readonly context: GPUCanvasContext;
@@ -68,13 +81,21 @@ export interface SurfaceOptions {
   readonly canvasRenderTarget?: boolean;
   /** Called each time the backing size is computed. */
   readonly devicePixelRatio: () => number;
+  /** GPU time measurement; absent in release builds and without `timestamp-query`. */
+  readonly timer?: PassTimer | undefined;
 }
 
 export class Surface {
+  private get timer(): PassTimer | undefined {
+    return this.timerDropped ? undefined : this.options.timer;
+  }
+
   private readonly viewFormat: CanvasSrgbFormat;
   private widthPx = 0;
   private heightPx = 0;
   private depth: GPUTexture | null = null;
+  /** The GPU timer belongs to the device it was created on; a recovered device has none (decision 0055, 0056). */
+  private timerDropped = false;
   private depthWidth = 0;
   private depthHeight = 0;
   private offscreen: GPUTexture | null = null;
@@ -200,6 +221,7 @@ export class Surface {
    */
   recover(device: GPUDevice): void {
     this.device = device;
+    this.timerDropped = true;
     this.depth = null;
     this.depthWidth = 0;
     this.depthHeight = 0;
@@ -247,7 +269,9 @@ export class Surface {
     const { device } = this;
     const target = this.offscreen ?? context.getCurrentTexture();
     const encoder = device.createCommandEncoder({ label: "mtek frame" });
+    const timestampWrites = this.timer?.passTimestampWrites();
     const pass = encoder.beginRenderPass({
+      ...(timestampWrites === undefined ? {} : { timestampWrites }),
       colorAttachments: [
         {
           view: target.createView({ format: this.offscreen !== null ? OFFSCREEN_FORMAT : this.viewFormat }),
@@ -265,7 +289,9 @@ export class Surface {
     });
     encode?.(pass);
     pass.end();
+    if (timestampWrites !== undefined) this.timer?.resolve(encoder);
     device.queue.submit([encoder.finish()]);
+    if (timestampWrites !== undefined) this.timer?.submitted();
     this.rendered += 1;
     return true;
   }

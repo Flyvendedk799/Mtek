@@ -337,6 +337,7 @@ pub fn compile_and_write(
         profile: TargetProfile::WebGpuCore2026,
         mode,
         runtime_bundle: context.runtime.map(|runtime| Arc::from(runtime.bundle)),
+        dev_runtime_bundle: context.runtime.map(|runtime| Arc::from(runtime.dev_bundle)),
         runtime_declarations: context
             .runtime
             .map(|runtime| Arc::from(runtime.declarations)),

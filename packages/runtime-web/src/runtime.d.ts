@@ -109,6 +109,8 @@ export interface MtekTestOptions {
     /** The next n device requests of a recovery attempt fail as if requestDevice had rejected. */
     failDeviceRequests?: number;
   };
+  /** Draw every visible entity, as if frustum culling did not exist (lets a test compare culled and unculled frames). */
+  disableCulling?: boolean;
 }
 
 export interface MtekDebug {
@@ -152,6 +154,8 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
   pauseWhenHidden?: boolean;
   /** Default "auto". */
   devicePixelRatio?: number | "auto";
+  /** Show the development overlay and measure GPU time (`timestamp-query`). Development runtime only; the release runtime ignores it. */
+  devOverlay?: boolean;
   /** Omit in production. */
   test?: MtekTestOptions;
 }

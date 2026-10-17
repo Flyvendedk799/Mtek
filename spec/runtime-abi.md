@@ -235,6 +235,7 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
   seed?: number;                              // random() seed; default derived from time
   pauseWhenHidden?: boolean;                  // default from manifest runtimeConfig
   devicePixelRatio?: number | "auto";         // default "auto"
+  devOverlay?: boolean;                       // development runtime only (decision 0055); the release runtime ignores it
   test?: MtekTestOptions;                     // §10.2; omit in production
 }
 ```
@@ -365,7 +366,7 @@ P = | f/a  0   0              0              |
 ```
 `P` is written in mathematical (row, column) notation; stored column-major in a `Float32Array(16)` its non-zero entries are index 0 = `f/a`, 5 = `f`, 10 = `far/(near−far)`, 11 = `−1`, 14 = `near·far/(near−far)`. Orthographic with `h = height`, `w = h · a`: `x' = 2x/w`, `y' = 2y/h`, `z' = z/(near−far) + near/(near−far)`, `w' = 1` (column-major indices 0 = `2/w`, 5 = `2/h`, 10 = `1/(near−far)`, 14 = `near/(near−far)`, 15 = `1`). Both map `z = −near` to depth 0 and `z = −far` to depth 1. `view_proj = P · V`.
 
-8.4 **Draw list.** Visible entities with a mesh, sorted by `(pipeline key, material instance, mesh)`, ties by instance order. **Compatible instancing (M4, normative definition):** entities are drawn with one instanced draw when they have the same mesh, the same pipeline key and the **same parameter block** (material instances whose params are all class `initial` and byte-identical, i.e. sharing one slot per `spec/gpu-layout.md` §8.2); per-instance model and normal matrices come from an instance vertex buffer. Any other combination is drawn individually. The `instancedDraws` and `drawCalls` counters make the path observable. Pipeline cache key = `(shader hash, vertex attribute set, color format, depth format, cull mode, topology)` (blueprint §7.2). Parameter edits never create pipelines. Frustum culling (M4) tests each entity's world-space bounding sphere against the six frustum planes; its effect is visible in counters.
+8.4 **Draw list.** Visible entities with a mesh, sorted by `(pipeline key, material instance, mesh)`, ties by instance order. **Compatible instancing (M4, normative definition):** entities are drawn with one instanced draw when they have the same mesh, the same pipeline key and the **same parameter block** (material instances whose params are all class `initial` and byte-identical, i.e. sharing one slot per `spec/gpu-layout.md` §8.2); per-instance model and normal matrices come from an instance vertex buffer. Any other combination is drawn individually. The `instancedDraws` and `drawCalls` counters make the path observable. Pipeline cache key = `(shader hash, vertex attribute set, color format, depth format, cull mode, topology)` (blueprint §7.2). Parameter edits never create pipelines. Frustum culling (M4) tests each entity's world-space bounding sphere against the six frustum planes; its effect is visible in counters. The plane extraction, the bounding-sphere radius, the counter semantics and the release/development runtime flavours are fixed by decision 0055 (`spec/decisions/0055-culling-counters-and-overlay.md`).
 
 8.5 **Pass sequence.** clear → opaque geometry → development overlay (dev builds) → present. No general render graph in v0.1.
 
@@ -387,7 +388,7 @@ The resize and pixel-ratio watchers, the device-loss rebuild (what is retained, 
 
 ## 10. Counters, overlay and test control
 
-10.1 **Counters** (per frame and cumulative): `frameTimeMs`, `cpuUpdateMs`, `renderPrepMs`, `drawCalls`, `instancedDraws`, `culledObjects`, `uploads`, `uploadBytes`, `pipelinesCreated`, `shaderModulesCreated`, `bindGroupsCreated`, `buffersAllocated`, `texturesAllocated`, live counts `liveBuffers`, `liveTextures`, `liveSamplers`, `liveShaderModules`, `livePipelines`, `liveBindGroups`, `liveListeners`, `sharedParamBlocks`, `ownedParamBlocks`, `discardedSteps`, `liveEntities`, `failedMaterials` (materials no longer drawn after a later shader or pipeline failure, §12), `deviceLosses`, `deviceRecoveries`, `recoveryAttempts` (cumulative, §9.4). GPU time is reported only when the `timestamp-query` feature is available and requested; otherwise the overlay says "GPU time unavailable" (blueprint §12.3 — never relabel CPU submission time as GPU time).
+10.1 **Counters** (per frame and cumulative): `frameTimeMs`, `cpuUpdateMs`, `renderPrepMs`, `drawCalls`, `instancedDraws`, `culledObjects`, `uploads`, `uploadBytes`, `pipelinesCreated`, `shaderModulesCreated`, `bindGroupsCreated`, `buffersAllocated`, `texturesAllocated`, live counts `liveBuffers`, `liveTextures`, `liveSamplers`, `liveShaderModules`, `livePipelines`, `liveBindGroups`, `liveListeners`, `sharedParamBlocks`, `ownedParamBlocks`, `discardedSteps`, `liveEntities`, `failedMaterials` (materials no longer drawn after a later shader or pipeline failure, §12), `deviceLosses`, `deviceRecoveries`, `recoveryAttempts` (cumulative, §9.4). GPU time is reported only when the `timestamp-query` feature is available and requested; otherwise the overlay says "GPU time unavailable" (blueprint §12.3 — never relabel CPU submission time as GPU time). How the counters are exposed (per-frame and cumulative forms, `gpuTimeMs` / `gpuTimeAvailable`) is decision 0055.
 
 10.2 **Test control** (`options.test`, never in production builds of examples):
 ```ts
@@ -395,6 +396,7 @@ interface MtekTestOptions {
   manualClock?: boolean; renderTarget?: { width: number; height: number };
   canvasRenderTarget?: boolean;   // offscreen target that follows the canvas backing size (resize, pixel ratio); excludes renderTarget
   recovery?: { delaysMs?: [number, number, number]; failDeviceRequests?: number };   // §9.4: default [250, 1000, 4000]
+  disableCulling?: boolean;       // draw every visible entity, as if culling did not exist (decision 0055)
 }
 interface MtekDebug {
   step(frames: number, dtSeconds: number): void;
