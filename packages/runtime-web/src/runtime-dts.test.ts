@@ -39,7 +39,8 @@ function compile(source: string, options: ts.CompilerOptions = {}): string[] {
       : realGetSourceFile(fileName, languageVersionOrOptions, onError, shouldCreate);
   host.fileExists = (fileName) => path.resolve(fileName) === SNIPPET || realFileExists(fileName);
   host.readFile = (fileName) => (path.resolve(fileName) === SNIPPET ? source : realReadFile(fileName));
-  const program = ts.createProgram([SNIPPET], compilerOptions, host);
+  // flavour.d.ts declares the build-time constant the implementation files refer to.
+  const program = ts.createProgram([SNIPPET, path.join(SRC_DIR, "flavour.d.ts")], compilerOptions, host);
   return ts
     .getPreEmitDiagnostics(program)
     .map((d) => {

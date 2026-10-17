@@ -7,6 +7,7 @@
 import type { MtekManifest } from "../abi/manifest-types.js";
 import { checkManifest } from "../abi/validate.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
+import type { DevTools } from "../dev/tools.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import type { MtekProgramScene } from "../abi/program.js";
 import { attachInputListeners } from "../input/dom.js";
@@ -44,6 +45,8 @@ export interface AppDependencies {
   readonly sink: DiagnosticSink;
   /** `null` with `failureDisplay: "none"`. */
   readonly overlay: FailureOverlay | null;
+  /** The development overlay and GPU timer; always `null` in a release runtime (decision 0055). */
+  readonly devTools: DevTools | null;
   readonly environment: HostEnvironment;
   readonly canvas: HTMLCanvasElement;
   readonly pauseWhenHidden: boolean;
@@ -103,6 +106,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     this.behaviors = new Behaviors(deps.sceneFunctions, deps.scene.world);
     this.hostInputs = new HostInputs(manifest);
     registry.phase = "runtime:render";
+    if (test?.disableCulling === true) deps.scene.renderer.setFrustumCulling(false);
 
     const manual = test?.manualClock === true;
     this.scheduler = new Scheduler(
@@ -368,6 +372,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     this.resizeObserver?.disconnect();
     surface.dispose();
     overlay?.remove();
+    if (__MTEK_DEV__) this.deps.devTools?.dispose();
     registry.destroyAll();
     device.onuncapturederror = null;
     device.destroy();
@@ -415,7 +420,10 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   /** Delivers a diagnostic to the host; errors also appear in the overlay. */
   report(diagnostic: MtekDiagnostic): void {
     if (!this.deps.sink.report(diagnostic)) return;
-    if (diagnostic.severity === "error") this.deps.overlay?.add(diagnostic);
+    if (diagnostic.severity === "error") {
+      this.deps.overlay?.add(diagnostic);
+      if (__MTEK_DEV__) this.deps.devTools?.recordError(diagnostic);
+    }
   }
 
   /** Reports the cause, stops the frame loop and shows the overlay (whatever the severity of the cause). */
@@ -425,6 +433,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     this.scheduler.stop();
     this.deps.sink.report(cause);
     this.deps.overlay?.add(cause);
+    if (__MTEK_DEV__) this.deps.devTools?.recordError(cause);
   }
 
   private onResize(): void {
@@ -432,6 +441,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     try {
       this.deps.surface.resize();
       this.deps.overlay?.reposition();
+      if (__MTEK_DEV__) this.deps.devTools?.reposition();
     } catch (error) {
       if (this.state !== "failed") {
         this.fail(
@@ -493,6 +503,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         this.cpuUpdateMs = this.renderStartMs - this.frameStartMs;
         this.renderPrepMs = end - this.renderStartMs;
         this.frameTimeMs = end - this.frameStartMs;
+        if (__MTEK_DEV__) this.deps.devTools?.afterFrame(this.frameTimeMs, () => this.counters());
       },
     };
   }
@@ -512,8 +523,11 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       const diagnostic = restartDiagnostic(pending.manifest, pending.restart);
       this.deps.sink.report(diagnostic);
       this.deps.overlay?.add(diagnostic);
+      if (__MTEK_DEV__) this.deps.devTools?.recordError(diagnostic);
     }
 
+    if (this.deps.test?.disableCulling === true) pending.scene.renderer.setFrustumCulling(false);
+    if (__MTEK_DEV__) this.deps.devTools?.setProgram(pending.manifest);
     this.deps.scene = pending.scene;
     this.deps.manifest = pending.manifest;
     this.deps.program = pending.program;
@@ -567,15 +581,22 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private counters(): Readonly<Record<string, number>> {
     const registry = this.deps.registry.snapshot();
     const { renderer, materials, world } = this.deps.scene;
+    // GPU time exists only with timestamp-query in a development runtime that was asked to measure it;
+    // otherwise the key is absent and `gpuTimeAvailable` is 0 (never CPU time under another name).
+    const gpuTimeMs = __MTEK_DEV__ ? (this.deps.devTools?.gpuTimeMs ?? null) : null;
     return {
       ...registry,
       frameTimeMs: this.frameTimeMs,
       cpuUpdateMs: this.cpuUpdateMs,
       renderPrepMs: this.renderPrepMs,
+      ...(gpuTimeMs === null ? {} : { gpuTimeMs }),
+      gpuTimeAvailable: gpuTimeMs === null ? 0 : 1,
       drawCalls: renderer.drawCalls,
+      drawCallsTotal: renderer.drawCallsCumulative,
       failedMaterials: renderer.failedMaterialCount,
       instancedDraws: 0,
-      culledObjects: 0,
+      culledObjects: renderer.culledObjects,
+      culledObjectsTotal: renderer.culledObjectsCumulative,
       sharedParamBlocks: materials.sharedParamBlocks,
       ownedParamBlocks: materials.ownedParamBlocks,
       discardedSteps: this.scheduler.discardedSteps,

@@ -100,6 +100,8 @@ export interface MtekTestOptions {
   manualClock?: boolean;
   /** Render into an offscreen rgba8unorm-srgb texture of this size. */
   renderTarget?: { width: number; height: number };
+  /** Draw every visible entity, as if frustum culling did not exist (lets a test compare culled and unculled frames). */
+  disableCulling?: boolean;
 }
 
 export interface MtekDebug {
@@ -139,6 +141,8 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
   pauseWhenHidden?: boolean;
   /** Default "auto". */
   devicePixelRatio?: number | "auto";
+  /** Show the development overlay and measure GPU time (`timestamp-query`). Development runtime only; the release runtime ignores it. */
+  devOverlay?: boolean;
   /** Omit in production. */
   test?: MtekTestOptions;
 }

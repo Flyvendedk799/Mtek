@@ -29,6 +29,11 @@ export interface AcquireDeviceOptions {
   readonly requiredFeatures: GPUFeatureName[];
   /** Limits above the defaults the program needs (`manifest.requiredCapabilities.limits`). */
   readonly requiredLimits: Record<string, number>;
+  /**
+   * Features requested only if the adapter offers them (development builds ask for `timestamp-query`,
+   * `spec/runtime-abi.md` section 8.1). Never an error when missing; the device's `features` say what it got.
+   */
+  readonly optionalFeatures?: readonly GPUFeatureName[];
   /** Called when `device.lost` resolves (including for reason `"destroyed"`; the caller decides). */
   readonly onDeviceLost?: (info: GPUDeviceLostInfo) => void;
   /** Installed as `device.onuncapturederror`. */
@@ -186,10 +191,12 @@ export async function acquireDevice(opts: AcquireDeviceOptions): Promise<Acquire
   const unmet = unmetRequirements(adapter, opts);
   if (unmet.length > 0) throw mountFailure(unmet, "device-failed");
 
+  const optional = (opts.optionalFeatures ?? []).filter((feature) => adapter.features.has(feature) && !opts.requiredFeatures.includes(feature));
+
   let device: GPUDevice;
   try {
     device = await adapter.requestDevice({
-      requiredFeatures: opts.requiredFeatures,
+      requiredFeatures: [...opts.requiredFeatures, ...optional],
       requiredLimits: opts.requiredLimits,
     });
   } catch (e) {
