@@ -78,11 +78,12 @@ export function findStructuralChange(
   return undefined;
 }
 
-function copyValue(value: unknown): unknown {
+/** Copies a migrated value. A quaternion also satisfies `isVec3`, so it must be tested first or `w` is lost. */
+export function copyValue(value: unknown): unknown {
   if (value === null || typeof value === "boolean" || typeof value === "number" || typeof value === "string") return value;
   if (value instanceof Float32Array) return new Float32Array(value);
-  if (isVec3(value)) return { x: value.x, y: value.y, z: value.z };
   if (isQuat(value)) return { x: value.x, y: value.y, z: value.z, w: value.w };
+  if (isVec3(value)) return { x: value.x, y: value.y, z: value.z };
   if (isColor(value)) return { r: value.r, g: value.g, b: value.b, a: value.a };
   if (typeof value === "object" && value !== null) {
     const record = value as Record<string, unknown>;

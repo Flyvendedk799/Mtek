@@ -16,7 +16,7 @@ import {
 } from "../test-support/mount-fixture.js";
 import { minimalManifestJson, minimalSceneInit, MINIMAL_SCENE_COLOR, BASE_URL, MANIFEST_URL } from "../test-support/fake-host.js";
 import { syntheticProgram } from "../test-support/program.js";
-import { findStructuralChange, prefabNames } from "./reload.js";
+import { copyValue, findStructuralChange, prefabNames } from "./reload.js";
 import type { MtekApp } from "./types.js";
 
 function debugOf(app: MtekApp): NonNullable<MtekApp["debug"]> {
@@ -84,6 +84,20 @@ describe("findStructuralChange", () => {
     if (!parsed.ok) throw new Error("minimal");
     const change = findStructuralChange(parsed.manifest.scene, parsed.manifest.scene, new Set(), new Set(["src/main.mtek::Box"]));
     expect(change).toEqual({ symbol: "src/main.mtek::Box", reason: "prefab 'src/main.mtek::Box' was added" });
+  });
+});
+
+describe("copyValue", () => {
+  it("keeps the w component of a quaternion (a quaternion also looks like a vec3)", () => {
+    expect(copyValue({ x: 0, y: 0.25, z: 0, w: 0.75 })).toEqual({ x: 0, y: 0.25, z: 0, w: 0.75 });
+  });
+
+  it("copies vec3 and colour values without aliasing them", () => {
+    const vec = { x: 1, y: 2, z: 3 };
+    const copy = copyValue(vec);
+    expect(copy).toEqual(vec);
+    expect(copy).not.toBe(vec);
+    expect(copyValue({ r: 1, g: 0, b: 0.5, a: 1 })).toEqual({ r: 1, g: 0, b: 0.5, a: 1 });
   });
 });
 

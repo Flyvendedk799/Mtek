@@ -4,14 +4,12 @@
  *
  * Requires:
  * - a WebGPU adapter (`gpu` fixture); without one → NOT-RUN
- * - a successful `mtek build --mode test` of examples/pulse-cube (global setup);
- *   until M3-01..05 open gated constructs, that build fails → NOT-RUN with E9010 reason
+ * - a successful `mtek build --mode test` of examples/pulse-cube and its reload variants (global setup)
  *
  * Hardware evidence: `MTEK_REQUIRE_GPU=1 npm run test:browser:hardware -- specs/m3/pulse-cube.spec.ts`
  */
 import { expect, test } from "../../support/fixtures.ts";
 import {
-  PULSE_CUBE_OUT,
   readPulseCubeStatus,
   type PulseCubeBuildStatus,
 } from "../../support/m3-fixtures.ts";
@@ -63,6 +61,8 @@ interface MountWindow {
   ) => Promise<AppLike>;
   __app?: AppLike;
   __reported?: DiagnosticLike[];
+  /** Loads another build of the program (a reload candidate) from the same static server. */
+  __loadProgram: (url: string) => Promise<{ default: unknown }>;
 }
 
 const DT = 1 / 60;
@@ -208,33 +208,139 @@ test.describe("pulse-cube hot-reload exit criteria", () => {
   test.beforeEach(async ({ page, gpu }) => {
     void gpu;
     requirePulseCubeBuilt();
+    await page.addInitScript(() => {
+      (window as unknown as MountWindow).__loadProgram = (url) => import(url) as Promise<{ default: unknown }>;
+    });
     await page.goto("/m3/pulse-cube/index.html");
   });
 
-  test("colour edit through reload: pipelinesCreated unchanged", async ({ page }) => {
-    // Covered in depth by specs/m3/hot-reload.spec.ts on the mount fixture; this asserts
-    // the same criterion against the Demo program when replaceProgram is available.
+  async function mountDemo(page: import("@playwright/test").Page): Promise<void> {
     await page.evaluate(async () => {
       const w = window as unknown as MountWindow;
+      const reported: DiagnosticLike[] = [];
+      w.__reported = reported;
       w.__app = await w.__mtekMount({
         test: { manualClock: true, renderTarget: { width: 32, height: 32 } },
+        onDiagnostic: (d: DiagnosticLike) => reported.push(d),
       });
       w.__app.debug.step(1, 0.016);
     });
-    const hasReplace = await page.evaluate(() => typeof (window as unknown as MountWindow).__app?.replaceProgram === "function");
-    test.skip(!hasReplace, `${NOT_RUN_PREFIX} replaceProgram is only present in dev builds; pulse-cube is built in test mode`);
+  }
+
+  test("colour edit: the existing material is updated and pipelinesCreated is unchanged", async ({ page }) => {
+    await mountDemo(page);
+    const result = await page.evaluate(async () => {
+      const w = window as unknown as MountWindow;
+      const app = w.__app!;
+      const tintOf = () => app.debug.scene().entities.find((e) => e.name === "Cube")?.mat?.p?.["tint"] as
+        | { r: number; g: number; b: number }
+        | undefined;
+      const before = { tint: tintOf(), pipelines: app.debug.counters()["pipelinesCreated"] };
+      const candidate = (await w.__loadProgram("/m3/pulse-cube-colour/app.js")).default;
+      const outcome = await app.replaceProgram!(candidate);
+      app.debug.step(1, 0.016);
+      return { outcome, before, tint: tintOf(), pipelines: app.debug.counters()["pipelinesCreated"], state: app.state };
+    });
+    expect(result.outcome).toEqual({ ok: true });
+    expect(result.pipelines).toBe(result.before.pipelines);
+    expect(result.state).toBe("running");
+    // #6b5cff is blue-dominant, #f04f72 is red-dominant.
+    expect(result.before.tint!.b).toBeGreaterThan(result.before.tint!.r);
+    expect(result.tint!.r).toBeGreaterThan(result.tint!.b);
   });
 
-  test("failed shader edit keeps the last valid scene", ({ page }) => {
-    // See hot-reload.spec.ts — requires a candidate with a broken shader URL.
-    // Re-stated here so M3 gate docs list every exit criterion against pulse-cube.
-    void page;
-    void PULSE_CUBE_OUT;
-    test.skip(true, `${NOT_RUN_PREFIX} failed-shader keep-alive is covered by specs/m3/hot-reload.spec.ts (mount fixture); pulse-cube test-mode build has no SSE reload client`);
+  test("failed shader edit keeps the last valid scene", async ({ page }) => {
+    await mountDemo(page);
+    const before = await page.evaluate(() => {
+      const app = (window as unknown as MountWindow).__app!;
+      return { pipelines: app.debug.counters()["pipelinesCreated"], scene: app.debug.scene() };
+    });
+
+    const brokenHash = "b".repeat(64);
+    await page.route("**/m3/pulse-cube/shaders/bbbbbbbbbbbbbbbb.wgsl", (route) =>
+      route.fulfill({ status: 200, contentType: "text/plain", body: "// generated\n    let x = 1; @@error unexpected token\n" }),
+    );
+    await page.route("**/m3/pulse-cube/shaders/bbbbbbbbbbbbbbbb.mtek-map.json", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ shader: brokenHash, entries: [] }) }),
+    );
+    await page.route("**/m3/pulse-cube/program.manifest.json", async (route) => {
+      const response = await route.fetch();
+      const manifest = (await response.json()) as Record<string, unknown>;
+      const shaders = manifest["shaders"] as Array<Record<string, unknown>>;
+      const materials = manifest["materials"] as Array<Record<string, unknown>>;
+      shaders[0] = { ...shaders[0], hash: brokenHash, url: "shaders/bbbbbbbbbbbbbbbb.wgsl", map: "shaders/bbbbbbbbbbbbbbbb.mtek-map.json" };
+      materials[0] = { ...materials[0], shader: brokenHash };
+      await route.fulfill({ response, json: manifest });
+    });
+
+    const result = await page.evaluate(async () => {
+      const w = window as unknown as MountWindow;
+      const app = w.__app!;
+      const candidate = (await w.__loadProgram("/m3/pulse-cube/app.js")).default;
+      const outcome = await app.replaceProgram!(candidate);
+      app.debug.step(1, 0.016);
+      return {
+        outcome,
+        state: app.state,
+        pipelines: app.debug.counters()["pipelinesCreated"],
+        scene: app.debug.scene(),
+        reported: (w.__reported ?? []).map((d) => d.code),
+      };
+    });
+
+    expect(result.outcome.ok).toBe(false);
+    if (result.outcome.ok) throw new Error("expected the broken shader to be rejected");
+    expect(result.outcome.diagnostics.some((d) => d.code === "MTEK-E8051")).toBe(true);
+    expect(result.reported).toContain("MTEK-E8051");
+    // The last valid scene is still running: same pipelines, same entities, and it still steps.
+    expect(result.state).toBe("running");
+    expect(result.pipelines).toBe(before.pipelines);
+    expect(result.scene.entities.map((e) => e.name)).toEqual(before.scene.entities.map((e) => e.name));
+    expect(result.scene.state["speed"]).toBeCloseTo(SPEED, 5);
   });
 
-  test("compatible state survives reload; incompatible change restarts with W8070", ({ page }) => {
-    void page;
-    test.skip(true, `${NOT_RUN_PREFIX} state migration / W8070 covered by specs/m3/hot-reload.spec.ts; needs replaceProgram on a running Demo`);
+  test("compatible state survives reload; incompatible change restarts with W8070", async ({ page }) => {
+    await mountDemo(page);
+    const compatible = await page.evaluate(async ({ dt }) => {
+      const w = window as unknown as MountWindow;
+      const app = w.__app!;
+      app.debug.pressKey("Space");
+      app.debug.step(1, dt);
+      app.debug.releaseKey("Space");
+      app.debug.step(20, dt);
+      const cubeOf = () => app.debug.scene().entities.find((e) => e.name === "Cube")!;
+      const before = { speed: app.debug.scene().state["speed"], rotation: cubeOf().rotation };
+      const candidate = (await w.__loadProgram("/m3/pulse-cube-colour/app.js")).default;
+      const outcome = await app.replaceProgram!(candidate);
+      const after = { speed: app.debug.scene().state["speed"], rotation: cubeOf().rotation };
+      return { before, after, outcome, reported: (w.__reported ?? []).map((d) => d.code) };
+    }, { dt: DT });
+    expect(compatible.outcome).toEqual({ ok: true });
+    expect(compatible.before.speed).toBeCloseTo(-SPEED, 5);
+    expect(compatible.after.speed).toBeCloseTo(-SPEED, 5);
+    expect(yRotationAngle(compatible.after.rotation)).toBeCloseTo(yRotationAngle(compatible.before.rotation), 5);
+    expect(compatible.reported).not.toContain("MTEK-W8070");
+
+    const incompatible = await page.evaluate(async () => {
+      const w = window as unknown as MountWindow;
+      const app = w.__app!;
+      const candidate = (await w.__loadProgram("/m3/pulse-cube-extra/app.js")).default;
+      const outcome = await app.replaceProgram!(candidate);
+      app.debug.step(1, 0.016);
+      const scene = app.debug.scene();
+      return {
+        outcome,
+        names: scene.entities.map((e) => e.name),
+        speed: scene.state["speed"],
+        reported: (w.__reported ?? []).map((d) => ({ code: d.code, message: d.message, notes: d.notes })),
+      };
+    });
+    expect(incompatible.outcome).toEqual({ ok: true });
+    expect(incompatible.names).toContain("Extra");
+    // A restart re-runs init: the toggled speed is back at its declared value.
+    expect(incompatible.speed).toBeCloseTo(SPEED, 5);
+    const w8070 = incompatible.reported.find((d) => d.code === "MTEK-W8070");
+    expect(w8070).toBeDefined();
+    expect(w8070?.notes.some((n) => n.includes("Demo.Extra"))).toBe(true);
   });
 });
