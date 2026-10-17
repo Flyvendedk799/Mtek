@@ -6,12 +6,9 @@
 //
 // - E4040: a fragment stage captures scene state, `frame.time`, an entity field or `self`, or calls a `cpu fn`.
 // - E4002: a pure `fn` (and so shader code) calls a `cpu fn`, directly, through a chain, or through an import.
-// - E4013, a GPU-only built-in function called from CPU code, cannot be produced by any program this build
-//   accepts: every GPU-only built-in (`sample`, `lighting.pbr`) is gated to M4 and a program that calls one is
-//   rejected as not implemented (E9010). That rejection is asserted below on a CPU function; the E4013 rule
-//   itself is covered by the unit tests of `types/effects.rs` (`src/types/effects_tests.rs`), which run it
-//   against a registry in which a built-in is made GPU-only.
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+// - E4013: a `cpu fn` calls the GPU-only built-in `sample` (reachable since task M4-04 lifted its gate,
+//   decision 0054; `lighting.pbr` is still gated to M4).
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
@@ -58,6 +55,7 @@ const REJECTIONS: ReadonlyArray<{ fixture: string; rule: string }> = [
   { fixture: "functions/e4002_calls_cpu_fn", rule: "a pure fn calls a cpu fn" },
   { fixture: "functions/e4002_call_chain", rule: "a pure fn reaches a cpu fn through a chain" },
   { fixture: "functions/e4002_imported_cpu_fn", rule: "a pure fn calls an imported cpu fn" },
+  { fixture: "e4013_gpu_only_builtin_in_cpu_code", rule: "a cpu fn calls the GPU-only built-in sample" },
 ];
 
 function expectRejected(project: string, expected: ExpectedDiagnostic[]): void {
@@ -114,27 +112,4 @@ test.describe("M2 invalid captures and CPU-only calls from shader code fail befo
       expectRejected(project, expected);
     });
   }
-
-  test("a GPU-only built-in called from CPU code is rejected (E9010: gated to M4; the E4013 rule is covered by the compiler's unit tests)", () => {
-    const scratch = mkdtempSync(join(tmpdir(), "mtek-m2-gpu-only-"));
-    try {
-      mkdirSync(join(scratch, "src"));
-      writeFileSync(join(scratch, "mtek.toml"), '[project]\nname = "gpu-only"\nlanguage = "0.1"\n');
-      writeFileSync(join(scratch, "src", "main.mtek"), "cpu fn shade(x: f32) -> f32 {\n    return sample(x);\n}\n\nscene Demo {\n    camera Main {}\n}\n");
-      const check = runCli(cliPath(), ["check", "--format", "json", scratch]);
-      expect(check.status, check.stderr).toBe(1);
-      const report = JSON.parse(check.stdout) as { diagnostics: ReportDiagnostic[] };
-      expect(validateReport(report), JSON.stringify(validateReport.errors)).toBe(true);
-      const errors = report.diagnostics.filter((d) => d.severity === "error");
-      expect(errors.map((d) => d.code)).toEqual(["MTEK-E9010"]);
-      expect(errors[0]?.message).toContain("`sample`");
-      expect(errors[0]?.message).toContain("planned for M4");
-      expect(errors[0]?.source).toMatchObject({ file: "src/main.mtek", startLine: 2 });
-      const build = runCli(cliPath(), ["build", "--mode", "test", "--format", "json", "--out", join(scratch, "dist"), scratch]);
-      expect(build.status).toBe(1);
-      expect(existsSync(join(scratch, "dist")), "no output directory").toBe(false);
-    } finally {
-      rmSync(scratch, { recursive: true, force: true });
-    }
-  });
 });

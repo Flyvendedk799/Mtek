@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E4013",
+    "file": "src/main.mtek",
+    "startByte": 115,
+    "endByte": 166,
+    "message": "`sample` is a GPU-only built-in function, but the function 'shade' runs on the CPU.",
+    "related": [
+      {
+        "message": "'shade' is a `cpu fn`, which runs on the CPU",
+        "file": "src/main.mtek",
+        "startByte": 78,
+        "endByte": 83
+      }
+    ],
+    "notes": [
+      "GPU-only built-in functions may be used only in material stage functions and the `fn`s they call"
+    ]
+  }
+]

@@ -1,0 +1,8 @@
+// `sample` exists only on the GPU: a `cpu fn` cannot call it (E4013).
+cpu fn shade(uv: vec2) -> vec4 {
+    return sample(texture.white(), sampler.linear_clamp(), uv);
+}
+
+scene Demo {
+    camera Main {}
+}

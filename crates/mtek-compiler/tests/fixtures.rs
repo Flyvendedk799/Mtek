@@ -1513,16 +1513,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
 /// produce, with the reason and the test file that covers them instead.
 const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
     (
-        "E4012",
-        "every CPU-only built-in function is planned for M3 or later",
-        "src/types/effects_tests.rs",
-    ),
-    (
-        "E4013",
-        "every GPU-only built-in function is planned for M4",
-        "src/types/effects_tests.rs",
-    ),
-    (
         "E5080",
         "`spawn` and `destroy` are planned for M5",
         "src/types/effects_tests.rs",
