@@ -119,7 +119,13 @@ impl Lowering<'_> {
                     param.name
                 ));
             }
-            members.push((param.name.clone(), self.layout_type(param.ty)?));
+            // A texture or sampler is a binding of its own, not a member of the block.
+            if !matches!(
+                self.types.interner().get(param.ty),
+                Ty::Texture | Ty::Sampler
+            ) {
+                members.push((param.name.clone(), self.layout_type(param.ty)?));
+            }
             if let Some(def) = param.def {
                 positions.insert(
                     def,

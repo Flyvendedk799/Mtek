@@ -1,0 +1,15 @@
+// A sampler param read anywhere but as an argument of `sample` is E4041: here as the
+// operands of a comparison.
+material Gloss {
+    param map: texture = texture.white();
+    param filter: sampler = sampler.linear_clamp();
+    fragment(input: SurfaceInput) -> color {
+        let texel = sample(map, filter, input.uv);
+        let again = filter == filter;
+        return color.linear(texel.xyz, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

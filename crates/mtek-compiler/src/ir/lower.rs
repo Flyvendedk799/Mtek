@@ -983,7 +983,11 @@ impl Lowering<'_> {
                 name: name.to_owned(),
                 ty: ty.to_owned(),
                 source: Source::Const(Value::from(value)),
-                update: UpdateClass::Initial,
+                update: if matches!(ty, "texture" | "sampler") {
+                    UpdateClass::Resource
+                } else {
+                    UpdateClass::Initial
+                },
                 span,
             },
         }

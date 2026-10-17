@@ -1,0 +1,790 @@
+{
+  "entryScene": "src/main.mtek::Gallery",
+  "modules": [
+    {
+      "path": "src/main.mtek",
+      "file": 0,
+      "span": {"file": 0, "start": 0, "end": 1165},
+      "items": [
+        {
+          "kind": "material",
+          "name": "Textured",
+          "symbol": "src/main.mtek::Textured",
+          "params": [
+            {
+              "name": "tint",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 0, "start": 221, "end": 249}
+            },
+            {
+              "name": "base",
+              "type": "texture",
+              "default": {
+                "texture": "texture.white"
+              },
+              "span": {"file": 0, "start": 254, "end": 292}
+            },
+            {
+              "name": "filter",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.linear_repeat"
+              },
+              "span": {"file": 0, "start": 297, "end": 345}
+            },
+            {
+              "name": "strength",
+              "type": "f32",
+              "default": {"f32": 1.0},
+              "span": {"file": 0, "start": 350, "end": 376}
+            },
+            {
+              "name": "mask",
+              "type": "texture",
+              "default": {
+                "texture": "texture.black"
+              },
+              "span": {"file": 0, "start": 381, "end": 419}
+            },
+            {
+              "name": "crisp",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.nearest_clamp"
+              },
+              "span": {"file": 0, "start": 424, "end": 471}
+            }
+          ],
+          "layout": {
+            "id": "material:src/main.mtek::Textured",
+            "wgslStruct": "MtekParams_e2cab98b_Textured",
+            "size": 32,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "src/main.mtek::Textured",
+              "offset": 0,
+              "size": 32,
+              "align": 16,
+              "members": [
+                {
+                  "name": "tint",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                },
+                {
+                  "name": "strength",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 16,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "src/main.mtek::Textured.fragment",
+            "surfaceInputs": [
+              "uv"
+            ],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "input",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 0, "start": 486, "end": 491}
+              },
+              {
+                "index": 1,
+                "name": "soft",
+                "type": "vec4",
+                "kind": "let",
+                "span": {"file": 0, "start": 530, "end": 534}
+              },
+              {
+                "index": 2,
+                "name": "hard",
+                "type": "vec4",
+                "kind": "let",
+                "span": {"file": 0, "start": 581, "end": 585}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "let",
+                  "local": 1,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "sample",
+                    "args": [
+                      {
+                        "kind": "param",
+                        "param": 1,
+                        "name": "base",
+                        "type": "texture",
+                        "span": {"file": 0, "start": 544, "end": 548}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 2,
+                        "name": "filter",
+                        "type": "sampler",
+                        "span": {"file": 0, "start": 550, "end": 556}
+                      },
+                      {
+                        "kind": "field",
+                        "base": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "input",
+                          "type": "SurfaceInput",
+                          "span": {"file": 0, "start": 558, "end": 563}
+                        },
+                        "field": "uv",
+                        "index": 3,
+                        "type": "vec2",
+                        "span": {"file": 0, "start": 558, "end": 566}
+                      }
+                    ],
+                    "type": "vec4",
+                    "span": {"file": 0, "start": 537, "end": 567}
+                  },
+                  "span": {"file": 0, "start": 526, "end": 568}
+                },
+                {
+                  "kind": "let",
+                  "local": 2,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "sample",
+                    "args": [
+                      {
+                        "kind": "param",
+                        "param": 4,
+                        "name": "mask",
+                        "type": "texture",
+                        "span": {"file": 0, "start": 596, "end": 600}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 5,
+                        "name": "crisp",
+                        "type": "sampler",
+                        "span": {"file": 0, "start": 604, "end": 609}
+                      },
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "field",
+                          "base": {
+                            "kind": "local",
+                            "local": 0,
+                            "name": "input",
+                            "type": "SurfaceInput",
+                            "span": {"file": 0, "start": 612, "end": 617}
+                          },
+                          "field": "uv",
+                          "index": 3,
+                          "type": "vec2",
+                          "span": {"file": 0, "start": 612, "end": 620}
+                        },
+                        "rhs": {
+                          "kind": "const",
+                          "value": {"f32": 2.0},
+                          "type": "f32",
+                          "span": {"file": 0, "start": 623, "end": 626}
+                        },
+                        "type": "vec2",
+                        "span": {"file": 0, "start": 612, "end": 626}
+                      }
+                    ],
+                    "type": "vec4",
+                    "span": {"file": 0, "start": 588, "end": 627}
+                  },
+                  "span": {"file": 0, "start": 577, "end": 628}
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "builtin",
+                    "function": "color.linear",
+                    "args": [
+                      {
+                        "kind": "binary",
+                        "op": "+",
+                        "lhs": {
+                          "kind": "binary",
+                          "op": "*",
+                          "lhs": {
+                            "kind": "binary",
+                            "op": "*",
+                            "lhs": {
+                              "kind": "components",
+                              "base": {
+                                "kind": "param",
+                                "param": 0,
+                                "name": "tint",
+                                "type": "color",
+                                "span": {"file": 0, "start": 657, "end": 661}
+                              },
+                              "components": [0, 1, 2],
+                              "type": "vec3",
+                              "span": {"file": 0, "start": 657, "end": 665}
+                            },
+                            "rhs": {
+                              "kind": "components",
+                              "base": {
+                                "kind": "local",
+                                "local": 1,
+                                "name": "soft",
+                                "type": "vec4",
+                                "span": {"file": 0, "start": 668, "end": 672}
+                              },
+                              "components": [0, 1, 2],
+                              "type": "vec3",
+                              "span": {"file": 0, "start": 668, "end": 676}
+                            },
+                            "type": "vec3",
+                            "span": {"file": 0, "start": 657, "end": 676}
+                          },
+                          "rhs": {
+                            "kind": "param",
+                            "param": 3,
+                            "name": "strength",
+                            "type": "f32",
+                            "span": {"file": 0, "start": 679, "end": 687}
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 657, "end": 687}
+                        },
+                        "rhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "local",
+                            "local": 2,
+                            "name": "hard",
+                            "type": "vec4",
+                            "span": {"file": 0, "start": 690, "end": 694}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 690, "end": 698}
+                        },
+                        "type": "vec3",
+                        "span": {"file": 0, "start": 657, "end": 698}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 0, "start": 700, "end": 703}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 0, "start": 644, "end": 704}
+                  },
+                  "span": {"file": 0, "start": 637, "end": 705}
+                }
+              ],
+              "span": {"file": 0, "start": 516, "end": 711}
+            },
+            "span": {"file": 0, "start": 477, "end": 711}
+          },
+          "span": {"file": 0, "start": 197, "end": 713}
+        },
+        {
+          "kind": "const",
+          "name": "SHARP",
+          "symbol": "src/main.mtek::SHARP",
+          "type": "Textured",
+          "value": {
+            "struct": {
+              "name": "Textured",
+              "fields": [
+                {
+                  "name": "tint",
+                  "value": {
+                    "color": [1.0, 1.0, 1.0, 1.0]
+                  }
+                },
+                {
+                  "name": "base",
+                  "value": {
+                    "texture": "texture.white"
+                  }
+                },
+                {
+                  "name": "filter",
+                  "value": {
+                    "sampler": "sampler.nearest_repeat"
+                  }
+                },
+                {
+                  "name": "strength",
+                  "value": {"f32": 1.0}
+                },
+                {
+                  "name": "mask",
+                  "value": {
+                    "texture": "texture.white"
+                  }
+                },
+                {
+                  "name": "crisp",
+                  "value": {
+                    "sampler": "sampler.nearest_clamp"
+                  }
+                }
+              ]
+            }
+          },
+          "span": {"file": 0, "start": 715, "end": 798}
+        },
+        {
+          "kind": "scene",
+          "name": "Gallery",
+          "symbol": "src/main.mtek::Gallery",
+          "span": {"file": 0, "start": 800, "end": 1164},
+          "fields": {
+            "clearColor": {
+              "source": {
+                "const": {
+                  "color": [0.0, 0.0, 0.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 0, "start": 800, "end": 1164}
+            }
+          },
+          "constants": [],
+          "cameras": [
+            {
+              "name": "Main",
+              "symbol": "src/main.mtek::Gallery.Main",
+              "span": {"file": 0, "start": 820, "end": 834},
+              "active": true,
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.0, 5.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 820, "end": 834}
+              },
+              "target": null,
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 820, "end": 834}
+              },
+              "projection": {
+                "desc": {
+                  "kind": "perspective",
+                  "fovY": 0.9,
+                  "near": 0.1,
+                  "far": 1000.0
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 820, "end": 834}
+              }
+            }
+          ],
+          "entities": [
+            {
+              "index": 0,
+              "name": "Plain",
+              "symbol": "src/main.mtek::Gallery.Plain",
+              "parent": null,
+              "span": {"file": 0, "start": 839, "end": 936},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.0, 0.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 839, "end": 936}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 839, "end": 936}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 839, "end": 936}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 839, "end": 936}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "plane",
+                  "size": [2.0, 2.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 862, "end": 899}
+              },
+              "material": {
+                "material": "src/main.mtek::Textured",
+                "params": [
+                  {
+                    "name": "tint",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 908, "end": 930}
+                  },
+                  {
+                    "name": "base",
+                    "type": "texture",
+                    "source": {
+                      "const": {
+                        "texture": "texture.white"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 908, "end": 930}
+                  },
+                  {
+                    "name": "filter",
+                    "type": "sampler",
+                    "source": {
+                      "const": {
+                        "sampler": "sampler.linear_repeat"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 908, "end": 930}
+                  },
+                  {
+                    "name": "strength",
+                    "type": "f32",
+                    "source": {
+                      "const": {"f32": 1.0}
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 908, "end": 930}
+                  },
+                  {
+                    "name": "mask",
+                    "type": "texture",
+                    "source": {
+                      "const": {
+                        "texture": "texture.black"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 908, "end": 930}
+                  },
+                  {
+                    "name": "crisp",
+                    "type": "sampler",
+                    "source": {
+                      "const": {
+                        "sampler": "sampler.nearest_clamp"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 908, "end": 930}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 0, "start": 908, "end": 930}
+              }
+            },
+            {
+              "index": 1,
+              "name": "Sharp",
+              "symbol": "src/main.mtek::Gallery.Sharp",
+              "parent": null,
+              "span": {"file": 0, "start": 941, "end": 1032},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.0, 0.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 941, "end": 1032}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 941, "end": 1032}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 941, "end": 1032}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 941, "end": 1032}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "plane",
+                  "size": [2.0, 2.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 964, "end": 1001}
+              },
+              "material": {
+                "material": "src/main.mtek::Textured",
+                "params": [
+                  {
+                    "name": "tint",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 1010, "end": 1026}
+                  },
+                  {
+                    "name": "base",
+                    "type": "texture",
+                    "source": {
+                      "const": {
+                        "texture": "texture.white"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 1010, "end": 1026}
+                  },
+                  {
+                    "name": "filter",
+                    "type": "sampler",
+                    "source": {
+                      "const": {
+                        "sampler": "sampler.nearest_repeat"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 1010, "end": 1026}
+                  },
+                  {
+                    "name": "strength",
+                    "type": "f32",
+                    "source": {
+                      "const": {"f32": 1.0}
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 1010, "end": 1026}
+                  },
+                  {
+                    "name": "mask",
+                    "type": "texture",
+                    "source": {
+                      "const": {
+                        "texture": "texture.white"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 1010, "end": 1026}
+                  },
+                  {
+                    "name": "crisp",
+                    "type": "sampler",
+                    "source": {
+                      "const": {
+                        "sampler": "sampler.nearest_clamp"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 1010, "end": 1026}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 0, "start": 1010, "end": 1026}
+              }
+            },
+            {
+              "index": 2,
+              "name": "Dark",
+              "symbol": "src/main.mtek::Gallery.Dark",
+              "parent": null,
+              "span": {"file": 0, "start": 1037, "end": 1162},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.0, 0.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1037, "end": 1162}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1037, "end": 1162}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1037, "end": 1162}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1037, "end": 1162}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "box",
+                  "size": [1.0, 1.0, 1.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1059, "end": 1072}
+              },
+              "material": {
+                "material": "src/main.mtek::Textured",
+                "params": [
+                  {
+                    "name": "tint",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 0.24620132, 0.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 1081, "end": 1156}
+                  },
+                  {
+                    "name": "base",
+                    "type": "texture",
+                    "source": {
+                      "const": {
+                        "texture": "texture.black"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 1081, "end": 1156}
+                  },
+                  {
+                    "name": "filter",
+                    "type": "sampler",
+                    "source": {
+                      "const": {
+                        "sampler": "sampler.linear_repeat"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 1081, "end": 1156}
+                  },
+                  {
+                    "name": "strength",
+                    "type": "f32",
+                    "source": {
+                      "const": {"f32": 2.0}
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 1081, "end": 1156}
+                  },
+                  {
+                    "name": "mask",
+                    "type": "texture",
+                    "source": {
+                      "const": {
+                        "texture": "texture.black"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 1081, "end": 1156}
+                  },
+                  {
+                    "name": "crisp",
+                    "type": "sampler",
+                    "source": {
+                      "const": {
+                        "sampler": "sampler.nearest_clamp"
+                      }
+                    },
+                    "update": "resource",
+                    "span": {"file": 0, "start": 1081, "end": 1156}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 0, "start": 1081, "end": 1156}
+              }
+            }
+          ],
+          "state": [],
+          "behaviors": [],
+          "bindings": []
+        }
+      ]
+    }
+  ]
+}

@@ -200,3 +200,75 @@ fn a_parameter_block_over_the_profile_limit_is_e6001() {
         Some("param 'samples' takes 65536 bytes of the block")
     );
 }
+
+const TEXTURED: &str = "material Skin {\n    param shine: f32 = 0.5;\n    param base: texture = texture.white();\n    param filter: sampler = sampler.linear_repeat();\n    param gain: vec2 = vec2(1.0, 2.0);\n    param mask: texture = texture.black();\n    fragment(input: SurfaceInput) -> color { return color.linear(sample(base, filter, input.uv).xyz * shine + sample(mask, filter, input.uv * gain).xyz, 1.0); }\n}\n";
+
+#[test]
+fn textures_and_samplers_are_bindings_from_1_in_declaration_order_beside_the_block() {
+    let program = program(&format!(
+        "{TEXTURED}scene Demo {{\n    camera Main {{}}\n    entity A {{ mesh: Box {{}}; material: Skin {{ filter: sampler.nearest_clamp() }}; }}\n}}\n"
+    ));
+    let plan = plan_program(&program).unwrap();
+    let skin = &plan.materials[0];
+    let resources: Vec<(&str, &str, u32)> = skin
+        .resources
+        .iter()
+        .map(|r| (r.name.as_str(), r.kind, r.binding))
+        .collect();
+    assert_eq!(
+        resources,
+        [
+            ("base", "texture", 1),
+            ("filter", "sampler", 2),
+            ("mask", "texture", 3)
+        ]
+    );
+    // The block holds the value params only, in declaration order.
+    let LayoutNode::Struct { members, .. } = &skin.layout.as_ref().unwrap().root else {
+        panic!("not a struct");
+    };
+    let names: Vec<&str> = members.iter().map(|m| m.name.as_str()).collect();
+    assert_eq!(names, ["shine", "gain"]);
+    // The instance: `resource` params carry the built-in they name; the plan stays shareable.
+    let instance = &plan.instances[0];
+    let classes: Vec<(&str, ParamClass)> = instance
+        .params
+        .iter()
+        .map(|p| (p.name.as_str(), p.class))
+        .collect();
+    assert_eq!(
+        classes,
+        [
+            ("shine", ParamClass::Initial),
+            ("base", ParamClass::Resource),
+            ("filter", ParamClass::Resource),
+            ("gain", ParamClass::Initial),
+            ("mask", ParamClass::Resource)
+        ]
+    );
+    assert_eq!(
+        instance.params[2].value,
+        Some(Value::Sampler("sampler.nearest_clamp".to_owned()))
+    );
+    assert_eq!(
+        instance.params[4].value,
+        Some(Value::Texture("texture.black".to_owned()))
+    );
+    assert!(instance.shareable());
+    assert_eq!(ParamClass::Resource.as_str(), "resource");
+    assert_eq!(
+        ParamClass::from(UpdateClass::Resource),
+        ParamClass::Resource
+    );
+    assert!(check_limits(&plan, "webgpu-core-2026", MAX_UNIFORM_BUFFER_BINDING_SIZE).is_empty());
+}
+
+#[test]
+fn a_material_with_resources_only_has_no_block() {
+    let program = program(
+        "material Flat {\n    param base: texture = texture.white();\n    param filter: sampler = sampler.linear_clamp();\n    fragment(input: SurfaceInput) -> color { return color.linear(sample(base, filter, input.uv).xyz, 1.0); }\n}\nscene Demo {\n    camera Main {}\n    entity A { mesh: Box {}; material: Flat {}; }\n}\n",
+    );
+    let plan = plan_program(&program).unwrap();
+    assert_eq!(plan.materials[0].layout, None);
+    assert_eq!(plan.materials[0].resources.len(), 2);
+}

@@ -1,0 +1,17 @@
+// Passing a texture and a sampler to a user function is not a direct `sample`
+// argument (E4041), once for each.
+fn look(map: texture, filter: sampler, uv: vec2) -> vec4 {
+    return sample(map, filter, uv);
+}
+
+material Gloss {
+    param map: texture = texture.white();
+    param filter: sampler = sampler.linear_clamp();
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(look(map, filter, input.uv).xyz, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

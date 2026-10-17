@@ -1,0 +1,19 @@
+// Texture and sampler params are construction-only in v0.1 (E5073).
+material Gloss {
+    param map: texture = texture.white();
+    param filter: sampler = sampler.linear_clamp();
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(sample(map, filter, input.uv).xyz, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Panel {
+        mesh: Plane { size: vec2(1.0, 1.0) };
+        material: Gloss {};
+        update(dt: f32) {
+            self.material.map = texture.black();
+        }
+    }
+}

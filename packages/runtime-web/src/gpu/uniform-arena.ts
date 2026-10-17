@@ -284,9 +284,11 @@ export class UniformArena {
   /**
    * Static-offset bind group of one slot: `{ buffer, offset: slot x stride, size }` at this arena's binding
    * (`spec/gpu-layout.md` section 8.1). Cached per (layout, slot) until the slot is released or the arena grows.
-   * `layout` must declare the binding without `hasDynamicOffset`.
+   * `layout` must declare the binding without `hasDynamicOffset`. `extra` are further entries of the same
+   * bind group (the textures and samplers of a material instance); they belong to the slot, so the group
+   * cached for (layout, slot) keeps the entries it was created with.
    */
-  bindGroupForSlot(slot: number, layout: GPUBindGroupLayout): GPUBindGroup {
+  bindGroupForSlot(slot: number, layout: GPUBindGroupLayout, extra: readonly GPUBindGroupEntry[] = []): GPUBindGroup {
     this.checkLive();
     if (this.dynamicOffset) {
       throw new Error(`UniformArena '${this.id}' is in dynamic-offset mode; use bindGroupDynamic()`);
@@ -302,7 +304,7 @@ export class UniformArena {
       group = this.registry.createBindGroup({
         label: `${this.id}#${String(slot)}`,
         layout,
-        entries: [{ binding: this.binding, resource: { buffer: this.gpuBuffer, offset: slot * this.slotStride, size: this.size } }],
+        entries: [{ binding: this.binding, resource: { buffer: this.gpuBuffer, offset: slot * this.slotStride, size: this.size } }, ...extra],
       });
       bySlot.set(slot, group);
     }

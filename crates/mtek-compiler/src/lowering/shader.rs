@@ -55,6 +55,7 @@ use crate::diagnostics::{Code, Diagnostic};
 use crate::emit_wgsl::member_wgsl_name;
 use crate::ir::{self, LocalItem, LocalKind, MaterialItem, Place, Program, Value};
 use crate::layout::{LayoutNode, hash8};
+use crate::plan;
 use crate::source::Span;
 
 use helpers::Helper;
@@ -66,7 +67,7 @@ use super::shader_ir::{
 };
 use super::standard_stage::{
     FragmentBody, MaterialDescription, MaterialShader, SurfaceField, build_standard_stage,
-    params_global,
+    params_global, resource_global,
 };
 
 /// What went wrong: a description of the compiler defect.
@@ -215,6 +216,10 @@ impl<'p> ShaderLowering<'p> {
             declaration: material.span,
             surface_inputs,
             params: material.layout.clone(),
+            resources: plan::resources(material)
+                .iter()
+                .map(|resource| resource_global(resource, material.span))
+                .collect(),
             fragment: FragmentBody {
                 surface_param: Name::user(UserNameKind::Param, surface.name.clone()),
                 body: statements,
@@ -685,6 +690,14 @@ impl<'p> ShaderLowering<'p> {
 
     /// The material param `index` (`name`, of IR type `ty`): `mtek_params.u_<name>`.
     fn param(&mut self, index: u32, name: &str, ty: &str, span: Span) -> Result<Expr, Defect> {
+        // A texture or sampler is its own global, not a member of the block.
+        if matches!(ty, "texture" | "sampler") {
+            let resource = plan::resources(self.material)
+                .into_iter()
+                .find(|r| r.name == name)
+                .ok_or_else(|| format!("the resource param '{name}' is not a binding"))?;
+            return Ok(Expr::global(&resource_global(&resource, self.span()), span));
+        }
         let record = self
             .material
             .layout
@@ -698,10 +711,10 @@ impl<'p> ShaderLowering<'p> {
         else {
             return Err("the parameter block is not a struct".to_owned());
         };
-        let member = members
-            .get(index as usize)
-            .filter(|m| m.name == name)
-            .ok_or_else(|| format!("the param '{name}' is not member {index} of the block"))?;
+        // The block holds the value params only, so a param's index is not its member's.
+        let member = members.iter().find(|m| m.name == name).ok_or_else(|| {
+            format!("the param '{name}' (number {index}) is not a member of the block")
+        })?;
         let stored = ShaderType::from_layout_node(&member.node);
         // Make sure the structs of the param's type are declared like any other use.
         if ty != "bool" {
@@ -862,6 +875,18 @@ impl<'p> ShaderLowering<'p> {
                 ));
             }
             "mat4.columns" => return Ok(Expr::construct(ShaderType::Mat4, args, span)),
+            // Level 0 and no derivatives: one level (decision 0054), and valid in any control
+            // flow, which `textureSample` is not.
+            "sample" => {
+                let mut args = args;
+                args.push(literal(0.0));
+                return Ok(Expr::intrinsic(
+                    Intrinsic::TextureSampleLevel,
+                    args,
+                    result,
+                    span,
+                ));
+            }
             "color.linear" => return Ok(Expr::construct(ShaderType::VEC4, args, span)),
             "color.srgb" => Helper::ColorSrgb,
             "quat.axis_angle" => Helper::QuatAxisAngle,
@@ -955,6 +980,9 @@ impl<'p> ShaderLowering<'p> {
                 Expr::construct(array, lowered, span)
             }
             Value::String(_) => return Err("a string constant in GPU code".to_owned()),
+            Value::Texture(_) | Value::Sampler(_) => {
+                return Err("a texture or sampler constant in GPU code".to_owned());
+            }
         })
     }
 

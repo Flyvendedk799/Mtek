@@ -1,4 +1,4 @@
-const S: sampler = sampler.linear_repeat();
+const S: glb_asset = asset.glb("chair.glb");
 
 scene Demo {
     camera Main {}

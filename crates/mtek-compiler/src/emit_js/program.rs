@@ -30,7 +30,7 @@
 
 use crate::ir::{Camera, Entity, Owner, Program, ProjectionDesc, Scene, State, Value};
 use crate::layout::{LayoutNode, LayoutRecord};
-use crate::plan::ResourcePlan;
+use crate::plan::{ParamClass, ResourcePlan};
 use crate::{COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI};
 
 use crate::source::Span;
@@ -456,10 +456,14 @@ fn entity_statements(
             .get(*index as usize)
             .ok_or_else(|| format!("the material instance {index} is not in the plan"))?;
         for (param, desc) in planned.params.iter().zip(&material.params) {
-            // A bound param's value is the binding's, written after `init`.
+            // A bound param's value is the binding's, written after `init`; a texture or
+            // sampler is not written at all, the manifest names it (decision 0054).
             let Some(value) = &param.value else {
                 continue;
             };
+            if param.class == ParamClass::Resource {
+                continue;
+            }
             body.push(Stmt::Expr {
                 expr: ctx_call(
                     "setParam",
@@ -537,6 +541,9 @@ pub fn value_expr(value: &Value) -> Result<Expr, String> {
             Expr::Array(elements)
         }
         Value::String(text) => Expr::string(text),
+        // The name of the built-in resource, as the manifest spells it. Nothing in generated code
+        // consumes one: resource params are bound from the manifest.
+        Value::Texture(name) | Value::Sampler(name) => Expr::string(name),
     })
 }
 

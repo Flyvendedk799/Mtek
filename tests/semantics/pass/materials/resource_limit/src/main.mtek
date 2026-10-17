@@ -1,0 +1,26 @@
+// Exactly eight textures and samplers: the limit of a material (E6002 is for the ninth).
+// Value params after the resources keep their own block; resource bindings are 1 to 8.
+material Atlas {
+    param t0: texture = texture.white();
+    param s0: sampler = sampler.linear_repeat();
+    param t1: texture = texture.black();
+    param s1: sampler = sampler.linear_clamp();
+    param t2: texture = texture.white();
+    param s2: sampler = sampler.nearest_repeat();
+    param t3: texture = texture.black();
+    param s3: sampler = sampler.nearest_clamp();
+    param gain: f32 = 0.25;
+    fragment(input: SurfaceInput) -> color {
+        let a = sample(t0, s0, input.uv) + sample(t1, s1, input.uv);
+        let b = sample(t2, s2, input.uv) + sample(t3, s3, input.uv);
+        return color.linear((a + b).xyz * gain, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Panel {
+        mesh: Plane { size: vec2(1.0, 1.0) };
+        material: Atlas { gain: 0.5; s2: sampler.linear_clamp() };
+    }
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "code": "MTEK-E4011",
+    "file": "src/main.mtek",
+    "startByte": 128,
+    "endByte": 135,
+    "message": "The parameter 'map' has type texture, which does not exist on the GPU, but the function 'look' runs on the GPU.",
+    "actual": "texture",
+    "related": [
+      {
+        "message": "the fragment stage of material 'Gloss' runs on the GPU",
+        "file": "src/main.mtek",
+        "startByte": 328,
+        "endByte": 336
+      },
+      {
+        "message": "'the fragment stage of material 'Gloss'' calls 'look' here",
+        "file": "src/main.mtek",
+        "startByte": 397,
+        "endByte": 424
+      }
+    ],
+    "notes": [
+      "GPU code uses only bool, i32, u32, f32, vectors, mat4, quat, color, and structs and arrays of them"
+    ]
+  },
+  {
+    "code": "MTEK-E4011",
+    "file": "src/main.mtek",
+    "startByte": 145,
+    "endByte": 152,
+    "message": "The parameter 'filter' has type sampler, which does not exist on the GPU, but the function 'look' runs on the GPU.",
+    "actual": "sampler",
+    "related": [
+      {
+        "message": "the fragment stage of material 'Gloss' runs on the GPU",
+        "file": "src/main.mtek",
+        "startByte": 328,
+        "endByte": 336
+      },
+      {
+        "message": "'the fragment stage of material 'Gloss'' calls 'look' here",
+        "file": "src/main.mtek",
+        "startByte": 397,
+        "endByte": 424
+      }
+    ],
+    "notes": [
+      "GPU code uses only bool, i32, u32, f32, vectors, mat4, quat, color, and structs and arrays of them"
+    ]
+  },
+  {
+    "code": "MTEK-E4041",
+    "file": "src/main.mtek",
+    "startByte": 402,
+    "endByte": 405,
+    "message": "The texture param of material 'Gloss' can only be used as an argument of `sample`.",
+    "notes": [
+      "textures and samplers are bound as resources, not values: they cannot be copied, stored in a local or passed to a function",
+      "help: write `sample(texture_param, sampler_param, uv)`"
+    ]
+  },
+  {
+    "code": "MTEK-E4041",
+    "file": "src/main.mtek",
+    "startByte": 407,
+    "endByte": 413,
+    "message": "The sampler param of material 'Gloss' can only be used as an argument of `sample`.",
+    "notes": [
+      "textures and samplers are bound as resources, not values: they cannot be copied, stored in a local or passed to a function",
+      "help: write `sample(texture_param, sampler_param, uv)`"
+    ]
+  }
+]

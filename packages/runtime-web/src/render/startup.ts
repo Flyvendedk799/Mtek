@@ -20,6 +20,7 @@ import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
 import { BindingPlan, PipelineCache, type PipelineResult } from "./pipelines.js";
+import type { TextureOverrides } from "./resources.js";
 import { Renderer, type MaterialPipeline, type RenderSurface } from "./renderer.js";
 
 export interface SceneStartupOptions {
@@ -50,6 +51,8 @@ export interface SceneStartupOptions {
    * pipeline cannot be created is reported (phase `runtime:device`) and not drawn instead of failing the rebuild.
    */
   readonly recover?: { readonly world: World; readonly bindings: Bindings };
+  /** `options.test.textures`: replacement pixels for the built-in textures (`spec/runtime-abi.md` section 10.2). */
+  readonly textures?: TextureOverrides;
 }
 
 /** The running scene: its CPU world, its GPU state and its renderer. */
@@ -82,7 +85,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
 
   const plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
-  const materials = new MaterialStore(device, registry, plan, structure, program.writers);
+  const materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures);
   const { recover } = options;
   let world: World;
   let bindings: Bindings;

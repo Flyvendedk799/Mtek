@@ -1359,7 +1359,7 @@ fn every_gated_construct_has_a_gating_fixture() {
     assert!(gated >= 2, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
-        ("The built-in type `sampler`", "M4"),
+        ("The built-in type `glb_asset`", "M4"),
         ("The built-in schema `Pbr`", "M4"),
         ("The `Entity` field `body`", "M5"),
         ("The `Scene` field `gravity`", "M5"),
@@ -1470,7 +1470,6 @@ fn the_syntax_corpus_resolves_without_panicking() {
 /// that implement them.
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
-    ("E4041", "M4: texture and sampler params"),
     ("E5030", "M5: spawn and destroy"),
     ("E5040", "M5-01: prefabs"),
     ("E5041", "M5-01: prefabs"),
@@ -1488,7 +1487,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
         "E5902",
         "no v0.1 construct requests transparency explicitly (`spec/materials.md` section 2)",
     ),
-    ("E6002", "M4: texture and sampler params"),
     (
         "E6003",
         "v0.1 has at most 4 inter-stage variables (`spec/materials.md` section 3.3); custom vertex stages are v0.2",
@@ -1510,16 +1508,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
 /// Codes this build implements that no program checked by this build can
 /// produce, with the reason and the test file that covers them instead.
 const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
-    (
-        "E4012",
-        "every CPU-only built-in function is planned for M3 or later",
-        "src/types/effects_tests.rs",
-    ),
-    (
-        "E4013",
-        "every GPU-only built-in function is planned for M4",
-        "src/types/effects_tests.rs",
-    ),
     (
         "E5080",
         "`spawn` and `destroy` are planned for M5",

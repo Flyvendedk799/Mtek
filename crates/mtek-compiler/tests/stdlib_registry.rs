@@ -976,9 +976,18 @@ fn since_milestones_follow_the_work_plan() {
     assert_eq!(registry.namespace("frame").unwrap().since, Milestone::M1);
     assert_eq!(registry.event("key_down").unwrap().since, Milestone::M1);
     assert_eq!(registry.enum_def("Key").unwrap().since, Milestone::M1);
-    // M4: textures, samplers, assets, lighting.
-    assert_eq!(intrinsic_since("sample"), Milestone::M4);
-    for name in ["texture", "sampler", "asset", "lighting"] {
+    // M4: textures and samplers landed with task M4-04, before the M4 gate; they are marked as
+    // implemented by the current build (decision 0054). Assets and lighting are still M4.
+    assert_eq!(intrinsic_since("sample"), Milestone::M1);
+    for name in ["texture", "sampler"] {
+        assert_eq!(
+            registry.namespace(name).unwrap().since,
+            Milestone::M1,
+            "{name}"
+        );
+        assert_eq!(registry.type_def(name).unwrap().since, Milestone::M1);
+    }
+    for name in ["asset", "lighting"] {
         assert_eq!(
             registry.namespace(name).unwrap().since,
             Milestone::M4,

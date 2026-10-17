@@ -207,7 +207,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e4031"></a>E4031 | invalid parameter default | |
 | <a id="mtek-e4032"></a>E4032 | too many material parameters | > 64 |
 | <a id="mtek-e4040"></a>E4040 | capture in GPU stage | scene state, `frame`, entity, `cpu fn` (help: add a param and `bind`) |
-| <a id="mtek-e4041"></a>E4041 | invalid use of texture or sampler | only as `sample` arguments |
+| <a id="mtek-e4041"></a>E4041 | invalid use of texture or sampler | only as `sample` arguments (decision 0054) |
 | <a id="mtek-e4901"></a>E4901 | stage not supported | `vertex`/`compute` |
 
 ### 5.5 Scenes, schemas, ownership, bindings (`5xxx`)
@@ -257,7 +257,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | Code | Title | Trigger |
 |---|---|---|
 | <a id="mtek-e6001"></a>E6001 | parameter block too large | > 65 536 bytes |
-| <a id="mtek-e6002"></a>E6002 | too many material resources | > 8 textures+samplers |
+| <a id="mtek-e6002"></a>E6002 | too many material resources | > 8 textures+samplers; reported by `check` at the ninth (decision 0054) |
 | <a id="mtek-e6003"></a>E6003 | too many interpolated inputs | > 16 inter-stage variables |
 | <a id="mtek-e6100"></a>E6100 | generated WGSL failed validation | compiler bug; Naga message in notes |
 

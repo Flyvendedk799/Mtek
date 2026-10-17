@@ -33,6 +33,7 @@ All of the following are **proposals** (design choices), not external constraint
 - **M2-10** (the M2 gate) can rely on every material of a program building; its programs can be goldens under `tests/codegen/wgsl-materials/`.
 - **M2-13** (assignment to struct fields and array elements): the shader IR's assignment target is already an expression, so a place chain lowers through `field_place` and `index_place` (the stored reference of a field or clamped element, before `bool` decoding) with a `bool` value encoded on write and padded elements written through `.value`; an IR place form with spans would also let assignment targets map to their own text.
 - `spec/compiler-architecture.md` §4.8, §4.9 and §7 point here.
+- Textures and samplers (the resource globals and `sample` as `textureSampleLevel`) are decision 0054.
 
 ## Verification
 

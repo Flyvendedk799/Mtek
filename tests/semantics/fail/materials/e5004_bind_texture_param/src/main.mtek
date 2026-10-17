@@ -1,0 +1,16 @@
+// A texture param cannot be bound: resources are fixed when the instance is created (E5004).
+material Gloss {
+    param map: texture = texture.white();
+    param filter: sampler = sampler.linear_clamp();
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(sample(map, filter, input.uv).xyz, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Panel {
+        mesh: Plane { size: vec2(1.0, 1.0) };
+        material: Gloss { map: bind(texture.black()); };
+    }
+}

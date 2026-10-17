@@ -241,6 +241,19 @@ export class ResourceRegistry {
     this.uploadBytes += size;
   }
 
+  /**
+   * `queue.writeTexture` of tightly packed rows into the whole of `texture` (mip level 0), with the
+   * counters of `spec/runtime-abi.md` section 10.1. `data` holds `bytesPerRow x height` bytes.
+   */
+  writeTexture(queue: GPUQueue, texture: GPUTexture, data: Uint8Array, bytesPerRow: number, width: number, height: number): void {
+    if (!Number.isInteger(bytesPerRow) || bytesPerRow <= 0 || data.byteLength !== bytesPerRow * height) {
+      throw new RangeError("writeTexture: the data is not bytesPerRow x height bytes");
+    }
+    queue.writeTexture({ texture }, data, { bytesPerRow, rowsPerImage: height }, { width, height });
+    this.uploads += 1;
+    this.uploadBytes += data.byteLength;
+  }
+
   /** Adds a DOM listener; the returned function removes it (once). `destroyAll` removes any that remain. */
   addEventListener(
     target: EventTarget,

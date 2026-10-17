@@ -132,6 +132,7 @@ mod tests {
             declaration: declaration(),
             surface_inputs: Default::default(),
             params: None,
+            resources: Vec::new(),
             fragment: FragmentBody {
                 surface_param: Name::generated("s"),
                 body: vec![Statement::Return {

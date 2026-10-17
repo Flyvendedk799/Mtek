@@ -1,0 +1,35 @@
+// Textures and samplers in the WGSL of a material (spec/materials.md 5, decision 0054): resource
+// bindings 1.. in group 1 in param declaration order, interleaved with value params (which keep
+// the block at binding 0), a sample inside non-uniform control flow, a sample in a loop and
+// a sample whose coordinate is computed. `sample` lowers to `textureSampleLevel(.., 0.0)`.
+fn tint_of(texel: vec4, strength: f32) -> vec3 {
+    return texel.xyz * strength;
+}
+
+material Blend {
+    param strength: f32 = 0.5;
+    param base: texture = texture.white();
+    param filter: sampler = sampler.linear_repeat();
+    param overlay: texture = texture.black();
+    param flat: sampler = sampler.nearest_clamp();
+    param offset: vec2 = vec2(0.25, 0.0);
+
+    fragment(input: SurfaceInput) -> color {
+        var sum = vec3(0.0);
+        if input.uv.x > offset.x {
+            sum = sum + tint_of(sample(overlay, flat, input.uv - offset), strength);
+        }
+        for i in 0..3 {
+            sum = sum + sample(base, filter, input.uv * f32(i + 1)).xyz * 0.25;
+        }
+        return color.linear(sum, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Panel {
+        mesh: Plane { size: vec2(2.0, 2.0) };
+        material: Blend { strength: 0.75; flat: sampler.linear_clamp() };
+    }
+}

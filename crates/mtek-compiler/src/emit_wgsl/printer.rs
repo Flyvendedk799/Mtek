@@ -113,6 +113,8 @@ pub fn type_text(ty: &ShaderType) -> String {
         ShaderType::Array { element, length } => {
             format!("array<{}, {length}>", type_text(element))
         }
+        ShaderType::Texture2d => "texture_2d<f32>".to_owned(),
+        ShaderType::Sampler => "sampler".to_owned(),
     }
 }
 
@@ -269,6 +271,13 @@ impl Printer {
                 self.push(&mangle(&global.name));
                 self.push(": ");
                 self.push(&type_text(ty));
+                self.push(";");
+            }
+            GlobalKind::Texture { group, binding } | GlobalKind::Sampler { group, binding } => {
+                self.push(&format!("@group({group}) @binding({binding}) var "));
+                self.push(&mangle(&global.name));
+                self.push(": ");
+                self.push(&type_text(global.ty()));
                 self.push(";");
             }
         }

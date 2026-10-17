@@ -1,0 +1,13 @@
+// A texture param is not a value: it cannot be stored in a local (E4041).
+material Gloss {
+    param map: texture = texture.white();
+    param filter: sampler = sampler.linear_clamp();
+    fragment(input: SurfaceInput) -> color {
+        let copy = map;
+        return color.linear(sample(copy, filter, input.uv).xyz, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

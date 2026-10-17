@@ -87,6 +87,17 @@ pub enum BuiltinTexture {
     Black,
 }
 
+impl BuiltinTexture {
+    /// The name the manifest and the IR use: `texture.white`.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            BuiltinTexture::White => "texture.white",
+            BuiltinTexture::Black => "texture.black",
+        }
+    }
+}
+
 /// The built-in sampler presets (`sampler.linear_repeat()` and friends).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BuiltinSampler {
@@ -94,6 +105,19 @@ pub enum BuiltinSampler {
     LinearClamp,
     NearestRepeat,
     NearestClamp,
+}
+
+impl BuiltinSampler {
+    /// The name the manifest and the IR use: `sampler.linear_repeat`.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            BuiltinSampler::LinearRepeat => "sampler.linear_repeat",
+            BuiltinSampler::LinearClamp => "sampler.linear_clamp",
+            BuiltinSampler::NearestRepeat => "sampler.nearest_repeat",
+            BuiltinSampler::NearestClamp => "sampler.nearest_clamp",
+        }
+    }
 }
 
 /// A value the compiler can fold at compile time: what a field default evaluates to.

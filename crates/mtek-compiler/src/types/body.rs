@@ -35,7 +35,7 @@ use crate::resolve::{Def, DefId, DefKind, Res};
 use crate::source::Span;
 use crate::syntax::ast::{
     AssignOp, AssignStmt, Block, ElseBranch, Expr, ExprKind, FnDecl, ForIter, ForStmt, IfStmt,
-    LocalDecl, Stmt,
+    LocalDecl, NodeId, Stmt,
 };
 
 /// The state of the body being checked.
@@ -69,6 +69,9 @@ pub(super) struct StageState {
     pub(super) surface_field_reads: usize,
     /// The `SurfaceInput` fields read, by their registry position.
     pub(super) surface_reads: BTreeSet<usize>,
+    /// The expressions that are the texture or sampler operand of a `sample` call; any other
+    /// use of a texture or sampler param is `E4041` (decision 0054).
+    pub(super) sample_operands: BTreeSet<NodeId>,
 }
 
 /// How a statement leaves its block, when it always does.

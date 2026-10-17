@@ -397,7 +397,9 @@ interface MtekTestOptions {
   canvasRenderTarget?: boolean;   // offscreen target that follows the canvas backing size (resize, pixel ratio); excludes renderTarget
   recovery?: { delaysMs?: [number, number, number]; failDeviceRequests?: number };   // §9.4: default [250, 1000, 4000]
   disableCulling?: boolean;       // draw every visible entity, as if culling did not exist (decision 0055)
+  textures?: { "texture.white"?: MtekTestTexture; "texture.black"?: MtekTestTexture };  // M4-04: a generated texture in place of a built-in (decision 0054)
 }
+interface MtekTestTexture { width: number; height: number; data: Uint8Array; colorSpace?: "srgb" | "linear"; }  // RGBA8, top row first, width x height x 4 bytes
 interface MtekDebug {
   step(frames: number, dtSeconds: number): void;
   readPixels(): Promise<{ width: number; height: number; format: "rgba8unorm-srgb"; data: Uint8Array }>;

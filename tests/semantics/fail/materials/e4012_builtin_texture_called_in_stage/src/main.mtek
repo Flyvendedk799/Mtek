@@ -1,0 +1,12 @@
+// `texture.white()` is a CPU-side constructor: a stage cannot call it (E4012). The
+// texture to sample has to be a param (`param map: texture = texture.white();`).
+material Gloss {
+    param filter: sampler = sampler.linear_clamp();
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(sample(texture.white(), filter, input.uv).xyz, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

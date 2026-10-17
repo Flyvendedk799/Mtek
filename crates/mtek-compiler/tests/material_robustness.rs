@@ -77,7 +77,9 @@ const PARAMS: &[&str] = &[
     "string = \"x\"",
     "mesh = Box {}",
     "SurfaceInput",
-    "texture",
+    "glb_asset",
+    "texture = texture.white()",
+    "sampler = sampler.linear_repeat()",
 ];
 
 /// Expressions a stage body may compute with.

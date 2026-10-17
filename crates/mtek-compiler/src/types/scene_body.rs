@@ -757,6 +757,20 @@ impl Checker<'_> {
                         return Some(self.field_write(current, object_def, &field));
                     }
                     Some(FieldKind::MaterialParam { entity, param }) => {
+                        if self
+                            .ty_of(current.id)
+                            .is_some_and(|ty| self.is_resource(ty))
+                        {
+                            self.sink.push(
+                                Diagnostic::new(
+                                    Code::E5073,
+                                    format!("The texture or sampler param '{param}' is construction-only and cannot be assigned."),
+                                )
+                                .at(current.span)
+                                .note("resource params are bound when the material instance is created; replacing a texture is planned for v0.2"),
+                            );
+                            return Some((None, false));
+                        }
                         return Some((Some(WriteTarget::MaterialParam { entity, param }), true));
                     }
                     Some(FieldKind::LightField { entity, field }) => {

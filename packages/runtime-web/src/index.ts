@@ -31,6 +31,7 @@ export type {
   MtekMountOptions,
   MtekMountProgram,
   MtekTestOptions,
+  MtekTestTexture,
 } from "./host/types.js";
 export { acquireDevice, isLittleEndianPlatform } from "./gpu/device.js";
 export type { AcquireDeviceOptions, AcquiredDevice, MtekAdapterInfo } from "./gpu/device.js";

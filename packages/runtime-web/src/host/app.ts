@@ -349,6 +349,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         },
         pipelineCache: this.deps.scene.pipelines,
         bindingPlan: this.deps.scene.plan,
+        ...(this.deps.test?.textures === undefined ? {} : { textures: this.deps.test.textures }),
       });
       if (!started.ok) {
         for (const module of shaders.created) registry.release(module);
@@ -659,6 +660,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
           this.report(diagnostic);
         },
         recover: { world, bindings },
+        ...(this.deps.test?.textures === undefined ? {} : { textures: this.deps.test.textures }),
       });
       if (!started.ok) throw new Error(started.diagnostics.map((diagnostic) => diagnostic.message).join(" "));
       this.ensureRecovering();

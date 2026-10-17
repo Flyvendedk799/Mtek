@@ -9,7 +9,7 @@
 //! - [`ShaderType`] covers every WGSL type of `spec/gpu-layout.md` section 3 (a `bool`
 //!   stored in a struct, array or block is the `u32` scalar; padded array elements are
 //!   the `MtekPad16_*` wrapper structs);
-//! - [`GlobalKind`] gains texture and sampler globals in M4;
+//! - [`GlobalKind`] covers uniform blocks and the texture and sampler globals of group 1 (decision 0054);
 //! - [`Statement`]: `let`, `var`, assignment, `if`, counted `for`, `break`,
 //!   `continue`, blocks, call statements and `return`;
 //! - [`ExprKind`]: literals, locals, globals, field, swizzle and index access, unary
@@ -88,6 +88,10 @@ pub enum ShaderType {
         element: Box<ShaderType>,
         length: u32,
     },
+    /// `texture_2d<f32>`: the handle of a `texture` param (decision 0054).
+    Texture2d,
+    /// `sampler`: the handle of a `sampler` param.
+    Sampler,
 }
 
 impl ShaderType {
@@ -266,6 +270,10 @@ pub enum GlobalKind {
         binding: u32,
         ty: ShaderType,
     },
+    /// `@group(g) @binding(b) var name: texture_2d<f32>;`
+    Texture { group: u32, binding: u32 },
+    /// `@group(g) @binding(b) var name: sampler;`
+    Sampler { group: u32, binding: u32 },
 }
 
 /// A module-scope variable.
@@ -281,6 +289,8 @@ impl GlobalDecl {
     pub fn ty(&self) -> &ShaderType {
         match &self.kind {
             GlobalKind::Uniform { ty, .. } => ty,
+            GlobalKind::Texture { .. } => &ShaderType::Texture2d,
+            GlobalKind::Sampler { .. } => &ShaderType::Sampler,
         }
     }
 }
@@ -592,11 +602,14 @@ pub enum Intrinsic {
     Tan,
     Transpose,
     Trunc,
+    /// `textureSampleLevel(texture, sampler, uv, level)`: the lowering of Mtek's `sample`,
+    /// always at level 0 (decision 0054).
+    TextureSampleLevel,
 }
 
 impl Intrinsic {
     /// Every intrinsic, for tests and lookups.
-    pub const ALL: [Intrinsic; 38] = [
+    pub const ALL: [Intrinsic; 39] = [
         Intrinsic::Abs,
         Intrinsic::Acos,
         Intrinsic::Asin,
@@ -635,6 +648,7 @@ impl Intrinsic {
         Intrinsic::Tan,
         Intrinsic::Transpose,
         Intrinsic::Trunc,
+        Intrinsic::TextureSampleLevel,
     ];
 
     /// The WGSL function name.
@@ -678,6 +692,7 @@ impl Intrinsic {
             Intrinsic::Tan => "tan",
             Intrinsic::Transpose => "transpose",
             Intrinsic::Trunc => "trunc",
+            Intrinsic::TextureSampleLevel => "textureSampleLevel",
         }
     }
 

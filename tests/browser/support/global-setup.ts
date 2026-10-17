@@ -4,7 +4,8 @@
 // compiler's `bridge_spike` example, bundles the bridge page and prepares the mount fixture. It builds
 // the CLI (`cargo build -p mtek-cli --locked`) and every M1 fixture (`fixtures/m1/*`) with
 // `mtek build --mode test` into `.out/m1/`, plus the post-build failure variants (support/m1-fixtures.ts),
-// likewise the M2 fixtures (`fixtures/m2/*` into `.out/m2/`, support/m2-fixtures.ts),
+// likewise the M2 fixtures (`fixtures/m2/*` into `.out/m2/`, support/m2-fixtures.ts) and the M4-04 texture
+// fixture (`fixtures/m4/texture_sampling` into `.out/m4/`, support/m4-textures.ts),
 // and the numeric probe (`.out/numeric/`, support/numeric-probe.ts) with its page.
 import { execFileSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -15,6 +16,7 @@ import { buildCli, buildM1Fixtures } from "./m1-fixtures.ts";
 import { buildM2Fixtures } from "./m2-fixtures.ts";
 import { buildPulseCube, buildPulseCubeVariants } from "./m3-fixtures.ts";
 import { buildM4Fixtures } from "./m4-fixtures.ts";
+import { buildTextureSamplingFixture } from "./m4-textures.ts";
 import { buildNumericProbe } from "./numeric-probe.ts";
 import { startStaticServer } from "./serve.ts";
 
@@ -95,6 +97,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   if (buildPulseCube(cli).ok) buildPulseCubeVariants(cli);
   // M4 fixtures (culling, dev overlay): `.out/m4/` (test mode) and `.out/m4-release/` (release mode).
   buildM4Fixtures(cli);
+  // M4-04: the texture sampling fixture, in `.out/m4/texture_sampling/`.
+  buildTextureSamplingFixture(cli);
 
   // The numeric probe (M2-08): the compiler's WGSL for every operation of cpu.json plus a test-only harness.
   buildNumericProbe(cli, join(out, "numeric"));

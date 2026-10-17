@@ -1,0 +1,17 @@
+[
+  {
+    "code": "MTEK-E4012",
+    "file": "src/main.mtek",
+    "startByte": 315,
+    "endByte": 330,
+    "message": "`texture.white` is a CPU-only built-in function, but the fragment stage of material 'Gloss' runs on the GPU.",
+    "related": [
+      {
+        "message": "the fragment stage of material 'Gloss' runs on the GPU",
+        "file": "src/main.mtek",
+        "startByte": 239,
+        "endByte": 247
+      }
+    ]
+  }
+]

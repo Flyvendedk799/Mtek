@@ -1,0 +1,17 @@
+// A sampler cannot stand where a texture is expected (E3102), and a texture default must be
+// a texture (E4031).
+material Gloss {
+    param map: texture = sampler.linear_repeat();
+    param filter: sampler = sampler.linear_clamp();
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(sample(map, filter, input.uv).xyz, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Panel {
+        mesh: Plane { size: vec2(1.0, 1.0) };
+        material: Gloss { map: sampler.nearest_clamp() };
+    }
+}

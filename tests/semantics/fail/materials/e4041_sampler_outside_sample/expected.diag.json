@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E4041",
+    "file": "src/main.mtek",
+    "startByte": 342,
+    "endByte": 348,
+    "message": "The sampler param of material 'Gloss' can only be used as an argument of `sample`.",
+    "notes": [
+      "textures and samplers are bound as resources, not values: they cannot be copied, stored in a local or passed to a function",
+      "help: write `sample(texture_param, sampler_param, uv)`"
+    ]
+  },
+  {
+    "code": "MTEK-E4041",
+    "file": "src/main.mtek",
+    "startByte": 352,
+    "endByte": 358,
+    "message": "The sampler param of material 'Gloss' can only be used as an argument of `sample`.",
+    "notes": [
+      "textures and samplers are bound as resources, not values: they cannot be copied, stored in a local or passed to a function",
+      "help: write `sample(texture_param, sampler_param, uv)`"
+    ]
+  }
+]

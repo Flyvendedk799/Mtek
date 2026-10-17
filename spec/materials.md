@@ -112,7 +112,9 @@ material: Unlit { color: #ff8800 };
 - Param types `texture` and `sampler`. Values come from asset declarations (`spec/assets.md`: `asset.texture("…")`) and built-in constants: `texture.white()`, `texture.black()`, `sampler.linear_repeat()`, `sampler.linear_clamp()`, `sampler.nearest_repeat()`, `sampler.nearest_clamp()`.
 - GPU intrinsic `sample(t: texture, s: sampler, uv: vec2) -> vec4` — returns the filtered texel. Textures declared with colour space `srgb` (the default for colour images) are created with an `-srgb` format, so `sample` returns linear values; `linear` textures are returned as stored.
 - `texture` and `sampler` params may be used **only as direct arguments to `sample`** (`E4041` for any other use, including passing them to user functions), which keeps lowering to WGSL handle variables trivial.
-- Mip-maps are not generated in v0.1 (one level); documented limitation, measured in the runtime benchmark.
+- Mip-maps are not generated in v0.1 (one level); documented limitation, measured in the runtime benchmark. `sample` therefore reads level 0 explicitly (`textureSampleLevel`), which is also valid in non-uniform control flow.
+- A material has at most 8 `texture` and `sampler` params together (`E6002`, reported by `check`), and a resource is a param of its own, never an element of an array or a field of a struct (`E4030`). Resource params are construction-only: assigning one is `E5073` and binding one `E5004`.
+- Built-in textures are 1×1 and opaque, `texture.white()` `(1, 1, 1, 1)` and `texture.black()` `(0, 0, 0, 1)`; the samplers are filtering samplers (`linear_*` or `nearest_*` filtering, `*_repeat` or `*_clamp` addressing). How they are lowered, bound and created, and the `test.textures` control a test uses to sample a generated texture before asset textures exist, are decision 0054.
 
 ## 6. Colour pipeline
 

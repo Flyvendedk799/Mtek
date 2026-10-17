@@ -111,6 +111,17 @@ export interface MtekTestOptions {
   };
   /** Draw every visible entity, as if frustum culling did not exist (lets a test compare culled and unculled frames). */
   disableCulling?: boolean;
+  /** Replace the pixels of a built-in texture (a generated texture for a test; no asset needed). */
+  textures?: { "texture.white"?: MtekTestTexture; "texture.black"?: MtekTestTexture };
+}
+
+export interface MtekTestTexture {
+  width: number;
+  height: number;
+  /** Tightly packed RGBA8 texels, row-major, top row first: width x height x 4 bytes. */
+  data: Uint8Array;
+  /** "srgb" (default): an rgba8unorm-srgb texture, sampled as linear values. "linear": rgba8unorm, as stored. */
+  colorSpace?: "srgb" | "linear";
 }
 
 export interface MtekDebug {

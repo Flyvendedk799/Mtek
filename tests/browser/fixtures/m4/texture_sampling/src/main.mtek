@@ -1,0 +1,52 @@
+// Texture and sampler params (task M4-04): a probe material returns the texel `sample(map, filter, at)`
+// returns for the constant coordinate `at`, so every pixel of a panel is that texel, whatever the
+// geometry. The browser spec replaces the pixels of `texture.white()` with a generated 2x2 texture,
+// moves `at` with `app.debug.setParam` and compares the panels with a CPU reference of the sampler.
+//
+// Four panels show the four sampler presets of one texture: nearest or linear filtering, clamped or
+// repeated coordinates. `Dark` keeps the built-in black texture. The orthographic view covers
+// [-2, 2] x [-2, 2] over a 64 x 64 target, so a panel centred at (x, y) shows at pixel (16 (x + 2), 16 (2 - y)).
+material Probe {
+    param map: texture = texture.white();
+    param filter: sampler = sampler.nearest_clamp();
+    param at: vec2 = vec2(0.25, 0.25);
+
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(sample(map, filter, at).xyz, 1.0);
+    }
+}
+
+scene Panels {
+    clear_color: #203040;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 4.0; near: 0.1; far: 20.0 };
+    }
+
+    entity NearestClamp {
+        position: vec3(-1.0, 1.0, 0.0);
+        mesh: Box { size: vec3(1.4, 1.4, 0.2) };
+        material: Probe { filter: sampler.nearest_clamp() };
+    }
+    entity LinearClamp {
+        position: vec3(1.0, 1.0, 0.0);
+        mesh: Box { size: vec3(1.4, 1.4, 0.2) };
+        material: Probe { filter: sampler.linear_clamp() };
+    }
+    entity NearestRepeat {
+        position: vec3(-1.0, -1.0, 0.0);
+        mesh: Box { size: vec3(1.4, 1.4, 0.2) };
+        material: Probe { filter: sampler.nearest_repeat() };
+    }
+    entity LinearRepeat {
+        position: vec3(1.0, -1.0, 0.0);
+        mesh: Box { size: vec3(1.4, 1.4, 0.2) };
+        material: Probe { filter: sampler.linear_repeat() };
+    }
+    entity Dark {
+        mesh: Box { size: vec3(0.4, 0.4, 0.4) };
+        material: Probe { map: texture.black() };
+    }
+}

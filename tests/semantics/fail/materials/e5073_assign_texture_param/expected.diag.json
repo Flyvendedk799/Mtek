@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5073",
+    "file": "src/main.mtek",
+    "startByte": 466,
+    "endByte": 483,
+    "message": "The texture or sampler param 'map' is construction-only and cannot be assigned.",
+    "notes": [
+      "resource params are bound when the material instance is created; replacing a texture is planned for v0.2"
+    ]
+  }
+]

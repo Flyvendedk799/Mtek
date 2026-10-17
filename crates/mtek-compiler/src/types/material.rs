@@ -3,7 +3,7 @@
 //!
 //! * **Params** (section 2). Each type must be GPU-representable — a scalar,
 //!   vector, `mat4`, `quat`, `color`, or a struct or array of those (`E4030`;
-//!   `texture` and `sampler` are gated to M4 by the resolver); a default must
+//!   `texture` and `sampler` are params of their own, decision 0054); a default must
 //!   be a constant expression of the param's type (`E4031`), and a `color`
 //!   default must be opaque (`E5100`); at most [`MAX_MATERIAL_PARAMS`] params
 //!   (`E4032`). Params are checked in the dependency order of the constants
@@ -53,6 +53,10 @@ use crate::syntax::ast::{
 /// The most params one material may declare (`spec/diagnostics.md`, `E4032`).
 pub const MAX_MATERIAL_PARAMS: usize = 64;
 
+/// The most textures and samplers one material may bind (`spec/gpu-layout.md` section 8.3,
+/// `E6002`).
+pub const MAX_MATERIAL_RESOURCES: usize = 8;
+
 /// The one stage function of a v0.1 material.
 const FRAGMENT: &str = "fragment";
 
@@ -64,7 +68,7 @@ const SURFACE_INPUT: &str = "SurfaceInput";
 const ALPHA_PARAM: &str = "a";
 
 /// The help of `E4030`.
-const PARAM_TYPES: &str = "material params are bool, i32, u32, f32, vec2, vec3, vec4, mat4, quat, color, and structs and arrays of those (texture and sampler arrive in M4)";
+const PARAM_TYPES: &str = "material params are bool, i32, u32, f32, vec2, vec3, vec4, mat4, quat, color, structs and arrays of those, and texture and sampler (as params of their own)";
 
 fn strip_parens(expr: &Expr) -> &Expr {
     let mut expr = expr;
@@ -127,6 +131,7 @@ impl<'a> Checker<'a> {
         self.out.interner.intern_material(key, &material);
         let mut params = Vec::new();
         let mut declared = Vec::new();
+        let mut resources = 0;
         for member in &decl.members {
             let MaterialMember::Param(param) = member else {
                 continue;
@@ -168,6 +173,26 @@ impl<'a> Checker<'a> {
                     .help(PARAM_TYPES),
                 );
                 ty = TyId::ERROR;
+            }
+            if matches!(self.out.interner.get(ty), Ty::Texture | Ty::Sampler) {
+                resources += 1;
+                if resources == MAX_MATERIAL_RESOURCES + 1 {
+                    self.sink.push(
+                        Diagnostic::new(
+                            Code::E6002,
+                            format!(
+                                "Material '{material}' declares more than {MAX_MATERIAL_RESOURCES} texture and sampler params."
+                            ),
+                        )
+                        .at(param.name.span)
+                        .related(decl.name.span, format!("the material '{material}' is declared here"))
+                        .note(format!(
+                            "a material binds at most {MAX_MATERIAL_RESOURCES} textures and samplers in bind group 1; this is the {}th",
+                            MAX_MATERIAL_RESOURCES + 1
+                        ))
+                        .help("use fewer textures, or share one sampler between several `sample` calls"),
+                    );
+                }
             }
             let param_def = self.res.def_of(param.id);
             if let Some(param_def) = param_def {
@@ -230,10 +255,14 @@ impl<'a> Checker<'a> {
                 | Ty::Vec4
                 | Ty::Mat4
                 | Ty::Quat
-                | Ty::Color
-                // Resource params (M4); gated by the resolver in this build.
-                | Ty::Texture
-                | Ty::Sampler => {}
+                | Ty::Color => {}
+                // A resource is a param of its own: it has no place inside a struct or an array
+                // (decision 0054).
+                Ty::Texture | Ty::Sampler => {
+                    if current != ty {
+                        return Some(current);
+                    }
+                }
                 Ty::Array { element, .. } => pending.push(element),
                 Ty::Struct(_) => {
                     if let Some(def) = interner.struct_def(current) {
@@ -510,6 +539,7 @@ impl<'a> Checker<'a> {
                 surface_uses: 0,
                 surface_field_reads: 0,
                 surface_reads: BTreeSet::new(),
+                sample_operands: BTreeSet::new(),
             }),
         );
         let state = self.end_body(&stage.body, stage.ret.as_ref());
@@ -616,6 +646,50 @@ impl<'a> Checker<'a> {
             stage.surface_reads.insert(index);
         }
         self.out.interner.from_type_ref(field.ty)
+    }
+
+    /// Whether `ty` is a resource type: `texture` or `sampler`.
+    pub(super) fn is_resource(&self, ty: TyId) -> bool {
+        matches!(self.out.interner.get(ty), Ty::Texture | Ty::Sampler)
+    }
+
+    /// Remember the texture and sampler operands of a `sample` call of the stage being checked
+    /// (a parenthesised operand counts): they are the only places a resource param may stand.
+    pub(super) fn note_sample_operands(&mut self, args: &[Expr]) {
+        if let Some(stage) = self.body.as_mut().and_then(|b| b.stage.as_mut()) {
+            stage
+                .sample_operands
+                .extend(args.iter().take(2).map(|arg| strip_parens(arg).id));
+        }
+    }
+
+    /// `E4041` when `expr`, a use of a material param of type `ty`, names a texture or a sampler
+    /// anywhere but as the operand of `sample`. True when it was reported.
+    pub(super) fn misused_resource(&mut self, expr: &Expr, ty: TyId) -> bool {
+        let noun = match self.out.interner.get(ty) {
+            Ty::Texture => "texture",
+            Ty::Sampler => "sampler",
+            _ => return false,
+        };
+        let Some(stage) = self.body.as_ref().and_then(|b| b.stage.as_ref()) else {
+            return false;
+        };
+        if stage.sample_operands.contains(&expr.id) {
+            return false;
+        }
+        let material = stage.material.clone();
+        self.sink.push(
+            Diagnostic::new(
+                Code::E4041,
+                format!(
+                    "The {noun} param of material '{material}' can only be used as an argument of `sample`."
+                ),
+            )
+            .at(expr.span)
+            .note("textures and samplers are bound as resources, not values: they cannot be copied, stored in a local or passed to a function")
+            .help("write `sample(texture_param, sampler_param, uv)`"),
+        );
+        true
     }
 
     /// `E4040` for a read of the constant `id` of type `ty` in a stage when
@@ -784,7 +858,16 @@ impl<'a> Checker<'a> {
                 FieldValue::Expr(value) => Some(&**value),
                 // A bound param is checked with the scene's bindings (`types/bind.rs`).
                 FieldValue::Bind(bind) => {
-                    if !binds_allowed {
+                    if param.is_some_and(|p| self.is_resource(p.ty)) {
+                        self.bind_not_allowed(
+                            bind,
+                            &format!(
+                                "for the texture or sampler param '{}': resource params are construction-only in v0.1",
+                                field.name.name
+                            ),
+                        );
+                        ok = false;
+                    } else if !binds_allowed {
                         self.bind_not_allowed(
                             bind,
                             "here: only the params of the `material` of an entity can be bound",

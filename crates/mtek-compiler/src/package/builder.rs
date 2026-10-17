@@ -44,9 +44,9 @@ use super::identity::{BuildIdentity, h16};
 use super::manifest::{
     Binding, BindingDep, BindingTarget, Camera, Entity, EntityMaterial, InstanceParam, Layout,
     Light as ManifestLight, LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material,
-    MaterialInstance, MaterialParam, Mesh, MeshShape, Num, ParamClass as ManifestClass,
-    RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, StateEntry,
-    Subsystems, SymbolEntry, SymbolKind,
+    MaterialInstance, MaterialParam, MaterialResource, Mesh, MeshShape, Num,
+    ParamClass as ManifestClass, RequiredCapabilities, ResourceValue, RuntimeConfig, Scene,
+    SceneFields, Shader, SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -160,7 +160,15 @@ pub fn package(
             id: planned.symbol.to_string(),
             layout: planned.layout.as_ref().map(|l| l.id.clone()),
             shader: material.shader.sha256.clone(),
-            resources: Vec::new(),
+            resources: planned
+                .resources
+                .iter()
+                .map(|r| MaterialResource {
+                    name: r.name.clone(),
+                    kind: r.kind.to_owned(),
+                    binding: r.binding,
+                })
+                .collect(),
             params,
         });
     }
@@ -592,6 +600,16 @@ fn manifest_scene(
                             class: match (param.class, param.binding) {
                                 (ParamClass::Initial, _) => ManifestClass::Initial,
                                 (ParamClass::Imperative, _) => ManifestClass::Imperative,
+                                (ParamClass::Resource, _) => ManifestClass::Resource {
+                                    value: resource_value(param.value.as_ref()).ok_or_else(
+                                        || {
+                                            format!(
+                                                "the resource parameter '{}' has no built-in value",
+                                                param.name
+                                            )
+                                        },
+                                    )?,
+                                },
                                 (ParamClass::Bound, Some(binding)) => {
                                     ManifestClass::Bound { binding }
                                 }
@@ -625,6 +643,17 @@ fn manifest_scene(
             .collect(),
         lights,
     })
+}
+
+/// The manifest's value of a resource param: the built-in texture or sampler it holds
+/// (asset textures arrive with M4-05, as `ResourceValue::Asset`).
+fn resource_value(value: Option<&ir::Value>) -> Option<ResourceValue> {
+    match value? {
+        ir::Value::Texture(name) | ir::Value::Sampler(name) => {
+            Some(ResourceValue::Builtin { name: name.clone() })
+        }
+        _ => None,
+    }
 }
 
 /// The manifest's `bindings`, by id: targets and dependencies by static entity index, material

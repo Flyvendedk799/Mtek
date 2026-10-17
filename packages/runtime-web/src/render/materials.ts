@@ -7,6 +7,11 @@
  * Every instance owns its slot in M1 (decision 0031): sharing identical immutable blocks is allowed by
  * `spec/gpu-layout.md` section 8.2 but optional; `sharedParamBlocks` stays 0 and `ownedParamBlocks`
  * counts the slots.
+ *
+ * The textures and samplers of an instance (decision 0054) are bindings of the same group 1, after the
+ * block: the instance's bind group holds the block at binding 0 (when the material has value params) and
+ * the built-in texture views and samplers its resource params name, created once per instance. A
+ * material with resources and no value params has no arena; its instances still get their own bind group.
  */
 import type { ArenaDevice } from "../gpu/uniform-arena.js";
 import { UniformArena } from "../gpu/uniform-arena.js";
@@ -15,6 +20,7 @@ import type { LayoutWriters } from "../scene/program.js";
 import type { SceneStructure } from "../scene/structure.js";
 import type { ParamSink } from "../scene/world.js";
 import type { BindingPlan } from "./pipelines.js";
+import { BuiltinResources, type TextureOverrides } from "./resources.js";
 
 interface InstanceStorage {
   readonly arena: UniformArena;
@@ -23,18 +29,31 @@ interface InstanceStorage {
   readonly layout: GPUBindGroupLayout;
 }
 
+/** The textures and samplers of one instance: its group-1 layout and the entries after the block. */
+interface InstanceResources {
+  readonly layout: GPUBindGroupLayout;
+  readonly entries: readonly GPUBindGroupEntry[];
+}
+
 export class MaterialStore implements ParamSink {
   private readonly arenas = new Map<string, UniformArena>();
   /** By material instance index; `null` for instances of materials without value params. */
   private readonly storage: (InstanceStorage | null)[] = [];
+  /** Textures and samplers by instance index; absent for instances without resources. */
+  private readonly resources = new Map<number, InstanceResources>();
+  /** Bind groups of instances that have resources but no block, created on first use. */
+  private readonly resourceGroups = new Map<number, GPUBindGroup>();
+  private readonly builtins: BuiltinResources;
 
   constructor(
     device: ArenaDevice,
-    registry: ResourceRegistry,
+    private readonly registry: ResourceRegistry,
     private readonly plan: BindingPlan,
     structure: SceneStructure,
     writers: ReadonlyMap<string, LayoutWriters>,
+    textures?: TextureOverrides,
   ) {
+    this.builtins = new BuiltinResources(registry, device.queue, textures);
     const counts = new Map<string, number>();
     for (const instance of structure.instances) {
       const layout = instance.material.layout;
@@ -42,6 +61,16 @@ export class MaterialStore implements ParamSink {
     }
     for (const instance of structure.instances) {
       const layout = instance.material.layout;
+      const kinds = instance.material.resources;
+      if (instance.resources.length > 0) {
+        this.resources.set(instance.index, {
+          layout: plan.material(layout, kinds),
+          entries: instance.resources.map((resource) => ({
+            binding: resource.binding,
+            resource: resource.kind === "texture" ? this.builtins.textureView(resource.value) : this.builtins.sampler(resource.value),
+          })),
+        });
+      }
       if (layout === null) {
         this.storage[instance.index] = null;
         continue;
@@ -54,7 +83,7 @@ export class MaterialStore implements ParamSink {
       }
       const layoutWriters = writers.get(layout.id);
       if (layoutWriters === undefined) throw new Error(`internal error: no writers for the layout '${layout.id}'`);
-      this.storage[instance.index] = { arena, slot: arena.allocate(), writers: layoutWriters, layout: plan.material(layout) };
+      this.storage[instance.index] = { arena, slot: arena.allocate(), writers: layoutWriters, layout: plan.material(layout, kinds) };
     }
   }
 
@@ -84,10 +113,18 @@ export class MaterialStore implements ParamSink {
     });
   }
 
-  /** The group-1 bind group of an instance (cached by its arena). */
+  /** The group-1 bind group of an instance (cached by its arena, or by this store when it has no block). */
   bindGroup(instance: number): GPUBindGroup {
     const storage = this.storageOf(instance);
-    return storage === null ? this.plan.emptyMaterialGroup() : storage.arena.bindGroupForSlot(storage.slot, storage.layout);
+    const resources = this.resources.get(instance);
+    if (storage !== null) return storage.arena.bindGroupForSlot(storage.slot, storage.layout, resources?.entries);
+    if (resources === undefined) return this.plan.emptyMaterialGroup();
+    let group = this.resourceGroups.get(instance);
+    if (group === undefined) {
+      group = this.registry.createBindGroup({ label: `mtek material instance ${String(instance)} resources`, layout: resources.layout, entries: [...resources.entries] });
+      this.resourceGroups.set(instance, group);
+    }
+    return group;
   }
 
   /** Uploads every dirty slot; returns the number of uploads. */
@@ -102,6 +139,10 @@ export class MaterialStore implements ParamSink {
     for (const arena of this.arenas.values()) arena.dispose();
     this.arenas.clear();
     this.storage.length = 0;
+    for (const group of this.resourceGroups.values()) this.registry.release(group);
+    this.resourceGroups.clear();
+    this.resources.clear();
+    this.builtins.dispose();
   }
 
   private storageOf(instance: number): InstanceStorage | null {

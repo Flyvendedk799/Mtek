@@ -25,6 +25,7 @@ use serde::Serialize;
 
 use crate::layout::builtin::{mtek_frame, mtek_object};
 use crate::layout::{LayoutError, LayoutRecord, compute};
+use crate::plan::PlannedResource;
 use crate::source::Span;
 
 use super::shader_ir::{
@@ -188,6 +189,8 @@ pub struct MaterialDescription {
     pub surface_inputs: BTreeSet<SurfaceField>,
     /// The value-param block, bound at group 1 binding 0; `None` without value params.
     pub params: Option<LayoutRecord>,
+    /// The texture and sampler globals, group 1 from binding 1 in param declaration order.
+    pub resources: Vec<GlobalDecl>,
     pub fragment: FragmentBody,
     /// Further struct declarations the fragment body and its callees use (user structs and
     /// padded-element wrappers), each before its first use; declared after the param
@@ -224,6 +227,33 @@ pub fn params_global(record: &LayoutRecord, span: Span) -> GlobalDecl {
 /// `@group(2) @binding(0) var<uniform> mtek_object: MtekObject;`
 pub fn object_global(span: Span) -> GlobalDecl {
     uniform("object", 2, "MtekObject", span)
+}
+
+/// `@group(1) @binding(b) var mtek_texture_<name>: texture_2d<f32>;` or
+/// `@group(1) @binding(b) var mtek_sampler_<name>: sampler;` for the planned `resource`.
+pub fn resource_global(resource: &PlannedResource, span: Span) -> GlobalDecl {
+    let (name, kind) = if resource.kind == "texture" {
+        (
+            format!("texture_{}", resource.name),
+            GlobalKind::Texture {
+                group: 1,
+                binding: resource.binding,
+            },
+        )
+    } else {
+        (
+            format!("sampler_{}", resource.name),
+            GlobalKind::Sampler {
+                group: 1,
+                binding: resource.binding,
+            },
+        )
+    };
+    GlobalDecl {
+        name: Name::generated(name),
+        kind,
+        span,
+    }
 }
 
 fn uniform(name: &str, group: u32, struct_name: &str, span: Span) -> GlobalDecl {
@@ -274,6 +304,7 @@ pub fn build_standard_stage(material: &MaterialDescription) -> Result<MaterialSh
     if let Some(params) = &material.params {
         module.globals.push(params_global(params, span));
     }
+    module.globals.extend(material.resources.iter().cloned());
     module.globals.push(object.clone());
 
     module.functions.extend(material.functions.iter().cloned());
@@ -625,6 +656,7 @@ mod tests {
             declaration: span,
             surface_inputs: inputs.iter().copied().collect(),
             params,
+            resources: Vec::new(),
             fragment: FragmentBody {
                 surface_param: surface,
                 body,

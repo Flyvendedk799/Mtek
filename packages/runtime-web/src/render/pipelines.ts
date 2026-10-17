@@ -6,7 +6,8 @@
  *    topology)`. Parameter values are not part of it, so editing a param never creates a pipeline.
  *  - The binding plan is fixed: group 0 `MtekFrame` (vertex + fragment), group 1 the material's parameter
  *    block (fragment; an empty layout when the material has no value params, so group numbers never
- *    shift), group 2 `MtekObject` (vertex) with a dynamic offset.
+ *    shift) followed by one binding per texture and sampler param (decision 0054), group 2 `MtekObject`
+ *    (vertex) with a dynamic offset.
  *  - One vertex buffer per vertex attribute, in slot order position, normal, uv: `float32x3` at location
  *    0 (stride 12), `float32x3` at location 1 (stride 12), `float32x2` at location 2 (stride 8).
  *  - Opaque rendering: back faces culled, counter-clockwise front faces, depth test `less` with writes.
@@ -14,7 +15,7 @@
  *    declaration (shader compilation messages were mapped through the span map when the module was
  *    created, `host/shaders.ts`).
  */
-import type { MtekLayoutRecord, MtekManifest, MtekVertexAttribute } from "../abi/manifest-types.js";
+import type { MtekLayoutRecord, MtekManifest, MtekMaterialResource, MtekVertexAttribute } from "../abi/manifest-types.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic, type MtekRuntimePhase } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
@@ -64,6 +65,12 @@ function uniformEntry(size: number, visibility: number, hasDynamicOffset: boolea
   return { binding: 0, visibility, buffer: { type: "uniform", hasDynamicOffset, minBindingSize: size } };
 }
 
+/** The shape of a group-1 layout: the block size in bytes and the kind at each resource binding, e.g. `32 bytes, 1t 2s`. */
+function materialLayoutKey(size: number, resources: readonly MtekMaterialResource[]): string {
+  const kinds = resources.map((resource) => `${String(resource.binding)}${resource.kind === "texture" ? "t" : "s"}`);
+  return [`${String(size)} bytes`, ...kinds].join(" ");
+}
+
 /**
  * The bind group layouts of the fixed binding plan for one device, and the pipeline layout of each
  * material parameter block size. Layouts are created once and shared, so bind groups made for one
@@ -72,8 +79,8 @@ function uniformEntry(size: number, visibility: number, hasDynamicOffset: boolea
 export class BindingPlan {
   readonly frame: GPUBindGroupLayout;
   readonly object: GPUBindGroupLayout;
-  private readonly materialLayouts = new Map<number, GPUBindGroupLayout>();
-  private readonly pipelineLayouts = new Map<number, GPUPipelineLayout>();
+  private readonly materialLayouts = new Map<string, GPUBindGroupLayout>();
+  private readonly pipelineLayouts = new Map<string, GPUPipelineLayout>();
   private emptyGroup: GPUBindGroup | undefined;
 
   constructor(
@@ -85,35 +92,49 @@ export class BindingPlan {
     this.object = registry.createBindGroupLayout({ label: "mtek group 2 (MtekObject)", entries: [uniformEntry(objectLayout.size, STAGE_VERTEX, true)] });
   }
 
-  /** Group 1 of a material: its parameter block (fragment stage), or the empty layout (`size` 0). */
-  material(layout: MtekLayoutRecord | null): GPUBindGroupLayout {
+  /**
+   * Group 1 of a material: its parameter block at binding 0 (fragment stage; absent without value
+   * params), then one binding per texture or sampler (`spec/gpu-layout.md` section 6). The layout
+   * depends only on the block size and the kinds of the resources, so materials with the same shape
+   * share it.
+   */
+  material(layout: MtekLayoutRecord | null, resources: readonly MtekMaterialResource[] = []): GPUBindGroupLayout {
     const size = layout?.size ?? 0;
-    let found = this.materialLayouts.get(size);
+    const key = materialLayoutKey(size, resources);
+    let found = this.materialLayouts.get(key);
     if (found === undefined) {
+      const entries: GPUBindGroupLayoutEntry[] = size === 0 ? [] : [uniformEntry(size, STAGE_FRAGMENT, false)];
+      for (const resource of resources) {
+        entries.push(
+          resource.kind === "texture"
+            ? { binding: resource.binding, visibility: STAGE_FRAGMENT, texture: { sampleType: "float", viewDimension: "2d", multisampled: false } }
+            : { binding: resource.binding, visibility: STAGE_FRAGMENT, sampler: { type: "filtering" } },
+        );
+      }
       found = this.registry.createBindGroupLayout({
-        label: size === 0 ? "mtek group 1 (no params)" : `mtek group 1 (${String(size)}-byte params)`,
-        entries: size === 0 ? [] : [uniformEntry(size, STAGE_FRAGMENT, false)],
+        label: size === 0 && resources.length === 0 ? "mtek group 1 (no params)" : `mtek group 1 (${key})`,
+        entries,
       });
-      this.materialLayouts.set(size, found);
+      this.materialLayouts.set(key, found);
     }
     return found;
   }
 
-  /** The bind group of the empty group-1 layout, shared by every material without value params. */
+  /** The bind group of the empty group-1 layout, shared by every material without value params or resources. */
   emptyMaterialGroup(): GPUBindGroup {
     this.emptyGroup ??= this.registry.createBindGroup({ label: "mtek group 1 (no params)", layout: this.material(null), entries: [] });
     return this.emptyGroup;
   }
 
-  pipelineLayout(layout: MtekLayoutRecord | null): GPUPipelineLayout {
-    const size = layout?.size ?? 0;
-    let found = this.pipelineLayouts.get(size);
+  pipelineLayout(layout: MtekLayoutRecord | null, resources: readonly MtekMaterialResource[] = []): GPUPipelineLayout {
+    const key = materialLayoutKey(layout?.size ?? 0, resources);
+    let found = this.pipelineLayouts.get(key);
     if (found === undefined) {
       found = this.registry.createPipelineLayout({
-        label: `mtek pipeline layout (${String(size)}-byte params)`,
-        bindGroupLayouts: [this.frame, this.material(layout), this.object],
+        label: `mtek pipeline layout (${key})`,
+        bindGroupLayouts: [this.frame, this.material(layout, resources), this.object],
       });
-      this.pipelineLayouts.set(size, found);
+      this.pipelineLayouts.set(key, found);
     }
     return found;
   }
@@ -148,7 +169,7 @@ export function pipelineDescriptor(plan: BindingPlan, request: PipelineRequest):
   const { material, module, colorFormat } = request;
   return {
     label: `mtek pipeline ${material.id}`,
-    layout: plan.pipelineLayout(material.layout),
+    layout: plan.pipelineLayout(material.layout, material.resources),
     vertex: { module, entryPoint: material.shader.vertexEntry, buffers: vertexBufferLayouts(material.shader.vertexAttributes) },
     fragment: { module, entryPoint: material.shader.fragmentEntry, targets: [{ format: colorFormat }] },
     primitive: { topology: TOPOLOGY, cullMode: CULL_MODE, frontFace: FRONT_FACE },

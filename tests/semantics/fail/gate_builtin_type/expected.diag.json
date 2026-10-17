@@ -3,8 +3,8 @@
     "code": "MTEK-E9010",
     "file": "src/main.mtek",
     "startByte": 9,
-    "endByte": 16,
-    "message": "The built-in type `sampler` is specified for v0.1 but not implemented by this compiler build yet (planned for M4).",
+    "endByte": 18,
+    "message": "The built-in type `glb_asset` is specified for v0.1 but not implemented by this compiler build yet (planned for M4).",
     "notes": [
       "this compiler build implements the language up to milestone M1"
     ]
@@ -12,9 +12,9 @@
   {
     "code": "MTEK-E9010",
     "file": "src/main.mtek",
-    "startByte": 19,
+    "startByte": 21,
     "endByte": 26,
-    "message": "The built-in namespace `sampler` is specified for v0.1 but not implemented by this compiler build yet (planned for M4).",
+    "message": "The built-in namespace `asset` is specified for v0.1 but not implemented by this compiler build yet (planned for M4).",
     "notes": [
       "this compiler build implements the language up to milestone M1"
     ]

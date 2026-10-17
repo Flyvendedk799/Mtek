@@ -1,0 +1,64 @@
+program (entry scene src/main.mtek::Gallery)
+  module src/main.mtek @1:1-36:1
+    material Textured [src/main.mtek::Textured] @4:1-17:2
+      param #0 tint: color = color(1.0, 1.0, 1.0, 1.0) @5:5-5:33
+      param #1 base: texture = texture.white() @6:5-6:43
+      param #2 filter: sampler = sampler.linear_repeat() @7:5-7:53
+      param #3 strength: f32 = 1.0 @8:5-8:31
+      param #4 mask: texture = texture.black() @9:5-9:43
+      param #5 crisp: sampler = sampler.nearest_clamp() @10:5-10:52
+      block material:src/main.mtek::Textured MtekParams_e2cab98b_Textured (size 32, align 16)
+      fragment -> color [src/main.mtek::Textured.fragment] reads uv @12:5-16:6
+        local #0 input: SurfaceInput (param) @12:14-12:19
+        local #1 soft: vec4 (let) @13:13-13:17
+        local #2 hard: vec4 (let) @14:13-14:17
+        let soft#1 = (sample(param base#1, param filter#2, (input#0.uv): vec2)): vec4 @13:9-13:51
+        let hard#2 = (sample(param mask#4, param crisp#5, ((input#0.uv): vec2 * 2.0): vec2)): vec4 @14:9-14:60
+        return (color.linear(((((param tint#0.rgb): vec3 * (soft#1.xyz): vec3): vec3 * param strength#3): vec3 + (hard#2.xyz): vec3): vec3, 1.0)): color @15:9-15:77
+    const SHARP: Textured = Textured { tint: color(1.0, 1.0, 1.0, 1.0), base: texture.white(), filter: sampler.nearest_repeat(), strength: 1.0, mask: texture.white(), crisp: sampler.nearest_clamp() } [src/main.mtek::SHARP] @19:1-19:84
+    scene Gallery [src/main.mtek::Gallery] @21:1-35:2
+      fields
+        clear_color = color(0.0, 0.0, 0.0, 1.0) (default @21:1-35:2)
+      camera Main [src/main.mtek::Gallery.Main] active @22:5-22:19
+        position = vec3(0.0, 0.0, 5.0) (default @22:5-22:19)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @22:5-22:19)
+        projection = Perspective { fov_y: 0.9, near: 0.1, far: 1000.0 } (default @22:5-22:19)
+      entity #0 Plain [src/main.mtek::Gallery.Plain] root @23:5-26:6
+        position = vec3(0.0, 0.0, 0.0) (default @23:5-26:6)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @23:5-26:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @23:5-26:6)
+        visible = true (default @23:5-26:6)
+        mesh = Plane { size: vec2(2.0, 2.0) } (written @24:9-24:46)
+        material = src/main.mtek::Textured (written @25:9-25:31)
+          tint: color = color(1.0, 1.0, 1.0, 1.0)
+          base: texture = texture.white()
+          filter: sampler = sampler.linear_repeat()
+          strength: f32 = 1.0
+          mask: texture = texture.black()
+          crisp: sampler = sampler.nearest_clamp()
+      entity #1 Sharp [src/main.mtek::Gallery.Sharp] root @27:5-30:6
+        position = vec3(0.0, 0.0, 0.0) (default @27:5-30:6)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @27:5-30:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @27:5-30:6)
+        visible = true (default @27:5-30:6)
+        mesh = Plane { size: vec2(2.0, 2.0) } (written @28:9-28:46)
+        material = src/main.mtek::Textured (written @29:9-29:25)
+          tint: color = color(1.0, 1.0, 1.0, 1.0)
+          base: texture = texture.white()
+          filter: sampler = sampler.nearest_repeat()
+          strength: f32 = 1.0
+          mask: texture = texture.white()
+          crisp: sampler = sampler.nearest_clamp()
+      entity #2 Dark [src/main.mtek::Gallery.Dark] root @31:5-34:6
+        position = vec3(0.0, 0.0, 0.0) (default @31:5-34:6)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @31:5-34:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @31:5-34:6)
+        visible = true (default @31:5-34:6)
+        mesh = Box { size: vec3(1.0, 1.0, 1.0) } (written @32:9-32:22)
+        material = src/main.mtek::Textured (written @33:9-33:84)
+          tint: color = color(1.0, 0.24620132, 0.0, 1.0)
+          base: texture = texture.black()
+          filter: sampler = sampler.linear_repeat()
+          strength: f32 = 2.0
+          mask: texture = texture.black()
+          crisp: sampler = sampler.nearest_clamp()

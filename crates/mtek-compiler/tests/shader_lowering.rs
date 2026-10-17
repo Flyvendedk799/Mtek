@@ -171,6 +171,48 @@ fn every_golden_material_matches_its_expected_wgsl() {
 }
 
 #[test]
+fn textures_and_samplers_are_group_1_bindings_from_1_in_param_order() {
+    // Decision 0054: value params keep the block at binding 0 whatever their position among the
+    // resources; each texture or sampler param is one global; `sample` is `textureSampleLevel` at level 0
+    // (valid in any control flow, unlike `textureSample`).
+    let (program, _) = lowered(&materials_dir().join("textures"));
+    let wgsl = &shaders(&program)["main.Blend"].wgsl;
+    for line in [
+        "@group(1) @binding(0) var<uniform> mtek_params: ",
+        "@group(1) @binding(1) var mtek_texture_base: texture_2d<f32>;",
+        "@group(1) @binding(2) var mtek_sampler_filter: sampler;",
+        "@group(1) @binding(3) var mtek_texture_overlay: texture_2d<f32>;",
+        "@group(1) @binding(4) var mtek_sampler_flat: sampler;",
+    ] {
+        assert!(wgsl.contains(line), "{line}\n{wgsl}");
+    }
+    assert!(
+        wgsl.contains("textureSampleLevel(mtek_texture_overlay, mtek_sampler_flat, "),
+        "{wgsl}"
+    );
+    assert!(
+        wgsl.contains("textureSampleLevel(mtek_texture_base, mtek_sampler_filter, "),
+        "{wgsl}"
+    );
+    assert!(!wgsl.contains("textureSample("), "{wgsl}");
+    // The resources are not members of the block.
+    let block = wgsl.split("struct MtekParams_").nth(1).unwrap();
+    let block = block.split('}').next().unwrap();
+    assert!(
+        block.contains("u_strength") && block.contains("u_offset"),
+        "{block}"
+    );
+    assert!(
+        !block.contains("base") && !block.contains("filter"),
+        "{block}"
+    );
+    // The resource order of the group is the order of the param declarations.
+    let binding = |name: &str| wgsl.find(name).unwrap();
+    assert!(binding("mtek_texture_base:") < binding("mtek_sampler_filter:"));
+    assert!(binding("mtek_sampler_filter:") < binding("mtek_texture_overlay:"));
+}
+
+#[test]
 fn every_material_of_every_fixture_lowers_validates_and_is_deterministic() {
     let mut roots = projects(&repo().join("tests/semantics/pass"));
     roots.extend(projects(&repo().join("tests/codegen")));

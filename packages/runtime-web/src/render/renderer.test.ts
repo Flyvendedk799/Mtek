@@ -435,6 +435,56 @@ describe("lights in the frame block (decision 0053)", () => {
   });
 });
 
+/** The minimal manifest's material with a texture at binding 1 and a sampler at binding 2 (decision 0054). */
+function texturedEdit(json: Json): void {
+  const material = (json["materials"] as Json[])[0] ?? {};
+  material["resources"] = [
+    { name: "map", kind: "texture", binding: 1 },
+    { name: "filter", kind: "sampler", binding: 2 },
+  ];
+  (material["params"] as Json[]).push({ name: "map", type: "texture", span: 3 }, { name: "filter", type: "sampler", span: 3 });
+  const instance = ((json["scene"] as { materialInstances: Json[] }).materialInstances[0] ?? {}) as { params: Json[] };
+  instance.params.push(
+    { name: "map", class: "resource", value: { kind: "builtin", name: "texture.white" } },
+    { name: "filter", class: "resource", value: { kind: "builtin", name: "sampler.linear_repeat" } },
+  );
+}
+
+describe("textures and samplers (decision 0054)", () => {
+  it("binds the built-in texture view and sampler next to the block, in the layout the pipeline was made with", async () => {
+    const { host, debug, app } = await mountScene({ edit: texturedEdit, init: minimalSceneInit });
+    debug.step(1, 0.016);
+    const draw = lastDraws(host)[0];
+    const group = draw?.bindGroups[1];
+    expect(group?.descriptor.entries.map((entry) => entry.binding)).toEqual([0, 1, 2]);
+    // Textures and samplers take part in the layout identity checks of the fake draw (the same layout object).
+    expect(debug.counters()).toMatchObject({ liveSamplers: 1, drawCalls: 1 });
+    // Besides the render target and the depth texture: one 1x1 opaque white sRGB texel.
+    const builtin = host.device.textures.filter((texture) => texture.width === 1 && texture.height === 1 && texture.format === "rgba8unorm-srgb");
+    expect(builtin.map((texture) => [...texture.pixels])).toEqual([[255, 255, 255, 255]]);
+    // Frames after the first create no resources.
+    const before = { ...debug.counters() };
+    debug.step(3, 0.016);
+    const after = debug.counters();
+    for (const name of ["texturesAllocated", "bindGroupsCreated", "liveSamplers", "pipelinesCreated"]) expect(after[name], name).toBe(before[name]);
+    app.dispose();
+    expect(host.device.textures.every((texture) => texture.destroyed)).toBe(true);
+  });
+
+  it("replaces the pixels of the built-in texture with a test texture", async () => {
+    const data = Uint8Array.from([10, 20, 30, 255, 40, 50, 60, 255, 70, 80, 90, 255, 100, 110, 120, 255]);
+    const { host, app } = await mountScene({
+      edit: texturedEdit,
+      init: minimalSceneInit,
+      options: { test: { manualClock: true, renderTarget: TARGET, textures: { "texture.white": { width: 2, height: 2, data } } } },
+    });
+    const texture = host.device.textures.find((candidate) => candidate.format === "rgba8unorm-srgb" && candidate.width === 2);
+    expect(texture).toBeDefined();
+    expect([...(texture?.pixels ?? [])]).toEqual([...data]);
+    app.dispose();
+  });
+});
+
 const OTHER_HASH = "f".repeat(64);
 const OTHER_MATERIAL = "src/main.mtek::Other";
 
