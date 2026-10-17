@@ -53,7 +53,9 @@
 //                                        oracle treats NL = 0 as contributing 0 (rule 7), which is the only
 //                                        defined reading, and a test pins it.
 //
-// (a)-(f) are recorded as one non-blocking question on the task; the spec is unchanged.
+// (a)-(f) are recorded as two non-blocking questions on the task (their letters differ: question 1 has
+// a = (a)+(b) here, b = (c), c = (d); question 2 has d = the lux note, e = (e), f = the dead zero rule,
+// g = (f)); the spec is unchanged.
 import { describe, expect, it } from "vitest";
 import { linearRgbToSrgb8, linearToSrgb8, shadePbr, type Light, type ShadeInput, type Vec3 } from "./reference-shading.ts";
 
