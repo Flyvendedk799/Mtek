@@ -168,6 +168,7 @@ fn expr(e: &Expr, out: &mut Expected) {
         | ExprKind::EntityField { .. }
         | ExprKind::CameraField { .. }
         | ExprKind::InstanceParam { .. }
+        | ExprKind::LightField { .. }
         | ExprKind::Frame { .. }
         | ExprKind::EnumMember { .. } => {}
         ExprKind::Unary { operand, .. } => children.push(operand),

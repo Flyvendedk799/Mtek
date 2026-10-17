@@ -276,6 +276,8 @@ pub enum WriteTarget {
     Field { object: DefId, field: String },
     /// A param of the material instance of a named entity (`Cube.material.phase`).
     MaterialParam { entity: DefId, param: String },
+    /// A field of the light of a named entity (`Sun.light.intensity`).
+    LightField { entity: DefId, field: String },
 }
 
 /// What a `bind(..)` writes (`spec/scenes.md` section 8.4).
@@ -285,6 +287,8 @@ pub enum BindTarget {
     Field { object: DefId, field: String },
     /// A param of the material instance of a named entity.
     MaterialParam { entity: DefId, param: String },
+    /// A field of the light of a named entity (`Sun.light.color`).
+    LightField { entity: DefId, field: String },
 }
 
 /// What a binding expression reads: its dependencies (`spec/runtime-abi.md` section 5.2).
@@ -386,6 +390,8 @@ pub struct Typeck {
     writes: Vec<WriteSite>,
     /// The type of the material instance of each named entity that has one.
     entity_materials: BTreeMap<DefId, TyId>,
+    /// The schema (`DirectionalLight`, `PointLight`) of the light of each named entity that has one.
+    entity_lights: BTreeMap<DefId, &'static str>,
     /// Every `bind(..)` of every scene, scene by scene in declaration order.
     bindings: Vec<BindInfo>,
 }
@@ -410,6 +416,7 @@ impl Typeck {
             cpu_bodies: Vec::new(),
             writes: Vec::new(),
             entity_materials: BTreeMap::new(),
+            entity_lights: BTreeMap::new(),
             bindings: Vec::new(),
         }
     }
@@ -455,6 +462,12 @@ impl Typeck {
     #[must_use]
     pub fn entity_material(&self, entity: DefId) -> Option<TyId> {
         self.entity_materials.get(&entity).copied()
+    }
+
+    /// The light schema (`DirectionalLight`, `PointLight`) of the named entity `entity`.
+    #[must_use]
+    pub fn entity_light(&self, entity: DefId) -> Option<&'static str> {
+        self.entity_lights.get(&entity).copied()
     }
 
     /// The material declared as `def`.

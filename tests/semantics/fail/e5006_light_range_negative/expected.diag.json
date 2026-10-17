@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 150,
+    "endByte": 154,
+    "message": "Field 'range' of PointLight must be at least 0, but the value is -1.0."
+  }
+]

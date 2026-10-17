@@ -1,0 +1,38 @@
+// Lights: a directional and a point light on named entities, ambient light as scene fields. The
+// `color` and `intensity` of a light are bindable and writable, `range` is construction-only.
+scene Demo {
+    clear_color: #101418;
+    ambient_color: #8090ff;
+    ambient_intensity: 0.2;
+    state pulse: f32 = 1.0;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Sun {
+        rotation: quat.axis_angle(vec3(1.0, 0.0, 0.0), -0.9);
+        light: DirectionalLight { color: #fff4e0; intensity: bind(pulse * 3.0); };
+    }
+
+    entity Lamp {
+        position: vec3(0.0, 2.0, 0.0);
+        light: PointLight { color: bind(color.linear(vec3(pulse, 0.5, 0.25), 1.0)); intensity: 5.0; range: 8.0; };
+
+        update(dt: f32) {
+            pulse = pulse + dt;
+            Sun.light.color = #ffffff;
+        }
+    }
+
+    entity Torch {
+        position: vec3(2.0, 0.0, 0.0);
+        light: PointLight {};
+
+        update(dt: f32) {
+            self.light.intensity = self.light.intensity + dt;
+            Torch.light.color = color.linear(vec3(1.0, 0.5, 0.0), 1.0);
+        }
+    }
+}

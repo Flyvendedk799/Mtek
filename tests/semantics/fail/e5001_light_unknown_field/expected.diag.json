@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 180,
+    "endByte": 185,
+    "message": "The light of 'Sun' has no field 'range'.",
+    "notes": [
+      "the fields of DirectionalLight are color, intensity"
+    ]
+  }
+]

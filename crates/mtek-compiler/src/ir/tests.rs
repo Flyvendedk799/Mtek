@@ -4,8 +4,8 @@
 use std::collections::BTreeSet;
 
 use super::lower::{
-    CAMERA_FIELDS, ENTITY_FIELDS, MESH_SCHEMAS, OBJECT_KINDS, PROJECTION_SCHEMAS, SCENE_FIELDS,
-    mesh_desc, projection_desc,
+    CAMERA_FIELDS, ENTITY_FIELDS, LIGHT_SCHEMAS, MESH_SCHEMAS, OBJECT_KINDS, PROJECTION_SCHEMAS,
+    SCENE_FIELDS, mesh_desc, projection_desc,
 };
 use super::*;
 use crate::project::ProjectRoot;
@@ -168,6 +168,10 @@ fn every_implemented_descriptor_schema_is_lowered() {
     assert_eq!(
         implemented_schemas(SchemaCategory::Projection),
         PROJECTION_SCHEMAS.into_iter().collect()
+    );
+    assert_eq!(
+        implemented_schemas(SchemaCategory::Light),
+        LIGHT_SCHEMAS.into_iter().collect()
     );
     let materials = implemented_schemas(SchemaCategory::Material);
     assert!(!materials.is_empty());

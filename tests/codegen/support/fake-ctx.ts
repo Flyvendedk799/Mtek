@@ -5,7 +5,7 @@
 
 /** One recorded setter call. `entity` is the static index of the record passed, or -1. */
 export interface SetterCall {
-  readonly method: "setCamera" | "setTransform" | "setVisible" | "setParam";
+  readonly method: "setCamera" | "setTransform" | "setVisible" | "setParam" | "setLight";
   readonly entity: number;
   readonly field: string;
   readonly value: unknown;
@@ -34,6 +34,7 @@ export interface FakeContext {
   setTransform(entity: FakeEntityRecord, field: string, value: unknown): void;
   setVisible(entity: FakeEntityRecord, value: unknown): void;
   setParam(entity: FakeEntityRecord, name: string, value: unknown): void;
+  setLight(entity: FakeEntityRecord, field: string, value: unknown): void;
   warn(code: string, spanId: number): void;
 }
 
@@ -67,6 +68,9 @@ export function createFakeContext(entityCount: number): {
     },
     setParam(entity: FakeEntityRecord, name: string, value: unknown): void {
       calls.push({ method: "setParam", entity: indexOf(entity), field: name, value });
+    },
+    setLight(entity: FakeEntityRecord, field: string, value: unknown): void {
+      calls.push({ method: "setLight", entity: indexOf(entity), field, value });
     },
     warn(code: string, spanId: number): void {
       warnings.push({ code, spanId });

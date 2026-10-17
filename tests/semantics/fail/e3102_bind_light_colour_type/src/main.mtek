@@ -1,0 +1,7 @@
+// A bound light colour must be a colour (E3102).
+scene Demo {
+    camera Main {}
+    entity Sun {
+        light: DirectionalLight { color: bind(2.0); };
+    }
+}

@@ -20,9 +20,10 @@ use super::facts::BodyFacts;
 use super::ty::{Ty, TyId};
 use super::{CpuBody, CpuBodyKind, StateInfo, WriteSite, WriteTarget};
 use crate::diagnostics::{Code, Diagnostic};
+use crate::resolve::gate::is_implemented;
 use crate::resolve::{DefId, DefKind, PreludeItem, Res};
 use crate::source::Span;
-use crate::stdlib::EventForm;
+use crate::stdlib::{EventForm, SchemaCategory};
 use crate::syntax::ast::{
     EntityDecl, EntityMember, Expr, ExprKind, FieldInit, FieldValue, Handler, HandlerArg, Ident,
     LifecycleFn, SceneDecl, SceneMember, StateDecl,
@@ -614,6 +615,96 @@ impl Checker<'_> {
         }
     }
 
+    /// `Sun.light.intensity` and `self.light.color`: a field of the light of a named entity
+    /// (`spec/materials.md` section 7, decision 0053). `None` when `expr` is not that form.
+    pub(super) fn light_field(&mut self, expr: &Expr, base: &Expr, name: &Ident) -> Option<TyId> {
+        let ExprKind::Field {
+            base: owner,
+            name: light,
+        } = &base.kind
+        else {
+            return None;
+        };
+        if light.name != "light" || !matches!(owner.kind, ExprKind::Name(_) | ExprKind::SelfValue) {
+            return None;
+        }
+        let Some(Res::Def(entity)) = self.res.res(owner.id) else {
+            return None;
+        };
+        if self.res.def(entity).map(|d| d.kind) != Some(DefKind::Entity) {
+            return None;
+        }
+        let entity_name = self
+            .res
+            .def(entity)
+            .map_or_else(String::new, |d| d.name.clone());
+        if self.scope.is_some_and(|scope| scope.initialiser.is_some()) {
+            self.report_initialiser_read(expr, &entity_name, "entity", "light");
+            return Some(TyId::ERROR);
+        }
+        let Some(schema) = self.out.entity_lights.get(&entity).copied() else {
+            self.report(
+                Diagnostic::new(
+                    Code::E5001,
+                    format!("The entity '{entity_name}' has no light."),
+                )
+                .at(base.span),
+            );
+            return Some(TyId::ERROR);
+        };
+        let schema_ty = self.out.interner.intern(Ty::Schema(schema));
+        self.set_ty(base.id, schema_ty);
+        match self.registry.schema_field(schema, &name.name) {
+            Some(def) if is_implemented(def.since) => {
+                self.fields.insert(
+                    expr.id,
+                    FieldKind::LightField {
+                        entity,
+                        field: def.name.to_owned(),
+                    },
+                );
+                Some(self.out.interner.from_type_ref(def.ty))
+            }
+            _ => {
+                let fields: Vec<&str> = self
+                    .registry
+                    .schema(schema)
+                    .map(|s| s.fields.iter().map(|f| f.name).collect())
+                    .unwrap_or_default();
+                self.report(
+                    Diagnostic::new(
+                        Code::E5001,
+                        format!("The light of '{entity_name}' has no field '{}'.", name.name),
+                    )
+                    .at(name.span)
+                    .note(format!("the fields of {schema} are {}", fields.join(", "))),
+                );
+                Some(TyId::ERROR)
+            }
+        }
+    }
+
+    /// Remember the light schema of `light: L { … };` for `Sun.light.field`.
+    pub(super) fn note_entity_light(&mut self, entity: &EntityDecl, field: &FieldInit) {
+        if field.name.name != "light" {
+            return;
+        }
+        let FieldValue::Expr(value) = &field.value else {
+            return;
+        };
+        let (Some(ty), Some(def)) = (self.ty_of(value.id), self.res.def_of(entity.id)) else {
+            return;
+        };
+        if let Ty::Schema(name) = self.out.interner.get(ty)
+            && self
+                .registry
+                .schema(name)
+                .is_some_and(|schema| schema.category == SchemaCategory::Light)
+        {
+            self.out.entity_lights.insert(def, name);
+        }
+    }
+
     /// Remember the material instance type of `material: M { … };` for `Cube.material.param`.
     pub(super) fn note_entity_material(&mut self, entity: &EntityDecl, field: &FieldInit) {
         if field.name.name != "material" {
@@ -668,6 +759,9 @@ impl Checker<'_> {
                     Some(FieldKind::MaterialParam { entity, param }) => {
                         return Some((Some(WriteTarget::MaterialParam { entity, param }), true));
                     }
+                    Some(FieldKind::LightField { entity, field }) => {
+                        return Some(self.light_write(current, entity, &field));
+                    }
                     _ => return None,
                 },
                 ExprKind::Name(_) => {
@@ -683,6 +777,45 @@ impl Checker<'_> {
                 _ => return None,
             }
         }
+    }
+
+    /// A write of the field `field` of the light of `entity`: `E5073` if its schema marks the
+    /// field construction-only (`range`), else a write site.
+    fn light_write(
+        &mut self,
+        expr: &Expr,
+        entity: DefId,
+        field: &str,
+    ) -> (Option<WriteTarget>, bool) {
+        let def = self
+            .out
+            .entity_lights
+            .get(&entity)
+            .and_then(|schema| self.registry.schema_field(schema, field));
+        if let Some(def) = def
+            && !def.flags.is_writable()
+        {
+            let name = self
+                .res
+                .def(entity)
+                .map_or_else(String::new, |d| d.name.clone());
+            self.sink.push(
+                Diagnostic::new(
+                    Code::E5073,
+                    format!("The field '{field}' of the light of '{name}' is construction-only and cannot be assigned."),
+                )
+                .at(expr.span)
+                .note("construction-only fields are set where the object is declared"),
+            );
+            return (None, false);
+        }
+        (
+            Some(WriteTarget::LightField {
+                entity,
+                field: field.to_owned(),
+            }),
+            true,
+        )
     }
 
     /// A write of the registry field `field` of the object `object`: `E5073` if the schema marks

@@ -1,0 +1,10 @@
+// A directional light has no `range` (E5001).
+scene Demo {
+    camera Main {}
+    entity Sun {
+        light: DirectionalLight {};
+        update(dt: f32) {
+            Sun.light.range = 1.0;
+        }
+    }
+}

@@ -6,7 +6,7 @@ use super::*;
 use crate::diagnostics::Diagnostic;
 use crate::resolve::resolve_module;
 use crate::source::FileId;
-use crate::stdlib::{FieldDef, FieldFlags, Milestone, Registry, registry};
+use crate::stdlib::{FieldDef, FieldFlags, Registry, registry};
 use crate::syntax::{lex_str, parse_module};
 
 struct Checked {
@@ -104,15 +104,12 @@ fn a_missing_required_field_is_e5003() {
 
 #[test]
 fn only_material_colour_parameters_must_be_opaque() {
-    // `ambient_color` is M4 (gated by the resolver, `E9010`); on a registry
-    // where the checker implements it, a translucent value is accepted: the
-    // renderer uses only the RGB channels of scene colours.
-    let changed = registry_with(|r| field_mut(r, "Scene", "ambient_color").since = Milestone::M1);
-    let c = checked_with(
+    // A translucent scene colour is accepted: the renderer uses only the RGB channels of
+    // `clear_color` and `ambient_color`.
+    let c = checked(
         "scene Demo {\n    clear_color: #00000000;\n    ambient_color: #ffffff40;\n    camera Main {}\n}\n",
-        changed,
     );
-    assert_eq!(c.codes(), ["E9010"], "{:#?}", c.diagnostics);
+    assert!(c.codes().is_empty(), "{:#?}", c.diagnostics);
     let c = checked(
         "scene Demo { camera Main {} entity A { mesh: Box {}; material: Unlit { color: #ffffff00 }; } }\n",
     );

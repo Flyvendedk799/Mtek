@@ -1,0 +1,11 @@
+// `range` of a light is construction-only (E5073); `intensity` is writable.
+scene Demo {
+    camera Main {}
+    entity Lamp {
+        light: PointLight { range: 4.0; };
+        update(dt: f32) {
+            Lamp.light.intensity = 2.0;
+            Lamp.light.range = 8.0;
+        }
+    }
+}

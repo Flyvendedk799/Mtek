@@ -19,9 +19,10 @@
 //!    bundle and the shaders.
 //!
 //! The manifest carries structure and constant scene fields only; entity and camera values
-//! are set by `init(ctx)` (`spec/scenes.md` section 11). `ambientColor`, `ambientIntensity`
-//! and `gravity` are registry fields that M4/M5 implement: until then they are the registry
-//! defaults of the `Scene` schema.
+//! are set by `init(ctx)` (`spec/scenes.md` section 11); a light's kind and range are structure
+//! and live in `scene.lights`, its colour and intensity are set by `init(ctx)`. `gravity` is a
+//! registry field that M5 implements: until then it is the registry default of the `Scene`
+//! schema.
 
 use std::collections::BTreeMap;
 
@@ -42,9 +43,10 @@ use super::html::index_html;
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
     Binding, BindingDep, BindingTarget, Camera, Entity, EntityMaterial, InstanceParam, Layout,
-    MANIFEST_SCHEMA, Manifest, Material, MaterialInstance, MaterialParam, Mesh, MeshShape, Num,
-    ParamClass as ManifestClass, RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader,
-    SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
+    Light as ManifestLight, LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material,
+    MaterialInstance, MaterialParam, Mesh, MeshShape, Num, ParamClass as ManifestClass,
+    RequiredCapabilities, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, StateEntry,
+    Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -445,13 +447,6 @@ fn scene_default(name: &str) -> Result<ConstValue, String> {
         .ok_or_else(|| format!("the registry has no constant default for 'Scene.{name}'"))
 }
 
-fn color_nums(value: &ConstValue, what: &str) -> Result<Vec<Num>, String> {
-    match value {
-        ConstValue::Color(rgba) => nums(rgba),
-        _ => Err(format!("{what} is not a colour")),
-    }
-}
-
 /// The manifest's `scene`.
 fn resolve_host_inputs(project: &Project, scene: &ir::Scene) -> Vec<ResolvedHostInput> {
     let mut sink = crate::diagnostics::Diagnostics::new();
@@ -494,9 +489,13 @@ fn manifest_scene(
         Some(ir::Value::Color(rgba)) => nums(rgba)?,
         _ => return Err("the scene's clear_color is not a constant colour".to_owned()),
     };
-    let ambient_intensity = match scene_default("ambient_intensity")? {
-        ConstValue::F32(v) => num(v)?,
-        _ => return Err("the default of 'Scene.ambient_intensity' is not an f32".to_owned()),
+    let ambient_color = match scene.fields.ambient_color.source.as_const() {
+        Some(ir::Value::Color(rgba)) => nums(rgba)?,
+        _ => return Err("the scene's ambient_color is not a constant colour".to_owned()),
+    };
+    let ambient_intensity = match scene.fields.ambient_intensity.source.as_const() {
+        Some(ir::Value::F32(v)) => num(*v)?,
+        _ => return Err("the scene's ambient_intensity is not a constant f32".to_owned()),
     };
     let gravity = match scene_default("gravity")? {
         ConstValue::Vec3(v) => nums(&v)?,
@@ -504,7 +503,7 @@ fn manifest_scene(
     };
     let fields = SceneFields {
         clear_color,
-        ambient_color: color_nums(&scene_default("ambient_color")?, "Scene.ambient_color")?,
+        ambient_color,
         ambient_intensity,
         gravity,
     };
@@ -520,8 +519,29 @@ fn manifest_scene(
         })
         .collect();
     let mut entities = Vec::with_capacity(scene.entities.len());
+    let mut lights = Vec::new();
     for entity in &scene.entities {
         let slot = entity.index as usize;
+        // Lights are numbered in stable instance order; their colour and intensity are set by
+        // `init(ctx)` and the entity's bindings, the manifest carries the structure.
+        let light = match &entity.light {
+            Some(light) => {
+                let index = u32::try_from(lights.len())
+                    .map_err(|_| "the scene has too many lights".to_owned())?;
+                lights.push(ManifestLight {
+                    index,
+                    entity: entity.index,
+                    kind: match light.kind {
+                        ir::LightKind::Directional => ManifestLightKind::Directional,
+                        ir::LightKind::Point { range } => {
+                            ManifestLightKind::Point { range: num(range)? }
+                        }
+                    },
+                });
+                Some(index)
+            }
+            None => None,
+        };
         let mesh = plan
             .entity_meshes
             .get(slot)
@@ -542,7 +562,7 @@ fn manifest_scene(
                 id: i.material.to_string(),
                 instance: i.index,
             }),
-            light: None,
+            light,
             body: None,
             collider: None,
             state: state_entries(
@@ -603,7 +623,7 @@ fn manifest_scene(
             .iter()
             .map(ResolvedHostInput::to_manifest)
             .collect(),
-        lights: Vec::new(),
+        lights,
     })
 }
 
@@ -634,6 +654,10 @@ fn manifest_bindings(
                 name: name.clone(),
             },
             ir::BindingTarget::Camera { field } => BindingTarget::Camera {
+                field: field.clone(),
+            },
+            ir::BindingTarget::Light { entity, field } => BindingTarget::Light {
+                entity: *entity,
                 field: field.clone(),
             },
         };

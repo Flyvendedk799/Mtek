@@ -149,7 +149,7 @@
     {
       "name": "DirectionalLight",
       "category": "light",
-      "since": "M4",
+      "since": "M1",
       "doc": "A light infinitely far away. Travels along the entity's world -Z axis; rotate the entity to aim it.",
       "fields": [
         {
@@ -161,7 +161,7 @@
           "bindable": true,
           "constructionOnly": false,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "Light colour (linear RGB; alpha is ignored)."
         },
         {
@@ -173,7 +173,7 @@
           "bindable": true,
           "constructionOnly": false,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "Illuminance in lux."
         }
       ]
@@ -261,7 +261,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only."
         },
         {
@@ -525,7 +525,7 @@
     {
       "name": "PointLight",
       "category": "light",
-      "since": "M4",
+      "since": "M1",
       "doc": "A light radiating from the entity's world position.",
       "fields": [
         {
@@ -537,7 +537,7 @@
           "bindable": true,
           "constructionOnly": false,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "Light colour (linear RGB; alpha is ignored)."
         },
         {
@@ -549,7 +549,7 @@
           "bindable": true,
           "constructionOnly": false,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "Luminous intensity in candela."
         },
         {
@@ -561,7 +561,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": "≥ 0",
-          "since": "M4",
+          "since": "M1",
           "doc": "Distance at which the light fades to nothing; 0 means unlimited."
         }
       ]
@@ -581,7 +581,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "Colour of the ambient light term of lit materials. Only the RGB channels are used."
         },
         {
@@ -593,7 +593,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": "≥ 0",
-          "since": "M4",
+          "since": "M1",
           "doc": "Scale of the ambient light term of lit materials; 0 turns ambient light off."
         },
         {

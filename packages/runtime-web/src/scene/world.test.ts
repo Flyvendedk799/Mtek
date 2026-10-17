@@ -24,7 +24,22 @@ interface Ctx {
   setVisible(e: unknown, value: unknown): void;
   setParam(e: unknown, name: string, value: unknown): void;
   setCamera(field: string, value: unknown): void;
+  setLight(e: unknown, field: string, value: unknown): void;
   warn(code: string, span: number): void;
+}
+
+/** The minimal manifest with a point light (range 6.5) on its entity and a bare second entity. */
+function lightManifest(): MtekManifest {
+  const json = minimalManifestJson();
+  const scene = json["scene"] as { entities: Record<string, unknown>[]; lights: Record<string, unknown>[] };
+  const first = scene.entities[0];
+  if (first === undefined) throw new Error("minimal manifest has no entity");
+  scene.entities = [
+    { ...first, light: 0 },
+    { ...first, index: 1, name: "Plain", symbol: "src/main.mtek::Demo.Plain", mesh: null, material: null, light: null },
+  ];
+  scene.lights = [{ index: 0, entity: 0, kind: "point", range: 6.5 }];
+  return manifestFrom(json);
 }
 
 function manifestFrom(json: Record<string, unknown>): MtekManifest {
@@ -111,7 +126,7 @@ describe("the M1 context subset", () => {
     expect(Object.keys(ctx).sort()).toEqual([...CONTEXT_MEMBERS].sort());
   });
 
-  it.each(["spawn", "destroy", "alive", "body", "setLight", "notAMember"])(
+  it.each(["spawn", "destroy", "alive", "body", "notAMember"])(
     "reading ctx.%s throws an internal error naming the member",
     (member) => {
       const { ctx } = makeWorld();
@@ -192,6 +207,33 @@ describe("setters", () => {
     expect(e0?.mat?.p["color"]).toEqual({ r: 1, g: 0, b: 0, a: 1 });
     expect(writes).toHaveLength(1);
     expect(reported.map((d) => d.code)).toEqual(["MTEK-E8100"]);
+  });
+
+  it("creates the light record of an entity with the registry defaults and its construction-time range", () => {
+    const { ctx } = makeWorld(lightManifest());
+    expect(ctx.e[0]?.light).toEqual({ color: { r: 1, g: 1, b: 1, a: 1 }, intensity: 1, range: 6.5 });
+    expect(ctx.e[1]?.light).toBeNull();
+  });
+
+  it("setLight writes the colour and the intensity of the entity's light record", () => {
+    const { ctx, reported } = makeWorld(lightManifest());
+    const e0 = ctx.e[0];
+    const color = { r: 0.5, g: 0.25, b: 0.125, a: 1 };
+    ctx.setLight(e0, "color", color);
+    ctx.setLight(e0, "intensity", 12.5);
+    expect(e0?.light).toEqual({ color, intensity: 12.5, range: 6.5 });
+    expect(reported).toEqual([]);
+  });
+
+  it("setLight rejects what generated code never passes with internal errors: range, other fields, wrong types, no light", () => {
+    const { ctx } = makeWorld(lightManifest());
+    const [e0, e1] = ctx.e;
+    expect(() => ctx.setLight(e0, "range", 3)).toThrow(/expected color or intensity/);
+    expect(() => ctx.setLight(e0, "kind", 1)).toThrow(/expected color or intensity/);
+    expect(() => ctx.setLight(e0, "color", { x: 1, y: 1, z: 1 })).toThrow(/expects a color/);
+    expect(() => ctx.setLight(e0, "intensity", "3")).toThrow(/expects an f32/);
+    expect(() => ctx.setLight(e1, "intensity", 3)).toThrow(/has no light/);
+    expect(() => ctx.setLight({}, "intensity", 3)).toThrow(/not an entity record/);
   });
 
   it("setCamera writes the camera record", () => {

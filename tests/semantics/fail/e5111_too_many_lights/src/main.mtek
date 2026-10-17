@@ -1,0 +1,12 @@
+// A scene holds at most four lights (the frame block is fixed-size, E5111).
+scene Demo {
+    camera Main {}
+    entity A { light: DirectionalLight {}; }
+    entity B { light: PointLight {}; }
+    entity C {
+        light: PointLight {};
+        entity D { light: PointLight {}; }
+    }
+    entity E { light: PointLight {}; }
+    entity F { light: PointLight {}; }
+}

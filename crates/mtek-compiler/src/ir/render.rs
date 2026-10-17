@@ -4,9 +4,9 @@
 
 use super::model::{
     Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Camera, Const, Entity, Expr,
-    ExprKind, Field, Function, Item, LocalItem, LocalKind, MaterialInstanceDesc, MaterialItem,
-    Mesh, MeshDesc, NamedExpr, Origin, Owner, Place, PlaceRoot, PlaceStep, Program, Projection,
-    ProjectionDesc, Scene, Source, State, Stmt, StructItem,
+    ExprKind, Field, Function, Item, Light, LightKind, LocalItem, LocalKind, MaterialInstanceDesc,
+    MaterialItem, Mesh, MeshDesc, NamedExpr, Origin, Owner, Place, PlaceRoot, PlaceStep, Program,
+    Projection, ProjectionDesc, Scene, Source, State, Stmt, StructItem,
 };
 use crate::source::{SourceMap, Span};
 
@@ -428,6 +428,17 @@ impl Tree<'_> {
         );
         self.line(depth + 1, "fields".to_owned());
         self.field(depth + 2, "clear_color", &scene.fields.clear_color);
+        // The ambient fields are listed when the source writes them.
+        if scene.fields.ambient_color.origin == Origin::Written {
+            self.field(depth + 2, "ambient_color", &scene.fields.ambient_color);
+        }
+        if scene.fields.ambient_intensity.origin == Origin::Written {
+            self.field(
+                depth + 2,
+                "ambient_intensity",
+                &scene.fields.ambient_intensity,
+            );
+        }
         if !scene.constants.is_empty() {
             self.line(depth + 1, "constants".to_owned());
             for constant in &scene.constants {
@@ -458,6 +469,7 @@ impl Tree<'_> {
             BindingTarget::Visible { entity } => format!("entity#{entity}.visible"),
             BindingTarget::Param { entity, name } => format!("entity#{entity}.material.{name}"),
             BindingTarget::Camera { field } => format!("camera.{field}"),
+            BindingTarget::Light { entity, field } => format!("entity#{entity}.light.{field}"),
         };
         let deps: Vec<String> = binding
             .deps
@@ -591,6 +603,23 @@ impl Tree<'_> {
         if let Some(material) = &entity.material {
             self.material(depth + 1, material);
         }
+        if let Some(light) = &entity.light {
+            self.light(depth + 1, light);
+        }
+    }
+
+    fn light(&mut self, depth: usize, light: &Light) {
+        let location = self.location(light.span);
+        let kind = match light.kind {
+            LightKind::Directional => "DirectionalLight".to_owned(),
+            LightKind::Point { range } => format!("PointLight {{ range: {range:?} }}"),
+        };
+        self.line(
+            depth,
+            format!("light = {kind} ({} {location})", origin(light.origin)),
+        );
+        self.field(depth + 1, "color", &light.color);
+        self.field(depth + 1, "intensity", &light.intensity);
     }
 
     fn mesh(&mut self, depth: usize, mesh: &Mesh) {
@@ -647,6 +676,7 @@ fn place_text(place: &Place, local_name: &dyn Fn(u32) -> String) -> String {
         PlaceRoot::InstanceParam { entity, param, .. } => {
             format!("entity#{entity}.material.{param}")
         }
+        PlaceRoot::LightField { entity, field, .. } => format!("entity#{entity}.light.{field}"),
     };
     for step in &place.steps {
         match step {
@@ -712,6 +742,9 @@ fn expr_text(expr: &Expr) -> String {
         ExprKind::CameraField { camera, field } => return format!("{camera}.{field}"),
         ExprKind::InstanceParam { entity, param } => {
             return format!("entity#{entity}.material.{param}");
+        }
+        ExprKind::LightField { entity, field } => {
+            return format!("entity#{entity}.light.{field}");
         }
         ExprKind::Frame { member } => return format!("frame.{member}"),
         ExprKind::EnumMember {

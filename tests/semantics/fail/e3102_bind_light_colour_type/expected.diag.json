@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 145,
+    "endByte": 148,
+    "message": "The binding of the field 'color' of the light of entity 'Sun' expects color, but its expression has type f32.",
+    "expected": "color",
+    "actual": "f32"
+  }
+]

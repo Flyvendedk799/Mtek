@@ -441,6 +441,10 @@ impl FnLowering<'_, '_> {
                 entity: self.entity_index(*entity)?,
                 param: param.clone(),
             },
+            FieldKind::LightField { entity, field } => ExprKind::LightField {
+                entity: self.entity_index(*entity)?,
+                field: field.clone(),
+            },
             _ => return Err(self.defect("a field read this build does not lower")),
         })
     }
@@ -669,7 +673,8 @@ impl FnLowering<'_, '_> {
                     if let Some(
                         kind @ (FieldKind::EntityState { .. }
                         | FieldKind::ObjectField { .. }
-                        | FieldKind::MaterialParam { .. }),
+                        | FieldKind::MaterialParam { .. }
+                        | FieldKind::LightField { .. }),
                     ) = types.field_kind(current.id)
                     {
                         break match self.object_read(kind)? {
@@ -694,6 +699,12 @@ impl FnLowering<'_, '_> {
                             ExprKind::InstanceParam { entity, param } => PlaceRoot::InstanceParam {
                                 entity,
                                 param,
+                                ty,
+                                span: current.span,
+                            },
+                            ExprKind::LightField { entity, field } => PlaceRoot::LightField {
+                                entity,
+                                field,
                                 ty,
                                 span: current.span,
                             },
@@ -868,7 +879,8 @@ impl FnLowering<'_, '_> {
                 Some(
                     kind @ (FieldKind::EntityState { .. }
                     | FieldKind::ObjectField { .. }
-                    | FieldKind::MaterialParam { .. }),
+                    | FieldKind::MaterialParam { .. }
+                    | FieldKind::LightField { .. }),
                 ) => make(self.object_read(kind)?),
                 Some(FieldKind::NamespaceValue(full)) => match full.strip_prefix("frame.") {
                     Some(member) => make(ExprKind::Frame {
@@ -1091,6 +1103,10 @@ impl Lowering<'_> {
                         name: param.clone(),
                     }
                 }
+                crate::types::BindTarget::LightField { entity: e, field } => BindingTarget::Light {
+                    entity: entity(*e)?,
+                    field: field.clone(),
+                },
             };
             let mut deps = Vec::with_capacity(info.deps.len());
             for dep in &info.deps {

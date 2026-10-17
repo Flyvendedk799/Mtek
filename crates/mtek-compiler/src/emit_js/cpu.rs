@@ -434,7 +434,8 @@ impl FnLowering<'_, '_> {
             // with the write applied.
             root @ (ir::PlaceRoot::EntityField { ty, span, .. }
             | ir::PlaceRoot::CameraField { ty, span, .. }
-            | ir::PlaceRoot::InstanceParam { ty, span, .. }) => {
+            | ir::PlaceRoot::InstanceParam { ty, span, .. }
+            | ir::PlaceRoot::LightField { ty, span, .. }) => {
                 let current = self.root_read(root)?.spanned(*span);
                 if containers.is_empty() {
                     (current, false, ty.as_str())
@@ -529,7 +530,8 @@ impl FnLowering<'_, '_> {
         let setter_root = match &target.root {
             root @ (ir::PlaceRoot::EntityField { .. }
             | ir::PlaceRoot::CameraField { .. }
-            | ir::PlaceRoot::InstanceParam { .. }) => Some(root),
+            | ir::PlaceRoot::InstanceParam { .. }
+            | ir::PlaceRoot::LightField { .. }) => Some(root),
             _ => None,
         };
         let finish = match setter_root {
@@ -591,12 +593,16 @@ impl FnLowering<'_, '_> {
             ir::PlaceRoot::InstanceParam { entity, param, .. } => {
                 self.entity(*entity).member("mat").member("p").member(param)
             }
+            ir::PlaceRoot::LightField { entity, field, .. } => {
+                self.entity(*entity).member("light").member(field)
+            }
             ir::PlaceRoot::Local { .. } => return Err("a local read as a root".to_owned()),
         })
     }
 
     /// `ctx.setTransform(e, "position", v)`, `ctx.setVisible(e, v)`, `ctx.setCamera("position", v)`
-    /// or `ctx.setParam(e, "name", v)`: the context validates the value (`E8090`, `E8100`).
+    /// `ctx.setParam(e, "name", v)` or `ctx.setLight(e, "intensity", v)`: the context validates the
+    /// value (`E8090`, `E8100`).
     fn setter(&self, root: &ir::PlaceRoot, value: Expr, span: Span) -> Result<Stmt, String> {
         let call = match root {
             ir::PlaceRoot::EntityField { entity, field, .. } => match field.as_str() {
@@ -614,6 +620,9 @@ impl FnLowering<'_, '_> {
             ir::PlaceRoot::InstanceParam { entity, param, .. } => Expr::ident("ctx")
                 .member("setParam")
                 .call(vec![self.entity(*entity), Expr::string(param), value]),
+            ir::PlaceRoot::LightField { entity, field, .. } => Expr::ident("ctx")
+                .member("setLight")
+                .call(vec![self.entity(*entity), Expr::string(field), value]),
             _ => return Err("a setter for a root that has none".to_owned()),
         };
         Ok(Stmt::Expr {
@@ -757,6 +766,9 @@ impl FnLowering<'_, '_> {
             }
             ir::ExprKind::InstanceParam { entity, param } => {
                 self.entity(*entity).member("mat").member("p").member(param)
+            }
+            ir::ExprKind::LightField { entity, field } => {
+                self.entity(*entity).member("light").member(field)
             }
             ir::ExprKind::Frame { member } => Expr::ident("ctx").member("frame").member(member),
             ir::ExprKind::EnumMember { code, .. } => Expr::string(code),
@@ -970,6 +982,7 @@ mod tests {
                 | ir::ExprKind::EntityField { .. }
                 | ir::ExprKind::CameraField { .. }
                 | ir::ExprKind::InstanceParam { .. }
+                | ir::ExprKind::LightField { .. }
                 | ir::ExprKind::Frame { .. }
                 | ir::ExprKind::EnumMember { .. } => {}
                 ir::ExprKind::Unary { operand, .. } => expr(operand, out),

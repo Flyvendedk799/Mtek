@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5073",
+    "file": "src/main.mtek",
+    "startByte": 180,
+    "endByte": 190,
+    "message": "The field 'light' of 'Lamp' is construction-only and cannot be assigned.",
+    "notes": [
+      "construction-only fields are set where the object is declared"
+    ]
+  }
+]

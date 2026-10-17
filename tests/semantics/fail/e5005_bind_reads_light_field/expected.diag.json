@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5005",
+    "file": "src/main.mtek",
+    "startByte": 246,
+    "endByte": 266,
+    "message": "The binding of the field 'position' of entity 'Marker' reads the light field `Lamp.light.intensity`, which a binding cannot depend on.",
+    "notes": [
+      "a binding may read constants, state, `frame` and the fields and state of named entities"
+    ]
+  }
+]

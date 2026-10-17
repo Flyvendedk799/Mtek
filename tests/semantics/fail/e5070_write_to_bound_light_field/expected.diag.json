@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5070",
+    "file": "src/main.mtek",
+    "startByte": 266,
+    "endByte": 286,
+    "message": "`Lamp.light.intensity` is bound, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "`Lamp.light.intensity` is bound here",
+        "file": "src/main.mtek",
+        "startByte": 206,
+        "endByte": 223
+      }
+    ],
+    "notes": [
+      "help: update the binding's source instead"
+    ]
+  }
+]

@@ -15,6 +15,7 @@ interface BindingContext {
   setVisible(entity: unknown, value: boolean): void;
   setParam(entity: unknown, name: string, value: unknown): void;
   setCamera(field: string, value: unknown): void;
+  setLight(entity: unknown, field: string, value: unknown): void;
 }
 
 type Apply = (value: unknown) => void;
@@ -79,8 +80,12 @@ export class Bindings {
         return (value) => {
           ctx.setCamera(target.field, value);
         };
-      case "light":
-        throw new RuntimeInternalError("light bindings arrive with lights (M4).");
+      case "light": {
+        const record = entity(target.entity);
+        return (value) => {
+          ctx.setLight(record, target.field, value);
+        };
+      }
     }
   }
 }

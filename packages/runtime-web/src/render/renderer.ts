@@ -4,8 +4,8 @@
  * Per frame, when the target has pixels:
  *  1. `MtekFrame` is written through the generated `builtin:frame` field writers: `view_proj = P * V`
  *     from the camera (`spec/runtime-abi.md` section 8.3, aspect = target width / height), the camera
- *     position, `light_count` 0 (lights arrive with M4) and `ambient` = ambient colour RGB x intensity.
- *     The remaining members (`reserved0`, `lights`) are never written and stay zero.
+ *     position, the lights (`lights`, `light_count`: `render/lights.ts`) and `ambient` = ambient colour RGB x
+ *     intensity. The remaining member (`reserved0`) is never written and stays zero.
  *  2. For every entity whose world matrix changed (phase 6), `MtekObject` (model, normal matrix) is
  *     written through the generated `builtin:object` writers into its slot of the object arena.
  *  3. The frame, object and material arenas upload their dirty slots (`writeIfChanged` keeps unchanged
@@ -31,6 +31,7 @@ import { multiply, normalMatrix, orthographic, perspective, viewMatrix, identity
 import type { BlockWriter, LayoutWriters } from "../scene/program.js";
 import type { SceneStructure } from "../scene/structure.js";
 import type { World } from "../scene/world.js";
+import { emptyPackedLights, packLights, type LightSource, type PackedLight } from "./lights.js";
 import { extractFrustumPlanes, sphereIntersectsFrustum, worldBoundingSphere, type WorldSphere } from "./frustum.js";
 import type { MaterialStore } from "./materials.js";
 import type { GpuMesh, MeshStore } from "./meshes.js";
@@ -107,6 +108,10 @@ export class Renderer {
   private readonly writeCameraPosition: BlockWriter;
   private readonly writeLightCount: BlockWriter;
   private readonly writeAmbient: BlockWriter;
+  private readonly writeLights: BlockWriter;
+  /** The value of `MtekFrame.lights`, refilled every frame. */
+  private readonly packedLights: PackedLight[];
+  private readonly lightSource: LightSource;
   private readonly writeModel: BlockWriter;
   private readonly writeNormalMatrix: BlockWriter;
   private readonly ambient: { readonly x: number; readonly y: number; readonly z: number };
@@ -138,6 +143,16 @@ export class Renderer {
     this.writeCameraPosition = fieldWriter(frameWriters, "camera_position", structure.frameLayout.id);
     this.writeLightCount = fieldWriter(frameWriters, "light_count", structure.frameLayout.id);
     this.writeAmbient = fieldWriter(frameWriters, "ambient", structure.frameLayout.id);
+    this.writeLights = fieldWriter(frameWriters, "lights", structure.frameLayout.id);
+    this.packedLights = emptyPackedLights(structure.lightCapacity);
+    this.lightSource = {
+      light: (entity) => {
+        const light = options.world.entities[entity]?.light;
+        if (light === null || light === undefined) throw new Error(`internal error: entity ${String(entity)} has no light record`);
+        return light;
+      },
+      worldMatrix: (entity) => options.world.worldMatrix(entity),
+    };
     this.writeModel = fieldWriter(objectWriters, "model", structure.objectLayout.id);
     this.writeNormalMatrix = fieldWriter(objectWriters, "normal_matrix", structure.objectLayout.id);
 
@@ -307,11 +322,13 @@ export class Renderer {
     const { width, height } = this.options.surface.size;
     const viewProj = this.viewProjection(width / height);
     const position = this.options.world.camera.position;
+    const lightCount = packLights(this.options.structure.lights, this.lightSource, this.packedLights);
     this.frameArena.writeIfChanged(this.frameSlot, (memory, base) => {
       this.writeViewProj(memory, base, viewProj);
       this.writeCameraPosition(memory, base, position);
-      this.writeLightCount(memory, base, 0);
+      this.writeLightCount(memory, base, lightCount);
       this.writeAmbient(memory, base, this.ambient);
+      this.writeLights(memory, base, this.packedLights);
     });
     return viewProj;
   }

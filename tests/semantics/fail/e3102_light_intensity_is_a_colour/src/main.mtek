@@ -1,0 +1,7 @@
+// The intensity of a light is an f32 (E3102).
+scene Demo {
+    camera Main {}
+    entity Sun {
+        light: DirectionalLight { intensity: #ffffff; };
+    }
+}

@@ -24,6 +24,10 @@ fn members(list: &[(&str, LayoutType)]) -> Vec<(String, LayoutType)> {
         .collect()
 }
 
+/// The most lights one scene may declare: the length of `MtekFrame.lights`
+/// (`spec/gpu-layout.md` section 6.1, `E5111`).
+pub const MAX_LIGHTS: u32 = 4;
+
 /// The `MtekLight` struct (48 bytes, align 16), element type of `MtekFrame.lights`.
 pub fn mtek_light() -> LayoutType {
     LayoutType::new_struct(
@@ -49,7 +53,7 @@ pub fn mtek_frame() -> LayoutType {
             ("light_count", LayoutType::U32),
             ("ambient", LayoutType::Vec3),
             ("reserved0", LayoutType::F32),
-            ("lights", LayoutType::new_array(mtek_light(), 4)),
+            ("lights", LayoutType::new_array(mtek_light(), MAX_LIGHTS)),
         ]),
     )
 }

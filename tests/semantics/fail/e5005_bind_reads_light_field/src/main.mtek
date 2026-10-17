@@ -1,0 +1,10 @@
+// A binding cannot depend on a light field (E5005): the manifest has no such dependency kind.
+scene Demo {
+    camera Main {}
+    entity Lamp {
+        light: PointLight { intensity: 2.0; };
+    }
+    entity Marker {
+        position: bind(vec3(Lamp.light.intensity, 0.0, 0.0));
+    }
+}

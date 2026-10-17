@@ -68,8 +68,7 @@ fn objects() -> Vec<SchemaDef> {
                 C,
                 "Colour of the ambient light term of lit materials. Only the RGB channels are used.",
             )
-            .default(ConstValue::srgb(0xff, 0xff, 0xff))
-            .since(Milestone::M4),
+            .default(ConstValue::srgb(0xff, 0xff, 0xff)),
             field(
                 "ambient_intensity",
                 TypeRef::F32,
@@ -77,8 +76,7 @@ fn objects() -> Vec<SchemaDef> {
                 "Scale of the ambient light term of lit materials; 0 turns ambient light off.",
             )
             .default(ConstValue::F32(0.0))
-            .range(ValueRange::non_negative())
-            .since(Milestone::M4),
+            .range(ValueRange::non_negative()),
             field(
                 "gravity",
                 TypeRef::Vec3,
@@ -145,8 +143,7 @@ fn objects() -> Vec<SchemaDef> {
                 TypeRef::Descriptor(SchemaCategory::Light),
                 C,
                 "A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only.",
-            )
-            .since(Milestone::M4),
+            ),
             field(
                 "body",
                 TypeRef::Descriptor(SchemaCategory::Body),
@@ -403,6 +400,8 @@ fn materials() -> Vec<SchemaDef> {
     ]
 }
 
+/// The light schemas. M4-02 implements them ahead of the M4 gate, so they are marked as
+/// implemented by the current build (decision 0053), like the M2 and M3 items before them.
 fn lights() -> Vec<SchemaDef> {
     let color = || {
         field(
@@ -412,13 +411,12 @@ fn lights() -> Vec<SchemaDef> {
             "Light colour (linear RGB; alpha is ignored).",
         )
         .default(ConstValue::srgb(0xff, 0xff, 0xff))
-        .since(Milestone::M4)
     };
     vec![
         schema(
             "DirectionalLight",
             SchemaCategory::Light,
-            Milestone::M4,
+            Milestone::M1,
             "A light infinitely far away. Travels along the entity's world -Z axis; rotate the entity to aim it.",
             vec![
                 color(),
@@ -428,14 +426,13 @@ fn lights() -> Vec<SchemaDef> {
                     writable_bindable(),
                     "Illuminance in lux.",
                 )
-                .default(ConstValue::F32(1.0))
-                .since(Milestone::M4),
+                .default(ConstValue::F32(1.0)),
             ],
         ),
         schema(
             "PointLight",
             SchemaCategory::Light,
-            Milestone::M4,
+            Milestone::M1,
             "A light radiating from the entity's world position.",
             vec![
                 color(),
@@ -445,8 +442,7 @@ fn lights() -> Vec<SchemaDef> {
                     writable_bindable(),
                     "Luminous intensity in candela.",
                 )
-                .default(ConstValue::F32(1.0))
-                .since(Milestone::M4),
+                .default(ConstValue::F32(1.0)),
                 field(
                     "range",
                     TypeRef::F32,
@@ -454,8 +450,7 @@ fn lights() -> Vec<SchemaDef> {
                     "Distance at which the light fades to nothing; 0 means unlimited.",
                 )
                 .default(ConstValue::F32(0.0))
-                .range(ValueRange::non_negative())
-                .since(Milestone::M4),
+                .range(ValueRange::non_negative()),
             ],
         ),
     ]

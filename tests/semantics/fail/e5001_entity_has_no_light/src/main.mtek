@@ -1,0 +1,9 @@
+// Reading the light of an entity that has none (E5001).
+scene Demo {
+    camera Main {}
+    entity Plain {
+        update(dt: f32) {
+            Plain.position = vec3(Plain.light.intensity, 0.0, 0.0);
+        }
+    }
+}

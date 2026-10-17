@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5004",
+    "file": "src/main.mtek",
+    "startByte": 188,
+    "endByte": 199,
+    "message": "`bind` cannot be the value of the field 'range' of the light of entity 'Lamp': the field is not bindable.",
+    "notes": [
+      "bindable fields of PointLight: color, intensity"
+    ]
+  }
+]
