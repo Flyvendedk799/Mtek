@@ -1,0 +1,106 @@
+program (entry scene src/main.mtek::Demo)
+  module src/main.mtek @1:1-54:1
+    scene Demo [src/main.mtek::Demo] @3:1-53:2
+      fields
+        clear_color = color(0.0, 0.0, 0.0, 1.0) (default @3:1-53:2)
+      camera Main [src/main.mtek::Demo.Main] active @4:5-7:6
+        position = vec3(0.0, 4.0, 12.0) (written @5:9-5:40)
+        target = vec3(0.0, 1.0, 0.0) (written @6:9-6:37)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @4:5-7:6)
+        projection = Perspective { fov_y: 0.9, near: 0.1, far: 1000.0 } (default @4:5-7:6)
+      entity #0 StaticBox [src/main.mtek::Demo.StaticBox] root @8:5-13:6
+        position = vec3(-6.0, 0.0, 0.0) (written @9:9-9:40)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @8:5-13:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @8:5-13:6)
+        visible = true (default @8:5-13:6)
+        mesh = Box { size: vec3(2.0, 1.0, 2.0) } (written @10:9-10:49)
+        material = std/materials.mtek::Unlit (default @8:5-13:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Static {} (written @11:9-11:25)
+        collider = BoxCollider { size: vec3(2.0, 1.0, 2.0), sensor: false, friction: 0.5, restitution: 0.0 } (written @12:9-12:61)
+      entity #1 StaticSphere [src/main.mtek::Demo.StaticSphere] root @14:5-19:6
+        position = vec3(-4.0, 0.0, 0.0) (written @15:9-15:40)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @14:5-19:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @14:5-19:6)
+        visible = true (default @14:5-19:6)
+        mesh = Sphere { radius: 0.5, segments: 32, rings: 16 } (written @16:9-16:38)
+        material = std/materials.mtek::Unlit (default @14:5-19:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Static {} (written @17:9-17:25)
+        collider = SphereCollider { radius: 0.5, sensor: false, friction: 0.5, restitution: 0.0 } (written @18:9-18:50)
+      entity #2 DynamicBox [src/main.mtek::Demo.DynamicBox] root @20:5-25:6
+        position = vec3(-2.0, 3.0, 0.0) (written @21:9-21:40)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @20:5-25:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @20:5-25:6)
+        visible = true (default @20:5-25:6)
+        mesh = Box { size: vec3(1.0, 1.0, 1.0) } (written @22:9-22:22)
+        material = std/materials.mtek::Unlit (default @20:5-25:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Dynamic { mass: 1.0, linear_damping: 0.0, angular_damping: 0.05 } (written @23:9-23:26)
+        collider = BoxCollider { size: vec3(1.0, 1.0, 1.0), sensor: false, friction: 0.9, restitution: 0.1 } (written @24:9-24:94)
+      entity #3 DynamicSphere [src/main.mtek::Demo.DynamicSphere] root @26:5-35:6
+        position = vec3(0.0, 3.0, 0.0) (written @27:9-27:39)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @26:5-35:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @26:5-35:6)
+        visible = true (default @26:5-35:6)
+        mesh = Sphere { radius: 0.5, segments: 32, rings: 16 } (written @28:9-28:38)
+        material = std/materials.mtek::Unlit (default @26:5-35:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Dynamic { mass: 2.5, linear_damping: 0.1, angular_damping: 0.2 } (written @29:9-29:80)
+        collider = SphereCollider { radius: 0.5, sensor: false, friction: 0.5, restitution: 0.8 } (written @30:9-30:68)
+      entity #4 Antenna [src/main.mtek::Demo.DynamicSphere.Antenna] parent #3 @31:9-34:10
+        position = vec3(0.0, 0.6, 0.0) (written @32:13-32:43)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @31:9-34:10)
+        scale = vec3(1.0, 1.0, 1.0) (default @31:9-34:10)
+        visible = true (default @31:9-34:10)
+        mesh = Box { size: vec3(0.05, 0.4, 0.05) } (written @33:13-33:55)
+        material = std/materials.mtek::Unlit (default @31:9-34:10)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+      entity #5 KinematicBox [src/main.mtek::Demo.KinematicBox] root @36:5-41:6
+        position = vec3(2.0, 1.0, 0.0) (written @37:9-37:39)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @36:5-41:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @36:5-41:6)
+        visible = true (default @36:5-41:6)
+        mesh = Box { size: vec3(2.0, 0.2, 2.0) } (written @38:9-38:49)
+        material = std/materials.mtek::Unlit (default @36:5-41:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Kinematic {} (written @39:9-39:28)
+        collider = BoxCollider { size: vec3(2.0, 0.2, 2.0), sensor: false, friction: 0.5, restitution: 0.0 } (written @40:9-40:61)
+      entity #6 KinematicSphere [src/main.mtek::Demo.KinematicSphere] root @42:5-47:6
+        position = vec3(4.0, 1.0, 0.0) (written @43:9-43:39)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @42:5-47:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @42:5-47:6)
+        visible = true (default @42:5-47:6)
+        mesh = Sphere { radius: 0.25, segments: 32, rings: 16 } (written @44:9-44:39)
+        material = std/materials.mtek::Unlit (default @42:5-47:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Kinematic {} (written @45:9-45:28)
+        collider = SphereCollider { radius: 0.25, sensor: true, friction: 0.5, restitution: 0.0 } (written @46:9-46:65)
+      entity #7 Trigger [src/main.mtek::Demo.Trigger] root @48:5-52:6
+        position = vec3(6.0, 1.0, 0.0) (written @49:9-49:39)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @48:5-52:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @48:5-52:6)
+        visible = true (default @48:5-52:6)
+        body = Static {} (written @50:9-50:25)
+        collider = BoxCollider { size: vec3(1.0, 2.0, 1.0), sensor: true, friction: 0.5, restitution: 0.0 } (written @51:9-51:75)
+  module std/materials.mtek @1:1-22:1
+    material Unlit [std/materials.mtek::Unlit] @5:8-8:2
+      param #0 color: color = color(1.0, 1.0, 1.0, 1.0) @6:5-6:34
+      block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit (size 16, align 16)
+      fragment -> color [std/materials.mtek::Unlit.fragment] reads none @7:5-7:63
+        local #0 surface: SurfaceInput (param) @7:14-7:21
+        return param color#0 @7:48-7:61
+    material Pbr [std/materials.mtek::Pbr] @10:8-21:2
+      param #0 base_color: color = color(1.0, 1.0, 1.0, 1.0) @11:5-11:39
+      param #1 metallic: f32 = 0.0 @12:5-12:31
+      param #2 roughness: f32 = 0.5 @13:5-13:32
+      param #3 base_color_texture: texture = texture.white() @14:5-14:57
+      param #4 base_color_sampler: sampler = sampler.linear_repeat() @15:5-15:65
+      block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr (size 32, align 16)
+      fragment -> color [std/materials.mtek::Pbr.fragment] reads world_position, world_normal, uv @16:5-20:6
+        local #0 surface: SurfaceInput (param) @16:14-16:21
+        local #1 texel: vec4 (let) @17:13-17:18
+        local #2 albedo: color (let) @18:13-18:19
+        let texel#1 = (sample(param base_color_texture#3, param base_color_sampler#4, (surface#0.uv): vec2)): vec4 @17:9-17:80
+        let albedo#2 = (color.linear(((param base_color#0.rgb): vec3 * (texel#1.xyz): vec3): vec3, 1.0)): color @18:9-18:68
+        return (lighting.pbr(surface#0, albedo#2, param metallic#1, param roughness#2)): color @19:9-19:67

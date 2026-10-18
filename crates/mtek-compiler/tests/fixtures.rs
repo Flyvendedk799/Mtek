@@ -1360,12 +1360,10 @@ fn every_gated_construct_has_a_gating_fixture() {
     // Physics (task M5-03, decision 0065) lifted the gates of `Static` and the other body and
     // collider schemas, `Entity.body`, `Entity.collider`, `Scene.gravity`, the collision events and
     // `entity_ref`; `spawn`, `destroy` and the prefab literal are the last M5 items (task M5-02).
-    for (prefix, milestone) in [("Prefab literals", "M5")] {
-        assert!(
-            produced(prefix, milestone),
-            "no gate_* fixture reports {prefix}: {messages:#?}"
-        );
-    }
+    assert!(
+        produced("Prefab literals", "M5"),
+        "no gate_* fixture reports the prefab literal: {messages:#?}"
+    );
 }
 
 #[test]
