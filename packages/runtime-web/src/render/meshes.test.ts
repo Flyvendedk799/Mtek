@@ -153,6 +153,20 @@ describe("MeshStore: meshes from asset files (decision 0060)", () => {
     expect(registry.snapshot()).toMatchObject({ buffersAllocated: 6, uploads: 6 });
   });
 
+  it("reads 32-bit indices (more than 65 535 vertices) as uint32: four bytes each, no padding needed", () => {
+    const { store } = setup();
+    // Three vertices at byte 0 (36 bytes), then 3 uint32 indices at byte 36: 12 bytes. Only the layout is under test.
+    const layout = { ...layout1, indexFormat: "uint32" as const, offsets: { position: 0, indices: 36 } };
+    const bytes = new Uint8Array(48).map((_, i) => i);
+    const asset = { url: "assets/w.bin", sha256: "0".repeat(64), bytes: 48, kind: "mesh-data" as const, primitives: [layout], preprocessing: [], span: 0 };
+    const files = new LoadedAssets(new Map([["assets/w.bin", { asset, bytes }]]));
+    store.upload([{ id: "mesh:5", descriptor: { kind: "asset", asset: "assets/w.bin", primitive: 0, layout } }], files);
+    const mesh = store.get("mesh:5");
+    expect([mesh.indexFormat, mesh.indexCount]).toEqual(["uint32", 3]);
+    expect(fake(mesh.indexBuffer).size).toBe(12);
+    expect([...fake(mesh.indexBuffer).contents]).toEqual([...bytes.subarray(36, 48)]);
+  });
+
   it("keeps the manifest's bounding sphere: the centre is in the mesh's local space", () => {
     const { store } = setup();
     store.upload([quad, tri, { ...box, id: "mesh:9" }], loaded());

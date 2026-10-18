@@ -44,7 +44,7 @@ Everything here is a **proposal** (design choice) unless it repeats the specific
 ## Consequences
 
 - `spec/materials.md` §5, `spec/gpu-layout.md` §6 and §8.3, `spec/runtime-abi.md` §10.2 and `spec/diagnostics.md` point here. Decision 0039 items 1 and 13 and decision 0044's consequences about `E6002` are amended by pointers.
-- The remaining M4 work builds on these pieces: M4-03's `Pbr` uses `sample`, M4-05 adds `ResourceValue::Asset` values and `asset.texture`, M4-06 loads and uploads them through `BuiltinResources`' creation path (the same formats, `COPY_DST` and `writeTexture`), M4-08 may share bind groups of identical instances.
+- The remaining M4 work builds on these pieces: M4-03's `Pbr` uses `sample`, M4-05 adds `ResourceValue::Asset` values and `asset.texture`, M4-06 loads and uploads them through `BuiltinResources`' creation path (the same formats, `COPY_DST` and `writeTexture`), M4-08 may share bind groups of identical instances. (Decision 0060 did the M4-06 part: the runtime now renders asset-valued texture params, so the `E8003` of items 6 and 7 for them is gone.)
 - No new dependency and no new diagnostic code. `E4041` and `E6002` leave the not-yet-implemented list of `tests/fixtures.rs`.
 
 ## Verification

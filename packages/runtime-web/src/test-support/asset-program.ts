@@ -11,7 +11,6 @@
  * `image` (`assets/00000000000000b1.png`): a 2 x 2 image, texels (row by row) red, green, blue, white.
  */
 import { createHash } from "node:crypto";
-import type { MtekManifest } from "../abi/manifest-types.js";
 import { checkManifest } from "../abi/validate.js";
 import { BASE_URL, FakeHost, fakeImage, fakeProgram, minimalSceneInit } from "./fake-host.js";
 import { SHADER_URL, SHADER_MAP_URL, MATERIAL, VALID_WGSL, spanMapJson, validManifest } from "./mount-fixture.js";
@@ -106,7 +105,7 @@ export function installAssetProgram(host: FakeHost, options: AssetProgramOptions
 export function assetProgram(manifest: Record<string, unknown>, init: (ctx: object) => void = minimalSceneInit): ReturnType<typeof fakeProgram> {
   const parsed = checkManifest(manifest);
   if (!parsed.ok) throw new Error(`the asset manifest is not valid: ${JSON.stringify(parsed.failures)}`);
-  return fakeProgram(init, parsed.manifest as MtekManifest);
+  return fakeProgram(init, parsed.manifest);
 }
 
 export { MATERIAL };

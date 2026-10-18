@@ -979,7 +979,7 @@ export class FakeHost {
           this.bitmaps.push(bitmap);
           return Promise.resolve(asDom<ImageBitmap>(bitmap));
         } catch (error) {
-          return Promise.reject(error);
+          return Promise.reject(error instanceof Error ? error : new Error(String(error)));
         }
       },
       document: asDom<DocumentLike>(this.document),

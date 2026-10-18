@@ -239,7 +239,7 @@ test.describe("assets on the real adapter", () => {
       expectPixel(frame, lx + dx, ly + dy, lacquerPixel(lx + dx, ly + dy), PBR_TOLERANCE, `Lacquer sample ${String(k)}`);
     });
     // The lighting is not flat: a constant colour would mean the light was ignored.
-    const lit = LACQUER_OFFSETS.map(([dx, dy]) => pixel(frame, lx + dx, ly + dy)[0]!);
+    const lit = LACQUER_OFFSETS.map(([dx, dy]) => pixel(frame, lx + dx, ly + dy)[0]);
     expect(Math.max(...lit) - Math.min(...lit)).toBeGreaterThanOrEqual(2);
 
     // Nine entities, eight draw calls: Wood and Wood2 share mesh, pipeline and parameter block (one instanced draw).

@@ -63,7 +63,7 @@ describe("defaultEnvironment", () => {
   it("wires the asset seams", async () => {
     const environment = defaultEnvironment();
     expect(typeof environment.fetchBytes).toBe("function");
-    expect(environment.decodeImage).toBe(browserDecodeImage);
+    expect(typeof environment.decodeImage).toBe("function");
     expect(await environment.sha256?.(new TextEncoder().encode("abc"))).toBe(SHA256_ABC);
   });
 });

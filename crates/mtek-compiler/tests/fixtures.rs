@@ -1491,8 +1491,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
         "E6003",
         "v0.1 has at most 4 inter-stage variables (`spec/materials.md` section 3.3); custom vertex stages are v0.2",
     ),
-    ("E7030", "M4-06: runtime asset loading"),
-    ("E7031", "M4-06: runtime asset loading"),
     ("E8011", "M3: run-time field writes"),
     ("W8030", "M2: arrays (run-time index clamping)"),
     ("E8030", "M5: spawn and destroy"),
@@ -1560,6 +1558,15 @@ const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
     ("E8004", "../../packages/runtime-web/src/gpu/device.test.ts"),
     ("E8005", "../../packages/runtime-web/src/gpu/device.test.ts"),
     ("E8006", "../../packages/runtime-web/src/abi/abi.test.ts"),
+    // Asset loading at run time (`spec/assets.md` section 5, decision 0060).
+    (
+        "E7030",
+        "../../packages/runtime-web/src/assets/loader.test.ts",
+    ),
+    (
+        "E7031",
+        "../../packages/runtime-web/src/assets/loader.test.ts",
+    ),
     ("E8040", "../../packages/runtime-web/src/host/app.test.ts"),
     ("E8050", "../../packages/runtime-web/src/host/app.test.ts"),
     (
