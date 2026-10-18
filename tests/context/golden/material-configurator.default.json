@@ -279,7 +279,7 @@
       "type": "scene",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 4
+      "line": 12
     },
     {
       "name": "Configurator.seat_color",
@@ -287,7 +287,7 @@
       "type": "color",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 10
+      "line": 18
     },
     {
       "name": "Configurator.seat_metallic",
@@ -295,7 +295,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 11
+      "line": 19
     },
     {
       "name": "Configurator.seat_roughness",
@@ -303,7 +303,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 12
+      "line": 20
     },
     {
       "name": "Configurator.frame_color",
@@ -311,7 +311,7 @@
       "type": "color",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 13
+      "line": 21
     },
     {
       "name": "Configurator.frame_metallic",
@@ -319,7 +319,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 14
+      "line": 22
     },
     {
       "name": "Configurator.frame_roughness",
@@ -327,7 +327,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 15
+      "line": 23
     },
     {
       "name": "Configurator.stripe_a",
@@ -335,7 +335,7 @@
       "type": "color",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 16
+      "line": 24
     },
     {
       "name": "Configurator.stripe_b",
@@ -343,7 +343,7 @@
       "type": "color",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 17
+      "line": 25
     },
     {
       "name": "Configurator.back_roughness",
@@ -351,7 +351,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 18
+      "line": 26
     },
     {
       "name": "Configurator.sun_intensity",
@@ -359,7 +359,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 19
+      "line": 27
     },
     {
       "name": "Configurator.Main",
@@ -367,7 +367,7 @@
       "type": "Camera",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 21
+      "line": 29
     },
     {
       "name": "Configurator.Sun",
@@ -375,7 +375,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 30
+      "line": 38
     },
     {
       "name": "Configurator.Lamp",
@@ -383,7 +383,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 34
+      "line": 42
     },
     {
       "name": "Configurator.Floor",
@@ -391,7 +391,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 39
+      "line": 47
     },
     {
       "name": "Configurator.Seat",
@@ -399,7 +399,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 45
+      "line": 53
     },
     {
       "name": "Configurator.Back",
@@ -407,7 +407,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 55
+      "line": 63
     },
     {
       "name": "Configurator.Crest",
@@ -415,7 +415,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 67
+      "line": 75
     },
     {
       "name": "Configurator.LegFL",
@@ -423,7 +423,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 76
+      "line": 84
     },
     {
       "name": "Configurator.LegFR",
@@ -431,7 +431,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 82
+      "line": 90
     },
     {
       "name": "Configurator.LegBL",
@@ -439,7 +439,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 88
+      "line": 96
     },
     {
       "name": "Configurator.LegBR",
@@ -447,7 +447,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 94
+      "line": 102
     },
     {
       "name": "Configurator.RailFront",
@@ -455,7 +455,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 102
+      "line": 110
     },
     {
       "name": "Configurator.RailBack",
@@ -463,7 +463,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 112
+      "line": 120
     },
     {
       "name": "CHAIR",
@@ -487,7 +487,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/model.mtek",
-      "line": 8
+      "line": 9
     },
     {
       "name": "FABRIC_ROUGHNESS",
@@ -495,7 +495,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/model.mtek",
-      "line": 9
+      "line": 11
     },
     {
       "name": "STEEL_COLOR",
@@ -503,7 +503,7 @@
       "type": "color",
       "doc": "",
       "file": "src/model.mtek",
-      "line": 10
+      "line": 13
     },
     {
       "name": "STEEL_METALLIC",
@@ -511,7 +511,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/model.mtek",
-      "line": 11
+      "line": 15
     },
     {
       "name": "STEEL_ROUGHNESS",
@@ -519,7 +519,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/model.mtek",
-      "line": 12
+      "line": 17
     },
     {
       "name": "Striped",

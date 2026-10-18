@@ -277,7 +277,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 14
+      "line": 15
     },
     {
       "name": "SPAWN_RANGE_X",
@@ -285,7 +285,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 16
+      "line": 18
     },
     {
       "name": "SPAWN_RANGE_Z",
@@ -293,7 +293,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 18
+      "line": 21
     },
     {
       "name": "JUMP_IMPULSE",
@@ -301,7 +301,7 @@
       "type": "f32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 20
+      "line": 24
     },
     {
       "name": "Crate",
@@ -309,7 +309,7 @@
       "type": "prefab",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 24
+      "line": 28
     },
     {
       "name": "Playground",
@@ -317,7 +317,7 @@
       "type": "scene",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 42
+      "line": 46
     },
     {
       "name": "Playground.entered",
@@ -325,7 +325,7 @@
       "type": "i32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 48
+      "line": 52
     },
     {
       "name": "Playground.inside",
@@ -333,7 +333,7 @@
       "type": "i32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 49
+      "line": 53
     },
     {
       "name": "Playground.spawned",
@@ -341,7 +341,7 @@
       "type": "i32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 51
+      "line": 55
     },
     {
       "name": "Playground.Main",
@@ -349,7 +349,7 @@
       "type": "Camera",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 53
+      "line": 57
     },
     {
       "name": "Playground.Sun",
@@ -357,7 +357,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 61
+      "line": 65
     },
     {
       "name": "Playground.Floor",
@@ -365,7 +365,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 67
+      "line": 71
     },
     {
       "name": "Playground.First",
@@ -373,7 +373,7 @@
       "type": "entity: Crate",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 76
+      "line": 80
     },
     {
       "name": "Playground.Zone",
@@ -381,7 +381,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 83
+      "line": 87
     },
     {
       "name": "Playground.ZoneMarker",
@@ -389,7 +389,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 103
+      "line": 107
     },
     {
       "name": "Playground.Meter",
@@ -397,7 +397,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 111
+      "line": 115
     }
   ],
   "schemas": [
