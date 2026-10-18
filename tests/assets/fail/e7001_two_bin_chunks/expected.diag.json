@@ -4,6 +4,9 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The file has more than one BIN chunk; the profile allows at most one."
+    "message": "The file has more than one BIN chunk; the profile allows at most one.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
   }
 ]

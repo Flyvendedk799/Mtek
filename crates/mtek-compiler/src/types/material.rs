@@ -542,6 +542,9 @@ impl<'a> Checker<'a> {
                 sample_operands: BTreeSet::new(),
             }),
         );
+        if let Some(body) = &mut self.body {
+            body.ret_span = stage.ret.as_ref().map(|ret| ret.span);
+        }
         let state = self.end_body(&stage.body, stage.ret.as_ref());
         let (facts, surface_inputs) = match state {
             Some(state) => {
@@ -957,6 +960,10 @@ impl<'a> Checker<'a> {
                     ),
                 )
                 .at(value.span)
+                .related(
+                    param.name_span,
+                    format!("the param '{}' is declared here", param.name),
+                )
                 .expected(expected.clone())
                 .actual(got.clone());
                 let interner = &self.out.interner;
@@ -985,6 +992,10 @@ impl<'a> Checker<'a> {
                             ),
                         )
                         .at(name.span)
+                        .related(
+                            param.name_span,
+                            format!("the param '{}' is declared here", param.name),
+                        )
                         .note(format!("the param '{}' has no default", param.name))
                         .help(format!("add `{}: …`", param.name)),
                     );

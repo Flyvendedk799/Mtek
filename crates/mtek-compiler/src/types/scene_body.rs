@@ -12,7 +12,7 @@
 //!    entities, once all fields and material instances are typed. Each is a CPU root body whose
 //!    assignments are recorded as [`WriteSite`]s for the single-writer analysis.
 
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 
 use super::body::BodyState;
 use super::check::{Checker, FieldKind};
@@ -138,6 +138,10 @@ impl Checker<'_> {
                     ),
                 )
                 .at(state.value.span)
+                .related(
+                    state.ty.span,
+                    format!("the state '{name}' is declared as {declared_name} here"),
+                )
                 .expected(declared_name)
                 .actual(actual_name),
             );
@@ -191,7 +195,7 @@ impl Checker<'_> {
     pub(super) fn scene_bodies(&mut self, decl: &SceneDecl) {
         let owner = self.res.def_of(decl.id);
         let label = format!("scene '{}'", decl.name.name);
-        let mut seen = BTreeSet::new();
+        let mut seen = BTreeMap::new();
         for member in &decl.members {
             match member {
                 SceneMember::Lifecycle(function) => {
@@ -210,7 +214,7 @@ impl Checker<'_> {
         }
         let owner = self.res.def_of(entity.id);
         let label = format!("entity '{}'", entity.name.name);
-        let mut seen = BTreeSet::new();
+        let mut seen = BTreeMap::new();
         for member in &entity.members {
             match member {
                 EntityMember::Lifecycle(function) => {
@@ -231,7 +235,7 @@ impl Checker<'_> {
         owner: Option<DefId>,
         entity: Option<DefId>,
         holder: &str,
-        seen: &mut BTreeSet<&'static str>,
+        seen: &mut BTreeMap<&'static str, Span>,
     ) {
         let name = function.name.name.as_str();
         let Some(known) = LIFECYCLE_NAMES.iter().find(|n| **n == name).copied() else {
@@ -254,13 +258,17 @@ impl Checker<'_> {
             );
             return;
         };
-        if !seen.insert(known) {
+        if let Some(first) = seen.insert(known, function.name.span) {
+            // Keep the first declaration as the one later duplicates refer to.
+            seen.insert(known, first);
             self.sink.push(
                 Diagnostic::new(
                     Code::E5051,
                     format!("The {holder} declares `{known}` more than once."),
                 )
-                .at(function.name.span),
+                .at(function.name.span)
+                .related(first, format!("`{known}` is first declared here"))
+                .help("remove one of the two"),
             );
         }
         let ok = match function.params.as_slice() {

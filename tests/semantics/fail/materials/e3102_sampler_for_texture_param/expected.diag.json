@@ -15,6 +15,14 @@
     "endByte": 508,
     "message": "Parameter 'map' of material Gloss expects texture, but received sampler.",
     "expected": "texture",
-    "actual": "sampler"
+    "actual": "sampler",
+    "related": [
+      {
+        "message": "the param 'map' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 142,
+        "endByte": 145
+      }
+    ]
   }
 ]

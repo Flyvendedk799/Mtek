@@ -5,6 +5,14 @@
     "startByte": 295,
     "endByte": 300,
     "message": "'orign' is not a param of prefab Crate: a prefab literal may set only params.",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 45,
+        "endByte": 50
+      }
+    ],
     "notes": [
       "the params of Crate are: origin, tint",
       "help: did you mean 'origin'?"
@@ -16,6 +24,14 @@
     "startByte": 339,
     "endByte": 347,
     "message": "'position' is not a param of prefab Crate: a prefab literal may set only params.",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 45,
+        "endByte": 50
+      }
+    ],
     "notes": [
       "the params of Crate are: origin, tint"
     ]

@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "The mesh 'Tri' (meshes[0]), primitive 0 has the attribute TANGENT; the profile supports POSITION, NORMAL and TEXCOORD_0.",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "help: remove vertex colours, tangents and further UV sets when exporting"
     ]
   }

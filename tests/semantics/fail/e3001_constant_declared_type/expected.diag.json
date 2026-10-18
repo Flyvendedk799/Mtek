@@ -6,6 +6,14 @@
     "endByte": 39,
     "message": "The constant 'HEIGHT' is declared as f32, but its value has type vec3.",
     "expected": "f32",
-    "actual": "vec3"
+    "actual": "vec3",
+    "related": [
+      {
+        "message": "the constant 'HEIGHT' is declared as f32 here",
+        "file": "src/main.mtek",
+        "startByte": 14,
+        "endByte": 17
+      }
+    ]
   }
 ]

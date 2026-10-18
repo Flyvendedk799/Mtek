@@ -15,8 +15,6 @@
 //!   param without a default is given (`E5041`). The scene reads and writes its fields, state and
 //!   material params like those of any entity.
 
-use std::collections::BTreeSet;
-
 use super::check::Checker;
 use super::consteval::Folded;
 use super::scene::{CheckedInstance, CheckedParam, FieldOrigin};
@@ -330,7 +328,7 @@ impl<'a> Checker<'a> {
     /// Check every lifecycle function and handler of `decl`.
     fn prefab_bodies(&mut self, decl: &PrefabDecl, def: DefId) {
         let label = format!("prefab '{}'", decl.name.name);
-        let mut seen = BTreeSet::new();
+        let mut seen = std::collections::BTreeMap::new();
         for member in &decl.members {
             match member {
                 EntityMember::Lifecycle(function) => {
@@ -414,7 +412,7 @@ impl<'a> Checker<'a> {
         id: DefId,
         fields: &[DescField],
     ) -> TyId {
-        let Some((key, prefab, params)) = self.literal_prefab(id) else {
+        let Some((key, prefab, params, declared)) = self.literal_prefab(id) else {
             self.literal_values(fields);
             return TyId::ERROR;
         };
@@ -447,7 +445,7 @@ impl<'a> Checker<'a> {
             };
             let Some(param) = params.iter().find(|p| p.name == field.name.name) else {
                 ok = false;
-                self.unknown_literal_param(&field.name, &prefab, &params);
+                self.unknown_literal_param(&field.name, &prefab, declared, &params);
                 self.check(value, None);
                 continue;
             };
@@ -529,24 +527,36 @@ impl<'a> Checker<'a> {
         }
     }
 
-    /// The identity, name and params of the prefab `id` names (declared here or imported).
-    fn literal_prefab(&self, id: DefId) -> Option<(PrefabKey, String, Vec<PrefabParam>)> {
+    /// The identity, name, params and declaration of the prefab `id` names (declared here or
+    /// imported).
+    fn literal_prefab(&self, id: DefId) -> Option<(PrefabKey, String, Vec<PrefabParam>, Span)> {
         let def = self.res.def(id)?;
         match def.kind {
-            DefKind::Import => self
-                .imported_prefabs
-                .get(&id)
-                .map(|info| (info.key, info.name.clone(), info.params.clone())),
+            DefKind::Import => self.imported_prefabs.get(&id).map(|info| {
+                (
+                    info.key,
+                    info.name.clone(),
+                    info.params.clone(),
+                    info.name_span,
+                )
+            }),
             _ => Some((
                 self.prefab_key(id)?,
                 def.name.clone(),
                 self.prefab_params.get(&id)?.clone(),
+                def.span,
             )),
         }
     }
 
     /// `E5042` for a `name: value;` of a prefab literal that names no param.
-    fn unknown_literal_param(&mut self, name: &Ident, prefab: &str, params: &[PrefabParam]) {
+    fn unknown_literal_param(
+        &mut self,
+        name: &Ident,
+        prefab: &str,
+        declared: Span,
+        params: &[PrefabParam],
+    ) {
         let names: Vec<&str> = params.iter().map(|p| p.name.as_str()).collect();
         let list = if names.is_empty() {
             "none".to_owned()
@@ -561,6 +571,7 @@ impl<'a> Checker<'a> {
             ),
         )
         .at(name.span)
+        .related(declared, format!("the prefab '{prefab}' is declared here"))
         .note(format!("the params of {prefab} are: {list}"));
         let close: Vec<&str> = names
             .iter()
@@ -594,6 +605,10 @@ impl<'a> Checker<'a> {
                 ),
             )
             .at(value.span)
+            .related(
+                param.name_span,
+                format!("the param '{}' is declared here", param.name),
+            )
             .expected(expected.clone())
             .actual(got.clone());
             let interner = &self.out.interner;
@@ -918,6 +933,10 @@ impl<'a> Checker<'a> {
                 ),
             )
             .at(span)
+            .related(
+                info.name_span,
+                format!("the prefab '{}' is declared here", info.name),
+            )
             .note(format!("the params of {} are: {list}", info.name))
             .help("declare it in the prefab"),
         );
@@ -939,6 +958,10 @@ impl<'a> Checker<'a> {
             ),
         )
         .at(name.span)
+        .related(
+            info.name_span,
+            format!("the prefab '{}' is declared here", info.name),
+        )
         .note(format!("the params of {} are: {list}", info.name));
         let close: Vec<&str> = params
             .iter()

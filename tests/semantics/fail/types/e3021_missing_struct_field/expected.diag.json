@@ -5,6 +5,14 @@
     "startByte": 68,
     "endByte": 73,
     "message": "The struct literal Light is missing the field 'offset'.",
+    "related": [
+      {
+        "message": "the struct 'Light' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 12
+      }
+    ],
     "notes": [
       "a struct literal gives every field exactly once; struct fields have no defaults"
     ]

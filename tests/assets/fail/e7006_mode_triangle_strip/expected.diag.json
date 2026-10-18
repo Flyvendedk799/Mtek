@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "The mesh 'Tri' (meshes[0]), primitive 0 has mode 5 (TRIANGLE_STRIP); the profile supports only mode 4 (TRIANGLES).",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "help: triangulate the mesh when exporting; lines, points, strips and fans are not supported"
     ]
   }

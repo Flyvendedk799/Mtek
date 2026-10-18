@@ -421,7 +421,7 @@ impl AssetHost for AssetLoader<'_> {
         };
         if let Some(issues) = issues {
             for issue in issues {
-                sink.push(issue.at(span));
+                sink.push(issue.at_in(span, Some(path.as_str())));
             }
             return None;
         }

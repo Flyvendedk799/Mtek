@@ -4,6 +4,9 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The mesh 'Tri' (meshes[0]), primitive 0: the index accessor must be a SCALAR of UNSIGNED_BYTE, UNSIGNED_SHORT or UNSIGNED_INT."
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0: the index accessor must be a SCALAR of UNSIGNED_BYTE, UNSIGNED_SHORT or UNSIGNED_INT.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
   }
 ]

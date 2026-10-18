@@ -5,6 +5,14 @@
     "startByte": 361,
     "endByte": 367,
     "message": "'hieght' is not a param of prefab Crate: an instance may set only params.",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 133,
+        "endByte": 138
+      }
+    ],
     "notes": [
       "the params of Crate are: height, colour",
       "help: did you mean 'height'?"
@@ -16,6 +24,14 @@
     "startByte": 403,
     "endByte": 408,
     "message": "'speed' is not a param of prefab Crate: an instance may set only params.",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 133,
+        "endByte": 138
+      }
+    ],
     "notes": [
       "the params of Crate are: height, colour"
     ]

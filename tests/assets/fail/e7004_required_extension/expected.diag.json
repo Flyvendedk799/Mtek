@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "The file requires the glTF extensions KHR_draco_mesh_compression; the v0.1 profile supports none.",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "help: re-export the model without extensions (for example without Draco or meshopt compression)"
     ]
   },
@@ -16,6 +17,7 @@
     "endByte": 45,
     "message": "The file uses the glTF extensions EXT_meshopt_compression; the v0.1 profile supports none.",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "help: re-export the model without extensions"
     ]
   }

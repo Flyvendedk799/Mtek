@@ -1296,10 +1296,11 @@ impl<'a> Checker<'a> {
                     },
                     kind => kind,
                 };
+                let declared = (def.span, def.kind == DefKind::Import);
                 match kind {
                     _ if reused_prelude_name => TyId::ERROR,
                     DefKind::Struct => match self.struct_type(id) {
-                        Some(ty) => self.struct_literal(expr, name, ty, fields),
+                        Some(ty) => self.struct_literal(expr, name, ty, declared, fields),
                         // An imported struct whose type is not known.
                         None => TyId::ERROR,
                     },
@@ -2030,19 +2031,35 @@ impl<'a> Checker<'a> {
         expected: TyId,
         actual: TyId,
     ) {
+        self.report_argument_of(span, index, callee, expected, actual, None);
+    }
+
+    /// `E3001` for an argument of the wrong type; `declared` is the callee's declaration, for
+    /// a user function, with the message of the related span.
+    pub(super) fn report_argument_of(
+        &mut self,
+        span: Span,
+        index: usize,
+        callee: &str,
+        expected: TyId,
+        actual: TyId,
+        declared: Option<(Span, String)>,
+    ) {
         let (expected, actual) = (self.display(expected), self.display(actual));
-        self.report(
-            Diagnostic::new(
-                Code::E3001,
-                format!(
-                    "Argument {} of `{callee}` expects {expected}, but received {actual}.",
-                    index + 1
-                ),
-            )
-            .at(span)
-            .expected(expected)
-            .actual(actual),
-        );
+        let mut diagnostic = Diagnostic::new(
+            Code::E3001,
+            format!(
+                "Argument {} of `{callee}` expects {expected}, but received {actual}.",
+                index + 1
+            ),
+        )
+        .at(span)
+        .expected(expected)
+        .actual(actual);
+        if let Some((at, message)) = declared {
+            diagnostic = diagnostic.related(at, message);
+        }
+        self.report(diagnostic);
     }
 
     /// `f32(x)`, `i32(x)`, `u32(x)` (section 6.5).
@@ -2729,24 +2746,40 @@ impl Checker<'_> {
             } else {
                 format!(" -> {}", self.display(sig.ret))
             };
-            self.report(
-                Diagnostic::new(
-                    Code::E3002,
-                    format!(
-                        "`{name}` takes {count} argument{}, but {} {} given.",
-                        if count == 1 { "" } else { "s" },
-                        args.len(),
-                        if args.len() == 1 { "was" } else { "were" }
-                    ),
-                )
-                .at(expr.span)
-                .note(format!("signature: {text}{ret}")),
-            );
+            let mut diagnostic = Diagnostic::new(
+                Code::E3002,
+                format!(
+                    "`{name}` takes {count} argument{}, but {} {} given.",
+                    if count == 1 { "" } else { "s" },
+                    args.len(),
+                    if args.len() == 1 { "was" } else { "were" }
+                ),
+            )
+            .at(expr.span)
+            .note(format!("signature: {text}{ret}"));
+            if let Some(def) = self.res.def(id) {
+                let how = if def.kind == DefKind::Import {
+                    "imported"
+                } else {
+                    "declared"
+                };
+                diagnostic =
+                    diagnostic.related(def.span, format!("the function '{name}' is {how} here"));
+            }
+            self.report(diagnostic);
         } else {
             for (index, (arg, (_, param))) in args.iter().zip(&sig.params).enumerate() {
                 let actual = self.check(arg, Some(*param));
                 if !self.assignable(actual, *param) {
-                    self.report_argument(arg.span, index, &text, *param, actual);
+                    let declared = self.res.def(id).map(|def| {
+                        let how = if def.kind == DefKind::Import {
+                            "imported"
+                        } else {
+                            "declared"
+                        };
+                        (def.span, format!("the function '{name}' is {how} here"))
+                    });
+                    self.report_argument_of(arg.span, index, &text, *param, actual, declared);
                 }
             }
         }

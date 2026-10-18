@@ -174,14 +174,24 @@ impl<'a> Checker<'a> {
     }
 
     /// `Name { field: value; … }` of a user struct: every field exactly once,
-    /// each value checked against the field's type.
+    /// each value checked against the field's type. `declared` is where the
+    /// name is bound (the declaration, or the import that brings it in; the
+    /// flag tells which) for the related span of a diagnostic about the
+    /// struct's fields.
     pub(super) fn struct_literal(
         &mut self,
         expr: &Expr,
         name: &Ident,
         ty: TyId,
+        declared: (Span, bool),
         fields: &[DescField],
     ) -> TyId {
+        let (declared_at, imported) = declared;
+        let declared_message = format!(
+            "the struct '{}' is {} here",
+            name.name,
+            if imported { "imported" } else { "declared" }
+        );
         let declared = self.out.interner.struct_def(ty).cloned();
         let Some(declared) = declared.filter(|d| !d.broken && !d.fields.is_empty()) else {
             // A struct whose declaration was reported (`E3020`, `E3032`):
@@ -240,6 +250,7 @@ impl<'a> Checker<'a> {
                     format!("The struct {struct_name} has no field '{field_name}'."),
                 )
                 .at(field.name.span)
+                .related(declared_at, declared_message.clone())
                 .note(format!(
                     "the fields of {struct_name} are {}",
                     names.join(", ")
@@ -298,6 +309,7 @@ impl<'a> Checker<'a> {
                     format!("The struct literal {struct_name} is missing the {noun} {list}."),
                 )
                 .at(name.span)
+                .related(declared_at, declared_message)
                 .note("a struct literal gives every field exactly once; struct fields have no defaults"),
             );
         }
@@ -336,6 +348,18 @@ impl<'a> Checker<'a> {
             "the fields of {struct_name} are {}",
             names.join(", ")
         ));
+        // A struct of another module is declared in a file whose names are not at hand here.
+        let local = self
+            .out
+            .structs
+            .iter()
+            .find(|(_, local)| **local == ty)
+            .and_then(|(def, _)| self.res.def(*def))
+            .map(|def| def.span);
+        if let Some(span) = local {
+            diagnostic =
+                diagnostic.related(span, format!("the struct '{struct_name}' is declared here"));
+        }
         if let Some(candidate) =
             single_close_name(&name.name, declared.fields.iter().map(|(n, _)| n.as_str()))
         {

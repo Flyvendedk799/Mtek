@@ -5,6 +5,14 @@
     "startByte": 329,
     "endByte": 333,
     "message": "Missing required parameter 'height' on material Ramp.",
+    "related": [
+      {
+        "message": "the param 'height' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 60,
+        "endByte": 66
+      }
+    ],
     "notes": [
       "the param 'height' has no default",
       "help: add `height: …`"

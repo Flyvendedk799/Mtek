@@ -4,6 +4,9 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The file is 9 bytes; a binary glTF starts with a 12-byte header."
+    "message": "The file is 9 bytes; a binary glTF starts with a 12-byte header.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
   }
 ]

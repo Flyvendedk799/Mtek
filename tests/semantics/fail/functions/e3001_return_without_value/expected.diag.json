@@ -6,6 +6,14 @@
     "endByte": 57,
     "message": "The function 'pick' returns f32, but this `return` gives no value.",
     "expected": "f32",
-    "actual": "()"
+    "actual": "()",
+    "related": [
+      {
+        "message": "'pick' returns f32",
+        "file": "src/main.mtek",
+        "startByte": 19,
+        "endByte": 22
+      }
+    ]
   }
 ]

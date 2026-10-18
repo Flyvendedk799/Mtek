@@ -5,6 +5,14 @@
     "startByte": 353,
     "endByte": 373,
     "message": "The entity 'First' is an instance of prefab Crate and declares `state`, but an instance may set only the prefab's params.",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 176,
+        "endByte": 181
+      }
+    ],
     "notes": [
       "the params of Crate are: lift",
       "help: declare it in the prefab"
@@ -16,6 +24,14 @@
     "startByte": 382,
     "endByte": 398,
     "message": "The entity 'First' is an instance of prefab Crate and declares a `const`, but an instance may set only the prefab's params.",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 176,
+        "endByte": 181
+      }
+    ],
     "notes": [
       "the params of Crate are: lift",
       "help: declare it in the prefab"
@@ -27,6 +43,14 @@
     "startByte": 407,
     "endByte": 425,
     "message": "The entity 'First' is an instance of prefab Crate and declares a lifecycle function, but an instance may set only the prefab's params.",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 176,
+        "endByte": 181
+      }
+    ],
     "notes": [
       "the params of Crate are: lift",
       "help: declare it in the prefab"
@@ -38,6 +62,14 @@
     "startByte": 434,
     "endByte": 459,
     "message": "The entity 'First' is an instance of prefab Crate and declares an event handler, but an instance may set only the prefab's params.",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 176,
+        "endByte": 181
+      }
+    ],
     "notes": [
       "the params of Crate are: lift",
       "help: declare it in the prefab"
@@ -49,6 +81,14 @@
     "startByte": 468,
     "endByte": 496,
     "message": "The entity 'First' is an instance of prefab Crate and declares an `entity`, but an instance may set only the prefab's params.",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 176,
+        "endByte": 181
+      }
+    ],
     "notes": [
       "the params of Crate are: lift",
       "help: declare it in the prefab"

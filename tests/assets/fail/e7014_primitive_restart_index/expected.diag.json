@@ -4,6 +4,9 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The mesh 'Tri' (meshes[0]), primitive 0 has the index 65535 at position 2, but only 3 vertices."
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0 has the index 65535 at position 2, but only 3 vertices.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
   }
 ]

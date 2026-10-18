@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "The file contains 1 animation; the v0.1 profile is static and has neither animations nor skins.",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "help: export the model without animations and skins"
     ]
   }
