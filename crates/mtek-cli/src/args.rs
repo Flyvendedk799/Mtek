@@ -676,7 +676,9 @@ mod tests {
                 assert!(text.contains("dev"), "{text}");
                 assert!(text.contains("new"), "{text}");
                 assert!(text.contains("lsp"), "{text}");
-                assert!(!text.contains("fmt"), "unimplemented commands are hidden");
+                for command in ["fmt", "test", "context", "grammar"] {
+                    assert!(text.contains(command), "{command} is listed: {text}");
+                }
             }
             other => panic!("{other:?}"),
         }
