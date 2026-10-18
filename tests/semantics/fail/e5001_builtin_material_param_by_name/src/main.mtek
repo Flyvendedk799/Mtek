@@ -1,0 +1,29 @@
+scene Demo {
+    clear_color: #202020;
+    state taps: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #22c55e };
+    }
+
+    entity Floor {
+        mesh: Box { size: vec3(4.0, 0.2, 1.0) };
+    }
+
+    on key_down(Key.Space) {
+        Cube.material.color = #ff0000;
+        taps += 1;
+    }
+
+    on key_down(Key.Enter) {
+        let current: color = Cube.material.color;
+        Floor.material.color = current;
+    }
+}

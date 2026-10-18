@@ -71,7 +71,7 @@ entity Cube {
 | `scale` | `vec3` | `vec3(1.0)` | local; every component finite and `> 0` (§12) |
 | `visible` | `bool` | `true` | hides the mesh draw only; behaviour still runs |
 | `mesh` | mesh descriptor (`Box`, `Sphere`, `Plane`, asset mesh) | none | construction-only |
-| `material` | material instance (`Unlit {…}`, `Pbr {…}`, user material `{…}`) | `Unlit {}` if `mesh` is set | instance identity construction-only; params writable/bindable (`spec/materials.md` §4) |
+| `material` | material instance (`Unlit {…}`, `Pbr {…}`, user material `{…}`) | `Unlit {}` if `mesh` is set | instance identity construction-only; params writable/bindable (in this build the params of the built-in `Unlit` and `Pbr` of a named entity can only be bound in the descriptor, not read or assigned by name: decision 0086; `spec/materials.md` §4) |
 | `light` | `DirectionalLight {…}` / `PointLight {…}` | none | `spec/materials.md` §7 |
 | `body` | `Static {}` / `Dynamic {…}` / `Kinematic {}` | none | `spec/physics.md` |
 | `collider` | `BoxCollider {…}` / `SphereCollider {…}` | none | `spec/physics.md` |

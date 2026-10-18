@@ -12,4 +12,5 @@ export {
   type Vec3,
 } from "./helpers.ts";
 export type { InputResult, Pixels, TaskHooks } from "./hooks.ts";
+export { FIXED_STEP, MAX_CATCH_UP_STEPS, MAX_FRAME_DELTA } from "./frame.ts";
 export { startTask, TARGET_SIZE, type TaskApp, type TaskHost } from "./task.ts";

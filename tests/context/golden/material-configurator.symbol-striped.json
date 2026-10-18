@@ -174,7 +174,7 @@
       "value:frame.time"
     ],
     "notSupported": [
-      "non-constant-initial-values (planned for M3)",
+      "non-constant-initial-values",
       "as",
       "async",
       "await",

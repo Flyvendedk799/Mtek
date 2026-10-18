@@ -42,7 +42,9 @@ use super::{NonConstant, NonConstantKind};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::layout::builtin::MAX_LIGHTS;
 use crate::project::edit_distance;
-use crate::resolve::gate::{NON_CONSTANT_INITIAL_VALUES, gate_message, gate_note, is_implemented};
+use crate::resolve::gate::{
+    NON_CONSTANT_INITIAL_VALUES, gate_note, hard_gate_message, is_implemented,
+};
 use crate::resolve::{Construct, DefId, construct_implemented};
 use crate::source::Span;
 use crate::stdlib::{
@@ -1129,20 +1131,13 @@ impl Checker<'_> {
             return false;
         }
         self.sink.push(
-            Diagnostic::new(
-                Code::E9010,
-                gate_message(
-                    NON_CONSTANT_INITIAL_VALUES.subject,
-                    NON_CONSTANT_INITIAL_VALUES.plural,
-                    NON_CONSTANT_INITIAL_VALUES.since,
-                ),
-            )
-            .at(reason.span)
-            .note(format!(
-                "the value of {what} is not a constant expression: {}",
-                reason.reason
-            ))
-            .note(gate_note()),
+            Diagnostic::new(Code::E9010, hard_gate_message(&NON_CONSTANT_INITIAL_VALUES))
+                .at(reason.span)
+                .note(format!(
+                    "the value of {what} is not a constant expression: {}",
+                    reason.reason
+                ))
+                .note(gate_note()),
         );
         false
     }

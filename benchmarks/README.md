@@ -25,7 +25,7 @@ evidence in `evidence/M6/ai-eval/`). The holdout task was not opened for this an
 | Mutation checks | wrong-but-plausible solutions were run against the fixtures of most new tasks; the few that pass are differences no pixel or required symbol can show, listed in the evidence and the decisions |
 | `mtek test` and the `set_input` step | implemented (M6-09, decision 0074) |
 | The harness | `tools/ai-eval` (M6-07, decision 0077): tested with the replay client only; no model has been run, so no difficulty is measured |
-| Known benchmark gaps | no texture/sampler task (the baseline support has no image loader); no key-up, held-key or `fixed_update` task (the baseline support has no such hook); the baseline applies key transitions before host inputs while `spec/scenes.md` section 10 applies host inputs first (no fixture mixes them); no model runs, token counts or runtime benchmark (M7) |
+| Known benchmark gaps | no texture/sampler task (the baseline support has no image loader); no key-up, held-key or `fixed_update` task (the baseline support has the hooks since decision 0086, `onKeyUp`, `isKeyDown`, `fixedUpdate`, tested without a GPU, but the set is fixed at 30 + 8 tasks and none uses them yet); the baseline frame order now follows `spec/scenes.md` section 10 (host inputs before key transitions, decision 0086); no model runs, token counts or runtime benchmark (M7) |
 
 ## Layout
 

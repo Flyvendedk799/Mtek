@@ -1,0 +1,32 @@
+[
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 448,
+    "endByte": 461,
+    "message": "The material of the entity 'Cube' is the built-in `Unlit`; this build does not expose its params as `Cube.material.<param>`, to read or to assign.",
+    "notes": [
+      "help: to change a param over time, bind it in the descriptor (`material: Unlit { param: bind(…) }`); to read or assign it by name, declare a material of your own"
+    ]
+  },
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 563,
+    "endByte": 576,
+    "message": "The material of the entity 'Cube' is the built-in `Unlit`; this build does not expose its params as `Cube.material.<param>`, to read or to assign.",
+    "notes": [
+      "help: to change a param over time, bind it in the descriptor (`material: Unlit { param: bind(…) }`); to read or assign it by name, declare a material of your own"
+    ]
+  },
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 592,
+    "endByte": 606,
+    "message": "The entity 'Floor' does not declare a `material`, so its params cannot be reached by name.",
+    "notes": [
+      "help: declare `material: M {{ … }}` with a material of your own; the params of the built-in `Unlit` and `Pbr` can only be bound in the descriptor"
+    ]
+  }
+]

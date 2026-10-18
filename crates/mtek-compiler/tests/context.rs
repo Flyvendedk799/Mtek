@@ -426,7 +426,11 @@ fn every_registry_row_is_a_feature_or_planned_and_nothing_else_is() {
         .count();
     assert_eq!(
         planned_in_output,
-        planned.len() + HARD_GATES.len(),
+        planned.len()
+            + HARD_GATES
+                .iter()
+                .filter(|gate| gate.since.is_some())
+                .count(),
         "only gated rows and hard gates are planned"
     );
 }
@@ -585,21 +589,12 @@ fn the_hard_gate_is_what_the_build_rejects() {
         "{}",
         gate.message
     );
-    assert!(
-        gate.message
-            .contains(NON_CONSTANT_INITIAL_VALUES.since.as_str())
-    );
+    // No milestone is planned for it (the old "planned for M3" outlived M3): neither the message nor
+    // the export promises one.
+    assert_eq!(NON_CONSTANT_INITIAL_VALUES.since, None);
+    assert!(!gate.message.contains("planned for"), "{}", gate.message);
     let not_supported = derive(registry()).not_supported;
-    assert!(
-        set(&not_supported).contains(
-            format!(
-                "{} (planned for {})",
-                NON_CONSTANT_INITIAL_VALUES.feature,
-                NON_CONSTANT_INITIAL_VALUES.since.as_str()
-            )
-            .as_str()
-        )
-    );
+    assert!(set(&not_supported).contains(NON_CONSTANT_INITIAL_VALUES.feature));
 }
 
 #[test]

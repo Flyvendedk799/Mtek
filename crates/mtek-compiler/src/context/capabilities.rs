@@ -290,11 +290,10 @@ pub fn derive_for(registry: &Registry, implemented: Milestone) -> Capabilities {
         .map(|(since, name)| format!("{name} (planned for {})", since.as_str()))
         .collect();
     for gate in HARD_GATES {
-        not_supported.push(format!(
-            "{} (planned for {})",
-            gate.feature,
-            gate.since.as_str()
-        ));
+        not_supported.push(match gate.since {
+            Some(since) => format!("{} (planned for {})", gate.feature, since.as_str()),
+            None => gate.feature.to_owned(),
+        });
     }
     not_supported.extend(RESERVED_WORDS.iter().map(|word| (*word).to_owned()));
     not_supported.extend(

@@ -1,0 +1,30 @@
+# 0086. Honest wording of two diagnostics, and the frame order of the benchmark baseline
+
+- Status: Accepted
+- Date: 2026-10-18
+- Blueprint origin: M6 (blueprint §11), findings of the benchmark task set (M6-08, decisions 0078, 0079, 0083, 0084); `spec/scenes.md` §§4.1, 8, 10; `spec/diagnostics.md` (`E5001`, `E9010`); decisions 0024, 0025 (milestone gating), 0039 item 9 (non-constant initial values), 0021 (the benchmark task format).
+- Supersedes: the wording of `E9010` for non-constant initial values in decision 0039 item 9 ("planned for M3") and the note of every `E9010` ("this compiler build implements the language up to milestone M1"). Nothing else.
+
+## Context
+
+Three findings of the M6-08 workers were small and were fixed together. The first two are wording: a message that sends a user (or a model repairing a program) in the wrong direction. The third is a difference between the benchmark's three.js side and the specification.
+
+## Decision
+
+1. **`Name.material.param` on a built-in material (`E5001`).** The specification says the params of a material instance are readable and writable (`spec/scenes.md` §4.1, §8.1). This build does it for the materials a program declares itself, and for the materials of prefab instances, but not for the built-in `Unlit` and `Pbr` of a named entity: their descriptor is a registry schema, not a material instance of the program (`types/scene_body.rs`, `note_entity_material`), so the checker had no instance type to read the params from and answered `E5001` "The entity 'Cube' has no material." — false when the entity declares `material: Unlit { … }` and when it has a mesh (default `Unlit {}`). The checker now remembers the built-in material of each named entity (`entity_builtin_materials`) and says what is true: *the material of the entity is the built-in `Unlit`; this build does not expose its params as `Cube.material.<param>`, to read or to assign*, with the help "to change a param over time, bind it in the descriptor (`material: Unlit { param: bind(…) }`); to read or assign it by name, declare a material of your own". An entity that declares no material gets "does not declare a `material`, so its params cannot be reached by name", with the same way out. The code is still `E5001` and the spans are unchanged; **making the built-in params readable and assignable is a feature, not a wording fix, and is not done here** (it needs an instance type for the registry materials and the lowering of the write to the runtime's `setParam`). It stays a known gap between the specification and the build. Fixture: `tests/semantics/fail/e5001_builtin_material_param_by_name` (a write, a read, and an entity with a mesh and no `material`).
+2. **`E9010` for non-constant initial values.** The message promised "(planned for M3)" and M3 is closed; the build still folds every initial value (decision 0039 item 9), and no milestone is planned for it. `HardGate::since` is now an `Option<Milestone>`; `NON_CONSTANT_INITIAL_VALUES` has `None`, and its message ends after "not implemented by this compiler build yet." (`hard_gate_message`). The context export lists it as `non-constant-initial-values` without a milestone. A hard gate with a milestone keeps the old wording.
+3. **The note of `E9010`.** "this compiler build implements the language up to milestone M1" is false by construction: `CURRENT_MILESTONE` is `M1` because every row implemented so far is tagged `since M1` and the constant never moved (decision 0024), so it says nothing about the build. The note is now "`mtek context` lists what this build supports and what it does not" (`gate_note`), which is true and actionable. The only fixture that carried the old note was re-blessed (`gate_non_constant_initial_value`), and the seven context goldens lost "(planned for M3)".
+4. **Baseline frame order.** `benchmarks/baselines/support` applied key transitions before host inputs; `spec/scenes.md` §10 phase 1 applies host inputs first, then key transitions. No fixture mixed the two, so nothing changed for the 38 tasks (the 89 baseline specs pass unchanged on hardware). The frame order is now one module without rendering, `src/frame.ts` (`FrameClock`), used by `startTask` and tested without a GPU (`test/frame.test.ts`, 6 tests): host inputs, key transitions, fixed ticks (step 1/60 s, at most 4 per frame, the surplus of the accumulator dropped), update with the delta clamped to 0.1 s, then render. The same change adds what the benchmark was missing and could not express: `host.onKeyUp(code, handler)`, `host.isKeyDown(code)` (true from the input phase of the frame that applies the press, like Mtek's `is_key_down`), and `app.fixedUpdate(dt)`. Their pixel-level behaviour is covered by the unit tests only; no task uses them yet.
+
+## Fixtures and tests
+
+`e5001_builtin_material_param_by_name` (new); `gate_non_constant_initial_value` and the context goldens re-blessed (`MTEK_BLESS=1`); `crates/mtek-compiler/tests/context.rs` (the hard gate has no milestone and is listed without one) and `resolve/gate.rs` (`messages_follow_the_specified_wording`) updated; `benchmarks/baselines/support/test/frame.test.ts`.
+
+## Consequences
+
+- A model or a user who assigns a built-in material param now learns what to do instead (bind it, or declare a material); the benchmark tasks that avoid the assignment (`interaction-02` to `-04`, `shader-bridge-*`) are unchanged.
+- The gaps of the benchmark that these hooks make expressible (a key-up, a held-key and a `fixed_update` task) are not authored: the set is fixed at 30 tasks and 8 holdout tasks by the blueprint (§12.2), so a new task would replace one, which is a decision for the benchmark's owner. The texture/sampler gap remains (the baseline support has no image loader), as do model runs and token counts (M7).
+
+## Verification
+
+`cargo test --workspace --locked`, `npm run check`, `npm run test:unit`, `MTEK_REQUIRE_GPU=1 npm run test:benchmarks` (89/89 on the hardware adapter, unchanged), `MTEK_REQUIRE_GPU=1 npm run test:browser:hardware` (nothing browser-visible changed).

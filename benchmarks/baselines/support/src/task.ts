@@ -1,7 +1,8 @@
 // `startTask`: the baseline counterpart of Mtek's runtime in test mode (decision 0021, section 6).
 // It owns the renderer, a 128 x 128 `RGBA8` sRGB render target with a depth buffer, a manual clock,
-// key transitions, host inputs and pixel readback; the application supplies a scene, a camera, a clear
-// colour, an optional `update(dt)` and its input handlers.
+// key transitions, host inputs, a fixed tick and pixel readback; the application supplies a scene, a camera,
+// a clear colour, an optional `update(dt)` and `fixedUpdate(dt)` and its input handlers. The frame order is
+// the one of `spec/scenes.md` section 10 (frame.ts): host inputs, key transitions, fixed ticks, update, render.
 import {
   type Camera,
   RenderTarget,
@@ -9,6 +10,7 @@ import {
   SRGBColorSpace,
   WebGPURenderer,
 } from "three/webgpu";
+import { FrameClock } from "./frame.ts";
 import { srgb } from "./helpers.ts";
 import type { InputResult, Pixels, TaskHooks } from "./hooks.ts";
 
@@ -18,6 +20,13 @@ export const TARGET_SIZE = 128;
 export interface TaskHost {
   /** Runs `handler` in the input phase of the frame after the key with this `KeyboardEvent.code` went down. */
   onKeyDown(code: string, handler: () => void): void;
+  /** Runs `handler` in the input phase of the frame after the key with this `KeyboardEvent.code` went up. */
+  onKeyUp(code: string, handler: () => void): void;
+  /**
+   * Whether the key is down as of the current frame: a transition counts from the input phase of the frame
+   * that applies it, like Mtek's `is_key_down`.
+   */
+  isKeyDown(code: string): boolean;
   /**
    * Declares a host input (the page sets it with `setInput`, like Mtek's `[host.inputs]`). The value is
    * handed to `handler` in the input phase of the next frame.
@@ -30,12 +39,11 @@ export interface TaskApp {
   readonly camera: Camera;
   /** Background colour as `#rrggbb` (sRGB), like Mtek's `clear_color`. */
   readonly clearColor: string;
-  /** Called once per frame with the frame time in seconds, after the frame's input. */
+  /** Called once per fixed tick (0 to 4 per frame, 1/60 s each), after the frame's input. */
+  fixedUpdate?(dt: number): void;
+  /** Called once per frame with the clamped frame time in seconds, after the frame's fixed ticks. */
   update?(dt: number): void;
 }
-
-type Transition = { readonly kind: "down" | "up"; readonly code: string };
-type QueuedInput = { readonly name: string; readonly value: unknown };
 
 /**
  * Builds the application and exposes it to the test as `window.mtekTask`. On failure it sets
@@ -50,11 +58,19 @@ export async function startTask(build: (host: TaskHost) => TaskApp): Promise<voi
 }
 
 async function createHooks(build: (host: TaskHost) => TaskApp): Promise<TaskHooks> {
+  const clock = new FrameClock();
   const keyHandlers = new Map<string, Array<() => void>>();
+  const keyUpHandlers = new Map<string, Array<() => void>>();
   const inputHandlers = new Map<string, (value: unknown) => void>();
   const app = build({
     onKeyDown(code, handler) {
       keyHandlers.set(code, [...(keyHandlers.get(code) ?? []), handler]);
+    },
+    onKeyUp(code, handler) {
+      keyUpHandlers.set(code, [...(keyUpHandlers.get(code) ?? []), handler]);
+    },
+    isKeyDown(code) {
+      return clock.down.has(code);
     },
     onInput(name, handler) {
       if (inputHandlers.has(name)) throw new Error(`host input '${name}' is declared twice`);
@@ -70,26 +86,23 @@ async function createHooks(build: (host: TaskHost) => TaskApp): Promise<TaskHook
   const target = new RenderTarget(TARGET_SIZE, TARGET_SIZE, { depthBuffer: true });
   target.texture.colorSpace = SRGBColorSpace;
 
-  const held = new Set<string>();
-  const transitions: Transition[] = [];
-  const inputs: QueuedInput[] = [];
-
-  /** Phase 1 of a frame: queued key transitions and host inputs, in arrival order within each kind. */
-  const applyInput = (): void => {
-    for (const transition of transitions.splice(0)) {
-      if (transition.kind === "down") {
-        for (const handler of keyHandlers.get(transition.code) ?? []) handler();
-      }
-    }
-    for (const input of inputs.splice(0)) inputHandlers.get(input.name)?.(input.value);
+  const callbacks = {
+    input: (name: string, value: unknown): void => inputHandlers.get(name)?.(value),
+    keyDown: (code: string): void => {
+      for (const handler of keyHandlers.get(code) ?? []) handler();
+    },
+    keyUp: (code: string): void => {
+      for (const handler of keyUpHandlers.get(code) ?? []) handler();
+    },
+    fixedUpdate: (dt: number): void => app.fixedUpdate?.(dt),
+    update: (dt: number): void => app.update?.(dt),
   };
 
   return {
     size: TARGET_SIZE,
     async step(frames, dtSeconds) {
       for (let frame = 0; frame < frames; frame += 1) {
-        applyInput();
-        app.update?.(dtSeconds);
+        clock.frame(dtSeconds, callbacks);
         renderer.setRenderTarget(target);
         renderer.render(app.scene, app.camera);
         renderer.setRenderTarget(null);
@@ -102,19 +115,16 @@ async function createHooks(build: (host: TaskHost) => TaskApp): Promise<TaskHook
       return { width: TARGET_SIZE, height: TARGET_SIZE, data: [...view] };
     },
     pressKey(code) {
-      if (held.has(code)) return;
-      held.add(code);
-      transitions.push({ kind: "down", code });
+      clock.pressKey(code);
     },
     releaseKey(code) {
-      if (!held.delete(code)) return;
-      transitions.push({ kind: "up", code });
+      clock.releaseKey(code);
     },
     setInput(name, value): InputResult {
       if (!inputHandlers.has(name)) {
         return { ok: false, error: { code: "unknown-input", message: `no host input named '${name}'` } };
       }
-      inputs.push({ name, value });
+      clock.setInput(name, value);
       return { ok: true };
     },
   };

@@ -239,8 +239,9 @@ pub struct HardGate {
     pub subject: &'static str,
     /// Whether `subject` is plural.
     pub plural: bool,
-    /// The milestone that is planned to implement the construct.
-    pub since: Milestone,
+    /// The milestone that is planned to implement the construct; `None` when no milestone is planned
+    /// for it (a planned milestone that has passed without it would be a false promise).
+    pub since: Option<Milestone>,
 }
 
 /// A state initialiser, constant or field initialiser that is not a constant expression and is
@@ -249,7 +250,7 @@ pub const NON_CONSTANT_INITIAL_VALUES: HardGate = HardGate {
     feature: "non-constant-initial-values",
     subject: "Initial values that are not constant expressions",
     plural: true,
-    since: Milestone::M3,
+    since: None,
 };
 
 /// Every [`HardGate`] of the build.
@@ -266,13 +267,26 @@ pub fn gate_message(subject: &str, plural: bool, since: Milestone) -> String {
     )
 }
 
-/// The note every `E9010` of the resolver carries.
+/// The `E9010` message of a [`HardGate`]: with the milestone planned for it, if there is one.
+#[must_use]
+pub fn hard_gate_message(gate: &HardGate) -> String {
+    match gate.since {
+        Some(since) => gate_message(gate.subject, gate.plural, since),
+        None => {
+            let verb = if gate.plural { "are" } else { "is" };
+            format!(
+                "{} {verb} specified for v0.1 but not implemented by this compiler build yet.",
+                gate.subject
+            )
+        }
+    }
+}
+
+/// The note every `E9010` of the resolver carries: where to see what the build supports (the
+/// registry's milestone tags are not a version of the build, decision 0024).
 #[must_use]
 pub fn gate_note() -> String {
-    format!(
-        "this compiler build implements the language up to milestone {}",
-        IMPLEMENTED_MILESTONE.as_str()
-    )
+    "`mtek context` lists what this build supports and what it does not".to_owned()
 }
 
 #[cfg(test)]
@@ -418,7 +432,12 @@ mod tests {
         );
         assert_eq!(
             gate_note(),
-            "this compiler build implements the language up to milestone M1"
+            "`mtek context` lists what this build supports and what it does not"
+        );
+        // A hard gate with no planned milestone promises none.
+        assert_eq!(
+            hard_gate_message(&NON_CONSTANT_INITIAL_VALUES),
+            "Initial values that are not constant expressions are specified for v0.1 but not implemented by this compiler build yet."
         );
     }
 }

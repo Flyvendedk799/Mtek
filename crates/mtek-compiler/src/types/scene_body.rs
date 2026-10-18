@@ -596,13 +596,25 @@ impl Checker<'_> {
             (Some(instance), _) => (instance, self.instance_params(instance)),
             (None, Some(params)) => (TyId::MATERIAL, params),
             (None, None) => {
-                self.report(
-                    Diagnostic::new(
+                let diagnostic = match self.out.entity_builtin_materials.get(&entity) {
+                    Some(builtin) => Diagnostic::new(
                         Code::E5001,
-                        format!("The entity '{entity_name}' has no material."),
+                        format!(
+                            "The material of the entity '{entity_name}' is the built-in `{builtin}`; this build does not expose its params as `{entity_name}.material.<param>`, to read or to assign."
+                        ),
                     )
-                    .at(base.span),
-                );
+                    .help(format!(
+                        "to change a param over time, bind it in the descriptor (`material: {builtin} {{ param: bind(…) }}`); to read or assign it by name, declare a material of your own"
+                    )),
+                    None => Diagnostic::new(
+                        Code::E5001,
+                        format!(
+                            "The entity '{entity_name}' does not declare a `material`, so its params cannot be reached by name."
+                        ),
+                    )
+                    .help("declare `material: M {{ … }}` with a material of your own; the params of the built-in `Unlit` and `Pbr` can only be bound in the descriptor"),
+                };
+                self.report(diagnostic.at(base.span));
                 return Some(TyId::ERROR);
             }
         };
@@ -751,8 +763,19 @@ impl Checker<'_> {
         let (Some(ty), Some(def)) = (self.ty_of(value.id), entity) else {
             return;
         };
-        if matches!(self.out.interner.get(ty), Ty::MaterialInstance(_)) {
-            self.out.entity_materials.insert(def, ty);
+        match self.out.interner.get(ty) {
+            Ty::MaterialInstance(_) => {
+                self.out.entity_materials.insert(def, ty);
+            }
+            Ty::Schema(name)
+                if self
+                    .registry
+                    .schema(name)
+                    .is_some_and(|schema| schema.category == SchemaCategory::Material) =>
+            {
+                self.out.entity_builtin_materials.insert(def, name);
+            }
+            _ => {}
         }
     }
 
