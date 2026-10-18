@@ -1,0 +1,15 @@
+[
+  {
+    "task": "shader-bridge-06",
+    "side": "baseline reference (three.js)",
+    "mutant": "colour-lags-the-height-by-one-frame",
+    "change": {
+      "file": "reference/baseline/src/main.ts",
+      "from": "cube.position.y = state.lift;\nwarmth.value = cube.position.y / 2;",
+      "to": "warmth.value = cube.position.y / 2;\ncube.position.y = state.lift;"
+    },
+    "command": "MTEK_REQUIRE_GPU=1 MTEK_BASELINE_SOURCE=reference npm run test:benchmarks -- shader-bridge-06 (hardware adapter)",
+    "verdict": "rejected: fixture 'the cube follows lift and its colour follows its height in the same frame' failed; the retention fixture passed",
+    "firstFailure": "step 5 (expect_pixel): pixel (64, 40) is rgb(30, 58, 138), expected #b85c65 within 2 (the colour of the previous frame's height 0, COOL)"
+  }
+]

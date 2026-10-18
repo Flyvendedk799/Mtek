@@ -1,0 +1,290 @@
+[
+  {
+    "task": "shader-bridge-02",
+    "mutant": "left-right-swapped",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "Shade { amount: bind(level) }",
+      "to": "Shade { amount: bind(1.0 - level) }"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "until the host sets level, Left stays #898989 and the background stays #202020 :: pixel (35, 64) is #e1e1e1, expected #898989 within 2 per channel; it differs by 88 | the host input level sets Left to level and Right to 1 - level :: pixel (35, 64) is #e1e1e1, expected #898989 within 2 per channel; it differs by 88"
+  },
+  {
+    "task": "shader-bridge-02",
+    "mutant": "right-not-complement",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "bind(1.0 - level)",
+      "to": "bind(level)"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the host input level sets Left to level and Right to 1 - level :: pixel (93, 64) is #898989, expected #e1e1e1 within 2 per channel; it differs by 88"
+  },
+  {
+    "task": "shader-bridge-02",
+    "mutant": "wrong-initial-level",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "state level: f32 = 0.25;",
+      "to": "state level: f32 = 0.5;"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "until the host sets level, Left stays #898989 and the background stays #202020 :: pixel (35, 64) is #bcbcbc, expected #898989 within 2 per channel; it differs by 51 | the host input level sets Left to level and Right to 1 - level :: pixel (35, 64) is #bcbcbc, expected #898989 within 2 per channel; it differs by 51"
+  },
+  {
+    "task": "shader-bridge-02",
+    "mutant": "value-not-bound",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "bind(level)",
+      "to": "level"
+    },
+    "expected": "rejected (the compiler refuses a state read in a parameter value: E9010)",
+    "verdict": "fail",
+    "firstFailures": "check failed [\"MTEK-E9010\"]"
+  },
+  {
+    "task": "shader-bridge-03",
+    "mutant": "time-one-frame-late",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "phase: bind(frame.time)",
+      "to": "phase: bind(frame.time + 0.0625)"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the colour is the same along y, and the panel ends where the box ends :: pixel (72, 44) is #f7ae20, expected #f5ac24 within 3 per channel; it differs by 4 | the panel colour is the sweep of the object-space x and the elapsed time :: pixel (32, 64) is #2d2b7d, expected #26287d within 3 per channel; it differs by 7"
+  },
+  {
+    "task": "shader-bridge-03",
+    "mutant": "time-one-frame-early",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "phase: bind(frame.time)",
+      "to": "phase: bind(frame.time - 0.0625)"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the colour is the same along y, and the panel ends where the box ends :: pixel (72, 44) is #f3ab28, expected #f5ac24 within 3 per channel; it differs by 4 | the panel colour is the sweep of the object-space x and the elapsed time :: pixel (32, 64) is #20257e, expected #26287d within 3 per channel; it differs by 6"
+  },
+  {
+    "task": "shader-bridge-03",
+    "mutant": "time-not-bound",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "phase: bind(frame.time)",
+      "to": "phase: 0.0"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the colour is the same along y, and the panel ends where the box ends :: pixel (72, 44) is #bb845c, expected #f5ac24 within 3 per channel; it differs by 58 | the panel colour is the sweep of the object-space x and the elapsed time :: pixel (32, 64) is #20257e, expected #26287d within 3 per channel; it differs by 6"
+  },
+  {
+    "task": "shader-bridge-03",
+    "mutant": "frequency-0.9",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "0.8 * surface",
+      "to": "0.9 * surface"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the colour is the same along y, and the panel ends where the box ends :: pixel (92, 44) is #feb208, expected #ffb303 within 3 per channel; it differs by 5 | the panel colour is the sweep of the object-space x and the elapsed time :: pixel (32, 64) is #1a237e, expected #26287d within 3 per channel; it differs by 12"
+  },
+  {
+    "task": "shader-bridge-03",
+    "mutant": "time-sign-flipped",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "+ phase",
+      "to": "- phase"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the colour is the same along y, and the panel ends where the box ends :: pixel (72, 44) is #523f7a, expected #f5ac24 within 3 per channel; it differs by 163 | the panel colour is the sweep of the object-space x and the elapsed time :: pixel (32, 64) is #1c247e, expected #26287d within 3 per channel; it differs by 10"
+  },
+  {
+    "task": "shader-bridge-03",
+    "mutant": "blend-in-srgb-not-linear",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "color.linear(mix(COLD.rgb, WARM.rgb, w), 1.0)",
+      "to": "color.srgb(mix(COLD.rgb, WARM.rgb, w), 1.0)"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the colour is the same along y, and the panel ends where the box ends :: pixel (72, 44) is #ea6a05, expected #f5ac24 within 3 per channel; it differs by 66 | the panel colour is the sweep of the object-space x and the elapsed time :: pixel (32, 64) is #050535, expected #26287d within 3 per channel; it differs by 72"
+  },
+  {
+    "task": "shader-bridge-03",
+    "mutant": "world-x-instead-of-object-x",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "surface.local_position.x",
+      "to": "surface.world_position.x"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the colour is the same along y, and the panel ends where the box ends :: pixel (72, 44) is #fdb20c, expected #f5ac24 within 3 per channel; it differs by 24 | the panel colour is the sweep of the object-space x and the elapsed time :: pixel (32, 64) is #4d3c7a, expected #26287d within 3 per channel; it differs by 39"
+  },
+  {
+    "task": "shader-bridge-03",
+    "mutant": "panel-height-1.6",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "Box { size: vec3(4.0, 2.0, 0.2) }",
+      "to": "Box { size: vec3(4.0, 1.6, 0.2) }"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the colour is the same along y, and the panel ends where the box ends :: pixel (72, 44) is #202020, expected #f5ac24 within 3 per channel; it differs by 213"
+  },
+  {
+    "task": "shader-bridge-04",
+    "mutant": "limit-5-not-4",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "if charge < 4",
+      "to": "if charge < 5"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "Space raises the charge to at most 4, Backspace lowers it to at least 0 :: pixel (64, 64) is #ffffff, expected #e1e1e1 within 2 per channel; it differs by 30"
+  },
+  {
+    "task": "shader-bridge-04",
+    "mutant": "no-lower-limit",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "if charge > 0",
+      "to": "if charge > -5"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "Space raises the charge to at most 4, Backspace lowers it to at least 0 :: pixel (64, 64) is #000000, expected #898989 within 2 per channel; it differs by 137"
+  },
+  {
+    "task": "shader-bridge-04",
+    "mutant": "backspace-does-nothing",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "charge -= 1;",
+      "to": "charge -= 0;"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "Space raises the charge to at most 4, Backspace lowers it to at least 0 :: pixel (64, 64) is #ffffff, expected #e1e1e1 within 2 per channel; it differs by 30"
+  },
+  {
+    "task": "shader-bridge-04",
+    "mutant": "divide-by-3",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "f32(charge) / 4.0",
+      "to": "f32(charge) / 3.0"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "Space raises the charge to at most 4, Backspace lowers it to at least 0 :: pixel (64, 64) is #9c9c9c, expected #898989 within 2 per channel; it differs by 19 | a held key is one press :: pixel (64, 64) is #9c9c9c, expected #898989 within 2 per channel; it differs by 19"
+  },
+  {
+    "task": "shader-bridge-04",
+    "mutant": "space-on-key-up",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "on key_down(Key.Space)",
+      "to": "on key_up(Key.Space)"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "Space raises the charge to at most 4, Backspace lowers it to at least 0 :: pixel (64, 64) is #000000, expected #898989 within 2 per channel; it differs by 137 | a held key is one press :: pixel (64, 64) is #000000, expected #898989 within 2 per channel; it differs by 137"
+  },
+  {
+    "task": "shader-bridge-05",
+    "mutant": "divide-by-20",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "Lamp.light.intensity / 10.0",
+      "to": "Lamp.light.intensity / 20.0"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the dial follows the lamp's intensity when the host changes power :: pixel (64, 64) is #6c6c6c, expected #959595 within 2 per channel; it differs by 41 | before any input the indicator shows the intensity 3 as the grey #959595 :: pixel (64, 64) is #6c6c6c, expected #959595 within 2 per channel; it differs by 41"
+  },
+  {
+    "task": "shader-bridge-05",
+    "mutant": "power-as-intensity",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "Lamp.light.intensity / 10.0",
+      "to": "power / 10.0"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the dial follows the lamp's intensity when the host changes power :: pixel (64, 64) is #6c6c6c, expected #959595 within 2 per channel; it differs by 41 | before any input the indicator shows the intensity 3 as the grey #959595 :: pixel (64, 64) is #6c6c6c, expected #959595 within 2 per channel; it differs by 41"
+  },
+  {
+    "task": "shader-bridge-05",
+    "mutant": "equivalent-reads-power-directly",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "Lamp.light.intensity / 10.0",
+      "to": "power / 5.0"
+    },
+    "expected": "accepted (an equivalent program: the lamp's intensity is 2 * power)",
+    "verdict": "pass",
+    "firstFailures": ""
+  },
+  {
+    "task": "shader-bridge-06",
+    "mutant": "warmth-height-over-3",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "self.position.y / 2.0",
+      "to": "self.position.y / 3.0"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the cube follows lift and its colour follows its height in the same frame :: pixel (64, 40) is #9a5273, expected #b85c65 within 2 per channel; it differs by 30"
+  },
+  {
+    "task": "shader-bridge-06",
+    "mutant": "cube-does-not-follow-lift",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "position: bind(vec3(0.0, lift, 0.0));",
+      "to": "position: vec3(0.0, 0.0, 0.0);"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the cube follows lift and its colour follows its height in the same frame :: pixel (64, 40) is #202020, expected #b85c65 within 2 per channel; it differs by 152"
+  },
+  {
+    "task": "shader-bridge-06",
+    "mutant": "lift-on-x-axis",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "vec3(0.0, lift, 0.0)",
+      "to": "vec3(lift, 0.0, 0.0)"
+    },
+    "expected": "rejected",
+    "verdict": "fail",
+    "firstFailures": "the cube follows lift and its colour follows its height in the same frame :: pixel (64, 40) is #202020, expected #b85c65 within 2 per channel; it differs by 152"
+  },
+  {
+    "task": "shader-bridge-06",
+    "mutant": "equivalent-warmth-from-lift",
+    "change": {
+      "file": "src/main.mtek",
+      "from": "self.position.y / 2.0",
+      "to": "lift / 2.0"
+    },
+    "expected": "accepted (an equivalent program: the height is lift)",
+    "verdict": "pass",
+    "firstFailures": ""
+  }
+]
