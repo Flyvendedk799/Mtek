@@ -48,6 +48,7 @@ scene Demo {
         position: vec3(0.0, 0.5, 0.0);
         update(dt: f32) {
             let angle = double(speed) * dt;
+            let wobble = sin(angle);
             let light = Light { intensity: 2.0; position: vec3(0.0, 1.0, 0.0); };
             self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), angle + light.intensity);
         }
@@ -254,6 +255,26 @@ fn hover_on_registry_fields_functions_and_members_has_the_registry_docs() {
     assert!(surface.contains("type SurfaceInput"), "{surface}");
     let vec3 = f.hover("src/main.mtek", "vec3(1.0, 1.0", 0);
     assert!(vec3.contains("type vec3"), "{vec3}");
+}
+
+#[test]
+fn hover_on_a_global_intrinsic_shows_its_signatures_and_where_it_may_run() {
+    let f = Fixture::new(&[]);
+    let sin = f.hover("src/main.mtek", "sin(angle)", 0);
+    assert!(
+        sin.starts_with(
+            "```mtek
+fn sin("
+        ),
+        "{sin}"
+    );
+    assert!(sin.contains("domain: both"), "{sin}");
+    assert!(sin.contains("usable in constant expressions"), "{sin}");
+    let definition = f.definition("src/main.mtek", "sin(angle)", 0).unwrap();
+    assert_eq!(
+        f.target_text(definition),
+        ("mtek-prelude:std/prelude.mtek".to_owned(), "sin".to_owned())
+    );
 }
 
 #[test]
