@@ -1,5 +1,5 @@
 // Runs the integration suite (src/integration/suite.ts) in a real VS Code: downloads that VS Code
-// (cached in .vscode-test/), opens a temporary project as the workspace folder, points
+// (cached in target/vscode-test/), opens a temporary project as the workspace folder, points
 // `mtek.server.path` at the binary `npm run build` made, and checks the suite's own record of what
 // it ran. Nothing is "skipped": a VS Code that cannot be downloaded or started is a failure here
 // (exit 1, and the message says NOT-RUN), never a pass.
@@ -74,7 +74,7 @@ try {
   try {
     exitCode = await runTests({
       ...(executable === undefined ? { version: process.env["VSCODE_VERSION"] ?? PINNED_VSCODE } : { vscodeExecutablePath: executable }),
-      cachePath: join(packageRoot, ".vscode-test"),
+      cachePath: join(repoRoot, "target", "vscode-test"),
       extensionDevelopmentPath: packageRoot,
       extensionTestsPath: join(packageRoot, "dist", "test", "suite.cjs"),
       extensionTestsEnv: { MTEK_TEST_RESULTS: results },

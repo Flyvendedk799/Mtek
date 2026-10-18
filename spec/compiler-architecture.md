@@ -23,7 +23,7 @@ crates/
 packages/
   runtime-web/             # @mtek/runtime-web — TypeScript runtime (M0+)
   physics-rapier/          # @mtek/physics-rapier — optional physics adapter (M5)
-  editor-vscode/           # VS Code extension (M6)
+  editor-vscode/           # VS Code extension (M6-04, decision 0090): grammar generator, LSP client, .vsix packaging
 spec/                      # this specification set, decisions, evidence policy
 examples/                  # pulse-cube (M3), material-configurator (M4), physics-playground (M5), modular-scene (M7)
 tests/

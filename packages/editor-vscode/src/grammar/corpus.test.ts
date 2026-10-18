@@ -65,4 +65,15 @@ describe("the grammar over the corpus", () => {
     expect(problems.slice(0, 20)).toEqual([]);
     expect(checked).toBeGreaterThan(100);
   });
+
+  it("does scope what is invalid on purpose (so the check above can fail)", () => {
+    let illegal = 0;
+    for (const file of files.filter((f) => f.startsWith("tests/syntax/fail/") || f.startsWith("tests/syntax/lex/"))) {
+      const text = readFileSync(join(REPO_ROOT, file), "utf8");
+      for (const line of tokenizeText(grammar, text)) {
+        illegal += line.tokens.filter((t) => t.scopes.some((s) => s.startsWith("invalid.illegal"))).length;
+      }
+    }
+    expect(illegal).toBeGreaterThan(20);
+  });
 });

@@ -12,6 +12,6 @@ tests/browser/results/
 packages/runtime-web/src/abi/generated/
 tests/codegen/.out/
 
-# VS Code downloaded by @vscode/test-electron (packages/editor-vscode)
-packages/editor-vscode/.vscode-test/
+# The extension package (packages/editor-vscode); the VS Code its integration tests download is cached
+# in target/vscode-test/
 *.vsix

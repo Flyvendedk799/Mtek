@@ -27,7 +27,7 @@ From a clean checkout:
 | Command | Purpose |
 |---|---|
 | `npm ci` | install the exact locked npm dependencies |
-| `npm run build` | bundle `@mtek/runtime-web` to `packages/runtime-web/dist/runtime.js` and the Rapier adapter to `packages/physics-rapier/dist/physics.js`, then `cargo build -p mtek-cli --locked` |
+| `npm run build` | bundle `@mtek/runtime-web` to `packages/runtime-web/dist/runtime.js`, the Rapier adapter to `packages/physics-rapier/dist/physics.js` and the VS Code extension to `packages/editor-vscode/dist/extension.cjs`, then `cargo build -p mtek-cli --locked` |
 | `npm run check` | `cargo fmt --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `npm run check:ts`, `npm run lint`, `npm run check:naming`, `npm run check:tasks` |
 | `npm run check:ts` | `tsc -b` over all TypeScript projects |
 | `npm run lint` | ESLint (`recommended-type-checked`, no `any`) |
@@ -116,11 +116,21 @@ unchanged. The environment record contains no paths and is committed as written.
 
 ## Language server
 
-`mtek lsp [--stdio]` is a language server over standard input and output (`spec/tooling.md` section 7, decision 0076): diagnostics for the whole project (150 ms after the last change, over the editor's unsaved buffers), hover (types, doc comments, standard-library documentation), go to definition (across modules and into the standard library as read-only `mtek-prelude:` documents), completion, and a quick fix for every validated suggested edit of `spec/diagnostics.md` section 6. Positions are UTF-8 if the client offers it and UTF-16 otherwise. A client needs only the launch command; the VS Code extension (M6-04) is a thin client of it.
+`mtek lsp [--stdio]` is a language server over standard input and output (`spec/tooling.md` section 7, decision 0076): diagnostics for the whole project (150 ms after the last change, over the editor's unsaved buffers), hover (types, doc comments, standard-library documentation), go to definition (across modules and into the standard library as read-only `mtek-prelude:` documents), completion, and a quick fix for every validated suggested edit of `spec/diagnostics.md` section 6. Positions are UTF-8 if the client offers it and UTF-16 otherwise. A client needs only the launch command; the VS Code extension (`packages/editor-vscode`, below) is a thin client of it.
 
 ```
 cargo run -p mtek-cli -- lsp        # waits for an LSP client on stdin; exit code 0 after shutdown and exit
 ```
+
+## VS Code extension
+
+`packages/editor-vscode` (npm name `mtek-vscode`, `spec/tooling.md` section 8, decision 0090) is a VS Code extension for `.mtek` files: syntax highlighting from a TextMate grammar that `scripts/gen-grammar.ts` generates from `spec/grammar.ebnf`, a language configuration that matches `mtek fmt`, and a client of `mtek lsp` (the `mtek` executable on `PATH`, or the setting `mtek.server.path`). It is not published to a marketplace; CI builds the `.vsix` and uploads it as a workflow artifact.
+
+| Command | Purpose |
+|---|---|
+| `npm run package -w mtek-vscode` | bundle the extension and make `packages/editor-vscode/mtek-vscode-<version>.vsix` with `@vscode/vsce` (install it with *Extensions: Install from VSIX...*) |
+| `npm run gen:grammar -w mtek-vscode` | regenerate `syntaxes/mtek.tmLanguage.json` (`npm run check:grammar -w mtek-vscode` fails if the committed file differs) |
+| `npm run test:integration -w mtek-vscode` | download a pinned VS Code (cached in `target/vscode-test/`), open a temporary project in it and run the integration suite against `target/debug/mtek lsp`; needs `npm run build` first and a display (`xvfb-run -a` on Linux without one); a VS Code that cannot be downloaded or started prints NOT-RUN and exits 1 |
 
 ## Planned commands (not available)
 
