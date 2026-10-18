@@ -50,7 +50,7 @@ test.afterAll(() => {
   writeRecord("m4-configurator-counters.json", record);
 });
 
-test.describe("the material configurator on the hardware adapter (M4-10)", () => {
+test.describe("the material configurator (M4-10)", () => {
   test("loads the model: assets ready, entities placed by the node accessors, counters, and the picture the oracle predicts", async ({ page, gpu }, testInfo) => {
     void gpu;
     test.setTimeout(120_000);
