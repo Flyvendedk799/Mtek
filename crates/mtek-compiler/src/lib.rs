@@ -9,6 +9,7 @@
 pub mod assets;
 pub mod emit_js;
 pub mod emit_wgsl;
+pub mod format;
 pub mod ir;
 pub mod layout;
 pub mod lowering;
