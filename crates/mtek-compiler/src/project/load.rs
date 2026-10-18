@@ -133,7 +133,7 @@ fn entry_not_readable(view: &dyn Fs, entry: &ProjectPath, error: &FsError) -> Di
 /// there is one. Segments are matched one directory at a time; when several
 /// entries of a directory match, the first in sorted order is taken, so the
 /// answer does not depend on directory enumeration order.
-pub(super) fn path_differing_in_case(fs: &dyn Fs, wanted: &ProjectPath) -> Option<ProjectPath> {
+pub(crate) fn path_differing_in_case(fs: &dyn Fs, wanted: &ProjectPath) -> Option<ProjectPath> {
     let mut found = ProjectPath::root();
     for segment in wanted.segments() {
         let mut names = fs.list_dir(&found).ok()?;

@@ -93,6 +93,20 @@ impl Fs for RealFs {
         })
     }
 
+    fn len(&self, p: &ProjectPath) -> Result<u64, FsError> {
+        let path = match self.locate(p) {
+            Ok(Some(path)) => path,
+            Ok(None) => return Err(FsError::NotFound(p.clone())),
+            Err(error) => return Err(other(p, &error)),
+        };
+        match fs::metadata(&path) {
+            Ok(metadata) if metadata.is_dir() => Err(FsError::IsADirectory(p.clone())),
+            Ok(metadata) => Ok(metadata.len()),
+            Err(error) if is_missing(&error) => Err(FsError::NotFound(p.clone())),
+            Err(error) => Err(other(p, &error)),
+        }
+    }
+
     fn exact_case_exists(&self, p: &ProjectPath) -> bool {
         matches!(self.locate(p), Ok(Some(path)) if fs::metadata(&path).is_ok())
     }
