@@ -10,7 +10,7 @@ Make these keys change value:
 - value never exceeds 8: any result above 8 becomes 8.
 Every key press counts and is applied in the order the presses were made, also when several keys are pressed at the same moment (in the same frame). For example, starting from 1, D then P gives (1 x 2) + 3 = 5, while P then D gives (1 + 3) x 2 = 8. Without any key press nothing changes. The bar's drawing, the camera and everything else stay as they are."""
 required_symbols = ["Demo.Bar", "Demo.value"]
-mtek_side_status = "unverified-until-M6"
+mtek_side_status = "verified"
 
 [budgets]
 max_repairs = 3

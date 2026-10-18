@@ -1,0 +1,19 @@
+id = "interaction-08"
+category = "interaction"
+mode = "cold"
+title = "A runner that Space starts and stops and that wraps around"
+prompt = """Build a scene named Demo that looks and behaves as follows. The picture is square.
+- The clear (background) colour is #202020.
+- One camera at (0, 0, 10) looking at the origin, with an orthographic projection whose visible height is 12.8 world units (near plane 0.1, far plane 1000); so one world unit is ten pixels.
+- A thin dark grey track named Track: a box 12 wide, 0.2 high and 0.2 deep at (0, -1, 0), colour #404040.
+- An orange block named Runner: a box 1 wide, 1 high and 0.5 deep, colour #f97316, starting at (-5, 0, 0). It starts stopped.
+- A press of the Space bar toggles the Runner between stopped and moving. While it is moving it moves along +X at 4 world units per second of program time (program time is the sum of the frame durations the program is given; the distance covered in a frame is 4 times that frame's duration). While it is stopped it stays where it is, and starting it again continues from there.
+- The Runner's x is kept in the range -6 <= x < 6: when moving takes it to 6 or beyond, 12 is subtracted, so it re-enters at the left.
+All surfaces are flat colours (no lighting). Nothing else moves."""
+required_symbols = ["Demo.Runner", "Demo.Track"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

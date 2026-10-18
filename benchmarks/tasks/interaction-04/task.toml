@@ -9,7 +9,7 @@ Make it behave like this:
 - A press of the Space bar while the Beacon is done sets it back to idle at once.
 Every run counts the full 1.5 seconds from its own start. Without any key press nothing changes. The block's size and position, the camera and everything else stay as they are."""
 required_symbols = ["Demo.Beacon"]
-mtek_side_status = "unverified-until-M6"
+mtek_side_status = "verified"
 
 [budgets]
 max_repairs = 3

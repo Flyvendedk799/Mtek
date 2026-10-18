@@ -9,7 +9,7 @@ The host page must be able to place the Marker through an input named cursor who
 - A press of the Space bar puts the Marker back at the centre (0, 0); the host's next value moves it again.
 Before the host sets anything the Marker is at the centre. The panel, the camera and everything else stay as they are."""
 required_symbols = ["Demo.Marker", "Demo.Panel"]
-mtek_side_status = "unverified-until-M6"
+mtek_side_status = "verified"
 
 [budgets]
 max_repairs = 3

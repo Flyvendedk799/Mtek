@@ -1,0 +1,17 @@
+id = "interaction-07"
+category = "interaction"
+mode = "edit"
+title = "Add and remove pips in a row with the keyboard"
+prompt = """The scene Demo is drawn from the front with a flat (orthographic) camera; one world unit is ten pixels. It shows a thin grey rail named Rail. The program also defines Pip, a reusable description of one small sky-blue block (0.8 by 0.8 world units, #38bdf8) that takes its horizontal position x as an input and sits at (x, 0, 0). No Pip exists at the start: Pips are created and removed while the program runs.
+Make the keyboard fill and empty a row of Pips:
+- A press of the Space bar adds a Pip at the next free place: the n-th Pip that currently exists is at x = -6 + 2n, so the places are x = -4, -2, 0, 2 and 4, in that order. At most five Pips exist: a press of Space while five exist does nothing.
+- A press of the Backspace key removes the most recently added Pip (the one furthest right); with no Pip it does nothing. A place that was emptied is free again.
+- A press of the Enter key removes all Pips.
+Every key press counts and takes effect in the order the presses were made, also when several keys are pressed in the same frame. A removed Pip leaves nothing behind in the picture. The rail, the definition of Pip, the camera and everything else stay as they are."""
+required_symbols = ["Pip", "Demo.Rail"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

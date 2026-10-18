@@ -10,7 +10,7 @@ Make the Handle respond to the keyboard:
 - A press of the Enter key puts the Handle back at the centre (x = 0), yellow.
 Without any key press nothing moves. The track, the camera and everything else stay as they are."""
 required_symbols = ["Demo.Handle", "Demo.Track"]
-mtek_side_status = "unverified-until-M6"
+mtek_side_status = "verified"
 
 [budgets]
 max_repairs = 3

@@ -112,6 +112,15 @@ export class Fixture {
     return this;
   }
 
+  /** Expects pixel (px, py) to have exactly this colour (for models that compute colours themselves). */
+  expectColor(px, py, color, tolerance = 2) {
+    this.lines.push(
+      `  { expect_pixel = { x = ${String(px)}, y = ${String(py)}, color = "${color}", tolerance = ${String(tolerance)} } },`,
+    );
+    this.asserts += 1;
+    return this;
+  }
+
   /** Expects every listed pixel. @param {Array<[number, number]>} points */
   expectAll(boxes, background, points) {
     for (const [px, py] of points) this.expect(boxes, background, px, py);

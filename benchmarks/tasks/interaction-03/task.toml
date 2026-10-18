@@ -9,7 +9,7 @@ Make the keyboard control the lamps:
 - A press of the Enter key switches both lamps off.
 Every key press counts and takes effect in the order the presses were made, also when several keys are pressed at the same moment (in the same frame). Without any key press nothing changes. The lamps' shapes and positions, the camera and everything else stay as they are."""
 required_symbols = ["Demo.LampA", "Demo.LampB"]
-mtek_side_status = "unverified-until-M6"
+mtek_side_status = "verified"
 
 [budgets]
 max_repairs = 3
