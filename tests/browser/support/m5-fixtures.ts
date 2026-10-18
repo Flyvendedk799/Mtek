@@ -21,6 +21,21 @@ export const SPAWN_RING = "spawn_ring";
  */
 export const PHYSICS_DROP = "physics_drop";
 
+/** Four balls through a sensor zone: exact enter/exit counts on the engine (M5-06, decision 0068). */
+export const PHYSICS_SENSOR = "physics_sensor";
+
+/** Seventeen fast balls against a thin static wall and against thin dynamic plates: the tunnelling measurement (M5-06). */
+export const PHYSICS_TUNNEL = "physics_tunnel";
+
+/** Handlers that destroy and spawn inside collision callbacks (M5-06). */
+export const PHYSICS_CALLBACKS = "physics_callbacks";
+
+/** The same-frame combinations of `spec/scenes.md` section 10.3 with bodies (M5-06). */
+export const PHYSICS_COMBOS = "physics_combos";
+
+/** Waves of crates that spawn and destroy themselves: the resource plateau (M5-06). */
+export const PHYSICS_WAVES = "physics_waves";
+
 /** Every fixture directory under `fixtures/m5/`, sorted. */
 export function m5FixtureNames(): string[] {
   return readdirSync(M5_FIXTURES_DIR, { withFileTypes: true })

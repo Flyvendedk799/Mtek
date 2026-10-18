@@ -204,7 +204,7 @@ The runtime's scheduler (`spec/runtime-abi.md` §7 is the implementation contrac
 
 10.2 **Time policy.** Frame delta is clamped to `max_frame_delta` (default 0.1 s). `pause()` stops clocks and the fixed-step accumulator; `resume()` continues without simulating the paused interval. Hidden documents are paused automatically and resumed when visible, unless the host opts out. All three constants are configurable in `mtek.toml` `[runtime]` and recorded in the manifest.
 
-10.3 **Same-frame combinations** that must have conformance tests: spawn then destroy in the same handler; destroy then a collision involving the entity in the same tick; key down and up within one frame (both delivered, in order); input during pause (transitions that occur while paused are discarded; the held-key state is re-synchronised on resume exactly as on focus loss, §7.4).
+10.3 **Same-frame combinations** that must have conformance tests: spawn then destroy in the same handler; destroy then a collision involving the entity in the same tick; key down and up within one frame (both delivered, in order); input during pause (transitions that occur while paused are discarded; the held-key state is re-synchronised on resume exactly as on focus loss, §7.4). The unit tests are `host/spawn.test.ts` and `scene/slots.test.ts`; the browser conformance tests, with a real physics engine under them (destroy before, in and after the tick of a collision, key down and up in one frame, input during a pause, and spawn, destroy, input and a collision in one frame of three ticks), are `tests/browser/specs/m5/physics-combinations.spec.ts` (decision 0068 item 6).
 
 ## 11. Initialisation order
 

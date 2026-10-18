@@ -1,0 +1,167 @@
+// M5-06: the same-frame combinations of spec/scenes.md section 10.3, with a real physics engine under them
+// (decisions 0064, 0066 and 0068). No gravity. Space spawns the Probe (flies at 5 m/s along +x from x = 2 into the
+// Pad, whose face is at x = 4.9) and the Drifter (a body at rest); each key below is one combination:
+//   A  spawn then destroy in one handler: a Block (a dynamic body) that is never created
+//   D  destroy the Probe from a key handler: the destroy is flushed before the next tick's step
+//   F  arm a flag; the scene's fixed_update destroys the Probe in the next tick, before that tick's step
+//   Q  key down and key up of one key within one frame: both handlers run, in order (down: velocity along +x, up: velocity
+//      along +z for the Ball; the later command of one category wins, decision 0066 item 5)
+//   W/E  key W down, then (paused) W up and E down, then resume: input during a pause is discarded and the held W is
+//      released at the next frame as after a focus loss; `w_held` polls is_key_down in `update`
+//   X  one frame that has three ticks (the spec drives it with a frame of 3.5 steps): destroy the Drifter, spawn a
+//      Runner (a body that flies at 6 m/s along +x from x = 0, z = 5), spawn and destroy a Block, while the Probe hits the Pad
+// The Probe's handler spawns a Mark{1} (a witness, a prefab instance without a body); the Pad counts hits and
+// records the tick of the last one. `ticks` counts fixed ticks.
+prefab Mark {
+    param kind: i32;
+    state tag: i32 = kind;
+}
+
+prefab Block {
+    param lane: f32;
+    position: vec3(0.0, 0.0, lane);
+    mesh: Box { size: vec3(0.5, 0.5, 0.5); };
+    material: Unlit { color: #ff8040; };
+    body: Dynamic { mass: 1.0; };
+    collider: BoxCollider { size: vec3(0.5, 0.5, 0.5); };
+}
+
+prefab Drifter {
+    param lane: f32;
+    position: vec3(0.0, 0.0, lane);
+    mesh: Sphere { radius: 0.25; };
+    material: Unlit { color: #8080ff; };
+    body: Dynamic { mass: 1.0; };
+    collider: SphereCollider { radius: 0.25; };
+}
+
+prefab Probe {
+    param lane: f32;
+    state launched: i32 = 0;
+    position: vec3(2.0, 0.0, lane);
+    mesh: Sphere { radius: 0.25; };
+    material: Unlit { color: #ff4040; };
+    body: Dynamic { mass: 1.0; };
+    collider: SphereCollider { radius: 0.25; };
+    fixed_update(dt: f32) {
+        if self.launched == 0 {
+            self.body.set_linear_velocity(vec3(5.0, 0.0, 0.0));
+            self.launched = 1;
+        }
+    }
+    on collision_enter(other: entity_ref) {
+        spawn(Mark { kind: 1; });
+    }
+}
+
+prefab Runner {
+    param lane: f32;
+    state launched: i32 = 0;
+    position: vec3(0.0, 0.0, lane);
+    mesh: Sphere { radius: 0.25; };
+    material: Unlit { color: #40ff80; };
+    body: Dynamic { mass: 1.0; };
+    collider: SphereCollider { radius: 0.25; };
+    fixed_update(dt: f32) {
+        if self.launched == 0 {
+            self.body.set_linear_velocity(vec3(6.0, 0.0, 0.0));
+            self.launched = 1;
+        }
+    }
+}
+
+scene Combos {
+    clear_color: #202830;
+    gravity: vec3(0.0, 0.0, 0.0);
+    state ticks: i32 = 0;
+    state probe: entity_ref = Pad;
+    state drifter: entity_ref = Pad;
+    state armed: i32 = 0;
+    state pad_hits: i32 = 0;
+    state pad_tick: i32 = 0;
+    state q_len: i32 = 0;
+    state q_log: array<i32, 4> = [0, 0, 0, 0];
+    state w_down: i32 = 0;
+    state w_up: i32 = 0;
+    state e_down: i32 = 0;
+    state w_held: i32 = 0;
+    camera Lens {
+        position: vec3(5.0, 40.0, 0.0);
+        target: vec3(5.0, 0.0, 0.0);
+    }
+    fixed_update(dt: f32) {
+        ticks += 1;
+        if armed == 1 {
+            armed = 0;
+            if probe != Pad {
+                destroy(probe);
+            }
+        }
+    }
+    update(dt: f32) {
+        if is_key_down(Key.W) {
+            w_held = 1;
+        } else {
+            w_held = 0;
+        }
+    }
+    on key_down(Key.Space) {
+        probe = spawn(Probe { lane: 0.0; });
+        drifter = spawn(Drifter { lane: 10.0; });
+    }
+    on key_down(Key.A) {
+        let cancelled = spawn(Block { lane: -10.0; });
+        destroy(cancelled);
+    }
+    on key_down(Key.D) {
+        if probe != Pad {
+            destroy(probe);
+        }
+    }
+    on key_down(Key.F) {
+        armed = 1;
+    }
+    on key_down(Key.Q) {
+        Ball.body.set_linear_velocity(vec3(3.0, 0.0, 0.0));
+        q_log[q_len] = 1;
+        q_len += 1;
+    }
+    on key_up(Key.Q) {
+        Ball.body.set_linear_velocity(vec3(0.0, 0.0, 3.0));
+        q_log[q_len] = 2;
+        q_len += 1;
+    }
+    on key_down(Key.W) {
+        w_down += 1;
+    }
+    on key_up(Key.W) {
+        w_up += 1;
+    }
+    on key_down(Key.E) {
+        e_down += 1;
+    }
+    on key_down(Key.X) {
+        destroy(drifter);
+        let runner = spawn(Runner { lane: 5.0; });
+        let cancelled = spawn(Block { lane: -10.0; });
+        destroy(cancelled);
+    }
+    entity Pad {
+        position: vec3(5.0, 0.0, 0.0);
+        mesh: Box { size: vec3(0.2, 2.0, 8.0); };
+        material: Unlit { color: #405060; };
+        body: Static {};
+        collider: BoxCollider { size: vec3(0.2, 2.0, 8.0); };
+        on collision_enter(other: entity_ref) {
+            pad_hits += 1;
+            pad_tick = ticks;
+        }
+    }
+    entity Ball {
+        position: vec3(0.0, 0.0, -20.0);
+        mesh: Sphere { radius: 0.25; };
+        material: Unlit { color: #ffd040; };
+        body: Dynamic { mass: 1.0; };
+        collider: SphereCollider { radius: 0.25; };
+    }
+}

@@ -1,0 +1,167 @@
+// M5-06: sensor enter/exit counts on the real physics engine (spec/physics.md sections 6 and 7, decision 0068).
+// A sensor zone (a static box, y from 3 to 5, wide enough for four lanes) hangs above a floor; four balls of radius
+// 0.25 go through it on different paths, so every ball's number of crossings is known from its flight alone:
+//   A  dropped from y = 9                       enters through the top, leaves through the bottom: 1 enter, 1 exit
+//   B  thrown up at 12 m/s from the floor       up through the zone and out of the top (apex 7.6 m), back down
+//                                               through it again: 2 enters, 2 exits
+//   C  thrown up at 8.5 m/s from the floor      enters from below, turns inside the zone (apex 3.9 m, the zone ends
+//                                               at 5) and leaves downwards: 1 enter, 1 exit
+//   D  dropped from y = 9 onto a ledge          enters through the top and comes to rest inside the zone, on a
+//      (top face y = 4) inside the zone         static ledge that is inside the zone too: 1 enter, 0 exits
+// The zone sees every ball through `collision_enter` / `collision_exit` and every ball sees the zone; both sides
+// write the scene state so the browser spec can compare them (`zone_enter[i]` against `ball_enter[i]`). `log_who`
+// and `log_tick` record every delivery at the zone in order (who*10 + 1 for an enter, who*10 + 2 for an exit, and the
+// tick), `strangers` counts events whose other entity is none of the balls (the ledge, which is a static body
+// inside the zone: a fixed-fixed pair is expected to produce none). Space throws B and C.
+scene Sensor {
+    clear_color: #202830;
+    state ticks: i32 = 0;
+    state zone_enter: array<i32, 4> = [0, 0, 0, 0];
+    state zone_exit: array<i32, 4> = [0, 0, 0, 0];
+    state ball_enter: array<i32, 4> = [0, 0, 0, 0];
+    state ball_exit: array<i32, 4> = [0, 0, 0, 0];
+    state strangers: i32 = 0;
+    state log_len: i32 = 0;
+    state log_who: array<i32, 24> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    state log_tick: array<i32, 24> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    camera Lens {
+        position: vec3(0.0, 4.0, 20.0);
+        target: vec3(0.0, 4.0, 0.0);
+    }
+    fixed_update(dt: f32) {
+        ticks += 1;
+    }
+    on key_down(Key.Space) {
+        B.body.set_linear_velocity(vec3(0.0, 12.0, 0.0));
+        C.body.set_linear_velocity(vec3(0.0, 8.5, 0.0));
+    }
+    entity Floor {
+        position: vec3(0.0, -0.5, 0.0);
+        mesh: Box { size: vec3(20.0, 1.0, 4.0); };
+        material: Unlit { color: #405060; };
+        body: Static {};
+        collider: BoxCollider { size: vec3(20.0, 1.0, 4.0); };
+    }
+    entity Ledge {
+        position: vec3(4.0, 3.5, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+        material: Unlit { color: #506070; };
+        body: Static {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    }
+    entity Zone {
+        position: vec3(0.0, 4.0, 0.0);
+        mesh: Box { size: vec3(12.0, 2.0, 2.0); };
+        material: Unlit { color: #204020; };
+        body: Static {};
+        collider: BoxCollider { size: vec3(12.0, 2.0, 2.0); sensor: true; };
+        on collision_enter(other: entity_ref) {
+            var who = 0;
+            if other == A {
+                who = 1;
+            } else if other == B {
+                who = 2;
+            } else if other == C {
+                who = 3;
+            } else if other == D {
+                who = 4;
+            }
+            if who == 0 {
+                strangers += 1;
+            } else {
+                zone_enter[who - 1] += 1;
+                log_who[log_len] = who * 10 + 1;
+                log_tick[log_len] = ticks;
+                log_len += 1;
+            }
+        }
+        on collision_exit(other: entity_ref) {
+            var who = 0;
+            if other == A {
+                who = 1;
+            } else if other == B {
+                who = 2;
+            } else if other == C {
+                who = 3;
+            } else if other == D {
+                who = 4;
+            }
+            if who == 0 {
+                strangers += 1;
+            } else {
+                zone_exit[who - 1] += 1;
+                log_who[log_len] = who * 10 + 2;
+                log_tick[log_len] = ticks;
+                log_len += 1;
+            }
+        }
+    }
+    entity A {
+        position: vec3(-4.0, 9.0, 0.0);
+        mesh: Sphere { radius: 0.25; };
+        material: Unlit { color: #ff7040; };
+        body: Dynamic { mass: 1.0; };
+        collider: SphereCollider { radius: 0.25; };
+        on collision_enter(other: entity_ref) {
+            if other == Zone {
+                ball_enter[0] += 1;
+            }
+        }
+        on collision_exit(other: entity_ref) {
+            if other == Zone {
+                ball_exit[0] += 1;
+            }
+        }
+    }
+    entity B {
+        position: vec3(-1.5, 0.25, 0.0);
+        mesh: Sphere { radius: 0.25; };
+        material: Unlit { color: #70ff40; };
+        body: Dynamic { mass: 1.0; };
+        collider: SphereCollider { radius: 0.25; };
+        on collision_enter(other: entity_ref) {
+            if other == Zone {
+                ball_enter[1] += 1;
+            }
+        }
+        on collision_exit(other: entity_ref) {
+            if other == Zone {
+                ball_exit[1] += 1;
+            }
+        }
+    }
+    entity C {
+        position: vec3(1.5, 0.25, 0.0);
+        mesh: Sphere { radius: 0.25; };
+        material: Unlit { color: #4070ff; };
+        body: Dynamic { mass: 1.0; };
+        collider: SphereCollider { radius: 0.25; };
+        on collision_enter(other: entity_ref) {
+            if other == Zone {
+                ball_enter[2] += 1;
+            }
+        }
+        on collision_exit(other: entity_ref) {
+            if other == Zone {
+                ball_exit[2] += 1;
+            }
+        }
+    }
+    entity D {
+        position: vec3(4.0, 9.0, 0.0);
+        mesh: Sphere { radius: 0.25; };
+        material: Unlit { color: #ffd040; };
+        body: Dynamic { mass: 1.0; };
+        collider: SphereCollider { radius: 0.25; };
+        on collision_enter(other: entity_ref) {
+            if other == Zone {
+                ball_enter[3] += 1;
+            }
+        }
+        on collision_exit(other: entity_ref) {
+            if other == Zone {
+                ball_exit[3] += 1;
+            }
+        }
+    }
+}

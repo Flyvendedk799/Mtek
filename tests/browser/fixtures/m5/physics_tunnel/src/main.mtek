@@ -1,0 +1,99 @@
+// M5-06: the high-speed limitation of v0.1 (no continuous collision detection option), measured on the real engine
+// (spec/physics.md section 7, decision 0068). Seventeen small balls (radius 0.05) fly along +x at their own speed
+// towards a thin wall (0.1 m thick, its midplane at x = 5, its faces at 4.95 and 5.05), without gravity, in two
+// groups of lanes 3 m apart:
+//   S00..S16  the wall is one long STATIC box (z from -6 to 54), the common case
+//   D00..D16  the wall is a DYNAMIC plate of its own (mass 10000 kg, so it hardly moves), one per lane (z from 60)
+// Space gives each ball its speed. The balls start at their own `x0`, so the positions the engine samples (x0 + k *
+// speed * step, one per fixed step) are chosen lane by lane; the browser spec derives from them whether a ball is
+// stopped or passes (the model is in tests/browser/specs/m5/physics-tunnelling.spec.ts). The lane table is the same
+// in both groups; the spec reads it from this file.
+prefab Shot {
+    param lane: f32;
+    param x0: f32;
+    param speed: f32;
+    position: vec3(x0, 0.0, lane);
+    mesh: Sphere { radius: 0.05; };
+    material: Unlit { color: #ff7040; };
+    body: Dynamic { mass: 1.0; };
+    collider: SphereCollider { radius: 0.05; };
+    on key_down(Key.Space) {
+        self.body.set_linear_velocity(vec3(speed, 0.0, 0.0));
+    }
+}
+
+prefab Plate {
+    param lane: f32;
+    position: vec3(5.0, 0.0, lane);
+    mesh: Box { size: vec3(0.1, 2.0, 2.0); };
+    material: Unlit { color: #6080a0; };
+    body: Dynamic { mass: 10000.0; };
+    collider: BoxCollider { size: vec3(0.1, 2.0, 2.0); };
+}
+
+scene Tunnel {
+    clear_color: #202830;
+    gravity: vec3(0.0, 0.0, 0.0);
+    camera Lens {
+        position: vec3(5.0, 60.0, 54.0);
+        target: vec3(5.0, 0.0, 54.0);
+    }
+    entity Wall {
+        position: vec3(5.0, 0.0, 24.0);
+        mesh: Box { size: vec3(0.1, 2.0, 60.0); };
+        material: Unlit { color: #405060; };
+        body: Static {};
+        collider: BoxCollider { size: vec3(0.1, 2.0, 60.0); };
+    }
+    entity S00: Shot { lane: 0.0; x0: 3.0; speed: 3.0; }
+    entity S01: Shot { lane: 3.0; x0: 3.0; speed: 6.0; }
+    entity S02: Shot { lane: 6.0; x0: 3.05; speed: 6.0; }
+    entity S03: Shot { lane: 9.0; x0: 3.0; speed: 7.0; }
+    entity S04: Shot { lane: 12.0; x0: 3.04; speed: 7.0; }
+    entity S05: Shot { lane: 15.0; x0: 3.0; speed: 9.0; }
+    entity S06: Shot { lane: 18.0; x0: 3.065; speed: 9.0; }
+    entity S07: Shot { lane: 21.0; x0: 3.3; speed: 12.0; }
+    entity S08: Shot { lane: 24.0; x0: 3.24; speed: 12.0; }
+    entity S09: Shot { lane: 27.0; x0: 3.95; speed: 30.0; }
+    entity S10: Shot { lane: 30.0; x0: 3.84; speed: 30.0; }
+    entity S11: Shot { lane: 33.0; x0: 3.9; speed: 60.0; }
+    entity S12: Shot { lane: 36.0; x0: 3.84; speed: 60.0; }
+    entity S13: Shot { lane: 39.0; x0: 2.9; speed: 120.0; }
+    entity S14: Shot { lane: 42.0; x0: 2.84; speed: 120.0; }
+    entity S15: Shot { lane: 45.0; x0: 0.9; speed: 240.0; }
+    entity S16: Shot { lane: 48.0; x0: 0.84; speed: 240.0; }
+    entity P00: Plate { lane: 60.0; }
+    entity P01: Plate { lane: 63.0; }
+    entity P02: Plate { lane: 66.0; }
+    entity P03: Plate { lane: 69.0; }
+    entity P04: Plate { lane: 72.0; }
+    entity P05: Plate { lane: 75.0; }
+    entity P06: Plate { lane: 78.0; }
+    entity P07: Plate { lane: 81.0; }
+    entity P08: Plate { lane: 84.0; }
+    entity P09: Plate { lane: 87.0; }
+    entity P10: Plate { lane: 90.0; }
+    entity P11: Plate { lane: 93.0; }
+    entity P12: Plate { lane: 96.0; }
+    entity P13: Plate { lane: 99.0; }
+    entity P14: Plate { lane: 102.0; }
+    entity P15: Plate { lane: 105.0; }
+    entity P16: Plate { lane: 108.0; }
+    entity D00: Shot { lane: 60.0; x0: 3.0; speed: 3.0; }
+    entity D01: Shot { lane: 63.0; x0: 3.0; speed: 6.0; }
+    entity D02: Shot { lane: 66.0; x0: 3.05; speed: 6.0; }
+    entity D03: Shot { lane: 69.0; x0: 3.0; speed: 7.0; }
+    entity D04: Shot { lane: 72.0; x0: 3.04; speed: 7.0; }
+    entity D05: Shot { lane: 75.0; x0: 3.0; speed: 9.0; }
+    entity D06: Shot { lane: 78.0; x0: 3.065; speed: 9.0; }
+    entity D07: Shot { lane: 81.0; x0: 3.3; speed: 12.0; }
+    entity D08: Shot { lane: 84.0; x0: 3.24; speed: 12.0; }
+    entity D09: Shot { lane: 87.0; x0: 3.95; speed: 30.0; }
+    entity D10: Shot { lane: 90.0; x0: 3.84; speed: 30.0; }
+    entity D11: Shot { lane: 93.0; x0: 3.9; speed: 60.0; }
+    entity D12: Shot { lane: 96.0; x0: 3.84; speed: 60.0; }
+    entity D13: Shot { lane: 99.0; x0: 2.9; speed: 120.0; }
+    entity D14: Shot { lane: 102.0; x0: 2.84; speed: 120.0; }
+    entity D15: Shot { lane: 105.0; x0: 0.9; speed: 240.0; }
+    entity D16: Shot { lane: 108.0; x0: 0.84; speed: 240.0; }
+}
