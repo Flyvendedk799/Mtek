@@ -570,7 +570,9 @@ fn states_feeding_material_colors(scene: &ir::Scene) -> std::collections::BTreeS
     scene
         .bindings
         .iter()
-        .filter(|binding| matches!(binding.target, ir::BindingTarget::Param { .. }) && binding.ty == "color")
+        .filter(|binding| {
+            matches!(binding.target, ir::BindingTarget::Param { .. }) && binding.ty == "color"
+        })
         .flat_map(|binding| &binding.deps)
         .filter_map(|dep| match dep {
             ir::BindingDep::State { name } => Some(name.clone()),

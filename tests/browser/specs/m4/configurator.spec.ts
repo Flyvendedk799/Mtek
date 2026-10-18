@@ -235,7 +235,7 @@ test.describe("the material configurator on the hardware adapter (M4-10)", () =>
     await setCanvasCssSize(page, 320, 240);
     await mount(page, { test: { manualClock: true, canvasRenderTarget: true } });
     for (const [name, value] of Object.entries(values)) {
-      const ok = await page.evaluate(([n, v]) => (window as unknown as { __h: { app: { setInput(a: string, b: unknown): { ok: boolean } } } }).__h.app.setInput(n as string, v).ok, [name, value] as const);
+      const ok = await page.evaluate(([n, v]) => (window as unknown as { __h: { app: { setInput(a: string, b: unknown): { ok: boolean } } } }).__h.app.setInput(n, v).ok, [name, value] as const);
       expect(ok, `setInput ${name}`).toBe(true);
     }
 

@@ -661,11 +661,7 @@ fn a_colour_state_bound_into_a_material_colour_gets_the_opaque_host_input_codec(
 }
 ",
     );
-    let result = build(
-        &ProjectRoot::at_base(),
-        &memory,
-        &stub(BuildMode::Release),
-    );
+    let result = build(&ProjectRoot::at_base(), &memory, &stub(BuildMode::Release));
     assert!(!result.has_errors(), "{:#?}", result.report.diagnostics);
     let manifest: Value = serde_json::from_slice(&result.files["program.manifest.json"]).unwrap();
     let codecs: BTreeMap<String, String> = manifest["scene"]["hostInputs"]
