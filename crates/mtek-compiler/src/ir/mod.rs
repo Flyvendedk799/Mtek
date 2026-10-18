@@ -26,6 +26,8 @@ mod lower_prefab;
 mod model;
 #[cfg(test)]
 mod prefab_tests;
+#[cfg(test)]
+mod spawn_tests;
 mod render;
 #[cfg(test)]
 mod tests;
