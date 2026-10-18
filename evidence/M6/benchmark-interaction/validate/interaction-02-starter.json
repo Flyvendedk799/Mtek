@@ -136,7 +136,7 @@
     {
       "command": "check",
       "exitCode": 0,
-      "durationMs": 137,
+      "durationMs": 127,
       "timedOut": false
     },
     {
@@ -160,9 +160,9 @@
     {
       "command": "test",
       "exitCode": 1,
-      "durationMs": 2387,
+      "durationMs": 2360,
       "timedOut": false
     }
   ],
-  "durationMs": 2925
+  "durationMs": 2887
 }

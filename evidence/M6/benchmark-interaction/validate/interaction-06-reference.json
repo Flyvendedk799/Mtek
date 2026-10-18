@@ -109,33 +109,33 @@
     {
       "command": "check",
       "exitCode": 0,
-      "durationMs": 143,
+      "durationMs": 139,
       "timedOut": false
     },
     {
       "command": "context Demo.Bar",
       "exitCode": 0,
-      "durationMs": 131,
+      "durationMs": 130,
       "timedOut": false
     },
     {
       "command": "context Demo.value",
       "exitCode": 0,
-      "durationMs": 132,
+      "durationMs": 128,
       "timedOut": false
     },
     {
       "command": "build",
       "exitCode": 0,
-      "durationMs": 152,
+      "durationMs": 153,
       "timedOut": false
     },
     {
       "command": "test",
       "exitCode": 0,
-      "durationMs": 3935,
+      "durationMs": 3583,
       "timedOut": false
     }
   ],
-  "durationMs": 4494
+  "durationMs": 4133
 }

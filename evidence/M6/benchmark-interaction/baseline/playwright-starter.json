@@ -126,7 +126,7 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 657,
+                  "duration": 665,
                   "error": {
                     "message": "Error: each press of an arrow key moves the handle one unit, step 26 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m",
                     "stack": "Error: each press of an arrow key moves the handle one unit, step 26 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -150,7 +150,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:32.934Z",
+                  "startTime": "2026-10-18T19:11:49.133Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -195,7 +195,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 644,
+                  "duration": 715,
                   "error": {
                     "message": "Error: Enter puts the handle back at the centre, yellow, step 22 (expect_pixel): pixel (80, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m",
                     "stack": "Error: Enter puts the handle back at the centre, yellow, step 22 (expect_pixel): pixel (80, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -219,7 +219,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:34.887Z",
+                  "startTime": "2026-10-18T19:11:51.167Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -264,12 +264,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 460,
+                  "duration": 480,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:36.790Z",
+                  "startTime": "2026-10-18T19:11:53.271Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -298,7 +298,7 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 590,
+                  "duration": 604,
                   "error": {
                     "message": "Error: the handle stops at -4 and +4 and is red there, step 26 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m",
                     "stack": "Error: the handle stops at -4 and +4 and is red there, step 26 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -322,7 +322,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:38.009Z",
+                  "startTime": "2026-10-18T19:11:54.570Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -375,7 +375,7 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 641,
+                  "duration": 636,
                   "error": {
                     "message": "Error: A and B each toggle their own lamp, step 17 (expect_pixel): pixel (34, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m",
                     "stack": "Error: A and B each toggle their own lamp, step 17 (expect_pixel): pixel (34, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -399,7 +399,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:39.101Z",
+                  "startTime": "2026-10-18T19:11:55.697Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -449,7 +449,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:41.028Z",
+                  "startTime": "2026-10-18T19:11:57.622Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -478,7 +478,7 @@
                   "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 584,
+                  "duration": 618,
                   "error": {
                     "message": "Error: key presses of one frame all count, in the order they were made, step 24 (expect_pixel): pixel (94, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m",
                     "stack": "Error: key presses of one frame all count, in the order they were made, step 24 (expect_pixel): pixel (94, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -502,7 +502,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:42.281Z",
+                  "startTime": "2026-10-18T19:11:58.879Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -547,7 +547,7 @@
                   "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 638,
+                  "duration": 636,
                   "error": {
                     "message": "Error: Space flips every lamp from its own state; Enter switches both off, step 17 (expect_pixel): pixel (34, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m",
                     "stack": "Error: Space flips every lamp from its own state; Enter switches both off, step 17 (expect_pixel): pixel (34, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -571,7 +571,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:43.363Z",
+                  "startTime": "2026-10-18T19:12:00.021Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -624,7 +624,7 @@
                   "workerIndex": 6,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 461,
+                  "duration": 474,
                   "error": {
                     "message": "Error: Space when done returns to idle; the next run counts the full 1.5 s, step 6 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #22c55e within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m139\u001b[39m",
                     "stack": "Error: Space when done returns to idle; the next run counts the full 1.5 s, step 6 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #22c55e within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m139\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -648,7 +648,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:45.262Z",
+                  "startTime": "2026-10-18T19:12:01.947Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -693,12 +693,12 @@
                   "workerIndex": 7,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 625,
+                  "duration": 642,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:46.993Z",
+                  "startTime": "2026-10-18T19:12:03.685Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -727,7 +727,7 @@
                   "workerIndex": 7,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 607,
+                  "duration": 619,
                   "error": {
                     "message": "Error: Space starts a run that turns the beacon done after 1.5 s, step 12 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #ffb000 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m",
                     "stack": "Error: Space starts a run that turns the beacon done after 1.5 s, step 12 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #ffb000 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -751,7 +751,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:48.384Z",
+                  "startTime": "2026-10-18T19:12:05.128Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -796,7 +796,7 @@
                   "workerIndex": 8,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 464,
+                  "duration": 511,
                   "error": {
                     "message": "Error: Space while running does nothing and does not restart the run, step 6 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #ffb000 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m",
                     "stack": "Error: Space while running does nothing and does not restart the run, step 6 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #ffb000 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -820,7 +820,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:49.488Z",
+                  "startTime": "2026-10-18T19:12:06.276Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -873,7 +873,7 @@
                   "workerIndex": 9,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 479,
+                  "duration": 491,
                   "error": {
                     "message": "Error: the host input cursor places the marker, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                     "stack": "Error: the host input cursor places the marker, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -897,7 +897,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:51.195Z",
+                  "startTime": "2026-10-18T19:12:08.116Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -942,7 +942,7 @@
                   "workerIndex": 10,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 478,
+                  "duration": 499,
                   "error": {
                     "message": "Error: coordinates beyond 4.5 are limited one by one, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                     "stack": "Error: coordinates beyond 4.5 are limited one by one, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -966,7 +966,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:52.962Z",
+                  "startTime": "2026-10-18T19:12:09.995Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1011,12 +1011,12 @@
                   "workerIndex": 11,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 462,
+                  "duration": 481,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:54.718Z",
+                  "startTime": "2026-10-18T19:12:11.842Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1045,7 +1045,7 @@
                   "workerIndex": 11,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 419,
+                  "duration": 417,
                   "error": {
                     "message": "Error: Space puts the marker back at the centre and the next value moves it again, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                     "stack": "Error: Space puts the marker back at the centre and the next value moves it again, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -1069,7 +1069,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:55.958Z",
+                  "startTime": "2026-10-18T19:12:13.119Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1122,12 +1122,12 @@
                   "workerIndex": 12,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 455,
+                  "duration": 510,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:56.871Z",
+                  "startTime": "2026-10-18T19:12:14.066Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1180,7 +1180,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:58.093Z",
+                  "startTime": "2026-10-18T19:12:15.376Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1225,7 +1225,7 @@
                   "workerIndex": 13,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 660,
+                  "duration": 662,
                   "error": {
                     "message": "Error: presses of one frame apply in the order they were made, step 20 (expect_pixel): pixel (53, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m",
                     "stack": "Error: presses of one frame apply in the order they were made, step 20 (expect_pixel): pixel (53, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -1249,7 +1249,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:04:59.167Z",
+                  "startTime": "2026-10-18T19:12:16.470Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1302,7 +1302,7 @@
                   "workerIndex": 14,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 672,
+                  "duration": 643,
                   "error": {
                     "message": "Error: Backspace removes the newest Pip, Enter removes all of them, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m",
                     "stack": "Error: Backspace removes the newest Pip, Enter removes all of them, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -1326,7 +1326,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:05:01.123Z",
+                  "startTime": "2026-10-18T19:12:18.484Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1371,12 +1371,12 @@
                   "workerIndex": 15,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 465,
+                  "duration": 477,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:05:03.092Z",
+                  "startTime": "2026-10-18T19:12:20.378Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1405,7 +1405,7 @@
                   "workerIndex": 15,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 585,
+                  "duration": 580,
                   "error": {
                     "message": "Error: presses of one frame apply in the order they were made, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m",
                     "stack": "Error: presses of one frame apply in the order they were made, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -1429,7 +1429,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:05:04.322Z",
+                  "startTime": "2026-10-18T19:12:21.618Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1474,7 +1474,7 @@
                   "workerIndex": 16,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 636,
+                  "duration": 643,
                   "error": {
                     "message": "Error: Space adds a Pip at the next free slot, up to five, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m",
                     "stack": "Error: Space adds a Pip at the next free slot, up to five, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -1498,7 +1498,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:05:05.412Z",
+                  "startTime": "2026-10-18T19:12:22.699Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1551,7 +1551,7 @@
                   "workerIndex": 17,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 445,
+                  "duration": 490,
                   "error": {
                     "message": "Error: the runner stays at x = -5 until Space is pressed, step 2 (expect_pixel): pixel (2, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m",
                     "stack": "Error: the runner stays at x = -5 until Space is pressed, step 2 (expect_pixel): pixel (2, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -1575,7 +1575,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:05:07.317Z",
+                  "startTime": "2026-10-18T19:12:24.612Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1620,7 +1620,7 @@
                   "workerIndex": 18,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 466,
+                  "duration": 450,
                   "error": {
                     "message": "Error: Space starts the runner, the next Space stops it, the next continues, step 6 (expect_pixel): pixel (42, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m",
                     "stack": "Error: Space starts the runner, the next Space stops it, the next continues, step 6 (expect_pixel): pixel (42, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -1644,7 +1644,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:05:09.045Z",
+                  "startTime": "2026-10-18T19:12:26.395Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1689,7 +1689,7 @@
                   "workerIndex": 19,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 454,
+                  "duration": 449,
                   "error": {
                     "message": "Error: the runner re-enters at the left after reaching x = 6, step 6 (expect_pixel): pixel (105, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m",
                     "stack": "Error: the runner re-enters at the left after reaching x = 6, step 6 (expect_pixel): pixel (105, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
@@ -1713,7 +1713,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-18T19:05:10.781Z",
+                  "startTime": "2026-10-18T19:12:28.102Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1747,8 +1747,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-18T19:04:23.772Z",
-    "duration": 48392.055,
+    "startTime": "2026-10-18T19:11:36.077Z",
+    "duration": 53375.89,
     "expected": 6,
     "skipped": 0,
     "unexpected": 20,

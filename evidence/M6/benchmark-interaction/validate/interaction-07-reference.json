@@ -118,33 +118,33 @@
     {
       "command": "check",
       "exitCode": 0,
-      "durationMs": 145,
+      "durationMs": 141,
       "timedOut": false
     },
     {
       "command": "context Pip",
       "exitCode": 0,
-      "durationMs": 127,
+      "durationMs": 125,
       "timedOut": false
     },
     {
       "command": "context Demo.Rail",
       "exitCode": 0,
-      "durationMs": 125,
+      "durationMs": 127,
       "timedOut": false
     },
     {
       "command": "build",
       "exitCode": 0,
-      "durationMs": 148,
+      "durationMs": 152,
       "timedOut": false
     },
     {
       "command": "test",
       "exitCode": 0,
-      "durationMs": 6286,
+      "durationMs": 6995,
       "timedOut": false
     }
   ],
-  "durationMs": 6833
+  "durationMs": 7542
 }

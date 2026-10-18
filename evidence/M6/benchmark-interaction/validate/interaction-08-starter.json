@@ -65,21 +65,21 @@
     {
       "command": "check",
       "exitCode": 1,
-      "durationMs": 124,
+      "durationMs": 136,
       "timedOut": false
     },
     {
       "command": "context Demo.Runner",
       "exitCode": 2,
-      "durationMs": 123,
+      "durationMs": 121,
       "timedOut": false
     },
     {
       "command": "context Demo.Track",
       "exitCode": 2,
-      "durationMs": 121,
+      "durationMs": 122,
       "timedOut": false
     }
   ],
-  "durationMs": 369
+  "durationMs": 380
 }

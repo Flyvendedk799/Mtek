@@ -117,27 +117,27 @@
     {
       "command": "check",
       "exitCode": 0,
-      "durationMs": 145,
+      "durationMs": 143,
       "timedOut": false
     },
     {
       "command": "context Demo.Beacon",
       "exitCode": 0,
-      "durationMs": 135,
+      "durationMs": 141,
       "timedOut": false
     },
     {
       "command": "build",
       "exitCode": 0,
-      "durationMs": 149,
+      "durationMs": 165,
       "timedOut": false
     },
     {
       "command": "test",
       "exitCode": 0,
-      "durationMs": 3304,
+      "durationMs": 2867,
       "timedOut": false
     }
   ],
-  "durationMs": 3734
+  "durationMs": 3317
 }

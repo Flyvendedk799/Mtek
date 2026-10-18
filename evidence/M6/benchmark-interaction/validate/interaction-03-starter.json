@@ -136,33 +136,33 @@
     {
       "command": "check",
       "exitCode": 0,
-      "durationMs": 134,
+      "durationMs": 130,
       "timedOut": false
     },
     {
       "command": "context Demo.LampA",
       "exitCode": 0,
-      "durationMs": 135,
+      "durationMs": 124,
       "timedOut": false
     },
     {
       "command": "context Demo.LampB",
       "exitCode": 0,
-      "durationMs": 127,
+      "durationMs": 126,
       "timedOut": false
     },
     {
       "command": "build",
       "exitCode": 0,
-      "durationMs": 149,
+      "durationMs": 144,
       "timedOut": false
     },
     {
       "command": "test",
       "exitCode": 1,
-      "durationMs": 2450,
+      "durationMs": 2397,
       "timedOut": false
     }
   ],
-  "durationMs": 2996
+  "durationMs": 2922
 }

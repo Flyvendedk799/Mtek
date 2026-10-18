@@ -109,7 +109,7 @@
     {
       "command": "check",
       "exitCode": 0,
-      "durationMs": 139,
+      "durationMs": 142,
       "timedOut": false
     },
     {
@@ -121,21 +121,21 @@
     {
       "command": "context Demo.Track",
       "exitCode": 0,
-      "durationMs": 126,
+      "durationMs": 128,
       "timedOut": false
     },
     {
       "command": "build",
       "exitCode": 0,
-      "durationMs": 148,
+      "durationMs": 147,
       "timedOut": false
     },
     {
       "command": "test",
       "exitCode": 0,
-      "durationMs": 2533,
+      "durationMs": 2615,
       "timedOut": false
     }
   ],
-  "durationMs": 3074
+  "durationMs": 3161
 }
