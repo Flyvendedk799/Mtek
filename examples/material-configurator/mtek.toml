@@ -1,0 +1,21 @@
+[project]
+name = "material-configurator"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Configurator"
+
+[build]
+target = "web"
+title = "Material Configurator"
+
+[host.inputs]
+seat_color = "Configurator.seat_color"
+seat_metallic = "Configurator.seat_metallic"
+seat_roughness = "Configurator.seat_roughness"
+frame_color = "Configurator.frame_color"
+frame_metallic = "Configurator.frame_metallic"
+frame_roughness = "Configurator.frame_roughness"
+stripe_a = "Configurator.stripe_a"
+stripe_b = "Configurator.stripe_b"
+back_roughness = "Configurator.back_roughness"
+sun_intensity = "Configurator.sun_intensity"

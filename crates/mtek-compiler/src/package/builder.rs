@@ -558,9 +558,27 @@ fn resolve_host_inputs(project: &Project, scene: &ir::Scene) -> Vec<ResolvedHost
     validate_host_inputs(
         &project.config.host_inputs,
         &checked,
-        &std::collections::BTreeSet::new(),
+        &states_feeding_material_colors(scene),
         &mut sink,
     )
+}
+
+/// The scene `state` that some `bind(..)` reads to set a `color` param of a material instance. A host input of such a state gets
+/// the `color-hex-opaque` codec (`spec/runtime-abi.md` section 6.3: a translucent value is rejected by `setInput` itself
+/// with `E8100`, not accepted and then refused when the binding runs). A colour state that feeds nothing opaque stays `color-hex`.
+fn states_feeding_material_colors(scene: &ir::Scene) -> std::collections::BTreeSet<String> {
+    scene
+        .bindings
+        .iter()
+        .filter(|binding| {
+            matches!(binding.target, ir::BindingTarget::Param { .. }) && binding.ty == "color"
+        })
+        .flat_map(|binding| &binding.deps)
+        .filter_map(|dep| match dep {
+            ir::BindingDep::State { name } => Some(name.clone()),
+            _ => None,
+        })
+        .collect()
 }
 
 fn manifest_scene(

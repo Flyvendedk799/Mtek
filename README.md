@@ -40,6 +40,15 @@ From a clean checkout:
 | `npm test` | `check`, then `cargo test --workspace --locked`, then `test:unit`, then `test:browser` (NOT-RUN tolerant unless `MTEK_REQUIRE_GPU=1`) |
 | `cargo run -p mtek-cli -- --version` | prints `mtek 0.1.0-dev (language 0.1, runtime ABI 1)` |
 
+### Examples
+
+| Directory | What it is |
+|---|---|
+| [`examples/pulse-cube`](examples/pulse-cube) | the `mtek new` scaffold: a rotating cube, one material, one host input (M3) |
+| [`examples/material-configurator`](examples/material-configurator) | a multi-file configurator: a generated chair (GLB), PBR materials bound to host inputs, a custom fragment material, lights, a host page, and instanced legs (M4); its browser specs are the evidence for the M4 exit gate |
+
+Global setup of the browser tests builds both with the CLI (`tests/browser/support/m3-fixtures.ts`, `m4-configurator.ts`).
+
 ### Browser tests
 
 The browser harness lives in [`tests/browser`](tests/browser) (`spec/testing.md` section 6, decision 0012). One-time browser install:

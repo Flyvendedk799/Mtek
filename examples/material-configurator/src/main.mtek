@@ -1,0 +1,119 @@
+import { CHAIR, FABRIC_COLOR, FABRIC_METALLIC, FABRIC_ROUGHNESS, STEEL_COLOR, STEEL_METALLIC, STEEL_ROUGHNESS } from "./model.mtek";
+import { Striped } from "./materials.mtek";
+
+scene Configurator {
+    clear_color: #1b1f27;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.12;
+
+    // The configurable inputs; mtek.toml [host.inputs] exposes each of them to the host page.
+    state seat_color: color = FABRIC_COLOR;
+    state seat_metallic: f32 = FABRIC_METALLIC;
+    state seat_roughness: f32 = FABRIC_ROUGHNESS;
+    state frame_color: color = STEEL_COLOR;
+    state frame_metallic: f32 = STEEL_METALLIC;
+    state frame_roughness: f32 = STEEL_ROUGHNESS;
+    state stripe_a: color = #e8e2d0;
+    state stripe_b: color = #2a3f5f;
+    state back_roughness: f32 = 0.6;
+    state sun_intensity: f32 = 3.0;
+
+    camera Main {
+        position: vec3(0.0, 1.15, 2.6);
+        target: vec3(0.0, 0.45, 0.0);
+        projection: Perspective { fov_y: 0.8; near: 0.1; far: 30.0 };
+    }
+
+    entity Sun {
+        rotation: quat.euler(-0.8, 0.5, 0.0);
+        light: DirectionalLight { color: #fff4e0; intensity: bind(sun_intensity) };
+    }
+    entity Lamp {
+        position: vec3(-1.4, 1.8, 1.2);
+        light: PointLight { color: #ffffff; intensity: 5.0; range: 6.0 };
+    }
+
+    entity Floor {
+        mesh: CHAIR.mesh("Floor");
+        position: CHAIR.node_position("Floor");
+        rotation: CHAIR.node_rotation("Floor");
+        material: CHAIR.material("Stone");
+    }
+    entity Seat {
+        mesh: CHAIR.mesh("Seat");
+        position: CHAIR.node_position("Seat");
+        rotation: CHAIR.node_rotation("Seat");
+        material: Pbr {
+            base_color: bind(seat_color);
+            metallic: bind(seat_metallic);
+            roughness: bind(seat_roughness);
+        };
+    }
+    entity Back {
+        mesh: CHAIR.mesh("Back");
+        position: CHAIR.node_position("Back");
+        rotation: CHAIR.node_rotation("Back");
+        material: Striped {
+            stripe_a: bind(stripe_a);
+            stripe_b: bind(stripe_b);
+            roughness: bind(back_roughness);
+        };
+    }
+
+    // The crest rail on top of the back: a prism with slanted sides, in the model's own "Oak".
+    entity Crest {
+        mesh: CHAIR.mesh("Crest");
+        position: CHAIR.node_position("Crest");
+        rotation: CHAIR.node_rotation("Crest");
+        material: CHAIR.material("Oak");
+    }
+
+    // The four legs are one mesh with the model's own "Oak" material, constant: they share one parameter block and are
+    // drawn as one instanced draw (decision 0059).
+    entity LegFL {
+        mesh: CHAIR.mesh("Leg");
+        position: CHAIR.node_position("LegFL");
+        rotation: CHAIR.node_rotation("LegFL");
+        material: CHAIR.material("Oak");
+    }
+    entity LegFR {
+        mesh: CHAIR.mesh("Leg");
+        position: CHAIR.node_position("LegFR");
+        rotation: CHAIR.node_rotation("LegFR");
+        material: CHAIR.material("Oak");
+    }
+    entity LegBL {
+        mesh: CHAIR.mesh("Leg");
+        position: CHAIR.node_position("LegBL");
+        rotation: CHAIR.node_rotation("LegBL");
+        material: CHAIR.material("Oak");
+    }
+    entity LegBR {
+        mesh: CHAIR.mesh("Leg");
+        position: CHAIR.node_position("LegBR");
+        rotation: CHAIR.node_rotation("LegBR");
+        material: CHAIR.material("Oak");
+    }
+
+    // The two rails are the two primitives of one glTF mesh.
+    entity RailFront {
+        mesh: CHAIR.primitive("Rails", 0);
+        position: CHAIR.node_position("Rails");
+        rotation: CHAIR.node_rotation("Rails");
+        material: Pbr {
+            base_color: bind(frame_color);
+            metallic: bind(frame_metallic);
+            roughness: bind(frame_roughness);
+        };
+    }
+    entity RailBack {
+        mesh: CHAIR.primitive("Rails", 1);
+        position: CHAIR.node_position("Rails");
+        rotation: CHAIR.node_rotation("Rails");
+        material: Pbr {
+            base_color: bind(frame_color);
+            metallic: bind(frame_metallic);
+            roughness: bind(frame_roughness);
+        };
+    }
+}

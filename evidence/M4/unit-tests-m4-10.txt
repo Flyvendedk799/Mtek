@@ -1,0 +1,16 @@
+npm run test:unit, commit 88c2ef8, summary lines only
+ RUN  v5.0.3 <repo>/packages/runtime-web
+ Test Files  48 passed (48)
+      Tests  1019 passed (1019)
+ RUN  v5.0.3 <repo>/tests/browser
+ Test Files  15 passed (15)
+      Tests  214 passed (214)
+ RUN  v5.0.3 <repo>/tests/codegen
+ Test Files  7 passed (7)
+      Tests  1004 passed (1004)
+ RUN  v5.0.3 <repo>/benchmarks
+ Test Files  6 passed (6)
+      Tests  74 passed | 1 skipped (75)
+ RUN  v5.0.3 <repo>/benchmarks/baselines/m0-bridge
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
