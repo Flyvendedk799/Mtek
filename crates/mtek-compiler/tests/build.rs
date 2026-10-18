@@ -628,6 +628,69 @@ fn textures_and_samplers_reach_the_manifest_the_instances_and_the_shader() {
 }
 
 #[test]
+fn a_colour_state_bound_into_a_material_colour_gets_the_opaque_host_input_codec() {
+    // spec/runtime-abi.md section 6.3: the codec of a colour host input is `color-hex-opaque` when the state reaches a material
+    // `color` param through a binding (so `setInput` itself rejects a translucent value with E8100), `color-hex` otherwise.
+    // Found by task M4-10: the packager passed an empty set of such states, so every colour input was `color-hex`, a translucent
+    // value was accepted by `setInput` and only refused (or applied) later by the binding.
+    let mut memory = MemFs::new();
+    let mut insert = |path: &str, text: &str| {
+        memory.insert(ProjectPath::new(path).unwrap(), text.as_bytes().to_vec());
+    };
+    insert(
+        "mtek.toml",
+        "[project]\nname = \"fixture\"\nlanguage = \"0.1\"\n\n[host.inputs]\nbound = \"Demo.bound\"\nvia_pbr = \"Demo.via_pbr\"\nunused = \"Demo.unused\"\nlevel = \"Demo.level\"\n",
+    );
+    insert(
+        "src/main.mtek",
+        "scene Demo {
+    state bound: color = #6b5cff;
+    state via_pbr: color = #ffffff;
+    state unused: color = #123456;
+    state level: f32 = 0.5;
+    camera Main {}
+    entity A {
+        mesh: Box {};
+        material: Unlit { color: bind(bound) };
+    }
+    entity B {
+        mesh: Box {};
+        position: vec3(2.0, 0.0, 0.0);
+        material: Pbr { base_color: bind(via_pbr); roughness: bind(level); };
+    }
+}
+",
+    );
+    let result = build(
+        &ProjectRoot::at_base(),
+        &memory,
+        &stub(BuildMode::Release),
+    );
+    assert!(!result.has_errors(), "{:#?}", result.report.diagnostics);
+    let manifest: Value = serde_json::from_slice(&result.files["program.manifest.json"]).unwrap();
+    let codecs: BTreeMap<String, String> = manifest["scene"]["hostInputs"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|input| {
+            (
+                input["name"].as_str().unwrap().to_owned(),
+                input["codec"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        codecs,
+        BTreeMap::from([
+            ("bound".to_owned(), "color-hex-opaque".to_owned()),
+            ("level".to_owned(), "f32".to_owned()),
+            ("unused".to_owned(), "color-hex".to_owned()),
+            ("via_pbr".to_owned(), "color-hex-opaque".to_owned()),
+        ])
+    );
+}
+
+#[test]
 fn the_modes_differ_only_in_the_page() {
     let root = codegen_dir().join("scene_a_target_camera_box");
     let release = built(&root, BuildMode::Release);

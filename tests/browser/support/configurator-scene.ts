@@ -64,7 +64,7 @@ export interface Glb {
 export function parseGlb(bytes: Buffer): Glb {
   if (bytes.readUInt32LE(0) !== 0x46546c67 || bytes.readUInt32LE(4) !== 2) throw new Error("not a binary glTF 2.0 file");
   let json: GltfJson | undefined;
-  let bin = Buffer.alloc(0);
+  let bin: Buffer = Buffer.alloc(0);
   for (let offset = 12; offset < bytes.length; ) {
     const length = bytes.readUInt32LE(offset);
     const type = bytes.readUInt32LE(offset + 4);

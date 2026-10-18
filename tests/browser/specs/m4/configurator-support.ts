@@ -117,7 +117,10 @@ export async function runPlan(page: Page, url: string, test: Record<string, unkn
       app.dispose();
       return { shots, reported, state, assets, assetEvents, mounted };
     },
-    { testOptions: test, steps: plan.map((step) => ({ label: step.label, inputs: step.inputs?.map(([n, v]) => [n, v]) ?? [], frames: step.frames ?? 1 })) },
+    {
+      testOptions: test,
+      steps: plan.map((step) => ({ label: step.label, inputs: step.inputs?.map(([n, v]): [string, unknown] => [n, v]) ?? [], frames: step.frames ?? 1 })),
+    },
   );
   return {
     ...raw,
