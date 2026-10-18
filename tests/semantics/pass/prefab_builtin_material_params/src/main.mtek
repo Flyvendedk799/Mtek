@@ -1,0 +1,74 @@
+// The built-in materials of prefabs (decision 0087): `self.material.color` in a prefab with
+// `Unlit` and in one whose material is the default `Unlit {}` of its mesh, the params of static
+// instances read and written from the scene (also of an imported prefab with `Pbr`), compound
+// assignment, and spawned instances that run the same handlers.
+import { Lamp } from "./props/lamp.mtek";
+
+prefab Tile {
+    param tint: color = #6b5cff;
+    state flips: i32 = 0;
+    mesh: Box { size: vec3(0.8, 0.8, 0.1) };
+    material: Unlit { color: tint };
+
+    on key_down(Key.T) {
+        self.flips += 1;
+        self.material.color = #ffffff;
+    }
+}
+
+prefab Pebble {
+    param origin: vec3 = vec3(0.0, 0.0, 0.0);
+    position: origin;
+    mesh: Sphere { radius: 0.2 };
+
+    on key_down(Key.P) {
+        self.material.color = color.linear(vec3(0.2, 0.4, 0.8), 1.0);
+    }
+}
+
+scene Demo {
+    state picked: color = #000000;
+    state gloss: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 1.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Sun {
+        rotation: quat.axis_angle(vec3(1.0, 0.0, 0.0), -0.7);
+        light: DirectionalLight {};
+    }
+
+    entity First: Tile {}
+    entity Second: Tile {
+        tint: #ff8800;
+    }
+    entity Stone: Pebble {
+        origin: vec3(1.0, 0.0, 0.0);
+    }
+    entity Near: Lamp {
+        gloss: 0.25;
+    }
+    entity Far: Lamp {
+        tint: #88ccff;
+    }
+
+    update(dt: f32) {
+        Far.material.roughness += dt * 0.1;
+        gloss = Near.material.roughness;
+    }
+
+    on key_down(Key.Space) {
+        First.material.color = Second.material.color;
+        picked = Stone.material.color;
+        Stone.material.color = #00ff00;
+        Near.material.base_color = picked;
+    }
+
+    on key_down(Key.Enter) {
+        let x = gloss * 2.0;
+        let _tile = spawn(Tile { tint: color.linear(vec3(x, 0.5, 0.5), 1.0) });
+        let _pebble = spawn(Pebble { origin: vec3(x, 1.0, 0.0) });
+    }
+}

@@ -30,8 +30,9 @@ use serde_json::Value;
 /// `materials/pulse` has the golden `materials_pulse.ir.json`), the textures and
 /// samplers of M4-04 (decision 0054), the assignable places of M2-13 (decision 0045) and the
 /// prefabs with their static instances of M5-01 (decision 0062) and the physics bodies, colliders and
-/// body commands of M5-03 (decision 0065) and the bindings that read light fields of M4-14 (decision 0067).
-const GOLDEN_FIXTURES: [&str; 13] = [
+/// body commands of M5-03 (decision 0065), the bindings that read light fields of M4-14 (decision 0067) and the
+/// params of the built-in materials read and written by name, in scenes and in prefabs (decision 0087).
+const GOLDEN_FIXTURES: [&str; 15] = [
     "scene_a_target_camera_box",
     "scene_b_orthographic_nested",
     "functions_statements_and_calls",
@@ -45,6 +46,8 @@ const GOLDEN_FIXTURES: [&str; 13] = [
     "physics_body_collider_matrix",
     "physics_prefab_crate",
     "bind_reads_light_field",
+    "builtin_material_params",
+    "prefab_builtin_material_params",
 ];
 
 /// The file name stem of the golden of `fixture`.

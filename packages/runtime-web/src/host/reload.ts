@@ -2,9 +2,10 @@
  * Candidate-based hot reload helpers (`spec/runtime-abi.md` section 11): structural comparison,
  * state migration by identity, and the W8070 restart diagnostic.
  */
-import type { MtekBody, MtekEntity, MtekLight, MtekManifest, MtekPrefab, MtekScene, MtekStateEntry } from "../abi/manifest-types.js";
+import type { MtekBody, MtekEntity, MtekInstanceParam, MtekLight, MtekManifest, MtekPrefab, MtekScene, MtekStateEntry } from "../abi/manifest-types.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import { resolveSpan, spanOfSymbol } from "./failures.js";
+import type { ResolvedPrefabMaterial } from "../scene/structure.js";
 import type { EntityRecord, World } from "../scene/world.js";
 import { isColor, isQuat, isVec3 } from "../scene/values.js";
 
@@ -136,16 +137,16 @@ function stateBySymbol(entries: readonly MtekStateEntry[], values: Record<string
 
 /**
  * Carries what the program kept in one entity from `before` onto `after`: transform, visibility, the state whose
- * identity (symbol) and type are unchanged, and the imperative material params, which are written through the
- * context so the parameter store sees them (a param that `init` supplied stays as the new `init` left it, so a
- * changed default is applied).
+ * identity (symbol) and type are unchanged, and the material params `kept` names ({@link keptParams}: imperative in
+ * both programs), which are written through the context so the parameter store sees them (any other param stays as
+ * the new `init` left it, so a changed literal is applied).
  */
 function carryEntity(
   before: EntityRecord,
   beforeState: ReadonlyMap<string, string>,
   after: EntityRecord,
   afterState: readonly MtekStateEntry[],
-  imperative: readonly string[],
+  kept: readonly string[],
   setParam: (entity: object, name: string, value: unknown) => void,
 ): void {
   after.position = copyValue(before.position) as EntityRecord["position"];
@@ -160,11 +161,47 @@ function carryEntity(
   }
 
   if (after.mat !== null && before.mat !== null) {
-    for (const name of imperative) {
+    for (const name of kept) {
       if (!Object.hasOwn(before.mat.p, name)) continue;
       setParam(after, name, copyValue(before.mat.p[name]));
     }
   }
+}
+
+/** What the reload rule needs of a material instance: its material, the declared type of each param and the class of each. */
+interface InstanceClasses {
+  readonly material: string;
+  readonly types: ReadonlyMap<string, string>;
+  readonly params: readonly MtekInstanceParam[];
+}
+
+/** The classes of material instance `index` of the scene of `manifest`. */
+function sceneInstanceClasses(manifest: MtekManifest, index: number | undefined): InstanceClasses | undefined {
+  const instance = index === undefined ? undefined : manifest.scene.materialInstances[index];
+  if (instance === undefined) return undefined;
+  const material = manifest.materials.find((candidate) => candidate.id === instance.material);
+  return { material: instance.material, types: new Map((material?.params ?? []).map((param) => [param.name, param.type])), params: instance.params };
+}
+
+/** The classes of the material every instance of a spawned prefab starts with. */
+function prefabInstanceClasses(material: ResolvedPrefabMaterial | null): InstanceClasses | undefined {
+  if (material === null) return undefined;
+  return { material: material.material.id, types: new Map(material.material.params.map((param) => [param.name, param.type])), params: material.params };
+}
+
+/**
+ * The material params whose running value a reload keeps (`spec/runtime-abi.md` section 11.3, decision 0087): those that
+ * are `imperative` in both programs, of the same material with the same declared type. This is the rule of decision 0067
+ * for light fields; a param that was `initial` takes what the new `init` set, so an edited literal applies, and a
+ * `bound` one is evaluated again. Built-in (`Unlit`, `Pbr`) and user materials alike.
+ */
+function keptParams(before: InstanceClasses | undefined, after: InstanceClasses | undefined): string[] {
+  if (before === undefined || after === undefined || before.material !== after.material) return [];
+  const previous = new Map(before.params.map((param) => [param.name, param.class]));
+  return after.params
+    .filter((param) => param.class === "imperative" && previous.get(param.name) === "imperative")
+    .filter((param) => before.types.get(param.name) !== undefined && before.types.get(param.name) === after.types.get(param.name))
+    .map((param) => param.name);
 }
 
 const LIGHT_FIELDS = ["color", "intensity"] as const;
@@ -192,8 +229,8 @@ function carryLight(
 
 /**
  * Carries compatible state from `previous` onto `next` by identity
- * (`path::Qualified.Name` with identical types). Material `initial` params stay as the new
- * `init` left them (so a changed literal default is applied); imperative mirrors are migrated. The colour and
+ * (`path::Qualified.Name` with identical types). Material params that are `imperative` in both programs keep their
+ * running value ({@link keptParams}); the others stay as the new `init` left them (so a changed literal applies). The colour and
  * intensity of a light follow the same rule by their own update classes ({@link carryLight}).
  */
 export function migrateWorld(previous: World, previousManifest: MtekManifest, next: World, nextManifest: MtekManifest): void {
@@ -217,6 +254,7 @@ export function migrateWorld(previous: World, previousManifest: MtekManifest, ne
   const previousLights = new Map(
     previousManifest.scene.entities.map((entity) => [entity.symbol, entity.light === null ? undefined : previousManifest.scene.lights[entity.light]]),
   );
+  const previousInstances = new Map(previousManifest.scene.entities.map((entity) => [entity.symbol, sceneInstanceClasses(previousManifest, entity.material?.instance)]));
   const { setParam, setLight } = next.ctx as {
     setParam: (entity: object, name: string, value: unknown) => void;
     setLight: (entity: object, field: string, value: unknown) => void;
@@ -226,13 +264,12 @@ export function migrateWorld(previous: World, previousManifest: MtekManifest, ne
     const before = previousEntities.get(entity.symbol);
     if (nextRecord === undefined || before === undefined) return;
     carryLight(before, previousLights.get(entity.symbol), nextRecord, entity.light === null ? undefined : nextManifest.scene.lights[entity.light], setLight);
-    const nextInstance = nextManifest.scene.materialInstances[entity.material?.instance ?? -1];
     carryEntity(
       before,
       previousEntityStateTypes.get(entity.symbol) ?? new Map(),
       nextRecord,
       entity.state,
-      (nextInstance?.params ?? []).filter((param) => param.class === "imperative").map((param) => param.name),
+      keptParams(previousInstances.get(entity.symbol), sceneInstanceClasses(nextManifest, entity.material?.instance)),
       setParam,
     );
   });
@@ -246,7 +283,7 @@ export function migrateWorld(previous: World, previousManifest: MtekManifest, ne
       new Map(before.prefab.resolved.state.map((entry) => [entry.symbol, entry.type])),
       after.record,
       after.prefab.resolved.state,
-      (after.prefab.resolved.material?.params ?? []).filter((param) => param.class === "imperative").map((param) => param.name),
+      keptParams(prefabInstanceClasses(before.prefab.resolved.material), prefabInstanceClasses(after.prefab.resolved.material)),
       setParam,
     );
   });

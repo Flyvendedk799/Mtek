@@ -10,7 +10,7 @@
 // fixture (`fixtures/m5/*` into `.out/m5/`, support/m5-fixtures.ts), the physics playground example
 // (`examples/physics-playground` into `.out/m5-playground/`, support/m5-playground.ts), the M6-10 untrusted-preview
 // fixtures (`fixtures/preview/*` and the physics fixture, built with `--mode preview` into `.out/preview/`,
-// support/preview-fixtures.ts),
+// support/preview-fixtures.ts), the M6 fixtures (`fixtures/m6/*` into `.out/m6/`, support/m6-fixtures.ts),
 // and the numeric probe (`.out/numeric/`, support/numeric-probe.ts) with its page.
 import { execFileSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -23,6 +23,7 @@ import { buildPulseCube, buildPulseCubeVariants } from "./m3-fixtures.ts";
 import { buildConfigurator } from "./m4-configurator.ts";
 import { buildM4Fixtures } from "./m4-fixtures.ts";
 import { buildM5Fixtures } from "./m5-fixtures.ts";
+import { buildM6Fixtures } from "./m6-fixtures.ts";
 import { buildPlayground } from "./m5-playground.ts";
 import { buildPreviewFixtures } from "./preview-fixtures.ts";
 import { buildTextureSamplingFixture } from "./m4-textures.ts";
@@ -116,6 +117,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   buildPlayground(cli);
   // M6-10: untrusted previews (loop budget, policy page, external bootstrap), in `.out/preview/`.
   buildPreviewFixtures(cli);
+  // Decision 0087: the built-in material params assigned by name, in `.out/m6/`.
+  buildM6Fixtures(cli);
 
   // The numeric probe (M2-08): the compiler's WGSL for every operation of cpu.json plus a test-only harness.
   buildNumericProbe(cli, join(out, "numeric"));

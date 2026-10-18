@@ -364,6 +364,32 @@ fn members_of_an_entity_and_its_material() {
 }
 
 #[test]
+fn members_of_a_builtin_material_are_its_params() {
+    // Decision 0087: `Name.material.` of a built-in `Pbr` and of the default `Unlit {}` of a mesh.
+    let c = at(
+        "    on key_down(Key.Space) {",
+        "    entity Ball { mesh: Sphere {}; material: Pbr { roughness: 0.25 }; }\n    entity Plain { mesh: Box {}; }\n    on key_down(Key.Enter) { Ball.material.\u{a7} }\n    on key_down(Key.Space) {",
+    );
+    assert_has(
+        &c,
+        &[
+            "base_color",
+            "metallic",
+            "roughness",
+            "base_color_texture",
+            "base_color_sampler",
+        ],
+    );
+    assert_lacks(&c, &["position", "tint"]);
+    let c = at(
+        "    on key_down(Key.Space) {",
+        "    entity Plain { mesh: Box {}; }\n    on key_down(Key.Enter) { Plain.material.\u{a7} }\n    on key_down(Key.Space) {",
+    );
+    assert_has(&c, &["color"]);
+    assert_lacks(&c, &["roughness", "position"]);
+}
+
+#[test]
 fn components_of_vectors_colours_and_fields_of_structs() {
     let c = at(
         "speed = -speed;",

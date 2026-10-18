@@ -149,6 +149,7 @@ impl<'a> Checker<'a> {
                 _ => {}
             }
         }
+        self.note_default_material(Some(def), &decl.members);
         self.prefab_binds(decl);
         self.prefab_bodies(decl, def);
         self.binding_conflicts(Some(def));

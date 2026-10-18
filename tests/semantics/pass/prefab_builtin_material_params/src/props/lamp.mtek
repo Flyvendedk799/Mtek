@@ -1,0 +1,16 @@
+// An exported prefab with the built-in `Pbr`: its handler writes a param through `self`, one param
+// is bound, and an importing scene reads and writes the others on its static instances.
+export prefab Lamp {
+    param tint: color = #ffcc88;
+    param gloss: f32 = 0.5;
+    mesh: Sphere { radius: 0.4 };
+    material: Pbr {
+        base_color: tint;
+        roughness: gloss;
+        metallic: bind(0.5 + sin(frame.time) * 0.5);
+    };
+
+    on key_down(Key.L) {
+        self.material.roughness = 1.0 - self.material.roughness;
+    }
+}

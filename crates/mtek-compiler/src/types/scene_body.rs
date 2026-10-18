@@ -596,25 +596,14 @@ impl Checker<'_> {
             (Some(instance), _) => (instance, self.instance_params(instance)),
             (None, Some(params)) => (TyId::MATERIAL, params),
             (None, None) => {
-                let diagnostic = match self.out.entity_builtin_materials.get(&entity) {
-                    Some(builtin) => Diagnostic::new(
+                self.report(
+                    Diagnostic::new(
                         Code::E5001,
-                        format!(
-                            "The material of the entity '{entity_name}' is the built-in `{builtin}`; this build does not expose its params as `{entity_name}.material.<param>`, to read or to assign."
-                        ),
+                        format!("The entity '{entity_name}' has no material."),
                     )
-                    .help(format!(
-                        "to change a param over time, bind it in the descriptor (`material: {builtin} {{ param: bind(…) }}`); to read or assign it by name, declare a material of your own"
-                    )),
-                    None => Diagnostic::new(
-                        Code::E5001,
-                        format!(
-                            "The entity '{entity_name}' does not declare a `material`, so its params cannot be reached by name."
-                        ),
-                    )
-                    .help("declare `material: M {{ … }}` with a material of your own; the params of the built-in `Unlit` and `Pbr` can only be bound in the descriptor"),
-                };
-                self.report(diagnostic.at(base.span));
+                    .at(base.span)
+                    .note("an entity has a material when it declares `material`, or `mesh` (its material is then `Unlit {}`)"),
+                );
                 return Some(TyId::ERROR);
             }
         };
@@ -752,7 +741,9 @@ impl Checker<'_> {
         }
     }
 
-    /// Remember the material instance type of `material: M { … };` for `Cube.material.param`.
+    /// Remember the material instance type of `material: M { … };` for `Cube.material.param`: a
+    /// user material's instance type, or the registry schema of a built-in material (`Unlit {…}`,
+    /// `Pbr {…}`), whose params [`Checker::instance_params`] reads from the schema (decision 0087).
     pub(super) fn note_entity_material(&mut self, entity: Option<DefId>, field: &FieldInit) {
         if field.name.name != "material" {
             return;
@@ -763,19 +754,58 @@ impl Checker<'_> {
         let (Some(ty), Some(def)) = (self.ty_of(value.id), entity) else {
             return;
         };
-        match self.out.interner.get(ty) {
-            Ty::MaterialInstance(_) => {
-                self.out.entity_materials.insert(def, ty);
-            }
-            Ty::Schema(name)
-                if self
-                    .registry
-                    .schema(name)
-                    .is_some_and(|schema| schema.category == SchemaCategory::Material) =>
-            {
-                self.out.entity_builtin_materials.insert(def, name);
-            }
-            _ => {}
+        let instance = match self.out.interner.get(ty) {
+            Ty::MaterialInstance(_) => true,
+            Ty::Schema(name) => self
+                .registry
+                .schema(name)
+                .is_some_and(|schema| schema.category == SchemaCategory::Material),
+            _ => false,
+        };
+        if instance {
+            self.out.entity_materials.insert(def, ty);
+        }
+    }
+
+    /// The default material of an entity or prefab that declares a `mesh` and no `material`: the
+    /// registry's default of the entity schema's `material` field (`Unlit {}`, `spec/scenes.md`
+    /// section 4.1), whose params are reached by name like those of a written `Unlit {}`.
+    pub(super) fn note_default_material(
+        &mut self,
+        entity: Option<DefId>,
+        members: &[EntityMember],
+    ) {
+        let Some(def) = entity else {
+            return;
+        };
+        let written = |name: &str| {
+            members
+                .iter()
+                .any(|m| matches!(m, EntityMember::Field(f) if f.name.name == name))
+        };
+        if self.out.entity_materials.contains_key(&def) || written("material") {
+            return;
+        }
+        let schema = self.registry.declaration_schemas.entity;
+        let Some(material) = self.registry.schema_field(schema, "material") else {
+            return;
+        };
+        if material
+            .default_when_set
+            .is_some_and(|sibling| !written(sibling))
+        {
+            return;
+        }
+        let Some(crate::stdlib::ConstValue::EmptyDescriptor(name)) = material.default else {
+            return;
+        };
+        if self
+            .registry
+            .schema(name)
+            .is_some_and(|schema| schema.category == SchemaCategory::Material)
+        {
+            let ty = self.out.interner.intern(Ty::Schema(name));
+            self.out.entity_materials.insert(def, ty);
         }
     }
 

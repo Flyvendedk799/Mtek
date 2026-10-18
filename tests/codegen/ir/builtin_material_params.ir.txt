@@ -1,0 +1,101 @@
+program (entry scene src/main.mtek::Demo)
+  module src/main.mtek @1:1-69:1
+    scene Demo [src/main.mtek::Demo] @5:1-68:2
+      fields
+        clear_color = color(0.0051815165, 0.00699541, 0.009134059, 1.0) (written @6:5-6:26)
+      camera Main [src/main.mtek::Demo.Main] active @11:5-14:6
+        position = vec3(0.0, 1.0, 6.0) (written @12:9-12:39)
+        target = vec3(0.0, 0.0, 0.0) (written @13:9-13:37)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @11:5-14:6)
+        projection = Perspective { fov_y: 0.9, near: 0.1, far: 1000.0 } (default @11:5-14:6)
+      entity #0 Sun [src/main.mtek::Demo.Sun] root @16:5-19:6
+        position = vec3(0.0, 0.0, 0.0) (default @16:5-19:6)
+        rotation = quat(-0.3428978, -0.0, -0.0, 0.9393727) (written @17:9-17:62)
+        scale = vec3(1.0, 1.0, 1.0) (default @16:5-19:6)
+        visible = true (default @16:5-19:6)
+        light = DirectionalLight (written @18:9-18:52)
+          color = color(1.0, 1.0, 1.0, 1.0) (written @18:9-18:52)
+          intensity = 2.0 (written @18:9-18:52)
+      entity #1 Badge [src/main.mtek::Demo.Badge] root @21:5-29:6
+        position = vec3(-1.5, 0.0, 0.0) (written @22:9-22:40)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @21:5-29:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @21:5-29:6)
+        visible = true (default @21:5-29:6)
+        mesh = Box { size: vec3(1.0, 1.0, 1.0) } (written @23:9-23:22)
+        material = std/materials.mtek::Unlit (written @24:9-24:44)
+          color: color = color(0.015996294, 0.5583404, 0.11193243, 1.0)
+      entity #2 Ball [src/main.mtek::Demo.Ball] root @31:5-34:6
+        position = vec3(0.0, 0.0, 0.0) (default @31:5-34:6)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @31:5-34:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @31:5-34:6)
+        visible = true (default @31:5-34:6)
+        mesh = Sphere { radius: 0.6, segments: 32, rings: 16 } (written @32:9-32:38)
+        material = std/materials.mtek::Pbr (written @33:9-33:86)
+          base_color: color = color(0.5271151, 0.5271151, 0.5271151, 1.0)
+          metallic: f32 = bind#0
+          roughness: f32 = 0.5
+          base_color_texture: texture = texture.white()
+          base_color_sampler: sampler = sampler.linear_repeat()
+      entity #3 Plain [src/main.mtek::Demo.Plain] root @36:5-39:6
+        position = vec3(1.5, 0.0, 0.0) (written @37:9-37:39)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @36:5-39:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @36:5-39:6)
+        visible = true (default @36:5-39:6)
+        mesh = Box { size: vec3(0.5, 0.5, 0.5) } (written @38:9-38:49)
+        material = std/materials.mtek::Unlit (default @36:5-39:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+      entity #4 Marker [src/main.mtek::Demo.Marker] root @41:5-45:6
+        position = bind#1 (written @42:9-42:84)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @41:5-45:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @41:5-45:6)
+        visible = true (default @41:5-45:6)
+        mesh = Box { size: vec3(0.1, 0.1, 0.1) } (written @43:9-43:49)
+        material = std/materials.mtek::Unlit (written @44:9-44:63)
+          color: color = bind#2
+      state taps: i32 = i32(0) [src/main.mtek::Demo.taps] @7:5-7:25
+      state seen: color = color(0.0, 0.0, 0.0, 1.0) [src/main.mtek::Demo.seen] @8:5-8:33
+      state shine: f32 = 0.0 [src/main.mtek::Demo.shine] @9:5-9:28
+      update of scene [src/main.mtek::Demo.update] @47:5-52:6
+        local #0 dt: f32 (param) @47:12-47:14
+        entity#2.material.roughness += (dt#0 * 0.25): f32 @48:9-48:46
+        if (entity#2.material.roughness > 1.0): bool @49:9-51:10
+          entity#2.material.roughness = 0.1 @50:13-50:43
+      on key_down(Space) of scene [src/main.mtek::Demo.on_key_down_Space] @54:5-59:6
+        state.taps += i32(1) @55:9-55:19
+        entity#1.material.color = color(1.0, 0.0, 0.0, 1.0) @56:9-56:40
+        entity#2.material.base_color = color(0.9, 0.6, 0.2, 1.0) @57:9-57:75
+        state.shine = (1.0 - state.shine): f32 @58:9-58:29
+      on key_down(Enter) of scene [src/main.mtek::Demo.on_key_down_Enter] @61:5-67:6
+        local #0 current: color (let) @62:13-62:20
+        local #1 rough: f32 (let) @65:13-65:18
+        let current#0 = entity#1.material.color @62:9-62:51
+        state.seen = current#0 @63:9-63:24
+        entity#3.material.color = current#0 @64:9-64:40
+        let rough#1 = entity#2.material.roughness @65:9-65:50
+        entity#2.material.roughness = (rough#1 * 0.5): f32 @66:9-66:47
+      on key_down(KeyB) of entity#1 [src/main.mtek::Demo.Badge.on_key_down_B] @26:9-28:10
+        entity#1.material.color = color(0.04373503, 0.22322796, 0.92158186, 1.0) @27:13-27:43
+      bind#0 entity#2.material.metallic = state.shine [order 0; reads state shine] @33:56-33:67
+      bind#1 entity#4.position = (vec3(entity#2.material.roughness, entity#2.material.metallic, 0.0)): vec3 [order 1; reads entity#2.material.roughness, entity#2.material.metallic] @42:19-42:83
+      bind#2 entity#4.material.color = entity#1.material.color [order 2; reads entity#1.material.color] @44:34-44:60
+  module std/materials.mtek @1:1-22:1
+    material Unlit [std/materials.mtek::Unlit] @5:8-8:2
+      param #0 color: color = color(1.0, 1.0, 1.0, 1.0) @6:5-6:34
+      block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit (size 16, align 16)
+      fragment -> color [std/materials.mtek::Unlit.fragment] reads none @7:5-7:63
+        local #0 surface: SurfaceInput (param) @7:14-7:21
+        return param color#0 @7:48-7:61
+    material Pbr [std/materials.mtek::Pbr] @10:8-21:2
+      param #0 base_color: color = color(1.0, 1.0, 1.0, 1.0) @11:5-11:39
+      param #1 metallic: f32 = 0.0 @12:5-12:31
+      param #2 roughness: f32 = 0.5 @13:5-13:32
+      param #3 base_color_texture: texture = texture.white() @14:5-14:57
+      param #4 base_color_sampler: sampler = sampler.linear_repeat() @15:5-15:65
+      block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr (size 32, align 16)
+      fragment -> color [std/materials.mtek::Pbr.fragment] reads world_position, world_normal, uv @16:5-20:6
+        local #0 surface: SurfaceInput (param) @16:14-16:21
+        local #1 texel: vec4 (let) @17:13-17:18
+        local #2 albedo: color (let) @18:13-18:19
+        let texel#1 = (sample(param base_color_texture#3, param base_color_sampler#4, (surface#0.uv): vec2)): vec4 @17:9-17:80
+        let albedo#2 = (color.linear(((param base_color#0.rgb): vec3 * (texel#1.xyz): vec3): vec3, 1.0)): color @18:9-18:68
+        return (lighting.pbr(surface#0, albedo#2, param metallic#1, param roughness#2)): color @19:9-19:67

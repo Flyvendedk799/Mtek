@@ -2,31 +2,61 @@
   {
     "code": "MTEK-E5001",
     "file": "src/main.mtek",
-    "startByte": 448,
-    "endByte": 461,
-    "message": "The material of the entity 'Cube' is the built-in `Unlit`; this build does not expose its params as `Cube.material.<param>`, to read or to assign.",
+    "startByte": 457,
+    "endByte": 462,
+    "message": "The material of 'Lamp' has no param 'gloss'.",
     "notes": [
-      "help: to change a param over time, bind it in the descriptor (`material: Unlit { param: bind(…) }`); to read or assign it by name, declare a material of your own"
+      "its params are base_color, metallic, roughness, base_color_texture, base_color_sampler"
     ]
   },
   {
     "code": "MTEK-E5001",
     "file": "src/main.mtek",
-    "startByte": 563,
-    "endByte": 576,
-    "message": "The material of the entity 'Cube' is the built-in `Unlit`; this build does not expose its params as `Cube.material.<param>`, to read or to assign.",
+    "startByte": 1086,
+    "endByte": 1092,
+    "message": "The material of 'Cube' has no param 'colour'.",
     "notes": [
-      "help: to change a param over time, bind it in the descriptor (`material: Unlit { param: bind(…) }`); to read or assign it by name, declare a material of your own"
+      "its params are color"
     ]
   },
   {
     "code": "MTEK-E5001",
     "file": "src/main.mtek",
-    "startByte": 592,
-    "endByte": 606,
-    "message": "The entity 'Floor' does not declare a `material`, so its params cannot be reached by name.",
+    "startByte": 1146,
+    "endByte": 1152,
+    "message": "The material of 'Ball' has no param 'albedo'.",
     "notes": [
-      "help: declare `material: M {{ … }}` with a material of your own; the params of the built-in `Unlit` and `Pbr` can only be bound in the descriptor"
+      "its params are base_color, metallic, roughness, base_color_texture, base_color_sampler"
+    ]
+  },
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 1177,
+    "endByte": 1181,
+    "message": "The material of 'Floor' has no param 'tint'.",
+    "notes": [
+      "its params are color"
+    ]
+  },
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 1217,
+    "endByte": 1226,
+    "message": "The material of 'Hanging' has no param 'shininess'.",
+    "notes": [
+      "its params are base_color, metallic, roughness, base_color_texture, base_color_sampler"
+    ]
+  },
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 1242,
+    "endByte": 1256,
+    "message": "The entity 'Empty' has no material.",
+    "notes": [
+      "an entity has a material when it declares `material`, or `mesh` (its material is then `Unlit {}`)"
     ]
   }
 ]

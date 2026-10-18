@@ -1,0 +1,30 @@
+// The texture and sampler params of the built-in `Pbr` are construction-only in v0.1, like those of
+// a user material (E5073, decision 0087): from the scene, through `self`, and on a prefab instance.
+prefab Tile {
+    mesh: Plane { size: vec2(1.0, 1.0) };
+    material: Pbr {};
+
+    on key_down(Key.T) {
+        self.material.base_color_sampler = sampler.nearest_clamp();
+    }
+}
+
+scene Demo {
+    camera Main {}
+
+    entity Panel {
+        mesh: Plane { size: vec2(1.0, 1.0) };
+        material: Pbr { base_color: #808080 };
+
+        update(dt: f32) {
+            self.material.base_color_texture = texture.black();
+        }
+    }
+
+    entity Floor: Tile {}
+
+    on key_down(Key.Space) {
+        Panel.material.base_color_sampler = sampler.nearest_repeat();
+        Floor.material.base_color_texture = texture.white();
+    }
+}

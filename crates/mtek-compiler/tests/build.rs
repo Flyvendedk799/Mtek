@@ -194,6 +194,8 @@ fn the_two_m1_scenes_are_codegen_fixtures_with_the_semantic_sources() {
         [
             "assignable_places",
             "bindings",
+            "builtin_params",
+            "builtin_params_edited",
             "cpu_functions",
             "light_bindings",
             "light_bindings_edited",

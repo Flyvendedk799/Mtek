@@ -416,8 +416,11 @@ describe("the golden programs' init against the real world", () => {
     const { world, writes, reported } = makeWorld(golden.manifest);
     world.initialise(checked.program.scene.init);
     expect(reported).toEqual([]);
-    // Every material param of every instance is written exactly once, opaque.
-    const expected = golden.manifest.scene.materialInstances.flatMap((instance) => instance.params.filter((p) => p.class !== "bound").map((p) => `${String(instance.index)}:${p.name}`));
+    // Every material param of every instance is written exactly once, opaque; a texture or sampler is bound when the
+    // instance is created (decision 0054), not written.
+    const expected = golden.manifest.scene.materialInstances.flatMap((instance) =>
+      instance.params.filter((p) => p.class !== "bound" && p.class !== "resource").map((p) => `${String(instance.index)}:${p.name}`),
+    );
     expect(writes.map((w) => `${String(w.instance)}:${w.name}`)).toEqual(expected);
     for (const record of world.entities) {
       expect(record.scale.x * record.scale.y * record.scale.z).toBeGreaterThan(0);

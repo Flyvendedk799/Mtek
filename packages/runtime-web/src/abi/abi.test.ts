@@ -85,6 +85,8 @@ describe("compiled manifests (tests/codegen/*/expected)", () => {
     expect(paths.map((path) => path.split("/").at(-3))).toEqual([
       "assignable_places",
       "bindings",
+      "builtin_params",
+      "builtin_params_edited",
       "cpu_functions",
       "light_bindings",
       "light_bindings_edited",

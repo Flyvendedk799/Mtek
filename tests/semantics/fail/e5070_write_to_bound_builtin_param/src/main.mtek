@@ -1,0 +1,41 @@
+// A bound param of a built-in material has one writer, its binding (decision 0087): assigning it
+// is E5070 from the entity's own handler, from the scene, through `self` in a prefab, and on a
+// static instance of a prefab that binds it. The unbound params stay assignable.
+prefab Lamp {
+    mesh: Sphere {};
+    material: Pbr { metallic: bind(0.5 + sin(frame.time) * 0.5) };
+
+    on key_down(Key.L) {
+        self.material.metallic = 0.0;
+        self.material.roughness = 0.75;
+    }
+}
+
+scene Demo {
+    state level: f32 = 0.5;
+
+    camera Main {}
+
+    entity Badge {
+        mesh: Box {};
+        material: Unlit { color: bind(color.linear(vec3(level), 1.0)) };
+
+        update(dt: f32) {
+            self.material.color = #ff0000;
+        }
+    }
+
+    entity Ball {
+        mesh: Sphere {};
+        material: Pbr { roughness: bind(level) };
+    }
+
+    entity Hanging: Lamp {}
+
+    on key_down(Key.Space) {
+        Ball.material.roughness = 0.25;
+        Ball.material.metallic = 1.0;
+        Hanging.material.metallic += 0.5;
+        Hanging.material.base_color = #00ff00;
+    }
+}
