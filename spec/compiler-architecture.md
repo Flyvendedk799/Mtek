@@ -146,7 +146,7 @@ pub fn check(project: &ProjectRoot, fs: &dyn Fs) -> CheckResult;            // d
 pub fn analyze(project: &ProjectRoot, fs: &dyn Fs) -> Analysis;             // the front end's full result (IR input, tests, LSP); decision 0028
 pub fn build(project: &ProjectRoot, fs: &dyn Fs, opts: &CompileOptions) -> BuildResult; // files + diagnostics
 pub fn inspect(project: &ProjectRoot, fs: &dyn Fs, what: Inspect) -> InspectResult;     // ir | bindings | shaders
-pub fn context(project: &ProjectRoot, fs: &dyn Fs, req: &ContextRequest) -> ContextResult; // M6
+pub fn context(project: &ProjectRoot, fs: &dyn Fs, options: &ContextOptions) -> Result<ContextOutput, ContextError>; // M6, decision 0072
 ```
 The CLI, the tests and the LSP all call these; none re-implements compiler logic (blueprint §13). The result types of `check`, `analyze` and `inspect` are decision 0028 (the `--shaders` and `--bindings` views decision 0044); `BuildResult` (files, build id, output directory, the build's source map) and the stub runtime constants are decision 0030.
 
