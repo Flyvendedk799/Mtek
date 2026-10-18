@@ -4,6 +4,6 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The image 0 (unnamed) has the MIME type 'image/webp'; the profile supports image/png and image/jpeg."
+    "message": "The image at images[0] has the MIME type 'image/webp'; the profile supports image/png and image/jpeg."
   }
 ]

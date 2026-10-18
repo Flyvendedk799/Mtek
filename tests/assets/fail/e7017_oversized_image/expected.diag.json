@@ -4,6 +4,6 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The image 0 (unnamed): it is 9000 by 9000 pixels, over the limit of 8192 per side."
+    "message": "The image at images[0]: it is 9000 by 9000 pixels, over the limit of 8192 per side."
   }
 ]

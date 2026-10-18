@@ -6,7 +6,7 @@
     "endByte": 136,
     "message": "The glTF file 'models/chair.glb' has no mesh named 'Qaud'.",
     "notes": [
-      "available meshs: 'Quad', 'Tri', 'Twin', 'Wedge', 'Wide'",
+      "available meshes: 'Quad', 'Tri', 'Twin', 'Wedge', 'Wide'",
       "help: did you mean 'Quad'?"
     ],
     "suggestedEdits": [
@@ -29,7 +29,7 @@
     "endByte": 196,
     "message": "The glTF file 'models/chair.glb' has no mesh named 'Sofa'.",
     "notes": [
-      "available meshs: 'Quad', 'Tri', 'Twin', 'Wedge', 'Wide'"
+      "available meshes: 'Quad', 'Tri', 'Twin', 'Wedge', 'Wide'"
     ]
   },
   {
@@ -71,10 +71,7 @@
     "file": "src/main.mtek",
     "startByte": 346,
     "endByte": 352,
-    "message": "The mesh 'Twin' of 'models/chair.glb' has 2 primitives, but primitive 2 was requested.",
-    "notes": [
-      "help: did you mean 'Tri'?"
-    ]
+    "message": "The mesh 'Twin' of 'models/chair.glb' has 2 primitives, but primitive 2 was requested."
   },
   {
     "code": "MTEK-E7024",

@@ -4,6 +4,6 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The sampler 0 (unnamed) uses MIRRORED_REPEAT; the profile supports REPEAT and CLAMP_TO_EDGE."
+    "message": "The sampler at samplers[0] uses MIRRORED_REPEAT; the profile supports REPEAT and CLAMP_TO_EDGE."
   }
 ]

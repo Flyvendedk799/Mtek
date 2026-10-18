@@ -67,6 +67,8 @@ pub struct Failure {
     pub help: Option<String>,
     /// A validated replacement for the name argument (`E7024` only).
     pub rename: Option<String>,
+    /// The name is not there (as opposed to ambiguous, or an index out of range).
+    pub unknown_name: bool,
 }
 
 impl Failure {
@@ -77,7 +79,17 @@ impl Failure {
             notes: Vec::new(),
             help: None,
             rename: None,
+            unknown_name: false,
         }
+    }
+}
+
+/// The plural of a noun from `noun`.
+fn plural(noun: &str) -> &'static str {
+    match noun {
+        "mesh" => "meshes",
+        "material" => "materials",
+        _ => "nodes",
     }
 }
 
@@ -141,8 +153,10 @@ fn unknown_name(file: &GlbFile, method: &str, name: &str, found: &[(usize, Strin
             file.path
         ),
     );
+    failure.unknown_name = true;
+    let plural = plural(noun);
     if names.is_empty() {
-        failure.notes.push(format!("the file has no named {noun}s{scope}"));
+        failure.notes.push(format!("the file has no named {plural}{scope}"));
     } else {
         let shown: Vec<String> = names
             .iter()
@@ -151,7 +165,7 @@ fn unknown_name(file: &GlbFile, method: &str, name: &str, found: &[(usize, Strin
             .collect();
         let more = names.len().saturating_sub(LISTED_NAMES);
         failure.notes.push(format!(
-            "available {noun}s{scope}: {}{}",
+            "available {plural}{scope}: {}{}",
             shown.join(", "),
             if more > 0 {
                 format!(" (and {more} more)")
@@ -163,8 +177,8 @@ fn unknown_name(file: &GlbFile, method: &str, name: &str, found: &[(usize, Strin
     let unnamed = total(file, noun).saturating_sub(found.len());
     if unnamed > 0 && noun != "node" {
         failure.notes.push(format!(
-            "{unnamed} {noun}{} in the file {} no name and cannot be referenced; name {} in the authoring tool",
-            if unnamed == 1 { "" } else { "s" },
+            "{unnamed} {} in the file {} no name and cannot be referenced; name {} in the authoring tool",
+            if unnamed == 1 { noun } else { plural },
             if unnamed == 1 { "has" } else { "have" },
             if unnamed == 1 { "it" } else { "them" },
         ));
@@ -207,9 +221,10 @@ pub fn evaluate(
             let mut failure = Failure::new(
                 Code::E7024,
                 format!(
-                    "The glTF file '{}' has {} {noun}s named '{name}', so the name does not identify one.",
+                    "The glTF file '{}' has {} {} named '{name}', so the name does not identify one.",
                     file.path,
-                    several.len()
+                    several.len(),
+                    plural(noun)
                 ),
             );
             failure
@@ -321,7 +336,7 @@ pub fn evaluate_checked(
         Ok(value) => return Ok(value),
         Err(failure) => failure,
     };
-    if failure.code == Code::E7024 {
+    if failure.unknown_name {
         let found = candidates(file, noun(method));
         let mut near: Vec<&str> = found
             .iter()

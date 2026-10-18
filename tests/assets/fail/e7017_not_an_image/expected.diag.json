@@ -4,6 +4,6 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The image 0 (unnamed): its bytes are not PNG or JPEG data; the profile supports PNG and JPEG."
+    "message": "The image at images[0]: its bytes are not PNG or JPEG data; the profile supports PNG and JPEG."
   }
 ]

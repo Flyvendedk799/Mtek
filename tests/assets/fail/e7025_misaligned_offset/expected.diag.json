@@ -4,6 +4,6 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The mesh 'Tri' (meshes[0]), primitive 0, POSITION: accessor 0 reads 3 elements of 12 bytes (stride 12) from offset 2, past the 36 bytes of its buffer view."
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0, POSITION: accessors[0] starts at byte 2, which is not a multiple of its 4-byte component size."
   }
 ]

@@ -738,6 +738,7 @@ fail("e7025_stride_too_small", (() => {
 })());
 fail("e7025_misaligned_offset", (() => {
   const m = tri();
+  firstView(m).byteLength += 4; // room for the shifted accessor: only the alignment is wrong
   m.json.accessors[0].byteOffset = 2;
   return m.glb();
 })());

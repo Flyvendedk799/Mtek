@@ -260,8 +260,19 @@ fn parse_container<'a>(bytes: &'a [u8], limits: &AssetLimits) -> Result<Chunks<'
         )));
     };
     if magic != GLB_MAGIC {
+        let start: String = bytes
+            .iter()
+            .take(4)
+            .map(|b| {
+                if b.is_ascii_graphic() {
+                    char::from(*b).to_string()
+                } else {
+                    format!("\\x{b:02x}")
+                }
+            })
+            .collect();
         let mut issue = container(format!(
-            "The file does not start with the glTF magic number 'glTF' (it starts with 0x{magic:08X})."
+            "The file does not start with the glTF magic number 'glTF' (it starts with \"{start}\")."
         ));
         if bytes.first() == Some(&b'{') {
             issue = issue.note("the file looks like glTF JSON; export a binary `.glb` instead");
@@ -728,7 +739,7 @@ struct Validator<'a> {
     image_ok: Vec<bool>,
 }
 
-/// `mesh 'Seat' (meshes[2])`, or `mesh 2 (unnamed)`.
+/// `mesh 'Seat' (meshes[2])`, or `mesh at meshes[2]` without a name.
 fn label(kind: &str, index: usize, name: Option<&str>) -> String {
     let collection = match kind {
         "mesh" => "meshes",
@@ -738,7 +749,7 @@ fn label(kind: &str, index: usize, name: Option<&str>) -> String {
     };
     match name {
         Some(name) => format!("{kind} '{name}' ({collection}[{index}])"),
-        None => format!("{kind} {index} (unnamed)"),
+        None => format!("{kind} at {collection}[{index}]"),
     }
 }
 
@@ -844,7 +855,7 @@ impl<'a> Validator<'a> {
                     7,
                     Issue::new(
                         Code::E7011,
-                        format!("Accessor {index} is sparse; the profile does not support sparse accessors."),
+                        format!("accessors[{index}] is sparse; the profile does not support sparse accessors."),
                     )
                     .help("re-export the model without sparse accessors (for example without morph targets)"),
                 );
@@ -855,7 +866,7 @@ impl<'a> Validator<'a> {
     /// Where the elements of accessor `index` live, or why they cannot be read.
     fn resolve(&self, index: usize, element: usize, indices: bool) -> Result<Resolved, Problem> {
         let Some(accessor) = self.root.accessors.get(index) else {
-            return Err(Problem::Bad(format!("accessor {index} does not exist")));
+            return Err(Problem::Bad(format!("accessors[{index}] does not exist")));
         };
         if accessor.sparse.is_some() {
             return Err(Problem::Sparse);
@@ -863,7 +874,7 @@ impl<'a> Validator<'a> {
         let Some(view_index) = &accessor.buffer_view else {
             return Err(Problem::NoView);
         };
-        let bad = |text: String| Err(Problem::Bad(format!("accessor {index} {text}")));
+        let bad = |text: String| Err(Problem::Bad(format!("accessors[{index}] {text}")));
         let Some(view) = self.root.buffer_views.get(view_index.value()) else {
             return bad("refers to a buffer view that does not exist".into());
         };
@@ -1663,7 +1674,7 @@ fn semantic_name(semantic: &Semantic) -> String {
         Semantic::TexCoords(n) => format!("TEXCOORD_{n}"),
         Semantic::Joints(n) => format!("JOINTS_{n}"),
         Semantic::Weights(n) => format!("WEIGHTS_{n}"),
-        Semantic::Extras(name) => name.clone(),
+        Semantic::Extras(name) => format!("_{}", name.trim_start_matches('_')),
     }
 }
 

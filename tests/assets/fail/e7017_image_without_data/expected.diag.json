@@ -4,6 +4,6 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The image 0 (unnamed) has neither a `uri` nor a buffer view."
+    "message": "The image at images[0] has neither a `uri` nor a buffer view."
   }
 ]

@@ -4,6 +4,6 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The sampler 0 (unnamed) wraps S with REPEAT and T with CLAMP_TO_EDGE; the sampler presets use one address mode for both directions."
+    "message": "The sampler at samplers[0] wraps S with REPEAT and T with CLAMP_TO_EDGE; the sampler presets use one address mode for both directions."
   }
 ]

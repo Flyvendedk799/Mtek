@@ -4,6 +4,6 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The image 0 (unnamed) is declared as image/jpeg, but its bytes are image/png."
+    "message": "The image at images[0] is declared as image/jpeg, but its bytes are image/png."
   }
 ]

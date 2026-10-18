@@ -4,7 +4,7 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "Accessor 4 is sparse; the profile does not support sparse accessors.",
+    "message": "accessors[4] is sparse; the profile does not support sparse accessors.",
     "notes": [
       "help: re-export the model without sparse accessors (for example without morph targets)"
     ]
