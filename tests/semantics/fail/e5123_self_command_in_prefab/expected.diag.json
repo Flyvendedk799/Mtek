@@ -4,7 +4,7 @@
     "file": "src/main.mtek",
     "startByte": 241,
     "endByte": 249,
-    "message": "`teleport` is not valid for 'self': it applies to Dynamic and Kinematic bodies, but 'self' has a Static body.",
+    "message": "`teleport` is not valid for the prefab 'Post': it applies to Dynamic and Kinematic bodies, but the prefab 'Post' has a Static body.",
     "related": [
       {
         "message": "the body is declared here",

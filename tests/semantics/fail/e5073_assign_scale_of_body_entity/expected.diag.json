@@ -4,7 +4,7 @@
     "file": "src/main.mtek",
     "startByte": 238,
     "endByte": 249,
-    "message": "The field 'scale' of 'Floor' is construction-only and cannot be assigned, because 'Floor' has a body.",
+    "message": "The field 'scale' of 'Floor' is construction-only and cannot be assigned, because it has a body.",
     "related": [
       {
         "message": "the body is declared here",

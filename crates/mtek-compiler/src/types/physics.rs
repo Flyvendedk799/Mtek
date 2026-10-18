@@ -223,13 +223,14 @@ impl Checker<'_> {
     ) -> Option<bool> {
         let (kind, body_span) = self.physics_of(object).body?;
         let name = self.object_name(object);
+        let subject = self.entity_subject(object);
         match field {
             "position" | "rotation" => {
                 let (allowed, help) = ownership_note(kind);
                 let mut diagnostic = Diagnostic::new(
                     Code::E5071,
                     format!(
-                        "`{name}.{field}` belongs to the physics subsystem, because '{name}' has a {} body, so it cannot be assigned.",
+                        "`{name}.{field}` belongs to the physics subsystem, because {subject} has a {} body, so it cannot be assigned.",
                         kind.as_str()
                     ),
                 )
@@ -247,7 +248,7 @@ impl Checker<'_> {
                     Diagnostic::new(
                         Code::E5073,
                         format!(
-                            "The field 'scale' of '{name}' is construction-only and cannot be assigned, because '{name}' has a body."
+                            "The field 'scale' of {subject} is construction-only and cannot be assigned, because it has a body."
                         ),
                     )
                     .at(expr.span)
@@ -327,7 +328,16 @@ impl Checker<'_> {
         }
     }
 
-    /// The name diagnostics use for the entity or prefab `def`: `self` for a prefab.
+    /// How a message names the entity or prefab `def`: `'Lamp'`, `the prefab 'Crate'`.
+    fn entity_subject(&self, def: DefId) -> String {
+        match self.res.def(def) {
+            Some(d) if d.kind == DefKind::Prefab => format!("the prefab '{}'", d.name),
+            Some(d) => format!("'{}'", d.name),
+            None => "the entity".to_owned(),
+        }
+    }
+
+    /// The name code uses for the entity or prefab `def`: `self` for a prefab.
     fn object_name(&self, def: DefId) -> String {
         match self.res.def(def) {
             Some(d) if d.kind == DefKind::Prefab => "self".to_owned(),
@@ -461,10 +471,10 @@ impl Checker<'_> {
         &mut self,
         span: Span,
         def: DefId,
-        name: &str,
         what: &str,
         applies_to: &[BodyKind],
     ) -> bool {
+        let name = self.entity_subject(def);
         let physics = self.physics_of(def);
         let Some((kind, body_span)) = physics.body else {
             // A body that is not a body descriptor was reported where it is written.
@@ -474,12 +484,12 @@ impl Checker<'_> {
             self.report(
                 Diagnostic::new(
                     Code::E5123,
-                    format!("`{what}` is not valid for '{name}': it has no body."),
+                    format!("`{what}` is not valid for {name}: it has no body."),
                 )
                 .at(span)
                 .note(format!("`{what}` applies to {}", kinds_phrase(applies_to)))
                 .help(format!(
-                    "declare `body: {} {{ .. }}` and a collider on '{name}'",
+                    "declare `body: {} {{ .. }}` and a collider on {name}",
                     applies_to.first().map_or("Dynamic", |kind| kind.as_str())
                 )),
             );
@@ -491,7 +501,7 @@ impl Checker<'_> {
         let mut diagnostic = Diagnostic::new(
             Code::E5123,
             format!(
-                "`{what}` is not valid for '{name}': it applies to {}, but '{name}' has a {} body.",
+                "`{what}` is not valid for {name}: it applies to {}, but {name} has a {} body.",
                 kinds_phrase(applies_to),
                 kind.as_str()
             ),
@@ -524,7 +534,7 @@ impl Checker<'_> {
             Diagnostic::new(
                 Code::E5001,
                 format!(
-                    "The body of '{owner}' has no command or property '{}'.",
+                    "The body of {owner} has no command or property '{}'.",
                     name.name
                 ),
             )
@@ -577,17 +587,12 @@ impl Checker<'_> {
         }
         let Some(command) = command else {
             self.synth_args(args);
-            self.unknown_body_member(&owner_name, name);
+            let subject = def.map_or_else(|| owner_name.clone(), |def| self.entity_subject(def));
+            self.unknown_body_member(&subject, name);
             return Some(TyId::ERROR);
         };
         let allowed = def.is_none_or(|def| {
-            self.body_kind_allows(
-                name.span,
-                def,
-                &owner_name,
-                command.name,
-                command.applies_to,
-            )
+            self.body_kind_allows(name.span, def, command.name, command.applies_to)
         });
         let args_ok = self.body_command_args(expr, command, args);
         if let Some(body) = &mut self.body {
@@ -686,7 +691,8 @@ impl Checker<'_> {
             return Some(TyId::ERROR);
         }
         let Some(property) = property else {
-            self.unknown_body_member(&owner_name, name);
+            let subject = def.map_or_else(|| owner_name.clone(), |def| self.entity_subject(def));
+            self.unknown_body_member(&subject, name);
             return Some(TyId::ERROR);
         };
         if self.scope.is_some_and(|scope| scope.initialiser.is_some()) {
@@ -694,13 +700,7 @@ impl Checker<'_> {
             return Some(TyId::ERROR);
         }
         if let Some(def) = def
-            && !self.body_kind_allows(
-                name.span,
-                def,
-                &owner_name,
-                property.name,
-                property.applies_to,
-            )
+            && !self.body_kind_allows(name.span, def, property.name, property.applies_to)
         {
             return Some(TyId::ERROR);
         }

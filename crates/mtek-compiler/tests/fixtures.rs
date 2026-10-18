@@ -1491,7 +1491,10 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E8080", "M6: preview builds"),
     ("E8090", "M3: run-time field writes"),
     ("E8100", "M3: run-time field writes and host inputs"),
-    ("E8101", "M5-05: body commands through an entity_ref at run time"),
+    (
+        "E8101",
+        "M5-05: body commands through an entity_ref at run time",
+    ),
     ("E8102", "M5-05: loading the physics module at mount"),
     ("E8103", "M5-05: reading the solver's poses back"),
 ];
