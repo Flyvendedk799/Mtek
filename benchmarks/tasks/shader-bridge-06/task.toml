@@ -1,0 +1,13 @@
+id = "shader-bridge-06"
+category = "shader-bridge"
+mode = "edit"
+title = "The colour of a cube follows its height, which follows a host input"
+prompt = """The scene Demo shows a cube named Cube at the origin, drawn with a custom material named Heat. Heat is not lit: it draws the blend (1 - w) * COOL + w * HOT of the two colours COOL = #1e3a8a and HOT = #f97316, computed in linear light on the colours converted from sRGB and displayed as it is, where w is its parameter warmth limited to the range 0 to 1. The host page sets an input named lift, a number in metres that is 0 until the host sets it; the scene already stores it, but nothing uses it yet, so the cube stays at the origin with warmth 0.
+Change the program so that (1) the cube's height (its y position) is always equal to lift, and (2) Heat's warmth is always the cube's height divided by 2, the height the cube has in the frame being drawn: the colour must never show the previous frame's height. Both follow lift whenever the host changes it, and reach the material as updated values; no material or shader is replaced. Everything else stays as it is."""
+required_symbols = ["Demo.Cube", "Heat"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

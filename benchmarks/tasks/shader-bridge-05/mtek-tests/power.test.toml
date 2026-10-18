@@ -1,0 +1,40 @@
+# The lamp's intensity is 2 * power; the dial's linear grey is intensity / 10, shown as its sRGB encoding (exact
+# transfer function, computed independently of any reference):
+#   power 2.5 -> intensity 5  -> 0.5 -> #bcbcbc (187.52)
+#   power 4   -> intensity 8  -> 0.8 -> #e7e7e7 (231.11)
+#   power 5   -> intensity 10 -> 1   -> #ffffff
+#   power 0.5 -> intensity 1  -> 0.1 -> #595959 (89.04)
+#   power 0   -> intensity 0  -> 0   -> #000000
+# A host input is applied at the start of the next frame, and the dial shows the new intensity in that very frame (one `step`
+# after every `set_input`). The sampled pixels lie inside the cube's front face (pixels 51.96 to 76.04, see start.test.toml).
+name = "the dial follows the lamp's intensity when the host changes power"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#959595", tolerance = 2 } },
+
+  { set_input = { power = 2.5 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#bcbcbc", tolerance = 2 } },
+  { expect_pixel = { x = 54, y = 54, color = "#bcbcbc", tolerance = 2 } },
+
+  { set_input = { power = 4.0 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#e7e7e7", tolerance = 2 } },
+
+  { set_input = { power = 5.0 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#ffffff", tolerance = 2 } },
+  { expect_pixel = { x = 74, y = 74, color = "#ffffff", tolerance = 2 } },
+
+  { set_input = { power = 0.5 } },
+  { step = 10, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#595959", tolerance = 2 } },
+
+  { set_input = { power = 0.0 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#000000", tolerance = 2 } },
+
+  # the lamp lights nothing and draws nothing: the background keeps its clear colour
+  { expect_pixel = { x = 2, y = 2, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 83, y = 64, color = "#202020", tolerance = 2 } },
+]

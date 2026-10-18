@@ -1,0 +1,75 @@
+# Space raises the charge by one up to 4, Backspace lowers it by one down to 0; the cube's linear grey is charge / 4, shown as its
+# sRGB encoding (exact transfer function, computed independently of any reference):
+#   0 -> #000000   1 -> 0.25 -> #898989 (136.96)   2 -> 0.5 -> #bcbcbc (187.52)   3 -> 0.75 -> #e1e1e1 (224.61)   4 -> #ffffff
+# A grey above charge 4 would be clipped to white by the output, so the limit of 4 is made visible by lowering the charge
+# afterwards: after six presses of Space, one Backspace shows charge 3 (#e1e1e1), where a limit of 5 or none would show white.
+# In the same way a missing lower limit is visible when Space is pressed after Backspace was pressed at 0.
+# A key press is applied at the start of the next frame, so a `step` follows every `press`. The sampled pixels lie inside the
+# cube's front face (pixels 51.96 to 76.04, see start.test.toml); the corner is the clear colour.
+name = "Space raises the charge to at most 4, Backspace lowers it to at least 0"
+steps = [
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { expect_pixel = { x = 64, y = 64, color = "#898989", tolerance = 2 } },
+
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { expect_pixel = { x = 64, y = 64, color = "#bcbcbc", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 72, color = "#bcbcbc", tolerance = 2 } },
+
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { expect_pixel = { x = 64, y = 64, color = "#e1e1e1", tolerance = 2 } },
+
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { expect_pixel = { x = 64, y = 64, color = "#ffffff", tolerance = 2 } },
+
+  # two more presses at the limit change nothing: Backspace then shows charge 3, not 5
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 10, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#ffffff", tolerance = 2 } },
+  { press = "Backspace" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Backspace" },
+  { expect_pixel = { x = 64, y = 64, color = "#e1e1e1", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 56, color = "#e1e1e1", tolerance = 2 } },
+
+  # down to 0 and beyond: the charge stays at 0, so one Space shows charge 1, not 0
+  { press = "Backspace" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Backspace" },
+  { expect_pixel = { x = 64, y = 64, color = "#bcbcbc", tolerance = 2 } },
+  { press = "Backspace" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Backspace" },
+  { expect_pixel = { x = 64, y = 64, color = "#898989", tolerance = 2 } },
+  { press = "Backspace" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Backspace" },
+  { expect_pixel = { x = 64, y = 64, color = "#000000", tolerance = 2 } },
+  { press = "Backspace" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Backspace" },
+  { press = "Backspace" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Backspace" },
+  { expect_pixel = { x = 64, y = 64, color = "#000000", tolerance = 2 } },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { expect_pixel = { x = 64, y = 64, color = "#898989", tolerance = 2 } },
+
+  # the background keeps its clear colour throughout
+  { expect_pixel = { x = 2, y = 2, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 45, y = 64, color = "#202020", tolerance = 2 } },
+]

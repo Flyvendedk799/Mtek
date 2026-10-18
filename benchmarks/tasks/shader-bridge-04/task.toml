@@ -1,0 +1,13 @@
+id = "shader-bridge-04"
+category = "shader-bridge"
+mode = "edit"
+title = "A charge counted on the CPU shows as the grey of a cube"
+prompt = """The scene Demo shows a cube named Meter at the origin, drawn with a custom material named Gauge. Gauge is not lit: it draws a flat grey whose red, green and blue values in linear light all equal its parameter level. The level is 0 in the starter, so the cube is black.
+Make the cube show a charge. The charge is a whole number that starts at 0. Each time Space is pressed the charge goes up by one, but never above 4; each time Backspace is pressed the charge goes down by one, but never below 0. Gauge's level is always the charge divided by 4, so the cube is black at charge 0 and white at charge 4. Only the transition of a key from up to down counts as a press: a key held down is one press. The charge reaches the material as a value that is updated; no material or shader is replaced. Everything else stays as it is."""
+required_symbols = ["Demo.Meter", "Gauge"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

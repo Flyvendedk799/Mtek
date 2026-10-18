@@ -1,0 +1,40 @@
+# Panel: a box 4 x 2 x 0.2 at (0.4, 0, 0); its front face is at z = 0.1, depth 5.9 from the camera at (0, 0, 6) looking at the
+# origin, fov_y 0.9, 128 x 128 target. The face spans pixels x 28.07 to 117.89 and y 41.54 to 86.46 (CPU projection, f64,
+# independent of any renderer: benchmarks/baselines/support/test/projection.ts); the camera is inside the box's x and y extents,
+# so only the front face is seen. A pixel centre (px + 0.5) lies at world x = (px - 63.5) * 0.044533 (= 2 * 5.9 * tan(0.45) / 128
+# per pixel) and so at object-space x = world x - 0.4, which is -1.8027, -0.9121, -0.0215, 0.8692 and 1.7598 for pixel columns
+# 32, 52, 72, 92, 112. (A shader that read the world x instead of the object x would be 0.4 off and show other colours.)
+#
+# Colour of a pixel: w = 0.5 + 0.5 sin(0.8 x + t), linear (1 - w) A + w B with A = #1a237e (linear 0.010330, 0.016807,
+# 0.208637) and B = #ffb300 (linear 1, 0.450786, 0), encoded to sRGB with the exact transfer function.
+# The time is the sum of the frame durations, 0.0625 s per frame (exact in binary), the frame being drawn included:
+#   1 frame -> t = 0.0625, 16 frames -> t = 1, 44 frames -> t = 2.75.
+#   t = 0.0625   w = 0.0091 0.1906 0.5226 0.8437 0.9975   colours #26287d #7b5972 #c08759 #eda633 #ffb302
+#   t = 1        w = 0.2860 0.6335 0.9160 0.9961 0.8348   colours #93696c #d1934e #f5ac24 #ffb303 #eca634
+#   t = 2.75     w = 0.9828 0.9503 0.6987 0.3505 0.0749   colours #fdb20c #f9af1a #da9947 #a17267 #523f7a
+# The colour changes by up to 4.5 bytes per pixel along x at these columns, so the tolerance is 3 (rasterisation samples exactly
+# at the pixel centre; the margin covers binary32 arithmetic and the GPU's sin). A time that is one frame (0.0625 s) off moves
+# these colours by 4 to 7 bytes, so the fixture tells it apart.
+name = "the panel colour is the sweep of the object-space x and the elapsed time"
+steps = [
+  { step = 1, dt = 0.0625 },
+  { expect_pixel = { x = 32, y = 64, color = "#26287d", tolerance = 3 } },
+  { expect_pixel = { x = 52, y = 64, color = "#7b5972", tolerance = 3 } },
+  { expect_pixel = { x = 72, y = 64, color = "#c08759", tolerance = 3 } },
+  { expect_pixel = { x = 92, y = 64, color = "#eda633", tolerance = 3 } },
+  { expect_pixel = { x = 112, y = 64, color = "#ffb302", tolerance = 3 } },
+
+  { step = 15, dt = 0.0625 },
+  { expect_pixel = { x = 32, y = 64, color = "#93696c", tolerance = 3 } },
+  { expect_pixel = { x = 52, y = 64, color = "#d1934e", tolerance = 3 } },
+  { expect_pixel = { x = 72, y = 64, color = "#f5ac24", tolerance = 3 } },
+  { expect_pixel = { x = 92, y = 64, color = "#ffb303", tolerance = 3 } },
+  { expect_pixel = { x = 112, y = 64, color = "#eca634", tolerance = 3 } },
+
+  { step = 28, dt = 0.0625 },
+  { expect_pixel = { x = 32, y = 64, color = "#fdb20c", tolerance = 3 } },
+  { expect_pixel = { x = 52, y = 64, color = "#f9af1a", tolerance = 3 } },
+  { expect_pixel = { x = 72, y = 64, color = "#da9947", tolerance = 3 } },
+  { expect_pixel = { x = 92, y = 64, color = "#a17267", tolerance = 3 } },
+  { expect_pixel = { x = 112, y = 64, color = "#523f7a", tolerance = 3 } },
+]

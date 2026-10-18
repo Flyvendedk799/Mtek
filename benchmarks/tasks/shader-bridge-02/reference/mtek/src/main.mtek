@@ -1,4 +1,3 @@
-// UNVERIFIED: not compiled or run yet.
 material Shade {
     param amount: f32 = 0.25;
 

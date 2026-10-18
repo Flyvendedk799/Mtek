@@ -1,0 +1,54 @@
+# The cube's height is lift; Heat's warmth is the cube's height / 2 (limited to 0..1 by the material), and the pixel is the blend
+# (1 - w) COOL + w HOT in linear light, sRGB-encoded with the exact transfer function (computed independently of any reference;
+# COOL #1e3a8a is linear 0.012983, 0.042311, 0.254152 and HOT #f97316 is linear 0.947307, 0.171441, 0.008023):
+#   w = 0 -> #1e3a8a    w = 0.25 -> #884d79    w = 0.5 -> #b85c65    w = 0.75 -> #dc684b    w = 1 -> #f97316 (HOT)
+# A host input is applied at the start of the next frame, and in that same frame both the cube's height and the colour that
+# belongs to the new height are drawn: one `step` after every `set_input`, never two.
+# The front face of the unit cube is at depth 5.5 and spans pixels x 51.96 to 76.04 and, for a cube at height h, these y
+# (CPU projection, as in start.test.toml):
+#   h = 0.5: 39.91 to 64.00    h = 1: 27.87 to 51.96    h = 1.5: 15.82 to 39.91    h = 2: 3.78 to 27.87    h = -1: 76.04 to 100.13
+# Seen from the camera at height 0 the cube also shows its underside when h > 0.5 (a strip about 2 pixels high just below the
+# front face) and its top when h < -0.5 (just above it); the sampled pixels avoid those strips.
+name = "the cube follows lift and its colour follows its height in the same frame"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#1e3a8a", tolerance = 2 } },
+
+  # lift 1: height 1, warmth 0.5
+  { set_input = { lift = 1.0 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 40, color = "#b85c65", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 32, color = "#b85c65", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 47, color = "#b85c65", tolerance = 2 } },
+  # the old place is empty: the clear colour
+  { expect_pixel = { x = 64, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 70, color = "#202020", tolerance = 2 } },
+
+  # lift 2: height 2, warmth 1, HOT
+  { set_input = { lift = 2.0 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 16, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 8, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 40, color = "#202020", tolerance = 2 } },
+
+  # lift 0.5: height 0.5, warmth 0.25
+  { set_input = { lift = 0.5 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 52, color = "#884d79", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 44, color = "#884d79", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 16, color = "#202020", tolerance = 2 } },
+
+  # lift 1.5: height 1.5, warmth 0.75 (and several frames later, nothing has changed)
+  { set_input = { lift = 1.5 } },
+  { step = 10, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 28, color = "#dc684b", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 52, color = "#202020", tolerance = 2 } },
+
+  # lift -1: below the camera, height -1, warmth -0.5 limited to 0, COOL
+  { set_input = { lift = -1.0 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 88, color = "#1e3a8a", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 82, color = "#1e3a8a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 106, color = "#202020", tolerance = 2 } },
+]
