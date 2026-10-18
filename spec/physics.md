@@ -24,10 +24,10 @@
 | `collider: SphereCollider { radius; sensor; friction; restitution }` | |
 | Mass | positive finite kilograms; the adapter sets it on the collider (`setMass`), letting the backend derive consistent inertia |
 | Gravity | scene field `gravity`, default `vec3(0.0, -9.81, 0.0)` |
-| Collision events | `collision_enter` / `collision_exit` on entities with colliders, delivered after each step |
+| Collision events | `collision_enter` / `collision_exit` on entities and prefabs with a collider (`E5062` otherwise), delivered after each step |
 | Teleport | explicit command with a velocity reset/preserve choice |
 
-Rules checked by the compiler: a `collider` requires a `body` (`E5120`, "add `body: Static {}` for fixed geometry"); a `body` without a `collider` is `E5121`; bodies only on root entities (`E5091`); `scale` of a body entity is construction-only and must be `vec3(1.0)` for `Dynamic` and `Kinematic` bodies (`E5122`, scaled dynamic bodies are not in v0.1); a binding on a dynamic or kinematic body's `position`/`rotation` is `E5072`; assignment is `E5071`. Changing a visual material never touches the collider; collider dimensions are construction-only in v0.1 (a rebuild path is v0.2).
+Rules checked by the compiler (decision 0065 records the details; every rule has a fixture): a `collider` requires a `body` (`E5120`, "add `body: Static {}` for fixed geometry"); a `body` without a `collider` is `E5121`; bodies only on root entities (`E5091`; a static instance of a prefab with a body counts as an entity with a body); `scale` of a body entity is construction-only (`E5073` on an assignment, `E5004` on a `bind`) and must be the constant `vec3(1.0)` for `Dynamic` and `Kinematic` bodies (`E5122`, scaled dynamic bodies are not in v0.1; a `Static` body may have any positive scale, which is visual only because the collider is sized by its own descriptor); a `bind` on the `position` or `rotation` of any entity with a body (`Static`, `Dynamic` or `Kinematic`) is `E5072`, an assignment to them `E5071`, naming the operation that is allowed (`apply_impulse`, `set_kinematic_target`, `teleport`, or "static bodies cannot move"). Values of the descriptors are constants in the ranges of `spec/stdlib.md` section 3.7 (`E5006`; mass, damping, friction, sizes and radius are finite). Changing a visual material never touches the collider; collider dimensions are construction-only in v0.1 (a rebuild path is v0.2).
 
 ## 3. Body commands (CPU, handlers only)
 
@@ -41,7 +41,7 @@ Available as `Name.body.<command>(…)`, `self.body.<command>(…)` and `ref.bod
 | `teleport(position: vec3, rotation: quat, keep_velocity: bool)` | Dynamic, Kinematic | sets the pose before the next tick; velocities are zeroed unless `keep_velocity` |
 | `set_linear_velocity(v: vec3)` | Dynamic | applied at the start of the next tick |
 
-Readable (not writable) fields: `Name.body.linear_velocity: vec3`, `Name.body.angular_velocity: vec3` (Dynamic/Kinematic), as of the last completed tick. A command on the wrong body kind is `E5123` (static) or, through an `entity_ref` whose body kind is unknown statically, a runtime `E8101` (command dropped). Commands to a pending or dead entity are dropped with `W8031`.
+Readable (not writable) fields: `Name.body.linear_velocity: vec3`, `Name.body.angular_velocity: vec3` (Dynamic/Kinematic), as of the last completed tick (zero before the first tick). Assigning one is `E5071`; a binding cannot depend on one (`E5005`: the manifest has no dependency kind for it), and a state initialiser cannot read one (`E5081`). A command or velocity on a named entity (or `self`, or a static prefab instance) whose body kind does not support it, or that has no body, is `E5123`; through an `entity_ref` the body kind is unknown statically, so the runtime reports `E8101` and drops the command. Commands run only in lifecycle functions and event handlers (`E5080` in a function, `E5005` in a `bind`). A command with the wrong number or types of arguments is `E3002`/`E3001`. Commands to a pending or dead entity are dropped with `W8031`. The code a handler compiles to is `ctx.body(target).<command>(..)` and `ctx.body(target).<property>` (`spec/runtime-abi.md` section 4.2).
 
 ## 4. Tick integration (`spec/scenes.md` §10 phase 2)
 
@@ -82,7 +82,7 @@ export type LoadPhysics = () => Promise<PhysicsBackend>;   // default export of 
 
 The runtime core depends only on these types. `packages/physics-rapier` implements them with `@dimforge/rapier3d-compat` (pinned exactly, initially 0.21.0) and is bundled by the build into `physics/<h16>.js`, loaded with a dynamic `import()` during mount only when `subsystems.physics` is true. A test asserts that a non-physics program performs no request for any `physics/` URL (M5 gate).
 
-The descriptor types the listing uses (`Vec3`, `Quat`, `Pose`, `BodyHandle`, `BodyDesc`, `ColliderDesc`), the Rapier adapter (M5-04), the engine behaviours the integration must account for (collision events lag the poses by one step, undrained events are discarded at the next step, events of removed entities are dropped, the 5 mm contact skin, averaged friction and restitution), the bundle and the rule for when the compiler writes it (`subsystems.physics` only; the library-only option `force_physics_subsystem` until the checker sets it, M5-03) are decision 0063. The runtime integration (stepping, commands, event delivery, loading the bundle at mount) is M5-05.
+The descriptor types the listing uses (`Vec3`, `Quat`, `Pose`, `BodyHandle`, `BodyDesc`, `ColliderDesc`), the Rapier adapter (M5-04), the engine behaviours the integration must account for (collision events lag the poses by one step, undrained events are discarded at the next step, events of removed entities are dropped, the 5 mm contact skin, averaged friction and restitution), the bundle and the rule for when the compiler writes it (`subsystems.physics` only: true when any body exists, decision 0065; the library-only option `force_physics_subsystem` forces it for the packaging tests) are decision 0063. The runtime integration (stepping, commands, event delivery, loading the bundle at mount) is M5-05.
 
 ### 5.1 Rapier mapping
 | Mtek | Rapier |
@@ -111,4 +111,4 @@ Resting contact (a box dropped on the floor comes to rest within 0.01 m of the e
 
 ## 8. Physics diagnostic codes
 
-Compile time (added to `spec/diagnostics.md` §5.5 in M5): `E5120` collider without body · `E5121` body without collider · `E5122` scaled dynamic or kinematic body · `E5123` command not valid for this body kind. Runtime (§5.8): `E8101` command not valid for the target's body kind · `E8102` physics module failed to load (mount fails with the dedicated kind `"physics-failed"`, added to `MtekMountError.kind` in M5) · `E8103` non-finite pose produced by the solver (body frozen, reported once).
+Compile time (in `spec/diagnostics.md` §5.5, added by M5-03): `E5120` collider without body · `E5121` body without collider · `E5122` scaled dynamic or kinematic body · `E5123` command not valid for this body kind. Runtime (§5.8, catalogued by M5-03, reported by M5-05): `E8101` command not valid for the target's body kind · `E8102` physics module failed to load (mount fails with the dedicated kind `"physics-failed"`, added to `MtekMountError.kind` in M5) · `E8103` non-finite pose produced by the solver (body frozen, reported once).

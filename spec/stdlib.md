@@ -101,9 +101,11 @@ Out-of-range constants are `E5006` ("field value out of range"). Asset meshes co
 `DirectionalLight { color: color = #ffffff; intensity: f32 = 1.0 }`, `PointLight { color: color = #ffffff; intensity: f32 = 1.0; range: f32 = 0.0 }` — `color`, `intensity` W B; `range` C. (`spec/materials.md` §7.)
 
 ### 3.7 Bodies and colliders (category `body`/`collider`, all C) — semantics in `spec/physics.md`
-`Static {}`, `Kinematic {}`, `Dynamic { mass: f32 = 1.0 (> 0, finite); linear_damping: f32 = 0.0 (≥ 0); angular_damping: f32 = 0.05 (≥ 0) }`,
-`BoxCollider { size: vec3 (R, > 0); sensor: bool = false; friction: f32 = 0.5 (≥ 0); restitution: f32 = 0.0 (0…1) }`,
-`SphereCollider { radius: f32 (R, > 0); sensor: bool = false; friction: f32 = 0.5; restitution: f32 = 0.0 }`.
+`Static {}`, `Kinematic {}`, `Dynamic { mass: f32 = 1.0 (> 0, finite); linear_damping: f32 = 0.0 (≥ 0, finite); angular_damping: f32 = 0.05 (≥ 0, finite) }`,
+`BoxCollider { size: vec3 (R, every component > 0, finite); sensor: bool = false; friction: f32 = 0.5 (≥ 0, finite); restitution: f32 = 0.0 (0…1) }`,
+`SphereCollider { radius: f32 (R, > 0, finite); sensor: bool = false; friction: f32 = 0.5; restitution: f32 = 0.0 }`.
+
+A `collider` requires a `body` (`E5120`) and a `body` a `collider` (`E5121`); `Scene.gravity` is a finite `vec3`. The M5 gates of these rows, of `entity_ref` and of the collision events were lifted by task M5-03 (decision 0065).
 
 ## 4. Primitive mesh generation (normative, runtime `src/mesh/`)
 

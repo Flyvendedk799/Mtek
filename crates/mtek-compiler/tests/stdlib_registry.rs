@@ -64,7 +64,7 @@ fn schema_rows() -> Vec<Row> {
             "vec3",
             Some("vec3(0.0, -9.81, 0.0)"),
             "C",
-            None,
+            Some("finite"),
         ),
         // 3.2 Entity
         ("Entity", "position", "vec3", Some(V3_ZERO), "WB", None),
@@ -262,7 +262,7 @@ fn schema_rows() -> Vec<Row> {
             "f32",
             Some("0.0"),
             "C",
-            Some("\u{2265} 0"),
+            Some("\u{2265} 0, finite"),
         ),
         (
             "Dynamic",
@@ -270,7 +270,7 @@ fn schema_rows() -> Vec<Row> {
             "f32",
             Some("0.05"),
             "C",
-            Some("\u{2265} 0"),
+            Some("\u{2265} 0, finite"),
         ),
         (
             "BoxCollider",
@@ -278,7 +278,7 @@ fn schema_rows() -> Vec<Row> {
             "vec3",
             None,
             "RC",
-            Some("every component > 0"),
+            Some("every component > 0, finite"),
         ),
         ("BoxCollider", "sensor", "bool", Some("false"), "C", None),
         (
@@ -287,7 +287,7 @@ fn schema_rows() -> Vec<Row> {
             "f32",
             Some("0.5"),
             "C",
-            Some("\u{2265} 0"),
+            Some("\u{2265} 0, finite"),
         ),
         (
             "BoxCollider",
@@ -297,7 +297,14 @@ fn schema_rows() -> Vec<Row> {
             "C",
             Some("0\u{2026}1"),
         ),
-        ("SphereCollider", "radius", "f32", None, "RC", Some("> 0")),
+        (
+            "SphereCollider",
+            "radius",
+            "f32",
+            None,
+            "RC",
+            Some("> 0, finite"),
+        ),
         ("SphereCollider", "sensor", "bool", Some("false"), "C", None),
         (
             "SphereCollider",
@@ -305,7 +312,7 @@ fn schema_rows() -> Vec<Row> {
             "f32",
             Some("0.5"),
             "C",
-            Some("\u{2265} 0"),
+            Some("\u{2265} 0, finite"),
         ),
         (
             "SphereCollider",
