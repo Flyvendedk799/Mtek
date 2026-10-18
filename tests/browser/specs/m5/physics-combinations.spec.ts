@@ -11,9 +11,10 @@
 //   - a destroy is a flag at once (the entity's handlers and deliveries stop) and a removal at the next flush: the start
 //     of the next tick, or the end of the frame.
 import { expect, test } from "../../support/fixtures.ts";
+import { PHYSICS_COMBOS } from "../../support/m5-fixtures.ts";
 import { STEP, runScript, type Action, type ScriptRun, type Snapshot } from "./physics-support.ts";
 
-const FIXTURE = "physics_combos";
+const FIXTURE = PHYSICS_COMBOS;
 /** 2 + ceil((4.9 - 2.25 - 0.02) / (5 / 60)): see the header. */
 const DERIVED_K = 34;
 

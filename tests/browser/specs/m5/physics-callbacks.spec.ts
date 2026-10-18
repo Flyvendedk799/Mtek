@@ -14,9 +14,10 @@
 // it is at x0 + m v dt and the engine sees the contact once the surface gap is under the prediction distance (20 mm), and
 // reports it one step later (decision 0063 item 5): delivery in tick 2 + m.
 import { expect, test } from "../../support/fixtures.ts";
+import { PHYSICS_CALLBACKS } from "../../support/m5-fixtures.ts";
 import { STEP, TARGET, openFixture, type AppLike, type DiagnosticLike } from "./physics-support.ts";
 
-const FIXTURE = "physics_callbacks";
+const FIXTURE = PHYSICS_CALLBACKS;
 const TICKS = 120;
 const PREDICTION = 0.02;
 const RADIUS = 0.25;

@@ -10,9 +10,10 @@
 // A ball dropped from rest has offset 0; the balls thrown with Space (pressed after five ticks, so the commands
 // land at the start of tick 6) have offset 5. Delivery order inside one tick is enter before exit, then by slot.
 import { expect, test } from "../../support/fixtures.ts";
+import { PHYSICS_SENSOR } from "../../support/m5-fixtures.ts";
 import { GRAVITY, STEP, TARGET, crossingTimes, openFixture, type AppLike, type DiagnosticLike } from "./physics-support.ts";
 
-const FIXTURE = "physics_sensor";
+const FIXTURE = PHYSICS_SENSOR;
 const RADIUS = 0.25;
 const ZONE = { bottom: 3, top: 5 } as const;
 const SETTLE_TICKS = 5;

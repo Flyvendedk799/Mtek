@@ -13,9 +13,10 @@
 //    the pose equals the free-fall pose of the number of steps taken, so the pose is a function of the steps and
 //    not of the clock.
 import { expect, test } from "../../support/fixtures.ts";
+import { PHYSICS_DROP } from "../../support/m5-fixtures.ts";
 import { GRAVITY, STEP, TARGET, freeFallHeight, openFixture, runScript, type Action, type AppLike, type DiagnosticLike } from "./physics-support.ts";
 
-const FIXTURE = "physics_drop";
+const FIXTURE = PHYSICS_DROP;
 
 const crateY = (snapshot: { at: Record<string, { y: number }> }): number => snapshot.at["Crate"]?.y ?? Number.NaN;
 

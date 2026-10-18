@@ -13,9 +13,10 @@
 //    keep the capacity they grew to and never shrink, decision 0064 items 13 and 14), a wave of a hundred raises the
 //    plateau once and the later waves, of fifty or a hundred, do not move it again.
 import { expect, test } from "../../support/fixtures.ts";
+import { PHYSICS_WAVES } from "../../support/m5-fixtures.ts";
 import { TARGET, openFixture, runScript, type Action, type AppLike, type DiagnosticLike, type Snapshot } from "./physics-support.ts";
 
-const FIXTURE = "physics_waves";
+const FIXTURE = PHYSICS_WAVES;
 const STEP = 0.016666668;
 
 /** Every live-object counter of the renderer and the physics world: all 0 after `dispose()` (runtime-abi 9.3). */
@@ -55,9 +56,12 @@ test.describe("physics resources return to zero and stay bounded (M5-06)", () =>
         const capture = (options: unknown): boolean => (typeof options === "boolean" ? options : typeof options === "object" && options !== null && (options as { capture?: boolean }).capture === true);
         const key = (target: EventTarget, type: string, listener: unknown, options: unknown): string | undefined => {
           if (listener === null || (typeof listener !== "object" && typeof listener !== "function")) return undefined;
-          return `${String(idOf(ids, target))}:${type}:${String(idOf(listenerIds, listener as object))}:${String(capture(options))}`;
+          return `${String(idOf(ids, target))}:${type}:${String(idOf(listenerIds, listener))}:${String(capture(options))}`;
         };
+        // The originals are called with `this` set explicitly below.
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         const originalAdd = EventTarget.prototype.addEventListener;
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         const originalRemove = EventTarget.prototype.removeEventListener;
         let tracking = false;
         EventTarget.prototype.addEventListener = function (this: EventTarget, type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {

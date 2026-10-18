@@ -28,10 +28,10 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "../../support/fixtures.ts";
-import { M5_FIXTURES_DIR } from "../../support/m5-fixtures.ts";
+import { M5_FIXTURES_DIR, PHYSICS_TUNNEL } from "../../support/m5-fixtures.ts";
 import { STEP, TARGET, openFixture, type AppLike, type DiagnosticLike } from "./physics-support.ts";
 
-const FIXTURE = "physics_tunnel";
+const FIXTURE = PHYSICS_TUNNEL;
 const WALL = 5;
 const THICKNESS = 0.1;
 const RADIUS = 0.05;
