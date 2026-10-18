@@ -10,6 +10,10 @@
  *    (vertex) with a dynamic offset.
  *  - One vertex buffer per vertex attribute, in slot order position, normal, uv: `float32x3` at location
  *    0 (stride 12), `float32x3` at location 1 (stride 12), `float32x2` at location 2 (stride 8).
+ *  - The instanced variant of a pipeline (decision 0059) runs the shader's `instancedVertexEntry` and adds one
+ *    more vertex buffer, step mode `instance`, after the attribute buffers: the model matrix as four `float32x4`
+ *    columns at locations 3 to 6, the normal matrix as four at locations 7 to 10, stride 128. Its cache key is
+ *    the key of the plain pipeline with `instance_matrices` appended to the vertex attribute set.
  *  - Opaque rendering: back faces culled, counter-clockwise front faces, depth test `less` with writes.
  *  - Creation runs inside a validation error scope; a failure becomes `E8051` at the material's
  *    declaration (shader compilation messages were mapped through the span map when the module was
@@ -31,11 +35,22 @@ export const FRONT_FACE: GPUFrontFace = "ccw";
 export const TOPOLOGY: GPUPrimitiveTopology = "triangle-list";
 export const DEPTH_COMPARE: GPUCompareFunction = "less";
 
+/** The name the instance matrices have in the vertex attribute set of an instanced pipeline's key. */
+export const INSTANCE_MATRICES = "instance_matrices";
+/** `shaderLocation` of the first column of the instance model matrix: right after the fixed attributes (0 to 2). */
+export const INSTANCE_MODEL_LOCATION = 3;
+/** `shaderLocation` of the first column of the instance normal matrix. */
+export const INSTANCE_NORMAL_LOCATION = 7;
+/** Bytes per instance: the model matrix, then the normal matrix, 16 `f32` each, column-major. */
+export const INSTANCE_STRIDE = 128;
+/** `f32` per instance. */
+export const INSTANCE_FLOATS = INSTANCE_STRIDE / 4;
+
 /** The parts of the pipeline cache key (`spec/runtime-abi.md` section 8.4), nothing else. */
 export interface PipelineKeyParts {
   readonly shaderHash: string;
-  /** In vertex-buffer slot order. */
-  readonly vertexAttributes: readonly MtekVertexAttribute[];
+  /** In vertex-buffer slot order; `instance_matrices` last for the instanced variant (decision 0059). */
+  readonly vertexAttributes: readonly (MtekVertexAttribute | typeof INSTANCE_MATRICES)[];
   readonly colorFormat: GPUTextureFormat;
   readonly depthFormat: GPUTextureFormat;
   readonly cullMode: GPUCullMode;
@@ -59,6 +74,17 @@ export function vertexBufferLayouts(attributes: readonly MtekVertexAttribute[]):
     const { location, format, stride } = VERTEX_FORMATS[attribute];
     return { arrayStride: stride, stepMode: "vertex", attributes: [{ shaderLocation: location, offset: 0, format }] };
   });
+}
+
+/**
+ * The instance vertex buffer layout: step mode `instance`, the eight `float32x4` columns of the model and
+ * normal matrices at locations 3 to 10 (the locations of `mtek_vs_instanced`, `lowering/standard_stage.rs`).
+ */
+export function instanceBufferLayout(): GPUVertexBufferLayout {
+  const attributes: GPUVertexAttribute[] = [];
+  for (let column = 0; column < 4; column++) attributes.push({ shaderLocation: INSTANCE_MODEL_LOCATION + column, offset: column * 16, format: "float32x4" });
+  for (let column = 0; column < 4; column++) attributes.push({ shaderLocation: INSTANCE_NORMAL_LOCATION + column, offset: 64 + column * 16, format: "float32x4" });
+  return { arrayStride: INSTANCE_STRIDE, stepMode: "instance", attributes };
 }
 
 function uniformEntry(size: number, visibility: number, hasDynamicOffset: boolean): GPUBindGroupLayoutEntry {
@@ -146,17 +172,19 @@ export interface PipelineRequest {
   readonly colorFormat: GPUTextureFormat;
   /** The phase recorded in a failure diagnostic. Default `runtime:mount`. */
   readonly phase?: MtekRuntimePhase;
+  /** The instanced variant (needs the shader's `instancedVertexEntry`). Default: the plain pipeline. */
+  readonly instanced?: boolean;
 }
 
 export type PipelineResult =
   | { readonly ok: true; readonly key: string; readonly pipeline: GPURenderPipeline }
   | { readonly ok: false; readonly diagnostic: MtekDiagnostic };
 
-/** The key of a material's pipeline for a colour format, with the fixed depth format, cull mode and topology. */
-export function materialPipelineKey(material: ResolvedMaterial, colorFormat: GPUTextureFormat): string {
+/** The key of a material's pipeline (the instanced variant when `instanced`) for a colour format, with the fixed depth format, cull mode and topology. */
+export function materialPipelineKey(material: ResolvedMaterial, colorFormat: GPUTextureFormat, instanced = false): string {
   return pipelineKey({
     shaderHash: material.shader.hash,
-    vertexAttributes: material.shader.vertexAttributes,
+    vertexAttributes: instanced ? [...material.shader.vertexAttributes, INSTANCE_MATRICES] : material.shader.vertexAttributes,
     colorFormat,
     depthFormat: DEPTH_FORMAT,
     cullMode: CULL_MODE,
@@ -167,10 +195,18 @@ export function materialPipelineKey(material: ResolvedMaterial, colorFormat: GPU
 /** The render pipeline descriptor of a material (exported for tests). */
 export function pipelineDescriptor(plan: BindingPlan, request: PipelineRequest): GPURenderPipelineDescriptor {
   const { material, module, colorFormat } = request;
+  const buffers = vertexBufferLayouts(material.shader.vertexAttributes);
+  let entryPoint = material.shader.vertexEntry;
+  if (request.instanced === true) {
+    const instancedEntry = material.shader.instancedVertexEntry;
+    if (instancedEntry === undefined) throw new Error(`internal error: the shader of '${material.id}' has no instanced vertex entry`);
+    entryPoint = instancedEntry;
+    buffers.push(instanceBufferLayout());
+  }
   return {
-    label: `mtek pipeline ${material.id}`,
+    label: request.instanced === true ? `mtek pipeline ${material.id} (instanced)` : `mtek pipeline ${material.id}`,
     layout: plan.pipelineLayout(material.layout, material.resources),
-    vertex: { module, entryPoint: material.shader.vertexEntry, buffers: vertexBufferLayouts(material.shader.vertexAttributes) },
+    vertex: { module, entryPoint, buffers },
     fragment: { module, entryPoint: material.shader.fragmentEntry, targets: [{ format: colorFormat }] },
     primitive: { topology: TOPOLOGY, cullMode: CULL_MODE, frontFace: FRONT_FACE },
     depthStencil: { format: DEPTH_FORMAT, depthCompare: DEPTH_COMPARE, depthWriteEnabled: true },
@@ -215,7 +251,7 @@ export class PipelineCache {
 
   /** Returns the cached pipeline of the request's key, or creates it inside a validation error scope. */
   async obtain(request: PipelineRequest): Promise<PipelineResult> {
-    const key = materialPipelineKey(request.material, request.colorFormat);
+    const key = materialPipelineKey(request.material, request.colorFormat, request.instanced === true);
     const cached = this.pipelines.get(key);
     if (cached !== undefined) return { ok: true, key, pipeline: cached };
 
@@ -246,7 +282,7 @@ export class PipelineCache {
       phase: request.phase ?? "runtime:mount",
       message: `The render pipeline for material '${request.material.id}' could not be created: ${message}`,
       source: spanId === undefined ? null : resolveSpan(this.manifest, spanId),
-      notes: [`pipeline key: ${materialPipelineKey(request.material, request.colorFormat)}`],
+      notes: [`pipeline key: ${materialPipelineKey(request.material, request.colorFormat, request.instanced === true)}`],
     });
   }
 }

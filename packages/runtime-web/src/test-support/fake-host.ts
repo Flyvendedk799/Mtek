@@ -129,6 +129,9 @@ export interface FakeDrawRecord {
   readonly indexBuffer: FakeBuffer;
   readonly indexFormat: string;
   readonly indexCount: number;
+  /** `instanceCount` of the draw: more than 1 for an instanced draw. */
+  readonly instanceCount: number;
+  readonly firstInstance: number;
 }
 
 export interface FakeRenderPassRecord {
@@ -230,8 +233,9 @@ export class FakeRenderPassEncoder {
     this.index = { buffer, format };
   }
 
-  drawIndexed(indexCount: number): void {
+  drawIndexed(indexCount: number, instanceCount = 1, firstIndex = 0, baseVertex = 0, firstInstance = 0): void {
     this.recording("drawIndexed");
+    if (firstIndex !== 0 || baseVertex !== 0) throw new Error("drawIndexed: the fake supports firstIndex and baseVertex 0 only");
     const pipeline = this.pipeline;
     if (pipeline === null) throw new Error("drawIndexed: no pipeline is set");
     const groupLayouts = pipelineGroupLayouts(pipeline);
@@ -261,6 +265,10 @@ export class FakeRenderPassEncoder {
       if (buffer.size % layout.arrayStride !== 0) {
         throw new Error(`drawIndexed: vertex buffer slot ${String(slot)} is not a whole number of ${String(layout.arrayStride)}-byte vertices`);
       }
+      // An instance-step buffer is read at firstInstance .. firstInstance + instanceCount - 1.
+      if (layout.stepMode === "instance" && (firstInstance + instanceCount) * layout.arrayStride > buffer.size) {
+        throw new Error(`drawIndexed: instances ${String(firstInstance)}..${String(firstInstance + instanceCount - 1)} exceed the instance buffer of slot ${String(slot)}`);
+      }
       return buffer;
     });
     if (this.index === null) throw new Error("drawIndexed: no index buffer is set");
@@ -274,6 +282,8 @@ export class FakeRenderPassEncoder {
       indexBuffer: this.index.buffer,
       indexFormat: this.index.format,
       indexCount,
+      instanceCount,
+      firstInstance,
     });
   }
 

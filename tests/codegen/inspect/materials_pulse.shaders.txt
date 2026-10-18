@@ -1,12 +1,12 @@
 shaders of scene src/main.mtek::Demo (target profile webgpu-core-2026)
 
 shader of material src/main.mtek::Pulse (declared at src/main.mtek:8:1-15:2)
-  file shaders/31a39735d6cdd995.wgsl (sha256 31a39735d6cdd995a082186a2a254cd14506d00086e8737e48334185b3803e0c)
-  entry points mtek_vs (vertex), mtek_fs (fragment)
+  file shaders/745dc8401b0e18fd.wgsl (sha256 745dc8401b0e18fdf82014748f0eac37709fee1f89c464fe3a64861bf506ad28)
+  entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position
   surface inputs none
   parameter block material:src/main.mtek::Pulse (group 1 binding 0)
-  span map 72 entries over 55 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 99 entries over 61 lines; a line is followed by `// <source> <symbol>` where its origin changes
    1 | struct MtekLight {  // src/main.mtek:8:1-15:2 src/main.mtek::Pulse
    2 |     color: vec3<f32>,
    3 |     kind: u32,
@@ -57,8 +57,14 @@ shader of material src/main.mtek::Pulse (declared at src/main.mtek:8:1-15:2)
   48 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world);
   49 | }
   50 |
-  51 | @fragment
-  52 | fn mtek_fs() -> @location(0) vec4<f32> {
-  53 |     let mtek_color = mtek_fragment();
-  54 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  51 | @vertex
+  52 | fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+  53 |     let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
+  54 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world);
   55 | }
+  56 |
+  57 | @fragment
+  58 | fn mtek_fs() -> @location(0) vec4<f32> {
+  59 |     let mtek_color = mtek_fragment();
+  60 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  61 | }

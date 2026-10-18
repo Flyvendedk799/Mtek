@@ -1,12 +1,12 @@
 shaders of scene src/main.mtek::Gallery (target profile webgpu-core-2026)
 
 shader of material src/main.mtek::Textured (declared at src/main.mtek:4:1-17:2)
-  file shaders/bb7709f3102e4341.wgsl (sha256 bb7709f3102e4341d40392459699d96690c7a5dbac4b637c328ddead3e5e1751)
-  entry points mtek_vs (vertex), mtek_fs (fragment)
+  file shaders/10e56e35c599e7c4.wgsl (sha256 10e56e35c599e7c4bd315bf8920380552df6460091a1886c2f93b93668634aa2)
+  entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position, uv
   surface inputs uv
   parameter block material:src/main.mtek::Textured (group 1 binding 0)
-  span map 98 entries over 63 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 127 entries over 69 lines; a line is followed by `// <source> <symbol>` where its origin changes
    1 | struct MtekLight {  // src/main.mtek:4:1-17:2 src/main.mtek::Textured
    2 |     color: vec3<f32>,
    3 |     kind: u32,
@@ -64,9 +64,15 @@ shader of material src/main.mtek::Textured (declared at src/main.mtek:4:1-17:2)
   55 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_uv);
   56 | }
   57 |
-  58 | @fragment
-  59 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
-  60 |     let mtek_surface = MtekSurfaceInput(mtek_in.uv);
-  61 |     let mtek_color = mtek_fragment(mtek_surface);
-  62 |     return vec4<f32>(mtek_color.xyz, 1.0);
-  63 | }
+  58 | @vertex
+  59 | fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+  60 |     let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
+  61 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_uv);
+  62 | }
+  63 |
+  64 | @fragment
+  65 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
+  66 |     let mtek_surface = MtekSurfaceInput(mtek_in.uv);
+  67 |     let mtek_color = mtek_fragment(mtek_surface);
+  68 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  69 | }

@@ -53,7 +53,7 @@ function harness(materials: readonly ResolvedMaterial[], writerLayouts: readonly
   const device = new FakeDevice();
   const registry = new ResourceRegistry(asGpu<RegistryDevice>(device));
   const plan = new BindingPlan(registry, FRAME, OBJECT);
-  const instances: ResolvedInstance[] = materials.map((m, index) => ({ index, material: m, entity: index, resources: [] }));
+  const instances: ResolvedInstance[] = materials.map((m, index) => ({ index, material: m, entity: index, shareable: false, resources: [] }));
   const structure = { instances } as unknown as SceneStructure;
   const calls: WriteCall[] = [];
   const store = new MaterialStore(asGpu<GPUDevice>(device), registry, plan, structure, recordingWriters(writerLayouts, calls));

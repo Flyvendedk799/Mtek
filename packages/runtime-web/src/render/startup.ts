@@ -4,10 +4,12 @@
  *
  *  1. The binding plan and the material arenas (one slot per material instance).
  *  2. The world with its records at the registry defaults; `scenes.<Entry>.init(ctx)` sets every value,
- *     material params through the generated writers into the arenas; transforms are propagated.
+ *     material params through the generated writers into the arenas; transforms are propagated. Identical
+ *     `shareable` instances then share one parameter block (`MaterialStore.shareIdentical`, decision 0059).
  *  3. The meshes are generated and uploaded.
- *  4. Every startup pipeline (one per material, for the surface's colour format) is created; a failure
- *     is `E8051` and fails the mount.
+ *  4. Every startup pipeline (one per material, for the surface's colour format, and the instanced
+ *     variant of each material that has entities to instance) is created; a failure is `E8051` and
+ *     fails the mount.
  *  5. The renderer allocates the frame and object blocks.
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
@@ -19,7 +21,8 @@ import { Bindings } from "../scene/bindings.js";
 import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
-import { BindingPlan, PipelineCache, type PipelineResult } from "./pipelines.js";
+import { instancingCandidates } from "./instancing.js";
+import { BindingPlan, PipelineCache, materialPipelineKey, type PipelineResult } from "./pipelines.js";
 import type { TextureOverrides } from "./resources.js";
 import { Renderer, type MaterialPipeline, type RenderSurface } from "./renderer.js";
 
@@ -53,6 +56,8 @@ export interface SceneStartupOptions {
   readonly recover?: { readonly world: World; readonly bindings: Bindings };
   /** `options.test.textures`: replacement pixels for the built-in textures (`spec/runtime-abi.md` section 10.2). */
   readonly textures?: TextureOverrides;
+  /** Group compatible draws into instanced draws (default true; `options.test.disableInstancing` makes it false). */
+  readonly instancing?: boolean;
 }
 
 /** The running scene: its CPU world, its GPU state and its renderer. */
@@ -101,20 +106,34 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     ({ world, bindings } = recover);
     world.rebindParams(materials);
   }
+  // Every instance holds its initial values: identical immutable ones now share a parameter block.
+  materials.shareIdentical();
 
   const meshes = new MeshStore(registry, device.queue);
   meshes.upload(structure.meshes);
 
   const pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest);
-  const phase = recover === undefined ? undefined : "runtime:device";
+  const phase: MtekRuntimePhase | undefined = recover === undefined ? undefined : "runtime:device";
+  // The materials with entities that can share an instanced draw also get the instanced variant of their pipeline.
+  const instanced =
+    options.instancing === false
+      ? new Set<string>()
+      : instancingCandidates(
+          structure,
+          (instance) => materials.blockOf(instance),
+          (material) => materialPipelineKey(material, surface.colorFormat),
+        ).materials;
   const results = await Promise.all(
-    structure.materials.map((material) => {
+    structure.materials.map(async (material): Promise<PipelineResult & { readonly instancedPipeline?: GPURenderPipeline }> => {
       const module = modules.get(material.shader.hash);
       if (module === undefined) {
-        if (recover !== undefined) return Promise.resolve(missingModule(material, phase));
+        if (recover !== undefined) return missingModule(material, phase);
         throw new Error(`internal error: no shader module for '${material.id}'`);
       }
-      return pipelines.obtain({ material, module, colorFormat: surface.colorFormat, ...(phase === undefined ? {} : { phase }) });
+      const request = { material, module, colorFormat: surface.colorFormat, ...(phase === undefined ? {} : { phase }) };
+      const [plain, variant] = await Promise.all([pipelines.obtain(request), instanced.has(material.id) ? pipelines.obtain({ ...request, instanced: true }) : undefined]);
+      if (!plain.ok || variant === undefined) return plain;
+      return variant.ok ? { ...plain, instancedPipeline: variant.pipeline } : variant;
     }),
   );
   const diagnostics: MtekDiagnostic[] = [];
@@ -123,7 +142,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   results.forEach((result, index) => {
     const material = structure.materials[index];
     if (material === undefined) return;
-    if (result.ok) byMaterial.set(material.id, { key: result.key, pipeline: result.pipeline });
+    if (result.ok) byMaterial.set(material.id, { key: result.key, pipeline: result.pipeline, ...(result.instancedPipeline === undefined ? {} : { instanced: result.instancedPipeline }) });
     else if (recover === undefined) diagnostics.push(result.diagnostic);
     else failed.push({ id: material.id, diagnostic: result.diagnostic });
   });
@@ -134,7 +153,21 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   }
 
   world.phase = "runtime:update";
-  const renderer = new Renderer({ device, registry, surface, manifest, structure, world, writers: program.writers, plan, materials, meshes, pipelines: byMaterial, report });
+  const renderer = new Renderer({
+    device,
+    registry,
+    surface,
+    manifest,
+    structure,
+    world,
+    writers: program.writers,
+    plan,
+    materials,
+    meshes,
+    pipelines: byMaterial,
+    report,
+    ...(options.instancing === undefined ? {} : { instancing: options.instancing }),
+  });
   for (const { id, diagnostic } of failed) renderer.failMaterial(id, diagnostic);
   return { ok: true, scene: { world, bindings, materials, meshes, plan, pipelines, renderer } };
 }

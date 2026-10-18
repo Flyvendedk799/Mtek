@@ -150,6 +150,8 @@ export interface MtekShader {
   readonly map: string;
   readonly material: SymbolId;
   readonly vertexEntry: string;
+  /** The vertex entry that reads the model and normal matrices from an instance buffer (decision 0059); absent: no instancing. */
+  readonly instancedVertexEntry?: string;
   readonly fragmentEntry: string;
   readonly vertexAttributes: readonly MtekVertexAttribute[];
   readonly surfaceInputs: readonly MtekSurfaceInput[];

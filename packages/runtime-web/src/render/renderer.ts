@@ -10,14 +10,19 @@
  *     written through the generated `builtin:object` writers into its slot of the object arena.
  *  3. The frame, object and material arenas upload their dirty slots (`writeIfChanged` keeps unchanged
  *     blocks clean, so a static scene uploads nothing after its first frame).
- *  4. The draw list (visible entities with a mesh, sorted by (pipeline key, material instance, mesh),
+ *  4. The draw list (visible entities with a mesh, sorted by (pipeline key, parameter block, mesh),
  *     ties by instance order) is frustum-culled: an entity whose world-space bounding sphere lies
  *     outside one of the six planes of `view_proj` is not drawn (section 8.4, decision 0055). Its
  *     object block is still written, so it is correct when it comes back into view.
- *  5. One render pass clears to the scene clear colour and draws the remaining entities. Group 0 is
- *     bound once, group 1 when the material instance changes, vertex and index buffers when the mesh
- *     changes, group 2 per draw with the object's dynamic offset.
- *  6. The command buffer is submitted (by the surface).
+ *  5. The remaining draws are grouped (`instancing.ts`, decision 0059): a run of two or more with the
+ *     same pipeline key, parameter block and mesh becomes one instanced draw, whose per-instance model
+ *     and normal matrices are copied into the instance buffer (only the bytes that changed are uploaded).
+ *     Every other draw stays individual.
+ *  6. One render pass clears to the scene clear colour and issues the draw calls. Group 0 is bound once,
+ *     group 1 when the parameter block changes, vertex and index buffers when the mesh changes, group 2
+ *     per individual draw with the object's dynamic offset; an instanced draw uses the instanced pipeline
+ *     and the instance buffer instead of group 2.
+ *  7. The command buffer is submitted (by the surface).
  *
  * The runtime never computes an offset inside `MtekFrame` or `MtekObject`: only the generated writers
  * know the layout.
@@ -33,9 +38,10 @@ import type { SceneStructure } from "../scene/structure.js";
 import type { World } from "../scene/world.js";
 import { emptyPackedLights, packLights, type LightSource, type PackedLight } from "./lights.js";
 import { extractFrustumPlanes, sphereIntersectsFrustum, worldBoundingSphere, type WorldSphere } from "./frustum.js";
+import { batchDraws, instancingCandidates, type Batch } from "./instancing.js";
 import type { MaterialStore } from "./materials.js";
 import type { GpuMesh, MeshStore } from "./meshes.js";
-import type { BindingPlan } from "./pipelines.js";
+import { INSTANCE_FLOATS, INSTANCE_STRIDE, type BindingPlan } from "./pipelines.js";
 
 /** What the renderer needs of the drawing surface (`host/surface.ts`). */
 export interface RenderSurface {
@@ -48,12 +54,14 @@ export interface RenderSurface {
 export interface MaterialPipeline {
   readonly key: string;
   readonly pipeline: GPURenderPipeline;
+  /** The instanced variant (decision 0059); only materials that can be part of an instanced draw have one. */
+  readonly instanced?: GPURenderPipeline;
 }
 
 /** The order of the draw list (`spec/runtime-abi.md` section 8.4). */
 export interface DrawSortKey {
   readonly pipelineKey: string;
-  /** Material instance index. */
+  /** The parameter block (`MaterialStore.blockOf`): the lowest material instance index that shares it. */
   readonly instance: number;
   /** Mesh upload order. */
   readonly mesh: number;
@@ -70,6 +78,8 @@ export function compareDraws(a: DrawSortKey, b: DrawSortKey): number {
 /** One draw of the draw list. */
 export interface DrawItem extends DrawSortKey {
   readonly pipeline: GPURenderPipeline;
+  /** The pipeline of an instanced draw of this draw's group; `undefined` when it can never be instanced. */
+  readonly instancedPipeline: GPURenderPipeline | undefined;
   readonly attributes: readonly MtekVertexAttribute[];
   readonly gpuMesh: GpuMesh;
   readonly objectSlot: number;
@@ -89,7 +99,13 @@ export interface RendererOptions {
   /** By material id. */
   readonly pipelines: ReadonlyMap<string, MaterialPipeline>;
   readonly report: (diagnostic: MtekDiagnostic) => void;
+  /** Group compatible draws into instanced draws (decision 0059). Default true; `test.disableInstancing` turns it off. */
+  readonly instancing?: boolean;
 }
+
+// WebGPU buffer usage flags (constants of the standard; the globals do not exist outside a browser).
+const BUFFER_USAGE_COPY_DST = 0x08;
+const BUFFER_USAGE_VERTEX = 0x20;
 
 function fieldWriter(writers: LayoutWriters, name: string, layoutId: string): BlockWriter {
   const writer = writers.fields.get(name);
@@ -118,9 +134,12 @@ export class Renderer {
   private lastView: Mat4 = identity();
   private draws: readonly DrawItem[] = [];
   private drawsVersion = -1;
+  private drawsBlockVersion = -1;
   private drawCallsLastFrame = 0;
+  private instancedLastFrame = 0;
   private culledLastFrame = 0;
   private drawCallsTotal = 0;
+  private instancedTotal = 0;
   private culledTotal = 0;
   /** The draws that survived culling this frame (reused between frames). */
   private readonly drawn: DrawItem[] = [];
@@ -130,6 +149,15 @@ export class Renderer {
   private readonly sphereScales: Float64Array;
   private readonly sphere: WorldSphere = { x: 0, y: 0, z: 0, radius: 0 };
   private cullingEnabled = true;
+  /** The instance vertex buffer (`INSTANCE_STRIDE` bytes per record); absent when no draw can ever be instanced. */
+  private readonly instanceBuffer: GPUBuffer | undefined;
+  /** Per static entity index: its model matrix, then its normal matrix (`INSTANCE_FLOATS` f32), refreshed with its object block. */
+  private readonly entityMatrices: Float32Array;
+  /** The records of the instanced draws of this frame, and what the GPU buffer holds (to upload only what changed). */
+  private readonly instanceStaging: Float32Array;
+  private readonly instanceMirror: Float32Array;
+  /** The draw calls of this frame (reused between frames). */
+  private readonly batches: Batch[] = [];
   /** Materials that failed after mount (`failMaterial`): never drawn. */
   private readonly failedMaterials = new Set<string>();
 
@@ -166,6 +194,22 @@ export class Renderer {
     for (const entity of drawable) this.objectSlots[entity.index] = this.objectArena.allocate();
     this.sphereCentres = new Float64Array(structure.entities.length * 3);
     this.sphereScales = new Float64Array(structure.entities.length);
+
+    // The instance buffer is created here, with the other GPU objects of the scene (so device recovery
+    // rebuilds it): as large as the entities that could ever be instanced, never grown.
+    const capacity =
+      options.instancing === false
+        ? 0
+        : instancingCandidates(
+            structure,
+            (instance) => options.materials.blockOf(instance),
+            (material) => options.pipelines.get(material.id)?.key ?? "",
+          ).capacity;
+    this.instanceBuffer =
+      capacity === 0 ? undefined : registry.createBuffer({ label: "mtek instance matrices", size: capacity * INSTANCE_STRIDE, usage: BUFFER_USAGE_VERTEX | BUFFER_USAGE_COPY_DST });
+    this.entityMatrices = new Float32Array(capacity === 0 ? 0 : structure.entities.length * INSTANCE_FLOATS);
+    this.instanceStaging = new Float32Array(capacity * INSTANCE_FLOATS);
+    this.instanceMirror = new Float32Array(capacity * INSTANCE_FLOATS);
   }
 
   /** Draw calls encoded by the last rendered frame. */
@@ -176,6 +220,16 @@ export class Renderer {
   /** Drawable entities (visible, with a mesh) outside the frustum in the last rendered frame; 0 when no frame was drawn. */
   get culledObjects(): number {
     return this.culledLastFrame;
+  }
+
+  /** Instanced draws (draw calls that draw two or more entities) encoded by the last rendered frame; 0 when no frame was drawn. */
+  get instancedDraws(): number {
+    return this.instancedLastFrame;
+  }
+
+  /** Instanced draws encoded since the scene started. */
+  get instancedDrawsCumulative(): number {
+    return this.instancedTotal;
   }
 
   /** Draw calls encoded since the scene started. */
@@ -207,6 +261,7 @@ export class Renderer {
   dispose(): void {
     this.frameArena.dispose();
     this.objectArena.dispose();
+    if (this.instanceBuffer !== undefined) this.options.registry.release(this.instanceBuffer);
   }
 
   failMaterial(materialId: string, diagnostic: MtekDiagnostic): void {
@@ -218,8 +273,8 @@ export class Renderer {
 
   /** The current draw list (rebuilt when visibility or the set of failed materials changed). */
   drawList(): readonly DrawItem[] {
-    const { world, structure, pipelines, meshes } = this.options;
-    if (this.drawsVersion === world.visibilityVersion) return this.draws;
+    const { world, structure, pipelines, meshes, materials } = this.options;
+    if (this.drawsVersion === world.visibilityVersion && this.drawsBlockVersion === materials.blockVersion) return this.draws;
     const items: DrawItem[] = [];
     for (const entity of structure.entities) {
       const record = world.entities[entity.index];
@@ -231,10 +286,11 @@ export class Renderer {
       const gpuMesh = meshes.get(entity.mesh.id);
       items.push({
         pipelineKey: pipeline.key,
-        instance: entity.instance.index,
+        instance: materials.blockOf(entity.instance.index),
         mesh: gpuMesh.order,
         entity: entity.index,
         pipeline: pipeline.pipeline,
+        instancedPipeline: pipeline.instanced,
         attributes: entity.instance.material.shader.vertexAttributes,
         gpuMesh,
         objectSlot,
@@ -242,6 +298,7 @@ export class Renderer {
     }
     this.draws = items.sort(compareDraws);
     this.drawsVersion = world.visibilityVersion;
+    this.drawsBlockVersion = materials.blockVersion;
     return this.draws;
   }
 
@@ -252,6 +309,7 @@ export class Renderer {
     // A zero-sized target skips the frame; the surface counts the skip.
     if (!surface.renderable) {
       this.drawCallsLastFrame = 0;
+      this.instancedLastFrame = 0;
       this.culledLastFrame = 0;
       return surface.render(clearColor);
     }
@@ -264,12 +322,15 @@ export class Renderer {
 
     const listed = this.drawList();
     const draws = this.cull(listed, viewProj);
+    const instanced = this.groupDraws(draws);
     const rendered = surface.render(clearColor, (pass) => {
       this.encode(pass, draws);
     });
-    this.drawCallsLastFrame = rendered ? draws.length : 0;
+    this.drawCallsLastFrame = rendered ? this.batches.length : 0;
+    this.instancedLastFrame = rendered ? instanced : 0;
     this.culledLastFrame = rendered ? listed.length - draws.length : 0;
     this.drawCallsTotal += this.drawCallsLastFrame;
+    this.instancedTotal += this.instancedLastFrame;
     this.culledTotal += this.culledLastFrame;
     return rendered;
   }
@@ -286,6 +347,41 @@ export class Renderer {
       if (sphereIntersectsFrustum(planes, sphereCentres[e * 3] ?? 0, sphereCentres[e * 3 + 1] ?? 0, sphereCentres[e * 3 + 2] ?? 0, radius)) drawn.push(draw);
     }
     return drawn;
+  }
+
+  /**
+   * Splits the culled draws into this frame's draw calls (`this.batches`) and, for the instanced ones, copies the
+   * matrices of their entities into the instance buffer in draw order. Returns the number of instanced draws.
+   */
+  private groupDraws(draws: readonly DrawItem[]): number {
+    const { instanceBuffer } = this;
+    const instanced = batchDraws(draws, (draw) => instanceBuffer !== undefined && draw.instancedPipeline !== undefined, this.batches);
+    if (instanceBuffer === undefined) return 0;
+    const { entityMatrices, instanceStaging } = this;
+    let records = 0;
+    for (const batch of this.batches) {
+      if (batch.firstInstance < 0) continue;
+      for (let k = 0; k < batch.count; k++) {
+        const entity = draws[batch.start + k]?.entity ?? 0;
+        instanceStaging.set(entityMatrices.subarray(entity * INSTANCE_FLOATS, (entity + 1) * INSTANCE_FLOATS), (batch.firstInstance + k) * INSTANCE_FLOATS);
+      }
+      records = batch.firstInstance + batch.count;
+    }
+    this.uploadInstances(instanceBuffer, records * INSTANCE_FLOATS);
+    return instanced;
+  }
+
+  /** Uploads the changed part of the first `floats` staged values: from the first to the last word that differs from the GPU copy. */
+  private uploadInstances(buffer: GPUBuffer, floats: number): void {
+    const staged = new Uint32Array(this.instanceStaging.buffer, 0, floats);
+    const held = new Uint32Array(this.instanceMirror.buffer, 0, floats);
+    let first = 0;
+    while (first < floats && staged[first] === held[first]) first += 1;
+    if (first === floats) return;
+    let last = floats - 1;
+    while (staged[last] === held[last]) last -= 1;
+    held.set(staged.subarray(first, last + 1), first);
+    this.options.registry.writeBuffer(this.options.device.queue, buffer, first * 4, this.instanceMirror.buffer as ArrayBuffer, first * 4, (last + 1 - first) * 4);
   }
 
   /** `P * V` of the active camera for the target's aspect ratio. */
@@ -346,6 +442,10 @@ export class Renderer {
       this.sphereCentres[index * 3 + 2] = this.sphere.z;
       this.sphereScales[index] = this.sphere.radius;
       const normal = normalMatrix(model);
+      if (this.instanceBuffer !== undefined) {
+        this.entityMatrices.set(model, index * INSTANCE_FLOATS);
+        this.entityMatrices.set(normal, index * INSTANCE_FLOATS + 16);
+      }
       this.objectArena.writeIfChanged(slot, (memory, base) => {
         this.writeModel(memory, base, model);
         this.writeNormalMatrix(memory, base, normal);
@@ -358,15 +458,22 @@ export class Renderer {
     const { plan, materials } = this.options;
     pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
     const objectGroup = this.objectArena.bindGroupDynamic(plan.object);
+    let objectBound = false;
     let pipeline: GPURenderPipeline | undefined;
     let instance = -1;
     let mesh: GpuMesh | undefined;
-    for (const draw of draws) {
-      if (draw.pipeline !== pipeline) {
-        pass.setPipeline(draw.pipeline);
-        pipeline = draw.pipeline;
-        // Another pipeline may read other attributes: rebind the mesh's buffers.
+    for (const batch of this.batches) {
+      const draw = draws[batch.start];
+      if (draw === undefined) continue;
+      const instanced = batch.firstInstance >= 0;
+      const wanted = instanced ? draw.instancedPipeline : draw.pipeline;
+      if (wanted === undefined) throw new Error("internal error: an instanced draw without an instanced pipeline");
+      if (wanted !== pipeline) {
+        pass.setPipeline(wanted);
+        pipeline = wanted;
+        // Another pipeline may read other attributes: rebind the mesh's buffers (and the instance buffer, whose slot follows them).
         mesh = undefined;
+        if (instanced && this.instanceBuffer !== undefined) pass.setVertexBuffer(draw.attributes.length, this.instanceBuffer);
       }
       if (draw.instance !== instance) {
         pass.setBindGroup(1, materials.bindGroup(draw.instance));
@@ -379,8 +486,18 @@ export class Renderer {
         pass.setIndexBuffer(draw.gpuMesh.indexBuffer, draw.gpuMesh.indexFormat);
         mesh = draw.gpuMesh;
       }
-      pass.setBindGroup(2, objectGroup, [this.objectArena.slotOffset(draw.objectSlot)]);
-      pass.drawIndexed(draw.gpuMesh.indexCount);
+      if (instanced) {
+        // The instanced entry point does not read group 2, but the pipeline layout has it: bind it once, at any slot.
+        if (!objectBound) {
+          pass.setBindGroup(2, objectGroup, [0]);
+          objectBound = true;
+        }
+        pass.drawIndexed(draw.gpuMesh.indexCount, batch.count, 0, 0, batch.firstInstance);
+      } else {
+        pass.setBindGroup(2, objectGroup, [this.objectArena.slotOffset(draw.objectSlot)]);
+        objectBound = true;
+        pass.drawIndexed(draw.gpuMesh.indexCount);
+      }
     }
   }
 }

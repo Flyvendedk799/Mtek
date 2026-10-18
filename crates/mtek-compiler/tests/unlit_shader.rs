@@ -145,12 +145,17 @@ fn unlit_validates_with_naga_and_has_the_fixed_interface() {
         entries,
         [
             ("mtek_vs", naga::ShaderStage::Vertex),
+            ("mtek_vs_instanced", naga::ShaderStage::Vertex),
             ("mtek_fs", naga::ShaderStage::Fragment)
         ]
     );
     assert_eq!(
-        (artifact.vertex_entry, artifact.fragment_entry),
-        ("mtek_vs", "mtek_fs")
+        (
+            artifact.vertex_entry,
+            artifact.instanced_vertex_entry,
+            artifact.fragment_entry
+        ),
+        ("mtek_vs", "mtek_vs_instanced", "mtek_fs")
     );
     // Unlit reads no SurfaceInput field: position is the only vertex attribute.
     assert_eq!(artifact.vertex_attributes, [VertexAttribute::Position]);

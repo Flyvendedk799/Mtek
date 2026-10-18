@@ -120,6 +120,13 @@ fn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3
     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_position, mtek_world_normal);
 }
 
+@vertex
+fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+    let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
+    let mtek_world_normal = normalize((mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * vec4<f32>(mtek_normal, 0.0)).xyz);
+    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_position, mtek_world_normal);
+}
+
 @fragment
 fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
     let mtek_surface = MtekSurfaceInput(mtek_in.local_position, normalize(mtek_in.world_normal));

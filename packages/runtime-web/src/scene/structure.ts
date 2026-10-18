@@ -45,6 +45,11 @@ export interface ResolvedInstance {
   readonly index: number;
   readonly material: ResolvedMaterial;
   readonly entity: number;
+  /**
+   * Every param is class `initial` or `resource` (the manifest's `shareable`): nothing writes the instance after
+   * `init`, so it may share its parameter slot with a byte-identical instance (`spec/gpu-layout.md` section 8.2).
+   */
+  readonly shareable: boolean;
   /** In the order of `material.resources`. */
   readonly resources: readonly ResolvedInstanceResource[];
 }
@@ -258,7 +263,7 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
       }
       resources.push({ name: resource.name, kind: resource.kind, binding: resource.binding, value: param.value.name });
     }
-    instances[index] = { index, material, entity: instance.entity, resources };
+    instances[index] = { index, material, entity: instance.entity, shareable: instance.shareable, resources };
   });
 
   const entities: ResolvedEntity[] = [];

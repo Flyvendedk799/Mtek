@@ -187,6 +187,7 @@ pub fn package(
             map: artifact.map_path(),
             material: artifact.material.clone(),
             vertex_entry: artifact.vertex_entry.to_owned(),
+            instanced_vertex_entry: Some(artifact.instanced_vertex_entry.to_owned()),
             fragment_entry: artifact.fragment_entry.to_owned(),
             vertex_attributes: artifact
                 .vertex_attributes
