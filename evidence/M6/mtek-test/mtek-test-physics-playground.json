@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "command": "mtek test",
+  "project": "physics-playground",
+  "status": "pass",
+  "exitCode": 0,
+  "allowNotRun": false,
+  "error": null,
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "notRun": 0
+  },
+  "build": {
+    "ok": true,
+    "mode": "test",
+    "buildId": "584f1126df7e0478a75562fd85e0bd756121dabadb20b7c79cadf4d4f37e1445",
+    "errors": 0,
+    "warnings": 0,
+    "diagnostics": []
+  },
+  "environment": {
+    "browser": {
+      "name": "chromium",
+      "channel": "chromium",
+      "version": "153.0.8010.12",
+      "headless": true,
+      "launchArgs": [
+        "--enable-unsafe-webgpu",
+        "--ignore-gpu-blocklist",
+        "--enable-webgpu-developer-features"
+      ]
+    },
+    "gpu": {
+      "available": true,
+      "reason": null,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      }
+    }
+  },
+  "fixtures": [
+    {
+      "file": "tests/crates-and-sensor.test.toml",
+      "name": "C spawns seeded crates; the sensor counts the ones that land in the zone and the ones that miss the floor are destroyed",
+      "status": "pass",
+      "reason": null,
+      "failure": null,
+      "seed": 166,
+      "stepsRun": 57,
+      "stepsTotal": 57,
+      "durationMs": 543
+    },
+    {
+      "file": "tests/space-lifts-first.test.toml",
+      "name": "Space lifts First by the height its impulse derives and it comes back to rest",
+      "status": "pass",
+      "reason": null,
+      "failure": null,
+      "seed": 0,
+      "stepsRun": 11,
+      "stepsTotal": 11,
+      "durationMs": 330
+    }
+  ]
+}

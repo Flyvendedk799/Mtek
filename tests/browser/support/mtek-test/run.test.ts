@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runPlan, type RunnerDeps } from "./run.ts";
+import { reasonOf, runPlan, type RunnerDeps } from "./run.ts";
 import { SCHEMA_VERSION, type Plan } from "./plan.ts";
 
 const plan: Plan = {
@@ -90,6 +90,16 @@ function fakes(options: {
   return { deps, closed, served };
 }
 
+describe("reasonOf", () => {
+  it("keeps the first line and hides file paths of either kind", () => {
+    expect(reasonOf(new Error("Cannot find package '@playwright/test' imported from C:\\Users\\me\\x\\main.ts\nstack"))).toBe(
+      "Cannot find package '@playwright/test' imported from <path>",
+    );
+    expect(reasonOf(new Error("failed at /usr/lib/chromium/chrome (exit 1)"))).toBe("failed at <path> (exit 1)");
+    expect(reasonOf("plain text, 3/4 done")).toBe("plain text, 3/4 done");
+  });
+});
+
 describe("runPlan without a working browser setup", () => {
   it("reports every fixture NOT-RUN when Playwright is not installed", async () => {
     const { deps, served } = fakes({ load: () => Promise.reject(new Error("Cannot find package '@playwright/test'")) });
@@ -107,11 +117,12 @@ describe("runPlan without a working browser setup", () => {
 
   it("reports every fixture NOT-RUN when Chromium cannot be launched", async () => {
     const { deps, served } = fakes({
-      launch: () => Promise.reject(new Error("Executable doesn't exist at /x\nmore lines")),
+      launch: () => Promise.reject(new Error("Executable doesn't exist at /home/u/.cache/chrome\nmore lines")),
     });
     const report = await runPlan(plan, deps);
     expect(report.fixtures.every((f) => f.status === "not-run")).toBe(true);
-    expect(report.fixtures[0]?.reason).toContain("Chromium could not be launched (Executable doesn't exist at /x)");
+    // The first line only, and no path of the machine in it.
+    expect(report.fixtures[0]?.reason).toContain("Chromium could not be launched (Executable doesn't exist at <path>)");
     expect(report.fixtures[0]?.reason).toContain("playwright install chromium");
     expect(served).toEqual([]);
   });

@@ -12,6 +12,8 @@
 
 // Test-only code: helper functions outside `#[test]` functions may unwrap and panic.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+// Without the embedded runtime only the tests that need no build run; the helpers of the others are then unused.
+#![cfg_attr(not(mtek_runtime_embedded), allow(dead_code, unused_imports))]
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -298,8 +300,7 @@ fn an_invalid_fixture_fails_with_its_problems_and_the_others_still_count() {
     assert_eq!(details.len(), 2, "{details:?}");
     assert!(details[0].starts_with("line 3:"), "{details:?}");
     assert!(details[1].starts_with("line 4:"), "{details:?}");
-    // The valid fixture is never sent to the browser in a state of doubt: it ran (or, without a
-    // successful build, failed for the build), but the report names both.
+    // The valid fixture is reported next to the invalid one, in file name order.
     assert_eq!(report["fixtures"][1]["file"], "tests/good.test.toml");
     let human = run_test(&scratch, &["proj"], &[]);
     assert!(

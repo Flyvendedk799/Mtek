@@ -15,7 +15,7 @@
 | `mtek inspect --ir\|--bindings\|--shaders\|--assets [--format human\|json] [PATH]` | M1 (`--ir`), M2 (`--shaders`, `--bindings`), M4 (`--assets`) | inspection (`spec/gpu-layout.md` §10; the views are decision 0044; `--assets` is the packaged assets of `spec/assets.md` §4, decision 0058) |
 | `mtek new NAME` | M3 | scaffold a project from the built-in template (`mtek.toml`, `src/main.mtek` with the Demo scene, `.gitignore`) |
 | `mtek fmt [--check] [PATHS…]` | M6 | canonical formatter |
-| `mtek test [PATH]` | M6 | run a project's declarative test fixtures (§6) |
+| `mtek test [--allow-not-run] [--format human\|json] [PATH]` | M6 | run a project's declarative test fixtures (§6; decision 0074) |
 | `mtek context --entry FILE [--symbol NAME…] --format json` | M6 | AI context export (`spec/ai-and-benchmarks.md` §2) |
 | `mtek grammar export --format ebnf\|gbnf` | M6 | grammar export (`spec/ai-and-benchmarks.md` §3) |
 | `mtek lsp` | M6 | language server over stdio |
@@ -110,9 +110,11 @@ steps = [
   { expect_pixel = { x = 64, y = 64, color = "#6b5cff", tolerance = 2 } },
 ]
 ```
-Fixture steps are `step`, `press`, `release`, `set_input`, `expect_state` and `expect_pixel`; the `set_input` step (a host input is set, applied at the next frame) and the rules for render-target size, pixel origin and tolerance are fixed by decision 0021 (`spec/decisions/0021-benchmark-task-format.md`).
+Fixture steps are `step`, `press`, `release`, `set_input`, `expect_state`, `expect_pixel` and `expect_counter`; the `set_input` step (a host input is set, applied at the next frame) and the rules for render-target size, pixel origin and tolerance are fixed by decision 0021 (`spec/decisions/0021-benchmark-task-format.md`).
 
 `mtek test` builds the project in `test` mode, launches the browser harness of `spec/testing.md` §6 (Playwright must be installed; otherwise it reports NOT-RUN and exits 1 unless `--allow-not-run`) and reports per fixture.
+
+The seventh step, `expect_counter` (`{ expect_counter = { drawCalls = 7, culledObjects = { min = 1 } } }`), the other forms of `expect_state` (entity poses and material parameters, vectors, colours, `{ value, tolerance }`), the optional top-level `seed`, the failure kinds, the exit codes (0 pass, or only NOT-RUN with `--allow-not-run`; 1 a fixture failed, the project does not build, a fixture file is invalid, there are no fixtures, or NOT-RUN without the flag; 2 usage; 3 the tool itself failed), NOT-RUN and its reasons, and the JSON report (`--format json`, `spec/test-report.schema.json`) are decision 0074 (`spec/decisions/0074-mtek-test.md`).
 
 ## 7. Language server (`mtek lsp`, M6)
 

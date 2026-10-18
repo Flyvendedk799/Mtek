@@ -78,3 +78,7 @@ On the hardware adapter (`MTEK_REQUIRE_GPU=1 npm run test:browser:hardware -- sp
 - `specs/m4/configurator-variants.spec.ts`: unsupported asset features fail at compile time; an 80-copy variant of the scene shows the instancing path in counters and in equal output.
 
 The expected pixels come from `tests/browser/support/configurator-scene.ts`: a ray tracer over the geometry in the GLB file with the PBR oracle of `reference-shading.ts`. It shares no code with the compiler, the runtime or the GPU, and asserts only pixels whose whole one-pixel footprint sees the same surface of the same entity.
+
+## `mtek test`
+
+`tests/*.test.toml` are declarative fixtures that `mtek test examples/material-configurator` runs (decision 0074): `chair-defaults` (the starting state, the counters of decision 0059 and the picture) and `host-inputs` (each input recolours what it drives, nothing is rebuilt). Pixels come from the CPU oracle above and are recomputed by `tests/browser/support/mtek-test/example-fixtures.test.ts`.

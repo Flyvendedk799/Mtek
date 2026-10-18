@@ -298,6 +298,8 @@ test.describe("mtek test reports NOT-RUN, never a pass, when it cannot run", () 
       record("mtek-test-not-run-no-playwright.json", run);
       expectAllNotRun(run, /^Playwright is not installed/);
       expect(run.report.environment).toBeNull();
+      expect(run.stdout, "no path of the machine in a result").not.toContain(root);
+      expect(run.stdout).not.toContain(root.replace(/\\/g, "/"));
       expect(mtekTest(["examples/pulse-cube", "--allow-not-run"], { MTEK_TEST_RUNNER: join(root, "support", "mtek-test", "main.ts") }).status).toBe(0);
     } finally {
       rmSync(root, { recursive: true, force: true });

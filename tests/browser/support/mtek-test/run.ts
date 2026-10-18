@@ -35,6 +35,14 @@ function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+/** A file path with at least two separators: the report must not carry the paths of the machine it ran on. */
+const PATH_IN_TEXT = /(?:[A-Za-z]:[\\/]|\/)[^\s'"()]*[\\/][^\s'"()]*/g;
+
+/** The first line of an error message with its file paths replaced by `<path>`. */
+export function reasonOf(error: unknown): string {
+  return (messageOf(error).split("\n")[0] ?? "").replace(PATH_IN_TEXT, "<path>");
+}
+
 /** Every fixture of the plan did not run, for `reason`. */
 function allNotRun(plan: Plan, reason: string, environment: Environment | null): RunnerReport {
   return {
@@ -135,7 +143,7 @@ export async function runPlan(plan: Plan, deps: RunnerDeps): Promise<RunnerRepor
   } catch (error) {
     return allNotRun(
       plan,
-      `Playwright is not installed (${messageOf(error)}); run "npm ci" in the repository`,
+      `Playwright is not installed (${reasonOf(error)}); run "npm ci" in the repository`,
       null,
     );
   }
@@ -148,7 +156,7 @@ export async function runPlan(plan: Plan, deps: RunnerDeps): Promise<RunnerRepor
   } catch (error) {
     return allNotRun(
       plan,
-      `Chromium could not be launched (${messageOf(error).split("\n")[0] ?? ""}); install it with "npx playwright install chromium"`,
+      `Chromium could not be launched (${reasonOf(error)}); install it with "npx playwright install chromium"`,
       null,
     );
   }

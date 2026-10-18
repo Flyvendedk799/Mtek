@@ -158,7 +158,7 @@ describe("examples/material-configurator fixtures follow from the CPU oracle", (
         if (kind === "set_input") {
           const [name, input] = Object.entries(value as Table)[0] ?? [];
           expect(HOST_NAMES, `${fixture.file}: ${String(name)} is a host input of mtek.toml`).toContain(name);
-          values = { ...values, [String(name)]: input } as HostValues;
+          values = { ...values, [String(name)]: input };
         } else if (kind === "expect_pixel") {
           const pixel = value as Table;
           const key = JSON.stringify(values);
@@ -178,7 +178,7 @@ describe("examples/material-configurator fixtures follow from the CPU oracle", (
     expect(checked).toBeGreaterThanOrEqual(25);
   });
 
-  it("the pixels changed by an input are those of the entity it drives, and only those", async () => {
+  it("the pixels changed by an input are those of the entity it drives, and only those", () => {
     // The fixture asserts that the rails keep their colour while the seat changes; the oracle must agree that they are different
     // pictures where the fixture says they change.
     const before = expectedImage(configuratorScene(applyHostValues({})), 128, 128);
