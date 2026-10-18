@@ -454,7 +454,24 @@ fn edge_cases() -> Vec<(&'static str, String, Expected)> {
             in_fn("let _ = 1;"),
             A,
         ),
-        ("word: _ as a descriptor name", e("_ { a: 1 }"), A),
+        ("word: _ as a descriptor name (E1001)", e("_ { a: 1 }"), R),
+        ("word: _x as a descriptor name", e("_x { a: 1 }"), A),
+        (
+            "word: _ as a scene object name (E1001)",
+            "scene Main { camera _ { } }\n".to_owned(),
+            R,
+        ),
+        (
+            "word: _ as a scene object kind",
+            "scene Main { _ Main { } }\n".to_owned(),
+            A,
+        ),
+        (
+            "word: _ as a field name",
+            "scene Main { entity E { _: 1; } }\n".to_owned(),
+            A,
+        ),
+        ("word: _ after a dot", e("a._"), A),
         ("word: keyword as a name", in_fn("let if = 1;"), R),
         ("word: reserved word as a name", in_fn("let type = 1;"), R),
         ("word: every keyword as a name", in_fn("let true = 1;"), R),
@@ -631,6 +648,32 @@ fn derived_cases(pass: &[(String, String)]) -> Vec<Case> {
                 text: mutated,
                 expected,
             });
+        }
+        // Every name, keyword and literal word replaced by `_`, by the
+        // field-name keyword `material`, by a reserved word and by another
+        // keyword: the positions where the parser takes a token kind other
+        // than the grammar's `Ident`.
+        for (index, token) in tokens.iter().enumerate() {
+            let (start, end) = (token.span.start as usize, token.span.end as usize);
+            let word = &text[start..end];
+            if !word.starts_with(|c: char| c.is_ascii_alphabetic() || c == '_') {
+                continue;
+            }
+            for replacement in ["_", "material", "type", "self"] {
+                if replacement == word {
+                    continue;
+                }
+                let mutated = format!("{}{replacement}{}", &text[..start], &text[end..]);
+                let Ok(expected) = corpus_expectation(name, &mutated) else {
+                    continue;
+                };
+                cases.push(Case {
+                    section: "positive fixtures with one word replaced",
+                    name: format!("{name} with token {index} `{word}` replaced by `{replacement}`"),
+                    text: mutated,
+                    expected,
+                });
+            }
         }
     }
     cases

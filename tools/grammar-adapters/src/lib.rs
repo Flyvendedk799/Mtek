@@ -801,6 +801,38 @@ mod tests {
     }
 
     #[test]
+    fn a_model_that_is_not_the_pinned_file_is_unavailable() {
+        // Uses the real generator and validator when they are installed, so
+        // that steps 2 and 3 pass for real and step 4 is the one that fails.
+        let pins = Pins::load().expect("pins");
+        let Ok(real) = Install::read(&default_install_dir(), &pins) else {
+            println!("NOT-RUN: the pinned backend is not installed");
+            return;
+        };
+        let (Some(generator), Some(validator)) = (real.generator, real.validator) else {
+            println!("NOT-RUN: the pinned generator or validator is not installed");
+            return;
+        };
+        let scratch = Scratch::new("model").expect("scratch");
+        scratch.write("model.gguf", b"not a model").expect("write");
+        let record = json!({
+            "release": pins.release, "commit": pins.commit,
+            "backend": { "generator": generator.display().to_string() },
+            "validator": { "path": validator.display().to_string() },
+            "model": { "path": "model.gguf" },
+        });
+        scratch
+            .write("install.json", record.to_string().as_bytes())
+            .expect("write");
+        let error = check_capability(&scratch.0).expect_err("wrong model");
+        assert!(
+            error.reason.contains("the pinned model has"),
+            "{}",
+            error.reason
+        );
+    }
+
+    #[test]
     fn verdict_expectations_follow_the_codes() {
         let v = |codes: &[&str]| CompilerVerdict {
             errors: codes.iter().map(|c| (*c).to_owned()).collect(),

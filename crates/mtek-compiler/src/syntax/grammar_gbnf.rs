@@ -31,8 +31,9 @@
 //! Where the compiler accepts or rejects more precisely than the reference
 //! grammar says, the translation follows the compiler (decision 0005): the
 //! keyword `material` is a field name (decision 0023 item 1), a lone carriage
-//! return is never accepted (E0003), and a `\u{…}` escape must name a
-//! Unicode scalar value (E0023). Everything else is the model as written; the
+//! return is never accepted (E0003), a `\u{…}` escape must name a Unicode
+//! scalar value (E0023), and `_` (a token of its own) cannot name a
+//! descriptor literal or a scene object (E1001). Everything else is the model as written; the
 //! `[S: …]` restrictions are not expressed, so the grammar accepts programs
 //! the compiler then rejects with those codes. The grammar does not bound the
 //! length of the output: the caller enforces a maximum (the harness's
@@ -492,10 +493,10 @@ impl<'m> Translator<'m> {
     fn token(&mut self, expr: &Expr) -> Result<Option<Token>, String> {
         match expr {
             Expr::Literal(text) => Ok(Some(literal_token(text))),
-            Expr::Ref(name) if *name == FIELD_NAME => {
+            Expr::Ref(name) if *name == FIELD_NAME || *name == NAMED => {
                 self.lexical.insert("Ident");
                 Ok(Some(Token {
-                    gbnf: sym(FIELD_NAME),
+                    gbnf: sym(name),
                     first: First::Word,
                     last: Last::Word,
                 }))
@@ -1056,8 +1057,9 @@ const HEADER: &str = "\
 # - ExprNoDesc is expanded as expr-no-desc, or-expr-no-desc, ...,
 #   primary-no-desc. Block comments nest by recursion, without a depth bound.
 # - Follows the compiler where it is stricter than the reference grammar: no
-#   lone carriage return, \\u{...} escapes name Unicode scalar values, and the
-#   keyword `material` is a field name (decision 0023). The [S: ...]
+#   lone carriage return, \\u{...} escapes name Unicode scalar values, `_`
+#   names no descriptor literal or scene object, and the keyword `material`
+#   is a field name (decision 0023). The [S: ...]
 #   restrictions of the reference grammar are not expressed: accepted text
 #   still goes through the compiler.
 ";
@@ -1250,12 +1252,38 @@ fn field_names(production: &Production) -> Result<Expr, String> {
             }
             other => return Err(format!("PostfixOp is not alternatives: {other:?}")),
         },
+        // The parser reads `Name {` as a descriptor literal and `kind name {`
+        // as a scene object only when the name is an identifier token, which
+        // `_` is not (it is a token kind of its own): `_ { … }` and
+        // `camera _ { … }` are E1001.
+        "DescriptorLiteral" => match rhs {
+            Expr::Seq(mut items) if items.first() == Some(&Expr::Ref("Ident")) => {
+                items[0] = Expr::Ref(NAMED_REF);
+                Expr::Seq(items)
+            }
+            other => {
+                return Err(format!(
+                    "DescriptorLiteral does not start with Ident: {other:?}"
+                ));
+            }
+        },
+        "SceneObject" => match rhs {
+            Expr::Seq(mut items) if items.get(1) == Some(&Expr::Ref("Ident")) => {
+                items[1] = Expr::Ref(NAMED_REF);
+                Expr::Seq(items)
+            }
+            other => return Err(format!("SceneObject is not Ident Ident …: {other:?}")),
+        },
         _ => rhs,
     };
     Ok(rewritten)
 }
 
 const FIELD_NAME_REF: &str = FIELD_NAME;
+
+/// An identifier other than `_` (the trie with `_` among the excluded words).
+const NAMED: &str = "ident-not-underscore";
+const NAMED_REF: &str = NAMED;
 
 // ----- lexical productions ----------------------------------------------------------
 
@@ -1373,8 +1401,21 @@ impl Lexical<'_> {
                 format!("ident-x-{prefix}")
             }
         };
+        // The identifiers other than `_`: the same trie with `_` excluded too,
+        // which changes only the root (`_` is a one-character word).
+        let mut named_words = words.clone();
+        named_words.insert("_".to_owned());
         let mut out = Vec::new();
-        for prefix in &prefixes {
+        for (prefix, words, name) in
+            prefixes
+                .iter()
+                .map(|p| (p, &words, node(p)))
+                .chain(std::iter::once((
+                    &String::new(),
+                    &named_words,
+                    NAMED.to_owned(),
+                )))
+        {
             let allowed = if prefix.is_empty() {
                 &start
             } else {
@@ -1414,7 +1455,7 @@ impl Lexical<'_> {
             if !prefix.is_empty() && !words.contains(prefix) {
                 arms.push(G::Empty);
             }
-            out.push((node(prefix), alt(arms).unwrap_or(G::Empty)));
+            out.push((name, alt(arms).unwrap_or(G::Empty)));
         }
         out.push((
             "ident-continue".to_owned(),
@@ -1805,6 +1846,19 @@ mod tests {
             .find(|(n, _)| n == "block-comment")
             .expect("block-comment");
         assert!(body.contains("\\r\\n"), "{body}");
+        // `_` names no descriptor literal and no scene object.
+        let all = rules(&text);
+        let body_of = |name: &str| {
+            all.iter()
+                .find(|(n, _)| n == name)
+                .map(|(_, b)| b.clone())
+                .expect(name)
+        };
+        assert!(body_of("descriptor-literal").starts_with(&format!("ws {NAMED} ")));
+        assert!(body_of("scene-object").contains(&format!("ws1 {NAMED} ")));
+        let named = body_of(NAMED);
+        assert!(named.contains("\"_\" ident-continue+"), "{named}");
+        assert!(!body_of("ident").contains("\"_\""));
     }
 
     #[test]
