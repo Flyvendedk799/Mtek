@@ -1,0 +1,25 @@
+// M6-10: a handler that never comes back (decision 0075). `update` counts frames and, from the sixth on, runs two nested
+// loops of 2^31 - 1 iterations each: effectively for ever. Built in `--mode release` it blocks the page for good; built
+// in `--mode preview` the frame's loop budget ends it with E8080 at the inner `for`, and the overlay says so.
+scene Runaway {
+    state frames: i32 = 0;
+    state total: i32 = 0;
+    camera Lens {
+        position: vec3(0.0, 0.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+        material: Unlit { color: #ff7040; };
+    }
+    update(dt: f32) {
+        frames += 1;
+        if frames > 5 {
+            for i in 0..2147483647 {
+                for j in 0..2147483647 {
+                    total += 1;
+                }
+            }
+        }
+    }
+}
