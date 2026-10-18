@@ -796,9 +796,7 @@ impl<'m> Translator<'m> {
                 .iter()
                 .all(|l| Self::canonical(shape, *l, ALL_LASTS) == canon)
         {
-            return Ok(self
-                .compile(context, inner, canon, ALL_LASTS)?
-                .map(|g| star(g)));
+            return Ok(self.compile(context, inner, canon, ALL_LASTS)?.map(star));
         }
         let name = self.helper_name(context, inner);
         let after = Self::canonical(rep_shape, after, ends);

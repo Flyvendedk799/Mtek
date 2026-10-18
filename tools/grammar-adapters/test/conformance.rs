@@ -736,11 +736,13 @@ fn main() -> ExitCode {
     for (name, text, expected) in edge_cases() {
         // The stated verdict must be the compiler's (or a known difference).
         let compiler = corpus_expectation(name, &text);
-        let agrees = match (&compiler, expected) {
-            (Ok(Expected::AcceptKnown(_) | Expected::Accept), Expected::Accept)
-            | (Ok(Expected::Reject), Expected::Reject) => true,
-            _ => false,
-        };
+        let agrees = matches!(
+            (&compiler, expected),
+            (
+                Ok(Expected::AcceptKnown(_) | Expected::Accept),
+                Expected::Accept
+            ) | (Ok(Expected::Reject), Expected::Reject)
+        );
         if !agrees {
             problems.push(format!(
                 "edge case {name:?}: stated {expected:?}, the compiler says {compiler:?} ({:?})",
