@@ -1,0 +1,11 @@
+// `self` in an entity declared in the scene is a named entity. (In a prefab it may be a spawned
+// instance, and `destroy(self)` is fine.)
+scene Demo {
+    camera Main {}
+    entity Cube {
+        mesh: Box {};
+        on key_down(Key.Space) {
+            destroy(self);
+        }
+    }
+}

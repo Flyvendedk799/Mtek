@@ -664,7 +664,11 @@ impl<'p> ShaderLowering<'p> {
             ir::ExprKind::Material { material, .. } => {
                 return Err(format!("an instance of '{material}' in GPU code"));
             }
+            ir::ExprKind::PrefabLiteral { prefab, .. } => {
+                return Err(format!("a literal of the prefab '{prefab}' in GPU code"));
+            }
             ir::ExprKind::State { .. }
+            | ir::ExprKind::EntityRef { .. }
             | ir::ExprKind::EntityField { .. }
             | ir::ExprKind::CameraField { .. }
             | ir::ExprKind::InstanceParam { .. }

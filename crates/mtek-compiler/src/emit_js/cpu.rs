@@ -769,12 +769,48 @@ impl FnLowering<'_, '_> {
                 arguments.push(Expr::Num(Number::U32(span_id)));
                 Expr::ident("ctx").member("print").call(arguments)
             }
+            // `spawn(Prefab { .. })`: `ctx.spawn(symbol, { params }, spanId)`; the span names the
+            // call for `E8033` (decision 0064).
+            ir::ExprKind::Builtin { function, args } if function == "spawn" => {
+                let [literal] = args.as_slice() else {
+                    return Err("a spawn without one argument".to_owned());
+                };
+                let ir::ExprKind::PrefabLiteral { prefab, params } = &literal.kind else {
+                    return Err("a spawn of something that is not a prefab literal".to_owned());
+                };
+                let mut properties = Vec::with_capacity(params.len());
+                for param in params {
+                    properties.push((param.name.clone(), self.expr(&param.value)?));
+                }
+                let span_id = (self.span_id)(expr.span)?;
+                Expr::ident("ctx").member("spawn").call(vec![
+                    Expr::string(prefab.as_str()),
+                    Expr::object(properties),
+                    Expr::Num(Number::U32(span_id)),
+                ])
+            }
+            ir::ExprKind::Builtin { function, args } if function == "destroy" => {
+                let mut arguments = self.exprs(args)?;
+                let span_id = (self.span_id)(expr.span)?;
+                arguments.push(Expr::Num(Number::U32(span_id)));
+                Expr::ident("ctx").member("destroy").call(arguments)
+            }
+            ir::ExprKind::Builtin { function, args } if function == "alive" => {
+                let arguments = self.exprs(args)?;
+                Expr::ident("ctx").member("alive").call(arguments)
+            }
             ir::ExprKind::Builtin { function, args } => {
                 let types: Vec<&str> = args.iter().map(|a| a.ty.as_str()).collect();
                 let arguments = self.exprs(args)?;
                 rt_call(function, &types, ty, arguments)?
             }
             ir::ExprKind::State { owner, name } => self.state_path(*owner, name),
+            ir::ExprKind::EntityRef { entity } => self.entity(*entity).member("ref"),
+            ir::ExprKind::PrefabLiteral { prefab, .. } => {
+                return Err(format!(
+                    "a literal of the prefab '{prefab}' outside the argument of spawn"
+                ));
+            }
             ir::ExprKind::EntityField { entity, field } => self.entity(*entity).member(field),
             ir::ExprKind::CameraField { field, .. } => {
                 Expr::ident("ctx").member("cam").member(field)
@@ -896,6 +932,11 @@ fn binary_op(
         "==" | "!=" if lt == rt_ty && scalar(lt) => {
             Expr::binary(if op == "==" { "===" } else { "!==" }, left, right)
         }
+        // A reference is `{ slot, gen }`: equal when both are (decision 0064).
+        "==" | "!=" if lt == "entity_ref" && rt_ty == "entity_ref" => {
+            let same = rt("refEq", vec![left, right]);
+            if op == "==" { same } else { Expr::unary("!", same) }
+        }
         "<" | "<=" | ">" | ">=" if lt == rt_ty && matches!(lt, "f32" | "i32" | "u32") => {
             let op: &'static str = match op {
                 "<" => "<",
@@ -999,6 +1040,7 @@ mod tests {
                 ir::ExprKind::Const { .. }
                 | ir::ExprKind::Local { .. }
                 | ir::ExprKind::State { .. }
+                | ir::ExprKind::EntityRef { .. }
                 | ir::ExprKind::EntityField { .. }
                 | ir::ExprKind::CameraField { .. }
                 | ir::ExprKind::InstanceParam { .. }
@@ -1025,6 +1067,7 @@ mod tests {
                 ir::ExprKind::Param { .. } => {}
                 ir::ExprKind::Struct { fields }
                 | ir::ExprKind::Descriptor { fields, .. }
+                | ir::ExprKind::PrefabLiteral { params: fields, .. }
                 | ir::ExprKind::Material { params: fields, .. } => {
                     fields.iter().for_each(|f| expr(&f.value, out));
                 }

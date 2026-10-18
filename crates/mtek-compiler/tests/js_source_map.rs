@@ -165,6 +165,7 @@ fn expr(e: &Expr, out: &mut Expected) {
         | ExprKind::Local { .. }
         | ExprKind::Param { .. }
         | ExprKind::State { .. }
+        | ExprKind::EntityRef { .. }
         | ExprKind::EntityField { .. }
         | ExprKind::CameraField { .. }
         | ExprKind::InstanceParam { .. }
@@ -182,6 +183,7 @@ fn expr(e: &Expr, out: &mut Expected) {
         ExprKind::Array { elements } => children.extend(elements),
         ExprKind::Struct { fields }
         | ExprKind::Descriptor { fields, .. }
+        | ExprKind::PrefabLiteral { params: fields, .. }
         | ExprKind::Material { params: fields, .. } => {
             children.extend(fields.iter().map(|f| &f.value));
         }

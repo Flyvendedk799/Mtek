@@ -254,6 +254,11 @@ pub(super) struct Checker<'a> {
     /// What the scene checks know of the prefab behind each static instance, by the instance's
     /// declaration.
     pub(super) instances: BTreeMap<DefId, super::prefab::InstanceFacts>,
+    /// The params of every prefab the module declares, by its declaration: checked before any
+    /// prefab body, so that a `spawn` finds its prefab wherever it is declared (decision 0064).
+    pub(super) prefab_params: BTreeMap<DefId, Vec<super::PrefabParam>>,
+    /// The prefab literal that is the argument of the `spawn` being checked (decision 0064).
+    pub(super) spawn_argument: Option<NodeId>,
 }
 
 impl<'a> Checker<'a> {
@@ -315,6 +320,8 @@ impl<'a> Checker<'a> {
             current_prefab: None,
             dynamic_descriptors: BTreeSet::new(),
             instances: BTreeMap::new(),
+            prefab_params: BTreeMap::new(),
+            spawn_argument: None,
         }
     }
 
@@ -372,6 +379,11 @@ impl<'a> Checker<'a> {
         }
         // Every prefab before any scene, so that an instance finds its prefab wherever it is
         // declared (decision 0062).
+        for item in &module.items {
+            if let ItemKind::Prefab(decl) = &item.kind {
+                self.prefab_signature(decl);
+            }
+        }
         for item in &module.items {
             if let ItemKind::Prefab(decl) = &item.kind {
                 self.prefab(decl);
@@ -1280,7 +1292,7 @@ impl<'a> Checker<'a> {
                         None => TyId::ERROR,
                     },
                     DefKind::Material => self.material_instance(expr, name, id, fields),
-                    DefKind::Prefab => self.prefab_literal(name, fields),
+                    DefKind::Prefab => self.prefab_literal(expr, name, id, fields),
                     DefKind::SceneObject { kind: None } => TyId::ERROR,
                     kind => {
                         let (def_name, noun, span) = (def.name.clone(), kind.noun(), def.span);
@@ -1828,7 +1840,14 @@ impl<'a> Checker<'a> {
                         name: function.name,
                         const_eligible: function.const_eligible,
                     };
-                    return self.function_call(expr, name, function, args, kind, expected);
+                    if name == "spawn" {
+                        self.note_spawn_argument(args);
+                    }
+                    let ty = self.function_call(expr, name, function, args, kind, expected);
+                    if name == "destroy" {
+                        self.check_destroy_target(args);
+                    }
+                    return ty;
                 }
                 Some(Res::Def(id)) if self.names_function(id) => {
                     return self.user_call(expr, id, args);
@@ -2359,6 +2378,9 @@ impl<'a> Checker<'a> {
             }
         }
         let base_ty = self.check(base, None);
+        if base_ty == TyId::ENTITY_REF {
+            return self.entity_ref_field(expr, name);
+        }
         if self.out.interner.struct_def(base_ty).is_some() {
             return self.struct_field(expr, base_ty, name);
         }

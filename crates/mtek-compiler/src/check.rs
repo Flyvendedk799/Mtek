@@ -32,7 +32,7 @@ use crate::source::{Fs, SourceMap};
 use crate::syntax::ast::{ItemKind, Module};
 use crate::types::effects::{ProgramUnit, RootBody, check_program};
 use crate::types::{
-    AssetHookup, FnRef, ImportedConst, ImportedConsts, ImportedFn, ImportedMaterial,
+    AssetHookup, CpuBodyKind, FnRef, ImportedConst, ImportedConsts, ImportedFn, ImportedMaterial,
     ImportedPrefab, ImportedStruct, Imports, ProgramEffects, Roots, Typeck,
     check_module_with_assets,
 };
@@ -379,6 +379,7 @@ fn stage_roots(program: &[ProgramUnit<'_>]) -> Vec<RootBody> {
                     label: format!("the fragment stage of material '{}'", material.name),
                     span: stage.name_span,
                     facts: stage.facts.clone(),
+                    initialiser: false,
                 })
             })
         })
@@ -396,6 +397,10 @@ fn cpu_roots(program: &[ProgramUnit<'_>]) -> Vec<RootBody> {
                 label: body.label.clone(),
                 span: body.span,
                 facts: body.facts.clone(),
+                initialiser: matches!(
+                    body.kind,
+                    CpuBodyKind::StateInit | CpuBodyKind::FieldInit
+                ),
             })
         })
         .collect()

@@ -1,0 +1,16 @@
+// A prefab literal sets only params.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box {};
+    material: Unlit { color: tint };
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        spawn(Crate { orign: vec3(0.0); });
+        spawn(Crate { position: vec3(0.0); });
+    }
+}

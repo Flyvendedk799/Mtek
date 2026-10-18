@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E5041",
+    "file": "src/main.mtek",
+    "startByte": 309,
+    "endByte": 314,
+    "message": "Missing required parameter 'origin' for prefab Crate.",
+    "related": [
+      {
+        "message": "the param 'origin' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 107,
+        "endByte": 113
+      }
+    ],
+    "notes": [
+      "the param 'origin' has no default",
+      "help: add `origin: …;` to the literal"
+    ]
+  }
+]

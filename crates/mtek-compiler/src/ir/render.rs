@@ -818,6 +818,10 @@ fn expr_text(expr: &Expr) -> String {
         ExprKind::Material { material, params } => {
             format!("{material} {{ {} }}", named(params))
         }
+        ExprKind::PrefabLiteral { prefab, params } => {
+            format!("{prefab} {{ {} }}", named(params))
+        }
+        ExprKind::EntityRef { entity } => return format!("ref entity#{entity}"),
     };
     format!("({text}): {}", expr.ty)
 }

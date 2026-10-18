@@ -1,0 +1,24 @@
+// `spawn` and `destroy` are handler-only: not in a `cpu fn` and not in a `fn`, even when a
+// handler calls it.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box {};
+    material: Unlit { color: tint };
+}
+
+cpu fn make() -> entity_ref {
+    return spawn(Crate {});
+}
+
+cpu fn remove(target: entity_ref) {
+    destroy(target);
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        remove(make());
+    }
+}

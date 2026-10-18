@@ -1,0 +1,18 @@
+// Through an entity_ref nothing is read: a named entity's fields are read by its name.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box {};
+    material: Unlit { color: tint };
+}
+
+scene Demo {
+    camera Main {}
+    entity Floor { mesh: Plane {}; }
+    state last: entity_ref = Floor;
+    on key_down(Key.Space) {
+        last = spawn(Crate {});
+        let p = last.position;
+    }
+}

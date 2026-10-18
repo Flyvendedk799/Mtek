@@ -1,5 +1,0 @@
-const S: entity_ref = 0;
-
-scene Demo {
-    camera Main {}
-}

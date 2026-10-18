@@ -23,14 +23,15 @@ use super::scene::{CheckedInstance, CheckedParam, FieldOrigin};
 use super::ty::TyId;
 use super::value::ConstValue;
 use super::{
-    CpuBody, CpuBodyKind, NonConstant, NonConstantKind, PrefabInfo, PrefabKey, PrefabParam,
+    CpuBody, CpuBodyKind, LiteralParam, NonConstant, NonConstantKind, PrefabInfo, PrefabKey,
+    PrefabLiteral, PrefabParam,
 };
 use crate::diagnostics::{Code, Diagnostic};
 use crate::project::edit_distance;
-use crate::resolve::gate::{construct_implemented, gate_message, gate_note};
+use crate::resolve::gate::construct_implemented;
 use crate::resolve::{Construct, DefId, DefKind, Res};
 use crate::source::Span;
-use crate::stdlib::Milestone;
+use crate::stdlib::TypeRef;
 use crate::syntax::ast::{
     DescField, EntityDecl, EntityMember, Expr, ExprKind, FieldInit, FieldValue, Ident, NodeId,
     PrefabDecl,
@@ -66,7 +67,7 @@ struct GivenParam {
     value: Option<ConstValue>,
 }
 
-fn strip_parens(expr: &Expr) -> &Expr {
+pub(super) fn strip_parens(expr: &Expr) -> &Expr {
     let mut expr = expr;
     while let ExprKind::Paren(inner) = &expr.kind {
         expr = inner;
@@ -96,6 +97,21 @@ impl<'a> Checker<'a> {
         }
     }
 
+    /// The params of the prefab `decl` (types, defaults), before any prefab body is checked: a
+    /// `spawn` in any body, of this prefab or another, finds them (decision 0064).
+    pub(super) fn prefab_signature(&mut self, decl: &PrefabDecl) {
+        let (Some(def), true) = (
+            self.res.def_of(decl.id),
+            construct_implemented(Construct::Prefab),
+        ) else {
+            return;
+        };
+        let previous = self.current_prefab.replace(def);
+        let params = self.prefab_params(decl);
+        self.current_prefab = previous;
+        self.prefab_params.insert(def, params);
+    }
+
     /// Check the prefab `decl`: nested entities (`E5040`), params, fields, constants, state,
     /// bindings, lifecycle functions and handlers, then record its [`PrefabInfo`].
     pub(super) fn prefab(&mut self, decl: &PrefabDecl) {
@@ -110,7 +126,7 @@ impl<'a> Checker<'a> {
         };
         self.current_prefab = Some(def);
         self.nested_entities(decl);
-        let params = self.prefab_params(decl);
+        let params = self.prefab_params.get(&def).cloned().unwrap_or_default();
         self.declare_prefab_states(decl, def);
         let schema = self.registry.declaration_schemas.entity;
         for member in &decl.members {
@@ -385,25 +401,267 @@ impl<'a> Checker<'a> {
     }
 
     /// `Crate { origin: … }`: a prefab literal builds a dynamic instance and is the argument of
-    /// `spawn` (task M5-02); a static instance is the declaration `entity Name: Crate { .. }`.
-    pub(super) fn prefab_literal(&mut self, name: &Ident, fields: &[DescField]) -> TyId {
+    /// `spawn` (`spec/scenes.md` section 9, decision 0064); a static instance is the declaration
+    /// `entity Name: Crate { .. }`. It sets only params (`E5042`), each once (`E5002`) with a
+    /// value of the param's type (`E3102`) that may be computed at run time, and every param
+    /// without a default (`E5041`). Anywhere but as the argument of `spawn` it is `E3001`.
+    pub(super) fn prefab_literal(
+        &mut self,
+        expr: &Expr,
+        name: &Ident,
+        id: DefId,
+        fields: &[DescField],
+    ) -> TyId {
+        let Some((key, prefab, params)) = self.literal_prefab(id) else {
+            self.literal_values(fields);
+            return TyId::ERROR;
+        };
+        if self.spawn_argument != Some(expr.id) {
+            self.literal_values(fields);
+            self.report(
+                Diagnostic::new(
+                    Code::E3001,
+                    format!(
+                        "The prefab literal `{prefab} {{ .. }}` is not a value: it can only be the argument of `spawn`."
+                    ),
+                )
+                .at(expr.span)
+                .expected("a value")
+                .actual("a prefab literal")
+                .help(format!("create the instance with `spawn({prefab} {{ .. }})` in a lifecycle function or an event handler, or declare a static instance: `entity Name: {prefab} {{ param: value; }}`")),
+            );
+            return TyId::ERROR;
+        }
+        let mut given: Vec<(String, Span, NodeId)> = Vec::new();
+        let mut ok = true;
+        for field in fields {
+            let value = match &field.value {
+                FieldValue::Expr(value) => &**value,
+                FieldValue::Bind(bind) => {
+                    ok = false;
+                    self.bind_not_allowed(bind, "as the value of a prefab param");
+                    continue;
+                }
+            };
+            let Some(param) = params.iter().find(|p| p.name == field.name.name) else {
+                ok = false;
+                self.unknown_literal_param(&field.name, &prefab, &params);
+                self.check(value, None);
+                continue;
+            };
+            if let Some((_, first, _)) = given.iter().find(|(known, _, _)| *known == param.name) {
+                ok = false;
+                let first = *first;
+                self.report(
+                    Diagnostic::new(
+                        Code::E5002,
+                        format!(
+                            "The param '{}' of prefab {prefab} is set twice.",
+                            param.name
+                        ),
+                    )
+                    .at(field.name.span)
+                    .related(first, format!("'{}' is first set here", param.name))
+                    .help("remove one of the two"),
+                );
+                self.check(value, Some(param.ty));
+                continue;
+            }
+            let actual = self.check(value, Some(param.ty));
+            ok &= self.param_value_type(&prefab, param, value, actual);
+            given.push((param.name.clone(), field.name.span, value.id));
+        }
+        for param in &params {
+            if !param.has_default && !given.iter().any(|(name, _, _)| *name == param.name) {
+                ok = false;
+                self.report(
+                    Diagnostic::new(
+                        Code::E5041,
+                        format!(
+                            "Missing required parameter '{}' for prefab {prefab}.",
+                            param.name
+                        ),
+                    )
+                    .at(name.span)
+                    .related(
+                        param.name_span,
+                        format!("the param '{}' is declared here", param.name),
+                    )
+                    .note(format!("the param '{}' has no default", param.name))
+                    .help(format!("add `{}: …;` to the literal", param.name)),
+                );
+            }
+        }
+        if ok {
+            let params = params
+                .iter()
+                .map(|param| LiteralParam {
+                    name: param.name.clone(),
+                    ty: param.ty,
+                    value: given
+                        .iter()
+                        .find(|(name, _, _)| *name == param.name)
+                        .map(|(_, _, node)| *node),
+                    default: param.default.clone(),
+                })
+                .collect();
+            self.out.prefab_literals.insert(
+                expr.id,
+                PrefabLiteral {
+                    key,
+                    name: prefab,
+                    params,
+                },
+            );
+        }
+        self.out.interner.from_type_ref(TypeRef::PrefabDescriptor)
+    }
+
+    /// The values of a literal that is reported or ignored: still typed, so that their own
+    /// mistakes are reported once.
+    fn literal_values(&mut self, fields: &[DescField]) {
         for field in fields {
             if let FieldValue::Expr(value) = &field.value {
                 self.check(value, None);
             }
         }
-        self.report(
-            Diagnostic::new(
-                Code::E9010,
-                gate_message(
-                    "Prefab literals (`Prefab { .. }`, the argument of `spawn`)",
-                    true,
-                    Milestone::M5,
+    }
+
+    /// The identity, name and params of the prefab `id` names (declared here or imported).
+    fn literal_prefab(&self, id: DefId) -> Option<(PrefabKey, String, Vec<PrefabParam>)> {
+        let def = self.res.def(id)?;
+        match def.kind {
+            DefKind::Import => self
+                .imported_prefabs
+                .get(&id)
+                .map(|info| (info.key, info.name.clone(), info.params.clone())),
+            _ => Some((
+                self.prefab_key(id)?,
+                def.name.clone(),
+                self.prefab_params.get(&id)?.clone(),
+            )),
+        }
+    }
+
+    /// `E5042` for a `name: value;` of a prefab literal that names no param.
+    fn unknown_literal_param(&mut self, name: &Ident, prefab: &str, params: &[PrefabParam]) {
+        let names: Vec<&str> = params.iter().map(|p| p.name.as_str()).collect();
+        let list = if names.is_empty() {
+            "none".to_owned()
+        } else {
+            names.join(", ")
+        };
+        let mut diagnostic = Diagnostic::new(
+            Code::E5042,
+            format!(
+                "'{}' is not a param of prefab {prefab}: a prefab literal may set only params.",
+                name.name
+            ),
+        )
+        .at(name.span)
+        .note(format!("the params of {prefab} are: {list}"));
+        let close: Vec<&str> = names
+            .iter()
+            .copied()
+            .filter(|candidate| (1..=2).contains(&edit_distance(&name.name, candidate)))
+            .collect();
+        if let [single] = close.as_slice() {
+            diagnostic = diagnostic.help(format!("did you mean '{single}'?"));
+        }
+        self.report(diagnostic);
+    }
+
+    /// `E3102` unless the value `value` of type `actual` fits the param. True when it does.
+    fn param_value_type(
+        &mut self,
+        prefab: &str,
+        param: &PrefabParam,
+        value: &Expr,
+        actual: TyId,
+    ) -> bool {
+        if self.out.interner.assignable(actual, param.ty) {
+            return true;
+        }
+        if !self.out.interner.is_error(actual) {
+            let (expected, got) = (self.display(param.ty), self.display(actual));
+            let mut diagnostic = Diagnostic::new(
+                Code::E3102,
+                format!(
+                    "Parameter '{}' of prefab {prefab} expects {expected}, but received {got}.",
+                    param.name
                 ),
             )
-            .at(name.span)
-            .note(gate_note())
-            .help("declare a static instance: `entity Name: Prefab { param: value; }`"),
+            .at(value.span)
+            .expected(expected.clone())
+            .actual(got.clone());
+            let interner = &self.out.interner;
+            if let (Some(want), Some(have)) =
+                (interner.vector_dim(param.ty), interner.vector_dim(actual))
+            {
+                diagnostic = diagnostic.note(format!(
+                    "a {expected} has {want} components; this value has {have}"
+                ));
+            }
+            self.report(diagnostic);
+        }
+        false
+    }
+
+    /// The call `spawn(args)`: its argument may be a prefab literal.
+    pub(super) fn note_spawn_argument(&mut self, args: &[Expr]) {
+        self.spawn_argument = args.first().map(|arg| strip_parens(arg).id);
+    }
+
+    /// `E5030`: `destroy` of a named entity, whose lifetime is the scene's (`spec/scenes.md`
+    /// section 4.5). Only the certain cases are reported: `self` in a prefab may be spawned, and
+    /// a reference to a named entity that reaches `destroy` at run time is `E8030`.
+    pub(super) fn check_destroy_target(&mut self, args: &[Expr]) {
+        let [arg] = args else {
+            return;
+        };
+        let target = strip_parens(arg);
+        if !matches!(target.kind, ExprKind::Name(_) | ExprKind::SelfValue) {
+            return;
+        }
+        let Some(Res::Def(id)) = self.res.res(target.id) else {
+            return;
+        };
+        let Some(def) = self.res.def(id).cloned() else {
+            return;
+        };
+        if def.kind != DefKind::Entity {
+            return;
+        }
+        self.report(
+            Diagnostic::new(
+                Code::E5030,
+                format!(
+                    "The entity '{}' is declared in the scene and cannot be destroyed: it lives as long as the scene.",
+                    def.name
+                ),
+            )
+            .at(arg.span)
+            .related(def.span, format!("'{}' is declared here", def.name))
+            .note("only an entity created with `spawn` can be destroyed (spec/scenes.md section 4.5)")
+            .help("hide it with `visible: false`"),
+        );
+    }
+
+    /// `E5074`: a field of an `entity_ref`. Through a reference an entity can be compared,
+    /// tested with `alive`, destroyed and given body commands; its fields stay out of reach so
+    /// that every field access is statically checkable (`spec/scenes.md` section 8.3).
+    pub(super) fn entity_ref_field(&mut self, expr: &Expr, name: &Ident) -> TyId {
+        self.report(
+            Diagnostic::new(
+                Code::E5074,
+                format!(
+                    "'.{}' accesses a field through an entity_ref, but fields cannot be read or written through an entity_ref in v0.1.",
+                    name.name
+                ),
+            )
+            .at(expr.span)
+            .note("through an entity_ref you may compare it (`==`, `!=`), test `alive(r)`, `destroy(r)` it and issue body commands")
+            .help("a named entity's fields are read by its name: `Floor.position`; keep the data you need in state"),
         );
         TyId::ERROR
     }
@@ -597,32 +855,7 @@ impl<'a> Checker<'a> {
             return false;
         };
         let actual = self.check(value, Some(param.ty));
-        let mut sound = true;
-        if !self.out.interner.assignable(actual, param.ty) {
-            sound = false;
-            if !self.out.interner.is_error(actual) {
-                let (expected, got) = (self.display(param.ty), self.display(actual));
-                let mut diagnostic = Diagnostic::new(
-                    Code::E3102,
-                    format!(
-                        "Parameter '{}' of prefab {} expects {expected}, but received {got}.",
-                        param.name, info.name
-                    ),
-                )
-                .at(value.span)
-                .expected(expected.clone())
-                .actual(got.clone());
-                let interner = &self.out.interner;
-                if let (Some(want), Some(have)) =
-                    (interner.vector_dim(param.ty), interner.vector_dim(actual))
-                {
-                    diagnostic = diagnostic.note(format!(
-                        "a {expected} has {want} components; this value has {have}"
-                    ));
-                }
-                self.report(diagnostic);
-            }
-        }
+        let mut sound = self.param_value_type(&info.name, param, value, actual);
         let folded = self.fold(value);
         let constant = match folded {
             Folded::Value(constant) if sound => Some(constant),

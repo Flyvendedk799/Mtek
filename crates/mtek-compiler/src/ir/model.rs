@@ -709,6 +709,16 @@ pub enum ExprKind {
         material: Symbol,
         params: Vec<NamedExpr>,
     },
+    /// A prefab literal, the argument of `spawn` (decision 0064): the prefab and every one of
+    /// its params in declaration order, the written value or the default as a constant. Its
+    /// type is `prefab`.
+    PrefabLiteral {
+        prefab: Symbol,
+        params: Vec<NamedExpr>,
+    },
+    /// An `entity_ref` to the entity `entity` of the scene (or, in a prefab body, `self`:
+    /// entity 0): a named entity used as a value, or `self` (decision 0064).
+    EntityRef { entity: u32 },
 }
 
 /// A named field value of a struct or descriptor literal.

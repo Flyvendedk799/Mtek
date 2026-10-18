@@ -1343,7 +1343,8 @@ fn every_gated_construct_has_a_gating_fixture() {
             .any(|(_, message)| message.starts_with(prefix) && message.ends_with(&ending))
     };
     // Prefabs (task M5-01, decision 0062) were the last constructs of the table gated in this
-    // build; what is still gated are registry items (below) and the literals of prefabs.
+    // build; what is still gated are registry items (below). Prefab literals and `entity_ref`
+    // landed with task M5-02 (decision 0064).
     for construct in Construct::ALL {
         let gate = construct_gate(construct);
         if gate.since.is_reached_by(IMPLEMENTED_MILESTONE) {
@@ -1358,12 +1359,10 @@ fn every_gated_construct_has_a_gating_fixture() {
     }
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
-        ("The built-in type `entity_ref`", "M5"),
         ("The built-in schema `Static`", "M5"),
         ("The `Entity` field `body`", "M5"),
         ("The `Scene` field `gravity`", "M5"),
         ("Event handlers (`on collision_enter`)", "M5"),
-        ("Prefab literals", "M5"),
     ] {
         assert!(
             produced(prefix, milestone),
@@ -1470,11 +1469,9 @@ fn the_syntax_corpus_resolves_without_panicking() {
 /// that implement them.
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
-    ("E5030", "M5: spawn and destroy"),
     ("E5062", "M5: collision events"),
     ("E5071", "M5: physics"),
     ("E5072", "M5: physics"),
-    ("E5074", "M5: entity_ref"),
     ("E5091", "M5: physics"),
     (
         "E5901",
@@ -1490,10 +1487,10 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ),
     ("E8011", "M3: run-time field writes"),
     ("W8030", "M2: arrays (run-time index clamping)"),
-    ("E8030", "M5: spawn and destroy"),
-    ("W8031", "M5: spawn and destroy"),
-    ("W8032", "M5: spawn and destroy"),
-    ("E8033", "M5: spawn and destroy"),
+    ("E8030", "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)"),
+    ("W8031", "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)"),
+    ("W8032", "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)"),
+    ("E8033", "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)"),
     ("E8041", "M3: host inputs (decision 0018)"),
     ("W8070", "M3: candidate-based hot reload"),
     ("E8080", "M6: preview builds"),
@@ -1504,11 +1501,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
 /// Codes this build implements that no program checked by this build can
 /// produce, with the reason and the test file that covers them instead.
 const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
-    (
-        "E5080",
-        "`spawn` and `destroy` are planned for M5",
-        "src/types/effects_tests.rs",
-    ),
     (
         "E6100",
         "only a compiler defect produces it (Naga rejecting generated WGSL)",

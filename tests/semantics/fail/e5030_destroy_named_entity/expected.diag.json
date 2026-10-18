@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E5030",
+    "file": "src/main.mtek",
+    "startByte": 201,
+    "endByte": 205,
+    "message": "The entity 'Cube' is declared in the scene and cannot be destroyed: it lives as long as the scene.",
+    "related": [
+      {
+        "message": "'Cube' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 133,
+        "endByte": 137
+      }
+    ],
+    "notes": [
+      "only an entity created with `spawn` can be destroyed (spec/scenes.md section 4.5)",
+      "help: hide it with `visible: false`"
+    ]
+  }
+]

@@ -1,0 +1,28 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 329,
+    "endByte": 330,
+    "message": "Argument 1 of `spawn(prefab: prefab descriptor)` expects prefab descriptor, but received i32.",
+    "expected": "prefab descriptor",
+    "actual": "i32"
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 347,
+    "endByte": 352,
+    "message": "'Crate' is a prefab, not a value.",
+    "expected": "a value",
+    "actual": "prefab",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 87,
+        "endByte": 92
+      }
+    ]
+  }
+]

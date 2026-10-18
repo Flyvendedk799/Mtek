@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5004",
+    "file": "src/main.mtek",
+    "startByte": 350,
+    "endByte": 365,
+    "message": "`bind` cannot be used as the value of a prefab param.",
+    "notes": [
+      "`bind(expr)` is the whole value of a bindable field of an entity or camera, or of a param in the `material` of an entity",
+      "help: write the expression without `bind`, or move it into a bindable field"
+    ]
+  }
+]

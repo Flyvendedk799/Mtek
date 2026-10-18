@@ -88,6 +88,9 @@ pub struct Manifest {
     pub materials: Vec<Material>,
     pub meshes: Vec<Mesh>,
     pub assets: Vec<Asset>,
+    /// The prefabs the program spawns (decision 0064); absent when it spawns none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub prefabs: Vec<Prefab>,
     pub scene: Scene,
 }
 
@@ -546,6 +549,42 @@ pub struct Entity {
 pub struct EntityMaterial {
     pub id: String,
     pub instance: u32,
+}
+
+/// A prefab the program spawns (`spec/runtime-abi.md` section 5.6, decision 0064): what the runtime
+/// needs to create an instance. In its bindings entity 0 is the instance and material instance 0 is
+/// its material.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Prefab {
+    /// The key of the `prefabs` table of `app.js`.
+    pub symbol: String,
+    pub name: String,
+    pub params: Vec<PrefabParam>,
+    pub mesh: Option<String>,
+    pub material: Option<PrefabMaterial>,
+    pub body: Option<Body>,
+    pub collider: Option<Collider>,
+    pub state: Vec<StateEntry>,
+    pub update: bool,
+    pub fixed_update: bool,
+    pub bindings: Vec<Binding>,
+    pub span: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PrefabParam {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub ty: String,
+}
+
+/// The material instance of a prefab; every instance made from it starts with these classes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PrefabMaterial {
+    pub id: String,
+    pub params: Vec<InstanceParam>,
+    pub shareable: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
