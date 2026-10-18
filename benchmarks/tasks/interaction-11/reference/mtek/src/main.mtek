@@ -1,0 +1,31 @@
+scene Demo {
+    clear_color: #202020;
+    state ticks: i32 = 0;
+    state glide: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Ticker {
+        position: bind(vec3(-5.5 + 0.1 * f32(ticks), 3.0, 0.0));
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #ef4444 };
+    }
+
+    entity Glider {
+        position: bind(vec3(-5.5 + glide, -3.0, 0.0));
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+    }
+
+    fixed_update(dt: f32) {
+        ticks += 1;
+    }
+
+    update(dt: f32) {
+        glide += 6.0 * dt;
+    }
+}

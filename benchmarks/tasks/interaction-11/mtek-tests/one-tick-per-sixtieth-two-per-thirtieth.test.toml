@@ -1,0 +1,77 @@
+# Camera: orthographic, height 12.8, at (0, 0, 10) looking at the origin: 10 pixels per world unit,
+# pixel x = 64 + 10 x, pixel y = 64 - 10 y. Ticker: 1 x 1 unit, #ef4444, pixels y 29..38; Glider: 1 x 1 unit,
+# #38bdf8, pixels y 89..98; both start with the left edge at pixel x = 4 (centre x = -5.5). Background #202020.
+# The Ticker's left edge is at pixel 4 + (number of ticks so far); the Glider's at 4 + 60 * (program time so far, the
+# sum of the frame durations each counted at most 0.1 s). A tick is one whole 1/60 s of program time (at most 4 per
+# frame, whole steps beyond the fourth dropped, the fraction of a step kept for the next frame).
+# Frame lengths are 1/60 s and 1/30 s rounded up in the fourth digit (0.0167 and 0.0334) and a few others; none is
+# within 0.001 step of a tick boundary on either value of the step (1/60 s as binary64 and as the manifest's
+# binary32 print 0.016666668 s): the model runs both and refuses a frame where they differ.
+# Every expected colour below was computed by evidence/M6/benchmark-input-hooks/oracle/interaction-11.mjs from the
+# task description, not from a run of either reference solution.
+name = "a frame of 1/60 s runs one tick, a frame of 1/30 s runs two"
+steps = [
+  { step = 10, dt = 0.0167 },
+
+  # 10 frames of 1/60 s: 10 ticks: 10 ticks (Ticker at pixel 14), Glider at pixel 14.020
+  { expect_pixel = { x = 14, y = 33, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 23, y = 33, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 29, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 23, y = 38, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 33, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 33, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 18, y = 28, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 18, y = 39, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 93, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 23, y = 93, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 89, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 23, y = 98, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 93, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 93, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 18, y = 88, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 18, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 2, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 125, y = 64, color = "#202020", tolerance = 2 } },
+  { step = 5, dt = 0.0334 },
+
+  # 5 frames of 1/30 s: 10 more ticks: 20 ticks (Ticker at pixel 24), Glider at pixel 24.040
+  { expect_pixel = { x = 24, y = 33, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 33, y = 33, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 29, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 33, y = 38, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 23, y = 33, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 34, y = 33, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 28, y = 28, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 28, y = 39, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 93, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 33, y = 93, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 89, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 33, y = 98, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 23, y = 93, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 34, y = 93, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 28, y = 88, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 28, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 2, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 125, y = 64, color = "#202020", tolerance = 2 } },
+  { step = 3, dt = 0.0167 },
+
+  # 3 frames of 1/60 s: 3 more: 23 ticks (Ticker at pixel 27), Glider at pixel 27.046
+  { expect_pixel = { x = 27, y = 33, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 36, y = 33, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 27, y = 29, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 36, y = 38, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 26, y = 33, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 37, y = 33, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 31, y = 28, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 31, y = 39, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 27, y = 93, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 36, y = 93, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 27, y = 89, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 36, y = 98, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 26, y = 93, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 37, y = 93, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 31, y = 88, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 31, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 2, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 125, y = 64, color = "#202020", tolerance = 2 } },
+]

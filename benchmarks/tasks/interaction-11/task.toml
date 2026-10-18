@@ -1,0 +1,19 @@
+id = "interaction-11"
+category = "interaction"
+mode = "edit"
+title = "Two clocks: a block that moves per fixed tick and a block that moves per frame time"
+prompt = """The scene Demo is drawn from the front with a flat (orthographic) camera. One world unit is ten pixels. Two blocks of 1 x 1 units stand at the left with their centres at x = -5.5: a red block named Ticker (#ef4444) at y = 3 and a cyan block named Glider (#38bdf8) at y = -3. Neither moves yet.
+The program has two clocks:
+- Frames. Every frame has a duration, the time since the previous frame; a duration longer than 0.1 s counts as 0.1 s. Program time is the sum of the counted durations.
+- Fixed steps. The simulation runs in steps of exactly 1/60 s of program time, one tick per step. In each frame the counted duration is added to whatever is left over from earlier frames, and every whole 1/60 s in that sum is one tick, run in order within that frame, but at most 4 ticks run in one frame. Whole steps beyond the fourth are dropped: they are never run later. What is less than one step is kept for the next frame. For example, starting with nothing left over, a frame of 0.04 s (2.4 steps) runs 2 ticks and keeps 0.4 of a step.
+Make both blocks move to the right:
+- The Ticker moves 0.1 world unit (one pixel) on every tick.
+- The Glider moves 6 world units per second of program time: in every frame it moves 6 times that frame's counted duration.
+Neither block moves in any other way. The camera and everything else stay as they are."""
+required_symbols = ["Demo.Ticker", "Demo.Glider"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300
