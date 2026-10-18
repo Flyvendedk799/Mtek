@@ -69,7 +69,10 @@ enum G {
     /// Characters, matched literally.
     Lit(String),
     /// A character class over code-point ranges.
-    Class { negated: bool, ranges: Vec<(u32, u32)> },
+    Class {
+        negated: bool,
+        ranges: Vec<(u32, u32)>,
+    },
     Sym(String),
     Seq(Vec<G>),
     Alt(Vec<G>),
@@ -437,49 +440,38 @@ struct Translator<'m> {
 impl<'m> Translator<'m> {
     fn new(model: &'m GrammarModel) -> Result<Self, String> {
         let mut rules = BTreeMap::new();
-        let mut order = Vec::new();
-        for production in model.productions() {
-            if production.level != Level::Syntactic {
+        let mut order: Vec<String> = Vec::new();
+        let syntactic: Vec<&Production> = model
+            .productions()
+            .filter(|p| p.level == Level::Syntactic)
+            .collect();
+        for production in syntactic.iter().filter(|p| p.derivation.is_none()) {
+            rules.insert(production.name.to_owned(), field_names(production)?);
+            order.push(production.name.to_owned());
+        }
+        // The derived productions are expanded once every original is known;
+        // their copies follow the originals.
+        for production in &syntactic {
+            let Some(Derivation::WithoutAtTopLevel { base, removed }) = &production.derivation
+            else {
                 continue;
+            };
+            if production.rhs != Expr::Ref(base) {
+                return Err(format!(
+                    "{} is derived from {base} but its right-hand side is not {base}",
+                    production.name
+                ));
             }
-            match &production.derivation {
-                None => {
-                    rules.insert(production.name.to_owned(), field_names(production)?);
-                    order.push(production.name.to_owned());
-                }
-                Some(Derivation::WithoutAtTopLevel { base, removed }) => {
-                    if production.rhs != Expr::Ref(base) {
-                        return Err(format!(
-                            "{} is derived from {base} but its right-hand side is not {base}",
-                            production.name
-                        ));
-                    }
-                    // Copies are made once all originals are known.
-                    order.push(format!("\u{0}{}\u{0}{base}\u{0}{removed}", production.name));
-                }
+            let suffix = production
+                .name
+                .strip_prefix(base)
+                .ok_or_else(|| format!("{} does not extend the name {base}", production.name))?;
+            for (copy, rhs) in without_at_top_level(&rules, &order, base, removed, suffix)? {
+                order.push(copy.clone());
+                rules.insert(copy, rhs);
             }
         }
-        // Expand the derived productions.
-        let mut expanded_order = Vec::new();
-        for entry in order {
-            if let Some(spec) = entry.strip_prefix('\u{0}') {
-                let mut parts = spec.split('\u{0}');
-                let (Some(name), Some(base), Some(removed)) =
-                    (parts.next(), parts.next(), parts.next())
-                else {
-                    return Err("internal: malformed derivation entry".to_owned());
-                };
-                let suffix = name.strip_prefix(base).unwrap_or(name).to_owned();
-                let copies =
-                    without_at_top_level(&rules, &expanded_order, base, removed, &suffix)?;
-                for (copy, rhs) in copies {
-                    expanded_order.push(copy.clone());
-                    rules.insert(copy, rhs);
-                }
-            } else {
-                expanded_order.push(entry);
-            }
-        }
+        let expanded_order = order;
         let mut translator = Translator {
             model,
             rules,
@@ -581,10 +573,7 @@ impl<'m> Translator<'m> {
                     ..s
                 }
             }
-            Expr::Literal(_)
-            | Expr::CodePoint(_)
-            | Expr::Class { .. }
-            | Expr::Except(..) => {
+            Expr::Literal(_) | Expr::CodePoint(_) | Expr::Class { .. } | Expr::Except(..) => {
                 return Err(format!(
                     "a lexical construct in a syntactic production: {expr:?}"
                 ));
@@ -876,19 +865,17 @@ impl<'m> Translator<'m> {
     }
 
     fn variant_name(&self, variant: &Variant) -> String {
-        let base = if self.helpers.contains_key(&variant.rule) {
-            variant.rule.clone()
+        // Helpers are always named with their ending tag; productions only
+        // when the variant excludes some of their possible endings.
+        let (base, full) = if self.helpers.contains_key(&variant.rule) {
+            (variant.rule.clone(), None)
         } else {
-            kebab(&variant.rule)
+            let shape = self.shapes.get(&variant.rule).copied().unwrap_or_default();
+            (
+                kebab(&variant.rule),
+                Some(Self::possible_last(shape, variant.after)),
+            )
         };
-        let shape = if let Some(inner) = self.helpers.get(&variant.rule) {
-            // Helpers are always named with their full tag set.
-            let _ = inner;
-            None
-        } else {
-            self.shapes.get(&variant.rule).copied()
-        };
-        let full = shape.map(|s| Self::possible_last(s, variant.after));
         let mut name = base;
         match variant.after {
             Last::Punct => {}
@@ -989,7 +976,9 @@ impl<'m> Translator<'m> {
             &mut out,
         );
 
-        out.push_str("\n# Syntactic productions (sections 2 to 7), in grammar order, with their variants.\n");
+        out.push_str(
+            "\n# Syntactic productions (sections 2 to 7), in grammar order, with their variants.\n",
+        );
         let mut emitted: BTreeSet<String> = BTreeSet::new();
         let order = self.order.clone();
         for name in &order {
@@ -1108,7 +1097,9 @@ fn without_at_top_level(
         }
     }
     if !copied.contains(base) {
-        return Err(format!("{removed} is not reachable from {base} outside brackets"));
+        return Err(format!(
+            "{removed} is not reachable from {base} outside brackets"
+        ));
     }
     // Only the rules reachable from `base` through copied rules.
     let mut wanted = vec![base.to_owned()];
@@ -1118,9 +1109,7 @@ fn without_at_top_level(
         if !seen.insert(name.clone()) {
             continue;
         }
-        let rhs = rules
-            .get(&name)
-            .ok_or_else(|| format!("no rule {name}"))?;
+        let rhs = rules.get(&name).ok_or_else(|| format!("no rule {name}"))?;
         let copy = rewrite_without(rhs, &copied, removed, suffix, 0);
         for r in unbracketed.get(name.as_str()).into_iter().flatten() {
             if copied.contains(r) {
@@ -1161,7 +1150,11 @@ fn unbracketed_refs(expr: &Expr, out: &mut BTreeSet<String>) {
         }
         Expr::Alt(arms) => arms.iter().for_each(|a| unbracketed_refs(&a.expr, out)),
         Expr::Group(inner) | Expr::Repeat(inner, _) => unbracketed_refs(inner, out),
-        Expr::Except(..) | Expr::Literal(_) | Expr::CodePoint(_) | Expr::Class { .. } | Expr::Eof => {}
+        Expr::Except(..)
+        | Expr::Literal(_)
+        | Expr::CodePoint(_)
+        | Expr::Class { .. }
+        | Expr::Eof => {}
     }
 }
 
@@ -1335,16 +1328,14 @@ impl Lexical<'_> {
             out.push((kebab(name), body));
         }
         if !seen.contains("Hex") && seen.contains("Escape") {
-            out.push(("hex".to_owned(), translate(&self.production("Hex")?.rhs, "Hex")?));
+            out.push((
+                "hex".to_owned(),
+                translate(&self.production("Hex")?.rhs, "Hex")?,
+            ));
         }
         // Grammar order.
         let order: Vec<String> = self.model.productions().map(|p| kebab(p.name)).collect();
-        out.sort_by_key(|(name, _)| {
-            order
-                .iter()
-                .position(|n| n == name)
-                .unwrap_or(usize::MAX)
-        });
+        out.sort_by_key(|(name, _)| order.iter().position(|n| n == name).unwrap_or(usize::MAX));
         Ok(out)
     }
 
@@ -1384,7 +1375,11 @@ impl Lexical<'_> {
         };
         let mut out = Vec::new();
         for prefix in &prefixes {
-            let allowed = if prefix.is_empty() { &start } else { &cont_ranges };
+            let allowed = if prefix.is_empty() {
+                &start
+            } else {
+                &cont_ranges
+            };
             let mut children: Vec<char> = words
                 .iter()
                 .filter(|w| w.len() > prefix.len() && w.starts_with(prefix.as_str()))
@@ -1553,7 +1548,9 @@ fn translate(expr: &Expr, context: &str) -> Result<G, String> {
         Expr::Group(inner) => translate(inner, context)?,
         Expr::Repeat(inner, repeat) => G::Rep(Box::new(translate(inner, context)?), *repeat),
         Expr::Eof | Expr::Except(..) => {
-            return Err(format!("{context}: cannot translate {expr:?} character by character"));
+            return Err(format!(
+                "{context}: cannot translate {expr:?} character by character"
+            ));
         }
     })
 }
@@ -1604,7 +1601,13 @@ fn hex4_not_surrogate() -> G {
     let hex = || sym("hex");
     alt(vec![
         seq(vec![
-            class(&[(0x30, 0x39), (0x41, 0x43), (0x45, 0x46), (0x61, 0x63), (0x65, 0x66)]),
+            class(&[
+                (0x30, 0x39),
+                (0x41, 0x43),
+                (0x45, 0x46),
+                (0x61, 0x63),
+                (0x65, 0x66),
+            ]),
             G::Times(Box::new(hex()), 3, 3),
         ]),
         seq(vec![
@@ -1675,7 +1678,10 @@ mod tests {
             }
         }
         for name in &used {
-            assert!(names.contains(name.as_str()), "{name} is used but not defined");
+            assert!(
+                names.contains(name.as_str()),
+                "{name} is used but not defined"
+            );
         }
         for name in &names {
             assert!(
@@ -1700,12 +1706,22 @@ mod tests {
         let text = grammar_text();
         let names: BTreeSet<String> = rules(&text).into_iter().map(|(n, _)| n).collect();
         for base in [
-            "expr", "or-expr", "and-expr", "eq-expr", "rel-expr", "add-expr", "mul-expr",
-            "unary-expr", "postfix-expr", "primary",
+            "expr",
+            "or-expr",
+            "and-expr",
+            "eq-expr",
+            "rel-expr",
+            "add-expr",
+            "mul-expr",
+            "unary-expr",
+            "postfix-expr",
+            "primary",
         ] {
             let copy = format!("{base}-no-desc");
             assert!(
-                names.iter().any(|n| n == &copy || n.starts_with(&format!("{copy}-"))),
+                names
+                    .iter()
+                    .any(|n| n == &copy || n.starts_with(&format!("{copy}-"))),
                 "{copy} is missing"
             );
         }
@@ -1713,7 +1729,11 @@ mod tests {
         let body = |prefix: &str| {
             rules(&text)
                 .into_iter()
-                .filter(|(n, _)| n == prefix || n.starts_with(&format!("{prefix}-e")) || n.starts_with(&format!("{prefix}-a")))
+                .filter(|(n, _)| {
+                    n == prefix
+                        || n.starts_with(&format!("{prefix}-e"))
+                        || n.starts_with(&format!("{prefix}-a"))
+                })
                 .map(|(_, b)| b)
                 .collect::<Vec<_>>()
                 .join(" ")

@@ -10,3 +10,6 @@ fn b() {
 /** looks like a doc comment but is a block comment */
 fn c() {}
 const /* between tokens */ D /* anywhere */ = /* really */ 1;
+/***/
+/* stars before the end **/
+const E = /*/ a slash after the opener */ 2;

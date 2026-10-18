@@ -14,8 +14,7 @@ use std::process::ExitCode;
 
 use mtek_grammar_adapters::{check_capability, default_install_dir};
 
-const USAGE: &str =
-    "usage: grammar-adapter check [--install-dir DIR] [--format human|json]\n";
+const USAGE: &str = "usage: grammar-adapter check [--install-dir DIR] [--format human|json]\n";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();

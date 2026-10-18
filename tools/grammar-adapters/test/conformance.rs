@@ -129,7 +129,10 @@ fn mtek_files(dir: &Path, out: &mut Vec<PathBuf>) {
             let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
             // Never read the holdout set (spec/ai-and-benchmarks.md 6.2), nor
             // generated or installed trees.
-            if matches!(name, "holdout" | "node_modules" | "target" | ".cache" | "dist" | ".out") {
+            if matches!(
+                name,
+                "holdout" | "node_modules" | "target" | ".cache" | "dist" | ".out"
+            ) {
                 continue;
             }
             mtek_files(&path, out);
@@ -253,40 +256,136 @@ fn edge_cases() -> Vec<(&'static str, String, Expected)> {
         ("string: \\u{12 unclosed", s(r"\u{12"), R),
         ("string: unterminated", in_fn("let s = \"abc;"), R),
         ("string: a line break inside", in_fn("let s = \"a\nb\";"), R),
-        ("string: a backslash at the end of the line", in_fn("let s = \"a\\\n\";"), R),
+        (
+            "string: a backslash at the end of the line",
+            in_fn("let s = \"a\\\n\";"),
+            R,
+        ),
         // Comments.
-        ("comment: line", "// a line comment\nfn f() {}\n".to_owned(), A),
-        ("comment: doc before a function", "/// Documents f.\nfn f() {}\n".to_owned(), A),
-        ("comment: //// banner", "//// banner\nfn f() {}\n".to_owned(), A),
-        ("comment: line comment ends the file without a line break", "fn f() {} // end".to_owned(), A),
-        ("comment: only a line comment, no line break", "// nothing else".to_owned(), A),
+        (
+            "comment: line",
+            "// a line comment\nfn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "comment: doc before a function",
+            "/// Documents f.\nfn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "comment: //// banner",
+            "//// banner\nfn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "comment: line comment ends the file without a line break",
+            "fn f() {} // end".to_owned(),
+            A,
+        ),
+        (
+            "comment: only a line comment, no line break",
+            "// nothing else".to_owned(),
+            A,
+        ),
         ("comment: block", "/* block */ fn f() {}\n".to_owned(), A),
         ("comment: empty block /**/", "/**/fn f() {}\n".to_owned(), A),
         ("comment: /***/", "/***/ fn f() {}\n".to_owned(), A),
-        ("comment: stars before the end", "/* a **/ fn f() {}\n".to_owned(), A),
-        ("comment: slash after the opener", "/*/ x */ fn f() {}\n".to_owned(), A),
-        ("comment: nested", "/* a /* b */ c */ fn f() {}\n".to_owned(), A),
-        ("comment: //* inside opens a nested comment", "/* //* x */ */ fn f() {}\n".to_owned(), A),
-        ("comment: stars and slashes", "/* * / ** // */ fn f() {}\n".to_owned(), A),
-        ("comment: between every token", "fn/**/f(/**/)/**/{/**/}\n".to_owned(), A),
+        (
+            "comment: stars before the end",
+            "/* a **/ fn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "comment: slash after the opener",
+            "/*/ x */ fn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "comment: nested",
+            "/* a /* b */ c */ fn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "comment: //* inside opens a nested comment",
+            "/* //* x */ */ fn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "comment: stars and slashes",
+            "/* * / ** // */ fn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "comment: between every token",
+            "fn/**/f(/**/)/**/{/**/}\n".to_owned(),
+            A,
+        ),
         ("comment: separates two words", in_fn("let/* */x = 1;"), A),
-        ("comment: multi-line block", "/*\n line\n line\n*/\nfn f() {}\n".to_owned(), A),
-        ("comment: block at the end", "fn f() {} /* end */".to_owned(), A),
+        (
+            "comment: multi-line block",
+            "/*\n line\n line\n*/\nfn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "comment: block at the end",
+            "fn f() {} /* end */".to_owned(),
+            A,
+        ),
         ("comment: unterminated", "fn f() {} /* open".to_owned(), R),
-        ("comment: nested, unbalanced", "/* a /* b */ fn f() {}\n".to_owned(), R),
+        (
+            "comment: nested, unbalanced",
+            "/* a /* b */ fn f() {}\n".to_owned(),
+            R,
+        ),
         ("comment: /*/", "/*/ fn f() {}\n".to_owned(), R),
         ("comment: stray */", "fn f() {} */\n".to_owned(), R),
-        ("comment: lone carriage return inside a block comment", "/* a\rb */ fn f() {}\n".to_owned(), R),
-        ("comment: lone carriage return after a line comment", "// a\rfn f() {}\n".to_owned(), R),
-        ("whitespace: lone carriage return", "fn f() {}\r".to_owned(), R),
-        ("whitespace: CRLF line endings", "// c\r\nfn f() {\r\n    let a = 1;\r\n}\r\n".to_owned(), A),
-        ("whitespace: tabs", "fn\tf()\t{\tlet a = 1;\t}\n".to_owned(), A),
+        (
+            "comment: lone carriage return inside a block comment",
+            "/* a\rb */ fn f() {}\n".to_owned(),
+            R,
+        ),
+        (
+            "comment: lone carriage return after a line comment",
+            "// a\rfn f() {}\n".to_owned(),
+            R,
+        ),
+        (
+            "whitespace: lone carriage return",
+            "fn f() {}\r".to_owned(),
+            R,
+        ),
+        (
+            "whitespace: CRLF line endings",
+            "// c\r\nfn f() {\r\n    let a = 1;\r\n}\r\n".to_owned(),
+            A,
+        ),
+        (
+            "whitespace: tabs",
+            "fn\tf()\t{\tlet a = 1;\t}\n".to_owned(),
+            A,
+        ),
         ("whitespace: empty file", String::new(), A),
         ("whitespace: only blank lines", "\n\n  \n".to_owned(), A),
-        ("whitespace: vertical tab (E0005)", "fn f() {}\u{0B}\n".to_owned(), R),
-        ("whitespace: no-break space (E0005)", "fn\u{a0}f() {}\n".to_owned(), R),
-        ("whitespace: byte-order mark at the start", "\u{feff}fn f() {}\n".to_owned(), A),
-        ("whitespace: byte-order mark later (E0002)", "fn f() {}\n\u{feff}".to_owned(), R),
+        (
+            "whitespace: vertical tab (E0005)",
+            "fn f() {}\u{0B}\n".to_owned(),
+            R,
+        ),
+        (
+            "whitespace: no-break space (E0005)",
+            "fn\u{a0}f() {}\n".to_owned(),
+            R,
+        ),
+        (
+            "whitespace: byte-order mark at the start",
+            "\u{feff}fn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "whitespace: byte-order mark later (E0002)",
+            "fn f() {}\n\u{feff}".to_owned(),
+            R,
+        ),
         // Numbers and colours.
         ("number: 0", e("0"), A),
         ("number: 1234567890", e("1234567890"), A),
@@ -299,7 +398,11 @@ fn edge_cases() -> Vec<(&'static str, String, Expected)> {
         ("number: 1 .x (field of an integer)", e("1 .x"), A),
         ("number: 1.0.x", e("1.0.x"), A),
         ("number: 0..n range", in_fn("for i in 0..n { g(i); }"), A),
-        ("number: 0.5..1.5 range", in_fn("for i in 0.5..1.5 { g(i); }"), A),
+        (
+            "number: 0.5..1.5 range",
+            in_fn("for i in 0.5..1.5 { g(i); }"),
+            A,
+        ),
         ("number: 00", e("00"), R),
         ("number: 01", e("01"), R),
         ("number: 1.", e("1."), R),
@@ -323,31 +426,77 @@ fn edge_cases() -> Vec<(&'static str, String, Expected)> {
         ("color: #gggggg", e("#gggggg"), R),
         ("color: #fffffffff (nine)", e("#fffffffff"), R),
         // Words, keywords and field names.
-        ("word: a name that starts with a keyword", in_fn("let iffy = 1;"), A),
-        ("word: a name that a keyword starts with", in_fn("let i = 1;"), A),
+        (
+            "word: a name that starts with a keyword",
+            in_fn("let iffy = 1;"),
+            A,
+        ),
+        (
+            "word: a name that a keyword starts with",
+            in_fn("let i = 1;"),
+            A,
+        ),
         ("word: _x", in_fn("let _x = 1;"), A),
         ("word: __x (E0011, a restriction)", in_fn("let __x = 1;"), A),
-        ("word: assignment to a name that starts with let", in_fn("letx = 1;"), A),
-        ("word: a call that starts with return", in_fn("returnx();"), A),
+        (
+            "word: assignment to a name that starts with let",
+            in_fn("letx = 1;"),
+            A,
+        ),
+        (
+            "word: a call that starts with return",
+            in_fn("returnx();"),
+            A,
+        ),
         ("word: return(1)", in_fn("return(1);"), A),
+        (
+            "word: _ as a declared name (E0012 is the resolver's)",
+            in_fn("let _ = 1;"),
+            A,
+        ),
+        ("word: _ as a descriptor name", e("_ { a: 1 }"), A),
         ("word: keyword as a name", in_fn("let if = 1;"), R),
         ("word: reserved word as a name", in_fn("let type = 1;"), R),
         ("word: every keyword as a name", in_fn("let true = 1;"), R),
         ("word: non-ASCII name (E0010)", in_fn("let café = 1;"), R),
         ("word: glued keywords", "fnf() {}\n".to_owned(), R),
         ("word: glued export", "exportfn f() {}\n".to_owned(), R),
-        ("word: glued keyword and name", "scene Main { stateangle: f32 = 0.0; }\n".to_owned(), R),
+        (
+            "word: glued keyword and name",
+            "scene Main { stateangle: f32 = 0.0; }\n".to_owned(),
+            R,
+        ),
         (
             "word: material is a field name",
             "scene Main {\n    entity Cube { material: Unlit { color: #ffffff }; }\n}\n".to_owned(),
             A,
         ),
-        ("word: material after a dot", in_fn("Cube.material.color = #ffffff;"), A),
-        ("word: material as a descriptor field", e("Unlit { material: 1 }"), A),
-        ("word: material as a struct field", "struct S { material: f32; }\n".to_owned(), R),
-        ("word: material as a local name", in_fn("let material = 1;"), R),
+        (
+            "word: material after a dot",
+            in_fn("Cube.material.color = #ffffff;"),
+            A,
+        ),
+        (
+            "word: material as a descriptor field",
+            e("Unlit { material: 1 }"),
+            A,
+        ),
+        (
+            "word: material as a struct field",
+            "struct S { material: f32; }\n".to_owned(),
+            R,
+        ),
+        (
+            "word: material as a local name",
+            in_fn("let material = 1;"),
+            R,
+        ),
         // Separators between punctuation.
-        ("operator: >= after type arguments", in_fn("let a: array<f32, 2>= x;"), A),
+        (
+            "operator: >= after type arguments",
+            in_fn("let a: array<f32, 2>= x;"),
+            A,
+        ),
         ("operator: a=-b", in_fn("a=-b;"), A),
         ("operator: a<-b", e("a<-b"), A),
         ("operator: = = is not ==", e("a = = b"), R),
@@ -359,17 +508,45 @@ fn edge_cases() -> Vec<(&'static str, String, Expected)> {
         ("operator: shift (E1901)", e("a << b"), R),
         ("operator: ...", in_fn("for i in a...b { }"), R),
         // ExprNoDesc.
-        ("condition: descriptor literal (E1011)", in_fn("if Box { size: 1.0 } { g(); }"), R),
-        ("condition: parenthesised descriptor", in_fn("if (Box { size: 1.0 }).size > 0.0 { g(); }"), A),
+        (
+            "condition: descriptor literal (E1011)",
+            in_fn("if Box { size: 1.0 } { g(); }"),
+            R,
+        ),
+        (
+            "condition: parenthesised descriptor",
+            in_fn("if (Box { size: 1.0 }).size > 0.0 { g(); }"),
+            A,
+        ),
         ("condition: name then two blocks", in_fn("if x {} {}"), A),
-        ("condition: descriptor in a call argument", in_fn("if f(Box { s: 1 }) { g(); }"), A),
-        ("for: descriptor iterable (E1011)", in_fn("for x in Items { a: 1 } { g(x); }"), R),
+        (
+            "condition: descriptor in a call argument",
+            in_fn("if f(Box { s: 1 }) { g(); }"),
+            A,
+        ),
+        (
+            "for: descriptor iterable (E1011)",
+            in_fn("for x in Items { a: 1 } { g(x); }"),
+            R,
+        ),
         // Structure.
         ("item: export const", "export const A = 1;\n".to_owned(), A),
         ("item: cpu fn", "cpu fn f() {}\n".to_owned(), A),
-        ("item: export cpu fn", "export cpu fn f() {}\n".to_owned(), A),
-        ("item: import", "import { A, B, } from \"./a.mtek\";\n".to_owned(), A),
-        ("item: import glued from", "import { A }from\"./a.mtek\";\n".to_owned(), A),
+        (
+            "item: export cpu fn",
+            "export cpu fn f() {}\n".to_owned(),
+            A,
+        ),
+        (
+            "item: import",
+            "import { A, B, } from \"./a.mtek\";\n".to_owned(),
+            A,
+        ),
+        (
+            "item: import glued from",
+            "import { A }from\"./a.mtek\";\n".to_owned(),
+            A,
+        ),
         ("item: trailing garbage", "fn f() {} }\n".to_owned(), R),
     ];
     // Deep nesting that the compiler accepts, and a nested comment 64 deep.
@@ -437,7 +614,11 @@ fn derived_cases(pass: &[(String, String)]) -> Vec<Case> {
             });
         }
         let lexed = lex_str(FileId(0), text);
-        let tokens: Vec<_> = lexed.tokens.iter().filter(|t| t.kind != TokenKind::Eof).collect();
+        let tokens: Vec<_> = lexed
+            .tokens
+            .iter()
+            .filter(|t| t.kind != TokenKind::Eof)
+            .collect();
         for (index, token) in tokens.iter().enumerate() {
             let (start, end) = (token.span.start as usize, token.span.end as usize);
             let mutated = format!("{}{}", &text[..start], &text[end..]);
@@ -538,8 +719,14 @@ fn main() -> ExitCode {
     let workers = std::thread::available_parallelism().map_or(4, |n| n.get().min(12));
     std::thread::scope(|scope| {
         for worker in 0..workers {
-            let (queue, results, cases, scratch, validator, grammar_path) =
-                (&queue, &results, &cases, &scratch, &validator, &grammar_path);
+            let (queue, results, cases, scratch, validator, grammar_path) = (
+                &queue,
+                &results,
+                &cases,
+                &scratch,
+                &validator,
+                &grammar_path,
+            );
             scope.spawn(move || {
                 loop {
                     let Some(index) = queue.lock().unwrap().pop_front() else {

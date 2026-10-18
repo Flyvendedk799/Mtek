@@ -259,10 +259,16 @@ impl Validator {
             Command::new(&self.path).arg(grammar).arg(input),
             Duration::from_secs(120),
         )?;
-        if run.stdout.contains("Input string is valid according to the grammar.") {
+        if run
+            .stdout
+            .contains("Input string is valid according to the grammar.")
+        {
             return Ok(Verdict::Accepted);
         }
-        if run.stdout.contains("Input string is invalid according to the grammar.") {
+        if run
+            .stdout
+            .contains("Input string is invalid according to the grammar.")
+        {
             let line = run
                 .stdout
                 .lines()
@@ -396,7 +402,11 @@ impl CompilerVerdict {
     /// The expectation for the grammar.
     #[must_use]
     pub fn expectation(&self) -> Expectation {
-        if self.errors.iter().any(|c| GRAMMAR_CODES.contains(&c.as_str())) {
+        if self
+            .errors
+            .iter()
+            .any(|c| GRAMMAR_CODES.contains(&c.as_str()))
+        {
             Expectation::Reject
         } else if self
             .errors
@@ -555,7 +565,11 @@ pub fn check_capability(dir: &Path) -> Result<Capability, Unavailable> {
             .map_err(Unavailable::new)?;
         let verdict = validator
             .validate_file(&grammar_path, &input)
-            .map_err(|e| Unavailable::new(format!("the grammar does not load in the pinned validator: {e}")))?;
+            .map_err(|e| {
+                Unavailable::new(format!(
+                    "the grammar does not load in the pinned validator: {e}"
+                ))
+            })?;
         if (verdict == Verdict::Accepted) != wanted {
             return Err(Unavailable::new(format!(
                 "the pinned validator {} the {} probe module: the grammar is not enforced as exported",
@@ -724,13 +738,19 @@ mod tests {
     fn a_missing_install_is_unavailable_with_the_message() {
         let scratch = Scratch::new("missing").expect("scratch");
         let error = check_capability(&scratch.0).expect_err("nothing is installed");
-        assert!(error.to_string().starts_with("grammar-constrained mode unavailable: "));
+        assert!(
+            error
+                .to_string()
+                .starts_with("grammar-constrained mode unavailable: ")
+        );
         assert!(error.reason.contains("not installed"), "{}", error.reason);
         let json = error.to_json();
         assert_eq!(json["status"], "unavailable");
-        assert!(json["message"]
-            .as_str()
-            .is_some_and(|m| m.starts_with(UNAVAILABLE)));
+        assert!(
+            json["message"]
+                .as_str()
+                .is_some_and(|m| m.starts_with(UNAVAILABLE))
+        );
     }
 
     #[test]
@@ -755,7 +775,11 @@ mod tests {
             .write("install.json", record.to_string().as_bytes())
             .expect("write");
         let error = check_capability(&scratch.0).expect_err("no generator");
-        assert!(error.reason.contains("generator is not installed"), "{}", error.reason);
+        assert!(
+            error.reason.contains("generator is not installed"),
+            "{}",
+            error.reason
+        );
     }
 
     #[test]
@@ -802,12 +826,18 @@ mod tests {
             split_end_of_text("scene A {}\n [end of text]\n"),
             ("scene A {}\n".to_owned(), true)
         );
-        assert_eq!(split_end_of_text("scene A {"), ("scene A {".to_owned(), false));
+        assert_eq!(
+            split_end_of_text("scene A {"),
+            ("scene A {".to_owned(), false)
+        );
     }
 
     #[test]
     fn the_compiler_verdict_lexes_and_parses() {
         assert_eq!(compiler_verdict("fn f() {}").errors, Vec::<String>::new());
-        assert_eq!(compiler_verdict("fn f() {").expectation(), Expectation::Reject);
+        assert_eq!(
+            compiler_verdict("fn f() {").expectation(),
+            Expectation::Reject
+        );
     }
 }

@@ -619,7 +619,9 @@ pub fn grammar() -> GrammarModel {
                     lit("*/"),
                 ]),
             ),
-            &["                                                                /* nests; unterminated is E0006  */"],
+            &[
+                "                                                                /* nests; unterminated is E0006  */",
+            ],
         ),
         Blank,
         lexical(
@@ -635,7 +637,9 @@ pub fn grammar() -> GrammarModel {
                 "IdentContinue",
                 class(&[R('A', 'Z'), R('a', 'z'), R('0', '9'), C('_')]),
             ),
-            &["                    /* [S: reserved-identifiers: '_' alone and names starting with '__' are rejected (E0012, E0011)] */"],
+            &[
+                "                    /* [S: reserved-identifiers: '_' alone and names starting with '__' are rejected (E0012, E0011)] */",
+            ],
         ),
         Blank,
         lexical("Keyword", words(&KEYWORD_WORDS, &[7, 15, 22])),
@@ -769,7 +773,9 @@ pub fn grammar() -> GrammarModel {
                     lit(";"),
                 ]),
             ),
-            &["                    /* 'from' is contextual. [S: import-specifier: specifier rules E2030-E2034] */"],
+            &[
+                "                    /* 'from' is contextual. [S: import-specifier: specifier rules E2030-E2034] */",
+            ],
         ),
         Blank,
         syntax(
@@ -932,7 +938,9 @@ pub fn grammar() -> GrammarModel {
                     &[5],
                 ),
             ),
-            &["                    /* [S: param-only-in-prefab: ParamDecl only inside prefabs (E1040)] */"],
+            &[
+                "                    /* [S: param-only-in-prefab: ParamDecl only inside prefabs (E1040)] */",
+            ],
         ),
         Blank,
         noted(
@@ -946,7 +954,9 @@ pub fn grammar() -> GrammarModel {
                     lit("}"),
                 ]),
             ),
-            &["                    /* [S: scene-object-kind: first Ident is a registered scene-object kind: 'camera' (E5014 \"unknown scene object kind\" otherwise)] */"],
+            &[
+                "                    /* [S: scene-object-kind: first Ident is a registered scene-object kind: 'camera' (E5014 \"unknown scene object kind\" otherwise)] */",
+            ],
         ),
         Blank,
         syntax(
@@ -973,7 +983,9 @@ pub fn grammar() -> GrammarModel {
                     r("Expr"),
                 ]),
             ),
-            &["                    /* [S: bind-bindable-field: bind only on bindable fields (E5004)] */"],
+            &[
+                "                    /* [S: bind-bindable-field: bind only on bindable fields (E5004)] */",
+            ],
         ),
         Blank,
         noted(
@@ -1016,7 +1028,9 @@ pub fn grammar() -> GrammarModel {
                             &[1],
                         ),
                     ),
-                    &["                    /* disambiguation: Ident followed by ':' is the parameter form        */"],
+                    &[
+                        "                    /* disambiguation: Ident followed by ':' is the parameter form        */",
+                    ],
                 ),
                 0,
                 12,
@@ -1052,10 +1066,7 @@ pub fn grammar() -> GrammarModel {
         Blank,
         Comment(SECTION_6),
         Blank,
-        syntax(
-            "Block",
-            seq(vec![lit("{"), star(r("Statement")), lit("}")]),
-        ),
+        syntax("Block", seq(vec![lit("{"), star(r("Statement")), lit("}")])),
         syntax(
             "Statement",
             alt_lines(
@@ -1210,10 +1221,7 @@ pub fn grammar() -> GrammarModel {
                 r("PostfixExpr"),
             ]),
         ),
-        syntax(
-            "PostfixExpr",
-            seq(vec![r("Primary"), star(r("PostfixOp"))]),
-        ),
+        syntax("PostfixExpr", seq(vec![r("Primary"), star(r("PostfixOp"))])),
         syntax(
             "PostfixOp",
             alt(vec![

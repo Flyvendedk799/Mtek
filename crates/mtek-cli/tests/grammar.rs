@@ -20,9 +20,8 @@ fn export_ebnf_prints_the_checked_in_grammar_exactly() {
     let out = run(&["grammar", "export", "--format", "ebnf"]);
     assert_eq!(out.status.code(), Some(0));
     assert!(out.stderr.is_empty());
-    let file =
-        std::fs::read(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../spec/grammar.ebnf"))
-            .unwrap();
+    let file = std::fs::read(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../spec/grammar.ebnf"))
+        .unwrap();
     assert!(out.stdout == file, "stdout differs from spec/grammar.ebnf");
 }
 

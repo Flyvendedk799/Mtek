@@ -19,19 +19,25 @@ use mtek_grammar_adapters::{
     Expectation, check_capability, compiler_verdict, default_install_dir, generate,
 };
 
+/// The model's own chat format (ChatML), written out, so that its answer is
+/// the module and it ends the answer with its end-of-turn token, which the
+/// grammar sampler allows only where the module is complete.
 const PROMPT: &str = "\
-// Mtek is a language for 3D scenes in the browser. This file is a complete Mtek module.
-// Example:
-//
-// scene Demo {
-//     camera Main { position: vec3(0.0, 2.0, 6.0); }
-//     entity Cube {
-//         mesh: Box { size: vec3(1.0, 1.0, 1.0) };
-//         material: Unlit { color: #6b5cff };
-//     }
-// }
-//
-// The module below declares one scene with a camera and one entity, and nothing else.
+<|im_start|>system
+You write Mtek, a language for 3D scenes in the browser. Answer with Mtek source only.<|im_end|>
+<|im_start|>user
+Here is an Mtek module:
+
+scene Demo {
+    camera Main { position: vec3(0.0, 2.0, 6.0); }
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #6b5cff };
+    }
+}
+
+Write a similar module with a scene called Garden, one camera and one entity called Tree.<|im_end|>
+<|im_start|>assistant
 ";
 
 const MAX_TOKENS: u32 = 400;
@@ -66,11 +72,18 @@ fn main() -> ExitCode {
     let verdict = compiler_verdict(&generation.text);
     println!(
         "grammar adapter smoke: generation {} after {} decode runs (limit {MAX_TOKENS}); compiler lex+parse errors: {:?}",
-        if generation.truncated { "truncated" } else { "completed" },
+        if generation.truncated {
+            "truncated"
+        } else {
+            "completed"
+        },
         generation.tokens,
         verdict.errors
     );
-    println!("----- generated text -----\n{}\n--------------------------", generation.text);
+    println!(
+        "----- generated text -----\n{}\n--------------------------",
+        generation.text
+    );
     let parses = verdict.expectation() == Expectation::Accept;
     if !generation.truncated && parses {
         println!("grammar adapter smoke: PASS");
