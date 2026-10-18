@@ -137,6 +137,19 @@ pub fn complete(
     current: Option<&Snapshot>,
 ) -> Option<Completion> {
     let prepared = prepare(text, offset)?;
+    complete_prepared(&prepared, dir, buffers, path, text, current)
+}
+
+/// [`complete`] for text that [`prepare`] has already looked at: `current` is used when
+/// `prepared` needs no placeholder.
+pub fn complete_prepared(
+    prepared: &Prepared,
+    dir: &Path,
+    buffers: &Buffers,
+    path: &ProjectPath,
+    text: &str,
+    current: Option<&Snapshot>,
+) -> Option<Completion> {
     let fresh;
     let snapshot = match (&prepared.patched, current) {
         (None, Some(current)) => current,

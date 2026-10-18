@@ -239,6 +239,30 @@ pub fn pump(mut input: impl BufRead, sender: &Sender<Inbound>) {
     }
 }
 
+/// What the server sends: a message, or the error reply to a payload that was not one.
+#[derive(Debug)]
+pub enum Outbound {
+    Message(Message),
+    Rejection {
+        id: Option<RequestId>,
+        code: ErrorCode,
+        message: String,
+    },
+}
+
+/// Write `outbound` as a frame and flush.
+///
+/// # Errors
+/// The error of the underlying writer.
+pub fn write_outbound(output: &mut impl Write, outbound: &Outbound) -> io::Result<()> {
+    match outbound {
+        Outbound::Message(message) => write_message(output, message),
+        Outbound::Rejection { id, code, message } => {
+            write_rejection(output, id.as_ref(), *code, message)
+        }
+    }
+}
+
 /// Write `message` as a frame and flush.
 ///
 /// # Errors

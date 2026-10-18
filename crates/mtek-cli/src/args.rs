@@ -68,6 +68,15 @@ struct Unimplemented {
     rest: Vec<OsString>,
 }
 
+/// What `mtek lsp` accepts: only the conventional `--stdio`.
+#[derive(Args, Debug)]
+struct LspArgs {
+    /// Speak the protocol over standard input and output (the only transport; accepted for
+    /// clients that always pass it)
+    #[arg(long)]
+    stdio: bool,
+}
+
 /// What `mtek inspect` shows: exactly one of the flags.
 #[derive(Args, Debug)]
 #[group(required = true, multiple = false)]
@@ -183,8 +192,8 @@ enum CliCommand {
     },
     #[command(hide = true)]
     Grammar(Unimplemented),
-    #[command(hide = true)]
-    Lsp(Unimplemented),
+    /// Run the language server: the Language Server Protocol over standard input and output
+    Lsp(LspArgs),
 }
 
 /// A command to run.
@@ -230,15 +239,19 @@ pub enum Request {
     },
     /// `mtek test`.
     Test(TestArgs),
+    /// `mtek lsp`.
+    Lsp,
 }
 
 impl Request {
     /// The `--format` of the request (human for `--version` and `--help`).
     pub fn format(&self) -> Format {
         match self {
-            Request::Version | Request::Help(_) | Request::Dev { .. } | Request::New { .. } => {
-                Format::Human
-            }
+            Request::Version
+            | Request::Help(_)
+            | Request::Dev { .. }
+            | Request::New { .. }
+            | Request::Lsp => Format::Human,
             Request::Context { .. } => Format::Json,
             Request::Check { format, .. }
             | Request::Build { format, .. }
@@ -258,6 +271,7 @@ impl Request {
             Request::New { .. } => "new",
             Request::Context { .. } => "context",
             Request::Test(_) => "test",
+            Request::Lsp => "lsp",
         }
     }
 }
@@ -364,7 +378,7 @@ where
             max_bytes,
         }),
         CliCommand::Grammar(_) => Err(not_yet("mtek grammar", "M6")),
-        CliCommand::Lsp(_) => Err(not_yet("mtek lsp", "M6")),
+        CliCommand::Lsp(LspArgs { stdio: _ }) => Ok(Request::Lsp),
     }
 }
 
@@ -591,8 +605,21 @@ mod tests {
     }
 
     #[test]
+    fn lsp_takes_no_arguments_but_the_conventional_stdio_flag() {
+        assert_eq!(parse_args(&["lsp"]), Ok(Request::Lsp));
+        assert_eq!(parse_args(&["lsp", "--stdio"]), Ok(Request::Lsp));
+        assert_eq!(
+            parse_args(&["lsp"]).map(|r| (r.format(), r.verb())),
+            Ok((Format::Human, "lsp"))
+        );
+        usage(&["lsp", "--port", "1"]);
+        usage(&["lsp", "somewhere"]);
+        usage(&["lsp", "--format", "json"]);
+    }
+
+    #[test]
     fn later_commands_are_named_in_the_error() {
-        for (command, milestone) in [("fmt", "M6"), ("grammar", "M6"), ("lsp", "M6")] {
+        for (command, milestone) in [("fmt", "M6"), ("grammar", "M6")] {
             let text = usage(&[command, "--port", "1", "x"]);
             assert!(
                 text.contains(&format!("'mtek {command}'")) && text.contains(milestone),
@@ -621,7 +648,8 @@ mod tests {
                 assert!(text.contains("check") && text.contains("inspect"));
                 assert!(text.contains("dev"), "{text}");
                 assert!(text.contains("new"), "{text}");
-                assert!(!text.contains("lsp"), "unimplemented commands are hidden");
+                assert!(text.contains("lsp"), "{text}");
+                assert!(!text.contains("fmt"), "unimplemented commands are hidden");
             }
             other => panic!("{other:?}"),
         }

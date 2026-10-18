@@ -198,7 +198,7 @@ fn usage_errors_exit_two_with_nothing_on_stdout() {
         &["inspect", "--ir", "--shaders"],
         &["dev", "--port", "0"],
         &["dev", "--host", "0.0.0.0"],
-        &["lsp"],
+        &["lsp", "--port", "1"],
     ];
     for args in cases {
         let out = run(args);

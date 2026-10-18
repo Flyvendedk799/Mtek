@@ -54,6 +54,13 @@ fn run(request: Request) -> Outcome {
                     ..Outcome::default()
                 };
             }
+            if matches!(request, Request::Lsp) {
+                // Long-running, and it owns standard input and output for the protocol.
+                return Outcome {
+                    code: lsp::run(),
+                    ..Outcome::default()
+                };
+            }
             if let Request::New { name } = request {
                 return scaffold::create(&context.cwd, &name);
             }

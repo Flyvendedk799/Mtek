@@ -6,7 +6,7 @@
 //! client has not opened, a definition in another module) is the project directory's URI as
 //! the client spelled it, plus the percent-encoded project-relative path.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use mtek_compiler::source::ProjectPath;
 
@@ -49,6 +49,45 @@ pub fn classify(uri: &str) -> UriKind {
 #[must_use]
 pub fn prelude_uri(path: &str) -> String {
     format!("{PRELUDE_SCHEME}:/{}", encode_path(path))
+}
+
+/// The `file:` URI of the local path `path`, spelled as VS Code does: a drive letter becomes
+/// lowercase with an escaped colon (`file:///c%3A/dir/file`), everything but the unreserved
+/// characters is percent-encoded.
+#[must_use]
+pub fn file_uri(path: &Path) -> String {
+    let text = path.to_string_lossy().replace('\\', "/");
+    let mut out = String::from("file://");
+    let text = if text.starts_with('/') {
+        text
+    } else {
+        // `C:/dir` becomes `/c%3A/dir`.
+        let mut chars = text.chars();
+        let drive = chars.next().map_or('c', |c| c.to_ascii_lowercase());
+        let rest: String = chars.collect();
+        format!("/{drive}%3A{}", rest.strip_prefix(':').unwrap_or(&rest))
+    };
+    out.push_str(&encode_path_keeping_escapes(&text));
+    out
+}
+
+/// [`encode_path`] that leaves an existing `%XX` alone (the drive colon above).
+fn encode_path_keeping_escapes(path: &str) -> String {
+    let bytes = path.as_bytes();
+    let mut out = String::with_capacity(path.len());
+    let mut i = 0;
+    while let Some(&byte) = bytes.get(i) {
+        let escape = byte == b'%'
+            && bytes.get(i + 1).copied().and_then(hex).is_some()
+            && bytes.get(i + 2).copied().and_then(hex).is_some();
+        if escape || byte == b'/' || byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.' | b'_' | b'~') {
+            out.push(char::from(byte));
+        } else {
+            out.push_str(&format!("%{byte:02X}"));
+        }
+        i += 1;
+    }
+    out
 }
 
 /// The URI of the project-relative `path` below the project directory whose URI is `prefix` (as
@@ -271,6 +310,25 @@ mod tests {
         assert_eq!(project_dir_uri("file:///p/src/main.mtek", &p("lib/main.mtek")), None);
         assert_eq!(project_dir_uri("file:///main.mtek", &p("src/main.mtek")), None);
         assert_eq!(join_uri("file:///p/", &ProjectPath::root()), "file:///p/");
+    }
+
+    #[test]
+    fn file_uris_are_vs_code_style_and_round_trip() {
+        if cfg!(windows) {
+            let uri = file_uri(Path::new("C:\\Users\\x y\\p\u{e9}.mtek"));
+            assert_eq!(uri, "file:///c%3A/Users/x%20y/p%C3%A9.mtek");
+            assert_eq!(
+                classify(&uri),
+                UriKind::File(PathBuf::from("c:/Users/x y/p\u{e9}.mtek"))
+            );
+        } else {
+            let uri = file_uri(Path::new("/tmp/a b/c\u{e9}.mtek"));
+            assert_eq!(uri, "file:///tmp/a%20b/c%C3%A9.mtek");
+            assert_eq!(
+                classify(&uri),
+                UriKind::File(PathBuf::from("/tmp/a b/c\u{e9}.mtek"))
+            );
+        }
     }
 
     #[test]

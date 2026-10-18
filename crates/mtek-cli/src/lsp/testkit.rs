@@ -1,7 +1,7 @@
 //! Helpers of the language server's tests: projects on disk, cursor markers.
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 /// The cursor marker of test sources: it is removed and its byte offset is the position.
@@ -70,7 +70,7 @@ impl TempProject {
     /// The `file:` URI of a project file, as VS Code spells it (a lowercase drive letter with
     /// an escaped colon on Windows).
     pub fn uri(&self, relative: &str) -> String {
-        file_uri(&self.path(relative))
+        super::uri::file_uri(&self.path(relative))
     }
 }
 
@@ -78,31 +78,6 @@ impl Drop for TempProject {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.dir);
     }
-}
-
-/// The `file:` URI of `path`.
-pub fn file_uri(path: &Path) -> String {
-    let text = path.to_string_lossy().replace('\\', "/");
-    let mut out = String::from("file://");
-    let text = if let Some(rest) = text.strip_prefix('/') {
-        out.push('/');
-        rest.to_owned()
-    } else {
-        // `C:/x` -> `/c%3A/x`, as VS Code writes it.
-        out.push('/');
-        let mut chars = text.chars();
-        let drive = chars.next().unwrap_or('c').to_ascii_lowercase();
-        let rest: String = chars.collect();
-        format!("{drive}%3A{}", rest.strip_prefix(':').unwrap_or(&rest))
-    };
-    for byte in text.bytes() {
-        if byte == b'/' || byte == b'%' || byte.is_ascii_alphanumeric() || b"-._~".contains(&byte) {
-            out.push(char::from(byte));
-        } else {
-            out.push_str(&format!("%{byte:02X}"));
-        }
-    }
-    out
 }
 
 #[cfg(test)]
@@ -114,17 +89,5 @@ mod tests {
         let (text, offset) = cursor("a\u{e9}\u{a7}b");
         assert_eq!(text, "a\u{e9}b");
         assert_eq!(offset, 3);
-    }
-
-    #[test]
-    fn file_uris_are_vs_code_style() {
-        let uri = file_uri(Path::new("/tmp/a b/c.mtek"));
-        if !cfg!(windows) {
-            assert_eq!(uri, "file:///tmp/a%20b/c.mtek");
-        }
-        let windows = file_uri(Path::new("C:\\Users\\x y\\p.mtek"));
-        if cfg!(windows) {
-            assert_eq!(windows, "file:///c%3A/Users/x%20y/p.mtek");
-        }
     }
 }
