@@ -2,10 +2,13 @@
 //! diagnostics, `spec/grammar.ebnf` section 1), the AST of the whole v0.1
 //! language, and the parser: the Pratt expression parser and the recursive
 //! descent parser of types, items, members and statements with error recovery
-//! ([`parse_module`]).
+//! ([`parse_module`]). The grammar model ([`grammar_model`]) describes the
+//! reference grammar as data for `mtek grammar export` (decision 0073).
 
 pub mod ast;
 mod dump;
+mod grammar_gbnf;
+pub mod grammar_model;
 mod lexer;
 #[cfg(test)]
 mod lexer_tests;
@@ -14,6 +17,7 @@ mod token;
 mod walk;
 
 pub use dump::{dump_expr, dump_module};
+pub use grammar_gbnf::{GBNF_ROOT, gbnf};
 pub use lexer::{FloatFix, Lexed, MAX_LEXICAL_DIAGNOSTICS, lex, lex_str};
 pub use parser::{
     BINARY_OPERATORS, BinaryOperator, CandidateEdit, MAX_NESTING_DEPTH, ParsedExpr, ParsedModule,

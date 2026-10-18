@@ -187,8 +187,8 @@ enum CliCommand {
         #[arg(long, value_enum, default_value_t)]
         format: ContextFormat,
     },
-    #[command(hide = true)]
-    Grammar(Unimplemented),
+    /// Print the grammar of the language (EBNF or GBNF)
+    Grammar(crate::grammar::GrammarArgs),
     #[command(hide = true)]
     Lsp(Unimplemented),
 }
@@ -238,6 +238,8 @@ pub enum Request {
     },
     /// `mtek test`.
     Test(TestArgs),
+    /// `mtek grammar …` (`crate::grammar`).
+    Grammar(crate::grammar::GrammarArgs),
 }
 
 impl Request {
@@ -248,7 +250,8 @@ impl Request {
             | Request::Help(_)
             | Request::Dev { .. }
             | Request::New { .. }
-            | Request::Fmt { .. } => Format::Human,
+            | Request::Fmt { .. }
+            | Request::Grammar(_) => Format::Human,
             Request::Context { .. } => Format::Json,
             Request::Check { format, .. }
             | Request::Build { format, .. }
@@ -269,6 +272,7 @@ impl Request {
             Request::Context { .. } => "context",
             Request::Test(_) => "test",
             Request::Fmt { .. } => "fmt",
+            Request::Grammar(_) => "grammar",
         }
     }
 }
@@ -374,7 +378,7 @@ where
             symbols,
             max_bytes,
         }),
-        CliCommand::Grammar(_) => Err(not_yet("mtek grammar", "M6")),
+        CliCommand::Grammar(args) => Ok(Request::Grammar(args)),
         CliCommand::Lsp(_) => Err(not_yet("mtek lsp", "M6")),
     }
 }
@@ -626,8 +630,28 @@ mod tests {
     }
 
     #[test]
+    fn grammar_export_needs_a_format() {
+        for format in ["ebnf", "gbnf"] {
+            let request = parse_args(&["grammar", "export", "--format", format]);
+            assert!(
+                matches!(&request, Ok(Request::Grammar(_))),
+                "{format}: {request:?}"
+            );
+            assert_eq!(
+                request.map(|r| (r.format(), r.verb())),
+                Ok((Format::Human, "grammar"))
+            );
+        }
+        usage(&["grammar"]);
+        usage(&["grammar", "export"]);
+        assert!(usage(&["grammar", "export", "--format", "yaml"]).contains("yaml"));
+        usage(&["grammar", "export", "--format", "ebnf", "extra"]);
+        usage(&["grammar", "check"]);
+    }
+
+    #[test]
     fn later_commands_are_named_in_the_error() {
-        for (command, milestone) in [("grammar", "M6"), ("lsp", "M6")] {
+        for (command, milestone) in [("lsp", "M6")] {
             let text = usage(&[command, "--port", "1", "x"]);
             assert!(
                 text.contains(&format!("'mtek {command}'")) && text.contains(milestone),

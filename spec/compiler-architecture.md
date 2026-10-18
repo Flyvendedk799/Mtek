@@ -30,7 +30,7 @@ tests/
   syntax/ semantics/ codegen/ gpu-layout/ assets/   # compiler fixtures (§10)
   browser/                 # @mtek/browser-tests — Playwright (M0+)
 benchmarks/  tasks/ baselines/ results/
-tools/       grammar-coverage/ ai-eval/ grammar-adapters/   # grammar-coverage: M2 (Rust crate, decision 0042); the others M6
+tools/       grammar-coverage/ ai-eval/ grammar-adapters/   # grammar-coverage: M2 (Rust crate, decision 0042); grammar-adapters: M6 (Rust crate: llama.cpp pins, capability check, conformance suite, decision 0073); ai-eval: M6
 evidence/    M0/ M1/ …     # milestone gate evidence (spec/testing.md §8)
 ```
 

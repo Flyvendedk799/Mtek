@@ -267,9 +267,10 @@ pub fn execute(request: &Request, context: &Context) -> Outcome {
         | Request::Help(_)
         | Request::Dev { .. }
         | Request::New { .. }
-        | Request::Context { .. } => {
+        | Request::Context { .. }
+        | Request::Grammar(_) => {
             return printer.single(internal_diagnostic(
-                "--version, --help, new and dev are not one-shot library commands",
+                "--version, --help, new, dev and grammar are not one-shot library commands",
             ));
         }
     };
