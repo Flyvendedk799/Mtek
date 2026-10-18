@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "packages/runtime-web" },
+    { "path": "packages/physics-rapier" },
     { "path": "tests/browser" },
     { "path": "tests/codegen" },
     { "path": "benchmarks" },
