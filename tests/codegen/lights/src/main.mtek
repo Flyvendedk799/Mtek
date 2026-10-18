@@ -10,6 +10,8 @@ scene Demo {
     camera Main {
         position: vec3(0.0, 2.0, 6.0);
         target: vec3(0.0, 0.0, 0.0);
+        // EV100 (decision 0081): constant, carried in the manifest's camera entry.
+        exposure: 1.5 - 0.25;
     }
 
     entity Sun {

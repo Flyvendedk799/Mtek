@@ -39,8 +39,14 @@ use crate::types::{
 pub(super) const SCENE_FIELDS: [&str; 3] = ["clear_color", "ambient_color", "ambient_intensity"];
 /// The camera fields lowered into [`Camera`]; `active` is represented by
 /// [`Camera::active`], which the scene checks computed.
-pub(super) const CAMERA_FIELDS: [&str; 5] =
-    ["position", "target", "rotation", "projection", "active"];
+pub(super) const CAMERA_FIELDS: [&str; 6] = [
+    "position",
+    "target",
+    "rotation",
+    "projection",
+    "active",
+    "exposure",
+];
 /// The entity fields lowered into [`Entity`].
 pub(super) const ENTITY_FIELDS: [&str; 7] = [
     "position", "rotation", "scale", "visible", "mesh", "material", "light",
@@ -649,6 +655,7 @@ impl Lowering<'_> {
             position: required(self.types, &what, fields, "position", object.span)?,
             target: optional(self.types, &what, fields, "target", object.span)?,
             rotation: required(self.types, &what, fields, "rotation", object.span)?,
+            exposure: required(self.types, &what, fields, "exposure", object.span)?,
             projection: Projection { desc, origin, span },
         })
     }

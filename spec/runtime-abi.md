@@ -188,7 +188,7 @@ The runtime **rejects** a manifest whose `manifestSchema` or `runtimeAbi` it doe
   "name": "Demo", "symbol": "src/main.mtek::Demo",
   "fields": { "clearColor": [0.0052, 0.0070, 0.0091, 1.0], "ambientColor": [1.0, 1.0, 1.0, 1.0], "ambientIntensity": 0.0, "gravity": [0.0, -9.81, 0.0] },
   "state":    [ { "name": "speed", "type": "f32", "symbol": "src/main.mtek::Demo.speed" } ],
-  "cameras":  [ { "name": "Main", "symbol": "…", "projection": "perspective", "hasTarget": true, "active": true } ],
+  "cameras":  [ { "name": "Main", "symbol": "…", "projection": "perspective", "hasTarget": true, "active": true, "exposure": -1.9145305 } ],
   "entities": [ { "index": 0, "name": "Cube", "symbol": "…", "parent": null,
                   "mesh": "mesh:0", "material": { "id": "src/main.mtek::Pulse", "instance": 0 },
                   "light": null, "body": null, "collider": null,

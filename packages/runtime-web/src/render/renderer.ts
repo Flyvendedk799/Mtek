@@ -5,7 +5,8 @@
  *  1. `MtekFrame` is written through the generated `builtin:frame` field writers: `view_proj = P * V`
  *     from the camera (`spec/runtime-abi.md` section 8.3, aspect = target width / height), the camera
  *     position, the lights (`lights`, `light_count`: `render/lights.ts`) and `ambient` = ambient colour RGB x
- *     intensity. The remaining member (`reserved0`) is never written and stays zero.
+ *     intensity, and `exposure` = `exposureScale(camera.exposure)` = 1 / (1.2 x 2^EV100) of the active camera
+ *     (decision 0081), which `lighting.pbr` multiplies its result by.
  *  2. For every entity whose world matrix changed (phase 6), `MtekObject` (model, normal matrix) is
  *     written through the generated `builtin:object` writers into its slot of the object arena.
  *  3. The frame, object and material arenas upload their dirty slots (`writeIfChanged` keeps unchanged
@@ -124,6 +125,9 @@ export class Renderer {
   private readonly writeCameraPosition: BlockWriter;
   private readonly writeLightCount: BlockWriter;
   private readonly writeAmbient: BlockWriter;
+  private readonly writeExposure: BlockWriter;
+  /** `exposureScale` of the active camera's EV100 (construction-only, decision 0081). */
+  private readonly exposure: number;
   private readonly writeLights: BlockWriter;
   /** The value of `MtekFrame.lights`, refilled every frame. */
   private readonly packedLights: PackedLight[];
@@ -173,6 +177,8 @@ export class Renderer {
     this.writeCameraPosition = fieldWriter(frameWriters, "camera_position", structure.frameLayout.id);
     this.writeLightCount = fieldWriter(frameWriters, "light_count", structure.frameLayout.id);
     this.writeAmbient = fieldWriter(frameWriters, "ambient", structure.frameLayout.id);
+    this.writeExposure = fieldWriter(frameWriters, "exposure", structure.frameLayout.id);
+    this.exposure = exposureScale(structure.camera.exposure);
     this.writeLights = fieldWriter(frameWriters, "lights", structure.frameLayout.id);
     this.packedLights = emptyPackedLights(structure.lightCapacity);
     this.lightSource = {
@@ -430,6 +436,7 @@ export class Renderer {
       this.writeCameraPosition(memory, base, position);
       this.writeLightCount(memory, base, lightCount);
       this.writeAmbient(memory, base, this.ambient);
+      this.writeExposure(memory, base, this.exposure);
       this.writeLights(memory, base, this.packedLights);
     });
     return viewProj;
@@ -507,4 +514,13 @@ export class Renderer {
       }
     }
   }
+}
+
+/**
+ * The exposure scale of an EV100 value (decision 0081, Filament's photometric exposure for a camera at
+ * ISO 100): `1 / (1.2 * 2^ev100)`. The default EV100 `-log2(1.2 * pi)` gives pi, so a white Lambertian
+ * surface under a 1 lux directional light (radiance 1/pi) is shown as 1.0.
+ */
+export function exposureScale(ev100: number): number {
+  return 1 / (1.2 * 2 ** ev100);
 }

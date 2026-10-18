@@ -218,7 +218,7 @@ struct MtekFrame {
     camera_position: vec3;      // @64
     light_count: u32;           // @76
     ambient: vec3;              // @80  (ambient_color.rgb × ambient_intensity)
-    reserved0: f32;             // @92
+    exposure: f32;             // @92  (1 / (1.2 × 2^camera.exposure), decision 0081)
     lights: array<MtekLight, 4>;// @96, stride 48
 }                               // size 288
 ```

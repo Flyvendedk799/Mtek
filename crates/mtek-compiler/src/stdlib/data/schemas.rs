@@ -9,6 +9,9 @@ use crate::stdlib::model::{
 use crate::stdlib::value::{Bound, ConstValue, Limit, ValueRange};
 
 const C: FieldFlags = FieldFlags::CONSTRUCTION_ONLY;
+/// The default `Camera.exposure`, `-log2(1.2 * pi)` (decision 0081): the exposure scale
+/// `1 / (1.2 * 2^EV100)` is then pi, so a white Lambertian surface under 1 lux is 1.0.
+pub(crate) const CAMERA_DEFAULT_EV100: f32 = -1.914_530_5;
 const R_C: FieldFlags = FieldFlags::REQUIRED.union(FieldFlags::CONSTRUCTION_ONLY);
 
 /// The schemas of scene and entity bodies.
@@ -206,6 +209,13 @@ fn objects() -> Vec<SchemaDef> {
                 C,
                 "Marks the active camera. Optional when the scene has exactly one camera; with several cameras exactly one must declare `active: true`.",
             ),
+            field(
+                "exposure",
+                TypeRef::F32,
+                C,
+                "Exposure value EV100 of the camera; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15.",
+            )
+            .default(ConstValue::F32(CAMERA_DEFAULT_EV100)),
         ],
     )
     // `spec/scenes.md` section 3: with a `target`, `rotation` must not be declared.

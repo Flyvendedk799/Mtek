@@ -17,7 +17,7 @@ function w_builtin_MtekFrame_ambient(m, base, v) {
   const w = base >>> 2;
   m.f32[w + 20] = v.x; m.f32[w + 21] = v.y; m.f32[w + 22] = v.z;
 }
-function w_builtin_MtekFrame_reserved0(m, base, v) {
+function w_builtin_MtekFrame_exposure(m, base, v) {
   m.f32[(base >>> 2) + 23] = v;
 }
 function w_builtin_MtekFrame_lights(m, base, v) {
@@ -52,13 +52,13 @@ function w_builtin_MtekFrame(m, base, v) {
   w_builtin_MtekFrame_camera_position(m, base, v.camera_position);
   w_builtin_MtekFrame_light_count(m, base, v.light_count);
   w_builtin_MtekFrame_ambient(m, base, v.ambient);
-  w_builtin_MtekFrame_reserved0(m, base, v.reserved0);
+  w_builtin_MtekFrame_exposure(m, base, v.exposure);
   w_builtin_MtekFrame_lights(m, base, v.lights);
 }
 
 // Test artifact only: this wrapper is never part of app.js.
 const writers = {
-  "builtin:frame": { all: w_builtin_MtekFrame, fields: { view_proj: w_builtin_MtekFrame_view_proj, camera_position: w_builtin_MtekFrame_camera_position, light_count: w_builtin_MtekFrame_light_count, ambient: w_builtin_MtekFrame_ambient, reserved0: w_builtin_MtekFrame_reserved0, lights: w_builtin_MtekFrame_lights } },
+  "builtin:frame": { all: w_builtin_MtekFrame, fields: { view_proj: w_builtin_MtekFrame_view_proj, camera_position: w_builtin_MtekFrame_camera_position, light_count: w_builtin_MtekFrame_light_count, ambient: w_builtin_MtekFrame_ambient, exposure: w_builtin_MtekFrame_exposure, lights: w_builtin_MtekFrame_lights } },
 };
 export {
   w_builtin_MtekFrame,
@@ -66,7 +66,7 @@ export {
   w_builtin_MtekFrame_camera_position,
   w_builtin_MtekFrame_light_count,
   w_builtin_MtekFrame_ambient,
-  w_builtin_MtekFrame_reserved0,
+  w_builtin_MtekFrame_exposure,
   w_builtin_MtekFrame_lights,
   writers,
 };

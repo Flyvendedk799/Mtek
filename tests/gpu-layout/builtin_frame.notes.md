@@ -25,7 +25,7 @@
 | camera_position: vec3 | 16 | 12 | 64 | 64 | 76 |
 | light_count: u32 | 4 | 4 | 76 | 76 | 80 |
 | ambient: vec3 | 16 | 12 | 80 | 80 | 92 |
-| reserved0: f32 | 4 | 4 | 92 | 92 | 96 |
+| exposure: f32 | 4 | 4 | 92 | 92 | 96 |
 | lights: array<MtekLight, 4> | 16 | 192 | 96 | 96 | 288 |
 
 Members of a light inside the frame are recorded relative to the element start (0, 12, 16, 28, 32, 44); light `i` starts at 96 + 48 * i.

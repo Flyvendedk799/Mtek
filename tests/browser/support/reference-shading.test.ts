@@ -24,7 +24,7 @@
 //
 // The "formula review pins" below pin each resolved point against the glTF expression.
 import { describe, expect, it } from "vitest";
-import { linearRgbToSrgb8, linearToSrgb8, shadePbr, type Light, type ShadeInput, type Vec3 } from "./reference-shading.ts";
+import { exposureScale, linearRgbToSrgb8, linearToSrgb8, shadePbr, type Light, type ShadeInput, type Vec3 } from "./reference-shading.ts";
 
 const PI = Math.PI;
 
@@ -316,6 +316,32 @@ describe("formula review pins (resolved in favour of glTF, decision 0080)", () =
     // N = +Z, V = −Z (NV clamps to 1e-4), light from +Z: L = +Z = −V, NL = 1, L + V = 0.
     const rgb = shadePbr(scene({ V: [0, 0, -1], lights: [sun(UP)], ambientIntensity: 0.5 }));
     expectRgb(rgb, [0.25, 0.25, 0.25]);
+  });
+});
+
+describe("camera exposure (rule 9, decision 0081)", () => {
+  it("the default EV100 -log2(1.2π) shows a white Lambertian surface under 1 lux as white", () => {
+    // Roughness 1, metallic 0, c = 1, N = V = L: diffuse 0.96/π, specular (1/π)(1/4)(0.04) = 0.01/π, so the
+    // radiance is 0.97/π and times π it is 0.97: "near white" (sRGB byte 252). A pure Lambertian 1/π gives 1.
+    const ev = -Math.log2(1.2 * PI);
+    expectClose(exposureScale(ev), PI);
+    const rgb = shadePbr(scene({ lights: [sun(UP)], baseColor: WHITE, roughness: 1, exposure: exposureScale(ev) }));
+    expectRgb(rgb, [0.97, 0.97, 0.97]);
+    expect(linearRgbToSrgb8(rgb)).toEqual([252, 252, 252]);
+  });
+
+  it("scales lights and ambient alike; EV100 -log2(1.2) is the unit exposure; +1 EV halves", () => {
+    expectClose(exposureScale(-Math.log2(1.2)), 1);
+    expectClose(exposureScale(3) / exposureScale(4), 2);
+    const base = shadePbr(scene({ lights: [sun(UP)], ambientIntensity: 0.5 }));
+    const scaled = shadePbr(scene({ lights: [sun(UP)], ambientIntensity: 0.5, exposure: 0.25 }));
+    expectRgb(scaled, [base[0] * 0.25, base[1] * 0.25, base[2] * 0.25]);
+  });
+
+  it("a sunny day: 100 000 lux at EV100 15 is a mid-to-bright value, as photographed", () => {
+    // White Lambertian (roughness 1, c = 1): 0.97/π · 1e5 / (1.2 · 2^15) = 0.785...
+    const rgb = shadePbr(scene({ lights: [sun(UP, 1e5)], baseColor: WHITE, roughness: 1, exposure: exposureScale(15) }));
+    expectClose(rgb[0], (0.97 / PI) * 1e5 / (1.2 * 32768));
   });
 });
 

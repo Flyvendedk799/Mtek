@@ -522,6 +522,9 @@ pub struct Camera {
     pub projection: String,
     pub has_target: bool,
     pub active: bool,
+    /// The camera's exposure as EV100 (decision 0081); lit materials are scaled by
+    /// `1 / (1.2 * 2^exposure)`.
+    pub exposure: Num,
 }
 
 /// An entity: structure only; its transform and visibility are set by `init(ctx)`.

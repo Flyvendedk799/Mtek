@@ -1,0 +1,5 @@
+// Camera exposure is construction-only (decision 0081): its value must be a constant expression.
+scene Demo {
+    state ev: f32 = 1.0;
+    camera Main { exposure: ev; }
+}

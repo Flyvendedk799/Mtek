@@ -1008,6 +1008,8 @@ pub struct Camera {
     pub target: Option<Field>,
     /// Orientation when there is no target.
     pub rotation: Field,
+    /// `exposure`: the camera's EV100, a construction-only constant (decision 0081).
+    pub exposure: Field,
     pub projection: Projection,
 }
 

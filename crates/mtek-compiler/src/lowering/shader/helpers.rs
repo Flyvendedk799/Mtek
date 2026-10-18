@@ -845,14 +845,18 @@ impl Builder {
                 span: self.span,
             },
             // Rule 7, ambient: (1 - m) * c * ambient_color * ambient_intensity, the last two
-            // packed as `ambient`.
+            // packed as `ambient`; rule 9: the sum times the camera's exposure scale
+            // `1 / (1.2 * 2^EV100)`, packed as `exposure` (decision 0081).
             self.ret(self.vec4(vec![
-                self.add(
-                    v3("rgb"),
-                    self.mul(
-                        self.mul(v3("c"), one_minus(s("m"))),
-                        frame().field("ambient", ShaderType::VEC3, self.span),
+                self.mul(
+                    self.add(
+                        v3("rgb"),
+                        self.mul(
+                            self.mul(v3("c"), one_minus(s("m"))),
+                            frame().field("ambient", ShaderType::VEC3, self.span),
+                        ),
                     ),
+                    frame().field("exposure", ShaderType::F32, self.span),
                 ),
                 self.f(1.0),
             ])),

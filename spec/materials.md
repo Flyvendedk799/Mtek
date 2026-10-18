@@ -119,7 +119,7 @@ material: Unlit { color: #ff8800 };
 ## 6. Colour pipeline
 
 - All shading is in linear space (`spec/language.md` §5.4).
-- The render target is written through an sRGB view (`spec/runtime-abi.md` §8.2), so the hardware performs the linear→sRGB encode. There is **no tone mapping** in v0.1: linear values above 1.0 clip. This is documented and visible in tests (a light of high intensity saturates).
+- The render target is written through an sRGB view (`spec/runtime-abi.md` §8.2), so the hardware performs the linear→sRGB encode. Lit materials apply the camera's exposure (§8 rule 9) before the output. There is **no tone mapping** in v0.1: linear values above 1.0 clip. This is documented and visible in tests (a light of high intensity saturates).
 - Opaque rendering only; depth test `less`, depth write on, back-face culling with counter-clockwise front faces (glTF convention). All built-in meshes are generated counter-clockwise when viewed from outside.
 
 ## 7. Lights (components, M4)
@@ -147,6 +147,7 @@ Notation: `N` = normalised world normal; `V = normalize(camera_position − worl
 6. Radiance of a directional light: `E = light.color.rgb · intensity`. Of a point light at distance `d`: `E = light.color.rgb · intensity / max(d², 1e-4) · w`, with `w = 1` if `range = 0`, else `w = clamp(1 − (d / range)⁴, 0, 1)` (the `KHR_lights_punctual` window, not squared).
 7. Result: `rgb = Σ_lights (Diffuse + Specular) · E · NL + (1 − m) · c · ambient_color.rgb · ambient_intensity`; alpha `= 1`. A metal receives no diffuse ambient.
 8. No `NaN`: a light's term is exactly `0` when `NL ≤ 0`, and when `L + V = 0` (no half vector, reachable with `NL > 0` only for a back-facing normal). Implementations must test both before forming `H = normalize(L + V)`.
+9. Exposure: the result `rgb` of rule 7 is multiplied by the active camera's exposure scale `1 / (1.2 · 2^EV100)`, where EV100 is `Camera.exposure` (`spec/scenes.md` §3, decision `spec/decisions/0081-camera-exposure.md`). Light intensities stay physical (lux, candela); the default exposure (`-log2(1.2 · π)`, scale `π`) maps a white Lambertian surface under 1 lux to `1.0`.
 
 No image-based lighting, emissive, occlusion, normal mapping, clear-coat or shadows in v0.1. A call `lighting.pbr(input, …)` reads `world_position` and `world_normal` of the stage input (§3.1), and of nothing else.
 

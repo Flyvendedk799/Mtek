@@ -52,7 +52,7 @@ pub fn mtek_frame() -> LayoutType {
             ("camera_position", LayoutType::Vec3),
             ("light_count", LayoutType::U32),
             ("ambient", LayoutType::Vec3),
-            ("reserved0", LayoutType::F32),
+            ("exposure", LayoutType::F32),
             ("lights", LayoutType::new_array(mtek_light(), MAX_LIGHTS)),
         ]),
     )
@@ -140,7 +140,7 @@ mod tests {
                 ("camera_position", 64),
                 ("light_count", 76),
                 ("ambient", 80),
-                ("reserved0", 92),
+                ("exposure", 92),
                 ("lights", 96),
             ]
         );

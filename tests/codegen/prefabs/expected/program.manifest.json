@@ -581,7 +581,7 @@
             }
           },
           {
-            "name": "reserved0",
+            "name": "exposure",
             "mtekType": "f32",
             "node": {
               "kind": "scalar",
@@ -791,9 +791,9 @@
   ],
   "shaders": [
     {
-      "hash": "9def9871f3bcd75add5be149b80bb76886104d046274660eb5e688de9505d841",
-      "url": "shaders/9def9871f3bcd75a.wgsl",
-      "map": "shaders/9def9871f3bcd75a.mtek-map.json",
+      "hash": "9ae152f988697c96595859c5a3aabb1c0093696d8376f689a403d478b17b772a",
+      "url": "shaders/9ae152f988697c96.wgsl",
+      "map": "shaders/9ae152f988697c96.mtek-map.json",
       "material": "src/props.mtek::Glow",
       "vertexEntry": "mtek_vs",
       "instancedVertexEntry": "mtek_vs_instanced",
@@ -804,9 +804,9 @@
       "surfaceInputs": []
     },
     {
-      "hash": "ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa",
-      "url": "shaders/ef35824416f65c3f.wgsl",
-      "map": "shaders/ef35824416f65c3f.mtek-map.json",
+      "hash": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
+      "url": "shaders/385b28531dc27b69.wgsl",
+      "map": "shaders/385b28531dc27b69.mtek-map.json",
       "material": "std/materials.mtek::Unlit",
       "vertexEntry": "mtek_vs",
       "instancedVertexEntry": "mtek_vs_instanced",
@@ -821,7 +821,7 @@
     {
       "id": "src/props.mtek::Glow",
       "layout": "material:src/props.mtek::Glow",
-      "shader": "9def9871f3bcd75add5be149b80bb76886104d046274660eb5e688de9505d841",
+      "shader": "9ae152f988697c96595859c5a3aabb1c0093696d8376f689a403d478b17b772a",
       "resources": [],
       "params": [
         {
@@ -839,7 +839,7 @@
     {
       "id": "std/materials.mtek::Unlit",
       "layout": "material:std/materials.mtek::Unlit",
-      "shader": "ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa",
+      "shader": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
       "resources": [],
       "params": [
         {
@@ -908,7 +908,8 @@
         "symbol": "src/main.mtek::Demo.Main",
         "projection": "perspective",
         "hasTarget": true,
-        "active": true
+        "active": true,
+        "exposure": -1.9145305
       }
     ],
     "entities": [

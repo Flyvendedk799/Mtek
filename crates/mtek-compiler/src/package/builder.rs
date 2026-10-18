@@ -658,14 +658,26 @@ fn manifest_scene(
     let cameras = scene
         .cameras
         .iter()
-        .map(|camera| Camera {
-            name: camera.name.clone(),
-            symbol: camera.symbol.to_string(),
-            projection: camera.projection.desc.kind().to_owned(),
-            has_target: camera.target.is_some(),
-            active: camera.active,
+        .map(|camera| {
+            let exposure = match camera.exposure.source.as_const() {
+                Some(ir::Value::F32(value)) => num(*value)?,
+                _ => {
+                    return Err(format!(
+                        "the exposure of camera '{}' is not a constant f32",
+                        camera.name
+                    ));
+                }
+            };
+            Ok(Camera {
+                name: camera.name.clone(),
+                symbol: camera.symbol.to_string(),
+                projection: camera.projection.desc.kind().to_owned(),
+                has_target: camera.target.is_some(),
+                active: camera.active,
+                exposure,
+            })
         })
-        .collect();
+        .collect::<Result<Vec<_>, String>>()?;
     let mut entities = Vec::with_capacity(scene.entities.len());
     let mut lights = Vec::new();
     for entity in &scene.entities {

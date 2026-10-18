@@ -60,6 +60,16 @@ export interface ShadeInput {
   /** Linear RGB. */
   readonly ambientColor: Vec3;
   readonly ambientIntensity: number;
+  /**
+   * The camera's exposure scale `1 / (1.2 * 2^EV100)` (rule 9, decision 0081); the result is multiplied by
+   * it. Default 1 (EV100 = -log2(1.2), the value the lit GPU fixtures declare).
+   */
+  readonly exposure?: number;
+}
+
+/** The exposure scale of an EV100 value, `1 / (1.2 * 2^ev100)` (spec/materials.md section 8 rule 9). */
+export function exposureScale(ev100: number): number {
+  return 1 / (1.2 * 2 ** finite(ev100, "ev100"));
 }
 
 /** Lower bound of the roughness clamp and of `NV` (spec/materials.md section 8, notation and rule 1). */
@@ -187,7 +197,9 @@ export function shadePbr(input: ShadeInput): Vec3 {
   }
   // Rule 7, ambient: (1 − m) · c · ambient_color · ambient_intensity (a metal receives no diffuse ambient).
   for (let i = 0; i < 3; i += 1) rgb[i] = rgb[i]! + (1 - m) * c[i]! * ambientColor[i]! * input.ambientIntensity;
-  return rgb;
+  // Rule 9: the camera's exposure scale.
+  const exposure = finite(input.exposure ?? 1, "exposure");
+  return [rgb[0] * exposure, rgb[1] * exposure, rgb[2] * exposure];
 }
 
 /**

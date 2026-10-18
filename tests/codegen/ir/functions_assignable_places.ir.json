@@ -1824,6 +1824,13 @@
                 "origin": "default",
                 "span": {"file": 0, "start": 1994, "end": 2008}
               },
+              "exposure": {
+                "source": {
+                  "const": {"f32": -1.9145305}
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1994, "end": 2008}
+              },
               "projection": {
                 "desc": {
                   "kind": "perspective",

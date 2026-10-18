@@ -12,7 +12,7 @@ struct MtekFrame {
     camera_position: vec3<f32>,
     light_count: u32,
     ambient: vec3<f32>,
-    reserved0: f32,
+    exposure: f32,
     @align(16) lights: array<MtekLight, 4>,
 }
 
@@ -86,7 +86,7 @@ fn mtek_lighting_pbr(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>,
             }
         }
     }
-    return vec4<f32>(mtek_rgb + ((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient), 1.0);
+    return vec4<f32>((mtek_rgb + ((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient)) * mtek_frame.exposure, 1.0);
 }
 
 fn mtek_fragment(u_p_input: MtekSurfaceInput) -> vec4<f32> {

@@ -514,7 +514,14 @@ fn the_manifest_carries_structure_but_no_entity_or_camera_values() {
             let keys: Vec<&String> = camera.as_object().unwrap().keys().collect();
             assert_eq!(
                 keys,
-                ["name", "symbol", "projection", "hasTarget", "active"],
+                [
+                    "name",
+                    "symbol",
+                    "projection",
+                    "hasTarget",
+                    "active",
+                    "exposure"
+                ],
                 "{label}"
             );
         }

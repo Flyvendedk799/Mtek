@@ -1,7 +1,7 @@
 shaders of scene src/main.mtek::Gallery (target profile webgpu-core-2026)
 
 shader of material src/main.mtek::Textured (declared at src/main.mtek:4:1-17:2)
-  file shaders/10e56e35c599e7c4.wgsl (sha256 10e56e35c599e7c4bd315bf8920380552df6460091a1886c2f93b93668634aa2)
+  file shaders/fd4c8c71c49f8f08.wgsl (sha256 fd4c8c71c49f8f084ffe5217dbce43e03c1bcf7fa538c501630e7ee13d6fd429)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position, uv
   surface inputs uv
@@ -21,7 +21,7 @@ shader of material src/main.mtek::Textured (declared at src/main.mtek:4:1-17:2)
   12 |     camera_position: vec3<f32>,
   13 |     light_count: u32,
   14 |     ambient: vec3<f32>,
-  15 |     reserved0: f32,
+  15 |     exposure: f32,
   16 |     @align(16) lights: array<MtekLight, 4>,
   17 | }
   18 |

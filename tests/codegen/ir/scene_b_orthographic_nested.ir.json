@@ -66,6 +66,13 @@
                 "origin": "written",
                 "span": {"file": 0, "start": 324, "end": 367}
               },
+              "exposure": {
+                "source": {
+                  "const": {"f32": -1.9145305}
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 258, "end": 453}
+              },
               "projection": {
                 "desc": {
                   "kind": "orthographic",

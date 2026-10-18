@@ -499,13 +499,14 @@
     "camera": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "symbol", "projection", "hasTarget", "active"],
+      "required": ["name", "symbol", "projection", "hasTarget", "active", "exposure"],
       "properties": {
         "name": { "$ref": "#/$defs/name" },
         "symbol": { "$ref": "#/$defs/symbolId" },
         "projection": { "type": "string", "enum": ["perspective", "orthographic"] },
         "hasTarget": { "type": "boolean" },
-        "active": { "type": "boolean" }
+        "active": { "type": "boolean" },
+        "exposure": { "type": "number", "description": "EV100 of the camera (decision 0081); lit materials are scaled by 1 / (1.2 * 2^exposure)." }
       }
     },
     "entity": {

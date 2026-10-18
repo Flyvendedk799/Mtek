@@ -1301,6 +1301,9 @@ scene Showroom {
         position: vec3(0.0, 0.0, 6.0);
         target: vec3(0.0, 0.0, 0.0);
         projection: Orthographic { height: 6.0; near: 0.1; far: 20.0 };
+        // EV100 -log2(1.2): exposure scale 1, so lit radiance reaches the target unscaled (decision 0081;
+        // the default exposure, -log2(1.2 pi), would show a white surface under 1 lux as white).
+        exposure: -0.2630344;
     }
 
     entity Sun {

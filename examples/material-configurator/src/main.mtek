@@ -22,6 +22,9 @@ scene Configurator {
         position: vec3(0.0, 1.15, 2.6);
         target: vec3(0.0, 0.45, 0.0);
         projection: Perspective { fov_y: 0.8; near: 0.1; far: 30.0 };
+        // EV100 -log2(1.2): exposure scale 1, so lit radiance reaches the target unscaled (decision 0081;
+        // the default exposure, -log2(1.2 pi), would show a white surface under 1 lux as white).
+        exposure: -0.2630344;
     }
 
     entity Sun {
