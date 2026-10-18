@@ -1,12 +1,19 @@
 // The baseline starters are what a model is given. They must be genuine TypeScript projects, except
-// that the maintenance starter contains exactly the two errors its task describes (a wrong vector
-// dimension and an unknown field). The Playwright side checks the behaviour; this checks the types.
+// that the starters of maintenance-01 and maintenance-03 contain the compile errors their tasks describe
+// (maintenance-01: a wrong vector dimension and an unknown field; maintenance-03: four defects of four kinds,
+// six diagnostics). The Playwright side checks the behaviour; this checks the types.
 import { readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 const BENCHMARKS = resolve(import.meta.dirname, "..", "..", "..");
+/** Every task of `tasks/`; a new task is covered without touching this file. */
+const TASKS = readdirSync(join(BENCHMARKS, "tasks"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
+/** The starters that are broken on purpose, so that they cannot type-check. */
+const BROKEN_STARTERS = ["maintenance-01", "maintenance-03"];
 const HOLDOUT_TASKS = readdirSync(join(BENCHMARKS, "holdout"), { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
@@ -29,7 +36,7 @@ function diagnosticsOf(projectDir: string): { code: number; file: string; messag
 }
 
 describe("baseline starters", () => {
-  it.each(["scene-rendering-01", "interaction-01", "shader-bridge-01"])("%s starter type-checks", (task) => {
+  it.each(TASKS.filter((task) => !BROKEN_STARTERS.includes(task)))("%s starter type-checks", (task) => {
     expect(diagnosticsOf(join(BENCHMARKS, "tasks", task, "baseline"))).toEqual([]);
   });
 
@@ -49,7 +56,13 @@ describe("baseline starters", () => {
     expect(diagnostics.some(({ message }) => message.includes("Vector2") && message.includes("'z'"))).toBe(true);
   });
 
-  it.each(["scene-rendering-01", "interaction-01", "shader-bridge-01", "maintenance-01"])(
+  it("the maintenance-03 starter has the six diagnostics of its four defects, all in its main.ts", () => {
+    const diagnostics = diagnosticsOf(join(BENCHMARKS, "tasks", "maintenance-03", "baseline"));
+    expect(diagnostics).toHaveLength(6);
+    expect(new Set(diagnostics.map(({ file }) => file))).toEqual(new Set(["tasks/maintenance-03/baseline/src/main.ts"]));
+  });
+
+  it.each(TASKS)(
     "%s reference type-checks",
     (task) => {
       expect(diagnosticsOf(join(BENCHMARKS, "tasks", task, "reference", "baseline"))).toEqual([]);

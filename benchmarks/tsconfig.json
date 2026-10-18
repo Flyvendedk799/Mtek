@@ -16,5 +16,5 @@
     "holdout/*/baseline-tests",
     "vitest.config.ts"
   ],
-  "exclude": ["tasks/maintenance-01/baseline/src"]
+  "exclude": ["tasks/maintenance-01/baseline/src", "tasks/maintenance-03/baseline/src"]
 }

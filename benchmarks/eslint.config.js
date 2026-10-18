@@ -8,6 +8,7 @@ export default tseslint.config(
       "baselines/m0-bridge/**",
       // Starter that contains compile errors on purpose (the task is to repair them).
       "tasks/maintenance-01/baseline/**",
+      "tasks/maintenance-03/baseline/**",
       "**/dist/**",
     ],
   },
