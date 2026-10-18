@@ -1,0 +1,126 @@
+{
+  "name": "mtek-vscode",
+  "displayName": "Mtek",
+  "description": "Mtek language support: syntax highlighting and the language server (`mtek lsp`).",
+  "version": "0.1.0",
+  "publisher": "mtek",
+  "private": true,
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flyvendedk799/mtek.git",
+    "directory": "packages/editor-vscode"
+  },
+  "type": "module",
+  "main": "./dist/extension.cjs",
+  "engines": {
+    "vscode": "^1.91.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:mtek"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "The language server runs the executable named by `mtek.server.path`; a workspace cannot change that setting until it is trusted.",
+      "restrictedConfigurations": [
+        "mtek.server.path"
+      ]
+    }
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "mtek",
+        "aliases": [
+          "Mtek",
+          "mtek"
+        ],
+        "extensions": [
+          ".mtek"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "mtek",
+        "scopeName": "source.mtek",
+        "path": "./syntaxes/mtek.tmLanguage.json"
+      }
+    ],
+    "configurationDefaults": {
+      "[mtek]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4,
+        "editor.detectIndentation": false,
+        "editor.rulers": [
+          100
+        ],
+        "files.eol": "\n",
+        "files.insertFinalNewline": true,
+        "files.trimTrailingWhitespace": true
+      }
+    },
+    "configuration": {
+      "title": "Mtek",
+      "properties": {
+        "mtek.server.path": {
+          "type": "string",
+          "default": "mtek",
+          "scope": "machine-overridable",
+          "markdownDescription": "The `mtek` executable that is started as `mtek lsp` for the language server. A bare name is looked up on `PATH`; use an absolute path to use a build that is not installed (for example the `target/debug/mtek` of a checkout, written out in full). Changing it restarts the server."
+        },
+        "mtek.trace.server": {
+          "type": "string",
+          "enum": [
+            "messages",
+            "verbose"
+          ],
+          "default": "messages",
+          "scope": "window",
+          "markdownDescription": "How much of the traffic between VS Code and the language server the **Mtek Language Server** output channel shows when tracing is on. Tracing is switched on with the log level of that channel (Output panel, gear icon, *Set Log Level...*, *Trace*): `vscode-languageclient` 10 follows the log level, and this setting chooses between the messages alone and the messages with their parameters."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "mtek.restartServer",
+        "title": "Mtek: Restart Language Server"
+      },
+      {
+        "command": "mtek.showServerLog",
+        "title": "Mtek: Show Language Server Log"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "gen:grammar": "node scripts/gen-grammar.ts",
+    "check:grammar": "node scripts/gen-grammar.ts --check",
+    "lint": "eslint src",
+    "package": "npm run build && vsce package --no-dependencies --skip-license",
+    "test:unit": "vitest run",
+    "test:integration": "node scripts/run-vscode-tests.mjs"
+  },
+  "dependencies": {
+    "vscode-languageclient": "10.1.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.1",
+    "@types/vscode": "1.91.0",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3",
+    "vscode-oniguruma": "2.0.1",
+    "vscode-textmate": "9.3.2"
+  }
+}

@@ -1,0 +1,6 @@
+**
+!package.json
+!README.md
+!language-configuration.json
+!syntaxes/mtek.tmLanguage.json
+!dist/extension.cjs
