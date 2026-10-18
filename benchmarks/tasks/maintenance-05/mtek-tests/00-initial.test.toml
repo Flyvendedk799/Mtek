@@ -1,0 +1,25 @@
+# Camera: position (0, 0, 8) looking at the origin, fov_y 0.9, 128 x 128 target (CPU projection,
+# benchmarks/baselines/support/test/projection.ts). The Housing is a box 5 x 5 x 1 at the origin (grey) and
+# spans pixels 20 to 108 in x and y. The Bulb is a yellow plate 2 x 2 x 0.2 at (0, 0, 1) scaled by
+# (0.5 + brightness) in x and y, so its edge is 1 + 2 * brightness and its silhouette is, in pixels:
+#   brightness 0.5 (the start): 44.8 to 83.2 in x (and in y)
+# The sampled points are at least 4 pixels from the silhouette they are not in and, inside it, at least 4 pixels
+# in. A rename must not change anything visible: the lamp starts at brightness 0.5.
+name = "the lamp starts at brightness 0.5"
+steps = [
+  { step = 3, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 50, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 78, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 50, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 40, y = 64, color = "#4b5563", tolerance = 2 } },
+  { expect_pixel = { x = 88, y = 64, color = "#4b5563", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 40, color = "#4b5563", tolerance = 2 } },
+  { expect_pixel = { x = 30, y = 30, color = "#4b5563", tolerance = 2 } },
+  { expect_pixel = { x = 10, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 118, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 10, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 118, color = "#202020", tolerance = 2 } },
+]

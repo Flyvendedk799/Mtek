@@ -1,0 +1,14 @@
+id = "maintenance-04"
+category = "maintenance"
+mode = "edit"
+title = "Repair a turret that turns by the wrong amount and to the wrong side"
+prompt = """The project is meant to show a turret that turns when Space is pressed, and the turret does not end up where it should. Repair it without removing anything.
+Intended scene: clear colour #202020; one camera at (0, 0, 8) looking at the origin; a cube named Turret with edge length 2 at the origin, flat colour #6b5cff; a cube named Barrel with edge length 0.8, flat colour #f59e0b, attached to the Turret as its child at the local position (0, 0, 2.2), so that at the start it is between the turret and the camera. All surfaces are flat colours (no lighting).
+Intended behaviour: every press of Space turns the Turret by a further 30 degrees about the vertical axis (Y), to the right as seen from the camera: the barrel swings from the camera toward the right-hand side of the picture, so that after three presses it is at world (2.2, 0, 0) and after four it is at (1.905, 0, -1.1). The program keeps the heading, which grows by one step with each press, in a variable named heading."""
+required_symbols = ["Demo.Turret", "Demo.Turret.Barrel", "Demo.heading"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

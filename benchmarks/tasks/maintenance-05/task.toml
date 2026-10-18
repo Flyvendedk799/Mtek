@@ -1,0 +1,13 @@
+id = "maintenance-05"
+category = "maintenance"
+mode = "edit"
+title = "Rename the lamp's glow input to brightness without changing its behaviour"
+prompt = """The project shows a lamp: a grey housing with a yellow bulb in front of it, and the size of the bulb follows a number called glow. The page that hosts the project is being changed and will from now on call this number brightness; it no longer uses the name glow. Rename it consistently: the variable glow becomes brightness everywhere it is used, and the input through which the page sets it is named brightness (the old input name goes away). Nothing else changes: the lamp looks and behaves exactly as before.
+Behaviour that must stay: clear colour #202020; one camera at (0, 0, 8) looking at the origin; a box named Housing, 5 x 5 x 1, at the origin with the flat colour #4b5563; a box named Bulb, flat colour #fde047, a square plate in front of the housing at (0, 0, 1) whose edge is 1 + 2 * brightness and whose thickness is 0.2 (so the edge is 2 at the starting brightness of 0.5); pressing Space sets the brightness to 1, pressing D sets it to 0, and the page can set it to any number between 0 and 1. All surfaces are flat colours (no lighting)."""
+required_symbols = ["Demo.Bulb", "Demo.Housing"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

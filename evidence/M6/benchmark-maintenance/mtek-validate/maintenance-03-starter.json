@@ -1,0 +1,215 @@
+{
+  "task": "maintenance-03",
+  "project": "starter",
+  "layers": {
+    "parse": {
+      "outcome": "fail",
+      "reason": "2 syntax errors; first MTEK-E0022: Float literal `2.` has no digits after the decimal point; floats need digits on both sides of the point. (src/main.mtek:26)",
+      "notRun": null
+    },
+    "check": {
+      "outcome": "fail",
+      "reason": "4 errors; first MTEK-E2003: Unknown name 'elapsd'. (src/main.mtek:25)",
+      "notRun": null
+    },
+    "build": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    },
+    "start": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    },
+    "tests": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Bob",
+      "Demo.elapsed",
+      "Demo.presses"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [
+    {
+      "schemaVersion": 1,
+      "code": "MTEK-E2003",
+      "severity": "error",
+      "title": "unknown name",
+      "message": "Unknown name 'elapsd'.",
+      "source": {
+        "file": "src/main.mtek",
+        "startByte": 523,
+        "endByte": 529,
+        "startLine": 25,
+        "startColumn": 9,
+        "endLine": 25,
+        "endColumn": 15
+      },
+      "related": [
+        {
+          "message": "did you mean 'elapsed'?",
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 180,
+            "endByte": 187,
+            "startLine": 10,
+            "startColumn": 11,
+            "endLine": 10,
+            "endColumn": 18
+          }
+        }
+      ],
+      "notes": [],
+      "suggestedEdits": [
+        {
+          "description": "rename 'elapsd' to 'elapsed'",
+          "edits": [
+            {
+              "file": "src/main.mtek",
+              "startByte": 523,
+              "endByte": 529,
+              "replacement": "elapsed"
+            }
+          ]
+        }
+      ],
+      "phase": "check",
+      "docs": "spec/diagnostics.md#mtek-e2003"
+    },
+    {
+      "schemaVersion": 1,
+      "code": "MTEK-E0022",
+      "severity": "error",
+      "title": "malformed float literal",
+      "message": "Float literal `2.` has no digits after the decimal point; floats need digits on both sides of the point.",
+      "source": {
+        "file": "src/main.mtek",
+        "startByte": 579,
+        "endByte": 581,
+        "startLine": 26,
+        "startColumn": 43,
+        "endLine": 26,
+        "endColumn": 45
+      },
+      "related": [],
+      "notes": [
+        "help: write `2.0`"
+      ],
+      "suggestedEdits": [
+        {
+          "description": "write the float literal as `2.0`",
+          "edits": [
+            {
+              "file": "src/main.mtek",
+              "startByte": 579,
+              "endByte": 581,
+              "replacement": "2.0"
+            }
+          ]
+        }
+      ],
+      "phase": "parse",
+      "docs": "spec/diagnostics.md#mtek-e0022"
+    },
+    {
+      "schemaVersion": 1,
+      "code": "MTEK-E3014",
+      "severity": "error",
+      "title": "operator not defined for operands",
+      "message": "The operator `*` is not defined for f32 and i32.",
+      "source": {
+        "file": "src/main.mtek",
+        "startByte": 584,
+        "endByte": 598,
+        "startLine": 26,
+        "startColumn": 48,
+        "endLine": 26,
+        "endColumn": 62
+      },
+      "related": [],
+      "notes": [
+        "help: v0.1 has no implicit conversions; convert one operand explicitly, for example `f32(…)`"
+      ],
+      "suggestedEdits": [],
+      "phase": "check",
+      "docs": "spec/diagnostics.md#mtek-e3014"
+    },
+    {
+      "schemaVersion": 1,
+      "code": "MTEK-E1003",
+      "severity": "error",
+      "title": "missing semicolon",
+      "message": "Missing `;` at the end of the assignment, found `}`.",
+      "source": {
+        "file": "src/main.mtek",
+        "startByte": 662,
+        "endByte": 662,
+        "startLine": 30,
+        "startColumn": 21,
+        "endLine": 30,
+        "endColumn": 21
+      },
+      "expected": "`;`",
+      "actual": "`}`",
+      "related": [],
+      "notes": [
+        "help: end every statement, field and declaration with `;`"
+      ],
+      "suggestedEdits": [
+        {
+          "description": "insert the missing `;`",
+          "edits": [
+            {
+              "file": "src/main.mtek",
+              "startByte": 662,
+              "endByte": 662,
+              "replacement": ";"
+            }
+          ]
+        }
+      ],
+      "phase": "parse",
+      "docs": "spec/diagnostics.md#mtek-e1003"
+    }
+  ],
+  "testReport": null,
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "fail",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 1,
+      "durationMs": 127,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Bob",
+      "exitCode": 0,
+      "durationMs": 117,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.elapsed",
+      "exitCode": 0,
+      "durationMs": 121,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.presses",
+      "exitCode": 0,
+      "durationMs": 117,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 483
+}

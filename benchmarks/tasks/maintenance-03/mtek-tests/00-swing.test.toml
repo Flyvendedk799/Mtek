@@ -1,0 +1,39 @@
+# Camera: position (0, 0, 8) looking at the origin, fov_y 0.9, 128 x 128 target (CPU projection,
+# benchmarks/baselines/support/test/projection.ts). Bob is a unit box at x = 2 sin(t), y = 0 (no key pressed),
+# t the elapsed time in seconds; its front face (z = 0.5) is 17.7 pixels wide and centred on pixel
+# x = 64 + 17.66 x, y = 64:
+#   frame   1 (t = 0.0167): x = 0.033 -> pixel 64.6
+#   frame  30 (t = 0.5):    x = 0.959 -> pixel 80.9   (the box covers pixels 72 to 90)
+#   frame  60 (t = 1.0):    x = 1.683 -> pixel 93.7   (85 to 102)
+#   frame 240 (t = 4.0):    x = -1.514 -> pixel 37.3  (28 to 46)
+# The sampled points are at least 2 pixels inside or 5 pixels outside the silhouette.
+name = "Bob swings sideways with x = 2 sin(t)"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#ec4899", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 108, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 20, color = "#202020", tolerance = 2 } },
+
+  { step = 29, dt = 0.016666668 },
+  { expect_pixel = { x = 81, y = 64, color = "#ec4899", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 95, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 81, y = 50, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 81, y = 78, color = "#202020", tolerance = 2 } },
+
+  { step = 30, dt = 0.016666668 },
+  { expect_pixel = { x = 94, y = 64, color = "#ec4899", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 110, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 94, y = 50, color = "#202020", tolerance = 2 } },
+
+  # the other side of the centre, where sin(t) is negative
+  { step = 180, dt = 0.016666668 },
+  { expect_pixel = { x = 37, y = 64, color = "#ec4899", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 54, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 37, y = 50, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 37, y = 78, color = "#202020", tolerance = 2 } },
+]

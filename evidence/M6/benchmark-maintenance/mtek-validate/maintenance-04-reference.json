@@ -1,0 +1,148 @@
+{
+  "task": "maintenance-04",
+  "project": "benchmarks/tasks/maintenance-04/reference/mtek",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Turret",
+      "Demo.Turret.Barrel",
+      "Demo.heading"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "pass",
+    "exitCode": 0,
+    "summary": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/00-initial.test.toml",
+        "name": "before any key press the barrel points at the camera",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 8,
+        "stepsTotal": 8
+      },
+      {
+        "file": "tests/01-one-press.test.toml",
+        "name": "one press of Space turns the turret 30 degrees to the right",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 13,
+        "stepsTotal": 13
+      },
+      {
+        "file": "tests/02-more-presses.test.toml",
+        "name": "three presses point the barrel to the right, more presses turn it further round",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 53,
+        "stepsTotal": 53
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "pass",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 113,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Turret",
+      "exitCode": 0,
+      "durationMs": 114,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Turret.Barrel",
+      "exitCode": 0,
+      "durationMs": 115,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.heading",
+      "exitCode": 0,
+      "durationMs": 115,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 133,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 0,
+      "durationMs": 2023,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 2614
+}

@@ -1,0 +1,190 @@
+{
+  "task": "maintenance-06",
+  "project": "starter",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "fail",
+      "reason": "2 of 4 fixtures failed: 'five presses light every pip and the alarm, more presses change nothing', 'R switches everything off and counting starts again' (expect_pixel: pixel (64, 29) is #202020, expected #ef4444 within 2 per channel; it differs by 207)",
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.count",
+      "Demo.Pip1",
+      "Demo.Pip2",
+      "Demo.Pip3",
+      "Demo.Pip4",
+      "Demo.Pip5"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "fail",
+    "exitCode": 1,
+    "summary": {
+      "total": 4,
+      "passed": 2,
+      "failed": 2,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/00-initial.test.toml",
+        "name": "before any key press nothing is lit",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 15,
+        "stepsTotal": 15
+      },
+      {
+        "file": "tests/01-presses.test.toml",
+        "name": "each press of Space lights one more pip",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 36,
+        "stepsTotal": 36
+      },
+      {
+        "file": "tests/02-full.test.toml",
+        "name": "five presses light every pip and the alarm, more presses change nothing",
+        "status": "fail",
+        "reason": null,
+        "failure": {
+          "kind": "expect_pixel",
+          "step": 34,
+          "line": 38,
+          "message": "pixel (64, 29) is #202020, expected #ef4444 within 2 per channel; it differs by 207",
+          "details": []
+        },
+        "stepsRun": 33,
+        "stepsTotal": 58
+      },
+      {
+        "file": "tests/03-reset.test.toml",
+        "name": "R switches everything off and counting starts again",
+        "status": "fail",
+        "reason": null,
+        "failure": {
+          "kind": "expect_pixel",
+          "step": 27,
+          "line": 31,
+          "message": "pixel (64, 29) is #202020, expected #ef4444 within 2 per channel; it differs by 207",
+          "details": []
+        },
+        "stepsRun": 26,
+        "stepsTotal": 65
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "fail",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 123,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.count",
+      "exitCode": 0,
+      "durationMs": 114,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Pip1",
+      "exitCode": 0,
+      "durationMs": 113,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Pip2",
+      "exitCode": 0,
+      "durationMs": 114,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Pip3",
+      "exitCode": 0,
+      "durationMs": 117,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Pip4",
+      "exitCode": 0,
+      "durationMs": 114,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Pip5",
+      "exitCode": 0,
+      "durationMs": 113,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 147,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 1,
+      "durationMs": 2282,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 3239
+}

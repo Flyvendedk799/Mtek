@@ -1,0 +1,940 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=benchmarks",
+      "maintenance-0[2-6]"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-02\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-02/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-02 (starter baseline): before any key press only the rail is drawn",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 493,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:18.521Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c78692ee7bc317e3c5ee-1dfb88fa2eb975af6cc1",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-02 (starter baseline): one press of Space places a row of five markers",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 417,
+                  "error": {
+                    "message": "Error: one press of Space places a row of five markers, step 6 (expect_pixel): pixel (12, 29) is rgb(32, 32, 32), expected #facc15 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m218\u001b[39m",
+                    "stack": "Error: one press of Space places a row of five markers, step 6 (expect_pixel): pixel (12, 29) is rgb(32, 32, 32), expected #facc15 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m218\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: one press of Space places a row of five markers, step 6 (expect_pixel): pixel (12, 29) is rgb(32, 32, 32), expected #facc15 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m218\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:19.792Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-02-basel-9fe76-laces-a-row-of-five-markers-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-02-basel-9fe76-laces-a-row-of-five-markers-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c78692ee7bc317e3c5ee-cc51eb971b67ec1eede8",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-02 (starter baseline): a second press places a second row below the first",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 469,
+                  "error": {
+                    "message": "Error: a second press places a second row below the first, step 10 (expect_pixel): pixel (12, 29) is rgb(32, 32, 32), expected #facc15 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m218\u001b[39m",
+                    "stack": "Error: a second press places a second row below the first, step 10 (expect_pixel): pixel (12, 29) is rgb(32, 32, 32), expected #facc15 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m218\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: a second press places a second row below the first, step 10 (expect_pixel): pixel (12, 29) is rgb(32, 32, 32), expected #facc15 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m218\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:20.717Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-02-basel-42a6f--second-row-below-the-first-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-02-basel-42a6f--second-row-below-the-first-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c78692ee7bc317e3c5ee-14785a070c5b39e26520",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-03\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-03/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-03 (starter baseline): Bob swings sideways with x = 2 sin(t)",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 0,
+                  "error": {
+                    "message": "Error: Build failed with 1 error:\n../../benchmarks/tasks/maintenance-03/baseline/src/main.ts:24:3: ERROR: Expected \")\" but found \";\"",
+                    "stack": "Error: Build failed with 1 error:\n../../benchmarks/tasks/maintenance-03/baseline/src/main.ts:24:3: ERROR: Expected \")\" but found \";\"\n    at failureErrorWithLog (node_modules/esbuild/lib/main.js:1752:15)\n    at node_modules/esbuild/lib/main.js:1211:25\n    at node_modules/esbuild/lib/main.js:1163:52\n    at buildResponseToResult (node_modules/esbuild/lib/main.js:1209:7)\n    at node_modules/esbuild/lib/main.js:1236:16\n    at responseCallbacks.<computed> (node_modules/esbuild/lib/main.js:886:9)\n    at handleIncomingPacket (node_modules/esbuild/lib/main.js:941:12)\n    at Socket.readFromStdout (node_modules/esbuild/lib/main.js:864:7)"
+                  },
+                  "errors": [
+                    {
+                      "message": "Error: Build failed with 1 error:\n../../benchmarks/tasks/maintenance-03/baseline/src/main.ts:24:3: ERROR: Expected \")\" but found \";\"\n    at failureErrorWithLog (node_modules/esbuild/lib/main.js:1752:15)\n    at node_modules/esbuild/lib/main.js:1211:25\n    at node_modules/esbuild/lib/main.js:1163:52\n    at buildResponseToResult (node_modules/esbuild/lib/main.js:1209:7)\n    at node_modules/esbuild/lib/main.js:1236:16\n    at responseCallbacks.<computed> (node_modules/esbuild/lib/main.js:886:9)\n    at handleIncomingPacket (node_modules/esbuild/lib/main.js:941:12)\n    at Socket.readFromStdout (node_modules/esbuild/lib/main.js:864:7)"
+                    },
+                    {
+                      "message": "{\n  detail: undefined,\n  id: '',\n  location: {\n    column: 3,\n    file: '../../benchmarks/tasks/maintenance-03/baseline/src/main.ts',\n    length: 1,\n    line: 24,\n    lineText: '  };',\n    namespace: '',\n    suggestion: ')'\n  },\n  notes: [],\n  pluginName: '',\n  text: 'Expected \")\" but found \";\"'\n}"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": "WCBbRVJST1JdIEV4cGVjdGVkICIpIiBidXQgZm91bmQgIjsiCgogICAgLi4vLi4vYmVuY2htYXJrcy90YXNrcy9tYWludGVuYW5jZS0wMy9iYXNlbGluZS9zcmMvbWFpbi50czoyNDozOgogICAgICAyNCDilIIgICB9OwogICAgICAgICDilIIgICAgXgogICAgICAgICDilbUgICAgKQ=="
+                    },
+                    {
+                      "buffer": "Cgo="
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:22.455Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-03-basel-f3514-gs-sideways-with-x-2-sin-t--benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-03-basel-f3514-gs-sideways-with-x-2-sin-t--benchmarks/error-context.md"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "af51fedec9ee281568a2-faaea441de639d7d9f97",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-03 (starter baseline): every press of Space raises Bob by half a unit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:22.516Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "af51fedec9ee281568a2-f44f872f5c773d8487c2",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-04\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-04/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-04 (starter baseline): before any key press the barrel points at the camera",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 450,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:22.871Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5d1ca8e49f066ea564c4-1e29b8c11f68795c51fb",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-04 (starter baseline): one press of Space turns the turret 30 degrees to the right",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 406,
+                  "error": {
+                    "message": "Error: one press of Space turns the turret 30 degrees to the right, step 6 (expect_pixel): pixel (86, 64) is rgb(32, 32, 32), expected #f59e0b within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m213\u001b[39m",
+                    "stack": "Error: one press of Space turns the turret 30 degrees to the right, step 6 (expect_pixel): pixel (86, 64) is rgb(32, 32, 32), expected #f59e0b within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m213\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: one press of Space turns the turret 30 degrees to the right, step 6 (expect_pixel): pixel (86, 64) is rgb(32, 32, 32), expected #f59e0b within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m213\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:24.108Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-04-basel-dbc66-ret-30-degrees-to-the-right-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-04-basel-dbc66-ret-30-degrees-to-the-right-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5d1ca8e49f066ea564c4-fc270b49cbfd1d4fecbc",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-04 (starter baseline): three presses point the barrel to the right, more presses turn it further round",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 475,
+                  "error": {
+                    "message": "Error: three presses point the barrel to the right, more presses turn it further round, step 14 (expect_pixel): pixel (100, 64) is rgb(32, 32, 32), expected #f59e0b within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m213\u001b[39m",
+                    "stack": "Error: three presses point the barrel to the right, more presses turn it further round, step 14 (expect_pixel): pixel (100, 64) is rgb(32, 32, 32), expected #f59e0b within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m213\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: three presses point the barrel to the right, more presses turn it further round, step 14 (expect_pixel): pixel (100, 64) is rgb(32, 32, 32), expected #f59e0b within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m213\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:25.021Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-04-basel-a2e1f-esses-turn-it-further-round-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-04-basel-a2e1f-esses-turn-it-further-round-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5d1ca8e49f066ea564c4-b264b6207a8ca649edf7",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-05\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-05/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-05 (starter baseline): the lamp starts at brightness 0.5",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 460,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:26.781Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6c2a9b6c9c1e82f4816-39fbd75d5955a1b38c94",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-05 (starter baseline): Space sets full brightness and D the smallest",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 566,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:28.024Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6c2a9b6c9c1e82f4816-53d35d5a47f9cedb4c78",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-05 (starter baseline): the host input brightness sets the lamp",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 234,
+                  "error": {
+                    "message": "Error: the host input brightness sets the lamp, step 2 (set_input): setInput('brightness') was rejected: unknown-input: no host input named 'brightness'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: the host input brightness sets the lamp, step 2 (set_input): setInput('brightness') was rejected: unknown-input: no host input named 'brightness'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 95,
+                      "line": 103
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 101 |\u001b[39m     \u001b[36mcase\u001b[39m \u001b[32m\"set_input\"\u001b[39m\u001b[33m:\u001b[39m {\n \u001b[90m 102 |\u001b[39m       \u001b[36mconst\u001b[39m result \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m app\u001b[33m.\u001b[39msetInput(step\u001b[33m.\u001b[39mname\u001b[33m,\u001b[39m step\u001b[33m.\u001b[39mvalue)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 103 |\u001b[39m       expect(result\u001b[33m.\u001b[39mok\u001b[33m,\u001b[39m \u001b[32m`${where}: setInput('${step.name}') was rejected: ${result.message}`\u001b[39m)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 104 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 105 |\u001b[39m     }\n \u001b[90m 106 |\u001b[39m     \u001b[36mcase\u001b[39m \u001b[32m\"expect_state\"\u001b[39m\u001b[33m:\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 95,
+                        "line": 103
+                      },
+                      "message": "Error: the host input brightness sets the lamp, step 2 (set_input): setInput('brightness') was rejected: unknown-input: no host input named 'brightness'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  101 |     case \"set_input\": {\n  102 |       const result = await app.setInput(step.name, step.value);\n> 103 |       expect(result.ok, `${where}: setInput('${step.name}') was rejected: ${result.message}`).toBe(true);\n      |                                                                                               ^\n  104 |       return;\n  105 |     }\n  106 |     case \"expect_state\":\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:28.598Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-05-basel-f9828-ut-brightness-sets-the-lamp-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-05-basel-f9828-ut-brightness-sets-the-lamp-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 95,
+                    "line": 103
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d6c2a9b6c9c1e82f4816-8aa04814ea0aad6bd686",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-06\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-06/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-06 (starter baseline): before any key press nothing is lit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 440,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:29.339Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ecc339f30be3456e740c-2ef0bf3b31f6efe7a140",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-06 (starter baseline): each press of Space lights one more pip",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 744,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:30.550Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ecc339f30be3456e740c-9b41425dced4492b0b1c",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-06 (starter baseline): five presses light every pip and the alarm, more presses change nothing",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 578,
+                  "error": {
+                    "message": "Error: five presses light every pip and the alarm, more presses change nothing, step 34 (expect_pixel): pixel (64, 29) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m",
+                    "stack": "Error: five presses light every pip and the alarm, more presses change nothing, step 34 (expect_pixel): pixel (64, 29) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: five presses light every pip and the alarm, more presses change nothing, step 34 (expect_pixel): pixel (64, 29) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:31.303Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-06-basel-3c3bb-more-presses-change-nothing-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-06-basel-3c3bb-more-presses-change-nothing-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ecc339f30be3456e740c-379a3a4ce8856cc45ebd",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-06 (starter baseline): R switches everything off and counting starts again",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 492,
+                  "error": {
+                    "message": "Error: R switches everything off and counting starts again, step 27 (expect_pixel): pixel (64, 29) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m",
+                    "stack": "Error: R switches everything off and counting starts again, step 27 (expect_pixel): pixel (64, 29) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: R switches everything off and counting starts again, step 27 (expect_pixel): pixel (64, 29) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T18:40:32.399Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-06-basel-17509-f-and-counting-starts-again-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-maintenance-06-basel-17509-f-and-counting-starts-again-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ecc339f30be3456e740c-4916bc262d278443b8ef",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-18T18:40:09.997Z",
+    "duration": 23834.317000000003,
+    "expected": 6,
+    "skipped": 1,
+    "unexpected": 8,
+    "flaky": 0
+  }
+}

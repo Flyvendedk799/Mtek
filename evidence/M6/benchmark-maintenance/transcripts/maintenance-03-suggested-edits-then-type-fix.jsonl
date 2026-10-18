@@ -1,0 +1,2 @@
+{"text":"<<<FILE src/main.mtek\n<<<SEARCH\n        elapsd += dt;\n===\n        elapsed += dt;\n>>>REPLACE\n<<<SEARCH\nsway(elapsed, 2.)\n===\nsway(elapsed, 2.0)\n>>>REPLACE\n<<<SEARCH\n        presses += 1\n===\n        presses += 1;\n>>>REPLACE\n","finish":"stop","usage":{"inputTokens":null,"outputTokens":null}}
+{"text":"<<<FILE src/main.mtek\n<<<SEARCH\nRISE * presses\n===\nRISE * f32(presses)\n>>>REPLACE\n","finish":"stop","usage":{"inputTokens":null,"outputTokens":null}}

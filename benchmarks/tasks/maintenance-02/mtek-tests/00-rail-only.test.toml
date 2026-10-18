@@ -1,0 +1,20 @@
+# Camera: position (0, 0, 8) looking at the origin, fov_y 0.9, 128 x 128 target (CPU projection,
+# benchmarks/baselines/support/test/projection.ts). Rail: a box 8 x 0.4 x 1 at (0, -3, 0), its silhouette spans
+# y 107.6 to 120.5 and the whole width. Markers are boxes of edge 0.8: a marker at (x, y, 0) is centred on pixel
+# x = 64 + 17.43 x, y = 64 - 17.43 y (front face at depth 7.6) and is about 14 pixels wide; the five x of a row
+# (-3, -1.5, 0, 1.5, 3) are pixels 12, 38, 64, 90, 116; the rows y = 2.0 and y = -0.5 are pixels 29 and 73.
+# Before any key press nothing but the rail is drawn (the starter's behaviour, which a repair must not break).
+name = "before any key press only the rail is drawn"
+steps = [
+  { step = 5, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 114, color = "#475569", tolerance = 2 } },
+  { expect_pixel = { x = 30, y = 114, color = "#475569", tolerance = 2 } },
+  { expect_pixel = { x = 100, y = 114, color = "#475569", tolerance = 2 } },
+  { expect_pixel = { x = 12, y = 29, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 29, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 116, y = 29, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 12, y = 73, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 73, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 104, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 125, color = "#202020", tolerance = 2 } },
+]

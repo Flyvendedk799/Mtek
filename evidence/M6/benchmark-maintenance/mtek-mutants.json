@@ -1,0 +1,308 @@
+{
+  "note": "Sensitivity check of the fixtures and the required symbols: each mutant is a plausible wrong or partial fix, validated with `node tools/ai-eval/src/cli.ts validate --task <task> --project <mutant>` on the hardware adapter of environment-benchmarks.json. Eight of the ten fail. Two PASS, and both are cases of a difference that no pixel and no required symbol shows: 05b (the page-facing input is renamed, the internal variable is not) and 06c (the count may reach 6, which looks like 5). They are recorded here, and in decision 0084, as limits of the checks; nothing was changed to make them fail.",
+  "mutants": [
+    {
+      "mutant": "02a",
+      "task": "maintenance-02",
+      "change": "reference with the loop `0..COLUMNS - 1` (the right-most marker is missing)",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "requiredSymbols": "pass",
+      "fixtures": [
+        {
+          "file": "tests/00-rail-only.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/01-one-row.test.toml",
+          "status": "fail",
+          "failure": "pixel (116, 29) is #202020, expected #facc15 within 2 per channel; it differs by 218"
+        },
+        {
+          "file": "tests/02-two-rows.test.toml",
+          "status": "fail",
+          "failure": "pixel (116, 29) is #202020, expected #facc15 within 2 per channel; it differs by 218"
+        }
+      ],
+      "firstDiagnostic": null
+    },
+    {
+      "mutant": "02b",
+      "task": "maintenance-02",
+      "change": "reference with the loop `1..COLUMNS + 1` (the row is shifted by one column)",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "requiredSymbols": "pass",
+      "fixtures": [
+        {
+          "file": "tests/00-rail-only.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/01-one-row.test.toml",
+          "status": "fail",
+          "failure": "pixel (12, 29) is #202020, expected #facc15 within 2 per channel; it differs by 218"
+        },
+        {
+          "file": "tests/02-two-rows.test.toml",
+          "status": "fail",
+          "failure": "pixel (12, 29) is #202020, expected #facc15 within 2 per channel; it differs by 218"
+        }
+      ],
+      "firstDiagnostic": null
+    },
+    {
+      "mutant": "04a",
+      "task": "maintenance-04",
+      "change": "reference with the angle in radians but the sign still wrong (`-radians(heading)`)",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "requiredSymbols": "pass",
+      "fixtures": [
+        {
+          "file": "tests/00-initial.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/01-one-press.test.toml",
+          "status": "fail",
+          "failure": "pixel (86, 64) is #202020, expected #f59e0b within 2 per channel; it differs by 213"
+        },
+        {
+          "file": "tests/02-more-presses.test.toml",
+          "status": "fail",
+          "failure": "pixel (100, 64) is #202020, expected #f59e0b within 2 per channel; it differs by 213"
+        }
+      ],
+      "firstDiagnostic": null
+    },
+    {
+      "mutant": "04b",
+      "task": "maintenance-04",
+      "change": "reference with the sign right but the angle still in degrees (`heading` passed as radians)",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "requiredSymbols": "pass",
+      "fixtures": [
+        {
+          "file": "tests/00-initial.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/01-one-press.test.toml",
+          "status": "fail",
+          "failure": "pixel (86, 64) is #202020, expected #f59e0b within 2 per channel; it differs by 213"
+        },
+        {
+          "file": "tests/02-more-presses.test.toml",
+          "status": "fail",
+          "failure": "pixel (36, 64) is #f59e0b, expected #202020 within 2 per channel; it differs by 213"
+        }
+      ],
+      "firstDiagnostic": null
+    },
+    {
+      "mutant": "05a",
+      "task": "maintenance-05",
+      "change": "reference sources with the starter's mtek.toml (the host input is still glow)",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "fail",
+        "build": "not-run",
+        "start": "not-run",
+        "tests": "not-run"
+      },
+      "requiredSymbols": "pass",
+      "fixtures": null,
+      "firstDiagnostic": "MTEK-E9021: Unknown host input target 'Demo.glow': scene 'Demo' has no state 'glow'."
+    },
+    {
+      "mutant": "05b",
+      "task": "maintenance-05",
+      "change": "starter sources with only the key of the host input renamed (`brightness = \"Demo.glow\"`): the variable keeps its old name",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "requiredSymbols": "pass",
+      "fixtures": [
+        {
+          "file": "tests/00-initial.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/01-keys.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/02-host-input.test.toml",
+          "status": "pass",
+          "failure": null
+        }
+      ],
+      "firstDiagnostic": null
+    },
+    {
+      "mutant": "05c",
+      "task": "maintenance-05",
+      "change": "reference with one use of the old name left (`glow = 1.0;` in the Space handler)",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "fail",
+        "build": "not-run",
+        "start": "not-run",
+        "tests": "not-run"
+      },
+      "requiredSymbols": "pass",
+      "fixtures": null,
+      "firstDiagnostic": "MTEK-E2003: Unknown name 'glow'."
+    },
+    {
+      "mutant": "06a",
+      "task": "maintenance-06",
+      "change": "reference with the alarm visible from a count of 4 instead of 5",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "requiredSymbols": "pass",
+      "fixtures": [
+        {
+          "file": "tests/00-initial.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/01-presses.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/02-full.test.toml",
+          "status": "fail",
+          "failure": "pixel (64, 29) is #ef4444, expected #202020 within 2 per channel; it differs by 207"
+        },
+        {
+          "file": "tests/03-reset.test.toml",
+          "status": "pass",
+          "failure": null
+        }
+      ],
+      "firstDiagnostic": null
+    },
+    {
+      "mutant": "06b",
+      "task": "maintenance-06",
+      "change": "reference with R setting the count to 1 instead of 0",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "requiredSymbols": "pass",
+      "fixtures": [
+        {
+          "file": "tests/00-initial.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/01-presses.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/02-full.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/03-reset.test.toml",
+          "status": "fail",
+          "failure": "pixel (12, 99) is #22c55e, expected #202020 within 2 per channel; it differs by 165"
+        }
+      ],
+      "firstDiagnostic": null
+    },
+    {
+      "mutant": "06c",
+      "task": "maintenance-06",
+      "change": "reference with the cap of the count raised from 5 to 6",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "requiredSymbols": "pass",
+      "fixtures": [
+        {
+          "file": "tests/00-initial.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/01-presses.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/02-full.test.toml",
+          "status": "pass",
+          "failure": null
+        },
+        {
+          "file": "tests/03-reset.test.toml",
+          "status": "pass",
+          "failure": null
+        }
+      ],
+      "firstDiagnostic": null
+    }
+  ]
+}

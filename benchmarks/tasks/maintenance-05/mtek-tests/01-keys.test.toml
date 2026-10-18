@@ -1,0 +1,31 @@
+# Space sets the brightness to 1.0 and D sets it to 0.0 (the starter's behaviour, which the rename must keep).
+# Bulb silhouette (CPU projection, see 00-initial.test.toml), in pixels in x and y:
+#   brightness 1.0: 35.2 to 92.8      brightness 0.0: 54.4 to 73.6
+# A key press is applied at the start of the next frame.
+name = "Space sets full brightness and D the smallest"
+steps = [
+  { step = 2, dt = 0.016666668 },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 44, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 44, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 30, y = 64, color = "#4b5563", tolerance = 2 } },
+  { expect_pixel = { x = 98, y = 64, color = "#4b5563", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 30, color = "#4b5563", tolerance = 2 } },
+
+  { press = "KeyD" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyD" },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 60, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 68, y = 64, color = "#fde047", tolerance = 2 } },
+  { expect_pixel = { x = 50, y = 64, color = "#4b5563", tolerance = 2 } },
+  { expect_pixel = { x = 78, y = 64, color = "#4b5563", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 50, color = "#4b5563", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 78, color = "#4b5563", tolerance = 2 } },
+]

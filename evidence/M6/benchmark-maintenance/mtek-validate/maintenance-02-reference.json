@@ -1,0 +1,141 @@
+{
+  "task": "maintenance-02",
+  "project": "benchmarks/tasks/maintenance-02/reference/mtek",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Rail",
+      "Marker"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "pass",
+    "exitCode": 0,
+    "summary": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/00-rail-only.test.toml",
+        "name": "before any key press only the rail is drawn",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 11,
+        "stepsTotal": 11
+      },
+      {
+        "file": "tests/01-one-row.test.toml",
+        "name": "one press of Space places a row of five markers",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 18,
+        "stepsTotal": 18
+      },
+      {
+        "file": "tests/02-two-rows.test.toml",
+        "name": "a second press places a second row below the first",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 27,
+        "stepsTotal": 27
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "pass",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 133,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Rail",
+      "exitCode": 0,
+      "durationMs": 116,
+      "timedOut": false
+    },
+    {
+      "command": "context Marker",
+      "exitCode": 0,
+      "durationMs": 116,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 140,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 0,
+      "durationMs": 2077,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 2583
+}

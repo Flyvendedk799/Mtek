@@ -1,0 +1,141 @@
+{
+  "task": "maintenance-05",
+  "project": "benchmarks/tasks/maintenance-05/reference/mtek",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Bulb",
+      "Demo.Housing"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "pass",
+    "exitCode": 0,
+    "summary": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/00-initial.test.toml",
+        "name": "the lamp starts at brightness 0.5",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 15,
+        "stepsTotal": 15
+      },
+      {
+        "file": "tests/01-keys.test.toml",
+        "name": "Space sets full brightness and D the smallest",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 23,
+        "stepsTotal": 23
+      },
+      {
+        "file": "tests/02-host-input.test.toml",
+        "name": "the host input brightness sets the lamp",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 31,
+        "stepsTotal": 31
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "pass",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 133,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Bulb",
+      "exitCode": 0,
+      "durationMs": 115,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Housing",
+      "exitCode": 0,
+      "durationMs": 113,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 135,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 0,
+      "durationMs": 2143,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 2639
+}
