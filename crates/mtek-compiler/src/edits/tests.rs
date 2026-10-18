@@ -306,6 +306,48 @@ fn at_most_the_validation_budget_of_proposals_is_rechecked() {
 }
 
 #[test]
+fn analysis_without_edits_has_the_same_diagnostics_and_never_an_edit() {
+    // Two proposals the validator accepts (`1.` and a missing `;`) and an unknown name.
+    let text =
+        "const A: f32 = 1.;\nconst B: f32 = A\nconst C: f32 = Z;\nscene Demo { camera Main {} }\n";
+    let fs = project(text);
+    let validated = analyze(&ProjectRoot::at_base(), &fs);
+    let plain = crate::analyze_without_edits(&ProjectRoot::at_base(), &fs);
+    assert!(
+        validated
+            .report
+            .diagnostics
+            .iter()
+            .any(|d| !d.edits.is_empty()),
+        "the program has an edit to withhold"
+    );
+    assert!(
+        plain
+            .report
+            .diagnostics
+            .iter()
+            .all(|d| d.edits.is_empty() && d.candidates.is_empty()),
+        "no edit and no unvalidated proposal"
+    );
+    let strip = |report: &Report| -> Vec<Diagnostic> {
+        report
+            .diagnostics
+            .iter()
+            .cloned()
+            .map(|mut d| {
+                d.edits.clear();
+                d
+            })
+            .collect()
+    };
+    assert_eq!(strip(&validated.report), strip(&plain.report));
+    assert_eq!(validated.report.summary, plain.report.summary);
+    // The tree is the same: the module and its names.
+    assert_eq!(validated.module, plain.module);
+    assert_eq!(validated.resolution, plain.resolution);
+}
+
+#[test]
 fn the_edited_copy_is_in_memory_only() {
     let text = "const A: f32 = 1.;\nscene Demo { camera Main {} }\n";
     let fs = project(text);

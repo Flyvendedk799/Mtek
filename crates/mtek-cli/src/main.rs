@@ -13,6 +13,7 @@ mod fmt;
 mod grammar;
 mod guard;
 mod limits;
+mod lsp;
 mod real_fs;
 mod runtime;
 mod scaffold;
@@ -53,6 +54,13 @@ fn run(request: Request) -> Outcome {
                 // Long-running: it prints as it goes and guards each build on its own.
                 return Outcome {
                     code: dev::run(port, open, path.as_deref(), context),
+                    ..Outcome::default()
+                };
+            }
+            if matches!(request, Request::Lsp) {
+                // Long-running, and it owns standard input and output for the protocol.
+                return Outcome {
+                    code: lsp::run(),
                     ..Outcome::default()
                 };
             }

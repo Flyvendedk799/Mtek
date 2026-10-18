@@ -21,6 +21,12 @@ axum = { version = "=0.8.9", default-features = false, features = ["http1", "tok
 tokio = { version = "=1.53.2", features = ["rt-multi-thread", "macros", "fs", "net", "signal", "sync", "time"] }
 tokio-stream = { version = "=0.1.19", default-features = false, features = ["sync"] }
 notify = { version = "=8.2.0" }
+# `mtek lsp` (decisions 0007 and 0076, `spec/compiler-architecture.md` section 2): the stdio
+# transport and the protocol types of the language server.
+lsp-server = "=0.10.0"
+lsp-types = "=0.97.0"
+# Already in the workspace (decision 0007): the traits the protocol types are (de)serialised with.
+serde = "=1.0.229"
 # Already in the workspace (decision 0007): the JSON of the `mtek dev` events.
 serde_json = { version = "=1.0.151", features = ["preserve_order"] }
 # Already in the workspace (the compiler reads `mtek.toml` with it): `mtek test` reads its fixtures.

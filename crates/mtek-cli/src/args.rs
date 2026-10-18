@@ -55,17 +55,13 @@ enum Mode {
     Preview,
 }
 
-/// The arguments after a command that this build does not implement yet; accepted so that
-/// the error names the command instead of complaining about its arguments.
+/// What `mtek lsp` accepts: only the conventional `--stdio`.
 #[derive(Args, Debug)]
-struct Unimplemented {
-    #[arg(
-        trailing_var_arg = true,
-        allow_hyphen_values = true,
-        num_args = 0..,
-        hide = true
-    )]
-    rest: Vec<OsString>,
+struct LspArgs {
+    /// Speak the protocol over standard input and output (the only transport; accepted for
+    /// clients that always pass it)
+    #[arg(long)]
+    stdio: bool,
 }
 
 /// What `mtek inspect` shows: exactly one of the flags.
@@ -189,8 +185,8 @@ enum CliCommand {
     },
     /// Print the grammar of the language (EBNF or GBNF)
     Grammar(crate::grammar::GrammarArgs),
-    #[command(hide = true)]
-    Lsp(Unimplemented),
+    /// Run the language server: the Language Server Protocol over standard input and output
+    Lsp(LspArgs),
 }
 
 /// A command to run.
@@ -240,6 +236,8 @@ pub enum Request {
     Test(TestArgs),
     /// `mtek grammar …` (`crate::grammar`).
     Grammar(crate::grammar::GrammarArgs),
+    /// `mtek lsp`.
+    Lsp,
 }
 
 impl Request {
@@ -251,7 +249,8 @@ impl Request {
             | Request::Dev { .. }
             | Request::New { .. }
             | Request::Fmt { .. }
-            | Request::Grammar(_) => Format::Human,
+            | Request::Grammar(_)
+            | Request::Lsp => Format::Human,
             Request::Context { .. } => Format::Json,
             Request::Check { format, .. }
             | Request::Build { format, .. }
@@ -273,6 +272,7 @@ impl Request {
             Request::Test(_) => "test",
             Request::Fmt { .. } => "fmt",
             Request::Grammar(_) => "grammar",
+            Request::Lsp => "lsp",
         }
     }
 }
@@ -280,13 +280,6 @@ impl Request {
 /// Bad arguments: the text for stderr; the exit code is 2.
 #[derive(Debug, PartialEq, Eq)]
 pub struct UsageError(pub String);
-
-/// The error for a command or option that a later milestone implements.
-fn not_yet(what: &str, milestone: &str) -> UsageError {
-    UsageError(format!(
-        "error: '{what}' is specified (milestone {milestone}) but not implemented by this build yet\n"
-    ))
-}
 
 /// Interpret the arguments, including the program name.
 pub fn parse<I, T>(args: I) -> Result<Request, UsageError>
@@ -379,7 +372,7 @@ where
             max_bytes,
         }),
         CliCommand::Grammar(args) => Ok(Request::Grammar(args)),
-        CliCommand::Lsp(_) => Err(not_yet("mtek lsp", "M6")),
+        CliCommand::Lsp(LspArgs { stdio: _ }) => Ok(Request::Lsp),
     }
 }
 
@@ -650,13 +643,16 @@ mod tests {
     }
 
     #[test]
-    fn later_commands_are_named_in_the_error() {
-        let (command, milestone) = ("lsp", "M6");
-        let text = usage(&[command, "--port", "1", "x"]);
-        assert!(
-            text.contains(&format!("'mtek {command}'")) && text.contains(milestone),
-            "{text}"
+    fn lsp_takes_no_arguments_but_the_conventional_stdio_flag() {
+        assert_eq!(parse_args(&["lsp"]), Ok(Request::Lsp));
+        assert_eq!(parse_args(&["lsp", "--stdio"]), Ok(Request::Lsp));
+        assert_eq!(
+            parse_args(&["lsp"]).map(|r| (r.format(), r.verb())),
+            Ok((Format::Human, "lsp"))
         );
+        usage(&["lsp", "--port", "1"]);
+        usage(&["lsp", "somewhere"]);
+        usage(&["lsp", "--format", "json"]);
     }
 
     #[test]
@@ -679,7 +675,8 @@ mod tests {
                 assert!(text.contains("check") && text.contains("inspect"));
                 assert!(text.contains("dev"), "{text}");
                 assert!(text.contains("new"), "{text}");
-                assert!(!text.contains("lsp"), "unimplemented commands are hidden");
+                assert!(text.contains("lsp"), "{text}");
+                assert!(!text.contains("fmt"), "unimplemented commands are hidden");
             }
             other => panic!("{other:?}"),
         }

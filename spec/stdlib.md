@@ -8,7 +8,7 @@
 
 ## 1. One registry, many products
 
-Every prelude name is defined **once**, in the Rust registry. From it the toolchain generates: name resolution of prelude symbols, field/argument checking, `spec/stdlib-schema.json`, LSP completion and hover, the generated schema reference, and the AI context export (blueprint §3.4; `mtek context`, decision 0072: every registry row is a `supported.features` entry or a `notSupported` entry by its `since`). Unknown fields are errors, duplicate fields are errors, unsupported fields are never ignored.
+Every prelude name is defined **once**, in the Rust registry. From it the toolchain generates: name resolution of prelude symbols, field/argument checking, `spec/stdlib-schema.json`, LSP completion, hover and the `mtek-prelude:` virtual documents (decision 0076), the generated schema reference, and the AI context export (blueprint §3.4; `mtek context`, decision 0072: every registry row is a `supported.features` entry or a `notSupported` entry by its `since`). Unknown fields are errors, duplicate fields are errors, unsupported fields are never ignored.
 
 ### 1.1 Registry data model (Rust)
 
