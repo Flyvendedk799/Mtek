@@ -1,7 +1,7 @@
 // M4-08 compatible instancing fixture with groups that must stay apart. Seventeen entities, five kinds:
 //
 //   A0..A5   six boxes (1 x 1 x 1), Shade with the default tint X         group 1: 6 instances (A5 moves with mover_x)
-//   S0..S3   four spheres (radius 0.5), Shade with tint X                 group 2: 4 instances (another mesh)
+//   S0..S3   four ellipsoids (spheres, radius 0.5, scaled), Shade with tint X  group 2: 4 instances (another mesh)
 //   C0..C2   three boxes (1 x 1 x 1), Shade with tint Y                   group 3: 3 instances (another parameter block)
 //   U0..U2   three boxes (1 x 1 x 1), Unlit                               group 4: 3 instances (another material, pipeline)
 //   E0       one box (1.5 x 1.5 x 1.5), Shade with tint X                 alone: drawn individually (another mesh)
@@ -9,8 +9,9 @@
 // A, S and E have the same material and the same parameters: they share one parameter block (the lowest
 // instance, A0's, names it) but differ in mesh, so they are separate groups. The expected counters are
 // 17 entities, 5 draw calls, 4 instanced draws, 3 shared parameter blocks (X, Y, Unlit) and none owned.
-// Every entity has its own rotation, so the per-instance normal matrices differ; the material reads the
-// world normal and position, so a wrong matrix shows in the pixels.
+// Every entity has its own rotation, and the ellipsoids a non-uniform scale: only there is the normal matrix (the inverse
+// transpose of the model matrix) not just a rotation of the surface normals (a box face keeps its direction under any
+// scale). The material reads the world normal and the world position, so a wrong model or normal matrix shows in the pixels.
 material Shade {
     param tint: color = #ffc040;
 
@@ -37,10 +38,10 @@ scene Mixed {
     entity A4 { position: vec3(-2.0, 4.0, 0.0); rotation: quat.euler(0.6, 1.5, 0.0); mesh: Box { size: vec3(1.0, 1.0, 1.0) }; material: Shade { tint: #ffc040 }; }
     entity A5 { position: bind(vec3(mover_x, 4.0, 0.0)); rotation: quat.euler(0.4, 0.4, 0.0); mesh: Box { size: vec3(1.0, 1.0, 1.0) }; material: Shade { tint: #ffc040 }; }
 
-    entity S0 { position: vec3(-9.0, 1.5, 0.0); mesh: Sphere { radius: 0.5 }; material: Shade { tint: #ffc040 }; }
-    entity S1 { position: vec3(-6.0, 1.5, 0.0); mesh: Sphere { radius: 0.5 }; material: Shade { tint: #ffc040 }; }
-    entity S2 { position: vec3(-3.0, 1.5, 0.0); mesh: Sphere { radius: 0.5 }; material: Shade { tint: #ffc040 }; }
-    entity S3 { position: vec3(0.0, 1.5, 0.0); mesh: Sphere { radius: 0.5 }; material: Shade { tint: #ffc040 }; }
+    entity S0 { position: vec3(-9.0, 1.5, 0.0); rotation: quat.euler(0.4, 0.6, 0.2); scale: vec3(1.6, 0.7, 1.0); mesh: Sphere { radius: 0.5 }; material: Shade { tint: #ffc040 }; }
+    entity S1 { position: vec3(-6.0, 1.5, 0.0); rotation: quat.euler(0.4, 0.6, 0.2); scale: vec3(1.6, 0.7, 1.0); mesh: Sphere { radius: 0.5 }; material: Shade { tint: #ffc040 }; }
+    entity S2 { position: vec3(-3.0, 1.5, 0.0); rotation: quat.euler(0.4, 0.6, 0.2); scale: vec3(1.6, 0.7, 1.0); mesh: Sphere { radius: 0.5 }; material: Shade { tint: #ffc040 }; }
+    entity S3 { position: vec3(0.0, 1.5, 0.0); rotation: quat.euler(0.4, 0.6, 0.2); scale: vec3(1.6, 0.7, 1.0); mesh: Sphere { radius: 0.5 }; material: Shade { tint: #ffc040 }; }
 
     entity C0 { position: vec3(-6.0, -1.0, 0.0); rotation: quat.euler(0.5, 0.3, 0.0); mesh: Box { size: vec3(1.0, 1.0, 1.0) }; material: Shade { tint: #40ff80 }; }
     entity C1 { position: vec3(-3.0, -1.0, 0.0); rotation: quat.euler(1.0, 0.8, 0.0); mesh: Box { size: vec3(1.0, 1.0, 1.0) }; material: Shade { tint: #40ff80 }; }

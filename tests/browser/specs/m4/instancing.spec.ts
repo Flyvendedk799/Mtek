@@ -104,7 +104,7 @@ const OFF = { disableInstancing: true };
 const FRAME = [{}] as const;
 
 test.describe("compatible instancing (M4-08)", () => {
-  test("500 identical boxes: one instanced draw instead of 500, and the same picture", async ({ page, gpu }) => {
+  test("500 identical boxes: one instanced draw instead of 500, and the same picture", async ({ page, gpu }, testInfo) => {
     void gpu;
     const [instanced] = await render(page, INSTANCING_GRID, ON, FRAME);
     const [individual] = await render(page, INSTANCING_GRID, OFF, FRAME);
@@ -125,6 +125,10 @@ test.describe("compatible instancing (M4-08)", () => {
     // And identical to the one-draw-per-entity picture (within 1/255 per channel; ties of equal depth resolve alike
     // because both draw in the same order).
     const difference = compare(instanced.pixels, individual.pixels);
+    testInfo.annotations.push({
+      type: "m4-instancing",
+      description: `500 boxes: drawCalls ${String(individual.counters["drawCalls"])} -> ${String(instanced.counters["drawCalls"])}, instancedDraws ${String(instanced.counters["instancedDraws"])}, max channel difference ${String(difference.maxDiff)}/255, ${String(difference.differing)} of ${String(TARGET.width * TARGET.height)} pixels differ, ${String(seen.drawn)} drawn in ${String(seen.colours)} colours`,
+    });
     expect(difference.maxDiff, `${String(difference.differing)} pixels differ`).toBeLessThanOrEqual(1);
   });
 
