@@ -99,7 +99,19 @@ export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8100: "non-opaque color value",
 } as const;
 
-export type RuntimeDiagnosticCode = keyof typeof RUNTIME_DIAGNOSTIC_CATALOGUE;
+/**
+ * The two asset codes the runtime produces (`spec/diagnostics.md` section 5.7, task M4-06). They are catalogued
+ * with the other `7xxx` codes, so they are not in {@link RUNTIME_DIAGNOSTIC_CATALOGUE}; a test asserts that their
+ * titles equal that table.
+ */
+export const RUNTIME_ASSET_DIAGNOSTICS = {
+  E7030: "asset fetch or integrity failure",
+  E7031: "image decode failure",
+} as const;
+
+export type RuntimeDiagnosticCode = keyof typeof RUNTIME_DIAGNOSTIC_CATALOGUE | keyof typeof RUNTIME_ASSET_DIAGNOSTICS;
+
+const RUNTIME_TITLES: Readonly<Record<RuntimeDiagnosticCode, string>> = { ...RUNTIME_DIAGNOSTIC_CATALOGUE, ...RUNTIME_ASSET_DIAGNOSTICS };
 
 export interface RuntimeDiagnosticInit {
   readonly message: string;
@@ -121,7 +133,7 @@ export function makeRuntimeDiagnostic(code: RuntimeDiagnosticCode, init: Runtime
     schemaVersion: 1 as const,
     code: `MTEK-${code}`,
     severity: severityOf(code),
-    title: RUNTIME_DIAGNOSTIC_CATALOGUE[code],
+    title: RUNTIME_TITLES[code],
     message: init.message,
     source: init.source ?? null,
   };

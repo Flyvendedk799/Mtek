@@ -27,6 +27,7 @@ export function asGpu<T>(fake: object): T {
 const USAGE_COPY_DST = 0x08;
 /** `GPUTextureUsage.COPY_DST` (texture usage flags are a different set than buffer usage flags). */
 const USAGE_COPY_DST_TEXTURE = 0x02;
+const USAGE_RENDER_ATTACHMENT_TEXTURE = 0x10;
 const USAGE_UNIFORM = 0x40;
 
 export const DEFAULT_LIMITS: Readonly<Record<string, number>> = {
@@ -181,6 +182,41 @@ export class FakeQueue {
     this.textureWrites.push({ texture, bytes: data.byteLength, width: size.width, height: size.height });
   }
 
+  /** Every `copyExternalImageToTexture` call. */
+  readonly externalCopies: FakeExternalCopy[] = [];
+
+  /**
+   * `copyExternalImageToTexture` of a decoded image into mip level 0 at the origin. Like the real call it needs a
+   * live bitmap, and a destination that is a live `rgba8unorm`/`rgba8unorm-srgb`/`bgra8unorm(-srgb)` texture with
+   * `COPY_DST | RENDER_ATTACHMENT`; the texel bytes are copied as they are (an `-srgb` destination keeps the stored
+   * sRGB bytes, as hardware does for an image whose colour space is sRGB). `flipY` and premultiplication are modelled
+   * only as "must be off", which is what the runtime asks for.
+   */
+  copyExternalImageToTexture(
+    source: { readonly source: FakeImageBitmap; readonly flipY?: boolean },
+    destination: { readonly texture: FakeTexture; readonly colorSpace?: string; readonly premultipliedAlpha?: boolean },
+    size: { readonly width: number; readonly height: number },
+  ): void {
+    const { texture } = destination;
+    const bitmap = source.source;
+    if (bitmap.closed) throw new Error("copyExternalImageToTexture: the image bitmap is closed");
+    if (texture.destroyed) throw new Error("copyExternalImageToTexture: the texture is destroyed");
+    if ((texture.usage & USAGE_COPY_DST_TEXTURE) === 0 || (texture.usage & USAGE_RENDER_ATTACHMENT_TEXTURE) === 0) {
+      throw new Error("copyExternalImageToTexture: the texture needs COPY_DST and RENDER_ATTACHMENT");
+    }
+    if (!["rgba8unorm", "rgba8unorm-srgb", "bgra8unorm", "bgra8unorm-srgb"].includes(texture.format)) {
+      throw new Error(`copyExternalImageToTexture: ${texture.format} is not a valid destination format`);
+    }
+    if (source.flipY === true || destination.premultipliedAlpha === true) throw new Error("copyExternalImageToTexture: flipY and premultipliedAlpha must be off");
+    if (size.width > bitmap.width || size.height > bitmap.height || size.width > texture.width || size.height > texture.height) {
+      throw new Error("copyExternalImageToTexture: the copy exceeds the image or the texture");
+    }
+    for (let row = 0; row < size.height; row += 1) {
+      texture.pixels.set(bitmap.data.subarray(row * bitmap.width * 4, row * bitmap.width * 4 + size.width * 4), row * texture.width * 4);
+    }
+    this.externalCopies.push({ texture, bitmap, width: size.width, height: size.height, colorSpace: destination.colorSpace });
+  }
+
   writeBuffer(
     buffer: FakeBuffer,
     bufferOffset: number,
@@ -208,6 +244,30 @@ export class FakeQueue {
     buffer.contents.set(sourceBytes.subarray(byteOffset, byteOffset + byteSize), bufferOffset);
     this.writes.push({ buffer, bufferOffset, size: byteSize });
   }
+}
+
+/** A decoded image (`ImageBitmap`): RGBA8 texels, top row first, with `close`. */
+export class FakeImageBitmap {
+  closed = false;
+
+  constructor(
+    readonly width: number,
+    readonly height: number,
+    readonly data: Uint8Array,
+  ) {}
+
+  close(): void {
+    this.closed = true;
+  }
+}
+
+/** One `copyExternalImageToTexture` call. */
+export interface FakeExternalCopy {
+  readonly texture: FakeTexture;
+  readonly bitmap: FakeImageBitmap;
+  readonly width: number;
+  readonly height: number;
+  readonly colorSpace: string | undefined;
 }
 
 /** One `writeTexture` call: the texture and the bytes it received. */

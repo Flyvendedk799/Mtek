@@ -3,12 +3,14 @@
  * at mount: entity parents, meshes, material instances, materials, their layouts and shaders.
  *
  * The schema validates shapes, not cross references. A reference that does not resolve is a broken
- * manifest (`E8006`, `manifest-invalid`). A structure this runtime build cannot render yet (asset meshes,
- * texture params that come from an asset) is an incompatible program (`E8003`, decisions 0031 and 0054).
+ * manifest (`E8006`, `manifest-invalid`): also an asset mesh or texture that names a file the `assets` table
+ * lacks, a primitive whose regions do not fit the file, and an asset mesh that lacks an attribute its
+ * material reads (decisions 0058 and 0060).
  */
 import type {
   MtekBuiltinResourceName,
   MtekCamera,
+  MtekImageAsset,
   MtekLayoutRecord,
   MtekManifest,
   MtekMaterialParam,
@@ -17,7 +19,8 @@ import type {
   MtekVertexAttribute,
 } from "../abi/manifest-types.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
-import type { MeshDescriptor } from "../mesh/cache.js";
+import { regionProblem } from "../mesh/asset.js";
+import type { MeshSource } from "../mesh/cache.js";
 
 /** A material as the renderer needs it: its parameter block layout (or none), its shader and params. */
 export interface ResolvedMaterial {
@@ -32,13 +35,25 @@ export interface ResolvedMaterial {
   readonly resources: readonly MtekMaterialResource[];
 }
 
-/** A texture or sampler of a material instance: what group 1 binds at `binding` (decision 0054). */
-export interface ResolvedInstanceResource {
+/** A built-in texture or sampler of a material instance: what group 1 binds at `binding` (decision 0054). */
+export interface ResolvedBuiltinResource {
   readonly name: string;
   readonly kind: "texture" | "sampler";
   readonly binding: number;
   readonly value: MtekBuiltinResourceName;
 }
+
+/** A texture of a material instance that comes from an image file of the `assets` table (decision 0060). */
+export interface ResolvedAssetResource {
+  readonly name: string;
+  readonly kind: "texture";
+  readonly binding: number;
+  /** The image's url. */
+  readonly value: string;
+  readonly asset: MtekImageAsset;
+}
+
+export type ResolvedInstanceResource = ResolvedBuiltinResource | ResolvedAssetResource;
 
 export interface ResolvedInstance {
   /** Index into `scene.materialInstances`. */
@@ -54,10 +69,10 @@ export interface ResolvedInstance {
   readonly resources: readonly ResolvedInstanceResource[];
 }
 
-/** A primitive mesh of the manifest's `meshes` table. */
+/** A mesh of the manifest's `meshes` table: a primitive shape or one primitive of a packaged file. */
 export interface ResolvedMesh {
   readonly id: string;
-  readonly descriptor: MeshDescriptor;
+  readonly descriptor: MeshSource;
 }
 
 export interface ResolvedEntity {
@@ -115,14 +130,6 @@ export const VERTEX_ATTRIBUTE_ORDER: readonly MtekVertexAttribute[] = ["position
 
 function broken(field: string, message: string): MtekDiagnostic {
   return makeRuntimeDiagnostic("E8006", { phase: "runtime:mount", message: `Invalid manifest: ${message}`, notes: [`field: ${field}`] });
-}
-
-function unsupported(field: string, message: string): MtekDiagnostic {
-  return makeRuntimeDiagnostic("E8003", {
-    phase: "runtime:mount",
-    message: `Incompatible program: ${message}`,
-    notes: [`field: ${field}`, "this runtime build renders primitive meshes, value params and built-in textures and samplers only"],
-  });
 }
 
 /** True when `attributes` is a subsequence of position, normal, uv (each at most once, in that order). */
@@ -218,10 +225,27 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
   });
   const materialById = new Map(materials.map((material) => [material.id, material]));
 
+  const assetsByUrl = new Map(manifest.assets.map((asset) => [asset.url, asset]));
   const meshes: ResolvedMesh[] = [];
   manifest.meshes.forEach((mesh, index) => {
     if (mesh.kind === "asset") {
-      diagnostics.push(unsupported(`meshes[${String(index)}]`, `mesh '${mesh.id}' comes from an asset.`));
+      const field = `meshes[${String(index)}]`;
+      const file = assetsByUrl.get(mesh.asset);
+      if (file?.kind !== "mesh-data") {
+        diagnostics.push(broken(`${field}.asset`, `mesh '${mesh.id}' names '${mesh.asset}', which the assets table lacks or which is not mesh data.`));
+        return;
+      }
+      const layout = file.primitives[mesh.primitive];
+      if (layout === undefined) {
+        diagnostics.push(broken(`${field}.primitive`, `mesh '${mesh.id}' names primitive ${String(mesh.primitive)} of '${mesh.asset}', which has ${String(file.primitives.length)}.`));
+        return;
+      }
+      const problem = regionProblem(layout, file.bytes);
+      if (problem !== undefined) {
+        diagnostics.push(broken(`${field}`, `mesh '${mesh.id}' (primitive ${String(mesh.primitive)} of '${mesh.asset}') cannot be read: ${problem}.`));
+        return;
+      }
+      meshes.push({ id: mesh.id, descriptor: { kind: "asset", asset: mesh.asset, primitive: mesh.primitive, layout } });
       return;
     }
     meshes.push({ id: mesh.id, descriptor: mesh });
@@ -252,8 +276,18 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
         return;
       }
       if (param.value.kind === "asset") {
-        diagnostics.push(unsupported(`${field}.params`, `the ${resource.kind} param '${resource.name}' of material instance ${String(index)} comes from an asset.`));
-        return;
+        const image = assetsByUrl.get(param.value.asset);
+        if (resource.kind !== "texture" || image?.kind !== "image") {
+          diagnostics.push(
+            broken(
+              `${field}.params`,
+              `the ${resource.kind} param '${resource.name}' of material instance ${String(index)} names '${param.value.asset}', which is not an image of the assets table.`,
+            ),
+          );
+          return;
+        }
+        resources.push({ name: resource.name, kind: "texture", binding: resource.binding, value: image.url, asset: image });
+        continue;
       }
       if (!param.value.name.startsWith(`${resource.kind}.`)) {
         diagnostics.push(
@@ -309,6 +343,20 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
     if ((mesh === null) !== (instance === null)) {
       diagnostics.push(broken(field, `entity '${entity.name}' has a mesh without a material or a material without a mesh.`));
       return;
+    }
+    // The compiler proved that an asset mesh has every attribute its material reads (E7010); the runtime does not trust that blindly.
+    const source = mesh?.descriptor;
+    if (source?.kind === "asset" && instance !== null) {
+      const missing = instance.material.shader.vertexAttributes.find((attribute) => !source.layout.attributes.includes(attribute));
+      if (missing !== undefined) {
+        diagnostics.push(
+          broken(
+            field,
+            `entity '${entity.name}' draws the mesh '${mesh?.id ?? ""}' with material '${instance.material.id}', which reads '${missing}'; primitive ${String(source.primitive)} of '${source.asset}' has [${source.layout.attributes.join(", ")}].`,
+          ),
+        );
+        return;
+      }
     }
     entities.push({ index, name: entity.name, symbol: entity.symbol, parent: entity.parent, mesh, instance });
   });

@@ -17,7 +17,6 @@ import {
   makeRuntimeDiagnostic,
   type MtekDiagnostic,
   type MtekRuntimePhase,
-  type RuntimeDiagnosticCode,
 } from "../diagnostics/types.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { fromRotationTranslationScale, multiply, type Mat4 } from "../math/mat4.js";
@@ -221,7 +220,7 @@ function sameVec3(a: Vec3, b: Vec3): boolean {
   return a.x === b.x && a.y === b.y && a.z === b.z;
 }
 
-function isWarningCode(code: string): code is RuntimeDiagnosticCode {
+function isWarningCode(code: string): code is keyof typeof RUNTIME_DIAGNOSTIC_CATALOGUE {
   return code.startsWith("W") && Object.hasOwn(RUNTIME_DIAGNOSTIC_CATALOGUE, code);
 }
 

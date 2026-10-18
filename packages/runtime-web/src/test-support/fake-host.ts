@@ -23,9 +23,11 @@
  * `asDom` is the single documented place where a fake is presented as a nominally typed DOM interface.
  */
 /// <reference types="vite/client" />
+/// <reference types="node" />
+import { createHash } from "node:crypto";
 import type { MtekManifest } from "../abi/manifest-types.js";
 import { checkManifest } from "../abi/validate.js";
-import type { DocumentLike, FetchResponseLike, HostEnvironment, ResizeObserverLike } from "../host/environment.js";
+import type { BytesResponseLike, DocumentLike, FetchResponseLike, HostEnvironment, ResizeObserverLike } from "../host/environment.js";
 import { syntheticProgram, type TestProgram } from "./program.js";
 import {
   FakeAdapter,
@@ -33,6 +35,7 @@ import {
   FakeBuffer,
   FakeDevice,
   FakeGpu,
+  FakeImageBitmap,
   FakeResource,
   FakeTexture,
   FakeTextureView,
@@ -882,8 +885,29 @@ export class FakeTimers {
 
 // ---------------------------------------------------------------- environment
 
-/** A scripted file server: a string is a 200 response, a number an HTTP error status, an Error a network failure. */
-export type FakeFile = string | number | Error;
+/**
+ * A scripted file server: a string or a `Uint8Array` is a 200 response (a string is its UTF-8 bytes for
+ * `fetchBytes`), a number an HTTP error status, an Error a network failure.
+ */
+export type FakeFile = string | Uint8Array | number | Error;
+
+/** The fake image format: `FIMG`, width and height as `u16` little-endian, then `width x height x 4` RGBA bytes. */
+export function fakeImage(width: number, height: number, rgba: ArrayLike<number>): Uint8Array {
+  const bytes = new Uint8Array(8 + width * height * 4);
+  bytes.set([0x46, 0x49, 0x4d, 0x47, width & 0xff, width >> 8, height & 0xff, height >> 8]);
+  bytes.set(Array.from(rgba), 8);
+  return bytes;
+}
+
+/** The decoder of the fake host: understands {@link fakeImage} and rejects everything else like a browser would. */
+function decodeFakeImage(bytes: Uint8Array): FakeImageBitmap {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (bytes.byteLength < 8 || view.getUint32(0, false) !== 0x46494d47) throw new DOMException("The source image could not be decoded.", "InvalidStateError");
+  const width = view.getUint16(4, true);
+  const height = view.getUint16(6, true);
+  if (bytes.byteLength !== 8 + width * height * 4) throw new DOMException("The source image could not be decoded.", "InvalidStateError");
+  return new FakeImageBitmap(width, height, bytes.slice(8));
+}
 
 export interface FakeHostOptions {
   readonly adapter?: FakeHostAdapterOptions | null;
@@ -895,6 +919,8 @@ export interface FakeHostOptions {
   readonly noGpu?: boolean;
   /** `false` simulates a browser without `ResizeObserver`. */
   readonly resizeObserver?: boolean;
+  /** `false` simulates an insecure context: no `crypto.subtle`, so the asset loader checks lengths only. */
+  readonly subtleCrypto?: boolean;
 }
 
 export class FakeHost {
@@ -904,6 +930,8 @@ export class FakeHost {
   readonly gpu: FakeHostGpu;
   readonly files = new Map<string, FakeFile>();
   readonly fetched: string[] = [];
+  /** Every bitmap the fake decoder produced, in order; tests assert they are closed. */
+  readonly bitmaps: FakeImageBitmap[] = [];
   readonly resizeObservers: FakeResizeObserver[] = [];
   /** Every `matchMedia` query the runtime made, in order. */
   readonly mediaQueries: FakeMediaQuery[] = [];
@@ -940,6 +968,20 @@ export class FakeHost {
       gpu: options.noGpu === true ? null : asDom<GPU>(this.gpu),
       ...(options.littleEndian === undefined ? {} : { littleEndian: options.littleEndian }),
       fetch: (url) => this.fetch(url),
+      fetchBytes: (url) => this.fetchBytes(url),
+      sha256:
+        options.subtleCrypto === false
+          ? undefined
+          : (bytes) => Promise.resolve(createHash("sha256").update(bytes).digest("hex")),
+      decodeImage: (bytes) => {
+        try {
+          const bitmap = decodeFakeImage(bytes);
+          this.bitmaps.push(bitmap);
+          return Promise.resolve(asDom<ImageBitmap>(bitmap));
+        } catch (error) {
+          return Promise.reject(error);
+        }
+      },
       document: asDom<DocumentLike>(this.document),
       window: asDom<EventTarget>(this.window),
       log: (message) => {
@@ -1018,7 +1060,19 @@ export class FakeHost {
       const status = file ?? 404;
       return Promise.resolve({ ok: false, status, text: () => Promise.resolve("") });
     }
-    return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(file) });
+    const text = typeof file === "string" ? file : new TextDecoder().decode(file);
+    return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(text) });
+  }
+
+  private fetchBytes(url: string): Promise<BytesResponseLike> {
+    this.fetched.push(url);
+    const file = this.files.get(url);
+    if (file instanceof Error) return Promise.reject(file);
+    if (file === undefined || typeof file === "number") {
+      return Promise.resolve({ ok: false, status: file ?? 404, arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)) });
+    }
+    const bytes = typeof file === "string" ? new TextEncoder().encode(file) : file;
+    return Promise.resolve({ ok: true, status: 200, arrayBuffer: () => Promise.resolve(bytes.slice().buffer) });
   }
 }
 

@@ -254,6 +254,19 @@ export class ResourceRegistry {
     this.uploadBytes += data.byteLength;
   }
 
+  /**
+   * `queue.copyExternalImageToTexture` of a decoded image into mip level 0 of `texture` (which needs `COPY_DST`
+   * and `RENDER_ATTACHMENT`), counted as one upload of `width x height x 4` bytes. The bitmap was decoded
+   * without colour conversion or premultiplication, so the texel bytes arrive as stored: an `-srgb` format
+   * reads them as sRGB-encoded, a plain format as data (`spec/assets.md` section 5).
+   */
+  copyExternalImage(queue: GPUQueue, bitmap: ImageBitmap, texture: GPUTexture): void {
+    const size = { width: bitmap.width, height: bitmap.height };
+    queue.copyExternalImageToTexture({ source: bitmap, flipY: false }, { texture, colorSpace: "srgb", premultipliedAlpha: false }, size);
+    this.uploads += 1;
+    this.uploadBytes += size.width * size.height * 4;
+  }
+
   /** Adds a DOM listener; the returned function removes it (once). `destroyAll` removes any that remain. */
   addEventListener(
     target: EventTarget,

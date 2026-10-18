@@ -6,6 +6,7 @@
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
 import { checkManifest } from "../abi/validate.js";
+import { closeImages, decodeImages, loadAssets, type LoadedAssets } from "../assets/loader.js";
 import { MtekMountError, makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import type { DevTools } from "../dev/tools.js";
 import type { AcquiredDevice } from "../gpu/device.js";
@@ -61,6 +62,11 @@ export interface AppDependencies {
   readonly acquireDevice: (handlers: DeviceHandlers) => Promise<AcquiredDevice>;
   /** Fetches shader files; remembers earlier responses so the rebuild after a device loss needs no network. */
   readonly fetchShaderFile: (url: string) => Promise<FetchResponseLike>;
+  /**
+   * The verified bytes of the program's asset files. The meshes and textures made from them are rebuilt from
+   * these after a device loss, without the network (decision 0060). Mutable: a hot-reload swap replaces it.
+   */
+  assets: LoadedAssets;
   /** True with `devicePixelRatio: "auto"`: a change of the pixel ratio resizes the backing store. */
   readonly watchPixelRatio: boolean;
   readonly registry: ResourceRegistry;
@@ -125,6 +131,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         readonly manifest: MtekManifest;
         readonly program: MtekMountProgram<Record<string, unknown>>;
         readonly modules: Map<string, GPUShaderModule>;
+        readonly assets: LoadedAssets;
         readonly sceneFunctions: MtekProgramScene;
         readonly restart: StructuralChange | undefined;
       }
@@ -335,23 +342,44 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         prefabNames(candidate.prefabs),
       );
 
-      const started = await startScene({
+      // Asset files that did not change (same url, hash and length) are not fetched again.
+      const loaded = await loadAssets({
         manifest,
-        structure: structure.structure,
-        program: checked.program,
-        device,
-        registry,
-        surface,
-        modules: shaders.modules,
-        services,
-        report: (diagnostic) => {
-          this.report(diagnostic);
-        },
-        pipelineCache: this.deps.scene.pipelines,
-        bindingPlan: this.deps.scene.plan,
-        ...(this.deps.test?.textures === undefined ? {} : { textures: this.deps.test.textures }),
-        ...(this.deps.test?.disableInstancing === true ? { instancing: false } : {}),
+        baseUrl: candidate.baseUrl,
+        environment,
+        maxTextureDimension2D: device.limits.maxTextureDimension2D,
+        phase: "runtime:reload",
+        previous: this.deps.assets,
       });
+      if (loaded.diagnostics.length > 0) {
+        for (const module of shaders.created) registry.release(module);
+        for (const diagnostic of loaded.diagnostics) this.report(diagnostic);
+        return { ok: false, diagnostics: loaded.diagnostics };
+      }
+
+      let started: Awaited<ReturnType<typeof startScene>>;
+      try {
+        started = await startScene({
+          manifest,
+          structure: structure.structure,
+          program: checked.program,
+          device,
+          registry,
+          surface,
+          modules: shaders.modules,
+          services,
+          report: (diagnostic) => {
+            this.report(diagnostic);
+          },
+          pipelineCache: this.deps.scene.pipelines,
+          bindingPlan: this.deps.scene.plan,
+          assets: { files: loaded.assets, images: loaded.images },
+          ...(this.deps.test?.textures === undefined ? {} : { textures: this.deps.test.textures }),
+          ...(this.deps.test?.disableInstancing === true ? { instancing: false } : {}),
+        });
+      } finally {
+        closeImages(loaded.images);
+      }
       if (!started.ok) {
         for (const module of shaders.created) registry.release(module);
         for (const diagnostic of started.diagnostics) this.report(diagnostic);
@@ -380,6 +408,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         manifest,
         program: candidate as MtekMountProgram<Record<string, unknown>>,
         modules: new Map(shaders.modules),
+        assets: loaded.assets,
         sceneFunctions: checked.program.scene,
         restart,
       };
@@ -647,24 +676,43 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       // A shader that does not build takes its material out of the scene (E8051); it does not fail the rebuild.
       for (const diagnostic of shaders.diagnostics) this.report(diagnostic);
 
-      const { world, bindings } = this.deps.scene;
-      const started = await startScene({
+      // The images are decoded again from the bytes the mount verified: the rebuild needs no network (decision 0060).
+      const decoded = await decodeImages({
         manifest,
-        structure: structure.structure,
-        program: checked.program,
-        device,
-        registry,
-        surface,
-        modules: shaders.modules,
-        services,
-        report: (diagnostic) => {
-          this.report(diagnostic);
-        },
-        recover: { world, bindings },
-        ...(this.deps.test?.textures === undefined ? {} : { textures: this.deps.test.textures }),
-        ...(this.deps.test?.disableInstancing === true ? { instancing: false } : {}),
+        baseUrl: this.deps.program.baseUrl,
+        environment: this.deps.environment,
+        maxTextureDimension2D: device.limits.maxTextureDimension2D,
+        phase: "runtime:device",
+        assets: this.deps.assets,
       });
-      if (!started.ok) throw new Error(started.diagnostics.map((diagnostic) => diagnostic.message).join(" "));
+      let scene: Scene | undefined;
+      try {
+        if (decoded.diagnostics.length > 0) throw new Error(decoded.diagnostics.map((diagnostic) => diagnostic.message).join(" "));
+        this.ensureRecovering();
+
+        const { world, bindings } = this.deps.scene;
+        const started = await startScene({
+          manifest,
+          structure: structure.structure,
+          program: checked.program,
+          device,
+          registry,
+          surface,
+          modules: shaders.modules,
+          services,
+          report: (diagnostic) => {
+            this.report(diagnostic);
+          },
+          recover: { world, bindings },
+          assets: { files: this.deps.assets, images: decoded.images },
+          ...(this.deps.test?.textures === undefined ? {} : { textures: this.deps.test.textures }),
+          ...(this.deps.test?.disableInstancing === true ? { instancing: false } : {}),
+        });
+        if (!started.ok) throw new Error(started.diagnostics.map((diagnostic) => diagnostic.message).join(" "));
+        scene = started.scene;
+      } finally {
+        closeImages(decoded.images);
+      }
       this.ensureRecovering();
 
       // Out-of-memory results arrive after a round trip (as at mount), and the new device may have been lost meanwhile.
@@ -675,7 +723,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       const lost = this.deps.device;
       this.deps.device = device;
       this.deps.modules = new Map(shaders.modules);
-      this.deps.scene = started.scene;
+      if (scene === undefined) throw new Error("internal error: the rebuild produced no scene");
+      this.deps.scene = scene;
       committed = true;
       lost.onuncapturederror = null;
       lost.destroy();
@@ -827,6 +876,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     this.deps.manifest = pending.manifest;
     this.deps.program = pending.program;
     this.deps.modules = pending.modules;
+    this.deps.assets = pending.assets;
     this.deps.sceneFunctions = pending.sceneFunctions;
     this.behaviors = new Behaviors(pending.sceneFunctions, pending.scene.world);
     this.hostInputs = new HostInputs(pending.manifest);
@@ -866,6 +916,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         this.simulatedLossEpoch = this.deviceEpoch;
         this.deps.device.destroy();
       },
+      assets: () => this.deps.assets.statuses(),
       failAllocation: () => {
         if (this.current === "disposed" || this.current === "failed") throw new Error(`debug.failAllocation: the application is ${this.current}`);
         this.deps.registry.reportAllocationFailure("Allocating the GPU buffer 'debug.failAllocation' failed: out of memory (simulated).", [

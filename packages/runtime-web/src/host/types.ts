@@ -36,6 +36,25 @@ export interface MtekTestOptions {
   disableInstancing?: boolean;
   /** Replace the pixels of a built-in texture (a generated texture for a test; no asset needed). */
   textures?: { "texture.white"?: MtekTestTexture; "texture.black"?: MtekTestTexture };
+  /**
+   * Called for every state change of every asset file of the program (`spec/assets.md` section 5): all files
+   * `pending` first, then `ready` or `failed` as each finishes, before `mountMtek` settles (decision 0060).
+   */
+  onAssetState?: (event: MtekAssetStateEvent) => void;
+}
+
+/** One state change of one asset file: `pending`, then `ready` or `failed`. */
+export interface MtekAssetStateEvent {
+  /** The file's `url` in the manifest's `assets` table. */
+  readonly url: string;
+  readonly kind: "mesh-data" | "image";
+  readonly state: "pending" | "ready" | "failed";
+}
+
+/** An asset file and its state, as `debug.assets()` lists it. */
+export interface MtekAssetStatus extends MtekAssetStateEvent {
+  /** The file's byte length. */
+  readonly bytes: number;
 }
 
 /** `spec/runtime-abi.md` section 10.2. */
@@ -74,6 +93,8 @@ export interface MtekDebug {
   loseDevice(): void;
   /** Reports `E8063` as an out-of-memory error scope would, so the failure path can be driven on hardware. */
   failAllocation(): void;
+  /** Every asset file of the running program with its state: after a successful mount all are `ready` (decision 0060). */
+  assets(): readonly MtekAssetStatus[];
   scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }> };
 }
 

@@ -3,7 +3,7 @@ import { ResourceRegistry } from "../gpu/registry.js";
 import { generateBox, generateSphere } from "../mesh/primitives.js";
 import type { ResolvedMesh } from "../scene/structure.js";
 import { FakeBuffer, FakeDevice, asGpu } from "../test-support/fake-gpu.js";
-import { MeshStore, uploadBuffer } from "./meshes.js";
+import { MeshStore, uploadBuffer, vertexBufferOf } from "./meshes.js";
 
 const COPY_DST = 0x08;
 const INDEX = 0x10;
@@ -38,9 +38,9 @@ describe("MeshStore", () => {
     expect(mesh.indexFormat).toBe("uint16");
     expect(mesh.boundingRadius).toBe(data.boundingRadius);
     const expected = [
-      [mesh.vertexBuffers.position, data.positions, VERTEX, 24 * 12],
-      [mesh.vertexBuffers.normal, data.normals, VERTEX, 24 * 12],
-      [mesh.vertexBuffers.uv, data.uvs, VERTEX, 24 * 8],
+      [vertexBufferOf(mesh, "position"), data.positions, VERTEX, 24 * 12],
+      [vertexBufferOf(mesh, "normal"), data.normals, VERTEX, 24 * 12],
+      [vertexBufferOf(mesh, "uv"), data.uvs, VERTEX, 24 * 8],
       [mesh.indexBuffer, data.indices, INDEX, 36 * 2],
     ] as const;
     for (const [buffer, source, usage, size] of expected) {

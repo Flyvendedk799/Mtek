@@ -26,6 +26,8 @@ export { mountMtek } from "./host/mount.js";
 export type {
   MtekApp,
   MtekAppState,
+  MtekAssetStateEvent,
+  MtekAssetStatus,
   MtekDebug,
   MtekInputResult,
   MtekMountOptions,
