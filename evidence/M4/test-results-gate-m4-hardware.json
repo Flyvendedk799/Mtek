@@ -1,0 +1,2633 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=hardware",
+      "specs/m4/"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "m4\\assets.spec.ts",
+      "file": "m4/assets.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "assets on the real adapter",
+          "file": "m4/assets.spec.ts",
+          "line": 200,
+          "column": 6,
+          "specs": [
+            {
+              "title": "a supported GLB, its images and two standalone textures render with the colours derived by hand",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 482,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:10.357Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-05fa17e5f237858c1f82",
+              "file": "m4/assets.spec.ts",
+              "line": 206,
+              "column": 3
+            },
+            {
+              "title": "mount resolves only when every asset is ready, and the states are observable: pending, then ready",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 668,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:11.495Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-24989b172cdb787df55e",
+              "file": "m4/assets.spec.ts",
+              "line": 255,
+              "column": 3
+            },
+            {
+              "title": "an instanced draw of an asset mesh renders exactly what one draw call per entity renders",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 519,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:12.172Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-6170681c94f15341523f",
+              "file": "m4/assets.spec.ts",
+              "line": 284,
+              "column": 3
+            },
+            {
+              "title": "culling with the manifest's bounding spheres removes nothing that is in view",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 504,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:12.700Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-4972b39ab1646942ddb6",
+              "file": "m4/assets.spec.ts",
+              "line": 302,
+              "column": 3
+            },
+            {
+              "title": "buffers and textures are created once at mount and released on dispose, over repeated mounts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 481,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:13.213Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-4f520faf456f584ed160",
+              "file": "m4/assets.spec.ts",
+              "line": 316,
+              "column": 3
+            },
+            {
+              "title": "the device recovers with its assets: no asset is requested again and the frame is identical",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 581,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:13.704Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-4591207a6276108219c3",
+              "file": "m4/assets.spec.ts",
+              "line": 349,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "a failed asset rejects the mount with asset-failed and says which file and which declaration",
+          "file": "m4/assets.spec.ts",
+          "line": 395,
+          "column": 6,
+          "specs": [
+            {
+              "title": "a missing mesh file (HTTP 404)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 317,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:14.292Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-a1e27d206b62cbd3180a",
+              "file": "m4/assets.spec.ts",
+              "line": 433,
+              "column": 3
+            },
+            {
+              "title": "a missing image (HTTP 404) is reported at its own declaration",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 311,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:14.618Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-9737e4470ec33101903a",
+              "file": "m4/assets.spec.ts",
+              "line": 440,
+              "column": 3
+            },
+            {
+              "title": "a request that fails (the connection is dropped)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 316,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:14.943Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-1261907923e8fe7fc41e",
+              "file": "m4/assets.spec.ts",
+              "line": 447,
+              "column": 3
+            },
+            {
+              "title": "a body of the wrong length is E7030 with both lengths",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 322,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:15.266Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-716a950d13a351c16c17",
+              "file": "m4/assets.spec.ts",
+              "line": 454,
+              "column": 3
+            },
+            {
+              "title": "an altered image of the right length fails the SHA-256 check with the expected and the actual digest",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 315,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:15.601Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-c345e7627715ece39f2d",
+              "file": "m4/assets.spec.ts",
+              "line": 464,
+              "column": 3
+            },
+            {
+              "title": "an image that cannot be decoded is E7031 at its declaration",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 239,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:15.924Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5369bd0aa1d156d84653-8ba4d903907d2c130dda",
+              "file": "m4/assets.spec.ts",
+              "line": 477,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\configurator-variants.spec.ts",
+      "file": "m4/configurator-variants.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "an unsupported required asset feature fails explicitly, at compile time (M4-10)",
+          "file": "m4/configurator-variants.spec.ts",
+          "line": 48,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the unmodified example passes check with 0 errors and 0 warnings",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 91,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:16.197Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-b8754e50b0a4a673adec",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 54,
+              "column": 3
+            },
+            {
+              "title": "the example with a normal texture in its GLB: check and build fail with MTEK-E7016, the message names the feature, nothing is built",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 194,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:16.293Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-872882a92df21eb11d9a",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 63,
+              "column": 5
+            },
+            {
+              "title": "the human-readable report of MTEK-E7016 also names the feature",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 273,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:16.492Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-4712731300fde79689e1",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 81,
+              "column": 5
+            },
+            {
+              "title": "the example with a required extension in its GLB: check and build fail with MTEK-E7004, the message names the feature, nothing is built",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 188,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:16.770Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-0f9ef979ff49fbd53bee",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 63,
+              "column": 5
+            },
+            {
+              "title": "the human-readable report of MTEK-E7004 also names the feature",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 271,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:16.962Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-a79f32aba5fe4f011207",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 81,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "a repeated-object scene shows the instancing path in counters and in equal output (M4-10)",
+          "file": "m4/configurator-variants.spec.ts",
+          "line": 100,
+          "column": 6,
+          "specs": [
+            {
+              "title": "80 copies need 5 draw calls instead of 80 and look the same, and both pictures are the oracle's",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-instancing",
+                      "description": "80 copies: drawCalls 80 -> 5, instancedDraws 4; instanced vs individual: max channel difference 0/255, 0 of 172800 pixels differ; against the oracle (162896 pixels, 80 entities): instanced max 1/255, individual max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3739,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:17.238Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-instancing",
+                          "description": "80 copies: drawCalls 80 -> 5, instancedDraws 4; instanced vs individual: max channel difference 0/255, 0 of 172800 pixels differ; against the oracle (162896 pixels, 80 entities): instanced max 1/255, individual max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-61b77007b5045bb8a354",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 105,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\configurator.spec.ts",
+      "file": "m4/configurator.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "the material configurator (M4-10)",
+          "file": "m4/configurator.spec.ts",
+          "line": 53,
+          "column": 6,
+          "specs": [
+            {
+              "title": "loads the model: assets ready, entities placed by the node accessors, counters, and the picture the oracle predicts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-load",
+                      "description": "74717 pixels compared, max error 1/255; counters {\"drawCalls\":7,\"instancedDraws\":1,\"culledObjects\":0,\"liveEntities\":12,\"sharedParamBlocks\":1,\"ownedParamBlocks\":5,\"pipelinesCreated\":3}"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 695,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:21.009Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-load",
+                          "description": "74717 pixels compared, max error 1/255; counters {\"drawCalls\":7,\"instancedDraws\":1,\"culledObjects\":0,\"liveEntities\":12,\"sharedParamBlocks\":1,\"ownedParamBlocks\":5,\"pipelinesCreated\":3}"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-6fcb757ee17d12605e00",
+              "file": "m4/configurator.spec.ts",
+              "line": 54,
+              "column": 3
+            },
+            {
+              "title": "changing host inputs changes exactly the colours they drive, and the picture follows the oracle after every change",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-inputs",
+                      "description": "defaults: 74717 px, max 1/255; seat green and rough: 74717 px, max 1/255; seat gold metal: 74717 px, max 1/255; rails copper: 74717 px, max 1/255; back stripes red and white: 74717 px, max 1/255; sun off: 74717 px, max 1/255; sun blinding: 74717 px, max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3537,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:21.711Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-inputs",
+                          "description": "defaults: 74717 px, max 1/255; seat green and rough: 74717 px, max 1/255; seat gold metal: 74717 px, max 1/255; rails copper: 74717 px, max 1/255; back stripes red and white: 74717 px, max 1/255; sun off: 74717 px, max 1/255; sun blinding: 74717 px, max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-1d6ae66f05a46cb4289c",
+              "file": "m4/configurator.spec.ts",
+              "line": 136,
+              "column": 3
+            },
+            {
+              "title": "rejected inputs leave the picture as it was: wrong type, translucent colour, unknown name",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 278,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:25.256Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-4ecab527947fc5eae733",
+              "file": "m4/configurator.spec.ts",
+              "line": 204,
+              "column": 3
+            },
+            {
+              "title": "survives resize: at every size and aspect the picture is the one the oracle predicts, the inputs persist and the same size gives the same bytes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-resize",
+                      "description": "320x240: 74717 px, max 1/255; 480x240: 112837 px, max 1/255; 240x480: 111494 px, max 1/255; 200x200: 38386 px, max 1/255; 400x300: 117358 px, max 1/255; 96x72: 6350 px, max 1/255; 320x240: 74717 px, max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2862,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:25.541Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-resize",
+                          "description": "320x240: 74717 px, max 1/255; 480x240: 112837 px, max 1/255; 240x480: 111494 px, max 1/255; 200x200: 38386 px, max 1/255; 400x300: 117358 px, max 1/255; 96x72: 6350 px, max 1/255; 320x240: 74717 px, max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-a56535f92201e47bbe2c",
+              "file": "m4/configurator.spec.ts",
+              "line": 230,
+              "column": 3
+            },
+            {
+              "title": "a change of the pixel ratio resizes the backing store and the picture follows the oracle",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-dpr",
+                      "description": "ratio 1: 28721 px, max 1/255; ratio 2: 117358 px, max 1/255; ratio 1 again: 28721 px, max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1068,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:28.409Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-dpr",
+                          "description": "ratio 1: 28721 px, max 1/255; ratio 2: 117358 px, max 1/255; ratio 1 again: 28721 px, max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-e1d70b7c343467ae51fd",
+              "file": "m4/configurator.spec.ts",
+              "line": 284,
+              "column": 3
+            },
+            {
+              "title": "captures are repeatable: two independent mounts with the manual clock read back byte-identical frames",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-capture-digests",
+                      "description": "dc7c85133cf7d963 6b617f0193191128 003942bdd7628243"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 884,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:29.484Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-capture-digests",
+                          "description": "dc7c85133cf7d963 6b617f0193191128 003942bdd7628243"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-5d83dd34b18a4cf793f0",
+              "file": "m4/configurator.spec.ts",
+              "line": 322,
+              "column": 3
+            },
+            {
+              "title": "the host page drives the program with setInput: its controls change the colours the oracle predicts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-host-page",
+                      "description": "page as opened: 74717 px, max 1/255; after the controls: 74717 px, max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1121,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:30.374Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-host-page",
+                          "description": "page as opened: 74717 px, max 1/255; after the controls: 74717 px, max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-90f8d757eca7766f0a45",
+              "file": "m4/configurator.spec.ts",
+              "line": 353,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\culling.spec.ts",
+      "file": "m4/culling.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "frustum culling (M4-07)",
+          "file": "m4/culling.spec.ts",
+          "line": 96,
+          "column": 6,
+          "specs": [
+            {
+              "title": "moving the camera away raises culledObjects, lowers drawCalls, and leaves the visible objects' pixels untouched",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 726,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:31.527Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b44bc96d39a0c06dba95-c86504ceb4bcd78ff2b2",
+              "file": "m4/culling.spec.ts",
+              "line": 97,
+              "column": 3
+            },
+            {
+              "title": "a sphere whose centre is outside the view but whose radius reaches into it is kept",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 382,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:32.259Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b44bc96d39a0c06dba95-2883f02f74d98332f3b1",
+              "file": "m4/culling.spec.ts",
+              "line": 151,
+              "column": 3
+            },
+            {
+              "title": "culling creates nothing: no pipeline, shader module, bind group, buffer or texture appears or disappears",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 495,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:32.648Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b44bc96d39a0c06dba95-6f0a7b0385f87daede46",
+              "file": "m4/culling.spec.ts",
+              "line": 163,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\dev-overlay.spec.ts",
+      "file": "m4/dev-overlay.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "development overlay (M4-07)",
+          "file": "m4/dev-overlay.spec.ts",
+          "line": 73,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the test-mode page shows the panel with the counters of the frame just drawn",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 234,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:33.160Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1216a2b817e916ee853a-97a11438607d62378b3f",
+              "file": "m4/dev-overlay.spec.ts",
+              "line": 74,
+              "column": 3
+            },
+            {
+              "title": "lists upload bytes, creation and live counts, discarded steps, and the frame time with p50 and p95",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 250,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:33.401Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1216a2b817e916ee853a-4d1586c431bea1eeb206",
+              "file": "m4/dev-overlay.spec.ts",
+              "line": 104,
+              "column": 3
+            },
+            {
+              "title": "the backquote key hides and shows the panel; Shift+backquote selects the next entity and shows its source line",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 261,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:33.659Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1216a2b817e916ee853a-370fb7a737f9d6e1a23b",
+              "file": "m4/dev-overlay.spec.ts",
+              "line": 125,
+              "column": 3
+            },
+            {
+              "title": "the overlay never changes the pixels of a frame, and dispose removes it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 528,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:33.927Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1216a2b817e916ee853a-4cab7408a1ddc3e71f1e",
+              "file": "m4/dev-overlay.spec.ts",
+              "line": 150,
+              "column": 3
+            },
+            {
+              "title": "GPU time comes from timestamp-query, or is reported as unavailable; it is never CPU time under another name",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "timestamp-query",
+                      "description": "available: GPU time measured"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 259,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:34.462Z",
+                      "annotations": [
+                        {
+                          "type": "timestamp-query",
+                          "description": "available: GPU time measured"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1216a2b817e916ee853a-06f934d9920fc0bd8ec9",
+              "file": "m4/dev-overlay.spec.ts",
+              "line": 171,
+              "column": 3
+            },
+            {
+              "title": "without the option the development runtime shows no panel and measures no GPU time",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 246,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:34.730Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1216a2b817e916ee853a-09e21f458778d37d0fc9",
+              "file": "m4/dev-overlay.spec.ts",
+              "line": 206,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "the release build (M4-07)",
+          "file": "m4/dev-overlay.spec.ts",
+          "line": 217,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the runtime file of a release build has no overlay code, the test-mode one has",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 54,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:34.983Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1216a2b817e916ee853a-e0ce0ce7faf0331422d8",
+              "file": "m4/dev-overlay.spec.ts",
+              "line": 218,
+              "column": 3
+            },
+            {
+              "title": "a release page shows no overlay, even when mounted with devOverlay, and culling still works",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 253,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:35.044Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1216a2b817e916ee853a-e6e5cafda196cc169a79",
+              "file": "m4/dev-overlay.spec.ts",
+              "line": 239,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\instancing.spec.ts",
+      "file": "m4/instancing.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "compatible instancing (M4-08)",
+          "file": "m4/instancing.spec.ts",
+          "line": 106,
+          "column": 6,
+          "specs": [
+            {
+              "title": "500 identical boxes: one instanced draw instead of 500, and the same picture",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-instancing",
+                      "description": "500 boxes: drawCalls 500 -> 1, instancedDraws 1, max channel difference 0/255, 0 of 32768 pixels differ, 11004 drawn in 2936 colours"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 384,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:35.318Z",
+                      "annotations": [
+                        {
+                          "type": "m4-instancing",
+                          "description": "500 boxes: drawCalls 500 -> 1, instancedDraws 1, max channel difference 0/255, 0 of 32768 pixels differ, 11004 drawn in 2936 colours"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e004c5833c44cefc0326-87e8708c61a3c54da5de",
+              "file": "m4/instancing.spec.ts",
+              "line": 107,
+              "column": 3
+            },
+            {
+              "title": "the instanced and the individual path agree while the camera moves and culling removes entities",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 566,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:35.709Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e004c5833c44cefc0326-a8e72c9f05d35b8178c7",
+              "file": "m4/instancing.spec.ts",
+              "line": 135,
+              "column": 3
+            },
+            {
+              "title": "a mixed scene groups only compatible draws",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 361,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:36.282Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e004c5833c44cefc0326-33d1d8b4fde7bd062e73",
+              "file": "m4/instancing.spec.ts",
+              "line": 163,
+              "column": 3
+            },
+            {
+              "title": "a parameter that differs takes its entity out of its group, and the picture stays right",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 388,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:36.653Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e004c5833c44cefc0326-7cb8f0086a26dfa94bec",
+              "file": "m4/instancing.spec.ts",
+              "line": 178,
+              "column": 3
+            },
+            {
+              "title": "moving one instance changes only that instance's output and uploads only its matrix",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 394,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:37.050Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e004c5833c44cefc0326-c7a1a95144f491d61d3e",
+              "file": "m4/instancing.spec.ts",
+              "line": 197,
+              "column": 3
+            },
+            {
+              "title": "instancing survives a device loss: the instance buffer is rebuilt and the picture is the same",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 936,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:37.450Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e004c5833c44cefc0326-13fb1351af645ef9abda",
+              "file": "m4/instancing.spec.ts",
+              "line": 236,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\pbr.spec.ts",
+      "file": "m4/pbr.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "the PBR material against the CPU oracle (M4-03)",
+          "file": "m4/pbr.spec.ts",
+          "line": 202,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the chosen pixels all see the sphere and the camera geometry matches the fixture",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:38.400Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-254a934dcaba697945b8",
+              "file": "m4/pbr.spec.ts",
+              "line": 203,
+              "column": 3
+            },
+            {
+              "title": "the directional light for metallic 0 and 1 and roughness 0.2 and 0.8",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "sun, metallic 0, roughness 0.2: max error 1/255 (pixel 108,73 channel 1: GPU 171, oracle 170 (linear 0.40439)); sun, metallic 0, roughness 0.8: max error 1/255 (pixel 135,175 channel 1: GPU 140, oracle 141 (linear 0.26459)); sun, metallic 1, roughness 0.2: max error 0/255 (exact); sun, metallic 1, roughness 0.8: max error 1/255 (pixel 128,128 channel 2: GPU 84, oracle 83 (linear 0.08751))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 282,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:38.413Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "sun, metallic 0, roughness 0.2: max error 1/255 (pixel 108,73 channel 1: GPU 171, oracle 170 (linear 0.40439)); sun, metallic 0, roughness 0.8: max error 1/255 (pixel 135,175 channel 1: GPU 140, oracle 141 (linear 0.26459)); sun, metallic 1, roughness 0.2: max error 0/255 (exact); sun, metallic 1, roughness 0.8: max error 1/255 (pixel 128,128 channel 2: GPU 84, oracle 83 (linear 0.08751))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-8f6b47a8a4b760cbb0fe",
+              "file": "m4/pbr.spec.ts",
+              "line": 218,
+              "column": 3
+            },
+            {
+              "title": "a point light with a range: inside the window, across its edge and outside it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "lamp inside the window, dielectric: max error 1/255 (pixel 155,101 channel 1: GPU 175, oracle 176 (linear 0.43143)); lamp inside the window, metal: max error 1/255 (pixel 128,128 channel 0: GPU 94, oracle 95 (linear 0.11321)); lamp across the window edge, dielectric: max error 1/255 (pixel 128,128 channel 2: GPU 35, oracle 34 (linear 0.01637)); lamp outside the window: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 293,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:38.703Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "lamp inside the window, dielectric: max error 1/255 (pixel 155,101 channel 1: GPU 175, oracle 176 (linear 0.43143)); lamp inside the window, metal: max error 1/255 (pixel 128,128 channel 0: GPU 94, oracle 95 (linear 0.11321)); lamp across the window edge, dielectric: max error 1/255 (pixel 128,128 channel 2: GPU 35, oracle 34 (linear 0.01637)); lamp outside the window: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-46c3359970094e3fd668",
+              "file": "m4/pbr.spec.ts",
+              "line": 241,
+              "column": 3
+            },
+            {
+              "title": "a point light without a range falls off with the square of the distance",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "free lamp, metallic 0.3, roughness 0.4: max error 1/255 (pixel 160,88 channel 1: GPU 86, oracle 85 (linear 0.09187)); free lamp far away: max error 1/255 (pixel 155,101 channel 0: GPU 119, oracle 118 (linear 0.18264))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 276,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:39.003Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "free lamp, metallic 0.3, roughness 0.4: max error 1/255 (pixel 160,88 channel 1: GPU 86, oracle 85 (linear 0.09187)); free lamp far away: max error 1/255 (pixel 155,101 channel 0: GPU 119, oracle 118 (linear 0.18264))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-08f6a7fad85349223cb7",
+              "file": "m4/pbr.spec.ts",
+              "line": 279,
+              "column": 3
+            },
+            {
+              "title": "ambient light only: base colour times the ambient colour, independent of metallic and roughness",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "ambient, dielectric, rough 0.8: max error 0/255 (exact); ambient, metal, rough 0.2: max error 0/255 (exact); ambient, black base: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 286,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:39.287Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "ambient, dielectric, rough 0.8: max error 0/255 (exact); ambient, metal, rough 0.2: max error 0/255 (exact); ambient, black base: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-2b1f7618ee1a7b695c1e",
+              "file": "m4/pbr.spec.ts",
+              "line": 298,
+              "column": 3
+            },
+            {
+              "title": "all three lights together, with a coloured sun",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "three lights, metallic 0.5, roughness 0.35: max error 1/255 (pixel 155,101 channel 0: GPU 160, oracle 161 (linear 0.35399))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 254,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:39.580Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "three lights, metallic 0.5, roughness 0.35: max error 1/255 (pixel 155,101 channel 0: GPU 160, oracle 161 (linear 0.35399))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-06d6b55e60f4ddd95e85",
+              "file": "m4/pbr.spec.ts",
+              "line": 325,
+              "column": 3
+            },
+            {
+              "title": "saturation: a very bright light clips and nothing is tone mapped",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "saturating sun, warm base: max error 1/255 (pixel 100,190 channel 1: GPU 59, oracle 60 (linear 0.04447)); blinding sun: max error 0/255; clipped pixels 7, all-white pixels 9"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 282,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:39.841Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "saturating sun, warm base: max error 1/255 (pixel 100,190 channel 1: GPU 59, oracle 60 (linear 0.04447)); blinding sun: max error 0/255; clipped pixels 7, all-white pixels 9"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-d9677e96427a7824aa81",
+              "file": "m4/pbr.spec.ts",
+              "line": 343,
+              "column": 3
+            },
+            {
+              "title": "no resource is created after mount while the cases change every input",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 264,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:40.130Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-93cd8fbaae5242e2f010",
+              "file": "m4/pbr.spec.ts",
+              "line": 371,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\resilience-device.spec.ts",
+      "file": "m4/resilience-device.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "device loss and allocation failure (hardware)",
+          "file": "m4/resilience-device.spec.ts",
+          "line": 20,
+          "column": 6,
+          "specs": [
+            {
+              "title": "recovers after device.destroy(): W8060, three-attempt budget, W8061, and output identical to a run without the loss",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-recovery",
+                      "description": "loss to recovering 2 ms, total 289 ms"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 589,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:40.410Z",
+                      "annotations": [
+                        {
+                          "type": "m4-recovery",
+                          "description": "loss to recovering 2 ms, total 289 ms"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "122611baa2260756eee4-13d4f5de90409cfa366c",
+              "file": "m4/resilience-device.spec.ts",
+              "line": 42,
+              "column": 3
+            },
+            {
+              "title": "a frame request during the recovery renders nothing, and the device can be lost and recovered again",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 377,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:41.006Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "122611baa2260756eee4-cbb82b97aca072f0ab46",
+              "file": "m4/resilience-device.spec.ts",
+              "line": 92,
+              "column": 3
+            },
+            {
+              "title": "two failed device requests are retried: the third attempt recovers",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 337,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:41.392Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "122611baa2260756eee4-73ac9bde77f8cf064d16",
+              "file": "m4/resilience-device.spec.ts",
+              "line": 119,
+              "column": 3
+            },
+            {
+              "title": "repeated failure reaches the failed state with E8062 and the overlay after exactly three attempts, and never retries again",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 816,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:41.736Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "122611baa2260756eee4-42b7a5089849649bc7fb",
+              "file": "m4/resilience-device.spec.ts",
+              "line": 135,
+              "column": 3
+            },
+            {
+              "title": "an allocation failure after mount reports E8063, stops the scene and shows the overlay",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 238,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:42.563Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "122611baa2260756eee4-af81802fea6a25cdf128",
+              "file": "m4/resilience-device.spec.ts",
+              "line": 166,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\resilience-resize.spec.ts",
+      "file": "m4/resilience-resize.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "resize, pixel ratio, zero size and visibility (hardware)",
+          "file": "m4/resilience-resize.spec.ts",
+          "line": 60,
+          "column": 6,
+          "specs": [
+            {
+              "title": "a resize during a manual-clock run keeps the box undistorted: edges match the projection at every aspect",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-resize",
+                      "description": "128x128: box 24x26 px, projected {\"minX\":52.124553095937614,\"maxX\":75.87544690406239,\"minY\":51.732400821918745,\"maxY\":77.80104907534141}; 256x128: box 24x26 px, projected {\"minX\":116.12455309593761,\"maxX\":139.8754469040624,\"minY\":51.732400821918745,\"maxY\":77.80104907534141}; 128x256: box 48x53 px, projected {\"minX\":40.24910619187523,\"maxX\":87.75089380812477,\"minY\":103.46480164383749,\"maxY\":155.60209815068282}; 96x96: box 18x19 px, projected {\"minX\":39.09341482195321,\"maxX\":56.90658517804679,\"minY\":38.799300616439055,\"maxY\":58.35078680650606}; 200x120: box 22x25 px, projected {\"minX\":88.86676852744151,\"maxX\":111.13323147255849,\"minY\":48.49912577054882,\"maxY\":72.93848350813258}; 128x128: box 24x26 px, projected {\"minX\":52.124553095937614,\"maxX\":75.87544690406239,\"minY\":51.732400821918745,\"maxY\":77.80104907534141}"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 324,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:42.817Z",
+                      "annotations": [
+                        {
+                          "type": "m4-resize",
+                          "description": "128x128: box 24x26 px, projected {\"minX\":52.124553095937614,\"maxX\":75.87544690406239,\"minY\":51.732400821918745,\"maxY\":77.80104907534141}; 256x128: box 24x26 px, projected {\"minX\":116.12455309593761,\"maxX\":139.8754469040624,\"minY\":51.732400821918745,\"maxY\":77.80104907534141}; 128x256: box 48x53 px, projected {\"minX\":40.24910619187523,\"maxX\":87.75089380812477,\"minY\":103.46480164383749,\"maxY\":155.60209815068282}; 96x96: box 18x19 px, projected {\"minX\":39.09341482195321,\"maxX\":56.90658517804679,\"minY\":38.799300616439055,\"maxY\":58.35078680650606}; 200x120: box 22x25 px, projected {\"minX\":88.86676852744151,\"maxX\":111.13323147255849,\"minY\":48.49912577054882,\"maxY\":72.93848350813258}; 128x128: box 24x26 px, projected {\"minX\":52.124553095937614,\"maxX\":75.87544690406239,\"minY\":51.732400821918745,\"maxY\":77.80104907534141}"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7d782d1776776012a252-e29d7d399d04e9bd6d2a",
+              "file": "m4/resilience-resize.spec.ts",
+              "line": 69,
+              "column": 3
+            },
+            {
+              "title": "a change of the pixel ratio resizes the backing store and the picture follows",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-dpr",
+                      "description": "box width at dpr 2 / 1.5 / 1: 36 / 26 / 18"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 298,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:43.149Z",
+                      "annotations": [
+                        {
+                          "type": "m4-dpr",
+                          "description": "box width at dpr 2 / 1.5 / 1: 36 / 26 / 18"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7d782d1776776012a252-702fa55efdc838285b69",
+              "file": "m4/resilience-resize.spec.ts",
+              "line": 111,
+              "column": 3
+            },
+            {
+              "title": "a zero-sized canvas skips rendering without an error, the simulation goes on, and the same picture returns",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 261,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:43.455Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7d782d1776776012a252-58448196b0c364bc5cd1",
+              "file": "m4/resilience-resize.spec.ts",
+              "line": 148,
+              "column": 3
+            },
+            {
+              "title": "a hidden page pauses the frame loop and a visible one resumes it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 249,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:42:43.725Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7d782d1776776012a252-28bb7a2e2be17aa0135f",
+              "file": "m4/resilience-resize.spec.ts",
+              "line": 175,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\textures.spec.ts",
+      "file": "m4/textures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "the fixture's group 1 has the texture at binding 1 and the sampler at binding 2, and every instance names its built-ins",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T09:42:43.990Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe06053cb81488bda342-66bbbdc51a7d645b68e5",
+          "file": "m4/textures.spec.ts",
+          "line": 153,
+          "column": 1
+        },
+        {
+          "title": "a generated 2x2 sRGB texture is sampled at exact texel centres and across edges as the reference says",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "m4-texture-pixels",
+                  "description": "initial NearestClamp: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; initial LinearClamp: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; initial NearestRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; initial LinearRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; centre of the top left texel NearestClamp: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; centre of the top left texel LinearClamp: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; centre of the top left texel NearestRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; centre of the top left texel LinearRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; centre of the top right texel NearestClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; centre of the top right texel LinearClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; centre of the top right texel NearestRepeat: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; centre of the top right texel LinearRepeat: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; centre of the bottom left texel NearestClamp: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; centre of the bottom left texel LinearClamp: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; centre of the bottom left texel NearestRepeat: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; centre of the bottom left texel LinearRepeat: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; centre of the bottom right texel NearestClamp: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220; centre of the bottom right texel LinearClamp: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220; centre of the bottom right texel NearestRepeat: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220; centre of the bottom right texel LinearRepeat: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220; just left of the edge between the top texels NearestClamp: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; just left of the edge between the top texels LinearClamp: expected 223,101,21 (linear 0.74150,0.13027,0.00751) actual 224,101,21; just left of the edge between the top texels NearestRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; just left of the edge between the top texels LinearRepeat: expected 223,101,21 (linear 0.74150,0.13027,0.00751) actual 224,101,21; just right of the edge between the top texels NearestClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; just right of the edge between the top texels LinearClamp: expected 226,103,20 (linear 0.76139,0.13686,0.00693) actual 226,103,20; just right of the edge between the top texels NearestRepeat: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; just right of the edge between the top texels LinearRepeat: expected 226,103,20 (linear 0.76139,0.13686,0.00693) actual 226,103,20; on the edge between the top texels NearestClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; on the edge between the top texels LinearClamp: expected 225,102,20 (linear 0.75144,0.13356,0.00722) actual 225,102,21; on the edge between the top texels NearestRepeat: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; on the edge between the top texels LinearRepeat: expected 225,102,20 (linear 0.75144,0.13356,0.00722) actual 225,102,21; beyond the right edge NearestClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; beyond the right edge LinearClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; beyond the right edge NearestRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; beyond the right edge LinearRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; beyond the left edge NearestClamp: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; beyond the left edge LinearClamp: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; beyond the left edge NearestRepeat: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220; beyond the left edge LinearRepeat: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 313,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T09:42:43.998Z",
+                  "annotations": [
+                    {
+                      "type": "m4-texture-pixels",
+                      "description": "initial NearestClamp: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; initial LinearClamp: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; initial NearestRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; initial LinearRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; centre of the top left texel NearestClamp: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; centre of the top left texel LinearClamp: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; centre of the top left texel NearestRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; centre of the top left texel LinearRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; centre of the top right texel NearestClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; centre of the top right texel LinearClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; centre of the top right texel NearestRepeat: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; centre of the top right texel LinearRepeat: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; centre of the bottom left texel NearestClamp: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; centre of the bottom left texel LinearClamp: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; centre of the bottom left texel NearestRepeat: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; centre of the bottom left texel LinearRepeat: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; centre of the bottom right texel NearestClamp: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220; centre of the bottom right texel LinearClamp: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220; centre of the bottom right texel NearestRepeat: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220; centre of the bottom right texel LinearRepeat: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220; just left of the edge between the top texels NearestClamp: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; just left of the edge between the top texels LinearClamp: expected 223,101,21 (linear 0.74150,0.13027,0.00751) actual 224,101,21; just left of the edge between the top texels NearestRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; just left of the edge between the top texels LinearRepeat: expected 223,101,21 (linear 0.74150,0.13027,0.00751) actual 224,101,21; just right of the edge between the top texels NearestClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; just right of the edge between the top texels LinearClamp: expected 226,103,20 (linear 0.76139,0.13686,0.00693) actual 226,103,20; just right of the edge between the top texels NearestRepeat: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; just right of the edge between the top texels LinearRepeat: expected 226,103,20 (linear 0.76139,0.13686,0.00693) actual 226,103,20; on the edge between the top texels NearestClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; on the edge between the top texels LinearClamp: expected 225,102,20 (linear 0.75144,0.13356,0.00722) actual 225,102,21; on the edge between the top texels NearestRepeat: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; on the edge between the top texels LinearRepeat: expected 225,102,20 (linear 0.75144,0.13356,0.00722) actual 225,102,21; beyond the right edge NearestClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; beyond the right edge LinearClamp: expected 255,128,0 (linear 1.00000,0.21586,0.00000) actual 255,128,0; beyond the right edge NearestRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; beyond the right edge LinearRepeat: expected 188,64,32 (linear 0.50289,0.05127,0.01444) actual 188,64,32; beyond the left edge NearestClamp: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; beyond the left edge LinearClamp: expected 16,200,100 (linear 0.00518,0.57758,0.12744) actual 16,200,100; beyond the left edge NearestRepeat: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220; beyond the left edge LinearRepeat: expected 96,96,220 (linear 0.11697,0.11697,0.71569) actual 96,96,220"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe06053cb81488bda342-e59293c12b999929410d",
+          "file": "m4/textures.spec.ts",
+          "line": 189,
+          "column": 1
+        },
+        {
+          "title": "a linear-colour-space texture is sampled as stored, not decoded",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 263,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T09:42:44.319Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe06053cb81488bda342-bfbc7f037205cdbedab1",
+          "file": "m4/textures.spec.ts",
+          "line": 264,
+          "column": 1
+        },
+        {
+          "title": "without a test texture the built-in textures are 1x1 opaque white and black",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 241,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T09:42:44.589Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe06053cb81488bda342-c41a37b2b8c229bd2dc1",
+          "file": "m4/textures.spec.ts",
+          "line": 288,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-18T09:42:05.138Z",
+    "duration": 39869.738,
+    "expected": 63,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
