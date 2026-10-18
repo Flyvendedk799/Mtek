@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7001",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The first chunk is a BIN chunk; the JSON chunk must come first."
+  }
+]

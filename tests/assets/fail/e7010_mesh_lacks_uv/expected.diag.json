@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E7010",
+    "file": "src/main.mtek",
+    "startByte": 271,
+    "endByte": 297,
+    "message": "The mesh 'Wedge' of 'models/chair.glb' has no TEXCOORD_0, but the material Checker reads `uv`.",
+    "notes": [
+      "the compiler does not invent vertex data: it never substitutes zeros and does not compute normals or texture coordinates",
+      "help: export the model with TEXCOORD_0, or draw it with a material that does not read `uv`"
+    ]
+  }
+]

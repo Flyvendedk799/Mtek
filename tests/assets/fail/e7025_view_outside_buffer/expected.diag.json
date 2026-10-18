@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7025",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0, POSITION: accessor 0 uses a buffer view of 100000 bytes at offset 0, which ends after the 102 bytes of the BIN buffer."
+  }
+]

@@ -1,0 +1,6 @@
+[project]
+name = "fixture"
+language = "0.1"
+
+[assets]
+max_vertices_per_primitive = 2

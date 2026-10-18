@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7017",
+    "file": "src/main.mtek",
+    "startByte": 28,
+    "endByte": 51,
+    "message": "The image 'textures/image.dat': it is 9000 by 9000 pixels, over the limit of 8192 per side.",
+    "notes": [
+      "help: scale the image down, or raise `max_texture_dimension` in the `[assets]` table of mtek.toml (at most 8192, the WebGPU default)"
+    ]
+  }
+]

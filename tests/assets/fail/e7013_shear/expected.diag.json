@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7013",
+    "file": "src/main.mtek",
+    "startByte": 170,
+    "endByte": 178,
+    "message": "The node 'Turned' of 'models/model.glb' cannot be an entity transform: its world matrix has shear (the X and Y axes are not perpendicular), usually from a non-uniform scale below a rotated parent.",
+    "notes": [
+      "help: apply the transform in the authoring tool, or use only translation, rotation and positive scale"
+    ]
+  }
+]

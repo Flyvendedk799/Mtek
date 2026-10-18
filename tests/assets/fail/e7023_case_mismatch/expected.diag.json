@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E7023",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The asset path \"../Models/model.glb\" names 'Models/model.glb', but the file is spelled 'models/model.glb'.",
+    "notes": [
+      "file names in asset paths must match the file system exactly, even where it ignores case, so that the project builds everywhere",
+      "help: use the spelling 'models/model.glb'"
+    ]
+  },
+  {
+    "code": "MTEK-E7023",
+    "file": "src/main.mtek",
+    "startByte": 72,
+    "endByte": 93,
+    "message": "The asset path \"../models/MODEL.glb\" names 'models/MODEL.glb', but the file is spelled 'models/model.glb'.",
+    "notes": [
+      "file names in asset paths must match the file system exactly, even where it ignores case, so that the project builds everywhere",
+      "help: use the spelling 'models/model.glb'"
+    ]
+  }
+]

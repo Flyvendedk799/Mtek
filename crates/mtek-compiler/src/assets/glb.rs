@@ -496,6 +496,28 @@ fn validation_issue(path: &str, error: json::validation::Error) -> Issue {
     } else {
         Code::E7001
     };
+    // The failures a user can act on, in their own words.
+    if error == E::Missing && path.starts_with("accessors[") && path.ends_with(".bufferView") {
+        let accessor = path.trim_end_matches(".bufferView");
+        return Issue::new(
+            Code::E7011,
+            format!("{accessor} has no buffer view; zero-filled accessors are not supported."),
+        );
+    }
+    if error == E::Missing && path.ends_with("attributes[\"POSITION\"]") {
+        let primitive = path.trim_end_matches(".attributes[\"POSITION\"]");
+        return Issue::new(Code::E7010, format!("{primitive} has no POSITION attribute."));
+    }
+    if error == E::Missing
+        && path.contains("attributes[\"POSITION\"].")
+        && (path.ends_with(".min") || path.ends_with(".max"))
+    {
+        let primitive = path.split(".attributes[").next().unwrap_or(path);
+        return Issue::new(
+            Code::E7001,
+            format!("The POSITION accessor of {primitive} has no `min` and `max`, which glTF requires for positions."),
+        );
+    }
     let shown = if path.is_empty() { "the root" } else { path };
     Issue::new(code, format!("In the glTF JSON, {shown} {what}."))
 }
@@ -784,6 +806,7 @@ impl<'a> Validator<'a> {
     }
 
     fn run(&mut self) {
+        self.check_buffer();
         self.check_sparse();
         self.check_meshes();
         self.check_samplers();
@@ -793,6 +816,25 @@ impl<'a> Validator<'a> {
     }
 
     // ----- accessors ---------------------------------------------------------
+
+    /// The BIN chunk must hold all the bytes buffer 0 declares (`E7025`).
+    fn check_buffer(&mut self) {
+        if let Some(buffer) = self.root.buffers.first() {
+            let declared = buffer.byte_length.0;
+            if declared > self.bin.len() as u64 {
+                self.report(
+                    7,
+                    Issue::new(
+                        Code::E7025,
+                        format!(
+                            "Buffer 0 declares {declared} bytes, but the BIN chunk has {}.",
+                            self.bin.len()
+                        ),
+                    ),
+                );
+            }
+        }
+    }
 
     /// `E7011` for every sparse accessor of the file.
     fn check_sparse(&mut self) {

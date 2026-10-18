@@ -534,8 +534,19 @@ impl<'a> Checker<'a> {
                         return TyId::ERROR;
                     }
                     // `None` only for `array` without arguments.
-                    if let Some(ty) = self.out.interner.prelude_type(type_name) {
-                        return ty;
+                    if let Some(resolved) = self.out.interner.prelude_type(type_name) {
+                        if resolved == TyId::GLB_ASSET && !self.asset_state.glb_annotation_ok {
+                            self.report(
+                                Diagnostic::new(
+                                    Code::E7022,
+                                    "A `glb_asset` can only be the type of a `const`.",
+                                )
+                                .at(ty.span)
+                                .note("parameters, fields, locals and material params cannot hold a model; use its accessors where the value is needed"),
+                            );
+                            return TyId::ERROR;
+                        }
+                        return resolved;
                     }
                     self.report(
                         Diagnostic::new(

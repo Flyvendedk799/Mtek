@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7010",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "meshes[0].primitives[0] has no POSITION attribute."
+  }
+]

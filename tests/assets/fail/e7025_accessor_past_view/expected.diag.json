@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7025",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0, POSITION: accessor 0 reads 40 elements of 12 bytes (stride 12) from offset 0, past the 36 bytes of its buffer view."
+  }
+]

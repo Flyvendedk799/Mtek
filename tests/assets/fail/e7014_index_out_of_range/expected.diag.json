@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7014",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0 has the index 3 at position 2, but only 3 vertices."
+  }
+]

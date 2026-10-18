@@ -1,0 +1,9 @@
+const MODEL = asset.glb("https://example.com/chair.glb");
+const WOOD = asset.texture("data:image/png;base64,AAAA");
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: Box {};
+    }
+}

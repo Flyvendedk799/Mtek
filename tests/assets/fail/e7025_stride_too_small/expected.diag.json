@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7025",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0, POSITION: accessor 0 has a buffer view `byteStride` of 8, which is smaller than its 12-byte elements or not a multiple of 4."
+  }
+]

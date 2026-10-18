@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E7005",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The file uses the glTF extensions KHR_materials_clearcoat; the v0.1 profile supports none.",
+    "notes": [
+      "first use: 'KHR_materials_clearcoat' at materials[0].extensions",
+      "help: re-export the model without extensions"
+    ]
+  }
+]

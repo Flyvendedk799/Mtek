@@ -1,0 +1,22 @@
+[
+  {
+    "code": "MTEK-E7901",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 55,
+    "message": "The asset path \"https://example.com/chair.glb\" is a https: URL; remote assets are not supported in v0.1.",
+    "notes": [
+      "help: copy the file into the project and use a path relative to this file"
+    ]
+  },
+  {
+    "code": "MTEK-E7901",
+    "file": "src/main.mtek",
+    "startByte": 85,
+    "endByte": 113,
+    "message": "The asset path \"data:image/png;base64,AAAA\" is a data: URL; remote assets are not supported in v0.1.",
+    "notes": [
+      "help: copy the file into the project and use a path relative to this file"
+    ]
+  }
+]

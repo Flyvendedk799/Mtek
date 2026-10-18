@@ -20,7 +20,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::assets::{AssetLimits, AssetLoader, AssetStore};
+use crate::assets::{AssetLimits, AssetLoader, AssetStore, attributes::check_attributes};
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report};
 use crate::prelude::{compile_materials, uses_builtin_material};
 use crate::project::{
@@ -295,6 +295,13 @@ pub(crate) fn front_end_with(
         }
     }
 
+    // Meshes from GLBs against the attributes their materials read (decision 0058).
+    let assets = loader.into_store();
+    {
+        let typecks: Vec<&Typeck> = types.iter().flatten().collect();
+        check_attributes(&typecks, &assets, sink);
+    }
+
     // Effects, recursion and reachability over the whole program, once every
     // module is checked (decision 0038).
     let program: Vec<ProgramUnit<'_>> = project
@@ -359,7 +366,7 @@ pub(crate) fn front_end_with(
         types: entry_types,
         dependencies,
         effects,
-        assets: loader.into_store(),
+        assets,
     }
 }
 

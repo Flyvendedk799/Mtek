@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7003",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "Buffer 0 is a data URI; the profile reads only the BIN chunk of a `.glb`.",
+    "notes": [
+      "help: export a single binary `.glb` with the data embedded"
+    ]
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7013",
+    "file": "src/main.mtek",
+    "startByte": 170,
+    "endByte": 176,
+    "message": "The node 'Flat' of 'models/model.glb' cannot be an entity transform: its world matrix has a scale of zero on an axis.",
+    "notes": [
+      "help: apply the transform in the authoring tool, or use only translation, rotation and positive scale"
+    ]
+  }
+]

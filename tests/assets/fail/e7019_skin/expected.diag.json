@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7019",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The file contains 1 skin; the v0.1 profile is static and has neither animations nor skins.",
+    "notes": [
+      "help: export the model without animations and skins"
+    ]
+  }
+]

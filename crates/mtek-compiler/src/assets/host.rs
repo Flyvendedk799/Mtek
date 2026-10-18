@@ -91,13 +91,6 @@ pub struct ImageFile {
     pub info: ImageInfo,
 }
 
-/// Where an asset's bytes come from, for the build identity.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SourceKey {
-    pub path: String,
-    pub sha256: String,
-}
-
 /// Everything the loader found: the files of a project's asset declarations.
 #[derive(Clone, Debug, Default)]
 pub struct AssetStore {

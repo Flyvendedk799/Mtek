@@ -1,0 +1,102 @@
+[
+  {
+    "code": "MTEK-E7024",
+    "file": "src/main.mtek",
+    "startByte": 130,
+    "endByte": 136,
+    "message": "The glTF file 'models/chair.glb' has no mesh named 'Qaud'.",
+    "notes": [
+      "available meshs: 'Quad', 'Tri', 'Twin', 'Wedge', 'Wide'",
+      "help: did you mean 'Quad'?"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "use the name 'Quad'",
+        "edits": [
+          {
+            "startByte": 130,
+            "endByte": 136,
+            "replacement": "\"Quad\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E7024",
+    "file": "src/main.mtek",
+    "startByte": 190,
+    "endByte": 196,
+    "message": "The glTF file 'models/chair.glb' has no mesh named 'Sofa'.",
+    "notes": [
+      "available meshs: 'Quad', 'Tri', 'Twin', 'Wedge', 'Wide'"
+    ]
+  },
+  {
+    "code": "MTEK-E7024",
+    "file": "src/main.mtek",
+    "startByte": 237,
+    "endByte": 244,
+    "message": "The glTF file 'models/chair.glb' has no node named 'Spare' in the default scene.",
+    "notes": [
+      "available nodes in the default scene: 'Frame', 'Root', 'Seat'",
+      "a node named 'Spare' exists, but it is not part of the default scene"
+    ]
+  },
+  {
+    "code": "MTEK-E7024",
+    "file": "src/main.mtek",
+    "startByte": 279,
+    "endByte": 284,
+    "message": "The glTF file 'models/chair.glb' has no node named 'Rot' in the default scene.",
+    "notes": [
+      "available nodes in the default scene: 'Frame', 'Root', 'Seat'",
+      "help: did you mean 'Root'?"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "use the name 'Root'",
+        "edits": [
+          {
+            "startByte": 279,
+            "endByte": 284,
+            "replacement": "\"Root\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E7024",
+    "file": "src/main.mtek",
+    "startByte": 346,
+    "endByte": 352,
+    "message": "The mesh 'Twin' of 'models/chair.glb' has 2 primitives, but primitive 2 was requested.",
+    "notes": [
+      "help: did you mean 'Tri'?"
+    ]
+  },
+  {
+    "code": "MTEK-E7024",
+    "file": "src/main.mtek",
+    "startByte": 417,
+    "endByte": 423,
+    "message": "The glTF file 'models/chair.glb' has no material named 'Oakk'.",
+    "notes": [
+      "available materials: 'Fabric', 'Oak', 'Steel'",
+      "help: did you mean 'Oak'?"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "use the name 'Oak'",
+        "edits": [
+          {
+            "startByte": 417,
+            "endByte": 423,
+            "replacement": "\"Oak\""
+          }
+        ]
+      }
+    ]
+  }
+]

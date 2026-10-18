@@ -330,11 +330,10 @@ mod tests {
 
     #[test]
     fn shear_mirror_zero_scale_and_conflicts_are_not_representable() {
-        let q = std::f32::consts::FRAC_1_SQRT_2;
-        // A non-uniform scale below a rotated parent shears.
+        // A rotation below a parent with a non-uniform scale shears.
         let sheared = file(vec![
-            (vec![1], trs([0.0; 3], [0.0, 0.0, q, q], [1.0; 3])),
-            (vec![], trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0, 2.0, 1.0])),
+            (vec![1], trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0, 2.0, 1.0])),
+            (vec![], trs([0.0; 3], [0.0, 0.0, 0.382_683_43, 0.923_879_5], [1.0; 3])),
         ]);
         assert!(node_world_trs(&sheared, 1).unwrap_err().contains("shear"));
         let mirrored = file(vec![(vec![], trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [-1.0, 1.0, 1.0]))]);

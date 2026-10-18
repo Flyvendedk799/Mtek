@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7001",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 46,
+    "message": "'models/scene.gltf' is a glTF JSON file; the v0.1 profile reads binary `.glb` files only.",
+    "notes": [
+      "help: export the model as a single binary glTF (`.glb`) with its data and images embedded"
+    ]
+  }
+]

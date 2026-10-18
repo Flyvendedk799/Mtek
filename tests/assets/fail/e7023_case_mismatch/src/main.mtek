@@ -1,0 +1,9 @@
+const MODEL = asset.glb("../Models/model.glb");
+const OTHER = asset.glb("../models/MODEL.glb");
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: Box {};
+    }
+}

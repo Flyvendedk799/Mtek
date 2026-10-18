@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7017",
+    "file": "src/main.mtek",
+    "startByte": 28,
+    "endByte": 51,
+    "message": "The image 'textures/image.dat': its bytes are not PNG or JPEG data; the profile supports PNG and JPEG.",
+    "notes": [
+      "help: convert the image to PNG or JPEG"
+    ]
+  }
+]

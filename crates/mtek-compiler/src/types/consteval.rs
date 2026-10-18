@@ -309,8 +309,10 @@ impl Checker<'_> {
         self.const_stack.push((def, via));
 
         let name = decl.name.name.clone();
-        let declared = decl.ty.as_ref().map(|ty| self.annotation(ty));
         // A `glb_asset` may be stored in a constant (decision 0058).
+        self.asset_state.glb_annotation_ok = true;
+        let declared = decl.ty.as_ref().map(|ty| self.annotation(ty));
+        self.asset_state.glb_annotation_ok = false;
         self.asset_state.glb_ok.insert(decl.value.id);
         let actual = self.check(&decl.value, declared);
         let mut ty = actual;

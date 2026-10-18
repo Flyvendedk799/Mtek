@@ -13,6 +13,7 @@
 //! an [`Issue`] that becomes a diagnostic at the span of the declaring path literal.
 
 pub mod access;
+pub(crate) mod attributes;
 mod glb;
 mod host;
 mod image;

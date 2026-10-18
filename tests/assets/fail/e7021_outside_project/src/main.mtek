@@ -1,0 +1,11 @@
+const MODEL = asset.glb("../../models/model.glb");
+const WOOD = asset.texture("/etc/wood.png");
+const BACK = asset.texture("..\\wood.png");
+const EMPTY = asset.texture("");
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: Box {};
+    }
+}

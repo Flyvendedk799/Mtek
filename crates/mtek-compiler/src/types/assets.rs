@@ -37,6 +37,8 @@ pub(super) struct AssetState {
     /// Nodes where a `glb_asset` is allowed: the initialiser of a constant and the receiver of
     /// an accessor.
     pub(super) glb_ok: std::collections::BTreeSet<NodeId>,
+    /// The annotation being checked is that of a constant.
+    pub(super) glb_annotation_ok: bool,
     /// Accessor calls whose failure was reported.
     pub(super) reported: std::collections::BTreeSet<NodeId>,
 }

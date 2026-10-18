@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7001",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The file is binary glTF version 1; only version 2 is supported."
+  }
+]

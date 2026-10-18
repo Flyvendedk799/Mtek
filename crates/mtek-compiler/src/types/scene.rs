@@ -710,11 +710,23 @@ impl Checker<'_> {
                 // Reported by the resolver (`E9010`); not typed.
                 continue;
             }
+            // `model: ASSET` would instance a whole node hierarchy (`E7902`, decision 0058): the
+            // value is only a `glb_asset`, which this field cannot take, not a second error.
+            let model = def.is_none()
+                && name.name == "model"
+                && matches!(holder, Holder::Body { noun: "entity", .. });
+            if model && let Some(expr) = expr {
+                self.asset_state.glb_ok.insert(expr.id);
+            }
             if let Some(expr) = expr {
                 self.descriptors_in(expr);
             }
             let Some(def) = def else {
-                self.unknown_field(schema, holder, name);
+                if model {
+                    self.model_field(holder, name);
+                } else {
+                    self.unknown_field(schema, holder, name);
+                }
                 continue;
             };
             if let Some(first) = written.iter().find(|w| w.def.name == def.name) {
@@ -745,6 +757,22 @@ impl Checker<'_> {
             });
         }
         written
+    }
+
+    /// `E7902`: an entity field `model`, which would instance a whole GLB node hierarchy.
+    fn model_field(&mut self, holder: Holder<'_>, name: &Ident) {
+        self.sink.push(
+            Diagnostic::new(
+                Code::E7902,
+                format!(
+                    "The field 'model' of {} would instance a whole node hierarchy, which v0.1 does not support.",
+                    holder.subject()
+                ),
+            )
+            .at(name.span)
+            .note("every drawn object is a named entity that references one mesh")
+            .help("write one entity per part: `mesh: MODEL.mesh(\"Name\")`, with `position: MODEL.node_position(\"Name\")` and its rotation and scale"),
+        );
     }
 
     fn unknown_field(&mut self, schema: &'static SchemaDef, holder: Holder<'_>, name: &Ident) {

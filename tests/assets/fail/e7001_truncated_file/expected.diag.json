@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7001",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The header declares 1004 bytes, but the file has 300.",
+    "notes": [
+      "the file is truncated or has data after the last chunk"
+    ]
+  }
+]

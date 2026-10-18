@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7001",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "Buffer 0 has no `uri`, so it is the BIN chunk, but the file has none."
+  }
+]

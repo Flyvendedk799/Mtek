@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7007",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0: POSITION is SHORT VEC3; the profile requires FLOAT VEC3 without normalisation.",
+    "notes": [
+      "help: export vertex data as 32-bit floats (normalised integer formats are not supported)"
+    ]
+  }
+]

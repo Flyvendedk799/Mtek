@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E7012",
+    "file": "src/main.mtek",
+    "startByte": 124,
+    "endByte": 130,
+    "message": "The mesh 'Twin' of 'models/chair.glb' has 2 primitives; `.mesh` needs exactly one.",
+    "notes": [
+      "a glTF primitive has one material; v0.1 draws each primitive as its own entity",
+      "help: pick one with `.primitive(\"Twin\", 0)` to `.primitive(\"Twin\", 1)`"
+    ]
+  }
+]

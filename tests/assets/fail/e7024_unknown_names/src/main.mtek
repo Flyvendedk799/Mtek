@@ -1,0 +1,17 @@
+const CHAIR = asset.glb("../models/chair.glb");
+
+scene Demo {
+    camera Main {}
+    entity Misspelled {
+        mesh: CHAIR.mesh("Qaud");
+    }
+    entity Absent {
+        mesh: CHAIR.mesh("Sofa");
+        position: CHAIR.node_position("Spare");
+        scale: CHAIR.node_scale("Rot");
+    }
+    entity Primitive {
+        mesh: CHAIR.primitive("Twin", 2);
+        material: Unlit { color: CHAIR.material_base_color("Oakk") };
+    }
+}
