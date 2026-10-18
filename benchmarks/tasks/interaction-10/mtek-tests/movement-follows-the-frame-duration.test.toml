@@ -1,0 +1,96 @@
+# Camera: orthographic, height 12.8, at (0, 0, 10) looking at the origin: 10 pixels per world unit,
+# pixel x = 64 + 10 x, pixel y = 64 - 10 y. Field: 10 x 10 units at the origin (behind the Ship), #303030, pixels
+# x 14..113, y 14..113. Ship: 2 x 2 units, #38bdf8, centre (x, y): at the start it covers x 54..73, y 54..73.
+# Speed 8 units per second of program time per held key. Frames last 1/16 s (0.0625, 0.5 unit = 5 pixels per frame)
+# unless a step says otherwise; 1/32 s and 3/32 s are exact in binary too and below the 0.1 s frame clamp.
+# A key counts as held in the frame that handles its press and every later frame up to but not including the frame
+# that handles its release. The Ship is limited to x, y in [-4, 4] after every frame.
+# Every expected colour below was computed by evidence/M6/benchmark-input-hooks/oracle/interaction-10.mjs from the
+# task description, not from a run of either reference solution.
+name = "the distance in a frame is 8 times that frame's duration"
+steps = [
+  { step = 2, dt = 0.0625 },
+  { press = "ArrowUp" },
+  { step = 8, dt = 0.03125 },
+
+  # 8 frames of 1/32 s: 2 units: Ship at (0, 2)
+  { expect_pixel = { x = 63, y = 43, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 54, y = 34, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 73, y = 53, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 53, y = 43, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 74, y = 43, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 33, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 54, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 64, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 64, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 14, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 113, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 114, color = "#202020", tolerance = 2 } },
+  { step = 2, dt = 0.0625 },
+
+  # 2 frames of 1/16 s: 1 unit more: Ship at (0, 3)
+  { expect_pixel = { x = 63, y = 33, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 54, y = 24, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 73, y = 43, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 53, y = 33, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 74, y = 33, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 23, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 44, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 64, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 64, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 14, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 113, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 114, color = "#202020", tolerance = 2 } },
+  { step = 2, dt = 0.09375 },
+
+  # 2 frames of 3/32 s: 1.5 units more, at the limit 4 (a frame count, not a time, would give less): Ship at (0, 4)
+  { expect_pixel = { x = 63, y = 23, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 54, y = 14, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 73, y = 33, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 53, y = 23, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 74, y = 23, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 13, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 34, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 64, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 64, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 14, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 113, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 114, color = "#202020", tolerance = 2 } },
+  { release = "ArrowUp" },
+  { press = "ArrowLeft" },
+  { step = 4, dt = 0.03125 },
+
+  # Left: 4 frames of 1/32 s: 1 unit: Ship at (-1, 4)
+  { expect_pixel = { x = 53, y = 23, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 44, y = 14, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 33, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 43, y = 23, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 23, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 53, y = 13, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 53, y = 34, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 64, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 64, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 14, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 113, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 114, color = "#202020", tolerance = 2 } },
+  { step = 6, dt = 0.03125 },
+
+  # 6 more frames of 1/32 s: 1.5 units more: Ship at (-2.5, 4)
+  { expect_pixel = { x = 38, y = 23, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 29, y = 14, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 48, y = 33, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 28, y = 23, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 49, y = 23, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 38, y = 13, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 38, y = 34, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 64, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 64, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 14, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 113, color = "#303030", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 114, color = "#202020", tolerance = 2 } },
+]

@@ -1,0 +1,1002 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=benchmarks",
+      "--grep",
+      "interaction-(09|10|11) "
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-09\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-09/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-09 (starter baseline): key events within one frame are handled in the order they happened",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 480,
+                  "error": {
+                    "message": "Error: key events within one frame are handled in the order they happened, step 6 (expect_pixel): pixel (43, 63) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m",
+                    "stack": "Error: key events within one frame are handled in the order they happened, step 6 (expect_pixel): pixel (43, 63) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: key events within one frame are handled in the order they happened, step 6 (expect_pixel): pixel (43, 63) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:26.673Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-09-basel-def53--in-the-order-they-happened-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-09-basel-def53--in-the-order-they-happened-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "07815eedd26c5bdf5920-d5e90bbb903d2522c99a",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-09 (starter baseline): Up counts only while Space is held, up to 5, and a launch stops at x = 5",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 656,
+                  "error": {
+                    "message": "Error: Up counts only while Space is held, up to 5, and a launch stops at x = 5, step 45 (expect_pixel): pixel (23, 63) is rgb(255, 210, 74), expected #ff7a1a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m88\u001b[39m",
+                    "stack": "Error: Up counts only while Space is held, up to 5, and a launch stops at x = 5, step 45 (expect_pixel): pixel (23, 63) is rgb(255, 210, 74), expected #ff7a1a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m88\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: Up counts only while Space is held, up to 5, and a launch stops at x = 5, step 45 (expect_pixel): pixel (23, 63) is rgb(255, 210, 74), expected #ff7a1a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m88\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:28.457Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-09-basel-e0ca0-5-and-a-launch-stops-at-x-5-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-09-basel-e0ca0-5-and-a-launch-stops-at-x-5-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "07815eedd26c5bdf5920-ae7cd862bc35dd273fdb",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-09 (starter baseline): the Stone is launched by the release of Space, not by its press",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 654,
+                  "error": {
+                    "message": "Error: the Stone is launched by the release of Space, not by its press, step 21 (expect_pixel): pixel (23, 63) is rgb(255, 210, 74), expected #ff7a1a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m88\u001b[39m",
+                    "stack": "Error: the Stone is launched by the release of Space, not by its press, step 21 (expect_pixel): pixel (23, 63) is rgb(255, 210, 74), expected #ff7a1a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m88\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: the Stone is launched by the release of Space, not by its press, step 21 (expect_pixel): pixel (23, 63) is rgb(255, 210, 74), expected #ff7a1a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m88\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:30.405Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-09-basel-57809-e-of-Space-not-by-its-press-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-09-basel-57809-e-of-Space-not-by-its-press-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "07815eedd26c5bdf5920-94fbc38bfe79950942b3",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-09 (starter baseline): nothing happens without a key event",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 627,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:32.328Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07815eedd26c5bdf5920-808ee3c74366d5e9cc87",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-10\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-10/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-10 (starter baseline): keys held at the same time all act, opposite keys cancel out",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 539,
+                  "error": {
+                    "message": "Error: keys held at the same time all act, opposite keys cancel out, step 5 (expect_pixel): pixel (73, 53) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m",
+                    "stack": "Error: keys held at the same time all act, opposite keys cancel out, step 5 (expect_pixel): pixel (73, 53) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: keys held at the same time all act, opposite keys cancel out, step 5 (expect_pixel): pixel (73, 53) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:33.770Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-10-basel-7e2dd-ct-opposite-keys-cancel-out-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-10-basel-7e2dd-ct-opposite-keys-cancel-out-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8d28674211b2f790c8ef-d17cea14c3946878b6c2",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-10 (starter baseline): the distance in a frame is 8 times that frame's duration",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 481,
+                  "error": {
+                    "message": "Error: the distance in a frame is 8 times that frame's duration, step 4 (expect_pixel): pixel (63, 43) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m",
+                    "stack": "Error: the distance in a frame is 8 times that frame's duration, step 4 (expect_pixel): pixel (63, 43) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: the distance in a frame is 8 times that frame's duration, step 4 (expect_pixel): pixel (63, 43) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:34.920Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-10-basel-5911b-times-that-frame-s-duration-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-10-basel-5911b-times-that-frame-s-duration-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8d28674211b2f790c8ef-dc0c0b4f2bc2e60df0a5",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-10 (starter baseline): a held key moves the Ship in every frame until it is released",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 481,
+                  "error": {
+                    "message": "Error: a held key moves the Ship in every frame until it is released, step 6 (expect_pixel): pixel (78, 73) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m",
+                    "stack": "Error: a held key moves the Ship in every frame until it is released, step 6 (expect_pixel): pixel (78, 73) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: a held key moves the Ship in every frame until it is released, step 6 (expect_pixel): pixel (78, 73) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:36.674Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-10-basel-82f9d--frame-until-it-is-released-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-10-basel-82f9d--frame-until-it-is-released-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8d28674211b2f790c8ef-7e54bc30a05a407069bf",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-10 (starter baseline): the centre of the Ship is limited to -4 .. 4 on each axis",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 484,
+                  "error": {
+                    "message": "Error: the centre of the Ship is limited to -4 .. 4 on each axis, step 4 (expect_pixel): pixel (93, 63) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m",
+                    "stack": "Error: the centre of the Ship is limited to -4 .. 4 on each axis, step 4 (expect_pixel): pixel (93, 63) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: the centre of the Ship is limited to -4 .. 4 on each axis, step 4 (expect_pixel): pixel (93, 63) is rgb(48, 48, 48), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m200\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:38.441Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-10-basel-d3220-imited-to--4-4-on-each-axis-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-10-basel-d3220-imited-to--4-4-on-each-axis-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8d28674211b2f790c8ef-3a82a237125c53a93c21",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-10 (starter baseline): the Ship stays at the centre without a held key",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 641,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:40.209Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8d28674211b2f790c8ef-b134afdee398372a4bb8",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-11\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-11/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-11 (starter baseline): a frame longer than 0.1 s counts as 0.1 s",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 541,
+                  "error": {
+                    "message": "Error: a frame longer than 0.1 s counts as 0.1 s, step 3 (expect_pixel): pixel (16, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m",
+                    "stack": "Error: a frame longer than 0.1 s counts as 0.1 s, step 3 (expect_pixel): pixel (16, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: a frame longer than 0.1 s counts as 0.1 s, step 3 (expect_pixel): pixel (16, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:41.664Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-11-basel-b86f3--than-0-1-s-counts-as-0-1-s-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-11-basel-b86f3--than-0-1-s-counts-as-0-1-s-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ae690e183b6972df8792-2c4d66c96cd645f507c9",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-11 (starter baseline): at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 8,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 485,
+                  "error": {
+                    "message": "Error: at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept, step 3 (expect_pixel): pixel (16, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m",
+                    "stack": "Error: at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept, step 3 (expect_pixel): pixel (16, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept, step 3 (expect_pixel): pixel (16, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:42.826Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-11-basel-21594-d-them-are-dropped-not-kept-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-11-basel-21594-d-them-are-dropped-not-kept-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ae690e183b6972df8792-56569777a637f86f20c1",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-11 (starter baseline): the blocks stay where they are while less than a step has passed",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 9,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 462,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:44.604Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ae690e183b6972df8792-ad668af3c25053c6b963",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-11 (starter baseline): a frame of 1/60 s runs one tick, a frame of 1/30 s runs two",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 9,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 420,
+                  "error": {
+                    "message": "Error: a frame of 1/60 s runs one tick, a frame of 1/30 s runs two, step 2 (expect_pixel): pixel (14, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m",
+                    "stack": "Error: a frame of 1/60 s runs one tick, a frame of 1/30 s runs two, step 2 (expect_pixel): pixel (14, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: a frame of 1/60 s runs one tick, a frame of 1/30 s runs two, step 2 (expect_pixel): pixel (14, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:45.859Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-11-basel-f4cfd--a-frame-of-1-30-s-runs-two-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-11-basel-f4cfd--a-frame-of-1-30-s-runs-two-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ae690e183b6972df8792-bce197c43f801d53e87b",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-11 (starter baseline): what is less than a step is kept for the next frame",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 10,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 476,
+                  "error": {
+                    "message": "Error: what is less than a step is kept for the next frame, step 3 (expect_pixel): pixel (20, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m",
+                    "stack": "Error: what is less than a step is kept for the next frame, step 3 (expect_pixel): pixel (20, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: what is less than a step is kept for the next frame, step 3 (expect_pixel): pixel (20, 33) is rgb(32, 32, 32), expected #ef4444 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m207\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T22:26:46.791Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-11-basel-fd1e3--is-kept-for-the-next-frame-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-11-basel-fd1e3--is-kept-for-the-next-frame-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ae690e183b6972df8792-ca85f892a3c3ad23d2e4",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-18T22:26:17.134Z",
+    "duration": 31057.26,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 11,
+    "flaky": 0
+  }
+}

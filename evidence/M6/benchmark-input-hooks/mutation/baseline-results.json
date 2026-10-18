@@ -1,0 +1,183 @@
+{
+  "total": 22,
+  "ok": 22,
+  "unexpected": [],
+  "results": [
+    {
+      "task": "interaction-09",
+      "name": "launch-on-press",
+      "kind": "mutant",
+      "passed": 1,
+      "failed": 3,
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "up-without-space",
+      "kind": "mutant",
+      "passed": 2,
+      "failed": 2,
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "no-right-limit",
+      "kind": "mutant",
+      "passed": 3,
+      "failed": 1,
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "power-not-reset",
+      "kind": "mutant",
+      "passed": 1,
+      "failed": 3,
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "polling-edges-in-update",
+      "kind": "mutant",
+      "passed": 3,
+      "failed": 1,
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "isKeyDown-in-the-up-handler",
+      "kind": "mutant",
+      "passed": 3,
+      "failed": 1,
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "alt-colour-in-update",
+      "kind": "alternate",
+      "passed": 4,
+      "failed": 0,
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "move-once-per-press",
+      "kind": "mutant",
+      "passed": 1,
+      "failed": 4,
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "half-a-unit-per-frame",
+      "kind": "mutant",
+      "passed": 4,
+      "failed": 1,
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "moves-in-fixedUpdate",
+      "kind": "mutant",
+      "passed": 1,
+      "failed": 4,
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "release-ignored",
+      "kind": "mutant",
+      "passed": 2,
+      "failed": 3,
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "else-if-chains",
+      "kind": "mutant",
+      "passed": 4,
+      "failed": 1,
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "previous-frame-state",
+      "kind": "mutant",
+      "passed": 1,
+      "failed": 4,
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "alt-handler-flags",
+      "kind": "alternate",
+      "passed": 5,
+      "failed": 0,
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "one-tick-per-frame",
+      "kind": "mutant",
+      "passed": 0,
+      "failed": 5,
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "whole-steps-of-this-frame-only",
+      "kind": "mutant",
+      "passed": 2,
+      "failed": 3,
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "glider-moves-per-tick",
+      "kind": "mutant",
+      "passed": 2,
+      "failed": 3,
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "glider-moves-per-frame",
+      "kind": "mutant",
+      "passed": 0,
+      "failed": 5,
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "own-clock-no-cap",
+      "kind": "mutant",
+      "passed": 3,
+      "failed": 2,
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "own-clock-keeps-the-backlog",
+      "kind": "mutant",
+      "passed": 4,
+      "failed": 1,
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "own-clock-drops-the-fraction-too",
+      "kind": "mutant",
+      "passed": 4,
+      "failed": 1,
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "alt-own-clock-in-update",
+      "kind": "alternate",
+      "passed": 5,
+      "failed": 0,
+      "ok": true
+    }
+  ]
+}

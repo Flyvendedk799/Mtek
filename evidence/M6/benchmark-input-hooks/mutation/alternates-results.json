@@ -1,0 +1,80 @@
+{
+  "kind": "alternates",
+  "total": 4,
+  "ok": 4,
+  "unexpected": [],
+  "results": [
+    {
+      "task": "interaction-09",
+      "name": "alt-stone-x-as-state",
+      "what": "the Stone's x is scene state that the position binds to; the colour is a mix of a 0/1 state; the cap is an if",
+      "expected": "pass",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "fixturesFailed": 0,
+      "fixturesTotal": 4,
+      "failedFixtures": [],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "alt-held-flags-from-events",
+      "what": "the held state is tracked from key_down and key_up handlers (flags) and the motion is bound scene state written in update",
+      "expected": "pass",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "fixturesFailed": 0,
+      "fixturesTotal": 5,
+      "failedFixtures": [],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "alt-own-clock-in-update",
+      "what": "no fixed_update: an own accumulator in update (cap of 4, whole steps beyond dropped, the fraction kept)",
+      "expected": "pass",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "fixturesFailed": 0,
+      "fixturesTotal": 5,
+      "failedFixtures": [],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "alt-positions-written-in-the-handlers",
+      "what": "fixed_update and update write the entities' positions directly (no state, no bind)",
+      "expected": "pass",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "fixturesFailed": 0,
+      "fixturesTotal": 5,
+      "failedFixtures": [],
+      "ok": true
+    }
+  ]
+}

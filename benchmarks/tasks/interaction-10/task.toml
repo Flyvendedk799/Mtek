@@ -1,0 +1,18 @@
+id = "interaction-10"
+category = "interaction"
+mode = "edit"
+title = "Fly a ship with the arrow keys: it moves in every frame a key is held"
+prompt = """The scene Demo is drawn from the front with a flat (orthographic) camera. One world unit is ten pixels. A blue square block named Ship (#38bdf8, 2 x 2 units) is at the centre, x = 0 and y = 0, on a dark grey square named Field (10 x 10 units, centred on the origin).
+Make the arrow keys fly the Ship:
+- While the Right arrow key is held down the Ship moves along +X at 8 world units per second of program time: in every frame in which the key is held it moves 8 times that frame's duration. Left moves it along -X, Up along +Y and Down along -Y in the same way. Program time is the sum of the frame durations the program is given, and frame durations vary.
+- Keys that are held at the same time all act at the same time: Right and Up together move the Ship diagonally, 8 units per second along each of the two axes; two opposite keys held together cancel each other out.
+- A key counts as held in the frame in which its press is handled and in every later frame up to, but not including, the frame in which its release is handled. A key that is pressed and released again within the same frame is not held in any frame, so it moves nothing.
+- After every frame the centre of the Ship is limited to x and y between -4 and 4, each axis on its own, so the Ship stays inside the Field.
+Without a held key nothing moves. The Field, the camera and everything else stay as they are."""
+required_symbols = ["Demo.Ship", "Demo.Field"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

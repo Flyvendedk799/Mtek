@@ -1,0 +1,175 @@
+{
+  "task": "interaction-09",
+  "project": "starter",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "fail",
+      "reason": "3 of 4 fixtures failed: 'key events within one frame are handled in the order they happened', 'Up counts only while Space is held, up to 5, and a launch stops at x = 5', 'the Stone is launched by the release of Space, not by its press' (expect_pixel: pixel (43, 63) is #202020, expected #ffd24a within 2 per channel; it differs by 223)",
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Stone",
+      "Demo.Power",
+      "Demo.power"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "fail",
+    "exitCode": 1,
+    "summary": {
+      "total": 4,
+      "passed": 1,
+      "failed": 3,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/events-of-one-frame-are-handled-in-order.test.toml",
+        "name": "key events within one frame are handled in the order they happened",
+        "status": "fail",
+        "reason": null,
+        "failure": {
+          "kind": "expect_pixel",
+          "step": 6,
+          "line": 19,
+          "message": "pixel (43, 63) is #202020, expected #ffd24a within 2 per channel; it differs by 223",
+          "details": []
+        },
+        "stepsRun": 5,
+        "stepsTotal": 147
+      },
+      {
+        "file": "tests/power-is-capped-and-needs-space-held.test.toml",
+        "name": "Up counts only while Space is held, up to 5, and a launch stops at x = 5",
+        "status": "fail",
+        "reason": null,
+        "failure": {
+          "kind": "expect_pixel",
+          "step": 45,
+          "line": 60,
+          "message": "pixel (23, 63) is #ffd24a, expected #ff7a1a within 2 per channel; it differs by 88",
+          "details": []
+        },
+        "stepsRun": 44,
+        "stepsTotal": 165
+      },
+      {
+        "file": "tests/release-launches-and-press-does-not.test.toml",
+        "name": "the Stone is launched by the release of Space, not by its press",
+        "status": "fail",
+        "reason": null,
+        "failure": {
+          "kind": "expect_pixel",
+          "step": 21,
+          "line": 36,
+          "message": "pixel (23, 63) is #ffd24a, expected #ff7a1a within 2 per channel; it differs by 88",
+          "details": []
+        },
+        "stepsRun": 20,
+        "stepsTotal": 184
+      },
+      {
+        "file": "tests/stone-stays-without-input.test.toml",
+        "name": "nothing happens without a key event",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 36,
+        "stepsTotal": 36
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "fail",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 138,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Stone",
+      "exitCode": 0,
+      "durationMs": 139,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Power",
+      "exitCode": 0,
+      "durationMs": 139,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.power",
+      "exitCode": 0,
+      "durationMs": 131,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 157,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 1,
+      "durationMs": 2530,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 3236
+}
