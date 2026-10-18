@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-10-17
 - Blueprint origin: M4 (blueprint §11), task M4-02; `spec/materials.md` §7; `spec/gpu-layout.md` §6.1; `spec/scenes.md` §§4.1, 8.2, 8.4; `spec/runtime-abi.md` §§4.2, 5.2; `spec/diagnostics.md` (`E5110`, `E5111`); decisions 0025 (milestone gating), 0035 (items that land before their milestone's gate), 0049 (state, handlers and writes), 0051 (`bind`).
-- Supersedes: nothing. Lifts the M4 gating of the `Entity` field `light`, the schemas `DirectionalLight` and `PointLight`, and the `Scene` fields `ambient_color` and `ambient_intensity`; the `Pbr` material, textures, samplers and assets stay M4 items of other tasks.
+- Supersedes: nothing. Lifts the M4 gating of the `Entity` field `light`, the schemas `DirectionalLight` and `PointLight`, and the `Scene` fields `ambient_color` and `ambient_intensity`; the `Pbr` material, textures, samplers and assets stay M4 items of other tasks.  (`Pbr` and `lighting.pbr` landed with M4-03, decision 0057.)
 
 ## Context
 

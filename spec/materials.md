@@ -135,7 +135,7 @@ Lights are components on **named** entities only in v0.1 (a `light` in a prefab 
 
 ## 8. Lighting model: the documented PBR subset (M4)
 
-The built-in `Pbr` material and the GPU intrinsic `lighting.pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` implement exactly the following. The runtime test-suite contains a CPU reference implementation of the same formulas (`spec/testing.md` §6.4); images are compared against it with tolerances, so these formulas are a test oracle, not just documentation.
+The built-in `Pbr` material and the GPU intrinsic `lighting.pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` implement exactly the following. The runtime test-suite contains a CPU reference implementation of the same formulas (`spec/testing.md` §6.4); images are compared against it with tolerances, so these formulas are a test oracle, not just documentation. How the model is lowered to WGSL (one generated helper over `mtek_frame`), which `SurfaceInput` fields a call reads, where binary32 evaluation needs a guard, and the measured agreement with the oracle are decision `spec/decisions/0057-pbr-lighting.md`.
 
 Notation: `N` = normalised world normal; `V = normalize(camera_position − world_position)`; for each light, `L` = unit vector from the surface towards the light, `H = normalize(L + V)`; `NL = max(dot(N, L), 0)`, `NV = max(dot(N, V), 1e-4)`, `NH = max(dot(N, H), 0)`, `VH = max(dot(V, H), 0)`; `c = base_color.rgb`.
 
@@ -147,7 +147,7 @@ Notation: `N` = normalised world normal; `V = normalize(camera_position − worl
 6. Radiance of a directional light: `E = light.color.rgb · intensity`. Of a point light at distance `d`: `E = light.color.rgb · intensity / max(d², 1e-4) · w`, with `w = 1` if `range = 0`, else `w = clamp(1 − (d / range)⁴, 0, 1)²`.
 7. Result: `rgb = Σ_lights (Diffuse + Specular) · E · NL + c · ambient_color.rgb · ambient_intensity`; alpha `= 1`.
 
-No image-based lighting, emissive, occlusion, normal mapping, clear-coat or shadows in v0.1.
+No image-based lighting, emissive, occlusion, normal mapping, clear-coat or shadows in v0.1. A call `lighting.pbr(input, …)` reads `world_position` and `world_normal` of the stage input (§3.1), and of nothing else.
 
 ## 9. Built-in materials (prelude, written in Mtek)
 
@@ -173,7 +173,7 @@ export material Pbr {
 }
 ```
 
-The param named `color` in `Unlit` relies on the rule in `spec/language.md` §4.2: a material param may share a prelude type's name; inside `Unlit`, `color` in expression position is the param, `color` in type position is the type, and `color.linear(…)` would be `E2005` (the prelude does not use it). (M1 provided `Unlit` through a minimal compiler-built shader IR; since M2 it is compiled from this source, and the temporary path is gone, decision 0044.)
+The param named `color` in `Unlit` relies on the rule in `spec/language.md` §4.2: a material param may share a prelude type's name; inside `Unlit`, `color` in expression position is the param, `color` in type position is the type, and `color.linear(…)` would be `E2005` (the prelude does not use it). (M1 provided `Unlit` through a minimal compiler-built shader IR; since M2 it is compiled from this source, and the temporary path is gone, decision 0044.) `Pbr` is compiled from this source too since task M4-03 (decision 0057).
 
 ## 10. Not in v0.1
 
