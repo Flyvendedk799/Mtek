@@ -177,11 +177,13 @@ fn many_problems_are_capped_with_a_count_of_the_rest() {
         .collect();
     json["materials"] = Value::Array(materials);
     let issues = read(&json, &bin).unwrap_err();
-    assert_eq!(issues.len(), 25);
+    assert_eq!(issues.len(), 24);
+    assert!(issues.iter().all(|i| i.code == Code::E7015));
     assert_eq!(
-        issues[24].message,
-        "16 more problems in this file are not shown."
+        issues[23].notes,
+        ["16 more problems in this file are not shown"]
     );
+    assert!(issues[..23].iter().all(|i| i.notes.is_empty()));
 }
 
 #[test]

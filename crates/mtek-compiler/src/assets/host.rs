@@ -357,7 +357,12 @@ impl AssetHost for AssetLoader<'_> {
         let key = path.as_str().to_owned();
         let is_glb = kind == AssetKind::Glb;
         if is_glb {
-            let extension = key.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
+            let name = path.file_name().unwrap_or("");
+            let extension = name
+                .rsplit_once('.')
+                .map_or(String::new(), |(_, extension)| {
+                    extension.to_ascii_lowercase()
+                });
             if extension != "glb" {
                 let what = if extension == "gltf" {
                     format!("'{path}' is a glTF JSON file")

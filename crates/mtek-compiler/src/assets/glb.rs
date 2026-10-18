@@ -563,9 +563,24 @@ pub fn read_glb(path: &str, bytes: &[u8], limits: &AssetLimits) -> Result<GlbFil
     if !early.is_empty() {
         return Err(finish(early));
     }
-    let document = match gltf::Document::from_json(root) {
-        Ok(document) => document,
-        Err(gltf::Error::Validation(errors)) => {
+    let dangling = dangling_attributes(&root);
+    if !dangling.is_empty() {
+        return Err(finish(dangling));
+    }
+    // The `gltf` crate indexes the accessors of a primitive's attributes while validating; a
+    // panic inside it (a hostile file it did not foresee) is a malformed file, not a crash.
+    let validated = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        gltf::Document::from_json(root)
+    }));
+    let document = match validated {
+        Err(_) => {
+            return Err(vec![Issue::new(
+                Code::E7001,
+                "The glTF structure is malformed: the reader could not validate it.",
+            )]);
+        }
+        Ok(Ok(document)) => document,
+        Ok(Err(gltf::Error::Validation(errors))) => {
             let mut issues: Vec<(u8, Issue)> = errors
                 .into_iter()
                 .map(|(path, error)| (1, validation_issue(path.as_str(), error)))
@@ -573,7 +588,7 @@ pub fn read_glb(path: &str, bytes: &[u8], limits: &AssetLimits) -> Result<GlbFil
             issues.dedup_by(|a, b| a.1 == b.1);
             return Err(finish(issues));
         }
-        Err(other) => {
+        Ok(Err(other)) => {
             return Err(vec![Issue::new(
                 Code::E7001,
                 format!("The glTF document is invalid: {other}."),
@@ -610,6 +625,32 @@ pub fn read_glb(path: &str, bytes: &[u8], limits: &AssetLimits) -> Result<GlbFil
     })
 }
 
+/// Attributes that name an accessor which does not exist. The `gltf` crate would index it
+/// before it checks it.
+fn dangling_attributes(root: &Root) -> Vec<(u8, Issue)> {
+    let mut out = Vec::new();
+    for (mesh_index, mesh) in root.meshes.iter().enumerate() {
+        for (primitive_index, primitive) in mesh.primitives.iter().enumerate() {
+            for (semantic, accessor) in &primitive.attributes {
+                if accessor.value() >= root.accessors.len() {
+                    let name = match semantic {
+                        Checked::Valid(semantic) => semantic_name(semantic),
+                        Checked::Invalid => "an unknown attribute".to_owned(),
+                    };
+                    out.push((
+                        1,
+                        validation_issue(
+                            &format!("meshes[{mesh_index}].primitives[{primitive_index}].attributes[\"{name}\"]"),
+                            json::validation::Error::IndexOutOfBounds,
+                        ),
+                    ));
+                }
+            }
+        }
+    }
+    out
+}
+
 fn hex(bytes: &[u8]) -> String {
     let mut text = String::with_capacity(bytes.len() * 2);
     for byte in bytes {
@@ -628,10 +669,12 @@ fn finish(mut issues: Vec<(u8, Issue)>) -> Vec<Issue> {
         .map(|(_, issue)| issue)
         .take(CAP)
         .collect();
-    if total > CAP {
-        out.push(Issue::new(
-            Code::E7001,
-            format!("{} more problems in this file are not shown.", total - CAP),
+    if total > CAP
+        && let Some(last) = out.last_mut()
+    {
+        last.notes.push(format!(
+            "{} more problems in this file are not shown",
+            total - CAP
         ));
     }
     out

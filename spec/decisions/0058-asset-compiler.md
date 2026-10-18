@@ -70,7 +70,7 @@ The file is validated **in full when it is declared**, not when a name is used: 
 | Node transforms | per accessor, §3 item "`E7013`" above | `E7013` |
 | Animations, skins | `animations` or `skins` not empty (one message gives the counts) | `E7019` |
 
-At most 24 issues are reported per file, followed by "N more problems in this file are not shown". The values the validator keeps are offsets into the BIN chunk, never copies of vertex data; the BIN chunk is kept (up to the declared length of buffer 0) for packaging.
+At most 24 issues are reported per file; the last carries the note "N more problems in this file are not shown". The values the validator keeps are offsets into the BIN chunk, never copies of vertex data; the BIN chunk is kept (up to the declared length of buffer 0) for packaging.
 
 Non-obvious consequences, all deliberate: a file with `JOINTS_0` and a `skins` array reports `E7008` for each attribute and `E7019` for the skin; `alphaCutoff` with OPAQUE is ignored by glTF itself and not an error; `metallicFactor`, `roughnessFactor` and the `baseColorFactor` components are taken as written (their ranges are not checked); a texture that is not referenced by any material is still checked as an image.
 

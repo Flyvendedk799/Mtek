@@ -34,6 +34,8 @@ pub(crate) struct AssetHookup<'a> {
 pub(super) struct AssetState {
     /// The handle each `asset.*` call stands for.
     pub(super) declared: BTreeMap<NodeId, AssetHandle>,
+    /// The `asset.*` calls already handed to the host (a node may be checked twice).
+    pub(super) attempted: std::collections::BTreeSet<NodeId>,
     /// Nodes where a `glb_asset` is allowed: the initialiser of a constant and the receiver of
     /// an accessor.
     pub(super) glb_ok: std::collections::BTreeSet<NodeId>,
@@ -160,6 +162,9 @@ impl Checker<'_> {
             "texture" => AssetKind::Texture,
             _ => AssetKind::LinearTexture,
         };
+        if !self.asset_state.attempted.insert(expr.id) {
+            return ty;
+        }
         let Some(hookup) = self.assets.as_mut() else {
             return ty;
         };

@@ -266,6 +266,43 @@ fn a_node_that_cannot_be_an_entity_transform_is_e7013() {
 }
 
 // ---------------------------------------------------------------------------
+// Hostile files
+// ---------------------------------------------------------------------------
+
+#[test]
+fn a_damaged_file_is_a_diagnostic_never_a_panic() {
+    // Every byte of a real model replaced by other values, and every prefix of it: the reader
+    // must answer with a model or with issues (spec/assets.md section 1: a bad file is a compile
+    // error with a span, not a crash). The packer runs on whatever still reads.
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/assets/pass/assets_supported/models/chair.glb");
+    let original = std::fs::read(path).unwrap();
+    let limits = AssetLimits {
+        max_vertices_per_primitive: 1 << 16,
+        ..AssetLimits::default()
+    };
+    let mut readable = 0;
+    for at in 0..original.len() {
+        for value in [
+            0x00,
+            0xFF,
+            original[at] ^ 0x01,
+            original[at].wrapping_add(1),
+        ] {
+            let mut bytes = original.clone();
+            bytes[at] = value;
+            if read_glb("models/m.glb", &bytes, &limits).is_ok() {
+                readable += 1;
+            }
+        }
+    }
+    for length in 0..original.len() {
+        assert!(read_glb("models/m.glb", &original[..length], &limits).is_err());
+    }
+    assert!(readable > 0, "some single-byte changes leave a valid file");
+}
+
+// ---------------------------------------------------------------------------
 // The host and the packer
 // ---------------------------------------------------------------------------
 
