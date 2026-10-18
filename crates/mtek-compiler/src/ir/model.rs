@@ -893,6 +893,11 @@ pub enum BindingDep {
         entity: u32,
         name: String,
     },
+    /// `color` or `intensity` of the light of an entity (decision 0067).
+    Light {
+        entity: u32,
+        field: String,
+    },
 }
 
 /// A `state` declaration with its initialiser (`spec/scenes.md` sections 2, 4.4 and 11).
@@ -1140,6 +1145,11 @@ pub struct Light {
     pub color: Field,
     /// `intensity`: an `f32`, a constant or the value of a binding.
     pub intensity: Field,
+    /// How a hot reload treats `color` (decision 0067): `Bound` exactly when `color` is a
+    /// binding, `Imperative` when a lifecycle function or handler writes it, else `Initial`.
+    pub color_update: UpdateClass,
+    /// The same for `intensity`.
+    pub intensity_update: UpdateClass,
     pub origin: Origin,
     /// The `light: …;` member.
     #[serde(serialize_with = "span")]

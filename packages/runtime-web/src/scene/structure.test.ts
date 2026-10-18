@@ -8,6 +8,9 @@ import { resolveStructure } from "./structure.js";
 
 type Json = Record<string, unknown>;
 
+/** The update classes of a light's fields (decision 0067); the structure checks do not look at them. */
+const CLASSES = { color: "initial", intensity: "initial" } as const;
+
 function manifestWith(edit: (json: Json, scene: Json & { entities: Json[]; materialInstances: Json[]; cameras: Json[] }) => void): MtekManifest {
   const json = minimalManifestJson();
   edit(json, json["scene"] as Json & { entities: Json[]; materialInstances: Json[]; cameras: Json[] });
@@ -91,7 +94,7 @@ describe("resolveStructure", () => {
       manifestWith((_, scene) => {
         const entity = scene.entities[0] ?? {};
         entity["light"] = 0;
-        scene["lights"] = [{ index: 0, entity: 0, kind: "point", range: 6.5 }];
+        scene["lights"] = [{ index: 0, entity: 0, kind: "point", range: 6.5, classes: CLASSES }];
       }),
     );
     if (!result.ok) throw new Error(JSON.stringify(result.diagnostics));
@@ -107,14 +110,14 @@ describe("resolveStructure", () => {
       const template = scene.entities[0] ?? {};
       scene.entities = [0, 1, 2, 3, 4].map((index) => ({ ...template, index, name: `L${String(index)}`, symbol: `src/main.mtek::Demo.L${String(index)}`, mesh: null, material: null, light: index }));
       scene.materialInstances = [];
-      scene["lights"] = [0, 1, 2, 3, 4].map((index) => ({ index, entity: index, kind: "directional" }));
+      scene["lights"] = [0, 1, 2, 3, 4].map((index) => ({ index, entity: index, kind: "directional", classes: CLASSES }));
     });
     expect(problems(five)).toEqual(["MTEK-E8006 field: scene.lights"]);
     // The light names an entity that does not name it back.
     expect(
       problems(
         manifestWith((_, scene) => {
-          scene["lights"] = [{ index: 0, entity: 0, kind: "directional" }];
+          scene["lights"] = [{ index: 0, entity: 0, kind: "directional", classes: CLASSES }];
         }),
       ),
     ).toEqual(["MTEK-E8006 field: scene.lights[0].entity"]);
@@ -127,7 +130,7 @@ describe("resolveStructure", () => {
             { ...template, light: 0 },
             { ...template, index: 1, name: "Other", symbol: "src/main.mtek::Demo.Other", mesh: null, material: null, light: null },
           ];
-          scene["lights"] = [{ index: 0, entity: 1, kind: "directional" }];
+          scene["lights"] = [{ index: 0, entity: 1, kind: "directional", classes: CLASSES }];
         }),
       ),
     ).toEqual(["MTEK-E8006 field: scene.lights[0].entity", "MTEK-E8006 field: scene.entities[0].light"]);
@@ -135,7 +138,7 @@ describe("resolveStructure", () => {
       problems(
         manifestWith((_, scene) => {
           (scene.entities[0] ?? {})["light"] = 0;
-          scene["lights"] = [{ index: 1, entity: 0, kind: "directional" }];
+          scene["lights"] = [{ index: 1, entity: 0, kind: "directional", classes: CLASSES }];
         }),
       ),
     ).toEqual(["MTEK-E8006 field: scene.lights[0].index"]);

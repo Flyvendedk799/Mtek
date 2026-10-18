@@ -1,0 +1,7 @@
+// A binding that reads the light field it binds depends on itself (decision 0067).
+scene Demo {
+    camera Main {}
+    entity Sun {
+        light: DirectionalLight { intensity: bind(Sun.light.intensity + 1.0); };
+    }
+}

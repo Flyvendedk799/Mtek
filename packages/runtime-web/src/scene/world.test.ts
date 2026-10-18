@@ -38,7 +38,7 @@ function lightManifest(): MtekManifest {
     { ...first, light: 0 },
     { ...first, index: 1, name: "Plain", symbol: "src/main.mtek::Demo.Plain", mesh: null, material: null, light: null },
   ];
-  scene.lights = [{ index: 0, entity: 0, kind: "point", range: 6.5 }];
+  scene.lights = [{ index: 0, entity: 0, kind: "point", range: 6.5, classes: { color: "initial", intensity: "initial" } }];
   return manifestFrom(json);
 }
 

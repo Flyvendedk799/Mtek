@@ -525,6 +525,7 @@ impl Tree<'_> {
                 BindingDep::EntityField { entity, field } => format!("entity#{entity}.{field}"),
                 BindingDep::EntityState { entity, name } => format!("entity#{entity}.state {name}"),
                 BindingDep::Param { entity, name } => format!("entity#{entity}.material.{name}"),
+                BindingDep::Light { entity, field } => format!("entity#{entity}.light.{field}"),
             })
             .collect();
         self.line(

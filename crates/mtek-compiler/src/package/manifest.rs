@@ -628,13 +628,33 @@ pub enum Collider {
     },
 }
 
-/// A light: `index`, `entity`, then its kind (M4).
+/// A light: `index`, `entity`, its kind (M4), then the update classes of its fields.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Light {
     pub index: u32,
     pub entity: u32,
     #[serde(flatten)]
     pub kind: LightKind,
+    pub classes: LightClasses,
+}
+
+/// The update class of each field of a light that can change at run time (decision 0067): what a
+/// hot reload does with it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct LightClasses {
+    pub color: LightClass,
+    pub intensity: LightClass,
+}
+
+/// A light field is constant (`initial`: the source's literal is applied on reload), written by a
+/// handler (`imperative`: its value is carried over a reload) or the value of a binding
+/// (`bound`: evaluated every frame).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LightClass {
+    Initial,
+    Imperative,
+    Bound,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -704,6 +724,7 @@ pub enum BindingDep {
     EntityField { entity: u32, field: String },
     EntityState { entity: u32, name: String },
     Param { instance: u32, name: String },
+    Light { entity: u32, field: String },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -778,11 +799,32 @@ mod tests {
             index: 0,
             entity: 3,
             kind: LightKind::Directional,
+            classes: LightClasses {
+                color: LightClass::Initial,
+                intensity: LightClass::Bound,
+            },
         };
         assert_eq!(
             serde_json::to_string(&light).expect("ok"),
-            r#"{"index":0,"entity":3,"kind":"directional"}"#
+            r#"{"index":0,"entity":3,"kind":"directional","classes":{"color":"initial","intensity":"bound"}}"#
         );
+        let point = Light {
+            index: 1,
+            entity: 4,
+            kind: LightKind::Point {
+                range: Num::from_u32(5),
+            },
+            classes: LightClasses {
+                color: LightClass::Imperative,
+                intensity: LightClass::Initial,
+            },
+        };
+        let text = serde_json::to_string(&point).expect("ok");
+        assert_eq!(
+            text,
+            r#"{"index":1,"entity":4,"kind":"point","range":5,"classes":{"color":"imperative","intensity":"initial"}}"#
+        );
+        assert_eq!(serde_json::from_str::<Light>(&text).expect("reads"), point);
     }
 
     #[test]

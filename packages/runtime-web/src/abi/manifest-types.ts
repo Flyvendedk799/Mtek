@@ -404,7 +404,8 @@ export type MtekBindingDependency =
       readonly field: "position" | "rotation" | "scale" | "visible";
     }
   | { readonly kind: "entityState"; readonly entity: number; readonly name: string }
-  | { readonly kind: "param"; readonly instance: number; readonly name: string };
+  | { readonly kind: "param"; readonly instance: number; readonly name: string }
+  | { readonly kind: "light"; readonly entity: number; readonly field: "color" | "intensity" };
 
 export interface MtekBinding {
   readonly id: number;
@@ -435,9 +436,20 @@ export interface MtekHostInput {
   readonly codec: MtekHostInputCodec;
 }
 
+/**
+ * What a hot reload does with a light field that can change at run time (decision 0067): `initial` applies the
+ * source's new literal, `imperative` keeps the value the running scene holds, `bound` is evaluated every frame.
+ */
+export type MtekLightClass = "initial" | "imperative" | "bound";
+
+export interface MtekLightClasses {
+  readonly color: MtekLightClass;
+  readonly intensity: MtekLightClass;
+}
+
 export type MtekLight =
-  | { readonly index: number; readonly entity: number; readonly kind: "directional" }
-  | { readonly index: number; readonly entity: number; readonly kind: "point"; readonly range: number };
+  | { readonly index: number; readonly entity: number; readonly kind: "directional"; readonly classes: MtekLightClasses }
+  | { readonly index: number; readonly entity: number; readonly kind: "point"; readonly range: number; readonly classes: MtekLightClasses };
 
 export interface MtekScene {
   readonly name: string;

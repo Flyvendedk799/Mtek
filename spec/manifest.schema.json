@@ -624,22 +624,34 @@
     "directionalLight": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "entity", "kind"],
+      "required": ["index", "entity", "kind", "classes"],
       "properties": {
         "index": { "$ref": "#/$defs/index" },
         "entity": { "$ref": "#/$defs/index" },
-        "kind": { "const": "directional" }
+        "kind": { "const": "directional" },
+        "classes": { "$ref": "#/$defs/lightClasses" }
       }
     },
     "pointLight": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "entity", "kind", "range"],
+      "required": ["index", "entity", "kind", "range", "classes"],
       "properties": {
         "index": { "$ref": "#/$defs/index" },
         "entity": { "$ref": "#/$defs/index" },
         "kind": { "const": "point" },
-        "range": { "type": "number", "minimum": 0, "description": "0 = unlimited." }
+        "range": { "type": "number", "minimum": 0, "description": "0 = unlimited." },
+        "classes": { "$ref": "#/$defs/lightClasses" }
+      }
+    },
+    "lightClasses": {
+      "type": "object",
+      "description": "The update class of each light field that can change at run time (decision 0067): `initial` = a constant the source's literal sets (a reload applies the new literal), `imperative` = written by a handler (a reload keeps the value it holds), `bound` = the value of a binding (evaluated every frame).",
+      "additionalProperties": false,
+      "required": ["color", "intensity"],
+      "properties": {
+        "color": { "type": "string", "enum": ["initial", "imperative", "bound"] },
+        "intensity": { "type": "string", "enum": ["initial", "imperative", "bound"] }
       }
     },
 
@@ -850,7 +862,8 @@
         { "$ref": "#/$defs/frameDep" },
         { "$ref": "#/$defs/entityFieldDep" },
         { "$ref": "#/$defs/entityStateDep" },
-        { "$ref": "#/$defs/paramDep" }
+        { "$ref": "#/$defs/paramDep" },
+        { "$ref": "#/$defs/lightDep" }
       ],
       "discriminator": { "propertyName": "kind" }
     },
@@ -894,6 +907,18 @@
         "kind": { "const": "param" },
         "instance": { "$ref": "#/$defs/index" },
         "name": { "$ref": "#/$defs/name" }
+      }
+    },
+
+    "lightDep": {
+      "type": "object",
+      "description": "A read of the colour or intensity of the light of an entity (decision 0067); `range` is fixed at construction and is not a dependency.",
+      "additionalProperties": false,
+      "required": ["kind", "entity", "field"],
+      "properties": {
+        "kind": { "const": "light" },
+        "entity": { "$ref": "#/$defs/index" },
+        "field": { "type": "string", "enum": ["color", "intensity"] }
       }
     },
 

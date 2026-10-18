@@ -1396,13 +1396,21 @@
         "index": 0,
         "entity": 3,
         "kind": "directional",
-        "range": 5
+        "range": 5,
+        "classes": {
+          "color": "initial",
+          "intensity": "bound"
+        }
       },
       {
         "index": 1,
         "entity": 4,
         "kind": "point",
-        "range": 12
+        "range": 12,
+        "classes": {
+          "color": "imperative",
+          "intensity": "initial"
+        }
       }
     ]
   }

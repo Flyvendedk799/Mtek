@@ -414,6 +414,9 @@ pub enum BindDep {
     EntityState { entity: DefId, name: String },
     /// A param of the material instance of a named entity.
     MaterialParam { entity: DefId, param: String },
+    /// `color` or `intensity` of the light of a named entity (decision 0067). A read of the
+    /// construction-only `range` is not a dependency: nothing writes it after construction.
+    LightField { entity: DefId, field: String },
 }
 
 impl BindDep {
@@ -435,6 +438,13 @@ impl BindDep {
                     param: p,
                 },
             ) => entity == e && param == p,
+            (
+                BindDep::LightField { entity, field },
+                BindTarget::LightField {
+                    entity: e,
+                    field: f,
+                },
+            ) => entity == e && field == f,
             _ => false,
         }
     }

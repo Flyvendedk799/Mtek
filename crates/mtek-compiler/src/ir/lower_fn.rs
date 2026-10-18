@@ -1276,6 +1276,10 @@ impl Lowering<'_> {
                             name: param.clone(),
                         }
                     }
+                    crate::types::BindDep::LightField { entity: e, field } => BindingDep::Light {
+                        entity: entity(*e)?,
+                        field: field.clone(),
+                    },
                 });
             }
             let lowering = FnLowering {

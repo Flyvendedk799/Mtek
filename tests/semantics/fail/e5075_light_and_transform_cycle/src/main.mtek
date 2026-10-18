@@ -1,0 +1,9 @@
+// A light bound to a transform that is bound to the light: the cycle runs through a light field and an
+// entity field, in that order (decision 0067).
+scene Demo {
+    camera Main {}
+    entity Lamp {
+        position: bind(vec3(0.0, Lamp.light.intensity, 0.0));
+        light: PointLight { intensity: bind(Lamp.position.y + 1.0); };
+    }
+}

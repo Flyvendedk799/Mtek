@@ -648,13 +648,21 @@
       {
         "index": 0,
         "entity": 0,
-        "kind": "directional"
+        "kind": "directional",
+        "classes": {
+          "color": "initial",
+          "intensity": "bound"
+        }
       },
       {
         "index": 1,
         "entity": 2,
         "kind": "point",
-        "range": 6.5
+        "range": 6.5,
+        "classes": {
+          "color": "imperative",
+          "intensity": "imperative"
+        }
       }
     ]
   }

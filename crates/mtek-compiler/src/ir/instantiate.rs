@@ -349,6 +349,10 @@ impl Substitution<'_> {
                     entity: self.index(*entity),
                     name: name.clone(),
                 },
+                BindingDep::Light { entity, field } => BindingDep::Light {
+                    entity: self.index(*entity),
+                    field: field.clone(),
+                },
             })
             .collect();
         Ok(Binding {

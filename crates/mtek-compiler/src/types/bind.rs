@@ -9,8 +9,9 @@
 //! * **What.** The expression is typed against the field's type exactly (`E3102`) as a CPU root
 //!   body, so the functions it calls are reachable CPU code, and it is pure: a call of a `cpu fn` or
 //!   of a CPU intrinsic is `E5005`.
-//! * **Dependencies.** The state, `frame` values, entity and camera fields, entity state and
-//!   material params it reads, in source order, each once.
+//! * **Dependencies.** The state, `frame` values, entity fields, entity state, material params and
+//!   light colour and intensity (decision 0067) it reads, in source order, each once. A camera
+//!   field or a body property has no dependency kind: reading one is `E5005`.
 //! * **Order and cycles.** A binding reads another when it reads what the other writes. Evaluation
 //!   order is topological with ties broken by declaration order; a cycle is `E5075`, reported once
 //!   with every binding of the cycle as a related span, in order.
@@ -420,16 +421,16 @@ impl Checker<'_> {
         if !sound {
             return;
         }
-        let (deps, camera_reads) = self.dependencies(&bind.source);
-        if !camera_reads.is_empty() {
-            for (span, name) in camera_reads {
+        let (deps, unbindable) = self.dependencies(&bind.source);
+        if !unbindable.is_empty() {
+            for (span, name) in unbindable {
                 self.report(
                     Diagnostic::new(
                         Code::E5005,
                         format!("The binding of {subject} reads {name}, which a binding cannot depend on."),
                     )
                     .at(span)
-                    .note("a binding may read constants, state, `frame` and the fields and state of named entities"),
+                    .note("a binding may read constants, state, `frame`, the fields and state of named entities and the colour and intensity of their lights"),
                 );
             }
             return;
@@ -467,11 +468,22 @@ impl Checker<'_> {
         }
     }
 
-    /// The dependencies of the expression `source`, in source order, each once.
+    /// Whether the field `field` of the light of `entity` can change after construction: the
+    /// registry marks it bindable (`color`, `intensity`; not `range`).
+    fn light_field_is_dynamic(&self, entity: DefId, field: &str) -> bool {
+        self.out
+            .entity_lights
+            .get(&entity)
+            .and_then(|schema| self.registry.schema_field(schema, field))
+            .is_some_and(|def| def.flags.contains(FieldFlags::BINDABLE))
+    }
+
+    /// The dependencies of the expression `source`, in source order, each once, and the reads
+    /// no dependency kind covers (a camera field, a body property), which `E5005` reports.
     fn dependencies(&self, source: &Expr) -> (Vec<BindDep>, Vec<(Span, String)>) {
         let mut ids = Vec::new();
         walk_expr(source, &mut |node, _| ids.push((node.id, node.span)));
-        let mut camera_reads: Vec<(Span, String)> = Vec::new();
+        let mut unbindable: Vec<(Span, String)> = Vec::new();
         let mut deps: Vec<BindDep> = Vec::new();
         let mut push = |dep: BindDep| {
             if !deps.contains(&dep) {
@@ -497,7 +509,7 @@ impl Checker<'_> {
                                 field: field.clone(),
                             });
                         } else {
-                            camera_reads
+                            unbindable
                                 .push((span, format!("the camera field `{object_name}.{field}`")));
                         }
                     }
@@ -509,19 +521,20 @@ impl Checker<'_> {
                         entity: *entity,
                         param: param.clone(),
                     }),
-                    // The manifest has no light dependency kind (decision 0053), like cameras.
+                    // `color` and `intensity` are what a binding or a handler can write at run
+                    // time, so a read of one is a dependency (decision 0067). The others
+                    // (`range`) are fixed at construction: nothing orders a binding against them.
                     FieldKind::LightField { entity, field } => {
-                        let name = self
-                            .res
-                            .def(*entity)
-                            .map(|d| d.name.clone())
-                            .unwrap_or_default();
-                        camera_reads
-                            .push((span, format!("the light field `{name}.light.{field}`")));
+                        if self.light_field_is_dynamic(*entity, field) {
+                            push(BindDep::LightField {
+                                entity: *entity,
+                                field: field.clone(),
+                            });
+                        }
                     }
-                    // Nor does it have a body property (decision 0065).
+                    // The manifest has no dependency kind for a body property (decision 0065).
                     FieldKind::BodyProperty { property, .. } => {
-                        camera_reads.push((span, format!("the body property `body.{property}`")));
+                        unbindable.push((span, format!("the body property `body.{property}`")));
                     }
                     FieldKind::NamespaceValue(name) => {
                         if let Some(member) = name.strip_prefix("frame.") {
@@ -547,7 +560,7 @@ impl Checker<'_> {
                 }
             }
         }
-        (deps, camera_reads)
+        (deps, unbindable)
     }
 
     /// Number the bindings, find cycles (`E5075`) and give each its place in the evaluation order.

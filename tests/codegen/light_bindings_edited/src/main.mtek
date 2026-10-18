@@ -1,0 +1,41 @@
+// The edit of `light_bindings` that the hot reload tests apply (decision 0067): the literal colour of
+// Sun, the formula of the intensity of Sun and the literal intensity of Lamp are different; the
+// structure, the state and the handlers are the same.
+scene Demo {
+    clear_color: #101418;
+    state warmth: f32 = 0.5;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Marker {
+        mesh: Box { size: vec3(0.2, 0.2, 0.2) };
+        position: bind(vec3(Fill.light.intensity * 0.25, Sun.light.intensity * 0.125, Lamp.light.intensity * 0.0625));
+    }
+
+    entity Fill {
+        position: vec3(-2.0, 1.0, 0.0);
+        mesh: Sphere {};
+        light: PointLight { color: bind(Sun.light.color); intensity: bind(Sun.light.intensity * 0.5); range: 8.0; };
+    }
+
+    entity Sun {
+        rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.9);
+        mesh: Box { size: vec3(0.3, 0.3, 0.3) };
+        light: DirectionalLight { color: #b0e0ff; intensity: bind(3.0 + warmth * 4.0); };
+    }
+
+    entity Lamp {
+        position: vec3(2.0, 1.0, 0.0);
+        mesh: Sphere { radius: 0.4 };
+        light: PointLight { color: #ff8040; intensity: 9.0; range: 6.5; };
+    }
+
+    update(dt: f32) {
+        warmth = warmth + dt;
+        Lamp.light.intensity = Lamp.light.intensity + dt;
+        Lamp.light.color = color.linear(vec3(0.25, warmth, 0.75), 1.0);
+    }
+}

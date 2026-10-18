@@ -2,7 +2,7 @@
  * Candidate-based hot reload helpers (`spec/runtime-abi.md` section 11): structural comparison,
  * state migration by identity, and the W8070 restart diagnostic.
  */
-import type { MtekBody, MtekEntity, MtekManifest, MtekPrefab, MtekScene, MtekStateEntry } from "../abi/manifest-types.js";
+import type { MtekBody, MtekEntity, MtekLight, MtekManifest, MtekPrefab, MtekScene, MtekStateEntry } from "../abi/manifest-types.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import { resolveSpan, spanOfSymbol } from "./failures.js";
 import type { EntityRecord, World } from "../scene/world.js";
@@ -167,10 +167,34 @@ function carryEntity(
   }
 }
 
+const LIGHT_FIELDS = ["color", "intensity"] as const;
+
+/**
+ * Carries the colour and intensity a handler wrote into the light of `before` onto the light of `after`
+ * (decision 0067). The update class of each field decides: `imperative` in both programs keeps the running
+ * value, written through the context so the world sees it; `initial` takes what the new `init` set (an edited
+ * literal applies), and `bound` is evaluated again every frame. A light that was added or removed, or whose
+ * kind changed, keeps what the new `init` made of it.
+ */
+function carryLight(
+  before: EntityRecord,
+  previous: MtekLight | undefined,
+  after: EntityRecord,
+  next: MtekLight | undefined,
+  setLight: (entity: object, field: string, value: unknown) => void,
+): void {
+  if (before.light === null || after.light === null || previous === undefined || next === undefined || previous.kind !== next.kind) return;
+  for (const field of LIGHT_FIELDS) {
+    if (previous.classes[field] !== "imperative" || next.classes[field] !== "imperative") continue;
+    setLight(after, field, copyValue(before.light[field]));
+  }
+}
+
 /**
  * Carries compatible state from `previous` onto `next` by identity
  * (`path::Qualified.Name` with identical types). Material `initial` params stay as the new
- * `init` left them (so a changed literal default is applied); imperative mirrors are migrated.
+ * `init` left them (so a changed literal default is applied); imperative mirrors are migrated. The colour and
+ * intensity of a light follow the same rule by their own update classes ({@link carryLight}).
  */
 export function migrateWorld(previous: World, previousManifest: MtekManifest, next: World, nextManifest: MtekManifest): void {
   const previousSceneState = stateBySymbol(previousManifest.scene.state, previous.sceneState);
@@ -190,11 +214,18 @@ export function migrateWorld(previous: World, previousManifest: MtekManifest, ne
     previousManifest.scene.entities.map((entity) => [entity.symbol, stateTypeMap(entity.state)]),
   );
 
-  const setParam = (next.ctx as { setParam: (entity: object, name: string, value: unknown) => void }).setParam;
+  const previousLights = new Map(
+    previousManifest.scene.entities.map((entity) => [entity.symbol, entity.light === null ? undefined : previousManifest.scene.lights[entity.light]]),
+  );
+  const { setParam, setLight } = next.ctx as {
+    setParam: (entity: object, name: string, value: unknown) => void;
+    setLight: (entity: object, field: string, value: unknown) => void;
+  };
   nextManifest.scene.entities.forEach((entity, index) => {
     const nextRecord = next.entities[index];
     const before = previousEntities.get(entity.symbol);
     if (nextRecord === undefined || before === undefined) return;
+    carryLight(before, previousLights.get(entity.symbol), nextRecord, entity.light === null ? undefined : nextManifest.scene.lights[entity.light], setLight);
     const nextInstance = nextManifest.scene.materialInstances[entity.material?.instance ?? -1];
     carryEntity(
       before,
