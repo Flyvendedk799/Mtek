@@ -45,6 +45,9 @@ pub enum Referent {
     /// A member that has a type and no declaration to go to (the state of a static prefab
     /// instance): hover only.
     Typed(String),
+    /// A contextual word of the language that is not a name (`update`, `fragment`): Markdown,
+    /// hover only.
+    Described(String),
     /// The module an import names.
     Module(ModuleId),
 }
@@ -81,12 +84,46 @@ pub fn referent_of_name(
     nodes: &Nodes,
     info: NodeInfo,
 ) -> Option<Referent> {
-    match view.res.res(info.id)? {
-        Res::Def(def) => Some(follow_import(snapshot, view, def)),
-        Res::Prelude(item) => Some(Referent::Prelude(item.into())),
-        Res::Field => field_referent(snapshot, view, nodes, info),
-        Res::Error => None,
+    match view.res.res(info.id) {
+        Some(Res::Def(def)) => Some(follow_import(snapshot, view, def)),
+        Some(Res::Prelude(item)) => Some(Referent::Prelude(item.into())),
+        Some(Res::Field) => field_referent(snapshot, view, nodes, info),
+        Some(Res::Error) => None,
+        None => None,
     }
+    .or_else(|| declared_name(view, nodes, info))
+    .or_else(|| contextual_word(view, nodes, info))
+}
+
+/// The name of a declaration whose name the resolver recorded no resolution for (a param of a
+/// prefab): the declaration its node introduces, if this identifier is its name.
+fn declared_name(view: &ModuleView<'_>, nodes: &Nodes, info: NodeInfo) -> Option<Referent> {
+    let parent = nodes.parent(info.id)?;
+    let def = view.res.def_of(parent.id)?;
+    (view.res.def(def)?.span == info.span).then_some(Referent::Decl {
+        module: view.id,
+        def,
+    })
+}
+
+/// The words that name a kind of member and are not names (`update`, `fixed_update`, `fragment`).
+fn contextual_word(view: &ModuleView<'_>, nodes: &Nodes, info: NodeInfo) -> Option<Referent> {
+    let parent = nodes.parent(info.id)?;
+    let is_first = nodes.child(parent.id, 0).map(|child| child.id) == Some(info.id);
+    let word = text(view, info.span)?;
+    let described = match (parent.kind, word) {
+        ("lifecycle", "update") => {
+            "```mtek\nupdate(dt: f32) { .. }\n```\n\nA lifecycle function: runs once per rendered frame, after the fixed simulation ticks (`spec/scenes.md` section 6)."
+        }
+        ("lifecycle", "fixed_update") => {
+            "```mtek\nfixed_update(dt: f32) { .. }\n```\n\nA lifecycle function: runs once per fixed simulation tick; `dt` is the fixed step (`spec/scenes.md` section 6)."
+        }
+        ("stage", "fragment") => {
+            "```mtek\nfragment(input: SurfaceInput) -> color { .. }\n```\n\nThe fragment stage of a material: computes the colour of a surface point from the interpolated inputs (`spec/materials.md` section 3)."
+        }
+        _ => return None,
+    };
+    is_first.then(|| Referent::Described(described.to_owned()))
 }
 
 /// `def` of `view`, followed to the declaration an imported name denotes.
@@ -135,7 +172,19 @@ fn field_referent(
                 }
                 _ => return None,
             };
-            schema_field(view, schema, info)
+            schema_field(view, schema, info).or_else(|| {
+                // `entity First: Crate { origin: ..; }`: a param of the prefab.
+                let prefab = nodes
+                    .child(owner.id, 1)
+                    .filter(|_| owner.kind == "entity")?;
+                let Res::Def(def) = view.res.res(prefab.id)? else {
+                    return None;
+                };
+                let Referent::Decl { module, def } = follow_import(snapshot, view, def) else {
+                    return None;
+                };
+                declared_member(snapshot, module, def, text(view, info.span)?)
+            })
         }
         "field" => {
             let desc = nodes.parent(parent.id)?;

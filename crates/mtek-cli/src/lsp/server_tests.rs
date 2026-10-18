@@ -1006,6 +1006,47 @@ fn the_standard_library_documents_are_served_and_unknown_ones_refused() {
 }
 
 #[test]
+fn a_virtual_document_a_client_opens_is_accepted_and_never_analysed() {
+    let mut h = Harness::standard(json!({}));
+    let uri = "mtek-prelude:/std/prelude.mtek";
+    let text = h
+        .request("workspace/textDocumentContent", json!({"uri": uri}))
+        .unwrap()["text"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    h.open_uri(uri, &text, 1);
+    h.change(uri, 2, &text);
+    h.advance(1000);
+    assert!(
+        h.published().is_empty(),
+        "no diagnostics for a library document"
+    );
+    let (line, character) = position_of(&text, "schema Box", 0);
+    assert_eq!(
+        h.request("textDocument/hover", at(uri, line, character + 8))
+            .unwrap(),
+        Value::Null
+    );
+    assert_eq!(
+        h.request("textDocument/definition", at(uri, line, character))
+            .unwrap(),
+        Value::Null
+    );
+    assert_eq!(
+        h.request("textDocument/completion", at(uri, line, character))
+            .unwrap(),
+        Value::Null
+    );
+    h.notify(
+        "textDocument/didClose",
+        json!({"textDocument": {"uri": uri}}),
+    );
+    h.advance(1000);
+    assert!(h.published().is_empty());
+}
+
+#[test]
 fn completion_replaces_the_typed_part_in_utf16_units() {
     let template = "const A: f32 = 1.0; /* \u{1f600}\u{e9} */ const B: f32 = sm\u{a7};\nscene Demo { camera Main {} }\n";
     let (text, offset) = cursor(template);
@@ -1349,15 +1390,29 @@ fn huge_and_odd_texts_are_diagnosed_not_fatal() {
         Value::Null
     );
     // Odd text: NUL bytes, lone surrogates cannot exist in a Rust string, a misplaced BOM, CRLF.
-    for text in [
-        "\u{0}\u{0}",
-        "const\u{feff}A",
-        "a\r\nb\r\n",
-        "\u{feff}scene",
-        "\r",
-        "{\"jsonrpc\"",
-        "\u{1f600}".repeat(1000).as_str(),
-    ] {
+    // Deep nesting and long chains: the compiler's nesting limit (256) keeps the recursion of
+    // every pass, ours included, shallow on a test thread's small stack.
+    let deep = [
+        "(".repeat(100_000),
+        "{".repeat(100_000),
+        "[".repeat(100_000),
+        format!("const A: f32 = {};", "(".repeat(5_000)),
+        format!("const A: f32 = {}1.0;", "-".repeat(5_000)),
+        format!("const A: f32 = 1.0{};", " + 1.0".repeat(5_000)),
+        format!("const A: f32 = a{};", ".a".repeat(5_000)),
+        format!("scene S {{ {} }}", "entity E { ".repeat(2_000)),
+    ];
+    let odd = [
+        "\u{0}\u{0}".to_owned(),
+        "const\u{feff}A".to_owned(),
+        "a\r\nb\r\n".to_owned(),
+        "\u{feff}scene".to_owned(),
+        "\r".to_owned(),
+        "{\"jsonrpc\"".to_owned(),
+        "\u{1f600}".repeat(1000),
+    ];
+    for text in deep.iter().chain(odd.iter()) {
+        let text = text.as_str();
         h.change(&uri, 2, text);
         h.advance(DEBOUNCE_MS);
         h.published();

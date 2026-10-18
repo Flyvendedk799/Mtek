@@ -410,3 +410,88 @@ fn definition_where_there_is_no_name_is_none() {
         "a swizzle has no declaration"
     );
 }
+
+#[test]
+fn prefab_params_where_declared_and_where_an_entity_sets_them() {
+    let lib = "/// How a crate looks.
+export prefab Crate {
+    /// Where it starts.
+    param origin: vec3 = vec3(0.0, 0.5, 0.0);
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+}
+";
+    let main = "import { Crate } from \"./lib.mtek\";
+scene Demo {
+    camera Main {}
+    entity First: Crate { origin: vec3(1.0, 0.5, 0.0); }
+}
+";
+    let project = TempProject::new(&[("src/lib.mtek", lib), ("src/main.mtek", main)]);
+    let snapshot = Snapshot::run(&project.dir, &Buffers::new(), false);
+    let errors: Vec<_> = snapshot
+        .analysis
+        .report
+        .diagnostics
+        .iter()
+        .map(|d| d.message.clone())
+        .collect();
+    assert!(errors.is_empty(), "{errors:?}");
+    let at = |file: &str, text: &str, needle: &str| {
+        let view = snapshot
+            .module_at(&ProjectPath::new(file).unwrap())
+            .unwrap();
+        let offset = u32::try_from(text.find(needle).unwrap()).unwrap();
+        (view, offset)
+    };
+    // The declaration of the param, in its own module.
+    let (view, offset) = at("src/lib.mtek", lib, "origin:");
+    let hover = hover_at(&snapshot, &view, offset).unwrap().markdown;
+    assert!(
+        hover.starts_with(
+            "```mtek
+param origin: vec3 = vec3(0.0, 0.5, 0.0)
+```"
+        ),
+        "{hover}"
+    );
+    assert!(hover.contains("Where it starts."), "{hover}");
+    // The entity that instantiates the prefab sets it: the same param, declared in the other module.
+    let (view, offset) = at("src/main.mtek", main, "origin:");
+    let hover = hover_at(&snapshot, &view, offset).unwrap().markdown;
+    assert!(
+        hover.contains("param origin: vec3") && hover.contains("*declared in `src/lib.mtek`*"),
+        "{hover}"
+    );
+    let Some(Target::Source { module, span }) = definition_at(&snapshot, &view, offset) else {
+        panic!("no definition");
+    };
+    let declaring = snapshot.module(module).unwrap();
+    assert_eq!(declaring.path.as_str(), "src/lib.mtek");
+    assert_eq!(declaring.source.slice(span.start, span.end), Some("origin"));
+    // The prefab named after the colon goes to its declaration, with the doc comment.
+    let (view, offset) = at("src/main.mtek", main, "Crate {");
+    let hover = hover_at(&snapshot, &view, offset).unwrap().markdown;
+    assert!(
+        hover.contains("prefab Crate") && hover.contains("How a crate looks."),
+        "{hover}"
+    );
+}
+
+#[test]
+fn the_words_of_lifecycle_functions_and_stages_are_explained() {
+    let f = Fixture::new(&[]);
+    let update = f.hover("src/main.mtek", "update(dt", 0);
+    assert!(
+        update.starts_with(
+            "```mtek
+update(dt: f32) { .. }
+```"
+        ),
+        "{update}"
+    );
+    assert!(update.contains("once per rendered frame"), "{update}");
+    let fragment = f.hover("src/main.mtek", "fragment(input", 0);
+    assert!(fragment.contains("fragment stage"), "{fragment}");
+    assert!(f.definition("src/main.mtek", "update(dt", 0).is_none());
+}

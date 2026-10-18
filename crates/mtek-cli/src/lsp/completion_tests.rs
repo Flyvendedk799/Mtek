@@ -485,3 +485,73 @@ fn a_file_outside_the_module_graph_has_no_completion() {
     );
     assert!(got.is_none());
 }
+
+/// A prefab with a body, a named instance of it and a handler, as the physics example writes them.
+const PHYSICS: &str = "\
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 0.5, 0.0);
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+    body: Dynamic { mass: 2.0; };
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+}
+
+scene Playground {
+    camera Main {}
+    entity First: Crate { origin: vec3(0.0, 0.5, 0.0); }
+    entity Wall {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+        body: Static {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    }
+    on key_down(Key.Space) {
+        First.body.apply_impulse(vec3(0.0, 1.0, 0.0));
+    }
+}
+";
+
+#[test]
+fn the_properties_and_commands_of_a_body_depend_on_its_kind() {
+    let completion = |old: &str, new: &str| {
+        let (text, offset) = cursor(&PHYSICS.replacen(old, new, 1));
+        let project = TempProject::new(&[("src/main.mtek", &text)]);
+        complete(
+            &project.dir,
+            &Buffers::new(),
+            &ProjectPath::new("src/main.mtek").unwrap(),
+            &text,
+            offset,
+            None,
+        )
+        .expect("something can be completed there")
+    };
+    let call = "First.body.apply_impulse(vec3(0.0, 1.0, 0.0));";
+    // `First` is an instance of the prefab with a dynamic body: velocities and forces.
+    let c = completion(call, "First.body.\u{a7}");
+    assert_has(
+        &c,
+        &[
+            "linear_velocity",
+            "angular_velocity",
+            "apply_impulse",
+            "apply_force",
+        ],
+    );
+    assert_eq!(find(&c, "apply_impulse").kind, CompletionItemKind::METHOD);
+    assert_eq!(
+        find(&c, "linear_velocity").kind,
+        CompletionItemKind::PROPERTY
+    );
+    // `Wall` is static: it cannot be pushed, so no force or impulse is offered.
+    let c = completion(call, "Wall.body.\u{a7}");
+    assert_lacks(&c, &["apply_impulse", "apply_force"]);
+    // The params of the prefab in the entity that instantiates it and in a spawn descriptor.
+    let c = completion(
+        "entity First: Crate { origin: vec3(0.0, 0.5, 0.0); }",
+        "entity First: Crate { \u{a7} }",
+    );
+    assert_has(&c, &["origin", "position"]);
+    let c = completion(call, "spawn(Crate { \u{a7} });");
+    assert_has(&c, &["origin"]);
+    assert_lacks(&c, &["position"]);
+}

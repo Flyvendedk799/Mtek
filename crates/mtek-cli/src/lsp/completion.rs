@@ -248,7 +248,9 @@ pub fn candidates(snapshot: &Snapshot, view: &ModuleView<'_>, anchor: u32) -> Ve
     let mut out = match context(&nodes, anchor) {
         Context::Member { base } => member_candidates(snapshot, view, &nodes, base),
         Context::FieldName { owner } => field_candidates(snapshot, view, &nodes, owner, anchor),
-        Context::MemberStart { owner } => member_start_candidates(view, owner, anchor),
+        Context::MemberStart { owner } => {
+            member_start_candidates(snapshot, view, &nodes, owner, anchor)
+        }
         Context::Expression { statement_start } => {
             expression_candidates(snapshot, view, &nodes, anchor, statement_start)
         }
@@ -761,7 +763,13 @@ fn keywords(words: &[&str]) -> Vec<Candidate> {
         .collect()
 }
 
-fn member_start_candidates(view: &ModuleView<'_>, owner: NodeInfo, anchor: u32) -> Vec<Candidate> {
+fn member_start_candidates(
+    snapshot: &Snapshot,
+    view: &ModuleView<'_>,
+    nodes: &Nodes,
+    owner: NodeInfo,
+    anchor: u32,
+) -> Vec<Candidate> {
     let registry = registry();
     let written = written_fields(view, owner, anchor);
     match owner.kind {
@@ -783,6 +791,14 @@ fn member_start_candidates(view: &ModuleView<'_>, owner: NodeInfo, anchor: u32) 
         }
         "entity" | "prefab" => {
             let mut out = schema_fields(registry.declaration_schemas.entity, &written, 0);
+            // `entity First: Crate { | }`: the params of the prefab are set here too.
+            if owner.kind == "entity"
+                && let Some(prefab) = nodes.child(owner.id, 1).filter(|n| n.kind == "ident")
+                && let Some(Res::Def(def)) = view.res.res(prefab.id)
+                && let Referent::Decl { module, def } = follow_import(snapshot, view, def)
+            {
+                out.extend(declared_fields(snapshot, module, def, &written));
+            }
             let mut words = vec!["const", "state", "entity", "on"];
             if owner.kind == "prefab" {
                 words.push("param");

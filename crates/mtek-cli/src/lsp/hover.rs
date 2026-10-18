@@ -99,10 +99,8 @@ pub fn referent_markdown(
             }
             Some(markdown)
         }
-        Referent::Components(text) | Referent::Typed(text) => Some(match referent {
-            Referent::Components(_) => text.clone(),
-            _ => code(text),
-        }),
+        Referent::Components(text) | Referent::Described(text) => Some(text.clone()),
+        Referent::Typed(text) => Some(code(text)),
         Referent::Module(module) => {
             let target = snapshot.module(*module)?;
             Some(format!("module `{}`", target.path))

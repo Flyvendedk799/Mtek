@@ -36,6 +36,6 @@ pub fn definition_at(snapshot: &Snapshot, view: &ModuleView<'_>, offset: u32) ->
         Referent::Member { module, span, .. } => Some(Target::Source { module, span }),
         Referent::Prelude(key) => prelude_doc::location(key).map(Target::Prelude),
         Referent::Module(module) => Some(Target::Module(module)),
-        Referent::Components(_) | Referent::Typed(_) => None,
+        Referent::Components(_) | Referent::Typed(_) | Referent::Described(_) => None,
     }
 }
