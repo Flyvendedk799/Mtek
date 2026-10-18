@@ -1,4 +1,5 @@
 const ON: color = #ffd24a;
+
 const OFF: color = #3a3a3a;
 
 scene Demo {

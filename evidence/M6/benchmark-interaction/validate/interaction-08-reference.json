@@ -1,0 +1,141 @@
+{
+  "task": "interaction-08",
+  "project": "benchmarks/tasks/interaction-08/reference/mtek",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Runner",
+      "Demo.Track"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "pass",
+    "exitCode": 0,
+    "summary": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/runner-waits-at-the-start.test.toml",
+        "name": "the runner stays at x = -5 until Space is pressed",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 28,
+        "stepsTotal": 28
+      },
+      {
+        "file": "tests/space-starts-and-stops.test.toml",
+        "name": "Space starts the runner, the next Space stops it, the next continues",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 72,
+        "stepsTotal": 72
+      },
+      {
+        "file": "tests/wraps-around-at-six.test.toml",
+        "name": "the runner re-enters at the left after reaching x = 6",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 67,
+        "stepsTotal": 67
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "pass",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 139,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Runner",
+      "exitCode": 0,
+      "durationMs": 127,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Track",
+      "exitCode": 0,
+      "durationMs": 126,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 148,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 0,
+      "durationMs": 2533,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 3074
+}

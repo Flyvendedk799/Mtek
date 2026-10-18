@@ -1,0 +1,116 @@
+{
+  "kind": "alternates",
+  "total": 6,
+  "ok": 6,
+  "unexpected": [],
+  "results": [
+    {
+      "task": "interaction-02",
+      "name": "alt-imperative",
+      "what": "the Handle's position is written by the handlers; only the colour is bound",
+      "expected": "pass",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "fixturesFailed": 0,
+      "fixturesTotal": 4,
+      "failedFixtures": [],
+      "ok": true
+    },
+    {
+      "task": "interaction-03",
+      "name": "alt-bool-states",
+      "what": "bool states and a pure function from state to colour",
+      "expected": "pass",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "fixturesFailed": 0,
+      "fixturesTotal": 4,
+      "failedFixtures": [],
+      "ok": true
+    },
+    {
+      "task": "interaction-04",
+      "name": "alt-frame-time",
+      "what": "the run is timed with frame.time at the press instead of summing dt",
+      "expected": "pass",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "fixturesFailed": 0,
+      "fixturesTotal": 4,
+      "failedFixtures": [],
+      "ok": true
+    },
+    {
+      "task": "interaction-05",
+      "name": "alt-update-writes",
+      "what": "the Marker's position is written every frame in update instead of being bound",
+      "expected": "pass",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "fixturesFailed": 0,
+      "fixturesTotal": 4,
+      "failedFixtures": [],
+      "ok": true
+    },
+    {
+      "task": "interaction-06",
+      "name": "alt-clamp-after",
+      "what": "the cap is applied by an if after each operation",
+      "expected": "pass",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "fixturesFailed": 0,
+      "fixturesTotal": 3,
+      "failedFixtures": [],
+      "ok": true
+    },
+    {
+      "task": "interaction-08",
+      "name": "alt-state-bound",
+      "what": "the Runner's x is scene state, bound to the position",
+      "expected": "pass",
+      "verdict": "pass",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "pass"
+      },
+      "fixturesFailed": 0,
+      "fixturesTotal": 3,
+      "failedFixtures": [],
+      "ok": true
+    }
+  ]
+}

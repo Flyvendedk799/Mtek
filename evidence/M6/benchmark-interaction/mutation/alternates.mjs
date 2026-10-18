@@ -56,8 +56,8 @@ scene Demo {
     task: "interaction-03",
     name: "alt-bool-states",
     what: "bool states and a pure function from state to colour",
-    whole: `fn lamp_color(on: bool) -> color {
-    if on {
+    whole: `fn lamp_color(lit: bool) -> color {
+    if lit {
         return #ffd24a;
     }
     return #3a3a3a;

@@ -1,4 +1,5 @@
 const YELLOW: color = #ffd24a;
+
 const RED: color = #ef4444;
 
 scene Demo {
@@ -20,7 +21,9 @@ scene Demo {
     entity Handle {
         position: bind(vec3(slot, 0.0, 0.0));
         mesh: Box { size: vec3(0.8, 0.8, 0.5) };
-        material: Unlit { color: bind(color.linear(mix(YELLOW.rgb, RED.rgb, step(4.0, abs(slot))), 1.0)) };
+        material: Unlit {
+            color: bind(color.linear(mix(YELLOW.rgb, RED.rgb, step(4.0, abs(slot))), 1.0));
+        };
     }
 
     on key_down(Key.ArrowRight) {
