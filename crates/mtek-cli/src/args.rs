@@ -2,7 +2,7 @@
 //!
 //! [`parse`] turns the arguments into a [`Request`] or a [`UsageError`] (exit code 2). Commands
 //! and options that the specification names but this build does not implement yet (`--mode preview`,
-//! `mtek fmt`, …) are usage errors that say so, rather than clap's
+//! `mtek test`, …) are usage errors that say so, rather than clap's
 //! generic "unrecognized subcommand".
 
 use std::ffi::OsString;
@@ -147,8 +147,14 @@ enum CliCommand {
         /// Project name (`[a-z0-9-]+`); also the directory created in the working directory
         name: String,
     },
-    #[command(hide = true)]
-    Fmt(Unimplemented),
+    /// Format Mtek files canonically (in place, or only check them)
+    Fmt {
+        /// Do not write: list the files that are not formatted and exit with 1 if there are any
+        #[arg(long)]
+        check: bool,
+        /// Files, or directories searched for `.mtek` files [default: the current directory]
+        paths: Vec<PathBuf>,
+    },
     #[command(hide = true)]
     Test(Unimplemented),
     #[command(hide = true)]
@@ -192,15 +198,19 @@ pub enum Request {
     },
     /// `mtek new NAME`.
     New { name: String },
+    /// `mtek fmt [--check] [PATHS…]`.
+    Fmt { check: bool, paths: Vec<PathBuf> },
 }
 
 impl Request {
     /// The `--format` of the request (human for `--version` and `--help`).
     pub fn format(&self) -> Format {
         match self {
-            Request::Version | Request::Help(_) | Request::Dev { .. } | Request::New { .. } => {
-                Format::Human
-            }
+            Request::Version
+            | Request::Help(_)
+            | Request::Dev { .. }
+            | Request::New { .. }
+            | Request::Fmt { .. } => Format::Human,
             Request::Check { format, .. }
             | Request::Build { format, .. }
             | Request::Inspect { format, .. } => *format,
@@ -216,6 +226,7 @@ impl Request {
             Request::Inspect { .. } => "inspect",
             Request::Dev { .. } => "dev",
             Request::New { .. } => "new",
+            Request::Fmt { .. } => "fmt",
         }
     }
 }
@@ -302,7 +313,7 @@ where
         }
         CliCommand::Dev { port, open, path } => Ok(Request::Dev { port, open, path }),
         CliCommand::New { name } => Ok(Request::New { name }),
-        CliCommand::Fmt(_) => Err(not_yet("mtek fmt", "M6")),
+        CliCommand::Fmt { check, paths } => Ok(Request::Fmt { check, paths }),
         CliCommand::Test(_) => Err(not_yet("mtek test", "M6")),
         CliCommand::Context(_) => Err(not_yet("mtek context", "M6")),
         CliCommand::Grammar(_) => Err(not_yet("mtek grammar", "M6")),
@@ -459,6 +470,30 @@ mod tests {
     }
 
     #[test]
+    fn fmt_takes_paths_and_check() {
+        assert_eq!(
+            parse_args(&["fmt"]),
+            Ok(Request::Fmt {
+                check: false,
+                paths: vec![]
+            })
+        );
+        assert_eq!(
+            parse_args(&["fmt", "--check", "a.mtek", "dir"]),
+            Ok(Request::Fmt {
+                check: true,
+                paths: vec![PathBuf::from("a.mtek"), PathBuf::from("dir")]
+            })
+        );
+        assert_eq!(
+            parse_args(&["fmt", "a"]).map(|r| (r.format(), r.verb())),
+            Ok((Format::Human, "fmt"))
+        );
+        usage(&["fmt", "--format", "json"]);
+        usage(&["fmt", "--write"]);
+    }
+
+    #[test]
     fn new_takes_a_name() {
         assert_eq!(
             parse_args(&["new", "pulse-cube"]),
@@ -473,7 +508,6 @@ mod tests {
     #[test]
     fn later_commands_are_named_in_the_error() {
         for (command, milestone) in [
-            ("fmt", "M6"),
             ("test", "M6"),
             ("context", "M6"),
             ("grammar", "M6"),

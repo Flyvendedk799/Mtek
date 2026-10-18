@@ -39,6 +39,11 @@ pub(super) enum Doc {
     /// The document with one more level of indentation after each of its line
     /// breaks.
     Indent(Box<Doc>),
+    /// The document indented one more level if the line it starts on has
+    /// something on it already, else as it is (what follows a comment that
+    /// ended a line hangs from the line it continues, but not from a line it
+    /// starts).
+    Hang(Box<Doc>),
     /// The document as one unit that is printed on one line if it fits; the
     /// flag says that the document forces a break (computed once by
     /// [`Doc::group`], so that nested groups are not scanned again and again).
@@ -69,6 +74,10 @@ impl Doc {
         Doc::Indent(Box::new(doc))
     }
 
+    pub(super) fn hang(doc: Doc) -> Doc {
+        Doc::Hang(Box::new(doc))
+    }
+
     pub(super) fn group(doc: Doc) -> Doc {
         let forced = doc.forces_break();
         Doc::Group(Box::new(doc), forced)
@@ -88,7 +97,7 @@ impl Doc {
             Doc::Nil | Doc::Text(_) | Doc::Space | Doc::Line | Doc::SoftLine => false,
             Doc::Verbatim(_) | Doc::HardLine | Doc::EnsureLine => true,
             Doc::Concat(parts) => parts.iter().any(Doc::forces_break),
-            Doc::Indent(doc) => doc.forces_break(),
+            Doc::Indent(doc) | Doc::Hang(doc) => doc.forces_break(),
             Doc::Group(_, forced) => *forced,
             Doc::IfBreak { broken, flat } => broken.forces_break() || flat.forces_break(),
         }
@@ -155,7 +164,7 @@ fn fits(next: Command<'_>, rest: &[Command<'_>], mut remaining: isize) -> bool {
                     stack.push((indent, mode, part));
                 }
             }
-            Doc::Indent(doc) => stack.push((indent + INDENT, mode, doc)),
+            Doc::Indent(doc) | Doc::Hang(doc) => stack.push((indent + INDENT, mode, doc)),
             Doc::Group(doc, forced) => {
                 let mode = if *forced { Mode::Break } else { mode };
                 stack.push((indent, mode, doc));
@@ -223,10 +232,16 @@ impl Output {
         self.line_has_content = false;
     }
 
-    /// A line break that is not wanted on an empty line.
+    /// A line break that is not wanted on an empty line, which is only indented
+    /// as the break asks.
     fn newline_unless_empty(&mut self, indent: usize) {
         if self.line_has_content {
             self.newline(indent);
+        } else {
+            let kept = self.text.trim_end_matches(' ').len();
+            self.text.truncate(kept);
+            self.text.extend(std::iter::repeat_n(' ', indent));
+            self.column = indent;
         }
     }
 }
@@ -252,6 +267,14 @@ pub(super) fn render(doc: &Doc, width: usize) -> String {
                 }
             }
             Doc::Indent(doc) => commands.push((indent + INDENT, mode, doc)),
+            Doc::Hang(doc) => {
+                let indent = if out.line_has_content {
+                    indent + INDENT
+                } else {
+                    indent
+                };
+                commands.push((indent, mode, doc));
+            }
             Doc::Group(inner, forced) => {
                 let flat = !*forced
                     && match mode {
@@ -378,6 +401,18 @@ mod tests {
             Doc::text("c"),
         ]);
         assert_eq!(render(&doc, 80), "a\nb\nc");
+    }
+
+    #[test]
+    fn a_hang_indents_only_a_line_that_has_something_on_it() {
+        let hang = |text: &str| Doc::hang(Doc::concat(vec![Doc::text("// c"), Doc::HardLine, Doc::text(text)]));
+        let doc = Doc::concat(vec![
+            Doc::text("x ="),
+            Doc::Space,
+            hang("1;"),
+            Doc::indent(Doc::concat(vec![Doc::HardLine, hang("2;")])),
+        ]);
+        assert_eq!(render(&doc, 80), "x = // c\n    1;\n    // c\n    2;");
     }
 
     #[test]

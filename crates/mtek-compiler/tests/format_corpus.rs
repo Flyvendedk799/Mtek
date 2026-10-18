@@ -8,7 +8,8 @@
 //! * keep every comment (the multiset of comment texts is equal);
 //! * raise the same diagnostics (codes) as the original when parsed;
 //! * be canonical text: `\n` only, one final newline, no trailing spaces, no
-//!   tab, no blank line at the start of a body or two in a row.
+//!   tab in the indentation, indentation in steps of 4, no blank line at the
+//!   start of a body or two in a row.
 //!
 //! Every file that does not parse must be refused with error diagnostics. The
 //! corpus is every `.mtek` file under the repository root (`tests/syntax`,
@@ -16,9 +17,12 @@
 //! `tests/assets`, `tests/browser`, `tests/modules`, `examples`, `benchmarks`,
 //! the CLI template, the standard materials).
 //!
-//! The mutation test goes further: it inserts comments of every kind at token
-//! boundaries of the corpus and checks the same properties, which is what the
-//! corpus alone cannot do (real programs have few comments in odd places).
+//! The mutation tests go further: they insert comments of every kind at token
+//! boundaries of the corpus, one at a time and several at once, and check the
+//! same properties. That is what the corpus alone cannot do: real programs have
+//! few comments, and those are in the usual places. `MTEK_FMT_EXHAUSTIVE=1`
+//! inserts every kind at every boundary of every file (about 15 times as many
+//! programs; for the work on the formatter, not for every run).
 
 // Test-only code: helper functions outside `#[test]` functions may unwrap.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
@@ -78,7 +82,8 @@ fn display(path: &Path) -> String {
         .replace('\\', "/")
 }
 
-/// The codes of everything the lexer and parser report, sorted.
+/// The codes of everything the lexer and parser report, sorted, and whether
+/// any is an error.
 fn codes_of(text: &str) -> (Vec<String>, bool) {
     let mut lexed = lex_str(FILE, text);
     let mut sink = Diagnostics::new();
@@ -191,8 +196,7 @@ fn check_properties(text: &str) -> Result<String, String> {
         .map_err(|d| format!("the formatted text is refused: {d:?}"))?;
     if formatted != again {
         return Err(format!(
-            "formatting is not idempotent; the second pass makes:
-{again}"
+            "formatting is not idempotent; the second pass makes:\n{again}"
         ));
     }
     if tree_of(text) != tree_of(&formatted) {
@@ -224,21 +228,20 @@ fn the_corpus_is_formatted_idempotently_and_without_loss() {
     let mut comments = 0;
     for path in &files {
         let name = display(path);
-        let Ok(bytes) = fs::read(path) else {
-            panic!("{name}: unreadable");
-        };
+        let bytes = fs::read(path).unwrap_or_else(|e| panic!("{name}: unreadable: {e}"));
         let Ok(text) = String::from_utf8(bytes) else {
             // A fixture of E0001 (invalid UTF-8): not a module at all.
             skipped_count += 1;
             continue;
         };
-        let (_, has_errors) = codes_of(&text);
-        if has_errors {
+        if codes_of(&text).1 {
             // The formatter refuses a file that does not parse, and says why.
-            let refusal = format_text(FILE, &text);
-            let diagnostics = refusal.expect_err(&format!("{name}: a file with errors was formatted"));
+            let diagnostics = format_text(FILE, &text)
+                .expect_err(&format!("{name}: a file with errors was formatted"));
             assert!(
-                diagnostics.iter().any(|d| d.code.severity() == Severity::Error),
+                diagnostics
+                    .iter()
+                    .any(|d| d.code.severity() == Severity::Error),
                 "{name}: refused without an error diagnostic"
             );
             assert!(
@@ -268,7 +271,8 @@ fn the_corpus_is_formatted_idempotently_and_without_loss() {
     assert!(comments >= 500, "only {comments} comments in the corpus");
 }
 
-/// The mutations: each inserts one comment at a token boundary.
+/// The mutations: each is a comment (with the white space around it) put
+/// before a token.
 const MUTATIONS: [&str; 6] = [
     " /* c */ ",
     " // c\n",
@@ -278,52 +282,147 @@ const MUTATIONS: [&str; 6] = [
     "\n\n/// doc\n",
 ];
 
-/// The text with `insert` put before the token `index`.
-fn with_comment_before(text: &str, token_start: u32, insert: &str) -> String {
-    let at = token_start as usize;
-    format!("{}{}{}", &text[..at], insert, &text[at..])
+/// `text` with the comments `inserts` (token start offset, comment) added.
+fn with_comments(text: &str, inserts: &[(u32, &str)]) -> String {
+    let mut sorted = inserts.to_vec();
+    sorted.sort_by_key(|(at, _)| std::cmp::Reverse(*at));
+    let mut mutated = text.to_owned();
+    for (at, comment) in sorted {
+        mutated.insert_str(at as usize, comment);
+    }
+    mutated
+}
+
+/// A repeatable source of numbers (xorshift): the same corpus gives the same
+/// programs on every run.
+struct Random(u64);
+
+impl Random {
+    fn new(seed: &str) -> Self {
+        let hash = seed
+            .bytes()
+            .fold(0xcbf2_9ce4_8422_2325_u64, |h, b| {
+                (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3)
+            });
+        Random(hash | 1)
+    }
+
+    fn next(&mut self, below: usize) -> usize {
+        self.0 ^= self.0 << 13;
+        self.0 ^= self.0 >> 7;
+        self.0 ^= self.0 << 17;
+        (self.0 % below as u64) as usize
+    }
+}
+
+/// The files the mutation tests use: those that parse, but never the holdout
+/// of the benchmarks (`benchmarks/README.md`: it is not read for design, and a
+/// failure here prints the program).
+fn mutable_files() -> Vec<(String, String)> {
+    corpus()
+        .iter()
+        .filter_map(|path| {
+            let name = display(path);
+            if name.starts_with("benchmarks/holdout/") {
+                return None;
+            }
+            let text = fs::read_to_string(path).ok()?;
+            (!codes_of(&text).1).then_some((name, text))
+        })
+        .collect()
+}
+
+fn fail(site: &str, mutated: &str, problem: &str) -> ! {
+    let output = format_text(FILE, mutated).unwrap_or_default();
+    panic!("{site}: {problem}\n--- input\n{mutated}\n--- output\n{output}");
+}
+
+fn token_starts(text: &str) -> Vec<u32> {
+    lex_str(FILE, text)
+        .tokens
+        .iter()
+        .map(|token| token.span.start)
+        .collect()
 }
 
 #[test]
-fn comments_in_every_place_survive_formatting() {
-    let files = corpus();
+fn a_comment_in_any_place_survives_formatting() {
+    let exhaustive = std::env::var("MTEK_FMT_EXHAUSTIVE").is_ok_and(|v| v == "1");
     let mut checked = 0usize;
-    let mut sites = 0usize;
-    for path in &files {
-        let name = display(path);
-        if name.starts_with("benchmarks/holdout/") {
-            // Never read for design (benchmarks/README.md); the plain corpus
-            // test above covers it without printing it.
-            continue;
-        }
-        let Ok(text) = fs::read_to_string(path) else {
-            continue;
+    let files = mutable_files();
+    for (name, text) in &files {
+        let starts = token_starts(text);
+        // Every boundary of a small file, a sample of a large one; the
+        // mutation rotates so that every kind meets every kind of token
+        // somewhere in the corpus.
+        let stride = if exhaustive {
+            1
+        } else {
+            (starts.len() / 24).max(1)
         };
-        if codes_of(&text).1 {
-            continue;
+        for (index, start) in starts.iter().enumerate().step_by(stride) {
+            let kinds = if exhaustive {
+                &MUTATIONS[..]
+            } else {
+                let rotate = (index / stride + checked) % MUTATIONS.len();
+                &MUTATIONS[rotate..=rotate]
+            };
+            for insert in kinds {
+                let mutated = with_comments(text, &[(*start, insert)]);
+                if let Err(problem) = check_properties(&mutated) {
+                    fail(
+                        &format!("{name} (before token {index}, inserting {insert:?})"),
+                        &mutated,
+                        &problem,
+                    );
+                }
+                checked += 1;
+            }
         }
-        let lexed = lex_str(FILE, &text);
-        let boundaries: Vec<u32> = lexed.tokens.iter().map(|t| t.span.start).collect();
-        // Every boundary of a small file; a sample of a large one. The
-        // mutation rotates with the position so that every kind meets every
-        // kind of token somewhere in the corpus.
-        let stride = (boundaries.len() / 24).max(1);
-        for (index, start) in boundaries.iter().enumerate().step_by(stride) {
-            let insert = MUTATIONS[(index / stride + checked) % MUTATIONS.len()];
-            let mutated = with_comment_before(&text, *start, insert);
-            let site = format!("{name} (before token {index}, inserting {insert:?})");
+    }
+    eprintln!(
+        "single comment mutations: {checked} programs from {} files",
+        files.len()
+    );
+    assert!(checked >= 5000, "only {checked} mutations");
+}
+
+#[test]
+fn several_comments_at_once_survive_formatting() {
+    let rounds = if std::env::var("MTEK_FMT_EXHAUSTIVE").is_ok_and(|v| v == "1") {
+        60
+    } else {
+        4
+    };
+    let mut checked = 0usize;
+    let files = mutable_files();
+    for (name, text) in &files {
+        let starts = token_starts(text);
+        let mut random = Random::new(name);
+        for round in 0..rounds {
+            let count = 2 + random.next(4);
+            let inserts: Vec<(u32, &str)> = (0..count)
+                .map(|_| {
+                    (
+                        starts[random.next(starts.len())],
+                        MUTATIONS[random.next(MUTATIONS.len())],
+                    )
+                })
+                .collect();
+            let mutated = with_comments(text, &inserts);
             if let Err(problem) = check_properties(&mutated) {
-                let output = format_text(FILE, &mutated).unwrap_or_default();
-                panic!("{site}: {problem}
---- input
-{mutated}
---- output
-{output}");
+                fail(
+                    &format!("{name} (round {round}, inserting {inserts:?})"),
+                    &mutated,
+                    &problem,
+                );
             }
             checked += 1;
         }
-        sites += 1;
     }
-    eprintln!("comment mutations: {checked} mutated programs from {sites} files");
-    assert!(checked >= 5000, "only {checked} mutations");
+    eprintln!(
+        "multiple comment mutations: {checked} programs from {} files",
+        files.len()
+    );
+    assert!(checked >= 2000, "only {checked} mutations");
 }

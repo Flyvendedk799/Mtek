@@ -1,4 +1,12 @@
-import { CHAIR, FABRIC_COLOR, FABRIC_METALLIC, FABRIC_ROUGHNESS, STEEL_COLOR, STEEL_METALLIC, STEEL_ROUGHNESS } from "./model.mtek";
+import {
+    CHAIR,
+    FABRIC_COLOR,
+    FABRIC_METALLIC,
+    FABRIC_ROUGHNESS,
+    STEEL_COLOR,
+    STEEL_METALLIC,
+    STEEL_ROUGHNESS,
+} from "./model.mtek";
 import { Striped } from "./materials.mtek";
 
 scene Configurator {

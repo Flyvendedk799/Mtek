@@ -5,8 +5,13 @@ export const CHAIR = asset.glb("../models/chair.glb");
 
 // The factors of the model's own materials: the starting values of the configurable inputs.
 export const FABRIC_COLOR = CHAIR.material_base_color("Fabric");
+
 export const FABRIC_METALLIC = CHAIR.material_metallic("Fabric");
+
 export const FABRIC_ROUGHNESS = CHAIR.material_roughness("Fabric");
+
 export const STEEL_COLOR = CHAIR.material_base_color("Steel");
+
 export const STEEL_METALLIC = CHAIR.material_metallic("Steel");
+
 export const STEEL_ROUGHNESS = CHAIR.material_roughness("Steel");

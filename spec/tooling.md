@@ -97,6 +97,8 @@ Canonical (no options), idempotent, comment-preserving, AST-based printer with c
 - Doc comments stay attached to the following declaration; other comments stay at their relative position.
 - Properties tested on the whole corpus: `fmt(fmt(x)) == fmt(x)`; `parse(fmt(x))` has the same AST as `parse(x)` (modulo spans); comments preserved (multiset of comment texts equal).
 
+The details these rules leave open are decision 0070 (`spec/decisions/0070-canonical-formatter.md`): where each kind of comment goes, which blank lines are kept, how lines are wrapped at 100 columns, that literals are printed as written, and that imports stay grouped. `mtek fmt [--check] [PATHS…]` takes files and directories (every `.mtek` file below them; the current directory without arguments; no `mtek.toml` is needed). A file that does not parse is reported with its diagnostics (exit 1) and never rewritten; `--check` lists the files that are not canonical on stdout and exits 1 without writing; I/O failures and a formatter defect (`E9999`, the file is untouched) exit 3. The formatter checks its own result on every run (same tree, same comments) and refuses to produce anything else. The naming lint `W0030` of `spec/language.md` §3.3 is not part of §5 and is not implemented by `mtek fmt` in this release.
+
 ## 6. `mtek test` (M6)
 
 Runs declarative fixtures in `tests/*.test.toml` of a project — no new test syntax in the language (blueprint §12.1):

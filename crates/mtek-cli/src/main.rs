@@ -8,6 +8,7 @@ mod args;
 mod commands;
 mod dev;
 mod dist;
+mod fmt;
 mod guard;
 mod real_fs;
 mod runtime;

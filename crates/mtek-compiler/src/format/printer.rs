@@ -210,10 +210,15 @@ impl<'a> Printer<'a> {
     /// just printed.
     fn trailing_comments_on_the_line(&mut self, limit: u32) -> Doc {
         let mut parts = Vec::new();
-        while let Some(comment) = self
-            .comments
-            .take_if(|comment| comment.start < limit && !comment.starts_line)
+        // A `//` comment ends the line: a comment after it starts the next one,
+        // and belongs to what follows.
+        let mut line_ended = false;
+        while !line_ended
+            && let Some(comment) = self
+                .comments
+                .take_if(|comment| comment.start < limit && !comment.starts_line)
         {
+            line_ended = comment.is_line_comment();
             parts.push(trailing_comment(&comment));
         }
         Doc::concat(parts)
@@ -243,7 +248,10 @@ impl<'a> Printer<'a> {
         for (index, item) in items.iter().enumerate() {
             let leading = self.leading_comments(item.span().start);
             let doc = print(self, item);
-            inside.push(combine_leading(leading, doc));
+            inside.push(match leading {
+                None => doc,
+                Some((comments, _)) => Doc::concat(vec![comments, doc]),
+            });
             match items.get(index + 1) {
                 Some(next) => {
                     inside.push(Doc::text(style.separator));
@@ -300,21 +308,27 @@ impl<'a> Printer<'a> {
         print: &mut dyn FnMut(&mut Self, &T) -> Doc,
     ) -> Doc {
         let first_start = items.first().map_or(close, |item| item.span().start);
-        // Comments between the header and the brace, and after the brace on
-        // its line, stay on the line of the brace. A documentation comment
-        // before the brace stays before it: after the brace it would document
-        // the first member.
+        // Comments between the header and the brace stay before it (after it
+        // they would be taken for comments of the first member, and a
+        // documentation comment would document it); comments after the brace
+        // on its line stay on that line, up to the first `//` comment, which
+        // ends it.
         let mut before_brace = Vec::new();
         let mut head = Vec::new();
-        while let Some(comment) = self
-            .comments
-            .take_if(|c| c.start < first_start && (c.start < open || !c.starts_line))
-        {
-            if comment.is_doc() && comment.start < open {
+        let mut line_ended = false;
+        while let Some(comment) = self.comments.take_if(|c| {
+            c.start < first_start && (c.start < open || (!c.starts_line && !line_ended))
+        }) {
+            if comment.start < open {
                 before_brace.push(Doc::Space);
                 before_brace.push(verbatim_or_text(&comment.text));
-                before_brace.push(Doc::HardLine);
+                before_brace.push(if comment.is_line_comment() {
+                    Doc::HardLine
+                } else {
+                    Doc::Space
+                });
             } else {
+                line_ended = comment.is_line_comment();
                 head.push(after_brace_comment(&comment));
             }
         }
@@ -391,10 +405,11 @@ impl<'a> Printer<'a> {
             // What is left of the member's comments, and the comments on the
             // line of its end, go after it.
             let limit = items.get(index + 1).map_or(end, |next| next.span().start);
-            while let Some(comment) = self
-                .comments
-                .take_if(|c| c.start < span.end || (c.start < limit && !c.starts_line))
-            {
+            let mut line_ended = false;
+            while let Some(comment) = self.comments.take_if(|c| {
+                c.start < span.end || (c.start < limit && !c.starts_line && !line_ended)
+            }) {
+                line_ended = comment.is_line_comment();
                 out.push(after_brace_comment(&comment));
                 state.prev_end = state.prev_end.max(comment.end);
             }
@@ -438,7 +453,7 @@ impl<'a> Printer<'a> {
 pub(super) fn combine_leading(leading: Option<(Doc, bool)>, body: Doc) -> Doc {
     match leading {
         None => body,
-        Some((comments, true)) => Doc::indent(Doc::concat(vec![comments, body])),
+        Some((comments, true)) => Doc::hang(Doc::concat(vec![comments, body])),
         Some((comments, false)) => Doc::concat(vec![comments, body]),
     }
 }

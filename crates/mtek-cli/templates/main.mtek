@@ -22,17 +22,12 @@ scene Demo {
 
     entity Cube {
         mesh: Box { size: vec3(1.0, 1.0, 1.0) };
-        material: Pulse {
-            tint: bind(tint);
-            phase: bind(frame.time);
-        };
+        material: Pulse { tint: bind(tint); phase: bind(frame.time) };
         position: vec3(0.0, 0.5, 0.0);
         rotation: quat.identity();
 
         update(dt: f32) {
-            self.rotation *= quat.axis_angle(
-                vec3(0.0, 1.0, 0.0), speed * dt
-            );
+            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);
         }
     }
 
