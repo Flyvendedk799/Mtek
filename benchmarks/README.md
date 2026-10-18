@@ -1,7 +1,7 @@
 # Benchmarks
 
 This directory holds the benchmark infrastructure of Mtek: the task format of the AI/token benchmark
-(`spec/ai-and-benchmarks.md` section 6), its first five tasks, the tools that keep the task set honest,
+(`spec/ai-and-benchmarks.md` section 6), its 30 tasks and 8 holdout tasks, the tools that keep the task set honest,
 and the three.js baselines. Task M0-10 created everything except `baselines/m0-bridge` (task M0-09).
 The runtime benchmark (`benchmarks/runtime/`, spec section 7) does not exist yet (M7).
 
@@ -17,15 +17,15 @@ evidence in `evidence/M6/ai-eval/`). The holdout task was not opened for this an
 | Part | Status |
 |---|---|
 | Task format, validator, holdout hash | done; `npm run check:tasks` (part of `npm run check`) and `npm run test:unit` verify it |
-| Five seed tasks (4 in `tasks/`, 1 in `holdout/`) | written; the baseline side is verified on hardware (below) |
-| three.js baseline reference solutions | **verified**: 7 of 7 fixtures pass on a hardware adapter |
-| three.js baseline starters | verified to fail as intended: 5 of 7 fixtures fail, and the 2 that pass are retention checks (below) |
-| Mtek references of the four tasks in `tasks/` | **verified** on 2026-10-18 on a hardware adapter (AMD Radeon RX 7900 XTX): every layer passes (parse, check, build, start, 7 of 7 fixtures) and every required symbol is declared |
-| Mtek starters of the four tasks | **verified to fail as intended** on the same adapter: `maintenance-01` fails `check` with exactly its `starter_diagnostics` (`MTEK-E3102`, `MTEK-E5001`), `scene-rendering-01` fails `check` with `MTEK-E9006` (no scene yet), the starters of `interaction-01` and `shader-bridge-01` pass their retention fixture and fail the other |
-| Mtek side of the holdout task | **unverified**, deliberately not opened |
+| The 30 tasks in `tasks/` (10 scene-rendering, 8 interaction, 6 shader-bridge, 6 maintenance) | all written with Mtek and three.js starters, fixtures and reference solutions; decisions 0078, 0079, 0083, 0084 (the first four tasks are from M0-10, decision 0021) |
+| The 8 holdout tasks in `holdout/` (3 scene-rendering, 2 interaction, 1 shader-bridge, 2 maintenance) | written and re-hashed (`holdout.sha256`); decision 0085 (no task content there). The author of 7 of them had the full specification and compiler, so the holdout is not blind to its author |
+| Mtek references (30 + 8) | **verified** on 2026-10-18 on a hardware adapter (AMD Radeon RX 7900 XTX): every layer passes (parse, check, build, start, fixtures) and every required symbol is declared; evidence in `evidence/M6/ai-eval/` and `evidence/M6/benchmark-*/` (holdout: ids and counts only) |
+| Mtek starters | **verified to fail as intended** on the same adapter (cold stubs fail `check` with `MTEK-E9006`; edit starters fail at least one fixture and pass their retention fixtures; `maintenance-01`, `maintenance-03` and `holdout-08` fail `check` with exactly their `starter_diagnostics`) |
+| three.js baseline references and starters | references **verified** (all fixtures pass on a hardware adapter); starters verified to fail as intended, the passes being retention fixtures. The type checks are `benchmarks/baselines/support/test/starters.test.ts` (it enumerates the task directories) |
+| Mutation checks | wrong-but-plausible solutions were run against the fixtures of most new tasks; the few that pass are differences no pixel or required symbol can show, listed in the evidence and the decisions |
 | `mtek test` and the `set_input` step | implemented (M6-09, decision 0074) |
-| The harness | `tools/ai-eval` (M6-07, decision 0077): tested with the replay client only; no model has been run |
-| The other 25 tasks, the 7 further holdout tasks, model runs, token counts | not started (M6, M7) |
+| The harness | `tools/ai-eval` (M6-07, decision 0077): tested with the replay client only; no model has been run, so no difficulty is measured |
+| Known benchmark gaps | no texture/sampler task (the baseline support has no image loader); no key-up, held-key or `fixed_update` task (the baseline support has no such hook); the baseline applies key transitions before host inputs while `spec/scenes.md` section 10 applies host inputs first (no fixture mixes them); no model runs, token counts or runtime benchmark (M7) |
 
 ## Layout
 
