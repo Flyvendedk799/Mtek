@@ -124,7 +124,7 @@ max_wall_seconds = 300
 ```
 
 ### 6.2 Set composition
-30 tasks: 10 scene/rendering, 8 interaction, 6 shader/bridge, 6 maintenance/repair; plus a **holdout** set of 8 in `benchmarks/holdout/` that is never used while designing syntax, docs or context (a CI check fails if any file under `tools/` or `spec/` references a holdout id). The holdout's tree hash is recorded in `benchmarks/holdout.sha256` when created so later edits are detectable. **M0 delivers the format and 5 seed tasks** (one per category plus one holdout); M6 completes the set.
+30 tasks: 10 scene/rendering, 8 interaction, 6 shader/bridge, 6 maintenance/repair (the repository has 34: decisions 0088 and 0089 added `interaction-09` to `-11` and `scene-rendering-11` for key release, held keys, the fixed tick and textures); plus a **holdout** set of 8 in `benchmarks/holdout/` that is never used while designing syntax, docs or context (a CI check fails if any file under `tools/` or `spec/` references a holdout id). The holdout's tree hash is recorded in `benchmarks/holdout.sha256` when created so later edits are detectable. **M0 delivers the format and 5 seed tasks** (one per category plus one holdout); M6 completes the set.
 
 ### 6.3 Baseline fairness
 The baseline is competent TypeScript with three.js r186 (`three/webgpu`, `three/tsl`) or equivalent typed helpers. Where Mtek's standard library provides help (primitive meshes, look-at cameras, sRGB colour literals, typed material parameters), the baseline gets an equivalent helper module. Both sides receive version-correct documentation, whose tokens are counted (blueprint §12.2).
