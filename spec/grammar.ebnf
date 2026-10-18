@@ -3,6 +3,9 @@
    Authoritative parser: crates/mtek-compiler/src/syntax (handwritten,
    recursive descent + Pratt). This file is the reference used for the
    shared conformance corpus and for generated adapters (GBNF, tree-sitter).
+   It is printed by `mtek grammar export --format ebnf` from the grammar
+   model (crates/mtek-compiler/src/syntax/grammar_model.rs, decision 0073);
+   a test keeps the two equal, so a change edits both.
    Semantic restrictions are noted as [S: <rule-id>: ... (codes)]; they are
    enforced by the compiler (lexer, parser or checker), not by this grammar.
    A fail fixture that exercises one declares `// covers: [S: <rule-id>]`
@@ -18,7 +21,7 @@
 
 Whitespace      ::= ( #x20 | #x09 | #x0A | #x0D #x0A )+        /* lone #x0D is an error (E0003) */
 LineComment     ::= '//' [^#x0A#x0D]*                           /* includes '///' doc comments  */
-BlockComment    ::= '/*' ( BlockComment | [^*/] | '*' [^/] | '/' [^*] )* '*/'
+BlockComment    ::= '/*' ( '/'* BlockComment | '/'+ [^*/] | '*'+ [^*/] | [^*/] )* '*'* '*/'
                                                                 /* nests; unterminated is E0006  */
 
 Ident           ::= IdentStart IdentContinue* - ( Keyword | Reserved )
