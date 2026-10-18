@@ -133,7 +133,6 @@ for (const variant of ["release", "preview"] as const satisfies readonly Program
 // iteration they happen in; an empty range pays nothing; the check that finds the budget below zero reports the span
 // of the loop.
 describe("preview budget: the checks of a preview build count iterations", () => {
-  type Counted = (ctx: unknown, ...args: unknown[]) => unknown;
 
   /** The error `rt.budgetExceeded` of the built runtime bundle throws (a class of that bundle, so it is told by name). */
   const isBudgetError = (error: unknown): boolean =>
@@ -142,7 +141,7 @@ describe("preview budget: the checks of a preview build count iterations", () =>
   async function run(fn: string, args: unknown[], budget: number, fixture = "cpu_functions"): Promise<{ result: unknown; left: number }> {
     const program = await loadProgram(fixture, "preview");
     const { ctx } = createFakeContext(0, [], budget);
-    const generated = functionOf(program, fn) as Counted;
+    const generated = functionOf(program, fn);
     const result = generated(ctx, ...args);
     return { result, left: (ctx as unknown as { budget: { n: number } }).budget.n };
   }
@@ -182,7 +181,7 @@ describe("preview budget: the checks of a preview build count iterations", () =>
     let thrown: unknown;
     try {
       // 2 000 000 000 iterations would take seconds; the budget ends it after 5 000.
-      (functionOf(program, "count_u") as Counted)(ctx, 2_000_000_000);
+      (functionOf(program, "count_u"))(ctx, 2_000_000_000);
     } catch (error) {
       thrown = error;
     }
@@ -197,7 +196,7 @@ describe("preview budget: the checks of a preview build count iterations", () =>
     const program = await loadProgram("cpu_functions");
     expect(program.appText).not.toContain("budget");
     const { ctx } = createFakeContext(0, [], 7);
-    (functionOf(program, "sum_to") as Counted)(ctx, 10);
+    (functionOf(program, "sum_to"))(ctx, 10);
     expect((ctx as unknown as { budget: { n: number } }).budget.n).toBe(7);
   });
 });

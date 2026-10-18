@@ -923,6 +923,7 @@ fn writing_the_pose_of_a_dynamic_body_in_the_physics_playground_is_e5071() {
 // ---------------------------------------------------------------------------
 
 /// A scene with a loop in an `update`.
+#[cfg(mtek_runtime_embedded)]
 const LOOPING: &str = "scene Demo {
     state total: i32 = 0;
     camera Main {}

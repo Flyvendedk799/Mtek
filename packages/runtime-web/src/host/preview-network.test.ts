@@ -120,8 +120,10 @@ describe("restrictToBase", () => {
     const { environment } = recordingEnvironment();
     const restricted = restrictToBase(environment, BASE);
     expect(restricted.gpu).toBe(environment.gpu);
-    expect(restricted.requestAnimationFrame).toBe(environment.requestAnimationFrame);
-    expect(restricted.sha256).toBe(environment.sha256);
+    expect(Object.keys(restricted).sort()).toEqual(Object.keys(environment).sort());
+    // The three doors are the only members that changed.
+    const changed = Object.keys(environment).filter((key) => (restricted as unknown as Record<string, unknown>)[key] !== (environment as unknown as Record<string, unknown>)[key]);
+    expect(changed.sort()).toEqual(["fetch", "fetchBytes", "importModule"]);
   });
 });
 
