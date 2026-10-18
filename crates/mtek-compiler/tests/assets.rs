@@ -428,6 +428,27 @@ fn the_supported_project_copies_images_byte_for_byte_with_their_colour_space() {
             ("png", "srgb")
         ]
     );
+    // Every entry names the author's file (decision 0082): a project path for a standalone
+    // texture, `<glb path>#images[N]` for an embedded image.
+    let mut sources: Vec<&str> = images
+        .iter()
+        .map(|i| i["source"].as_str().unwrap())
+        .collect();
+    sources.sort_unstable();
+    assert!(
+        sources
+            .iter()
+            .any(|s| s.ends_with("textures/wood.png") && !s.contains('#')),
+        "{sources:?}"
+    );
+    assert_eq!(
+        sources
+            .iter()
+            .filter(|s| s.contains(".glb#images["))
+            .count(),
+        2,
+        "{sources:?}"
+    );
     for image in &images {
         let url = image["url"].as_str().unwrap();
         let bytes = result.files.get(url).unwrap();

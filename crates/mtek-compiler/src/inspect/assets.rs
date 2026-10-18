@@ -186,6 +186,7 @@ fn row(
             color_space,
             preprocessing,
             span,
+            ..
         } => AssetRow {
             url: asset.url.clone(),
             sha256: asset.sha256.clone(),

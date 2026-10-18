@@ -440,6 +440,11 @@ pub enum AssetKind {
         color_space: String,
         preprocessing: Vec<String>,
         span: u32,
+        /// The author's file (decision 0082): the project path of a standalone image, or
+        /// `<glb path>#images[N]` for an embedded one. Optional in the schema; this compiler
+        /// always writes it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source: Option<String>,
     },
 }
 

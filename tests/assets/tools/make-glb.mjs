@@ -898,6 +898,25 @@ fail("e7017_not_an_image", (() => {
   withImage(m, Buffer.from("this is not an image at all, just text"), "image/png");
   return m.glb();
 })());
+/**
+ * `jpeg` with an `Exif` APP1 segment right after SOI whose IFD0 holds one entry, Orientation (0x0112, SHORT) =
+ * `orientation`, big-endian TIFF (decision 0082: a JPEG whose orientation is not 1 is E7017).
+ */
+function withExifOrientation(jpeg, orientation) {
+  const tiff = Buffer.concat([
+    Buffer.from([0x4d, 0x4d, 0x00, 0x2a, 0, 0, 0, 8, 0, 1]),
+    Buffer.from([0x01, 0x12, 0x00, 0x03, 0, 0, 0, 1, orientation >> 8, orientation & 0xff, 0, 0]),
+    Buffer.from([0, 0, 0, 0]),
+  ]);
+  const body = Buffer.concat([Buffer.from("Exif\u0000\u0000", "latin1"), tiff]);
+  const length = Buffer.from([(body.length + 2) >> 8, (body.length + 2) & 0xff]);
+  return Buffer.concat([jpeg.subarray(0, 2), Buffer.from([0xff, 0xe1]), length, body, jpeg.subarray(2)]);
+}
+fail("e7017_jpeg_exif_orientation", (() => {
+  const m = tri();
+  withImage(m, withExifOrientation(jpegGrey(200), 6), "image/jpeg");
+  return m.glb();
+})());
 fail("e7017_image_without_data", (() => {
   const m = tri();
   m.json.images = [{ mimeType: "image/png" }];
@@ -1166,6 +1185,7 @@ const textureProject = (name, bytes, toml = TOML) => {
 textureProject("e7017_texture_not_png_or_jpeg", Buffer.from("GIF89a\u0001\u0000\u0001\u0000", "latin1"));
 textureProject("e7017_texture_oversized", bigPng(9000, 9000));
 textureProject("e7017_texture_over_configured_limit", CHECKER, `${TOML}\n[assets]\nmax_texture_dimension = 1\n`);
+textureProject("e7017_texture_exif_orientation", withExifOrientation(jpegGrey(200), 8));
 textureProject("e7002_texture_file_too_large", bigPng(2000, 2000), `${TOML}\n[assets]\nmax_file_bytes = 64\n`);
 
 // ---------------------------------------------------------------------------

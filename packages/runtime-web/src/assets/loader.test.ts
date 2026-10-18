@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import type { MtekManifest } from "../abi/manifest-types.js";
 import { checkManifest } from "../abi/validate.js";
-import { BASE_URL, FakeHost, fakeImage, minimalManifestJson } from "../test-support/fake-host.js";
+import { FailureOverlay } from "../host/overlay.js";
+import { BASE_URL, FakeCanvas, FakeDocument, FakeHost, asDom, fakeImage, minimalManifestJson } from "../test-support/fake-host.js";
 import { LoadedAssets, closeImages, decodeImages, loadAssets, type AssetStateEvent } from "./loader.js";
 
 const sha256 = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
@@ -242,6 +243,27 @@ describe("loadAssets: image decoding", () => {
     expect(d?.source?.file).toBe("src/main.mtek");
     expect(d?.source?.startLine).toBe(2);
     expect(result.images.size).toBe(0);
+  });
+
+  it("names the author's file (the entry's `source`, decision 0082) in the message, a note and the overlay", async () => {
+    const garbage = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
+    for (const source of ["textures/wood.png", "models/chair.glb#images[1]"]) {
+      const host = hostWith({ [IMAGE_URL]: garbage });
+      const result = await load(host, manifestWith([{ ...imageEntry(garbage), source }]));
+      const [d] = result.diagnostics;
+      expect(d?.code).toBe("MTEK-E7031");
+      expect(d?.message).toContain(`'${IMAGE_URL}' (from '${source}')`);
+      expect(d?.notes).toEqual(expect.arrayContaining([`asset file: ${IMAGE_URL}`, `source file: ${source}`]));
+      const doc = new FakeDocument();
+      const overlay = new FailureOverlay(asDom<HTMLCanvasElement>(new FakeCanvas(doc)));
+      overlay.show(result.diagnostics);
+      const root = doc.body.find("data-mtek-overlay");
+      expect(root?.textContent).toContain(`source file: ${source}`);
+      expect(root?.textContent).toContain(`(from '${source}')`);
+    }
+    // A failed fetch names it too ("image 'textures/wood.png'").
+    const missing = await load(hostWith({ [IMAGE_URL]: 404 }), manifestWith([{ ...imageEntry(), source: "textures/wood.png" }]));
+    expect(missing.diagnostics[0]?.message).toContain("(image 'textures/wood.png')");
   });
 
   it("an image larger than the device's maxTextureDimension2D is E8002, and its bitmap is closed", async () => {

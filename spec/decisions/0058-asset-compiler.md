@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-10-18
 - Blueprint origin: §7.3 (assets are explicit, typed, compile-time dependencies; nothing unsupported is partially ignored), §9.4 (diagnostics with validated edits), §13 (dependency policy); `spec/assets.md` (the whole document), `spec/materials.md` §3.1 and §5, `spec/manifest.schema.json` (`assets`, `meshes`, `resourceValue`), `spec/runtime-abi.md` §2 and §5, `spec/diagnostics.md` §5.7, `spec/tooling.md` §1 and §3; decisions 0007, 0015, 0030, 0054 (the pattern of lifting a gate ahead of the milestone gate).
+- Amended by: decision 0082 (its proposed codes are final; EXIF-oriented JPEGs are `E7017`).
 
 ## Context
 

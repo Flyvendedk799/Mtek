@@ -280,7 +280,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7014"></a>E7014 | index out of range | index at or beyond the vertex count, or an index count that is not a multiple of 3 |
 | <a id="mtek-e7015"></a>E7015 | transparency in material | `alphaMode` is not OPAQUE, or the base colour alpha is not 1 |
 | <a id="mtek-e7016"></a>E7016 | unsupported material feature | normal, occlusion, emissive or metallic-roughness texture, non-zero emissive factor, `doubleSided` |
-| <a id="mtek-e7017"></a>E7017 | unsupported or oversized image | image is not PNG/JPEG, has no embedded bytes, is unreadable or exceeds `max_texture_dimension` |
+| <a id="mtek-e7017"></a>E7017 | unsupported or oversized image | image is not PNG/JPEG, has no embedded bytes, is unreadable, exceeds `max_texture_dimension`, or is a JPEG with an EXIF orientation other than 1 (decision 0082) |
 | <a id="mtek-e7018"></a>E7018 | unsupported sampler mode | MIRRORED_REPEAT, or wrap or filter modes that no sampler preset can express |
 | <a id="mtek-e7019"></a>E7019 | animation present | `animations` or `skins` present in the file |
 | <a id="mtek-e7020"></a>E7020 | asset file not found | the file named by an `asset.*` call does not exist or cannot be read (decision 0058) |

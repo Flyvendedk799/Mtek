@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7017",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The image at images[0]: it is a JPEG with the EXIF orientation 6 (rotated or mirrored); browsers apply the orientation when they decode the image, so the texture would not be the stored pixels. Re-save it without the orientation tag."
+  }
+]

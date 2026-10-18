@@ -919,7 +919,8 @@
       "preprocessing": [
         "mipmaps not generated"
       ],
-      "span": 22
+      "span": 22,
+      "source": "models/chair.glb#images[0]"
     },
     {
       "url": "assets/e29579ce6430e703.png",

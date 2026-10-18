@@ -35,6 +35,18 @@ pub enum ImageSource {
     Embedded { glb: String, image: usize },
 }
 
+impl ImageSource {
+    /// The manifest's `source` of an image entry (decision 0082): the project path, or
+    /// `<glb path>#images[N]`.
+    #[must_use]
+    pub fn display(&self) -> String {
+        match self {
+            ImageSource::File(path) => path.clone(),
+            ImageSource::Embedded { glb, image } => format!("{glb}#images[{image}]"),
+        }
+    }
+}
+
 /// A reference to an image by an entity's material.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ImageRef {
@@ -464,6 +476,9 @@ pub fn pack(
         for key in &wanted.keys {
             packed.images.insert((key.clone(), space), url.clone());
         }
+        // The first source in key order names the author's file (decision 0082); identical
+        // bytes from several files share the entry.
+        let source = wanted.keys.iter().next().map(ImageSource::display);
         packed.assets.push(Asset {
             url: url.clone(),
             sha256: sha256_hex(wanted.bytes),
@@ -476,6 +491,7 @@ pub fn pack(
                     Vec::new()
                 },
                 span,
+                source,
             },
         });
         sources.insert(wanted.source_path.to_owned(), wanted.source_sha.to_owned());

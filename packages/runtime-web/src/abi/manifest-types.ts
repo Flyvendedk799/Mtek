@@ -247,6 +247,8 @@ export interface MtekImageAsset {
   readonly colorSpace: "srgb" | "linear";
   readonly preprocessing: readonly string[];
   readonly span: SpanId;
+  /** The author's file (decision 0082): a project path, or `<glb path>#images[N]`. Optional. */
+  readonly source?: string;
 }
 
 export type MtekAsset = MtekMeshDataAsset | MtekImageAsset;

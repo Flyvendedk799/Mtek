@@ -402,7 +402,8 @@
         "kind": { "const": "image" },
         "colorSpace": { "type": "string", "enum": ["srgb", "linear"] },
         "preprocessing": { "$ref": "#/$defs/preprocessing" },
-        "span": { "$ref": "#/$defs/spanId" }
+        "span": { "$ref": "#/$defs/spanId" },
+        "source": { "type": "string", "minLength": 1, "description": "The author's file (decision 0082): the project path of a standalone image, or \"<glb path>#images[N]\" for an image embedded in a GLB. Optional; shown by the runtime when the image fails." }
       }
     },
     "preprocessing": {
