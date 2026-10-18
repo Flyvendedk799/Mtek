@@ -12,7 +12,7 @@
 | `mtek check [--format human\|json] [PATH]` | M1 | parse + type-check; **no GPU needed**; exit 1 on errors |
 | `mtek build [--target web] [--mode release\|dev\|test\|preview] [--out DIR] [--format human\|json] [PATH]` | M1 (`preview`: M6) | produce `dist/` (`spec/runtime-abi.md` §2). `--target` accepts only `web` in v0.1 (the default; any other value is a usage error) |
 | `mtek dev [--port N] [--open] [PATH]` | M1 (reload: M3) | build, serve, watch, rebuild; candidate-based hot reload from M3 |
-| `mtek inspect --ir\|--bindings\|--shaders [--format human\|json] [PATH]` | M1 (`--ir`), M2 (`--shaders`, `--bindings`) | inspection (`spec/gpu-layout.md` §10; the views are decision 0044) |
+| `mtek inspect --ir\|--bindings\|--shaders\|--assets [--format human\|json] [PATH]` | M1 (`--ir`), M2 (`--shaders`, `--bindings`), M4 (`--assets`) | inspection (`spec/gpu-layout.md` §10; the views are decision 0044; `--assets` is the packaged assets of `spec/assets.md` §4, decision 0058) |
 | `mtek new NAME` | M3 | scaffold a project from the built-in template (`mtek.toml`, `src/main.mtek` with the Demo scene, `.gitignore`) |
 | `mtek fmt [--check] [PATHS…]` | M6 | canonical formatter |
 | `mtek test [PATH]` | M6 | run a project's declarative test fixtures (§6) |
@@ -65,8 +65,11 @@ pause_when_hidden = true
 [dev]
 port = 5173                  # default 5173; falls back to the next free port and says so
 
-[assets]                     # M4; see spec/assets.md §6
-max_file_bytes = 67108864
+[assets]                     # see spec/assets.md §6; defaults shown
+max_file_bytes = 67108864            # per asset file
+max_total_bytes = 268435456          # all packaged assets
+max_texture_dimension = 8192         # per image side, at most 8192
+max_vertices_per_primitive = 4194304
 ```
 
 Unknown tables or keys, wrong types and out-of-range values are `E9001` with the exact key path. `host.inputs` targets must name scene state of an exposable type (`E9020`/`E9021`, `spec/runtime-abi.md` §6.3). There is no dependency table in v0.1 (no packages, blueprint §2.3).
