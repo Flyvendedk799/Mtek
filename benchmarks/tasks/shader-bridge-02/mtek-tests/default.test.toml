@@ -1,0 +1,25 @@
+# Until the host sets level it is 0.25, so Left keeps the linear grey 0.25 of the starter: sRGB #898989 (136.96 as a
+# byte). Nothing changes by itself, and the rest of the scene stays as it is. (The starter passes this fixture: it guards
+# against an edit that breaks what already works. Right's grey is checked in level.test.toml.)
+# Camera: position (0, 0, 6) looking at the origin, fov_y 0.9, 128 x 128 target. The front face of each unit cube is at
+# depth 5.5 and spans (CPU projection, benchmarks/baselines/support/test/projection.ts, pixel centres at +0.5):
+#   Left  x 23.05 to 47.14, y 51.96 to 76.04
+#   Right x 80.86 to 104.95, y 51.96 to 76.04
+# so the sampled pixels below lie inside the faces. The camera sees the inner side face of each cube as well (the +X
+# face of Left, x 47.14 to 49.73, and the -X face of Right, x 78.27 to 80.86, both the same grey as the front); the
+# background pixels lie outside both cubes including those side faces.
+name = "until the host sets level, Left stays #898989 and the background stays #202020"
+steps = [
+  { step = 5, dt = 0.016666668 },
+  { expect_pixel = { x = 35, y = 64, color = "#898989", tolerance = 2 } },
+  { expect_pixel = { x = 26, y = 54, color = "#898989", tolerance = 2 } },
+  { expect_pixel = { x = 44, y = 74, color = "#898989", tolerance = 2 } },
+
+  # background: between and beside the cubes, and a corner
+  { expect_pixel = { x = 64, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 21, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 52, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 76, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 107, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 2, y = 2, color = "#202020", tolerance = 2 } },
+]
