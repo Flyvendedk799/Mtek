@@ -431,13 +431,10 @@ fn num(value: f32) -> Result<Num, String> {
     Num::from_f32(value).ok_or_else(|| format!("the value {value} is not finite"))
 }
 
-/// Package the assets the plan references: the asset meshes of `plan.meshes` and the image
-/// values of the resource params of its material instances.
-fn pack_assets(
-    store: &AssetStore,
-    plan: &ResourcePlan,
-    spans: &mut SpanTable,
-) -> Result<Packed, Vec<Diagnostic>> {
+/// The asset meshes of `plan.meshes` and the image values of the resource params of its
+/// material instances: what `mtek build` and `mtek inspect --assets` package.
+#[must_use]
+pub fn asset_references(plan: &ResourcePlan) -> (Vec<MeshRef>, Vec<ImageRef>) {
     let meshes: Vec<MeshRef> = plan
         .meshes
         .iter()
@@ -467,6 +464,16 @@ fn pack_assets(
             _ => None,
         })
         .collect();
+    (meshes, images)
+}
+
+/// Package the assets the plan references.
+fn pack_assets(
+    store: &AssetStore,
+    plan: &ResourcePlan,
+    spans: &mut SpanTable,
+) -> Result<Packed, Vec<Diagnostic>> {
+    let (meshes, images) = asset_references(plan);
     crate::assets::pack::pack(store, &meshes, &images, &mut |span| spans.intern(span).ok())
 }
 

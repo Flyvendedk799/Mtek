@@ -20,7 +20,7 @@ pub mod spans;
 
 pub use builder::{
     APP_DTS, APP_JS, APP_JS_MAP, INDEX_HTML, MANIFEST_JSON, Package, PackageInput, RUNTIME_DTS,
-    checked_plan, material_shaders, package,
+    asset_references, checked_plan, material_shaders, package,
 };
 pub use manifest::Manifest;
 pub use replace::{ReplacePlan, ReplaceStep};

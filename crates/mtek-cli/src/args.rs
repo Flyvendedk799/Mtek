@@ -70,6 +70,9 @@ struct InspectWhat {
     /// The generated WGSL of every material, with its span map
     #[arg(long)]
     shaders: bool,
+    /// The packaged assets: files, hashes, preprocessing and the meshes that use them
+    #[arg(long)]
+    assets: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -290,6 +293,8 @@ where
                 mtek_compiler::Inspect::Bindings
             } else if what.shaders {
                 mtek_compiler::Inspect::Shaders
+            } else if what.assets {
+                mtek_compiler::Inspect::Assets
             } else {
                 mtek_compiler::Inspect::Ir
             };
@@ -408,9 +413,18 @@ mod tests {
                 path: Some(PathBuf::from("game"))
             })
         );
+        assert_eq!(
+            parse_args(&["inspect", "--assets", "--format", "json"]),
+            Ok(Request::Inspect {
+                view: mtek_compiler::Inspect::Assets,
+                format: Format::Json,
+                path: None,
+            })
+        );
         usage(&["inspect"]);
         usage(&["inspect", "--ir", "--shaders"]);
         usage(&["inspect", "--bindings", "--shaders"]);
+        usage(&["inspect", "--assets", "--ir"]);
     }
 
     #[test]

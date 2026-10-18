@@ -15,7 +15,7 @@ use mtek_compiler::diagnostics::{Code, Diagnostic};
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::source::{MemFs, ProjectPath, SourceMap};
 use mtek_compiler::types::ConstValue;
-use mtek_compiler::{BuildMode, CompileOptions, analyze, build};
+use mtek_compiler::{BuildMode, CompileOptions, Inspect, InspectFormat, analyze, build, inspect};
 use serde_json::{Map, Value, json};
 
 const EXPECTED: &str = "expected.diag.json";
@@ -517,6 +517,68 @@ fn the_build_identity_covers_the_asset_bytes() {
     );
     assert!(!changed.has_errors());
     assert_ne!(original.build_id, changed.build_id);
+}
+
+#[test]
+fn inspect_assets_prints_the_goldens_in_both_formats() {
+    let goldens = assets_dir().join("inspect");
+    let memory = project_fs("pass", "assets_supported", None);
+    let result = inspect(&ProjectRoot::at_base(), &memory, Inspect::Assets);
+    assert!(!result.has_errors());
+    for (format, extension) in [
+        (InspectFormat::Json, "assets.json"),
+        (InspectFormat::Human, "assets.txt"),
+    ] {
+        let actual = result.render(format).unwrap();
+        let path = goldens.join(format!("assets_supported.{extension}"));
+        if blessing() {
+            fs::create_dir_all(&goldens).unwrap();
+            fs::write(&path, &actual).unwrap();
+            continue;
+        }
+        let expected = fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("missing {} ({e}); run MTEK_BLESS=1", path.display()))
+            .replace("\r\n", "\n");
+        assert_eq!(expected, actual, "{}", path.display());
+    }
+}
+
+#[test]
+fn inspect_assets_agrees_with_the_manifest_of_the_build() {
+    let built = supported();
+    let manifest = manifest_of(&built);
+    let memory = project_fs("pass", "assets_supported", None);
+    let result = inspect(&ProjectRoot::at_base(), &memory, Inspect::Assets);
+    let view: Value = serde_json::from_str(&result.render(InspectFormat::Json).unwrap()).unwrap();
+    let rows = view["assets"].as_array().unwrap();
+    let entries = manifest["assets"].as_array().unwrap();
+    assert_eq!(rows.len(), entries.len());
+    for (row, entry) in rows.iter().zip(entries) {
+        for key in ["url", "sha256", "bytes", "kind", "preprocessing"] {
+            assert_eq!(row[key], entry[key], "{key}");
+        }
+        if entry["kind"] == "image" {
+            assert_eq!(row["colorSpace"], entry["colorSpace"]);
+        } else {
+            assert_eq!(row["primitives"], entry["primitives"]);
+        }
+    }
+    let total: u64 = entries.iter().map(|e| e["bytes"].as_u64().unwrap()).sum();
+    assert_eq!(view["totalBytes"].as_u64().unwrap(), total);
+    let from_manifest: Vec<(&str, u64)> = manifest["meshes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|m| m["kind"] == "asset")
+        .map(|m| (m["asset"].as_str().unwrap(), m["primitive"].as_u64().unwrap()))
+        .collect();
+    let from_view: Vec<(&str, u64)> = view["meshes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|m| (m["asset"].as_str().unwrap(), m["primitive"].as_u64().unwrap()))
+        .collect();
+    assert_eq!(from_view, from_manifest);
 }
 
 #[test]
