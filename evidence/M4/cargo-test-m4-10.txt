@@ -1,0 +1,97 @@
+cargo test --workspace --locked, commit 88c2ef8, summary lines only (CARGO_PROFILE_DEV_DEBUG=0 CARGO_INCREMENTAL=0: the disk was nearly full)
+     Running unittests src\main.rs (target\debug\deps\mtek-27ab4dc0188a6389.exe)
+test result: ok. 58 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.26s
+     Running tests\cli.rs (target\debug\deps\cli-216f3f81f75e9af2.exe)
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.86s
+     Running tests\dev.rs (target\debug\deps\dev-700eb618b047dee7.exe)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.61s
+     Running unittests src\lib.rs (target\debug\deps\mtek_compiler-a227fd1603ffe26e.exe)
+test result: ok. 778 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.78s
+     Running tests\assets.rs (target\debug\deps\assets-ee76a5bf059d8059.exe)
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+     Running tests\assets_api.rs (target\debug\deps\assets_api-6fb0a1a5fbef16f6.exe)
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.09s
+     Running tests\build.rs (target\debug\deps\build-a11bc074a20b0c23.exe)
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.51s
+     Running tests\codegen_cpu_table.rs (target\debug\deps\codegen_cpu_table-acf24ba9b003c49f.exe)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+     Running tests\consteval_goldens.rs (target\debug\deps\consteval_goldens-8d5b01246636a43c.exe)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests\consteval_robustness.rs (target\debug\deps\consteval_robustness-d768ac70e2521961.exe)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.03s
+     Running tests\determinism.rs (target\debug\deps\determinism-309181b69c327451.exe)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests\diagnostics_catalogue.rs (target\debug\deps\diagnostics_catalogue-92b5c8420d00d084.exe)
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests\diagnostics_render.rs (target\debug\deps\diagnostics_render-205244db5e53a590.exe)
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests\diagnostics_schema.rs (target\debug\deps\diagnostics_schema-96815a7faa3a8b39.exe)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+     Running tests\fixtures.rs (target\debug\deps\fixtures-08b1ed5255dc128e.exe)
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.05s
+     Running tests\fold_cpu_table.rs (target\debug\deps\fold_cpu_table-361643081e287f12.exe)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+     Running tests\function_robustness.rs (target\debug\deps\function_robustness-943dc3bc464b0c3d.exe)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.25s
+     Running tests\gpu_layout.rs (target\debug\deps\gpu_layout-6d1682c2d9c8900f.exe)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests\inspect_views.rs (target\debug\deps\inspect_views-1413802d46255bbe.exe)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.12s
+     Running tests\ir_goldens.rs (target\debug\deps\ir_goldens-52d3b17f346914f4.exe)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.68s
+     Running tests\js_source_map.rs (target\debug\deps\js_source_map-f126ced3729cba46.exe)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+     Running tests\js_writers.rs (target\debug\deps\js_writers-edfffb8ab7b63f0c.exe)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests\lexer_fixtures.rs (target\debug\deps\lexer_fixtures-10280601f0e24428.exe)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests\lexer_robustness.rs (target\debug\deps\lexer_robustness-02146e84cbd01d93.exe)
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s
+     Running tests\lexer_spec.rs (target\debug\deps\lexer_spec-894da2bafea31327.exe)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests\manifest_model.rs (target\debug\deps\manifest_model-e8b9d43a9046ced8.exe)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+     Running tests\material_robustness.rs (target\debug\deps\material_robustness-0b3696ba1698cb37.exe)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.31s
+     Running tests\modules.rs (target\debug\deps\modules-f1d7a905589a4461.exe)
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+     Running tests\naga_oracle.rs (target\debug\deps\naga_oracle-24d009b0a30bccbe.exe)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+     Running tests\no_direct_io.rs (target\debug\deps\no_direct_io-0158c6079752c566.exe)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+     Running tests\numeric_cpu_table.rs (target\debug\deps\numeric_cpu_table-8a8f77984fef9363.exe)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+     Running tests\numeric_srgb_golden.rs (target\debug\deps\numeric_srgb_golden-497a7a6a4e33c5c4.exe)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests\project_loading.rs (target\debug\deps\project_loading-41f785063cf7f8bb.exe)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests\resolve_corpus.rs (target\debug\deps\resolve_corpus-77417063b2a1d0e0.exe)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.84s
+     Running tests\robustness.rs (target\debug\deps\robustness-c1b0813da631d02b.exe)
+test result: ok. 9 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 2.69s
+     Running tests\scene_robustness.rs (target\debug\deps\scene_robustness-2c21ebba54b93e2b.exe)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.50s
+     Running tests\shader_lowering.rs (target\debug\deps\shader_lowering-f9d1d5a291067d78.exe)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.74s
+     Running tests\stdlib_registry.rs (target\debug\deps\stdlib_registry-abbf309f2ac7bbcf.exe)
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests\stdlib_schema.rs (target\debug\deps\stdlib_schema-b445676a2bb18e86.exe)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests\temporary_unlit_is_gone.rs (target\debug\deps\temporary_unlit_is_gone-a8f5618cd23cec7c.exe)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.99s
+     Running tests\unlit_shader.rs (target\debug\deps\unlit_shader-d80db27a230c1c34.exe)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests\wgsl_blocks.rs (target\debug\deps\wgsl_blocks-15a794cb6a39598b.exe)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests examples\bridge_spike.rs (target\debug\examples\bridge_spike-82f3159fc2290a07.exe)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+     Running unittests src\lib.rs (target\debug\deps\mtek_grammar_coverage-0b381c2ae239ef9b.exe)
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src\main.rs (target\debug\deps\grammar_coverage-7d87949f971ae2f1.exe)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests\coverage.rs (target\debug\deps\coverage-7ff11ec3459a7d35.exe)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+   Doc-tests mtek_compiler
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+   Doc-tests mtek_grammar_coverage
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

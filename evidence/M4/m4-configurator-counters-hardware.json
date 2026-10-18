@@ -1,0 +1,229 @@
+{
+  "load": {
+    "counters": {
+      "buffersAllocated": 34,
+      "texturesAllocated": 3,
+      "pipelinesCreated": 3,
+      "shaderModulesCreated": 2,
+      "bindGroupsCreated": 8,
+      "uploads": 47,
+      "uploadBytes": 7472,
+      "liveBuffers": 33,
+      "liveTextures": 3,
+      "liveSamplers": 1,
+      "liveShaderModules": 2,
+      "livePipelines": 3,
+      "liveBindGroups": 8,
+      "liveListeners": 9,
+      "frameTimeMs": 1.599999999627471,
+      "cpuUpdateMs": 0.2000000011175871,
+      "renderPrepMs": 1.3999999985098839,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 7,
+      "drawCallsTotal": 7,
+      "failedMaterials": 0,
+      "instancedDraws": 1,
+      "instancedDrawsTotal": 1,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 5,
+      "discardedSteps": 0,
+      "liveEntities": 12,
+      "framesRendered": 1,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    "mounted": {
+      "buffersAllocated": 33,
+      "texturesAllocated": 3,
+      "pipelinesCreated": 3,
+      "shaderModulesCreated": 2,
+      "bindGroupsCreated": 0,
+      "uploads": 29,
+      "uploadBytes": 5184,
+      "liveBuffers": 33,
+      "liveTextures": 3,
+      "liveSamplers": 1,
+      "liveShaderModules": 2,
+      "livePipelines": 3,
+      "liveBindGroups": 0,
+      "liveListeners": 9,
+      "frameTimeMs": 0,
+      "cpuUpdateMs": 0,
+      "renderPrepMs": 0,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 0,
+      "drawCallsTotal": 0,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 0,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 5,
+      "discardedSteps": 0,
+      "liveEntities": 12,
+      "framesRendered": 0,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    "comparison": {
+      "compared": 74717,
+      "maxError": 1,
+      "worst": "pixel 138,58 (Crest): GPU 194,148,99, oracle 195,148,99",
+      "outside": 0,
+      "perEntity": {
+        "clear": 37938,
+        "Crest": 268,
+        "Back": 1264,
+        "Seat": 988,
+        "Floor": 33095,
+        "LegBR": 222,
+        "LegFL": 282,
+        "LegBL": 107,
+        "LegFR": 332,
+        "RailBack": 66,
+        "RailFront": 155
+      }
+    },
+    "digest": "dc7c85133cf7d963a53227e96517608c0dfea1299c1f3e229c304c70c6094fa7"
+  },
+  "inputs": {
+    "steps": [
+      "defaults: 74717 px, max 1/255",
+      "seat green and rough: 74717 px, max 1/255",
+      "seat gold metal: 74717 px, max 1/255",
+      "rails copper: 74717 px, max 1/255",
+      "back stripes red and white: 74717 px, max 1/255",
+      "sun off: 74717 px, max 1/255",
+      "sun blinding: 74717 px, max 1/255"
+    ],
+    "digests": [
+      "dc7c85133cf7d963a53227e96517608c0dfea1299c1f3e229c304c70c6094fa7",
+      "3235e019e2721d5ef1326c3736a0f24c2d9e4f158986a35b38bb04a6dc429c81",
+      "e38420698b012fe70317358d943b98072de74dc642b8b84ff5fd63cd5c484b86",
+      "ee0e0c7c1ada16c20cf25f4428f5d2ee28bd9e98cf43d33a4d1cb72410adb129",
+      "03fc6a81a9bd3d5d66bef50e71a12cfe98ec122ec97532d673d172304bb4992d",
+      "df37357f46993badd01be7531246e5e94270b96b799150b08e2c3bfef4e8f986",
+      "e0e2dd3848d93e306bcaf159da1ac8a850648c772d98baba2bcc6b96c7994907"
+    ],
+    "counters": [
+      {
+        "label": "defaults",
+        "pipelinesCreated": 3,
+        "uploads": 47,
+        "uploadBytes": 7472
+      },
+      {
+        "label": "seat green and rough",
+        "pipelinesCreated": 3,
+        "uploads": 48,
+        "uploadBytes": 7504
+      },
+      {
+        "label": "seat gold metal",
+        "pipelinesCreated": 3,
+        "uploads": 49,
+        "uploadBytes": 7536
+      },
+      {
+        "label": "rails copper",
+        "pipelinesCreated": 3,
+        "uploads": 51,
+        "uploadBytes": 7600
+      },
+      {
+        "label": "back stripes red and white",
+        "pipelinesCreated": 3,
+        "uploads": 52,
+        "uploadBytes": 7648
+      },
+      {
+        "label": "sun off",
+        "pipelinesCreated": 3,
+        "uploads": 53,
+        "uploadBytes": 7936
+      },
+      {
+        "label": "sun blinding",
+        "pipelinesCreated": 3,
+        "uploads": 54,
+        "uploadBytes": 8224
+      }
+    ]
+  },
+  "resize": {
+    "sizes": [
+      "320x240: 74717 px, max 1/255",
+      "480x240: 112837 px, max 1/255",
+      "240x480: 111494 px, max 1/255",
+      "200x200: 38386 px, max 1/255",
+      "400x300: 117358 px, max 1/255",
+      "96x72: 6350 px, max 1/255",
+      "320x240: 74717 px, max 1/255"
+    ],
+    "counters": {
+      "buffersAllocated": 40,
+      "texturesAllocated": 15,
+      "pipelinesCreated": 3,
+      "shaderModulesCreated": 2,
+      "bindGroupsCreated": 8,
+      "uploads": 51,
+      "uploadBytes": 8624,
+      "liveBuffers": 33,
+      "liveTextures": 3,
+      "liveSamplers": 1,
+      "liveShaderModules": 2,
+      "livePipelines": 3,
+      "liveBindGroups": 8,
+      "liveListeners": 9,
+      "frameTimeMs": 0.19999999925494194,
+      "cpuUpdateMs": 0.09999999962747097,
+      "renderPrepMs": 0.09999999962747097,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 7,
+      "drawCallsTotal": 98,
+      "failedMaterials": 0,
+      "instancedDraws": 1,
+      "instancedDrawsTotal": 14,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 5,
+      "discardedSteps": 0,
+      "liveEntities": 12,
+      "framesRendered": 14,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    }
+  },
+  "repeatable": {
+    "digestsMountA": [
+      "dc7c85133cf7d963a53227e96517608c0dfea1299c1f3e229c304c70c6094fa7",
+      "6b617f019319112806fd60bfd08c629672f89fe0ba3cb9e91a1d6e311e556b71",
+      "003942bdd7628243d92c53fed5b3d4b058545d2577b18bfbf737a64a2307960d"
+    ],
+    "digestsMountB": [
+      "dc7c85133cf7d963a53227e96517608c0dfea1299c1f3e229c304c70c6094fa7",
+      "6b617f019319112806fd60bfd08c629672f89fe0ba3cb9e91a1d6e311e556b71",
+      "003942bdd7628243d92c53fed5b3d4b058545d2577b18bfbf737a64a2307960d"
+    ],
+    "differentSequence": [
+      "dc7c85133cf7d963a53227e96517608c0dfea1299c1f3e229c304c70c6094fa7",
+      "02a784cde1beab5ef8b34f2ec3645077f576ac701239ff8af88218e848f695c4"
+    ]
+  },
+  "hostPage": {
+    "notes": [
+      "page as opened: 74717 px, max 1/255",
+      "after the controls: 74717 px, max 1/255"
+    ]
+  }
+}

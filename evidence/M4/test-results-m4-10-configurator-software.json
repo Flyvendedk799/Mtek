@@ -1,0 +1,670 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=software",
+      "specs/m4/configurator"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "m4\\configurator-variants.spec.ts",
+      "file": "m4/configurator-variants.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "an unsupported required asset feature fails explicitly, at compile time (M4-10)",
+          "file": "m4/configurator-variants.spec.ts",
+          "line": 48,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the unmodified example passes check with 0 errors and 0 warnings",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 91,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:26:59.336Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-43f5b99658fcb9477241",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 54,
+              "column": 3
+            },
+            {
+              "title": "the example with a normal texture in its GLB: check and build fail with MTEK-E7016, the message names the feature, nothing is built",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 187,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:26:59.449Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-f9630d332b57e05eddb0",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 63,
+              "column": 5
+            },
+            {
+              "title": "the human-readable report of MTEK-E7016 also names the feature",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 266,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:26:59.644Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-6610b0c7cbfa6a2694e3",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 81,
+              "column": 5
+            },
+            {
+              "title": "the example with a required extension in its GLB: check and build fail with MTEK-E7004, the message names the feature, nothing is built",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 183,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:26:59.916Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-fa9af798c567a0b9a90b",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 63,
+              "column": 5
+            },
+            {
+              "title": "the human-readable report of MTEK-E7004 also names the feature",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 270,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:27:00.105Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-8abd678dc686736a2f8e",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 81,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "a repeated-object scene shows the instancing path in counters and in equal output (M4-10)",
+          "file": "m4/configurator-variants.spec.ts",
+          "line": 100,
+          "column": 6,
+          "specs": [
+            {
+              "title": "80 copies need 5 draw calls instead of 80 and look the same, and both pictures are the oracle's",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-instancing",
+                      "description": "80 copies: drawCalls 80 -> 5, instancedDraws 4; instanced vs individual: max channel difference 0/255, 0 of 172800 pixels differ; against the oracle (162896 pixels, 80 entities): instanced max 1/255, individual max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3576,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:27:00.384Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-instancing",
+                          "description": "80 copies: drawCalls 80 -> 5, instancedDraws 4; instanced vs individual: max channel difference 0/255, 0 of 172800 pixels differ; against the oracle (162896 pixels, 80 entities): instanced max 1/255, individual max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-94cfacb314665d6de6b9",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 105,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\configurator.spec.ts",
+      "file": "m4/configurator.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "the material configurator (M4-10)",
+          "file": "m4/configurator.spec.ts",
+          "line": 53,
+          "column": 6,
+          "specs": [
+            {
+              "title": "loads the model: assets ready, entities placed by the node accessors, counters, and the picture the oracle predicts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-load",
+                      "description": "74717 pixels compared, max error 1/255; counters {\"drawCalls\":7,\"instancedDraws\":1,\"culledObjects\":0,\"liveEntities\":12,\"sharedParamBlocks\":1,\"ownedParamBlocks\":5,\"pipelinesCreated\":3}"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 677,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:27:04.522Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-load",
+                          "description": "74717 pixels compared, max error 1/255; counters {\"drawCalls\":7,\"instancedDraws\":1,\"culledObjects\":0,\"liveEntities\":12,\"sharedParamBlocks\":1,\"ownedParamBlocks\":5,\"pipelinesCreated\":3}"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-afeec0315fda758eb8a9",
+              "file": "m4/configurator.spec.ts",
+              "line": 54,
+              "column": 3
+            },
+            {
+              "title": "changing host inputs changes exactly the colours they drive, and the picture follows the oracle after every change",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-inputs",
+                      "description": "defaults: 74717 px, max 1/255; seat green and rough: 74717 px, max 1/255; seat gold metal: 74717 px, max 1/255; rails copper: 74717 px, max 1/255; back stripes red and white: 74717 px, max 1/255; sun off: 74717 px, max 1/255; sun blinding: 74717 px, max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3433,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:27:05.205Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-inputs",
+                          "description": "defaults: 74717 px, max 1/255; seat green and rough: 74717 px, max 1/255; seat gold metal: 74717 px, max 1/255; rails copper: 74717 px, max 1/255; back stripes red and white: 74717 px, max 1/255; sun off: 74717 px, max 1/255; sun blinding: 74717 px, max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-53d8332ec0092aec3e8e",
+              "file": "m4/configurator.spec.ts",
+              "line": 136,
+              "column": 3
+            },
+            {
+              "title": "rejected inputs leave the picture as it was: wrong type, translucent colour, unknown name",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 265,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:27:08.645Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-91b224c29099cbeee1bc",
+              "file": "m4/configurator.spec.ts",
+              "line": 204,
+              "column": 3
+            },
+            {
+              "title": "survives resize: at every size and aspect the picture is the one the oracle predicts, the inputs persist and the same size gives the same bytes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-resize",
+                      "description": "320x240: 74717 px, max 1/255; 480x240: 112837 px, max 1/255; 240x480: 111494 px, max 1/255; 200x200: 38386 px, max 1/255; 400x300: 117358 px, max 1/255; 96x72: 6350 px, max 1/255; 320x240: 74717 px, max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2807,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:27:08.917Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-resize",
+                          "description": "320x240: 74717 px, max 1/255; 480x240: 112837 px, max 1/255; 240x480: 111494 px, max 1/255; 200x200: 38386 px, max 1/255; 400x300: 117358 px, max 1/255; 96x72: 6350 px, max 1/255; 320x240: 74717 px, max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-9d553447e751f8beea55",
+              "file": "m4/configurator.spec.ts",
+              "line": 230,
+              "column": 3
+            },
+            {
+              "title": "a change of the pixel ratio resizes the backing store and the picture follows the oracle",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-dpr",
+                      "description": "ratio 1: 28721 px, max 1/255; ratio 2: 117358 px, max 1/255; ratio 1 again: 28721 px, max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1060,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:27:11.730Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-dpr",
+                          "description": "ratio 1: 28721 px, max 1/255; ratio 2: 117358 px, max 1/255; ratio 1 again: 28721 px, max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-ab012eaf817f377d145e",
+              "file": "m4/configurator.spec.ts",
+              "line": 284,
+              "column": 3
+            },
+            {
+              "title": "captures are repeatable: two independent mounts with the manual clock read back byte-identical frames",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-capture-digests",
+                      "description": "47e68e0337b91d82 7c99a9879b2d54e6 03c7d3fcf76cde06"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 922,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:27:12.798Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-capture-digests",
+                          "description": "47e68e0337b91d82 7c99a9879b2d54e6 03c7d3fcf76cde06"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-fe82b512130018a3170b",
+              "file": "m4/configurator.spec.ts",
+              "line": 322,
+              "column": 3
+            },
+            {
+              "title": "the host page drives the program with setInput: its controls change the colours the oracle predicts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-host-page",
+                      "description": "page as opened: 74717 px, max 1/255; after the controls: 74717 px, max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1080,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T09:27:13.726Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-host-page",
+                          "description": "page as opened: 74717 px, max 1/255; after the controls: 74717 px, max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed88284942d170d231b1-2dc70a41a562a5616fb0",
+              "file": "m4/configurator.spec.ts",
+              "line": 353,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-18T09:26:54.057Z",
+    "duration": 20902.557,
+    "expected": 13,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
