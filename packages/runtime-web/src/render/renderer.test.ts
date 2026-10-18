@@ -523,7 +523,8 @@ function twoMaterialEdit(json: Json): void {
     material,
     entity: index,
     params: [{ name: "color", class: "initial" }],
-    shareable: true,
+    // These tests are about instances that each hold a slot of their own; sharing has its own tests (sharing.test.ts).
+    shareable: false,
   }));
 }
 
@@ -664,6 +665,14 @@ describe("a material that fails after mount", () => {
   });
 });
 
+/**
+ * The parameter blocks of a golden program: every instance owns one, except in `lights`, whose three Unlit
+ * instances are `shareable` and hold the same colour, so they share one block (decision 0059).
+ */
+function blockCounters(fixture: string, instances: number): { ownedParamBlocks: number; sharedParamBlocks: number } {
+  return fixture === "lights" ? { ownedParamBlocks: 0, sharedParamBlocks: 1 } : { ownedParamBlocks: instances, sharedParamBlocks: 0 };
+}
+
 describe("the golden programs end to end on the fake GPU", () => {
   it.each(CODEGEN_FIXTURES)("%s mounts, renders every entity once and caches its pipeline", async (name) => {
     const golden = await loadGoldenProgram(name);
@@ -682,7 +691,7 @@ describe("the golden programs end to end on the fake GPU", () => {
     expect(debug.counters()).toMatchObject({
       drawCalls: drawn,
       pipelinesCreated: golden.manifest.materials.length,
-      ownedParamBlocks: golden.manifest.scene.materialInstances.length,
+      ...blockCounters(name, golden.manifest.scene.materialInstances.length),
       liveEntities: golden.manifest.scene.entities.length,
     });
     // Every object block holds its entity's world translation (read at the layout's offset).

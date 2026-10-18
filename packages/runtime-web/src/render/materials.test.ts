@@ -204,6 +204,7 @@ describe("MaterialStore: textures and samplers (decision 0054)", () => {
         index,
         material: m,
         entity: index,
+        shareable: false,
         resources: [
           { name: "map", kind: "texture", binding: 1, value: texture },
           { name: "filter", kind: "sampler", binding: 2, value: sampler },
