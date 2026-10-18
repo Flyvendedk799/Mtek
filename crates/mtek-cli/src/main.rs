@@ -8,6 +8,7 @@ mod args;
 mod commands;
 mod dev;
 mod dist;
+mod grammar;
 mod guard;
 mod real_fs;
 mod runtime;
@@ -31,6 +32,7 @@ fn run(request: Request) -> Outcome {
     match request {
         Request::Version => Outcome::stdout(format!("{}\n", version_line())),
         Request::Help(text) => Outcome::stdout(text),
+        Request::Grammar(args) => grammar::run(&args),
         request => {
             guard::install_panic_hook();
             let color = commands::color_enabled(

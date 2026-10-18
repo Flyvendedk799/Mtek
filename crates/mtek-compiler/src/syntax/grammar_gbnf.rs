@@ -470,7 +470,9 @@ impl<'m> Translator<'m> {
                     return Err("internal: malformed derivation entry".to_owned());
                 };
                 let suffix = name.strip_prefix(base).unwrap_or(name).to_owned();
-                for (copy, rhs) in without_at_top_level(&rules, base, removed, &suffix)? {
+                let copies =
+                    without_at_top_level(&rules, &expanded_order, base, removed, &suffix)?;
+                for (copy, rhs) in copies {
                     expanded_order.push(copy.clone());
                     rules.insert(copy, rhs);
                 }
@@ -1073,9 +1075,10 @@ const HEADER: &str = "\
 
 /// The `NoDesc` copies of the rules reached from `base` outside brackets, with
 /// the arms that are exactly `removed` dropped. Returns `(name, rhs)` pairs,
-/// `base` first.
+/// `base` first, then in the grammar order `order`.
 fn without_at_top_level(
     rules: &BTreeMap<String, Expr>,
+    order: &[String],
     base: &str,
     removed: &str,
     suffix: &str,
@@ -1128,8 +1131,8 @@ fn without_at_top_level(
     }
     // Keep the grammar order: the order of first reference from `base`.
     let position = |name: &str| {
-        rules
-            .keys()
+        order
+            .iter()
             .position(|k| format!("{k}{suffix}") == name)
             .unwrap_or(usize::MAX)
     };

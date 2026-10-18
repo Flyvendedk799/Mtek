@@ -1,0 +1,34 @@
+{
+  "comment": "The one supported grammar-constrained backend/model/version combination (decision 0073). Changing any pin is a new decision record; fetch-backend.mjs verifies every download against these SHA-256 values.",
+  "backend": "llama.cpp",
+  "release": "b11719",
+  "commit": "5aeac37a35b44fde4bdffaec9159f2fcb253b622",
+  "versionMarkers": ["build 11719", "commit 5aeac37a"],
+  "source": {
+    "url": "https://github.com/ggml-org/llama.cpp/archive/5aeac37a35b44fde4bdffaec9159f2fcb253b622.tar.gz",
+    "sha256": "8601c4eab1b4d81e5796b89ee28bd46b08654bde7fec354214b9a21a08b37c97",
+    "topDirectory": "llama.cpp-5aeac37a35b44fde4bdffaec9159f2fcb253b622",
+    "validatorTarget": "test-gbnf-validator"
+  },
+  "binaries": {
+    "win32-x64": {
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11719/llama-b11719-bin-win-cpu-x64.zip",
+      "sha256": "1b1234d208a8b851cc27cd3d96b850d1547a4e5cfc5cd75f0a9fdd1d4c5bea20",
+      "generator": "llama-completion.exe"
+    },
+    "linux-x64": {
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11719/llama-b11719-bin-ubuntu-x64.tar.gz",
+      "sha256": "2c50edd1422cdc686a1620923a7dda9a33634509566d2821155fb3d4879510a3",
+      "generator": "llama-completion"
+    }
+  },
+  "model": {
+    "id": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+    "revision": "f86cb2c1fa58255f8052cc32aeede1b7482d4361",
+    "file": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+    "url": "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/f86cb2c1fa58255f8052cc32aeede1b7482d4361/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+    "sha256": "cc324af070c2ecbfd324a30884d2f951a7ff756aba85cb811a6ec436933bb046",
+    "size": 1117320768,
+    "license": "Apache-2.0"
+  }
+}

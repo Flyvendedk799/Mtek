@@ -153,8 +153,8 @@ enum CliCommand {
     Test(Unimplemented),
     #[command(hide = true)]
     Context(Unimplemented),
-    #[command(hide = true)]
-    Grammar(Unimplemented),
+    /// Print the grammar of the language (EBNF or GBNF)
+    Grammar(crate::grammar::GrammarArgs),
     #[command(hide = true)]
     Lsp(Unimplemented),
 }
@@ -192,15 +192,19 @@ pub enum Request {
     },
     /// `mtek new NAME`.
     New { name: String },
+    /// `mtek grammar …` (`crate::grammar`).
+    Grammar(crate::grammar::GrammarArgs),
 }
 
 impl Request {
     /// The `--format` of the request (human for `--version` and `--help`).
     pub fn format(&self) -> Format {
         match self {
-            Request::Version | Request::Help(_) | Request::Dev { .. } | Request::New { .. } => {
-                Format::Human
-            }
+            Request::Version
+            | Request::Help(_)
+            | Request::Dev { .. }
+            | Request::New { .. }
+            | Request::Grammar(_) => Format::Human,
             Request::Check { format, .. }
             | Request::Build { format, .. }
             | Request::Inspect { format, .. } => *format,
@@ -216,6 +220,7 @@ impl Request {
             Request::Inspect { .. } => "inspect",
             Request::Dev { .. } => "dev",
             Request::New { .. } => "new",
+            Request::Grammar(_) => "grammar",
         }
     }
 }
@@ -305,7 +310,7 @@ where
         CliCommand::Fmt(_) => Err(not_yet("mtek fmt", "M6")),
         CliCommand::Test(_) => Err(not_yet("mtek test", "M6")),
         CliCommand::Context(_) => Err(not_yet("mtek context", "M6")),
-        CliCommand::Grammar(_) => Err(not_yet("mtek grammar", "M6")),
+        CliCommand::Grammar(args) => Ok(Request::Grammar(args)),
         CliCommand::Lsp(_) => Err(not_yet("mtek lsp", "M6")),
     }
 }
@@ -471,12 +476,31 @@ mod tests {
     }
 
     #[test]
+    fn grammar_export_needs_a_format() {
+        for format in ["ebnf", "gbnf"] {
+            let request = parse_args(&["grammar", "export", "--format", format]);
+            assert!(
+                matches!(&request, Ok(Request::Grammar(_))),
+                "{format}: {request:?}"
+            );
+            assert_eq!(
+                request.map(|r| (r.format(), r.verb())),
+                Ok((Format::Human, "grammar"))
+            );
+        }
+        usage(&["grammar"]);
+        usage(&["grammar", "export"]);
+        assert!(usage(&["grammar", "export", "--format", "yaml"]).contains("yaml"));
+        usage(&["grammar", "export", "--format", "ebnf", "extra"]);
+        usage(&["grammar", "check"]);
+    }
+
+    #[test]
     fn later_commands_are_named_in_the_error() {
         for (command, milestone) in [
             ("fmt", "M6"),
             ("test", "M6"),
             ("context", "M6"),
-            ("grammar", "M6"),
             ("lsp", "M6"),
         ] {
             let text = usage(&[command, "--port", "1", "x"]);
