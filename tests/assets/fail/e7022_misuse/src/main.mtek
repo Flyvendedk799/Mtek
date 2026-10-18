@@ -1,0 +1,20 @@
+const MODEL = asset.glb("../models/model.glb");
+const NAME = "../models/model.glb";
+const DYNAMIC = asset.glb(NAME);
+
+fn pass_it(model: glb_asset) -> f32 {
+    return 1.0;
+}
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: MODEL.mesh("Tri");
+        position: vec3(MODEL, 0.0, 0.0);
+    }
+}
+
+fn keep() -> f32 {
+    let copy = MODEL;
+    return 1.0;
+}

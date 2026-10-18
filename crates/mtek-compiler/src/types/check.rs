@@ -146,6 +146,8 @@ pub enum CallKind {
         name: &'static str,
         const_eligible: bool,
     },
+    /// An accessor of a `glb_asset` (`CHAIR.mesh("Seat")`, decision 0058).
+    GlbAccessor { method: &'static str },
     /// A user function (never constant in v0.1, section 8.1): its name and
     /// the declaration the callee resolved to (a `fn` of this module or the
     /// imported name).
@@ -235,6 +237,10 @@ pub(super) struct Checker<'a> {
     /// Descriptor literals of user materials without errors, with their
     /// material (for folding).
     pub(super) material_literals: BTreeMap<NodeId, MaterialInfo>,
+    /// The asset host and the declaring module, when the front end provides assets
+    /// (decision 0058).
+    pub(super) assets: Option<super::assets::AssetHookup<'a>>,
+    pub(super) asset_state: super::assets::AssetState,
 }
 
 impl<'a> Checker<'a> {
@@ -290,6 +296,8 @@ impl<'a> Checker<'a> {
             material_done: BTreeSet::new(),
             imported_materials: BTreeMap::new(),
             material_literals: BTreeMap::new(),
+            assets: None,
+            asset_state: super::assets::AssetState::default(),
         }
     }
 
@@ -526,8 +534,19 @@ impl<'a> Checker<'a> {
                         return TyId::ERROR;
                     }
                     // `None` only for `array` without arguments.
-                    if let Some(ty) = self.out.interner.prelude_type(type_name) {
-                        return ty;
+                    if let Some(resolved) = self.out.interner.prelude_type(type_name) {
+                        if resolved == TyId::GLB_ASSET && !self.asset_state.glb_annotation_ok {
+                            self.report(
+                                Diagnostic::new(
+                                    Code::E7022,
+                                    "A `glb_asset` can only be the type of a `const`.",
+                                )
+                                .at(ty.span)
+                                .note("parameters, fields, locals and material params cannot hold a model; use its accessors where the value is needed"),
+                            );
+                            return TyId::ERROR;
+                        }
+                        return resolved;
                     }
                     self.report(
                         Diagnostic::new(
@@ -678,7 +697,10 @@ impl<'a> Checker<'a> {
             self.assign_literal(expr, target);
             return target;
         }
-        let ty = self.check_kind(expr, expected);
+        let mut ty = self.check_kind(expr, expected);
+        if self.misused_glb_asset(expr, ty) {
+            ty = TyId::ERROR;
+        }
         self.set_ty(expr.id, ty);
         ty
     }
@@ -908,7 +930,12 @@ impl<'a> Checker<'a> {
             | ExprKind::SelfValue
             | ExprKind::Error => TyId::ERROR,
             ExprKind::Name(_) => self.name_value(expr),
-            ExprKind::Paren(inner) => self.check(inner, expected),
+            ExprKind::Paren(inner) => {
+                if self.asset_state.glb_ok.contains(&expr.id) {
+                    self.asset_state.glb_ok.insert(inner.id);
+                }
+                self.check(inner, expected)
+            }
             ExprKind::Descriptor { name, fields } => self.descriptor(expr, name, fields),
             ExprKind::Unary { op, operand } => self.unary(expr, *op, operand, expected),
             ExprKind::Binary { op, lhs, rhs, .. } => self.binary(expr, *op, lhs, rhs, expected),
@@ -1735,7 +1762,7 @@ impl<'a> Checker<'a> {
 
     // ----- calls -----------------------------------------------------------
 
-    fn synth_args(&mut self, args: &[Expr]) {
+    pub(super) fn synth_args(&mut self, args: &[Expr]) {
         for arg in args {
             self.check(arg, None);
         }
@@ -1774,9 +1801,12 @@ impl<'a> Checker<'a> {
                 _ => {}
             }
         }
-        if let ExprKind::Field { name, .. } = &callee.kind {
+        if let ExprKind::Field { base, name } = &callee.kind {
             match self.res.res(name.id) {
                 Some(Res::Prelude(PreludeItem::NamespaceMember { namespace, member })) => {
+                    if namespace == "asset" {
+                        return self.asset_call(expr, callee, member, args);
+                    }
                     return self.namespace_call(expr, callee, namespace, member, args);
                 }
                 Some(Res::Error) => {
@@ -1784,6 +1814,9 @@ impl<'a> Checker<'a> {
                     return TyId::ERROR;
                 }
                 _ => {}
+            }
+            if let Some(ty) = self.glb_accessor_call(expr, base, name, args) {
+                return ty;
             }
         }
         let callee_ty = self.check(callee, None);
@@ -1992,7 +2025,7 @@ impl<'a> Checker<'a> {
         target
     }
 
-    fn namespace_call(
+    pub(super) fn namespace_call(
         &mut self,
         expr: &Expr,
         callee: &Expr,
@@ -2051,7 +2084,7 @@ impl<'a> Checker<'a> {
     /// whose parameters are concrete types, each argument is checked against
     /// its parameter (bidirectionally, `E3001`); otherwise the registry's
     /// overload resolution chooses (decision 0024 item 8).
-    fn function_call(
+    pub(super) fn function_call(
         &mut self,
         expr: &Expr,
         name: &str,
@@ -2522,7 +2555,12 @@ impl Checker<'_> {
 
     /// Record, for the program-wide passes, a call of a built-in function
     /// whose domain or handler restriction matters (decision 0038).
-    fn record_builtin_call(&mut self, span: Span, name: String, function: &IntrinsicDef) {
+    pub(super) fn record_builtin_call(
+        &mut self,
+        span: Span,
+        name: String,
+        function: &IntrinsicDef,
+    ) {
         if function.domain == Domain::Both && !function.handlers_only {
             return;
         }

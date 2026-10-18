@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7014",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0 has 4 indices, which is not a multiple of 3."
+  }
+]

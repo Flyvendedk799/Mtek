@@ -250,7 +250,7 @@ fn the_parser_finds_the_whole_catalogue() {
     assert!(rows.len() > 150, "parsed only {} rows", rows.len());
     // Range placeholders are not codes.
     assert!(rows.iter().all(|r| is_code(&r.code)));
-    assert!(!rows.iter().any(|r| r.code == "E7001"));
+    assert!(!rows.iter().any(|r| r.code == "E7032"));
     assert!(!rows.iter().any(|r| r.code == "E8101"));
 }
 
@@ -431,13 +431,13 @@ fn a_duplicate_or_misplaced_anchor_is_detected() {
 #[test]
 fn an_anchor_without_a_code_is_detected() {
     let edited = SPEC.replacen(
-        "| (E7001–E7099) |",
-        "| <a id=\"mtek-e7001\"></a>(E7001–E7099) |",
+        "| (E7032–E7099) |",
+        "| <a id=\"mtek-e7032\"></a>(E7032–E7099) |",
         1,
     );
-    assert_ne!(edited, SPEC, "the E7001-E7099 range row was not found");
+    assert_ne!(edited, SPEC, "the E7032-E7099 range row was not found");
     assert_eq!(
         anchor_problems(&edited),
-        ["anchor \"mtek-e7001\" belongs to no code".to_string()]
+        ["anchor \"mtek-e7032\" belongs to no code".to_string()]
     );
 }

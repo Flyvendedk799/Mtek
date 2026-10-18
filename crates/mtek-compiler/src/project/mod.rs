@@ -30,15 +30,18 @@ mod specifier;
 
 pub use config::{
     AssetsSection, BuildSection, BuildTarget, DEFAULT_DEV_PORT, DEFAULT_ENTRY, DEFAULT_FIXED_STEP,
-    DEFAULT_MAX_ASSET_FILE_BYTES, DEFAULT_MAX_CATCH_UP_STEPS, DEFAULT_MAX_ENTITIES,
-    DEFAULT_MAX_FRAME_DELTA, DEFAULT_OUT_DIR, DEV_PORT_RANGE, DevSection,
-    MAX_ASSET_FILE_BYTES_RANGE, MAX_CATCH_UP_STEPS_RANGE, MAX_ENTITIES_RANGE, MAX_TIME_SECONDS,
-    PROJECT_FILE, ProjectConfig, ProjectSection, RESERVED_DIRECTORY, RuntimeSection,
-    SOURCE_EXTENSION,
+    DEFAULT_MAX_ASSET_FILE_BYTES, DEFAULT_MAX_ASSET_TOTAL_BYTES, DEFAULT_MAX_CATCH_UP_STEPS,
+    DEFAULT_MAX_ENTITIES, DEFAULT_MAX_FRAME_DELTA, DEFAULT_MAX_TEXTURE_DIMENSION,
+    DEFAULT_MAX_VERTICES_PER_PRIMITIVE, DEFAULT_OUT_DIR, DEV_PORT_RANGE, DevSection,
+    MAX_ASSET_FILE_BYTES_RANGE, MAX_ASSET_TOTAL_BYTES_RANGE, MAX_CATCH_UP_STEPS_RANGE,
+    MAX_ENTITIES_RANGE, MAX_TEXTURE_DIMENSION_RANGE, MAX_TIME_SECONDS,
+    MAX_VERTICES_PER_PRIMITIVE_RANGE, PROJECT_FILE, ProjectConfig, ProjectSection,
+    RESERVED_DIRECTORY, RuntimeSection, SOURCE_EXTENSION,
 };
 pub use graph::{GraphError, Import, ImportCycle, MAX_MODULES, Module, ModuleGraph, ModuleId};
 pub use host_inputs::{ResolvedHostInput, states_feeding_opaque_color, validate_host_inputs};
 pub use load::Project;
+pub(crate) use load::path_differing_in_case;
 pub use modules::{ImportLink, LoadedModule, load_modules, report_cycles};
 pub(crate) use parse::edit_distance;
 pub use parse::parse_config;

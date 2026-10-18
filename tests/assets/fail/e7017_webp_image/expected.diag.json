@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7017",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The image at images[0] has the MIME type 'image/webp'; the profile supports image/png and image/jpeg."
+  }
+]

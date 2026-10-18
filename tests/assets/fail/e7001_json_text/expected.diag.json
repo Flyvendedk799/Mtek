@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7001",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The file does not start with the glTF magic number 'glTF' (it starts with \"{\"as\").",
+    "notes": [
+      "the file looks like glTF JSON; export a binary `.glb` instead"
+    ]
+  }
+]

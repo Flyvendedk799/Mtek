@@ -245,26 +245,28 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         ),
         namespace(
             "asset",
-            Milestone::M4,
+            // Implemented by task M4-05 ahead of the M4 gate, like textures and samplers
+            // (decisions 0054 and 0058): `CURRENT_MILESTONE` does not move.
+            Milestone::M1,
             "Compile-time asset declarations. The argument must be a string literal naming a file inside the project.",
             vec![
                 NamespaceMember::Function(compile_time(
                     "glb",
-                    Milestone::M4,
+                    Milestone::M1,
                     "A static GLB model. May be stored only in a `const` and used through its accessors.",
                     &[p("path", string)],
                     TypeRef::GlbAsset,
                 )),
                 NamespaceMember::Function(compile_time(
                     "texture",
-                    Milestone::M4,
+                    Milestone::M1,
                     "An sRGB colour texture.",
                     &[p("path", string)],
                     TypeRef::Texture,
                 )),
                 NamespaceMember::Function(compile_time(
                     "linear_texture",
-                    Milestone::M4,
+                    Milestone::M1,
                     "A linear data texture (masks, normal data).",
                     &[p("path", string)],
                     TypeRef::Texture,
@@ -323,7 +325,7 @@ fn simple(
 fn glb_methods() -> Vec<IntrinsicDef> {
     let name = p("name", exact(TypeRef::String));
     let accessor = |method, doc, params: &[crate::stdlib::model::ParamDef], ret| {
-        compile_time(method, Milestone::M4, doc, params, ret)
+        compile_time(method, Milestone::M1, doc, params, ret)
     };
     vec![
         accessor(
@@ -490,7 +492,7 @@ pub(super) fn types() -> Vec<TypeDef> {
             methods: glb_methods(),
             ..handle(
                 "glb_asset",
-                Milestone::M4,
+                Milestone::M1,
                 "The compile-time handle of `asset.glb(..)`; may be stored only in a `const` and used through its accessors.",
             )
         },

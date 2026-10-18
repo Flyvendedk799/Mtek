@@ -419,6 +419,43 @@ fn inspect_shaders_and_bindings_print_the_goldens_in_both_formats() {
 }
 
 #[test]
+fn inspect_assets_prints_the_goldens_in_both_formats() {
+    let scratch = Scratch::new("inspect-assets");
+    let project = copy_fixture(&scratch, "assets/pass", "assets_supported");
+    let goldens = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/assets/inspect");
+    for (format, extension) in [("json", "assets.json"), ("human", "assets.txt")] {
+        let out = run_in(&project, &["inspect", "--assets", "--format", format]);
+        assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+        assert!(out.stderr.is_empty(), "{}", stderr(&out));
+        let golden = fs::read_to_string(goldens.join(format!("assets_supported.{extension}")))
+            .unwrap()
+            .replace("\r\n", "\n");
+        assert_eq!(stdout(&out), golden, "--format {format}");
+    }
+}
+
+#[cfg(mtek_runtime_embedded)]
+#[test]
+fn a_build_with_assets_writes_them_next_to_the_program() {
+    let scratch = Scratch::new("build-assets");
+    let project = copy_fixture(&scratch, "assets/pass", "assets_supported");
+    let out = run_in(&project, &["build", "--format", "json"]);
+    assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+    let manifest: Value =
+        serde_json::from_slice(&fs::read(project.join("dist/program.manifest.json")).unwrap())
+            .unwrap();
+    for asset in manifest["assets"].as_array().unwrap() {
+        let url = asset["url"].as_str().unwrap();
+        let bytes = fs::read(project.join("dist").join(url)).unwrap();
+        assert_eq!(
+            asset["bytes"].as_u64().unwrap(),
+            bytes.len() as u64,
+            "{url}"
+        );
+    }
+}
+
+#[test]
 fn inspect_shaders_with_errors_prints_the_report() {
     let scratch = Scratch::new("inspect-views-errors");
     let project = scratch.project("app", INVALID);

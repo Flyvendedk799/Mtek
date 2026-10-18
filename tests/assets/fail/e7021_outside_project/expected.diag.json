@@ -1,0 +1,42 @@
+[
+  {
+    "code": "MTEK-E7021",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 48,
+    "message": "The asset path \"../../models/model.glb\" leaves the project root.",
+    "notes": [
+      "an asset path is relative to the directory of the declaring file and stays inside the project"
+    ]
+  },
+  {
+    "code": "MTEK-E7021",
+    "file": "src/main.mtek",
+    "startByte": 78,
+    "endByte": 93,
+    "message": "The asset path \"/etc/wood.png\" is not valid: absolute paths are not allowed.",
+    "notes": [
+      "an asset path is relative to the directory of the declaring file, uses `/`, and stays inside the project"
+    ]
+  },
+  {
+    "code": "MTEK-E7021",
+    "file": "src/main.mtek",
+    "startByte": 123,
+    "endByte": 137,
+    "message": "The asset path \"..\\wood.png\" is not valid: paths are separated by `/`, not by backslashes.",
+    "notes": [
+      "an asset path is relative to the directory of the declaring file, uses `/`, and stays inside the project"
+    ]
+  },
+  {
+    "code": "MTEK-E7021",
+    "file": "src/main.mtek",
+    "startByte": 168,
+    "endByte": 170,
+    "message": "The asset path \"\" is not valid: it is empty.",
+    "notes": [
+      "an asset path is relative to the directory of the declaring file, uses `/`, and stays inside the project"
+    ]
+  }
+]

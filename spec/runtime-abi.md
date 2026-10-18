@@ -217,6 +217,27 @@ The runtime **rejects** a manifest whose `manifestSchema` or `runtimeAbi` it doe
 ```
 One entry per emitted WGSL statement/expression that originates in Mtek source; generated wrapper code maps to the material declaration. Used to translate Naga errors (compile time) and `GPUCompilationInfo` messages (run time) into Mtek diagnostics.
 
+### 5.5 Assets (decision 0058)
+
+`assets` lists the packaged files of the entry scene (none if no entity uses an asset). Every `url` is relative to the program like `shaders[].url`; file names are opaque; the runtime verifies `bytes` and `sha256` (`spec/assets.md` §5) and never parses a name. Entries are sorted: `mesh-data` by the project path of their GLB, then `image` by `url`. `span` is the declaring `asset.*` call (the first declaration that named the file).
+
+```json
+{ "url": "assets/07f04966d738a71c.bin", "sha256": "…", "bytes": 500, "kind": "mesh-data", "span": 4,
+  "preprocessing": [ "mesh 'Wedge' primitive 0: u8 indices widened to u16" ],
+  "primitives": [ { "source": { "file": "models/chair.glb", "mesh": "Wedge", "primitive": 0 },
+                    "vertexCount": 4, "indexCount": 12, "indexFormat": "uint16",
+                    "attributes": ["position", "normal"],
+                    "offsets": { "position": 140, "normal": 188, "indices": 236 },
+                    "boundingSphere": { "center": [0.5, 0.5, 0.5], "radius": 0.8660255 } } ] }
+{ "url": "assets/9c39f834fcfae0c6.png", "sha256": "…", "bytes": 76, "kind": "image", "span": 4,
+  "colorSpace": "srgb", "preprocessing": [ "mipmaps not generated" ] }
+```
+
+- **Mesh data.** A `.bin` holds the referenced primitives of one GLB, in the order of the `primitives` array. Every offset is a **byte offset from the start of the file** and a multiple of 4; numbers are little-endian. A primitive stores, in this order: `position` (`f32 × 3` per vertex), `normal` (`f32 × 3`) if `attributes` has `"normal"`, `uv` (`f32 × 2`) if it has `"uv"`, all tightly packed, then `indexCount` indices of `indexFormat` (`uint16` when `vertexCount` ≤ 65 535, otherwise `uint32`), then zero padding to a multiple of 4. `boundingSphere` is in the mesh's local space (the entity transform applies as for built-in shapes). Triangles are counter-clockwise from the front, uv origin top-left, +Y up (glTF's conventions, which are Mtek's; nothing is converted).
+- **Meshes.** `meshes[]` has entries `{ "id": "mesh:N", "kind": "asset", "asset": <url of a mesh-data entry>, "primitive": <index into that entry's primitives> }`; an entity's `mesh` is the id. The compiler has checked that the mesh has every attribute its material reads (`shaders[].vertexAttributes`, `E7010`).
+- **Images.** The file is a PNG or JPEG exactly as the author wrote it; `colorSpace` says how to upload it (`"srgb"`: `rgba8unorm-srgb`, `"linear"`: `rgba8unorm`, `spec/assets.md` §5). An instance's `texture` param is `{ "name": "base_color_texture", "class": "resource", "value": { "kind": "asset", "asset": <url of an image entry> } }`; its `sampler` param is a built-in preset. `preprocessing` lists what the compiler decided instead of the author (`mipmaps not generated`: the file's sampler asked for mip-maps, v0.1 samples the base level).
+- **Names.** The `<h16>` of a `.bin` is the first 16 hex digits of the SHA-256 of the GLB's project path, a zero byte and the file's bytes; of an image, of the colour space name, a zero byte and the image bytes. The same image bytes used in both colour spaces are two files.
+
 ## 6. Host API
 
 ### 6.1 Mounting

@@ -188,6 +188,7 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
                     mode: options.mode,
                     runtime_bundle: bundle,
                     runtime_declarations: declarations,
+                    assets: &front.assets,
                 };
                 match package(project, &program, &input) {
                     Ok(result) => packaged = Some(result),

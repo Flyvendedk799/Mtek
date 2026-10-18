@@ -6,7 +6,7 @@
 //! specification and fails if a code, severity or title differs.
 //!
 //! The table lists exactly the concrete codes of the specification, in the
-//! order of its tables. Ranges such as `E7001-E7099` are reserved by the
+//! order of its tables. Ranges such as `E7032-E7099` are reserved by the
 //! specification but are not codes yet; they are added here when the owning
 //! specification section (assets, physics) lists them.
 
@@ -192,7 +192,36 @@ catalogue! {
     E6003 Error "too many interpolated inputs",
     E6100 Error "generated WGSL failed validation",
     // 5.7 Assets (`7xxx`)
+    E7001 Error "unsupported container",
+    E7002 Error "asset too large",
+    E7003 Error "external or data URI",
+    E7004 Error "required extension",
+    E7005 Error "used extension",
+    E7006 Error "unsupported primitive mode",
+    E7007 Error "unsupported attribute format",
+    E7008 Error "skinning or morph targets",
+    E7009 Error "unsupported vertex attribute",
     E7010 Error "mesh lacks required attribute",
+    E7011 Error "sparse accessor",
+    E7012 Error "mesh has several primitives",
+    E7013 Error "node transform not representable",
+    E7014 Error "index out of range",
+    E7015 Error "transparency in material",
+    E7016 Error "unsupported material feature",
+    E7017 Error "unsupported or oversized image",
+    E7018 Error "unsupported sampler mode",
+    E7019 Error "animation present",
+    E7020 Error "asset file not found",
+    E7021 Error "asset path outside project",
+    E7022 Error "invalid use of asset value",
+    E7023 Error "asset path case mismatch",
+    E7024 Error "unknown name in asset",
+    E7025 Error "accessor out of bounds",
+    E7026 Error "asset limit exceeded",
+    E7030 Error "asset fetch or integrity failure",
+    E7031 Error "image decode failure",
+    E7901 Error "remote assets not supported",
+    E7902 Error "node hierarchy instancing not supported",
     // 5.8 Runtime (`8xxx`)
     E8001 Error "unsupported platform endianness",
     E8002 Error "device below target profile",

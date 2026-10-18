@@ -1,0 +1,8 @@
+const IMAGE = asset.texture("../textures/image.dat");
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: Box {};
+    }
+}

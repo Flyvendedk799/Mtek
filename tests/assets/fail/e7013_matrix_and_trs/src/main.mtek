@@ -1,0 +1,9 @@
+const MODEL = asset.glb("../models/model.glb");
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: MODEL.mesh("Tri");
+        position: MODEL.node_position("Both");
+    }
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "code": "MTEK-E7022",
+    "file": "src/main.mtek",
+    "startByte": 110,
+    "endByte": 114,
+    "message": "The path of `asset.glb` must be a string literal.",
+    "notes": [
+      "the compiler opens the file while it checks the program, so the path cannot be computed"
+    ]
+  },
+  {
+    "code": "MTEK-E7022",
+    "file": "src/main.mtek",
+    "startByte": 136,
+    "endByte": 145,
+    "message": "A `glb_asset` can only be the type of a `const`.",
+    "notes": [
+      "parameters, fields, locals and material params cannot hold a model; use its accessors where the value is needed"
+    ]
+  },
+  {
+    "code": "MTEK-E7022",
+    "file": "src/main.mtek",
+    "startByte": 281,
+    "endByte": 286,
+    "message": "A `glb_asset` can only be stored in a `const` and used through its accessors.",
+    "notes": [
+      "write `CHAIR.mesh(\"Seat\")`, `CHAIR.material_roughness(\"Fabric\")` or `CHAIR.node_position(\"Seat\")` where the value is needed",
+      "help: the model's hierarchy cannot be instanced as a whole in v0.1; each entity references one mesh"
+    ]
+  },
+  {
+    "code": "MTEK-E7022",
+    "file": "src/main.mtek",
+    "startByte": 342,
+    "endByte": 347,
+    "message": "A `glb_asset` can only be stored in a `const` and used through its accessors.",
+    "notes": [
+      "write `CHAIR.mesh(\"Seat\")`, `CHAIR.material_roughness(\"Fabric\")` or `CHAIR.node_position(\"Seat\")` where the value is needed",
+      "help: the model's hierarchy cannot be instanced as a whole in v0.1; each entity references one mesh"
+    ]
+  }
+]

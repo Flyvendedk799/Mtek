@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7025",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "Buffer 0 declares 4102 bytes, but the BIN chunk has 104."
+  }
+]

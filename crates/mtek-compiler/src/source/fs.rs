@@ -47,6 +47,17 @@ pub trait Fs {
     /// [`FsError::NotFound`], [`FsError::IsADirectory`] or [`FsError::Other`].
     fn read(&self, p: &ProjectPath) -> Result<Vec<u8>, FsError>;
 
+    /// The length in bytes of the file at `p`, without reading it: the asset
+    /// loader checks sizes before it allocates (`spec/assets.md` section 3).
+    /// The default reads the file; implementations that can ask the file
+    /// system directly override it.
+    ///
+    /// # Errors
+    /// As for [`Fs::read`].
+    fn len(&self, p: &ProjectPath) -> Result<u64, FsError> {
+        self.read(p).map(|bytes| bytes.len() as u64)
+    }
+
     /// True if a file or directory exists at `p` and every segment of `p`
     /// matches the stored entry name exactly, including case
     /// (`spec/language.md` section 9.1, `E2032`).
@@ -108,6 +119,14 @@ impl Fs for MemFs {
     fn read(&self, p: &ProjectPath) -> Result<Vec<u8>, FsError> {
         match self.files.get(p) {
             Some(bytes) => Ok(bytes.clone()),
+            None if self.is_dir(p) => Err(FsError::IsADirectory(p.clone())),
+            None => Err(FsError::NotFound(p.clone())),
+        }
+    }
+
+    fn len(&self, p: &ProjectPath) -> Result<u64, FsError> {
+        match self.files.get(p) {
+            Some(bytes) => Ok(bytes.len() as u64),
             None if self.is_dir(p) => Err(FsError::IsADirectory(p.clone())),
             None => Err(FsError::NotFound(p.clone())),
         }
@@ -194,6 +213,15 @@ mod tests {
         let fs = sample();
         assert_eq!(fs.read(&p("assets/b.bin")), Ok(vec![0, 255, 1]));
         assert_eq!(fs.read(&p("src/main.mtek")), Ok(b"main".to_vec()));
+    }
+
+    #[test]
+    fn len_is_the_size_of_a_file() {
+        let fs = sample();
+        assert_eq!(fs.len(&p("assets/b.bin")), Ok(3));
+        assert_eq!(fs.len(&p("src/main.mtek")), Ok(4));
+        assert_eq!(fs.len(&p("src")), Err(FsError::IsADirectory(p("src"))));
+        assert_eq!(fs.len(&p("nope")), Err(FsError::NotFound(p("nope"))));
     }
 
     #[test]

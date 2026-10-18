@@ -12,15 +12,20 @@
 //!   profile's limits (`E6001`), and the validated WGSL of every material it uses, with its
 //!   interface and span map — the shaders `build` writes ([`shaders`]);
 //! - [`Inspect::Bindings`]: the same checked plan as blocks and material instances
-//!   (`spec/gpu-layout.md` section 10, [`bindings`]).
+//!   (`spec/gpu-layout.md` section 10, [`bindings`]);
+//! - [`Inspect::Assets`]: the packaged assets of the entry scene, as the manifest's `assets`
+//!   table with where each was declared and what was preprocessed (`spec/assets.md` section 4,
+//!   [`assets`]).
 //!
 //! The target profile is `webgpu-core-2026`, the only one of v0.1.
 
+pub mod assets;
 pub mod bindings;
 pub mod shaders;
 pub mod view;
 
 use crate::TargetProfile;
+use crate::assets::AssetStore;
 use crate::check::front_end;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report};
 use crate::ir::{self, LowerError, Program};
@@ -28,6 +33,7 @@ use crate::package::{checked_plan, material_shaders};
 use crate::project::ProjectRoot;
 use crate::source::{Fs, SourceMap};
 
+pub use assets::AssetsView;
 pub use bindings::BindingsView;
 pub use shaders::ShadersView;
 
@@ -40,6 +46,8 @@ pub enum Inspect {
     Shaders,
     /// The blocks and material instances of the entry scene (`mtek inspect --bindings`).
     Bindings,
+    /// The packaged assets of the entry scene (`mtek inspect --assets`).
+    Assets,
 }
 
 /// How to print an inspection (`--format human|json`).
@@ -70,6 +78,8 @@ pub struct InspectResult {
     pub shaders: Option<ShadersView>,
     /// The `--bindings` view; `None` for other views and when the report has errors.
     pub bindings: Option<BindingsView>,
+    /// The `--assets` view; `None` for other views and when the report has errors.
+    pub assets: Option<AssetsView>,
 }
 
 impl InspectResult {
@@ -103,6 +113,13 @@ impl InspectResult {
             }
             Inspect::Bindings => {
                 let view = self.bindings.as_ref()?;
+                Some(match format {
+                    InspectFormat::Json => view.to_json(),
+                    InspectFormat::Human => view.to_human(),
+                })
+            }
+            Inspect::Assets => {
+                let view = self.assets.as_ref()?;
                 Some(match format {
                     InspectFormat::Json => view.to_json(),
                     InspectFormat::Human => view.to_human(),
@@ -142,9 +159,12 @@ pub fn inspect(root: &ProjectRoot, fs: &dyn Fs, what: Inspect) -> InspectResult 
     };
     let mut shaders = None;
     let mut bindings = None;
-    if let (Some(program), Inspect::Shaders | Inspect::Bindings) = (ir.as_ref(), what) {
-        match views(program, what, &sources) {
-            Ok((s, b)) => (shaders, bindings) = (s, b),
+    let mut assets = None;
+    if let (Some(program), Inspect::Shaders | Inspect::Bindings | Inspect::Assets) =
+        (ir.as_ref(), what)
+    {
+        match views(program, what, &sources, &front.assets) {
+            Ok((s, b, a)) => (shaders, bindings, assets) = (s, b, a),
             Err(diagnostics) => sink.extend(diagnostics),
         }
     }
@@ -156,16 +176,18 @@ pub fn inspect(root: &ProjectRoot, fs: &dyn Fs, what: Inspect) -> InspectResult 
         what,
         shaders,
         bindings,
+        assets,
     }
 }
 
-/// The `--shaders` or `--bindings` view of `program`: the checked resource plan (`E6001`),
-/// then the shaders or the bindings.
+/// The `--shaders`, `--bindings` or `--assets` view of `program`: the checked resource plan
+/// (`E6001`), then the shaders, the bindings or the assets.
 fn views(
     program: &Program,
     what: Inspect,
     sources: &SourceMap,
-) -> Result<(Option<ShadersView>, Option<BindingsView>), Vec<Diagnostic>> {
+    store: &AssetStore,
+) -> Result<ViewSet, Vec<Diagnostic>> {
     let profile = TargetProfile::default();
     let plan = checked_plan(program, profile)?;
     let scene = program.entry_scene.as_str();
@@ -175,16 +197,27 @@ fn views(
             let artifacts = material_shaders(program, &plan)?;
             let view = shaders::shaders_view(scene, profile.as_str(), &plan, &artifacts, sources)
                 .map_err(view_defect)?;
-            Ok((Some(view), None))
+            Ok((Some(view), None, None))
         }
         Inspect::Bindings => {
             let view = bindings::bindings_view(scene, profile.as_str(), &plan, sources)
                 .map_err(view_defect)?;
-            Ok((None, Some(view)))
+            Ok((None, Some(view), None))
         }
-        Inspect::Ir => Ok((None, None)),
+        Inspect::Assets => {
+            let view = assets::assets_view(scene, &plan, store, sources)?;
+            Ok((None, None, Some(view)))
+        }
+        Inspect::Ir => Ok((None, None, None)),
     }
 }
+
+/// The shaders, bindings and assets views; at most one is present.
+type ViewSet = (
+    Option<ShadersView>,
+    Option<BindingsView>,
+    Option<AssetsView>,
+);
 
 /// `E9999` for a checked program the typed IR cannot represent.
 fn internal_error(defect: &str) -> Diagnostic {

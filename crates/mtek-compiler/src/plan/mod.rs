@@ -195,6 +195,7 @@ fn same_mesh(a: &MeshDesc, b: &MeshDesc) -> bool {
                 rings: g2,
             },
         ) => r1.to_bits() == r2.to_bits() && s1 == s2 && g1 == g2,
+        (a @ MeshDesc::Asset { .. }, b @ MeshDesc::Asset { .. }) => a == b,
         _ => false,
     }
 }

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7001",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "In the glTF JSON, meshes[0].primitives[0].material refers to an object that does not exist."
+  }
+]

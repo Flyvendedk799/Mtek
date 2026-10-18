@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7001",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "Chunk 2 has the unknown type 0x12345678; the profile allows one JSON chunk and at most one BIN chunk."
+  }
+]

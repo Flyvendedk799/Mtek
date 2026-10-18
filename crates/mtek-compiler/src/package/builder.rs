@@ -9,13 +9,14 @@
 //!    which the front end compiled from the embedded prelude `std/materials.mtek` (decision
 //!    0044) and added to the project's source map, so the manifest's `sources` and `spans`
 //!    cover it;
-//! 3. interns the manifest's spans in this order: symbols (scene, cameras, entities, per
+//! 3. packages the referenced assets ([`crate::assets::pack`], decision 0058);
+//! 4. interns the manifest's spans in this order: symbols (scene, cameras, entities, per
 //!    material its declaration and its params, then the functions compiled for the CPU),
-//!    material params, shader span maps;
-//! 4. emits `app.js` ([`crate::emit_js::emit_program`]) with the writers of `builtin:frame`,
+//!    material params, shader span maps, the declaring spans of the assets;
+//! 5. emits `app.js` ([`crate::emit_js::emit_program`]) with the writers of `builtin:frame`,
 //!    `builtin:object` and every material block and the CPU functions, whose run-time index
 //!    checks intern their spans last;
-//! 5. builds the manifest and writes the files with content-addressed names for the runtime
+//! 6. builds the manifest and writes the files with content-addressed names for the runtime
 //!    bundle and the shaders.
 //!
 //! The manifest carries structure and constant scene fields only; entity and camera values
@@ -26,6 +27,7 @@
 
 use std::collections::BTreeMap;
 
+use crate::assets::{AssetStore, ImageRef, MeshRef, pack::Packed};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::emit_js::{ProgramParts, emit_app_dts, emit_program, source_map};
 use crate::emit_wgsl::{ShaderArtifact, emit_shader};
@@ -67,6 +69,8 @@ pub struct PackageInput<'a> {
     pub runtime_bundle: &'a [u8],
     /// The runtime host declarations (`runtime.d.ts`).
     pub runtime_declarations: &'a [u8],
+    /// The assets the front end loaded (decision 0058).
+    pub assets: &'a AssetStore,
 }
 
 /// A packaged build.
@@ -204,8 +208,12 @@ pub fn package(
         shader_files.push((artifact.map_path(), map_text.into_bytes()));
     }
 
+    // The assets: re-laid out meshes and copied images, with the declaring spans interned here.
+    let packed = pack_assets(input.assets, &plan, &mut spans)?;
+
     // The binding spans come before app.js too, for the same reason.
-    let manifest_scene = manifest_scene(scene, &plan, &mut spans, &host_inputs).map_err(defect)?;
+    let manifest_scene =
+        manifest_scene(scene, &plan, &packed, &mut spans, &host_inputs).map_err(defect)?;
 
     // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
     // other span, so a program's span ids do not depend on its function bodies.
@@ -243,7 +251,7 @@ pub fn package(
             .iter()
             .map(|s| (s.path.clone(), s.sha256.clone()))
             .collect(),
-        assets: Vec::new(),
+        assets: packed.sources.clone(),
         config: &project.config_text,
     }
     .build_id();
@@ -279,8 +287,8 @@ pub fn package(
         layouts: layouts.iter().map(Layout::from_record).collect(),
         shaders,
         materials: manifest_materials,
-        meshes: meshes(&plan).map_err(defect)?,
-        assets: Vec::new(),
+        meshes: meshes(&plan, &packed).map_err(defect)?,
+        assets: packed.assets.clone(),
         scene: manifest_scene,
     };
 
@@ -299,6 +307,9 @@ pub fn package(
     files.insert(runtime_file, input.runtime_bundle.to_vec());
     files.insert(MANIFEST_JSON.to_owned(), manifest.to_json().into_bytes());
     for (path, bytes) in shader_files {
+        files.insert(path, bytes);
+    }
+    for (path, bytes) in packed.files {
         files.insert(path, bytes);
     }
     Ok(Package {
@@ -421,8 +432,54 @@ fn num(value: f32) -> Result<Num, String> {
     Num::from_f32(value).ok_or_else(|| format!("the value {value} is not finite"))
 }
 
+/// The asset meshes of `plan.meshes` and the image values of the resource params of its
+/// material instances: what `mtek build` and `mtek inspect --assets` package.
+#[must_use]
+pub fn asset_references(plan: &ResourcePlan) -> (Vec<MeshRef>, Vec<ImageRef>) {
+    let meshes: Vec<MeshRef> = plan
+        .meshes
+        .iter()
+        .filter_map(|desc| match desc {
+            MeshDesc::Asset {
+                file,
+                mesh,
+                primitive,
+            } => Some(MeshRef {
+                file: file.clone(),
+                mesh: mesh.clone(),
+                primitive: *primitive as usize,
+            }),
+            _ => None,
+        })
+        .collect();
+    let images: Vec<ImageRef> = plan
+        .instances
+        .iter()
+        .flat_map(|instance| instance.params.iter())
+        .filter_map(|param| match &param.value {
+            Some(ir::Value::Image(image)) => Some(ImageRef {
+                source: image.source.clone(),
+                space: image.space,
+                mipmapped: image.mipmapped,
+            }),
+            _ => None,
+        })
+        .collect();
+    (meshes, images)
+}
+
+/// Package the assets the plan references.
+fn pack_assets(
+    store: &AssetStore,
+    plan: &ResourcePlan,
+    spans: &mut SpanTable,
+) -> Result<Packed, Vec<Diagnostic>> {
+    let (meshes, images) = asset_references(plan);
+    crate::assets::pack::pack(store, &meshes, &images, &mut |span| spans.intern(span).ok())
+}
+
 /// The manifest's `meshes`.
-fn meshes(plan: &ResourcePlan) -> Result<Vec<Mesh>, String> {
+fn meshes(plan: &ResourcePlan, packed: &Packed) -> Result<Vec<Mesh>, String> {
     let mut meshes = Vec::with_capacity(plan.meshes.len());
     for (index, desc) in plan.meshes.iter().enumerate() {
         let index = u32::try_from(index).map_err(|_| "too many meshes".to_owned())?;
@@ -438,6 +495,24 @@ fn meshes(plan: &ResourcePlan) -> Result<Vec<Mesh>, String> {
                 rings: *rings,
             },
             MeshDesc::Plane { size } => MeshShape::Plane { size: nums(size)? },
+            MeshDesc::Asset {
+                file,
+                mesh,
+                primitive,
+            } => {
+                let key = MeshRef {
+                    file: file.clone(),
+                    mesh: mesh.clone(),
+                    primitive: *primitive as usize,
+                };
+                let location = packed.meshes.get(&key).ok_or_else(|| {
+                    format!("the asset mesh '{mesh}' of '{file}' was not packaged")
+                })?;
+                MeshShape::Asset {
+                    asset: location.asset.clone(),
+                    primitive: location.primitive,
+                }
+            }
         };
         meshes.push(Mesh {
             id: ResourcePlan::mesh_id(index),
@@ -491,6 +566,7 @@ fn resolve_host_inputs(project: &Project, scene: &ir::Scene) -> Vec<ResolvedHost
 fn manifest_scene(
     scene: &ir::Scene,
     plan: &ResourcePlan,
+    packed: &Packed,
     spans: &mut SpanTable,
     host_inputs: &[ResolvedHostInput],
 ) -> Result<Scene, String> {
@@ -602,14 +678,13 @@ fn manifest_scene(
                                 (ParamClass::Initial, _) => ManifestClass::Initial,
                                 (ParamClass::Imperative, _) => ManifestClass::Imperative,
                                 (ParamClass::Resource, _) => ManifestClass::Resource {
-                                    value: resource_value(param.value.as_ref()).ok_or_else(
-                                        || {
+                                    value: resource_value(param.value.as_ref(), packed)
+                                        .ok_or_else(|| {
                                             format!(
-                                                "the resource parameter '{}' has no built-in value",
+                                                "the resource parameter '{}' has no packaged value",
                                                 param.name
                                             )
-                                        },
-                                    )?,
+                                        })?,
                                 },
                                 (ParamClass::Bound, Some(binding)) => {
                                     ManifestClass::Bound { binding }
@@ -646,13 +721,17 @@ fn manifest_scene(
     })
 }
 
-/// The manifest's value of a resource param: the built-in texture or sampler it holds
-/// (asset textures arrive with M4-05, as `ResourceValue::Asset`).
-fn resource_value(value: Option<&ir::Value>) -> Option<ResourceValue> {
+/// The manifest's value of a resource param: the built-in texture or sampler it holds, or the
+/// packaged image (`ResourceValue::Asset`, decision 0058).
+fn resource_value(value: Option<&ir::Value>, packed: &Packed) -> Option<ResourceValue> {
     match value? {
         ir::Value::Texture(name) | ir::Value::Sampler(name) => {
             Some(ResourceValue::Builtin { name: name.clone() })
         }
+        ir::Value::Image(image) => packed
+            .images
+            .get(&(image.source.clone(), image.space))
+            .map(|url| ResourceValue::Asset { asset: url.clone() }),
         _ => None,
     }
 }

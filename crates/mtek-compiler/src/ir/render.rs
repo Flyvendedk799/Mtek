@@ -624,7 +624,7 @@ impl Tree<'_> {
 
     fn mesh(&mut self, depth: usize, mesh: &Mesh) {
         let location = self.location(mesh.span);
-        let desc = match mesh.desc {
+        let desc = match &mesh.desc {
             MeshDesc::Box { size: [x, y, z] } => {
                 format!("Box {{ size: vec3({x:?}, {y:?}, {z:?}) }}")
             }
@@ -634,6 +634,11 @@ impl Tree<'_> {
                 rings,
             } => format!("Sphere {{ radius: {radius:?}, segments: {segments}, rings: {rings} }}"),
             MeshDesc::Plane { size: [x, z] } => format!("Plane {{ size: vec2({x:?}, {z:?}) }}"),
+            MeshDesc::Asset {
+                file,
+                mesh,
+                primitive,
+            } => format!("Asset {{ file: {file:?}, mesh: {mesh:?}, primitive: {primitive} }}"),
         };
         self.line(
             depth,

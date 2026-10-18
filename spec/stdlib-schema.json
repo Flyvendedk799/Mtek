@@ -1643,7 +1643,7 @@
   "namespaces": [
     {
       "name": "asset",
-      "since": "M4",
+      "since": "M1",
       "doc": "Compile-time asset declarations. The argument must be a string literal naming a file inside the project.",
       "members": [
         {
@@ -1656,7 +1656,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "A static GLB model. May be stored only in a `const` and used through its accessors."
         },
         {
@@ -1669,7 +1669,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "A linear data texture (masks, normal data)."
         },
         {
@@ -1682,7 +1682,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "An sRGB colour texture."
         }
       ]
@@ -2076,7 +2076,7 @@
       "name": "glb_asset",
       "kind": "handle",
       "gpu": false,
-      "since": "M4",
+      "since": "M1",
       "doc": "The compile-time handle of `asset.glb(..)`; may be stored only in a `const` and used through its accessors.",
       "fields": [],
       "methods": [
@@ -2089,7 +2089,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "The glTF material with this name as a `Pbr` instance with every parameter taken from the file."
         },
         {
@@ -2101,7 +2101,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "The linear `baseColorFactor` of the material; alpha must be 1."
         },
         {
@@ -2113,7 +2113,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "The `metallicFactor` of the material."
         },
         {
@@ -2125,7 +2125,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "The `roughnessFactor` of the material."
         },
         {
@@ -2137,7 +2137,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "The `baseColorTexture` of the material, or `texture.white()` when absent."
         },
         {
@@ -2149,7 +2149,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "The glTF mesh with this name; it must have exactly one primitive."
         },
         {
@@ -2161,7 +2161,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "World position of the node in the default scene."
         },
         {
@@ -2173,7 +2173,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "World rotation of the node in the default scene."
         },
         {
@@ -2185,7 +2185,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "World scale of the node in the default scene."
         },
         {
@@ -2197,7 +2197,7 @@
           "constEligible": true,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "Primitive `index` (an integer literal) of the named glTF mesh."
         }
       ]

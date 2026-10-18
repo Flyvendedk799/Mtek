@@ -222,6 +222,7 @@ pub fn bindings_view(
                     })?;
                 let value = match &param.value {
                     Some(Value::Texture(name) | Value::Sampler(name)) => Some(name.clone()),
+                    Some(Value::Image(image)) => Some(image.to_string()),
                     _ => None,
                 };
                 (None, None, None, Some(binding), value)

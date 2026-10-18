@@ -1359,7 +1359,7 @@ fn every_gated_construct_has_a_gating_fixture() {
     assert!(gated >= 2, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
-        ("The built-in type `glb_asset`", "M4"),
+        ("The built-in type `entity_ref`", "M5"),
         ("The built-in schema `Static`", "M5"),
         ("The `Entity` field `body`", "M5"),
         ("The `Scene` field `gravity`", "M5"),
@@ -1491,7 +1491,8 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
         "E6003",
         "v0.1 has at most 4 inter-stage variables (`spec/materials.md` section 3.3); custom vertex stages are v0.2",
     ),
-    ("E7010", "M4: assets"),
+    ("E7030", "M4-06: runtime asset loading"),
+    ("E7031", "M4-06: runtime asset loading"),
     ("E8011", "M3: run-time field writes"),
     ("W8030", "M2: arrays (run-time index clamping)"),
     ("E8030", "M5: spawn and destroy"),
@@ -1627,6 +1628,12 @@ fn fixture_codes() -> BTreeMap<String, BTreeSet<String>> {
                 add_json(&path, &format!("semantics/{suite}/{name}"), &mut codes);
             }
         }
+    }
+    // The asset projects (`tests/assets`, decision 0058).
+    let assets = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/assets/fail");
+    for name in subdirectories(&assets) {
+        let path = assets.join(&name).join(EXPECTED);
+        add_json(&path, &format!("assets/fail/{name}"), &mut codes);
     }
     codes
 }

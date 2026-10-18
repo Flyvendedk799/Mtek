@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E7902",
+    "file": "src/main.mtek",
+    "startByte": 107,
+    "endByte": 112,
+    "message": "The field 'model' of entity 'Part' would instance a whole node hierarchy, which v0.1 does not support.",
+    "notes": [
+      "every drawn object is a named entity that references one mesh",
+      "help: write one entity per part: `mesh: MODEL.mesh(\"Name\")`, with `position: MODEL.node_position(\"Name\")` and its rotation and scale"
+    ]
+  },
+  {
+    "code": "MTEK-E7022",
+    "file": "src/main.mtek",
+    "startByte": 114,
+    "endByte": 119,
+    "message": "A `glb_asset` can only be stored in a `const` and used through its accessors.",
+    "notes": [
+      "write `CHAIR.mesh(\"Seat\")`, `CHAIR.material_roughness(\"Fabric\")` or `CHAIR.node_position(\"Seat\")` where the value is needed",
+      "help: the model's hierarchy cannot be instanced as a whole in v0.1; each entity references one mesh"
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7018",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The sampler at samplers[0] filters magnification NEAREST and minification LINEAR; the sampler presets use one filter for both."
+  }
+]

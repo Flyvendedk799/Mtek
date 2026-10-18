@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7024",
+    "file": "src/main.mtek",
+    "startByte": 124,
+    "endByte": 129,
+    "message": "The glTF file 'models/model.glb' has 2 meshes named 'Tri', so the name does not identify one.",
+    "notes": [
+      "names must be unique to be referenced; rename them in the authoring tool"
+    ]
+  }
+]

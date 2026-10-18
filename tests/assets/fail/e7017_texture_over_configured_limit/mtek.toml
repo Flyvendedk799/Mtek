@@ -1,0 +1,6 @@
+[project]
+name = "fixture"
+language = "0.1"
+
+[assets]
+max_texture_dimension = 1

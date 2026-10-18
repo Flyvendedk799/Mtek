@@ -1,0 +1,11 @@
+const CHAIR = asset.glb("../models/chair.glb");
+
+scene Demo {
+    camera Main {}
+    entity Quad {
+        mesh: CHAIR.mesh("Quad");
+    }
+    entity Wedge {
+        mesh: CHAIR.mesh("Wedge");
+    }
+}

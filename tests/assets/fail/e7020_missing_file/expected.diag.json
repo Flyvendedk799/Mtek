@@ -1,0 +1,22 @@
+[
+  {
+    "code": "MTEK-E7020",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 46,
+    "message": "The asset file 'models/absent.glb' was not found.",
+    "notes": [
+      "an asset path is relative to the directory of the declaring file"
+    ]
+  },
+  {
+    "code": "MTEK-E7020",
+    "file": "src/main.mtek",
+    "startByte": 76,
+    "endByte": 100,
+    "message": "The asset file 'textures/absent.png' was not found.",
+    "notes": [
+      "an asset path is relative to the directory of the declaring file"
+    ]
+  }
+]

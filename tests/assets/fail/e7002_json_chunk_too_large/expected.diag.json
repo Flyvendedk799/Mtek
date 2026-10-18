@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7002",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The JSON chunk is 20971520 bytes, over the limit of 16777216 bytes."
+  }
+]

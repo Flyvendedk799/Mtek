@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7015",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The material 'Plain' (materials[0]) has alphaMode MASK; the profile supports OPAQUE only.",
+    "notes": [
+      "help: v0.1 has no transparency (`spec/materials.md` section 2)"
+    ]
+  }
+]

@@ -1,0 +1,312 @@
+{
+  "scene": "src/main.mtek::Showroom",
+  "totalBytes": 878,
+  "assets": [
+    {
+      "url": "assets/07f04966d738a71c.bin",
+      "sha256": "0e381fef913d849818dfa049d71965c94fe332420b7f3e8642127dd0171e23f3",
+      "bytes": 500,
+      "kind": "mesh-data",
+      "sources": [
+        "models/chair.glb"
+      ],
+      "declaredAt": {
+        "file": "src/main.mtek",
+        "startByte": 205,
+        "endByte": 226,
+        "startLine": 3,
+        "startColumn": 25,
+        "endLine": 3,
+        "endColumn": 46
+      },
+      "preprocessing": [
+        "mesh 'Wedge' primitive 0: u8 indices widened to u16",
+        "mesh 'Tri' primitive 0: sequential indices generated",
+        "mesh 'Twin' primitive 1: sequential indices generated",
+        "mesh 'Wide' primitive 0: u32 indices narrowed to u16 (at most 65535 vertices)"
+      ],
+      "primitives": [
+        {
+          "source": {
+            "file": "models/chair.glb",
+            "mesh": "Quad",
+            "primitive": 0
+          },
+          "vertexCount": 4,
+          "indexCount": 6,
+          "indexFormat": "uint16",
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "offsets": {
+            "position": 0,
+            "normal": 48,
+            "uv": 96,
+            "indices": 128
+          },
+          "boundingSphere": {
+            "center": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "radius": 1.4142137
+          }
+        },
+        {
+          "source": {
+            "file": "models/chair.glb",
+            "mesh": "Wedge",
+            "primitive": 0
+          },
+          "vertexCount": 4,
+          "indexCount": 12,
+          "indexFormat": "uint16",
+          "attributes": [
+            "position",
+            "normal"
+          ],
+          "offsets": {
+            "position": 140,
+            "normal": 188,
+            "indices": 236
+          },
+          "boundingSphere": {
+            "center": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "radius": 0.86602545
+          }
+        },
+        {
+          "source": {
+            "file": "models/chair.glb",
+            "mesh": "Tri",
+            "primitive": 0
+          },
+          "vertexCount": 3,
+          "indexCount": 3,
+          "indexFormat": "uint16",
+          "attributes": [
+            "position",
+            "uv"
+          ],
+          "offsets": {
+            "position": 260,
+            "uv": 296,
+            "indices": 320
+          },
+          "boundingSphere": {
+            "center": [
+              1.0,
+              1.0,
+              0.0
+            ],
+            "radius": 1.4142137
+          }
+        },
+        {
+          "source": {
+            "file": "models/chair.glb",
+            "mesh": "Twin",
+            "primitive": 0
+          },
+          "vertexCount": 3,
+          "indexCount": 3,
+          "indexFormat": "uint16",
+          "attributes": [
+            "position"
+          ],
+          "offsets": {
+            "position": 328,
+            "indices": 364
+          },
+          "boundingSphere": {
+            "center": [
+              0.5,
+              0.5,
+              0.0
+            ],
+            "radius": 0.7071068
+          }
+        },
+        {
+          "source": {
+            "file": "models/chair.glb",
+            "mesh": "Twin",
+            "primitive": 1
+          },
+          "vertexCount": 3,
+          "indexCount": 3,
+          "indexFormat": "uint16",
+          "attributes": [
+            "position",
+            "uv"
+          ],
+          "offsets": {
+            "position": 372,
+            "uv": 408,
+            "indices": 432
+          },
+          "boundingSphere": {
+            "center": [
+              0.5,
+              0.5,
+              1.0
+            ],
+            "radius": 0.7071068
+          }
+        },
+        {
+          "source": {
+            "file": "models/chair.glb",
+            "mesh": "Wide",
+            "primitive": 0
+          },
+          "vertexCount": 4,
+          "indexCount": 6,
+          "indexFormat": "uint16",
+          "attributes": [
+            "position"
+          ],
+          "offsets": {
+            "position": 440,
+            "indices": 488
+          },
+          "boundingSphere": {
+            "center": [
+              0.5,
+              0.0,
+              0.5
+            ],
+            "radius": 0.7071068
+          }
+        }
+      ]
+    },
+    {
+      "url": "assets/655d37e24a342c6e.png",
+      "sha256": "7b97293a8ee90fd2694fdd5c8e2c4d840bb23498e67043488402fa1ff54ad3ea",
+      "bytes": 78,
+      "kind": "image",
+      "colorSpace": "linear",
+      "sources": [
+        "textures/mask.png"
+      ],
+      "declaredAt": {
+        "file": "src/main.mtek",
+        "startByte": 315,
+        "endByte": 337,
+        "startLine": 5,
+        "startColumn": 35,
+        "endLine": 5,
+        "endColumn": 57
+      },
+      "preprocessing": []
+    },
+    {
+      "url": "assets/7439b49d77c7c22c.jpg",
+      "sha256": "6d5c2863669ea8f62688478cace3c4167a0b54b45f59b82591f1140f1918519d",
+      "bytes": 141,
+      "kind": "image",
+      "colorSpace": "srgb",
+      "sources": [
+        "image 1 of models/chair.glb"
+      ],
+      "declaredAt": {
+        "file": "src/main.mtek",
+        "startByte": 205,
+        "endByte": 226,
+        "startLine": 3,
+        "startColumn": 25,
+        "endLine": 3,
+        "endColumn": 46
+      },
+      "preprocessing": []
+    },
+    {
+      "url": "assets/9c39f834fcfae0c6.png",
+      "sha256": "a890804ce8b9f708dda592da80c26c7b6f0e6b0e2a3d1620ed612e6a808cf4e4",
+      "bytes": 76,
+      "kind": "image",
+      "colorSpace": "srgb",
+      "sources": [
+        "image 0 of models/chair.glb"
+      ],
+      "declaredAt": {
+        "file": "src/main.mtek",
+        "startByte": 205,
+        "endByte": 226,
+        "startLine": 3,
+        "startColumn": 25,
+        "endLine": 3,
+        "endColumn": 46
+      },
+      "preprocessing": [
+        "mipmaps not generated"
+      ]
+    },
+    {
+      "url": "assets/bcc399594511a2c0.png",
+      "sha256": "f1e07690183a7b46227dec468aaa073b988c43a8c7ae52ef27d4986356eae2cb",
+      "bytes": 83,
+      "kind": "image",
+      "colorSpace": "srgb",
+      "sources": [
+        "textures/wood.png"
+      ],
+      "declaredAt": {
+        "file": "src/main.mtek",
+        "startByte": 256,
+        "endByte": 278,
+        "startLine": 4,
+        "startColumn": 28,
+        "endLine": 4,
+        "endColumn": 50
+      },
+      "preprocessing": []
+    }
+  ],
+  "meshes": [
+    {
+      "id": "mesh:0",
+      "asset": "assets/07f04966d738a71c.bin",
+      "primitive": 0,
+      "source": "mesh \"Quad\" primitive 0 of models/chair.glb"
+    },
+    {
+      "id": "mesh:1",
+      "asset": "assets/07f04966d738a71c.bin",
+      "primitive": 1,
+      "source": "mesh \"Wedge\" primitive 0 of models/chair.glb"
+    },
+    {
+      "id": "mesh:2",
+      "asset": "assets/07f04966d738a71c.bin",
+      "primitive": 2,
+      "source": "mesh \"Tri\" primitive 0 of models/chair.glb"
+    },
+    {
+      "id": "mesh:3",
+      "asset": "assets/07f04966d738a71c.bin",
+      "primitive": 3,
+      "source": "mesh \"Twin\" primitive 0 of models/chair.glb"
+    },
+    {
+      "id": "mesh:4",
+      "asset": "assets/07f04966d738a71c.bin",
+      "primitive": 4,
+      "source": "mesh \"Twin\" primitive 1 of models/chair.glb"
+    },
+    {
+      "id": "mesh:5",
+      "asset": "assets/07f04966d738a71c.bin",
+      "primitive": 5,
+      "source": "mesh \"Wide\" primitive 0 of models/chair.glb"
+    }
+  ]
+}

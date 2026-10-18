@@ -1,0 +1,9 @@
+const MODEL = asset.glb("../models/absent.glb");
+const WOOD = asset.texture("../textures/absent.png");
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: Box {};
+    }
+}

@@ -144,6 +144,10 @@ impl Fs for ProjectFs<'_> {
         self.fs.read(&self.real(p)).map_err(|e| rebase(e, p))
     }
 
+    fn len(&self, p: &ProjectPath) -> Result<u64, FsError> {
+        self.fs.len(&self.real(p)).map_err(|e| rebase(e, p))
+    }
+
     fn exact_case_exists(&self, p: &ProjectPath) -> bool {
         self.fs.exact_case_exists(&self.real(p))
     }

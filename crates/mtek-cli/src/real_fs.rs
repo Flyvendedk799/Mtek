@@ -93,6 +93,20 @@ impl Fs for RealFs {
         })
     }
 
+    fn len(&self, p: &ProjectPath) -> Result<u64, FsError> {
+        let path = match self.locate(p) {
+            Ok(Some(path)) => path,
+            Ok(None) => return Err(FsError::NotFound(p.clone())),
+            Err(error) => return Err(other(p, &error)),
+        };
+        match fs::metadata(&path) {
+            Ok(metadata) if metadata.is_dir() => Err(FsError::IsADirectory(p.clone())),
+            Ok(metadata) => Ok(metadata.len()),
+            Err(error) if is_missing(&error) => Err(FsError::NotFound(p.clone())),
+            Err(error) => Err(other(p, &error)),
+        }
+    }
+
     fn exact_case_exists(&self, p: &ProjectPath) -> bool {
         matches!(self.locate(p), Ok(Some(path)) if fs::metadata(&path).is_ok())
     }
@@ -172,6 +186,20 @@ mod tests {
         assert_eq!(fs.read(&p("mtek.toml")), Ok(b"[project]\n".to_vec()));
         assert_eq!(fs.read(&p("src/Main.mtek")), Ok(b"scene\r\n".to_vec()));
         assert_eq!(fs.read(&p("src/deep/a.mtek")), Ok(b"a".to_vec()));
+    }
+
+    #[test]
+    fn len_is_the_size_of_the_file_without_reading_it() {
+        let (_scratch, fs) = sample("len");
+        assert_eq!(fs.len(&p("mtek.toml")), Ok(10));
+        assert_eq!(fs.len(&p("src/deep/a.mtek")), Ok(1));
+        assert_eq!(fs.len(&p("src")), Err(FsError::IsADirectory(p("src"))));
+        assert_eq!(fs.len(&p("nope")), Err(FsError::NotFound(p("nope"))));
+        assert_eq!(
+            fs.len(&p("src/main.mtek")),
+            Err(FsError::NotFound(p("src/main.mtek"))),
+            "a different case is another file"
+        );
     }
 
     #[test]

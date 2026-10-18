@@ -1,0 +1,20 @@
+const CHAIR = asset.glb("../models/chair.glb");
+
+material Checker {
+    param tint: color = #ffffff;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * input.uv.x, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Wedge {
+        mesh: CHAIR.mesh("Wedge");
+        material: Checker {};
+    }
+    entity Quad {
+        mesh: CHAIR.mesh("Quad");
+        material: Checker {};
+    }
+}

@@ -17,9 +17,10 @@ use toml::de::{DeTable, DeValue};
 
 use super::config::{
     AssetsSection, BuildSection, BuildTarget, DEFAULT_ENTRY, DEFAULT_OUT_DIR, DEV_PORT_RANGE,
-    DevSection, MAX_ASSET_FILE_BYTES_RANGE, MAX_CATCH_UP_STEPS_RANGE, MAX_ENTITIES_RANGE,
-    MAX_TIME_SECONDS, PROJECT_FILE, ProjectConfig, ProjectSection, RESERVED_DIRECTORY,
-    RuntimeSection, SOURCE_EXTENSION, constant_path,
+    DevSection, MAX_ASSET_FILE_BYTES_RANGE, MAX_ASSET_TOTAL_BYTES_RANGE, MAX_CATCH_UP_STEPS_RANGE,
+    MAX_ENTITIES_RANGE, MAX_TEXTURE_DIMENSION_RANGE, MAX_TIME_SECONDS,
+    MAX_VERTICES_PER_PRIMITIVE_RANGE, PROJECT_FILE, ProjectConfig, ProjectSection,
+    RESERVED_DIRECTORY, RuntimeSection, SOURCE_EXTENSION, constant_path,
 };
 use crate::LANGUAGE_VERSION;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
@@ -42,7 +43,15 @@ const SCHEMA: [(&str, &[&str]); 6] = [
         ],
     ),
     ("dev", &["port"]),
-    ("assets", &["max_file_bytes"]),
+    (
+        "assets",
+        &[
+            "max_file_bytes",
+            "max_total_bytes",
+            "max_texture_dimension",
+            "max_vertices_per_primitive",
+        ],
+    ),
 ];
 
 /// Parse and validate the text of a `mtek.toml`.
@@ -710,8 +719,44 @@ impl Validator {
                 u64::try_from(number).ok()
             },
         );
+        let max_total_bytes = self.field(
+            table,
+            "assets",
+            "max_total_bytes",
+            || AssetsSection::default().max_total_bytes,
+            |s, path, value| {
+                let (min, max) = MAX_ASSET_TOTAL_BYTES_RANGE;
+                let number = s.integer(path, value, (i128::from(min), i128::from(max)))?;
+                u64::try_from(number).ok()
+            },
+        );
+        let max_texture_dimension = self.field(
+            table,
+            "assets",
+            "max_texture_dimension",
+            || AssetsSection::default().max_texture_dimension,
+            |s, path, value| {
+                let (min, max) = MAX_TEXTURE_DIMENSION_RANGE;
+                let number = s.integer(path, value, (i128::from(min), i128::from(max)))?;
+                u32::try_from(number).ok()
+            },
+        );
+        let max_vertices_per_primitive = self.field(
+            table,
+            "assets",
+            "max_vertices_per_primitive",
+            || AssetsSection::default().max_vertices_per_primitive,
+            |s, path, value| {
+                let (min, max) = MAX_VERTICES_PER_PRIMITIVE_RANGE;
+                let number = s.integer(path, value, (i128::from(min), i128::from(max)))?;
+                u32::try_from(number).ok()
+            },
+        );
         Some(AssetsSection {
             max_file_bytes: max_file_bytes?,
+            max_total_bytes: max_total_bytes?,
+            max_texture_dimension: max_texture_dimension?,
+            max_vertices_per_primitive: max_vertices_per_primitive?,
         })
     }
 }

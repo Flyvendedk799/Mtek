@@ -1,0 +1,8 @@
+const CHAIR = asset.glb("../models/chair.glb");
+
+scene Demo {
+    camera Main {}
+    entity Both {
+        mesh: CHAIR.mesh("Twin");
+    }
+}

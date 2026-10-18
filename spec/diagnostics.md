@@ -264,8 +264,37 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 ### 5.7 Assets (`7xxx`)
 | Code | Title | Trigger |
 |---|---|---|
-| <a id="mtek-e7010"></a>E7010 | mesh lacks required attribute | material reads `uv`/`world_normal` the mesh lacks |
-| (E7001–E7099) | further asset codes | defined in `spec/assets.md` §8 and added to this table in M4 |
+| <a id="mtek-e7001"></a>E7001 | unsupported container | not a binary glTF 2.0 container: `.gltf`, wrong magic or version, bad chunk layout, malformed JSON or structure (the message says which) |
+| <a id="mtek-e7002"></a>E7002 | asset too large | file over `[assets] max_file_bytes` or JSON chunk over 16 MiB; checked before the data is read |
+| <a id="mtek-e7003"></a>E7003 | external or data URI | a buffer or image has a `uri` (file or `data:`) |
+| <a id="mtek-e7004"></a>E7004 | required extension | `extensionsRequired` is not empty; the message lists them |
+| <a id="mtek-e7005"></a>E7005 | used extension | `extensionsUsed` or an `extensions` object is not empty; the message lists them |
+| <a id="mtek-e7006"></a>E7006 | unsupported primitive mode | primitive `mode` is not 4 (TRIANGLES) |
+| <a id="mtek-e7007"></a>E7007 | unsupported attribute format | attribute or index accessor is not in the supported format (normalised or non-float attributes) |
+| <a id="mtek-e7008"></a>E7008 | skinning or morph targets | `JOINTS_n`, `WEIGHTS_n`, morph targets or morph weights |
+| <a id="mtek-e7009"></a>E7009 | unsupported vertex attribute | `COLOR_0`, `TANGENT`, `TEXCOORD_1` and up, another unlisted attribute, or a texture reading `texCoord` 1 and up |
+| <a id="mtek-e7010"></a>E7010 | mesh lacks required attribute | material reads `uv`/`world_normal` the mesh lacks; also a primitive without `POSITION` |
+| <a id="mtek-e7011"></a>E7011 | sparse accessor | sparse accessor, or an accessor without a buffer view |
+| <a id="mtek-e7012"></a>E7012 | mesh has several primitives | `.mesh(name)` on a mesh with several primitives; suggests `.primitive` |
+| <a id="mtek-e7013"></a>E7013 | node transform not representable | world transform of a node has shear, a mirror, a zero scale or is not affine |
+| <a id="mtek-e7014"></a>E7014 | index out of range | index at or beyond the vertex count, or an index count that is not a multiple of 3 |
+| <a id="mtek-e7015"></a>E7015 | transparency in material | `alphaMode` is not OPAQUE, or the base colour alpha is not 1 |
+| <a id="mtek-e7016"></a>E7016 | unsupported material feature | normal, occlusion, emissive or metallic-roughness texture, non-zero emissive factor, `doubleSided` |
+| <a id="mtek-e7017"></a>E7017 | unsupported or oversized image | image is not PNG/JPEG, has no embedded bytes, is unreadable or exceeds `max_texture_dimension` |
+| <a id="mtek-e7018"></a>E7018 | unsupported sampler mode | MIRRORED_REPEAT, or wrap or filter modes that no sampler preset can express |
+| <a id="mtek-e7019"></a>E7019 | animation present | `animations` or `skins` present in the file |
+| <a id="mtek-e7020"></a>E7020 | asset file not found | the file named by an `asset.*` call does not exist or cannot be read (decision 0058) |
+| <a id="mtek-e7021"></a>E7021 | asset path outside project | the path escapes the project root, is absolute or malformed |
+| <a id="mtek-e7022"></a>E7022 | invalid use of asset value | a `glb_asset` outside a `const` and its accessors, or a path that is not a string literal |
+| <a id="mtek-e7023"></a>E7023 | asset path case mismatch | the path differs from the file system entry in case |
+| <a id="mtek-e7024"></a>E7024 | unknown name in asset | no mesh, material or node of that name, or the name is ambiguous; lists the names |
+| <a id="mtek-e7025"></a>E7025 | accessor out of bounds | buffer view or accessor outside its buffer, bad stride or alignment, non-finite values |
+| <a id="mtek-e7026"></a>E7026 | asset limit exceeded | more vertices than `max_vertices_per_primitive`, or packaged assets over `max_total_bytes` |
+| <a id="mtek-e7030"></a>E7030 | asset fetch or integrity failure | runtime: fetch failed, length or SHA-256 mismatch (M4-06) |
+| <a id="mtek-e7031"></a>E7031 | image decode failure | runtime: the browser could not decode the image (M4-06) |
+| <a id="mtek-e7901"></a>E7901 | remote assets not supported | an `http:`, `https:` or other URL as an asset path |
+| <a id="mtek-e7902"></a>E7902 | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy |
+| (E7032–E7099) | further asset codes | reserved; added with the feature that needs them |
 
 ### 5.8 Runtime (`8xxx`)
 | Code | Title | Trigger |

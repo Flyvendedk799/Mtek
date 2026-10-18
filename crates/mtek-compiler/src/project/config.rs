@@ -39,6 +39,12 @@ pub const DEFAULT_MAX_ENTITIES: u32 = 16_384;
 pub const DEFAULT_DEV_PORT: u16 = 5173;
 /// Default of `assets.max_file_bytes`: 64 MiB.
 pub const DEFAULT_MAX_ASSET_FILE_BYTES: u64 = 67_108_864;
+/// Default of `assets.max_total_bytes`: 256 MiB.
+pub const DEFAULT_MAX_ASSET_TOTAL_BYTES: u64 = 268_435_456;
+/// Default of `assets.max_texture_dimension`.
+pub const DEFAULT_MAX_TEXTURE_DIMENSION: u32 = 8_192;
+/// Default of `assets.max_vertices_per_primitive`.
+pub const DEFAULT_MAX_VERTICES_PER_PRIMITIVE: u32 = 4_194_304;
 
 /// Largest accepted `runtime.fixed_step` and `runtime.max_frame_delta`
 /// (seconds). Both must be finite and greater than zero (the manifest schema
@@ -57,6 +63,13 @@ pub const DEV_PORT_RANGE: (u16, u16) = (1, u16::MAX);
 /// Accepted range of `assets.max_file_bytes`: a binary glTF file stores its
 /// lengths as 32-bit values, so no valid asset is larger than this.
 pub const MAX_ASSET_FILE_BYTES_RANGE: (u64, u64) = (1, 4_294_967_295);
+/// Accepted range of `assets.max_total_bytes`.
+pub const MAX_ASSET_TOTAL_BYTES_RANGE: (u64, u64) = (1, 17_179_869_184);
+/// Accepted range of `assets.max_texture_dimension`: the target profile's
+/// `maxTextureDimension2D` is the WebGPU default of 8 192 (decision 0058).
+pub const MAX_TEXTURE_DIMENSION_RANGE: (u32, u32) = (1, 8_192);
+/// Accepted range of `assets.max_vertices_per_primitive`.
+pub const MAX_VERTICES_PER_PRIMITIVE_RANGE: (u32, u32) = (1, u32::MAX);
 
 /// A constant, valid project path (the default paths above and
 /// [`PROJECT_FILE`]). The fallback to the root is never taken: a unit test
@@ -148,12 +161,18 @@ impl Default for DevSection {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct AssetsSection {
     pub max_file_bytes: u64,
+    pub max_total_bytes: u64,
+    pub max_texture_dimension: u32,
+    pub max_vertices_per_primitive: u32,
 }
 
 impl Default for AssetsSection {
     fn default() -> Self {
         Self {
             max_file_bytes: DEFAULT_MAX_ASSET_FILE_BYTES,
+            max_total_bytes: DEFAULT_MAX_ASSET_TOTAL_BYTES,
+            max_texture_dimension: DEFAULT_MAX_TEXTURE_DIMENSION,
+            max_vertices_per_primitive: DEFAULT_MAX_VERTICES_PER_PRIMITIVE,
         }
     }
 }

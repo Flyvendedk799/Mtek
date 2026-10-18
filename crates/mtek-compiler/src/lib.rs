@@ -6,6 +6,7 @@
 //! `dist/` file set in memory, decision 0030), plus the version constants the
 //! command line tool and the runtime agree on.
 
+pub mod assets;
 pub mod emit_js;
 pub mod emit_wgsl;
 pub mod ir;

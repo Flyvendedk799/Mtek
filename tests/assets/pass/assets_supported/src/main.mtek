@@ -1,0 +1,58 @@
+// A GLB with six meshes, a node hierarchy and three materials, plus two standalone textures
+// (spec/assets.md section 2). Every value is checked against the file at compile time.
+const CHAIR = asset.glb("../models/chair.glb");
+const WOOD = asset.texture("../textures/wood.png");
+const MASK = asset.linear_texture("../textures/mask.png");
+
+material Textured {
+    param tint: color = #ffffff;
+    param base: texture = texture.white();
+    param mask: texture = texture.white();
+    param filter: sampler = sampler.linear_repeat();
+
+    fragment(input: SurfaceInput) -> color {
+        let a = sample(base, filter, input.uv);
+        let b = sample(mask, filter, input.uv);
+        return color.linear(tint.rgb * a.xyz * b.xyz, 1.0);
+    }
+}
+
+scene Showroom {
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+    entity Seat {
+        mesh: CHAIR.mesh("Quad");
+        position: CHAIR.node_position("Seat");
+        rotation: CHAIR.node_rotation("Seat");
+        scale: CHAIR.node_scale("Seat");
+        material: Textured {
+            tint: CHAIR.material_base_color("Fabric");
+            base: CHAIR.material_texture("Fabric");
+            mask: MASK;
+            filter: sampler.nearest_clamp();
+        };
+    }
+    entity Frame {
+        mesh: CHAIR.mesh("Wedge");
+        position: CHAIR.node_position("Frame");
+        scale: CHAIR.node_scale("Frame");
+        material: Unlit { color: CHAIR.material_base_color("Oak") };
+    }
+    entity Ground {
+        mesh: CHAIR.mesh("Tri");
+        material: Textured { base: WOOD };
+    }
+    entity Left {
+        mesh: CHAIR.primitive("Twin", 0);
+    }
+    entity Right {
+        mesh: CHAIR.primitive("Twin", 1);
+        material: Textured { base: CHAIR.material_texture("Steel"); tint: CHAIR.material_base_color("Steel") };
+    }
+    entity Wide {
+        mesh: CHAIR.mesh("Wide");
+        position: CHAIR.node_position("Root");
+    }
+}

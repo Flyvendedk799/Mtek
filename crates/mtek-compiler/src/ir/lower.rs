@@ -811,6 +811,18 @@ fn vec3_member(schema: &str, fields: &Fields, name: &str) -> Result<[f32; 3], De
 
 /// A completed mesh descriptor.
 pub(super) fn mesh_desc(what: &str, value: &ConstValue) -> Result<MeshDesc, Defect> {
+    if let ConstValue::AssetMesh {
+        file,
+        mesh,
+        primitive,
+    } = value
+    {
+        return Ok(MeshDesc::Asset {
+            file: file.clone(),
+            mesh: mesh.clone(),
+            primitive: *primitive,
+        });
+    }
     let (schema, fields) = descriptor(what, value)?;
     if !MESH_SCHEMAS.contains(&schema) {
         return Err(format!(

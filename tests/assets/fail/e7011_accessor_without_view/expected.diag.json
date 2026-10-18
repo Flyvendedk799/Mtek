@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E7011",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "accessors[4] has no buffer view; zero-filled accessors are not supported."
+  }
+]
