@@ -12,6 +12,9 @@ export const M5_OUT_DIR = join(BROWSER_ROOT, ".out", "m5");
 /** Three instances of one prefab with their own params, and an instance whose position is bound to the clock. */
 export const PREFAB_INSTANCES = "prefab_instances";
 
+/** Spawned and destroyed blocks in a ring of eight slots under an orthographic camera (M5-02, decision 0064). */
+export const SPAWN_RING = "spawn_ring";
+
 /** Every fixture directory under `fixtures/m5/`, sorted. */
 export function m5FixtureNames(): string[] {
   return readdirSync(M5_FIXTURES_DIR, { withFileTypes: true })

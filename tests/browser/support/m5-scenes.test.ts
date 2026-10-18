@@ -4,12 +4,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { M5_FIXTURES_DIR, PREFAB_INSTANCES, m5FixtureNames } from "./m5-fixtures.ts";
+import { M5_FIXTURES_DIR, PREFAB_INSTANCES, SPAWN_RING, m5FixtureNames } from "./m5-fixtures.ts";
 import { CLIMBER_AT, CLIMBER_FRAMES, CLIMBER_STEP, CLIMBER_TIME, SHOWROOM } from "./m5-scenes.ts";
 
 describe("M5 browser fixtures", () => {
-  it("are exactly the prefab instances fixture", () => {
-    expect(m5FixtureNames()).toEqual([PREFAB_INSTANCES]);
+  it("are exactly the prefab instances fixture and the spawn ring", () => {
+    expect(m5FixtureNames()).toEqual([PREFAB_INSTANCES, SPAWN_RING]);
   });
 
   it("the transcription of the showroom occurs in its source", () => {
