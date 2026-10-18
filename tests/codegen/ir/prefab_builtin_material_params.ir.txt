@@ -1,0 +1,171 @@
+program (entry scene src/main.mtek::Demo)
+  module src/main.mtek @1:1-75:1
+    prefab Tile [src/main.mtek::Tile] @7:1-17:2
+      param #0 tint: color = color(0.14702727, 0.107023105, 1.0, 1.0) @8:5-8:33
+      entity #0 Tile [src/main.mtek::Tile] root @7:1-17:2
+        position = vec3(0.0, 0.0, 0.0) (default @7:1-17:2)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @7:1-17:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @7:1-17:2)
+        visible = true (default @7:1-17:2)
+        mesh = Box { size: vec3(0.8, 0.8, 0.1) } (written @10:5-10:45)
+        material = std/materials.mtek::Unlit (written @11:5-11:37)
+          color: color = init param tint#0
+      state flips: i32 = i32(0) [src/main.mtek::Tile.flips] @9:5-9:26
+      on key_down(KeyT) of entity#0 [src/main.mtek::Tile.on_key_down_T] @13:5-16:6
+        entity#0.state.flips += i32(1) @14:9-14:25
+        entity#0.material.color = color(1.0, 1.0, 1.0, 1.0) @15:9-15:39
+    prefab Pebble [src/main.mtek::Pebble] @19:1-27:2
+      param #0 origin: vec3 = vec3(0.0, 0.0, 0.0) @20:5-20:46
+      entity #0 Pebble [src/main.mtek::Pebble] root @19:1-27:2
+        position = init param origin#0 (written @21:5-21:22)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @19:1-27:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @19:1-27:2)
+        visible = true (default @19:1-27:2)
+        mesh = Sphere { radius: 0.2, segments: 32, rings: 16 } (written @22:5-22:34)
+        material = std/materials.mtek::Unlit (default @19:1-27:2)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+      on key_down(KeyP) of entity#0 [src/main.mtek::Pebble.on_key_down_P] @24:5-26:6
+        entity#0.material.color = color(0.2, 0.4, 0.8, 1.0) @25:9-25:70
+    scene Demo [src/main.mtek::Demo] @29:1-74:2
+      fields
+        clear_color = color(0.0, 0.0, 0.0, 1.0) (default @29:1-74:2)
+      camera Main [src/main.mtek::Demo.Main] active @33:5-36:6
+        position = vec3(0.0, 1.0, 6.0) (written @34:9-34:39)
+        target = vec3(0.0, 0.0, 0.0) (written @35:9-35:37)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @33:5-36:6)
+        projection = Perspective { fov_y: 0.9, near: 0.1, far: 1000.0 } (default @33:5-36:6)
+      entity #0 Sun [src/main.mtek::Demo.Sun] root @38:5-41:6
+        position = vec3(0.0, 0.0, 0.0) (default @38:5-41:6)
+        rotation = quat(-0.3428978, -0.0, -0.0, 0.9393727) (written @39:9-39:62)
+        scale = vec3(1.0, 1.0, 1.0) (default @38:5-41:6)
+        visible = true (default @38:5-41:6)
+        light = DirectionalLight (written @40:9-40:36)
+          color = color(1.0, 1.0, 1.0, 1.0) (written @40:9-40:36)
+          intensity = 1.0 (written @40:9-40:36)
+      entity #1 First [src/main.mtek::Demo.First] root @43:5-43:26
+        instance of src/main.mtek::Tile { tint: color(0.14702727, 0.107023105, 1.0, 1.0) }
+        position = vec3(0.0, 0.0, 0.0) (default @7:1-17:2)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @7:1-17:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @7:1-17:2)
+        visible = true (default @7:1-17:2)
+        mesh = Box { size: vec3(0.8, 0.8, 0.1) } (written @10:5-10:45)
+        material = std/materials.mtek::Unlit (written @11:5-11:37)
+          color: color = color(0.14702727, 0.107023105, 1.0, 1.0)
+      entity #2 Second [src/main.mtek::Demo.Second] root @44:5-46:6
+        instance of src/main.mtek::Tile { tint: color(1.0, 0.24620132, 0.0, 1.0) }
+        position = vec3(0.0, 0.0, 0.0) (default @7:1-17:2)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @7:1-17:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @7:1-17:2)
+        visible = true (default @7:1-17:2)
+        mesh = Box { size: vec3(0.8, 0.8, 0.1) } (written @10:5-10:45)
+        material = std/materials.mtek::Unlit (written @11:5-11:37)
+          color: color = color(1.0, 0.24620132, 0.0, 1.0)
+      entity #3 Stone [src/main.mtek::Demo.Stone] root @47:5-49:6
+        instance of src/main.mtek::Pebble { origin: vec3(1.0, 0.0, 0.0) }
+        position = vec3(1.0, 0.0, 0.0) (written @21:5-21:22)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @19:1-27:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @19:1-27:2)
+        visible = true (default @19:1-27:2)
+        mesh = Sphere { radius: 0.2, segments: 32, rings: 16 } (written @22:5-22:34)
+        material = std/materials.mtek::Unlit (default @19:1-27:2)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+      entity #4 Near [src/main.mtek::Demo.Near] root @50:5-52:6
+        instance of src/props/lamp.mtek::Lamp { tint: color(1.0, 0.60382736, 0.24620132, 1.0), gloss: 0.25 }
+        position = vec3(0.0, 0.0, 0.0) (default @3:8-16:2)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @3:8-16:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @3:8-16:2)
+        visible = true (default @3:8-16:2)
+        mesh = Sphere { radius: 0.4, segments: 32, rings: 16 } (written @6:5-6:34)
+        material = std/materials.mtek::Pbr (written @7:5-11:7)
+          base_color: color = color(1.0, 0.60382736, 0.24620132, 1.0)
+          metallic: f32 = bind#0
+          roughness: f32 = 0.25
+          base_color_texture: texture = texture.white()
+          base_color_sampler: sampler = sampler.linear_repeat()
+      entity #5 Far [src/main.mtek::Demo.Far] root @53:5-55:6
+        instance of src/props/lamp.mtek::Lamp { tint: color(0.24620132, 0.60382736, 1.0, 1.0), gloss: 0.5 }
+        position = vec3(0.0, 0.0, 0.0) (default @3:8-16:2)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @3:8-16:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @3:8-16:2)
+        visible = true (default @3:8-16:2)
+        mesh = Sphere { radius: 0.4, segments: 32, rings: 16 } (written @6:5-6:34)
+        material = std/materials.mtek::Pbr (written @7:5-11:7)
+          base_color: color = color(0.24620132, 0.60382736, 1.0, 1.0)
+          metallic: f32 = bind#1
+          roughness: f32 = 0.5
+          base_color_texture: texture = texture.white()
+          base_color_sampler: sampler = sampler.linear_repeat()
+      state picked: color = color(0.0, 0.0, 0.0, 1.0) [src/main.mtek::Demo.picked] @30:5-30:35
+      state gloss: f32 = 0.0 [src/main.mtek::Demo.gloss] @31:5-31:28
+      state flips: i32 = i32(0) [src/main.mtek::Demo.First.flips] @9:5-9:26
+      state flips: i32 = i32(0) [src/main.mtek::Demo.Second.flips] @9:5-9:26
+      update of scene [src/main.mtek::Demo.update] @57:5-60:6
+        local #0 dt: f32 (param) @57:12-57:14
+        entity#5.material.roughness += (dt#0 * 0.1): f32 @58:9-58:44
+        state.gloss = entity#4.material.roughness @59:9-59:41
+      on key_down(Space) of scene [src/main.mtek::Demo.on_key_down_Space] @62:5-67:6
+        entity#1.material.color = entity#2.material.color @63:9-63:54
+        state.picked = entity#3.material.color @64:9-64:39
+        entity#3.material.color = color(0.0, 1.0, 0.0, 1.0) @65:9-65:40
+        entity#4.material.base_color = state.picked @66:9-66:43
+      on key_down(Enter) of scene [src/main.mtek::Demo.on_key_down_Enter] @69:5-73:6
+        local #0 x: f32 (let) @70:13-70:14
+        local #1 _tile: entity_ref (let) @71:13-71:18
+        local #2 _pebble: entity_ref (let) @72:13-72:20
+        let x#0 = (state.gloss * 2.0): f32 @70:9-70:29
+        let _tile#1 = (spawn((src/main.mtek::Tile { tint: (color.linear((vec3(x#0, 0.5, 0.5)): vec3, 1.0)): color }): prefab descriptor)): entity_ref @71:9-71:80
+        let _pebble#2 = (spawn((src/main.mtek::Pebble { origin: (vec3(x#0, 1.0, 0.0)): vec3 }): prefab descriptor)): entity_ref @72:9-72:67
+      on key_down(KeyT) of entity#1 [src/main.mtek::Demo.First.on_key_down_T] @13:5-16:6
+        entity#1.state.flips += i32(1) @14:9-14:25
+        entity#1.material.color = color(1.0, 1.0, 1.0, 1.0) @15:9-15:39
+      on key_down(KeyT) of entity#2 [src/main.mtek::Demo.Second.on_key_down_T] @13:5-16:6
+        entity#2.state.flips += i32(1) @14:9-14:25
+        entity#2.material.color = color(1.0, 1.0, 1.0, 1.0) @15:9-15:39
+      on key_down(KeyP) of entity#3 [src/main.mtek::Demo.Stone.on_key_down_P] @24:5-26:6
+        entity#3.material.color = color(0.2, 0.4, 0.8, 1.0) @25:9-25:70
+      on key_down(KeyL) of entity#4 [src/main.mtek::Demo.Near.on_key_down_L] @13:5-15:6
+        entity#4.material.roughness = (1.0 - entity#4.material.roughness): f32 @14:9-14:65
+      on key_down(KeyL) of entity#5 [src/main.mtek::Demo.Far.on_key_down_L] @13:5-15:6
+        entity#5.material.roughness = (1.0 - entity#5.material.roughness): f32 @14:9-14:65
+      bind#0 entity#4.material.metallic = (0.5 + ((sin(frame.time)): f32 * 0.5): f32): f32 [order 0; reads frame.time] @10:19-10:52
+      bind#1 entity#5.material.metallic = (0.5 + ((sin(frame.time)): f32 * 0.5): f32): f32 [order 1; reads frame.time] @10:19-10:52
+  module src/props/lamp.mtek @1:1-17:1
+    prefab Lamp [src/props/lamp.mtek::Lamp] @3:8-16:2
+      param #0 tint: color = color(1.0, 0.60382736, 0.24620132, 1.0) @4:5-4:33
+      param #1 gloss: f32 = 0.5 @5:5-5:28
+      entity #0 Lamp [src/props/lamp.mtek::Lamp] root @3:8-16:2
+        position = vec3(0.0, 0.0, 0.0) (default @3:8-16:2)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @3:8-16:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @3:8-16:2)
+        visible = true (default @3:8-16:2)
+        mesh = Sphere { radius: 0.4, segments: 32, rings: 16 } (written @6:5-6:34)
+        material = std/materials.mtek::Pbr (written @7:5-11:7)
+          base_color: color = init param tint#0
+          metallic: f32 = bind#0
+          roughness: f32 = init param gloss#1
+          base_color_texture: texture = texture.white()
+          base_color_sampler: sampler = sampler.linear_repeat()
+      on key_down(KeyL) of entity#0 [src/props/lamp.mtek::Lamp.on_key_down_L] @13:5-15:6
+        entity#0.material.roughness = (1.0 - entity#0.material.roughness): f32 @14:9-14:65
+      bind#0 entity#0.material.metallic = (0.5 + ((sin(frame.time)): f32 * 0.5): f32): f32 [order 0; reads frame.time] @10:19-10:52
+  module std/materials.mtek @1:1-22:1
+    material Unlit [std/materials.mtek::Unlit] @5:8-8:2
+      param #0 color: color = color(1.0, 1.0, 1.0, 1.0) @6:5-6:34
+      block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit (size 16, align 16)
+      fragment -> color [std/materials.mtek::Unlit.fragment] reads none @7:5-7:63
+        local #0 surface: SurfaceInput (param) @7:14-7:21
+        return param color#0 @7:48-7:61
+    material Pbr [std/materials.mtek::Pbr] @10:8-21:2
+      param #0 base_color: color = color(1.0, 1.0, 1.0, 1.0) @11:5-11:39
+      param #1 metallic: f32 = 0.0 @12:5-12:31
+      param #2 roughness: f32 = 0.5 @13:5-13:32
+      param #3 base_color_texture: texture = texture.white() @14:5-14:57
+      param #4 base_color_sampler: sampler = sampler.linear_repeat() @15:5-15:65
+      block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr (size 32, align 16)
+      fragment -> color [std/materials.mtek::Pbr.fragment] reads world_position, world_normal, uv @16:5-20:6
+        local #0 surface: SurfaceInput (param) @16:14-16:21
+        local #1 texel: vec4 (let) @17:13-17:18
+        local #2 albedo: color (let) @18:13-18:19
+        let texel#1 = (sample(param base_color_texture#3, param base_color_sampler#4, (surface#0.uv): vec2)): vec4 @17:9-17:80
+        let albedo#2 = (color.linear(((param base_color#0.rgb): vec3 * (texel#1.xyz): vec3): vec3, 1.0)): color @18:9-18:68
+        return (lighting.pbr(surface#0, albedo#2, param metallic#1, param roughness#2)): color @19:9-19:67

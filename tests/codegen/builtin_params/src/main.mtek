@@ -1,0 +1,57 @@
+// The params of the built-in materials, written and read by name (decision 0087). The runtime tests
+// run it for the uploads (a write reaches the instance's parameter block in the frame it happens,
+// and a frame without writes uploads nothing) and the reads (a handler and a binding see what was
+// written), and, with `builtin_params_edited` (the same scene with other literals and one other
+// formula), for hot reload: Badge.color is written by its own handler and Ball.roughness by `update`
+// (`imperative`), Ball.base_color is `initial`, Ball.metallic is `bound`, Plain has the default
+// `Unlit {}` and a handler of the scene writes it, Marker's default `Unlit {}` is never written.
+scene Demo {
+    clear_color: #101418;
+    state taps: i32 = 0;
+    state seen: color = #000000;
+    state rough: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 1.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Badge {
+        position: vec3(-1.5, 0.0, 0.0);
+        mesh: Box {};
+        material: Unlit { color: #22c55e };
+
+        on key_down(Key.Space) {
+            self.material.color = #3b82f6;
+        }
+    }
+
+    entity Ball {
+        mesh: Sphere { radius: 0.6 };
+        material: Pbr { base_color: #c0c0c0; metallic: bind(f32(taps % 2)); roughness: 0.25 };
+    }
+
+    entity Plain {
+        position: vec3(1.5, 0.0, 0.0);
+        mesh: Box { size: vec3(0.5, 0.5, 0.5) };
+    }
+
+    entity Marker {
+        position: bind(vec3(Ball.material.roughness, Ball.material.metallic, 0.0));
+        mesh: Box { size: vec3(0.1, 0.1, 0.1) };
+    }
+
+    update(dt: f32) {
+        Ball.material.roughness += dt;
+    }
+
+    on key_down(Key.Space) {
+        taps += 1;
+    }
+
+    on key_down(Key.Enter) {
+        seen = Badge.material.color;
+        rough = Ball.material.roughness;
+        Plain.material.color = seen;
+    }
+}

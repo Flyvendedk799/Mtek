@@ -69,6 +69,8 @@ interface IrEntity {
     readonly params: readonly {
       readonly name: string;
       readonly source: IrSource;
+      /** The update class: `resource` for a texture or sampler, which `init` does not write. */
+      readonly update: string;
       readonly span: IrSpan;
     }[];
   } | null;
@@ -204,6 +206,8 @@ function expectedCalls(ir: IrProgram): SetterCall[] {
       field: "visible",
     });
     for (const param of entity.material?.params ?? []) {
+      // Textures and samplers are bound when the instance is created (decision 0054), not set by `init`.
+      if (param.update === "resource") continue;
       add(param.source, param.span, { method: "setParam", entity: entity.index, field: param.name });
     }
     for (const field of ["color", "intensity"] as const) {
@@ -222,6 +226,8 @@ describe("the generated program module", () => {
     expect(fixtures).toEqual([
       "assignable_places",
       "bindings",
+      "builtin_params",
+      "builtin_params_edited",
       "cpu_functions",
       "light_bindings",
       "light_bindings_edited",

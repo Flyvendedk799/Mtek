@@ -1,0 +1,53 @@
+// The edit of `builtin_params` that the hot reload tests apply (decision 0087): the literal colour of
+// Badge, the literal base colour and roughness of Ball and the formula of Ball's bound metallic are
+// different; the structure, the state and the handlers are the same.
+scene Demo {
+    clear_color: #101418;
+    state taps: i32 = 0;
+    state seen: color = #000000;
+    state rough: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 1.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Badge {
+        position: vec3(-1.5, 0.0, 0.0);
+        mesh: Box {};
+        material: Unlit { color: #f59e0b };
+
+        on key_down(Key.Space) {
+            self.material.color = #3b82f6;
+        }
+    }
+
+    entity Ball {
+        mesh: Sphere { radius: 0.6 };
+        material: Pbr { base_color: #808080; metallic: bind(f32(taps % 2) * 0.5); roughness: 0.75 };
+    }
+
+    entity Plain {
+        position: vec3(1.5, 0.0, 0.0);
+        mesh: Box { size: vec3(0.5, 0.5, 0.5) };
+    }
+
+    entity Marker {
+        position: bind(vec3(Ball.material.roughness, Ball.material.metallic, 0.0));
+        mesh: Box { size: vec3(0.1, 0.1, 0.1) };
+    }
+
+    update(dt: f32) {
+        Ball.material.roughness += dt;
+    }
+
+    on key_down(Key.Space) {
+        taps += 1;
+    }
+
+    on key_down(Key.Enter) {
+        seen = Badge.material.color;
+        rough = Ball.material.roughness;
+        Plain.material.color = seen;
+    }
+}
