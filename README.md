@@ -103,6 +103,14 @@ rewrites paths under the checkout to repo-relative POSIX paths, the results dire
 and any other absolute path to `<external>`, and leaves timestamps, durations and every other value
 unchanged. The environment record contains no paths and is committed as written.
 
+## Language server
+
+`mtek lsp [--stdio]` is a language server over standard input and output (`spec/tooling.md` section 7, decision 0076): diagnostics for the whole project (150 ms after the last change, over the editor's unsaved buffers), hover (types, doc comments, standard-library documentation), go to definition (across modules and into the standard library as read-only `mtek-prelude:` documents), completion, and a quick fix for every validated suggested edit of `spec/diagnostics.md` section 6. Positions are UTF-8 if the client offers it and UTF-16 otherwise. A client needs only the launch command; the VS Code extension (M6-04) is a thin client of it.
+
+```
+cargo run -p mtek-cli -- lsp        # waits for an LSP client on stdin; exit code 0 after shutdown and exit
+```
+
 ## Planned commands (not available)
 
 None of these commands exists yet. The milestone in which each is planned is listed in

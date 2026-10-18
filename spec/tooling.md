@@ -18,7 +18,7 @@
 | `mtek test [--allow-not-run] [--format human\|json] [PATH]` | M6 | run a project's declarative test fixtures (§6; decision 0074) |
 | `mtek context --entry FILE [--symbol NAME…] --format json` | M6 | AI context export (`spec/ai-and-benchmarks.md` §2; `--max-bytes N` defaults to 24000; format `spec/context.schema.json`; exit codes, `--entry` and the failure modes are decision 0072) |
 | `mtek grammar export --format ebnf\|gbnf` | M6 | grammar export (`spec/ai-and-benchmarks.md` §3) |
-| `mtek lsp` | M6 | language server over stdio |
+| `mtek lsp [--stdio]` | M6 | language server over stdio (§7; decision 0076) |
 | `mtek --version` | M0 | prints `mtek 0.1.0-dev (language 0.1, runtime ABI 1)` |
 
 `PATH` defaults to the current directory; the project root is the nearest ancestor containing `mtek.toml` (`E9004` if none).
@@ -118,13 +118,15 @@ The seventh step, `expect_counter` (`{ expect_counter = { drawCalls = 7, culledO
 
 ## 7. Language server (`mtek lsp`, M6)
 
-- Transport: stdio JSON-RPC via `lsp-server`/`lsp-types`. Position encoding negotiated: UTF-16 by default (LSP requirement), UTF-8 if the client offers it.
-- Features (basic LSP, blueprint §10): publish diagnostics (from `check`, debounced 150 ms, using unsaved buffers through the in-memory `Fs`); hover (type and doc comment; registry docs for prelude names); go-to-definition (including imports and prelude docs as virtual read-only documents); completion (scope names, schema fields after `Name {`, enum members after `Key.`, intrinsics; all from the registry and resolver).
+- Transport: stdio JSON-RPC (`Content-Length` framing) with the message and protocol types of `lsp-server`/`lsp-types`; `mtek lsp` (or `mtek lsp --stdio`) is the whole launch command; nothing but the protocol is written to stdout. Exit code 0 after `shutdown` and `exit`, 1 without them or when the input is damaged. A payload that is not a message is answered with a JSON-RPC error and the session goes on; a damaged frame ends it.
+- Position encoding negotiated at `initialize`: UTF-8 if the client offers it, UTF-16 (the protocol's default) otherwise; conversions are the compiler's own and exact for multi-byte and astral characters and CRLF.
+- Features (basic LSP, blueprint §10): publish diagnostics (from the compiler's front end, debounced 150 ms after the last change, over the editor's unsaved buffers through the in-memory file system; the diagnostics of the whole project, to the file each is in); hover (type and doc comment; registry docs for prelude names); go-to-definition (including imports; the standard library as virtual read-only documents of the scheme `mtek-prelude:`, served by the LSP 3.18 request `workspace/textDocumentContent`); completion (scope names, schema fields after `Name {`, members after `Key.` and every other `Name.`, intrinsics; all from the registry and resolver); code actions (one quick fix for every validated suggested edit of `spec/diagnostics.md` §6, as one `WorkspaceEdit`).
 - The LSP calls the same compiler service as the CLI; there is no second semantic implementation.
+- What the server does with unsaved text, what it publishes for files that are not open or not in a project, the contexts of completion, the layout of the virtual documents, the capabilities it advertises and the ones it does not, how it survives garbage and its own defects, and the ambiguous points decided (UTF-8 whenever offered, diagnostics for every file of the project) are decision 0076 (`spec/decisions/0076-language-server.md`).
 
 ## 8. VS Code extension (`packages/editor-vscode`, M6)
 
-LSP client launching `mtek lsp` (path configurable, default `mtek` on `PATH`), TextMate grammar for highlighting (generated from the keyword and token lists of `spec/grammar.ebnf` by a script and checked against the corpus for no crashes), language configuration (comments, brackets, auto-closing). Packaged with `@vscode/vsce` as a `.vsix` in CI artefacts; publishing to a marketplace is out of scope for v0.1.
+LSP client launching `mtek lsp` (path configurable, default `mtek` on `PATH`; no other settings: decision 0076 item 12 lists what the client provides, including a content provider for the `mtek-prelude` scheme), TextMate grammar for highlighting (generated from the keyword and token lists of `spec/grammar.ebnf` by a script and checked against the corpus for no crashes), language configuration (comments, brackets, auto-closing). Packaged with `@vscode/vsce` as a `.vsix` in CI artefacts; publishing to a marketplace is out of scope for v0.1.
 
 ## 9. Development overlay (dev builds, M4)
 
