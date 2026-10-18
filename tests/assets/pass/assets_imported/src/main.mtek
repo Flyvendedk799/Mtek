@@ -1,0 +1,23 @@
+import { CHAIR, WOOD, SEAT, OAK } from "./library/assets.mtek";
+
+material Textured {
+    param base: texture = texture.white();
+    param filter: sampler = sampler.linear_repeat();
+    fragment(input: SurfaceInput) -> color {
+        let texel = sample(base, filter, input.uv);
+        return color.linear(texel.xyz, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Seat {
+        mesh: SEAT;
+        material: Textured { base: WOOD };
+    }
+    entity Frame {
+        mesh: CHAIR.mesh("Wedge");
+        position: CHAIR.node_position("Frame");
+        material: Unlit { color: OAK };
+    }
+}

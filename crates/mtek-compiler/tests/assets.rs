@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 
 use mtek_compiler::diagnostics::{Code, Diagnostic};
 use mtek_compiler::project::ProjectRoot;
-use mtek_compiler::source::{MemFs, ProjectPath, SourceMap};
+use mtek_compiler::source::{Fs, MemFs, ProjectPath, SourceMap};
 use mtek_compiler::types::ConstValue;
 use mtek_compiler::{BuildMode, CompileOptions, Inspect, InspectFormat, analyze, build, inspect};
 use serde_json::{Map, Value, json};
@@ -517,6 +517,155 @@ fn the_build_identity_covers_the_asset_bytes() {
     );
     assert!(!changed.has_errors());
     assert_ne!(original.build_id, changed.build_id);
+}
+
+#[test]
+fn every_passing_project_builds_and_has_a_valid_manifest() {
+    let schema: Value =
+        serde_json::from_str(include_str!("../../../spec/manifest.schema.json")).unwrap();
+    let validator = jsonschema::draft202012::new(&schema).unwrap();
+    let names = names("pass");
+    assert!(names.contains(&"assets_imported".to_owned()), "{names:?}");
+    for name in names {
+        let result = build_project("pass", &name);
+        assert!(
+            !result.has_errors(),
+            "assets/pass/{name}: {}",
+            diagnostics_json(&result.sources, &result.report.diagnostics)
+        );
+        let manifest = manifest_of(&result);
+        let problems: Vec<String> = validator
+            .iter_errors(&manifest)
+            .map(|e| format!("{e} at {}", e.instance_path()))
+            .collect();
+        assert!(problems.is_empty(), "{name}: {problems:#?}");
+        // Every asset the manifest names is a file of the output, with the length it says.
+        for asset in manifest["assets"].as_array().unwrap() {
+            let url = asset["url"].as_str().unwrap();
+            assert_eq!(
+                result.files.get(url).map(Vec::len),
+                asset["bytes"].as_u64().map(|b| b as usize),
+                "{name}: {url}"
+            );
+        }
+    }
+}
+
+#[test]
+fn assets_declared_in_one_module_are_used_in_another() {
+    let result = build_project("pass", "assets_imported");
+    let manifest = manifest_of(&result);
+    let kinds: Vec<&str> = manifest["assets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|a| a["kind"].as_str().unwrap())
+        .collect();
+    assert_eq!(kinds, ["mesh-data", "image"]);
+    // The declaring spans are in the module that wrote the declarations.
+    let assets = manifest["assets"].as_array().unwrap();
+    let spans = manifest["spans"].as_array().unwrap();
+    let sources = manifest["sources"].as_array().unwrap();
+    for asset in assets {
+        let span = &spans[asset["span"].as_u64().unwrap() as usize];
+        let path = sources[span["file"].as_u64().unwrap() as usize]["path"]
+            .as_str()
+            .unwrap();
+        assert_eq!(path, "src/library/assets.mtek");
+    }
+}
+
+/// Apply the suggested edits of the diagnostics to `source`.
+fn apply(source: &str, diagnostics: &[Value]) -> String {
+    let mut edits: Vec<(usize, usize, String)> = diagnostics
+        .iter()
+        .flat_map(|d| d["suggestedEdits"].as_array().cloned().unwrap_or_default())
+        .flat_map(|e| e["edits"].as_array().cloned().unwrap_or_default())
+        .map(|e| {
+            (
+                e["startByte"].as_u64().unwrap() as usize,
+                e["endByte"].as_u64().unwrap() as usize,
+                e["replacement"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect();
+    edits.sort_by(|a, b| b.0.cmp(&a.0));
+    let mut text = source.to_owned();
+    for (start, end, replacement) in edits {
+        text.replace_range(start..end, &replacement);
+    }
+    text
+}
+
+#[test]
+fn a_suggested_rename_removes_its_diagnostic_and_introduces_none() {
+    // Spec section 6 of diagnostics.md: an edit is offered only if the program, re-checked with
+    // the edit applied, no longer has the diagnostic and has no new error.
+    let name = "e7024_unknown_names";
+    let before = build_project("fail", name);
+    let report: Vec<Value> = serde_json::from_str(&diagnostics_json(
+        &before.sources,
+        &before.report.diagnostics,
+    ))
+    .unwrap();
+    let with_edits = report.iter().filter(|d| d.get("suggestedEdits").is_some()).count();
+    assert_eq!(with_edits, 3, "three of the names are one typo away from a name");
+    let mut memory = project_fs("fail", name, None);
+    let path = ProjectPath::new("src/main.mtek").unwrap();
+    let source = String::from_utf8(memory.read(&path).unwrap()).unwrap();
+    memory.insert(path, apply(&source, &report).into_bytes());
+    let after = build(
+        &ProjectRoot::at_base(),
+        &memory,
+        &CompileOptions::with_stub_runtime(BuildMode::Release),
+    );
+    let remaining: Vec<&str> = after
+        .report
+        .diagnostics
+        .iter()
+        .map(|d| d.message.as_str())
+        .collect();
+    assert_eq!(remaining.len(), report.len() - with_edits, "{remaining:#?}");
+    assert!(remaining.iter().all(|m| !m.contains("'Qaud'") && !m.contains("'Rot'") && !m.contains("'Oakk'")));
+}
+
+#[test]
+fn a_gltf_material_is_a_pbr_instance_once_pbr_exists() {
+    // `glb_asset.material` produces a `Pbr` instance (spec/assets.md section 2.1), so it waits
+    // for the built-in `Pbr` (task M4-03): until then it says so with E9010; after, it works.
+    let mut memory = project_fs("pass", "assets_supported", None);
+    memory.insert(
+        ProjectPath::new("src/main.mtek").unwrap(),
+        br#"const CHAIR = asset.glb("../models/chair.glb");
+scene Demo {
+    camera Main {}
+    entity Seat {
+        mesh: CHAIR.mesh("Quad");
+        material: CHAIR.material("Fabric");
+    }
+}
+"#
+        .to_vec(),
+    );
+    let result = analyze(&ProjectRoot::at_base(), &memory);
+    let pbr_implemented = mtek_compiler::stdlib::registry()
+        .schema("Pbr")
+        .is_some_and(|schema| {
+            schema
+                .since
+                .is_reached_by(mtek_compiler::resolve::IMPLEMENTED_MILESTONE)
+        });
+    let codes: Vec<&str> = result
+        .report
+        .diagnostics
+        .iter()
+        .map(|d| d.code.short())
+        .collect();
+    if pbr_implemented {
+        assert!(codes.is_empty(), "{codes:?}");
+    } else {
+        assert_eq!(codes, ["E9010"]);
+    }
 }
 
 #[test]

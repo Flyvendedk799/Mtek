@@ -1,0 +1,4 @@
+export const CHAIR = asset.glb("../../models/chair.glb");
+export const WOOD = asset.texture("../../textures/wood.png");
+export const SEAT = CHAIR.mesh("Quad");
+export const OAK = CHAIR.material_base_color("Oak");

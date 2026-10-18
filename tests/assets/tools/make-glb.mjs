@@ -495,6 +495,47 @@ scene Showroom {
 `,
 );
 
+// Assets declared in one module and used in another: the handles are constants like any
+// other, so they are exported and imported.
+put("pass/assets_imported/mtek.toml", TOML);
+put("pass/assets_imported/models/chair.glb", supportedModel());
+put("pass/assets_imported/textures/wood.png", WOOD);
+put(
+  "pass/assets_imported/src/library/assets.mtek",
+  `export const CHAIR = asset.glb("../../models/chair.glb");
+export const WOOD = asset.texture("../../textures/wood.png");
+export const SEAT = CHAIR.mesh("Quad");
+export const OAK = CHAIR.material_base_color("Oak");
+`,
+);
+put(
+  "pass/assets_imported/src/main.mtek",
+  `import { CHAIR, WOOD, SEAT, OAK } from "./library/assets.mtek";
+
+material Textured {
+    param base: texture = texture.white();
+    param filter: sampler = sampler.linear_repeat();
+    fragment(input: SurfaceInput) -> color {
+        let texel = sample(base, filter, input.uv);
+        return color.linear(texel.xyz, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Seat {
+        mesh: SEAT;
+        material: Textured { base: WOOD };
+    }
+    entity Frame {
+        mesh: CHAIR.mesh("Wedge");
+        position: CHAIR.node_position("Frame");
+        material: Unlit { color: OAK };
+    }
+}
+`,
+);
+
 // ----- row 1: the container --------------------------------------------------
 
 fail("e7001_gltf_extension", null, {
