@@ -1,0 +1,48 @@
+scene Demo {
+    clear_color: #0b1020;
+    state moving: bool = false;
+    state direction: f32 = 1.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 8.0; near: 0.1; far: 50.0 };
+    }
+
+    entity PostLeft {
+        position: vec3(-3.5, 0.0, 0.0);
+        mesh: Box { size: vec3(0.3, 1.6, 0.3) };
+        material: Unlit { color: #64748b };
+    }
+
+    entity PostRight {
+        position: vec3(3.5, 0.0, 0.0);
+        mesh: Box { size: vec3(0.3, 1.6, 0.3) };
+        material: Unlit { color: #64748b };
+    }
+
+    entity Slider {
+        position: vec3(-2.5, 0.0, 0.0);
+        mesh: Box { size: vec3(0.8, 0.8, 0.8) };
+        material: Unlit { color: #f97316 };
+    }
+
+    update(dt: f32) {
+        if moving {
+            let target = direction * 2.5;
+            var x = Slider.position.x + direction * 2.5 * dt;
+            if (x - target) * direction >= 0.0 {
+                x = target;
+                moving = false;
+                direction = -direction;
+            }
+            Slider.position = vec3(x, 0.0, 0.0);
+        }
+    }
+
+    on key_down(Key.Space) {
+        if !moving {
+            moving = true;
+        }
+    }
+}

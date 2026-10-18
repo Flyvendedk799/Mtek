@@ -1,0 +1,32 @@
+# Camera: position (0, 0, 6) looking at the origin, fov_y 0.9, 128 x 128 target. The unit cube's front face (z = 0.5)
+# is 24.09 pixels per unit of local x: local x = -0.5 is at pixel 51.96, x = 0 at 64, x = 0.5 at 76.04
+# (pinhole projection, f64; nothing else of the cube is visible from the camera at x = 0, y = 0). The colour of a
+# pixel follows from "local x below edge: rose, else accent"; every probe is at least 2.5 pixels from the boundary
+# and from the edge of the face. A host input is applied at the start of the next frame, so a step follows
+# each set_input.
+name = "without a host input the cube is rose left of x = 0 and blue right of it"
+steps = [
+  { step = 5, dt = 0.016666668 },
+  # edge 0, accent #2563eb (the starter): boundary at pixel 64.00 (face from 51.96 to 76.04)
+  { expect_pixel = { x = 54, y = 56, color = "#e11d48", tolerance = 2 } },
+  { expect_pixel = { x = 54, y = 72, color = "#e11d48", tolerance = 2 } },
+  { expect_pixel = { x = 57, y = 56, color = "#e11d48", tolerance = 2 } },
+  { expect_pixel = { x = 57, y = 72, color = "#e11d48", tolerance = 2 } },
+  { expect_pixel = { x = 60, y = 56, color = "#e11d48", tolerance = 2 } },
+  { expect_pixel = { x = 60, y = 72, color = "#e11d48", tolerance = 2 } },
+  { expect_pixel = { x = 66, y = 56, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 66, y = 72, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 69, y = 56, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 69, y = 72, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 70, y = 56, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 70, y = 72, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 56, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 72, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 73, y = 56, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 73, y = 72, color = "#2563eb", tolerance = 2 } },
+  # only the cube changes
+  { expect_pixel = { x = 2, y = 2, color = "#0f0f1a", tolerance = 2 } },
+  { expect_pixel = { x = 125, y = 125, color = "#0f0f1a", tolerance = 2 } },
+  { expect_pixel = { x = 46, y = 64, color = "#0f0f1a", tolerance = 2 } },
+  { expect_pixel = { x = 82, y = 64, color = "#0f0f1a", tolerance = 2 } },
+]

@@ -1,0 +1,19 @@
+id = "holdout-02"
+category = "scene-rendering"
+mode = "cold"
+title = "A scaled and rotated arm with two nested children"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #10141c.
+- One perspective camera at (0, 0, 8) looking at the origin: vertical field of view 0.9 radians, near plane 0.1, far plane 100.
+- All surfaces are flat colours (no lighting).
+- A box named Arm with edge lengths 1, 1, 1, colour #f59e0b, at position (1, -1, 0). Its local scale is (2, 1, 1), applied along its own axes, and it is turned by 90 degrees counter-clockwise about the Z axis as the camera sees it (a point on its local +X axis ends up on the world +Y side of it).
+- A box named Hand with edge lengths 0.5, 0.5, 0.5, colour #22d3ee, a child of Arm, at position (1, 0, 0) in Arm's local space.
+- A sphere named Spark of radius 0.4, colour #f472b6, a child of Hand, at position (0, 1, 0) in Hand's local space.
+A child's position, rotation and scale are relative to its parent, and the parent's transform applies to it."""
+required_symbols = ["Demo.Arm", "Demo.Arm.Hand", "Demo.Arm.Hand.Spark"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

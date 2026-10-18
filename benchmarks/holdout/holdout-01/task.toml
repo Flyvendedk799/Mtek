@@ -7,8 +7,8 @@ prompt = """Build a scene named Demo that renders exactly as follows. The pictur
 - One orthographic camera at (0, 0, 10) looking at the origin: visible world height 6 (the visible width is the same), near plane 0.1, far plane 50.
 - Three boxes in a row along the x axis, all flat colours (no lighting): Small at (-2, 0, 0) with edge length 0.5, colour #ef4444; Medium at the origin with edge length 1.0, colour #eab308; Large at (2, 0, 0) with edge length 1.5, colour #a855f7.
 - A white (#f8fafc) sphere named Cap of radius 0.25, a child of Medium, whose centre is 0.9 above the centre of Medium (flat colour)."""
-required_symbols = ["Demo.Small", "Demo.Medium", "Demo.Large", "Demo.Cap"]
-mtek_side_status = "unverified-until-M6"
+required_symbols = ["Demo.Small", "Demo.Medium", "Demo.Large", "Demo.Medium.Cap"]
+mtek_side_status = "verified"
 
 [budgets]
 max_repairs = 3

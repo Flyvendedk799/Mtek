@@ -1,0 +1,20 @@
+id = "holdout-03"
+category = "scene-rendering"
+mode = "cold"
+title = "A floor with boxes and a sphere, one box hidden"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #0f172a.
+- One perspective camera at (0, 5, 10) looking at the origin: vertical field of view 0.9 radians, near plane 0.1, far plane 100.
+- All surfaces are flat colours (no lighting).
+- A flat square named Floor, 8 by 8 (along x and z), lying in the plane y = 0 with its visible side facing up, colour #4d7c0f.
+- Three boxes, edge lengths given along x, y, z: Front 2, 2, 1 at (-1.3, 1, 0.8), colour #2563eb; Back 1.5, 3, 1.5 at (-1.5, 1.5, -1.5), colour #dc2626; Tall 1, 2, 1 at (2.3, 1, -0.8), colour #f97316.
+- A sphere named Orb of radius 0.9 at (1.2, 0.9, -0.8), colour #14b8a6. It passes through Tall.
+- A box named Ghost, edge lengths 1, 1, 1, colour #f8fafc, at (0.5, 0.5, 1). It must exist in the scene but must not be drawn (it is hidden for now and will be shown later).
+What is nearer to the camera hides what is behind it."""
+required_symbols = ["Demo.Floor", "Demo.Front", "Demo.Back", "Demo.Tall", "Demo.Orb", "Demo.Ghost"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

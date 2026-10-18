@@ -1,0 +1,9 @@
+[project]
+name = "holdout-06"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Demo"
+
+[host.inputs]
+edge = "Demo.edge_x"
+accent = "Demo.accent_color"

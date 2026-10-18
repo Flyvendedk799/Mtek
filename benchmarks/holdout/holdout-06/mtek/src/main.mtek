@@ -1,0 +1,22 @@
+material Split {
+    fragment(surface: SurfaceInput) -> color {
+        if surface.local_position.x < 0.0 {
+            return #e11d48;
+        }
+        return #2563eb;
+    }
+}
+
+scene Demo {
+    clear_color: #0f0f1a;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Split {};
+    }
+}

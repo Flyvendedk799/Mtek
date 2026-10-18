@@ -1,0 +1,34 @@
+scene Demo {
+    clear_color: #0a0a14;
+    state planet_angle: f32 = 0.0;
+    state moon_angle: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Sun {
+        mesh: Sphere { radius: 0.8 };
+        material: Unlit { color: #fbbf24 };
+    }
+
+    entity Planet {
+        position: vec3(3.0, 0.0, 0.0);
+        mesh: Sphere { radius: 0.5 };
+        material: Unlit { color: #38bdf8 };
+
+        entity Moon {
+            position: vec3(1.0, 0.0, 0.0);
+            mesh: Sphere { radius: 0.3 };
+            material: Unlit { color: #e2e8f0 };
+        }
+    }
+
+    update(dt: f32) {
+        planet_angle += 0.8 * dt;
+        moon_angle += 2.5 * dt;
+        Planet.position = vec3(3.0 * cos(planet_angle), 3.0 * sin(planet_angle), 0.0);
+        Moon.position = vec3(cos(moon_angle), sin(moon_angle), 0.0);
+    }
+}

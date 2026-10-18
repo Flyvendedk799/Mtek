@@ -1,0 +1,27 @@
+scene Demo {
+    clear_color: #0b1020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 8.0; near: 0.1; far: 50.0 };
+    }
+
+    entity PostLeft {
+        position: vec3(-3.5, 0.0, 0.0);
+        mesh: Box { size: vec3(0.3, 1.6, 0.3) };
+        material: Unlit { color: #64748b };
+    }
+
+    entity PostRight {
+        position: vec3(3.5, 0.0, 0.0);
+        mesh: Box { size: vec3(0.3, 1.6, 0.3) };
+        material: Unlit { color: #64748b };
+    }
+
+    entity Slider {
+        position: vec3(-2.5, 0.0, 0.0);
+        mesh: Box { size: vec3(0.8, 0.8, 0.8) };
+        material: Unlit { color: #f97316 };
+    }
+}
