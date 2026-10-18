@@ -1,0 +1,81 @@
+// Assets end to end (task M4-06, decision 0060): a GLB with three meshes (one with two primitives), five materials and
+// two images, and two standalone textures, drawn in a 3 x 3 grid. The layout and the expected pixels are written down in
+// tests/assets/tools/make-glb.mjs, which generates the GLB and the PNGs from explicit data.
+const SCENE = asset.glb("../models/scene.glb");
+const WOOD = asset.texture("../textures/wood.png");
+const MASK = asset.linear_texture("../textures/mask.png");
+
+// Unlit: the tint times the texel, in linear space (the texture is sampled as linear values).
+material Decal {
+    param tint: color = #ffffff;
+    param base: texture = texture.white();
+    param filter: sampler = sampler.nearest_clamp();
+
+    fragment(input: SurfaceInput) -> color {
+        let texel = sample(base, filter, input.uv);
+        return color.linear(tint.rgb * texel.xyz, 1.0);
+    }
+}
+
+scene Showroom {
+    clear_color: #102030;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.2;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 6.0; near: 0.1; far: 20.0 };
+    }
+
+    entity Sun {
+        rotation: quat.euler(-0.9, 0.4, 0.0);
+        light: DirectionalLight { intensity: 3.0 };
+    }
+
+    entity Checker {
+        mesh: SCENE.mesh("Panel");
+        position: SCENE.node_position("CheckerNode");
+        material: Decal { base: SCENE.material_texture("Checker") };
+    }
+    entity Corner {
+        mesh: SCENE.mesh("Corner");
+        position: SCENE.node_position("CornerNode");
+        material: Unlit { color: SCENE.material_base_color("Oak") };
+    }
+    entity Lacquer {
+        mesh: SCENE.mesh("Panel");
+        position: SCENE.node_position("LacquerNode");
+        material: SCENE.material("Lacquer");
+    }
+    entity Square {
+        mesh: SCENE.primitive("Pair", 0);
+        position: vec3(-2.0, 0.0, 0.0);
+        material: Unlit { color: SCENE.material_base_color("Slate") };
+    }
+    entity Roof {
+        mesh: SCENE.primitive("Pair", 1);
+        position: vec3(0.0, 0.0, 0.0);
+        material: Unlit { color: SCENE.material_base_color("Oak") };
+    }
+    entity Wood {
+        mesh: SCENE.mesh("Panel");
+        position: vec3(2.0, 0.0, 0.0);
+        material: Decal { base: WOOD };
+    }
+    entity Mask {
+        mesh: SCENE.mesh("Panel");
+        position: vec3(-2.0, -2.0, 0.0);
+        material: Decal { base: MASK };
+    }
+    entity Grey {
+        mesh: SCENE.mesh("Panel");
+        position: vec3(0.0, -2.0, 0.0);
+        material: Decal { base: SCENE.material_texture("Grey") };
+    }
+    entity Wood2 {
+        mesh: SCENE.mesh("Panel");
+        position: vec3(2.0, -2.0, 0.0);
+        material: Decal { base: WOOD };
+    }
+}
