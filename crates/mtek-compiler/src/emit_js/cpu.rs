@@ -844,10 +844,9 @@ impl FnLowering<'_, '_> {
                 let arguments = self.exprs(args)?;
                 handle.member(&camel_case(command)).call(arguments)
             }
-            ir::ExprKind::BodyProperty { target, property } => {
-                self.body_handle(target, expr.span)?
-                    .member(&camel_case(property))
-            }
+            ir::ExprKind::BodyProperty { target, property } => self
+                .body_handle(target, expr.span)?
+                .member(&camel_case(property)),
             ir::ExprKind::Frame { member } => Expr::ident("ctx").member("frame").member(member),
             ir::ExprKind::EnumMember { code, .. } => Expr::string(code),
             ir::ExprKind::Construct { args } => {

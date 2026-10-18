@@ -1559,7 +1559,10 @@ const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
         "E8101",
         "../../packages/runtime-web/src/physics/system.test.ts",
     ),
-    ("E8102", "../../packages/runtime-web/src/physics/load.test.ts"),
+    (
+        "E8102",
+        "../../packages/runtime-web/src/physics/load.test.ts",
+    ),
     (
         "E8103",
         "../../packages/runtime-web/src/physics/system.test.ts",

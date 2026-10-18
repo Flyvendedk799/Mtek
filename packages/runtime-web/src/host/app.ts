@@ -1039,6 +1039,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private counters(): Readonly<Record<string, number>> {
     const registry = this.deps.registry.snapshot();
     const { renderer, materials, world } = this.deps.scene;
+    // Bodies and colliders in the physics world; zero without physics and after dispose (spec/physics.md section 7).
+    const physics = this.deps.physics?.counts() ?? { bodies: 0, colliders: 0 };
     // GPU time exists only with timestamp-query in a development runtime that was asked to measure it;
     // otherwise the key is absent and `gpuTimeAvailable` is 0 (never CPU time under another name).
     const gpuTimeMs = __MTEK_DEV__ ? (this.deps.devTools?.gpuTimeMs ?? null) : null;
@@ -1065,8 +1067,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       entitySlots: world.dynamic.slotCapacity,
       entitiesSpawned: world.dynamic.spawned,
       entitiesDestroyed: world.dynamic.destroyed,
-      physicsBodies: this.deps.physics?.counts().bodies ?? 0,
-      physicsColliders: this.deps.physics?.counts().colliders ?? 0,
+      physicsBodies: physics.bodies,
+      physicsColliders: physics.colliders,
       physicsSteps: this.deps.physics?.steps ?? 0,
       physicsFrozenBodies: this.deps.physics?.frozenBodies ?? 0,
       framesRendered: this.deps.surface.framesRendered,

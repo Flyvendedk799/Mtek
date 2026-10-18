@@ -301,7 +301,8 @@ pub fn package(
         },
         subsystems: Subsystems {
             physics: uses_physics,
-            physics_module: physics_bundle.map(|bundle| format!("{PHYSICS_DIR}/{}.js", h16(bundle))),
+            physics_module: physics_bundle
+                .map(|bundle| format!("{PHYSICS_DIR}/{}.js", h16(bundle))),
         },
         runtime_config: RuntimeConfig {
             fixed_step: number(runtime.fixed_step, "runtime.fixed_step")?,
