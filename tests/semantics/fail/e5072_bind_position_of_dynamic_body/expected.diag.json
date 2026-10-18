@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5072",
+    "file": "src/main.mtek",
+    "startByte": 142,
+    "endByte": 170,
+    "message": "`bind` cannot drive the field 'position' of entity 'Ball': it has a Dynamic body, which owns the pose.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 205,
+        "endByte": 222
+      }
+    ],
+    "notes": [
+      "the solver owns the pose of a dynamic body; move it with `apply_impulse`, `apply_force`, `set_linear_velocity` or `teleport`"
+    ]
+  }
+]

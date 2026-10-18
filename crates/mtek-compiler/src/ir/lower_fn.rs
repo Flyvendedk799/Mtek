@@ -8,9 +8,9 @@ use std::collections::BTreeMap;
 
 use super::lower::{Defect, Lowering};
 use super::model::{
-    Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Branch, Expr, ExprKind,
-    Function, LocalItem, LocalKind, MaterialItem, MaterialParamItem, NamedExpr, Owner, Place,
-    PlaceRoot, PlaceStep, StageItem, State, Stmt, Symbol, Value,
+    Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, BodyTarget as IrBodyTarget,
+    Branch, Expr, ExprKind, Function, LocalItem, LocalKind, MaterialItem, MaterialParamItem,
+    NamedExpr, Owner, Place, PlaceRoot, PlaceStep, StageItem, State, Stmt, Symbol, Value,
 };
 use crate::layout::{
     LayoutType, compute, material_layout_id, material_params_struct, qualified_name,
@@ -18,7 +18,7 @@ use crate::layout::{
 use crate::resolve::{DefId, DefKind, Res};
 use crate::stdlib::{EventForm, registry};
 use crate::syntax::ast::{self, ElseBranch, ExprKind as AstExpr, FieldValue, ForIter, HandlerArg};
-use crate::types::{CallKind, EffectLevel, FieldKind, FnRef, Ty, TyId};
+use crate::types::{BodyTarget, CallKind, EffectLevel, FieldKind, FnRef, Ty, TyId};
 
 /// What the lowering of a scene body needs to name entities and cameras: the static index of
 /// every entity declaration and the name of every camera. For a prefab body (decision 0062) the
@@ -477,6 +477,27 @@ impl FnLowering<'_, '_> {
         })
     }
 
+    /// The target of the body command or property read `access` (`X.body.name(..)` as the call's
+    /// callee, or `X.body.name` itself): the named entity, or the lowered `entity_ref` `X`.
+    fn body_target(&self, access: &ast::Expr, target: &BodyTarget) -> Result<IrBodyTarget, Defect> {
+        Ok(match target {
+            BodyTarget::Entity(def) => IrBodyTarget::Entity {
+                entity: self.entity_index(*def)?,
+            },
+            BodyTarget::Ref => {
+                let AstExpr::Field { base, .. } = &access.kind else {
+                    return Err(self.defect("a body access that is not a field"));
+                };
+                let AstExpr::Field { base: owner, .. } = &base.kind else {
+                    return Err(self.defect("a body access without `.body`"));
+                };
+                IrBodyTarget::Ref {
+                    target: Box::new(self.expr(owner)?),
+                }
+            }
+        })
+    }
+
     fn defect(&self, what: &str) -> Defect {
         format!("function '{}': {what}", self.name)
     }
@@ -871,7 +892,12 @@ impl FnLowering<'_, '_> {
                 lhs: boxed(lhs)?,
                 rhs: boxed(rhs)?,
             }),
-            AstExpr::Call { args, .. } => match types.call_kind(expr.id) {
+            AstExpr::Call { callee, args } => match types.call_kind(expr.id) {
+                Some(CallKind::BodyCommand { command, target }) => make(ExprKind::BodyCommand {
+                    target: self.body_target(callee, target)?,
+                    command: (*command).to_owned(),
+                    args: list(args)?,
+                }),
                 Some(CallKind::UserFunction { def, .. }) => make(ExprKind::Call {
                     function: self.lowering.function_symbol(*def)?,
                     args: list(args)?,
@@ -913,6 +939,12 @@ impl FnLowering<'_, '_> {
                     | FieldKind::MaterialParam { .. }
                     | FieldKind::LightField { .. }),
                 ) => make(self.object_read(kind)?),
+                Some(FieldKind::BodyProperty { property, target }) => {
+                    make(ExprKind::BodyProperty {
+                        target: self.body_target(expr, target)?,
+                        property: (*property).to_owned(),
+                    })
+                }
                 Some(FieldKind::NamespaceValue(full)) => match full.strip_prefix("frame.") {
                     Some(member) => make(ExprKind::Frame {
                         member: member.to_owned(),

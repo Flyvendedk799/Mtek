@@ -1,0 +1,56 @@
+[
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 243,
+    "endByte": 256,
+    "message": "`Ball.position` belongs to the physics subsystem, because 'Ball' has a Dynamic body, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 130,
+        "endByte": 147
+      }
+    ],
+    "notes": [
+      "the solver owns the pose of a dynamic body; move it with `apply_impulse`, `apply_force`, `set_linear_velocity` or `teleport`"
+    ]
+  },
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 333,
+    "endByte": 346,
+    "message": "`Ball.position` belongs to the physics subsystem, because 'Ball' has a Dynamic body, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 130,
+        "endByte": 147
+      }
+    ],
+    "notes": [
+      "the solver owns the pose of a dynamic body; move it with `apply_impulse`, `apply_force`, `set_linear_velocity` or `teleport`"
+    ]
+  },
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 378,
+    "endByte": 391,
+    "message": "`Ball.rotation` belongs to the physics subsystem, because 'Ball' has a Dynamic body, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 130,
+        "endByte": 147
+      }
+    ],
+    "notes": [
+      "the solver owns the pose of a dynamic body; move it with `apply_impulse`, `apply_force`, `set_linear_velocity` or `teleport`"
+    ]
+  }
+]

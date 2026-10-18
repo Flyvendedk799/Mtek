@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5004",
+    "file": "src/main.mtek",
+    "startByte": 153,
+    "endByte": 169,
+    "message": "`bind` cannot be the value of the field 'scale' of entity 'Floor': the field is not bindable.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 201,
+        "endByte": 217
+      }
+    ],
+    "notes": [
+      "the scale of an entity with a body is construction-only"
+    ]
+  }
+]

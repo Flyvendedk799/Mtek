@@ -1,0 +1,37 @@
+// A scene gravity other than the default, and a static body with a scale: the scale of a static
+// body is visual (the collider is sized by its own descriptor), only dynamic and kinematic
+// bodies must keep vec3(1.0). The pose of a body entity can be read (here by a binding), and its
+// visible field is unaffected by physics.
+const MOON = vec3(0.0, -1.62, 0.0);
+
+scene Demo {
+    gravity: MOON;
+    camera Main {
+        position: vec3(0.0, 4.0, 12.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Slab {
+        position: vec3(0.0, -0.5, 0.0);
+        scale: vec3(10.0, 1.0, 10.0);
+        mesh: Box {};
+        material: Unlit { color: #777777 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(10.0, 1.0, 10.0) };
+    }
+    entity Rock {
+        position: vec3(0.0, 2.0, 0.0);
+        scale: vec3(1.0, 1.0, 1.0);
+        mesh: Sphere { radius: 0.5 };
+        material: Unlit { color: #aa8855 };
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5 };
+        on key_down(Key.H) {
+            self.visible = false;
+            Slab.visible = true;
+        }
+    }
+    entity Marker {
+        mesh: Box { size: vec3(0.1, 0.1, 0.1) };
+        position: bind(Rock.position + vec3(0.0, 1.0, 0.0));
+    }
+}

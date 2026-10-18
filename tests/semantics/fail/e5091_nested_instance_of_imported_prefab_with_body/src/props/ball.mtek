@@ -1,0 +1,5 @@
+export prefab Ball {
+    mesh: Sphere {};
+    body: Dynamic {};
+    collider: SphereCollider { radius: 0.5; };
+}

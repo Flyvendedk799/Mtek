@@ -308,6 +308,11 @@ impl ValueRange {
         Self::bounded(Some(Bound::exclusive(Limit::Int(0))), None)
     }
 
+    /// Any finite value (no bounds, no infinity).
+    pub const fn finite() -> Self {
+        Self::EMPTY.and_finite()
+    }
+
     /// `>= 0`.
     pub const fn non_negative() -> Self {
         Self::bounded(Some(Bound::inclusive(Limit::Int(0))), None)

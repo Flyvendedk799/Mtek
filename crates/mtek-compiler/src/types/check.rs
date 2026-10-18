@@ -36,6 +36,7 @@ use super::facts::{BuiltinCall, CallFact, Callee};
 use super::ops::{
     arithmetic_result, comparison_result, literal_operand_type, logical_result, negation_result,
 };
+use super::physics::BodyTarget;
 use super::ty::{MAX_TYPE_DEPTH, Ty, TyId};
 use super::value::{ArithOp, CompareOp, ConstValue, LogicOp, Scalar};
 use super::{FnSig, MaterialInfo, Typeck};
@@ -43,15 +44,15 @@ use super::{FnSig, MaterialInfo, Typeck};
 /// The largest length of `array<T, N>` (`spec/language.md` 5.1).
 pub(super) const MAX_ARRAY_LENGTH: u32 = 65_536;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
-use crate::resolve::gate::is_implemented;
+use crate::resolve::gate::{gate_message, gate_note, is_implemented};
 use crate::resolve::{
     Construct, DefId, DefKind, PreludeItem, Res, Resolution, binary_construct,
     construct_implemented, unary_construct,
 };
 use crate::source::Span;
 use crate::stdlib::{
-    ArgType, Domain, IntrinsicDef, NamespaceMember, Registry, SchemaCategory, SigType, TypeKind,
-    registry,
+    ArgType, Domain, IntrinsicDef, Milestone, NamespaceMember, Registry, SchemaCategory, SigType,
+    TypeKind, registry,
 };
 use crate::syntax::ast::{
     ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr,
@@ -152,6 +153,11 @@ pub enum CallKind {
     /// the declaration the callee resolved to (a `fn` of this module or the
     /// imported name).
     UserFunction { name: String, def: DefId },
+    /// A body command, `Name.body.apply_impulse(..)` (`spec/physics.md` section 3, decision 0065).
+    BodyCommand {
+        command: &'static str,
+        target: BodyTarget,
+    },
 }
 
 /// What a field access turned out to be (for constant evaluation and the
@@ -188,6 +194,11 @@ pub enum FieldKind {
     /// A field of a registry record value (`input.uv` of a `SurfaceInput`,
     /// decision 0039), with its position in the record.
     RecordField { field: &'static str, index: usize },
+    /// A readable body property, `Name.body.linear_velocity` (`spec/physics.md` section 3).
+    BodyProperty {
+        property: &'static str,
+        target: BodyTarget,
+    },
 }
 
 pub(super) struct Checker<'a> {
@@ -340,11 +351,11 @@ impl<'a> Checker<'a> {
         self.out.interner.display(ty)
     }
 
-    fn is_error(&self, ty: TyId) -> bool {
+    pub(super) fn is_error(&self, ty: TyId) -> bool {
         self.out.interner.is_error(ty)
     }
 
-    fn assignable(&self, actual: TyId, expected: TyId) -> bool {
+    pub(super) fn assignable(&self, actual: TyId, expected: TyId) -> bool {
         self.out.interner.assignable(actual, expected)
     }
 
@@ -519,6 +530,7 @@ impl<'a> Checker<'a> {
                     self.allow_param_bind = false;
                     self.note_entity_material(self.res.def_of(entity.id), field);
                     self.note_entity_light(self.res.def_of(entity.id), field);
+                    self.note_entity_physics(self.res.def_of(entity.id), field);
                 }
                 EntityMember::Const(decl) if construct_implemented(Construct::BodyConst) => {
                     self.const_decl(decl);
@@ -956,7 +968,7 @@ impl<'a> Checker<'a> {
             // value it is an `entity_ref`; its fields and state are read as `self.name`.
             ExprKind::SelfValue if construct_implemented(Construct::SelfValue) => {
                 match self.res.res(expr.id) {
-                    Some(Res::Def(_)) => TyId::ENTITY_REF,
+                    Some(Res::Def(_)) => self.entity_ref_value_is_gated(expr.span),
                     _ => TyId::ERROR,
                 }
             }
@@ -990,6 +1002,32 @@ impl<'a> Checker<'a> {
         }
     }
 
+    /// A named entity or `self` used as an `entity_ref` value (`other == Floor`) needs the
+    /// `entity_ref` expressions of task M5-02; this build reports the gate instead of failing in
+    /// the lowering (decision 0065). The fields and body commands of a named entity do not come
+    /// here.
+    fn entity_ref_value_is_gated(&mut self, span: Span) -> TyId {
+        // Outside a body (a constant, a field value) the name is reported as what it is not, a
+        // constant (`E3090`), as before.
+        if self.body.is_none() {
+            return TyId::ENTITY_REF;
+        }
+        self.report(
+            Diagnostic::new(
+                Code::E9010,
+                gate_message(
+                    "Named entities and `self` as `entity_ref` values (`other == Floor`)",
+                    true,
+                    Milestone::M5,
+                ),
+            )
+            .at(span)
+            .note(gate_note())
+            .help("use the entity's fields and body commands by name (`Floor.position`, `Floor.body.apply_impulse(..)`), which are implemented"),
+        );
+        TyId::ERROR
+    }
+
     fn def_value(&mut self, expr: &Expr, id: DefId) -> TyId {
         let Some(def) = self.res.def(id) else {
             return TyId::ERROR;
@@ -1003,7 +1041,7 @@ impl<'a> Checker<'a> {
             // A named entity converts to `entity_ref` where one is expected
             // (`spec/scenes.md` 8.3); that is the only meaning of a bare
             // entity name.
-            DefKind::Entity => TyId::ENTITY_REF,
+            DefKind::Entity => self.entity_ref_value_is_gated(expr.span),
             DefKind::SceneObject { kind: Some(_) }
             | DefKind::Scene
             | DefKind::Fn
@@ -1854,6 +1892,9 @@ impl<'a> Checker<'a> {
                 }
                 _ => {}
             }
+            if let Some(ty) = self.body_command_call(expr, base, name, args) {
+                return ty;
+            }
             if let Some(ty) = self.glb_accessor_call(expr, base, name, args) {
                 return ty;
             }
@@ -2330,6 +2371,9 @@ impl<'a> Checker<'a> {
             Some(Res::Error) => return TyId::ERROR,
             _ => {}
         }
+        if let Some(ty) = self.body_property_read(expr, base, name) {
+            return ty;
+        }
         if let Some(ty) = self.material_param(expr, base, name) {
             return ty;
         }
@@ -2459,6 +2503,19 @@ impl<'a> Checker<'a> {
         }
         match self.registry.schema_field(schema, &name.name) {
             Some(field) if !is_implemented(field.since) => TyId::ERROR,
+            // The body and the collider are components, not values (decision 0065).
+            Some(field)
+                if matches!(
+                    field.ty,
+                    crate::stdlib::TypeRef::Descriptor(
+                        crate::stdlib::SchemaCategory::Body
+                            | crate::stdlib::SchemaCategory::Collider
+                    )
+                ) =>
+            {
+                self.descriptor_field_is_not_a_value(expr, object, field.name);
+                TyId::ERROR
+            }
             Some(field) => {
                 self.fields.insert(
                     expr.id,

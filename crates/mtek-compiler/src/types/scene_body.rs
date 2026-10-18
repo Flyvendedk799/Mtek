@@ -332,6 +332,7 @@ impl Checker<'_> {
             Some(event) => {
                 self.handler_args(handler, event.form, event_name, &mut params);
                 let host = self.host_of(entity);
+                self.collision_needs_collider(handler, event, host, entity);
                 if !event.hosts.contains(&host) {
                     self.sink.push(
                         Diagnostic::new(
@@ -811,6 +812,11 @@ impl Checker<'_> {
                     Some(FieldKind::LightField { entity, field }) => {
                         return Some(self.light_write(current, entity, &field));
                     }
+                    // A readable body property is read-only: physics owns it (decision 0065).
+                    Some(FieldKind::BodyProperty { property, .. }) => {
+                        self.report_property_write(current, property);
+                        return Some((None, false));
+                    }
                     _ => return None,
                 },
                 ExprKind::Name(_) => {
@@ -878,6 +884,9 @@ impl Checker<'_> {
         let Some(object) = object else {
             return (None, true);
         };
+        if let Some(handled) = self.physics_owned_write(expr, object, field) {
+            return (None, handled);
+        }
         let schema = match self.res.def(object).map(|d| d.kind) {
             Some(DefKind::Entity | DefKind::Prefab) => {
                 Some(self.registry.declaration_schemas.entity)

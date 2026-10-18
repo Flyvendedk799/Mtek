@@ -1,0 +1,69 @@
+// The physics shapes of blueprint sections 3.3 and 8: a static floor, a dynamic ball, a kinematic
+// mover, the Crate prefab with a dynamic body and its static instances, a scene gravity, body
+// commands on named entities, on `self` and through an `entity_ref`, readable velocities and
+// collision events.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    material: Unlit { color: tint };
+    body: Dynamic { mass: 1.5; linear_damping: 0.05 };
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); friction: 0.6; restitution: 0.2 };
+    state bounces: i32 = 0;
+    on collision_enter(other: entity_ref) {
+        self.bounces += 1;
+        other.body.apply_impulse(vec3(0.0, 0.5, 0.0));
+    }
+    on key_down(Key.Space) {
+        self.body.apply_impulse(vec3(0.0, 5.0, 0.0));
+    }
+}
+
+scene Playground {
+    gravity: vec3(0.0, -4.5, 0.0);
+    state fastest: f32 = 0.0;
+    camera Main {
+        position: vec3(0.0, 4.0, 12.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Floor {
+        position: vec3(0.0, -0.5, 0.0);
+        mesh: Box { size: vec3(30.0, 1.0, 30.0) };
+        body: Static {};
+        collider: BoxCollider { size: vec3(30.0, 1.0, 30.0); friction: 0.8 };
+    }
+    entity Ball {
+        position: vec3(-3.0, 4.0, 0.0);
+        mesh: Sphere { radius: 0.5 };
+        body: Dynamic { mass: 2.0; angular_damping: 0.3 };
+        collider: SphereCollider { radius: 0.5; restitution: 0.7 };
+        fixed_update(dt: f32) {
+            let speed = length(self.body.linear_velocity);
+            if speed > fastest {
+                fastest = speed;
+            }
+        }
+        on collision_enter(who: entity_ref) {
+            who.body.apply_force(vec3(0.0, 0.0, -1.0));
+        }
+        on collision_exit(who: entity_ref) {
+            self.body.set_linear_velocity(vec3(0.0, 0.0, 0.0));
+        }
+    }
+    entity Mover {
+        position: vec3(3.0, 0.5, 0.0);
+        mesh: Box { size: vec3(2.0, 1.0, 2.0) };
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(2.0, 1.0, 2.0); sensor: true };
+        fixed_update(dt: f32) {
+            self.body.set_kinematic_target(vec3(3.0 + sin(frame.time), 0.5, 0.0), quat.identity());
+        }
+    }
+    entity A: Crate { origin: vec3(0.0, 1.5, 0.0); }
+    entity B: Crate { origin: vec3(0.2, 3.0, 0.1); tint: #ff4040; }
+    on key_down(Key.R) {
+        Ball.body.teleport(vec3(-3.0, 4.0, 0.0), quat.identity(), false);
+        A.body.teleport(vec3(0.0, 1.5, 0.0), quat.identity(), true);
+    }
+}

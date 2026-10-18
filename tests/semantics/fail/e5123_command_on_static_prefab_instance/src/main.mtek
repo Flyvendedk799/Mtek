@@ -1,0 +1,14 @@
+// An instance has the body kind of its prefab.
+prefab Post {
+    mesh: Box {};
+    body: Static {};
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+}
+
+scene Demo {
+    camera Main {}
+    entity One: Post {}
+    on key_down(Key.Space) {
+        One.body.apply_impulse(vec3(0.0, 1.0, 0.0));
+    }
+}

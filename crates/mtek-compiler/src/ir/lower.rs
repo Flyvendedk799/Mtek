@@ -17,9 +17,10 @@
 
 use super::lower_fn::SceneCtx;
 use super::model::{
-    Behavior, Binding, Camera, Const, Entity, Field, Item, Light, LightKind, MaterialInstanceDesc,
-    Mesh, MeshDesc, Module, Origin, Owner, Param, Program, Projection, ProjectionDesc, Scene,
-    SceneFields, Source, State, StructFieldItem, StructItem, Symbol, UpdateClass, Value,
+    Behavior, Binding, Body, BodyDesc, Camera, Collider, ColliderDesc, Const, Entity, Field, Item,
+    Light, LightKind, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin, Owner, Param, Program,
+    Projection, ProjectionDesc, Scene, SceneFields, Source, State, StructFieldItem, StructItem,
+    Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 
@@ -36,14 +37,19 @@ use crate::types::{
 };
 
 /// The scene fields lowered into [`SceneFields`].
-pub(super) const SCENE_FIELDS: [&str; 3] = ["clear_color", "ambient_color", "ambient_intensity"];
+pub(super) const SCENE_FIELDS: [&str; 4] = [
+    "clear_color",
+    "ambient_color",
+    "ambient_intensity",
+    "gravity",
+];
 /// The camera fields lowered into [`Camera`]; `active` is represented by
 /// [`Camera::active`], which the scene checks computed.
 pub(super) const CAMERA_FIELDS: [&str; 5] =
     ["position", "target", "rotation", "projection", "active"];
 /// The entity fields lowered into [`Entity`].
-pub(super) const ENTITY_FIELDS: [&str; 7] = [
-    "position", "rotation", "scale", "visible", "mesh", "material", "light",
+pub(super) const ENTITY_FIELDS: [&str; 9] = [
+    "position", "rotation", "scale", "visible", "mesh", "material", "light", "body", "collider",
 ];
 /// The scene-object kinds lowered (into [`Camera`]).
 pub(super) const OBJECT_KINDS: [&str; 1] = ["camera"];
@@ -53,6 +59,10 @@ pub(super) const MESH_SCHEMAS: [&str; 3] = ["Box", "Sphere", "Plane"];
 pub(super) const PROJECTION_SCHEMAS: [&str; 2] = ["Perspective", "Orthographic"];
 /// The light schemas lowered into [`LightKind`].
 pub(super) const LIGHT_SCHEMAS: [&str; 2] = ["DirectionalLight", "PointLight"];
+/// The body schemas lowered into [`BodyDesc`].
+pub(super) const BODY_SCHEMAS: [&str; 3] = ["Static", "Kinematic", "Dynamic"];
+/// The collider schemas lowered into [`ColliderDesc`].
+pub(super) const COLLIDER_SCHEMAS: [&str; 2] = ["BoxCollider", "SphereCollider"];
 
 /// Why lowering failed: a description of the compiler defect.
 pub(super) type Defect = String;
@@ -417,6 +427,7 @@ impl Lowering<'_> {
                 "ambient_intensity",
                 checked.span,
             )?,
+            gravity: required(self.types, &what, &checked.fields, "gravity", checked.span)?,
         };
         let mut constants = Vec::new();
         self.body_constants(&decl.members, &symbol, &mut constants)?;
@@ -700,6 +711,33 @@ impl Lowering<'_> {
             }
             None => None,
         };
+        let body = match fields.iter().find(|f| f.name == "body") {
+            Some(field) => {
+                let (value, origin, span) = parts(&what, field, checked.span)?;
+                Some(Body {
+                    desc: body_desc(&what, value)?,
+                    origin,
+                    span,
+                })
+            }
+            None => None,
+        };
+        let collider = match fields.iter().find(|f| f.name == "collider") {
+            Some(field) => {
+                let (value, origin, span) = parts(&what, field, checked.span)?;
+                Some(Collider {
+                    desc: collider_desc(&what, value)?,
+                    origin,
+                    span,
+                })
+            }
+            None => None,
+        };
+        if body.is_some() != collider.is_some() {
+            return Err(format!(
+                "{what} has a body without a collider or the reverse"
+            ));
+        }
         out.push(Entity {
             index,
             name: checked.name.clone(),
@@ -713,6 +751,8 @@ impl Lowering<'_> {
             mesh,
             material,
             light,
+            body,
+            collider,
             prefab: None,
         });
         for child in &checked.children {
@@ -901,6 +941,65 @@ pub(super) fn mesh_desc(what: &str, value: &ConstValue) -> Result<MeshDesc, Defe
         }),
         other => Err(format!(
             "the mesh {other} of {what} is not lowered by this build"
+        )),
+    }
+}
+
+fn bool_member(schema: &str, fields: &Fields, name: &str) -> Result<bool, Defect> {
+    match member(schema, fields, name)? {
+        ConstValue::Bool(v) => Ok(*v),
+        _ => Err(format!("the field '{name}' of {schema} is not a bool")),
+    }
+}
+
+/// A completed body descriptor (`spec/physics.md` section 2).
+pub(super) fn body_desc(what: &str, value: &ConstValue) -> Result<BodyDesc, Defect> {
+    let (schema, fields) = descriptor(what, value)?;
+    if !BODY_SCHEMAS.contains(&schema) {
+        return Err(format!(
+            "the body {schema} of {what} is not lowered by this build"
+        ));
+    }
+    match schema {
+        "Static" => Ok(BodyDesc::Static),
+        "Kinematic" => Ok(BodyDesc::Kinematic),
+        "Dynamic" => Ok(BodyDesc::Dynamic {
+            mass: f32_member(schema, fields, "mass")?,
+            linear_damping: f32_member(schema, fields, "linear_damping")?,
+            angular_damping: f32_member(schema, fields, "angular_damping")?,
+        }),
+        other => Err(format!(
+            "the body {other} of {what} is not lowered by this build"
+        )),
+    }
+}
+
+/// A completed collider descriptor (`spec/physics.md` section 2).
+pub(super) fn collider_desc(what: &str, value: &ConstValue) -> Result<ColliderDesc, Defect> {
+    let (schema, fields) = descriptor(what, value)?;
+    if !COLLIDER_SCHEMAS.contains(&schema) {
+        return Err(format!(
+            "the collider {schema} of {what} is not lowered by this build"
+        ));
+    }
+    let sensor = bool_member(schema, fields, "sensor")?;
+    let friction = f32_member(schema, fields, "friction")?;
+    let restitution = f32_member(schema, fields, "restitution")?;
+    match schema {
+        "BoxCollider" => Ok(ColliderDesc::Box {
+            size: vec3_member(schema, fields, "size")?,
+            sensor,
+            friction,
+            restitution,
+        }),
+        "SphereCollider" => Ok(ColliderDesc::Sphere {
+            radius: f32_member(schema, fields, "radius")?,
+            sensor,
+            friction,
+            restitution,
+        }),
+        other => Err(format!(
+            "the collider {other} of {what} is not lowered by this build"
         )),
     }
 }

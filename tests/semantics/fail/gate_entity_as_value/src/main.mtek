@@ -1,0 +1,21 @@
+// A named entity compared with an `entity_ref` (spec/scenes.md section 8.3) needs the entity_ref
+// values of task M5-02; its fields and body commands by name are implemented.
+scene Demo {
+    camera Main {}
+    entity Floor {
+        mesh: Box {};
+        body: Static {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    }
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+        on collision_enter(other: entity_ref) {
+            if other == Floor {
+                self.body.apply_impulse(vec3(0.0, 1.0, 0.0));
+            }
+            let me = self;
+        }
+    }
+}

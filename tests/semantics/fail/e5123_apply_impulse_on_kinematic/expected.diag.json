@@ -1,0 +1,38 @@
+[
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 282,
+    "endByte": 293,
+    "message": "`apply_force` is not valid for 'Lift': it applies to Dynamic bodies, but 'Lift' has a Kinematic body.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 145,
+        "endByte": 164
+      }
+    ],
+    "notes": [
+      "commands for a Kinematic body: set_kinematic_target, teleport"
+    ]
+  },
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 338,
+    "endByte": 357,
+    "message": "`set_linear_velocity` is not valid for 'Lift': it applies to Dynamic bodies, but 'Lift' has a Kinematic body.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 145,
+        "endByte": 164
+      }
+    ],
+    "notes": [
+      "commands for a Kinematic body: set_kinematic_target, teleport"
+    ]
+  }
+]

@@ -596,6 +596,16 @@ impl FnLowering<'_, '_> {
         }
     }
 
+    /// `ctx.body(target)`: the body handle of a named entity (its record) or of an `entity_ref`
+    /// (`spec/runtime-abi.md` section 4.2, decision 0065).
+    fn body_handle(&mut self, target: &ir::BodyTarget) -> Result<Expr, String> {
+        let target = match target {
+            ir::BodyTarget::Entity { entity } => self.entity(*entity),
+            ir::BodyTarget::Ref { target } => self.expr(target)?,
+        };
+        Ok(Expr::ident("ctx").member("body").call(vec![target]))
+    }
+
     /// The current value of a field or param root (`spec/runtime-abi.md` section 4.2: the
     /// records are read directly).
     fn root_read(&self, root: &ir::PlaceRoot) -> Result<Expr, String> {
@@ -785,6 +795,18 @@ impl FnLowering<'_, '_> {
             ir::ExprKind::LightField { entity, field } => {
                 self.entity(*entity).member("light").member(field)
             }
+            ir::ExprKind::BodyCommand {
+                target,
+                command,
+                args,
+            } => {
+                let handle = self.body_handle(target)?;
+                let arguments = self.exprs(args)?;
+                handle.member(&camel_case(command)).call(arguments)
+            }
+            ir::ExprKind::BodyProperty { target, property } => {
+                self.body_handle(target)?.member(&camel_case(property))
+            }
             ir::ExprKind::Frame { member } => Expr::ident("ctx").member("frame").member(member),
             ir::ExprKind::EnumMember { code, .. } => Expr::string(code),
             ir::ExprKind::Construct { args } => {
@@ -855,6 +877,23 @@ impl FnLowering<'_, '_> {
         };
         Ok(lowered.spanned(expr.span))
     }
+}
+
+/// `apply_impulse` as `applyImpulse`: how the body handle spells a command or property.
+fn camel_case(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    let mut upper = false;
+    for c in name.chars() {
+        if c == '_' {
+            upper = true;
+        } else if upper {
+            out.extend(c.to_uppercase());
+            upper = false;
+        } else {
+            out.push(c);
+        }
+    }
+    out
 }
 
 /// The name of component `index` of a value of type `ty` (`x` or `r` for 0).
@@ -1023,6 +1062,17 @@ mod tests {
                 }
                 ir::ExprKind::Array { elements } => elements.iter().for_each(|a| expr(a, out)),
                 ir::ExprKind::Param { .. } => {}
+                ir::ExprKind::BodyCommand { target, args, .. } => {
+                    if let ir::BodyTarget::Ref { target } = target {
+                        expr(target, out);
+                    }
+                    args.iter().for_each(|a| expr(a, out));
+                }
+                ir::ExprKind::BodyProperty { target, .. } => {
+                    if let ir::BodyTarget::Ref { target } = target {
+                        expr(target, out);
+                    }
+                }
                 ir::ExprKind::Struct { fields }
                 | ir::ExprKind::Descriptor { fields, .. }
                 | ir::ExprKind::Material { params: fields, .. } => {

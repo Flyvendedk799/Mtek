@@ -1,0 +1,12 @@
+// The same holds for assignments.
+scene Demo {
+    camera Main {}
+    entity Floor {
+        mesh: Box {};
+        body: Static {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    }
+    on key_down(Key.Space) {
+        Floor.scale = vec3(2.0);
+    }
+}

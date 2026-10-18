@@ -1,0 +1,14 @@
+// An instance of a prefab with a body has a body.
+prefab Ball {
+    mesh: Sphere {};
+    body: Dynamic {};
+    collider: SphereCollider { radius: 0.5; };
+}
+
+scene Demo {
+    camera Main {}
+    entity One: Ball {}
+    on key_down(Key.Space) {
+        One.position = vec3(0.0, 2.0, 0.0);
+    }
+}

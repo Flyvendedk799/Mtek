@@ -1357,13 +1357,12 @@ fn every_gated_construct_has_a_gating_fixture() {
         );
     }
     // Registry items, by kind (each message names the item and its `since`).
+    // Physics (task M5-03, decision 0065) lifted the gates of `Static` and the other body and
+    // collider schemas, `Entity.body`, `Entity.collider`, `Scene.gravity`, the collision events and
+    // `entity_ref`; `spawn`, `destroy` and the prefab literal are the last M5 items (task M5-02).
     for (prefix, milestone) in [
-        ("The built-in type `entity_ref`", "M5"),
-        ("The built-in schema `Static`", "M5"),
-        ("The `Entity` field `body`", "M5"),
-        ("The `Scene` field `gravity`", "M5"),
-        ("Event handlers (`on collision_enter`)", "M5"),
         ("Prefab literals", "M5"),
+        ("Named entities and `self` as `entity_ref` values", "M5"),
     ] {
         assert!(
             produced(prefix, milestone),
@@ -1471,11 +1470,7 @@ fn the_syntax_corpus_resolves_without_panicking() {
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
     ("E5030", "M5: spawn and destroy"),
-    ("E5062", "M5: collision events"),
-    ("E5071", "M5: physics"),
-    ("E5072", "M5: physics"),
     ("E5074", "M5: entity_ref"),
-    ("E5091", "M5: physics"),
     (
         "E5901",
         "no v0.1 construct switches scenes (`spec/scenes.md` section 1)",
@@ -1499,16 +1494,17 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E8080", "M6: preview builds"),
     ("E8090", "M3: run-time field writes"),
     ("E8100", "M3: run-time field writes and host inputs"),
+    (
+        "E8101",
+        "M5-05: body commands through an entity_ref at run time",
+    ),
+    ("E8102", "M5-05: loading the physics module at mount"),
+    ("E8103", "M5-05: reading the solver's poses back"),
 ];
 
 /// Codes this build implements that no program checked by this build can
 /// produce, with the reason and the test file that covers them instead.
 const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
-    (
-        "E5080",
-        "`spawn` and `destroy` are planned for M5",
-        "src/types/effects_tests.rs",
-    ),
     (
         "E6100",
         "only a compiler defect produces it (Naga rejecting generated WGSL)",

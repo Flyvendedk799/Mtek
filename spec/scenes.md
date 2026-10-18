@@ -106,7 +106,7 @@ prefab Crate {
 - **Dynamic instance:** `spawn(Crate { origin: p })` (§9).
 - A prefab has no access to scene state (it is not inside a scene); its handlers use `self`, its params, its state, constants and functions. Referencing a scene name from a prefab is `E2003`.
 - A field value, a state initialiser or a material param of a prefab may read its params, constants and state (§11) and call functions; it is computed when an instance is created. Construction-only values (`mesh`, `body`, `collider`) are constants (`E3090`). A prefab's `bind` follows §8.4 with `self` for the entity. An instance's fields, state and material params are read and written from the scene like those of any named entity (§4.4, §8), except that what the prefab binds cannot be assigned (`E5070`).
-- The params of a **static** instance are constant expressions (`E3090`); a run-time value is what `spawn` passes (§9). A prefab with a `body`, a `collider` or a collision handler is part of M5-03; `light` in a prefab is `E5110`. Decision `spec/decisions/0062-prefabs.md` records the details this section leaves open.
+- The params of a **static** instance are constant expressions (`E3090`); a run-time value is what `spawn` passes (§9). A prefab may declare a `body`, a `collider` and collision handlers (the entity it describes is checked like a scene entity, `spec/physics.md` section 2; a static instance of a prefab with a body must be a root entity, `E5091`); `light` in a prefab is `E5110`. Decisions `spec/decisions/0062-prefabs.md` and `0065-physics-schemas-and-ownership.md` record the details this section leaves open.
 
 ## 6. Lifecycle functions
 
@@ -164,7 +164,7 @@ The parameter name is free; its type must be `f32`, and there must be exactly on
 | **Binding** | the field's value is `bind(expr)` | any assignment to it anywhere is `E5070`, with a related span at the `bind` — "update its source instead" |
 | **Physics** | the entity has any `body`: `Dynamic` (solver owns `position`, `rotation`), `Kinematic` (pose set only through `set_kinematic_target`/`teleport`), `Static` (pose fixed at creation) | assignment to `position`/`rotation` is `E5071` with a note naming the allowed operation (`apply_impulse`, `set_kinematic_target`, `teleport`, or "static bodies cannot move"); a `bind` on those fields is `E5072` |
 
-Fields the schema marks construction-only (e.g. `mesh`, `body`, `scale` of bodies) cannot be assigned at all (`E5073`).
+Fields the schema marks construction-only (e.g. `mesh`, `body`, `scale` of bodies) cannot be assigned at all (`E5073`). The physics rules hold for every entity with a body, also an instance of a prefab that declares one and `self` inside such a prefab; decision `spec/decisions/0065-physics-schemas-and-ownership.md` records where each is reported.
 
 8.3 **`entity_ref` access is limited in v0.1.** Through an `entity_ref` you may only: compare (`==`, `!=`), test `alive(r)`, `destroy(r)`, and issue body commands (`r.body.apply_impulse(v)`, …, `spec/physics.md` §3). Field reads and writes through an `entity_ref` are `E5074` in v0.1. A named entity used where an `entity_ref` is expected converts implicitly (`other == Floor`). These limits keep all field access statically checkable.
 

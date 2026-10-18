@@ -54,6 +54,9 @@ impl FieldDef {
         self
     }
 
+    /// Marks the field as added by a later milestone than its schema. No field needs it while every
+    /// field of the registry is implemented (decision 0065); the next gated field uses it again.
+    #[allow(dead_code)]
     pub(super) fn since(mut self, since: Milestone) -> Self {
         self.since = since;
         self

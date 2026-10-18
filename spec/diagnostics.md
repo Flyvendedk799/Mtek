@@ -234,22 +234,26 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5052"></a>E5052 | unknown lifecycle function | |
 | <a id="mtek-e5060"></a>E5060 | unknown event | |
 | <a id="mtek-e5061"></a>E5061 | invalid event arguments | |
-| <a id="mtek-e5062"></a>E5062 | collision event without collider | |
+| <a id="mtek-e5062"></a>E5062 | collision event without collider | `on collision_enter` or `on collision_exit` in an entity or prefab that declares no `collider` (decision 0065) |
 | <a id="mtek-e5070"></a>E5070 | write to bound field | related span at `bind` |
-| <a id="mtek-e5071"></a>E5071 | write to physics-owned field | names the allowed operation |
-| <a id="mtek-e5072"></a>E5072 | binding on physics-owned field | |
+| <a id="mtek-e5071"></a>E5071 | write to physics-owned field | an assignment to the `position` or `rotation` of an entity with any body, or to a body velocity; names the allowed operation (decision 0065) |
+| <a id="mtek-e5072"></a>E5072 | binding on physics-owned field | `bind` on the `position` or `rotation` of an entity or prefab with any body (decision 0065) |
 | <a id="mtek-e5073"></a>E5073 | write to construction-only field | |
 | <a id="mtek-e5074"></a>E5074 | field access through entity_ref | not in v0.1 |
 | <a id="mtek-e5075"></a>E5075 | binding cycle | full path |
-| <a id="mtek-e5080"></a>E5080 | lifecycle operation during initialisation | `spawn` in initialisers |
+| <a id="mtek-e5080"></a>E5080 | lifecycle operation during initialisation | `spawn` in initialisers; a handler-only built-in function (`spawn`, `destroy`, a body command) called in a function (decision 0065) |
 | <a id="mtek-e5081"></a>E5081 | entity field read during initialisation | |
 | <a id="mtek-e5090"></a>E5090 | invalid scale | non-positive or non-finite constant |
-| <a id="mtek-e5091"></a>E5091 | body on non-root entity | |
+| <a id="mtek-e5091"></a>E5091 | body on non-root entity | a body on a nested entity, or a static instance of a prefab with a body nested in an entity (decision 0065) |
 | <a id="mtek-e5092"></a>E5092 | too many static entities | |
 | <a id="mtek-e5100"></a>E5100 | non-opaque color in material parameter | |
 | <a id="mtek-w5101"></a>W5101 | fragment alpha ignored | constant alpha ≠ 1 |
 | <a id="mtek-e5110"></a>E5110 | light in prefab | at the `light` member; the light is not part of the prefab's entity (decisions 0053, 0062) |
 | <a id="mtek-e5111"></a>E5111 | too many lights | > 4 |
+| <a id="mtek-e5120"></a>E5120 | collider without body | a `collider` on an entity or prefab that declares no `body`; help: `body: Static {}` for fixed geometry (decision 0065) |
+| <a id="mtek-e5121"></a>E5121 | body without collider | a `body` without a `collider`; the body would have no shape |
+| <a id="mtek-e5122"></a>E5122 | scaled dynamic or kinematic body | `scale` of a `Dynamic` or `Kinematic` body that is not the constant `vec3(1.0)` |
+| <a id="mtek-e5123"></a>E5123 | command not valid for this body kind | `Name.body.<command>(..)` or `Name.body.<velocity>` that the entity's body kind does not support, or on an entity without a body |
 | <a id="mtek-e5901"></a>E5901 | scene switching not supported | switching the active scene at run time |
 | <a id="mtek-e5902"></a>E5902 | transparency not supported | |
 
@@ -323,7 +327,10 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e8080"></a>E8080 | execution budget exceeded | untrusted preview (M6) |
 | <a id="mtek-e8090"></a>E8090 | invalid scale value | run-time write ignored |
 | <a id="mtek-e8100"></a>E8100 | non-opaque color value | run-time value rejected |
-| (E8101–E8199) | physics runtime codes | defined in `spec/physics.md` §8 |
+| <a id="mtek-e8101"></a>E8101 | command not valid for the target's body kind | a body command through an `entity_ref` whose body kind, or lack of a body, the command does not support; the command is dropped (implemented by M5-05) |
+| <a id="mtek-e8102"></a>E8102 | physics module failed to load | mount fails with the kind `physics-failed` (implemented by M5-05) |
+| <a id="mtek-e8103"></a>E8103 | non-finite pose produced by the solver | the body is frozen and the code is reported once (implemented by M5-05) |
+| (E8104–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
 
 ### 5.9 Project and internal (`9xxx`)
 | Code | Title | Trigger |

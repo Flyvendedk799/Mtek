@@ -1,0 +1,22 @@
+[
+  {
+    "code": "MTEK-E5003",
+    "file": "src/main.mtek",
+    "startByte": 195,
+    "endByte": 206,
+    "message": "Missing required field 'size' on BoxCollider.",
+    "notes": [
+      "help: add `size: …`"
+    ]
+  },
+  {
+    "code": "MTEK-E5003",
+    "file": "src/main.mtek",
+    "startByte": 303,
+    "endByte": 317,
+    "message": "Missing required field 'radius' on SphereCollider.",
+    "notes": [
+      "help: add `radius: …`"
+    ]
+  }
+]

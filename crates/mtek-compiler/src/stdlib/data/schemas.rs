@@ -84,7 +84,7 @@ fn objects() -> Vec<SchemaDef> {
                 "Gravitational acceleration in metres per second squared. Used only when the scene has physics bodies.",
             )
             .default(ConstValue::Vec3([0.0, -9.81, 0.0]))
-            .since(Milestone::M5),
+            .range(ValueRange::finite()),
         ],
     );
 
@@ -148,16 +148,14 @@ fn objects() -> Vec<SchemaDef> {
                 "body",
                 TypeRef::Descriptor(SchemaCategory::Body),
                 C,
-                "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only.",
-            )
-            .since(Milestone::M5),
+                "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`.",
+            ),
             field(
                 "collider",
                 TypeRef::Descriptor(SchemaCategory::Collider),
                 C,
                 "A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`.",
-            )
-            .since(Milestone::M5),
+            ),
         ],
     )
     // `spec/scenes.md` section 4.1: a material without a mesh is `E5020`.
@@ -165,6 +163,21 @@ fn objects() -> Vec<SchemaDef> {
         field: "material",
         requires: "mesh",
         code: Code::E5020,
+        help: None,
+    })
+    // `spec/physics.md` section 2: a collider needs a body (`E5120`) and a body needs a collider
+    // (`E5121`; decision 0065).
+    .rule(FieldRule::Requires {
+        field: "collider",
+        requires: "body",
+        code: Code::E5120,
+        help: Some("add `body: Static {}` for fixed geometry, or `Dynamic` or `Kinematic` for a moving body"),
+    })
+    .rule(FieldRule::Requires {
+        field: "body",
+        requires: "collider",
+        code: Code::E5121,
+        help: Some("add a `collider: BoxCollider { size: ... }` or `SphereCollider { radius: ... }` that gives the body its shape"),
     });
 
     let camera = schema(
@@ -456,27 +469,26 @@ fn bodies() -> Vec<SchemaDef> {
         schema(
             "Static",
             SchemaCategory::Body,
-            Milestone::M5,
+            Milestone::M1,
             "An immovable body; its pose is fixed at creation from the entity transform.",
             vec![],
         ),
         schema(
             "Kinematic",
             SchemaCategory::Body,
-            Milestone::M5,
+            Milestone::M1,
             "A body whose pose the program sets with `set_kinematic_target`.",
             vec![],
         ),
         schema(
             "Dynamic",
             SchemaCategory::Body,
-            Milestone::M5,
+            Milestone::M1,
             "A solver-controlled body; forces, impulses and teleports are explicit commands.",
             vec![
                 field("mass", TypeRef::F32, C, "Mass in kilograms.")
                     .default(ConstValue::F32(1.0))
-                    .range(ValueRange::positive().and_finite())
-                    .since(Milestone::M5),
+                    .range(ValueRange::positive().and_finite()),
                 field(
                     "linear_damping",
                     TypeRef::F32,
@@ -484,8 +496,7 @@ fn bodies() -> Vec<SchemaDef> {
                     "Rate at which linear velocity decays.",
                 )
                 .default(ConstValue::F32(0.0))
-                .range(ValueRange::non_negative())
-                .since(Milestone::M5),
+                .range(ValueRange::non_negative().and_finite()),
                 field(
                     "angular_damping",
                     TypeRef::F32,
@@ -493,8 +504,7 @@ fn bodies() -> Vec<SchemaDef> {
                     "Rate at which angular velocity decays.",
                 )
                 .default(ConstValue::F32(0.05))
-                .range(ValueRange::non_negative())
-                .since(Milestone::M5),
+                .range(ValueRange::non_negative().and_finite()),
             ],
         ),
     ]
@@ -509,13 +519,11 @@ fn colliders() -> Vec<SchemaDef> {
             "A sensor reports collisions but does not push other bodies.",
         )
         .default(ConstValue::Bool(false))
-        .since(Milestone::M5)
     };
     let friction = || {
         field("friction", TypeRef::F32, C, "Coulomb friction coefficient.")
             .default(ConstValue::F32(0.5))
-            .range(ValueRange::non_negative())
-            .since(Milestone::M5)
+            .range(ValueRange::non_negative().and_finite())
     };
     let restitution = || {
         field(
@@ -526,18 +534,16 @@ fn colliders() -> Vec<SchemaDef> {
         )
         .default(ConstValue::F32(0.0))
         .range(ValueRange::closed(0, 1))
-        .since(Milestone::M5)
     };
     vec![
         schema(
             "BoxCollider",
             SchemaCategory::Collider,
-            Milestone::M5,
+            Milestone::M1,
             "A box collision shape.",
             vec![
                 field("size", TypeRef::Vec3, R_C, "Full extents along X, Y and Z.")
-                    .range(ValueRange::positive())
-                    .since(Milestone::M5),
+                    .range(ValueRange::positive().and_finite()),
                 sensor(),
                 friction(),
                 restitution(),
@@ -546,12 +552,11 @@ fn colliders() -> Vec<SchemaDef> {
         schema(
             "SphereCollider",
             SchemaCategory::Collider,
-            Milestone::M5,
+            Milestone::M1,
             "A sphere collision shape.",
             vec![
                 field("radius", TypeRef::F32, R_C, "Radius in metres.")
-                    .range(ValueRange::positive())
-                    .since(Milestone::M5),
+                    .range(ValueRange::positive().and_finite()),
                 sensor(),
                 friction(),
                 restitution(),

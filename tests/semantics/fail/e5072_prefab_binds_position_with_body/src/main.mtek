@@ -1,0 +1,12 @@
+// The rule holds for the entity a prefab describes.
+prefab Ball {
+    position: bind(vec3(0.0, frame.time, 0.0));
+    mesh: Sphere {};
+    body: Kinematic {};
+    collider: SphereCollider { radius: 0.5; };
+}
+
+scene Demo {
+    camera Main {}
+    entity One: Ball {}
+}

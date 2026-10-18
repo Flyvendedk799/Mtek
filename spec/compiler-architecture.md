@@ -121,6 +121,7 @@ Scopes per `spec/language.md` §4; `DefId(u32)` for every declaration; side tabl
 - `effects.rs`: call graph, recursion detection (`E4001`), transitive effect levels, GPU reachability checks (§8.4 of the language reference). Assignable places, the control-flow rules, how often effect errors are reported and their call chains, the GPU roots and the bounds of the pass are decision 0038.
 - `material.rs`: material params, the stage function, captures (`E4040`), the constant-alpha warning and material instances; the choices the specification leaves open are decision 0039.
 - `prefab.rs`: prefab declarations (params, `E5040`), the summary an instance in any module reads (`PrefabInfo`), static instances (`E5041`, `E5042`), the field values a prefab's `init` computes; the choices the specification leaves open are decision 0062.
+- `physics.rs`: the physics authoring checks — bodies on root entities only (`E5091`), the scale of dynamic and kinematic bodies (`E5122`), one pose authority (`E5071`, `E5072`, `E5073`), body commands and readable velocities per body kind (`E5123`, lowered to `ctx.body(target)`), collision events needing a collider (`E5062`); `body` without `collider` and the reverse (`E5120`, `E5121`) are registry field rules enforced by `scene.rs`. The details are decision 0065.
 - `scene.rs`: schema field checks, scene-object kinds, nesting/body rules, lifecycle/event signatures, single-writer analysis (every assignment and `bind` site is collected first, then conflicts reported with both spans), binding dependency graph with cycle detection (`E5075`, full cycle path). The schema and scene checks of M1 (field validation, constant expressions, the camera and entity rules, the checked-scene result for the typed IR) and the registry data they read are decision 0027.
 
 ### 4.8 `ir/`
@@ -140,7 +141,7 @@ The **typed high-level IR**: the semantic contract between language and code gen
 ### 4.12 Public API (`lib.rs`)
 
 ```rust
-pub struct CompileOptions { pub profile: TargetProfile, pub mode: BuildMode /* Dev | Release | Test | Preview */, pub runtime_bundle: Option<Arc<[u8]>>, pub runtime_declarations: Option<Arc<[u8]>> /* runtime.d.ts */, pub physics_bundle: Option<Arc<[u8]>> /* decision 0063 */, pub force_physics_subsystem: bool /* test option, decision 0063 */ }
+pub struct CompileOptions { pub profile: TargetProfile, pub mode: BuildMode /* Dev | Release | Test | Preview */, pub runtime_bundle: Option<Arc<[u8]>>, pub runtime_declarations: Option<Arc<[u8]>> /* runtime.d.ts */, pub physics_bundle: Option<Arc<[u8]>> /* decision 0063 */, pub force_physics_subsystem: bool /* test option, decisions 0063 and 0065 */ }
 pub fn check(project: &ProjectRoot, fs: &dyn Fs) -> CheckResult;            // diagnostics only; no GPU, no emission
 pub fn analyze(project: &ProjectRoot, fs: &dyn Fs) -> Analysis;             // the front end's full result (IR input, tests, LSP); decision 0028
 pub fn build(project: &ProjectRoot, fs: &dyn Fs, opts: &CompileOptions) -> BuildResult; // files + diagnostics
@@ -151,7 +152,7 @@ The CLI, the tests and the LSP all call these; none re-implements compiler logic
 
 **Runtime bundle in tests.** Compiler fixture tests and codegen goldens pass a fixed **stub bundle** — the bytes `// mtek test runtime stub\n` — as `runtime_bundle`, so the hashed runtime file name inside golden `app.js` files never changes when the runtime is edited, and `cargo test` never needs a Node build. Execution tests (Node) and browser tests build with the real bundle. `build` without any bundle fails with `E9030`.
 
-**Physics bundle.** `physics_bundle` (`packages/physics-rapier/dist/physics.js`, stub `// mtek test physics stub\n`) is written as `physics/<h16>.js` only for a program whose manifest says `subsystems.physics`, and such a program without it is `E9030`; programs without physics never get it, whatever the options carry. Until the checker sets `subsystems.physics` (M5-03: any body), `force_physics_subsystem` is the only way to produce such a program; it is a library option with no command-line spelling and no source syntax (decision 0063).
+**Physics bundle.** `physics_bundle` (`packages/physics-rapier/dist/physics.js`, stub `// mtek test physics stub\n`) is written as `physics/<h16>.js` only for a program whose manifest says `subsystems.physics`, and such a program without it is `E9030`; programs without physics never get it, whatever the options carry. `subsystems.physics` is true when the entry scene has an entity with a `body` or a prefab of the program declares one (decision 0065); `force_physics_subsystem` additionally forces it for a program without a body, and never turns it off. It is a library option with no command-line spelling and no source syntax (decision 0063).
 
 ## 5. Determinism
 

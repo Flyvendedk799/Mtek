@@ -1,0 +1,21 @@
+// Instances of prefabs with physics from another module are root entities with the prefab's body:
+// commands that fit the body kind are accepted, and reading the pose and the velocity is too.
+import { Crate, Pillar } from "./props/crate.mtek";
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 8.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Box1: Crate { origin: vec3(0.0, 3.0, 0.0); }
+    entity Post: Pillar { origin: vec3(3.0, 2.0, 0.0); }
+    entity Probe {
+        mesh: Sphere { radius: 0.1 };
+        position: bind(Box1.position);
+    }
+    on key_down(Key.Space) {
+        Box1.body.apply_impulse(vec3(0.0, 8.0, 0.0));
+        Box1.hits = 0;
+        let seen = Box1.body.linear_velocity;
+    }
+}

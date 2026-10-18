@@ -1,0 +1,38 @@
+[
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 86,
+    "endByte": 90,
+    "message": "Field 'gravity' of scene 'Demo' expects vec3, but received f32.",
+    "expected": "vec3",
+    "actual": "f32"
+  },
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 182,
+    "endByte": 191,
+    "message": "Field 'mass' of Dynamic expects f32, but received vec3.",
+    "expected": "f32",
+    "actual": "vec3"
+  },
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 234,
+    "endByte": 237,
+    "message": "Field 'size' of BoxCollider expects vec3, but received f32.",
+    "expected": "vec3",
+    "actual": "f32"
+  },
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 247,
+    "endByte": 250,
+    "message": "Field 'sensor' of BoxCollider expects bool, but received f32.",
+    "expected": "bool",
+    "actual": "f32"
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "code": "MTEK-E5091",
+    "file": "src/main.mtek",
+    "startByte": 194,
+    "endByte": 199,
+    "message": "A Dynamic body is allowed only on a root entity, but the prefab instance 'Inner' has one and is nested in 'Holder'.",
+    "related": [
+      {
+        "message": "'Holder' is the parent",
+        "file": "src/main.mtek",
+        "startByte": 148,
+        "endByte": 154
+      },
+      {
+        "message": "the body is declared here, in the prefab",
+        "file": "src/props/ball.mtek",
+        "startByte": 46,
+        "endByte": 63
+      }
+    ],
+    "notes": [
+      "physics poses are world poses (`spec/scenes.md` section 12); a body entity may have visual children",
+      "help: declare 'Inner' in the scene instead of inside 'Holder', and give 'Inner' a visual child if it needs one"
+    ]
+  }
+]

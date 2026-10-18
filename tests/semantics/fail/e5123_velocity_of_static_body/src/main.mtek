@@ -1,0 +1,13 @@
+// A static body has no velocity to read.
+scene Demo {
+    camera Main {}
+    entity Floor {
+        mesh: Box {};
+        body: Static {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    }
+    on key_down(Key.Space) {
+        let v = Floor.body.linear_velocity;
+        let w = Floor.body.angular_velocity;
+    }
+}

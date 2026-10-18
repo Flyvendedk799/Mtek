@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 266,
+    "endByte": 279,
+    "message": "`Lift.rotation` belongs to the physics subsystem, because 'Lift' has a Kinematic body, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 148,
+        "endByte": 167
+      }
+    ],
+    "notes": [
+      "the pose of a kinematic body is set only with `set_kinematic_target` or `teleport`"
+    ]
+  }
+]

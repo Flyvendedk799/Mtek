@@ -1,0 +1,13 @@
+// The body is a component, not a value.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+    }
+    on key_down(Key.Space) {
+        let b = Ball.body;
+        let c = Ball.collider;
+    }
+}

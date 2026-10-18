@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 180,
+    "endByte": 193,
+    "message": "`apply_impulse` is not valid for 'Lamp': it has no body.",
+    "notes": [
+      "`apply_impulse` applies to Dynamic bodies",
+      "help: declare `body: Dynamic { .. }` and a collider on 'Lamp'"
+    ]
+  }
+]

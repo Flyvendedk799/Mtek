@@ -23,7 +23,8 @@ use super::scene::{CheckedInstance, CheckedParam, FieldOrigin};
 use super::ty::TyId;
 use super::value::ConstValue;
 use super::{
-    CpuBody, CpuBodyKind, NonConstant, NonConstantKind, PrefabInfo, PrefabKey, PrefabParam,
+    CpuBody, CpuBodyKind, EntityPhysics, NonConstant, NonConstantKind, PrefabInfo, PrefabKey,
+    PrefabParam,
 };
 use crate::diagnostics::{Code, Diagnostic};
 use crate::project::edit_distance;
@@ -122,6 +123,7 @@ impl<'a> Checker<'a> {
                     self.allow_param_bind = false;
                     self.note_entity_material(Some(def), field);
                     self.note_entity_light(Some(def), field);
+                    self.note_entity_physics(Some(def), field);
                 }
                 EntityMember::Const(constant) if construct_implemented(Construct::BodyConst) => {
                     self.const_decl(constant);
@@ -179,6 +181,7 @@ impl<'a> Checker<'a> {
                 params,
                 states,
                 material_params,
+                physics: self.physics_of(def),
                 bound_fields,
                 bound_params,
             },
@@ -460,6 +463,10 @@ impl<'a> Checker<'a> {
             }
             return;
         };
+        // An instance owns the body its prefab declares (decision 0065).
+        if info.physics != EntityPhysics::default() {
+            self.out.entity_physics.insert(def, info.physics);
+        }
         let mut given: Vec<GivenParam> = Vec::new();
         let mut ok = true;
         for member in &entity.members {

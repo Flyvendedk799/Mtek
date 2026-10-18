@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 259,
+    "endByte": 272,
+    "message": "`body.apply_impulse` is a command, not a value.",
+    "expected": "a value",
+    "actual": "command",
+    "notes": [
+      "help: call it: `Ball.body.apply_impulse(..)`"
+    ]
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 296,
+    "endByte": 311,
+    "message": "`body.linear_velocity` is a value, not a command.",
+    "expected": "a command",
+    "actual": "vec3",
+    "notes": [
+      "help: read it without a call: `Ball.body.linear_velocity`"
+    ]
+  }
+]

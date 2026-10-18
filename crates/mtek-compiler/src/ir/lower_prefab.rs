@@ -248,6 +248,8 @@ impl Lowering<'_> {
             mesh: None,
             material: None,
             light: None,
+            body: None,
+            collider: None,
             prefab: Some(PrefabInstance {
                 prefab: Symbol::item(path, &instance.prefab_name),
                 params: instance

@@ -1,0 +1,10 @@
+// The rule holds for the entity a prefab describes.
+prefab Wall {
+    mesh: Box {};
+    collider: SphereCollider { radius: 0.5; };
+}
+
+scene Demo {
+    camera Main {}
+    entity One: Wall {}
+}

@@ -1,0 +1,10 @@
+// The same holds for a kinematic body.
+scene Demo {
+    camera Main {}
+    entity Lift {
+        scale: vec3(1.0, 0.5, 1.0);
+        mesh: Box {};
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(1.0, 0.5, 1.0); };
+    }
+}

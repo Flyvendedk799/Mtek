@@ -1,0 +1,10 @@
+// The rule holds for the entity a prefab describes.
+prefab Ball {
+    mesh: Sphere {};
+    body: Kinematic {};
+}
+
+scene Demo {
+    camera Main {}
+    entity One: Ball {}
+}

@@ -1,0 +1,10 @@
+// The body kind of an instance of an imported prefab is known statically.
+import { Post } from "./props/post.mtek";
+
+scene Demo {
+    camera Main {}
+    entity One: Post {}
+    on key_down(Key.Space) {
+        One.body.apply_impulse(vec3(0.0, 1.0, 0.0));
+    }
+}

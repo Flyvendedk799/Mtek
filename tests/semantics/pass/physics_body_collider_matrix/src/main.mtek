@@ -1,0 +1,53 @@
+// Every body kind with both collider shapes (spec/physics.md section 2), the defaults of every
+// field, written values, a sensor, and a visual child of a body entity.
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 4.0, 12.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity StaticBox {
+        position: vec3(-6.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 1.0, 2.0) };
+        body: Static {};
+        collider: BoxCollider { size: vec3(2.0, 1.0, 2.0) };
+    }
+    entity StaticSphere {
+        position: vec3(-4.0, 0.0, 0.0);
+        mesh: Sphere { radius: 0.5 };
+        body: Static {};
+        collider: SphereCollider { radius: 0.5 };
+    }
+    entity DynamicBox {
+        position: vec3(-2.0, 3.0, 0.0);
+        mesh: Box {};
+        body: Dynamic {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); friction: 0.9; restitution: 0.1 };
+    }
+    entity DynamicSphere {
+        position: vec3(0.0, 3.0, 0.0);
+        mesh: Sphere { radius: 0.5 };
+        body: Dynamic { mass: 2.5; linear_damping: 0.1; angular_damping: 0.2 };
+        collider: SphereCollider { radius: 0.5; restitution: 0.8 };
+        entity Antenna {
+            position: vec3(0.0, 0.6, 0.0);
+            mesh: Box { size: vec3(0.05, 0.4, 0.05) };
+        }
+    }
+    entity KinematicBox {
+        position: vec3(2.0, 1.0, 0.0);
+        mesh: Box { size: vec3(2.0, 0.2, 2.0) };
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(2.0, 0.2, 2.0) };
+    }
+    entity KinematicSphere {
+        position: vec3(4.0, 1.0, 0.0);
+        mesh: Sphere { radius: 0.25 };
+        body: Kinematic {};
+        collider: SphereCollider { radius: 0.25; sensor: true };
+    }
+    entity Trigger {
+        position: vec3(6.0, 1.0, 0.0);
+        body: Static {};
+        collider: BoxCollider { size: vec3(1.0, 2.0, 1.0); sensor: true };
+    }
+}

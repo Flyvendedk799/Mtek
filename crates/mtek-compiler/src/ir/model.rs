@@ -688,6 +688,18 @@ pub enum ExprKind {
     InstanceParam { entity: u32, param: String },
     /// A read of a field of the light of a named entity (`Sun.light.intensity`).
     LightField { entity: u32, field: String },
+    /// A body command, `Name.body.apply_impulse(v)` (`spec/physics.md` section 3): of type `()`,
+    /// issued in a lifecycle function or handler.
+    BodyCommand {
+        target: BodyTarget,
+        command: String,
+        args: Vec<Expr>,
+    },
+    /// A readable body property, `Name.body.linear_velocity`.
+    BodyProperty {
+        target: BodyTarget,
+        property: String,
+    },
     /// `frame.time`, `frame.delta`, `frame.index`.
     Frame { member: String },
     /// A member of a registry enum (`Key.Space`) with the DOM code it maps from.
@@ -709,6 +721,16 @@ pub enum ExprKind {
         material: Symbol,
         params: Vec<NamedExpr>,
     },
+}
+
+/// What a body command or velocity read addresses.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum BodyTarget {
+    /// A named entity or `self`, by its static index; its body kind was checked.
+    Entity { entity: u32 },
+    /// An `entity_ref` value; the runtime checks its body kind (`E8101`).
+    Ref { target: Box<Expr> },
 }
 
 /// A named field value of a struct or descriptor literal.
@@ -931,6 +953,9 @@ pub struct SceneFields {
     /// `ambient_intensity`: an `f32` of at least 0. Listed like `ambient_color`.
     #[serde(skip_serializing_if = "Field::is_default")]
     pub ambient_intensity: Field,
+    /// `gravity`: a `vec3` in metres per second squared. Listed like `ambient_color`.
+    #[serde(skip_serializing_if = "Field::is_default")]
+    pub gravity: Field,
 }
 
 /// The value of one field of a scene, camera or entity body.
@@ -1081,6 +1106,12 @@ pub struct Entity {
     /// The light component, if the entity has one.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub light: Option<Light>,
+    /// The physics body, if the entity has one (`spec/physics.md` section 2, decision 0065).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub body: Option<Body>,
+    /// The collider; present exactly when `body` is.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub collider: Option<Collider>,
     /// `entity Name: Prefab { .. }`: the prefab this entity instantiates. The fields, mesh and
     /// material above are the prefab's with the instance's params substituted; the scene's
     /// `state`, `behaviors` and `bindings` hold the copies that belong to the instance.
@@ -1111,6 +1142,79 @@ pub enum LightKind {
     /// `range`: 0 for unlimited.
     Point {
         range: f32,
+    },
+}
+
+/// An entity's physics body (`spec/physics.md` section 2, decision 0065): every field of the
+/// body schema, defaults included.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Body {
+    pub desc: BodyDesc,
+    pub origin: Origin,
+    /// The `body: …;` member.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// The kinds of body and what each is constructed with; the same keys as the manifest's `body`.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[serde(
+    tag = "kind",
+    rename_all = "lowercase",
+    rename_all_fields = "camelCase"
+)]
+pub enum BodyDesc {
+    Static,
+    Kinematic,
+    Dynamic {
+        /// Kilograms; positive and finite.
+        mass: f32,
+        linear_damping: f32,
+        angular_damping: f32,
+    },
+}
+
+impl BodyDesc {
+    /// The kind as the manifest spells it (`dynamic`).
+    #[must_use]
+    pub fn kind(&self) -> &'static str {
+        match self {
+            BodyDesc::Static => "static",
+            BodyDesc::Kinematic => "kinematic",
+            BodyDesc::Dynamic { .. } => "dynamic",
+        }
+    }
+}
+
+/// An entity's collider (`spec/physics.md` section 2): every field of the collider schema,
+/// defaults included. Sizes are full extents.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Collider {
+    pub desc: ColliderDesc,
+    pub origin: Origin,
+    /// The `collider: …;` member.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// The collider shapes with the fields they share, the same keys as the manifest's `collider`.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum ColliderDesc {
+    Box {
+        /// Full extents along X, Y and Z.
+        size: [f32; 3],
+        sensor: bool,
+        friction: f32,
+        restitution: f32,
+    },
+    Sphere {
+        radius: f32,
+        sensor: bool,
+        friction: f32,
+        restitution: f32,
     },
 }
 

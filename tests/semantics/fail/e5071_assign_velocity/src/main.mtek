@@ -1,0 +1,13 @@
+// A velocity is read as of the last tick; it is changed with a command.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+        on key_down(Key.Space) {
+            self.body.linear_velocity = vec3(0.0, 1.0, 0.0);
+            self.body.angular_velocity.x = 1.0;
+        }
+    }
+}

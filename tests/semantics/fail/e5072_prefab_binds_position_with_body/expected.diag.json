@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5072",
+    "file": "src/main.mtek",
+    "startByte": 81,
+    "endByte": 113,
+    "message": "`bind` cannot drive the field 'position' of prefab 'Ball': it has a Kinematic body, which owns the pose.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 140,
+        "endByte": 159
+      }
+    ],
+    "notes": [
+      "the pose of a kinematic body is set only with `set_kinematic_target` or `teleport`"
+    ]
+  }
+]

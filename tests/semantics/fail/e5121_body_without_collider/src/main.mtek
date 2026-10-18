@@ -1,0 +1,8 @@
+// A body needs a collider, or it has no shape.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+    }
+}

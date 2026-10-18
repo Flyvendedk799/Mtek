@@ -1,11 +1,13 @@
-// Everything in this handler is unimplemented in this build (collision events are M5), but the
-// handler is reported once. Its names are still resolved.
+// Everything in this prefab literal is unimplemented in this build (spawning is M5), but the
+// literal is reported once. Its names are still resolved.
+prefab Crate {
+    param lift: f32 = 1.0;
+    mesh: Box {};
+}
+
 scene Demo {
     camera Main {}
-    entity Ball {
-        mesh: Sphere {};
-        on collision_enter(other: entity_ref) {
-            let total = missing;
-        }
+    on key_down(Key.Space) {
+        let crate = Crate { lift: missing; };
     }
 }

@@ -22,9 +22,9 @@ use std::collections::BTreeMap;
 
 use super::lower::ImperativeMark;
 use super::model::{
-    Behavior, Binding, BindingDep, BindingTarget, Block, Branch, Expr, ExprKind, Field, Item,
-    MaterialInstanceDesc, Module, NamedExpr, NamedValue, Owner, Param, Place, PlaceRoot, PlaceStep,
-    PrefabItem, Scene, Source, State, Stmt, Symbol, UpdateClass, Value,
+    Behavior, Binding, BindingDep, BindingTarget, Block, BodyTarget, Branch, Expr, ExprKind, Field,
+    Item, MaterialInstanceDesc, Module, NamedExpr, NamedValue, Owner, Param, Place, PlaceRoot,
+    PlaceStep, PrefabItem, Scene, Source, State, Stmt, Symbol, UpdateClass, Value,
 };
 
 /// Instantiate the prefabs of every static instance of `modules`, then apply `marks`.
@@ -105,6 +105,8 @@ fn instantiate_scene(
                 .map(|material| sub.material(material))
                 .transpose()?;
             entity.light = None;
+            entity.body = template_entity.body.clone();
+            entity.collider = template_entity.collider.clone();
         }
         for state in &template.state {
             scene.state.push(State {
@@ -593,6 +595,18 @@ impl Substitution<'_> {
         self.expr(expr).map(Box::new)
     }
 
+    /// The target of a body command or property for the instance.
+    fn body_target(&self, target: &BodyTarget) -> Result<BodyTarget> {
+        Ok(match target {
+            BodyTarget::Entity { entity } => BodyTarget::Entity {
+                entity: self.index(*entity),
+            },
+            BodyTarget::Ref { target } => BodyTarget::Ref {
+                target: self.boxed(target)?,
+            },
+        })
+    }
+
     /// `expr` for the instance: the reads of the prefab's params are the instance's constants and
     /// entity 0 is the instance.
     fn expr(&self, expr: &Expr) -> Result<Expr> {
@@ -687,6 +701,19 @@ impl Substitution<'_> {
             ExprKind::LightField { entity, field } => ExprKind::LightField {
                 entity: self.index(*entity),
                 field: field.clone(),
+            },
+            ExprKind::BodyCommand {
+                target,
+                command,
+                args,
+            } => ExprKind::BodyCommand {
+                target: self.body_target(target)?,
+                command: command.clone(),
+                args: self.exprs(args)?,
+            },
+            ExprKind::BodyProperty { target, property } => ExprKind::BodyProperty {
+                target: self.body_target(target)?,
+                property: property.clone(),
             },
             ExprKind::Frame { member } => ExprKind::Frame {
                 member: member.clone(),

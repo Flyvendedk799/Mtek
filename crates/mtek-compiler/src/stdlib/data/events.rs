@@ -31,7 +31,7 @@ pub(super) fn events() -> Vec<EventDef> {
         form: EventForm::Parameter(TypeRef::EntityRef),
         hosts: WITH_COLLIDER,
         requires_collider: true,
-        since: Milestone::M5,
+        since: Milestone::M1,
         doc,
     };
     vec![

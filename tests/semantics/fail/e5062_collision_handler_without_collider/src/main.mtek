@@ -1,0 +1,11 @@
+// Collision events are delivered for colliders.
+scene Demo {
+    camera Main {}
+    entity Lamp {
+        mesh: Sphere {};
+        on collision_enter(other: entity_ref) {
+        }
+        on collision_exit(other: entity_ref) {
+        }
+    }
+}

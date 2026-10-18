@@ -1,0 +1,13 @@
+// A component of the pose and a compound assignment write the pose too.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+    }
+    update(dt: f32) {
+        Ball.position.y = 4.0;
+        Ball.position += vec3(0.0, dt, 0.0);
+    }
+}
