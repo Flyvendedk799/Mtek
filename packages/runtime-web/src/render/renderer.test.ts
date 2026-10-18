@@ -7,7 +7,6 @@ import { mountMtekWith } from "../host/mount.js";
 import type { MtekApp, MtekDebug, MtekMountOptions } from "../host/types.js";
 import { lookAt, multiply, normalMatrix, perspective, translation } from "../math/mat4.js";
 import { RuntimeInternalError } from "../scene/world.js";
-import { FakeBuffer } from "../test-support/fake-gpu.js";
 import {
   BASE_URL,
   FakeHost,
@@ -19,6 +18,7 @@ import {
   type FakeDrawRecord,
   type InitContext,
 } from "../test-support/fake-host.js";
+import { bufferLabelled, floats, frameLightCount, frameLights, memberOffset, ZERO_LIGHT } from "../test-support/frame-block.js";
 import { installProgram } from "../test-support/mount-fixture.js";
 import { CODEGEN_FIXTURES, loadGoldenProgram } from "../test-support/program.js";
 import { compareDraws, exposureScale, type DrawSortKey } from "./renderer.js";
@@ -57,63 +57,6 @@ async function mountScene(
   });
   if (app.debug === undefined) throw new Error("no debug API");
   return { host, app, debug: app.debug, manifest: parsed.manifest, reported };
-}
-
-/** The live buffer with this label (arena buffers are labelled `mtek:uniform-arena:<layout id>`). */
-function bufferLabelled(host: FakeHost, label: string): FakeBuffer {
-  const found = host.device.buffers.filter((buffer) => buffer.label === label && !buffer.destroyed);
-  if (found.length !== 1 || found[0] === undefined) throw new Error(`expected one live buffer '${label}', found ${String(found.length)}`);
-  return found[0];
-}
-
-/** The byte offset of a top-level member, from the manifest's layout record (never hard-coded). */
-function memberOffset(manifest: MtekManifest, layoutId: string, member: string): number {
-  const node = manifest.layouts.find((layout) => layout.id === layoutId)?.root.members.find((m) => m.name === member)?.node;
-  if (node === undefined) throw new Error(`no member ${member} in ${layoutId}`);
-  return node.offset;
-}
-
-function floats(buffer: FakeBuffer, byteOffset: number, count: number): Float32Array {
-  return new Float32Array(buffer.contents.buffer.slice(byteOffset, byteOffset + count * 4));
-}
-
-/** One `MtekLight` read back from the frame block, vectors as arrays. */
-interface ReadLight {
-  readonly color: number[];
-  readonly kind: number;
-  readonly position: number[];
-  readonly range: number;
-  readonly direction: number[];
-}
-
-const ZERO_LIGHT: ReadLight = { color: [0, 0, 0], kind: 0, position: [0, 0, 0], range: 0, direction: [0, 0, 0] };
-
-/** `light_count` of the frame block. */
-function frameLightCount(manifest: MtekManifest, frame: FakeBuffer): number {
-  const at = memberOffset(manifest, "builtin:frame", "light_count");
-  return new Uint32Array(frame.contents.buffer.slice(at, at + 4))[0] ?? -1;
-}
-
-/**
- * Every `MtekLight` of the frame block, from the offsets and stride of the manifest's layout record (the
- * test, like the runtime, never hard-codes them).
- */
-function frameLights(manifest: MtekManifest, frame: FakeBuffer): ReadLight[] {
-  const node = manifest.layouts.find((layout) => layout.id === "builtin:frame")?.root.members.find((m) => m.name === "lights")?.node;
-  if (node?.kind !== "array" || node.element.kind !== "struct") throw new Error("the lights member is not an array of structs");
-  const element = node.element;
-  const at = (slot: number, member: string): number => {
-    const found = element.members.find((m) => m.name === member);
-    if (found === undefined) throw new Error(`no MtekLight member ${member}`);
-    return node.offset + slot * node.stride + found.node.offset;
-  };
-  return Array.from({ length: node.length }, (_, slot) => ({
-    color: Array.from(floats(frame, at(slot, "color"), 3)),
-    kind: new Uint32Array(frame.contents.buffer.slice(at(slot, "kind"), at(slot, "kind") + 4))[0] ?? -1,
-    position: Array.from(floats(frame, at(slot, "position"), 3)),
-    range: floats(frame, at(slot, "range"), 1)[0] ?? Number.NaN,
-    direction: Array.from(floats(frame, at(slot, "direction"), 3)),
-  }));
 }
 
 function lastDraws(host: FakeHost): readonly FakeDrawRecord[] {
@@ -353,8 +296,8 @@ function lightsEdit(json: Json): void {
     { ...bare, index: 2, name: "Lamp", symbol: "src/main.mtek::Demo.Rig.Lamp", parent: 1, light: 1 },
   ];
   scene.lights = [
-    { index: 0, entity: 0, kind: "directional" },
-    { index: 1, entity: 2, kind: "point", range: 6.5 },
+    { index: 0, entity: 0, kind: "directional", classes: { color: "initial", intensity: "initial" } },
+    { index: 1, entity: 2, kind: "point", range: 6.5, classes: { color: "initial", intensity: "initial" } },
   ];
 }
 
@@ -683,11 +626,13 @@ describe("a material that fails after mount", () => {
 });
 
 /**
- * The parameter blocks of a golden program: every instance owns one, except in `lights`, whose three Unlit
+ * The parameter blocks of a golden program: every instance owns one, except in the light programs, whose Unlit
  * instances are `shareable` and hold the same colour, so they share one block (decision 0059).
  */
+const SHARED_BLOCK_PROGRAMS = new Set(["lights", "light_bindings", "light_bindings_edited"]);
+
 function blockCounters(fixture: string, instances: number): { ownedParamBlocks: number; sharedParamBlocks: number } {
-  return fixture === "lights" ? { ownedParamBlocks: 0, sharedParamBlocks: 1 } : { ownedParamBlocks: instances, sharedParamBlocks: 0 };
+  return SHARED_BLOCK_PROGRAMS.has(fixture) ? { ownedParamBlocks: 0, sharedParamBlocks: 1 } : { ownedParamBlocks: instances, sharedParamBlocks: 0 };
 }
 
 /** The materials of spawnable prefabs with an instanced entry point: each gets a second pipeline at startup. */
@@ -775,8 +720,8 @@ describe("the compiler's lights program, end to end (decision 0053)", () => {
   it("declares the lights in the manifest, in instance order, with the ambient fields", async () => {
     const { manifest, app } = await mountLights();
     expect(manifest.scene.lights).toEqual([
-      { index: 0, entity: 0, kind: "directional" },
-      { index: 1, entity: 2, kind: "point", range: 6.5 },
+      { index: 0, entity: 0, kind: "directional", classes: { color: "initial", intensity: "bound" } },
+      { index: 1, entity: 2, kind: "point", range: 6.5, classes: { color: "imperative", intensity: "imperative" } },
     ]);
     expect(manifest.scene.entities.map((entity) => entity.light)).toEqual([0, null, 1]);
     expect(manifest.scene.bindings.map((binding) => binding.target)).toEqual([{ kind: "light", entity: 0, field: "intensity" }]);

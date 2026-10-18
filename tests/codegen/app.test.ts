@@ -223,6 +223,8 @@ describe("the generated program module", () => {
       "assignable_places",
       "bindings",
       "cpu_functions",
+      "light_bindings",
+      "light_bindings_edited",
       "lights",
       "numeric_cpu_table",
       "physics",

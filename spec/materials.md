@@ -131,7 +131,7 @@ Lights are components on **named** entities only in v0.1 (a `light` in a prefab 
 | `DirectionalLight` | `color: color = #ffffff`, `intensity: f32 = 1.0` (illuminance, lux) | travels along the entity's world `-Z` axis (rotate the entity to aim it) |
 | `PointLight` | `color: color = #ffffff`, `intensity: f32 = 1.0` (luminous intensity, candela), `range: f32 = 0.0` (`0` = unlimited) | at the entity's world position |
 
-`color` and `intensity` are writable and bindable. At most **4** lights per scene in v0.1 (`E5111` at compile time); the limit is a constant in the frame/view block layout (`spec/gpu-layout.md` §6.1). Shadows are not in v0.1. How lights are checked, written, bound and packed into `MtekFrame` each frame is decision `spec/decisions/0053-lights.md`.
+`color` and `intensity` are writable and bindable, and a binding may read them (decision `spec/decisions/0067-light-bindings-and-hot-reload.md`: they are binding dependencies, and a hot reload keeps or applies them by their update class). At most **4** lights per scene in v0.1 (`E5111` at compile time); the limit is a constant in the frame/view block layout (`spec/gpu-layout.md` §6.1). Shadows are not in v0.1. How lights are checked, written, bound and packed into `MtekFrame` each frame is decision `spec/decisions/0053-lights.md`.
 
 ## 8. Lighting model: the documented PBR subset (M4)
 

@@ -217,7 +217,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5002"></a>E5002 | duplicate field | |
 | <a id="mtek-e5003"></a>E5003 | missing required field | |
 | <a id="mtek-e5004"></a>E5004 | `bind` not allowed here | field is not bindable or `bind` outside a field value |
-| <a id="mtek-e5005"></a>E5005 | impure binding | `bind` expression calls `cpu` functions/intrinsics |
+| <a id="mtek-e5005"></a>E5005 | impure binding | `bind` expression calls `cpu` functions/intrinsics, or reads what no dependency kind covers (a camera field, a body property) |
 | <a id="mtek-e5006"></a>E5006 | field value out of range | e.g. `Sphere { segments: 2 }` |
 | <a id="mtek-e5010"></a>E5010 | camera has both target and rotation | |
 | <a id="mtek-e5011"></a>E5011 | invalid camera projection | |

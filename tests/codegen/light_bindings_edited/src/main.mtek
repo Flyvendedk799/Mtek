@@ -12,7 +12,7 @@ scene Demo {
 
     entity Marker {
         mesh: Box { size: vec3(0.2, 0.2, 0.2) };
-        position: bind(vec3(Fill.light.intensity, Sun.light.intensity, 0.0));
+        position: bind(vec3(Fill.light.intensity * 0.25, Sun.light.intensity * 0.125, Lamp.light.intensity * 0.0625));
     }
 
     entity Fill {
@@ -23,13 +23,13 @@ scene Demo {
 
     entity Sun {
         rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.9);
-        mesh: Box { size: vec3(0.2, 0.2, 0.2) };
+        mesh: Box { size: vec3(0.3, 0.3, 0.3) };
         light: DirectionalLight { color: #b0e0ff; intensity: bind(3.0 + warmth * 4.0); };
     }
 
     entity Lamp {
         position: vec3(2.0, 1.0, 0.0);
-        mesh: Sphere {};
+        mesh: Sphere { radius: 0.4 };
         light: PointLight { color: #ff8040; intensity: 9.0; range: 6.5; };
     }
 

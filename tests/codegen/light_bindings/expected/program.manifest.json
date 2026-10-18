@@ -3,7 +3,7 @@
   "runtimeAbi": 1,
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "buildId": "26e9eec08638f02bc3565b1f42263d5642575e3b82eae0e887ec8ecec50ac95a",
+  "buildId": "1d8440d549144b6c564aca485ba41600d46f8acf7d4789fd468ad8150cda3520",
   "targetProfile": "webgpu-core-2026",
   "requiredCapabilities": {
     "features": [],
@@ -25,7 +25,7 @@
     {
       "id": 0,
       "path": "src/main.mtek",
-      "sha256": "7e71bfff8d0ec32b578bf2d693ca806a5ac9dffb882297a72bf054ff3a3de86a"
+      "sha256": "908ae43c56733cb08a7510f8cf7effa930faca25ce0cb787ca684eb07b3692f2"
     },
     {
       "id": 1,
@@ -36,65 +36,65 @@
   "spans": [
     {
       "file": 0,
-      "start": 469,
-      "end": 1577,
-      "startLine": 6,
+      "start": 556,
+      "end": 1718,
+      "startLine": 7,
       "startColumn": 1,
-      "endLine": 43,
+      "endLine": 44,
       "endColumn": 2
     },
     {
       "file": 0,
-      "start": 512,
-      "end": 536,
-      "startLine": 8,
+      "start": 599,
+      "end": 623,
+      "startLine": 9,
       "startColumn": 5,
-      "endLine": 8,
+      "endLine": 9,
       "endColumn": 29
     },
     {
       "file": 0,
-      "start": 542,
-      "end": 637,
-      "startLine": 10,
+      "start": 629,
+      "end": 724,
+      "startLine": 11,
       "startColumn": 5,
-      "endLine": 13,
+      "endLine": 14,
       "endColumn": 6
     },
     {
       "file": 0,
-      "start": 643,
-      "end": 791,
-      "startLine": 15,
+      "start": 730,
+      "end": 919,
+      "startLine": 16,
       "startColumn": 5,
-      "endLine": 18,
+      "endLine": 19,
       "endColumn": 6
     },
     {
       "file": 0,
-      "start": 797,
-      "end": 998,
-      "startLine": 20,
+      "start": 925,
+      "end": 1126,
+      "startLine": 21,
       "startColumn": 5,
-      "endLine": 24,
+      "endLine": 25,
       "endColumn": 6
     },
     {
       "file": 0,
-      "start": 1004,
-      "end": 1222,
-      "startLine": 26,
+      "start": 1132,
+      "end": 1350,
+      "startLine": 27,
       "startColumn": 5,
-      "endLine": 30,
+      "endLine": 31,
       "endColumn": 6
     },
     {
       "file": 0,
-      "start": 1228,
-      "end": 1386,
-      "startLine": 32,
+      "start": 1356,
+      "end": 1527,
+      "startLine": 33,
       "startColumn": 5,
-      "endLine": 36,
+      "endLine": 37,
       "endColumn": 6
     },
     {
@@ -144,38 +144,38 @@
     },
     {
       "file": 0,
-      "start": 726,
-      "end": 784,
-      "startLine": 17,
+      "start": 813,
+      "end": 912,
+      "startLine": 18,
       "startColumn": 19,
-      "endLine": 17,
-      "endColumn": 77
+      "endLine": 18,
+      "endColumn": 118
     },
     {
       "file": 0,
-      "start": 911,
-      "end": 932,
-      "startLine": 23,
+      "start": 1039,
+      "end": 1060,
+      "startLine": 24,
       "startColumn": 36,
-      "endLine": 23,
+      "endLine": 24,
       "endColumn": 57
     },
     {
       "file": 0,
-      "start": 945,
-      "end": 976,
-      "startLine": 23,
+      "start": 1073,
+      "end": 1104,
+      "startLine": 24,
       "startColumn": 70,
-      "endLine": 23,
+      "endLine": 24,
       "endColumn": 101
     },
     {
       "file": 0,
-      "start": 1188,
-      "end": 1212,
-      "startLine": 29,
+      "start": 1316,
+      "end": 1340,
+      "startLine": 30,
       "startColumn": 62,
-      "endLine": 29,
+      "endLine": 30,
       "endColumn": 86
     }
   ],
@@ -504,6 +504,22 @@
       "radius": 0.5,
       "segments": 32,
       "rings": 16
+    },
+    {
+      "id": "mesh:2",
+      "kind": "box",
+      "size": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    {
+      "id": "mesh:3",
+      "kind": "sphere",
+      "radius": 0.4,
+      "segments": 32,
+      "rings": 16
     }
   ],
   "assets": [],
@@ -587,7 +603,7 @@
         "name": "Sun",
         "symbol": "src/main.mtek::Demo.Sun",
         "parent": null,
-        "mesh": "mesh:0",
+        "mesh": "mesh:2",
         "material": {
           "id": "std/materials.mtek::Unlit",
           "instance": 2
@@ -604,7 +620,7 @@
         "name": "Lamp",
         "symbol": "src/main.mtek::Demo.Lamp",
         "parent": null,
-        "mesh": "mesh:1",
+        "mesh": "mesh:3",
         "material": {
           "id": "std/materials.mtek::Unlit",
           "instance": 3
@@ -684,6 +700,11 @@
           {
             "kind": "light",
             "entity": 2,
+            "field": "intensity"
+          },
+          {
+            "kind": "light",
+            "entity": 3,
             "field": "intensity"
           }
         ],

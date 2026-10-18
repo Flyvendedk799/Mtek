@@ -1,5 +1,6 @@
 // Bindings that read light fields and feed lights (decision 0067). The runtime tests run it for the
-// evaluation order (Marker is declared first and reads what Fill and Sun bind, so it is evaluated last)
+// evaluation order (Marker is declared first and reads what Fill and Sun bind, so it is evaluated last,
+// and the value `update` wrote into Lamp, which it reads in the frame it was written)
 // and, with `light_bindings_edited` (the same scene with other literals and one other formula), for
 // hot reload: Sun.color is `initial`, Sun.intensity and the whole of Fill are `bound`, the light Lamp
 // is written by the scene's `update` and so `imperative`.
@@ -14,7 +15,7 @@ scene Demo {
 
     entity Marker {
         mesh: Box { size: vec3(0.2, 0.2, 0.2) };
-        position: bind(vec3(Fill.light.intensity, Sun.light.intensity, 0.0));
+        position: bind(vec3(Fill.light.intensity * 0.25, Sun.light.intensity * 0.125, Lamp.light.intensity * 0.0625));
     }
 
     entity Fill {
@@ -25,13 +26,13 @@ scene Demo {
 
     entity Sun {
         rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.9);
-        mesh: Box { size: vec3(0.2, 0.2, 0.2) };
+        mesh: Box { size: vec3(0.3, 0.3, 0.3) };
         light: DirectionalLight { color: #ffe0b0; intensity: bind(2.0 + warmth * 4.0); };
     }
 
     entity Lamp {
         position: vec3(2.0, 1.0, 0.0);
-        mesh: Sphere {};
+        mesh: Sphere { radius: 0.4 };
         light: PointLight { color: #ff8040; intensity: 4.0; range: 6.5; };
     }
 

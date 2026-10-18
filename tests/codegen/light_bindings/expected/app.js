@@ -111,7 +111,7 @@ function b_0_update(ctx, a_dt) {
 
 // bind (src/main.mtek::Demo.bind_0): evaluated every frame in the order of the manifest
 function bd_0(ctx) {
-  return rt.v3(ctx.e[1].light.intensity, ctx.e[2].light.intensity, 0.0);
+  return rt.v3(fr(ctx.e[1].light.intensity * 0.25), fr(ctx.e[2].light.intensity * 0.125), fr(ctx.e[3].light.intensity * 0.0625));
 }
 
 // bind (src/main.mtek::Demo.bind_1): evaluated every frame in the order of the manifest

@@ -564,7 +564,7 @@ fn the_manifest_carries_structure_but_no_entity_or_camera_values() {
 #[test]
 fn bindings_that_read_light_fields_are_ordered_by_them_and_lights_carry_update_classes() {
     // Decision 0067. `tests/codegen/light_bindings`: Marker (entity 0) is declared first and reads
-    // the intensities of Fill (1) and Sun (2); Fill binds its colour to the colour of Sun, which is
+    // the intensities of Fill (1), Sun (2) and Lamp (3, which a handler writes); Fill binds its colour to the colour of Sun, which is
     // a constant, and its intensity to the bound intensity of Sun; Sun binds its intensity to
     // state. So Fill.color (id 1) and Sun.intensity (id 3) have nothing to wait for, in id order;
     // Fill.intensity (id 2) follows Sun.intensity and Marker.position (id 0) both.
@@ -591,7 +591,8 @@ fn bindings_that_read_light_fields_are_ordered_by_them_and_lights_carry_update_c
             json!({ "kind": "transform", "entity": 0, "field": "position" }),
             json!([
                 { "kind": "light", "entity": 1, "field": "intensity" },
-                { "kind": "light", "entity": 2, "field": "intensity" }
+                { "kind": "light", "entity": 2, "field": "intensity" },
+                { "kind": "light", "entity": 3, "field": "intensity" }
             ]),
         ),
         (
