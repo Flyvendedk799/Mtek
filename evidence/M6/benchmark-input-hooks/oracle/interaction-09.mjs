@@ -17,6 +17,7 @@ class Model {
   x = -4;
   power = 0;
   held = false;
+  moved = false;
   queue = [];
 
   down(key) {
@@ -25,8 +26,15 @@ class Model {
   up(key) {
     this.queue.push(["up", key]);
   }
-  /** One frame: the queued events, in the order they arrived. */
+  /**
+   * One frame: the queued events, in the order they arrived. Refuses a frame that changes the Stone's colour right
+   * after a frame that moved it: three.js r186.1 (the baseline's renderer, driven by a manual loop) does not upload
+   * a colour change in that frame (decision 0088 item 8), so a fixture must not rely on it.
+   */
   frame() {
+    const movedBefore = this.moved;
+    const heldBefore = this.held;
+    const xBefore = this.x;
     for (const [kind, key] of this.queue.splice(0)) {
       if (kind === "down" && key === "Space") this.held = true;
       else if (kind === "down" && key === "ArrowUp") {
@@ -36,6 +44,10 @@ class Model {
         this.x = Math.min(RIGHT_LIMIT, this.x + 2 * this.power);
         this.power = 0;
       }
+    }
+    this.moved = this.x !== xBefore;
+    if (movedBefore && this.held !== heldBefore) {
+      throw new Error("a colour change in the frame after a frame that moved the Stone (three.js r186.1 does not upload it)");
     }
   }
   boxes() {
@@ -155,6 +167,7 @@ writeFixtures("interaction-09", {
     ["release", "Space"],
     ["step", 1],
     ["check", "launch with power 5 from -4 would reach 6: the Stone stops at x = 5"],
+    ["step", 1],
     ["press", "Space"],
     ["step", 1],
     ...tap("ArrowUp"),
