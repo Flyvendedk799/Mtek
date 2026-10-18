@@ -10,7 +10,7 @@ prompt = """Build a scene named Demo that renders exactly as follows. The pictur
   - A flat square named Floor, 14 x 14 units, one-sided, facing up (+Y), lying in the plane y = 0 and centred on the origin, base colour #9aa5b1, roughness 0.9.
 - One white point light named Lamp at (1.5, 3, 2.5) that shines equally in all directions, with no range limit. Its illumination falls off with the inverse square of the distance from the lamp, and its strength is calibrated so that a perfectly matte (Lambertian) white surface that is 3 units from the lamp and whose normal points straight at it renders as exactly white; a surface at an angle to the light receives proportionally less (the cosine of the angle).
 - A white ambient light of 5% of that strength: it adds, to every surface and regardless of its orientation, 5% of the surface's own diffuse colour.
-There are no shadows and no tone mapping: values above full brightness are simply clipped. The expected pixels were computed with the standard model (Lambertian diffuse plus a GGX specular term with Schlick Fresnel) and are checked with a tolerance of 8 per colour channel, which covers the small differences between implementations of that model."""
+There are no shadows and no tone mapping: values above full brightness are simply clipped. The expected pixels were computed with the standard model (Lambertian diffuse plus a GGX specular term with Schlick Fresnel) and are checked with a tolerance of 6 per colour channel, which covers the small differences between implementations of that model (the shading of a tessellated sphere, rounding)."""
 required_symbols = ["Demo.Lamp", "Demo.Floor", "Demo.Ball"]
 mtek_side_status = "verified"
 

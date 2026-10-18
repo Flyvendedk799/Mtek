@@ -6,7 +6,7 @@ function matte(hex: string, roughness: number): MeshStandardMaterial {
   return new MeshStandardMaterial({ color: srgb(hex), roughness, metalness: 0 });
 }
 
-/** A point light in physical units: `brightness` 1 means full brightness at 3 units (intensity 9 * pi). */
+/** A point light in physical units: intensity 9 * pi lights a matte surface that faces it squarely at 3 units to full brightness. */
 function lamp(name: string, hex: string, x: number): PointLight {
   const light = new PointLight(srgb(hex), 9 * Math.PI, 0, 2);
   light.name = name;

@@ -1,0 +1,9 @@
+scene-rendering-06: tolerance 0: fail; pixel (1, 64) is #777d86, expected #777d85 within 0 per channel; it differs by 1
+scene-rendering-06: tolerance 1: pass
+scene-rendering-07: tolerance 0: fail; pixel (73, 43) is #fa3359, expected #fb3459 within 0 per channel; it differs by 1
+scene-rendering-07: tolerance 1: fail; pixel (49, 47) is #38020b, expected #3c030d within 1 per channel; it differs by 4
+scene-rendering-07: tolerance 2: fail; pixel (49, 47) is #38020b, expected #3c030d within 2 per channel; it differs by 4
+scene-rendering-07: tolerance 3: fail; pixel (49, 47) is #38020b, expected #3c030d within 3 per channel; it differs by 4
+scene-rendering-07: tolerance 4: pass
+scene-rendering-10: tolerance 0: fail; pixel (74, 48) is #3552f5, expected #3552f6 within 0 per channel; it differs by 1
+scene-rendering-10: tolerance 1: pass

@@ -1,0 +1,85 @@
+{
+  "task": "scene-rendering-02",
+  "project": "starter",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "fail",
+      "reason": "1 errors; first MTEK-E9006: The entry scene 'Demo' (project.scene in mtek.toml) is not declared in the entry module 'src/main.mtek'.",
+      "notRun": null
+    },
+    "build": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    },
+    "start": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    },
+    "tests": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "fail",
+    "checked": [
+      "Demo.Bar",
+      "Demo.Tip"
+    ],
+    "missing": [
+      "Demo.Bar",
+      "Demo.Tip"
+    ],
+    "reason": "required symbols not declared: Demo.Bar, Demo.Tip"
+  },
+  "diagnostics": [
+    {
+      "schemaVersion": 1,
+      "code": "MTEK-E9006",
+      "severity": "error",
+      "title": "entry scene not found or ambiguous",
+      "message": "The entry scene 'Demo' (project.scene in mtek.toml) is not declared in the entry module 'src/main.mtek'.",
+      "source": null,
+      "related": [],
+      "notes": [
+        "help: the entry module declares no scene"
+      ],
+      "suggestedEdits": [],
+      "phase": "check",
+      "docs": "spec/diagnostics.md#mtek-e9006"
+    }
+  ],
+  "testReport": null,
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "fail",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 1,
+      "durationMs": 121,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Bar",
+      "exitCode": 2,
+      "durationMs": 108,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Tip",
+      "exitCode": 2,
+      "durationMs": 108,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 338
+}

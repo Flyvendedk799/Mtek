@@ -1,0 +1,73 @@
+{
+  "baselineSource": "starter",
+  "command": "MTEK_REQUIRE_GPU=1 MTEK_BASELINE_SOURCE=starter npm run test:benchmarks -- scene-rendering-0[2-9]|scene-rendering-10",
+  "counts": {
+    "passed": 0,
+    "failed": 9
+  },
+  "tests": [
+    {
+      "title": "scene-rendering-02 (starter baseline): a bar tilted by 0.9272952 rad about Z with a red ball at its end, on a dark blue-grey background",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 501,
+      "firstErrorLine": "Error: a bar tilted by 0.9272952 rad about Z with a red ball at its end, on a dark blue-grey background, step 2 (expect_pixel): pixel (64, 64) is rgb(0, 0, 0), expected #f59e0b within 2"
+    },
+    {
+      "title": "scene-rendering-03 (starter baseline): a two-segment arm: children follow the rotation and scale of their parents",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 454,
+      "firstErrorLine": "Error: a two-segment arm: children follow the rotation and scale of their parents, step 2 (expect_pixel): pixel (21, 89) is rgb(0, 0, 0), expected #64748b within 2"
+    },
+    {
+      "title": "scene-rendering-04 (starter baseline): three solids on a floor seen from an off-axis camera; nearer solids hide farther ones",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 464,
+      "firstErrorLine": "Error: three solids on a floor seen from an off-axis camera; nearer solids hide farther ones, step 2 (expect_pixel): pixel (64, 79) is rgb(0, 0, 0), expected #dc2626 within 2"
+    },
+    {
+      "title": "scene-rendering-05 (starter baseline): orthographic camera at (0, 6, 6): floor, moved crate and a dome half sunk into the floor",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 485,
+      "firstErrorLine": "Error: orthographic camera at (0, 6, 6): floor, moved crate and a dome half sunk into the floor, step 2 (expect_pixel): pixel (64, 64) is rgb(249, 115, 22), expected #3f4a5a within 2"
+    },
+    {
+      "title": "scene-rendering-06 (starter baseline): a cube and a floor lit by a directional light and ambient light",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 456,
+      "firstErrorLine": "Error: a cube and a floor lit by a directional light and ambient light, step 2 (expect_pixel): pixel (64, 82) is rgb(0, 0, 0), expected #be9b76 within 6"
+    },
+    {
+      "title": "scene-rendering-07 (starter baseline): a red ball on a floor lit by one point light and ambient light",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 454,
+      "firstErrorLine": "Error: a red ball on a floor lit by one point light and ambient light, step 2 (expect_pixel): pixel (64, 55) is rgb(0, 0, 0), expected #d3324e within 6"
+    },
+    {
+      "title": "scene-rendering-08 (starter baseline): five columns of different heights and colours standing on y = 0",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 488,
+      "firstErrorLine": "Error: five columns of different heights and colours standing on y = 0, step 3 (expect_pixel): pixel (42, 69) is rgb(15, 23, 42), expected #f59e0b within 2"
+    },
+    {
+      "title": "scene-rendering-09 (starter baseline): near and far planes cut boxes, a box behind the camera and a hidden box are not drawn",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 467,
+      "firstErrorLine": "Error: near and far planes cut boxes, a box behind the camera and a hidden box are not drawn, step 2 (expect_pixel): pixel (64, 64) is rgb(0, 0, 0), expected #ef4444 within 2"
+    },
+    {
+      "title": "scene-rendering-10 (starter baseline): a white ball and floor lit by a red and a blue point light and a tinted ambient light",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 456,
+      "firstErrorLine": "Error: a white ball and floor lit by a red and a blue point light and a tinted ambient light, step 2 (expect_pixel): pixel (64, 56) is rgb(0, 0, 0), expected #883b98 within 6"
+    }
+  ]
+}

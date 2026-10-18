@@ -1,0 +1,151 @@
+{
+  "task": "scene-rendering-09",
+  "project": "benchmarks/tasks/scene-rendering-09/reference/mtek",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Mid",
+      "Demo.Slab",
+      "Demo.Far",
+      "Demo.Behind",
+      "Demo.Ghost",
+      "Demo.Rim"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "pass",
+    "exitCode": 0,
+    "summary": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/scene.test.toml",
+        "name": "near and far planes cut boxes, a box behind the camera and a hidden box are not drawn",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 45,
+        "stepsTotal": 45
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "pass",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 127,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Mid",
+      "exitCode": 0,
+      "durationMs": 114,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Slab",
+      "exitCode": 0,
+      "durationMs": 120,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Far",
+      "exitCode": 0,
+      "durationMs": 114,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Behind",
+      "exitCode": 0,
+      "durationMs": 112,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Ghost",
+      "exitCode": 0,
+      "durationMs": 113,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Rim",
+      "exitCode": 0,
+      "durationMs": 113,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 131,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 0,
+      "durationMs": 1442,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 2387
+}

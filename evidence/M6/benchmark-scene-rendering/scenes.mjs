@@ -62,7 +62,7 @@ export const scenes = {
   "scene-rendering-06": {
     clear: "#0b0d12",
     camera: { position: [2.5, 2.5, 5], target: [0, 0, 0], fovY: 0.9 },
-    ambient: { color: "#ffffff", intensity: 0.1 },
+    ambient: { color: "#ffffff", intensity: 0.1 / Math.PI },
     lights: [{ directional: [0, -0.6, -0.8], intensity: 1 }],
     entities: [
       { name: "Floor", position: [0, -1, 0], mesh: { plane: [10, 10] }, material: pbr("#8a929c", 0.9) },
@@ -73,7 +73,7 @@ export const scenes = {
   "scene-rendering-07": {
     clear: "#10131a",
     camera: { position: [0, 3, 8], target: [0, 0.5, 0], fovY: 0.8 },
-    ambient: { color: "#ffffff", intensity: 0.05 },
+    ambient: { color: "#ffffff", intensity: 0.05 / Math.PI },
     lights: [{ point: [1.5, 3, 2.5], intensity: 9 }],
     entities: [
       { name: "Floor", mesh: { plane: [14, 14] }, material: pbr("#9aa5b1", 0.9) },
@@ -109,7 +109,7 @@ export const scenes = {
   "scene-rendering-10": {
     clear: "#0a0a0f",
     camera: { position: [0, 3, 9], target: [0, 0.5, 0], fovY: 0.8 },
-    ambient: { color: "#6070a0", intensity: 0.1 },
+    ambient: { color: "#6070a0", intensity: 0.1 / Math.PI },
     lights: [
       { point: [-3, 2.5, 2], color: "#ff3030", intensity: 9 },
       { point: [3, 2.5, 2], color: "#3050ff", intensity: 9 },
@@ -125,9 +125,10 @@ const LIT_NOTE = [
   "Lit scene: the shading is the oracle of spec/materials.md section 8 (tests/browser/support/reference-shading.ts) with the",
   "default camera exposure (scale pi, decision 0081). The prompt calibrates every light in observable terms (a matte white",
   "surface facing the light squarely at the stated distance renders white), which in the units of that model is: directional",
-  "light 1 lux, point light I candela at d metres 1 lux when I = d^2 (9 candela at 3 m), ambient intensity as stated.",
-  "The tolerance is 8 per channel because three.js's MeshStandardMaterial differs from that model by a few bytes",
-  "(decision 0078 item 6); it still separates the cases the task is about by far more.",
+  "light 1 lux, point light I candela at d metres 1 lux when I = d^2 (9 candela at 3 m). An ambient term that adds the fraction",
+  "k of the diffuse colour is ambient_intensity = k / pi in these units, because the exposure scale multiplies the ambient term by",
+  "pi too (rule 9). The tolerance covers the differences between this model and three.js's MeshStandardMaterial (decision 0078",
+  "item 6); it still separates the cases the task is about by far more.",
 ];
 
 /** Name and explanatory comment lines of the fixture of each task, and the tolerance where it is not the default. */
@@ -151,12 +152,12 @@ export const meta = {
   "scene-rendering-06": {
     name: "a cube and a floor lit by a directional light and ambient light",
     notes: ["Scene: light travelling along (0, -0.6, -0.8): front faces get cos 0.8, top faces 0.6, the +X face only ambient.", ...LIT_NOTE],
-    tolerance: 8,
+    tolerance: 6,
   },
   "scene-rendering-07": {
     name: "a red ball on a floor lit by one point light and ambient light",
     notes: ["Scene: point light at (1.5, 3, 2.5), 9 candela, inverse-square, no range; ambient 0.05.", ...LIT_NOTE],
-    tolerance: 8,
+    tolerance: 6,
   },
   "scene-rendering-08": {
     name: "five columns of different heights and colours standing on y = 0",
@@ -173,6 +174,6 @@ export const meta = {
   "scene-rendering-10": {
     name: "a white ball and floor lit by a red and a blue point light and a tinted ambient light",
     notes: ["Scene: two 9 candela point lights (#ff3030 at (-3, 2.5, 2), #3050ff at (3, 2.5, 2)), ambient #6070a0 x 0.1.", ...LIT_NOTE],
-    tolerance: 8,
+    tolerance: 6,
   },
 };

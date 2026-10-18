@@ -1,7 +1,9 @@
 scene Demo {
     clear_color: #10131a;
     ambient_color: #ffffff;
-    ambient_intensity: 0.05;
+    // The ambient term adds 5% of the diffuse colour: 0.05 / pi, because the camera's default exposure scale (pi)
+    // multiplies the ambient term as well.
+    ambient_intensity: 0.015915494;
 
     camera Main {
         position: vec3(0.0, 3.0, 8.0);

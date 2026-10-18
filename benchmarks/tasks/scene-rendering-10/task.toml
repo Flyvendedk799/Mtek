@@ -12,7 +12,7 @@ prompt = """Build a scene named Demo that renders exactly as follows. The pictur
   - LampLeft at (-3, 2.5, 2), light colour #ff3030.
   - LampRight at (3, 2.5, 2), light colour #3050ff.
 - A uniform ambient light of colour #6070a0 at 10% of the strength a white light of that calibration would have: it adds to every surface, regardless of its orientation, 10% of the surface's own diffuse colour multiplied by the ambient colour.
-The light colours and the surface colours are given as sRGB hex colours, and the lighting arithmetic is done on linear values. There are no shadows and no tone mapping: values above full brightness are simply clipped. The expected pixels were computed with the standard model (Lambertian diffuse plus a GGX specular term with Schlick Fresnel) and are checked with a tolerance of 8 per colour channel, which covers the small differences between implementations of that model."""
+The light colours and the surface colours are given as sRGB hex colours, and the lighting arithmetic is done on linear values. There are no shadows and no tone mapping: values above full brightness are simply clipped. The expected pixels were computed with the standard model (Lambertian diffuse plus a GGX specular term with Schlick Fresnel) and are checked with a tolerance of 6 per colour channel, which covers the small differences between implementations of that model (the shading of a tessellated sphere, rounding)."""
 required_symbols = ["Demo.LampLeft", "Demo.LampRight", "Demo.Floor", "Demo.Ball"]
 mtek_side_status = "verified"
 
