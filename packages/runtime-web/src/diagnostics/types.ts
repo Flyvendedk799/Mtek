@@ -70,7 +70,8 @@ export interface MtekDiagnostic {
 /**
  * The runtime part (`8xxx`) of the catalogue of `spec/diagnostics.md` section 5.8, in the order of
  * that table. A test asserts that this list equals the table. The physics codes (E8101 to E8103,
- * decision 0065) are catalogued here; the runtime reports them from M5-05 on.
+ * decision 0065; E8104, decision 0066) are catalogued here and reported by `physics/system.ts` and
+ * `physics/load.ts` (M5-05).
  */
 export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8001: "unsupported platform endianness",
@@ -100,6 +101,7 @@ export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8101: "command not valid for the target's body kind",
   E8102: "physics module failed to load",
   E8103: "non-finite pose produced by the solver",
+  E8104: "non-finite value given to a body",
 } as const;
 
 /**
@@ -163,7 +165,8 @@ export type MtekMountErrorKind =
   | "manifest-invalid"
   | "shader-failed"
   | "asset-failed"
-  | "allocation-failed";
+  | "allocation-failed"
+  | "physics-failed";
 
 const MOUNT_KIND_BY_CODE: Readonly<Record<string, MtekMountErrorKind>> = {
   E8001: "webgpu-unavailable",
@@ -176,6 +179,7 @@ const MOUNT_KIND_BY_CODE: Readonly<Record<string, MtekMountErrorKind>> = {
   E7030: "asset-failed",
   E7031: "asset-failed",
   E8063: "allocation-failed",
+  E8102: "physics-failed",
 };
 
 /**

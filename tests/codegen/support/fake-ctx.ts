@@ -34,6 +34,8 @@ export interface BodyCall {
   readonly target: number | { readonly slot: number; readonly gen: number };
   readonly method: string;
   readonly args: readonly unknown[];
+  /** The span id passed to `ctx.body(target, spanId)`: the command or property in the Mtek source (decision 0066). */
+  readonly span: number;
 }
 
 interface FakeVector {
@@ -62,7 +64,7 @@ export interface FakeContext {
   setVisible(entity: FakeEntityRecord, value: unknown): void;
   setParam(entity: FakeEntityRecord, name: string, value: unknown): void;
   setLight(entity: FakeEntityRecord, field: string, value: unknown): void;
-  body(target: FakeEntityRecord | { readonly slot: number; readonly gen: number }): FakeBodyHandle;
+  body(target: FakeEntityRecord | { readonly slot: number; readonly gen: number }, spanId: number): FakeBodyHandle;
   warn(code: string, spanId: number): void;
 }
 
@@ -118,10 +120,11 @@ export function createFakeContext(
     setLight(entity: FakeEntityRecord, field: string, value: unknown): void {
       calls.push({ method: "setLight", entity: indexOf(entity), field, value });
     },
-    body(target: FakeEntityRecord | { readonly slot: number; readonly gen: number }): FakeBodyHandle {
+    body(target: FakeEntityRecord | { readonly slot: number; readonly gen: number }, spanId: number): FakeBodyHandle {
+      if (typeof spanId !== "number") throw new Error("ctx.body must be given the span id of the command");
       const key = "index" in target ? indexOf(target) : target;
       const record = (method: string) => (...args: unknown[]): void => {
-        bodyCalls.push({ target: key, method, args });
+        bodyCalls.push({ target: key, method, args, span: spanId });
       };
       const velocity = typeof key === "number" ? velocities.get(key) : undefined;
       return {

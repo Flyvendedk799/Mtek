@@ -113,6 +113,9 @@ export interface DynamicRender {
 /** The event names an input transition can deliver, in the order they are looked up. */
 export const INPUT_EVENTS = ["key_down", "key_up", "pointer_down", "pointer_up", "pointer_move"] as const satisfies readonly MtekEventName[];
 
+/** The events the physics step delivers (`spec/physics.md` section 6, decision 0066). */
+export const COLLISION_EVENTS = ["collision_enter", "collision_exit"] as const satisfies readonly MtekEventName[];
+
 /** Joins the prefabs of the manifest to their code in the program module (checked by `checkProgram`). */
 export function buildPrefabRuntimes(prefabs: readonly ResolvedPrefab[], code: ReadonlyMap<string, MtekProgramPrefab>): Map<string, PrefabRuntime> {
   const runtimes = new Map<string, PrefabRuntime>();
@@ -127,7 +130,7 @@ export function buildPrefabRuntimes(prefabs: readonly ResolvedPrefab[], code: Re
         return { binding, compute };
       });
     const handlers = new Map<MtekEventName, readonly MtekPrefabEventHandler[]>();
-    for (const event of INPUT_EVENTS) {
+    for (const event of [...INPUT_EVENTS, ...COLLISION_EVENTS]) {
       const declared = program.events[event];
       // Declaration order is kept: several handlers of one event run in the order they were written.
       if (declared !== undefined && declared.length > 0) handlers.set(event, declared);

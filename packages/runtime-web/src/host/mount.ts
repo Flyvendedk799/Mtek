@@ -13,6 +13,11 @@
  * shaders compile; the scene is only started when every one is `ready`, and a file that is missing, altered
  * or undecodable rejects the mount with `asset-failed` (decision 0060).
  *
+ * A program whose manifest says `subsystems.physics` also imports its physics module (`physics/load.ts`) while the
+ * device is acquired and the shaders compile; a program without bodies never requests it. After `init` the bodies of
+ * the scene are created from the manifest (`physics/system.ts`, `spec/scenes.md` section 11 step 5); a module that
+ * does not load, or an engine that does not start, rejects the mount with `physics-failed` (`E8102`, decision 0066).
+ *
  * Every failure rejects with an `MtekMountError` of the documented kind, reports its diagnostics through
  * `onDiagnostic`, shows the overlay (unless `failureDisplay: "none"`), and leaves no live resource,
  * listener or device behind.
@@ -37,6 +42,8 @@ import { loadStartupShaders } from "./shaders.js";
 import { checkTestTextures } from "../render/resources.js";
 import { startScene } from "../render/startup.js";
 import { InputState } from "../input/input.js";
+import { loadPhysicsBackend, type PhysicsLoadResult } from "../physics/load.js";
+import { PhysicsSystem } from "../physics/system.js";
 import { Xoshiro128 } from "../random/xoshiro.js";
 import type { CpuServices } from "../scene/world.js";
 import { checkProgram } from "../scene/program.js";
@@ -182,6 +189,8 @@ export async function mountMtekWith<I = Record<string, unknown>>(
   let app: MountedApp<I> | undefined;
   // Decoded images wait here until the scene has uploaded them; closed in every case (idempotent).
   let images: DecodedImages | undefined;
+  // The physics world, freed on every failure after it exists.
+  let physics: PhysicsSystem | undefined;
   // A holder object, because the callbacks below assign it and TypeScript does not track that.
   const early: { lost?: GPUDeviceLostInfo } = {};
   const allocationFailures: MtekDiagnostic[] = [];
@@ -206,6 +215,13 @@ export async function mountMtekWith<I = Record<string, unknown>>(
     if (!structure.ok) throw mountError(structure.diagnostics);
     const checked = checkProgram(program, manifest);
     if (!checked.ok) throw mountError(checked.diagnostics);
+
+    // The physics module, imported while the device is acquired and the shaders compile, and only when the
+    // program has bodies (`spec/physics.md` section 1). The result never rejects, so a mount that fails first
+    // leaves nothing dangling.
+    const physicsLoad: Promise<PhysicsLoadResult> | undefined = manifest.subsystems.physics
+      ? loadPhysicsBackend({ manifest, baseUrl: program.baseUrl, importModule: (url) => environment.importModule(url), phase: "runtime:mount" })
+      : undefined;
 
     // Device. Capabilities come from the adapter's features and limits, never from the user agent.
     const required = manifest.requiredCapabilities;
@@ -295,7 +311,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
     // loss; the verified asset bytes are retained for the same purpose (decision 0060). Every failure of
     // either is reported, shaders first.
     const fetchShaderFile = rememberingFetch(environment);
-    const [shaders, loadedAssets] = await Promise.all([
+    const [shaders, loadedAssets, loadedPhysics] = await Promise.all([
       loadStartupShaders({
         manifest,
         baseUrl: program.baseUrl,
@@ -310,9 +326,10 @@ export async function mountMtekWith<I = Record<string, unknown>>(
         maxTextureDimension2D: device.limits.maxTextureDimension2D,
         ...(options.test?.onAssetState === undefined ? {} : { onState: options.test.onAssetState }),
       }),
+      physicsLoad ?? Promise.resolve(undefined),
     ]);
     images = loadedAssets.images;
-    const startupFailures = [...shaders.diagnostics, ...loadedAssets.diagnostics];
+    const startupFailures = [...shaders.diagnostics, ...loadedAssets.diagnostics, ...(loadedPhysics?.ok === false ? loadedPhysics.diagnostics : [])];
     if (startupFailures.length > 0) throw mountError(startupFailures);
     const assets: LoadedAssets = loadedAssets.assets;
 
@@ -358,6 +375,35 @@ export async function mountMtekWith<I = Record<string, unknown>>(
     // The textures are filled: the bitmaps are no longer needed (the bytes stay for the rebuild after a device loss).
     closeImages(images);
     if (!started.ok) throw mountError(started.diagnostics);
+
+    // The bodies of the scene, now that `init`, the bindings and the transforms have given every entity its pose
+    // (`spec/scenes.md` section 11, step 5). Collision events reach the application's handlers once it exists.
+    if (loadedPhysics?.ok === true) {
+      try {
+        physics = new PhysicsSystem({
+          backend: loadedPhysics.backend,
+          manifest,
+          world: started.scene.world,
+          report: (diagnostic) => {
+            if (app !== undefined) app.report(diagnostic);
+            else earlyReports.push(diagnostic);
+          },
+          deliver: (kind, slot, other) => {
+            app?.deliverCollision(kind, slot, other);
+          },
+        });
+        started.scene.world.bodies = physics;
+        physics.createNamedBodies();
+      } catch (error) {
+        throw mountError([
+          makeRuntimeDiagnostic("E8102", {
+            phase: "runtime:mount",
+            message: `The physics module could not be loaded: creating the physics world and its bodies failed (${errorText(error)}).`,
+            notes: [`module: ${loadedPhysics.url}`],
+          }),
+        ]);
+      }
+    }
 
     // Allocation errors arrive asynchronously (the out-of-memory scopes pop after a round trip); wait
     // for the queue so none is missed. This is a mount-time wait only; ordinary frames never wait.
@@ -416,6 +462,8 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       services,
       sceneFunctions: checked.program.scene,
       scene: started.scene,
+      physics,
+      physicsModule: loadedPhysics?.ok === true ? { url: loadedPhysics.url, backend: loadedPhysics.backend } : undefined,
       modules: new Map(shaders.modules),
       program: program as import("./types.js").MtekMountProgram<Record<string, unknown>>,
     });
@@ -437,6 +485,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
   } catch (error) {
     // Release everything acquired so far, then make the failure visible.
     if (images !== undefined) closeImages(images);
+    physics?.dispose();
     surface?.dispose();
     registry?.destroyAll();
     if (acquired !== undefined) {

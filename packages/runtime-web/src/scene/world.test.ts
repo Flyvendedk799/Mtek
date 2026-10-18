@@ -126,7 +126,7 @@ describe("the M1 context subset", () => {
     expect(Object.keys(ctx).sort()).toEqual([...CONTEXT_MEMBERS].sort());
   });
 
-  it.each(["body", "notAMember"])(
+  it.each(["raycast", "notAMember"])(
     "reading ctx.%s throws an internal error naming the member",
     (member) => {
       const { ctx } = makeWorld();

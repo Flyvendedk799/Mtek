@@ -69,7 +69,8 @@ export declare class MtekMountError extends Error {
     | "manifest-invalid"
     | "shader-failed"
     | "asset-failed"
-    | "allocation-failed";
+    | "allocation-failed"
+    | "physics-failed";
   /** Mapped to Mtek source where possible. */
   readonly diagnostics: readonly MtekDiagnostic[];
   constructor(kind: MtekMountError["kind"], diagnostics: readonly MtekDiagnostic[]);

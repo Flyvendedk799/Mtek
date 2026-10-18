@@ -11,7 +11,8 @@
     "wgslLanguageFeatures": []
   },
   "subsystems": {
-    "physics": true
+    "physics": true,
+    "physicsModule": "physics/4657dd4223a926b1.js"
   },
   "runtimeConfig": {
     "fixedStep": 0.016666668,
@@ -186,6 +187,78 @@
       "startColumn": 55,
       "endLine": 7,
       "endColumn": 60
+    },
+    {
+      "file": 0,
+      "start": 2461,
+      "end": 2525,
+      "startLine": 66,
+      "startColumn": 9,
+      "endLine": 66,
+      "endColumn": 73
+    },
+    {
+      "file": 0,
+      "start": 2535,
+      "end": 2594,
+      "startLine": 67,
+      "startColumn": 9,
+      "endLine": 67,
+      "endColumn": 68
+    },
+    {
+      "file": 0,
+      "start": 1594,
+      "end": 1619,
+      "startLine": 42,
+      "startColumn": 32,
+      "endLine": 42,
+      "endColumn": 57
+    },
+    {
+      "file": 0,
+      "start": 1770,
+      "end": 1812,
+      "startLine": 48,
+      "startColumn": 13,
+      "endLine": 48,
+      "endColumn": 55
+    },
+    {
+      "file": 0,
+      "start": 1881,
+      "end": 1931,
+      "startLine": 51,
+      "startColumn": 13,
+      "endLine": 51,
+      "endColumn": 63
+    },
+    {
+      "file": 0,
+      "start": 2203,
+      "end": 2289,
+      "startLine": 60,
+      "startColumn": 13,
+      "endLine": 60,
+      "endColumn": 99
+    },
+    {
+      "file": 0,
+      "start": 759,
+      "end": 804,
+      "startLine": 16,
+      "startColumn": 9,
+      "endLine": 16,
+      "endColumn": 54
+    },
+    {
+      "file": 0,
+      "start": 849,
+      "end": 893,
+      "startLine": 19,
+      "startColumn": 9,
+      "endLine": 19,
+      "endColumn": 53
     }
   ],
   "symbols": [

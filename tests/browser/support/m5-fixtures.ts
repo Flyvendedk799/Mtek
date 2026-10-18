@@ -15,6 +15,12 @@ export const PREFAB_INSTANCES = "prefab_instances";
 /** Spawned and destroyed blocks in a ring of eight slots under an orthographic camera (M5-02, decision 0064). */
 export const SPAWN_RING = "spawn_ring";
 
+/**
+ * A dynamic crate dropped onto a static floor on the real physics engine (M5-05, decision 0066): the only M5 fixture
+ * with bodies, so the only one whose build has a `physics/<h16>.js`.
+ */
+export const PHYSICS_DROP = "physics_drop";
+
 /** Every fixture directory under `fixtures/m5/`, sorted. */
 export function m5FixtureNames(): string[] {
   return readdirSync(M5_FIXTURES_DIR, { withFileTypes: true })

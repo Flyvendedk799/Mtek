@@ -1,0 +1,38 @@
+// M5-05: a dynamic body falls onto a static floor on the real physics engine (spec/physics.md sections 4 and 7).
+// The floor's top face is the plane y = 0 and the crate is a unit cube, so it comes to rest with its centre at
+// y = 0.5 (within the engine's 5 mm contact skin). `landings` counts the collision_enter events the handler
+// received, `rise` is the vertical velocity the last completed tick left (read in fixed_update), and Space
+// gives the crate an impulse of 8 N*s: with a mass of 2 kg that is 4 m/s, less one step of gravity
+// (9.81 / 60 m/s) by the time the step that applied it has run. The browser spec derives every number by hand.
+scene Drop {
+    clear_color: #202830;
+    state landings: i32 = 0;
+    state rise: f32 = 0.0;
+    camera Lens {
+        position: vec3(0.0, 2.0, 9.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Floor {
+        position: vec3(0.0, -0.5, 0.0);
+        mesh: Box { size: vec3(20.0, 1.0, 20.0); };
+        material: Unlit { color: #405060; };
+        body: Static {};
+        collider: BoxCollider { size: vec3(20.0, 1.0, 20.0); };
+    }
+    entity Crate {
+        position: vec3(0.0, 3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+        material: Unlit { color: #ff7040; };
+        body: Dynamic { mass: 2.0; };
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+        fixed_update(dt: f32) {
+            rise = self.body.linear_velocity.y;
+        }
+        on collision_enter(other: entity_ref) {
+            landings += 1;
+        }
+        on key_down(Key.Space) {
+            self.body.apply_impulse(vec3(0.0, 8.0, 0.0));
+        }
+    }
+}

@@ -104,13 +104,13 @@ export const functions = {};
 
 // on key_down (src/main.mtek::Playground.on_key_down_R)
 function b_0_on_key_down(ctx, self) {
-  ctx.body(ctx.e[1]).teleport({ x: -3.0, y: 4.0, z: 0.0 }, { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }, false);
-  ctx.body(ctx.e[3]).teleport({ x: 0.0, y: 1.5, z: 0.0 }, { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }, true);
+  ctx.body(ctx.e[1], 17).teleport({ x: -3.0, y: 4.0, z: 0.0 }, { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }, false);
+  ctx.body(ctx.e[3], 18).teleport({ x: 0.0, y: 1.5, z: 0.0 }, { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }, true);
 }
 
 // fixed_update (src/main.mtek::Playground.Ball.fixed_update)
 function b_1_fixed_update(ctx, self, a_dt) {
-  const l_speed = rt.v3length(ctx.body(self).linearVelocity);
+  const l_speed = rt.v3length(ctx.body(self, 19).linearVelocity);
   if (l_speed > ctx.s.fastest) {
     ctx.s.fastest = l_speed;
   }
@@ -118,39 +118,39 @@ function b_1_fixed_update(ctx, self, a_dt) {
 
 // on collision_enter (src/main.mtek::Playground.Ball.on_collision_enter)
 function b_2_on_collision_enter(ctx, self, a_who) {
-  ctx.body(a_who).applyForce({ x: 0.0, y: 0.0, z: -1.0 });
+  ctx.body(a_who, 20).applyForce({ x: 0.0, y: 0.0, z: -1.0 });
 }
 
 // on collision_exit (src/main.mtek::Playground.Ball.on_collision_exit)
 function b_3_on_collision_exit(ctx, self, a_who) {
-  ctx.body(self).setLinearVelocity({ x: 0.0, y: 0.0, z: 0.0 });
+  ctx.body(self, 21).setLinearVelocity({ x: 0.0, y: 0.0, z: 0.0 });
 }
 
 // fixed_update (src/main.mtek::Playground.Mover.fixed_update)
 function b_4_fixed_update(ctx, self, a_dt) {
-  ctx.body(self).setKinematicTarget(rt.v3(fr(3.0 + rt.sin(ctx.frame.time)), 0.5, 0.0), { x: 0.0, y: 0.0, z: 0.0, w: 1.0 });
+  ctx.body(self, 22).setKinematicTarget(rt.v3(fr(3.0 + rt.sin(ctx.frame.time)), 0.5, 0.0), { x: 0.0, y: 0.0, z: 0.0, w: 1.0 });
 }
 
 // on collision_enter (src/main.mtek::Playground.A.on_collision_enter)
 function b_5_on_collision_enter(ctx, self, a_other) {
   self.state.bounces = (self.state.bounces + 1) | 0;
-  ctx.body(a_other).applyImpulse({ x: 0.0, y: 0.5, z: 0.0 });
+  ctx.body(a_other, 23).applyImpulse({ x: 0.0, y: 0.5, z: 0.0 });
 }
 
 // on key_down (src/main.mtek::Playground.A.on_key_down_Space)
 function b_6_on_key_down(ctx, self) {
-  ctx.body(self).applyImpulse({ x: 0.0, y: 5.0, z: 0.0 });
+  ctx.body(self, 24).applyImpulse({ x: 0.0, y: 5.0, z: 0.0 });
 }
 
 // on collision_enter (src/main.mtek::Playground.B.on_collision_enter)
 function b_7_on_collision_enter(ctx, self, a_other) {
   self.state.bounces = (self.state.bounces + 1) | 0;
-  ctx.body(a_other).applyImpulse({ x: 0.0, y: 0.5, z: 0.0 });
+  ctx.body(a_other, 23).applyImpulse({ x: 0.0, y: 0.5, z: 0.0 });
 }
 
 // on key_down (src/main.mtek::Playground.B.on_key_down_Space)
 function b_8_on_key_down(ctx, self) {
-  ctx.body(self).applyImpulse({ x: 0.0, y: 5.0, z: 0.0 });
+  ctx.body(self, 24).applyImpulse({ x: 0.0, y: 5.0, z: 0.0 });
 }
 
 // scene Playground (src/main.mtek::Playground): the initialisation order of spec/scenes.md section 11
@@ -214,12 +214,12 @@ function p_e2cab98b_Crate_init(ctx, self, params) {
 // on collision_enter (src/main.mtek::Crate.on_collision_enter)
 function p_e2cab98b_Crate_b0_on_collision_enter(ctx, self, a_other) {
   self.state.bounces = (self.state.bounces + 1) | 0;
-  ctx.body(a_other).applyImpulse({ x: 0.0, y: 0.5, z: 0.0 });
+  ctx.body(a_other, 23).applyImpulse({ x: 0.0, y: 0.5, z: 0.0 });
 }
 
 // on key_down (src/main.mtek::Crate.on_key_down_Space)
 function p_e2cab98b_Crate_b1_on_key_down(ctx, self) {
-  ctx.body(self).applyImpulse({ x: 0.0, y: 5.0, z: 0.0 });
+  ctx.body(self, 24).applyImpulse({ x: 0.0, y: 5.0, z: 0.0 });
 }
 
 export const scenes = {

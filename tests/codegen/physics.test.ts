@@ -1,8 +1,10 @@
 // Execution test of the physics shapes in the generated program module (spec/physics.md sections
 // 2 and 3, spec/runtime-abi.md sections 4.2 and 5.2, task M5-03, decision 0065): the `physics`
 // fixture's manifest data and its handlers run against a fake context, with no browser. The
-// stepping, the body handle and the events are the runtime's (M5-05).
-import { readdirSync } from "node:fs";
+// stepping, the body handle and the events are the runtime's (M5-05, decision 0066): every
+// `ctx.body(target, spanId)` call names the command or property it came from, which the tests
+// below resolve through the manifest back to the Mtek source.
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createFakeContext } from "./support/fake-ctx.js";
 import { loadProgram, record } from "./support/programs.js";
@@ -23,7 +25,8 @@ interface ManifestEntity {
 }
 
 interface PhysicsManifest {
-  readonly subsystems: { readonly physics: boolean };
+  readonly subsystems: { readonly physics: boolean; readonly physicsModule?: string };
+  readonly spans: readonly { readonly start: number; readonly end: number }[];
   readonly scene: {
     readonly fields: { readonly gravity: readonly number[] };
     readonly entities: readonly ManifestEntity[];
@@ -31,6 +34,15 @@ interface PhysicsManifest {
 }
 
 const CRATE = "src/main.mtek::Crate";
+
+const SOURCE = readFileSync(new URL("./physics/src/main.mtek", import.meta.url));
+
+/** The Mtek source text a span id of the manifest names. */
+function sourceText(manifest: PhysicsManifest, span: number): string {
+  const range = manifest.spans[span];
+  if (range === undefined) throw new Error(`the manifest has no span ${String(span)}`);
+  return SOURCE.subarray(range.start, range.end).toString("utf8");
+}
 
 async function physics(): Promise<{
   scene: Readonly<Record<string, unknown>>;
@@ -58,7 +70,10 @@ describe("the manifest of the physics program", () => {
   it("is a physics program: the flag, the module and the gravity", async () => {
     const { manifest, files } = await physics();
     expect(manifest.subsystems.physics).toBe(true);
-    expect(files.filter((f) => f.replaceAll("\\", "/").startsWith("physics/"))).toHaveLength(1);
+    const bundles = files.map((f) => f.replaceAll("\\", "/")).filter((f) => f.startsWith("physics/"));
+    expect(bundles).toHaveLength(1);
+    // The runtime cannot derive the content-addressed name, so the manifest names the file (decision 0066).
+    expect(manifest.subsystems.physicsModule).toBe(bundles[0]);
     expect(manifest.scene.fields.gravity).toEqual([0, -4.5, 0]);
   });
 
@@ -104,7 +119,7 @@ describe("the handlers of the physics program", () => {
   });
 
   it("issues commands to the body of `self`, a named entity and an entity_ref", async () => {
-    const { scene } = await physics();
+    const { scene, manifest } = await physics();
     const made = createFakeContext(5);
     const ctx = { ...made.ctx, frame: { time: 0 } };
     const ref = Object.freeze({ slot: 7, gen: 2 });
@@ -114,7 +129,7 @@ describe("the handlers of the physics program", () => {
     handlers(scene, "collision_exit")[0]?.fn(ctx, ctx.e[1], ref);
     // `Ball.body.teleport(..)` and `A.body.teleport(..)` from the scene's handler name the entities.
     handlers(scene, "key_down")[0]?.fn(ctx, null);
-    expect(made.bodyCalls).toEqual([
+    expect(made.bodyCalls.map((c) => ({ target: c.target, method: c.method, args: c.args }))).toEqual([
       { target: ref, method: "applyForce", args: [{ x: 0, y: 0, z: -1 }] },
       { target: 1, method: "setLinearVelocity", args: [{ x: 0, y: 0, z: 0 }] },
       {
@@ -128,21 +143,31 @@ describe("the handlers of the physics program", () => {
         args: [{ x: 0, y: 1.5, z: 0 }, { x: 0, y: 0, z: 0, w: 1 }, true],
       },
     ]);
+    // Each call carries the span of the command in the Mtek source (what `E8101`, `E8104` and `W8031` point at).
+    expect(made.bodyCalls.map((call) => sourceText(manifest, call.span))).toEqual([
+      "who.body.apply_force(vec3(0.0, 0.0, -1.0))",
+      "self.body.set_linear_velocity(vec3(0.0, 0.0, 0.0))",
+      expect.stringMatching(/^Ball\.body\.teleport\(/),
+      expect.stringMatching(/^A\.body\.teleport\(/),
+    ]);
   });
 
   it("a kinematic mover sets its target every fixed tick", async () => {
-    const { scene } = await physics();
+    const { scene, manifest } = await physics();
     const made = createFakeContext(5);
     const ctx = { ...made.ctx, frame: { time: 0 } };
     const fixed = scene["entityFixedUpdate"] as (Fn | null)[];
     expect(fixed.map((fn) => fn !== null)).toEqual([false, true, true, false, false]);
     fixed[2]?.(ctx, ctx.e[2], 1 / 60);
-    expect(made.bodyCalls).toEqual([
+    expect(made.bodyCalls.map((c) => ({ target: c.target, method: c.method, args: c.args }))).toEqual([
       {
         target: 2,
         method: "setKinematicTarget",
         args: [{ x: 3, y: 0.5, z: 0 }, { x: 0, y: 0, z: 0, w: 1 }],
       },
+    ]);
+    expect(made.bodyCalls.map((call) => sourceText(manifest, call.span))).toEqual([
+      expect.stringMatching(/^self\.body\.set_kinematic_target\(/),
     ]);
   });
 

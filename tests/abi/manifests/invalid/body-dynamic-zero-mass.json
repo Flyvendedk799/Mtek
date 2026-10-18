@@ -18,7 +18,8 @@
     ]
   },
   "subsystems": {
-    "physics": true
+    "physics": true,
+    "physicsModule": "physics/0123456789abcdef.js"
   },
   "runtimeConfig": {
     "fixedStep": 0.016666668,

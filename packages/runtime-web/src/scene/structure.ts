@@ -9,8 +9,10 @@
  */
 import type {
   MtekBinding,
+  MtekBody,
   MtekBuiltinResourceName,
   MtekCamera,
+  MtekCollider,
   MtekImageAsset,
   MtekInstanceParam,
   MtekLayoutRecord,
@@ -111,6 +113,9 @@ export interface ResolvedPrefab {
   readonly params: readonly { readonly name: string; readonly type: string }[];
   readonly mesh: ResolvedMesh | null;
   readonly material: ResolvedPrefabMaterial | null;
+  /** The physics body and collider every instance gets when it is created (`null` together, decision 0065). */
+  readonly body: MtekBody | null;
+  readonly collider: MtekCollider | null;
   readonly state: readonly MtekStateEntry[];
   readonly update: boolean;
   readonly fixedUpdate: boolean;
@@ -518,6 +523,8 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
       params: prefab.params,
       mesh,
       material,
+      body: prefab.body,
+      collider: prefab.collider,
       state: prefab.state,
       update: prefab.update,
       fixedUpdate: prefab.fixedUpdate,

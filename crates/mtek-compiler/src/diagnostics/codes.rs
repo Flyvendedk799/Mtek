@@ -254,6 +254,7 @@ catalogue! {
     E8101 Error "command not valid for the target's body kind",
     E8102 Error "physics module failed to load",
     E8103 Error "non-finite pose produced by the solver",
+    E8104 Error "non-finite value given to a body",
     // 5.9 Project and internal (`9xxx`)
     E9001 Error "invalid project configuration",
     E9002 Error "too many modules",

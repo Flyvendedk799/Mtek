@@ -13,10 +13,14 @@ import type { AcquiredDevice } from "../gpu/device.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import type { MtekProgramScene } from "../abi/program.js";
 import { attachInputListeners } from "../input/dom.js";
+import { loadPhysicsBackend, physicsModuleUrl } from "../physics/load.js";
+import { PhysicsSystem, type CollisionEventName } from "../physics/system.js";
+import type { PhysicsBackend } from "../physics/types.js";
 import { InputState } from "../input/input.js";
 import { isMappedKeyCode } from "../input/keys.js";
 import { startScene, type Scene } from "../render/startup.js";
 import { Behaviors } from "../scene/behavior.js";
+import type { EntityRef } from "../scene/slots.js";
 import { Scheduler, type FramePhases } from "../schedule/scheduler.js";
 import { checkProgram } from "../scene/program.js";
 import { resolveStructure } from "../scene/structure.js";
@@ -90,6 +94,10 @@ export interface AppDependencies {
   sceneFunctions: MtekProgramScene;
   /** The initialised scene: world, material arenas, pipelines and renderer. Mutable on hot reload. */
   scene: Scene;
+  /** The physics subsystem of `scene`; `undefined` for a program without bodies. Replaced by a hot-reload swap. */
+  physics: PhysicsSystem | undefined;
+  /** The loaded physics module, kept so a reload that still has bodies does not import it again. */
+  physicsModule: { readonly url: string; readonly backend: PhysicsBackend } | undefined;
   /** Shader modules by hash; reused across reloads when the WGSL is unchanged. */
   modules: Map<string, GPUShaderModule>;
   /** The mounted program module; updated on a successful hot-reload swap. */
@@ -134,6 +142,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         readonly assets: LoadedAssets;
         readonly sceneFunctions: MtekProgramScene;
         readonly restart: StructuralChange | undefined;
+        /** The physics module the candidate needs (loaded by `replaceProgram`), if it has bodies. */
+        readonly physicsModule: { readonly url: string; readonly backend: PhysicsBackend } | undefined;
       }
     | undefined;
 
@@ -359,6 +369,26 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         return { ok: false, diagnostics: loaded.diagnostics };
       }
 
+      // A candidate with bodies needs the physics module: the one already loaded when it is the same file,
+      // otherwise it is imported now, so a candidate whose physics cannot load is discarded like any other.
+      let physicsModule = this.deps.physicsModule;
+      if (!manifest.subsystems.physics) {
+        physicsModule = undefined;
+      } else if (physicsModule === undefined || physicsModule.url !== physicsModuleUrl(manifest, candidate.baseUrl)) {
+        const loadedPhysics = await loadPhysicsBackend({
+          manifest,
+          baseUrl: candidate.baseUrl,
+          importModule: (url) => environment.importModule(url),
+          phase: "runtime:reload",
+        });
+        if (!loadedPhysics.ok) {
+          for (const module of shaders.created) registry.release(module);
+          for (const diagnostic of loadedPhysics.diagnostics) this.report(diagnostic);
+          return { ok: false, diagnostics: loadedPhysics.diagnostics };
+        }
+        physicsModule = { url: loadedPhysics.url, backend: loadedPhysics.backend };
+      }
+
       let started: Awaited<ReturnType<typeof startScene>>;
       try {
         started = await startScene({
@@ -413,6 +443,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         assets: loaded.assets,
         sceneFunctions: checked.program.scene,
         restart,
+        physicsModule,
       };
       return { ok: true };
     } catch (error) {
@@ -463,6 +494,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       this.pendingSwap = undefined;
     }
     const { device, registry, surface, overlay } = this.deps;
+    // `spec/runtime-abi.md` section 9.3: the physics world, with every body, collider and the event queue.
+    this.deps.physics?.dispose();
     this.scheduler.stop();
     this.clearRecoveryTimer();
     this.resizeObserver?.disconnect();
@@ -524,6 +557,11 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   handleMaterialFailure(materialId: string, diagnostic: MtekDiagnostic): void {
     if (this.current === "disposed") return;
     this.deps.scene.renderer.failMaterial(materialId, diagnostic);
+  }
+
+  /** Called by the physics subsystem, in the order of `spec/physics.md` section 6: runs one entity's collision handlers. */
+  deliverCollision(kind: CollisionEventName, slot: number, other: EntityRef): void {
+    this.behaviors.collision(kind, slot, other);
   }
 
   /** Delivers a diagnostic to the host; errors also appear in the overlay. */
@@ -830,9 +868,15 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         this.behaviors.dispatchInput(this.input.deliver());
       },
       phase2_tick: (step) => {
-        // (a) of `spec/scenes.md` section 10: the lifecycle queue is applied before each tick.
+        // (a) of `spec/scenes.md` section 10: the lifecycle queue is applied before each tick (spawned bodies are
+        // created and destroyed ones removed by the physics listener), then (b) the commands, once.
         this.deps.scene.world.dynamic.flush();
+        const physics = this.deps.physics;
+        physics?.applyCommands();
+        // (c) `fixed_update`; the commands it issues apply in the next tick.
         this.behaviors.fixedUpdate(step);
+        // (d) step, (e) write the poses back, (f) deliver the collision events to the handlers.
+        physics?.stepAndDeliver();
       },
       phase3_update: (delta) => {
         this.behaviors.update(delta);
@@ -869,6 +913,39 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     const previous = this.deps.scene;
     const previousManifest = this.deps.manifest;
 
+    // Physics follows the new world (decision 0066). The system is made first, so it hears about the spawned
+    // entities the migration re-creates; the bodies of the named entities are made after the migration carried
+    // their poses over. Velocities and queued commands do not survive a reload: the new world starts at rest.
+    let physics: PhysicsSystem | undefined;
+    if (pending.physicsModule !== undefined) {
+      try {
+        physics = new PhysicsSystem({
+          backend: pending.physicsModule.backend,
+          manifest: pending.manifest,
+          world: pending.scene.world,
+          report: (diagnostic) => {
+            this.report(diagnostic);
+          },
+          deliver: (kind, slot, other) => {
+            this.deliverCollision(kind, slot, other);
+          },
+        });
+      } catch (error) {
+        pending.scene.materials.dispose();
+        pending.scene.meshes.dispose();
+        pending.scene.renderer.dispose();
+        this.report(
+          makeRuntimeDiagnostic("E8102", {
+            phase: "runtime:reload",
+            message: `The candidate was discarded: creating its physics world failed (${errorText(error)}).`,
+            notes: [`module: ${pending.physicsModule.url}`],
+          }),
+        );
+        return;
+      }
+      pending.scene.world.bodies = physics;
+    }
+
     if (pending.restart === undefined) {
       migrateWorld(previous.world, previousManifest, pending.scene.world, pending.manifest);
     } else {
@@ -880,6 +957,10 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
 
     if (this.deps.test?.disableCulling === true) pending.scene.renderer.setFrustumCulling(false);
     if (__MTEK_DEV__) this.deps.devTools?.setProgram(pending.manifest);
+    physics?.createNamedBodies();
+    this.deps.physics?.dispose();
+    this.deps.physics = physics;
+    this.deps.physicsModule = pending.physicsModule;
     this.deps.scene = pending.scene;
     this.deps.manifest = pending.manifest;
     this.deps.program = pending.program;
@@ -958,6 +1039,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private counters(): Readonly<Record<string, number>> {
     const registry = this.deps.registry.snapshot();
     const { renderer, materials, world } = this.deps.scene;
+    // Bodies and colliders in the physics world; zero without physics and after dispose (spec/physics.md section 7).
+    const physics = this.deps.physics?.counts() ?? { bodies: 0, colliders: 0 };
     // GPU time exists only with timestamp-query in a development runtime that was asked to measure it;
     // otherwise the key is absent and `gpuTimeAvailable` is 0 (never CPU time under another name).
     const gpuTimeMs = __MTEK_DEV__ ? (this.deps.devTools?.gpuTimeMs ?? null) : null;
@@ -984,6 +1067,10 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       entitySlots: world.dynamic.slotCapacity,
       entitiesSpawned: world.dynamic.spawned,
       entitiesDestroyed: world.dynamic.destroyed,
+      physicsBodies: physics.bodies,
+      physicsColliders: physics.colliders,
+      physicsSteps: this.deps.physics?.steps ?? 0,
+      physicsFrozenBodies: this.deps.physics?.frozenBodies ?? 0,
       framesRendered: this.deps.surface.framesRendered,
       framesSkipped: this.deps.surface.framesSkipped,
       deviceLosses: this.losses,

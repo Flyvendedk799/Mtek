@@ -934,6 +934,12 @@ fn a_build_has_a_physics_file_exactly_when_the_program_has_a_body() {
                 .filter(|path| is_physics_file(path))
                 .collect();
             assert_eq!(manifest.subsystems.physics, has_body, "{label} {mode:?}");
+            // The manifest names the bundle file exactly when there is one (decision 0066).
+            assert_eq!(
+                manifest.subsystems.physics_module.as_ref(),
+                physics_files.first().copied(),
+                "{label} {mode:?}"
+            );
             assert_eq!(
                 physics_files.len(),
                 usize::from(has_body),
@@ -968,7 +974,7 @@ fn a_build_that_uses_physics_has_the_bundle_under_its_hash_and_says_so_in_the_ma
             let name = format!("physics/{}.js", h16(STUB_PHYSICS_BUNDLE));
             assert_eq!(with.files[&name], STUB_PHYSICS_BUNDLE, "{label} {mode:?}");
             // Exactly one more file, and it is the bundle; everything else is byte for byte the plain build,
-            // except the manifest, which differs in `subsystems.physics` alone.
+            // except the manifest, which differs in `subsystems` alone (`physics` and `physicsModule`).
             let extra: Vec<&String> = with
                 .files
                 .keys()
@@ -984,7 +990,17 @@ fn a_build_that_uses_physics_has_the_bundle_under_its_hash_and_says_so_in_the_ma
             assert_valid(&schema, &label, text);
             let mut flagged: Value = serde_json::from_str(text).unwrap();
             assert_eq!(flagged["subsystems"]["physics"], Value::Bool(true));
+            // The runtime cannot derive the hashed name: the manifest names the file (decision 0066).
+            assert_eq!(
+                flagged["subsystems"]["physicsModule"],
+                Value::String(name.clone()),
+                "{label} {mode:?}"
+            );
             flagged["subsystems"]["physics"] = Value::Bool(false);
+            flagged["subsystems"]
+                .as_object_mut()
+                .unwrap()
+                .remove("physicsModule");
             let unflagged: Value =
                 serde_json::from_slice(&plain.files["program.manifest.json"]).unwrap();
             assert_eq!(flagged, unflagged, "{label} {mode:?}");
@@ -1147,6 +1163,7 @@ fn a_program_with_a_body_packages_the_physics_bundle_without_any_option() {
     assert_valid(&validator(), "inline", text);
     let manifest = manifest_of(&result);
     assert!(manifest.subsystems.physics);
+    assert_eq!(manifest.subsystems.physics_module, Some(name.clone()));
     assert_eq!(
         serde_json::to_value(&manifest.scene.fields.gravity).unwrap(),
         serde_json::json!([0.0, -3.0, 0.0])
@@ -1188,6 +1205,7 @@ fn a_program_without_a_body_has_no_physics_module_and_the_default_gravity() {
     assert!(result.files.keys().all(|path| !is_physics_file(path)));
     let manifest = manifest_of(&result);
     assert!(!manifest.subsystems.physics);
+    assert_eq!(manifest.subsystems.physics_module, None);
     assert!(
         manifest
             .scene

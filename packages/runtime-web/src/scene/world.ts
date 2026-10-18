@@ -40,7 +40,7 @@ import {
 export { RuntimeInternalError };
 export type { EntityRef };
 
-/** The members of `ctx` this runtime build provides (decisions 0031, 0050 and 0064). */
+/** The members of `ctx` this runtime build provides (decisions 0031, 0050, 0064 and 0066). */
 export const CONTEXT_MEMBERS = [
   "s",
   "e",
@@ -54,6 +54,7 @@ export const CONTEXT_MEMBERS = [
   "spawn",
   "destroy",
   "alive",
+  "body",
   "warn",
   "random",
   "isKeyDown",
@@ -133,6 +134,15 @@ export interface CpuServices {
   isKeyDown(code: string): boolean;
   /** `print`: development console output; `spanId` indexes the manifest spans table. */
   print(message: string, spanId: number): void;
+}
+
+/**
+ * The physics subsystem as `ctx.body` reaches it (`physics/system.ts` implements it): the body handle of an entity
+ * record or `entity_ref`, with the commands and readable velocities of `spec/physics.md` section 3 (decision 0066).
+ * `spanId` is the manifest span of the command or property in the program, for run-time diagnostics.
+ */
+export interface BodyService {
+  handle(target: unknown, spanId: unknown): object;
 }
 
 /** Services for a world nothing drives: no keys held, a fixed sequence of zeros, no output. */
@@ -264,6 +274,8 @@ export class World {
   readonly dynamic: DynamicEntities;
   /** Phase recorded in diagnostics. `runtime:mount` during initialisation. */
   phase: MtekRuntimePhase = "runtime:mount";
+  /** The physics subsystem, once it is mounted (`ctx.body`); `undefined` for a program without bodies. */
+  bodies: BodyService | undefined;
 
   private readonly manifest: MtekManifest;
   private readonly structure: SceneStructure;
@@ -385,6 +397,12 @@ export class World {
         this.dynamic.destroy(ref, spanId);
       },
       alive: (ref: unknown): boolean => this.dynamic.alive(ref),
+      body: (target: unknown, spanId: unknown): object => {
+        if (this.bodies === undefined) {
+          throw new RuntimeInternalError("generated code called ctx.body, but the physics subsystem is not mounted (the manifest says subsystems.physics is false, or the scene is still initialising).");
+        }
+        return this.bodies.handle(target, spanId);
+      },
       warn: (code: unknown, spanId: unknown): void => {
         this.warn(code, spanId);
       },
