@@ -141,7 +141,7 @@ impl Run {
         let dist = scratch.0.join("dist");
         let fs = RealFs::new(&dir);
         let project = Located { dir: &dir, fs: &fs };
-        let written = compile_and_write(context, &project, BuildMode::Test, Some(&dist));
+        let written = compile_and_write(context, &project, BuildMode::Test.into(), Some(&dist));
         let failed = written.written.is_none();
         self.report.project.clone_from(&written.name);
         self.add_build_diagnostics(
