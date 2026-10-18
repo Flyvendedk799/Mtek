@@ -6,14 +6,15 @@ playgrounds and small 3D games. A Mtek program describes scene structure, state,
 their resource dependencies as one checked unit; the compiler produces JavaScript and WGSL for a
 runtime on browser WebGPU, and the toolchain works fully offline, without any AI service.
 
-## Status: pre-alpha — only the toolchain exists
+## Status: pre-alpha
 
-The specification is in [`spec/`](spec/README.md). The repository currently contains the build
-toolchain (Rust workspace, npm workspace, CI) and nothing else: the compiler library exposes only
-version constants, the `mtek` CLI implements only `--version`, and `@mtek/runtime-web` exports only
-its version constants. Everything else described in `spec/` is a design, not a feature; a feature
-counts as supported only when a test that would fail without it passes in a recorded environment
-(`spec/testing.md`).
+The specification is in [`spec/`](spec/README.md). The repository contains the compiler and the `mtek`
+command line tool (the commands are listed [below](#the-mtek-command)), the web runtime, three
+examples and the test and benchmark infrastructure. There is no release, no installer and no package
+registry: you build the tool from a checkout. **New here? Start with
+[`docs/getting-started.md`](docs/getting-started.md)**: install, create a project, run it, break it,
+read the error and repair it. A feature counts as supported only when a test that would fail without
+it passes in a recorded environment (`spec/testing.md`).
 
 ## Requirements
 
@@ -122,19 +123,22 @@ unchanged. The environment record contains no paths and is committed as written.
 cargo run -p mtek-cli -- lsp        # waits for an LSP client on stdin; exit code 0 after shutdown and exit
 ```
 
-## Planned commands (not available)
+## The `mtek` command
 
-None of these commands exists yet. The milestone in which each is planned is listed in
-[`spec/tooling.md`](spec/tooling.md). Any other `mtek` invocation currently prints usage and exits with code 2.
+| Command | Purpose |
+|---|---|
+| `mtek new NAME` | scaffold a project (the Demo scene) |
+| `mtek check [PATH]` | parse and type-check; no GPU needed |
+| `mtek build [PATH]` | produce `dist/` (release, `--mode dev`, `test` or `preview`) |
+| `mtek dev [PATH]` | build, serve, watch and hot reload |
+| `mtek inspect --ir\|--bindings\|--shaders\|--assets` | what the compiler made of a project |
+| `mtek fmt [--check] [PATHS]` | the canonical formatter |
+| `mtek test [PATH]` | run a project's `tests/*.test.toml` in a browser |
+| `mtek context --entry FILE --format json` | language and project context for AI agents |
+| `mtek grammar export --format ebnf\|gbnf` | the grammar |
+| `mtek lsp` | the language server |
 
-| Command | Purpose | Planned |
-|---|---|---|
-| `mtek check` | parse and type-check a project | M1 |
-| `mtek build` | produce a deployable web build | M1 |
-| `mtek dev` | build, serve and watch with hot reload | M1 (candidate-based reload: M3) |
-| `mtek inspect` | inspect IR, bindings and shaders | M1 / M2 |
-| `mtek new` | scaffold a project | M3 |
-| `mtek fmt`, `mtek test`, `mtek context`, `mtek grammar export`, `mtek lsp` | formatter, fixtures, AI context export, grammar export, language server | M6 |
+Options, exit codes and the details of each command are in [`spec/tooling.md`](spec/tooling.md).
 
 ## Licence
 

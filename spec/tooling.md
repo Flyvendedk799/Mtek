@@ -29,6 +29,8 @@
 
 What the commands print besides diagnostics, the colour rule for stderr, `--out` resolution, the project search on disk, `E9031` for an output directory that cannot be written, and the embedding mechanics are decision 0032.
 
+The path of a new user through these commands (install from source, `mtek new`, `mtek dev`, an edit, a deliberate error, its diagnostic and its repair) is `docs/getting-started.md`; `crates/mtek-cli/tests/getting_started.rs` runs the document, so the commands and the output it shows are tested (decision 0091).
+
 ## 2. Build modes
 
 | Mode | Differences |
