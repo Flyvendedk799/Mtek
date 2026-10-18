@@ -1,0 +1,17 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 86,
+    "endByte": 90,
+    "message": "Unknown prefab 'Crat'.",
+    "related": [
+      {
+        "message": "did you mean 'Crate'?",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 12
+      }
+    ]
+  }
+]

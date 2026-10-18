@@ -6,7 +6,8 @@
 // `mtek build --mode test` into `.out/m1/`, plus the post-build failure variants (support/m1-fixtures.ts),
 // likewise the M2 fixtures (`fixtures/m2/*` into `.out/m2/`, support/m2-fixtures.ts) and the M4-04 texture
 // fixture (`fixtures/m4/texture_sampling` into `.out/m4/`, support/m4-textures.ts), the material configurator example and its
-// variants (`examples/material-configurator` into `.out/m4-configurator/`, support/m4-configurator.ts),
+// variants (`examples/material-configurator` into `.out/m4-configurator/`, support/m4-configurator.ts), the M5-01 prefab
+// fixture (`fixtures/m5/*` into `.out/m5/`, support/m5-fixtures.ts),
 // and the numeric probe (`.out/numeric/`, support/numeric-probe.ts) with its page.
 import { execFileSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -18,6 +19,7 @@ import { buildM2Fixtures } from "./m2-fixtures.ts";
 import { buildPulseCube, buildPulseCubeVariants } from "./m3-fixtures.ts";
 import { buildConfigurator } from "./m4-configurator.ts";
 import { buildM4Fixtures } from "./m4-fixtures.ts";
+import { buildM5Fixtures } from "./m5-fixtures.ts";
 import { buildTextureSamplingFixture } from "./m4-textures.ts";
 import { buildNumericProbe } from "./numeric-probe.ts";
 import { startStaticServer } from "./serve.ts";
@@ -103,6 +105,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   buildTextureSamplingFixture(cli);
   // M4-10: the material configurator example, its host page and the repeated-object variant, in `.out/m4-configurator/`.
   buildConfigurator(cli);
+  // M5-01: static instances of prefabs, in `.out/m5/`.
+  buildM5Fixtures(cli);
 
   // The numeric probe (M2-08): the compiler's WGSL for every operation of cpu.json plus a test-only harness.
   buildNumericProbe(cli, join(out, "numeric"));

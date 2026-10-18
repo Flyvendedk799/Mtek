@@ -951,6 +951,19 @@ impl<'a> Checker<'a> {
                 format!("Cannot assign to {part}the constant '{name}'."),
                 Some("copy it into a `var` local and assign to that"),
             ),
+            DefKind::Param
+                if def
+                    .parent
+                    .and_then(|parent| self.res.def(parent))
+                    .is_some_and(|parent| parent.kind == DefKind::Prefab) =>
+            {
+                (
+                    format!(
+                        "Cannot assign to {part}the prefab param '{name}': params are immutable construction inputs."
+                    ),
+                    Some("keep changing values in `state`, initialised from the param"),
+                )
+            }
             DefKind::Param => (
                 format!(
                     "Cannot assign to {part}the material param '{name}': params are read-only in the stage."

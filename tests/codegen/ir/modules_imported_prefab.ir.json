@@ -1,0 +1,1475 @@
+{
+  "entryScene": "src/main.mtek::Demo",
+  "modules": [
+    {
+      "path": "src/main.mtek",
+      "file": 0,
+      "span": {"file": 0, "start": 0, "end": 670},
+      "items": [
+        {
+          "kind": "scene",
+          "name": "Demo",
+          "symbol": "src/main.mtek::Demo",
+          "span": {"file": 0, "start": 204, "end": 669},
+          "fields": {
+            "clearColor": {
+              "source": {
+                "const": {
+                  "color": [0.0, 0.0, 0.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 0, "start": 204, "end": 669}
+            }
+          },
+          "constants": [],
+          "cameras": [
+            {
+              "name": "Main",
+              "symbol": "src/main.mtek::Demo.Main",
+              "span": {"file": 0, "start": 221, "end": 316},
+              "active": true,
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 2.0, 8.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 243, "end": 273}
+              },
+              "target": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 1.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 282, "end": 310}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 221, "end": 316}
+              },
+              "projection": {
+                "desc": {
+                  "kind": "perspective",
+                  "fovY": 0.9,
+                  "near": 0.1,
+                  "far": 1000.0
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 221, "end": 316}
+              }
+            }
+          ],
+          "entities": [
+            {
+              "index": 0,
+              "name": "Near",
+              "symbol": "src/main.mtek::Demo.Near",
+              "parent": null,
+              "span": {"file": 0, "start": 321, "end": 374},
+              "position": {
+                "source": {
+                  "expr": {
+                    "kind": "binary",
+                    "op": "+",
+                    "lhs": {
+                      "kind": "const",
+                      "value": {
+                        "vec3": [-1.5, 0.0, 0.0]
+                      },
+                      "type": "vec3",
+                      "span": {"file": 1, "start": 375, "end": 381}
+                    },
+                    "rhs": {
+                      "kind": "const",
+                      "value": {
+                        "vec3": [0.0, 0.75, 0.0]
+                      },
+                      "type": "vec3",
+                      "span": {"file": 1, "start": 384, "end": 406}
+                    },
+                    "type": "vec3",
+                    "span": {"file": 1, "start": 375, "end": 406}
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 1, "start": 365, "end": 407}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 1, "start": 266, "end": 628}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 1, "start": 266, "end": 628}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 1, "start": 266, "end": 628}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.4,
+                  "segments": 12,
+                  "rings": 6
+                },
+                "origin": "written",
+                "span": {"file": 1, "start": 412, "end": 466}
+              },
+              "material": {
+                "material": "src/props/beacon.mtek::Flare",
+                "params": [
+                  {
+                    "name": "glow",
+                    "type": "f32",
+                    "source": {
+                      "const": {"f32": 1.0}
+                    },
+                    "update": "imperative",
+                    "span": {"file": 1, "start": 471, "end": 503}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 1, "start": 471, "end": 503}
+              },
+              "prefab": {
+                "prefab": "src/props/beacon.mtek::Beacon",
+                "params": [
+                  {
+                    "name": "origin",
+                    "value": {
+                      "vec3": [-1.5, 0.0, 0.0]
+                    }
+                  },
+                  {
+                    "name": "glow",
+                    "value": {"f32": 1.0}
+                  }
+                ]
+              }
+            },
+            {
+              "index": 1,
+              "name": "Far",
+              "symbol": "src/main.mtek::Demo.Far",
+              "parent": null,
+              "span": {"file": 0, "start": 379, "end": 442},
+              "position": {
+                "source": {
+                  "expr": {
+                    "kind": "binary",
+                    "op": "+",
+                    "lhs": {
+                      "kind": "const",
+                      "value": {
+                        "vec3": [1.5, 0.0, -3.0]
+                      },
+                      "type": "vec3",
+                      "span": {"file": 1, "start": 375, "end": 381}
+                    },
+                    "rhs": {
+                      "kind": "const",
+                      "value": {
+                        "vec3": [0.0, 0.75, 0.0]
+                      },
+                      "type": "vec3",
+                      "span": {"file": 1, "start": 384, "end": 406}
+                    },
+                    "type": "vec3",
+                    "span": {"file": 1, "start": 375, "end": 406}
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 1, "start": 365, "end": 407}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 1, "start": 266, "end": 628}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 1, "start": 266, "end": 628}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 1, "start": 266, "end": 628}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.4,
+                  "segments": 12,
+                  "rings": 6
+                },
+                "origin": "written",
+                "span": {"file": 1, "start": 412, "end": 466}
+              },
+              "material": {
+                "material": "src/props/beacon.mtek::Flare",
+                "params": [
+                  {
+                    "name": "glow",
+                    "type": "f32",
+                    "source": {
+                      "const": {"f32": 3.0}
+                    },
+                    "update": "imperative",
+                    "span": {"file": 1, "start": 471, "end": 503}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 1, "start": 471, "end": 503}
+              },
+              "prefab": {
+                "prefab": "src/props/beacon.mtek::Beacon",
+                "params": [
+                  {
+                    "name": "origin",
+                    "value": {
+                      "vec3": [1.5, 0.0, -3.0]
+                    }
+                  },
+                  {
+                    "name": "glow",
+                    "value": {"f32": 3.0}
+                  }
+                ]
+              }
+            },
+            {
+              "index": 2,
+              "name": "Marker",
+              "symbol": "src/main.mtek::Demo.Marker",
+              "parent": null,
+              "span": {"file": 0, "start": 447, "end": 577},
+              "position": {
+                "source": {"bound": 0},
+                "origin": "written",
+                "span": {"file": 0, "start": 521, "end": 571}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 447, "end": 577}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 447, "end": 577}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 447, "end": 577}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "box",
+                  "size": [0.2, 0.2, 0.2]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 471, "end": 512}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 447, "end": 577}
+                  }
+                ],
+                "origin": "default",
+                "span": {"file": 0, "start": 447, "end": 577}
+              }
+            }
+          ],
+          "state": [
+            {
+              "name": "flashes",
+              "symbol": "src/main.mtek::Demo.Near.flashes",
+              "type": "i32",
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "init": {
+                "kind": "const",
+                "value": {"i32": 0},
+                "type": "i32",
+                "span": {"file": 1, "start": 358, "end": 359}
+              },
+              "span": {"file": 1, "start": 337, "end": 360}
+            },
+            {
+              "name": "flashes",
+              "symbol": "src/main.mtek::Demo.Far.flashes",
+              "type": "i32",
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "init": {
+                "kind": "const",
+                "value": {"i32": 0},
+                "type": "i32",
+                "span": {"file": 1, "start": 358, "end": 359}
+              },
+              "span": {"file": 1, "start": 337, "end": 360}
+            }
+          ],
+          "behaviors": [
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "KeyR"
+              },
+              "owner": {
+                "kind": "scene"
+              },
+              "symbol": "src/main.mtek::Demo.on_key_down_R",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 1
+                        },
+                        "name": "flashes",
+                        "type": "i32",
+                        "span": {"file": 0, "start": 611, "end": 622}
+                      },
+                      "steps": [],
+                      "type": "i32",
+                      "span": {"file": 0, "start": 611, "end": 622}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "const",
+                      "value": {"i32": 0},
+                      "type": "i32",
+                      "span": {"file": 0, "start": 625, "end": 626}
+                    },
+                    "span": {"file": 0, "start": 611, "end": 627}
+                  },
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "instanceParam",
+                        "entity": 0,
+                        "param": "glow",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 636, "end": 654}
+                      },
+                      "steps": [],
+                      "type": "f32",
+                      "span": {"file": 0, "start": 636, "end": 654}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "const",
+                      "value": {"f32": 0.5},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 657, "end": 660}
+                    },
+                    "span": {"file": 0, "start": 636, "end": 661}
+                  }
+                ],
+                "span": {"file": 0, "start": 601, "end": 667}
+              },
+              "span": {"file": 0, "start": 582, "end": 667}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "Space"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Demo.Near.on_key_down_Space",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 0
+                        },
+                        "name": "flashes",
+                        "type": "i32",
+                        "span": {"file": 1, "start": 542, "end": 554}
+                      },
+                      "steps": [],
+                      "type": "i32",
+                      "span": {"file": 1, "start": 542, "end": 554}
+                    },
+                    "op": "+=",
+                    "value": {
+                      "kind": "const",
+                      "value": {"i32": 1},
+                      "type": "i32",
+                      "span": {"file": 1, "start": 558, "end": 559}
+                    },
+                    "span": {"file": 1, "start": 542, "end": 560}
+                  },
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "instanceParam",
+                        "entity": 0,
+                        "param": "glow",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 569, "end": 587}
+                      },
+                      "steps": [],
+                      "type": "f32",
+                      "span": {"file": 1, "start": 569, "end": 587}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "binary",
+                      "op": "*",
+                      "lhs": {
+                        "kind": "call",
+                        "function": "src/props/beacon.mtek::pulse",
+                        "args": [
+                          {
+                            "kind": "frame",
+                            "member": "time",
+                            "type": "f32",
+                            "span": {"file": 1, "start": 596, "end": 606}
+                          },
+                          {
+                            "kind": "const",
+                            "value": {"f32": 0.5},
+                            "type": "f32",
+                            "span": {"file": 1, "start": 608, "end": 611}
+                          }
+                        ],
+                        "type": "f32",
+                        "span": {"file": 1, "start": 590, "end": 612}
+                      },
+                      "rhs": {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 1, "start": 615, "end": 619}
+                      },
+                      "type": "f32",
+                      "span": {"file": 1, "start": 590, "end": 619}
+                    },
+                    "span": {"file": 1, "start": 569, "end": 620}
+                  }
+                ],
+                "span": {"file": 1, "start": 532, "end": 626}
+              },
+              "span": {"file": 1, "start": 509, "end": 626}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "Space"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "symbol": "src/main.mtek::Demo.Far.on_key_down_Space",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 1
+                        },
+                        "name": "flashes",
+                        "type": "i32",
+                        "span": {"file": 1, "start": 542, "end": 554}
+                      },
+                      "steps": [],
+                      "type": "i32",
+                      "span": {"file": 1, "start": 542, "end": 554}
+                    },
+                    "op": "+=",
+                    "value": {
+                      "kind": "const",
+                      "value": {"i32": 1},
+                      "type": "i32",
+                      "span": {"file": 1, "start": 558, "end": 559}
+                    },
+                    "span": {"file": 1, "start": 542, "end": 560}
+                  },
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "instanceParam",
+                        "entity": 1,
+                        "param": "glow",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 569, "end": 587}
+                      },
+                      "steps": [],
+                      "type": "f32",
+                      "span": {"file": 1, "start": 569, "end": 587}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "binary",
+                      "op": "*",
+                      "lhs": {
+                        "kind": "call",
+                        "function": "src/props/beacon.mtek::pulse",
+                        "args": [
+                          {
+                            "kind": "frame",
+                            "member": "time",
+                            "type": "f32",
+                            "span": {"file": 1, "start": 596, "end": 606}
+                          },
+                          {
+                            "kind": "const",
+                            "value": {"f32": 0.5},
+                            "type": "f32",
+                            "span": {"file": 1, "start": 608, "end": 611}
+                          }
+                        ],
+                        "type": "f32",
+                        "span": {"file": 1, "start": 590, "end": 612}
+                      },
+                      "rhs": {
+                        "kind": "const",
+                        "value": {"f32": 3.0},
+                        "type": "f32",
+                        "span": {"file": 1, "start": 615, "end": 619}
+                      },
+                      "type": "f32",
+                      "span": {"file": 1, "start": 590, "end": 619}
+                    },
+                    "span": {"file": 1, "start": 569, "end": 620}
+                  }
+                ],
+                "span": {"file": 1, "start": 532, "end": 626}
+              },
+              "span": {"file": 1, "start": 509, "end": 626}
+            }
+          ],
+          "bindings": [
+            {
+              "id": 0,
+              "symbol": "src/main.mtek::Demo.bind_0",
+              "target": {
+                "kind": "transform",
+                "entity": 2,
+                "field": "position"
+              },
+              "deps": [
+                {
+                  "kind": "entityState",
+                  "entity": 0,
+                  "name": "flashes"
+                }
+              ],
+              "order": 0,
+              "type": "vec3",
+              "expr": {
+                "kind": "construct",
+                "args": [
+                  {
+                    "kind": "const",
+                    "value": {"f32": 0.0},
+                    "type": "f32",
+                    "span": {"file": 0, "start": 541, "end": 544}
+                  },
+                  {
+                    "kind": "convert",
+                    "arg": {
+                      "kind": "state",
+                      "owner": {
+                        "kind": "entity",
+                        "index": 0
+                      },
+                      "name": "flashes",
+                      "type": "i32",
+                      "span": {"file": 0, "start": 550, "end": 562}
+                    },
+                    "type": "f32",
+                    "span": {"file": 0, "start": 546, "end": 563}
+                  },
+                  {
+                    "kind": "const",
+                    "value": {"f32": 0.0},
+                    "type": "f32",
+                    "span": {"file": 0, "start": 565, "end": 568}
+                  }
+                ],
+                "type": "vec3",
+                "span": {"file": 0, "start": 536, "end": 569}
+              },
+              "span": {"file": 0, "start": 531, "end": 570}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/props/beacon.mtek",
+      "file": 1,
+      "span": {"file": 1, "start": 0, "end": 629},
+      "items": [
+        {
+          "kind": "const",
+          "name": "HEIGHT",
+          "symbol": "src/props/beacon.mtek::HEIGHT",
+          "type": "f32",
+          "value": {"f32": 0.75},
+          "span": {"file": 1, "start": 0, "end": 20}
+        },
+        {
+          "kind": "material",
+          "name": "Flare",
+          "symbol": "src/props/beacon.mtek::Flare",
+          "params": [
+            {
+              "name": "glow",
+              "type": "f32",
+              "default": {"f32": 1.0},
+              "span": {"file": 1, "start": 43, "end": 65}
+            }
+          ],
+          "layout": {
+            "id": "material:src/props/beacon.mtek::Flare",
+            "wgslStruct": "MtekParams_de23d32a_Flare",
+            "size": 4,
+            "align": 4,
+            "root": {
+              "kind": "struct",
+              "name": "src/props/beacon.mtek::Flare",
+              "offset": 0,
+              "size": 4,
+              "align": 4,
+              "members": [
+                {
+                  "name": "glow",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 0,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "src/props/beacon.mtek::Flare.fragment",
+            "surfaceInputs": [],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "input",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 1, "start": 79, "end": 84}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "builtin",
+                    "function": "color.linear",
+                    "args": [
+                      {
+                        "kind": "construct",
+                        "args": [
+                          {
+                            "kind": "param",
+                            "param": 0,
+                            "name": "glow",
+                            "type": "f32",
+                            "span": {"file": 1, "start": 144, "end": 148}
+                          },
+                          {
+                            "kind": "binary",
+                            "op": "*",
+                            "lhs": {
+                              "kind": "param",
+                              "param": 0,
+                              "name": "glow",
+                              "type": "f32",
+                              "span": {"file": 1, "start": 150, "end": 154}
+                            },
+                            "rhs": {
+                              "kind": "const",
+                              "value": {"f32": 0.5},
+                              "type": "f32",
+                              "span": {"file": 1, "start": 157, "end": 160}
+                            },
+                            "type": "f32",
+                            "span": {"file": 1, "start": 150, "end": 160}
+                          },
+                          {
+                            "kind": "const",
+                            "value": {"f32": 0.1},
+                            "type": "f32",
+                            "span": {"file": 1, "start": 162, "end": 165}
+                          }
+                        ],
+                        "type": "vec3",
+                        "span": {"file": 1, "start": 139, "end": 166}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 1, "start": 168, "end": 171}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 1, "start": 126, "end": 172}
+                  },
+                  "span": {"file": 1, "start": 119, "end": 173}
+                }
+              ],
+              "span": {"file": 1, "start": 109, "end": 179}
+            },
+            "span": {"file": 1, "start": 70, "end": 179}
+          },
+          "span": {"file": 1, "start": 22, "end": 181}
+        },
+        {
+          "kind": "function",
+          "name": "pulse",
+          "symbol": "src/props/beacon.mtek::pulse",
+          "effect": "pure",
+          "gpuReachable": false,
+          "cpuReachable": true,
+          "result": "f32",
+          "locals": [
+            {
+              "index": 0,
+              "name": "t",
+              "type": "f32",
+              "kind": "param",
+              "span": {"file": 1, "start": 192, "end": 193}
+            },
+            {
+              "index": 1,
+              "name": "amount",
+              "type": "f32",
+              "kind": "param",
+              "span": {"file": 1, "start": 200, "end": 206}
+            }
+          ],
+          "body": {
+            "stmts": [
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "binary",
+                  "op": "+",
+                  "lhs": {
+                    "kind": "const",
+                    "value": {"f32": 1.0},
+                    "type": "f32",
+                    "span": {"file": 1, "start": 233, "end": 236}
+                  },
+                  "rhs": {
+                    "kind": "binary",
+                    "op": "*",
+                    "lhs": {
+                      "kind": "builtin",
+                      "function": "sin",
+                      "args": [
+                        {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "t",
+                          "type": "f32",
+                          "span": {"file": 1, "start": 243, "end": 244}
+                        }
+                      ],
+                      "type": "f32",
+                      "span": {"file": 1, "start": 239, "end": 245}
+                    },
+                    "rhs": {
+                      "kind": "local",
+                      "local": 1,
+                      "name": "amount",
+                      "type": "f32",
+                      "span": {"file": 1, "start": 248, "end": 254}
+                    },
+                    "type": "f32",
+                    "span": {"file": 1, "start": 239, "end": 254}
+                  },
+                  "type": "f32",
+                  "span": {"file": 1, "start": 233, "end": 254}
+                },
+                "span": {"file": 1, "start": 226, "end": 255}
+              }
+            ],
+            "span": {"file": 1, "start": 220, "end": 257}
+          },
+          "span": {"file": 1, "start": 183, "end": 257}
+        },
+        {
+          "kind": "prefab",
+          "name": "Beacon",
+          "symbol": "src/props/beacon.mtek::Beacon",
+          "params": [
+            {
+              "name": "origin",
+              "type": "vec3",
+              "default": null,
+              "span": {"file": 1, "start": 286, "end": 305}
+            },
+            {
+              "name": "glow",
+              "type": "f32",
+              "default": {"f32": 1.0},
+              "span": {"file": 1, "start": 310, "end": 332}
+            }
+          ],
+          "constants": [],
+          "entity": {
+            "index": 0,
+            "name": "Beacon",
+            "symbol": "src/props/beacon.mtek::Beacon",
+            "parent": null,
+            "span": {"file": 1, "start": 266, "end": 628},
+            "position": {
+              "source": {
+                "expr": {
+                  "kind": "binary",
+                  "op": "+",
+                  "lhs": {
+                    "kind": "param",
+                    "param": 0,
+                    "name": "origin",
+                    "type": "vec3",
+                    "span": {"file": 1, "start": 375, "end": 381}
+                  },
+                  "rhs": {
+                    "kind": "const",
+                    "value": {
+                      "vec3": [0.0, 0.75, 0.0]
+                    },
+                    "type": "vec3",
+                    "span": {"file": 1, "start": 384, "end": 406}
+                  },
+                  "type": "vec3",
+                  "span": {"file": 1, "start": 375, "end": 406}
+                }
+              },
+              "origin": "written",
+              "span": {"file": 1, "start": 365, "end": 407}
+            },
+            "rotation": {
+              "source": {
+                "const": {
+                  "quat": [0.0, 0.0, 0.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 1, "start": 266, "end": 628}
+            },
+            "scale": {
+              "source": {
+                "const": {
+                  "vec3": [1.0, 1.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 1, "start": 266, "end": 628}
+            },
+            "visible": {
+              "source": {
+                "const": {
+                  "bool": true
+                }
+              },
+              "origin": "default",
+              "span": {"file": 1, "start": 266, "end": 628}
+            },
+            "mesh": {
+              "desc": {
+                "kind": "sphere",
+                "radius": 0.4,
+                "segments": 12,
+                "rings": 6
+              },
+              "origin": "written",
+              "span": {"file": 1, "start": 412, "end": 466}
+            },
+            "material": {
+              "material": "src/props/beacon.mtek::Flare",
+              "params": [
+                {
+                  "name": "glow",
+                  "type": "f32",
+                  "source": {
+                    "expr": {
+                      "kind": "param",
+                      "param": 1,
+                      "name": "glow",
+                      "type": "f32",
+                      "span": {"file": 1, "start": 495, "end": 499}
+                    }
+                  },
+                  "update": "imperative",
+                  "span": {"file": 1, "start": 471, "end": 503}
+                }
+              ],
+              "origin": "written",
+              "span": {"file": 1, "start": 471, "end": 503}
+            }
+          },
+          "state": [
+            {
+              "name": "flashes",
+              "symbol": "src/props/beacon.mtek::Beacon.flashes",
+              "type": "i32",
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "init": {
+                "kind": "const",
+                "value": {"i32": 0},
+                "type": "i32",
+                "span": {"file": 1, "start": 358, "end": 359}
+              },
+              "span": {"file": 1, "start": 337, "end": 360}
+            }
+          ],
+          "behaviors": [
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "Space"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/props/beacon.mtek::Beacon.on_key_down_Space",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 0
+                        },
+                        "name": "flashes",
+                        "type": "i32",
+                        "span": {"file": 1, "start": 542, "end": 554}
+                      },
+                      "steps": [],
+                      "type": "i32",
+                      "span": {"file": 1, "start": 542, "end": 554}
+                    },
+                    "op": "+=",
+                    "value": {
+                      "kind": "const",
+                      "value": {"i32": 1},
+                      "type": "i32",
+                      "span": {"file": 1, "start": 558, "end": 559}
+                    },
+                    "span": {"file": 1, "start": 542, "end": 560}
+                  },
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "instanceParam",
+                        "entity": 0,
+                        "param": "glow",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 569, "end": 587}
+                      },
+                      "steps": [],
+                      "type": "f32",
+                      "span": {"file": 1, "start": 569, "end": 587}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "binary",
+                      "op": "*",
+                      "lhs": {
+                        "kind": "call",
+                        "function": "src/props/beacon.mtek::pulse",
+                        "args": [
+                          {
+                            "kind": "frame",
+                            "member": "time",
+                            "type": "f32",
+                            "span": {"file": 1, "start": 596, "end": 606}
+                          },
+                          {
+                            "kind": "const",
+                            "value": {"f32": 0.5},
+                            "type": "f32",
+                            "span": {"file": 1, "start": 608, "end": 611}
+                          }
+                        ],
+                        "type": "f32",
+                        "span": {"file": 1, "start": 590, "end": 612}
+                      },
+                      "rhs": {
+                        "kind": "param",
+                        "param": 1,
+                        "name": "glow",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 615, "end": 619}
+                      },
+                      "type": "f32",
+                      "span": {"file": 1, "start": 590, "end": 619}
+                    },
+                    "span": {"file": 1, "start": 569, "end": 620}
+                  }
+                ],
+                "span": {"file": 1, "start": 532, "end": 626}
+              },
+              "span": {"file": 1, "start": 509, "end": 626}
+            }
+          ],
+          "bindings": [],
+          "span": {"file": 1, "start": 266, "end": 628}
+        }
+      ]
+    },
+    {
+      "path": "std/materials.mtek",
+      "file": 2,
+      "span": {"file": 2, "start": 0, "end": 888},
+      "items": [
+        {
+          "kind": "material",
+          "name": "Unlit",
+          "symbol": "std/materials.mtek::Unlit",
+          "params": [
+            {
+              "name": "color",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 2, "start": 276, "end": 305}
+            }
+          ],
+          "layout": {
+            "id": "material:std/materials.mtek::Unlit",
+            "wgslStruct": "MtekParams_2b212d15_Unlit",
+            "size": 16,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "std/materials.mtek::Unlit",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "members": [
+                {
+                  "name": "color",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "std/materials.mtek::Unlit.fragment",
+            "surfaceInputs": [],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "surface",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 2, "start": 319, "end": 326}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "param",
+                    "param": 0,
+                    "name": "color",
+                    "type": "color",
+                    "span": {"file": 2, "start": 360, "end": 365}
+                  },
+                  "span": {"file": 2, "start": 353, "end": 366}
+                }
+              ],
+              "span": {"file": 2, "start": 351, "end": 368}
+            },
+            "span": {"file": 2, "start": 310, "end": 368}
+          },
+          "span": {"file": 2, "start": 255, "end": 370}
+        },
+        {
+          "kind": "material",
+          "name": "Pbr",
+          "symbol": "std/materials.mtek::Pbr",
+          "params": [
+            {
+              "name": "base_color",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 2, "start": 398, "end": 432}
+            },
+            {
+              "name": "metallic",
+              "type": "f32",
+              "default": {"f32": 0.0},
+              "span": {"file": 2, "start": 437, "end": 463}
+            },
+            {
+              "name": "roughness",
+              "type": "f32",
+              "default": {"f32": 0.5},
+              "span": {"file": 2, "start": 468, "end": 495}
+            },
+            {
+              "name": "base_color_texture",
+              "type": "texture",
+              "default": {
+                "texture": "texture.white"
+              },
+              "span": {"file": 2, "start": 500, "end": 552}
+            },
+            {
+              "name": "base_color_sampler",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.linear_repeat"
+              },
+              "span": {"file": 2, "start": 557, "end": 617}
+            }
+          ],
+          "layout": {
+            "id": "material:std/materials.mtek::Pbr",
+            "wgslStruct": "MtekParams_2b212d15_Pbr",
+            "size": 32,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "std/materials.mtek::Pbr",
+              "offset": 0,
+              "size": 32,
+              "align": 16,
+              "members": [
+                {
+                  "name": "base_color",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                },
+                {
+                  "name": "metallic",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 16,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                },
+                {
+                  "name": "roughness",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 20,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "std/materials.mtek::Pbr.fragment",
+            "surfaceInputs": [
+              "world_position",
+              "world_normal",
+              "uv"
+            ],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "surface",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 2, "start": 631, "end": 638}
+              },
+              {
+                "index": 1,
+                "name": "texel",
+                "type": "vec4",
+                "kind": "let",
+                "span": {"file": 2, "start": 677, "end": 682}
+              },
+              {
+                "index": 2,
+                "name": "albedo",
+                "type": "color",
+                "kind": "let",
+                "span": {"file": 2, "start": 757, "end": 763}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "let",
+                  "local": 1,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "sample",
+                    "args": [
+                      {
+                        "kind": "param",
+                        "param": 3,
+                        "name": "base_color_texture",
+                        "type": "texture",
+                        "span": {"file": 2, "start": 692, "end": 710}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 4,
+                        "name": "base_color_sampler",
+                        "type": "sampler",
+                        "span": {"file": 2, "start": 712, "end": 730}
+                      },
+                      {
+                        "kind": "field",
+                        "base": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "surface",
+                          "type": "SurfaceInput",
+                          "span": {"file": 2, "start": 732, "end": 739}
+                        },
+                        "field": "uv",
+                        "index": 3,
+                        "type": "vec2",
+                        "span": {"file": 2, "start": 732, "end": 742}
+                      }
+                    ],
+                    "type": "vec4",
+                    "span": {"file": 2, "start": 685, "end": 743}
+                  },
+                  "span": {"file": 2, "start": 673, "end": 744}
+                },
+                {
+                  "kind": "let",
+                  "local": 2,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "color.linear",
+                    "args": [
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "param",
+                            "param": 0,
+                            "name": "base_color",
+                            "type": "color",
+                            "span": {"file": 2, "start": 779, "end": 789}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 2, "start": 779, "end": 793}
+                        },
+                        "rhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "local",
+                            "local": 1,
+                            "name": "texel",
+                            "type": "vec4",
+                            "span": {"file": 2, "start": 796, "end": 801}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 2, "start": 796, "end": 805}
+                        },
+                        "type": "vec3",
+                        "span": {"file": 2, "start": 779, "end": 805}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 2, "start": 807, "end": 810}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 2, "start": 766, "end": 811}
+                  },
+                  "span": {"file": 2, "start": 753, "end": 812}
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "builtin",
+                    "function": "lighting.pbr",
+                    "args": [
+                      {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "surface",
+                        "type": "SurfaceInput",
+                        "span": {"file": 2, "start": 841, "end": 848}
+                      },
+                      {
+                        "kind": "local",
+                        "local": 2,
+                        "name": "albedo",
+                        "type": "color",
+                        "span": {"file": 2, "start": 850, "end": 856}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 1,
+                        "name": "metallic",
+                        "type": "f32",
+                        "span": {"file": 2, "start": 858, "end": 866}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 2,
+                        "name": "roughness",
+                        "type": "f32",
+                        "span": {"file": 2, "start": 868, "end": 877}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 2, "start": 828, "end": 878}
+                  },
+                  "span": {"file": 2, "start": 821, "end": 879}
+                }
+              ],
+              "span": {"file": 2, "start": 663, "end": 885}
+            },
+            "span": {"file": 2, "start": 622, "end": 885}
+          },
+          "span": {"file": 2, "start": 379, "end": 887}
+        }
+      ]
+    }
+  ]
+}

@@ -166,14 +166,62 @@ pub struct CheckedEntity {
     pub name_span: Span,
     /// The whole declaration, `entity Name { … }`.
     pub span: Span,
-    /// The fields of the registry's entity schema.
+    /// The fields of the registry's entity schema. A static prefab instance has none: its
+    /// fields are the prefab's, completed when the IR instantiates the prefab (decision 0062).
     pub fields: Vec<CheckedField>,
     /// The nested entities, in declaration order.
     pub children: Vec<CheckedEntity>,
+    /// `entity Name: Prefab { .. }`: the prefab and the values of its params.
+    pub instance: Option<CheckedInstance>,
 }
 
 impl CheckedEntity {
     /// The field `name` of the entity.
+    #[must_use]
+    pub fn field(&self, name: &str) -> Option<&CheckedField> {
+        self.fields.iter().find(|f| f.name == name)
+    }
+}
+
+/// A static prefab instance after the scene checks (`spec/scenes.md` section 5).
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckedInstance {
+    /// The prefab, by its declaration in any module.
+    pub prefab: super::PrefabKey,
+    /// The prefab's declared name.
+    pub prefab_name: String,
+    /// Every param of the prefab in declaration order, with the value the instance gives it
+    /// or the prefab's default. Empty when a value was rejected (an error was reported).
+    pub params: Vec<CheckedParam>,
+}
+
+/// The value of one param of a static prefab instance.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckedParam {
+    pub name: String,
+    /// The Mtek spelling of the param's type.
+    pub ty: String,
+    pub value: ConstValue,
+    /// Where the value comes from: the `name: value;` of the instance (at the member's span),
+    /// or the prefab's default.
+    pub origin: FieldOrigin,
+}
+
+/// A prefab after the scene checks: the fields of the one entity it describes, each with its
+/// folded value or, for a value the prefab's `init` computes from its params, a stand-in.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckedPrefab {
+    pub def: Option<DefId>,
+    pub name: String,
+    pub name_span: Span,
+    /// The whole declaration, `prefab Name { … }`.
+    pub span: Span,
+    /// The fields of the registry's entity schema, as for an entity.
+    pub fields: Vec<CheckedField>,
+}
+
+impl CheckedPrefab {
+    /// The field `name` of the prefab's entity.
     #[must_use]
     pub fn field(&self, name: &str) -> Option<&CheckedField> {
         self.fields.iter().find(|f| f.name == name)
@@ -200,6 +248,10 @@ pub struct CheckedField {
     /// [`crate::types::Typeck::binding_of`]) and `value` above is only a placeholder (the registry
     /// default, or zero) that the run-time evaluation of the binding replaces before the first frame.
     pub bound: bool,
+    /// The value is an expression over the params of a prefab (and its constants and state),
+    /// which the prefab's `init` evaluates: `value` is only a stand-in of the right type
+    /// (decision 0062). Only the fields of a prefab are ever dynamic.
+    pub dynamic: bool,
 }
 
 /// Where the value of a [`CheckedField`] comes from.
@@ -347,6 +399,8 @@ struct Written<'e> {
     bound: bool,
     /// The value passed the per-value checks; `None` until they ran.
     valid: Option<ConstValue>,
+    /// The value is computed by a prefab's `init` (`valid` then holds a stand-in).
+    dynamic: bool,
 }
 
 /// The outcome of the checks of one value against its field.
@@ -382,9 +436,9 @@ impl Checker<'_> {
                         self.out.scenes.push(scene);
                     }
                 }
-                // Prefabs are gated in this build (`E9010`); the one rule about lights in them is
-                // syntactic and holds already (decision 0053).
-                ItemKind::Prefab(decl) => self.prefab_lights(decl),
+                ItemKind::Prefab(decl) if construct_implemented(Construct::Prefab) => {
+                    self.prefab_decl(decl);
+                }
                 _ => {}
             }
         }
@@ -596,8 +650,7 @@ impl Checker<'_> {
             count.first_over = Some(entity.name.span);
         }
         if entity.prefab.is_some() {
-            // Prefab instances are gated in this build.
-            return None;
+            return self.instance_decl(entity);
         }
         let schema = self.registry.entity_schema()?;
         let mut inits = Vec::new();
@@ -631,7 +684,70 @@ impl Checker<'_> {
             span: entity.span,
             fields,
             children,
+            instance: None,
         })
+    }
+
+    /// A static prefab instance: a named entity without fields of its own (the prefab's are
+    /// completed when the IR instantiates it) and the values of the prefab's params. `None` if
+    /// the prefab or a param value was rejected (reported by the typing pass).
+    fn instance_decl(&mut self, entity: &EntityDecl) -> Option<CheckedEntity> {
+        let def = self.res.def_of(entity.id)?;
+        let instance = self.instances.get(&def)?.checked.clone()?;
+        Some(CheckedEntity {
+            def: Some(def),
+            name: entity.name.name.clone(),
+            name_span: entity.name.span,
+            span: entity.span,
+            fields: Vec::new(),
+            children: Vec::new(),
+            instance: Some(instance),
+        })
+    }
+
+    /// A prefab after the typing pass: `E5110` for a light (lights belong to the named entities
+    /// of a scene, so that their number is static), then the fields of the one entity it
+    /// describes checked like those of an entity, with the difference that a value that reads the
+    /// prefab's params, constants or state is accepted: the prefab's `init` computes it
+    /// (decision 0062).
+    fn prefab_decl(&mut self, decl: &PrefabDecl) {
+        self.prefab_lights(decl);
+        let Some(schema) = self.registry.entity_schema() else {
+            return;
+        };
+        let light_fields = self.light_fields();
+        let mut inits = Vec::new();
+        for member in &decl.members {
+            match member {
+                // A light is reported (`E5110`) and not part of the prefab's entity.
+                EntityMember::Field(field)
+                    if construct_implemented(Construct::EntityField)
+                        && !light_fields.contains(&field.name.name.as_str()) =>
+                {
+                    inits.push(field);
+                }
+                EntityMember::Const(constant) if construct_implemented(Construct::BodyConst) => {
+                    self.descriptors_in(&constant.value);
+                }
+                // Params, state, lifecycle functions and handlers are the typing pass's; nested
+                // entities were reported (`E5040`).
+                _ => {}
+            }
+        }
+        let holder = Holder::Body {
+            noun: "prefab",
+            name: &decl.name.name,
+        };
+        self.current_prefab = self.res.def_of(decl.id);
+        let fields = self.body(schema, holder, &decl.name, &inits);
+        self.current_prefab = None;
+        self.out.checked_prefabs.push(CheckedPrefab {
+            def: self.res.def_of(decl.id),
+            name: decl.name.name.clone(),
+            name_span: decl.name.span,
+            span: decl.span,
+            fields,
+        });
     }
 
     // ----- bodies and descriptors ------------------------------------------
@@ -655,8 +771,16 @@ impl Checker<'_> {
                 match self.value_checks(holder, field.def, value) {
                     Checked::Valid(folded) => field.valid = Some(folded),
                     // Not constant (or not typed): perhaps an initialisation
-                    // rule. A value of the wrong type was reported already.
-                    Checked::Unknown => self.initialisation(holder, field.def, value),
+                    // rule. A value of the wrong type was reported already. A prefab's `init`
+                    // computes a value that reads its params; a stand-in keeps the field complete.
+                    Checked::Unknown => {
+                        if self.initialisation(holder, field.def, value)
+                            && let Some(stand_in) = placeholder(field.def.ty)
+                        {
+                            field.valid = Some(stand_in);
+                            field.dynamic = true;
+                        }
+                    }
                     Checked::Rejected => {}
                 }
             }
@@ -754,6 +878,7 @@ impl Checker<'_> {
                 value: expr,
                 bound: matches!(value, FieldValue::Bind(_)),
                 valid: None,
+                dynamic: false,
             });
         }
         written
@@ -896,7 +1021,10 @@ impl Checker<'_> {
     /// construction-only field requires one, except that a descriptor value
     /// requires one only in its own construction-only fields (a mesh's size,
     /// not a material's colour); each descriptor field is judged on its own.
-    fn initialisation(&mut self, holder: Holder<'_>, def: &'static FieldDef, value: &Expr) {
+    ///
+    /// True when the value is accepted although it is not constant: the field of a prefab whose
+    /// value its `init` computes (decision 0062).
+    fn initialisation(&mut self, holder: Holder<'_>, def: &'static FieldDef, value: &Expr) -> bool {
         let inner = strip_parens(value);
         if let ExprKind::Descriptor { fields, .. } = &inner.kind
             && let Some(schema) = self.schema_of(inner)
@@ -914,7 +1042,7 @@ impl Checker<'_> {
                     self.initialisation(holder, field_def, field_value);
                 }
             }
-            return;
+            return false;
         }
         // A user material instance (decision 0039): each param on its own;
         // none is construction-only.
@@ -931,14 +1059,13 @@ impl Checker<'_> {
                     self.non_constant_initial(&what, &reason);
                 }
             }
-            return;
+            return false;
         }
         let Some(reason) = self.out.non_constant(value.id).cloned() else {
-            return;
+            return false;
         };
         if reason.kind == NonConstantKind::ObjectField || !def.flags.is_construction_only() {
-            self.non_constant_initial(&holder.field(def.name), &reason);
-            return;
+            return self.non_constant_initial(&holder.field(def.name), &reason);
         }
         self.sink.push(
             Diagnostic::new(
@@ -952,14 +1079,20 @@ impl Checker<'_> {
             .at(reason.span)
             .note("construction-only values may use only literals, constants, operators, conversions, constructors and const-eligible built-in functions"),
         );
+        false
     }
 
     /// The initial value of `what` ("field 'position' of entity 'Cube'") is
     /// not a constant expression, and need not be: `E5081` where it reads a
     /// field of an entity or camera; otherwise it is valid v0.1 (evaluated
     /// once at construction) that this build does not implement yet, because
-    /// it folds every initial value (`E9010`, decision 0039).
-    fn non_constant_initial(&mut self, what: &str, reason: &NonConstant) {
+    /// it folds every initial value (`E9010`, decision 0039). The exception is a prefab: its
+    /// `init` evaluates the expression with the instance's params (decision 0062), which is
+    /// what the result `true` says.
+    fn non_constant_initial(&mut self, what: &str, reason: &NonConstant) -> bool {
+        if reason.kind != NonConstantKind::ObjectField && self.current_prefab.is_some() {
+            return true;
+        }
         if reason.kind == NonConstantKind::ObjectField {
             self.sink.push(
                 Diagnostic::new(
@@ -970,9 +1103,13 @@ impl Checker<'_> {
                     ),
                 )
                 .at(reason.span)
-                .note("field initialisers may read constants, scene state and earlier state, but not the fields of entities or cameras"),
+                .note(if self.current_prefab.is_some() {
+                    "initialisers of a prefab may read constants, params and state, but not the fields of the entity"
+                } else {
+                    "field initialisers may read constants, scene state and earlier state, but not the fields of entities or cameras"
+                }),
             );
-            return;
+            return false;
         }
         self.sink.push(
             Diagnostic::new(
@@ -990,6 +1127,7 @@ impl Checker<'_> {
             ))
             .note(gate_note()),
         );
+        false
     }
 
     /// The rules between fields: cross-field ranges, the schema's rules
@@ -1178,6 +1316,7 @@ impl Checker<'_> {
                         value: w.node,
                     },
                     bound: w.bound,
+                    dynamic: w.dynamic,
                 });
             } else if let Some(value) = self.default_of(def, &present, 0) {
                 fields.push(CheckedField {
@@ -1186,6 +1325,7 @@ impl Checker<'_> {
                     value: Some(value),
                     origin: FieldOrigin::Default,
                     bound: false,
+                    dynamic: false,
                 });
             }
         }

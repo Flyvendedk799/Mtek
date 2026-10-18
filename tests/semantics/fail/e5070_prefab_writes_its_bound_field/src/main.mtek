@@ -1,0 +1,14 @@
+// A prefab's field has one writer, like an entity's: its handler may not assign what it binds.
+prefab Bobber {
+    param base: f32 = 0.0;
+    position: bind(vec3(0.0, base + frame.time, 0.0));
+    mesh: Box {};
+    update(dt: f32) {
+        self.position = vec3(0.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Bobber {}
+}

@@ -1,0 +1,13 @@
+// The params of a prefab of another module are checked at the instance as for a local one: a
+// missing required param is E5041 with the param declared in the other file as related span, a
+// field of the entity is E5042, and the prefab's bound field cannot be assigned (E5070).
+import { Beacon } from "./props.mtek";
+
+scene Demo {
+    camera Main {}
+    entity Near: Beacon {}
+    entity Far: Beacon { origin: vec3(1.0, 0.0, 0.0); scale: vec3(2.0); }
+    on key_down(Key.Space) {
+        Far.position = vec3(0.0);
+    }
+}

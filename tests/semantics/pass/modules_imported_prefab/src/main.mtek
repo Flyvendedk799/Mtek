@@ -1,0 +1,20 @@
+// A prefab exported by another module: its instances here use its params, read its state and
+// material params, and the same prefab is instantiated twice.
+import { Beacon } from "./props/beacon.mtek";
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 8.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Near: Beacon { origin: vec3(-1.5, 0.0, 0.0); }
+    entity Far: Beacon { origin: vec3(1.5, 0.0, -3.0); glow: 3.0; }
+    entity Marker {
+        mesh: Box { size: vec3(0.2, 0.2, 0.2); };
+        position: bind(vec3(0.0, f32(Near.flashes), 0.0));
+    }
+    on key_down(Key.R) {
+        Far.flashes = 0;
+        Near.material.glow = 0.5;
+    }
+}

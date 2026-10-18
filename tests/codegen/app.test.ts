@@ -22,9 +22,27 @@ import { type BuiltProgram, codegenFixtures, loadProgram, record } from "./suppo
 
 type IrValue = Readonly<Record<string, unknown>>;
 
+/**
+ * A constant, `{ bound: id }` for a field a `bind` supplies after init, or `{ expr }` for a
+ * value a prefab's `init` computes (decision 0062).
+ */
+interface IrSource {
+  readonly const?: IrValue;
+  readonly bound?: number;
+  readonly expr?: IrExpr;
+}
+
+/** The expressions the codegen fixtures leave in a field: constants and vector constructors. */
+interface IrExpr {
+  readonly kind: string;
+  readonly value?: IrValue;
+  readonly type: string;
+  readonly args?: readonly IrExpr[];
+}
+
 interface IrField {
-  /** A constant, or `{ bound: id }` for a field a `bind` supplies after init. */
-  readonly source: { readonly const?: IrValue; readonly bound?: number };
+  readonly source: IrSource;
+  readonly span: IrSpan;
 }
 
 interface IrSpan {
@@ -48,7 +66,11 @@ interface IrEntity {
   readonly scale: IrField;
   readonly visible: IrField;
   readonly material: {
-    readonly params: readonly { readonly name: string; readonly source: { readonly const?: IrValue; readonly bound?: number } }[];
+    readonly params: readonly {
+      readonly name: string;
+      readonly source: IrSource;
+      readonly span: IrSpan;
+    }[];
   } | null;
   /** The light component: `color` and `intensity` are constants or bound. */
   readonly light?: { readonly color: IrField; readonly intensity: IrField };
@@ -104,6 +126,27 @@ function cpuValue(value: IrValue): unknown {
   }
 }
 
+/** The value of an expression of a field source: a constant or a vector of constants. */
+function exprValue(expr: IrExpr): unknown {
+  if (expr.kind === "const" && expr.value !== undefined) return cpuValue(expr.value);
+  if (expr.kind === "construct" && expr.args !== undefined) {
+    const names = { vec2: ["x", "y"], vec3: ["x", "y", "z"], vec4: ["x", "y", "z", "w"] }[expr.type];
+    const parts = expr.args.map((arg) => exprValue(arg) as number);
+    if (names === undefined || names.length !== parts.length) {
+      throw new Error(`no CPU shape for the constructor ${expr.type}(${parts.length} args)`);
+    }
+    return Object.fromEntries(names.map((name, i) => [name, parts[i]]));
+  }
+  throw new Error(`no CPU value for the IR expression ${JSON.stringify(expr)}`);
+}
+
+/** The value `init` sets for a source: `undefined` where the runtime supplies it (a binding). */
+function sourceValue(source: IrSource): unknown {
+  if (source.const !== undefined) return cpuValue(source.const);
+  if (source.expr !== undefined) return exprValue(source.expr);
+  return undefined;
+}
+
 /** The setter calls the initialisation order of spec/scenes.md section 11 implies. */
 function expectedCalls(ir: IrProgram): SetterCall[] {
   const scene = ir.modules
@@ -140,37 +183,36 @@ function expectedCalls(ir: IrProgram): SetterCall[] {
       continue;
     }
     const entity = declaration.entity;
+    // The fields in registry order; the fields of a prefab instance whose value `init` computes
+    // are set in the order of their declarations (decision 0062).
+    const sets: { start: number; computed: boolean; call: SetterCall }[] = [];
+    const add = (source: IrSource, span: IrSpan, call: Omit<SetterCall, "value">): void => {
+      const value = sourceValue(source);
+      if (value === undefined) return;
+      sets.push({ start: span.start, computed: source.expr !== undefined, call: { ...call, value } });
+    };
     for (const field of ["position", "rotation", "scale"] as const) {
-      if (entity[field].source.const === undefined) continue;
-      calls.push({
+      add(entity[field].source, entity[field].span, {
         method: "setTransform",
         entity: entity.index,
         field,
-        value: cpuValue(entity[field].source.const),
       });
     }
-    if (entity.visible.source.const !== undefined) {
-      calls.push({
-        method: "setVisible",
-        entity: entity.index,
-        field: "visible",
-        value: cpuValue(entity.visible.source.const),
-      });
-    }
+    add(entity.visible.source, entity.visible.span, {
+      method: "setVisible",
+      entity: entity.index,
+      field: "visible",
+    });
     for (const param of entity.material?.params ?? []) {
-      if (param.source.const === undefined) continue;
-      calls.push({
-        method: "setParam",
-        entity: entity.index,
-        field: param.name,
-        value: cpuValue(param.source.const),
-      });
+      add(param.source, param.span, { method: "setParam", entity: entity.index, field: param.name });
     }
     for (const field of ["color", "intensity"] as const) {
-      const constant = entity.light?.[field].source.const;
-      if (constant === undefined) continue;
-      calls.push({ method: "setLight", entity: entity.index, field, value: cpuValue(constant) });
+      const light = entity.light?.[field];
+      if (light === undefined) continue;
+      add(light.source, light.span, { method: "setLight", entity: entity.index, field });
     }
+    if (sets.some((set) => set.computed)) sets.sort((a, b) => a.start - b.start);
+    calls.push(...sets.map((set) => set.call));
   }
   return calls;
 }
@@ -183,6 +225,7 @@ describe("the generated program module", () => {
       "cpu_functions",
       "lights",
       "numeric_cpu_table",
+      "prefabs",
       "scene_a_target_camera_box",
       "scene_b_orthographic_nested",
       "state_and_handlers",
@@ -234,7 +277,10 @@ describe("the generated program module", () => {
           "prefabs",
         ]);
         for (const key of Object.keys(program)) expect(program[key]).toBe(module[key]);
-        expect(module["prefabs"]).toEqual({});
+        // One entry per prefab of the program, keyed by symbol (decision 0062).
+        expect(Object.keys(record(module["prefabs"], "prefabs"))).toEqual(
+          manifest.symbols.filter((symbol) => symbol.kind === "prefab").map((symbol) => symbol.id),
+        );
 
         const scenes = record(module["scenes"], "scenes");
         expect(Object.keys(scenes)).toEqual([manifest.entryScene]);
@@ -324,6 +370,8 @@ describe("the generated program module", () => {
               .filter((c) => c.method === "setParam" && c.entity === entity.index)
               .map((c) => [c.field, c.value]),
           );
+          // A partly bound instance is completed by the runtime after init.
+          if (Object.keys(value).length < layout.root.members.length) continue;
           const parsed = parseLayoutRecord(
             JSON.stringify({ ...layout, root: { name: layout.wgslStruct, ...layout.root } }),
           );

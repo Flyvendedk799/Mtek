@@ -95,6 +95,7 @@ pub fn emit_functions(
                 temps: 0,
                 span_id: &mut *span_id,
                 owned: owned_vars(&function.body),
+                params: ParamReads::Nowhere,
             };
             let body = lowering
                 .block(&function.body)
@@ -191,6 +192,20 @@ struct FnLowering<'f, 's> {
     span_id: &'s mut dyn FnMut(Span) -> Result<u32, String>,
     /// The `var` locals written through a field or element ([`owned_vars`]).
     owned: BTreeSet<u32>,
+    /// Where the body reads the params of a prefab.
+    params: ParamReads,
+}
+
+/// Where code that reads a prefab param (`ExprKind::Param`) finds it (decision 0062).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ParamReads {
+    /// Nowhere: only a prefab's own code reads a param (a material's params exist in stage
+    /// bodies only), and an instance's copy has constants instead.
+    Nowhere,
+    /// In the `params` argument of the prefab's `init(ctx, self, params)`.
+    Init,
+    /// In `self.params`: the prefab's handlers, lifecycle functions and bindings.
+    SelfParams,
 }
 
 /// Whether values of the IR type `ty` are JavaScript arrays or objects that an element or
@@ -828,10 +843,15 @@ impl FnLowering<'_, '_> {
                 }
                 Expr::object(properties)
             }
-            // Material params exist only in stage bodies, which are never CPU code.
-            ir::ExprKind::Param { name, .. } => {
-                return Err(format!("the material param '{name}' in CPU code"));
-            }
+            // Material params exist only in stage bodies, which are never CPU code; a prefab
+            // param is read from the instance.
+            ir::ExprKind::Param { name, .. } => match self.params {
+                ParamReads::Init => Expr::ident("params").member(name),
+                ParamReads::SelfParams => Expr::ident("self").member("params").member(name),
+                ParamReads::Nowhere => {
+                    return Err(format!("the param '{name}' in CPU code outside a prefab"));
+                }
+            },
         };
         Ok(lowered.spanned(expr.span))
     }
@@ -1294,25 +1314,163 @@ fn path_root(path: &Expr) -> Option<String> {
     }
 }
 
+/// What an initialiser expression is lowered for: the entity whose record is `self` there and
+/// where it reads the params of a prefab.
+#[derive(Clone, Copy, Debug)]
+pub struct InitScope {
+    pub owner: Option<ir::Owner>,
+    pub params: ParamReads,
+}
+
+impl InitScope {
+    /// The `init` of a scene: every entity is `ctx.e[index]`, and there are no params.
+    pub const SCENE: InitScope = InitScope {
+        owner: None,
+        params: ParamReads::Nowhere,
+    };
+
+    /// The `init(ctx, self, params)` of a prefab: entity 0 is `self`, the params are `params`.
+    pub const PREFAB: InitScope = InitScope {
+        owner: Some(ir::Owner::Entity { index: 0 }),
+        params: ParamReads::Init,
+    };
+}
+
 /// The lowered initialiser of `state` (an expression without locals), for `init`.
 ///
 /// # Errors
 /// A text describing a compiler defect.
 pub fn emit_state_init(
     state: &ir::State,
+    scope: InitScope,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
+) -> Result<Expr, String> {
+    emit_init_expr(&state.init, scope, span_id)
+        .map_err(|e| format!("the initialiser of '{}': {e}", state.symbol))
+}
+
+/// The lowered value of a field or material param (an expression without locals) that `init`
+/// computes.
+///
+/// # Errors
+/// A text describing a compiler defect.
+pub fn emit_init_expr(
+    expr: &ir::Expr,
+    scope: InitScope,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<Expr, String> {
     let mut lowering = FnLowering {
         locals: &[],
-        owner: None,
+        owner: scope.owner,
         release: false,
         temps: 0,
         span_id,
         owned: BTreeSet::new(),
+        params: scope.params,
     };
-    lowering
-        .expr(&state.init)
-        .map_err(|e| format!("the initialiser of '{}': {e}", state.symbol))
+    lowering.expr(expr)
+}
+
+/// The function that implements `behavior`, with the comment that names it.
+fn behavior_function(
+    behavior: &ir::Behavior,
+    name: &str,
+    release: bool,
+    params: ParamReads,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
+) -> Result<Vec<Stmt>, String> {
+    let label = match &behavior.kind {
+        ir::BehaviorKind::Update => "update".to_owned(),
+        ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
+        ir::BehaviorKind::Event { event, .. } => format!("on {event}"),
+    };
+    let mut lowering = FnLowering {
+        locals: &behavior.locals,
+        owner: Some(behavior.owner),
+        release,
+        temps: 0,
+        span_id,
+        owned: owned_vars(&behavior.body),
+        params,
+    };
+    let body = lowering
+        .block(&behavior.body)
+        .map_err(|e| format!("behaviour '{}': {e}", behavior.symbol))?;
+    let mut arguments = vec!["ctx".to_owned()];
+    // Scene lifecycle functions are `(ctx, dt)`; everything else starts with `self`.
+    let is_lifecycle = !matches!(behavior.kind, ir::BehaviorKind::Event { .. });
+    if matches!(behavior.owner, ir::Owner::Entity { .. }) || !is_lifecycle {
+        arguments.push("self".to_owned());
+    }
+    arguments.extend(
+        behavior
+            .locals
+            .iter()
+            .filter(|l| l.kind == LocalKind::Param)
+            .map(local_name),
+    );
+    Ok(vec![
+        Stmt::Blank,
+        Stmt::Comment(format!("{label} ({})", behavior.symbol)),
+        Stmt::Function {
+            name: name.to_owned(),
+            params: arguments,
+            body,
+            span: Some(behavior.span),
+        },
+    ])
+}
+
+/// The base of the name of the function that implements `behavior` (`update`, `on_key_down`).
+fn behavior_base(behavior: &ir::Behavior) -> String {
+    match &behavior.kind {
+        ir::BehaviorKind::Update => "update".to_owned(),
+        ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
+        ir::BehaviorKind::Event { event, .. } => format!("on_{event}"),
+    }
+}
+
+/// The function that evaluates `binding`: `(ctx) => value` for a scene, `(ctx, self) => value`
+/// for a prefab, with the comment that names it.
+fn binding_function(
+    binding: &ir::Binding,
+    name: &str,
+    scope: InitScope,
+    release: bool,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
+) -> Result<Vec<Stmt>, String> {
+    let mut lowering = FnLowering {
+        locals: &[],
+        owner: scope.owner,
+        release,
+        temps: 0,
+        span_id,
+        owned: BTreeSet::new(),
+        params: scope.params,
+    };
+    let value = lowering
+        .expr(&binding.expr)
+        .map_err(|e| format!("binding '{}': {e}", binding.symbol))?;
+    let mut arguments = vec!["ctx".to_owned()];
+    if scope.owner.is_some() {
+        arguments.push("self".to_owned());
+    }
+    Ok(vec![
+        Stmt::Blank,
+        Stmt::Comment(format!(
+            "bind ({}): evaluated every frame in the order of the manifest",
+            binding.symbol
+        )),
+        Stmt::Function {
+            name: name.to_owned(),
+            params: arguments,
+            body: vec![Stmt::Return {
+                value: Some(value),
+                span: Some(binding.span),
+            }],
+            span: Some(binding.span),
+        },
+    ])
 }
 
 /// The lifecycle functions and handlers of a scene as JavaScript functions, and where the
@@ -1359,55 +1517,18 @@ pub fn emit_behaviors(
         ..EmittedBehaviors::default()
     };
     for (position, behavior) in scene.behaviors.iter().enumerate() {
-        let label = match &behavior.kind {
-            ir::BehaviorKind::Update => "update".to_owned(),
-            ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
-            ir::BehaviorKind::Event { event, .. } => format!("on {event}"),
-        };
-        let base = match &behavior.kind {
-            ir::BehaviorKind::Update => "update".to_owned(),
-            ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
-            ir::BehaviorKind::Event { event, .. } => format!("on_{event}"),
-        };
-        let name = format!("b_{position}_{}", identifier_part(&base));
-        let mut lowering = FnLowering {
-            locals: &behavior.locals,
-            owner: Some(behavior.owner),
+        let name = format!("b_{position}_{}", identifier_part(&behavior_base(behavior)));
+        emitted.stmts.extend(behavior_function(
+            behavior,
+            &name,
             release,
-            temps: 0,
-            span_id: &mut *span_id,
-            owned: owned_vars(&behavior.body),
-        };
-        let body = lowering
-            .block(&behavior.body)
-            .map_err(|e| format!("behaviour '{}': {e}", behavior.symbol))?;
+            ParamReads::Nowhere,
+            &mut *span_id,
+        )?);
         let owner_index = match behavior.owner {
             ir::Owner::Scene => None,
             ir::Owner::Entity { index } => Some(index),
         };
-        let mut params = vec!["ctx".to_owned()];
-        // Scene lifecycle functions are `(ctx, dt)`; everything else starts with `self`.
-        let is_lifecycle = !matches!(behavior.kind, ir::BehaviorKind::Event { .. });
-        if owner_index.is_some() || !is_lifecycle {
-            params.push("self".to_owned());
-        }
-        params.extend(
-            behavior
-                .locals
-                .iter()
-                .filter(|l| l.kind == LocalKind::Param)
-                .map(local_name),
-        );
-        emitted.stmts.push(Stmt::Blank);
-        emitted
-            .stmts
-            .push(Stmt::Comment(format!("{label} ({})", behavior.symbol)));
-        emitted.stmts.push(Stmt::Function {
-            name: name.clone(),
-            params,
-            body,
-            span: Some(behavior.span),
-        });
         match (&behavior.kind, owner_index) {
             (ir::BehaviorKind::Update, None) => emitted.update = Some(name),
             (ir::BehaviorKind::FixedUpdate, None) => emitted.fixed_update = Some(name),
@@ -1433,31 +1554,80 @@ pub fn emit_behaviors(
     }
     for binding in &scene.bindings {
         let name = format!("bd_{}", binding.id);
-        let mut lowering = FnLowering {
-            locals: &[],
-            owner: None,
+        emitted.stmts.extend(binding_function(
+            binding,
+            &name,
+            InitScope::SCENE,
             release,
-            temps: 0,
-            span_id: &mut *span_id,
-            owned: BTreeSet::new(),
-        };
-        let value = lowering
-            .expr(&binding.expr)
-            .map_err(|e| format!("binding '{}': {e}", binding.symbol))?;
-        emitted.stmts.push(Stmt::Blank);
-        emitted.stmts.push(Stmt::Comment(format!(
-            "bind ({}): evaluated every frame in the order of the manifest",
-            binding.symbol
-        )));
-        emitted.stmts.push(Stmt::Function {
-            name: name.clone(),
-            params: vec!["ctx".to_owned()],
-            body: vec![Stmt::Return {
-                value: Some(value),
-                span: Some(binding.span),
-            }],
-            span: Some(binding.span),
-        });
+            &mut *span_id,
+        )?);
+        emitted.bindings.push(name);
+    }
+    Ok(emitted)
+}
+
+/// The lifecycle functions, handlers and bindings of a prefab as JavaScript functions, and
+/// where the program module's `prefabs` table finds them (`spec/runtime-abi.md` section 3).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct EmittedPrefab {
+    /// A comment and a `function` statement per behaviour and binding, in IR order.
+    pub stmts: Vec<Stmt>,
+    /// `(ctx, self, dt)`.
+    pub update: Option<String>,
+    pub fixed_update: Option<String>,
+    /// The handlers in declaration order; their owner is always `self`.
+    pub events: Vec<EmittedEvent>,
+    /// The function of each binding, by binding id: `(ctx, self) => value`.
+    pub bindings: Vec<String>,
+}
+
+/// Lowers the behaviours and bindings of `prefab`; its functions are named
+/// `<prefix>_b<position>_<kind>` and `<prefix>_bd_<id>`. `release` compiles `print` out.
+///
+/// # Errors
+/// A text describing a compiler defect: an IR node the CPU emitter does not know.
+pub fn emit_prefab_behaviors(
+    prefab: &ir::PrefabItem,
+    prefix: &str,
+    release: bool,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
+) -> Result<EmittedPrefab, String> {
+    let mut emitted = EmittedPrefab::default();
+    for (position, behavior) in prefab.behaviors.iter().enumerate() {
+        let name = format!(
+            "{prefix}_b{position}_{}",
+            identifier_part(&behavior_base(behavior))
+        );
+        emitted.stmts.extend(behavior_function(
+            behavior,
+            &name,
+            release,
+            ParamReads::SelfParams,
+            &mut *span_id,
+        )?);
+        match &behavior.kind {
+            ir::BehaviorKind::Update => emitted.update = Some(name),
+            ir::BehaviorKind::FixedUpdate => emitted.fixed_update = Some(name),
+            ir::BehaviorKind::Event { event, filter } => emitted.events.push(EmittedEvent {
+                event: event.clone(),
+                key: filter.clone(),
+                owner: None,
+                function: name,
+            }),
+        }
+    }
+    for binding in &prefab.bindings {
+        let name = format!("{prefix}_bd_{}", binding.id);
+        emitted.stmts.extend(binding_function(
+            binding,
+            &name,
+            InitScope {
+                owner: Some(ir::Owner::Entity { index: 0 }),
+                params: ParamReads::SelfParams,
+            },
+            release,
+            &mut *span_id,
+        )?);
         emitted.bindings.push(name);
     }
     Ok(emitted)

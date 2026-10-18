@@ -60,6 +60,10 @@ impl Checker<'_> {
     }
 
     fn declare_entity_states(&mut self, entity: &EntityDecl) {
+        // An instance has the state of its prefab, not state of its own.
+        if entity.prefab.is_some() {
+            return;
+        }
         let owner = self.res.def_of(entity.id);
         let mut index = 0;
         for member in &entity.members {
@@ -74,7 +78,7 @@ impl Checker<'_> {
         }
     }
 
-    fn declare_state(&mut self, state: &StateDecl, owner: Option<DefId>, index: u32) {
+    pub(super) fn declare_state(&mut self, state: &StateDecl, owner: Option<DefId>, index: u32) {
         let Some(def) = self.res.def_of(state.id) else {
             return;
         };
@@ -221,7 +225,7 @@ impl Checker<'_> {
         }
     }
 
-    fn lifecycle_body(
+    pub(super) fn lifecycle_body(
         &mut self,
         function: &LifecycleFn,
         owner: Option<DefId>,
@@ -306,7 +310,7 @@ impl Checker<'_> {
         );
     }
 
-    fn handler_body(
+    pub(super) fn handler_body(
         &mut self,
         handler: &Handler,
         owner: Option<DefId>,
@@ -327,13 +331,14 @@ impl Checker<'_> {
             }
             Some(event) => {
                 self.handler_args(handler, event.form, event_name, &mut params);
-                if !event.hosts.contains(&host_of(entity)) {
+                let host = self.host_of(entity);
+                if !event.hosts.contains(&host) {
                     self.sink.push(
                         Diagnostic::new(
                             Code::E5060,
                             format!(
-                                "The event '{event_name}' cannot be handled in an {}.",
-                                noun(entity)
+                                "The event '{event_name}' cannot be handled in {}.",
+                                host_noun(host)
                             ),
                         )
                         .at(handler.event.span),
@@ -559,7 +564,7 @@ impl Checker<'_> {
         let Some(Res::Def(entity)) = self.res.res(owner.id) else {
             return None;
         };
-        if self.res.def(entity).map(|d| d.kind) != Some(DefKind::Entity) {
+        if !self.names_entity(entity, &owner.kind) {
             return None;
         }
         let entity_name = self
@@ -570,18 +575,29 @@ impl Checker<'_> {
             self.report_initialiser_read(expr, &entity_name, "entity", "material");
             return Some(TyId::ERROR);
         }
-        let Some(instance) = self.out.entity_materials.get(&entity).copied() else {
-            self.report(
-                Diagnostic::new(
-                    Code::E5001,
-                    format!("The entity '{entity_name}' has no material."),
-                )
-                .at(base.span),
-            );
-            return Some(TyId::ERROR);
+        // The material of a static prefab instance is the prefab's.
+        let instance_params = self
+            .instances
+            .get(&entity)
+            .and_then(|facts| facts.material_params.clone());
+        let (instance, params) = match (
+            self.out.entity_materials.get(&entity).copied(),
+            instance_params,
+        ) {
+            (Some(instance), _) => (instance, self.instance_params(instance)),
+            (None, Some(params)) => (TyId::MATERIAL, params),
+            (None, None) => {
+                self.report(
+                    Diagnostic::new(
+                        Code::E5001,
+                        format!("The entity '{entity_name}' has no material."),
+                    )
+                    .at(base.span),
+                );
+                return Some(TyId::ERROR);
+            }
         };
         self.set_ty(base.id, instance);
-        let params = self.instance_params(instance);
         match params.iter().find(|(param, _)| *param == name.name) {
             Some((param, ty)) => {
                 self.fields.insert(
@@ -631,7 +647,7 @@ impl Checker<'_> {
         let Some(Res::Def(entity)) = self.res.res(owner.id) else {
             return None;
         };
-        if self.res.def(entity).map(|d| d.kind) != Some(DefKind::Entity) {
+        if !self.names_entity(entity, &owner.kind) {
             return None;
         }
         let entity_name = self
@@ -684,15 +700,25 @@ impl Checker<'_> {
         }
     }
 
+    /// Whether the base `base` of a field access names the entity `def`: a named entity, or
+    /// `self` inside a prefab (the prefab's name is not a value).
+    pub(super) fn names_entity(&self, def: DefId, base: &ExprKind) -> bool {
+        match self.res.def(def).map(|d| d.kind) {
+            Some(DefKind::Entity) => true,
+            Some(DefKind::Prefab) => matches!(base, ExprKind::SelfValue),
+            _ => false,
+        }
+    }
+
     /// Remember the light schema of `light: L { … };` for `Sun.light.field`.
-    pub(super) fn note_entity_light(&mut self, entity: &EntityDecl, field: &FieldInit) {
+    pub(super) fn note_entity_light(&mut self, entity: Option<DefId>, field: &FieldInit) {
         if field.name.name != "light" {
             return;
         }
         let FieldValue::Expr(value) = &field.value else {
             return;
         };
-        let (Some(ty), Some(def)) = (self.ty_of(value.id), self.res.def_of(entity.id)) else {
+        let (Some(ty), Some(def)) = (self.ty_of(value.id), entity) else {
             return;
         };
         if let Ty::Schema(name) = self.out.interner.get(ty)
@@ -706,14 +732,14 @@ impl Checker<'_> {
     }
 
     /// Remember the material instance type of `material: M { … };` for `Cube.material.param`.
-    pub(super) fn note_entity_material(&mut self, entity: &EntityDecl, field: &FieldInit) {
+    pub(super) fn note_entity_material(&mut self, entity: Option<DefId>, field: &FieldInit) {
         if field.name.name != "material" {
             return;
         }
         let FieldValue::Expr(value) = &field.value else {
             return;
         };
-        let (Some(ty), Some(def)) = (self.ty_of(value.id), self.res.def_of(entity.id)) else {
+        let (Some(ty), Some(def)) = (self.ty_of(value.id), entity) else {
             return;
         };
         if matches!(self.out.interner.get(ty), Ty::MaterialInstance(_)) {
@@ -748,8 +774,17 @@ impl Checker<'_> {
                 ExprKind::Index { base, .. } => current = base,
                 ExprKind::Field { base, .. } => match self.fields.get(&current.id).cloned() {
                     Some(FieldKind::Components(_) | FieldKind::StructField(_)) => current = base,
-                    Some(FieldKind::EntityState { state, .. }) => {
-                        return Some((Some(WriteTarget::State(state)), true));
+                    Some(FieldKind::EntityState {
+                        state,
+                        entity,
+                        name,
+                        ..
+                    }) => {
+                        let target = match state {
+                            Some(state) => WriteTarget::State(state),
+                            None => WriteTarget::InstanceState { entity, name },
+                        };
+                        return Some((Some(target), true));
                     }
                     Some(FieldKind::ObjectField {
                         object_def, field, ..
@@ -844,7 +879,9 @@ impl Checker<'_> {
             return (None, true);
         };
         let schema = match self.res.def(object).map(|d| d.kind) {
-            Some(DefKind::Entity) => Some(self.registry.declaration_schemas.entity),
+            Some(DefKind::Entity | DefKind::Prefab) => {
+                Some(self.registry.declaration_schemas.entity)
+            }
             Some(DefKind::SceneObject { kind: Some(kind) }) => {
                 self.registry.scene_object(kind).map(|k| k.schema)
             }
@@ -878,16 +915,23 @@ impl Checker<'_> {
     }
 }
 
-fn host_of(entity: Option<DefId>) -> crate::stdlib::EventHost {
-    if entity.is_some() {
-        crate::stdlib::EventHost::Entity
-    } else {
-        crate::stdlib::EventHost::Scene
+impl Checker<'_> {
+    /// What hosts the handler of `entity`: the scene (`None`), a prefab or an entity.
+    fn host_of(&self, entity: Option<DefId>) -> crate::stdlib::EventHost {
+        match entity.and_then(|def| self.res.def(def)).map(|d| d.kind) {
+            Some(DefKind::Prefab) => crate::stdlib::EventHost::Prefab,
+            Some(_) => crate::stdlib::EventHost::Entity,
+            None => crate::stdlib::EventHost::Scene,
+        }
     }
 }
 
-fn noun(entity: Option<DefId>) -> &'static str {
-    if entity.is_some() { "entity" } else { "scene" }
+fn host_noun(host: crate::stdlib::EventHost) -> &'static str {
+    match host {
+        crate::stdlib::EventHost::Scene => "a scene",
+        crate::stdlib::EventHost::Entity => "an entity",
+        crate::stdlib::EventHost::Prefab => "a prefab",
+    }
 }
 
 fn capitalise(text: &str) -> String {

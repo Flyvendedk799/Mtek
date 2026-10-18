@@ -1,0 +1,32 @@
+// M5-01: static instances of prefabs render through WebGPU. `Cube` reads its params in its position,
+// scale and material colour; `Riser` binds its position to the clock. Every instance is a named
+// entity of the scene; support/m5-scenes.ts transcribes what the params make of them.
+prefab Cube {
+    param origin: vec3 = vec3(0.0, 0.5, 0.0);
+    param tint: color = #6b5cff;
+    param edge: f32 = 1.0;
+    position: origin;
+    scale: vec3(edge, edge, edge);
+    mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+    material: Unlit { color: tint; };
+}
+
+prefab Riser {
+    param base: vec3 = vec3(0.0, 0.5, 0.0);
+    param tint: color = #ffcc00;
+    position: bind(base + vec3(0.0, frame.time, 0.0));
+    mesh: Sphere { radius: 0.5; segments: 32; rings: 16; };
+    material: Unlit { color: tint; };
+}
+
+scene Showroom {
+    clear_color: #202830;
+    camera Lens {
+        position: vec3(0.0, 3.0, 9.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Left: Cube { origin: vec3(-3.0, 0.5, 0.0); tint: #ff4040; }
+    entity Middle: Cube {}
+    entity Right: Cube { origin: vec3(3.0, 1.0, 0.0); tint: #40d060; edge: 2.0; }
+    entity Climber: Riser { base: vec3(0.0, 0.5, -3.0); }
+}

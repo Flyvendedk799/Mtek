@@ -1,0 +1,35 @@
+// Static instances of prefabs (spec/scenes.md section 5): a prefab of this module, whose fields
+// read its params, and an imported one with bindings and handlers. The scene reads and writes
+// the instances' state and material like those of any entity.
+import { Lamp } from "./props.mtek";
+
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+    material: Unlit { color: tint; };
+    state bounces: i32 = 0;
+    on key_down(Key.Enter) {
+        self.bounces += 1;
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 8.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity First: Crate { origin: vec3(0.0, 3.0, 0.0); }
+    entity Second: Crate { tint: #ff4040; }
+    entity Left: Lamp { origin: vec3(-2.0, 0.0, 0.0); }
+    entity Right: Lamp { origin: vec3(2.0, 0.0, 0.0); tint: #0088ff; spin: 2.0; }
+    entity Marker {
+        mesh: Box { size: vec3(0.2, 0.2, 0.2); };
+        position: bind(vec3(0.0, 0.0, f32(Left.hits + First.bounces)));
+    }
+    on key_down(Key.H) {
+        Right.hits = 0;
+        Left.material.tint = #ff0000;
+    }
+}

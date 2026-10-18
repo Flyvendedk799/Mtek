@@ -1,0 +1,10 @@
+// The mesh is construction-only data the manifest carries: it cannot depend on a param.
+prefab Crate {
+    param edge: f32 = 1.0;
+    mesh: Box { size: vec3(edge, edge, edge) };
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate {}
+}

@@ -1,0 +1,13 @@
+prefab Crate {
+    param origin: vec3 = vec3(0.0);
+    param tint: color = #ffffff;
+    position: origin;
+    mesh: Box {};
+    material: Unlit { color: tint };
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate { origin: 2.0; }
+    entity Second: Crate { origin: vec2(1.0, 2.0); tint: vec3(1.0); }
+}

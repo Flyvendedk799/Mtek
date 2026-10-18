@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E2002",
+    "file": "src/main.mtek",
+    "startByte": 123,
+    "endByte": 131,
+    "message": "The state 'position' has the name of the entity field 'position'.",
+    "notes": [
+      "every entity has the field 'position' (schema Entity), so `self.position` would be ambiguous",
+      "help: choose another name for the state"
+    ]
+  }
+]

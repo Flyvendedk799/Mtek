@@ -82,3 +82,4 @@ recorded here before code depends on it (blueprint §15).
 | 0059 | Compatible instancing: shared parameter blocks, the instanced vertex entry and pipeline variant, the instance buffer, grouping, counters and `test.disableInstancing` |
 | 0060 | Runtime assets: the loader and its states, integrity, image decoding and texture uploads, mesh buffers, device limits, recovery, reload and visible failures |
 | 0061 | The material configurator: the example, its CPU model, the variants of the M4 gate, and the host-input codec defect found on the way |
+| 0062 | Prefabs: declarations, params, static instances as entities, instantiation in the IR, the `prefabs` table and what stays gated until M5-02 and M5-03 |

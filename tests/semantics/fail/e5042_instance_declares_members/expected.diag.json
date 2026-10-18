@@ -1,0 +1,57 @@
+[
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 353,
+    "endByte": 373,
+    "message": "The entity 'First' is an instance of prefab Crate and declares `state`, but an instance may set only the prefab's params.",
+    "notes": [
+      "the params of Crate are: lift",
+      "help: declare it in the prefab"
+    ]
+  },
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 382,
+    "endByte": 398,
+    "message": "The entity 'First' is an instance of prefab Crate and declares a `const`, but an instance may set only the prefab's params.",
+    "notes": [
+      "the params of Crate are: lift",
+      "help: declare it in the prefab"
+    ]
+  },
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 407,
+    "endByte": 425,
+    "message": "The entity 'First' is an instance of prefab Crate and declares a lifecycle function, but an instance may set only the prefab's params.",
+    "notes": [
+      "the params of Crate are: lift",
+      "help: declare it in the prefab"
+    ]
+  },
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 434,
+    "endByte": 459,
+    "message": "The entity 'First' is an instance of prefab Crate and declares an event handler, but an instance may set only the prefab's params.",
+    "notes": [
+      "the params of Crate are: lift",
+      "help: declare it in the prefab"
+    ]
+  },
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 468,
+    "endByte": 496,
+    "message": "The entity 'First' is an instance of prefab Crate and declares an `entity`, but an instance may set only the prefab's params.",
+    "notes": [
+      "the params of Crate are: lift",
+      "help: declare it in the prefab"
+    ]
+  }
+]

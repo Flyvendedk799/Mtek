@@ -213,7 +213,7 @@ fn only_locals_parameters_state_and_param_may_reuse_a_prelude_function() {
         ("scene Demo { entity sin {} }", vec!["E2001"]),
         ("scene Demo { camera sin {} }", vec!["E2001"]),
         ("scene Demo { state sin: f32 = 0.0; }", vec![]),
-        ("prefab P { param sin: f32 = 0.0; }", vec!["E9010"]),
+        ("prefab P { param sin: f32 = 0.0; }", vec![]),
         (
             "fn f() { let sin = 1.0; var cos = 2.0; for tan in 0..2 { } }",
             vec![],
@@ -256,7 +256,7 @@ fn a_material_or_prefab_param_may_share_its_name_with_a_prelude_type() {
     assert_eq!(r.res("name", "color", 0), Some(Res::Def(param.id)));
 
     let r = resolve_text("prefab P { param vec3: f32 = 1.0; }\n");
-    assert_eq!(r.codes(), ["E9010"]);
+    assert!(r.codes().is_empty(), "{:?}", r.diagnostics);
     // ... but not with a schema or an enum.
     let r = resolve_text("material M { param Box: f32 = 1.0; }\n");
     assert_eq!(r.codes(), ["E2001"]);

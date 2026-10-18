@@ -1,0 +1,11 @@
+prefab Crate {
+    mesh: Box {};
+    on key_down(Key.Space) {
+        self.mesh = Box { size: vec3(2.0); };
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate {}
+}

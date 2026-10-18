@@ -1,0 +1,37 @@
+// A static instance is a named entity: the scene reads and writes its fields, its state and the
+// params of its material, binds expressions to them, and passes it where an entity_ref goes.
+material Glow {
+    param level: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(level), 1.0);
+    }
+}
+
+prefab Counter {
+    param start: i32 = 0;
+    state count: i32 = start;
+    mesh: Box {};
+    material: Glow { level: 0.25; };
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 8.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    state taps: i32 = 0;
+    entity Left: Counter { start: 10; }
+    entity Right: Counter {}
+    entity Gauge {
+        mesh: Box {};
+        scale: bind(vec3(1.0, f32(Left.count + Right.count + 1), 1.0));
+        position: bind(vec3(Right.position.x, 0.0, Left.scale.z));
+    }
+    on key_down(Key.Space) {
+        taps += 1;
+        Left.count = Left.count + taps;
+        Right.position = vec3(f32(Right.count), 0.0, 0.0);
+        Right.material.level = f32(taps) * 0.1;
+        Left.visible = taps < 5;
+    }
+}

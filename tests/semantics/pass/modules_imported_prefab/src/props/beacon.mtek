@@ -1,0 +1,26 @@
+const HEIGHT = 0.75;
+
+material Flare {
+    param glow: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(glow, glow * 0.5, 0.1), 1.0);
+    }
+}
+
+fn pulse(t: f32, amount: f32) -> f32 {
+    return 1.0 + sin(t) * amount;
+}
+
+export prefab Beacon {
+    param origin: vec3;
+    param glow: f32 = 1.0;
+    state flashes: i32 = 0;
+    position: origin + vec3(0.0, HEIGHT, 0.0);
+    mesh: Sphere { radius: 0.4; segments: 12; rings: 6; };
+    material: Flare { glow: glow; };
+
+    on key_down(Key.Space) {
+        self.flashes += 1;
+        self.material.glow = pulse(frame.time, 0.5) * glow;
+    }
+}

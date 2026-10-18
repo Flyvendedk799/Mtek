@@ -1,0 +1,17 @@
+// A param's default is a constant expression: not another param, not a call of a `fn`.
+fn raised(y: f32) -> f32 {
+    return y + 1.0;
+}
+
+prefab Crate {
+    param height: f32 = 1.0;
+    param top: f32 = height + 1.0;
+    param lifted: f32 = raised(1.0);
+    position: vec3(0.0, top + lifted, 0.0);
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate {}
+}

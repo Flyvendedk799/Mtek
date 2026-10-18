@@ -1,0 +1,12 @@
+// An initialiser may read params, constants and state, but not the fields of the entity.
+prefab Crate {
+    position: vec3(0.0, 1.0, 0.0);
+    scale: vec3(self.position.y);
+    state height: f32 = self.position.y;
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate {}
+}

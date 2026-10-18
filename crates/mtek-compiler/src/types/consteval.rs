@@ -828,8 +828,26 @@ impl Checker<'_> {
                     let value_folded = self.fold(value);
                     if let Folded::NotConstant(reason) = &value_folded {
                         self.out.non_constant.insert(value.id, reason.clone());
+                        // A param of a prefab's `material` that reads the prefab's params is
+                        // computed by its `init`; a stand-in keeps the descriptor complete.
+                        let stand_in = self
+                            .registry
+                            .schema_field(schema, &field.name.name)
+                            .filter(|def| !def.flags.is_construction_only())
+                            .and_then(|def| super::bind::placeholder(def.ty));
+                        match self.dynamic_param(
+                            expr.id,
+                            &field.name.name,
+                            value.id,
+                            reason,
+                            stand_in,
+                        ) {
+                            Some(stand_in) => Folded::Value(stand_in),
+                            None => value_folded,
+                        }
+                    } else {
+                        value_folded
                     }
-                    value_folded
                 }
                 // A bound field's value arrives at run time; a stand-in keeps the descriptor complete.
                 FieldValue::Bind(_) => self

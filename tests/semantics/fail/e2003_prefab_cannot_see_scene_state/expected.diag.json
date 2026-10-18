@@ -1,0 +1,37 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 194,
+    "endByte": 199,
+    "message": "Unknown name 'speed'."
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 220,
+    "endByte": 226,
+    "message": "Unknown name 'Anchor'."
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 268,
+    "endByte": 273,
+    "message": "Unknown name 'speed'."
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 276,
+    "endByte": 281,
+    "message": "Unknown name 'speed'."
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 296,
+    "endByte": 300,
+    "message": "Unknown name 'Main'."
+  }
+]

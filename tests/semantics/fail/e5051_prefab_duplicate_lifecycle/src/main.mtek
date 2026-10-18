@@ -1,0 +1,11 @@
+prefab Crate {
+    mesh: Box {};
+    update(dt: f32) {}
+    update(step: f32) {}
+    spin(dt: f32) {}
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate {}
+}

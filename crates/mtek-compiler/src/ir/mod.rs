@@ -19,9 +19,13 @@
 //! [`to_json`] and [`to_human`] are the two forms of `mtek inspect --ir`
 //! ([`crate::inspect`]).
 
+mod instantiate;
 mod lower;
 mod lower_fn;
+mod lower_prefab;
 mod model;
+#[cfg(test)]
+mod prefab_tests;
 mod render;
 #[cfg(test)]
 mod tests;
@@ -30,9 +34,9 @@ pub use model::{
     Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Branch, Camera, Const,
     Entity, Expr, ExprKind, Field, Function, Item, Light, LightKind, LocalItem, LocalKind,
     MaterialInstanceDesc, MaterialItem, MaterialParamItem, Mesh, MeshDesc, Module, NamedExpr,
-    NamedValue, Origin, Owner, Param, Place, PlaceRoot, PlaceStep, Program, Projection,
-    ProjectionDesc, Scene, SceneFields, Source, StageItem, State, Stmt, StructFieldItem,
-    StructItem, Symbol, UpdateClass, Value,
+    NamedValue, Origin, Owner, Param, Place, PlaceRoot, PlaceStep, PrefabInstance, PrefabItem,
+    PrefabParamItem, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, StageItem,
+    State, Stmt, StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 pub use render::{to_human, to_json};
 

@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 288,
+    "endByte": 296,
+    "message": "'position' is not a param of prefab Crate: an instance may set only params.",
+    "notes": [
+      "the params of Crate are: lift",
+      "help: 'position' is a field of the entity: set it in the prefab, where it can use a param"
+    ]
+  }
+]

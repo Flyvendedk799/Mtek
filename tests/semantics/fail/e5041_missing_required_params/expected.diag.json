@@ -1,0 +1,59 @@
+[
+  {
+    "code": "MTEK-E5041",
+    "file": "src/main.mtek",
+    "startByte": 366,
+    "endByte": 370,
+    "message": "Missing required parameter 'origin' for prefab Crate.",
+    "related": [
+      {
+        "message": "the param 'origin' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 179,
+        "endByte": 185
+      }
+    ],
+    "notes": [
+      "the param 'origin' has no default",
+      "help: add `origin: …;` to the body of 'Both'"
+    ]
+  },
+  {
+    "code": "MTEK-E5041",
+    "file": "src/main.mtek",
+    "startByte": 366,
+    "endByte": 370,
+    "message": "Missing required parameter 'tint' for prefab Crate.",
+    "related": [
+      {
+        "message": "the param 'tint' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 203,
+        "endByte": 207
+      }
+    ],
+    "notes": [
+      "the param 'tint' has no default",
+      "help: add `tint: …;` to the body of 'Both'"
+    ]
+  },
+  {
+    "code": "MTEK-E5041",
+    "file": "src/main.mtek",
+    "startByte": 393,
+    "endByte": 396,
+    "message": "Missing required parameter 'tint' for prefab Crate.",
+    "related": [
+      {
+        "message": "the param 'tint' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 203,
+        "endByte": 207
+      }
+    ],
+    "notes": [
+      "the param 'tint' has no default",
+      "help: add `tint: …;` to the body of 'One'"
+    ]
+  }
+]

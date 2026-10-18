@@ -1,0 +1,22 @@
+// The scene may not assign what the instance's prefab binds, nor a bound param of its material.
+material Glow {
+    param level: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(level), 1.0);
+    }
+}
+
+prefab Bobber {
+    position: bind(vec3(0.0, frame.time, 0.0));
+    mesh: Box {};
+    material: Glow { level: bind(frame.time); };
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Bobber {}
+    on key_down(Key.Space) {
+        First.position = vec3(0.0);
+        First.material.level = 2.0;
+    }
+}

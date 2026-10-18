@@ -1342,13 +1342,13 @@ fn every_gated_construct_has_a_gating_fixture() {
             .iter()
             .any(|(_, message)| message.starts_with(prefix) && message.ends_with(&ending))
     };
-    let mut gated = 0;
+    // Prefabs (task M5-01, decision 0062) were the last constructs of the table gated in this
+    // build; what is still gated are registry items (below) and the literals of prefabs.
     for construct in Construct::ALL {
         let gate = construct_gate(construct);
         if gate.since.is_reached_by(IMPLEMENTED_MILESTONE) {
             continue;
         }
-        gated += 1;
         // The subject may be followed by detail: "Event handlers (`on
         // key_down`) are specified …".
         assert!(
@@ -1356,7 +1356,6 @@ fn every_gated_construct_has_a_gating_fixture() {
             "no gate_* fixture reports {construct:?}: {messages:#?}"
         );
     }
-    assert!(gated >= 2, "{gated} gated constructs");
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
         ("The built-in type `entity_ref`", "M5"),
@@ -1364,6 +1363,7 @@ fn every_gated_construct_has_a_gating_fixture() {
         ("The `Entity` field `body`", "M5"),
         ("The `Scene` field `gravity`", "M5"),
         ("Event handlers (`on collision_enter`)", "M5"),
+        ("Prefab literals", "M5"),
     ] {
         assert!(
             produced(prefix, milestone),
@@ -1471,9 +1471,6 @@ fn the_syntax_corpus_resolves_without_panicking() {
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
     ("E5030", "M5: spawn and destroy"),
-    ("E5040", "M5-01: prefabs"),
-    ("E5041", "M5-01: prefabs"),
-    ("E5042", "M5-01: prefabs"),
     ("E5062", "M5: collision events"),
     ("E5071", "M5: physics"),
     ("E5072", "M5: physics"),

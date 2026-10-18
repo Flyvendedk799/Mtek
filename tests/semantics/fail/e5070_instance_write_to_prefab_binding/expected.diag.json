@@ -1,0 +1,38 @@
+[
+  {
+    "code": "MTEK-E5070",
+    "file": "src/main.mtek",
+    "startByte": 473,
+    "endByte": 487,
+    "message": "`First.position` is bound by its prefab Bobber, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "`position` is bound here, in the prefab Bobber",
+        "file": "src/main.mtek",
+        "startByte": 272,
+        "endByte": 304
+      }
+    ],
+    "notes": [
+      "help: update the binding's source instead, or declare the field without `bind` in the prefab"
+    ]
+  },
+  {
+    "code": "MTEK-E5070",
+    "file": "src/main.mtek",
+    "startByte": 509,
+    "endByte": 529,
+    "message": "`First.material.level` is bound by its prefab Bobber, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "`material.level` is bound here, in the prefab Bobber",
+        "file": "src/main.mtek",
+        "startByte": 352,
+        "endByte": 368
+      }
+    ],
+    "notes": [
+      "help: update the binding's source instead, or declare the field without `bind` in the prefab"
+    ]
+  }
+]

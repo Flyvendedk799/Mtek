@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3061",
+    "file": "src/main.mtek",
+    "startByte": 92,
+    "endByte": 98,
+    "message": "Cannot assign to the prefab param 'height': params are immutable construction inputs.",
+    "related": [
+      {
+        "message": "the param 'height' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 25,
+        "endByte": 31
+      }
+    ],
+    "notes": [
+      "help: keep changing values in `state`, initialised from the param"
+    ]
+  }
+]

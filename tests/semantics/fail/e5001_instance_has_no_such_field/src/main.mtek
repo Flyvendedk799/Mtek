@@ -1,0 +1,12 @@
+prefab Crate {
+    state hits: i32 = 0;
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate {}
+    on key_down(Key.Space) {
+        First.hits = First.misses;
+    }
+}

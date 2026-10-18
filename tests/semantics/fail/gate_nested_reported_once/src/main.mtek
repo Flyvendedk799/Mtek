@@ -1,13 +1,11 @@
-// Everything in this prefab is unimplemented in this build (prefabs are M5), but the prefab is
-// reported once. Its names are still resolved.
-prefab Crate {
-    param origin: vec3 = vec3(0.0, 0.0, 0.0);
-    position: origin;
-    update(dt: f32) {
-        let total = missing;
-    }
-}
-
+// Everything in this handler is unimplemented in this build (collision events are M5), but the
+// handler is reported once. Its names are still resolved.
 scene Demo {
     camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        on collision_enter(other: entity_ref) {
+            let total = missing;
+        }
+    }
 }

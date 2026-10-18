@@ -30,8 +30,8 @@ use crate::resolve::{DefId, DefKind, Res};
 use crate::source::Span;
 use crate::stdlib::{Domain, FieldFlags};
 use crate::syntax::ast::{
-    Bind, DescField, EntityDecl, EntityMember, Expr, ExprKind, FieldInit, FieldValue, SceneDecl,
-    SceneMember, SceneObject,
+    Bind, DescField, EntityDecl, EntityMember, Expr, ExprKind, FieldInit, FieldValue, PrefabDecl,
+    SceneDecl, SceneMember, SceneObject,
 };
 use crate::syntax::walk_expr;
 
@@ -97,7 +97,13 @@ impl Checker<'_> {
                         && let ExprKind::Descriptor { fields, .. } = &value.kind
                     {
                         let params = self.descriptor_params(value, entity_def);
-                        self.param_binds(entity_def, &entity.name.name, &params, fields, found);
+                        self.param_binds(
+                            entity_def,
+                            ("entity", &entity.name.name),
+                            &params,
+                            fields,
+                            found,
+                        );
                     }
                     if self.is_light_field(&field.name.name)
                         && let (FieldValue::Expr(value), Some(entity_def)) = (&field.value, owner)
@@ -173,15 +179,54 @@ impl Checker<'_> {
         self.check_bind(bind, expected, &subject, target, found);
     }
 
-    /// `param: bind(..)` in the material instance of the entity `entity`.
+    /// Check every `bind` of the prefab `decl` (the fields of its entity and the params of its
+    /// material) and record its bindings, numbered per prefab (decision 0062).
+    pub(super) fn prefab_binds(&mut self, decl: &PrefabDecl) {
+        let Some(owner) = self.res.def_of(decl.id) else {
+            return;
+        };
+        let schema = self.registry.declaration_schemas.entity;
+        let mut found: Vec<BindInfo> = Vec::new();
+        for member in &decl.members {
+            let EntityMember::Field(field) = member else {
+                continue;
+            };
+            self.field_bind(
+                schema,
+                Some(owner),
+                "prefab",
+                &decl.name.name,
+                field,
+                &mut found,
+            );
+            if self.is_material_field(&field.name.name)
+                && let FieldValue::Expr(value) = &field.value
+                && let ExprKind::Descriptor { fields, .. } = &value.kind
+            {
+                let params = self.descriptor_params(value, owner);
+                self.param_binds(
+                    owner,
+                    ("prefab", &decl.name.name),
+                    &params,
+                    fields,
+                    &mut found,
+                );
+            }
+        }
+        self.finish_bindings(Some(owner), found);
+    }
+
+    /// `param: bind(..)` in the material instance of the entity or prefab `entity`, which
+    /// `owner` (`("entity", "Cube")`) names in messages.
     fn param_binds(
         &mut self,
         entity: DefId,
-        entity_name: &str,
+        owner: (&str, &str),
         params: &[(String, TyId)],
         fields: &[DescField],
         found: &mut Vec<BindInfo>,
     ) {
+        let (noun, entity_name) = owner;
         for field in fields {
             let FieldValue::Bind(bind) = &field.value else {
                 continue;
@@ -194,7 +239,7 @@ impl Checker<'_> {
             if self.is_resource(*ty) {
                 continue;
             }
-            let subject = format!("the param '{name}' of the material of entity '{entity_name}'");
+            let subject = format!("the param '{name}' of the material of {noun} '{entity_name}'");
             let target = BindTarget::MaterialParam {
                 entity,
                 param: name.clone(),
@@ -438,7 +483,7 @@ impl Checker<'_> {
                         let is_entity = self
                             .res
                             .def(*object)
-                            .is_some_and(|d| d.kind == DefKind::Entity);
+                            .is_some_and(|d| matches!(d.kind, DefKind::Entity | DefKind::Prefab));
                         if is_entity {
                             push(BindDep::Field {
                                 object: *object,
@@ -449,9 +494,9 @@ impl Checker<'_> {
                                 .push((span, format!("the camera field `{object_name}.{field}`")));
                         }
                     }
-                    FieldKind::EntityState { entity, state, .. } => push(BindDep::EntityState {
+                    FieldKind::EntityState { entity, name, .. } => push(BindDep::EntityState {
                         entity: *entity,
-                        state: *state,
+                        name: name.clone(),
                     }),
                     FieldKind::MaterialParam { entity, param } => push(BindDep::MaterialParam {
                         entity: *entity,
@@ -481,9 +526,12 @@ impl Checker<'_> {
                 let owner_is_entity = state
                     .owner
                     .and_then(|o| self.res.def(o))
-                    .is_some_and(|d| d.kind == DefKind::Entity);
+                    .is_some_and(|d| matches!(d.kind, DefKind::Entity | DefKind::Prefab));
                 match (owner_is_entity, state.owner) {
-                    (true, Some(entity)) => push(BindDep::EntityState { entity, state: def }),
+                    (true, Some(entity)) => push(BindDep::EntityState {
+                        entity,
+                        name: state.name.clone(),
+                    }),
                     _ => push(BindDep::State(def)),
                 }
             }
@@ -589,11 +637,11 @@ impl Checker<'_> {
 
     /// `Cube.position`, `Main.target`, `Cube.material.phase`.
     pub(super) fn describe_target(&self, target: &BindTarget) -> String {
-        let name = |def: DefId| {
-            self.res
-                .def(def)
-                .map(|d| d.name.clone())
-                .unwrap_or_default()
+        // Inside a prefab the entity is `self`.
+        let name = |def: DefId| match self.res.def(def) {
+            Some(d) if d.kind == DefKind::Prefab => "self".to_owned(),
+            Some(d) => d.name.clone(),
+            None => String::new(),
         };
         match target {
             BindTarget::Field { object, field } => format!("{}.{field}", name(*object)),
@@ -615,15 +663,16 @@ impl Checker<'_> {
             .filter(|b| b.scene == scene)
             .cloned()
             .collect();
-        if bindings.is_empty() {
-            return;
-        }
         let sites: Vec<(WriteTarget, Span)> = self
             .out
             .writes
             .iter()
             .map(|w| (w.target.clone(), w.span))
             .collect();
+        self.instance_conflicts(scene, &sites);
+        if bindings.is_empty() {
+            return;
+        }
         for (write, span) in sites {
             let hit = bindings.iter().find(|b| match (&write, &b.target) {
                 (
@@ -662,6 +711,62 @@ impl Checker<'_> {
                 );
             }
         }
+    }
+
+    /// `E5070` for every assignment, in a lifecycle function or handler of the scene `scene`, to
+    /// what the binding of a static prefab instance's prefab writes (`First.position` when the
+    /// prefab declares `position: bind(..)`).
+    fn instance_conflicts(&mut self, scene: Option<DefId>, sites: &[(WriteTarget, Span)]) {
+        for (write, span) in sites {
+            let (entity, name, bound, what) = match write {
+                WriteTarget::Field { object, field } => (*object, field, false, field.clone()),
+                WriteTarget::MaterialParam { entity, param } => {
+                    (*entity, param, true, format!("material.{param}"))
+                }
+                _ => continue,
+            };
+            if !self.in_scene(entity, scene) {
+                continue;
+            }
+            let Some(facts) = self.instances.get(&entity) else {
+                continue;
+            };
+            let list = if bound {
+                &facts.bound_params
+            } else {
+                &facts.bound_fields
+            };
+            let Some((_, bind)) = list.iter().find(|(bound_name, _)| bound_name == name) else {
+                continue;
+            };
+            let (bind, prefab) = (*bind, facts.prefab_name.clone());
+            let instance = self
+                .res
+                .def(entity)
+                .map(|d| d.name.clone())
+                .unwrap_or_default();
+            self.report(
+                Diagnostic::new(
+                    Code::E5070,
+                    format!("`{instance}.{what}` is bound by its prefab {prefab}, so it cannot be assigned."),
+                )
+                .at(*span)
+                .related(bind, format!("`{what}` is bound here, in the prefab {prefab}"))
+                .help("update the binding's source instead, or declare the field without `bind` in the prefab"),
+            );
+        }
+    }
+
+    /// Whether the entity `entity` is declared in the scene `scene` (at any depth).
+    fn in_scene(&self, entity: DefId, scene: Option<DefId>) -> bool {
+        let mut current = self.res.def(entity).and_then(|d| d.parent);
+        while let Some(parent) = current {
+            if Some(parent) == scene {
+                return true;
+            }
+            current = self.res.def(parent).and_then(|d| d.parent);
+        }
+        false
     }
 
     /// `E5004` for a `bind` where none is allowed: in a struct or descriptor literal other than the

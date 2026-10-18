@@ -88,6 +88,7 @@ describe("compiled manifests (tests/codegen/*/expected)", () => {
       "cpu_functions",
       "lights",
       "numeric_cpu_table",
+      "prefabs",
       "scene_a_target_camera_box",
       "scene_b_orthographic_nested",
       "state_and_handlers",
@@ -465,9 +466,19 @@ describe("MtekProgram", () => {
           bindings: [() => 0],
         },
       },
-      prefabs: {},
+      prefabs: {
+        "src/props.mtek::Crate": {
+          init: () => undefined,
+          update: null,
+          fixedUpdate: null,
+          // A prefab's handlers are always its own: the owner is "self" (decision 0062).
+          events: { key_down: [{ key: "Space", owner: "self", fn: () => undefined }] },
+          bindings: [() => 0],
+        },
+      },
     };
     expect(program.abi).toBe(RUNTIME_ABI);
     expect(Object.keys(program.scenes)).toEqual(["Demo"]);
+    expect(Object.keys(program.prefabs)).toEqual(["src/props.mtek::Crate"]);
   });
 });

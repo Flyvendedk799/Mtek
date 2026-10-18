@@ -1,0 +1,23 @@
+[
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 361,
+    "endByte": 367,
+    "message": "'hieght' is not a param of prefab Crate: an instance may set only params.",
+    "notes": [
+      "the params of Crate are: height, colour",
+      "help: did you mean 'height'?"
+    ]
+  },
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 403,
+    "endByte": 408,
+    "message": "'speed' is not a param of prefab Crate: an instance may set only params.",
+    "notes": [
+      "the params of Crate are: height, colour"
+    ]
+  }
+]

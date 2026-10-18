@@ -1,0 +1,10 @@
+prefab Crate {
+    param height: f32 = 1.0;
+    position: vec3(0.0, height, 0.0);
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate { height: 2.0; height: 3.0; }
+}

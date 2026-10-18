@@ -1,0 +1,5 @@
+export prefab Beacon {
+    param origin: vec3;
+    position: bind(origin + vec3(0.0, frame.time, 0.0));
+    mesh: Box {};
+}

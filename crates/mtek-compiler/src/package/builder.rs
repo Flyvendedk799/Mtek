@@ -364,8 +364,10 @@ pub fn material_shaders(
         .collect()
 }
 
-/// The manifest's `symbols`: the scene, its cameras and entities, then every material and its
-/// params, then every function compiled for the CPU (the entries of `app.js`'s `functions`).
+/// The manifest's `symbols`: the scene, its cameras and entities (the static instances of
+/// prefabs included), then every material and its params, then every prefab with its params and
+/// state (the keys of `app.js`'s `prefabs`), then every function compiled for the CPU (the
+/// entries of `functions`).
 fn symbols(
     program: &Program,
     scene: &ir::Scene,
@@ -403,6 +405,19 @@ fn symbols(
                 SymbolKind::Param,
                 param.span,
             )?;
+        }
+    }
+    for prefab in program.prefabs() {
+        add(prefab.symbol.to_string(), SymbolKind::Prefab, prefab.span)?;
+        for param in &prefab.params {
+            add(
+                prefab.symbol.child(&param.name).to_string(),
+                SymbolKind::Param,
+                param.span,
+            )?;
+        }
+        for state in &prefab.state {
+            add(state.symbol.to_string(), SymbolKind::State, state.span)?;
         }
     }
     for module in &program.modules {

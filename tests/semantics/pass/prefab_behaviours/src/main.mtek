@@ -1,0 +1,58 @@
+// A prefab with everything a body may hold: constants, params with and without defaults, state
+// initialised from the params, fields that read them, a user material whose params are read
+// from the prefab's params and bound, bindings, lifecycle functions and handlers that use
+// `self`, the params, the constants and functions.
+const LIFT = 0.5;
+
+material Glow {
+    param tint: color = #ffffff;
+    param level: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * level, 1.0);
+    }
+}
+
+fn wobble(t: f32, amount: f32) -> f32 {
+    return sin(t) * amount;
+}
+
+cpu fn pick(limit: i32) -> i32 {
+    return limit + i32(random() * 0.0);
+}
+
+prefab Lamp {
+    const SPEED = 2.0;
+    param origin: vec3;
+    param tint: color = #ff8800;
+    param spin: f32 = 1.0;
+    state hits: i32 = pick(1);
+    state phase: f32 = spin * SPEED;
+    position: bind(origin + vec3(0.0, LIFT + wobble(frame.time, 0.25), 0.0));
+    scale: vec3(spin, spin, spin);
+    visible: spin > 0.0;
+    mesh: Sphere { radius: 0.5; segments: 16; rings: 8; };
+    material: Glow { tint: tint; level: bind(1.0 + wobble(frame.time, 0.5)); };
+
+    update(dt: f32) {
+        self.rotation = quat.axis_angle(vec3(0.0, 1.0, 0.0), frame.time * spin + phase);
+    }
+    fixed_update(step: f32) {
+        self.phase = self.phase + step;
+    }
+    on key_down(Key.Space) {
+        self.hits += 1;
+        self.material.tint = #00ff00;
+    }
+    on pointer_down(event: PointerEvent) {
+        self.visible = !self.visible;
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 8.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Left: Lamp { origin: vec3(-2.0, 0.0, 0.0); }
+    entity Right: Lamp { origin: vec3(2.0, 0.0, 0.0); tint: #0088ff; spin: 2.0; }
+}

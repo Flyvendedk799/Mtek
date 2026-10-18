@@ -1,0 +1,50 @@
+[
+  {
+    "code": "MTEK-E5041",
+    "file": "src/main.mtek",
+    "startByte": 363,
+    "endByte": 367,
+    "message": "Missing required parameter 'origin' for prefab Beacon.",
+    "related": [
+      {
+        "message": "the param 'origin' is declared here",
+        "file": "src/props.mtek",
+        "startByte": 33,
+        "endByte": 39
+      }
+    ],
+    "notes": [
+      "the param 'origin' has no default",
+      "help: add `origin: …;` to the body of 'Near'"
+    ]
+  },
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 433,
+    "endByte": 438,
+    "message": "'scale' is not a param of prefab Beacon: an instance may set only params.",
+    "notes": [
+      "the params of Beacon are: origin",
+      "help: 'scale' is a field of the entity: set it in the prefab, where it can use a param"
+    ]
+  },
+  {
+    "code": "MTEK-E5070",
+    "file": "src/main.mtek",
+    "startByte": 490,
+    "endByte": 502,
+    "message": "`Far.position` is bound by its prefab Beacon, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "`position` is bound here, in the prefab Beacon",
+        "file": "src/props.mtek",
+        "startByte": 61,
+        "endByte": 102
+      }
+    ],
+    "notes": [
+      "help: update the binding's source instead, or declare the field without `bind` in the prefab"
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+cpu fn jitter() -> f32 {
+    return random();
+}
+
+prefab Shaker {
+    position: bind(vec3(jitter(), 0.0, 0.0));
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Shaker {}
+}
