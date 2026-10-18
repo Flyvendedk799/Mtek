@@ -56,6 +56,8 @@ export interface BrokenVariantRuns {
   readonly build: CliRun;
   /** Whether `mtek build` wrote any output at all. */
   readonly wroteOutput: boolean;
+  /** The edited copy of the example that was checked and built. */
+  readonly projectDir: string;
 }
 
 /**
@@ -69,5 +71,5 @@ export function buildBrokenVariant(cli: string, variantGlb: string): BrokenVaria
   rmSync(out, { recursive: true, force: true });
   const check = runCli(cli, ["check", "--format", "json", project]);
   const built = runCli(cli, ["build", "--mode", "test", "--format", "json", "--out", out, project]);
-  return { check, build: built, wroteOutput: existsSync(out) };
+  return { check, build: built, wroteOutput: existsSync(out), projectDir: project };
 }
