@@ -6,6 +6,7 @@
     { "path": "tests/browser" },
     { "path": "tests/codegen" },
     { "path": "benchmarks" },
-    { "path": "benchmarks/baselines/m0-bridge" }
+    { "path": "benchmarks/baselines/m0-bridge" },
+    { "path": "tools/ai-eval" }
   ]
 }
