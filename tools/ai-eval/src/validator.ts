@@ -117,6 +117,11 @@ export function scrubPaths(text: string, replacements: readonly (readonly [strin
   return out;
 }
 
+/** Replaces Windows drive paths that a tool printed (a Node executable that was not found, say) with `<path>`. */
+export function scrubMachinePaths(text: string): string {
+  return text.replace(/\b[A-Za-z]:[/\x5c][^\s'"`)]*/g, "<path>");
+}
+
 function firstLine(text: string): string {
   return text.trim().split("\n")[0]?.trim() ?? "";
 }
@@ -167,15 +172,15 @@ export function parseTestReport(stdout: string): TestReportSummary & { error: st
         kind: failureValue["kind"],
         step: typeof failureValue["step"] === "number" ? failureValue["step"] : null,
         line: typeof failureValue["line"] === "number" ? failureValue["line"] : null,
-        message: failureValue["message"],
-        details: Array.isArray(details) ? (details as unknown[]).filter((d): d is string => typeof d === "string") : [],
+        message: scrubMachinePaths(failureValue["message"]),
+        details: Array.isArray(details) ? (details as unknown[]).filter((d): d is string => typeof d === "string").map(scrubMachinePaths) : [],
       };
     }
     return {
       file: item["file"],
       name: item["name"],
       status: fixtureStatus,
-      reason: typeof item["reason"] === "string" ? item["reason"] : null,
+      reason: typeof item["reason"] === "string" ? scrubMachinePaths(item["reason"]) : null,
       failure,
       stepsRun: typeof item["stepsRun"] === "number" ? item["stepsRun"] : 0,
       stepsTotal: typeof item["stepsTotal"] === "number" ? item["stepsTotal"] : 0,
@@ -360,7 +365,7 @@ export class Validator {
       }
     } catch (error) {
       if (!(error instanceof ToolError)) throw error;
-      toolError = scrubPaths(error.message, [[input.projectDir, "<project>"], [input.outDir, "<out>"]]);
+      toolError = scrubMachinePaths(scrubPaths(error.message, [[input.projectDir, "<project>"], [input.outDir, "<out>"]]));
     }
 
     return {

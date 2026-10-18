@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CommandResult, CommandRunner, CommandSpec } from "../src/commands.ts";
-import { classifyTestReport, parseTestReport, Validator, verdictOf, type SymbolCheck, type TestFixtureResult, type TestReportSummary } from "../src/validator.ts";
+import { classifyTestReport, parseTestReport, scrubMachinePaths, Validator, verdictOf, type SymbolCheck, type TestFixtureResult, type TestReportSummary } from "../src/validator.ts";
 import { Workspace } from "../src/workspace.ts";
 import { editTask, fakeMtek, tempDir, validateDiagnosticReport, validateTestReport } from "./helpers.ts";
 
@@ -107,6 +107,30 @@ describe("parseTestReport", () => {
       error: null,
     };
     expect(parseTestReport(JSON.stringify(doc)).fallbackAdapter).toBe(true);
+  });
+});
+
+describe("scrubbing machine paths", () => {
+  it("replaces drive paths that a tool printed, and nothing else", () => {
+    expect(scrubMachinePaths("Node.js was not found ('C:/Users/x/node.exe': not found); install Node.js 24")).toBe(
+      "Node.js was not found ('<path>': not found); install Node.js 24",
+    );
+    expect(scrubMachinePaths("see D:\\work\\a.mtek line 3")).toBe("see <path> line 3");
+    expect(scrubMachinePaths("src/main.mtek: Rules: speed = 1;")).toBe("src/main.mtek: Rules: speed = 1;");
+  });
+
+  it("is applied to the reasons and messages of a test report", () => {
+    const doc = {
+      schemaVersion: 1,
+      command: "mtek test",
+      status: "not-run",
+      exitCode: 0,
+      summary: { total: 1, passed: 0, failed: 0, notRun: 1 },
+      fixtures: [{ file: "tests/a.test.toml", name: "a", status: "not-run", reason: "Node.js was not found ('C:/Users/x/node')", failure: null, stepsRun: 0, stepsTotal: 1 }],
+      environment: null,
+      error: null,
+    };
+    expect(parseTestReport(JSON.stringify(doc)).fixtures[0]?.reason).toBe("Node.js was not found ('<path>')");
   });
 });
 

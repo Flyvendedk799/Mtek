@@ -60,7 +60,7 @@ function killTree(pid: number | undefined, child: { kill: (signal: NodeJS.Signal
 }
 
 /** A runner that executes the real `mtek` binary. */
-export function createMtekRunner(mtekPath: string): CommandRunner {
+export function createMtekRunner(mtekPath: string, baseEnv: Readonly<Record<string, string>> = {}): CommandRunner {
   return {
     run(spec: CommandSpec): Promise<CommandResult> {
       return new Promise((resolveResult) => {
@@ -76,7 +76,7 @@ export function createMtekRunner(mtekPath: string): CommandRunner {
         };
         const child = spawn(mtekPath, [...spec.args], {
           cwd: spec.cwd,
-          env: { ...process.env, ...spec.env },
+          env: { ...process.env, ...baseEnv, ...spec.env },
           stdio: ["ignore", "pipe", "pipe"],
           windowsHide: true,
         });
