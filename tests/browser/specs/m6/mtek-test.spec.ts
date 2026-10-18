@@ -272,6 +272,14 @@ test.describe("mtek test reports NOT-RUN, never a pass, when it cannot run", () 
     const env = { MTEK_BROWSER_ARGS: "--disable-gpu" };
     const run = mtekTest(["examples/pulse-cube"], env);
     record("mtek-test-not-run-no-gpu.json", run);
+    // Whether `--disable-gpu` leaves Chromium without a WebGPU adapter depends on the platform: on Windows it does, on the
+    // Linux runners of CI Chromium keeps a software (SwiftShader) adapter and `mtek test` then really runs the fixtures.
+    // The spec can only show the no-adapter path where the browser has none, so it says so instead of failing; the path
+    // itself is also covered without a browser (`run.test.ts`, and the Rust tests with a stand-in runner).
+    test.skip(
+      run.report.environment?.gpu.available === true,
+      "this Chromium keeps a software WebGPU adapter under --disable-gpu, so there is no no-adapter run to observe here",
+    );
     expectAllNotRun(run, /^no WebGPU adapter: /);
     expect(run.report.environment?.gpu.available).toBe(false);
     expect(run.report.environment?.gpu.adapter).toBeNull();

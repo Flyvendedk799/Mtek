@@ -72,9 +72,14 @@ fn locate_script(script: Option<OsString>, exe: Option<&Path>) -> Result<PathBuf
             if path.is_file() {
                 Ok(path)
             } else {
+                // The reason goes into the machine-readable report, which never carries absolute
+                // paths (decision 0074): name the file, not where it was looked for.
+                let name = path.file_name().map_or_else(
+                    || path.display().to_string(),
+                    |name| name.to_string_lossy().into_owned(),
+                );
                 Err(format!(
-                    "the runner '{}' named by {RUNNER_VARIABLE} does not exist",
-                    path.display()
+                    "the runner '{name}' named by {RUNNER_VARIABLE} does not exist"
                 ))
             }
         }
