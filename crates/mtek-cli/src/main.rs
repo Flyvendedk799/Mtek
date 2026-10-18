@@ -9,6 +9,7 @@ mod commands;
 mod context_cmd;
 mod dev;
 mod dist;
+mod fmt;
 mod guard;
 mod limits;
 mod real_fs;

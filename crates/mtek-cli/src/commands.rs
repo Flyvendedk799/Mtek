@@ -261,6 +261,7 @@ pub fn execute(request: &Request, context: &Context) -> Outcome {
         Request::Check { path, .. }
         | Request::Build { path, .. }
         | Request::Inspect { path, .. } => path.as_deref(),
+        Request::Fmt { check, paths } => return crate::fmt::run(*check, paths, context),
         Request::Test(args) => return crate::test_cmd::run(args, context),
         Request::Version
         | Request::Help(_)

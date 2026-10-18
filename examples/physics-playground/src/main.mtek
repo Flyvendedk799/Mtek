@@ -10,12 +10,16 @@
 
 // Below this height a crate destroys itself.
 const KILL_HEIGHT: f32 = -10.0;
+
 // Crates appear at this height, so they always fall onto (or past) the floor.
 const SPAWN_HEIGHT: f32 = 6.0;
+
 // Newly spawned crates are scattered over x in [-SPAWN_RANGE_X, SPAWN_RANGE_X) ...
 const SPAWN_RANGE_X: f32 = 9.0;
+
 // ... and z in [-SPAWN_RANGE_Z, SPAWN_RANGE_Z).
 const SPAWN_RANGE_Z: f32 = 2.5;
+
 // The impulse of Space, in newton-seconds: First has a mass of 2 kg, so it leaves the floor at 5 m/s.
 const JUMP_IMPULSE: f32 = 10.0;
 
@@ -25,10 +29,10 @@ prefab Crate {
     param origin: vec3 = vec3(0.0, 0.5, 0.0);
     param tint: color = #5b8def;
     position: origin;
-    mesh: Box { size: vec3(1.0, 1.0, 1.0); };
-    material: Pbr { base_color: tint; roughness: 0.65; };
-    body: Dynamic { mass: 2.0; };
-    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); friction: 0.6; };
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    material: Pbr { base_color: tint; roughness: 0.65 };
+    body: Dynamic { mass: 2.0 };
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); friction: 0.6 };
 
     // Reading `self.position` is fine: it is the pose the solver wrote last tick. A destroy is queued and happens
     // at the start of the next tick.
@@ -53,23 +57,23 @@ scene Playground {
     camera Main {
         position: vec3(0.0, 8.0, 17.0);
         target: vec3(0.0, 1.5, 0.0);
-        projection: Perspective { fov_y: 0.8; near: 0.1; far: 100.0; };
+        projection: Perspective { fov_y: 0.8; near: 0.1; far: 100.0 };
         // EV100 -log2(1.2): an exposure scale of 1, as in examples/material-configurator (decision 0081).
         exposure: -0.2630344;
     }
 
     entity Sun {
         rotation: quat.euler(-0.9, 0.4, 0.0);
-        light: DirectionalLight { color: #fff4e0; intensity: 3.0; };
+        light: DirectionalLight { color: #fff4e0; intensity: 3.0 };
     }
 
     // Static geometry never moves; its top face is the plane y = 0, 14 x 8 units.
     entity Floor {
         position: vec3(0.0, -0.5, 0.0);
-        mesh: Box { size: vec3(14.0, 1.0, 8.0); };
-        material: Pbr { base_color: #3a4150; roughness: 0.9; };
+        mesh: Box { size: vec3(14.0, 1.0, 8.0) };
+        material: Pbr { base_color: #3a4150; roughness: 0.9 };
         body: Static {};
-        collider: BoxCollider { size: vec3(14.0, 1.0, 8.0); friction: 0.8; };
+        collider: BoxCollider { size: vec3(14.0, 1.0, 8.0); friction: 0.8 };
     }
 
     // A named instance of the prefab. Its body can be commanded by name: `First.body.apply_impulse(..)`.
@@ -83,7 +87,7 @@ scene Playground {
     entity Zone {
         position: vec3(4.0, 1.5, 0.0);
         body: Static {};
-        collider: BoxCollider { size: vec3(4.0, 2.0, 6.0); sensor: true; };
+        collider: BoxCollider { size: vec3(4.0, 2.0, 6.0); sensor: true };
 
         // `other` is a reference; comparing it with a named entity is allowed, reading its fields is not (E5074).
         on collision_enter(other: entity_ref) {
@@ -102,8 +106,8 @@ scene Playground {
     // What the zone covers, drawn as a thin plate on the floor (the sensor itself has no mesh).
     entity ZoneMarker {
         position: vec3(4.0, 0.01, 0.0);
-        mesh: Box { size: vec3(4.0, 0.02, 6.0); };
-        material: Unlit { color: #2f9e6a; };
+        mesh: Box { size: vec3(4.0, 0.02, 6.0) };
+        material: Unlit { color: #2f9e6a };
     }
 
     // The visible count: a bar that starts at x = -8 and grows by half a unit for every crate that has entered.
@@ -111,8 +115,8 @@ scene Playground {
     entity Meter {
         position: bind(vec3(-8.0 + (0.4 + 0.5 * f32(entered)) * 0.5, 6.0, -3.0));
         scale: bind(vec3(0.4 + 0.5 * f32(entered), 0.4, 0.4));
-        mesh: Box { size: vec3(1.0, 1.0, 1.0); };
-        material: Unlit { color: #ffd040; };
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #ffd040 };
     }
 
     on key_down(Key.Space) {
@@ -123,7 +127,7 @@ scene Playground {
     on key_down(Key.C) {
         let x = (random() * 2.0 - 1.0) * SPAWN_RANGE_X;
         let z = (random() * 2.0 - 1.0) * SPAWN_RANGE_Z;
-        spawn(Crate { origin: vec3(x, SPAWN_HEIGHT, z); });
+        spawn(Crate { origin: vec3(x, SPAWN_HEIGHT, z) });
         spawned += 1;
     }
 }
