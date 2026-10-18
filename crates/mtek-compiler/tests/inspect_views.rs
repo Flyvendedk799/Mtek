@@ -24,11 +24,12 @@ use mtek_compiler::{
 };
 use serde_json::Value;
 
-const GOLDEN_FIXTURES: [&str; 4] = [
+const GOLDEN_FIXTURES: [&str; 5] = [
     "scene_a_target_camera_box",
     "materials/pulse",
     "materials/params_and_defaults",
     "materials/textures",
+    "materials/lighting",
 ];
 
 const VIEWS: [(Inspect, &str); 2] = [

@@ -946,14 +946,15 @@ fn since_milestones_follow_the_work_plan() {
     assert_eq!(since("Scene", "ambient_intensity"), Milestone::M1);
     assert_eq!(since("DirectionalLight", "intensity"), Milestone::M1);
     assert_eq!(since("PointLight", "range"), Milestone::M1);
-    assert_eq!(since("Pbr", "roughness"), Milestone::M4);
+    // The `Pbr` material and `lighting.pbr` landed with task M4-03 (decision 0057).
+    assert_eq!(since("Pbr", "roughness"), Milestone::M1);
     // M5: physics.
     assert_eq!(since("Entity", "body"), Milestone::M5);
     assert_eq!(since("Dynamic", "mass"), Milestone::M5);
     assert_eq!(since("BoxCollider", "size"), Milestone::M5);
     let schema_since = |name: &str| registry.schema(name).unwrap().since;
     assert_eq!(schema_since("Unlit"), Milestone::M1);
-    assert_eq!(schema_since("Pbr"), Milestone::M4);
+    assert_eq!(schema_since("Pbr"), Milestone::M1);
     assert_eq!(schema_since("PointLight"), Milestone::M1);
     assert_eq!(schema_since("DirectionalLight"), Milestone::M1);
     assert_eq!(schema_since("Static"), Milestone::M5);
@@ -977,7 +978,7 @@ fn since_milestones_follow_the_work_plan() {
     assert_eq!(registry.event("key_down").unwrap().since, Milestone::M1);
     assert_eq!(registry.enum_def("Key").unwrap().since, Milestone::M1);
     // M4: textures and samplers landed with task M4-04, before the M4 gate; they are marked as
-    // implemented by the current build (decision 0054). Assets and lighting are still M4.
+    // implemented by the current build (decision 0054). Assets are still M4; `lighting` and `Pbr` landed with M4-03 (decision 0057).
     assert_eq!(intrinsic_since("sample"), Milestone::M1);
     for name in ["texture", "sampler"] {
         assert_eq!(
@@ -987,13 +988,12 @@ fn since_milestones_follow_the_work_plan() {
         );
         assert_eq!(registry.type_def(name).unwrap().since, Milestone::M1);
     }
-    for name in ["asset", "lighting"] {
-        assert_eq!(
-            registry.namespace(name).unwrap().since,
-            Milestone::M4,
-            "{name}"
-        );
-    }
+    assert_eq!(registry.namespace("asset").unwrap().since, Milestone::M4);
+    assert_eq!(registry.namespace("lighting").unwrap().since, Milestone::M1);
+    let Some(NamespaceMember::Function(pbr)) = registry.namespace_member("lighting", "pbr") else {
+        panic!("lighting.pbr is not a function");
+    };
+    assert_eq!(pbr.since, Milestone::M1);
     // M5: spawn, destroy, alive, collision events.
     for name in ["spawn", "destroy", "alive"] {
         assert_eq!(intrinsic_since(name), Milestone::M5, "{name}");

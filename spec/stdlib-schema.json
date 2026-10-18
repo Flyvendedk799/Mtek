@@ -393,7 +393,7 @@
     {
       "name": "Pbr",
       "category": "material",
-      "since": "M4",
+      "since": "M1",
       "doc": "The documented PBR subset (metallic-roughness, no image-based lighting). Defined in the embedded prelude source `std/materials.mtek`.",
       "fields": [
         {
@@ -405,7 +405,7 @@
           "bindable": true,
           "constructionOnly": false,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "Linear base colour multiplied with the base colour texture."
         },
         {
@@ -417,7 +417,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "Sampler for the base colour texture."
         },
         {
@@ -429,7 +429,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "Base colour texture."
         },
         {
@@ -441,7 +441,7 @@
           "bindable": true,
           "constructionOnly": false,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "Metalness; clamped to 0..1 by the lighting model."
         },
         {
@@ -453,7 +453,7 @@
           "bindable": true,
           "constructionOnly": false,
           "range": null,
-          "since": "M4",
+          "since": "M1",
           "doc": "Perceptual roughness; clamped to 0.045..1 by the lighting model."
         }
       ]
@@ -1753,7 +1753,7 @@
     },
     {
       "name": "lighting",
-      "since": "M4",
+      "since": "M1",
       "doc": "Lighting functions for material fragment stages.",
       "members": [
         {
@@ -1766,7 +1766,7 @@
           "constEligible": false,
           "handlersOnly": false,
           "cpuSemantics": "",
-          "since": "M4",
+          "since": "M1",
           "doc": "The documented PBR subset evaluated for every light in the scene."
         }
       ]

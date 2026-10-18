@@ -1,0 +1,68 @@
+// `lighting.pbr` (spec/materials.md 8, decision 0057) in a user material, in a branch, and the
+// prelude `Pbr` with its texture and sampler params, lit by one light of each kind. The calls read
+// `world_position` and `world_normal` of the stage input and nothing else.
+material Shiny {
+    param tint: color = #c0a060;
+    param metallic: f32 = 1.0;
+    param roughness: f32 = 0.3;
+
+    fragment(input: SurfaceInput) -> color {
+        return lighting.pbr(input, tint, metallic, roughness);
+    }
+}
+
+material Banded {
+    param roughness: f32 = 0.6;
+    param bands: f32 = 4.0;
+
+    fragment(input: SurfaceInput) -> color {
+        let level = floor(input.uv.y * bands) / bands;
+        let lit = lighting.pbr(input, color.linear(vec3(level, 0.5, 1.0 - level), 1.0), level, roughness);
+        if input.uv.x > 0.5 {
+            return lit;
+        }
+        return color.linear(lit.rgb * 0.5, 1.0);
+    }
+}
+
+scene Gallery {
+    clear_color: #101418;
+    ambient_color: #8090ff;
+    ambient_intensity: 0.1;
+
+    camera Main {
+        position: vec3(0.0, 1.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Sun {
+        rotation: quat.axis_angle(vec3(1.0, 0.0, 0.0), -0.8);
+        mesh: Box { size: vec3(0.1, 0.1, 0.1) };
+        light: DirectionalLight { color: #fff4e0; intensity: 3.0 };
+    }
+    entity Lamp {
+        position: vec3(2.0, 2.0, 1.0);
+        mesh: Sphere { radius: 0.1 };
+        light: PointLight { color: #80c0ff; intensity: 20.0; range: 8.0 };
+    }
+
+    entity Metal {
+        position: vec3(-1.5, 0.0, 0.0);
+        mesh: Sphere { radius: 0.8 };
+        material: Pbr { metallic: 1.0; roughness: 0.25 };
+    }
+    entity Plastic {
+        mesh: Sphere { radius: 0.8 };
+        material: Pbr { base_color: #3070d0; metallic: 0.0; roughness: 0.6; base_color_sampler: sampler.nearest_clamp() };
+    }
+    entity Custom {
+        position: vec3(1.5, 0.0, 0.0);
+        mesh: Sphere { radius: 0.8 };
+        material: Shiny { roughness: 0.5 };
+    }
+    entity Floor {
+        position: vec3(0.0, -1.0, 0.0);
+        mesh: Plane { size: vec2(6.0, 6.0) };
+        material: Banded {};
+    }
+}

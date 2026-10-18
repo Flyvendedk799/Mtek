@@ -27,14 +27,20 @@
 //! - `mtek_normalize_*(v)` = `v / sqrt(v.x*v.x + v.y*v.y + ...)` summed left to right, the
 //!   zero vector when that length is 0 (the CPU rule), not the built-in's `v * inverseSqrt(...)`;
 //!
+//! - `mtek_lighting_pbr(surface, base_color, metallic, roughness)`: the lighting model of
+//!   `spec/materials.md` section 8 over `mtek_frame.lights`, `camera_position` and `ambient`
+//!   (decision 0057); the one helper that reads a global and a struct of the standard stage.
+//!
 //! WGSL's own `/` and `%` already implement the Mtek integer rules, its conversions
 //! saturate like the CPU's (decision 0047), its `round` rounds half to even and it has `saturate`, so none of those needs a
 //! helper. Helper code carries the material declaration's span.
 
+use crate::layout::builtin::MAX_LIGHTS;
 use crate::lowering::shader_ir::{
-    BinaryOp, Component, Expr, FiniteF32, Function, FunctionParam, FunctionResult, Intrinsic, Name,
-    ShaderType, Statement,
+    BinaryOp, Component, Expr, FiniteF32, Function, FunctionParam, FunctionResult, Intrinsic,
+    Literal, Name, ShaderType, Statement, UnaryOp,
 };
+use crate::lowering::standard_stage::{SURFACE_INPUT_STRUCT, frame_global};
 use crate::source::Span;
 
 /// A generated helper function. The declaration order is the emission order: every
@@ -59,6 +65,10 @@ pub(super) enum Helper {
     Normalize {
         dim: u8,
     },
+    /// `lighting.pbr`: the lighting model of `spec/materials.md` section 8 over the frame
+    /// block's lights (decision 0057). It reads the module's `mtek_frame` and takes the
+    /// `MtekSurfaceInput` struct, so it exists only in a module built by the standard stage.
+    LightingPbr,
 }
 
 /// The type of `dim` `f32` components: 1 is `f32`, 2 to 4 a vector.
@@ -136,6 +146,7 @@ impl Helper {
                 scalar_t: true,
             } => format!("mix_{}_f32", dim_name(dim)),
             Helper::Normalize { dim } => format!("normalize_{}", dim_name(dim)),
+            Helper::LightingPbr => "lighting_pbr".to_owned(),
         })
     }
 
@@ -155,9 +166,11 @@ impl Helper {
             Helper::Mix { dim, .. } | Helper::Normalize { dim } => float_type(dim),
             Helper::QuatRotate => ShaderType::VEC3,
             Helper::Mat4Translation | Helper::Mat4Scale | Helper::Mat4Rotation => ShaderType::Mat4,
-            Helper::ColorSrgb | Helper::QuatMul | Helper::QuatAxisAngle | Helper::QuatEuler => {
-                ShaderType::VEC4
-            }
+            Helper::ColorSrgb
+            | Helper::QuatMul
+            | Helper::QuatAxisAngle
+            | Helper::QuatEuler
+            | Helper::LightingPbr => ShaderType::VEC4,
         }
     }
 
@@ -221,6 +234,15 @@ impl Helper {
                 ),
             ),
             Helper::Normalize { dim } => (vec![("v", float_type(dim))], b.normalize(dim)),
+            Helper::LightingPbr => (
+                vec![
+                    ("surface", ShaderType::named(SURFACE_INPUT_STRUCT)),
+                    ("base_color", ShaderType::VEC4),
+                    ("metallic", ShaderType::F32),
+                    ("roughness", ShaderType::F32),
+                ],
+                b.lighting_pbr(),
+            ),
         };
         Function {
             name: self.name(),
@@ -526,6 +548,291 @@ impl Builder {
                 ],
                 ty,
             )),
+        ]
+    }
+
+    /// `mtek_lighting_pbr`: `spec/materials.md` section 8 over `mtek_frame.lights`, one
+    /// numbered rule per block (decision 0057). Every operation is the specification's, in
+    /// its order; the only additions are the guards that keep an undefined intermediate
+    /// out of a defined result:
+    ///
+    /// - a light term is skipped when `NL == 0` (rule 7 multiplies it by `NL`, so it is
+    ///   exactly 0 whatever the half vector is, and `normalize(L + V)` is `NaN` for `L = -V`);
+    /// - a divisor that a `select` discards is made harmless first (`range = 0` is
+    ///   unlimited, where `d / range` is not used).
+    ///
+    /// `(1 - VH)^5` is `t2 * t2 * t` for `t = 1 - VH`, like the reference, so `pow` (undefined
+    /// for a negative base) is never involved.
+    fn lighting_pbr(&self) -> Vec<Statement> {
+        use Component::{X, Y, Z};
+        let frame_global = frame_global(self.span);
+        let frame = || Expr::global(&frame_global, self.span);
+        let surface = || self.local("surface", ShaderType::named(SURFACE_INPUT_STRUCT));
+        let world_position = || surface().field("world_position", ShaderType::VEC3, self.span);
+        let v3 = |name: &str| self.local(name, ShaderType::VEC3);
+        let s = |name: &str| self.scalar(name);
+        let u32_literal = |value: u32| Expr::literal(Literal::U32(value), self.span);
+        let splat = |value: f32| self.vec3(vec![self.f(value)]);
+        let max = |a: Expr, b: Expr| self.call(Intrinsic::Max, vec![a, b], ShaderType::F32);
+        let clamp = |x: Expr, lo: f32, hi: f32| {
+            self.call(
+                Intrinsic::Clamp,
+                vec![x, self.f(lo), self.f(hi)],
+                ShaderType::F32,
+            )
+        };
+        let dot = |a: Expr, b: Expr| self.call(Intrinsic::Dot, vec![a, b], ShaderType::F32);
+        let sqrt = |x: Expr| self.call(Intrinsic::Sqrt, vec![x], ShaderType::F32);
+        let select = |on_false: Expr, on_true: Expr, cond: Expr| {
+            let ty = on_false.ty.clone();
+            self.call(Intrinsic::Select, vec![on_false, on_true, cond], ty)
+        };
+        let one_minus = |x: Expr| self.sub(self.f(1.0), x);
+        let range = || s("range");
+        let unlimited = || self.bin(BinaryOp::Equal, range(), self.f(0.0));
+
+        // The per-light term, evaluated only for a light that faces the surface (NL > 0).
+        let light_term = vec![
+            // Rule 2 and 4: the half vector and its two cosines.
+            self.let_(
+                "h",
+                self.call(
+                    Intrinsic::Normalize,
+                    vec![self.add(v3("l"), v3("v"))],
+                    ShaderType::VEC3,
+                ),
+            ),
+            self.let_("nh", max(dot(v3("n"), v3("h")), self.f(0.0))),
+            self.let_("vh", max(dot(v3("v"), v3("h")), self.f(0.0))),
+            // Rule 2: D = a2 / (pi * (NH^2 * (a2 - 1) + 1)^2).
+            self.let_(
+                "spread",
+                self.add(
+                    self.mul(
+                        self.mul(s("nh"), s("nh")),
+                        self.sub(s("a2"), self.f(1.0)),
+                    ),
+                    self.f(1.0),
+                ),
+            ),
+            self.let_(
+                "d",
+                self.div(
+                    s("a2"),
+                    self.mul(self.mul(self.f(std::f32::consts::PI), s("spread")), s("spread")),
+                ),
+            ),
+            // Rule 3: Vis = 0.5 / (NL sqrt(NV^2 (1 - a2) + a2) + NV sqrt(NL^2 (1 - a2) + a2)),
+            // 0 for a zero denominator.
+            self.let_(
+                "denominator",
+                self.add(
+                    self.mul(
+                        s("nl"),
+                        sqrt(self.add(
+                            self.mul(self.mul(s("nv"), s("nv")), one_minus(s("a2"))),
+                            s("a2"),
+                        )),
+                    ),
+                    self.mul(
+                        s("nv"),
+                        sqrt(self.add(
+                            self.mul(self.mul(s("nl"), s("nl")), one_minus(s("a2"))),
+                            s("a2"),
+                        )),
+                    ),
+                ),
+            ),
+            self.let_(
+                "vis",
+                select(
+                    self.div(self.f(0.5), s("denominator")),
+                    self.f(0.0),
+                    self.bin(BinaryOp::Equal, s("denominator"), self.f(0.0)),
+                ),
+            ),
+            // Rule 4: F = F0 + (1 - F0) (1 - VH)^5, the power by multiplication.
+            self.let_("t", one_minus(s("vh"))),
+            self.let_(
+                "t5",
+                self.mul(self.mul(self.mul(s("t"), s("t")), self.mul(s("t"), s("t"))), s("t")),
+            ),
+            self.let_(
+                "fresnel",
+                self.add(v3("f0"), self.mul(self.sub(splat(1.0), v3("f0")), s("t5"))),
+            ),
+            // Rule 5: specular = D Vis F; diffuse = (1 - F) (1 - m) c / pi.
+            self.let_("specular", self.mul(v3("fresnel"), self.mul(s("d"), s("vis")))),
+            self.let_(
+                "diffuse",
+                self.mul(
+                    self.mul(self.sub(splat(1.0), v3("fresnel")), v3("c")),
+                    self.div(one_minus(s("m")), self.f(std::f32::consts::PI)),
+                ),
+            ),
+            // Rule 7: (Diffuse + Specular) E NL.
+            Statement::Assign {
+                target: v3("rgb"),
+                value: self.add(
+                    v3("rgb"),
+                    self.mul(
+                        self.mul(self.add(v3("diffuse"), v3("specular")), v3("radiance")),
+                        s("nl"),
+                    ),
+                ),
+                span: self.span,
+            },
+        ];
+
+        let light = || self.local("light", ShaderType::named("MtekLight"));
+        let light_field = |name: &str, ty: ShaderType| light().field(name, ty, self.span);
+        let per_light = vec![
+            self.let_(
+                "light",
+                frame()
+                    .field(
+                        "lights",
+                        ShaderType::Array {
+                            element: Box::new(ShaderType::named("MtekLight")),
+                            length: MAX_LIGHTS,
+                        },
+                        self.span,
+                    )
+                    .index(self.local("i", ShaderType::U32), ShaderType::named("MtekLight"), self.span),
+            ),
+            self.let_(
+                "range",
+                light_field("range", ShaderType::F32),
+            ),
+            self.let_(
+                "is_point",
+                self.bin(
+                    BinaryOp::Equal,
+                    light_field("kind", ShaderType::U32),
+                    u32_literal(1),
+                ),
+            ),
+            self.let_(
+                "to_light",
+                self.sub(light_field("position", ShaderType::VEC3), world_position()),
+            ),
+            self.let_("distance2", dot(v3("to_light"), v3("to_light"))),
+            // L: towards the point light, against the direction a directional light travels.
+            self.let_(
+                "l",
+                self.call(
+                    Intrinsic::Normalize,
+                    vec![select(
+                        light_field("direction", ShaderType::VEC3).unary(UnaryOp::Negate, self.span),
+                        v3("to_light"),
+                        self.local("is_point", ShaderType::BOOL),
+                    )],
+                    ShaderType::VEC3,
+                ),
+            ),
+            self.let_("nl", max(dot(v3("n"), v3("l")), self.f(0.0))),
+            // Rule 6: w = 1 without a range, else clamp(1 - (d / range)^4, 0, 1)^2; the divisor
+            // is 1 for the unlimited light, whose quotient is not used.
+            self.let_(
+                "ratio",
+                self.div(
+                    sqrt(s("distance2")),
+                    select(range(), self.f(1.0), unlimited()),
+                ),
+            ),
+            self.let_("ratio2", self.mul(s("ratio"), s("ratio"))),
+            self.let_(
+                "falloff",
+                clamp(one_minus(self.mul(s("ratio2"), s("ratio2"))), 0.0, 1.0),
+            ),
+            self.let_(
+                "window",
+                select(self.mul(s("falloff"), s("falloff")), self.f(1.0), unlimited()),
+            ),
+            // E: the packed colour is already `color.rgb * intensity` (decision 0053 item 10).
+            self.let_(
+                "radiance",
+                select(
+                    light_field("color", ShaderType::VEC3),
+                    self.mul(
+                        light_field("color", ShaderType::VEC3),
+                        self.div(s("window"), max(s("distance2"), self.f(1e-4))),
+                    ),
+                    self.local("is_point", ShaderType::BOOL),
+                ),
+            ),
+            Statement::If {
+                branches: vec![(self.bin(BinaryOp::Greater, s("nl"), self.f(0.0)), light_term)],
+                otherwise: None,
+                span: self.span,
+            },
+        ];
+
+        vec![
+            self.let_(
+                "c",
+                self.local("base_color", ShaderType::VEC4)
+                    .swizzle(&[X, Y, Z], self.span),
+            ),
+            // Rule 1.
+            self.let_("r", clamp(s("roughness"), 0.045, 1.0)),
+            self.let_("alpha", self.mul(s("r"), s("r"))),
+            self.let_("a2", self.mul(s("alpha"), s("alpha"))),
+            self.let_("m", clamp(s("metallic"), 0.0, 1.0)),
+            // Rule 4: F0 = mix(vec3(0.04), c, m).
+            self.let_(
+                "f0",
+                self.add(
+                    self.mul(splat(0.04), one_minus(s("m"))),
+                    self.mul(v3("c"), s("m")),
+                ),
+            ),
+            self.let_(
+                "n",
+                surface().field("world_normal", ShaderType::VEC3, self.span),
+            ),
+            self.let_(
+                "v",
+                self.call(
+                    Intrinsic::Normalize,
+                    vec![self.sub(
+                        frame().field("camera_position", ShaderType::VEC3, self.span),
+                        world_position(),
+                    )],
+                    ShaderType::VEC3,
+                ),
+            ),
+            self.let_("nv", max(dot(v3("n"), v3("v")), self.f(1e-4))),
+            Statement::Var {
+                name: Name::generated("rgb"),
+                value: splat(0.0),
+                span: self.span,
+            },
+            Statement::For {
+                name: Name::generated("i"),
+                start: u32_literal(0),
+                end: self.call(
+                    Intrinsic::Min,
+                    vec![
+                        frame().field("light_count", ShaderType::U32, self.span),
+                        u32_literal(MAX_LIGHTS),
+                    ],
+                    ShaderType::U32,
+                ),
+                body: per_light,
+                span: self.span,
+            },
+            // Rule 7, ambient: c * ambient_color * ambient_intensity, packed as `ambient`.
+            self.ret(self.vec4(vec![
+                self.add(
+                    v3("rgb"),
+                    self.mul(
+                        v3("c"),
+                        frame().field("ambient", ShaderType::VEC3, self.span),
+                    ),
+                ),
+                self.f(1.0),
+            ])),
         ]
     }
 
