@@ -1,0 +1,108 @@
+# Camera: orthographic, height 12.8, at (0, 0, 10) looking at the origin: 10 pixels per world unit,
+# pixel x = 64 + 10 x, pixel y = 64 - 10 y. The Panel is 10 x 10 (pixels 14..113 in x and y, #2a2a2a); the
+# Marker is a 1 x 1 block (#38bdf8) that covers pixels cx - 5 .. cx + 4 and cy - 5 .. cy + 4 around its centre
+# pixel (cx, cy) = (64 + 10 x, 64 - 10 y). Background #202020.
+# Every expected colour below was computed by evidence/M6/benchmark-interaction/oracle/interaction-05.mjs
+# from the task description, not from a run of either reference solution.
+# A host input is applied at the start of the next frame, so every set_input is followed by a step.
+# A key press and a host input are never put into the same frame (the order between them is not specified).
+name = "coordinates beyond 4.5 are limited one by one"
+steps = [
+  { step = 2, dt = 0.016666668 },
+
+  # start: Marker at (0, 0)
+  { expect_pixel = { x = 64, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 59, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 68, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 59, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 68, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 58, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 69, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 58, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 69, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { set_input = { cursor = [9.0, 1.0] } },
+  { step = 1, dt = 0.016666668 },
+
+  # cursor = [9.0, 1.0]: Marker at (4.5, 1)
+  { expect_pixel = { x = 109, y = 54, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 104, y = 54, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 54, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 109, y = 49, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 109, y = 58, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 103, y = 54, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 114, y = 54, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 109, y = 48, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 109, y = 59, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { set_input = { cursor = [-7.0, -20.0] } },
+  { step = 1, dt = 0.016666668 },
+
+  # cursor = [-7.0, -20.0]: Marker at (-4.5, -4.5)
+  { expect_pixel = { x = 19, y = 109, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 109, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 23, y = 109, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 19, y = 104, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 19, y = 113, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 109, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 109, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 19, y = 103, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 19, y = 114, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { set_input = { cursor = [1.5, 30.0] } },
+  { step = 1, dt = 0.016666668 },
+
+  # cursor = [1.5, 30.0]: Marker at (1.5, 4.5)
+  { expect_pixel = { x = 79, y = 19, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 74, y = 19, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 83, y = 19, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 79, y = 14, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 79, y = 23, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 73, y = 19, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 19, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 79, y = 13, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 79, y = 24, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { set_input = { cursor = [4.6, 0.0] } },
+  { step = 1, dt = 0.016666668 },
+
+  # cursor = [4.6, 0.0]: Marker at (4.5, 0)
+  { expect_pixel = { x = 109, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 104, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 109, y = 59, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 109, y = 68, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 103, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 114, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 109, y = 58, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 109, y = 69, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { set_input = { cursor = [-4.5, 4.5] } },
+  { step = 1, dt = 0.016666668 },
+
+  # cursor = [-4.5, 4.5]: Marker at (-4.5, 4.5)
+  { expect_pixel = { x = 19, y = 19, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 19, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 23, y = 19, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 19, y = 14, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 19, y = 23, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 19, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 19, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 19, y = 13, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 19, y = 24, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { set_input = { cursor = [2.0, -2.0] } },
+  { step = 1, dt = 0.016666668 },
+
+  # cursor = [2.0, -2.0]: Marker at (2, -2)
+  { expect_pixel = { x = 84, y = 84, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 79, y = 84, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 88, y = 84, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 79, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 88, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 78, y = 84, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 89, y = 84, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 78, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 89, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#2a2a2a", tolerance = 2 } },
+]

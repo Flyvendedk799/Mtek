@@ -1,0 +1,22 @@
+# Camera: orthographic, height 12.8, at (0, 0, 10) looking at the origin: 10 pixels per world unit,
+# pixel x = 64 + 10 x, pixel y = 64 - 10 y. The Bar is `value` units long and 1 unit high with its left end
+# at x = -6: it covers the pixels x 4 .. 4 + 10 value - 1 and y 59 .. 68 (#ffd24a on #202020).
+# Every expected colour below was computed by evidence/M6/benchmark-interaction/oracle/interaction-06.mjs
+# from the task description, not from a run of either reference solution.
+# A key press is applied at the start of the next frame, in the order the presses were made.
+# Retention check: the starter's behaviour.
+name = "the bar is one unit long and stays so without a key press"
+steps = [
+  { step = 60, dt = 0.016666668 },
+  { expect_pixel = { x = 4, y = 64, color = "#ffd24a", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 64, color = "#ffd24a", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 3, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 9, y = 64, color = "#ffd24a", tolerance = 2 } },
+  { expect_pixel = { x = 4, y = 59, color = "#ffd24a", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 68, color = "#ffd24a", tolerance = 2 } },
+  { expect_pixel = { x = 4, y = 58, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 4, y = 69, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 69, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 64, color = "#202020", tolerance = 2 } },
+]

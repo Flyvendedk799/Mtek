@@ -1,0 +1,31 @@
+# Camera: orthographic, height 12.8, at (0, 0, 10) looking at the origin: 10 pixels per world unit,
+# pixel x = 64 + 10 x, pixel y = 64 - 10 y. The Panel is 10 x 10 (pixels 14..113 in x and y, #2a2a2a); the
+# Marker is a 1 x 1 block (#38bdf8) that covers pixels cx - 5 .. cx + 4 and cy - 5 .. cy + 4 around its centre
+# pixel (cx, cy) = (64 + 10 x, 64 - 10 y). Background #202020.
+# Every expected colour below was computed by evidence/M6/benchmark-interaction/oracle/interaction-05.mjs
+# from the task description, not from a run of either reference solution.
+# A host input is applied at the start of the next frame, so every set_input is followed by a step.
+# A key press and a host input are never put into the same frame (the order between them is not specified).
+# Retention check: the starter's behaviour (a Marker at the centre, nothing moves by itself).
+name = "the marker stays at the centre until the host sets cursor"
+steps = [
+  { step = 60, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 59, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 68, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 59, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 68, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 58, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 69, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 58, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 69, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 64, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 114, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 13, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 14, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 113, color = "#2a2a2a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 114, color = "#202020", tolerance = 2 } },
+]

@@ -1,0 +1,33 @@
+# Camera: orthographic, height 12.8, at (0, 0, 10) looking at the origin: 10 pixels per world unit,
+# pixel x = 64 + 10 x, pixel y = 64 - 10 y. The Beacon is a 4 x 4 block at the origin (pixels 44..83 in x
+# and y). idle #3a3a3a, running #ffb000, done #22c55e, background #202020.
+# Frames last 1/16 s (0.0625, exactly representable, so every sum of frames is exact; it is below the
+# runtime's 0.1 s frame-delta clamp). A run lasts 1.5 s = 24 frames; n counts the frames since (and including)
+# the one that applies the press, so the run ends at frame n = 24 or n = 25 depending on whether that frame's
+# own duration counts. Checkpoints are only at n <= 21 (still running) and n >= 27 (done).
+# Every expected colour below was computed by evidence/M6/benchmark-interaction/oracle/interaction-04.mjs
+# from the task description, not from a run of either reference solution.
+# Retention check: the starter's behaviour.
+name = "the beacon stays idle without a key press"
+steps = [
+  { step = 2, dt = 0.0625 },
+
+  # after 2 frames: idle
+  { expect_pixel = { x = 64, y = 64, color = "#3a3a3a", tolerance = 2 } },
+  { expect_pixel = { x = 44, y = 44, color = "#3a3a3a", tolerance = 2 } },
+  { expect_pixel = { x = 83, y = 83, color = "#3a3a3a", tolerance = 2 } },
+  { expect_pixel = { x = 43, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 43, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 84, color = "#202020", tolerance = 2 } },
+  { step = 90, dt = 0.0625 },
+
+  # after 90 more frames (5.6 s): idle
+  { expect_pixel = { x = 64, y = 64, color = "#3a3a3a", tolerance = 2 } },
+  { expect_pixel = { x = 44, y = 44, color = "#3a3a3a", tolerance = 2 } },
+  { expect_pixel = { x = 83, y = 83, color = "#3a3a3a", tolerance = 2 } },
+  { expect_pixel = { x = 43, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 43, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 84, color = "#202020", tolerance = 2 } },
+]

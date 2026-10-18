@@ -1,0 +1,48 @@
+// UNVERIFIED: written by hand from spec/language.md and spec/scenes.md; checked by `mtek test` on hardware
+// by decision 0079 (the status in task.toml and the removal of this line say when that happened).
+const RUN_SECONDS: f32 = 1.5;
+
+fn phase_color(phase: i32) -> color {
+    if phase == 1 {
+        return #ffb000;
+    }
+    if phase == 2 {
+        return #22c55e;
+    }
+    return #3a3a3a;
+}
+
+scene Demo {
+    clear_color: #202020;
+    state phase: i32 = 0;
+    state elapsed: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Beacon {
+        mesh: Box { size: vec3(4.0, 4.0, 0.5) };
+        material: Unlit { color: bind(phase_color(phase)) };
+    }
+
+    on key_down(Key.Space) {
+        if phase == 0 {
+            phase = 1;
+            elapsed = 0.0;
+        } else if phase == 2 {
+            phase = 0;
+        }
+    }
+
+    update(dt: f32) {
+        if phase == 1 {
+            elapsed += dt;
+            if elapsed >= RUN_SECONDS {
+                phase = 2;
+            }
+        }
+    }
+}
