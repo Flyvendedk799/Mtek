@@ -10,7 +10,7 @@
 //!   (the fragment body's `return` at `return color;`), and the vertex layout is `position`
 //!   alone.
 //! * The prelude's `Unlit` agrees with the registry's `Unlit` schema (params, types,
-//!   defaults), and a program that uses no built-in material does not compile the prelude.
+//!   defaults), as does every built-in material (`Pbr` too, decision 0087), and a program that uses no built-in material does not compile the prelude.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -24,7 +24,7 @@ use mtek_compiler::lowering::standard_stage::VertexAttribute;
 use mtek_compiler::prelude::{MATERIALS_PATH, materials_text};
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::source::{MemFs, ProjectPath, SourceMap, Span};
-use mtek_compiler::stdlib::registry;
+use mtek_compiler::stdlib::{SchemaCategory, registry};
 use mtek_compiler::types::value::from_registry;
 use mtek_compiler::{Analysis, analyze};
 
@@ -305,6 +305,46 @@ fn the_prelude_unlit_agrees_with_the_registry_schema() {
         assert_eq!(param.ty, field.ty.spelling());
         let default = field.default.as_ref().and_then(from_registry).unwrap();
         assert_eq!(param.default, Some((&default).into()), "{}", param.name);
+    }
+}
+
+/// The checker reads the params of a built-in instance (`Ball.material.roughness`) from the registry
+/// schema, the IR and the runtime from the prelude's item (decision 0087): both must list the same
+/// params, in the same order, with the same types and defaults, for every built-in material.
+#[test]
+fn every_prelude_material_agrees_with_its_registry_schema() {
+    let (_, program) = analysed(0);
+    let builtins: Vec<_> = registry()
+        .schemas
+        .iter()
+        .filter(|schema| schema.category == SchemaCategory::Material)
+        .collect();
+    assert_eq!(
+        builtins.iter().map(|s| s.name).collect::<Vec<_>>(),
+        ["Unlit", "Pbr"]
+    );
+    for schema in builtins {
+        let symbol = format!("{MATERIALS_PATH}::{}", schema.name);
+        let item = program
+            .materials()
+            .find(|m| m.symbol.as_str() == symbol)
+            .unwrap_or_else(|| panic!("{symbol} is not in the IR"));
+        let names = |names: Vec<&str>| names.join(", ");
+        assert_eq!(
+            names(item.params.iter().map(|p| p.name.as_str()).collect()),
+            names(schema.fields.iter().map(|f| f.name).collect()),
+            "{symbol}"
+        );
+        for (param, field) in item.params.iter().zip(&schema.fields) {
+            assert_eq!(param.ty, field.ty.spelling(), "{symbol}.{}", param.name);
+            let default = field.default.as_ref().and_then(from_registry).unwrap();
+            assert_eq!(
+                param.default,
+                Some((&default).into()),
+                "{symbol}.{}",
+                param.name
+            );
+        }
     }
 }
 

@@ -16,13 +16,17 @@
  * the compiler's output.
  */
 import { describe, expect, it } from "vitest";
-import type { MtekManifest } from "../abi/manifest-types.js";
+import type { MtekInstanceParam, MtekManifest } from "../abi/manifest-types.js";
+import { checkManifest } from "../abi/validate.js";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
+import { resolveStructure } from "../scene/structure.js";
+import { World } from "../scene/world.js";
 import type { FakeBuffer } from "../test-support/fake-gpu.js";
 import { bufferLabelled, floats, memberOffset } from "../test-support/frame-block.js";
-import { FakeHost, asDom } from "../test-support/fake-host.js";
+import { FakeHost, asDom, minimalManifestJson } from "../test-support/fake-host.js";
 import { loadGoldenProgram, type GoldenProgram } from "../test-support/program.js";
 import { mountMtekWith } from "./mount.js";
+import { migrateWorld } from "./reload.js";
 import type { MtekApp, MtekDebug } from "./types.js";
 
 const f = Math.fround;
@@ -226,5 +230,92 @@ describe("hot reload of built-in params, from builtin_params to builtin_params_e
     roughness = f(roughness + f(0.1));
     expect(paramOf(running, PBR, "Ball", "roughness", 1)).toEqual([roughness]);
     app.dispose();
+  });
+});
+
+type Class = MtekInstanceParam["class"];
+type Color = { r: number; g: number; b: number; a: number };
+
+const RED: Color = { r: 1, g: 0, b: 0, a: 1 };
+const BLUE: Color = { r: 0, g: 0, b: 1, a: 1 };
+
+/** The minimal manifest (one entity with the built-in `Unlit`) with the given class of its `color` param. */
+function manifestWith(colorClass: Class): MtekManifest {
+  const json = minimalManifestJson();
+  const scene = json["scene"] as { materialInstances: Array<{ params: Array<{ name: string; class: string; binding?: number }>; shareable: boolean }> };
+  const instance = scene.materialInstances[0];
+  if (instance === undefined) throw new Error("minimal manifest has no material instance");
+  instance.params = [colorClass === "bound" ? { name: "color", class: "bound", binding: 0 } : { name: "color", class: colorClass }];
+  instance.shareable = colorClass === "initial";
+  if (colorClass === "bound") {
+    (json["scene"] as Record<string, unknown>)["bindings"] = [
+      { id: 0, target: { kind: "param", instance: 0, name: "color" }, deps: [{ kind: "frame", name: "time" }], order: 0, span: 0 },
+    ];
+  }
+  const parsed = checkManifest(json);
+  if (!parsed.ok) throw new Error(JSON.stringify(parsed.failures));
+  return parsed.manifest;
+}
+
+/** `manifest` with its material renamed: another material with a `color` param of the same type. */
+function withOtherMaterial(manifest: MtekManifest): MtekManifest {
+  const id = "src/main.mtek::Tint";
+  const renamed = (value: string): string => (value === "std/materials.mtek::Unlit" ? id : value);
+  return {
+    ...manifest,
+    materials: manifest.materials.map((material) => ({ ...material, id: renamed(material.id) })),
+    scene: {
+      ...manifest.scene,
+      entities: manifest.scene.entities.map((entity) => (entity.material === null ? entity : { ...entity, material: { ...entity.material, id: renamed(entity.material.id) } })),
+      materialInstances: manifest.scene.materialInstances.map((instance) => ({ ...instance, material: renamed(instance.material) })),
+    },
+  };
+}
+
+interface Ctx {
+  setParam(entity: unknown, name: string, value: unknown): void;
+}
+
+/** A world of `manifest` whose entity's `color` holds `color` (what `init` or a handler left in it). */
+function worldHolding(manifest: MtekManifest, color: Color): World {
+  const structure = resolveStructure(manifest);
+  if (!structure.ok) throw new Error(JSON.stringify(structure.diagnostics));
+  const world = new World({ manifest, structure: structure.structure, params: { writeParam: () => undefined }, report: () => undefined });
+  (world.ctx as Ctx).setParam(world.entities[0], "color", color);
+  return world;
+}
+
+describe("migrateWorld and the update classes of material params (decision 0087, the rule of decision 0067)", () => {
+  /** The running world had RED; the new program's `init` made it BLUE. Returns what the swap leaves. */
+  function migrate(before: MtekManifest, after: MtekManifest): unknown {
+    const previous = worldHolding(before, RED);
+    const next = worldHolding(after, BLUE);
+    migrateWorld(previous, before, next, after);
+    return next.entities[0]?.mat?.p["color"];
+  }
+
+  it("keeps the running value of a param that is imperative in both programs, as a copy", () => {
+    const manifest = manifestWith("imperative");
+    const previous = worldHolding(manifest, RED);
+    const next = worldHolding(manifest, BLUE);
+    migrateWorld(previous, manifest, next, manifest);
+    expect(next.entities[0]?.mat?.p["color"]).toEqual(RED);
+    expect(next.entities[0]?.mat?.p["color"]).not.toBe(previous.entities[0]?.mat?.p["color"]);
+  });
+
+  it("applies what the new init set when the param was not imperative before or is not imperative now", () => {
+    for (const other of ["initial", "bound"] as const) {
+      expect(migrate(manifestWith(other), manifestWith("imperative")), `${other} -> imperative`).toEqual(BLUE);
+      expect(migrate(manifestWith("imperative"), manifestWith(other)), `imperative -> ${other}`).toEqual(BLUE);
+    }
+  });
+
+  it("keeps nothing when the entity's material is another one, even with a param of the same name and type", () => {
+    const before = manifestWith("imperative");
+    const after = withOtherMaterial(before);
+    const previous = worldHolding(before, RED);
+    const next = worldHolding(after, BLUE);
+    migrateWorld(previous, before, next, after);
+    expect(next.entities[0]?.mat?.p["color"]).toEqual(BLUE);
   });
 });

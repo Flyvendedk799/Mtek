@@ -770,7 +770,11 @@ impl Checker<'_> {
     /// The default material of an entity or prefab that declares a `mesh` and no `material`: the
     /// registry's default of the entity schema's `material` field (`Unlit {}`, `spec/scenes.md`
     /// section 4.1), whose params are reached by name like those of a written `Unlit {}`.
-    pub(super) fn note_default_material(&mut self, entity: Option<DefId>, members: &[EntityMember]) {
+    pub(super) fn note_default_material(
+        &mut self,
+        entity: Option<DefId>,
+        members: &[EntityMember],
+    ) {
         let Some(def) = entity else {
             return;
         };
@@ -786,7 +790,10 @@ impl Checker<'_> {
         let Some(material) = self.registry.schema_field(schema, "material") else {
             return;
         };
-        if material.default_when_set.is_some_and(|sibling| !written(sibling)) {
+        if material
+            .default_when_set
+            .is_some_and(|sibling| !written(sibling))
+        {
             return;
         }
         let Some(crate::stdlib::ConstValue::EmptyDescriptor(name)) = material.default else {

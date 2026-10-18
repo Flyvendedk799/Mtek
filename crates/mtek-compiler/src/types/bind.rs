@@ -322,7 +322,11 @@ impl Checker<'_> {
     /// user material, or the fields of a registry material schema (`Unlit`), as
     /// [`Checker::instance_params`] gives them.
     fn descriptor_params(&mut self, value: &Expr, entity: DefId) -> Vec<(String, TyId)> {
-        match self.out.entity_material(entity).or_else(|| self.ty_of(value.id)) {
+        match self
+            .out
+            .entity_material(entity)
+            .or_else(|| self.ty_of(value.id))
+        {
             Some(instance) => self.instance_params(instance),
             None => Vec::new(),
         }
