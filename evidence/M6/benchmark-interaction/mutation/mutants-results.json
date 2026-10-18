@@ -1,0 +1,586 @@
+{
+  "kind": "mutants",
+  "total": 28,
+  "ok": 28,
+  "unexpected": [],
+  "results": [
+    {
+      "task": "interaction-02",
+      "name": "no-clamp",
+      "what": "arrow keys without the range limit",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Enter puts the handle back at the centre, yellow",
+        "the handle stops at -4 and +4 and is red there"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-02",
+      "name": "limit-five",
+      "what": "range limit 5 instead of 4",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Enter puts the handle back at the centre, yellow",
+        "the handle stops at -4 and +4 and is red there"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-02",
+      "name": "red-only-right",
+      "what": "red only at the right end",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Enter puts the handle back at the centre, yellow",
+        "the handle stops at -4 and +4 and is red there"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-02",
+      "name": "enter-does-not-centre",
+      "what": "Enter goes to x = 1 instead of the centre",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Enter puts the handle back at the centre, yellow"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-03",
+      "name": "space-copies-state",
+      "what": "Space flips A and gives B the same state (instead of flipping B)",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Space flips every lamp from its own state; Enter switches both off",
+        "key presses of one frame all count, in the order they were made"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-03",
+      "name": "enter-toggles",
+      "what": "Enter flips the lamps instead of switching them off",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Space flips every lamp from its own state; Enter switches both off",
+        "key presses of one frame all count, in the order they were made"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-03",
+      "name": "polling-fixed-order",
+      "what": "key edges polled in update, applied in a fixed key order instead of arrival order",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "key presses of one frame all count, in the order they were made"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-04",
+      "name": "restart-while-running",
+      "what": "Space while running restarts the run",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Space while running does nothing and does not restart the run"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-04",
+      "name": "stale-timer",
+      "what": "a new run does not reset the elapsed time",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Space when done returns to idle; the next run counts the full 1.5 s"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-04",
+      "name": "one-second",
+      "what": "run of 1.0 s instead of 1.5 s",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Space starts a run that turns the beacon done after 1.5 s",
+        "Space while running does nothing and does not restart the run"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-04",
+      "name": "two-seconds",
+      "what": "run of 2.0 s instead of 1.5 s",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Space starts a run that turns the beacon done after 1.5 s",
+        "Space when done returns to idle; the next run counts the full 1.5 s",
+        "Space while running does nothing and does not restart the run"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-04",
+      "name": "done-stays-done",
+      "what": "Space while done does not return to idle",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Space when done returns to idle; the next run counts the full 1.5 s"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-05",
+      "name": "limit-five",
+      "what": "limit 5 instead of 4.5",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Space puts the marker back at the centre and the next value moves it again",
+        "coordinates beyond 4.5 are limited one by one"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-05",
+      "name": "y-unclamped",
+      "what": "only x is limited",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Space puts the marker back at the centre and the next value moves it again",
+        "coordinates beyond 4.5 are limited one by one"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-05",
+      "name": "space-does-nothing",
+      "what": "Space does not recentre",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Space puts the marker back at the centre and the next value moves it again"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-06",
+      "name": "no-cap",
+      "what": "no cap at 8",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 3,
+      "failedFixtures": [
+        "D doubles, P adds three, R resets, and the value never exceeds 8"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-06",
+      "name": "adds-two",
+      "what": "P adds 2 instead of 3",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 3,
+      "failedFixtures": [
+        "D doubles, P adds three, R resets, and the value never exceeds 8",
+        "presses of one frame apply in the order they were made"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-06",
+      "name": "polling-fixed-order",
+      "what": "key edges polled in update, applied in a fixed key order instead of arrival order",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 3,
+      "failedFixtures": [
+        "presses of one frame apply in the order they were made"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-06",
+      "name": "r-does-not-reset",
+      "what": "R leaves the value alone",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 3,
+      "failedFixtures": [
+        "D doubles, P adds three, R resets, and the value never exceeds 8",
+        "presses of one frame apply in the order they were made"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-07",
+      "name": "no-cap",
+      "what": "a sixth Pip is added",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "presses of one frame apply in the order they were made"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-07",
+      "name": "enter-removes-one",
+      "what": "Enter removes one Pip but forgets the count",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Backspace removes the newest Pip, Enter removes all of them",
+        "presses of one frame apply in the order they were made"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-07",
+      "name": "off-by-one-place",
+      "what": "the n-th Pip is placed at -6 + 2(n-1)",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Backspace removes the newest Pip, Enter removes all of them",
+        "Space adds a Pip at the next free slot, up to five",
+        "presses of one frame apply in the order they were made"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-07",
+      "name": "count-not-decremented",
+      "what": "Backspace destroys the Pip but keeps the count",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Backspace removes the newest Pip, Enter removes all of them",
+        "presses of one frame apply in the order they were made"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-08",
+      "name": "no-wrap",
+      "what": "no wrap-around",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 3,
+      "failedFixtures": [
+        "Space starts the runner, the next Space stops it, the next continues",
+        "the runner re-enters at the left after reaching x = 6"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-08",
+      "name": "frame-dependent-step",
+      "what": "4/60 per frame instead of 4 per second of frame time",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 3,
+      "failedFixtures": [
+        "Space starts the runner, the next Space stops it, the next continues",
+        "the runner re-enters at the left after reaching x = 6"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-08",
+      "name": "never-stops",
+      "what": "Space only starts the Runner",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 3,
+      "failedFixtures": [
+        "Space starts the runner, the next Space stops it, the next continues"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-08",
+      "name": "wraps-at-five",
+      "what": "wraps at x = 5 instead of 6",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 3,
+      "failedFixtures": [
+        "the runner re-enters at the left after reaching x = 6"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-08",
+      "name": "stop-resets-position",
+      "what": "stopping sends the Runner back to the start",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 3,
+      "failedFixtures": [
+        "Space starts the runner, the next Space stops it, the next continues"
+      ],
+      "ok": true
+    }
+  ]
+}

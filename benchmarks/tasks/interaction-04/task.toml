@@ -1,0 +1,17 @@
+id = "interaction-04"
+category = "interaction"
+mode = "edit"
+title = "A beacon that runs for 1.5 seconds after Space"
+prompt = """The scene Demo is drawn from the front with a flat (orthographic) camera. In the middle it shows a square block named Beacon. The Beacon is always in one of three states, which its colour shows: idle (dark grey, #3a3a3a), running (amber, #ffb000) and done (green, #22c55e). It starts idle.
+Make it behave like this:
+- A press of the Space bar while the Beacon is idle starts a run: the Beacon turns amber and, after exactly 1.5 seconds of program time, turns green by itself. Program time is the sum of the frame durations the program is given; the run must not depend on how many frames make up those 1.5 seconds.
+- A press of the Space bar while the Beacon is running does nothing: the run neither stops nor restarts.
+- A press of the Space bar while the Beacon is done sets it back to idle at once.
+Every run counts the full 1.5 seconds from its own start. Without any key press nothing changes. The block's size and position, the camera and everything else stay as they are."""
+required_symbols = ["Demo.Beacon"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

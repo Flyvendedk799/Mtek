@@ -1,0 +1,1757 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=benchmarks",
+      "--grep",
+      "interaction-0[2-8]"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-02\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-02/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-02 (starter baseline): each press of an arrow key moves the handle one unit",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 665,
+                  "error": {
+                    "message": "Error: each press of an arrow key moves the handle one unit, step 26 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m",
+                    "stack": "Error: each press of an arrow key moves the handle one unit, step 26 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: each press of an arrow key moves the handle one unit, step 26 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:11:49.133Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-02-basel-b120a-y-moves-the-handle-one-unit-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-02-basel-b120a-y-moves-the-handle-one-unit-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c8bd31139767b20e9ae6-d13296f8f477e1ac2b36",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-02 (starter baseline): Enter puts the handle back at the centre, yellow",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 715,
+                  "error": {
+                    "message": "Error: Enter puts the handle back at the centre, yellow, step 22 (expect_pixel): pixel (80, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m",
+                    "stack": "Error: Enter puts the handle back at the centre, yellow, step 22 (expect_pixel): pixel (80, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: Enter puts the handle back at the centre, yellow, step 22 (expect_pixel): pixel (80, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:11:51.167Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-02-basel-f92e1-e-back-at-the-centre-yellow-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-02-basel-f92e1-e-back-at-the-centre-yellow-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c8bd31139767b20e9ae6-789a6de60f637507c3dc",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-02 (starter baseline): without a key press the handle stays in the centre, yellow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 480,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:11:53.271Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8bd31139767b20e9ae6-051e354111db23746ab8",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-02 (starter baseline): the handle stops at -4 and +4 and is red there",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 604,
+                  "error": {
+                    "message": "Error: the handle stops at -4 and +4 and is red there, step 26 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m",
+                    "stack": "Error: the handle stops at -4 and +4 and is red there, step 26 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: the handle stops at -4 and +4 and is red there, step 26 (expect_pixel): pixel (90, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:11:54.570Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-02-basel-305ca-t--4-and-4-and-is-red-there-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-02-basel-305ca-t--4-and-4-and-is-red-there-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c8bd31139767b20e9ae6-0cace7a21f14897dc7c5",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-03\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-03/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-03 (starter baseline): A and B each toggle their own lamp",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 636,
+                  "error": {
+                    "message": "Error: A and B each toggle their own lamp, step 17 (expect_pixel): pixel (34, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m",
+                    "stack": "Error: A and B each toggle their own lamp, step 17 (expect_pixel): pixel (34, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: A and B each toggle their own lamp, step 17 (expect_pixel): pixel (34, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:11:55.697Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-03-basel-a74d9--each-toggle-their-own-lamp-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-03-basel-a74d9--each-toggle-their-own-lamp-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "fd9701db9cd0235fd759-40c7fe1767363060f514",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-03 (starter baseline): both lamps are off and stay off without a key press",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 467,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:11:57.622Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fd9701db9cd0235fd759-6a4bc5c1d4693afc69e2",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-03 (starter baseline): key presses of one frame all count, in the order they were made",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 618,
+                  "error": {
+                    "message": "Error: key presses of one frame all count, in the order they were made, step 24 (expect_pixel): pixel (94, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m",
+                    "stack": "Error: key presses of one frame all count, in the order they were made, step 24 (expect_pixel): pixel (94, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: key presses of one frame all count, in the order they were made, step 24 (expect_pixel): pixel (94, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:11:58.879Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-03-basel-6a282-in-the-order-they-were-made-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-03-basel-6a282-in-the-order-they-were-made-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "fd9701db9cd0235fd759-4def255e843689bdec81",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-03 (starter baseline): Space flips every lamp from its own state; Enter switches both off",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 636,
+                  "error": {
+                    "message": "Error: Space flips every lamp from its own state; Enter switches both off, step 17 (expect_pixel): pixel (34, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m",
+                    "stack": "Error: Space flips every lamp from its own state; Enter switches both off, step 17 (expect_pixel): pixel (34, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: Space flips every lamp from its own state; Enter switches both off, step 17 (expect_pixel): pixel (34, 64) is rgb(58, 58, 58), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:00.021Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-03-basel-36a3c-ate-Enter-switches-both-off-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-03-basel-36a3c-ate-Enter-switches-both-off-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "fd9701db9cd0235fd759-e3c2bd019df97d1f7025",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-04\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-04/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-04 (starter baseline): Space when done returns to idle; the next run counts the full 1.5 s",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 474,
+                  "error": {
+                    "message": "Error: Space when done returns to idle; the next run counts the full 1.5 s, step 6 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #22c55e within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m139\u001b[39m",
+                    "stack": "Error: Space when done returns to idle; the next run counts the full 1.5 s, step 6 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #22c55e within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m139\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: Space when done returns to idle; the next run counts the full 1.5 s, step 6 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #22c55e within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m139\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:01.947Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-04-basel-df4de-t-run-counts-the-full-1-5-s-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-04-basel-df4de-t-run-counts-the-full-1-5-s-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0a6f2e09a2b596157624-20e40bfe817ed308fa24",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-04 (starter baseline): the beacon stays idle without a key press",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 642,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:03.685Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0a6f2e09a2b596157624-44e9c498645cf7493e02",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-04 (starter baseline): Space starts a run that turns the beacon done after 1.5 s",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 619,
+                  "error": {
+                    "message": "Error: Space starts a run that turns the beacon done after 1.5 s, step 12 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #ffb000 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m",
+                    "stack": "Error: Space starts a run that turns the beacon done after 1.5 s, step 12 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #ffb000 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: Space starts a run that turns the beacon done after 1.5 s, step 12 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #ffb000 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:05.128Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-04-basel-dc950-the-beacon-done-after-1-5-s-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-04-basel-dc950-the-beacon-done-after-1-5-s-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0a6f2e09a2b596157624-35b31496605b206a3f69",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-04 (starter baseline): Space while running does nothing and does not restart the run",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 8,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 511,
+                  "error": {
+                    "message": "Error: Space while running does nothing and does not restart the run, step 6 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #ffb000 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m",
+                    "stack": "Error: Space while running does nothing and does not restart the run, step 6 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #ffb000 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: Space while running does nothing and does not restart the run, step 6 (expect_pixel): pixel (64, 64) is rgb(58, 58, 58), expected #ffb000 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m197\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:06.276Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-04-basel-ccf86-nd-does-not-restart-the-run-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-04-basel-ccf86-nd-does-not-restart-the-run-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0a6f2e09a2b596157624-9a9499e80406d8cab7c7",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-05\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-05/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-05 (starter baseline): the host input cursor places the marker",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 9,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 491,
+                  "error": {
+                    "message": "Error: the host input cursor places the marker, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: the host input cursor places the marker, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 95,
+                      "line": 103
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 101 |\u001b[39m     \u001b[36mcase\u001b[39m \u001b[32m\"set_input\"\u001b[39m\u001b[33m:\u001b[39m {\n \u001b[90m 102 |\u001b[39m       \u001b[36mconst\u001b[39m result \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m app\u001b[33m.\u001b[39msetInput(step\u001b[33m.\u001b[39mname\u001b[33m,\u001b[39m step\u001b[33m.\u001b[39mvalue)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 103 |\u001b[39m       expect(result\u001b[33m.\u001b[39mok\u001b[33m,\u001b[39m \u001b[32m`${where}: setInput('${step.name}') was rejected: ${result.message}`\u001b[39m)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 104 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 105 |\u001b[39m     }\n \u001b[90m 106 |\u001b[39m     \u001b[36mcase\u001b[39m \u001b[32m\"expect_state\"\u001b[39m\u001b[33m:\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 95,
+                        "line": 103
+                      },
+                      "message": "Error: the host input cursor places the marker, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  101 |     case \"set_input\": {\n  102 |       const result = await app.setInput(step.name, step.value);\n> 103 |       expect(result.ok, `${where}: setInput('${step.name}') was rejected: ${result.message}`).toBe(true);\n      |                                                                                               ^\n  104 |       return;\n  105 |     }\n  106 |     case \"expect_state\":\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:08.116Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-05-basel-c344a-ut-cursor-places-the-marker-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-05-basel-c344a-ut-cursor-places-the-marker-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 95,
+                    "line": 103
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5fc32dc9ab87f9aef731-f0dd7f936340bb13eaee",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-05 (starter baseline): coordinates beyond 4.5 are limited one by one",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 10,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 499,
+                  "error": {
+                    "message": "Error: coordinates beyond 4.5 are limited one by one, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: coordinates beyond 4.5 are limited one by one, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 95,
+                      "line": 103
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 101 |\u001b[39m     \u001b[36mcase\u001b[39m \u001b[32m\"set_input\"\u001b[39m\u001b[33m:\u001b[39m {\n \u001b[90m 102 |\u001b[39m       \u001b[36mconst\u001b[39m result \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m app\u001b[33m.\u001b[39msetInput(step\u001b[33m.\u001b[39mname\u001b[33m,\u001b[39m step\u001b[33m.\u001b[39mvalue)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 103 |\u001b[39m       expect(result\u001b[33m.\u001b[39mok\u001b[33m,\u001b[39m \u001b[32m`${where}: setInput('${step.name}') was rejected: ${result.message}`\u001b[39m)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 104 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 105 |\u001b[39m     }\n \u001b[90m 106 |\u001b[39m     \u001b[36mcase\u001b[39m \u001b[32m\"expect_state\"\u001b[39m\u001b[33m:\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 95,
+                        "line": 103
+                      },
+                      "message": "Error: coordinates beyond 4.5 are limited one by one, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  101 |     case \"set_input\": {\n  102 |       const result = await app.setInput(step.name, step.value);\n> 103 |       expect(result.ok, `${where}: setInput('${step.name}') was rejected: ${result.message}`).toBe(true);\n      |                                                                                               ^\n  104 |       return;\n  105 |     }\n  106 |     case \"expect_state\":\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:09.995Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-05-basel-46848--4-5-are-limited-one-by-one-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-05-basel-46848--4-5-are-limited-one-by-one-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 95,
+                    "line": 103
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5fc32dc9ab87f9aef731-23274791f70e8cb106f1",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-05 (starter baseline): the marker stays at the centre until the host sets cursor",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 11,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 481,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:11.842Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5fc32dc9ab87f9aef731-b6e4c43764d1fc8e4f84",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-05 (starter baseline): Space puts the marker back at the centre and the next value moves it again",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 11,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 417,
+                  "error": {
+                    "message": "Error: Space puts the marker back at the centre and the next value moves it again, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: Space puts the marker back at the centre and the next value moves it again, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 95,
+                      "line": 103
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 101 |\u001b[39m     \u001b[36mcase\u001b[39m \u001b[32m\"set_input\"\u001b[39m\u001b[33m:\u001b[39m {\n \u001b[90m 102 |\u001b[39m       \u001b[36mconst\u001b[39m result \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m app\u001b[33m.\u001b[39msetInput(step\u001b[33m.\u001b[39mname\u001b[33m,\u001b[39m step\u001b[33m.\u001b[39mvalue)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 103 |\u001b[39m       expect(result\u001b[33m.\u001b[39mok\u001b[33m,\u001b[39m \u001b[32m`${where}: setInput('${step.name}') was rejected: ${result.message}`\u001b[39m)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 104 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 105 |\u001b[39m     }\n \u001b[90m 106 |\u001b[39m     \u001b[36mcase\u001b[39m \u001b[32m\"expect_state\"\u001b[39m\u001b[33m:\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 95,
+                        "line": 103
+                      },
+                      "message": "Error: Space puts the marker back at the centre and the next value moves it again, step 12 (set_input): setInput('cursor') was rejected: unknown-input: no host input named 'cursor'\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  101 |     case \"set_input\": {\n  102 |       const result = await app.setInput(step.name, step.value);\n> 103 |       expect(result.ok, `${where}: setInput('${step.name}') was rejected: ${result.message}`).toBe(true);\n      |                                                                                               ^\n  104 |       return;\n  105 |     }\n  106 |     case \"expect_state\":\n    at runStep (benchmarks/baselines/support/test/suite.ts:103:95)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:13.119Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-05-basel-81f2e-e-next-value-moves-it-again-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-05-basel-81f2e-e-next-value-moves-it-again-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 95,
+                    "line": 103
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5fc32dc9ab87f9aef731-acb3c570467c4884b16f",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-06\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-06/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-06 (starter baseline): the bar is one unit long and stays so without a key press",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 12,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 510,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:14.066Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "698406bd9535482af5ac-8b4c351863c2c721ae0b",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-06 (starter baseline): D doubles, P adds three, R resets, and the value never exceeds 8",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 12,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 583,
+                  "error": {
+                    "message": "Error: D doubles, P adds three, R resets, and the value never exceeds 8, step 18 (expect_pixel): pixel (23, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m",
+                    "stack": "Error: D doubles, P adds three, R resets, and the value never exceeds 8, step 18 (expect_pixel): pixel (23, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: D doubles, P adds three, R resets, and the value never exceeds 8, step 18 (expect_pixel): pixel (23, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:15.376Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-06-basel-a5452-d-the-value-never-exceeds-8-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-06-basel-a5452-d-the-value-never-exceeds-8-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "698406bd9535482af5ac-5a909eeb553870ae9945",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-06 (starter baseline): presses of one frame apply in the order they were made",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 13,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 662,
+                  "error": {
+                    "message": "Error: presses of one frame apply in the order they were made, step 20 (expect_pixel): pixel (53, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m",
+                    "stack": "Error: presses of one frame apply in the order they were made, step 20 (expect_pixel): pixel (53, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: presses of one frame apply in the order they were made, step 20 (expect_pixel): pixel (53, 64) is rgb(32, 32, 32), expected #ffd24a within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m223\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:16.470Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-06-basel-be701-in-the-order-they-were-made-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-06-basel-be701-in-the-order-they-were-made-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "698406bd9535482af5ac-bec249d859a4b85c6cdd",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-07\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-07/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-07 (starter baseline): Backspace removes the newest Pip, Enter removes all of them",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 14,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 643,
+                  "error": {
+                    "message": "Error: Backspace removes the newest Pip, Enter removes all of them, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m",
+                    "stack": "Error: Backspace removes the newest Pip, Enter removes all of them, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: Backspace removes the newest Pip, Enter removes all of them, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:18.484Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-07-basel-db272-p-Enter-removes-all-of-them-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-07-basel-db272-p-Enter-removes-all-of-them-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8928e77fb4b159a34b44-3e07df2093728eed3f85",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-07 (starter baseline): there is no Pip before the first Space",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 15,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 477,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:20.378Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8928e77fb4b159a34b44-9e59bf09a088cc73cb90",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-07 (starter baseline): presses of one frame apply in the order they were made",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 15,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 580,
+                  "error": {
+                    "message": "Error: presses of one frame apply in the order they were made, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m",
+                    "stack": "Error: presses of one frame apply in the order they were made, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: presses of one frame apply in the order they were made, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:21.618Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-07-basel-e3e17-in-the-order-they-were-made-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-07-basel-e3e17-in-the-order-they-were-made-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8928e77fb4b159a34b44-3cad6b2693b844477a43",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-07 (starter baseline): Space adds a Pip at the next free slot, up to five",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 16,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 643,
+                  "error": {
+                    "message": "Error: Space adds a Pip at the next free slot, up to five, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m",
+                    "stack": "Error: Space adds a Pip at the next free slot, up to five, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: Space adds a Pip at the next free slot, up to five, step 33 (expect_pixel): pixel (24, 64) is rgb(32, 32, 32), expected #38bdf8 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m216\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:22.699Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-07-basel-cdac8-e-next-free-slot-up-to-five-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-07-basel-cdac8-e-next-free-slot-up-to-five-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8928e77fb4b159a34b44-fd505c3486645d26f1dd",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-08\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-08/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-08 (starter baseline): the runner stays at x = -5 until Space is pressed",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 17,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 490,
+                  "error": {
+                    "message": "Error: the runner stays at x = -5 until Space is pressed, step 2 (expect_pixel): pixel (2, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m",
+                    "stack": "Error: the runner stays at x = -5 until Space is pressed, step 2 (expect_pixel): pixel (2, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: the runner stays at x = -5 until Space is pressed, step 2 (expect_pixel): pixel (2, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:24.612Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-08-basel-bd969-x--5-until-Space-is-pressed-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-08-basel-bd969-x--5-until-Space-is-pressed-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d83937fc941071665b52-22258465db16534fd492",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-08 (starter baseline): Space starts the runner, the next Space stops it, the next continues",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 18,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 450,
+                  "error": {
+                    "message": "Error: Space starts the runner, the next Space stops it, the next continues, step 6 (expect_pixel): pixel (42, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m",
+                    "stack": "Error: Space starts the runner, the next Space stops it, the next continues, step 6 (expect_pixel): pixel (42, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: Space starts the runner, the next Space stops it, the next continues, step 6 (expect_pixel): pixel (42, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:26.395Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-08-basel-d62a8-stops-it-the-next-continues-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-08-basel-d62a8-stops-it-the-next-continues-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d83937fc941071665b52-7a137dea054ae4d96180",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-08 (starter baseline): the runner re-enters at the left after reaching x = 6",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 19,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 449,
+                  "error": {
+                    "message": "Error: the runner re-enters at the left after reaching x = 6, step 6 (expect_pixel): pixel (105, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m",
+                    "stack": "Error: the runner re-enters at the left after reaching x = 6, step 6 (expect_pixel): pixel (105, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9",
+                    "location": {
+                      "file": "benchmarks/baselines/support/test/suite.ts",
+                      "column": 9,
+                      "line": 115
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 113 |\u001b[39m         worst\u001b[33m,\u001b[39m\n \u001b[90m 114 |\u001b[39m         \u001b[32m`${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`\u001b[39m\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 115 |\u001b[39m       )\u001b[33m.\u001b[39mtoBeLessThanOrEqual(step\u001b[33m.\u001b[39mtolerance)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 116 |\u001b[39m       \u001b[36mreturn\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 117 |\u001b[39m     }\n \u001b[90m 118 |\u001b[39m   }\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "benchmarks/baselines/support/test/suite.ts",
+                        "column": 9,
+                        "line": 115
+                      },
+                      "message": "Error: the runner re-enters at the left after reaching x = 6, step 6 (expect_pixel): pixel (105, 64) is rgb(0, 0, 0), expected #202020 within 2\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m2\u001b[39m\nReceived:    \u001b[31m32\u001b[39m\n\n  113 |         worst,\n  114 |         `${where}: pixel (${String(step.x)}, ${String(step.y)}) is rgb(${actual.join(\", \")}), expected ${step.color} within ${String(step.tolerance)}`,\n> 115 |       ).toBeLessThanOrEqual(step.tolerance);\n      |         ^\n  116 |       return;\n  117 |     }\n  118 |   }\n    at runStep (benchmarks/baselines/support/test/suite.ts:115:9)\n    at benchmarks/baselines/support/test/suite.ts:154:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-18T19:12:28.102Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-08-basel-dcdf0-the-left-after-reaching-x-6-benchmarks/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/tasks-interaction-08-basel-dcdf0-the-left-after-reaching-x-6-benchmarks/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "benchmarks/baselines/support/test/suite.ts",
+                    "column": 9,
+                    "line": 115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d83937fc941071665b52-047bc9b0fde8d08edf7f",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-18T19:11:36.077Z",
+    "duration": 53375.89,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 20,
+    "flaky": 0
+  }
+}

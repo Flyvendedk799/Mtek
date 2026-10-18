@@ -1,0 +1,45 @@
+const ON: color = #ffd24a;
+
+const OFF: color = #3a3a3a;
+
+scene Demo {
+    clear_color: #202020;
+    state lamp_a: f32 = 0.0;
+    state lamp_b: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity LampA {
+        position: vec3(-3.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: bind(color.linear(mix(OFF.rgb, ON.rgb, lamp_a), 1.0)) };
+    }
+
+    entity LampB {
+        position: vec3(3.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: bind(color.linear(mix(OFF.rgb, ON.rgb, lamp_b), 1.0)) };
+    }
+
+    on key_down(Key.A) {
+        lamp_a = 1.0 - lamp_a;
+    }
+
+    on key_down(Key.B) {
+        lamp_b = 1.0 - lamp_b;
+    }
+
+    on key_down(Key.Space) {
+        lamp_a = 1.0 - lamp_a;
+        lamp_b = 1.0 - lamp_b;
+    }
+
+    on key_down(Key.Enter) {
+        lamp_a = 0.0;
+        lamp_b = 0.0;
+    }
+}

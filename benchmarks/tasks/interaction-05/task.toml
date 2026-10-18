@@ -1,0 +1,17 @@
+id = "interaction-05"
+category = "interaction"
+mode = "edit"
+title = "A marker that follows a position set by the host page, kept inside the panel"
+prompt = """The scene Demo is drawn from the front with a flat (orthographic) camera; one world unit is ten pixels. It shows a square grey panel named Panel that spans x and y from -5 to 5, and a small blue block named Marker (1 by 1 world units, #38bdf8) at the panel's centre.
+The host page must be able to place the Marker through an input named cursor whose value is a pair of numbers [x, y], a position in world units. Make the Marker follow it:
+- When the host sets cursor to [x, y], the Marker moves to x and y (it stays at z = 0).
+- The Marker must stay entirely on the panel, so each coordinate is limited on its own to the range -4.5 to 4.5: a coordinate beyond that range becomes the nearest end of the range, the other coordinate is not changed (cursor [9, 1] puts the Marker at x = 4.5, y = 1).
+- A press of the Space bar puts the Marker back at the centre (0, 0); the host's next value moves it again.
+Before the host sets anything the Marker is at the centre. The panel, the camera and everything else stay as they are."""
+required_symbols = ["Demo.Marker", "Demo.Panel"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

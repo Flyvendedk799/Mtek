@@ -1,0 +1,87 @@
+# Camera: orthographic, height 12.8, at (0, 0, 10) looking at the origin: 10 pixels per world unit,
+# pixel x = 64 + 10 x, pixel y = 64 - 10 y. The Runner is a 1 x 1 block (#f97316) at y = 0 (pixel rows
+# 59..68) that starts at x = -5; the Track is 12 x 0.2 at y = -1 (#404040, pixels x 4..123, y 73..74).
+# Frames last 1/16 s (0.0625, exactly representable, below the runtime's 0.1 s frame-delta clamp): moving at
+# 4 units per second is 0.25 units (2.5 pixels) per frame, with exact sums.
+# The prompt does not say whether the frame that applies a press already moves (or still moves) the Runner,
+# so a pixel is only checked when its colour is the same in both readings and under a shift of up to 3
+# pixels. Every expected colour below was computed by evidence/M6/benchmark-interaction/oracle/
+# interaction-08.mjs from the task description, not from a run of either reference solution.
+name = "the runner re-enters at the left after reaching x = 6"
+steps = [
+  { step = 2, dt = 0.0625 },
+  { press = "Space" },
+  { step = 1, dt = 0.0625 },
+  { release = "Space" },
+  { step = 40, dt = 0.0625 },
+
+  # just before the wrap, 41 frames after the first Space (x about 5.25): moving, x = 5.25 (reading A) or 5 (reading B)
+  { expect_pixel = { x = 105, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 115, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 126, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 117, y = 57, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 117, y = 70, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 102, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 114, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 114, y = 60, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 114, y = 67, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 114, y = 57, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 114, y = 70, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 74, color = "#404040", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 74, color = "#404040", tolerance = 2 } },
+  { expect_pixel = { x = 110, y = 74, color = "#404040", tolerance = 2 } },
+  { step = 15, dt = 0.0625 },
+
+  # after the first wrap: moving, x = -3 (reading A) or -3.25 (reading B)
+  { expect_pixel = { x = 22, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 32, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 43, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 46, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 34, y = 57, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 34, y = 70, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 44, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 32, y = 60, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 32, y = 67, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 32, y = 57, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 32, y = 70, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 74, color = "#404040", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 74, color = "#404040", tolerance = 2 } },
+  { expect_pixel = { x = 110, y = 74, color = "#404040", tolerance = 2 } },
+  { step = 8, dt = 0.0625 },
+
+  # 8 frames later: moving, x = -1 (reading A) or -1.25 (reading B)
+  { expect_pixel = { x = 42, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 52, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 66, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 54, y = 57, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 54, y = 70, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 40, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 52, y = 60, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 52, y = 67, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 52, y = 57, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 52, y = 70, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 74, color = "#404040", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 74, color = "#404040", tolerance = 2 } },
+  { expect_pixel = { x = 110, y = 74, color = "#404040", tolerance = 2 } },
+  { step = 32, dt = 0.0625 },
+
+  # after the second wrap: moving, x = -5 (reading A) or -5.25 (reading B)
+  { expect_pixel = { x = 2, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 12, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 23, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 26, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 57, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 14, y = 70, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 0, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 12, y = 60, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 12, y = 67, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 12, y = 57, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 12, y = 70, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 74, color = "#404040", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 74, color = "#404040", tolerance = 2 } },
+  { expect_pixel = { x = 110, y = 74, color = "#404040", tolerance = 2 } },
+]
