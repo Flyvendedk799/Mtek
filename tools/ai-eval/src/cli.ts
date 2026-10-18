@@ -22,7 +22,6 @@ import { createClient } from "./adapters/registry.ts";
 import type { AdapterOptions } from "./adapter-options.ts";
 import { systemClock, type Clock } from "./clock.ts";
 import { createMtekRunner, findMtek, repoRoot, type CommandRunner } from "./commands.ts";
-import { ConfigError } from "./errors.ts";
 import { defaultGrammarCapability, type GrammarCapability, type TrialKind } from "./grammar.ts";
 import type { FetchLike, ModelClient } from "./model-client.ts";
 import { JsonlRecorder } from "./recorder.ts";
@@ -144,7 +143,7 @@ export async function runCli(argv: readonly string[], deps: CliDeps = {}): Promi
       io.err(`error: ${error.message}\n${USAGE}`);
       return 2;
     }
-    if (error instanceof ConfigError || error instanceof Error) {
+    if (error instanceof Error) {
       io.err(`error: ${error.message}\n`);
       return 3;
     }

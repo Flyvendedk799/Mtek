@@ -1,0 +1,132 @@
+{
+  "task": "shader-bridge-01",
+  "project": "benchmarks/tasks/shader-bridge-01/reference/mtek",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Cube",
+      "Flat"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "pass",
+    "exitCode": 0,
+    "summary": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/default.test.toml",
+        "name": "without a host input the cube stays #808080",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 4,
+        "stepsTotal": 4
+      },
+      {
+        "file": "tests/tint.test.toml",
+        "name": "the host input tint sets the cube colour",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 17,
+        "stepsTotal": 17
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "pass",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 107,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Cube",
+      "exitCode": 0,
+      "durationMs": 110,
+      "timedOut": false
+    },
+    {
+      "command": "context Flat",
+      "exitCode": 0,
+      "durationMs": 107,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 127,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 0,
+      "durationMs": 1582,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 2034
+}

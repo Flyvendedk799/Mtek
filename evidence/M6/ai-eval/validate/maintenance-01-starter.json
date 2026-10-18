@@ -1,0 +1,115 @@
+{
+  "task": "maintenance-01",
+  "project": "starter",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "fail",
+      "reason": "2 errors; first MTEK-E3102: Field 'position' of entity 'Right' expects vec3, but received vec2. (src/main.mtek:16)",
+      "notRun": null
+    },
+    "build": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    },
+    "start": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    },
+    "tests": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Left",
+      "Demo.Right"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [
+    {
+      "schemaVersion": 1,
+      "code": "MTEK-E3102",
+      "severity": "error",
+      "title": "field or parameter type mismatch",
+      "message": "Field 'position' of entity 'Right' expects vec3, but received vec2.",
+      "source": {
+        "file": "src/main.mtek",
+        "startByte": 336,
+        "endByte": 350,
+        "startLine": 16,
+        "startColumn": 19,
+        "endLine": 16,
+        "endColumn": 33
+      },
+      "expected": "vec3",
+      "actual": "vec2",
+      "related": [],
+      "notes": [
+        "a vec3 has 3 components; this value has 2"
+      ],
+      "suggestedEdits": [],
+      "phase": "check",
+      "docs": "spec/diagnostics.md#mtek-e3102"
+    },
+    {
+      "schemaVersion": 1,
+      "code": "MTEK-E5001",
+      "severity": "error",
+      "title": "unknown field",
+      "message": "Unknown field 'colour' on Unlit. Valid fields: color.",
+      "source": {
+        "file": "src/main.mtek",
+        "startByte": 427,
+        "endByte": 433,
+        "startLine": 18,
+        "startColumn": 27,
+        "endLine": 18,
+        "endColumn": 33
+      },
+      "related": [],
+      "notes": [
+        "help: did you mean 'color'?"
+      ],
+      "suggestedEdits": [],
+      "phase": "check",
+      "docs": "spec/diagnostics.md#mtek-e5001"
+    }
+  ],
+  "testReport": null,
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "fail",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 1,
+      "durationMs": 108,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Left",
+      "exitCode": 0,
+      "durationMs": 110,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Right",
+      "exitCode": 0,
+      "durationMs": 109,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 328
+}

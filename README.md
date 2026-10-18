@@ -84,6 +84,17 @@ cargo run -p mtek-cli -- test examples/pulse-cube
 MTEK_BROWSER_ARGS=--disable-gpu cargo run -p mtek-cli -- test examples/pulse-cube --allow-not-run   # NOT-RUN, exit 0
 ```
 
+#### The repair harness (M6)
+
+`tools/ai-eval` is the provider-independent generate, validate, repair loop of the AI benchmark
+(`spec/ai-and-benchmarks.md` section 4, decision 0077, usage in `tools/ai-eval/README.md`). It runs
+the real `mtek check`, `build`, `test` and `context` on a candidate, records every layer on its own to
+`records.jsonl` (`spec/ai-eval-record.schema.json`), and counts a candidate as a success only when every layer
+passes and the task's required declarations still exist; a layer that could not run (no GPU) is NOT-RUN,
+never a pass. `node tools/ai-eval/src/cli.ts validate --task benchmarks/tasks/<id> [--project DIR]`
+validates the starter or any project of a task; `npm run test:unit -w @mtek/ai-eval` needs no network and no GPU.
+No language package imports the harness or an inference provider: `npm run lint` checks it.
+
 #### The CPU/GPU bridge specs (M0)
 
 `tests/browser/specs/bridge/` proves on real WebGPU that values written by the **generated** JavaScript
