@@ -820,3 +820,97 @@ fn scaffold_check_succeeds_for_the_demo() {
     assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
     assert_eq!(codes(&report_of(&out, &scratch)), [] as [&str; 0]);
 }
+
+/// Every example under `examples/` checks clean: no error and no warning (the release
+/// demonstrations of decision 0002 must always compile against the current compiler).
+#[test]
+fn every_example_checks_without_diagnostics() {
+    let examples = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples");
+    let mut checked = Vec::new();
+    for entry in fs::read_dir(&examples).unwrap() {
+        let dir = entry.unwrap().path();
+        if !dir.join("mtek.toml").is_file() {
+            continue;
+        }
+        let out = run(&["check", "--format", "json", dir.to_str().unwrap()]);
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "{}: {}",
+            dir.display(),
+            stdout(&out)
+        );
+        let report = json(&out);
+        assert_schema_valid(&report);
+        assert_eq!(
+            codes(&report),
+            [] as [&str; 0],
+            "{} has diagnostics",
+            dir.display()
+        );
+        checked.push(dir.file_name().unwrap().to_str().unwrap().to_owned());
+    }
+    checked.sort();
+    assert!(
+        checked.contains(&"physics-playground".to_owned()),
+        "the physics playground was not found among {checked:?}"
+    );
+}
+
+/// The ownership rule on the real physics playground (decision 0069): put the two mistakes its
+/// handlers avoid back into the example's own source (lift `First` by writing its position, put a
+/// fallen crate back by writing its rotation through `self`) and `mtek check` rejects exactly
+/// those two writes with `E5071`. The edits are asserted to apply, so the test cannot pass on an
+/// example that was reworded.
+#[test]
+fn writing_the_pose_of_a_dynamic_body_in_the_physics_playground_is_e5071() {
+    let example = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/physics-playground");
+    let scratch = Scratch::new("playground-e5071");
+    let project = scratch.path("physics-playground");
+    for (rel, bytes) in tree(&example) {
+        if rel.starts_with("dist/") {
+            continue;
+        }
+        let to = project.join(&rel);
+        fs::create_dir_all(to.parent().unwrap()).unwrap();
+        fs::write(to, bytes).unwrap();
+    }
+    let main = project.join("src/main.mtek");
+    let source = fs::read_to_string(&main).unwrap();
+    let lift = "First.body.apply_impulse(vec3(0.0, JUMP_IMPULSE, 0.0));";
+    let remove = "destroy(self);";
+    assert_eq!(
+        source.matches(lift).count(),
+        1,
+        "the example's Space handler changed"
+    );
+    assert_eq!(
+        source.matches(remove).count(),
+        1,
+        "the example's crate cleanup changed"
+    );
+    let edited = source
+        .replace(lift, "First.position.y += 5.0;")
+        .replace(remove, "self.rotation = quat.identity();");
+    fs::write(&main, edited).unwrap();
+
+    let out = run_in(
+        &scratch.0,
+        &["check", "--format", "json", "physics-playground"],
+    );
+    assert_eq!(out.status.code(), Some(1), "{}", stdout(&out));
+    let report = json(&out);
+    assert_schema_valid(&report);
+    assert_eq!(codes(&report), ["MTEK-E5071", "MTEK-E5071"]);
+    let messages: Vec<&str> = report["diagnostics"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|d| d["message"].as_str().unwrap())
+        .collect();
+    assert!(
+        messages[0].contains("`self.rotation`") && messages[0].contains("prefab 'Crate'"),
+        "{messages:?}"
+    );
+    assert!(messages[1].contains("`First.position`"), "{messages:?}");
+}

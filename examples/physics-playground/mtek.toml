@@ -1,0 +1,9 @@
+[project]
+name = "physics-playground"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Playground"
+
+[build]
+target = "web"
+title = "Physics Playground"

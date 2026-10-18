@@ -1,0 +1,36 @@
+// The shape of examples/physics-playground with the three mistakes its handlers are written to avoid: lifting
+// the crate by assigning its position, putting a fallen crate back by assigning its position through `self`, and
+// resetting a rotation. The solver owns the pose of every dynamic body, including the bodies of prefab
+// instances, so each assignment is E5071; the working versions are `apply_impulse`, `destroy` and `teleport`.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 0.5, 0.0);
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+    material: Unlit { color: #5b8def; };
+    body: Dynamic { mass: 2.0; };
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    fixed_update(dt: f32) {
+        if self.position.y < -10.0 {
+            self.position = vec3(0.0, 6.0, 0.0);
+        }
+    }
+}
+
+scene Playground {
+    camera Main {}
+    entity Floor {
+        position: vec3(0.0, -0.5, 0.0);
+        mesh: Box { size: vec3(14.0, 1.0, 8.0); };
+        body: Static {};
+        collider: BoxCollider { size: vec3(14.0, 1.0, 8.0); };
+    }
+    entity First: Crate {
+        origin: vec3(-4.5, 0.5, 0.0);
+    }
+    on key_down(Key.Space) {
+        First.position.y += 5.0;
+    }
+    on key_down(Key.R) {
+        First.rotation = quat.identity();
+    }
+}
