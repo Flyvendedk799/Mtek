@@ -1,0 +1,18 @@
+// Custom fragment logic, lit by the documented PBR model: horizontal stripes from the texture coordinate.
+fn stripe(v: f32, bands: f32) -> f32 {
+    return step(0.5, fract(v * bands));
+}
+
+/// Stripes of `stripe_a` and `stripe_b` along the v coordinate of the mesh (`bands` pairs from top to bottom).
+export material Striped {
+    param stripe_a: color = #e8e2d0;
+    param stripe_b: color = #2a3f5f;
+    param bands: f32 = 6.0;
+    param metallic: f32 = 0.0;
+    param roughness: f32 = 0.6;
+
+    fragment(input: SurfaceInput) -> color {
+        let albedo = color.linear(mix(stripe_a.rgb, stripe_b.rgb, stripe(input.uv.y, bands)), 1.0);
+        return lighting.pbr(input, albedo, metallic, roughness);
+    }
+}

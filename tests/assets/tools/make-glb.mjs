@@ -10,6 +10,7 @@
 //
 //   node tests/assets/tools/make-glb.mjs           write the files
 //   node tests/assets/tools/make-glb.mjs --check   fail if a file on disk differs (npm run check)
+//   node tests/assets/tools/make-glb.mjs --out DIR write the same tree under DIR (repository-relative paths)
 //
 // The output is byte-for-byte deterministic: no timestamps, a fixed zlib level.
 
@@ -1379,6 +1380,133 @@ scene Corrupt {
 );
 
 // ---------------------------------------------------------------------------
+// The material configurator (task M4-10): `examples/material-configurator/models/chair.glb` and two variants that break one
+// row of the profile each (`tests/browser/fixtures/m4-variants/`, which the browser spec builds with the CLI). Everything
+// is written from explicit data, so `specs/m4/configurator.spec.ts` derives its expectations from the numbers below, never
+// from what the renderer draws. Metres, +Y up, the chair faces +Z in its own frame; the node "Chair" turns it by CHAIR_YAW.
+//
+//   mesh   "Floor"  one quad, 3.2 x 3.2 at y = 0, normal +Y                                      material Stone
+//   mesh   "Seat"   box 0.5 x 0.06 x 0.5                                                          material Fabric
+//   mesh   "Back"   box 0.5 x 0.4 x 0.04                                                          material Fabric
+//   mesh   "Leg"    tapered prism, 0.05 x 0.05 at the bottom, 0.08 x 0.08 at the top, 0.42 high  material Oak
+//   mesh   "Rails"  two primitives: boxes 0.4 x 0.035 x 0.035 at z = +0.2 and z = -0.2            material Steel
+//
+//   node Floor  (scene root)           no transform
+//   node Chair  (scene root)           rotation CHAIR_YAW about +Y; children below
+//     Seat      translation (0, 0.45, 0)
+//     Back      translation (0, 0.74, -0.23), rotation CHAIR_LEAN (-0.15 rad) about +X (it leans back)
+//     LegFL/FR/BL/BR   translation (+-0.2, 0.21, +-0.2) (F = +Z, L = +X)
+//     Rails     translation (0, 0.14, 0)
+//
+// The legs are one mesh used four times, a tapered prism rather than a box on purpose: a box face keeps its direction
+// under any scale, so a wrong normal matrix would not show on boxes, but the slanted sides of a leg do.
+
+const CHAIR_YAW = 0.5;
+const CHAIR_LEAN = -0.15;
+
+/** The faces of a box in the order of spec/stdlib.md section 4: normal, in-face axes u and v (u x v = n). */
+const BOX_FACES = [
+  [[1, 0, 0], [0, 0, -1], [0, 1, 0]],
+  [[-1, 0, 0], [0, 0, 1], [0, 1, 0]],
+  [[0, 1, 0], [1, 0, 0], [0, 0, -1]],
+  [[0, -1, 0], [1, 0, 0], [0, 0, 1]],
+  [[0, 0, 1], [1, 0, 0], [0, 1, 0]],
+  [[0, 0, -1], [-1, 0, 0], [0, 1, 0]],
+];
+
+/**
+ * A prism centred on `center` with half extents `bottom` = (x, z) at y = -height / 2 and `top` at y = +height / 2 (a box when
+ * they agree). Per face (one of `faces`, indices into BOX_FACES): four vertices with the flat normal of the face, uv
+ * (0, 1) (1, 1) (1, 0) (0, 0) for the corners c - u - v, c + u - v, c + u + v, c - u + v, indices 0 1 2 0 2 3.
+ */
+function prism({ bottom, top, height, center = [0, 0, 0], faces = [0, 1, 2, 3, 4, 5] }) {
+  const corner = (s) => [
+    center[0] + s[0] * (s[1] < 0 ? bottom[0] : top[0]),
+    center[1] + (s[1] * height) / 2,
+    center[2] + s[2] * (s[1] < 0 ? bottom[1] : top[1]),
+  ];
+  const positions = [];
+  const normals = [];
+  const uvs = [];
+  const indices = [];
+  for (const face of faces) {
+    const [n, u, v] = BOX_FACES[face];
+    const quad = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([su, sv]) => corner(n.map((c, i) => c + su * u[i] + sv * v[i])));
+    const edge1 = quad[1].map((c, i) => c - quad[0][i]);
+    const edge2 = quad[3].map((c, i) => c - quad[0][i]);
+    const cross = [
+      edge1[1] * edge2[2] - edge1[2] * edge2[1],
+      edge1[2] * edge2[0] - edge1[0] * edge2[2],
+      edge1[0] * edge2[1] - edge1[1] * edge2[0],
+    ];
+    const length = Math.hypot(...cross);
+    const base = positions.length / 3;
+    for (const p of quad) positions.push(...p);
+    for (let i = 0; i < 4; i += 1) normals.push(...cross.map((c) => c / length));
+    uvs.push(0, 1, 1, 1, 1, 0, 0, 0);
+    indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  }
+  return { positions, normals, uvs, indices };
+}
+
+/** One model primitive from `prism` output. */
+function addPrism(m, geometry, material) {
+  return {
+    attributes: { POSITION: m.positions(geometry.positions), NORMAL: m.vec3s(geometry.normals), TEXCOORD_0: m.vec2s(geometry.uvs) },
+    indices: m.indices16(geometry.indices),
+    material,
+  };
+}
+
+const box = (sx, sy, sz, center) => prism({ bottom: [sx / 2, sz / 2], top: [sx / 2, sz / 2], height: sy, center });
+
+/**
+ * The chair. `variant` breaks exactly one row of the profile (spec/assets.md section 3): "normal_texture" gives the Fabric
+ * material a normal texture (E7016), "required_extension" declares an extension the file requires (E7004).
+ */
+function chairModel(variant = null) {
+  const m = new Model();
+  m.json.materials.push(
+    { name: "Stone", pbrMetallicRoughness: { baseColorFactor: [0.3, 0.3, 0.32, 1], metallicFactor: 0, roughnessFactor: 0.9 } },
+    { name: "Fabric", pbrMetallicRoughness: { baseColorFactor: [0.55, 0.12, 0.1, 1], metallicFactor: 0, roughnessFactor: 0.85 } },
+    { name: "Oak", pbrMetallicRoughness: { baseColorFactor: [0.45, 0.25, 0.1, 1], metallicFactor: 0, roughnessFactor: 0.55 } },
+    { name: "Steel", pbrMetallicRoughness: { baseColorFactor: [0.8, 0.8, 0.82, 1], metallicFactor: 1, roughnessFactor: 0.3 } },
+  );
+  const [STONE, FABRIC, OAK, STEEL] = [0, 1, 2, 3];
+  const floor = m.mesh("Floor", [addPrism(m, prism({ bottom: [1.6, 1.6], top: [1.6, 1.6], height: 0, faces: [2] }), STONE)]);
+  const seat = m.mesh("Seat", [addPrism(m, box(0.5, 0.06, 0.5), FABRIC)]);
+  const back = m.mesh("Back", [addPrism(m, box(0.5, 0.4, 0.04), FABRIC)]);
+  const leg = m.mesh("Leg", [addPrism(m, prism({ bottom: [0.025, 0.025], top: [0.04, 0.04], height: 0.42 }), OAK)]);
+  const rails = m.mesh("Rails", [
+    addPrism(m, box(0.4, 0.035, 0.035, [0, 0, 0.2]), STEEL),
+    addPrism(m, box(0.4, 0.035, 0.035, [0, 0, -0.2]), STEEL),
+  ]);
+  // Nodes: the scene roots first, then the children of "Chair" (node indices 2 to 8).
+  m.node({ name: "Floor", mesh: floor }, true);
+  m.node({ name: "Chair", rotation: [0, Math.sin(CHAIR_YAW / 2), 0, Math.cos(CHAIR_YAW / 2)], children: [2, 3, 4, 5, 6, 7, 8] }, true);
+  m.node({ name: "Seat", translation: [0, 0.45, 0], mesh: seat });
+  m.node({ name: "Back", translation: [0, 0.74, -0.23], rotation: [Math.sin(CHAIR_LEAN / 2), 0, 0, Math.cos(CHAIR_LEAN / 2)], mesh: back });
+  m.node({ name: "LegFL", translation: [0.2, 0.21, 0.2], mesh: leg });
+  m.node({ name: "LegFR", translation: [-0.2, 0.21, 0.2], mesh: leg });
+  m.node({ name: "LegBL", translation: [0.2, 0.21, -0.2], mesh: leg });
+  m.node({ name: "LegBR", translation: [-0.2, 0.21, -0.2], mesh: leg });
+  m.node({ name: "Rails", translation: [0, 0.14, 0], mesh: rails });
+  if (variant === "normal_texture") {
+    const image = m.image(CHECKER, "image/png");
+    m.json.textures = [{ source: image }];
+    m.json.materials[FABRIC].normalTexture = { index: 0 };
+  } else if (variant === "required_extension") {
+    m.json.extensionsUsed = ["KHR_draco_mesh_compression"];
+    m.json.extensionsRequired = ["KHR_draco_mesh_compression"];
+  }
+  return m.glb();
+}
+
+put("../../examples/material-configurator/models/chair.glb", chairModel());
+put("../browser/fixtures/m4-variants/chair_normal_texture.glb", chairModel("normal_texture"));
+put("../browser/fixtures/m4-variants/chair_required_extension.glb", chairModel("required_extension"));
+
+// ---------------------------------------------------------------------------
 
 function walk(dir, out = []) {
   if (!existsSync(dir)) return out;
@@ -1391,9 +1519,13 @@ function walk(dir, out = []) {
 }
 
 const check = process.argv.includes("--check");
+// `--out DIR` writes the same tree under DIR instead of the repository (the reproducibility test of the configurator model
+// regenerates into a scratch directory and compares bytes).
+const outIndex = process.argv.indexOf("--out");
+const outDir = outIndex >= 0 ? resolve(process.argv[outIndex + 1] ?? "") : null;
 let problems = 0;
 for (const [path, content] of [...files].sort(([a], [b]) => (a < b ? -1 : 1))) {
-  const target = join(root, path);
+  const target = outDir === null ? join(root, path) : join(outDir, relative(resolve(root, "../.."), join(root, path)));
   if (check) {
     if (!existsSync(target) || !readFileSync(target).equals(content)) {
       console.error(`${relative(resolve(root, "../.."), target).split("\\").join("/")} is out of date; run node tests/assets/tools/make-glb.mjs`);
@@ -1415,4 +1547,4 @@ for (const file of walk(root)) {
   }
 }
 if (check && problems > 0) process.exit(1);
-if (!check) console.log(`wrote ${files.size} files under tests/assets and the browser asset fixtures`);
+if (!check) console.log(`wrote ${files.size} files under ${outDir ?? "tests/assets, the browser asset fixtures and the examples"}`);
