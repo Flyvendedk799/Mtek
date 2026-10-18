@@ -1,0 +1,178 @@
+// M5-06: destroying and spawning inside collision callbacks, on the real physics engine (spec/physics.md section 6,
+// spec/scenes.md section 9, decisions 0064 and 0066 item 8, decision 0068). No gravity; every body flies along +x at
+// 5 m/s (4 m/s for the twins) and hits a static wall (face at x = 4.9) or another body. One press of Space spawns
+// everything; each lane tests one rule of "removal during callbacks":
+//   Mine (3, at z = -2, 0, 2)  hit the Pad in the same tick: three pairs (Pad, Mine) delivered one after the other. The
+//                              Pad counts every enter (lower slot first); each Mine drops a Mark{1} and destroys
+//                              itself, which must not disturb the other two pairs of the iteration. The Pad's exit
+//                              handler must never run: the Mines are gone before they could leave.
+//   Victim (z = 10)            hits the Killer, whose handler destroys `other`. The Killer has the lower slot, so it is
+//                              delivered first; the Victim is then pending removal and receives nothing, so its
+//                              Mark{2} is never spawned.
+//   Twin (2, head on, z = 20)  the lower slot's handler spawns a Mark{3} and destroys `other` and `self`: both are
+//                              pending, so the second delivery of the pair is skipped: exactly one Mark{3}, and no
+//                              diagnostic (a second destroy of a pending entity would report W8032).
+//   Breeder (z = 30)           hits the Nursery; its handler spawns a Mark{4} and three Sparks (dynamic bodies, created
+//                              at the next flush, never inside the callback) and destroys itself.
+// Marks are prefab instances without a body: they are the witnesses the browser spec counts in `debug.scene().spawned`
+// (their `tag` state is the kind). `ticks` counts fixed ticks; `pad_tick` records the tick of every Pad delivery.
+prefab Mark {
+    param kind: i32;
+    state tag: i32 = kind;
+}
+
+prefab Spark {
+    param origin: vec3;
+    position: origin;
+    mesh: Sphere { radius: 0.25; };
+    material: Unlit { color: #ffd040; };
+    body: Dynamic { mass: 1.0; };
+    collider: SphereCollider { radius: 0.25; };
+}
+
+prefab Mine {
+    param lane: f32;
+    state launched: i32 = 0;
+    position: vec3(2.0, 0.0, lane);
+    mesh: Sphere { radius: 0.25; };
+    material: Unlit { color: #ff4040; };
+    body: Dynamic { mass: 1.0; };
+    collider: SphereCollider { radius: 0.25; };
+    fixed_update(dt: f32) {
+        if self.launched == 0 {
+            self.body.set_linear_velocity(vec3(5.0, 0.0, 0.0));
+            self.launched = 1;
+        }
+    }
+    on collision_enter(other: entity_ref) {
+        spawn(Mark { kind: 1 });
+        destroy(self);
+    }
+}
+
+prefab Victim {
+    param lane: f32;
+    state launched: i32 = 0;
+    position: vec3(2.0, 0.0, lane);
+    mesh: Sphere { radius: 0.25; };
+    material: Unlit { color: #40ff40; };
+    body: Dynamic { mass: 1.0; };
+    collider: SphereCollider { radius: 0.25; };
+    fixed_update(dt: f32) {
+        if self.launched == 0 {
+            self.body.set_linear_velocity(vec3(5.0, 0.0, 0.0));
+            self.launched = 1;
+        }
+    }
+    on collision_enter(other: entity_ref) {
+        spawn(Mark { kind: 2 });
+    }
+}
+
+prefab Twin {
+    param lane: f32;
+    param x0: f32;
+    param speed: f32;
+    state launched: i32 = 0;
+    position: vec3(x0, 0.0, lane);
+    mesh: Sphere { radius: 0.25; };
+    material: Unlit { color: #4080ff; };
+    body: Dynamic { mass: 1.0; };
+    collider: SphereCollider { radius: 0.25; };
+    fixed_update(dt: f32) {
+        if self.launched == 0 {
+            self.body.set_linear_velocity(vec3(speed, 0.0, 0.0));
+            self.launched = 1;
+        }
+    }
+    on collision_enter(other: entity_ref) {
+        spawn(Mark { kind: 3 });
+        destroy(other);
+        destroy(self);
+    }
+}
+
+prefab Breeder {
+    param lane: f32;
+    state launched: i32 = 0;
+    position: vec3(2.0, 0.0, lane);
+    mesh: Sphere { radius: 0.25; };
+    material: Unlit { color: #ff80ff; };
+    body: Dynamic { mass: 1.0; };
+    collider: SphereCollider { radius: 0.25; };
+    fixed_update(dt: f32) {
+        if self.launched == 0 {
+            self.body.set_linear_velocity(vec3(5.0, 0.0, 0.0));
+            self.launched = 1;
+        }
+    }
+    on collision_enter(other: entity_ref) {
+        spawn(Mark { kind: 4 });
+        for i in 0..3 {
+            spawn(Spark { origin: vec3(3.0, 0.0, self.position.z - 2.0 + f32(i) * 2.0); });
+        }
+        destroy(self);
+    }
+}
+
+scene Callbacks {
+    clear_color: #202830;
+    gravity: vec3(0.0, 0.0, 0.0);
+    state ticks: i32 = 0;
+    state pad_hits: i32 = 0;
+    state pad_exits: i32 = 0;
+    state killer_hits: i32 = 0;
+    state nursery_hits: i32 = 0;
+    state pad_tick: array<i32, 8> = [0, 0, 0, 0, 0, 0, 0, 0];
+    camera Lens {
+        position: vec3(5.0, 40.0, 15.0);
+        target: vec3(5.0, 0.0, 15.0);
+    }
+    fixed_update(dt: f32) {
+        ticks += 1;
+    }
+    on key_down(Key.Space) {
+        for i in 0..3 {
+            spawn(Mine { lane: f32(i) * 2.0 - 2.0; });
+        }
+        spawn(Victim { lane: 10.0; });
+        spawn(Twin { lane: 20.0; x0: 2.0; speed: 4.0; });
+        spawn(Twin { lane: 20.0; x0: 8.0; speed: -4.0; });
+        spawn(Breeder { lane: 30.0; });
+    }
+    entity Pad {
+        position: vec3(5.0, 0.0, 0.0);
+        mesh: Box { size: vec3(0.2, 2.0, 8.0); };
+        material: Unlit { color: #405060; };
+        body: Static {};
+        collider: BoxCollider { size: vec3(0.2, 2.0, 8.0); };
+        on collision_enter(other: entity_ref) {
+            pad_tick[pad_hits] = ticks;
+            pad_hits += 1;
+        }
+        on collision_exit(other: entity_ref) {
+            pad_exits += 1;
+        }
+    }
+    entity Killer {
+        position: vec3(5.0, 0.0, 10.0);
+        mesh: Box { size: vec3(0.2, 2.0, 2.0); };
+        material: Unlit { color: #604050; };
+        body: Static {};
+        collider: BoxCollider { size: vec3(0.2, 2.0, 2.0); };
+        on collision_enter(other: entity_ref) {
+            killer_hits += 1;
+            destroy(other);
+        }
+    }
+    entity Nursery {
+        position: vec3(5.0, 0.0, 30.0);
+        mesh: Box { size: vec3(0.2, 2.0, 2.0); };
+        material: Unlit { color: #506040; };
+        body: Static {};
+        collider: BoxCollider { size: vec3(0.2, 2.0, 2.0); };
+        on collision_enter(other: entity_ref) {
+            nursery_hits += 1;
+        }
+    }
+}

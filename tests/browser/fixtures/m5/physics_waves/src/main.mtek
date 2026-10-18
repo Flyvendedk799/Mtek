@@ -1,0 +1,64 @@
+// M5-06: crates spawned and destroyed in waves, to show that the live resources of the renderer and of the physics world
+// reach a bounded plateau (spec/testing.md section 6.6, spec/physics.md section 7, decision 0068). Every press of Space
+// spawns a wave of 50 dynamic crates in ten columns of five (three tints, so the instanced draws and the shared
+// parameter blocks are exercised) above a static floor; each crate destroys itself after 90 fixed ticks, so a wave
+// lives, falls, piles up on the floor and is destroyed all at once, bodies in contact included. The browser spec
+// presses Space twenty times: 1 000 crates. D spawns a wave of 100 (ten columns of ten) instead, to show that the
+// plateau is set by the largest wave and does not grow with the number of waves.
+prefab Crate {
+    param origin: vec3;
+    param tint: color;
+    param life: i32;
+    state age: i32 = 0;
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+    material: Unlit { color: tint; };
+    body: Dynamic { mass: 1.0; };
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    fixed_update(dt: f32) {
+        self.age += 1;
+        if self.age >= life {
+            destroy(self);
+        }
+    }
+}
+
+scene Waves {
+    clear_color: #202830;
+    state waves: i32 = 0;
+    camera Lens {
+        position: vec3(0.0, 8.0, 22.0);
+        target: vec3(0.0, 3.0, 0.0);
+    }
+    entity Floor {
+        position: vec3(0.0, -0.5, 0.0);
+        mesh: Box { size: vec3(24.0, 1.0, 8.0); };
+        material: Unlit { color: #405060; };
+        body: Static {};
+        collider: BoxCollider { size: vec3(24.0, 1.0, 8.0); };
+    }
+    on key_down(Key.Space) {
+        for i in 0..50 {
+            var tint: color = #ff4040;
+            if i % 3 == 1 {
+                tint = #40d060;
+            } else if i % 3 == 2 {
+                tint = #4080ff;
+            }
+            spawn(Crate { origin: vec3(f32(i % 10) * 1.6 - 7.2, 1.0 + f32(i / 10) * 1.2, f32(i % 3) * 0.1); tint: tint; life: 90; });
+        }
+        waves += 1;
+    }
+    on key_down(Key.D) {
+        for i in 0..100 {
+            var tint: color = #ff4040;
+            if i % 3 == 1 {
+                tint = #40d060;
+            } else if i % 3 == 2 {
+                tint = #4080ff;
+            }
+            spawn(Crate { origin: vec3(f32(i % 10) * 1.6 - 7.2, 1.0 + f32(i / 10) * 1.2, f32(i % 3) * 0.1); tint: tint; life: 90; });
+        }
+        waves += 1;
+    }
+}

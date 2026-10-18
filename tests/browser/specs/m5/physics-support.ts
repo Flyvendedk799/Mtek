@@ -65,3 +65,80 @@ export function crossingTimes(y0: number, v0: number, level: number, g = GRAVITY
   const root = Math.sqrt(discriminant);
   return [(-v0 - root) / (2 * a), (-v0 + root) / (2 * a)].filter((t) => t >= 0).sort((p, q) => p - q);
 }
+
+/** One thing a script does to a mounted application, in order. */
+export type Action =
+  | { op: "step"; frames: number; dt?: number }
+  | { op: "press"; key: string }
+  | { op: "release"; key: string }
+  | { op: "pause" }
+  | { op: "resume" }
+  | { op: "snap"; label: string };
+
+/** What a `snap` records: everything the specs read, copied out of the page. */
+export interface Snapshot {
+  label: string;
+  state: Record<string, number | number[]>;
+  counters: Record<string, number>;
+  spawned: SpawnedLike[];
+  /** Named entities by name. */
+  at: Record<string, { x: number; y: number; z: number }>;
+  appState: string;
+}
+
+export interface ScriptRun {
+  snaps: Snapshot[];
+  reported: DiagnosticLike[];
+  finalState: string;
+}
+
+/**
+ * Mounts the fixture with the manual clock and runs `actions` against it in the page; the application is disposed at
+ * the end. A `step` without `dt` uses the fixed step, so one frame is one tick (decision 0066 item 12).
+ */
+export async function runScript(page: Page, fixture: string, actions: readonly Action[]): Promise<ScriptRun> {
+  await openFixture(page, fixture);
+  return page.evaluate(
+    async ({ target, script, step }) => {
+      const w = window as unknown as { __mtekMount: (options: object) => Promise<AppLike> };
+      const reported: DiagnosticLike[] = [];
+      const app = await w.__mtekMount({ test: { manualClock: true, renderTarget: target }, onDiagnostic: (d: DiagnosticLike) => reported.push(d) });
+      const snaps: Snapshot[] = [];
+      for (const action of script) {
+        switch (action.op) {
+          case "step":
+            app.debug.step(action.frames, action.dt ?? step);
+            break;
+          case "press":
+            app.debug.pressKey(action.key);
+            break;
+          case "release":
+            app.debug.releaseKey(action.key);
+            break;
+          case "pause":
+            app.pause();
+            break;
+          case "resume":
+            app.resume();
+            break;
+          case "snap": {
+            const scene = app.debug.scene();
+            snaps.push({
+              label: action.label,
+              state: JSON.parse(JSON.stringify(scene.state)) as Snapshot["state"],
+              counters: { ...app.debug.counters() },
+              spawned: scene.spawned.map((entity) => ({ prefab: entity.prefab, slot: entity.slot, gen: entity.gen, alive: entity.alive, position: { ...entity.position }, state: { ...entity.state } })),
+              at: Object.fromEntries(scene.entities.map((entity) => [entity.name, { ...entity.position }])),
+              appState: app.state,
+            });
+            break;
+          }
+        }
+      }
+      const finalState = app.state;
+      app.dispose();
+      return { snaps, reported, finalState };
+    },
+    { target: TARGET, script: actions, step: STEP },
+  );
+}
