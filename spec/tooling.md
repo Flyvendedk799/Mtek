@@ -10,7 +10,7 @@
 | Command | Milestone | Purpose |
 |---|---|---|
 | `mtek check [--format human\|json] [PATH]` | M1 | parse + type-check; **no GPU needed**; exit 1 on errors |
-| `mtek build [--target web] [--mode release\|dev\|test\|preview] [--out DIR] [--format human\|json] [PATH]` | M1 (`preview`: M6) | produce `dist/` (`spec/runtime-abi.md` §2). `--target` accepts only `web` in v0.1 (the default; any other value is a usage error) |
+| `mtek build [--target web] [--mode release\|dev\|test\|preview] [--loop-budget N] [--out DIR] [--format human\|json] [PATH]` | M1 (`preview`: M6) | produce `dist/` (`spec/runtime-abi.md` §2). `--target` accepts only `web` in v0.1 (the default; any other value is a usage error) |
 | `mtek dev [--port N] [--open] [PATH]` | M1 (reload: M3) | build, serve, watch, rebuild; candidate-based hot reload from M3 |
 | `mtek inspect --ir\|--bindings\|--shaders\|--assets [--format human\|json] [PATH]` | M1 (`--ir`), M2 (`--shaders`, `--bindings`), M4 (`--assets`) | inspection (`spec/gpu-layout.md` §10; the views are decision 0044; `--assets` is the packaged assets of `spec/assets.md` §4, decision 0058) |
 | `mtek new NAME` | M3 | scaffold a project from the built-in template (`mtek.toml`, `src/main.mtek` with the Demo scene, `.gitignore`) |
@@ -36,7 +36,7 @@ What the commands print besides diagnostics, the colour rule for stderr, `--out`
 | `release` (default for `build`) | no dev overlay, no hot-reload client, `print` compiled out, warnings like `W8030` disabled |
 | `dev` (used by `mtek dev`) | overlay, hot-reload client, `print`, dev-only warnings, `timestamp-query` requested if available |
 | `test` | like `dev` without the overlay and reload client; `index.html` does not auto-mount and exposes `window.__mtekMount(options)` (signature in `spec/runtime-abi.md` §6.5) for Playwright; probe shaders emitted when requested by fixtures |
-| `preview` (M6) | like `release` plus CPU loop budgets, network restriction, external `bootstrap.js` and a restrictive Content-Security-Policy (`spec/ai-and-benchmarks.md` §5) |
+| `preview` (M6) | like `release` plus CPU loop budgets (`--loop-budget N`, default 10 million iterations per frame, valid with this mode only), a manifest that restricts the runtime's network access to `baseUrl`, external `bootstrap.js` and a restrictive Content-Security-Policy (`spec/ai-and-benchmarks.md` §5, decision 0075); the build runs against a 10 s clock (`E9032`) |
 
 ## 3. `mtek.toml`
 

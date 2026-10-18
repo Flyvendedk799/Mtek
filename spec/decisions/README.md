@@ -93,3 +93,4 @@ recorded here before code depends on it (blueprint §15).
 | 0080 | PBR lighting aligned with glTF: dielectric-Fresnel diffuse, un-squared range window, `(1 − m)` ambient, stable GGX form, no-NaN rule (0064–0079 left free for parallel M5 work) |
 | 0081 | Camera exposure (EV100): `Camera.exposure`, the scale `1 / (1.2 · 2^EV100)` applied by `lighting.pbr`, `MtekFrame.exposure`, default `-log2(1.2π)` |
 | 0082 | Asset diagnostics follow-ups: the optional image `source` in the manifest and overlay, EXIF-oriented JPEGs rejected with `E7017`, the E70xx codes of 0058 made final |
+| 0075 | Untrusted preview mode: the loop budget checked at the head of every CPU loop iteration (`ctx.budget`, default 10 million per frame, the host's `--loop-budget`), `E8080` at the loop with the scene stopped and the overlay, the manifest `preview` object, the runtime's network guard, the policy page and external `bootstrap.js`, the 10 s compile limit (`E9032`), the hosting guidance |
