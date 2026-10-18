@@ -46,8 +46,9 @@ From a clean checkout:
 |---|---|
 | [`examples/pulse-cube`](examples/pulse-cube) | the `mtek new` scaffold: a rotating cube, one material, one host input (M3) |
 | [`examples/material-configurator`](examples/material-configurator) | a multi-file configurator: a generated chair (GLB), PBR materials bound to host inputs, a custom fragment material, lights, a host page, and instanced legs (M4); its browser specs are the evidence for the M4 exit gate |
+| [`examples/physics-playground`](examples/physics-playground) | a floor, a prefab crate, an impulse on Space, seeded crates on C, a sensor zone that counts them, crates destroyed below a height, and a bar bound to the count (M5); its browser spec is part of the M5 evidence |
 
-Global setup of the browser tests builds both with the CLI (`tests/browser/support/m3-fixtures.ts`, `m4-configurator.ts`).
+Global setup of the browser tests builds all three with the CLI (`tests/browser/support/m3-fixtures.ts`, `m4-configurator.ts`, `m5-playground.ts`).
 
 ### Browser tests
 
