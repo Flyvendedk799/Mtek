@@ -208,10 +208,9 @@ async function runCommand(
     transcript: one(parsed, "transcript"),
     acceptGrammar: parsed.flags.has("accept-grammar"),
   };
-  const client = deps.client ?? (await createClient(clientName as string, adapterOptions, { env, fetch: deps.fetch }));
-
   const runId = one(parsed, "run-id") ?? `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(runId)) throw new UsageError("--run-id may contain letters, digits, '.', '_' and '-'");
+  const client = deps.client ?? (await createClient(clientName as string, adapterOptions, { env, fetch: deps.fetch }));
   const outRoot = resolve(one(parsed, "out") ?? join(repoRoot(), "benchmarks", "results"));
   const runDir = join(outRoot, runId);
   mkdirSync(outRoot, { recursive: true });

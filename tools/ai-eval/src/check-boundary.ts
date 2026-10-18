@@ -75,10 +75,10 @@ export function scanImports(source: string): ImportRef[] {
     found.push({ specifier, line: text.slice(0, index).split("\n").length, dynamic });
   };
   const patterns: [RegExp, boolean][] = [
-    [/\bimport\s+(?:type\s+)?(?:[\w*${},\s]*?\s+from\s+)?["']([^"'\n]+)["']/g, false],
-    [/\bexport\s+(?:type\s+)?(?:\*(?:\s+as\s+\w+)?|\{[^}]*\})\s+from\s+["']([^"'\n]+)["']/g, false],
-    [/\bimport\s*\(\s*["']([^"'\n]+)["']\s*\)/g, true],
-    [/\brequire\s*\(\s*["']([^"'\n]+)["']\s*\)/g, false],
+    [/(?<![.\w$])import\s+(?:type\s+)?(?:[\w*${},\s]*?\s+from\s+)?["']([^"'\n]+)["']/g, false],
+    [/(?<![.\w$])export\s+(?:type\s+)?(?:\*(?:\s+as\s+\w+)?|\{[^}]*\})\s+from\s+["']([^"'\n]+)["']/g, false],
+    [/(?<![.\w$])import\s*\(\s*["']([^"'\n]+)["']\s*\)/g, true],
+    [/(?<![.\w$])require\s*\(\s*["']([^"'\n]+)["']\s*\)/g, false],
   ];
   for (const [pattern, dynamic] of patterns) {
     for (const match of text.matchAll(pattern)) add(match[1], match.index, dynamic);

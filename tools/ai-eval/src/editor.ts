@@ -122,7 +122,6 @@ export function parseBlocks(reply: string): ParsedReply {
   let buffer: string[] = [];
   let search = "";
   let startLine = 0;
-  let number = 0;
   const here = (line: number): string => `line ${String(line)}`;
 
   const open = (line: string, lineNumber: number): void => {
@@ -166,7 +165,7 @@ export function parseBlocks(reply: string): ParsedReply {
   };
 
   for (const [position, line] of lines.entries()) {
-    number = position + 1;
+    const number = position + 1;
     switch (state) {
       case "outside":
       case "afterFile":

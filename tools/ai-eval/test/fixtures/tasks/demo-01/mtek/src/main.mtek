@@ -1,0 +1,8 @@
+scene Demo {
+    entity Cube {
+        speed = 1;
+    }
+    entity Marker {
+        size = 2;
+    }
+}

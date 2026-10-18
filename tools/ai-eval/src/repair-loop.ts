@@ -35,7 +35,7 @@ import { initialPrompt, PROMPT_VERSION, rejectionPrompt, systemPrompt, validatio
 import type { Condition, Recorder, TrialEndRecord } from "./recorder.ts";
 import { projectEntry } from "./context-builder.ts";
 import type { TaskSpec } from "./task.ts";
-import { Validator, type ValidationResult } from "./validator.ts";
+import { scrubPaths, Validator, type ValidationResult } from "./validator.ts";
 import { Workspace } from "./workspace.ts";
 
 export const DEFAULT_CONTEXT_MAX_BYTES = 24_000;
@@ -236,7 +236,7 @@ export class RepairLoop {
       });
     } catch (error) {
       if (!(error instanceof ToolError)) throw error;
-      contextError = error.message;
+      contextError = scrubPaths(error.message, [[workspace.projectDir, "<project>"]]);
     }
     recorder.record({
       type: "trial-start",

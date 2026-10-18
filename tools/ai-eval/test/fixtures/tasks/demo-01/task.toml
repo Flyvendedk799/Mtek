@@ -1,0 +1,12 @@
+id = "demo-01"
+category = "interaction"
+mode = "edit"
+title = "Reverse the cube's speed"
+prompt = """The scene Demo has a cube named Cube and a marker named Marker. Make the cube's speed negative."""
+required_symbols = ["Demo.Cube", "Demo.Marker"]
+mtek_side_status = "unverified-until-M6"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

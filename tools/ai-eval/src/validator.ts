@@ -106,6 +106,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/** Replaces machine paths (in both separator spellings) so that a record never names the machine it ran on. */
+export function scrubPaths(text: string, replacements: readonly (readonly [string, string])[]): string {
+  let out = text;
+  for (const [path, label] of replacements) {
+    for (const spelling of new Set([path, path.replace(/\\/g, "/"), path.replace(/\//g, "\\")])) {
+      if (spelling !== "") out = out.split(spelling).join(label);
+    }
+  }
+  return out;
+}
+
 function firstLine(text: string): string {
   return text.trim().split("\n")[0]?.trim() ?? "";
 }
@@ -349,7 +360,7 @@ export class Validator {
       }
     } catch (error) {
       if (!(error instanceof ToolError)) throw error;
-      toolError = error.message;
+      toolError = scrubPaths(error.message, [[input.projectDir, "<project>"], [input.outDir, "<out>"]]);
     }
 
     return {

@@ -6,7 +6,7 @@
 // attribute prompt size to instructions, context, project files, diagnostics, test feedback and the
 // rest (spec 6.4). Sizes are characters, not tokens: token attribution belongs to the analysis, which
 // has the provider's own counts per call.
-import { renderDiagnostics, type Diagnostic } from "./diagnostics.ts";
+import { renderDiagnostics } from "./diagnostics.ts";
 import type { EditPolicy, EditRejection } from "./editor.ts";
 import type { BuiltContext } from "./context-builder.ts";
 import { LAYERS, type LayerResult } from "./outcomes.ts";
@@ -122,7 +122,11 @@ export function rejectionPrompt(rejections: readonly EditRejection[], options: R
 
 /** The message after a candidate that was applied but does not yet satisfy the task. */
 export function validationPrompt(result: ValidationResult, options: RepairOptions): PromptText {
-  const layerLines = LAYERS.map((name) => layerLine(name, result.layers[name]));
+  // With status-only feedback the tests layer shows no reason: it names the failing expectation.
+  const layerLines = LAYERS.map((name) => {
+    const layer = result.layers[name];
+    return layerLine(name, name === "tests" && options.testFeedback === "status-only" && layer.outcome === "fail" ? { ...layer, reason: null } : layer);
+  });
   const symbols = result.requiredSymbols;
   const symbolLine = `- required declarations: ${symbols.outcome}${symbols.reason === null ? "" : ` - ${symbols.reason}`}`;
   const parts: [string, string][] = [
@@ -132,7 +136,7 @@ export function validationPrompt(result: ValidationResult, options: RepairOption
     ],
   ];
   if (result.diagnostics.length > 0) {
-    parts.push(["diagnostics", `# Diagnostics\n\n${renderDiagnostics(result.diagnostics as Diagnostic[], options.read)}\n\n`]);
+    parts.push(["diagnostics", `# Diagnostics\n\n${renderDiagnostics(result.diagnostics, options.read)}\n\n`]);
   }
   if (symbols.missing.length > 0) {
     parts.push([
