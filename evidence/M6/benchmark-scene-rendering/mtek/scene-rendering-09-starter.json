@@ -1,0 +1,117 @@
+{
+  "task": "scene-rendering-09",
+  "project": "starter",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "fail",
+      "reason": "1 errors; first MTEK-E9006: The entry scene 'Demo' (project.scene in mtek.toml) is not declared in the entry module 'src/main.mtek'.",
+      "notRun": null
+    },
+    "build": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    },
+    "start": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    },
+    "tests": {
+      "outcome": "not-run",
+      "reason": "check failed",
+      "notRun": "skipped"
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "fail",
+    "checked": [
+      "Demo.Mid",
+      "Demo.Slab",
+      "Demo.Far",
+      "Demo.Behind",
+      "Demo.Ghost",
+      "Demo.Rim"
+    ],
+    "missing": [
+      "Demo.Mid",
+      "Demo.Slab",
+      "Demo.Far",
+      "Demo.Behind",
+      "Demo.Ghost",
+      "Demo.Rim"
+    ],
+    "reason": "required symbols not declared: Demo.Mid, Demo.Slab, Demo.Far, Demo.Behind, Demo.Ghost, Demo.Rim"
+  },
+  "diagnostics": [
+    {
+      "schemaVersion": 1,
+      "code": "MTEK-E9006",
+      "severity": "error",
+      "title": "entry scene not found or ambiguous",
+      "message": "The entry scene 'Demo' (project.scene in mtek.toml) is not declared in the entry module 'src/main.mtek'.",
+      "source": null,
+      "related": [],
+      "notes": [
+        "help: the entry module declares no scene"
+      ],
+      "suggestedEdits": [],
+      "phase": "check",
+      "docs": "spec/diagnostics.md#mtek-e9006"
+    }
+  ],
+  "testReport": null,
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "fail",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 1,
+      "durationMs": 111,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Mid",
+      "exitCode": 2,
+      "durationMs": 110,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Slab",
+      "exitCode": 2,
+      "durationMs": 109,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Far",
+      "exitCode": 2,
+      "durationMs": 109,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Behind",
+      "exitCode": 2,
+      "durationMs": 111,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Ghost",
+      "exitCode": 2,
+      "durationMs": 110,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Rim",
+      "exitCode": 2,
+      "durationMs": 114,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 775
+}

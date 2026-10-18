@@ -1,0 +1,46 @@
+// One column: a box 1.2 wide and deep, `height` tall, standing on y = 0 at x = `x`.
+prefab Column {
+    param x: f32;
+    param height: f32;
+    param tint: color;
+    position: vec3(x, height * 0.5, 0.0);
+    scale: vec3(1.0, height, 1.0);
+    mesh: Box { size: vec3(1.2, 1.0, 1.2) };
+    material: Unlit { color: tint };
+}
+
+scene Demo {
+    clear_color: #0f172a;
+
+    camera Main {
+        position: vec3(0.0, 2.5, 14.0);
+        target: vec3(0.0, 1.5, 0.0);
+        projection: Perspective { fov_y: 0.8; near: 0.1; far: 1000.0 };
+    }
+
+    entity Column1: Column {
+        x: -4.0;
+        height: 1.0;
+        tint: #ef4444;
+    }
+    entity Column2: Column {
+        x: -2.0;
+        height: 2.0;
+        tint: #f59e0b;
+    }
+    entity Column3: Column {
+        x: 0.0;
+        height: 3.0;
+        tint: #22c55e;
+    }
+    entity Column4: Column {
+        x: 2.0;
+        height: 2.0;
+        tint: #3b82f6;
+    }
+    entity Column5: Column {
+        x: 4.0;
+        height: 1.0;
+        tint: #a855f7;
+    }
+}

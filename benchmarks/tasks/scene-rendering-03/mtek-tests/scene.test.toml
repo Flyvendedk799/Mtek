@@ -1,0 +1,64 @@
+# Expected pixels derived from the scene of the prompt by an independent CPU ray caster
+# (evidence/M6/benchmark-scene-rendering/derive.mjs and oracle.mjs: f64, entry-point ray casts, no three.js and no Mtek
+# runtime; lit surfaces shaded with the CPU oracle of spec/materials.md section 8). Every sampled pixel lies in a
+# surface whose boundary is at least 3 pixels away ("inside") or 1.5 to 2.25 pixels away ("near edge"), so neither
+# rasterisation rules nor the tessellation of a sphere decide a value.
+# Scene: Arm (rot 0.6435011) > Upper, Elbow (rot -1.287002, scale 0.75) > Fore, Hand; Base is a separate box.
+name = "a two-segment arm: children follow the rotation and scale of their parents"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # centre of Base
+  { expect_pixel = { x = 21, y = 89, color = "#64748b", tolerance = 2 } },
+  # centre of Upper
+  { expect_pixel = { x = 48, y = 69, color = "#3b82f6", tolerance = 2 } },
+  # centre of Fore
+  { expect_pixel = { x = 90, y = 60, color = "#22c55e", tolerance = 2 } },
+  # centre of Hand
+  { expect_pixel = { x = 106, y = 71, color = "#f43f5e", tolerance = 2 } },
+  # the clear colour
+  { expect_pixel = { x = 0, y = 0, color = "#14161c", tolerance = 2 } },
+  { expect_pixel = { x = 127, y = 0, color = "#14161c", tolerance = 2 } },
+  { expect_pixel = { x = 75, y = 127, color = "#14161c", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 3, color = "#14161c", tolerance = 2 } },
+  { expect_pixel = { x = 127, y = 120, color = "#14161c", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 65, y = 44, color = "#14161c", tolerance = 2 } },
+  { expect_pixel = { x = 69, y = 65, color = "#14161c", tolerance = 2 } },
+  { expect_pixel = { x = 5, y = 102, color = "#14161c", tolerance = 2 } },
+  { expect_pixel = { x = 29, y = 71, color = "#14161c", tolerance = 2 } },
+  # Base +X
+  # near the boundary
+  { expect_pixel = { x = 32, y = 96, color = "#64748b", tolerance = 2 } },
+  { expect_pixel = { x = 31, y = 92, color = "#64748b", tolerance = 2 } },
+  # Base +Z
+  { expect_pixel = { x = 11, y = 98, color = "#64748b", tolerance = 2 } },
+  { expect_pixel = { x = 11, y = 83, color = "#64748b", tolerance = 2 } },
+  { expect_pixel = { x = 26, y = 98, color = "#64748b", tolerance = 2 } },
+  { expect_pixel = { x = 26, y = 83, color = "#64748b", tolerance = 2 } },
+  { expect_pixel = { x = 13, y = 90, color = "#64748b", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 18, y = 82, color = "#64748b", tolerance = 2 } },
+  { expect_pixel = { x = 18, y = 99, color = "#64748b", tolerance = 2 } },
+  # Fore +Z
+  { expect_pixel = { x = 82, y = 51, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 98, y = 63, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 87, y = 55, color = "#22c55e", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 79, y = 47, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 82, y = 56, color = "#22c55e", tolerance = 2 } },
+  # Hand
+  { expect_pixel = { x = 102, y = 73, color = "#f43f5e", tolerance = 2 } },
+  { expect_pixel = { x = 109, y = 74, color = "#f43f5e", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 110, y = 67, color = "#f43f5e", tolerance = 2 } },
+  { expect_pixel = { x = 105, y = 66, color = "#f43f5e", tolerance = 2 } },
+  # Upper +Z
+  { expect_pixel = { x = 66, y = 51, color = "#3b82f6", tolerance = 2 } },
+  { expect_pixel = { x = 32, y = 76, color = "#3b82f6", tolerance = 2 } },
+  { expect_pixel = { x = 60, y = 63, color = "#3b82f6", tolerance = 2 } },
+  { expect_pixel = { x = 42, y = 78, color = "#3b82f6", tolerance = 2 } },
+  { expect_pixel = { x = 75, y = 53, color = "#3b82f6", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 32, y = 87, color = "#3b82f6", tolerance = 2 } },
+  { expect_pixel = { x = 51, y = 60, color = "#3b82f6", tolerance = 2 } },
+]

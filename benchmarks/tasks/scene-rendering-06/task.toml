@@ -1,0 +1,20 @@
+id = "scene-rendering-06"
+category = "scene-rendering"
+mode = "cold"
+title = "A cube and a floor lit by one directional light and an ambient term"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #0b0d12.
+- One camera at (2.5, 2.5, 5) looking at the origin, with a perspective projection (vertical field of view 0.9 radians, near plane 0.1, far plane 1000).
+- Both solids use a physically based material of the metallic-roughness kind, non-metallic (metalness 0), so they show a diffuse colour and a weak specular highlight:
+  - A box named Cube centred at the origin, edge length 2.0, base colour #c8a27a, roughness 0.8.
+  - A flat square named Floor, 10 x 10 units, one-sided, facing up (+Y), lying in the plane y = -1 and centred at (0, -1, 0), base colour #8a929c, roughness 0.9.
+- One white directional light named Sun that travels in the direction (0, -0.6, -0.8) (that is, down and away from the camera). Its strength is calibrated so that a perfectly matte (Lambertian) white surface whose normal points straight at the light renders as exactly white; a surface at an angle to the light receives proportionally less (the cosine of the angle).
+- A white ambient light of 10% of that strength: it adds, to every surface and regardless of its orientation, 10% of the surface's own diffuse colour.
+There are no shadows and no tone mapping: values above full brightness are simply clipped. The expected pixels were computed with the standard model (Lambertian diffuse plus a GGX specular term with Schlick Fresnel) and are checked with a tolerance of 6 per colour channel, which covers the small differences between implementations of that model (the shading of a tessellated sphere, rounding)."""
+required_symbols = ["Demo.Sun", "Demo.Floor", "Demo.Cube"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

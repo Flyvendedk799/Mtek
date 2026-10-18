@@ -1,0 +1,31 @@
+scene Demo {
+    clear_color: #0b0d12;
+    ambient_color: #ffffff;
+    // The ambient term adds 10% of the diffuse colour: 0.1 / pi, because the camera's default exposure scale (pi)
+    // multiplies the ambient term as well.
+    ambient_intensity: 0.031830989;
+
+    camera Main {
+        position: vec3(2.5, 2.5, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective { fov_y: 0.9; near: 0.1; far: 1000.0 };
+    }
+
+    // A directional light travels along its entity's -Z axis. Turning -Z about +X by -0.6435011
+    // (sine -0.6, cosine 0.8) gives the direction (0, -0.6, -0.8).
+    entity Sun {
+        rotation: quat.axis_angle(vec3(1.0, 0.0, 0.0), -0.6435011);
+        light: DirectionalLight { color: #ffffff; intensity: 1.0 };
+    }
+
+    entity Floor {
+        position: vec3(0.0, -1.0, 0.0);
+        mesh: Plane { size: vec2(10.0, 10.0) };
+        material: Pbr { base_color: #8a929c; metallic: 0.0; roughness: 0.9 };
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(2.0, 2.0, 2.0) };
+        material: Pbr { base_color: #c8a27a; metallic: 0.0; roughness: 0.8 };
+    }
+}

@@ -1,0 +1,30 @@
+scene Demo {
+    clear_color: #10131a;
+    ambient_color: #ffffff;
+    // The ambient term adds 5% of the diffuse colour: 0.05 / pi, because the camera's default exposure scale (pi)
+    // multiplies the ambient term as well.
+    ambient_intensity: 0.015915494;
+
+    camera Main {
+        position: vec3(0.0, 3.0, 8.0);
+        target: vec3(0.0, 0.5, 0.0);
+        projection: Perspective { fov_y: 0.8; near: 0.1; far: 1000.0 };
+    }
+
+    // Luminous intensity in candela: 9 cd gives 9 / 3^2 = 1 lux at 3 m, a squarely lit white surface at full brightness.
+    entity Lamp {
+        position: vec3(1.5, 3.0, 2.5);
+        light: PointLight { color: #ffffff; intensity: 9.0 };
+    }
+
+    entity Floor {
+        mesh: Plane { size: vec2(14.0, 14.0) };
+        material: Pbr { base_color: #9aa5b1; metallic: 0.0; roughness: 0.9 };
+    }
+
+    entity Ball {
+        position: vec3(0.0, 1.0, 0.0);
+        mesh: Sphere { radius: 1.0 };
+        material: Pbr { base_color: #e11d48; metallic: 0.0; roughness: 0.7 };
+    }
+}

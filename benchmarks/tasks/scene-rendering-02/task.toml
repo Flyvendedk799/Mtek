@@ -1,0 +1,17 @@
+id = "scene-rendering-02"
+category = "scene-rendering"
+mode = "cold"
+title = "A tilted amber bar with a red ball at its end"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #101820.
+- One camera at (0, 0, 8) looking at the origin, with a perspective projection (vertical field of view 0.8 radians, near plane 0.1, far plane 100).
+- An amber box named Bar centred at the origin: colour #f59e0b, edge length 4.0 along its own x axis, 1.0 along its own y axis and 0.5 along its own z axis. It is rotated about the world Z axis by 0.9272952 radians, counter-clockwise as seen from the camera (the angle whose cosine is 0.6 and whose sine is 0.8), so that its own x axis points along (0.6, 0.8, 0).
+- A red sphere named Tip at (1.2, 1.6, 0), which is the middle of the end face of the bar that lies along its own +x axis: colour #ef4444, radius 0.6.
+All surfaces are flat colours (no lighting)."""
+required_symbols = ["Demo.Bar", "Demo.Tip"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

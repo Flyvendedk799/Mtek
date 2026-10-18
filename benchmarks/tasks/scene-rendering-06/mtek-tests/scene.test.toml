@@ -1,0 +1,68 @@
+# Expected pixels derived from the scene of the prompt by an independent CPU ray caster
+# (evidence/M6/benchmark-scene-rendering/derive.mjs and oracle.mjs: f64, entry-point ray casts, no three.js and no Mtek
+# runtime; lit surfaces shaded with the CPU oracle of spec/materials.md section 8). Every sampled pixel lies in a
+# surface whose boundary is at least 3 pixels away ("inside") or 1.5 to 2.25 pixels away ("near edge"), so neither
+# rasterisation rules nor the tessellation of a sphere decide a value.
+# Scene: light travelling along (0, -0.6, -0.8): front faces get cos 0.8, top faces 0.6, the +X face only ambient.
+# Lit scene: the shading is the oracle of spec/materials.md section 8 (tests/browser/support/reference-shading.ts) with the
+# default camera exposure (scale pi, decision 0081). The prompt calibrates every light in observable terms (a matte white
+# surface facing the light squarely at the stated distance renders white), which in the units of that model is: directional
+# light 1 lux, point light I candela at d metres 1 lux when I = d^2 (9 candela at 3 m). An ambient term that adds the fraction
+# k of the diffuse colour is ambient_intensity = k / pi in these units, because the exposure scale multiplies the ambient term by
+# pi too (rule 9). The tolerance covers the differences between this model and three.js's MeshStandardMaterial (decision 0078
+# item 6); it still separates the cases the task is about by far more.
+name = "a cube and a floor lit by a directional light and ambient light"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # where the centre of Floor projects: Cube +Z
+  { expect_pixel = { x = 64, y = 82, color = "#be9b76", tolerance = 6 } },
+  # centre of Cube
+  { expect_pixel = { x = 64, y = 64, color = "#be9b76", tolerance = 6 } },
+  # the clear colour
+  { expect_pixel = { x = 0, y = 0, color = "#0b0d12", tolerance = 2 } },
+  { expect_pixel = { x = 127, y = 0, color = "#0b0d12", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 1, color = "#0b0d12", tolerance = 2 } },
+  { expect_pixel = { x = 2, y = 57, color = "#0b0d12", tolerance = 2 } },
+  { expect_pixel = { x = 124, y = 54, color = "#0b0d12", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 90, y = 37, color = "#0b0d12", tolerance = 2 } },
+  { expect_pixel = { x = 36, y = 40, color = "#0b0d12", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 34, color = "#0b0d12", tolerance = 2 } },
+  { expect_pixel = { x = 104, y = 52, color = "#0b0d12", tolerance = 2 } },
+  # Cube +X
+  { expect_pixel = { x = 88, y = 48, color = "#443526", tolerance = 6 } },
+  { expect_pixel = { x = 86, y = 73, color = "#443526", tolerance = 6 } },
+  { expect_pixel = { x = 79, y = 87, color = "#443526", tolerance = 6 } },
+  { expect_pixel = { x = 80, y = 60, color = "#443526", tolerance = 6 } },
+  { expect_pixel = { x = 79, y = 78, color = "#443526", tolerance = 6 } },
+  # near the boundary
+  { expect_pixel = { x = 89, y = 58, color = "#443526", tolerance = 6 } },
+  { expect_pixel = { x = 78, y = 69, color = "#443526", tolerance = 6 } },
+  # Cube +Y
+  { expect_pixel = { x = 85, y = 42, color = "#aa8a69", tolerance = 6 } },
+  { expect_pixel = { x = 42, y = 44, color = "#aa8a69", tolerance = 6 } },
+  { expect_pixel = { x = 63, y = 40, color = "#aa8a69", tolerance = 6 } },
+  { expect_pixel = { x = 73, y = 49, color = "#aa8a69", tolerance = 6 } },
+  { expect_pixel = { x = 53, y = 45, color = "#aa8a69", tolerance = 6 } },
+  # near the boundary
+  { expect_pixel = { x = 75, y = 40, color = "#aa8a69", tolerance = 6 } },
+  { expect_pixel = { x = 63, y = 49, color = "#aa8a69", tolerance = 6 } },
+  # Cube +Z
+  { expect_pixel = { x = 34, y = 49, color = "#be9b76", tolerance = 6 } },
+  { expect_pixel = { x = 37, y = 77, color = "#be9b76", tolerance = 6 } },
+  { expect_pixel = { x = 46, y = 62, color = "#be9b76", tolerance = 6 } },
+  { expect_pixel = { x = 49, y = 88, color = "#be9b76", tolerance = 6 } },
+  { expect_pixel = { x = 71, y = 95, color = "#be9b76", tolerance = 6 } },
+  # near the boundary
+  { expect_pixel = { x = 56, y = 51, color = "#be9b76", tolerance = 6 } },
+  { expect_pixel = { x = 75, y = 54, color = "#be9b76", tolerance = 6 } },
+  # Floor
+  { expect_pixel = { x = 0, y = 127, color = "#767d85", tolerance = 6 } },
+  { expect_pixel = { x = 127, y = 127, color = "#767d85", tolerance = 6 } },
+  { expect_pixel = { x = 127, y = 61, color = "#777d85", tolerance = 6 } },
+  { expect_pixel = { x = 1, y = 64, color = "#777d85", tolerance = 6 } },
+  { expect_pixel = { x = 48, y = 127, color = "#767d85", tolerance = 6 } },
+  # near the boundary
+  { expect_pixel = { x = 31, y = 79, color = "#767d85", tolerance = 6 } },
+  { expect_pixel = { x = 95, y = 55, color = "#777d85", tolerance = 6 } },
+]

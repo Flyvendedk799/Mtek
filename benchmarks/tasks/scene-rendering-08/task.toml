@@ -1,0 +1,21 @@
+id = "scene-rendering-08"
+category = "scene-rendering"
+mode = "edit"
+title = "Complete a row of five columns of different heights and colours"
+prompt = """The scene Demo shows one column, Column1, the leftmost of a row of five. Complete the row so that the scene renders exactly as follows. The picture is square.
+- The clear (background) colour stays #0f172a and the camera stays as it is: at (0, 2.5, 14) looking at (0, 1.5, 0), perspective, vertical field of view 0.8 radians, near plane 0.1, far plane 1000.
+- Every column is a box 1.2 wide (x) and 1.2 deep (z), with the height given below, standing on the plane y = 0 (its bottom face lies at y = 0) and centred at z = 0. All five are drawn with a flat colour.
+- The five columns, left to right as seen from the camera, named Column1 to Column5:
+  - Column1: x = -4, height 1, colour #ef4444 (already there; keep it)
+  - Column2: x = -2, height 2, colour #f59e0b
+  - Column3: x = 0, height 3, colour #22c55e
+  - Column4: x = 2, height 2, colour #3b82f6
+  - Column5: x = 4, height 1, colour #a855f7
+All surfaces are flat colours (no lighting). Do not remove anything that already exists."""
+required_symbols = ["Demo.Column1"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

@@ -1,0 +1,19 @@
+scene Demo {
+    clear_color: #1a1d23;
+
+    camera Main {
+        position: vec3(0.0, 3.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Floor {
+        mesh: Plane { size: vec2(7.0, 7.0) };
+        material: Unlit { color: #3f4a5a };
+    }
+
+    entity Crate {
+        position: vec3(0.0, 0.75, 0.0);
+        mesh: Box { size: vec3(1.5, 1.5, 1.5) };
+        material: Unlit { color: #f97316 };
+    }
+}

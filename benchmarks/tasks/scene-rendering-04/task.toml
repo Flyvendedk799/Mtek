@@ -1,0 +1,20 @@
+id = "scene-rendering-04"
+category = "scene-rendering"
+mode = "cold"
+title = "Three solids on a floor seen from an off-axis camera"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #9db4cc.
+- One camera at (5, 4, 9) looking at the point (0, 1, 0), with a perspective projection (vertical field of view 0.7 radians, near plane 0.1, far plane 1000).
+- A flat square floor named Floor: 12 x 12 units, lying in the plane y = 0 and centred on the origin, colour #4b5563. It is a one-sided surface that faces up (+Y); it is not drawn when seen from below.
+- Three solids stand on the floor:
+  - Tower: a box named Tower, colour #2563eb, 1.5 wide (x), 3.0 tall (y) and 1.5 deep (z), centred at (0, 1.5, 0).
+  - Block: a box named Block, colour #dc2626, 2.0 wide (x), 1.0 tall (y) and 2.0 deep (z), centred at (1.5, 0.5, 1.8).
+  - Ball: a sphere named Ball, colour #eab308, radius 0.8, centred at (-1.6, 0.8, 1.2).
+All surfaces are flat colours (no lighting). Solids nearer to the camera hide what is behind them."""
+required_symbols = ["Demo.Floor", "Demo.Tower", "Demo.Block", "Demo.Ball"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300
