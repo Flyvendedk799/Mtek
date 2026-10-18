@@ -12,7 +12,7 @@
 //    step 1/60 s, at most 4 ticks per frame, the whole steps beyond that dropped, the fraction of a step kept),
 //    run with BOTH values of the step that exist (1/60 in binary64, as the baseline support did before decision
 //    0088, and 0.016666668, the binary32 print that the Mtek manifest carries) and refusing a frame whose tick count
-//    or carried fraction would differ between them or lies within 0.001 of a step of a tick boundary.
+//    or dropped count differs between them, or that ends within 0.001 of a step of a tick boundary.
 import { Fixture, colorAt, rect, writeFixtures } from "../../benchmark-interaction/oracle/lib.mjs";
 
 export { Fixture, colorAt, rect, writeFixtures };

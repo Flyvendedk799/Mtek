@@ -1,0 +1,157 @@
+{
+  "task": "interaction-09",
+  "project": "benchmarks/tasks/interaction-09/reference/mtek",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Stone",
+      "Demo.Power",
+      "Demo.power"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "pass",
+    "exitCode": 0,
+    "summary": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/events-of-one-frame-are-handled-in-order.test.toml",
+        "name": "key events within one frame are handled in the order they happened",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 147,
+        "stepsTotal": 147
+      },
+      {
+        "file": "tests/power-is-capped-and-needs-space-held.test.toml",
+        "name": "Up counts only while Space is held, up to 5, and a launch stops at x = 5",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 165,
+        "stepsTotal": 165
+      },
+      {
+        "file": "tests/release-launches-and-press-does-not.test.toml",
+        "name": "the Stone is launched by the release of Space, not by its press",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 184,
+        "stepsTotal": 184
+      },
+      {
+        "file": "tests/stone-stays-without-input.test.toml",
+        "name": "nothing happens without a key event",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 36,
+        "stepsTotal": 36
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "pass",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 148,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Stone",
+      "exitCode": 0,
+      "durationMs": 134,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Power",
+      "exitCode": 0,
+      "durationMs": 133,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.power",
+      "exitCode": 0,
+      "durationMs": 132,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 154,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 0,
+      "durationMs": 4142,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 4845
+}

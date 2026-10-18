@@ -1,0 +1,630 @@
+{
+  "kind": "mutants",
+  "total": 29,
+  "ok": 29,
+  "unexpected": [],
+  "results": [
+    {
+      "task": "interaction-09",
+      "name": "launch-on-press",
+      "what": "the Stone is launched when Space is pressed (nothing happens on release)",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Up counts only while Space is held, up to 5, and a launch stops at x = 5",
+        "key events within one frame are handled in the order they happened",
+        "the Stone is launched by the release of Space, not by its press"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "no-right-limit",
+      "what": "a launch is not cut off at x = 5",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Up counts only while Space is held, up to 5, and a launch stops at x = 5"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "up-counts-without-space",
+      "what": "Up adds power also while Space is not held",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Up counts only while Space is held, up to 5, and a launch stops at x = 5",
+        "key events within one frame are handled in the order they happened"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "power-not-reset",
+      "what": "power stays after a launch",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Up counts only while Space is held, up to 5, and a launch stops at x = 5",
+        "key events within one frame are handled in the order they happened",
+        "the Stone is launched by the release of Space, not by its press"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "release-ignored-for-state",
+      "what": "the held state is never cleared by the release (colour and Up stay as if held)",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Up counts only while Space is held, up to 5, and a launch stops at x = 5",
+        "key events within one frame are handled in the order they happened",
+        "the Stone is launched by the release of Space, not by its press"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "cap-six",
+      "what": "power is capped at 6 instead of 5",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Up counts only while Space is held, up to 5, and a launch stops at x = 5"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "one-unit-per-point",
+      "what": "a launch moves 1 unit per point of power instead of 2",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Up counts only while Space is held, up to 5, and a launch stops at x = 5",
+        "key events within one frame are handled in the order they happened",
+        "the Stone is launched by the release of Space, not by its press"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "up-release-also-launches",
+      "what": "the release of Up launches as well",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "Up counts only while Space is held, up to 5, and a launch stops at x = 5",
+        "key events within one frame are handled in the order they happened",
+        "the Stone is launched by the release of Space, not by its press"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "is-key-down-in-the-up-handler",
+      "what": "the Up handler asks is_key_down(Space) instead of the tracked state",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "key events within one frame are handled in the order they happened"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-09",
+      "name": "polling-edges-in-update",
+      "what": "key events are not handled; Space and Up are polled in update and compared with the previous frame",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 4,
+      "failedFixtures": [
+        "key events within one frame are handled in the order they happened"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "move-once-per-press",
+      "what": "each press moves the Ship 0.5 unit; nothing happens while held",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 4,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a held key moves the Ship in every frame until it is released",
+        "keys held at the same time all act, opposite keys cancel out",
+        "the centre of the Ship is limited to -4 .. 4 on each axis",
+        "the distance in a frame is 8 times that frame's duration"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "half-a-unit-per-frame",
+      "what": "the Ship moves 0.5 per frame instead of 8 times the frame duration",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "the distance in a frame is 8 times that frame's duration"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "no-clamp",
+      "what": "the Ship is not limited to the Field",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "the centre of the Ship is limited to -4 .. 4 on each axis",
+        "the distance in a frame is 8 times that frame's duration"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "limit-five",
+      "what": "the limit is 5 instead of 4",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "the centre of the Ship is limited to -4 .. 4 on each axis",
+        "the distance in a frame is 8 times that frame's duration"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "right-and-up-win",
+      "what": "opposite keys do not cancel: Right wins over Left and Up over Down (else-if chains)",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "keys held at the same time all act, opposite keys cancel out"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "no-diagonal",
+      "what": "only one axis moves at a time (vertical keys are ignored while a horizontal key is held)",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "keys held at the same time all act, opposite keys cancel out",
+        "the centre of the Ship is limited to -4 .. 4 on each axis"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "release-ignored",
+      "what": "the direction is set by the press and never cleared by the release",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a held key moves the Ship in every frame until it is released",
+        "keys held at the same time all act, opposite keys cancel out",
+        "the centre of the Ship is limited to -4 .. 4 on each axis"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "moves-in-fixed-update",
+      "what": "the movement is in fixed_update (once per tick, not per frame)",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 4,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a held key moves the Ship in every frame until it is released",
+        "keys held at the same time all act, opposite keys cancel out",
+        "the centre of the Ship is limited to -4 .. 4 on each axis",
+        "the distance in a frame is 8 times that frame's duration"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "previous-frame-state",
+      "what": "movement uses the key state of the previous frame (the press frame is skipped, the release frame counts)",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 4,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a held key moves the Ship in every frame until it is released",
+        "keys held at the same time all act, opposite keys cancel out",
+        "the centre of the Ship is limited to -4 .. 4 on each axis",
+        "the distance in a frame is 8 times that frame's duration"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-10",
+      "name": "press-also-moves",
+      "what": "polling is right, but a press of Down also moves the Ship one extra step",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a held key moves the Ship in every frame until it is released",
+        "keys held at the same time all act, opposite keys cancel out"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "one-tick-per-frame",
+      "what": "the Ticker moves once per frame (update), not once per fixed tick",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 5,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a frame longer than 0.1 s counts as 0.1 s",
+        "a frame of 1/60 s runs one tick, a frame of 1/30 s runs two",
+        "at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept",
+        "the blocks stay where they are while less than a step has passed",
+        "what is less than a step is kept for the next frame"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "whole-steps-of-this-frame-only",
+      "what": "ticks = whole steps in the frame's own duration; the leftover is not carried",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a frame longer than 0.1 s counts as 0.1 s",
+        "at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept",
+        "what is less than a step is kept for the next frame"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "rounded-steps-per-frame",
+      "what": "ticks = the frame duration in steps, rounded",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a frame longer than 0.1 s counts as 0.1 s",
+        "at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept",
+        "what is less than a step is kept for the next frame"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "own-clock-no-cap",
+      "what": "an own accumulator in update that runs every whole step (no limit of 4 per frame)",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a frame longer than 0.1 s counts as 0.1 s",
+        "at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "own-clock-drops-the-fraction-too",
+      "what": "an own accumulator with the cap of 4 that empties the whole accumulator when it drops steps",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "own-clock-keeps-the-backlog",
+      "what": "an own accumulator with the cap of 4 that keeps the steps it did not run for later frames",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 1,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "glider-moves-per-tick",
+      "what": "the Glider is moved in fixed_update, 0.1 unit per tick, instead of by the frame duration",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 3,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a frame longer than 0.1 s counts as 0.1 s",
+        "at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept",
+        "what is less than a step is kept for the next frame"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "glider-moves-per-frame",
+      "what": "the Glider moves 0.1 unit per frame instead of 6 times the frame duration",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 5,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a frame longer than 0.1 s counts as 0.1 s",
+        "a frame of 1/60 s runs one tick, a frame of 1/30 s runs two",
+        "at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept",
+        "the blocks stay where they are while less than a step has passed",
+        "what is less than a step is kept for the next frame"
+      ],
+      "ok": true
+    },
+    {
+      "task": "interaction-11",
+      "name": "ticks-from-program-time",
+      "what": "the Ticker follows program time (floor(frame.time * 60)) instead of counting ticks",
+      "expected": "fail",
+      "verdict": "fail",
+      "layers": {
+        "parse": "pass",
+        "check": "pass",
+        "build": "pass",
+        "start": "pass",
+        "tests": "fail"
+      },
+      "fixturesFailed": 2,
+      "fixturesTotal": 5,
+      "failedFixtures": [
+        "a frame longer than 0.1 s counts as 0.1 s",
+        "at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept"
+      ],
+      "ok": true
+    }
+  ]
+}

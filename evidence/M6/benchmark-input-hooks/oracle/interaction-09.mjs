@@ -29,7 +29,7 @@ class Model {
   /**
    * One frame: the queued events, in the order they arrived. Refuses a frame that changes the Stone's colour right
    * after a frame that moved it: three.js r186.1 (the baseline's renderer, driven by a manual loop) does not upload
-   * a colour change in that frame (decision 0088 item 8), so a fixture must not rely on it.
+   * a colour change in that frame (decision 0088 item 10), so a fixture must not rely on it.
    */
   frame() {
     const movedBefore = this.moved;
