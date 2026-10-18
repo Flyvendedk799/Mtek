@@ -1,0 +1,181 @@
+{
+  "seed": 166,
+  "spawns": [
+    {
+      "x": 5.964195251464844,
+      "z": 0.39593398571014404,
+      "fate": "zone",
+      "enterTick": 48,
+      "destroyTick": 0,
+      "rest": {
+        "x": 5.979707717895508,
+        "y": 0.499931275844574,
+        "z": 0.40632322430610657
+      }
+    },
+    {
+      "x": -7.959586143493652,
+      "z": 0.9150147438049316,
+      "fate": "off",
+      "enterTick": 0,
+      "destroyTick": 110,
+      "rest": null
+    },
+    {
+      "x": 7.873403549194336,
+      "z": 1.8516302108764648,
+      "fate": "off",
+      "enterTick": 0,
+      "destroyTick": 110,
+      "rest": null
+    },
+    {
+      "x": -0.2323704957962036,
+      "z": -2.026926040649414,
+      "fate": "floor",
+      "enterTick": 0,
+      "destroyTick": 0,
+      "rest": {
+        "x": -0.21685878932476044,
+        "y": 0.499931275844574,
+        "z": -2.0165369510650635
+      }
+    },
+    {
+      "x": 2.5497283935546875,
+      "z": 2.030095100402832,
+      "fate": "zone",
+      "enterTick": 48,
+      "destroyTick": 0,
+      "rest": {
+        "x": 2.5652427673339844,
+        "y": 0.499931275844574,
+        "z": 2.040484666824341
+      }
+    },
+    {
+      "x": -3.0836262702941895,
+      "z": 2.4785044193267822,
+      "fate": "floor",
+      "enterTick": 0,
+      "destroyTick": 0,
+      "rest": {
+        "x": -3.0681118965148926,
+        "y": 0.499931275844574,
+        "z": 2.488893747329712
+      }
+    }
+  ],
+  "meterPixels": {
+    "before": {
+      "left": 243,
+      "right": 259,
+      "top": 79,
+      "bottom": 91
+    },
+    "after": {
+      "left": 243,
+      "right": 288,
+      "top": 79,
+      "bottom": 91
+    }
+  },
+  "counters": {
+    "start": {
+      "buffersAllocated": 16,
+      "texturesAllocated": 3,
+      "pipelinesCreated": 3,
+      "shaderModulesCreated": 2,
+      "bindGroupsCreated": 6,
+      "uploads": 51,
+      "uploadBytes": 7132,
+      "liveBuffers": 16,
+      "liveTextures": 3,
+      "liveSamplers": 1,
+      "liveShaderModules": 2,
+      "livePipelines": 3,
+      "liveBindGroups": 6,
+      "liveListeners": 9,
+      "frameTimeMs": 0.20000000018626451,
+      "cpuUpdateMs": 0.20000000018626451,
+      "renderPrepMs": 0,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 4,
+      "drawCallsTotal": 240,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 0,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "sharedParamBlocks": 0,
+      "ownedParamBlocks": 4,
+      "discardedSteps": 0,
+      "liveEntities": 6,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 6,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 3,
+      "physicsColliders": 3,
+      "physicsSteps": 60,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 60,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    "end": {
+      "buffersAllocated": 22,
+      "texturesAllocated": 3,
+      "pipelinesCreated": 3,
+      "shaderModulesCreated": 2,
+      "bindGroupsCreated": 10,
+      "uploads": 1219,
+      "uploadBytes": 108136,
+      "liveBuffers": 17,
+      "liveTextures": 3,
+      "liveSamplers": 1,
+      "liveShaderModules": 2,
+      "livePipelines": 3,
+      "liveBindGroups": 7,
+      "liveListeners": 9,
+      "frameTimeMs": 0.09999999962747097,
+      "cpuUpdateMs": 0.09999999962747097,
+      "renderPrepMs": 0,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 5,
+      "drawCallsTotal": 4740,
+      "failedMaterials": 0,
+      "instancedDraws": 1,
+      "instancedDrawsTotal": 653,
+      "culledObjects": 0,
+      "culledObjectsTotal": 15,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 4,
+      "discardedSteps": 0,
+      "liveEntities": 10,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 10,
+      "entitiesSpawned": 6,
+      "entitiesDestroyed": 2,
+      "physicsBodies": 7,
+      "physicsColliders": 7,
+      "physicsSteps": 960,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 960,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    }
+  },
+  "state": {
+    "entered": 2,
+    "inside": 2,
+    "spawned": 6
+  },
+  "gravity": 9.81
+}

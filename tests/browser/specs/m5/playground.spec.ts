@@ -241,6 +241,10 @@ test.describe("the physics playground on the real engine (M5-07)", () => {
     // The apex comes 5 / g = 0.51 s = 30.6 ticks after the impulse was applied (tick index 0 applied it).
     const apexTick = run.heights.indexOf(peak);
     const expectedApexTick = liftTime(JUMP_IMPULSE, CRATE_MASS) / STEP;
+    writeResult(
+      "m5-playground-lift.json",
+      `${JSON.stringify({ seed: SEED, impulse: JUMP_IMPULSE, mass: CRATE_MASS, gravity: GRAVITY, restY: run.rest.y, peakY: peak, rise: peak - run.rest.y, expectedRise, apexTick, expectedApexTick, finalY: run.heights.at(-1) }, null, 2)}\n`,
+    );
     expect(Math.abs(apexTick - expectedApexTick)).toBeLessThanOrEqual(2);
 
     // It goes up first, comes down, and rests again at the same height with the same x and z (a vertical impulse through the centre of mass).
