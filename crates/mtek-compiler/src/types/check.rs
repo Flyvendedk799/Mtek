@@ -1007,6 +1007,11 @@ impl<'a> Checker<'a> {
     /// the lowering (decision 0065). The fields and body commands of a named entity do not come
     /// here.
     fn entity_ref_value_is_gated(&mut self, span: Span) -> TyId {
+        // Outside a body (a constant, a field value) the name is reported as what it is not, a
+        // constant (`E3090`), as before.
+        if self.body.is_none() {
+            return TyId::ENTITY_REF;
+        }
         self.report(
             Diagnostic::new(
                 Code::E9010,

@@ -214,7 +214,7 @@ impl Checker<'_> {
 
     /// `E5071` for an assignment to the `position` or `rotation` of an entity with a body, `E5073`
     /// for one to its `scale`. `None` when the write is not the physics subsystem's business;
-    /// otherwise the result of [`Self::field_write`](super::scene_body).
+    /// otherwise whether the write may proceed (always false: it was reported).
     pub(super) fn physics_owned_write(
         &mut self,
         expr: &Expr,

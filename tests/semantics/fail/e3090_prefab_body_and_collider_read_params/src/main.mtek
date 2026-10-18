@@ -1,0 +1,14 @@
+// The body and the collider are construction-only: a prefab's params do not reach them, each
+// instance gets the body its prefab declares.
+prefab Crate {
+    param weight: f32 = 1.0;
+    param side: f32 = 1.0;
+    mesh: Box {};
+    body: Dynamic { mass: weight };
+    collider: BoxCollider { size: vec3(side); sensor: weight > 2.0 };
+}
+
+scene Demo {
+    camera Main {}
+    entity A: Crate { weight: 3.0; }
+}

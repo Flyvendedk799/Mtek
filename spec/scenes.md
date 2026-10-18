@@ -164,7 +164,7 @@ The parameter name is free; its type must be `f32`, and there must be exactly on
 | **Binding** | the field's value is `bind(expr)` | any assignment to it anywhere is `E5070`, with a related span at the `bind` — "update its source instead" |
 | **Physics** | the entity has any `body`: `Dynamic` (solver owns `position`, `rotation`), `Kinematic` (pose set only through `set_kinematic_target`/`teleport`), `Static` (pose fixed at creation) | assignment to `position`/`rotation` is `E5071` with a note naming the allowed operation (`apply_impulse`, `set_kinematic_target`, `teleport`, or "static bodies cannot move"); a `bind` on those fields is `E5072` |
 
-Fields the schema marks construction-only (e.g. `mesh`, `body`, `scale` of bodies) cannot be assigned at all (`E5073`).
+Fields the schema marks construction-only (e.g. `mesh`, `body`, `scale` of bodies) cannot be assigned at all (`E5073`). The physics rules hold for every entity with a body, also an instance of a prefab that declares one and `self` inside such a prefab; decision `spec/decisions/0065-physics-schemas-and-ownership.md` records where each is reported.
 
 8.3 **`entity_ref` access is limited in v0.1.** Through an `entity_ref` you may only: compare (`==`, `!=`), test `alive(r)`, `destroy(r)`, and issue body commands (`r.body.apply_impulse(v)`, …, `spec/physics.md` §3). Field reads and writes through an `entity_ref` are `E5074` in v0.1. A named entity used where an `entity_ref` is expected converts implicitly (`other == Floor`). These limits keep all field access statically checkable.
 

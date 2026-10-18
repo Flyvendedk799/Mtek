@@ -161,6 +161,30 @@ mod tests {
             Manifest::from_json(std::str::from_utf8(&with.files["program.manifest.json"]).unwrap())
                 .unwrap();
         assert!(manifest.subsystems.physics);
+
+        // A body in the source is enough, with no option (decision 0065).
+        let mut with_body = MemFs::new();
+        with_body
+            .insert(
+                ProjectPath::new("mtek.toml").unwrap(),
+                "[project]\nname = \"demo\"\nlanguage = \"0.1\"\n",
+            )
+            .insert(
+                ProjectPath::new("src/main.mtek").unwrap(),
+                "scene Demo {\n    camera Main {}\n    entity Floor {\n        mesh: Box {};\n        body: Static {};\n        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };\n    }\n}\n",
+            );
+        let by_source = build(&ProjectRoot::at_base(), &with_body, &options(false));
+        assert!(
+            !by_source.has_errors(),
+            "{:?}",
+            by_source.report.diagnostics
+        );
+        assert_eq!(by_source.files[&name], physics);
+        let manifest = Manifest::from_json(
+            std::str::from_utf8(&by_source.files["program.manifest.json"]).unwrap(),
+        )
+        .unwrap();
+        assert!(manifest.subsystems.physics);
     }
 
     #[cfg(not(mtek_runtime_embedded))]
