@@ -4,6 +4,9 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The image at images[0] is an external file or data URI; the profile reads only images embedded in the BIN chunk."
+    "message": "The image at images[0] is an external file or data URI; the profile reads only images embedded in the BIN chunk.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
   }
 ]

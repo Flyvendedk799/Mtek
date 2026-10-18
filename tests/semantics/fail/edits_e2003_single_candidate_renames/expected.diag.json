@@ -1,0 +1,100 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 148,
+    "endByte": 154,
+    "message": "Unknown name 'lenght'.",
+    "notes": [
+      "help: did you mean the built-in 'length'?"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'lenght' to 'length'",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 148,
+            "endByte": 154,
+            "replacement": "length"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 244,
+    "endByte": 250,
+    "message": "Unknown name 'lenght'.",
+    "notes": [
+      "help: did you mean the built-in 'length'?"
+    ]
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 316,
+    "endByte": 320,
+    "message": "The built-in enum `Key` has no member 'Spce'.",
+    "notes": [
+      "help: did you mean the built-in 'Key.Space'?"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'Spce' to 'Space'",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 316,
+            "endByte": 320,
+            "replacement": "Space"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 395,
+    "endByte": 400,
+    "message": "Unknown name 'ALPHC'."
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 444,
+    "endByte": 460,
+    "message": "Unknown name 'wholly_unrelated'."
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 507,
+    "endByte": 511,
+    "message": "Unknown name 'SPED'.",
+    "related": [
+      {
+        "message": "did you mean 'SPEED'?",
+        "file": "src/main.mtek",
+        "startByte": 6,
+        "endByte": 11
+      }
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'SPED' to 'SPEED'",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 507,
+            "endByte": 511,
+            "replacement": "SPEED"
+          }
+        ]
+      }
+    ]
+  }
+]

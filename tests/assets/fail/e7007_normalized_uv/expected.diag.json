@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "The mesh 'Tri' (meshes[0]), primitive 0: TEXCOORD_0 is normalised UNSIGNED_SHORT VEC2; the profile requires FLOAT VEC2 without normalisation.",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "help: export vertex data as 32-bit floats (normalised integer formats are not supported)"
     ]
   }

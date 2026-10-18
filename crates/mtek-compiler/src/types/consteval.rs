@@ -321,17 +321,22 @@ impl Checker<'_> {
             if !self.out.interner.assignable(actual, declared) {
                 type_ok = false;
                 let (declared_name, actual_name) = (self.display(declared), self.display(actual));
-                self.sink.push(
-                    Diagnostic::new(
-                        Code::E3001,
-                        format!(
-                            "The constant '{name}' is declared as {declared_name}, but its value has type {actual_name}."
-                        ),
-                    )
-                    .at(decl.value.span)
-                    .expected(declared_name)
-                    .actual(actual_name),
-                );
+                let mut diagnostic = Diagnostic::new(
+                    Code::E3001,
+                    format!(
+                        "The constant '{name}' is declared as {declared_name}, but its value has type {actual_name}."
+                    ),
+                )
+                .at(decl.value.span)
+                .expected(declared_name.clone())
+                .actual(actual_name);
+                if let Some(annotation) = &decl.ty {
+                    diagnostic = diagnostic.related(
+                        annotation.span,
+                        format!("the constant '{name}' is declared as {declared_name} here"),
+                    );
+                }
+                self.sink.push(diagnostic);
             }
             ty = declared;
         }

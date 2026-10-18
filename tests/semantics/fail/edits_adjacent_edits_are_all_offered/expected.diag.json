@@ -1,0 +1,59 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 207,
+    "endByte": 212,
+    "message": "Unknown descriptor type 'Swtch': no schema, struct, material or prefab has that name.",
+    "related": [
+      {
+        "message": "did you mean 'Switch'?",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 13
+      }
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'Swtch' to 'Switch'",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 207,
+            "endByte": 212,
+            "replacement": "Switch"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E1011",
+    "file": "src/main.mtek",
+    "startByte": 207,
+    "endByte": 225,
+    "message": "A descriptor literal cannot be used directly as the condition of `if` or the iterable of `for`; wrap it in parentheses.",
+    "notes": [
+      "help: write `(Name { ... })`"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "parenthesise the descriptor literal",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 207,
+            "endByte": 207,
+            "replacement": "("
+          },
+          {
+            "file": "src/main.mtek",
+            "startByte": 225,
+            "endByte": 225,
+            "replacement": ")"
+          }
+        ]
+      }
+    ]
+  }
+]

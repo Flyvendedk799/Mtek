@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "Buffer 0 is an external file; the profile reads only the BIN chunk of a `.glb`.",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "help: export a single binary `.glb` with the data embedded"
     ]
   }

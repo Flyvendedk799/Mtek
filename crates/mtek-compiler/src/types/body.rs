@@ -47,6 +47,8 @@ pub(super) struct BodyState {
     subject: String,
     /// The result type ([`TyId::UNIT`] without `->`).
     ret: TyId,
+    /// The written result type, for the related span of a mismatching `return`.
+    pub(super) ret_span: Option<Span>,
     pub(super) facts: BodyFacts,
     /// `var` locals assigned somewhere in the body.
     assigned: BTreeSet<DefId>,
@@ -180,6 +182,9 @@ impl<'a> Checker<'a> {
         };
         let name = decl.name.name.clone();
         self.start_body(format!("The function '{name}'"), name, sig.ret, None);
+        if let Some(body) = &mut self.body {
+            body.ret_span = decl.ret.as_ref().map(|ret| ret.span);
+        }
         for (param, (name, ty)) in decl.params.iter().zip(&sig.params) {
             if let Some(param_def) = self.res.def_of(param.id) {
                 self.out.locals.insert(param_def, *ty);
@@ -212,6 +217,7 @@ impl<'a> Checker<'a> {
             name,
             subject,
             ret,
+            ret_span: None,
             facts: BodyFacts::default(),
             assigned: BTreeSet::new(),
             vars: Vec::new(),
@@ -461,18 +467,26 @@ impl<'a> Checker<'a> {
         if let Some(declared) = declared {
             if !self.out.interner.assignable(actual, declared) {
                 let (declared_name, actual_name) = (self.display(declared), self.display(actual));
-                self.report_diagnostic(
-                    Diagnostic::new(
-                        Code::E3001,
+                let mut diagnostic = Diagnostic::new(
+                    Code::E3001,
+                    format!(
+                        "The {noun} '{}' is declared as {declared_name}, but its value has type {actual_name}.",
+                        decl.name.name
+                    ),
+                )
+                .at(decl.value.span)
+                .expected(declared_name.clone())
+                .actual(actual_name);
+                if let Some(annotation) = &decl.ty {
+                    diagnostic = diagnostic.related(
+                        annotation.span,
                         format!(
-                            "The {noun} '{}' is declared as {declared_name}, but its value has type {actual_name}.",
+                            "the {noun} '{}' is declared as {declared_name} here",
                             decl.name.name
                         ),
-                    )
-                    .at(decl.value.span)
-                    .expected(declared_name)
-                    .actual(actual_name),
-                );
+                    );
+                }
+                self.report_diagnostic(diagnostic);
             }
             ty = declared;
         }
@@ -617,10 +631,10 @@ impl<'a> Checker<'a> {
 
     /// `return;` or `return value;` against the function's result type.
     fn return_stmt(&mut self, span: Span, value: Option<&Expr>) {
-        let Some((name, subject, ret)) = self
+        let Some((name, subject, ret, ret_span)) = self
             .body
             .as_ref()
-            .map(|b| (b.name.clone(), b.subject.clone(), b.ret))
+            .map(|b| (b.name.clone(), b.subject.clone(), b.ret, b.ret_span))
         else {
             if let Some(value) = value {
                 self.check(value, None);
@@ -628,17 +642,20 @@ impl<'a> Checker<'a> {
             return;
         };
         let ret_name = self.display(ret);
+        let returns_here = format!("'{name}' returns {ret_name}");
         match value {
             None if ret != TyId::UNIT && !self.out.interner.is_error(ret) => {
-                self.report_diagnostic(
-                    Diagnostic::new(
-                        Code::E3001,
-                        format!("{subject} returns {ret_name}, but this `return` gives no value."),
-                    )
-                    .at(span)
-                    .expected(ret_name)
-                    .actual("()"),
-                );
+                let mut diagnostic = Diagnostic::new(
+                    Code::E3001,
+                    format!("{subject} returns {ret_name}, but this `return` gives no value."),
+                )
+                .at(span)
+                .expected(ret_name)
+                .actual("()");
+                if let Some(ret_span) = ret_span {
+                    diagnostic = diagnostic.related(ret_span, returns_here);
+                }
+                self.report_diagnostic(diagnostic);
             }
             None => {}
             Some(value) if ret == TyId::UNIT => {
@@ -662,17 +679,17 @@ impl<'a> Checker<'a> {
                 let ty = self.value(value, Some(ret));
                 if !self.out.interner.assignable(ty, ret) {
                     let actual = self.display(ty);
-                    self.report_diagnostic(
-                        Diagnostic::new(
-                            Code::E3001,
-                            format!(
-                                "{subject} returns {ret_name}, but this value has type {actual}."
-                            ),
-                        )
-                        .at(value.span)
-                        .expected(ret_name)
-                        .actual(actual),
-                    );
+                    let mut diagnostic = Diagnostic::new(
+                        Code::E3001,
+                        format!("{subject} returns {ret_name}, but this value has type {actual}."),
+                    )
+                    .at(value.span)
+                    .expected(ret_name)
+                    .actual(actual);
+                    if let Some(ret_span) = ret_span {
+                        diagnostic = diagnostic.related(ret_span, returns_here);
+                    }
+                    self.report_diagnostic(diagnostic);
                 }
                 self.fold_in_body(value);
                 self.returned_alpha(value);

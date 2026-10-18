@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "The header declares 1004 bytes, but the file has 300.",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "the file is truncated or has data after the last chunk"
     ]
   }

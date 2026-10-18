@@ -6,6 +6,14 @@
     "endByte": 335,
     "message": "Parameter 'phase' of material Pulse expects f32, but received vec3.",
     "expected": "f32",
-    "actual": "vec3"
+    "actual": "vec3",
+    "related": [
+      {
+        "message": "the param 'phase' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 60,
+        "endByte": 65
+      }
+    ]
   }
 ]

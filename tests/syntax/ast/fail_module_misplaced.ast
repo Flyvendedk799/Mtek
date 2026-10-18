@@ -16,7 +16,7 @@
   (fn f (params) (block (error) (break))))
 ; MTEK-E1040 17..19 `fn` `fn` declarations cannot appear in a scene.
 ; MTEK-E1040 36..41 `param` `param` declarations cannot appear in a scene.
-; MTEK-E1040 54..57 `let` statements cannot appear in a scene.
+; MTEK-E1040 54..57 `let` Statements cannot appear in a scene.
 ; MTEK-E1040 83..88 `param` `param` declarations cannot appear in an entity.
 ; MTEK-E1040 167..172 `state` `state` declarations cannot appear in a material.
 ; MTEK-E4901 191..197 `vertex` Custom `vertex` stages are not supported in v0.1; they are planned for v0.2.

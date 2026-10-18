@@ -6,7 +6,15 @@
     "endByte": 370,
     "message": "Parameter 'origin' of prefab Crate expects vec3, but received f32.",
     "expected": "vec3",
-    "actual": "f32"
+    "actual": "f32",
+    "related": [
+      {
+        "message": "the param 'origin' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 95,
+        "endByte": 101
+      }
+    ]
   },
   {
     "code": "MTEK-E3102",
@@ -16,6 +24,14 @@
     "message": "Parameter 'origin' of prefab Crate expects vec3, but received vec2.",
     "expected": "vec3",
     "actual": "vec2",
+    "related": [
+      {
+        "message": "the param 'origin' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 95,
+        "endByte": 101
+      }
+    ],
     "notes": [
       "a vec3 has 3 components; this value has 2"
     ]

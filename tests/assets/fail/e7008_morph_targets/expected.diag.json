@@ -4,13 +4,19 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The mesh 'Tri' (meshes[0]) has default morph target weights; the profile does not support morph targets."
+    "message": "The mesh 'Tri' (meshes[0]) has default morph target weights; the profile does not support morph targets.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
   },
   {
     "code": "MTEK-E7008",
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The mesh 'Tri' (meshes[0]), primitive 0 has morph targets; the profile does not support them."
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0 has morph targets; the profile does not support them.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
   }
 ]

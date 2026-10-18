@@ -7,6 +7,19 @@
     "message": "The built-in namespace `quat` has no member 'identty'.",
     "notes": [
       "help: did you mean the built-in 'quat.identity'?"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'identty' to 'identity'",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 46,
+            "endByte": 53,
+            "replacement": "identity"
+          }
+        ]
+      }
     ]
   }
 ]

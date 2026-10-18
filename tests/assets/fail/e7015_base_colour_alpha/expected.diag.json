@@ -4,6 +4,9 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The material 'Plain' (materials[0]) has a baseColorFactor alpha of 0.5; the profile requires 1."
+    "message": "The material 'Plain' (materials[0]) has a baseColorFactor alpha of 0.5; the profile requires 1.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
   }
 ]

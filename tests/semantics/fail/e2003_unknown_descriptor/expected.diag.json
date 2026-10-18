@@ -7,6 +7,19 @@
     "message": "Unknown descriptor type 'Boxx': no schema, struct, material or prefab has that name.",
     "notes": [
       "help: did you mean the built-in 'Box'?"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'Boxx' to 'Box'",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 56,
+            "endByte": 60,
+            "replacement": "Box"
+          }
+        ]
+      }
     ]
   }
 ]

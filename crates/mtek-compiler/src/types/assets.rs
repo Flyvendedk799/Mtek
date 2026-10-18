@@ -363,7 +363,7 @@ fn accessor_diagnostic(failure: &Failure, at: Span, literal: bool) -> Diagnostic
         && let Some(text) = string_literal(rename)
     {
         diagnostic = diagnostic
-            .edit(SuggestedEdit::new(format!("use the name '{rename}'")).replace(at, text));
+            .candidate(SuggestedEdit::new(format!("use the name '{rename}'")).replace(at, text));
     }
     diagnostic
 }

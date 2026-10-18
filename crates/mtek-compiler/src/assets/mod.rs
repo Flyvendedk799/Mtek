@@ -103,7 +103,21 @@ impl Issue {
     /// The diagnostic at `span` (the path literal of the declaration).
     #[must_use]
     pub fn at(&self, span: Span) -> Diagnostic {
+        self.at_in(span, None)
+    }
+
+    /// The diagnostic at `span` for a problem inside the file `file` (a project path). A
+    /// message that does not name the file gets the note "the problem is in the file '…'", so
+    /// that the file is named in the diagnostic itself and not only by the path literal at
+    /// `span` (`spec/diagnostics.md` section 7: name the specific entity).
+    #[must_use]
+    pub fn at_in(&self, span: Span, file: Option<&str>) -> Diagnostic {
         let mut diagnostic = Diagnostic::new(self.code, self.message.clone()).at(span);
+        if let Some(file) = file
+            && !self.message.contains(&format!("'{file}'"))
+        {
+            diagnostic = diagnostic.note(format!("the problem is in the file '{file}'"));
+        }
         for note in &self.notes {
             diagnostic = diagnostic.note(note.clone());
         }

@@ -5,6 +5,14 @@
     "startByte": 111,
     "endByte": 117,
     "message": "The struct Light has no field 'colour'.",
+    "related": [
+      {
+        "message": "the struct 'Light' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 12
+      }
+    ],
     "notes": [
       "the fields of Light are 'intensity', 'offset'"
     ]

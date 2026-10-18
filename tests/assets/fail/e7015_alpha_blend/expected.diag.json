@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "The material 'Plain' (materials[0]) has alphaMode BLEND; the profile supports OPAQUE only.",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "help: v0.1 has no transparency (`spec/materials.md` section 2)"
     ]
   }

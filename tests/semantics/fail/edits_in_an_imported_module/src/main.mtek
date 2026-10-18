@@ -1,0 +1,9 @@
+import { TINT } from "./palette.mtek";
+
+scene Demo {
+    camera Main { position: vec3(0.0, 0.0, 5.0); }
+    entity Cube {
+        mesh: Box {};
+        material: Unlit { color: TINT };
+    }
+}

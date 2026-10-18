@@ -453,6 +453,11 @@ impl Parser<'_> {
 
     #[inline(never)]
     fn report_not_allowed(&mut self, first: Span, place: Place, what: &str) {
+        // A complete sentence: the plural noun ("statements", "fields") starts it.
+        let mut what = what.to_owned();
+        if let Some(first) = what.get_mut(..1) {
+            first.make_ascii_uppercase();
+        }
         let diagnostic = Diagnostic::new(
             Code::E1040,
             format!("{what} cannot appear {}.", place.describe()),

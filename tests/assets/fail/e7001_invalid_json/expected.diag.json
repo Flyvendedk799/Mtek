@@ -4,6 +4,9 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The JSON chunk is not valid JSON: EOF while parsing an object at line 1 column 28."
+    "message": "The JSON chunk is not valid JSON: EOF while parsing an object at line 1 column 28.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
   }
 ]

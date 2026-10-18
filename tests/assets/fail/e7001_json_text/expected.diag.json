@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "The file does not start with the glTF magic number 'glTF' (it starts with \"{\"as\").",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "the file looks like glTF JSON; export a binary `.glb` instead"
     ]
   }

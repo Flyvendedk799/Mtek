@@ -8,6 +8,7 @@
 
 pub mod assets;
 pub mod context;
+pub mod edits;
 pub mod emit_js;
 pub mod emit_wgsl;
 pub mod ir;

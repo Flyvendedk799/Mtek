@@ -1,0 +1,14 @@
+const CHAIR = asset.glb("../models/chair.glb");
+
+// `Twi` is one edit away from both 'Twin' and 'Tri', `Wde` from 'Wide' and
+// 'Wedge': the intent is ambiguous, so the names are listed and no edit is
+// attached.
+scene Demo {
+    camera Main {}
+    entity First {
+        mesh: CHAIR.mesh("Twi");
+    }
+    entity Second {
+        mesh: CHAIR.mesh("Wde");
+    }
+}

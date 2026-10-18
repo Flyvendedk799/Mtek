@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E0022",
+    "file": "src/main.mtek",
+    "startByte": 155,
+    "endByte": 157,
+    "message": "Float literal `1.` has no digits after the decimal point; floats need digits on both sides of the point.",
+    "notes": [
+      "help: write `1.0`"
+    ]
+  }
+]

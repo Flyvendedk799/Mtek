@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "The file uses the glTF extensions KHR_materials_unlit; the v0.1 profile supports none.",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "first use: 'KHR_materials_unlit' at materials[0].extensions",
       "help: re-export the model without extensions"
     ]

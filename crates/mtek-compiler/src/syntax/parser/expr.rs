@@ -332,16 +332,17 @@ impl Parser<'_> {
     /// `E1011` for the descriptor literal at `span`; the parenthesising edit
     /// is recorded as a candidate for the driver to validate.
     fn report_descriptor_in_condition(&mut self, span: Span) {
+        let edit = SuggestedEdit::new("parenthesise the descriptor literal")
+            .insert(span, "(")
+            .insert(Span::at(span.file, span.end), ")");
         let diagnostic = Diagnostic::new(
             Code::E1011,
             "A descriptor literal cannot be used directly as the condition of `if` or the iterable of `for`; wrap it in parentheses.",
         )
         .at(span)
-        .help("write `(Name { ... })`");
+        .help("write `(Name { ... })`")
+        .candidate(edit.clone());
         self.report(diagnostic);
-        let edit = SuggestedEdit::new("parenthesise the descriptor literal")
-            .replace(Span::at(span.file, span.start), "(")
-            .replace(Span::at(span.file, span.end), ")");
         self.candidate_edits.push(CandidateEdit {
             code: Code::E1011,
             at: span,

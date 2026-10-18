@@ -4,6 +4,17 @@
     "file": "src/main.mtek",
     "startByte": 106,
     "endByte": 112,
-    "message": "The scene 'Demo' declares `update` more than once."
+    "message": "The scene 'Demo' declares `update` more than once.",
+    "related": [
+      {
+        "message": "`update` is first declared here",
+        "file": "src/main.mtek",
+        "startByte": 78,
+        "endByte": 84
+      }
+    ],
+    "notes": [
+      "help: remove one of the two"
+    ]
   }
 ]

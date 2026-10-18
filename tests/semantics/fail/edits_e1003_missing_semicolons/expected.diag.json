@@ -1,0 +1,127 @@
+[
+  {
+    "code": "MTEK-E1003",
+    "file": "src/main.mtek",
+    "startByte": 18,
+    "endByte": 18,
+    "message": "Missing `;` at the end of the constant declaration, found `const`.",
+    "expected": "`;`",
+    "actual": "`const`",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 18,
+            "endByte": 18,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E1003",
+    "file": "src/main.mtek",
+    "startByte": 46,
+    "endByte": 46,
+    "message": "Missing `;` at the end of the constant declaration, found `fn`.",
+    "expected": "`;`",
+    "actual": "`fn`",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 46,
+            "endByte": 46,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E1003",
+    "file": "src/main.mtek",
+    "startByte": 108,
+    "endByte": 108,
+    "message": "Missing `;` at the end of the `return` statement, found `}`.",
+    "expected": "`;`",
+    "actual": "`}`",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 108,
+            "endByte": 108,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E1003",
+    "file": "src/main.mtek",
+    "startByte": 154,
+    "endByte": 154,
+    "message": "Missing `;` at the end of the field, found `}`.",
+    "expected": "`;`",
+    "actual": "`}`",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 154,
+            "endByte": 154,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E1003",
+    "file": "src/main.mtek",
+    "startByte": 212,
+    "endByte": 212,
+    "message": "Missing `;` at the end of the field, found `}`.",
+    "expected": "`;`",
+    "actual": "`}`",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "insert the missing `;`",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 212,
+            "endByte": 212,
+            "replacement": ";"
+          }
+        ]
+      }
+    ]
+  }
+]

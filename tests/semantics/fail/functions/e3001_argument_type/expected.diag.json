@@ -6,7 +6,15 @@
     "endByte": 170,
     "message": "Argument 1 of `scale(v: vec3, factor: f32)` expects vec3, but received f32.",
     "expected": "vec3",
-    "actual": "f32"
+    "actual": "f32",
+    "related": [
+      {
+        "message": "the function 'scale' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 3,
+        "endByte": 8
+      }
+    ]
   },
   {
     "code": "MTEK-E3001",
@@ -15,6 +23,14 @@
     "endByte": 173,
     "message": "Argument 2 of `scale(v: vec3, factor: f32)` expects f32, but received vec3.",
     "expected": "f32",
-    "actual": "vec3"
+    "actual": "vec3",
+    "related": [
+      {
+        "message": "the function 'scale' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 3,
+        "endByte": 8
+      }
+    ]
   }
 ]

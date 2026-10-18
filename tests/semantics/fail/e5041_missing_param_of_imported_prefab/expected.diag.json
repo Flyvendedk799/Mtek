@@ -24,6 +24,14 @@
     "startByte": 433,
     "endByte": 438,
     "message": "'scale' is not a param of prefab Beacon: an instance may set only params.",
+    "related": [
+      {
+        "message": "the prefab 'Beacon' is declared here",
+        "file": "src/props.mtek",
+        "startByte": 14,
+        "endByte": 20
+      }
+    ],
     "notes": [
       "the params of Beacon are: origin",
       "help: 'scale' is a field of the entity: set it in the prefab, where it can use a param"

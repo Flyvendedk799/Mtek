@@ -1,0 +1,22 @@
+[
+  {
+    "code": "MTEK-E7024",
+    "file": "src/main.mtek",
+    "startByte": 290,
+    "endByte": 295,
+    "message": "The glTF file 'models/chair.glb' has no mesh named 'Twi'.",
+    "notes": [
+      "available meshes: 'Quad', 'Tri', 'Twin', 'Wedge', 'Wide'"
+    ]
+  },
+  {
+    "code": "MTEK-E7024",
+    "file": "src/main.mtek",
+    "startByte": 349,
+    "endByte": 354,
+    "message": "The glTF file 'models/chair.glb' has no mesh named 'Wde'.",
+    "notes": [
+      "available meshes: 'Quad', 'Tri', 'Twin', 'Wedge', 'Wide'"
+    ]
+  }
+]

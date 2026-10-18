@@ -4,6 +4,9 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The file does not start with the glTF magic number 'glTF' (it starts with \"RIFF\")."
+    "message": "The file does not start with the glTF magic number 'glTF' (it starts with \"RIFF\").",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
   }
 ]

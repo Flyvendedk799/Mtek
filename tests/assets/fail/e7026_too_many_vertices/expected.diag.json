@@ -6,6 +6,7 @@
     "endByte": 45,
     "message": "The mesh 'Tri' (meshes[0]), primitive 0 has 3 vertices, over the limit of 2 per primitive.",
     "notes": [
+      "the problem is in the file 'models/model.glb'",
       "help: raise `max_vertices_per_primitive` in the `[assets]` table of mtek.toml, or reduce the model"
     ]
   }

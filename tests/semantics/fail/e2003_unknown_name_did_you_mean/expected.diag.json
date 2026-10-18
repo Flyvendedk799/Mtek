@@ -12,6 +12,19 @@
         "startByte": 6,
         "endByte": 11
       }
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'SPEDE' to 'SPEED'",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 76,
+            "endByte": 81,
+            "replacement": "SPEED"
+          }
+        ]
+      }
     ]
   }
 ]

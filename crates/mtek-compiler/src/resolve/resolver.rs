@@ -9,7 +9,7 @@ use super::gate::{
     unary_construct,
 };
 use super::imports::ImportBindings;
-use crate::diagnostics::{Code, Diagnostic, Diagnostics};
+use crate::diagnostics::{Code, Diagnostic, Diagnostics, SuggestedEdit};
 use crate::project::edit_distance;
 use crate::source::Span;
 use crate::stdlib::{
@@ -408,6 +408,12 @@ impl<'a> Resolver<'a> {
     /// Report an unknown name: `message` with a "did you mean" when exactly
     /// one candidate is within edit distance 2. A declared candidate gets a
     /// related span; a built-in one, which has no span, a note.
+    ///
+    /// For `E2003` the single candidate is also proposed as a rename of the
+    /// written name (the text of `span`; for a member `owner.member`, of the
+    /// member), which `crate::edits` attaches only if the program checks with
+    /// the new name: the candidate is the only one in reach, but whether its
+    /// type fits is for the re-check to say (`spec/diagnostics.md` section 6).
     fn report_unknown(
         &mut self,
         code: Code,
@@ -422,6 +428,14 @@ impl<'a> Resolver<'a> {
                 Some(at) => diagnostic.related(at, format!("did you mean '{candidate}'?")),
                 None => diagnostic.help(format!("did you mean the built-in '{candidate}'?")),
             };
+            let written = name.rsplit('.').next().unwrap_or(name);
+            let renamed = candidate.rsplit('.').next().unwrap_or(candidate);
+            if code == Code::E2003 && span.len() as usize == written.len() {
+                diagnostic = diagnostic.candidate(
+                    SuggestedEdit::new(format!("rename '{written}' to '{renamed}'"))
+                        .replace(span, renamed),
+                );
+            }
         }
         self.sink.push(diagnostic);
     }

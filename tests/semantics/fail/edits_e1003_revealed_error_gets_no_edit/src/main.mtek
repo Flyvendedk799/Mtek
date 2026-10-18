@@ -1,0 +1,13 @@
+// Two missing semicolons in a row. The parser reports one syntax error per
+// three tokens, so only the first is reported. Writing it in would reveal the
+// second, an error the unedited program does not report: the re-check does not
+// accept that as a fix, and no edit is offered. Once the second `;` is written
+// by hand the first gets its edit again.
+fn double(x: f32) -> f32 {
+    let y = x * 2.0
+    return y
+}
+
+scene Demo {
+    camera Main {}
+}

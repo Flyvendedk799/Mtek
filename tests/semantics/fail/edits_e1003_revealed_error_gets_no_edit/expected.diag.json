@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E1003",
+    "file": "src/main.mtek",
+    "startByte": 403,
+    "endByte": 403,
+    "message": "Missing `;` at the end of the statement, found `return`.",
+    "expected": "`;`",
+    "actual": "`return`",
+    "notes": [
+      "help: end every statement, field and declaration with `;`"
+    ]
+  }
+]

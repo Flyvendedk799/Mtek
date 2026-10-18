@@ -516,14 +516,16 @@ fn validation_issue(path: &str, error: json::validation::Error) -> Issue {
         let accessor = path.trim_end_matches(".bufferView");
         return Issue::new(
             Code::E7011,
-            format!("{accessor} has no buffer view; zero-filled accessors are not supported."),
+            format!(
+                "The accessor {accessor} has no buffer view; zero-filled accessors are not supported."
+            ),
         );
     }
     if error == E::Missing && path.ends_with("attributes[\"POSITION\"]") {
         let primitive = path.trim_end_matches(".attributes[\"POSITION\"]");
         return Issue::new(
             Code::E7010,
-            format!("{primitive} has no POSITION attribute."),
+            format!("The primitive {primitive} has no POSITION attribute."),
         );
     }
     if error == E::Missing
@@ -911,7 +913,7 @@ impl<'a> Validator<'a> {
                     7,
                     Issue::new(
                         Code::E7011,
-                        format!("accessors[{index}] is sparse; the profile does not support sparse accessors."),
+                        format!("The accessor accessors[{index}] is sparse; the profile does not support sparse accessors."),
                     )
                     .help("re-export the model without sparse accessors (for example without morph targets)"),
                 );

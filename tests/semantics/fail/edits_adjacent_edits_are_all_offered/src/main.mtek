@@ -1,0 +1,14 @@
+struct Switch { ok: bool; }
+
+// The parenthesis of E1011 is inserted at the offset where the E2003 rename
+// starts: the ranges touch but do not overlap, so both edits are offered.
+fn pick() -> f32 {
+    if Swtch { ok: true }.ok {
+        return 1.0;
+    }
+    return 0.0;
+}
+
+scene Demo {
+    camera Main {}
+}

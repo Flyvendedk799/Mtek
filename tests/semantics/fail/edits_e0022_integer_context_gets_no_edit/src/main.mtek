@@ -1,0 +1,7 @@
+// `1.` would become `1.0`, a float, where an i32 is declared: the fix would
+// replace this error by a type error, so none is offered.
+const COUNT: i32 = 1.;
+
+scene Demo {
+    camera Main {}
+}

@@ -4,7 +4,7 @@
     "file": "e1040_statement_in_scene.mtek",
     "startByte": 17,
     "endByte": 20,
-    "message": "statements cannot appear in a scene.",
+    "message": "Statements cannot appear in a scene.",
     "notes": [
       "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
     ]
