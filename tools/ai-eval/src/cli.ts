@@ -22,6 +22,7 @@ import { createClient } from "./adapters/registry.ts";
 import type { AdapterOptions } from "./adapter-options.ts";
 import { systemClock, type Clock } from "./clock.ts";
 import { createMtekRunner, findMtek, repoRoot, type CommandRunner } from "./commands.ts";
+import { commandGrammarCapability, findGrammarAdapter } from "./command-grammar.ts";
 import { defaultGrammarCapability, type GrammarCapability, type TrialKind } from "./grammar.ts";
 import type { FetchLike, ModelClient } from "./model-client.ts";
 import { JsonlRecorder } from "./recorder.ts";
@@ -56,6 +57,7 @@ interface Parsed {
 const VALUE_FLAGS = new Set([
   "task", "client", "model", "base-url", "api-key-env", "transcript", "trial-kind", "trials", "temperature", "stop", "seed",
   "max-repairs", "max-total-tokens", "max-bytes", "test-feedback", "run-id", "out", "mtek", "scratch", "project", "first-trial",
+  "grammar-adapter",
 ]);
 const SWITCH_FLAGS = new Set(["keep-scratch", "accept-grammar", "help"]);
 
@@ -101,7 +103,7 @@ const USAGE = `usage:
               [--api-key-env VAR] [--transcript FILE] [--trial-kind unconstrained|constrained] [--trials N]
               [--temperature N|default] [--stop S]... [--seed N] [--max-repairs N] [--max-total-tokens N]
               [--max-bytes N] [--test-feedback messages|status-only] [--run-id ID] [--out DIR]
-              [--mtek PATH] [--scratch DIR] [--keep-scratch]
+              [--mtek PATH] [--grammar-adapter PATH] [--scratch DIR] [--keep-scratch]
   ai-eval validate --task DIR [--project DIR] [--mtek PATH]
 `;
 
@@ -174,6 +176,20 @@ async function validateCommand(
   }
 }
 
+/**
+ * The capability a constrained trial asks: the real check of M6-06 when the `grammar-adapter` binary is named
+ * (`--grammar-adapter PATH`, `MTEK_GRAMMAR_ADAPTER`) or built in this repository, else the honest default that says
+ * "grammar-constrained mode unavailable". The real check still fails with its own reason when the pinned backend
+ * or model is not installed; nothing here ever runs a constrained trial unconstrained.
+ */
+function grammarCapabilityFor(parsed: Parsed, env: Readonly<Record<string, string | undefined>>): GrammarCapability {
+  const named = one(parsed, "grammar-adapter");
+  const adapter = named === undefined ? findGrammarAdapter(env) : resolve(named);
+  const mtek = one(parsed, "mtek") ?? findMtek(env);
+  if (adapter === null || mtek === null) return defaultGrammarCapability;
+  return commandGrammarCapability({ adapter, mtek: resolve(mtek) });
+}
+
 async function runCommand(
   parsed: Parsed,
   task: ReturnType<typeof loadTask>,
@@ -222,7 +238,7 @@ async function runCommand(
     clock,
     scratchRoot,
     runDir,
-    grammar: deps.grammar ?? defaultGrammarCapability,
+    grammar: deps.grammar ?? grammarCapabilityFor(parsed, env),
     keepScratch: parsed.flags.has("keep-scratch"),
   });
   const stop = parsed.flags.get("stop");

@@ -123,11 +123,17 @@ sequences, seed, prompt version, feedback mode, budgets, trial kind) changes the
 
 ## Constrained decoding
 
-`--trial-kind constrained` asks the `GrammarCapability` (`src/grammar.ts`) for a grammar. This build
-has none: the default reports "grammar-constrained mode unavailable" and the trial ends `unavailable`
-without a model call. A constrained trial is **never** run unconstrained instead, and constrained and
-unconstrained trials are recorded as separate kinds (and separate conditions). Task M6-06 provides the
-real check; wiring it in means passing a `GrammarCapability` to `RepairLoop`.
+`--trial-kind constrained` asks the `GrammarCapability` (`src/grammar.ts`) for a grammar. When the
+`grammar-adapter` binary of M6-06 (decision 0073) is named with `--grammar-adapter PATH` or
+`MTEK_GRAMMAR_ADAPTER`, or built in this repository (`cargo build -p mtek-grammar-adapters`), the harness
+runs its check (`src/command-grammar.ts`: `grammar-adapter check --format json`, then
+`mtek grammar export --format gbnf` for the grammar text) and a constrained trial runs only if the pinned
+backend and model are really installed (`node tools/grammar-adapters/fetch-backend.mjs`). Otherwise the
+capability is unavailable with the adapter's reason and the exact message "grammar-constrained mode
+unavailable", and the trial ends `unavailable` without a model call. A constrained trial is **never** run
+unconstrained instead, and constrained and unconstrained trials are recorded as separate kinds (and
+separate conditions). The harness imports no adapter code: it spawns the two binaries (decision 0077
+item 10, wired by the orchestrator after M6-06 merged).
 
 ## Adapters
 
