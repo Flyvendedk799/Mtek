@@ -365,6 +365,10 @@ fn extension_objects(value: &Value, path: &str, out: &mut Vec<(String, String)>)
     match value {
         Value::Object(map) => {
             for (key, child) in map {
+                // `extras` is the author's own data: not inspected (spec/assets.md section 3).
+                if key == "extras" {
+                    continue;
+                }
                 let here = if path.is_empty() {
                     key.clone()
                 } else {

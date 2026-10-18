@@ -7,7 +7,7 @@
     "message": "The asset path \"../Models/model.glb\" names 'Models/model.glb', but the file is spelled 'models/model.glb'.",
     "notes": [
       "file names in asset paths must match the file system exactly, even where it ignores case, so that the project builds everywhere",
-      "help: use the spelling 'models/model.glb'"
+      "help: spell the path so that it names 'models/model.glb' exactly"
     ]
   },
   {
@@ -18,7 +18,7 @@
     "message": "The asset path \"../models/MODEL.glb\" names 'models/MODEL.glb', but the file is spelled 'models/model.glb'.",
     "notes": [
       "file names in asset paths must match the file system exactly, even where it ignores case, so that the project builds everywhere",
-      "help: use the spelling 'models/model.glb'"
+      "help: spell the path so that it names 'models/model.glb' exactly"
     ]
   }
 ]

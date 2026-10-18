@@ -156,6 +156,13 @@ fn the_container_and_extension_rows_report_together() {
 }
 
 #[test]
+fn extras_are_not_searched_for_extensions() {
+    let (mut json, bin) = base();
+    json["materials"][0]["extras"] = json!({ "extensions": { "my_tool": true } });
+    assert!(read(&json, &bin).is_ok());
+}
+
+#[test]
 fn an_extension_is_listed_once_whether_declared_or_found() {
     let (mut json, bin) = base();
     json["extensionsUsed"] = json!(["KHR_materials_unlit"]);

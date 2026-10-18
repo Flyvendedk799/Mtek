@@ -231,7 +231,7 @@ impl<'f> AssetLoader<'f> {
                         )
                         .at(span)
                         .note("file names in asset paths must match the file system exactly, even where it ignores case, so that the project builds everywhere")
-                        .help(format!("use the spelling '{found}'")),
+                        .help(format!("spell the path so that it names '{found}' exactly")),
                     ));
                 }
                 Err(Box::new(
