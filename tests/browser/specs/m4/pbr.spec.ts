@@ -150,7 +150,7 @@ async function render(page: Page, inputs: ReadonlyArray<Record<string, unknown>>
       app.dispose();
       return { rgb, counters, reported, state };
     },
-    { cases: [...inputs], pixels: PIXELS.map(([x, y]) => [x, y]), size: TARGET_SIZE },
+    { cases: [...inputs], pixels: PIXELS.map(([x, y]) => [x, y] as [number, number]), size: TARGET_SIZE },
   );
 }
 
@@ -241,7 +241,7 @@ test.describe("the PBR material against the CPU oracle (M4-03)", () => {
       lamp: { position, intensity: 8 },
     });
     const inside = [lampAt([1.2, 1.6, 2], "lamp inside the window, dielectric", 0, 0.5), lampAt([1.2, 1.6, 2], "lamp inside the window, metal", 1, 0.3)];
-    const across = lampAt([2, 2.5, 3.5], "lamp across the window edge, dielectric", 0, 0.4);
+    const across = lampAt([4.5, 1.5, 1.5], "lamp across the window edge, dielectric", 0, 0.4);
     const outside = lampAt([3.5, 4.5, 3], "lamp outside the window", 0, 0.4);
     const scenarios = [...inside, across, outside];
 
@@ -249,7 +249,7 @@ test.describe("the PBR material against the CPU oracle (M4-03)", () => {
     const inDistances = POINTS.map((point) => distanceTo([1.2, 1.6, 2], point));
     expect(Math.max(...inDistances)).toBeLessThan(LAMP_RANGE);
     expect(Math.max(...inDistances) / LAMP_RANGE, "the window actually attenuates inside it").toBeGreaterThan(0.5);
-    const acrossDistances = POINTS.map((point) => distanceTo([2, 2.5, 3.5], point));
+    const acrossDistances = POINTS.map((point) => distanceTo([4.5, 1.5, 1.5], point));
     expect(Math.min(...acrossDistances)).toBeLessThan(LAMP_RANGE);
     expect(Math.max(...acrossDistances)).toBeGreaterThan(LAMP_RANGE);
     expect(Math.min(...POINTS.map((point) => distanceTo([3.5, 4.5, 3], point)))).toBeGreaterThan(LAMP_RANGE);
