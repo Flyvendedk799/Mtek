@@ -1,0 +1,1222 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=hardware",
+      "specs/m5/"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "m5\\physics-callbacks.spec.ts",
+      "file": "m5/physics-callbacks.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "removal and creation inside collision callbacks on the real engine (M5-06)",
+          "file": "m5/physics-callbacks.spec.ts",
+          "line": 45,
+          "column": 6,
+          "specs": [
+            {
+              "title": "destroying one or both of a pair and spawning bodies in handlers: no lost or doubled event, a consistent world",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m5-callbacks",
+                      "description": "Pad saw the Mines in tick 34 (derived 34); Mark{3} first seen in tick 44 (derived 44); bodies 10 -> 8 -> 6"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 354,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:09.504Z",
+                      "annotations": [
+                        {
+                          "type": "m5-callbacks",
+                          "description": "Pad saw the Mines in tick 34 (derived 34); Mark{3} first seen in tick 44 (derived 44); bodies 10 -> 8 -> 6"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "cf41e1e8240f2e359b53-31a8491cd9753bf86e84",
+              "file": "m5/physics-callbacks.spec.ts",
+              "line": 46,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m5\\physics-combinations.spec.ts",
+      "file": "m5/physics-combinations.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "same-frame combinations on the real engine (spec/scenes.md section 10.3, M5-06)",
+          "file": "m5/physics-combinations.spec.ts",
+          "line": 45,
+          "column": 6,
+          "specs": [
+            {
+              "title": "spawn then destroy in one handler: nothing is created, no body appears, nothing is reported",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 267,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:10.533Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "75a4e41b11c119525713-f7154beb9caff85b3fb4",
+              "file": "m5/physics-combinations.spec.ts",
+              "line": 50,
+              "column": 3
+            },
+            {
+              "title": "destroy then a collision involving the entity in the same tick: destroyed before the tick, in the tick, or after the delivery",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 788,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:10.809Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "75a4e41b11c119525713-0528b98082d7f0faec02",
+              "file": "m5/physics-combinations.spec.ts",
+              "line": 61,
+              "column": 3
+            },
+            {
+              "title": "key down and key up within one frame: both delivered, in order, and the later command of a lane wins",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 276,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:11.605Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "75a4e41b11c119525713-489dac36e36be9bc74dc",
+              "file": "m5/physics-combinations.spec.ts",
+              "line": 89,
+              "column": 3
+            },
+            {
+              "title": "input during a pause is discarded; the held key is released at the next frame, as after a focus loss",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 270,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:11.889Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "75a4e41b11c119525713-19faf7c78b187a6aebc6",
+              "file": "m5/physics-combinations.spec.ts",
+              "line": 113,
+              "column": 3
+            },
+            {
+              "title": "spawn, destroy, input and a collision in one frame of three ticks, each with its documented outcome",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 424,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:12.168Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "75a4e41b11c119525713-9708037cedc380aea913",
+              "file": "m5/physics-combinations.spec.ts",
+              "line": 147,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m5\\physics-pause.spec.ts",
+      "file": "m5/physics-pause.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "pause and resume with physics (M5-06)",
+          "file": "m5/physics-pause.spec.ts",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "manual clock: a paused interval is never stepped, input during it is discarded, and the run ends where an uninterrupted one does",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 410,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:12.617Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "664f3881176463d098ba-eadb46315c3c3d00490f",
+              "file": "m5/physics-pause.spec.ts",
+              "line": 28,
+              "column": 3
+            },
+            {
+              "title": "real clock: 700 ms of wall-clock time paused advance the simulation by nothing, and the resume does not catch up",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1145,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:13.035Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "664f3881176463d098ba-08b8b93ab78d575ab3c5",
+              "file": "m5/physics-pause.spec.ts",
+              "line": 82,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m5\\physics-resources.spec.ts",
+      "file": "m5/physics-resources.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "physics resources return to zero and stay bounded (M5-06)",
+          "file": "m5/physics-resources.spec.ts",
+          "line": 32,
+          "column": 6,
+          "specs": [
+            {
+              "title": "twenty mounts and disposals with live crates: every counter and listener back to zero",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m5-cycles",
+                      "description": "20 cycles, each identical before dispose: {\"liveBuffers\":12,\"liveBindGroups\":6,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"buffersAllocated\":21,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"ownedParamBlocks\":1,\"sharedParamBlocks\":3,\"bindGroupsCreated\":6,\"uploads\":2059,\"uploadBytes\":546588,\"drawCalls\":4}; after dispose {\"liveBuffers\":0,\"liveTextures\":0,\"liveSamplers\":0,\"liveShaderModules\":0,\"livePipelines\":0,\"liveBindGroups\":0,\"liveListeners\":0,\"physicsBodies\":0,\"physicsColliders\":0,\"liveEntities\":51,\"entitySlots\":51}; listeners added per mount 9"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 914,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:14.210Z",
+                      "annotations": [
+                        {
+                          "type": "m5-cycles",
+                          "description": "20 cycles, each identical before dispose: {\"liveBuffers\":12,\"liveBindGroups\":6,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"buffersAllocated\":21,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"ownedParamBlocks\":1,\"sharedParamBlocks\":3,\"bindGroupsCreated\":6,\"uploads\":2059,\"uploadBytes\":546588,\"drawCalls\":4}; after dispose {\"liveBuffers\":0,\"liveTextures\":0,\"liveSamplers\":0,\"liveShaderModules\":0,\"livePipelines\":0,\"liveBindGroups\":0,\"liveListeners\":0,\"physicsBodies\":0,\"physicsColliders\":0,\"liveEntities\":51,\"entitySlots\":51}; listeners added per mount 9"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "038ddfb44f08f0335ad2-1910da4ea8eeb10ac004",
+              "file": "m5/physics-resources.spec.ts",
+              "line": 37,
+              "column": 3
+            },
+            {
+              "title": "1 000 crates in waves: bounded plateau of live resources, capacity kept, nothing leaks",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [
+                    {
+                      "type": "m5-waves",
+                      "description": "empty {\"liveBuffers\":11,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":1,\"buffersAllocated\":11,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":3}; wave 1 (50) peak {\"liveBuffers\":12,\"liveBindGroups\":6,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":51,\"buffersAllocated\":21,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":8}; wave 1 end {\"liveBuffers\":12,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":51,\"buffersAllocated\":21,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":8}; wave 20 (1000 crates) end {\"liveBuffers\":12,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":51,\"buffersAllocated\":21,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":65,\"entitiesSpawned\":1000,\"entitiesDestroyed\":1000}; wave 21 (100) peak {\"liveBuffers\":12,\"liveBindGroups\":6,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":101,\"buffersAllocated\":23,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":69}; wave 26 end {\"liveBuffers\":12,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":101,\"buffersAllocated\":23,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":84,\"entitiesSpawned\":1450,\"entitiesDestroyed\":1450}"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 951,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:15.134Z",
+                      "annotations": [
+                        {
+                          "type": "m5-waves",
+                          "description": "empty {\"liveBuffers\":11,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":1,\"buffersAllocated\":11,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":3}; wave 1 (50) peak {\"liveBuffers\":12,\"liveBindGroups\":6,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":51,\"buffersAllocated\":21,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":8}; wave 1 end {\"liveBuffers\":12,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":51,\"buffersAllocated\":21,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":8}; wave 20 (1000 crates) end {\"liveBuffers\":12,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":51,\"buffersAllocated\":21,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":65,\"entitiesSpawned\":1000,\"entitiesDestroyed\":1000}; wave 21 (100) peak {\"liveBuffers\":12,\"liveBindGroups\":6,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":101,\"buffersAllocated\":23,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":69}; wave 26 end {\"liveBuffers\":12,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"entitySlots\":101,\"buffersAllocated\":23,\"texturesAllocated\":2,\"pipelinesCreated\":2,\"shaderModulesCreated\":1,\"bindGroupsCreated\":84,\"entitiesSpawned\":1450,\"entitiesDestroyed\":1450}"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "038ddfb44f08f0335ad2-2a78f22a08e40e26ec4b",
+              "file": "m5/physics-resources.spec.ts",
+              "line": 125,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m5\\physics-sensor.spec.ts",
+      "file": "m5/physics-sensor.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "sensor enter and exit counts on the real engine (M5-06)",
+          "file": "m5/physics-sensor.spec.ts",
+          "line": 62,
+          "column": 6,
+          "specs": [
+            {
+              "title": "every crossing of the zone is one enter and one exit, delivered once to each side, in the derived tick",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m5-sensor",
+                      "description": "g=9.81 step=0.016666668; log (who*10+1 enter, +2 exit) [21,31,22,11,41,12,32,21,22] at ticks [20,29,39,54,54,69,88,121,139]; derived ticks [20,29,38,54,54,69,88,121,139]"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 314,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:16.108Z",
+                      "annotations": [
+                        {
+                          "type": "m5-sensor",
+                          "description": "g=9.81 step=0.016666668; log (who*10+1 enter, +2 exit) [21,31,22,11,41,12,32,21,22] at ticks [20,29,39,54,54,69,88,121,139]; derived ticks [20,29,38,54,54,69,88,121,139]"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2fb663b66c3adeb56cda-5d7d4907cdcbf2c92a65",
+              "file": "m5/physics-sensor.spec.ts",
+              "line": 63,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m5\\physics-tunnelling.spec.ts",
+      "file": "m5/physics-tunnelling.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "high-speed limitation on the real engine (M5-06)",
+          "file": "m5/physics-tunnelling.spec.ts",
+          "line": 84,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the model: stopped exactly when a sample lies in the window; static walls stop everything",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m5-tunnelling",
+                      "description": "window 0.120 m = 7.20 m/s per step 0.016666668; 3 m/s (0.0500 m/step) x0=3: model stopped, dynamic plate x=4.900, static wall x=4.900; 6 m/s (0.1000 m/step) x0=3: model stopped, dynamic plate x=4.900, static wall x=4.900; 6 m/s (0.1000 m/step) x0=3.05: model stopped, dynamic plate x=4.901, static wall x=4.900; 7 m/s (0.1167 m/step) x0=3: model stopped, dynamic plate x=4.901, static wall x=4.900; 7 m/s (0.1167 m/step) x0=3.04: model stopped, dynamic plate x=4.900, static wall x=4.900; 9 m/s (0.1500 m/step) x0=3: model stopped, dynamic plate x=4.901, static wall x=4.900; 9 m/s (0.1500 m/step) x0=3.065: model passes, dynamic plate x=21.065, static wall x=4.900; 12 m/s (0.2000 m/step) x0=3.3: model stopped, dynamic plate x=4.901, static wall x=4.900; 12 m/s (0.2000 m/step) x0=3.24: model passes, dynamic plate x=27.240, static wall x=4.900; 30 m/s (0.5000 m/step) x0=3.95: model stopped, dynamic plate x=4.902, static wall x=4.900; 30 m/s (0.5000 m/step) x0=3.84: model passes, dynamic plate x=63.840, static wall x=4.900; 60 m/s (1.0000 m/step) x0=3.9: model stopped, dynamic plate x=4.903, static wall x=4.900; 60 m/s (1.0000 m/step) x0=3.84: model passes, dynamic plate x=123.840, static wall x=4.900; 120 m/s (2.0000 m/step) x0=2.9: model stopped, dynamic plate x=4.907, static wall x=4.900; 120 m/s (2.0000 m/step) x0=2.84: model passes, dynamic plate x=242.840, static wall x=4.900; 240 m/s (4.0000 m/step) x0=0.9: model stopped, dynamic plate x=4.916, static wall x=4.900; 240 m/s (4.0000 m/step) x0=0.84: model passes, dynamic plate x=480.840, static wall x=4.900"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 338,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:16.438Z",
+                      "annotations": [
+                        {
+                          "type": "m5-tunnelling",
+                          "description": "window 0.120 m = 7.20 m/s per step 0.016666668; 3 m/s (0.0500 m/step) x0=3: model stopped, dynamic plate x=4.900, static wall x=4.900; 6 m/s (0.1000 m/step) x0=3: model stopped, dynamic plate x=4.900, static wall x=4.900; 6 m/s (0.1000 m/step) x0=3.05: model stopped, dynamic plate x=4.901, static wall x=4.900; 7 m/s (0.1167 m/step) x0=3: model stopped, dynamic plate x=4.901, static wall x=4.900; 7 m/s (0.1167 m/step) x0=3.04: model stopped, dynamic plate x=4.900, static wall x=4.900; 9 m/s (0.1500 m/step) x0=3: model stopped, dynamic plate x=4.901, static wall x=4.900; 9 m/s (0.1500 m/step) x0=3.065: model passes, dynamic plate x=21.065, static wall x=4.900; 12 m/s (0.2000 m/step) x0=3.3: model stopped, dynamic plate x=4.901, static wall x=4.900; 12 m/s (0.2000 m/step) x0=3.24: model passes, dynamic plate x=27.240, static wall x=4.900; 30 m/s (0.5000 m/step) x0=3.95: model stopped, dynamic plate x=4.902, static wall x=4.900; 30 m/s (0.5000 m/step) x0=3.84: model passes, dynamic plate x=63.840, static wall x=4.900; 60 m/s (1.0000 m/step) x0=3.9: model stopped, dynamic plate x=4.903, static wall x=4.900; 60 m/s (1.0000 m/step) x0=3.84: model passes, dynamic plate x=123.840, static wall x=4.900; 120 m/s (2.0000 m/step) x0=2.9: model stopped, dynamic plate x=4.907, static wall x=4.900; 120 m/s (2.0000 m/step) x0=2.84: model passes, dynamic plate x=242.840, static wall x=4.900; 240 m/s (4.0000 m/step) x0=0.9: model stopped, dynamic plate x=4.916, static wall x=4.900; 240 m/s (4.0000 m/step) x0=0.84: model passes, dynamic plate x=480.840, static wall x=4.900"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "236d6d5caa7340181b6e-bd8c998873ea7706cde0",
+              "file": "m5/physics-tunnelling.spec.ts",
+              "line": 85,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m5\\physics.spec.ts",
+      "file": "m5/physics.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "the physics module is loaded for programs with bodies only (M5-05)",
+          "file": "m5/physics.spec.ts",
+          "line": 63,
+          "column": 6,
+          "specs": [
+            {
+              "title": "prefab_instances: a program without bodies makes no request for physics/",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 220,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:16.797Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0b79ef8cdb40b4f8de6a-54e99629a247770ecba4",
+              "file": "m5/physics.spec.ts",
+              "line": 69,
+              "column": 5
+            },
+            {
+              "title": "spawn_ring: a program without bodies makes no request for physics/",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 217,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:17.025Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0b79ef8cdb40b4f8de6a-13b004a4d91e831b8739",
+              "file": "m5/physics.spec.ts",
+              "line": 69,
+              "column": 5
+            },
+            {
+              "title": "a program with bodies requests the one module its manifest names, once, and it loads",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 227,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:17.250Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0b79ef8cdb40b4f8de6a-a27284b75fd059df249a",
+              "file": "m5/physics.spec.ts",
+              "line": 95,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "a crate falls onto a floor on the real engine (M5-05)",
+          "file": "m5/physics.spec.ts",
+          "line": 122,
+          "column": 6,
+          "specs": [
+            {
+              "title": "it comes to rest at the derived height, the handlers see the landing, and an impulse changes the velocity by impulse / mass",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 302,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:17.484Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0b79ef8cdb40b4f8de6a-4d1507764040b3910499",
+              "file": "m5/physics.spec.ts",
+              "line": 127,
+              "column": 3
+            },
+            {
+              "title": "twenty mounts and disposals leave no body or collider behind",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 925,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:17.796Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0b79ef8cdb40b4f8de6a-74074a3d1b2c06ccb77f",
+              "file": "m5/physics.spec.ts",
+              "line": 191,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m5\\playground.spec.ts",
+      "file": "m5/playground.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "the physics playground on the real engine (M5-07)",
+          "file": "m5/playground.spec.ts",
+          "line": 219,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Space lifts First by the height its impulse derives and it comes back to rest",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 323,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:18.742Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "31f0a1e896948bac0bd4-14159d2e04019aad2e4f",
+              "file": "m5/playground.spec.ts",
+              "line": 224,
+              "column": 3
+            },
+            {
+              "title": "C spawns crates at seeded positions: they come to rest, the sensor counts them exactly and the ones that miss the floor are destroyed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 585,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:19.073Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "31f0a1e896948bac0bd4-47fc54708b7911cd02a8",
+              "file": "m5/playground.spec.ts",
+              "line": 258,
+              "column": 3
+            },
+            {
+              "title": "the same seed gives the same crates and another seed gives others",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 355,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:19.669Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "31f0a1e896948bac0bd4-abfb5c3ded06872160eb",
+              "file": "m5/playground.spec.ts",
+              "line": 398,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m5\\prefabs.spec.ts",
+      "file": "m5/prefabs.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "static prefab instances render through WebGPU (M5-01)",
+          "file": "m5/prefabs.spec.ts",
+          "line": 30,
+          "column": 6,
+          "specs": [
+            {
+              "title": "each instance shows the entity its params make of it, and the bound one follows the clock",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m5-pixel",
+                      "description": "Left centre projects to (106.78, 141.87) -> pixel (106, 141): expected rgb(255,64,64) actual rgb(255,64,64)"
+                    },
+                    {
+                      "type": "m5-pixel",
+                      "description": "Middle centre projects to (192.00, 141.87) -> pixel (192, 141): expected rgb(107,92,255) actual rgb(107,92,255)"
+                    },
+                    {
+                      "type": "m5-pixel",
+                      "description": "Right centre projects to (278.22, 128.00) -> pixel (278, 128): expected rgb(64,208,96) actual rgb(64,208,96)"
+                    },
+                    {
+                      "type": "m5-pixel",
+                      "description": "Climber centre projects to (192.00, 102.93) -> pixel (192, 102): expected rgb(255,204,0) actual rgb(255,204,0)"
+                    },
+                    {
+                      "type": "m5-pixel",
+                      "description": "grid samples clear 5597, Climber 16, Right 303, Left 67, Middle 51; clear rgb(32,40,48)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 849,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:20.051Z",
+                      "annotations": [
+                        {
+                          "type": "m5-pixel",
+                          "description": "Left centre projects to (106.78, 141.87) -> pixel (106, 141): expected rgb(255,64,64) actual rgb(255,64,64)"
+                        },
+                        {
+                          "type": "m5-pixel",
+                          "description": "Middle centre projects to (192.00, 141.87) -> pixel (192, 141): expected rgb(107,92,255) actual rgb(107,92,255)"
+                        },
+                        {
+                          "type": "m5-pixel",
+                          "description": "Right centre projects to (278.22, 128.00) -> pixel (278, 128): expected rgb(64,208,96) actual rgb(64,208,96)"
+                        },
+                        {
+                          "type": "m5-pixel",
+                          "description": "Climber centre projects to (192.00, 102.93) -> pixel (192, 102): expected rgb(255,204,0) actual rgb(255,204,0)"
+                        },
+                        {
+                          "type": "m5-pixel",
+                          "description": "grid samples clear 5597, Climber 16, Right 303, Left 67, Middle 51; clear rgb(32,40,48)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fc97d4c970757496ecf8-227cc7e9e5c0a80e5cce",
+              "file": "m5/prefabs.spec.ts",
+              "line": 35,
+              "column": 3
+            },
+            {
+              "title": "the instance bound to the clock moves with it, by the amount the CPU projection predicts",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m5-pixel",
+                      "description": "Climber footprint 374 px at centroid (192.00, 113.78) after 5 frames, 382 px at (192.00, 102.87) after 10; CPU-predicted centre (192.00, 113.80) -> (192.00, 102.93)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 375,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:20.908Z",
+                      "annotations": [
+                        {
+                          "type": "m5-pixel",
+                          "description": "Climber footprint 374 px at centroid (192.00, 113.78) after 5 frames, 382 px at (192.00, 102.87) after 10; CPU-predicted centre (192.00, 113.80) -> (192.00, 102.93)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fc97d4c970757496ecf8-86d99c2d821cac5a0d2b",
+              "file": "m5/prefabs.spec.ts",
+              "line": 94,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m5\\spawn.spec.ts",
+      "file": "m5/spawn.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "spawn and destroy on the real GPU (M5-02)",
+          "file": "m5/spawn.spec.ts",
+          "line": 143,
+          "column": 6,
+          "specs": [
+            {
+              "title": "a ring of spawned blocks: right pixels, a bounded population and nothing left behind",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m5-spawn",
+                      "description": "0 presses: {\"liveBuffers\":7,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"sharedParamBlocks\":0,\"liveEntities\":1,\"entitySlots\":1,\"drawCalls\":1,\"instancedDraws\":0}; 8: {\"liveBuffers\":8,\"liveBindGroups\":6,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"sharedParamBlocks\":3,\"liveEntities\":9,\"entitySlots\":9,\"drawCalls\":4,\"instancedDraws\":3}; 208: {\"liveBuffers\":8,\"liveBindGroups\":6,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"sharedParamBlocks\":3,\"liveEntities\":9,\"entitySlots\":10,\"drawCalls\":4,\"instancedDraws\":3}; cleared: {\"liveBuffers\":8,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"sharedParamBlocks\":0,\"liveEntities\":1,\"entitySlots\":10,\"drawCalls\":1,\"instancedDraws\":0}; buffersAllocated 19 -> 20, bindGroupsCreated 17 -> 17"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 317,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:21.301Z",
+                      "annotations": [
+                        {
+                          "type": "m5-spawn",
+                          "description": "0 presses: {\"liveBuffers\":7,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"sharedParamBlocks\":0,\"liveEntities\":1,\"entitySlots\":1,\"drawCalls\":1,\"instancedDraws\":0}; 8: {\"liveBuffers\":8,\"liveBindGroups\":6,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"sharedParamBlocks\":3,\"liveEntities\":9,\"entitySlots\":9,\"drawCalls\":4,\"instancedDraws\":3}; 208: {\"liveBuffers\":8,\"liveBindGroups\":6,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"sharedParamBlocks\":3,\"liveEntities\":9,\"entitySlots\":10,\"drawCalls\":4,\"instancedDraws\":3}; cleared: {\"liveBuffers\":8,\"liveBindGroups\":3,\"liveTextures\":2,\"liveSamplers\":0,\"livePipelines\":2,\"ownedParamBlocks\":1,\"sharedParamBlocks\":0,\"liveEntities\":1,\"entitySlots\":10,\"drawCalls\":1,\"instancedDraws\":0}; buffersAllocated 19 -> 20, bindGroupsCreated 17 -> 17"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f882c4a7a1663db972e0-389d81f7fbeba1e6fdc9",
+              "file": "m5/spawn.spec.ts",
+              "line": 144,
+              "column": 3
+            },
+            {
+              "title": "spawning again after the ring was cleared reuses the slots under new generations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 266,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-18T15:41:21.624Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f882c4a7a1663db972e0-49bb32a000b15b1e18c1",
+              "file": "m5/spawn.spec.ts",
+              "line": 197,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-18T15:41:01.679Z",
+    "duration": 20383.554,
+    "expected": 24,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
