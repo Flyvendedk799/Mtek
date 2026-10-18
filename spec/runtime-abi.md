@@ -116,7 +116,7 @@ Generated code imports only `rt` math/value helpers and receives everything else
 
 Because values are never mutated in place, sharing a reference is semantically a copy, which is what value semantics require. Assignment to a vector component (`self.position.y = 0.0`) emits construction of a new vector. Allocation cost is accepted for v0.1 and measured by the runtime benchmark before any optimisation.
 
-`rt` exports the helpers generated code uses: `v2 v3 v4 quat color` constructors, `fround`-disciplined vector/matrix/quaternion operations (`v3add`, `v3scale`, `qmul`, `qrotate`, `m4mul`, …), integer helpers (`idiv`, `irem`, `udiv`, `urem` implementing `spec/language.md` §6.3), conversions (`f2i`, `f2u`), and every pure intrinsic of `spec/stdlib.md` §6 with WGSL-matching semantics (`round` = ties-to-even, …). These live in `packages/runtime-web/src/math/` and have their own unit tests against the conformance table. The helper names, the index from Mtek operations to helpers, the CPU results of non-portable cases and the table format are decision 0037.
+`rt` exports the helpers generated code uses (a preview build also calls `rt.budgetExceeded(spanId)`, which throws, decision 0075): `v2 v3 v4 quat color` constructors, `fround`-disciplined vector/matrix/quaternion operations (`v3add`, `v3scale`, `qmul`, `qrotate`, `m4mul`, …), integer helpers (`idiv`, `irem`, `udiv`, `urem` implementing `spec/language.md` §6.3), conversions (`f2i`, `f2u`), and every pure intrinsic of `spec/stdlib.md` §6 with WGSL-matching semantics (`round` = ties-to-even, …). These live in `packages/runtime-web/src/math/` and have their own unit tests against the conformance table. The helper names, the index from Mtek operations to helpers, the CPU results of non-portable cases and the table format are decision 0037.
 
 ### 4.2 The context object (`ctx`)
 
@@ -136,6 +136,7 @@ The runtime passes `ctx` to every generated function. Its shape is part of ABI 1
 | `ctx.body(refOrEntity, spanId)` | the **body handle** of an entity record (`ctx.e[i]`, `self`) or of an `entity_ref`, for the body commands and velocity reads of `spec/physics.md` §3 (decision 0065): `h.applyImpulse(v)`, `h.applyForce(v)`, `h.setKinematicTarget(position, rotation)`, `h.teleport(position, rotation, keepVelocity)`, `h.setLinearVelocity(v)` (commands: queued for the next tick, in the category order of physics §4) and the read-only `h.linearVelocity`, `h.angularVelocity` (`vec3`, as of the last completed tick, zero before the first). The compiler has checked the body kind of a record; for an `entity_ref` the handle reports `E8101` and drops a command the body kind of its target does not support (and `W8031` for a pending or dead target). `spanId` is the manifest span of the command or property in the Mtek source (decision 0066), for `W8031`, `E8101` and `E8104`; a command with a value that is not finite is dropped with `E8104`. Generated code calls it as `ctx.body(self, 7).applyImpulse(..)`, `ctx.body(ctx.e[3], 8).teleport(..)`, `ctx.body(a_other, 9).applyForce(..)` |
 | `ctx.random()`, `ctx.print(message, spanId)`, `ctx.isKeyDown(code)` | CPU intrinsics |
 | `ctx.warn(code, spanId)` | report a mapped runtime warning (e.g. index clamping `W8030`, once per span) |
+| `ctx.budget` | `{ n }`, the iterations of CPU loops left in this frame: refilled with `manifest.preview.loopBudget` at the start of every frame and before `init`, decremented by the checks of `--mode preview` builds (`rt.budgetExceeded(spanId)` throws when it goes below zero; the runtime then reports `E8080`). Zero when the manifest has no `preview` object. Decision 0075. |
 
 Ownership rules (`spec/scenes.md` §8) are enforced **statically**; the setters only re-validate values. Generated code passes **span ids** (indices into the manifest `spans` table) so the runtime can map any run-time diagnostic to the Mtek source.
 
@@ -174,6 +175,8 @@ JSON, UTF-8, keys in a fixed order, schema version 1. A JSON Schema for it is ch
 Every `spans` entry carries the half-open byte range into the file as stored on disk and the 1-based line and column of both ends (columns count Unicode scalar values), computed by the compiler's source manager exactly as for compiler diagnostics; the runtime copies them verbatim into the `source` of a diagnostic and never ships or reads source text (decision `spec/decisions/0019-manifest-spans-carry-line-columns.md`).
 
 `requiredCapabilities.limits` lists only limits **above** the WebGPU defaults that the program needs (the v0.1 profile `webgpu-core-2026` is exactly the default limits, so it is `{}`); `features` lists optional WebGPU features (none in v0.1; `timestamp-query` is requested opportunistically by dev builds and never required).
+
+The optional top-level `preview` object, `{ "loopBudget": <integer 1 … 4294967295> }`, is present exactly in the manifest of a `--mode preview` build (it sits between `runtimeConfig` and `entryScene`; the build id covers it): the runtime enforces the loop budget through `ctx.budget` (§4.2) and refuses any request outside `baseUrl` (§6.5). No other mode writes the key. Decision 0075.
 
 ### 5.1 Compatibility (blueprint §5.3)
 
@@ -291,14 +294,14 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
 ```ts
 export class MtekMountError extends Error {
   readonly kind: "webgpu-unavailable" | "adapter-unavailable" | "device-failed" | "incompatible-program"
-               | "manifest-invalid" | "shader-failed" | "asset-failed" | "allocation-failed" | "physics-failed";
+               | "manifest-invalid" | "shader-failed" | "asset-failed" | "allocation-failed" | "physics-failed" | "budget-exceeded";
   readonly diagnostics: readonly MtekDiagnostic[];   // mapped to Mtek source where possible
 }
 ```
 
 A startup asset is `ready` only after its length and (with `crypto.subtle`) its SHA-256 were verified and, for an image, after it decoded and fits the device's `maxTextureDimension2D` (`E8002`); the failure diagnostics are at the declaring `asset.*` path literal and name the file (decision 0060).
 
-**Code → kind mapping (normative):** `E8001`, `E8004` → `webgpu-unavailable`; `E8005` → `adapter-unavailable`; `E8002` and a rejected `requestDevice` (browser message as a note) → `device-failed`; `E8003` → `incompatible-program`; `E8006` → `manifest-invalid`; `E8051` → `shader-failed`; `E7030`, `E7031` → `asset-failed`; `E8063` → `allocation-failed`; `E8102` → `physics-failed` (decision 0066).
+**Code → kind mapping (normative):** `E8001`, `E8004` → `webgpu-unavailable`; `E8005` → `adapter-unavailable`; `E8002` and a rejected `requestDevice` (browser message as a note) → `device-failed`; `E8003` → `incompatible-program`; `E8006` → `manifest-invalid`; `E8051` → `shader-failed`; `E7030`, `E7031` → `asset-failed`; `E8063` → `allocation-failed`; `E8102` → `physics-failed` (decision 0066); `E8080` → `budget-exceeded` (a loop of `init` ran past the budget of a preview, decision 0075).
 
 `runtime.d.ts` is a **hand-maintained** file in `packages/runtime-web/src/runtime.d.ts` declaring exactly the public types of this section; the runtime build copies it to `packages/runtime-web/dist/runtime.d.ts`, and a test compiles a host snippet against it with `tsc --strict`. The compiler receives it alongside the bundle (`CompileOptions.runtime_declarations`, `spec/compiler-architecture.md` §4.12) and writes it into every `dist/`.
 
@@ -374,7 +377,7 @@ export { mountMtek } from "./runtime.js";
 </script>
 ```
 
-In `--mode test` builds the bootstrap does **not** mount automatically; it defines `window.__mtekMount = (options: MtekMountOptions) => Promise<MtekApp>`, which mounts `program` on `#mtek` with the given options (Playwright calls it with `test` options). In `--mode preview` builds the bootstrap lives in an external `bootstrap.js` (no inline script, for the Content-Security-Policy of `spec/ai-and-benchmarks.md` §5).
+In `--mode test` builds the bootstrap does **not** mount automatically; it defines `window.__mtekMount = (options: MtekMountOptions) => Promise<MtekApp>`, which mounts `program` on `#mtek` with the given options (Playwright calls it with `test` options). In `--mode preview` builds the bootstrap lives in an external `bootstrap.js` (no inline script, for the Content-Security-Policy of `spec/ai-and-benchmarks.md` §5) with the same one-line mount as `release`; the manifest has the `preview` object (`{ "loopBudget": N }`), which makes the runtime enforce the budget and refuse every request (`fetch`, asset bytes, the physics module `import()`) whose URL is not below `baseUrl` (same origin, path under `baseUrl`, no credentials, no encoded dot or separator below it): the refusal is a rejected request that each loader reports with its own code (`E8006`, `E8051`, `E7030`, `E8102`) and the message `refused <url>`. Decision 0075.
 
 ## 7. The scheduler (implementation contract for `spec/scenes.md` §10)
 

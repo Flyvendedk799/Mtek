@@ -264,6 +264,14 @@
     "invalid/prefab-mesh-id-malformed.json": {
       "code": "E8006",
       "field": "prefabs[0].mesh"
+    },
+    "invalid/preview-budget-zero.json": {
+      "code": "E8006",
+      "field": "preview.loopBudget"
+    },
+    "invalid/preview-without-budget.json": {
+      "code": "E8006",
+      "field": "preview.loopBudget"
     }
   }
 }

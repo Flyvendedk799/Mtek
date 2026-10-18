@@ -51,6 +51,15 @@
       "else": { "properties": { "physics": {}, "physicsModule": false }, "additionalProperties": false }
     },
     "runtimeConfig": { "$ref": "#/$defs/runtimeConfig" },
+    "preview": {
+      "type": "object",
+      "description": "Present exactly in the manifest of a `--mode preview` build (decision 0075): the runtime enforces the loop budget the program was instrumented with and refuses any request outside baseUrl.",
+      "additionalProperties": false,
+      "required": ["loopBudget"],
+      "properties": {
+        "loopBudget": { "type": "integer", "minimum": 1, "maximum": 4294967295, "description": "Iterations of CPU loops allowed per frame (and during init)." }
+      }
+    },
     "entryScene": { "type": "string", "minLength": 1 },
     "sources": { "type": "array", "items": { "$ref": "#/$defs/source" } },
     "spans": { "type": "array", "items": { "$ref": "#/$defs/span" } },

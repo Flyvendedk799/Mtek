@@ -267,6 +267,7 @@ catalogue! {
     E9021 Error "unknown host input target",
     E9030 Error "runtime bundle not embedded",
     E9031 Error "build output not written",
+    E9032 Error "compilation timed out",
     E9999 Error "internal compiler error",
 }
 

@@ -7,7 +7,7 @@
 import type { MtekManifest } from "../abi/manifest-types.js";
 import { checkManifest } from "../abi/validate.js";
 import { closeImages, decodeImages, loadAssets, type LoadedAssets } from "../assets/loader.js";
-import { MtekMountError, makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
+import { MtekMountError, makeRuntimeDiagnostic, type MtekDiagnostic, type MtekRuntimePhase } from "../diagnostics/types.js";
 import type { DevTools } from "../dev/tools.js";
 import type { AcquiredDevice } from "../gpu/device.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
@@ -20,13 +20,14 @@ import { InputState } from "../input/input.js";
 import { isMappedKeyCode } from "../input/keys.js";
 import { startScene, type Scene } from "../render/startup.js";
 import { Behaviors } from "../scene/behavior.js";
+import { ExecutionBudgetExceeded } from "../scene/budget.js";
 import type { EntityRef } from "../scene/slots.js";
 import { Scheduler, type FramePhases } from "../schedule/scheduler.js";
 import { checkProgram } from "../scene/program.js";
 import { resolveStructure } from "../scene/structure.js";
 import type { CpuServices } from "../scene/world.js";
 import type { FetchResponseLike, HostEnvironment, ResizeObserverLike } from "./environment.js";
-import type { DiagnosticSink } from "./failures.js";
+import { resolveSpan, type DiagnosticSink } from "./failures.js";
 import { HostInputs, unknownInputResult } from "./inputs.js";
 import type { FailureOverlay } from "./overlay.js";
 import {
@@ -127,6 +128,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private behaviors: Behaviors;
   private readonly resizeObserver: ResizeObserverLike | undefined;
   private frameStartMs = 0;
+  /** The scheduler phase that is running (or ran last): the `phase` of an `E8080`. */
+  private framePhase: MtekRuntimePhase = "runtime:input";
   private renderStartMs = 0;
   private frameTimeMs = 0;
   private cpuUpdateMs = 0;
@@ -179,6 +182,10 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       this.createPhases(),
       manual ? null : { request: (cb) => environment.requestAnimationFrame(cb), cancel: (h) => { environment.cancelAnimationFrame(h); } },
       (error) => {
+        if (error instanceof ExecutionBudgetExceeded) {
+          this.failBudget(error);
+          return;
+        }
         this.fail(
           makeRuntimeDiagnostic("E8050", {
             phase: "runtime:render",
@@ -584,6 +591,29 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     if (__MTEK_DEV__) this.deps.devTools?.recordError(cause);
   }
 
+  /**
+   * `E8080` (decision 0075): a loop spent the last iteration of the frame's budget. The handler, the tick and the
+   * frame were abandoned where they stood, which leaves the scene half updated, so the scene stops (the overlay
+   * names the loop) instead of running on from a state no program produced.
+   */
+  private failBudget(error: ExecutionBudgetExceeded): void {
+    const limit = this.deps.manifest.preview?.loopBudget;
+    this.fail(
+      makeRuntimeDiagnostic("E8080", {
+        phase: this.framePhase,
+        message:
+          limit === undefined
+            ? "A loop ran past the execution budget of this preview, so the frame was abandoned and the scene stopped."
+            : `A loop ran past the execution budget of ${String(limit)} iterations per frame, so the frame was abandoned and the scene stopped.`,
+        source: resolveSpan(this.deps.manifest, error.spanId),
+        notes: [
+          "the budget counts the iterations of every loop of every handler, lifecycle function and binding that runs in one frame",
+          "help: bound the loop, or build the preview with a larger --loop-budget if the program really needs the iterations",
+        ],
+      }),
+    );
+  }
+
   private stateNow(): MtekAppState {
     return this.current;
   }
@@ -861,13 +891,17 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     return {
       phase1_input: () => {
         this.applyPendingSwap();
+        this.framePhase = "runtime:input";
         this.frameStartMs = now();
         const { world } = this.deps.scene;
+        // The budget is per frame: every handler, tick, update and binding of this frame draws on one counter.
+        world.resetBudget();
         world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex);
         this.hostInputs.applyQueued({ state: world.sceneState });
         this.behaviors.dispatchInput(this.input.deliver());
       },
       phase2_tick: (step) => {
+        this.framePhase = "runtime:tick";
         // (a) of `spec/scenes.md` section 10: the lifecycle queue is applied before each tick (spawned bodies are
         // created and destroyed ones removed by the physics listener), then (b) the commands, once.
         this.deps.scene.world.dynamic.flush();
@@ -879,12 +913,14 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         physics?.stepAndDeliver();
       },
       phase3_update: (delta) => {
+        this.framePhase = "runtime:update";
         this.behaviors.update(delta);
       },
       phase4_flush: () => {
         this.deps.scene.world.dynamic.flush();
       },
       phase5_bindings: () => {
+        this.framePhase = "runtime:bindings";
         this.deps.scene.bindings.evaluate();
         // The spawned entities' bindings follow the scene's (decision 0064).
         this.deps.scene.world.dynamic.evaluateBindings();
@@ -979,7 +1015,14 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     return {
       step: (frames, dtSeconds) => {
         if (!manual) throw new Error("debug.step requires mountMtek options test.manualClock");
-        this.scheduler.stepManual(frames, dtSeconds);
+        try {
+          this.scheduler.stepManual(frames, dtSeconds);
+        } catch (error) {
+          // A program that ran past its budget fails like it does on the animation-frame loop (reported, scene
+          // stopped, overlay); every other error of a manual frame still propagates (`Scheduler.stepManual`).
+          if (!(error instanceof ExecutionBudgetExceeded)) throw error;
+          this.failBudget(error);
+        }
       },
       readPixels: () => {
         if (this.current === "disposed") return Promise.reject(new Error("readPixels: the application is disposed"));

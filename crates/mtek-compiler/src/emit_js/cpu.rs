@@ -43,6 +43,17 @@ use super::printer::identifier_part;
 use super::program::value_expr;
 use super::rt_ops;
 
+/// What the build mode changes in the CPU code (`spec/tooling.md` section 2).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct CpuFlags {
+    /// A release build (`release` and `preview`): `print` is compiled out of lifecycle
+    /// functions and handlers.
+    pub release: bool,
+    /// A preview build: every loop checks the frame's budget before each iteration
+    /// (decision 0075).
+    pub loop_budget: bool,
+}
+
 /// The emitted functions of a program.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct EmittedFunctions {
@@ -69,13 +80,15 @@ pub fn function_name(symbol: &Symbol) -> Result<String, String> {
     Ok(format!("f_{}_{}", hash8(path), identifier_part(name)))
 }
 
-/// Lowers every `cpuReachable` function of `program`. `span_id` gives the manifest span id of
-/// a source span (index clamping reports its call site by span id).
+/// Lowers every `cpuReachable` function of `program`. `loop_budget` instruments every loop
+/// with the budget check of a preview build. `span_id` gives the manifest span id of a source
+/// span (index clamping and the budget check report their call site by span id).
 ///
 /// # Errors
 /// A text describing a compiler defect: an IR node the CPU emitter does not know.
 pub fn emit_functions(
     program: &Program,
+    loop_budget: bool,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<EmittedFunctions, String> {
     let mut emitted = EmittedFunctions::default();
@@ -91,7 +104,11 @@ pub fn emit_functions(
             let mut lowering = FnLowering {
                 locals: &function.locals,
                 owner: None,
-                release: false,
+                flags: CpuFlags {
+                    release: false,
+                    loop_budget,
+                },
+                uses_budget: false,
                 temps: 0,
                 span_id: &mut *span_id,
                 owned: owned_vars(&function.body),
@@ -99,6 +116,7 @@ pub fn emit_functions(
             };
             let body = lowering
                 .block(&function.body)
+                .map(|body| lowering.with_budget(body))
                 .map_err(|e| format!("function '{}': {e}", function.symbol))?;
             let mut params = vec!["ctx".to_owned()];
             params.extend(function.params().map(local_name));
@@ -185,8 +203,11 @@ struct FnLowering<'f, 's> {
     locals: &'f [ir::LocalItem],
     /// The scene or entity whose behaviour this is: `self` inside an entity's own body.
     owner: Option<ir::Owner>,
-    /// A release build: `print` is compiled out.
-    release: bool,
+    /// What the build mode changes: `print` compiled out, loop budget checks.
+    flags: CpuFlags,
+    /// Whether a budget check was emitted: the body then starts with `const budget = ctx.budget;`
+    /// ([`Self::with_budget`]).
+    uses_budget: bool,
     /// Temporaries used so far (`t_0`, `t_1`, …).
     temps: u32,
     span_id: &'s mut dyn FnMut(Span) -> Result<u32, String>,
@@ -301,6 +322,58 @@ impl FnLowering<'_, '_> {
         Ok(out)
     }
 
+    /// The body of the loop at `span`. In a preview build it starts with the budget check
+    /// (decision 0075): `if (--budget.n < 0) { rt.budgetExceeded(<span id>); }` runs once per
+    /// iteration, before the body, so `continue` (which jumps to the next iteration's check)
+    /// and every other path back to the loop head pay for the iteration they start. The span id
+    /// is the loop statement's entry in the manifest `spans` table; the runtime reports `E8080`
+    /// there. Other builds emit exactly the body.
+    fn loop_body(&mut self, body: &ir::Block, span: Span) -> Result<Vec<Stmt>, String> {
+        let mut lowered = self.block(body)?;
+        if self.flags.loop_budget {
+            let id = (self.span_id)(span)?;
+            self.uses_budget = true;
+            let spent = Expr::binary(
+                "<",
+                Expr::unary("--", Expr::ident("budget").member("n")),
+                int(0),
+            );
+            lowered.insert(
+                0,
+                Stmt::If {
+                    branches: vec![(
+                        spent,
+                        vec![Stmt::Expr {
+                            expr: rt("budgetExceeded", vec![Expr::Num(Number::U32(id))]),
+                            span: Some(span),
+                        }],
+                    )],
+                    otherwise: None,
+                    span: Some(span),
+                },
+            );
+        }
+        Ok(lowered)
+    }
+
+    /// `body`, preceded by `const budget = ctx.budget;` when it contains a budget check. The
+    /// counter is read once per function call: `ctx` is a guarded proxy, and reading through
+    /// it on every iteration would cost about thirty times a read of a plain object
+    /// (decision 0075 measures it).
+    fn with_budget(&self, mut body: Vec<Stmt>) -> Vec<Stmt> {
+        if self.uses_budget {
+            body.insert(
+                0,
+                Stmt::Const {
+                    name: "budget".to_owned(),
+                    value: Expr::ident("ctx").member("budget"),
+                    span: None,
+                },
+            );
+        }
+        body
+    }
+
     fn stmt(&mut self, stmt: &ir::Stmt) -> Result<Option<Stmt>, String> {
         Ok(Some(match stmt {
             ir::Stmt::Let { local, value, span } => Stmt::Const {
@@ -360,7 +433,7 @@ impl FnLowering<'_, '_> {
                     start,
                     limit,
                     end,
-                    body: self.block(body)?,
+                    body: self.loop_body(body, *span)?,
                     span: Some(*span),
                 }
             }
@@ -372,7 +445,7 @@ impl FnLowering<'_, '_> {
             } => Stmt::ForOf {
                 var: self.local_ident(*local)?,
                 iterable: self.expr(array)?,
-                body: self.block(body)?,
+                body: self.loop_body(body, *span)?,
                 span: Some(*span),
             },
             // The function's variables end here: returned owned storage needs no copy.
@@ -386,7 +459,7 @@ impl FnLowering<'_, '_> {
                 body: self.block(body)?,
             },
             ir::Stmt::Expr { expr, .. }
-                if self.release
+                if self.flags.release
                     && matches!(&expr.kind, ir::ExprKind::Builtin { function, .. } if function == "print") =>
             {
                 return Ok(None);
@@ -1260,7 +1333,7 @@ mod tests {
         ];
         let mut checked = 0;
         for program in &programs {
-            let emitted = emit_functions(program, &mut |_| Ok(0)).expect("emitted");
+            let emitted = emit_functions(program, false, &mut |_| Ok(0)).expect("emitted");
             let module = super::super::ast::Module {
                 items: emitted
                     .stmts
@@ -1308,6 +1381,82 @@ mod tests {
             checked += expected.len();
         }
         assert!(checked > 2000, "{checked}");
+    }
+
+    /// The program text of `emit_functions` for the `cpu_functions` fixture, with or without
+    /// the budget, and the spans the budget checks interned.
+    fn functions_text(loop_budget: bool) -> (String, Vec<Span>) {
+        let program = program_of(&[
+            (
+                "src/main.mtek",
+                include_str!("../../../../tests/codegen/cpu_functions/src/main.mtek"),
+            ),
+            (
+                "src/util.mtek",
+                include_str!("../../../../tests/codegen/cpu_functions/src/util.mtek"),
+            ),
+        ]);
+        let mut interned = Vec::new();
+        // Every span id is 0, so the text of two builds differs only by the budget checks.
+        let emitted = emit_functions(&program, loop_budget, &mut |span| {
+            interned.push(span);
+            Ok(0)
+        })
+        .expect("emitted");
+        let module = super::super::ast::Module {
+            items: emitted
+                .stmts
+                .into_iter()
+                .map(super::super::ast::Item::Stmt)
+                .collect(),
+        };
+        (super::super::ast::print(&module).text, interned)
+    }
+
+    /// Decision 0075: a preview build starts every iteration of every loop with the budget check
+    /// (its span id is the loop statement's), reads the counter once per function, and adds
+    /// nothing else; a build without the budget contains nothing of it.
+    #[test]
+    fn a_preview_build_checks_the_budget_at_the_head_of_every_loop() {
+        let (plain, plain_spans) = functions_text(false);
+        assert!(!plain.contains("budget"), "{plain}");
+
+        let (instrumented, spans) = functions_text(true);
+        let lines: Vec<&str> = instrumented.lines().map(str::trim).collect();
+        let loops = lines
+            .iter()
+            .filter(|line| line.starts_with("for ("))
+            .count();
+        assert!(loops >= 4, "the fixture has loops: {instrumented}");
+        // Each check is the first statement of its loop body, and there is one per loop.
+        for (at, line) in lines.iter().enumerate() {
+            if line.starts_with("for (") {
+                assert_eq!(lines[at + 1], "if (--budget.n < 0) {", "{instrumented}");
+                assert_eq!(lines[at + 2], "rt.budgetExceeded(0);", "{instrumented}");
+                assert_eq!(lines[at + 3], "}", "{instrumented}");
+            }
+        }
+        assert_eq!(
+            instrumented.matches("--budget.n < 0").count(),
+            loops,
+            "{instrumented}"
+        );
+        // The counter is read once at the head of each function that has a loop.
+        let reads = instrumented.matches("const budget = ctx.budget;").count();
+        assert!((4..=loops).contains(&reads), "{reads}: {instrumented}");
+        // Take the checks and the reads away and the plain output is left: the instrumentation
+        // adds statements, it never rewrites what the program computes.
+        let mut stripped = Vec::new();
+        let mut rest = instrumented.lines();
+        while let Some(line) = rest.next() {
+            if line.trim() == "if (--budget.n < 0) {" {
+                rest.nth(1);
+            } else if line.trim() != "const budget = ctx.budget;" {
+                stripped.push(line);
+            }
+        }
+        assert_eq!(stripped.join("\n") + "\n", plain);
+        assert_eq!(spans.len(), plain_spans.len() + loops, "one span per loop");
     }
 
     #[test]
@@ -1463,7 +1612,8 @@ pub fn emit_init_expr(
     let mut lowering = FnLowering {
         locals: &[],
         owner: scope.owner,
-        release: false,
+        flags: CpuFlags::default(),
+        uses_budget: false,
         temps: 0,
         span_id,
         owned: BTreeSet::new(),
@@ -1476,7 +1626,7 @@ pub fn emit_init_expr(
 fn behavior_function(
     behavior: &ir::Behavior,
     name: &str,
-    release: bool,
+    flags: CpuFlags,
     params: ParamReads,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<Vec<Stmt>, String> {
@@ -1488,7 +1638,8 @@ fn behavior_function(
     let mut lowering = FnLowering {
         locals: &behavior.locals,
         owner: Some(behavior.owner),
-        release,
+        flags,
+        uses_budget: false,
         temps: 0,
         span_id,
         owned: owned_vars(&behavior.body),
@@ -1496,6 +1647,7 @@ fn behavior_function(
     };
     let body = lowering
         .block(&behavior.body)
+        .map(|body| lowering.with_budget(body))
         .map_err(|e| format!("behaviour '{}': {e}", behavior.symbol))?;
     let mut arguments = vec!["ctx".to_owned()];
     // Scene lifecycle functions are `(ctx, dt)`; everything else starts with `self`.
@@ -1537,13 +1689,15 @@ fn binding_function(
     binding: &ir::Binding,
     name: &str,
     scope: InitScope,
-    release: bool,
+    flags: CpuFlags,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<Vec<Stmt>, String> {
+    // A binding is an expression: it has no loop of its own (the functions it calls carry theirs).
     let mut lowering = FnLowering {
         locals: &[],
         owner: scope.owner,
-        release,
+        flags,
+        uses_budget: false,
         temps: 0,
         span_id,
         owned: BTreeSet::new(),
@@ -1603,13 +1757,13 @@ pub struct EmittedEvent {
     pub function: String,
 }
 
-/// Lowers every behaviour of `scene`. `release` compiles `print` out.
+/// Lowers every behaviour of `scene`. `flags` (the build mode) compile `print` out and instrument the loops.
 ///
 /// # Errors
 /// A text describing a compiler defect: an IR node the CPU emitter does not know.
 pub fn emit_behaviors(
     scene: &ir::Scene,
-    release: bool,
+    flags: CpuFlags,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<EmittedBehaviors, String> {
     let mut emitted = EmittedBehaviors {
@@ -1622,7 +1776,7 @@ pub fn emit_behaviors(
         emitted.stmts.extend(behavior_function(
             behavior,
             &name,
-            release,
+            flags,
             ParamReads::Nowhere,
             &mut *span_id,
         )?);
@@ -1659,7 +1813,7 @@ pub fn emit_behaviors(
             binding,
             &name,
             InitScope::SCENE,
-            release,
+            flags,
             &mut *span_id,
         )?);
         emitted.bindings.push(name);
@@ -1683,14 +1837,14 @@ pub struct EmittedPrefab {
 }
 
 /// Lowers the behaviours and bindings of `prefab`; its functions are named
-/// `<prefix>_b<position>_<kind>` and `<prefix>_bd_<id>`. `release` compiles `print` out.
+/// `<prefix>_b<position>_<kind>` and `<prefix>_bd_<id>`. `flags` (the build mode) compile `print` out and instrument the loops.
 ///
 /// # Errors
 /// A text describing a compiler defect: an IR node the CPU emitter does not know.
 pub fn emit_prefab_behaviors(
     prefab: &ir::PrefabItem,
     prefix: &str,
-    release: bool,
+    flags: CpuFlags,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<EmittedPrefab, String> {
     let mut emitted = EmittedPrefab::default();
@@ -1702,7 +1856,7 @@ pub fn emit_prefab_behaviors(
         emitted.stmts.extend(behavior_function(
             behavior,
             &name,
-            release,
+            flags,
             ParamReads::SelfParams,
             &mut *span_id,
         )?);
@@ -1726,7 +1880,7 @@ pub fn emit_prefab_behaviors(
                 owner: Some(ir::Owner::Entity { index: 0 }),
                 params: ParamReads::SelfParams,
             },
-            release,
+            flags,
             &mut *span_id,
         )?);
         emitted.bindings.push(name);

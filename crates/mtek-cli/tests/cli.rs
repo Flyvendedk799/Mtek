@@ -188,7 +188,10 @@ fn usage_errors_exit_two_with_nothing_on_stdout() {
         &["check", "a", "b"],
         &["check", "--format", "yaml"],
         &["build", "--target", "native"],
-        &["build", "--mode", "preview", "--format", "json"],
+        &["build", "--loop-budget", "5"],
+        &["build", "--mode", "dev", "--loop-budget", "5"],
+        &["build", "--mode", "preview", "--loop-budget", "0"],
+        &["build", "--mode", "preview", "--loop-budget", "many"],
         &["build", "--out", "."],
         &["inspect"],
         &["inspect", "--bindings", "--shaders", "--format", "json"],
@@ -207,7 +210,7 @@ fn usage_errors_exit_two_with_nothing_on_stdout() {
             stderr(&out)
         );
     }
-    assert!(stderr(&run(&["build", "--mode", "preview"])).contains("M6"));
+    assert!(stderr(&run(&["build", "--loop-budget", "5"])).contains("--mode preview"));
 }
 
 #[test]
@@ -913,4 +916,213 @@ fn writing_the_pose_of_a_dynamic_body_in_the_physics_playground_is_e5071() {
         "{messages:?}"
     );
     assert!(messages[1].contains("`First.position`"), "{messages:?}");
+}
+
+// ---------------------------------------------------------------------------
+// Untrusted previews (decision 0075)
+// ---------------------------------------------------------------------------
+
+/// A scene with a loop in an `update`.
+#[cfg(mtek_runtime_embedded)]
+const LOOPING: &str = "scene Demo {
+    state total: i32 = 0;
+    camera Main {}
+    entity Cube { mesh: Box {}; }
+    update(dt: f32) {
+        for i in 0..4 {
+            total += i;
+        }
+    }
+}
+";
+
+#[cfg(mtek_runtime_embedded)]
+#[test]
+fn a_preview_build_has_the_policy_page_the_bootstrap_the_budget_and_the_release_runtime() {
+    let scratch = Scratch::new("preview");
+    let project = scratch.project("app", LOOPING);
+    let out = run_in(
+        &project,
+        &["build", "--mode", "preview", "--out", "default"],
+    );
+    assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+    assert!(
+        stdout(&out).starts_with("built 'demo' (preview): "),
+        "{}",
+        stdout(&out)
+    );
+    let built = tree(&project.join("default"));
+    let page = String::from_utf8_lossy(&built["index.html"]).into_owned();
+    assert!(page.contains("Content-Security-Policy"), "{page}");
+    assert!(page.contains("'wasm-unsafe-eval'"), "{page}");
+    assert!(
+        page.contains("<script type=\"module\" src=\"./bootstrap.js\"></script>"),
+        "{page}"
+    );
+    assert_eq!(
+        page.matches("<script").count(),
+        1,
+        "no inline script: {page}"
+    );
+    let bootstrap = String::from_utf8_lossy(&built["bootstrap.js"]).into_owned();
+    assert!(bootstrap.contains("mountMtek("), "{bootstrap}");
+    // The release flavour of the runtime: no development overlay code (decision 0055).
+    let runtime_name = built
+        .keys()
+        .find(|k| k.starts_with("runtime.") && k.ends_with(".js"))
+        .unwrap();
+    assert_eq!(built[runtime_name], runtime_file("runtime.js"));
+    // The loop is checked, with the default budget; `--loop-budget` changes the manifest.
+    let app = String::from_utf8_lossy(&built["app.js"]).into_owned();
+    assert!(app.contains("--budget.n < 0"), "{app}");
+    let manifest = |dir: &str| -> Value {
+        serde_json::from_slice(&tree(&project.join(dir))["program.manifest.json"]).unwrap()
+    };
+    assert_eq!(
+        manifest("default")["preview"],
+        serde_json::json!({ "loopBudget": 10_000_000 })
+    );
+    let out = run_in(
+        &project,
+        &[
+            "build",
+            "--mode",
+            "preview",
+            "--loop-budget",
+            "250",
+            "--out",
+            "small",
+        ],
+    );
+    assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+    assert_eq!(
+        manifest("small")["preview"],
+        serde_json::json!({ "loopBudget": 250 })
+    );
+}
+
+/// Source that makes the compiler's limits (and its stack) work: every one of these ends in a
+/// diagnostic and exit code 1 within the time limit, in preview mode and in every other.
+#[cfg(mtek_runtime_embedded)]
+#[test]
+fn hostile_sources_end_in_a_diagnostic_and_never_in_a_crash_or_a_hang() {
+    use std::time::{Duration, Instant};
+
+    let nest = |depth: usize| format!("{}1.0{}", "(".repeat(depth), ")".repeat(depth));
+    let scene = |body: &str| format!("scene S {{\n    camera C {{}}\n{body}}}\n");
+    let state = |value: &str| scene(&format!("    state x: f32 = {value};\n"));
+    let cases: Vec<(&str, String, &str)> = vec![
+        // Nesting past the parser's 256 levels: parentheses, a chain of operators, prefix operators.
+        ("parentheses", state(&nest(100_000)), "MTEK-E1050"),
+        ("barely too deep", state(&nest(300)), "MTEK-E1050"),
+        (
+            "operator chain",
+            state(&vec!["1.0"; 100_000].join(" + ")),
+            "MTEK-E1050",
+        ),
+        (
+            "prefix operators",
+            state(&format!("{}1.0", "-".repeat(100_000))),
+            "MTEK-E1050",
+        ),
+        (
+            "blocks",
+            format!(
+                "fn f() -> f32 {{ {}{} return 1.0; }}\n{}",
+                "{ ".repeat(5_000),
+                " }".repeat(5_000),
+                state("1.0")
+            ),
+            "MTEK-E1050",
+        ),
+        // A file past 4 MiB.
+        (
+            "huge file",
+            format!("{}// {}\n", state("1.0"), "x".repeat(5 * 1024 * 1024)),
+            "MTEK-E0004",
+        ),
+        // More static entities than a scene may have.
+        (
+            "entities",
+            scene(
+                &(0..17_000)
+                    .map(|i| format!("    entity E{i} {{ position: vec3(0.0, 0.0, 0.0); }}\n"))
+                    .collect::<String>(),
+            ),
+            "MTEK-E5092",
+        ),
+    ];
+    let scratch = Scratch::new("hostile");
+    for mode in ["preview", "release"] {
+        for (name, source, code) in &cases {
+            let project = scratch.project(&format!("{mode}-{name}").replace(' ', "-"), source);
+            let started = Instant::now();
+            let out = run_in(
+                &project,
+                &[
+                    "build", "--mode", mode, "--format", "json", "--out", "../out",
+                ],
+            );
+            let spent = started.elapsed();
+            assert_eq!(
+                out.status.code(),
+                Some(1),
+                "{mode} {name}: {}",
+                stderr(&out)
+            );
+            let report = report_of(&out, &scratch);
+            assert!(
+                codes(&report).iter().any(|c| c == code),
+                "{mode} {name}: {:?}",
+                codes(&report).iter().take(5).collect::<Vec<_>>()
+            );
+            assert!(
+                spent < Duration::from_secs(9),
+                "{mode} {name} took {spent:?}"
+            );
+            assert!(
+                !scratch.path("out").exists(),
+                "{mode} {name}: nothing is written"
+            );
+        }
+    }
+    // Over a thousand modules.
+    let mut main = String::new();
+    scratch.write("modules/mtek.toml", TOML);
+    for i in 0..1_100 {
+        scratch.write(
+            &format!("modules/src/m{i}.mtek"),
+            &format!("fn g{i}() -> f32 {{ return 1.0; }}\n"),
+        );
+        main.push_str(&format!("import {{ g{i} }} from \"./m{i}.mtek\";\n"));
+    }
+    main.push_str(&state("1.0"));
+    scratch.write("modules/src/main.mtek", &main);
+    let started = Instant::now();
+    let out = run_in(
+        &scratch.path("modules"),
+        &[
+            "build", "--mode", "preview", "--format", "json", "--out", "../out",
+        ],
+    );
+    assert_eq!(out.status.code(), Some(1), "{}", stderr(&out));
+    assert!(codes(&report_of(&out, &scratch)).contains(&"MTEK-E9002".to_owned()));
+    assert!(started.elapsed() < Duration::from_secs(9));
+}
+
+/// The deepest expression the parser accepts (255 levels) is a legal program, and compiling it on the
+/// compiler thread neither overflows the stack nor takes noticeable time.
+#[cfg(mtek_runtime_embedded)]
+#[test]
+fn the_deepest_legal_nesting_builds_as_a_preview() {
+    let scratch = Scratch::new("deepest");
+    let depth = 250;
+    let source = format!(
+        "scene S {{\n    camera C {{}}\n    state x: f32 = {}1.0{};\n}}\n",
+        "(".repeat(depth),
+        ")".repeat(depth)
+    );
+    let project = scratch.project("app", &source);
+    let out = run_in(&project, &["build", "--mode", "preview", "--out", "out"]);
+    assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
 }

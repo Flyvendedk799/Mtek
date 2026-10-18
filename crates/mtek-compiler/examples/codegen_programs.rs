@@ -11,6 +11,9 @@
 //!   `packages/runtime-web/dist/runtime.js` and `runtime.d.ts` as the runtime (the goldens use
 //!   the stub bundle, so the runtime never changes them),
 //! - `<out_dir>/programs/<name>/ir.json`: the program's typed IR (`mtek inspect --ir`),
+//! - `<out_dir>/programs-preview/<name>/`: the `dist/` tree of a `--mode preview` build of the same
+//!   fixture (decision 0075): the same program with a budget check at the head of every loop, which
+//!   the execution tests run against the same rows and count iterations with,
 //!
 //! and `<out_dir>/rt-operations.json`, the compiler's copy of the runtime's `RT_OPERATIONS`
 //! index with the structural helpers the emitter uses, which `tests/codegen/rt-operations.test.ts`
@@ -64,6 +67,22 @@ fn collect(
     Ok(())
 }
 
+/// Replaces `target` by the files of a build.
+fn write_files(
+    target: &Path,
+    files: &std::collections::BTreeMap<String, Vec<u8>>,
+) -> Result<(), Box<dyn Error>> {
+    let _ = fs::remove_dir_all(target);
+    for (path, bytes) in files {
+        let file = target.join(path);
+        if let Some(parent) = file.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(file, bytes)?;
+    }
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let out_dir: PathBuf = std::env::args_os()
         .nth(1)
@@ -91,6 +110,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         // The physics fixture packages a physics module; the execution tests never load it.
         physics_bundle: Some(Arc::from(STUB_PHYSICS_BUNDLE)),
         force_physics_subsystem: false,
+        loop_budget: None,
+    };
+
+    let preview = CompileOptions {
+        mode: BuildMode::Preview,
+        ..options.clone()
     };
 
     let codegen = repo().join("tests/codegen");
@@ -117,14 +142,19 @@ fn main() -> Result<(), Box<dyn Error>> {
             return Err(format!("{name} does not build: {:#?}", result.report.diagnostics).into());
         }
         let target = out_dir.join("programs").join(name);
-        let _ = fs::remove_dir_all(&target);
-        for (path, bytes) in &result.files {
-            let file = target.join(path);
-            if let Some(parent) = file.parent() {
-                fs::create_dir_all(parent)?;
-            }
-            fs::write(file, bytes)?;
+        write_files(&target, &result.files)?;
+        let instrumented = build(&ProjectRoot::at_base(), &memory, &preview);
+        if instrumented.has_errors() {
+            return Err(format!(
+                "{name} does not build as a preview: {:#?}",
+                instrumented.report.diagnostics
+            )
+            .into());
         }
+        write_files(
+            &out_dir.join("programs-preview").join(name),
+            &instrumented.files,
+        )?;
         let ir = inspect(&ProjectRoot::at_base(), &memory, Inspect::Ir)
             .render(InspectFormat::Json)
             .ok_or_else(|| format!("{name} has no IR"))?;

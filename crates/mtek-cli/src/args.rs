@@ -1,8 +1,8 @@
 //! Command line arguments (`spec/tooling.md` section 1), parsed with `clap`.
 //!
 //! [`parse`] turns the arguments into a [`Request`] or a [`UsageError`] (exit code 2). Commands
-//! and options that the specification names but this build does not implement yet (`--mode preview`,
-//! `mtek fmt`, …) are usage errors that say so, rather than clap's
+//! and options that the specification names but this build does not implement yet (`mtek fmt`, …)
+//! are usage errors that say so, rather than clap's
 //! generic "unrecognized subcommand".
 
 use std::ffi::OsString;
@@ -51,7 +51,7 @@ enum Mode {
     Dev,
     /// For browser tests: `index.html` exposes `window.__mtekMount(options)`.
     Test,
-    /// Untrusted previews (milestone M6).
+    /// Untrusted previews: loop budgets, no network outside `baseUrl`, external bootstrap, CSP.
     Preview,
 }
 
@@ -126,6 +126,9 @@ enum CliCommand {
         /// The output directory [default: `build.out_dir` of mtek.toml]
         #[arg(long, value_name = "DIR")]
         out: Option<PathBuf>,
+        /// `--mode preview` only: iterations of CPU loops allowed per frame [default: 10000000]
+        #[arg(long, value_name = "N", value_parser = clap::value_parser!(u32).range(1..))]
+        loop_budget: Option<u32>,
         /// Output format
         #[arg(long, value_enum, default_value_t)]
         format: Format,
@@ -199,6 +202,8 @@ pub enum Request {
     /// `mtek build --target web`.
     Build {
         mode: BuildMode,
+        /// `--loop-budget`: only with `BuildMode::Preview`.
+        loop_budget: Option<u32>,
         out: Option<PathBuf>,
         format: Format,
         path: Option<PathBuf>,
@@ -301,6 +306,7 @@ where
             target: Target::Web,
             mode,
             out,
+            loop_budget,
             format,
             path,
         } => {
@@ -308,8 +314,13 @@ where
                 Mode::Release => BuildMode::Release,
                 Mode::Dev => BuildMode::Dev,
                 Mode::Test => BuildMode::Test,
-                Mode::Preview => return Err(not_yet("mtek build --mode preview", "M6")),
+                Mode::Preview => BuildMode::Preview,
             };
+            if loop_budget.is_some() && mode != BuildMode::Preview {
+                return Err(UsageError(
+                    "error: '--loop-budget' applies to '--mode preview' only\n".to_owned(),
+                ));
+            }
             if let Some(dir) = &out
                 && dir.file_name().is_none()
             {
@@ -320,6 +331,7 @@ where
             }
             Ok(Request::Build {
                 mode,
+                loop_budget,
                 out,
                 format,
                 path,
@@ -405,6 +417,7 @@ mod tests {
             parse_args(&["build"]),
             Ok(Request::Build {
                 mode: BuildMode::Release,
+                loop_budget: None,
                 out: None,
                 format: Format::Human,
                 path: None
@@ -417,6 +430,7 @@ mod tests {
             ]),
             Ok(Request::Build {
                 mode: BuildMode::Test,
+                loop_budget: None,
                 out: Some(PathBuf::from("out/x")),
                 format: Format::Json,
                 path: Some(PathBuf::from("proj"))
@@ -427,7 +441,39 @@ mod tests {
             Ok(Format::Human)
         );
         assert!(usage(&["build", "--target", "native"]).contains("native"));
-        assert!(usage(&["build", "--mode", "preview"]).contains("M6"));
+        assert_eq!(
+            parse_args(&["build", "--mode", "preview"]),
+            Ok(Request::Build {
+                mode: BuildMode::Preview,
+                loop_budget: None,
+                out: None,
+                format: Format::Human,
+                path: None
+            })
+        );
+        assert_eq!(
+            parse_args(&[
+                "build",
+                "--mode",
+                "preview",
+                "--loop-budget",
+                "5000",
+                "proj"
+            ]),
+            Ok(Request::Build {
+                mode: BuildMode::Preview,
+                loop_budget: Some(5000),
+                out: None,
+                format: Format::Human,
+                path: Some(PathBuf::from("proj"))
+            })
+        );
+        // The budget belongs to previews, is a positive integer and fits a u32.
+        assert!(usage(&["build", "--loop-budget", "5"]).contains("--mode preview"));
+        assert!(usage(&["build", "--mode", "dev", "--loop-budget", "5"]).contains("preview"));
+        for bad in ["0", "-1", "many", "4294967296", ""] {
+            usage(&["build", "--mode", "preview", "--loop-budget", bad]);
+        }
         assert!(usage(&["build", "--out", "."]).contains("--out ."));
         usage(&["build", "--out", ".."]);
         usage(&["build", "--out", ""]);

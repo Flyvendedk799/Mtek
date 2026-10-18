@@ -141,7 +141,7 @@ The **typed high-level IR**: the semantic contract between language and code gen
 ### 4.12 Public API (`lib.rs`)
 
 ```rust
-pub struct CompileOptions { pub profile: TargetProfile, pub mode: BuildMode /* Dev | Release | Test | Preview */, pub runtime_bundle: Option<Arc<[u8]>>, pub runtime_declarations: Option<Arc<[u8]>> /* runtime.d.ts */, pub physics_bundle: Option<Arc<[u8]>> /* decision 0063 */, pub force_physics_subsystem: bool /* test option, decisions 0063 and 0065 */ }
+pub struct CompileOptions { pub profile: TargetProfile, pub mode: BuildMode /* Dev | Release | Test | Preview */, pub runtime_bundle: Option<Arc<[u8]>>, pub runtime_declarations: Option<Arc<[u8]>> /* runtime.d.ts */, pub physics_bundle: Option<Arc<[u8]>> /* decision 0063 */, pub force_physics_subsystem: bool /* test option, decisions 0063 and 0065 */, pub loop_budget: Option<u32> /* preview only, decision 0075 */ }
 pub fn check(project: &ProjectRoot, fs: &dyn Fs) -> CheckResult;            // diagnostics only; no GPU, no emission
 pub fn analyze(project: &ProjectRoot, fs: &dyn Fs) -> Analysis;             // the front end's full result (IR input, tests, LSP); decision 0028
 pub fn build(project: &ProjectRoot, fs: &dyn Fs, opts: &CompileOptions) -> BuildResult; // files + diagnostics
@@ -168,7 +168,7 @@ The CLI, the tests and the LSP all call these; none re-implements compiler logic
 - Vector, quaternion, matrix and colour operations call `rt` helpers (`spec/runtime-abi.md` §4.1). Swizzles construct new values.
 - Dynamic array indexing emits `a[rt.clampIndex(i, N, spanId, ctx)]` (clamps and reports `W8030` once per span in dev builds). Writes clamp the same way; a `var` written through a field or element is written in place and keeps value semantics by copying (`rt.copy`, decision 0045).
 - Handlers and lifecycle functions become functions taking `(ctx, …)`; entity handlers take `self` = the entity record. Scene state is `ctx.s.<name>`; writes to entity fields go through `ctx` setters.
-- Untrusted-preview builds (M6) insert a loop-budget check at each loop back-edge: `if (--ctx.budget < 0) rt.budgetExceeded(spanId)`.
+- Untrusted-preview builds (M6) insert a loop-budget check at the head of every loop iteration, before the body, so every path back to the loop head (`continue` included) pays: `if (--budget.n < 0) { rt.budgetExceeded(spanId); }`, where `const budget = ctx.budget;` is read once at the head of each function that has a loop (`ctx` is a guarded proxy; the counter is a plain object, decision 0075 measures the difference) and `spanId` is the loop statement's manifest span. Mtek has only counted `for` loops (`while`/`loop` are reserved, `E0013`) and recursion is `E4001`, so loop iterations are the only unbounded work. Other modes emit nothing of it.
 - Every emitted statement and expression with a source origin adds a Source Map v3 mapping to its Mtek span. Function naming (`f_<hash8>_<name>`), the inline forms, span ids of clamped indices, the mapping of nested expressions and the `exec.json` row format are decision 0040.
 
 ## 7. Shader IR and WGSL emission
@@ -204,6 +204,7 @@ Every node carries its Mtek `Span`.
 | Steps of a call chain listed in related spans (decision 0038) | 256 (then a note with the count) | — |
 | Static entities per scene | 16 384 | `E5092` |
 | Material params per material | 64 | `E4032` |
+| Compile time of a preview build (the command line tool, decision 0075) | 10 s | `E9032` |
 
 ## 10. Compiler test fixtures
 

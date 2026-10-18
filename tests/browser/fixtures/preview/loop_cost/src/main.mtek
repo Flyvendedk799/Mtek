@@ -1,0 +1,27 @@
+// M6-10: a program that really uses loops, to measure what the budget checks cost (decision 0075). Every frame `update`
+// runs 200 000 iterations of an f32 loop (far below the default budget of 10 million) and keeps the result in `acc`,
+// so the work cannot be dropped; `frames` counts the frames that ran. The same source is built in release and in preview.
+fn wave(n: i32, t: f32) -> f32 {
+    var sum = 0.0;
+    for i in 0..n {
+        sum += sin(f32(i) * 0.001 + t) * 0.5;
+    }
+    return sum;
+}
+
+scene LoopCost {
+    state frames: i32 = 0;
+    state acc: f32 = 0.0;
+    camera Lens {
+        position: vec3(0.0, 0.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+        material: Unlit { color: #60e080; };
+    }
+    update(dt: f32) {
+        frames += 1;
+        acc = wave(200000, frame.time);
+    }
+}

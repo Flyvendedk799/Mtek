@@ -324,7 +324,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e8062"></a>E8062 | GPU device recovery failed | |
 | <a id="mtek-e8063"></a>E8063 | GPU allocation failed | |
 | <a id="mtek-w8070"></a>W8070 | scene restarted on reload | names the forcing declaration |
-| <a id="mtek-e8080"></a>E8080 | execution budget exceeded | untrusted preview (M6) |
+| <a id="mtek-e8080"></a>E8080 | execution budget exceeded | a loop of a `--mode preview` build ran past the frame's loop budget (`manifest.preview.loopBudget`, default 10 million iterations): reported at the loop, the scene stops and the overlay shows it; during `init` the mount fails with the kind `budget-exceeded` (decision 0075) |
 | <a id="mtek-e8090"></a>E8090 | invalid scale value | run-time write ignored |
 | <a id="mtek-e8100"></a>E8100 | non-opaque color value | run-time value rejected |
 | <a id="mtek-e8101"></a>E8101 | command not valid for the target's body kind | a body command through an `entity_ref` (or a velocity read) whose body kind, or lack of a body, it does not support; the command is dropped and a read gives zero (decision 0066) |
@@ -347,6 +347,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e9021"></a>E9021 | unknown host input target | |
 | <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built without `packages/runtime-web/dist`; also a program that uses physics built without `packages/physics-rapier/dist/physics.js` (decision 0063) |
 | <a id="mtek-e9031"></a>E9031 | build output not written | `mtek build` could not write the output directory (I/O failure; exit code 3, the previous output stays in place; decision 0032) |
+| <a id="mtek-e9032"></a>E9032 | compilation timed out | `mtek build --mode preview` did not finish within the compile time limit (10 s, a constant of the command line tool); no files are written (decision 0075) |
 | <a id="mtek-e9999"></a>E9999 | internal compiler error | panic converted; asks for a report |
 
 ## 6. Suggested edits

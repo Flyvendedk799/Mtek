@@ -33,8 +33,8 @@ import { MtekMountError, makeRuntimeDiagnostic, type MtekDiagnostic } from "../d
 import { acquireDevice, type AcquiredDevice } from "../gpu/device.js";
 import { ResourceRegistry } from "../gpu/registry.js";
 import { MountedApp, RECOVERY_ATTEMPTS } from "./app.js";
-import { defaultEnvironment, type FetchResponseLike, type HostEnvironment } from "./environment.js";
-import { DiagnosticSink, abiFailureToDiagnostic, mountError } from "./failures.js";
+import { defaultEnvironment, isWithinBase, restrictToBase, type FetchResponseLike, type HostEnvironment } from "./environment.js";
+import { DiagnosticSink, abiFailureToDiagnostic, mountError, resolveSpan } from "./failures.js";
 import { FailureOverlay } from "./overlay.js";
 import { GpuTimer, hasTimestampQuery, TIMESTAMP_FEATURE } from "../dev/gpu-timer.js";
 import { DevTools } from "../dev/tools.js";
@@ -45,6 +45,7 @@ import { InputState } from "../input/input.js";
 import { loadPhysicsBackend, type PhysicsLoadResult } from "../physics/load.js";
 import { PhysicsSystem } from "../physics/system.js";
 import { Xoshiro128 } from "../random/xoshiro.js";
+import { ExecutionBudgetExceeded } from "../scene/budget.js";
 import type { CpuServices } from "../scene/world.js";
 import { checkProgram } from "../scene/program.js";
 import { resolveStructure } from "../scene/structure.js";
@@ -61,6 +62,20 @@ function mountDiagnostic(
   notes: readonly string[] = [],
 ): MtekDiagnostic {
   return makeRuntimeDiagnostic(code, { phase: "runtime:mount", message, notes });
+}
+
+/** `E8080` for a loop of `init` that spent the last iteration of the preview's budget (decision 0075). */
+function budgetDiagnostic(manifest: MtekManifest, error: ExecutionBudgetExceeded): MtekDiagnostic {
+  const limit = manifest.preview?.loopBudget;
+  return makeRuntimeDiagnostic("E8080", {
+    phase: "runtime:mount",
+    message:
+      limit === undefined
+        ? "A loop ran past the execution budget of this preview while the scene was initialised."
+        : `A loop ran past the execution budget of ${String(limit)} iterations while the scene was initialised.`,
+    source: resolveSpan(manifest, error.spanId),
+    notes: ["help: bound the loop, or build the preview with a larger --loop-budget if the program really needs the iterations"],
+  });
 }
 
 function validateOptions(options: MtekMountOptions<never>): void {
@@ -208,6 +223,19 @@ export async function mountMtekWith<I = Record<string, unknown>>(
     }
 
     const manifest = await loadManifest(environment, program.manifestUrl);
+
+    // An untrusted preview (decision 0075): from here on the runtime requests nothing outside `baseUrl`, whatever
+    // the manifest names. The manifest itself must have come from there.
+    if (manifest.preview !== undefined) {
+      if (!isWithinBase(program.manifestUrl.href, program.baseUrl)) {
+        throw mountError([
+          mountDiagnostic("E8006", `The manifest of a preview was fetched from ${program.manifestUrl.href}, outside baseUrl ${program.baseUrl.href}.`, [
+            "field: manifestUrl",
+          ]),
+        ]);
+      }
+      environment = restrictToBase(environment, program.baseUrl);
+    }
 
     // The scene structure and the program module, before any device work: a broken or mismatched
     // program fails fast. The structure is checked first (E8006 before E8003).
@@ -370,6 +398,8 @@ export async function mountMtekWith<I = Record<string, unknown>>(
     } catch (error) {
       // An allocation the registry reported (E8063) is the diagnosis of the exception it rethrew.
       if (allocationFailures.length > 0) throw mountError(allocationFailures);
+      // `init` ran past the loop budget of a preview (decision 0075): the mount fails, naming the loop.
+      if (error instanceof ExecutionBudgetExceeded) throw mountError([budgetDiagnostic(manifest, error)]);
       throw error;
     }
     // The textures are filled: the bitmaps are no longer needed (the bytes stay for the rebuild after a device loss).

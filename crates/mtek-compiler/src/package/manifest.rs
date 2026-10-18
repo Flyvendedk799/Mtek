@@ -79,6 +79,11 @@ pub struct Manifest {
     pub required_capabilities: RequiredCapabilities,
     pub subsystems: Subsystems,
     pub runtime_config: RuntimeConfig,
+    /// Present exactly in the manifest of a `--mode preview` build: the runtime then enforces the
+    /// loop budget the program was instrumented with and refuses network access outside
+    /// `baseUrl` (decision 0075). Absent in every other mode, byte for byte.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview: Option<Preview>,
     pub entry_scene: String,
     pub sources: Vec<SourceEntry>,
     pub spans: Vec<SpanEntry>,
@@ -121,6 +126,14 @@ pub struct RequiredCapabilities {
     /// Only limits above the WebGPU defaults; sorted by name.
     pub limits: BTreeMap<String, u64>,
     pub wgsl_language_features: Vec<String>,
+}
+
+/// The `preview` object of an untrusted-preview manifest (decision 0075).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Preview {
+    /// Iterations of CPU loops the runtime allows per frame (and during `init`); at least 1.
+    pub loop_budget: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

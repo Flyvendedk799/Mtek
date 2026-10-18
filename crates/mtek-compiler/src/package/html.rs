@@ -14,6 +14,12 @@
 //!   serves before the first successful build: the same client without a program (first success
 //!   still reloads into the real page).
 //!
+//! - `preview`: like `release`, but the page has no script of its own (decision 0075): it
+//!   carries the Content-Security-Policy of `spec/ai-and-benchmarks.md` section 5 as a `<meta>`
+//!   and loads the external module [`BOOTSTRAP_JS`] (`bootstrap.js`, [`preview_bootstrap`]),
+//!   which does what the inline script of `release` does. A policy without `'unsafe-inline'`
+//!   for scripts cannot allow an inline module.
+//!
 //! The `<title>` is `[build] title` (default: the project name), HTML-escaped.
 
 use crate::BuildMode;
@@ -96,21 +102,50 @@ const RELOAD_CLIENT: &str = concat!(
     "  };\n",
 );
 
+/// The file name of the external bootstrap module of a `preview` build, next to `index.html`.
+pub const BOOTSTRAP_JS: &str = "bootstrap.js";
+
+/// The Content-Security-Policy of a `preview` page (`spec/ai-and-benchmarks.md` section 5).
+/// `'wasm-unsafe-eval'` is what lets the physics module instantiate its WebAssembly; it allows
+/// no JavaScript `eval`. Only directives a `<meta>` element honours are used: `frame-ancestors`,
+/// `sandbox` and `report-uri` are ignored there and belong in the response headers of the host
+/// (`docs/preview-hosting.md`).
+pub const PREVIEW_CSP: &str = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; img-src 'self' blob:; style-src 'self' 'unsafe-inline'";
+
+/// The text of `bootstrap.js` of a `preview` build: the script of the `release` page, as a file.
+#[must_use]
+pub fn preview_bootstrap() -> String {
+    format!(
+        "import program, {{ mountMtek }} from \"./app.js\";\n{}",
+        MOUNT.trim_start()
+    )
+}
+
 const STYLE: &str =
     "<style>html,body{margin:0;height:100%}canvas{display:block;width:100%;height:100%}</style>\n";
 
-/// The text of `index.html` for `mode` with the page title `title`. `None` for a mode whose
-/// bootstrap this build does not implement (`preview`, M6).
+/// The text of `index.html` for `mode` with the page title `title`.
 #[must_use]
-pub fn index_html(title: &str, mode: BuildMode) -> Option<String> {
+pub fn index_html(title: &str, mode: BuildMode) -> String {
     let script = match mode {
         BuildMode::Release => MOUNT.to_owned(),
         BuildMode::Test => TEST_MOUNT.to_owned(),
         // `app` is declared by RELOAD_CLIENT; DEV_MOUNT assigns the mounted handle into it.
         BuildMode::Dev => format!("{RELOAD_CLIENT}{DEV_MOUNT}"),
-        BuildMode::Preview => return None,
+        // No inline script: the policy forbids it (decision 0075).
+        BuildMode::Preview => {
+            return format!(
+                "<!doctype html><meta charset=\"utf-8\">\n\
+                 <meta http-equiv=\"Content-Security-Policy\" content=\"{PREVIEW_CSP}\">\n\
+                 <title>{}</title>\n\
+                 {STYLE}\
+                 <canvas id=\"mtek\"></canvas>\n\
+                 <script type=\"module\" src=\"./{BOOTSTRAP_JS}\"></script>\n",
+                escape_html(title)
+            );
+        }
     };
-    Some(format!(
+    format!(
         "<!doctype html><meta charset=\"utf-8\"><title>{}</title>\n\
          {STYLE}\
          <canvas id=\"mtek\"></canvas>\n\
@@ -119,7 +154,7 @@ pub fn index_html(title: &str, mode: BuildMode) -> Option<String> {
          {script}\
          </script>\n",
         escape_html(title)
-    ))
+    )
 }
 
 /// The page `mtek dev` serves for `/` while its output directory has no `index.html`, i.e.
@@ -145,7 +180,7 @@ mod tests {
 
     #[test]
     fn release_mounts_on_the_canvas() {
-        let page = index_html("Pulse Cube", BuildMode::Release).expect("page");
+        let page = index_html("Pulse Cube", BuildMode::Release);
         assert_eq!(
             page,
             "<!doctype html><meta charset=\"utf-8\"><title>Pulse Cube</title>\n\
@@ -161,7 +196,7 @@ mod tests {
 
     #[test]
     fn test_mode_defines_the_mount_hook_instead_of_mounting() {
-        let page = index_html("t", BuildMode::Test).expect("page");
+        let page = index_html("t", BuildMode::Test);
         assert!(page.contains("window.__mtekMount = (options) => mountMtek(document.getElementById(\"mtek\"), program, options);"));
         assert!(!page.contains(".catch("), "{page}");
         assert!(!page.contains("EventSource"), "{page}");
@@ -169,12 +204,12 @@ mod tests {
 
     #[test]
     fn dev_mode_adds_the_reload_client() {
-        let page = index_html("t", BuildMode::Dev).expect("page");
+        let page = index_html("t", BuildMode::Dev);
         assert!(page.contains(".catch(() => {});"), "{page}");
         // Only the dev page asks for the development overlay; the others never mention it.
         assert!(page.contains("program, { devOverlay: true })"), "{page}");
         for mode in [BuildMode::Release, BuildMode::Test] {
-            let other = index_html("t", mode).expect("page");
+            let other = index_html("t", mode);
             assert!(!other.contains("devOverlay"), "{other}");
         }
         assert!(
@@ -192,7 +227,7 @@ mod tests {
 
     #[test]
     fn dev_mode_shows_failed_builds_in_an_overlay() {
-        let page = index_html("t", BuildMode::Dev).expect("page");
+        let page = index_html("t", BuildMode::Dev);
         assert!(
             page.contains("mtekShowBuildDiagnostics(message.diagnostics)"),
             "{page}"
@@ -225,22 +260,64 @@ mod tests {
             !page.contains("app.js") && !page.contains("mountMtek"),
             "{page}"
         );
-        let dev = index_html("<demo>", BuildMode::Dev).expect("page");
+        let dev = index_html("<demo>", BuildMode::Dev);
         assert!(dev.contains(RELOAD_CLIENT));
         assert!(page.is_ascii());
     }
 
     #[test]
-    fn the_title_is_escaped_and_preview_is_not_built() {
-        let page = index_html(
-            "</title><script>alert(1)</script> & 'x'",
-            BuildMode::Release,
-        )
-        .expect("page");
-        assert!(page.contains(
-            "<title>&lt;/title&gt;&lt;script&gt;alert(1)&lt;/script&gt; &amp; &#39;x&#39;</title>"
-        ));
-        assert_eq!(page.matches("<script").count(), 1);
-        assert_eq!(index_html("t", BuildMode::Preview), None);
+    fn the_title_is_escaped_in_every_page() {
+        for mode in [BuildMode::Release, BuildMode::Preview] {
+            let page = index_html("</title><script>alert(1)</script> & 'x'", mode);
+            assert!(page.contains(
+                "<title>&lt;/title&gt;&lt;script&gt;alert(1)&lt;/script&gt; &amp; &#39;x&#39;</title>"
+            ));
+            assert_eq!(page.matches("<script").count(), 1, "{page}");
+        }
+    }
+
+    #[test]
+    fn preview_has_the_policy_and_no_inline_script() {
+        let page = index_html("Pulse Cube", BuildMode::Preview);
+        assert_eq!(
+            page,
+            "<!doctype html><meta charset=\"utf-8\">\n\
+             <meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; img-src 'self' blob:; style-src 'self' 'unsafe-inline'\">\n\
+             <title>Pulse Cube</title>\n\
+             <style>html,body{margin:0;height:100%}canvas{display:block;width:100%;height:100%}</style>\n\
+             <canvas id=\"mtek\"></canvas>\n\
+             <script type=\"module\" src=\"./bootstrap.js\"></script>\n"
+        );
+        // The policy comes before anything that loads or runs, and no script has a body.
+        let policy = page.find("Content-Security-Policy").expect("policy");
+        assert!(policy < page.find("<script").expect("script"));
+        assert!(page.contains("></script>"), "{page}");
+        assert!(page.is_ascii());
+        // The bootstrap is the release page's script as a file, and mentions nothing development.
+        assert_eq!(
+            preview_bootstrap(),
+            "import program, { mountMtek } from \"./app.js\";\n\
+             mountMtek(document.getElementById(\"mtek\"), program).catch(() => {}); // failures are shown by the overlay\n"
+        );
+        assert!(!page.contains("devOverlay") && !page.contains("EventSource"));
+    }
+
+    #[test]
+    fn the_policy_names_the_directives_of_the_specification() {
+        let directives: Vec<&str> = PREVIEW_CSP.split("; ").collect();
+        assert_eq!(
+            directives,
+            [
+                "default-src 'self'",
+                "script-src 'self' 'wasm-unsafe-eval'",
+                "connect-src 'self'",
+                "img-src 'self' blob:",
+                "style-src 'self' 'unsafe-inline'",
+            ]
+        );
+        // Never a JavaScript eval, never an inline script, never a remote origin.
+        assert!(!PREVIEW_CSP.contains("'unsafe-eval'"));
+        assert!(!PREVIEW_CSP.contains("script-src 'self' 'unsafe-inline'"));
+        assert!(!PREVIEW_CSP.contains("http"));
     }
 }

@@ -156,7 +156,7 @@ export const RT_OPERATIONS: Readonly<Record<string, Readonly<Record<string, stri
  * `rt` exports that implement no callee of {@link RT_OPERATIONS}: constructors of values the
  * emitter builds from components, swizzles, component replacement, column and channel access, index
  * clamping, the value copy of assignable places (decision 0045), the colour transfer function of
- * one channel, and integer limits.
+ * one channel, the loop budget of preview builds (decision 0075), and integer limits.
  */
 export const RT_STRUCTURAL_EXPORTS: readonly string[] = [
   "quat",
@@ -172,6 +172,7 @@ export const RT_STRUCTURAL_EXPORTS: readonly string[] = [
   "clampIndex",
   "copy",
   "refEq",
+  "budgetExceeded",
   "srgbChannelToLinear",
   "I32_MIN",
   "I32_MAX",

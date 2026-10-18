@@ -14,3 +14,5 @@ export * from "./color.js";
 export * from "./matrix.js";
 export * from "./copy.js";
 export * from "./entity-ref.js";
+// The loop budget of preview builds (decision 0075): one helper; the error class stays out of `rt`.
+export { budgetExceeded } from "../scene/budget.js";

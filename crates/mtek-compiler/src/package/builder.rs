@@ -29,7 +29,7 @@ use std::collections::BTreeMap;
 
 use crate::assets::{AssetStore, ImageRef, MeshRef, pack::Packed};
 use crate::diagnostics::{Code, Diagnostic};
-use crate::emit_js::{ProgramParts, emit_app_dts, emit_program, source_map};
+use crate::emit_js::{CpuFlags, ProgramParts, emit_app_dts, emit_program, source_map};
 use crate::emit_wgsl::{ShaderArtifact, emit_shader};
 use crate::ir::{self, BehaviorKind, MeshDesc, Owner, Program};
 use crate::layout::{LayoutRecord, builtin_blocks, compute};
@@ -39,17 +39,19 @@ use crate::plan::{
 };
 use crate::project::{Project, ResolvedHostInput, validate_host_inputs};
 use crate::source::Span;
-use crate::{BuildMode, COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI, TargetProfile};
+use crate::{
+    BuildMode, COMPILER_VERSION, DEFAULT_LOOP_BUDGET, LANGUAGE_VERSION, RUNTIME_ABI, TargetProfile,
+};
 
-use super::html::index_html;
+use super::html::{BOOTSTRAP_JS, index_html, preview_bootstrap};
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
     Binding, BindingDep, BindingTarget, Body, Camera, Collider, Entity, EntityMaterial,
     InstanceParam, Layout, Light as ManifestLight, LightClass, LightClasses,
     LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material, MaterialInstance,
     MaterialParam, MaterialResource, Mesh, MeshShape, Num, ParamClass as ManifestClass, Prefab,
-    PrefabMaterial, PrefabParam, RequiredCapabilities, ResourceValue, RuntimeConfig, Scene,
-    SceneFields, Shader, SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
+    PrefabMaterial, PrefabParam, Preview, RequiredCapabilities, ResourceValue, RuntimeConfig,
+    Scene, SceneFields, Shader, SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -79,6 +81,9 @@ pub struct PackageInput<'a> {
     /// Treat the program as using physics although no source construct says so
     /// ([`CompileOptions::force_physics_subsystem`](crate::CompileOptions::force_physics_subsystem)).
     pub force_physics_subsystem: bool,
+    /// The loop budget of a `preview` build ([`CompileOptions::loop_budget`](crate::CompileOptions::loop_budget));
+    /// `None` is the default. Ignored by every other mode.
+    pub loop_budget: Option<u32>,
     /// The assets the front end loaded (decision 0058).
     pub assets: &'a AssetStore,
 }
@@ -117,7 +122,7 @@ struct BuiltMaterial<'p> {
 ///
 /// # Errors
 /// `E6001` for a parameter block over the target profile's limit; `E9999` (or `E6100` from
-/// Naga) for a compiler defect, `E9010` for a build mode this build does not implement.
+/// Naga) for a compiler defect.
 pub fn package(
     project: &Project,
     program: &Program,
@@ -245,13 +250,21 @@ pub fn package(
     // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
     // other span, so a program's span ids do not depend on its function bodies.
     let runtime_file = format!("runtime.{}.js", h16(input.runtime_bundle));
+    // A preview build is a release build with the loop budget (decision 0075): the budget is
+    // clamped to at least 1, the manifest says what the program was instrumented with.
+    let preview = (input.mode == BuildMode::Preview).then(|| Preview {
+        loop_budget: input.loop_budget.unwrap_or(DEFAULT_LOOP_BUDGET).max(1),
+    });
     let app = emit_program(
         program,
         &plan,
         &ProgramParts {
             runtime_file: &runtime_file,
             layouts: &layouts,
-            release: input.mode == BuildMode::Release,
+            flags: CpuFlags {
+                release: matches!(input.mode, BuildMode::Release | BuildMode::Preview),
+                loop_budget: preview.is_some(),
+            },
         },
         &mut |span| spans.intern(span),
     )
@@ -280,6 +293,7 @@ pub fn package(
             .collect(),
         assets: packed.sources.clone(),
         config: &project.config_text,
+        preview_loop_budget: preview.as_ref().map(|preview| preview.loop_budget),
     }
     .build_id();
 
@@ -311,6 +325,7 @@ pub fn package(
             max_entities: runtime.max_entities,
             pause_when_hidden: runtime.pause_when_hidden,
         },
+        preview,
         entry_scene: scene.name.clone(),
         sources: source_entries,
         spans: span_entries,
@@ -324,14 +339,12 @@ pub fn package(
         scene: manifest_scene,
     };
 
-    let html = index_html(&project.config.build.title, input.mode).ok_or_else(|| {
-        vec![Diagnostic::new(
-            Code::E9010,
-            "Preview builds are specified for v0.1 but not implemented by this compiler build yet (planned for M6).",
-        )]
-    })?;
+    let html = index_html(&project.config.build.title, input.mode);
     let mut files = BTreeMap::new();
     files.insert(INDEX_HTML.to_owned(), html.into_bytes());
+    if input.mode == BuildMode::Preview {
+        files.insert(BOOTSTRAP_JS.to_owned(), preview_bootstrap().into_bytes());
+    }
     files.insert(APP_JS.to_owned(), app.text.into_bytes());
     files.insert(APP_JS_MAP.to_owned(), app_map.to_json().into_bytes());
     files.insert(APP_DTS.to_owned(), emit_app_dts(&host_inputs).into_bytes());

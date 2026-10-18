@@ -28,6 +28,9 @@
     "maxEntities": 16384,
     "pauseWhenHidden": true
   },
+  "preview": {
+    "loopBudget": 10000000
+  },
   "entryScene": "Demo",
   "sources": [
     {

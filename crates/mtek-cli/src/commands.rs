@@ -27,6 +27,7 @@ use mtek_compiler::{
 
 use crate::args::{Format, Request};
 use crate::dist;
+use crate::limits::{self, Interrupted, PREVIEW_COMPILE_TIMEOUT};
 use crate::real_fs::RealFs;
 use crate::runtime::Runtime;
 
@@ -279,9 +280,23 @@ pub fn execute(request: &Request, context: &Context) -> Outcome {
     let root = ProjectRoot::at_base();
     match request {
         Request::Inspect { view, format, .. } => inspect_view(&printer, &root, &fs, *view, *format),
-        Request::Build { mode, out, .. } => {
+        Request::Build {
+            mode,
+            loop_budget,
+            out,
+            ..
+        } => {
             let project = Located { dir: &dir, fs: &fs };
-            build_project(&printer, context, &project, *mode, out.as_deref())
+            build_project(
+                &printer,
+                context,
+                &project,
+                BuildSettings {
+                    mode: *mode,
+                    loop_budget: *loop_budget,
+                },
+                out.as_deref(),
+            )
         }
         _ => {
             let result = check(&root, &fs);
@@ -315,6 +330,23 @@ fn mode_name(mode: BuildMode) -> &'static str {
     }
 }
 
+/// What a build is asked to be: the mode and, for a preview, the loop budget.
+#[derive(Clone, Copy, Debug)]
+pub struct BuildSettings {
+    pub mode: BuildMode,
+    /// `--loop-budget` (preview only): `None` is the compiler's default.
+    pub loop_budget: Option<u32>,
+}
+
+impl From<BuildMode> for BuildSettings {
+    fn from(mode: BuildMode) -> Self {
+        Self {
+            mode,
+            loop_budget: None,
+        }
+    }
+}
+
 /// What [`compile_and_write`] did.
 #[derive(Debug)]
 pub struct Written {
@@ -343,9 +375,10 @@ pub struct Written {
 pub fn compile_and_write(
     context: &Context,
     project: &Located<'_>,
-    mode: BuildMode,
+    settings: BuildSettings,
     out: Option<&Path>,
 ) -> Written {
+    let BuildSettings { mode, loop_budget } = settings;
     let options = CompileOptions {
         profile: TargetProfile::WebGpuCore2026,
         mode,
@@ -361,8 +394,23 @@ pub fn compile_and_write(
             .and_then(|runtime| runtime.physics_bundle)
             .map(Arc::from),
         force_physics_subsystem: false,
+        loop_budget,
     };
-    let result = build(&ProjectRoot::at_base(), project.fs, &options);
+    // A preview is built against a clock as well as against the size limits of the compiler
+    // (decision 0075); every other build runs as long as it takes.
+    let result = if mode == BuildMode::Preview {
+        let fs = project.fs.clone();
+        let job = move || build(&ProjectRoot::at_base(), &fs, &options);
+        match limits::run_within(PREVIEW_COMPILE_TIMEOUT, job) {
+            Ok(result) => result,
+            Err(Interrupted::TimedOut) => {
+                return interrupted(limits::timed_out(PREVIEW_COMPILE_TIMEOUT));
+            }
+            Err(Interrupted::Failed(text)) => return interrupted(internal_diagnostic(&text)),
+        }
+    } else {
+        build(&ProjectRoot::at_base(), project.fs, &options)
+    };
     let place = match (out, &result.out_dir) {
         (Some(out), _) => Some((absolute(&context.cwd, out), out.display().to_string())),
         (None, Some(out_dir)) => Some((
@@ -407,6 +455,22 @@ pub fn compile_and_write(
     written
 }
 
+/// The outcome of a build that was stopped before it had a result: its diagnostic alone, no project
+/// and no files.
+fn interrupted(diagnostic: Diagnostic) -> Written {
+    let mut sink = Diagnostics::new();
+    sink.push(diagnostic);
+    Written {
+        name: None,
+        sources: SourceMap::new(),
+        report: sink.finish(),
+        written: None,
+        shown: None,
+        target: None,
+        refused: None,
+    }
+}
+
 /// The human result line of a successful build: `built 'demo' (release): 9 files in dist,
 /// build 7c4846274cc3a51e; 0 errors, 0 warnings` (decision 0032 item 4).
 pub fn built_line(written: &Written, mode: BuildMode) -> String {
@@ -429,10 +493,11 @@ fn build_project(
     printer: &Printer,
     context: &Context,
     project: &Located<'_>,
-    mode: BuildMode,
+    settings: BuildSettings,
     out: Option<&Path>,
 ) -> Outcome {
-    let written = compile_and_write(context, project, mode, out);
+    let mode = settings.mode;
+    let written = compile_and_write(context, project, settings, out);
     if let Some(problem) = &written.refused {
         return Outcome {
             stdout: String::new(),

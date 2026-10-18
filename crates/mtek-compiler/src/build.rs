@@ -73,9 +73,17 @@ pub enum BuildMode {
     Dev,
     /// Browser tests: the page defines `window.__mtekMount(options)` instead of mounting.
     Test,
-    /// Untrusted previews (M6); not implemented by this build (`E9010`).
+    /// Untrusted previews (`spec/ai-and-benchmarks.md` section 5, decision 0075): `release`
+    /// plus a loop budget on every CPU loop, a manifest that tells the runtime to refuse network
+    /// access outside `baseUrl`, an external `bootstrap.js` and a restrictive
+    /// Content-Security-Policy in `index.html`.
     Preview,
 }
+
+/// The default loop budget of a preview build: iterations of CPU loops per frame, summed over
+/// every handler, lifecycle function and binding that runs in it (`spec/ai-and-benchmarks.md`
+/// section 5, decision 0075).
+pub const DEFAULT_LOOP_BUDGET: u32 = 10_000_000;
 
 /// Options of [`build`].
 #[derive(Clone, Debug, Default)]
@@ -102,6 +110,10 @@ pub struct CompileOptions {
     /// the only way to produce a physics build; it exists for the packaging tests (decision 0063)
     /// and has no command-line spelling. It never turns physics off.
     pub force_physics_subsystem: bool,
+    /// `--mode preview` only: the loop budget, in iterations of CPU loops per frame; `None` is
+    /// [`DEFAULT_LOOP_BUDGET`]. Ignored by every other mode. It is an option of the host that
+    /// runs the compiler, never of the project: `mtek.toml` cannot raise it (decision 0075).
+    pub loop_budget: Option<u32>,
 }
 
 impl CompileOptions {
@@ -116,6 +128,7 @@ impl CompileOptions {
             runtime_declarations: Some(Arc::from(STUB_RUNTIME_DECLARATIONS)),
             physics_bundle: Some(Arc::from(STUB_PHYSICS_BUNDLE)),
             force_physics_subsystem: false,
+            loop_budget: None,
         }
     }
 }
@@ -209,6 +222,7 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
                     runtime_declarations: declarations,
                     physics_bundle: options.physics_bundle.as_deref(),
                     force_physics_subsystem: options.force_physics_subsystem,
+                    loop_budget: options.loop_budget,
                     assets: &front.assets,
                 };
                 match package(project, &program, &input) {

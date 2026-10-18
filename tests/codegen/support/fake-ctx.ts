@@ -66,6 +66,8 @@ export interface FakeContext {
   setLight(entity: FakeEntityRecord, field: string, value: unknown): void;
   body(target: FakeEntityRecord | { readonly slot: number; readonly gen: number }, spanId: number): FakeBodyHandle;
   warn(code: string, spanId: number): void;
+  /** The loop budget of a preview build (`ctx.budget`, decision 0075): iterations left; checked only by preview code. */
+  readonly budget: { n: number };
 }
 
 /**
@@ -75,6 +77,7 @@ export interface FakeContext {
 export function createFakeContext(
   entityCount: number,
   params: readonly Readonly<Record<string, unknown>>[] = [],
+  budget: number = Number.MAX_SAFE_INTEGER,
 ): {
   ctx: FakeContext;
   calls: SetterCall[];
@@ -140,6 +143,7 @@ export function createFakeContext(
     warn(code: string, spanId: number): void {
       warnings.push({ code, spanId });
     },
+    budget: { n: budget },
   });
   return { ctx, calls, warnings, bodyCalls, velocities };
 }

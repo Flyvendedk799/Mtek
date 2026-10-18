@@ -39,8 +39,8 @@ mod build;
 mod check;
 mod inspect;
 pub use build::{
-    BuildMode, BuildResult, CompileOptions, STUB_PHYSICS_BUNDLE, STUB_RUNTIME_BUNDLE,
-    STUB_RUNTIME_DECLARATIONS, TargetProfile, build,
+    BuildMode, BuildResult, CompileOptions, DEFAULT_LOOP_BUDGET, STUB_PHYSICS_BUNDLE,
+    STUB_RUNTIME_BUNDLE, STUB_RUNTIME_DECLARATIONS, TargetProfile, build,
 };
 pub use check::{Analysis, AnalyzeOptions, CheckResult, ModuleUnit, analyze, analyze_with, check};
 pub use inspect::{Inspect, InspectFormat, InspectResult, inspect};

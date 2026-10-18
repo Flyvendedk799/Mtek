@@ -1,0 +1,23 @@
+// M6-10: a loop that never ends while the scene is initialised (decision 0075): the state initialiser calls a function
+// whose loops run for ever. In a preview the mount fails with E8080 (kind `budget-exceeded`) and the overlay names the loop.
+fn spin(n: i32) -> i32 {
+    var t = 0;
+    for i in 0..n {
+        for j in 0..n {
+            t += 1;
+        }
+    }
+    return t;
+}
+
+scene RunawayInit {
+    state total: i32 = spin(2147483647);
+    camera Lens {
+        position: vec3(0.0, 0.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+        material: Unlit { color: #40a0ff; };
+    }
+}

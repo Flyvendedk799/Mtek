@@ -87,7 +87,7 @@ describe("runtime.d.ts with tsc --strict", () => {
         } catch (error) {
           if (error instanceof MtekMountError) {
             const kind: "webgpu-unavailable" | "adapter-unavailable" | "device-failed" | "incompatible-program"
-              | "manifest-invalid" | "shader-failed" | "asset-failed" | "allocation-failed" | "physics-failed" = error.kind;
+              | "manifest-invalid" | "shader-failed" | "asset-failed" | "allocation-failed" | "physics-failed" | "budget-exceeded" = error.kind;
             console.log(kind, error.diagnostics[0]?.code);
           }
         }

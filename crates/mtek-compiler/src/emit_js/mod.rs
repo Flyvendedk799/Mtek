@@ -24,7 +24,7 @@ pub mod source_map;
 pub mod writers;
 
 pub use ast::{JsModule, Mapping};
-pub use cpu::{EmittedFunctions, emit_functions, function_name};
+pub use cpu::{CpuFlags, EmittedFunctions, emit_functions, function_name};
 pub use dts::emit_app_dts;
 pub use program::{ProgramParts, emit_program};
 pub use source_map::{SourceMapDocument, source_map};

@@ -13,8 +13,10 @@
 //!   is the hash of its bytes.
 //! * Hygiene (`spec/testing.md` section 4.3): no generated `app.js` names a forbidden
 //!   identifier outside the runtime import line; no output contains an absolute path.
-//! * `E9030` without a bundle or declarations, `E9010` for preview builds, no files for a
-//!   program with errors.
+//! * `E9030` without a bundle or declarations, no files for a program with errors.
+//! * Preview builds (decision 0075): the release code plus a budget check at the head of every
+//!   loop, the `preview` object of the manifest, the external `bootstrap.js`, the policy page;
+//!   every other mode is untouched.
 //! * Every semantic pass fixture builds, those with user materials included (their shaders
 //!   come from the shader lowering, decision 0041).
 
@@ -273,7 +275,12 @@ fn every_codegen_fixture_matches_its_expected_dist() {
 #[test]
 fn builds_are_reproducible_including_with_shuffled_listings() {
     for (label, root) in every_project() {
-        for mode in [BuildMode::Release, BuildMode::Test, BuildMode::Dev] {
+        for mode in [
+            BuildMode::Release,
+            BuildMode::Test,
+            BuildMode::Dev,
+            BuildMode::Preview,
+        ] {
             let first = built(&root, mode);
             for shuffle in [None, Some(1), Some(0x5eed)] {
                 let again = build_dir(&root, shuffle, mode);
@@ -481,12 +488,14 @@ fn the_hygiene_scan_finds_what_it_should() {
 #[test]
 fn generated_code_names_no_forbidden_identifier() {
     for (label, root) in every_project() {
-        let result = built(&root, BuildMode::Release);
-        let app = std::str::from_utf8(&result.files["app.js"]).unwrap();
-        let violations = hygiene_violations(app);
-        assert!(violations.is_empty(), "{label}: {violations:?}");
-        assert!(app.is_ascii(), "{label}: app.js is not ASCII");
-        assert!(!app.contains("\nexport function w_") && !app.contains("export { w_"));
+        for mode in [BuildMode::Release, BuildMode::Preview] {
+            let result = built(&root, mode);
+            let app = std::str::from_utf8(&result.files["app.js"]).unwrap();
+            let violations = hygiene_violations(app);
+            assert!(violations.is_empty(), "{label} ({mode:?}): {violations:?}");
+            assert!(app.is_ascii(), "{label}: app.js is not ASCII");
+            assert!(!app.contains("\nexport function w_") && !app.contains("export { w_"));
+        }
     }
 }
 
@@ -496,15 +505,17 @@ fn outputs_contain_no_absolute_paths_or_dates() {
     let absolute = absolute.to_string_lossy().replace('\\', "/");
     let absolute = absolute.trim_start_matches("//?/");
     for (label, root) in every_project() {
-        let result = built(&root, BuildMode::Dev);
-        for (path, bytes) in &result.files {
-            let text = String::from_utf8_lossy(bytes).replace('\\', "/");
-            assert!(
-                !text.contains(absolute),
-                "{label}: {path} names the checkout"
-            );
-            for marker in ["C:/", "/Users/", "/home/", "file://"] {
-                assert!(!text.contains(marker), "{label}: {path} contains {marker}");
+        for mode in [BuildMode::Dev, BuildMode::Preview] {
+            let result = built(&root, mode);
+            for (path, bytes) in &result.files {
+                let text = String::from_utf8_lossy(bytes).replace('\\', "/");
+                assert!(
+                    !text.contains(absolute),
+                    "{label}: {path} names the checkout"
+                );
+                for marker in ["C:/", "/Users/", "/home/", "file://"] {
+                    assert!(!text.contains(marker), "{label}: {path} contains {marker}");
+                }
             }
         }
     }
@@ -795,6 +806,31 @@ fn the_modes_differ_only_in_the_page() {
         page.contains("<title>Scene A: &lt;target&gt; camera &amp; box</title>"),
         "{page}"
     );
+}
+
+#[test]
+fn a_preview_of_a_program_without_loops_differs_from_release_in_the_page_the_bootstrap_and_the_manifest()
+ {
+    let root = codegen_dir().join("scene_a_target_camera_box");
+    let release = built(&root, BuildMode::Release);
+    let preview = built(&root, BuildMode::Preview);
+    for (path, bytes) in &release.files {
+        if !matches!(path.as_str(), "index.html" | "program.manifest.json") {
+            assert_eq!(preview.files.get(path), Some(bytes), "{path}");
+        }
+    }
+    assert_eq!(preview.files.len(), release.files.len() + 1);
+    assert!(preview.files.contains_key("bootstrap.js"));
+    // The manifest has the `preview` object and the id of the build that differs; nothing else.
+    let mut with_preview: Value =
+        serde_json::from_slice(&preview.files["program.manifest.json"]).unwrap();
+    let without: Value = serde_json::from_slice(&release.files["program.manifest.json"]).unwrap();
+    assert_eq!(with_preview["preview"], json!({ "loopBudget": 10_000_000 }));
+    let object = with_preview.as_object_mut().unwrap();
+    object.remove("preview");
+    object.insert("buildId".to_owned(), without["buildId"].clone());
+    assert_eq!(with_preview, without);
+    assert_ne!(preview.build_id, release.build_id);
 }
 
 fn codes(result: &BuildResult) -> Vec<&'static str> {
@@ -1265,12 +1301,180 @@ scene Demo {
     );
 }
 
+/// A program with loops in a function, a handler and a `print`.
+const LOOPS: &str = "fn busy(n: i32) -> i32 {
+    var total = 0;
+    for i in 0..n {
+        total += i;
+    }
+    return total;
+}
+
+scene Demo {
+    state total: i32 = 0;
+    camera Main {}
+    entity Crate { mesh: Box {}; }
+    update(dt: f32) {
+        print(\"tick\");
+        for i in 0..10 {
+            total += busy(i);
+        }
+    }
+}
+";
+
+fn preview_options(budget: Option<u32>) -> CompileOptions {
+    CompileOptions {
+        loop_budget: budget,
+        ..stub(BuildMode::Preview)
+    }
+}
+
+fn text_of<'a>(result: &'a BuildResult, path: &str) -> &'a str {
+    std::str::from_utf8(&result.files[path]).unwrap()
+}
+
 #[test]
-fn preview_builds_are_not_implemented_yet() {
-    let root = codegen_dir().join("scene_a_target_camera_box");
-    let result = build_dir(&root, None, BuildMode::Preview);
-    assert_eq!(codes(&result), ["E9010"]);
-    assert!(result.files.is_empty());
+fn a_preview_build_is_a_release_build_with_the_budget_the_policy_and_the_bootstrap() {
+    let memory = inline_project(LOOPS);
+    let preview = build(&ProjectRoot::at_base(), &memory, &preview_options(None));
+    assert!(!preview.has_errors(), "{:#?}", preview.report.diagnostics);
+    let release = build(&ProjectRoot::at_base(), &memory, &stub(BuildMode::Release));
+    let dev = build(&ProjectRoot::at_base(), &memory, &stub(BuildMode::Dev));
+
+    // The files: the release set plus `bootstrap.js`.
+    let mut names: Vec<&String> = preview.files.keys().collect();
+    let release_names: Vec<&String> = release.files.keys().collect();
+    assert!(names.contains(&&"bootstrap.js".to_owned()));
+    names.retain(|name| *name != "bootstrap.js");
+    assert_eq!(names, release_names);
+    assert_eq!(
+        text_of(&preview, "bootstrap.js"),
+        "import program, { mountMtek } from \"./app.js\";\n\
+         mountMtek(document.getElementById(\"mtek\"), program).catch(() => {}); // failures are shown by the overlay\n"
+    );
+
+    // The page: the policy first, then one script, which has a source and no body.
+    let page = text_of(&preview, "index.html");
+    assert!(
+        page.contains(
+            "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; img-src 'self' blob:; style-src 'self' 'unsafe-inline'\">"
+        ),
+        "{page}"
+    );
+    assert_eq!(page.matches("<script").count(), 1, "{page}");
+    assert!(page.contains("<script type=\"module\" src=\"./bootstrap.js\"></script>"));
+    assert!(!text_of(&release, "index.html").contains("Content-Security-Policy"));
+    assert!(!text_of(&dev, "index.html").contains("Content-Security-Policy"));
+
+    // The manifest names the budget; no other mode has the key.
+    let manifest = manifest_of(&preview);
+    assert_eq!(
+        manifest.preview.as_ref().map(|p| p.loop_budget),
+        Some(10_000_000)
+    );
+    assert!(manifest_of(&release).preview.is_none() && manifest_of(&dev).preview.is_none());
+    assert!(!text_of(&release, "program.manifest.json").contains("\"preview\""));
+    assert_valid(
+        &validator(),
+        "preview",
+        text_of(&preview, "program.manifest.json"),
+    );
+
+    // The code: every loop starts with the check, `print` is compiled out like in a release build,
+    // and nothing of the budget is in a build of another mode.
+    let app = text_of(&preview, "app.js");
+    assert_eq!(app.matches("for (").count(), 2, "{app}");
+    assert_eq!(app.matches("if (--budget.n < 0) {").count(), 2, "{app}");
+    assert_eq!(
+        app.matches("const budget = ctx.budget;").count(),
+        2,
+        "{app}"
+    );
+    assert!(!app.contains("ctx.print"), "print is compiled out: {app}");
+    for other in [&release, &dev] {
+        assert!(!text_of(other, "app.js").contains("budget"));
+    }
+    assert!(text_of(&dev, "app.js").contains("ctx.print"));
+
+    // Each check reports the loop it guards: the span id resolves to the `for` statement.
+    let spans_of_checks: Vec<usize> = app
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix("rt.budgetExceeded("))
+        .map(|rest| rest.trim_end_matches(");").parse().unwrap())
+        .collect();
+    assert_eq!(spans_of_checks.len(), 2);
+    let main = preview
+        .sources
+        .files()
+        .find(|file| file.path().as_str() == "src/main.mtek")
+        .unwrap();
+    for id in spans_of_checks {
+        let span = &manifest.spans[id];
+        assert_eq!(manifest.sources[span.file as usize].path, "src/main.mtek");
+        let text = main.slice(span.start, span.end).unwrap();
+        assert!(
+            text.starts_with("for i in 0..") && text.ends_with('}'),
+            "{text}"
+        );
+    }
+}
+
+#[test]
+fn the_budget_is_an_option_of_the_host_at_least_one_and_part_of_the_identity() {
+    let memory = inline_project(LOOPS);
+    let with = |budget| build(&ProjectRoot::at_base(), &memory, &preview_options(budget));
+    let default = with(None);
+    let small = with(Some(1_000));
+    let zero = with(Some(0));
+    assert_eq!(
+        manifest_of(&small).preview.map(|p| p.loop_budget),
+        Some(1_000)
+    );
+    assert_eq!(manifest_of(&zero).preview.map(|p| p.loop_budget), Some(1));
+    assert_eq!(default.files.len(), small.files.len());
+    assert_ne!(default.build_id, small.build_id);
+    assert_ne!(small.build_id, zero.build_id);
+    // The same program built twice with the same budget is byte-identical.
+    assert_eq!(with(Some(1_000)).files, small.files);
+    // A release build ignores the option.
+    let release = |budget| {
+        let options = CompileOptions {
+            loop_budget: budget,
+            ..stub(BuildMode::Release)
+        };
+        build(&ProjectRoot::at_base(), &memory, &options)
+    };
+    assert_eq!(release(Some(5)).files, release(None).files);
+    assert_eq!(release(Some(5)).build_id, release(None).build_id);
+}
+
+#[test]
+fn every_project_builds_as_a_preview_with_a_valid_manifest_and_checks_that_resolve() {
+    let schema = validator();
+    let mut checks = 0;
+    for (label, root) in every_project() {
+        let result = built(&root, BuildMode::Preview);
+        let text = text_of(&result, "program.manifest.json");
+        assert_valid(&schema, &label, text);
+        let manifest = manifest_of(&result);
+        assert_eq!(manifest.to_json(), text, "{label}");
+        assert!(manifest.preview.is_some(), "{label}");
+        let app = text_of(&result, "app.js");
+        let loops = app.matches("--budget.n < 0").count();
+        assert_eq!(loops, app.matches("rt.budgetExceeded(").count(), "{label}");
+        for line in app.lines() {
+            let Some(rest) = line.trim().strip_prefix("rt.budgetExceeded(") else {
+                continue;
+            };
+            let span = &manifest.spans[rest.trim_end_matches(");").parse::<usize>().unwrap()];
+            let file = result.sources.get(FileId(span.file)).unwrap();
+            let text = file.slice(span.start, span.end).unwrap();
+            assert!(text.starts_with("for "), "{label}: {text}");
+            checks += 1;
+        }
+    }
+    assert!(checks >= 6, "{checks} loops in the fixtures");
 }
 
 #[test]
