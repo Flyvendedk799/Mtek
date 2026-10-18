@@ -701,6 +701,44 @@ export function compareImage(expected: ExpectedImage, frame: ArrayLike<number>, 
   return { compared, maxError, worst, outside, perEntity };
 }
 
+// ---------------------------------------------------------------------------
+// Host inputs
+// ---------------------------------------------------------------------------
+
+/** The values a host sets with `setInput`, under the names of mtek.toml `[host.inputs]` (colours as `#rrggbb`). */
+export interface HostValues {
+  seat_color?: string;
+  seat_metallic?: number;
+  seat_roughness?: number;
+  frame_color?: string;
+  frame_metallic?: number;
+  frame_roughness?: number;
+  stripe_a?: string;
+  stripe_b?: string;
+  back_roughness?: number;
+  sun_intensity?: number;
+}
+
+/** The scene's inputs after the host set `values` on top of `base` (what the shaders see: colours linear). */
+export function applyHostValues(values: HostValues, base: ConfiguratorInputs = DEFAULT_INPUTS): ConfiguratorInputs {
+  return {
+    seat: {
+      baseColor: values.seat_color === undefined ? base.seat.baseColor : hexLinear(values.seat_color),
+      metallic: values.seat_metallic ?? base.seat.metallic,
+      roughness: values.seat_roughness ?? base.seat.roughness,
+    },
+    frame: {
+      baseColor: values.frame_color === undefined ? base.frame.baseColor : hexLinear(values.frame_color),
+      metallic: values.frame_metallic ?? base.frame.metallic,
+      roughness: values.frame_roughness ?? base.frame.roughness,
+    },
+    stripeA: values.stripe_a === undefined ? base.stripeA : hexLinear(values.stripe_a),
+    stripeB: values.stripe_b === undefined ? base.stripeB : hexLinear(values.stripe_b),
+    backRoughness: values.back_roughness ?? base.backRoughness,
+    sunIntensity: values.sun_intensity ?? base.sunIntensity,
+  };
+}
+
 /** Pixels whose expected entity is `name` (stable ones only). */
 export function pixelsOf(expected: ExpectedImage, name: string): number[] {
   const index = expected.names.indexOf(name);
