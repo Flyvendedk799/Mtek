@@ -1389,7 +1389,8 @@ scene Corrupt {
 //   mesh   "Seat"   box 0.5 x 0.06 x 0.5                                                          material Fabric
 //   mesh   "Back"   box 0.5 x 0.4 x 0.04                                                          material Fabric
 //   mesh   "Leg"    tapered prism, 0.05 x 0.05 at the bottom, 0.08 x 0.08 at the top, 0.42 high  material Oak
-//   mesh   "Rails"  two primitives: boxes 0.4 x 0.035 x 0.035 at z = +0.2 and z = -0.2            material Steel
+//   mesh   "Rails"  two primitives: boxes 0.4 x 0.05 x 0.05 at z = +0.2 and z = -0.2            material Steel
+//   mesh   "Crest"  the crest rail: a prism 0.5 x 0.06 at the bottom, 0.34 x 0.03 at the top, 0.08 high  material Oak
 //
 //   node Floor  (scene root)           no transform
 //   node Chair  (scene root)           rotation CHAIR_YAW about +Y; children below
@@ -1397,9 +1398,11 @@ scene Corrupt {
 //     Back      translation (0, 0.74, -0.23), rotation CHAIR_LEAN (-0.15 rad) about +X (it leans back)
 //     LegFL/FR/BL/BR   translation (+-0.2, 0.21, +-0.2) (F = +Z, L = +X)
 //     Rails     translation (0, 0.14, 0)
+//     Crest     on top of the Back: translation (0, 0.74, -0.23) + Rx(CHAIR_LEAN) (0, 0.24, 0), the Back's rotation
 //
-// The legs are one mesh used four times, a tapered prism rather than a box on purpose: a box face keeps its direction
-// under any scale, so a wrong normal matrix would not show on boxes, but the slanted sides of a leg do.
+// The legs are one mesh used four times. The legs and the crest are tapered prisms rather than boxes on purpose: a box face
+// keeps its direction under any scale, so a wrong normal matrix would not show on boxes, but the slanted sides of the crest
+// (about 40 degrees from vertical) do, and so do those of the legs, which lean by a degree or two.
 
 const CHAIR_YAW = 0.5;
 const CHAIR_LEAN = -0.15;
@@ -1477,13 +1480,14 @@ function chairModel(variant = null) {
   const seat = m.mesh("Seat", [addPrism(m, box(0.5, 0.06, 0.5), FABRIC)]);
   const back = m.mesh("Back", [addPrism(m, box(0.5, 0.4, 0.04), FABRIC)]);
   const leg = m.mesh("Leg", [addPrism(m, prism({ bottom: [0.025, 0.025], top: [0.04, 0.04], height: 0.42 }), OAK)]);
+  const crest = m.mesh("Crest", [addPrism(m, prism({ bottom: [0.25, 0.03], top: [0.17, 0.015], height: 0.08 }), OAK)]);
   const rails = m.mesh("Rails", [
-    addPrism(m, box(0.4, 0.035, 0.035, [0, 0, 0.2]), STEEL),
-    addPrism(m, box(0.4, 0.035, 0.035, [0, 0, -0.2]), STEEL),
+    addPrism(m, box(0.4, 0.05, 0.05, [0, 0, 0.2]), STEEL),
+    addPrism(m, box(0.4, 0.05, 0.05, [0, 0, -0.2]), STEEL),
   ]);
-  // Nodes: the scene roots first, then the children of "Chair" (node indices 2 to 8).
+  // Nodes: the scene roots first, then the children of "Chair" (node indices 2 to 9).
   m.node({ name: "Floor", mesh: floor }, true);
-  m.node({ name: "Chair", rotation: [0, Math.sin(CHAIR_YAW / 2), 0, Math.cos(CHAIR_YAW / 2)], children: [2, 3, 4, 5, 6, 7, 8] }, true);
+  m.node({ name: "Chair", rotation: [0, Math.sin(CHAIR_YAW / 2), 0, Math.cos(CHAIR_YAW / 2)], children: [2, 3, 4, 5, 6, 7, 8, 9] }, true);
   m.node({ name: "Seat", translation: [0, 0.45, 0], mesh: seat });
   m.node({ name: "Back", translation: [0, 0.74, -0.23], rotation: [Math.sin(CHAIR_LEAN / 2), 0, 0, Math.cos(CHAIR_LEAN / 2)], mesh: back });
   m.node({ name: "LegFL", translation: [0.2, 0.21, 0.2], mesh: leg });
@@ -1491,6 +1495,13 @@ function chairModel(variant = null) {
   m.node({ name: "LegBL", translation: [0.2, 0.21, -0.2], mesh: leg });
   m.node({ name: "LegBR", translation: [-0.2, 0.21, -0.2], mesh: leg });
   m.node({ name: "Rails", translation: [0, 0.14, 0], mesh: rails });
+  // The Back's local +Y axis turned by the lean: (0, cos, sin). The crest sits 0.24 up it, half the Back plus half the crest.
+  m.node({
+    name: "Crest",
+    translation: [0, 0.74 + 0.24 * Math.cos(CHAIR_LEAN), -0.23 + 0.24 * Math.sin(CHAIR_LEAN)],
+    rotation: [Math.sin(CHAIR_LEAN / 2), 0, 0, Math.cos(CHAIR_LEAN / 2)],
+    mesh: crest,
+  });
   if (variant === "normal_texture") {
     const image = m.image(CHECKER, "image/png");
     m.json.textures = [{ source: image }];

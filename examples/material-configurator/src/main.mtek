@@ -60,6 +60,14 @@ scene Configurator {
         };
     }
 
+    // The crest rail on top of the back: a prism with slanted sides, in the model's own "Oak".
+    entity Crest {
+        mesh: CHAIR.mesh("Crest");
+        position: CHAIR.node_position("Crest");
+        rotation: CHAIR.node_rotation("Crest");
+        material: CHAIR.material("Oak");
+    }
+
     // The four legs are one mesh with the model's own "Oak" material, constant: they share one parameter block and are
     // drawn as one instanced draw (decision 0059).
     entity LegFL {
