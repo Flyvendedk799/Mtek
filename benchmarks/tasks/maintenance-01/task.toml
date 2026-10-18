@@ -5,10 +5,10 @@ title = "Repair a project with a wrong vector dimension and an unknown field"
 prompt = """The project is meant to show a scene named Demo with two unit cubes and does not work. Repair it without removing anything.
 Intended scene: clear colour #202020; one camera at (0, 0, 8) looking at the origin; a unit cube named Left at (-1.5, 0, 0) with the flat colour #f97316 (orange); a unit cube named Right at (1.5, 0, 0) with the flat colour #14b8a6 (teal). All surfaces are flat colours (no lighting)."""
 required_symbols = ["Demo.Left", "Demo.Right"]
-mtek_side_status = "unverified-until-M6"
-# The two errors of the Mtek starter, as predicted from spec/language.md section 6.8 and spec/diagnostics.md
-# (not compiler output; the compiler does not exist yet): a vec2 where position expects vec3, and an
-# unknown field `colour` on Unlit.
+mtek_side_status = "verified"
+# The two errors of the Mtek starter: a vec2 where position expects vec3, and an unknown field `colour`
+# on Unlit. Predicted from spec/language.md section 6.8 and spec/diagnostics.md when the task was written,
+# and confirmed by the compiler's own output in task M6-07 (evidence/M6/ai-eval, decision 0077).
 starter_diagnostics = ["MTEK-E3102", "MTEK-E5001"]
 
 [budgets]
