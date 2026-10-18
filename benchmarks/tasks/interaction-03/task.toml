@@ -1,0 +1,17 @@
+id = "interaction-03"
+category = "interaction"
+mode = "edit"
+title = "Two lamps: toggle each one, flip both, switch both off"
+prompt = """The scene Demo is drawn from the front with a flat (orthographic) camera. It shows two square lamps, LampA on the left and LampB on the right. A lamp is either off (dark grey, #3a3a3a) or on (yellow, #ffd24a). Both lamps start off.
+Make the keyboard control the lamps:
+- A press of the A key toggles LampA (off becomes on, on becomes off). A press of the B key toggles LampB.
+- A press of the Space bar flips both lamps, each from its own state: a lamp that is on goes off and a lamp that is off goes on. (If the lamps are in different states they are still in different states afterwards.)
+- A press of the Enter key switches both lamps off.
+Every key press counts and takes effect in the order the presses were made, also when several keys are pressed at the same moment (in the same frame). Without any key press nothing changes. The lamps' shapes and positions, the camera and everything else stay as they are."""
+required_symbols = ["Demo.LampA", "Demo.LampB"]
+mtek_side_status = "unverified-until-M6"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

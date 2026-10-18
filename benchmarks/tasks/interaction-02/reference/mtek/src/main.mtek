@@ -1,0 +1,39 @@
+// UNVERIFIED: written by hand from spec/language.md and spec/scenes.md; checked by `mtek test` on hardware
+// by decision 0079 (the status in task.toml and the removal of this line say when that happened).
+const YELLOW: color = #ffd24a;
+const RED: color = #ef4444;
+
+scene Demo {
+    clear_color: #202020;
+    state slot: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Track {
+        position: vec3(0.0, -1.0, 0.0);
+        mesh: Box { size: vec3(10.0, 0.2, 0.2) };
+        material: Unlit { color: #404040 };
+    }
+
+    entity Handle {
+        position: bind(vec3(slot, 0.0, 0.0));
+        mesh: Box { size: vec3(0.8, 0.8, 0.5) };
+        material: Unlit { color: bind(color.linear(mix(YELLOW.rgb, RED.rgb, step(4.0, abs(slot))), 1.0)) };
+    }
+
+    on key_down(Key.ArrowRight) {
+        slot = min(slot + 1.0, 4.0);
+    }
+
+    on key_down(Key.ArrowLeft) {
+        slot = max(slot - 1.0, -4.0);
+    }
+
+    on key_down(Key.Enter) {
+        slot = 0.0;
+    }
+}

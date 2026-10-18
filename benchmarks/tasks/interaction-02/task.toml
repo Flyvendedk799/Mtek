@@ -1,0 +1,18 @@
+id = "interaction-02"
+category = "interaction"
+mode = "edit"
+title = "Move a handle along a track with the arrow keys, within limits"
+prompt = """The scene Demo is drawn from the front with a flat (orthographic) camera. It shows a thin grey track and, on it, a yellow square block named Handle (#ffd24a) that rests at the centre of the track, at x = 0. One world unit is ten pixels.
+Make the Handle respond to the keyboard:
+- Each press of the Right arrow key moves the Handle exactly one world unit to the right (+X); each press of the Left arrow key moves it one unit to the left. One press is one move.
+- The Handle never leaves the range x = -4 to x = 4: a press that would take it past an end leaves it where it is.
+- While the Handle is at either end of that range (x = -4 or x = 4) it is red (#ef4444); at every other position it is yellow (#ffd24a).
+- A press of the Enter key puts the Handle back at the centre (x = 0), yellow.
+Without any key press nothing moves. The track, the camera and everything else stay as they are."""
+required_symbols = ["Demo.Handle", "Demo.Track"]
+mtek_side_status = "unverified-until-M6"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300
