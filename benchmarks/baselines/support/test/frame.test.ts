@@ -53,6 +53,25 @@ describe("frame clock", () => {
     expect(clock.down.has("KeyA")).toBe(false);
   });
 
+  it("answers is_key_down as of the END of the input phase, also inside a handler of that phase", () => {
+    const clock = new FrameClock();
+    const seen: string[] = [];
+    const callbacks: FrameCallbacks = {
+      input: () => undefined,
+      keyDown: (code) => seen.push(`down ${code}: A ${String(clock.down.has("KeyA"))} B ${String(clock.down.has("KeyB"))}`),
+      keyUp: (code) => seen.push(`up ${code}: A ${String(clock.down.has("KeyA"))} B ${String(clock.down.has("KeyB"))}`),
+      fixedUpdate: () => undefined,
+      update: () => undefined,
+    };
+    // A goes down and up again in one frame, B goes down: when the handler of A's press runs, A is already up
+    // (the state is that of the end of the phase) and B is already down.
+    clock.pressKey("KeyA");
+    clock.releaseKey("KeyA");
+    clock.pressKey("KeyB");
+    clock.frame(0, callbacks);
+    expect(seen).toEqual(["down KeyA: A false B true", "up KeyA: A false B true", "down KeyB: A false B true"]);
+  });
+
   it("runs the fixed ticks between the input and the update", () => {
     const clock = new FrameClock();
     const { log, callbacks } = recorder();
@@ -61,11 +80,19 @@ describe("frame clock", () => {
     expect(log).toEqual(["down KeyA", "fixed", `update ${FIXED_STEP.toFixed(4)}`]);
   });
 
-  it("carries the remainder of the accumulator, so 3 frames of 1/40 s run 1, 2 and 1 ticks", () => {
+  it("carries the remainder of the accumulator, so 3 frames of 0.024 s (1.44 steps) run 1, 1 and 2 ticks", () => {
     const clock = new FrameClock();
     const { callbacks } = recorder();
-    const counts = [0, 1, 2].map(() => clock.frame(1 / 40, callbacks));
-    expect(counts).toEqual([1, 2, 1]);
+    const counts = [0, 1, 2].map(() => clock.frame(0.024, callbacks));
+    expect(counts).toEqual([1, 1, 2]);
+  });
+
+  it("uses the step of the runtime manifest, 0.016666668 s, so a frame of exactly that length is one tick", () => {
+    const clock = new FrameClock();
+    const { callbacks } = recorder();
+    expect(FIXED_STEP).toBe(0.016666668);
+    expect([0, 1, 2].map(() => clock.frame(0.016666668, callbacks))).toEqual([1, 1, 1]);
+    expect([0, 1].map(() => clock.frame(2 * 0.016666668, callbacks))).toEqual([2, 2]);
   });
 
   it("clamps the frame delta to 0.1 s, runs at most 4 ticks and drops the surplus", () => {

@@ -1,0 +1,18 @@
+id = "interaction-09"
+category = "interaction"
+mode = "edit"
+title = "A spring-loaded launcher: charge while Space is held, fire when it is released"
+prompt = """The scene Demo is drawn from the front with a flat (orthographic) camera. One world unit is ten pixels. A yellow block named Stone (#ffd24a, 2 x 2 units) rests on a thin grey rail with its centre at x = -4. Above it a small block named Power shows a whole-number counter called power: the centre of Power is at x = -5.5 + power. power starts at 0, the scene already draws Power from it, and no key changes power yet.
+Make the Space key a spring-loaded launcher:
+- While Space is held down the Stone is orange (#ff7a1a); at every other time it is yellow (#ffd24a).
+- While Space is held down, each press of the Up arrow key adds 1 to power, up to a maximum of 5. A press of Up while Space is not held does nothing.
+- When Space is released the Stone is launched: it moves 2 world units to the right for every point of power, but its centre never goes beyond x = 5 (a launch that would take it further leaves it at x = 5). Then power goes back to 0. A launch with power 0 moves nothing.
+- Pressing Space, or releasing Up, does nothing by itself: only the release of Space launches.
+Every key press and every key release counts and is handled in the order in which it happened, also when several happen at the same moment (in the same frame). For example, pressing Space, pressing Up and releasing Space within one frame launches the Stone with power 1. Without any key event nothing changes. The rail, the camera and everything else stay as they are."""
+required_symbols = ["Demo.Stone", "Demo.Power", "Demo.power"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

@@ -1,0 +1,28 @@
+scene Demo {
+    clear_color: #202020;
+    state power: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Rail {
+        position: vec3(0.0, -1.1, 0.0);
+        mesh: Box { size: vec3(12.0, 0.2, 0.2) };
+        material: Unlit { color: #404040 };
+    }
+
+    entity Stone {
+        position: vec3(-4.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: #ffd24a };
+    }
+
+    entity Power {
+        position: bind(vec3(-5.5 + f32(power), 3.5, 0.0));
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+    }
+}
