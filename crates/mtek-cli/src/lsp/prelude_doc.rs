@@ -46,6 +46,8 @@ pub enum RefKey {
     Event(&'static str),
     SceneObject(&'static str),
     RecordField(&'static str, &'static str),
+    /// An accessor of a handle type (`glb_asset.mesh`).
+    TypeMethod(&'static str, &'static str),
     BodyProperty(&'static str),
     BodyCommand(&'static str),
 }
@@ -247,7 +249,7 @@ fn build_reference(registry: &'static Registry) -> Reference {
                 for sig in &method.signatures {
                     w.declaration(
                         1,
-                        RefKey::Function(method.name),
+                        RefKey::TypeMethod(ty.name, method.name),
                         "fn ",
                         method.name,
                         &format!("{};", sig.text()),
@@ -599,6 +601,10 @@ pub fn hover(key: RefKey) -> Option<String> {
                 .ty;
             Some(code(&format!("{field}: {}", ty.spelling())) + &format!("\n\nfield of `{record}`"))
         }
+        RefKey::TypeMethod(type_name, method) => {
+            let function = registry.type_method(type_name, method)?;
+            Some(function_hover(function, &format!("{type_name}.")))
+        }
         RefKey::BodyProperty(name) => {
             let property = registry.body_property(name)?;
             Some(with_doc(
@@ -726,6 +732,7 @@ mod tests {
                 RefKey::SchemaField(_, n)
                 | RefKey::EnumMember(_, n)
                 | RefKey::NamespaceMember(_, n)
+                | RefKey::TypeMethod(_, n)
                 | RefKey::RecordField(_, n) => n,
             };
             assert_eq!(slice(doc, start, end), *name, "{key:?}");
@@ -810,6 +817,11 @@ mod tests {
         }
         for event in &registry.events {
             assert!(hover(RefKey::Event(event.name)).is_some());
+        }
+        for ty in &registry.types {
+            for method in &ty.methods {
+                assert!(hover(RefKey::TypeMethod(ty.name, method.name)).is_some());
+            }
         }
         for property in &registry.body_properties {
             assert!(hover(RefKey::BodyProperty(property.name)).is_some());
