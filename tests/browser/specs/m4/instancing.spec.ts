@@ -31,7 +31,7 @@ interface Shot {
 interface AppLike {
   setInput(name: string, value: unknown): { ok: boolean };
   dispose(): void;
-  state: string;
+  readonly state: string;
   debug: {
     step(frames: number, dtSeconds: number): void;
     readPixels(): Promise<{ width: number; height: number; data: Uint8Array }>;
@@ -250,7 +250,7 @@ test.describe("compatible instancing (M4-08)", () => {
         app.debug.loseDevice();
         while (app.state !== "recovering") await new Promise((resolve) => setTimeout(resolve, 1));
         while (app.state === "recovering") await new Promise((resolve) => setTimeout(resolve, 5));
-        const state = app.state;
+        const state: string = (app as { state: string }).state;
         app.debug.step(1, 1 / 60);
         const after = await read();
         app.dispose();

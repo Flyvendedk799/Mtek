@@ -14,7 +14,7 @@ import { mountMtekWith } from "../host/mount.js";
 import type { MtekApp, MtekDebug, MtekTestOptions } from "../host/types.js";
 import { FakeHost, asDom, fakeProgram, minimalSceneInit, type FakeDrawRecord, type InitContext } from "../test-support/fake-host.js";
 import { installProgram } from "../test-support/mount-fixture.js";
-import type { FakeBuffer, FakeResource } from "../test-support/fake-gpu.js";
+import type { FakeBuffer } from "../test-support/fake-gpu.js";
 import { batchDraws, instancingCandidates, type Batch } from "./instancing.js";
 import { INSTANCE_FLOATS, INSTANCE_STRIDE, instanceBufferLayout, materialPipelineKey } from "./pipelines.js";
 import { resolveStructure } from "../scene/structure.js";
@@ -197,7 +197,7 @@ function recordXs(host: FakeHost, count: number): number[] {
 }
 
 function entryPoint(draw: FakeDrawRecord): string | undefined {
-  return ((draw.pipeline as FakeResource).descriptor as { vertex: { entryPoint?: string } }).vertex.entryPoint;
+  return (draw.pipeline.descriptor as { vertex: { entryPoint?: string } }).vertex.entryPoint;
 }
 
 /** (instanceCount, firstInstance) per draw call. */
@@ -208,7 +208,7 @@ function shape(host: FakeHost): [number, number][] {
 const ROW5: readonly Item[] = [-4, -2, 0, 2, 4].map((x) => ({ x }));
 
 describe("candidates", () => {
-  it("are the groups of two or more with the same mesh, pipeline and parameter block", async () => {
+  it("are the groups of two or more with the same mesh, pipeline and parameter block", () => {
     const host = new FakeHost();
     const json = installProgram(host, (manifest: Json) => {
       const shader = (manifest["shaders"] as Json[])[0];
