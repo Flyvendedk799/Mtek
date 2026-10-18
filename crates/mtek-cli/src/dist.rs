@@ -250,6 +250,35 @@ mod tests {
     }
 
     #[test]
+    fn a_physics_build_writes_the_bundle_into_its_own_directory() {
+        use mtek_compiler::package::identity::h16;
+        use mtek_compiler::project::ProjectRoot;
+        use mtek_compiler::source::{MemFs, ProjectPath};
+        use mtek_compiler::{BuildMode, CompileOptions, STUB_PHYSICS_BUNDLE, build};
+
+        let mut project = MemFs::new();
+        project
+            .insert(
+                ProjectPath::new("mtek.toml").unwrap(),
+                "[project]\nname = \"demo\"\nlanguage = \"0.1\"\n",
+            )
+            .insert(
+                ProjectPath::new("src/main.mtek").unwrap(),
+                "scene Demo {\n    camera Main {}\n    entity Cube { mesh: Box {}; }\n}\n",
+            );
+        let mut options = CompileOptions::with_stub_runtime(BuildMode::Release);
+        options.force_physics_subsystem = true;
+        let result = build(&ProjectRoot::at_base(), &project, &options);
+        assert!(!result.has_errors(), "{:?}", result.report.diagnostics);
+        let scratch = Scratch::new("physics");
+        let out = scratch.0.join("dist");
+        write_dist(&out, &result.build_id.clone().unwrap(), &result.files).unwrap();
+        let name = format!("physics/{}.js", h16(STUB_PHYSICS_BUNDLE));
+        assert_eq!(fs::read(out.join(&name)).unwrap(), STUB_PHYSICS_BUNDLE);
+        assert_eq!(scratch.names(), ["dist"]);
+    }
+
+    #[test]
     fn bad_names_are_rejected_before_anything_is_written() {
         let scratch = Scratch::new("bad-names");
         let out = scratch.0.join("dist");

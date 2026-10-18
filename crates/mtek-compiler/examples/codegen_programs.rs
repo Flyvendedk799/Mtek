@@ -87,6 +87,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         runtime_bundle: Some(Arc::from(bundle)),
         dev_runtime_bundle: None,
         runtime_declarations: Some(Arc::from(declarations)),
+        physics_bundle: None,
+        force_physics_subsystem: false,
     };
 
     let codegen = repo().join("tests/codegen");

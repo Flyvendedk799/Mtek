@@ -33,8 +33,8 @@ use mtek_compiler::package::identity::{h16, sha256_hex};
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::source::{FileId, MemFs, ProjectPath};
 use mtek_compiler::{
-    BuildMode, BuildResult, CompileOptions, STUB_RUNTIME_BUNDLE, STUB_RUNTIME_DECLARATIONS, build,
-    check,
+    BuildMode, BuildResult, CompileOptions, STUB_PHYSICS_BUNDLE, STUB_RUNTIME_BUNDLE,
+    STUB_RUNTIME_DECLARATIONS, build, check,
 };
 use serde_json::Value;
 
@@ -817,6 +817,134 @@ fn each_mode_needs_its_own_bundle_for_e9030() {
         codes(&build(&ProjectRoot::at_base(), &memory, &options)),
         ["E9030"]
     );
+}
+
+/// Options that mark the program as using physics (decision 0063: the only way before M5-03).
+fn physics(mode: BuildMode) -> CompileOptions {
+    let mut options = stub(mode);
+    options.force_physics_subsystem = true;
+    options
+}
+
+fn is_physics_file(path: &str) -> bool {
+    path == "physics" || path.starts_with("physics/")
+}
+
+#[test]
+fn a_build_without_physics_has_no_physics_file_even_when_the_bundle_is_available() {
+    // `stub` carries a physics bundle; no program uses physics, so none is written.
+    assert!(stub(BuildMode::Release).physics_bundle.is_some());
+    for (label, root) in every_project() {
+        for mode in [BuildMode::Release, BuildMode::Dev, BuildMode::Test] {
+            let result = build_dir(&root, None, mode);
+            assert!(!result.has_errors(), "{label}");
+            assert!(
+                result.files.keys().all(|path| !is_physics_file(path)),
+                "{label} {mode:?}: {:?}",
+                result.files.keys()
+            );
+            assert!(!manifest_of(&result).subsystems.physics, "{label}");
+        }
+    }
+}
+
+#[test]
+fn a_build_that_uses_physics_has_the_bundle_under_its_hash_and_says_so_in_the_manifest() {
+    let schema = validator();
+    for (label, root) in every_project() {
+        for mode in [BuildMode::Release, BuildMode::Dev, BuildMode::Test] {
+            let memory = project_fs(&root, None);
+            let plain = build(&ProjectRoot::at_base(), &memory, &stub(mode));
+            let with = build(&ProjectRoot::at_base(), &memory, &physics(mode));
+            assert!(!with.has_errors(), "{label} {mode:?}");
+
+            let name = format!("physics/{}.js", h16(STUB_PHYSICS_BUNDLE));
+            assert_eq!(with.files[&name], STUB_PHYSICS_BUNDLE, "{label} {mode:?}");
+            // Exactly one more file, and it is the bundle; everything else is byte for byte the plain build,
+            // except the manifest, which differs in `subsystems.physics` alone.
+            let extra: Vec<&String> = with
+                .files
+                .keys()
+                .filter(|path| !plain.files.contains_key(*path))
+                .collect();
+            assert_eq!(extra, [&name], "{label} {mode:?}");
+            for (path, bytes) in &plain.files {
+                if path != "program.manifest.json" {
+                    assert_eq!(&with.files[path], bytes, "{label} {mode:?} {path}");
+                }
+            }
+            let text = std::str::from_utf8(&with.files["program.manifest.json"]).unwrap();
+            assert_valid(&schema, &label, text);
+            let mut flagged: Value = serde_json::from_str(text).unwrap();
+            assert_eq!(flagged["subsystems"]["physics"], Value::Bool(true));
+            flagged["subsystems"]["physics"] = Value::Bool(false);
+            let unflagged: Value =
+                serde_json::from_slice(&plain.files["program.manifest.json"]).unwrap();
+            assert_eq!(flagged, unflagged, "{label} {mode:?}");
+            // The build id does not depend on the bundle (nor does the runtime bundle's).
+            assert_eq!(with.build_id, plain.build_id, "{label} {mode:?}");
+        }
+    }
+}
+
+#[test]
+fn the_physics_bundle_is_written_verbatim_under_the_hash_of_its_bytes() {
+    let root = codegen_dir().join("scene_a_target_camera_box");
+    let memory = project_fs(&root, None);
+    let bytes: &[u8] = b"export default async () => ({ name: 'real' });\n";
+    let mut options = physics(BuildMode::Release);
+    options.physics_bundle = Some(Arc::from(bytes));
+    let result = build(&ProjectRoot::at_base(), &memory, &options);
+    assert!(!result.has_errors());
+    let name = format!("physics/{}.js", h16(bytes));
+    assert_eq!(result.files[&name], bytes);
+    assert_eq!(name.len(), "physics/".len() + 16 + ".js".len());
+    assert_eq!(
+        result.files.keys().filter(|p| is_physics_file(p)).count(),
+        1
+    );
+    // The stub's name is not there.
+    assert!(
+        !result
+            .files
+            .contains_key(&format!("physics/{}.js", h16(STUB_PHYSICS_BUNDLE)))
+    );
+}
+
+#[test]
+fn a_physics_build_is_reproducible() {
+    let root = codegen_dir().join("scene_a_target_camera_box");
+    let first = build(
+        &ProjectRoot::at_base(),
+        &project_fs(&root, None),
+        &physics(BuildMode::Release),
+    );
+    let second = build(
+        &ProjectRoot::at_base(),
+        &project_fs(&root, Some(7)),
+        &physics(BuildMode::Release),
+    );
+    assert_eq!(first.files, second.files);
+}
+
+#[test]
+fn a_program_that_uses_physics_cannot_be_built_without_the_physics_bundle() {
+    let root = codegen_dir().join("scene_a_target_camera_box");
+    let memory = project_fs(&root, None);
+    let mut options = physics(BuildMode::Release);
+    options.physics_bundle = None;
+    let result = build(&ProjectRoot::at_base(), &memory, &options);
+    assert_eq!(codes(&result), ["E9030"]);
+    assert!(result.files.is_empty() && result.build_id.is_none());
+    assert_eq!(
+        result.report.diagnostics[0].message,
+        "Cannot build: the physics bundle is not available to the compiler, but the program uses physics."
+    );
+    // The same options build a program that does not use physics.
+    options.force_physics_subsystem = false;
+    let result = build(&ProjectRoot::at_base(), &memory, &options);
+    assert!(codes(&result).is_empty());
+    assert!(result.files.keys().all(|path| !is_physics_file(path)));
 }
 
 #[test]

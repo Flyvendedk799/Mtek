@@ -341,6 +341,13 @@ pub fn compile_and_write(
         runtime_declarations: context
             .runtime
             .map(|runtime| Arc::from(runtime.declarations)),
+        // Written only for programs that use physics (decision 0063); the flag that forces the
+        // subsystem is a test option of the library and has no command-line spelling.
+        physics_bundle: context
+            .runtime
+            .and_then(|runtime| runtime.physics_bundle)
+            .map(Arc::from),
+        force_physics_subsystem: false,
     };
     let result = build(&ProjectRoot::at_base(), project.fs, &options);
     let place = match (out, &result.out_dir) {

@@ -11,7 +11,9 @@
 //! ([`CompileOptions::runtime_bundle`], [`CompileOptions::runtime_declarations`]): the CLI
 //! embeds the real ones; compiler tests and codegen goldens pass the fixed stubs
 //! [`STUB_RUNTIME_BUNDLE`] and [`STUB_RUNTIME_DECLARATIONS`], so goldens never change when the
-//! runtime is edited. A build without either fails with `E9030`.
+//! runtime is edited. A build without either fails with `E9030`. The physics bundle
+//! ([`CompileOptions::physics_bundle`], stub [`STUB_PHYSICS_BUNDLE`]) is different: it is only
+//! needed, and only written, for a program that uses physics (decision 0063).
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -28,6 +30,10 @@ pub const STUB_RUNTIME_BUNDLE: &[u8] = b"// mtek test runtime stub\n";
 
 /// The runtime declarations that accompany [`STUB_RUNTIME_BUNDLE`] in compiler tests.
 pub const STUB_RUNTIME_DECLARATIONS: &[u8] = b"// mtek test runtime declarations stub\n";
+
+/// The physics bundle of compiler tests (decision 0063): present in the options of
+/// [`CompileOptions::with_stub_runtime`], written only for programs that use physics.
+pub const STUB_PHYSICS_BUNDLE: &[u8] = b"// mtek test physics stub\n";
 
 /// The target profile (`spec/runtime-abi.md` section 5): v0.1 has exactly one.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -85,10 +91,20 @@ pub struct CompileOptions {
     pub dev_runtime_bundle: Option<Arc<[u8]>>,
     /// `runtime.d.ts`, written next to `app.d.ts`.
     pub runtime_declarations: Option<Arc<[u8]>>,
+    /// The physics bundle (`packages/physics-rapier/dist/physics.js`, decision 0063), written as
+    /// `physics/<h16>.js` only when the program uses physics (the manifest's `subsystems.physics`);
+    /// ignored otherwise. A program that uses physics needs it: without it the build fails with
+    /// `E9030`.
+    pub physics_bundle: Option<Arc<[u8]>>,
+    /// Treat the program as using physics although no source construct says so. Until the physics
+    /// schemas reach the checker (M5-03: `subsystems.physics` is true when any body exists), this is
+    /// the only way to produce a physics build; it exists for the packaging tests (decision 0063)
+    /// and has no command-line spelling. It never turns physics off.
+    pub force_physics_subsystem: bool,
 }
 
 impl CompileOptions {
-    /// Options for `mode` with the test stubs as runtime bundle and declarations.
+    /// Options for `mode` with the test stubs as runtime bundle, declarations and physics bundle.
     #[must_use]
     pub fn with_stub_runtime(mode: BuildMode) -> Self {
         Self {
@@ -97,6 +113,8 @@ impl CompileOptions {
             runtime_bundle: Some(Arc::from(STUB_RUNTIME_BUNDLE)),
             dev_runtime_bundle: None,
             runtime_declarations: Some(Arc::from(STUB_RUNTIME_DECLARATIONS)),
+            physics_bundle: Some(Arc::from(STUB_PHYSICS_BUNDLE)),
+            force_physics_subsystem: false,
         }
     }
 }
@@ -188,6 +206,8 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
                     mode: options.mode,
                     runtime_bundle: bundle,
                     runtime_declarations: declarations,
+                    physics_bundle: options.physics_bundle.as_deref(),
+                    force_physics_subsystem: options.force_physics_subsystem,
                     assets: &front.assets,
                 };
                 match package(project, &program, &input) {
