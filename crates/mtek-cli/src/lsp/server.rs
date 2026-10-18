@@ -203,6 +203,10 @@ pub struct Server {
     out: Vec<Outbound>,
     next_request_id: i32,
     exit: Option<u8>,
+    /// Run at the start of every request and every publication: tests make it panic to show that
+    /// a defect in a handler loses nothing.
+    #[cfg(test)]
+    pub(super) fault: Option<fn()>,
 }
 
 impl Server {
@@ -219,6 +223,8 @@ impl Server {
             out: Vec::new(),
             next_request_id: 1,
             exit: None,
+            #[cfg(test)]
+            fault: None,
         }
     }
 
@@ -307,6 +313,10 @@ impl Server {
     }
 
     fn request(&mut self, method: &str, params: Value) -> Answer {
+        #[cfg(test)]
+        if let Some(fault) = self.fault {
+            fault();
+        }
         match method {
             "initialize" => self.initialize(params),
             "shutdown" => {
@@ -1017,6 +1027,10 @@ impl Server {
     }
 
     fn publish_project(&mut self, dir: &Path) {
+        #[cfg(test)]
+        if let Some(fault) = self.fault {
+            fault();
+        }
         let Some(snapshot) = self.snapshot(dir, true) else {
             return;
         };

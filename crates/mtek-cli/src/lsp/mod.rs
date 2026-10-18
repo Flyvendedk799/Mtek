@@ -34,6 +34,8 @@ mod completion_tests;
 #[cfg(test)]
 mod feature_tests;
 #[cfg(test)]
+mod server_tests;
+#[cfg(test)]
 mod testkit;
 
 use std::io::{BufRead, Write};
