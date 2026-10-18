@@ -169,6 +169,7 @@ describe("mountMtek option validation", () => {
       [{ test: { renderTarget: { width: 8, height: 1.5 } } }, /renderTarget\.height/],
       [{ test: { textures: { "texture.white": { width: 2, height: 2, data: new Uint8Array(4) } } } }, /width x height x 4 = 16 bytes/],
       [{ test: { textures: { "texture.pink": { width: 1, height: 1, data: new Uint8Array(4) } } as never } }, /'texture\.pink' is not a built-in texture/],
+      [{ test: { onAssetState: "log" as never } }, /onAssetState must be a function/],
     ];
     for (const [options, pattern] of bad) {
       await expect(mountOn(host, options)).rejects.toThrow(pattern);

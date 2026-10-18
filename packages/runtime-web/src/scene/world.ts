@@ -399,7 +399,13 @@ export class World {
     for (const entity of this.structure.entities) {
       const record = this.entities[entity.index];
       if (entity.instance === null || record?.mat == null) continue;
-      for (const param of entity.instance.material.params) sink.writeParam(entity.instance.index, param.name, record.mat.p[param.name]);
+      const { params, resources } = entity.instance.material;
+      for (const param of params) {
+        // A texture or sampler is a binding of the group, not a field of the block (decision 0054): the rebuilt
+        // material store binds it again from the manifest.
+        if (resources.some((resource) => resource.name === param.name)) continue;
+        sink.writeParam(entity.instance.index, param.name, record.mat.p[param.name]);
+      }
     }
     this.worldChanged.fill(1);
   }

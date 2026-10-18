@@ -252,3 +252,28 @@ describe("worldBoundingSphere: radius times the largest world scale", () => {
     expect(out.radius).toBe(2);
   });
 });
+
+describe("worldBoundingSphere: an asset mesh's sphere is not centred at its origin (decision 0060)", () => {
+  // Hand-derived: local centre (1, 0, 0), scale 2, a quarter turn about +Y (x maps to -z), translation (10, 0, 0).
+  //   scale: (2, 0, 0); rotate: (0, 0, -2); translate: (10, 0, -2). Radius 1.5 * 2 = 3.
+  it("applies the whole world matrix to the local centre", () => {
+    const quarterTurn = { x: 0, y: Math.SQRT1_2, z: 0, w: Math.SQRT1_2 };
+    const world = fromRotationTranslationScale(quarterTurn, { x: 10, y: 0, z: 0 }, { x: 2, y: 2, z: 2 });
+    const sphere = worldBoundingSphere(world, 1.5, undefined, [1, 0, 0]);
+    expect(sphere.x).toBeCloseTo(10, 6);
+    expect(sphere.y).toBeCloseTo(0, 6);
+    expect(sphere.z).toBeCloseTo(-2, 6);
+    expect(sphere.radius).toBeCloseTo(3, 6);
+  });
+
+  // Non-uniform scale (2, 3, 4), translation (1, 1, 1), centre (1, 1, 1): (2, 3, 4) + (1, 1, 1) = (3, 4, 5); radius uses the largest scale 4.
+  it("scales the centre per axis and the radius by the largest axis", () => {
+    const world = fromRotationTranslationScale({ x: 0, y: 0, z: 0, w: 1 }, { x: 1, y: 1, z: 1 }, { x: 2, y: 3, z: 4 });
+    expect(worldBoundingSphere(world, 0.5, undefined, [1, 1, 1])).toEqual({ x: 3, y: 4, z: 5, radius: 2 });
+  });
+
+  it("an origin centre is the translation, as for the primitive shapes", () => {
+    const world = translation({ x: 1, y: 2, z: 3 });
+    expect(worldBoundingSphere(world, 1, undefined, [0, 0, 0])).toEqual(worldBoundingSphere(world, 1));
+  });
+});

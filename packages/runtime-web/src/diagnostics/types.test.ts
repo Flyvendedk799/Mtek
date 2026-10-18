@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import specText from "../../../../spec/diagnostics.md?raw";
 import {
   MtekMountError,
+  RUNTIME_ASSET_DIAGNOSTICS,
   RUNTIME_DIAGNOSTIC_CATALOGUE,
   makeRuntimeDiagnostic,
   mountErrorKindForCode,
@@ -71,6 +72,20 @@ describe("runtime diagnostic catalogue", () => {
     // No anchor in section 5.8 that is not a runtime code's row anchor.
     const sectionIds = [...runtimeSection().matchAll(/<a id="([^"]*)"><\/a>/g)].map((m) => m[1]);
     expect(sectionIds).toEqual(rows.map((row) => row.anchor));
+  });
+});
+
+describe("the asset codes of the runtime (spec/diagnostics.md section 5.7)", () => {
+  it("have the titles and anchors of the table, and map to the asset-failed mount error", () => {
+    for (const [code, title] of Object.entries(RUNTIME_ASSET_DIAGNOSTICS)) {
+      const row = new RegExp(`^\\| <a id="mtek-${code.toLowerCase()}"></a>${code} \\| ([^|]+?) \\|`, "m").exec(specText);
+      expect(row?.[1], code).toBe(title);
+      const d = makeRuntimeDiagnostic(code as keyof typeof RUNTIME_ASSET_DIAGNOSTICS, { message: "m", phase: "runtime:mount" });
+      expect(d.docs).toBe(`spec/diagnostics.md#mtek-${code.toLowerCase()}`);
+      expect(d.code).toBe(`MTEK-${code}`);
+      expect(d.severity).toBe("error");
+      expect(mountErrorKindForCode(code)).toBe("asset-failed");
+    }
   });
 });
 

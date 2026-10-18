@@ -152,11 +152,75 @@ describe("resolveStructure", () => {
     ).toContain("MTEK-E8006 field: layouts");
   });
 
-  it("reports what this runtime build cannot render as E8003", () => {
-    const assetMesh = manifestWith((json) => {
-      json["meshes"] = [{ id: "mesh:0", kind: "asset", asset: "assets/0000000000000000.bin", primitive: 0 }];
+});
+
+describe("resolveStructure: asset meshes", () => {
+  const BIN = "assets/0000000000000001.bin";
+  /** One primitive: 3 vertices with position (bytes 0 to 36) and uv (36 to 60), 3 `uint16` indices (60 to 66); a 68-byte file. */
+  const PRIMITIVE = {
+    source: { file: "models/tri.glb", mesh: "Tri", primitive: 0 },
+    vertexCount: 3,
+    indexCount: 3,
+    indexFormat: "uint16",
+    attributes: ["position", "uv"],
+    offsets: { position: 0, uv: 36, indices: 60 },
+    boundingSphere: { center: [1, 1, 0], radius: 1.5 },
+  };
+
+  /** The minimal manifest with its box replaced by the asset mesh above. */
+  function withAssetMesh(edit: (json: Json, scene: Json & { entities: Json[] }) => void = () => undefined): MtekManifest {
+    return manifestWith((json, scene) => {
+      json["assets"] = [{ url: BIN, sha256: "0".repeat(64), bytes: 68, kind: "mesh-data", primitives: [structuredClone(PRIMITIVE)], preprocessing: [], span: 3 }];
+      json["meshes"] = [{ id: "mesh:0", kind: "asset", asset: BIN, primitive: 0 }];
+      edit(json, scene);
     });
-    expect(problems(assetMesh)).toEqual(["MTEK-E8003 field: meshes[0]"]);
+  }
+
+  it("resolves an asset mesh with its layout", () => {
+    const result = resolveStructure(withAssetMesh());
+    if (!result.ok) throw new Error(JSON.stringify(result.diagnostics));
+    expect(result.structure.entities[0]?.mesh?.descriptor).toEqual({ kind: "asset", asset: BIN, primitive: 0, layout: PRIMITIVE });
+  });
+
+  it("reports an asset mesh that does not match the assets table as E8006", () => {
+    expect(problems(withAssetMesh((json) => (json["assets"] = [])))).toEqual(["MTEK-E8006 field: meshes[0].asset"]);
+    expect(problems(withAssetMesh((json) => ((json["meshes"] as Json[])[0] ??= {})["primitive"] = 1))).toEqual(["MTEK-E8006 field: meshes[0].primitive"]);
+    // The id names an image, not mesh data.
+    expect(
+      problems(
+        withAssetMesh((json) => {
+          json["assets"] = [{ url: BIN, sha256: "0".repeat(64), bytes: 68, kind: "image", colorSpace: "srgb", preprocessing: [], span: 3 }];
+        }),
+      ),
+    ).toEqual(["MTEK-E8006 field: meshes[0].asset"]);
+  });
+
+  it("reports primitive regions that do not fit the file as E8006, naming the region", () => {
+    const shortFile = withAssetMesh((json) => (((json["assets"] as Json[])[0] ?? {})["bytes"] = 64));
+    const result = resolveStructure(shortFile);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.diagnostics[0]?.message).toContain("the index data (bytes 60 to 66) lies outside the 64-byte file");
+    const misaligned = withAssetMesh((json) => (((((json["assets"] as Json[])[0] ?? {})["primitives"] as Json[])[0] ?? {})["offsets"] = { position: 0, uv: 38, indices: 60 }));
+    const bad = resolveStructure(misaligned);
+    if (!bad.ok) expect(bad.diagnostics[0]?.message).toContain("the uv data starts at byte 38, which is not a multiple of 4");
+    else throw new Error("expected a failure");
+  });
+
+  it("reports an asset mesh that lacks an attribute its material reads as E8006", () => {
+    const missing = withAssetMesh((json) => {
+      ((json["shaders"] as Json[])[0] ?? {})["vertexAttributes"] = ["position", "normal"];
+    });
+    const result = resolveStructure(missing);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.diagnostics.map((d) => `${d.code} ${d.notes[0] ?? ""}`)).toEqual(["MTEK-E8006 field: scene.entities[0]"]);
+      expect(result.diagnostics[0]?.message).toContain("reads 'normal'");
+    }
+    // A primitive shape has every attribute, whatever the material reads.
+    const box = manifestWith((json) => {
+      ((json["shaders"] as Json[])[0] ?? {})["vertexAttributes"] = ["position", "normal", "uv"];
+    });
+    expect(resolveStructure(box).ok).toBe(true);
   });
 });
 
@@ -202,11 +266,36 @@ describe("resolveStructure: textures and samplers", () => {
     ]);
   });
 
-  it("reports a texture from an asset as E8003 until assets are loaded", () => {
-    const asset = textured((_, instance) => {
-      (instance["params"] as Json[])[0] = { name: "map", class: "resource", value: { kind: "asset", asset: "assets/0123456789abcdef.png" } };
+  const IMAGE = { url: "assets/0123456789abcdef.png", sha256: "1".repeat(64), bytes: 76, kind: "image", colorSpace: "linear", preprocessing: [], span: 3 };
+  function fromAsset(assets: Json[]): MtekManifest {
+    return manifestWith((json, scene) => {
+      const material = (json["materials"] as Json[])[0] ?? {};
+      const instance = scene.materialInstances[0] ?? {};
+      material["resources"] = [
+        { name: "map", kind: "texture", binding: 1 },
+        { name: "filter", kind: "sampler", binding: 2 },
+      ];
+      (material["params"] as Json[]).push({ name: "map", type: "texture", span: 3 }, { name: "filter", type: "sampler", span: 3 });
+      (instance["params"] as Json[]).push(
+        { name: "map", class: "resource", value: { kind: "asset", asset: IMAGE.url } },
+        { name: "filter", class: "resource", value: { kind: "builtin", name: "sampler.nearest_clamp" } },
+      );
+      json["assets"] = assets;
     });
-    expect(problems(asset)).toEqual(["MTEK-E8003 field: scene.materialInstances[0].params"]);
+  }
+
+  it("resolves a texture from an image file with its colour space", () => {
+    const result = resolveStructure(fromAsset([IMAGE]));
+    if (!result.ok) throw new Error(JSON.stringify(result.diagnostics));
+    const [map, filter] = result.structure.instances[0]?.resources ?? [];
+    expect(map).toEqual({ name: "map", kind: "texture", binding: 1, value: IMAGE.url, asset: IMAGE });
+    expect(filter).toEqual({ name: "filter", kind: "sampler", binding: 2, value: "sampler.nearest_clamp" });
+  });
+
+  it("reports a texture that names no image file as E8006", () => {
+    expect(problems(fromAsset([]))).toEqual(["MTEK-E8006 field: scene.materialInstances[0].params"]);
+    const meshData = { url: IMAGE.url, sha256: IMAGE.sha256, bytes: 8, kind: "mesh-data", primitives: [], preprocessing: [], span: 3 };
+    expect(problems(fromAsset([meshData]))).toEqual(["MTEK-E8006 field: scene.materialInstances[0].params"]);
   });
 });
 
