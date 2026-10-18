@@ -68,3 +68,54 @@ export const SHOWROOM: SceneSpec = {
     "entity Climber: Riser { base: vec3(0.0, 0.5, -3.0); }",
   ],
 };
+
+// ---- the spawn_ring fixture (M5-02, decision 0064) ----
+//
+// Orthographic camera at (0, 0, 10) looking at the origin, view height 10, on a 320 x 160 target: 16 pixels per unit,
+// the world origin at pixel (160, 80), y up. A `Block` with `column` c sits at x = 2 * c - 7 (a unit box facing the
+// camera covers 16 x 16 pixels around ((x + 10) * 16, 80)); press n of Space spawns the block of column n % 8 with the
+// colour PALETTE[n % 3] (the `if presses % 3` chain of the program), after destroying the block of the same column.
+
+export const RING_TARGET = { width: 320, height: 160 } as const;
+export const RING_SIZE = 8;
+export const RING_CLEAR = "#202830";
+/** The colours the program gives press n: `#ff4040`, then `#40d060` when n % 3 == 1, `#4080ff` when n % 3 == 2. */
+export const PALETTE = ["#ff4040", "#40d060", "#4080ff"] as const;
+/** The named `Marker` at (-9, 4): pixel (16, 16). */
+export const RING_MARKER = { x: 16, y: 16 } as const;
+
+/** The pixel at the centre of the block of `column`. */
+export function blockCentre(column: number): { x: number; y: number } {
+  return { x: (2 * column - 7 + 10) * 16, y: 80 };
+}
+
+/** The index into PALETTE of press `n`. */
+export function blockColourIndex(n: number): number {
+  return n % 3;
+}
+
+/** The last press `n` (`since <= n < presses`) that went into `column` (`n % 8 == column`), or `undefined`. */
+export function ringColumn(presses: number, column: number, since = 0): number | undefined {
+  for (let n = presses - 1; n >= since; n -= 1) {
+    if (n % RING_SIZE === column) return n;
+  }
+  return undefined;
+}
+
+/** Everything the program states that the transcription above relies on; each must occur in the fixture source. */
+export const RING_SOURCE_LITERALS: readonly string[] = [
+  "clear_color: #202830;",
+  "position: vec3(f32(column) * 2.0 - 7.0, 0.0, 0.0);",
+  "mesh: Box { size: vec3(1.0, 1.0, 1.0); };",
+  "position: vec3(0.0, 0.0, 10.0);",
+  "target: vec3(0.0, 0.0, 0.0);",
+  "projection: Orthographic { height: 10.0; near: 0.1; far: 100.0; };",
+  "position: vec3(-9.0, 4.0, 0.0);",
+  "material: Unlit { color: #ffffff; };",
+  "let slot = presses % 8;",
+  "var tint: color = #ff4040;",
+  "if presses % 3 == 1 {",
+  "tint = #40d060;",
+  "tint = #4080ff;",
+  "ring[slot] = spawn(Block { column: slot; tint: tint; });",
+];

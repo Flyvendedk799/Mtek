@@ -1140,7 +1140,7 @@
       "constEligible": false,
       "handlersOnly": false,
       "cpuSemantics": "",
-      "since": "M5",
+      "since": "M1",
       "doc": "Whether the entity reference points at a live entity."
     },
     {
@@ -1249,7 +1249,7 @@
       "constEligible": false,
       "handlersOnly": true,
       "cpuSemantics": "",
-      "since": "M5",
+      "since": "M1",
       "doc": "Queues removal of a spawned entity; it counts as dead from the moment of the call."
     },
     {
@@ -1576,7 +1576,7 @@
       "constEligible": false,
       "handlersOnly": true,
       "cpuSemantics": "",
-      "since": "M5",
+      "since": "M1",
       "doc": "Queues creation of a prefab instance as a root entity; the reference is valid immediately and `alive` turns true after the next lifecycle flush."
     },
     {

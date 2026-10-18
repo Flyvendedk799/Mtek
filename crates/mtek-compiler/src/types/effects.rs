@@ -14,7 +14,8 @@
 //!   CPU-only operation as related spans;
 //! * `W4003` for a `cpu fn` that needs no CPU effect;
 //! * `E5080` for a call of a handler-only built-in function (`spawn`,
-//!   `destroy`) in any function;
+//!   `destroy`) in any function and in an initialiser of state or of a field
+//!   (decision 0064);
 //! * for the bodies reachable from the GPU roots through `fn`s: `E4010` for a
 //!   range loop without constant bounds, `E4011` for a declaration of a
 //!   CPU-only type, `E4012` for a call of a CPU-only built-in function (in
@@ -119,6 +120,9 @@ pub struct RootBody {
     /// The span diagnostics point at for it (the stage's name).
     pub span: Span,
     pub facts: BodyFacts,
+    /// An initialiser (of a `state`, or of a field of a prefab): it runs when its owner is
+    /// created, so the handler-only built-ins `spawn` and `destroy` are `E5080` in it (decision 0064).
+    pub initialiser: bool,
 }
 
 /// Where the domains start.
@@ -162,6 +166,8 @@ struct Node<'a> {
     /// The function's name or the root's span.
     span: Span,
     facts: &'a BodyFacts,
+    /// A root body that is an initialiser ([`RootBody::initialiser`]).
+    initialiser: bool,
     /// For each call of `facts.calls`, the function node it calls (if it
     /// calls a user function the program has).
     targets: Vec<Option<usize>>,
@@ -284,6 +290,7 @@ impl<'a> Graph<'a> {
                     name: info.name.clone(),
                     span: info.name_span,
                     facts: &info.facts,
+                    initialiser: false,
                     targets: Vec::new(),
                 });
             }
@@ -301,6 +308,7 @@ impl<'a> Graph<'a> {
                 name: root.label.clone(),
                 span: root.span,
                 facts: &root.facts,
+                initialiser: root.initialiser,
                 targets: Vec::new(),
             });
         }
@@ -591,7 +599,7 @@ impl<'a> Graph<'a> {
                         ..
                     } => {
                         needs_cpu = true;
-                        if is_function {
+                        if is_function || node.initialiser {
                             pending.push((
                                 fact.span,
                                 Code::E5080,

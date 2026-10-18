@@ -1,0 +1,16 @@
+// A prefab literal is not a value: it is the argument of `spawn` and nothing else. (Static
+// instances are declarations, `entity Name: Prefab { .. }`.)
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box {};
+    material: Unlit { color: tint };
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        let crate = Crate { origin: vec3(0.0, 1.0, 0.0); };
+    }
+}

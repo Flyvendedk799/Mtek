@@ -1,0 +1,13 @@
+// `spawn` is a lifecycle operation of handlers and lifecycle functions, not of initialisers.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box {};
+    material: Unlit { color: tint };
+}
+
+scene Demo {
+    camera Main {}
+    state first: entity_ref = spawn(Crate {});
+}

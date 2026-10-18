@@ -877,6 +877,15 @@ impl FnLowering<'_, '_> {
                             name: self.lowering.text_name(expr),
                         })
                     }
+                    // A named entity used as a value is an `entity_ref` to it (decision 0064).
+                    Some(Res::Def(def))
+                        if self.lowering.resolution.def(def).map(|d| d.kind)
+                            == Some(DefKind::Entity) =>
+                    {
+                        make(ExprKind::EntityRef {
+                            entity: self.entity_index(def)?,
+                        })
+                    }
                     _ => make(ExprKind::Local {
                         local: self.local_of(expr)?,
                         name: self.lowering.text_name(expr),
@@ -1057,6 +1066,39 @@ impl FnLowering<'_, '_> {
                             params: out,
                         })
                     }
+                    Ty::PrefabDescriptor => {
+                        let literal = types
+                            .prefab_literal(expr.id)
+                            .ok_or_else(|| self.defect("a prefab literal that was not checked"))?;
+                        let path = self
+                            .lowering
+                            .file_paths
+                            .get(&literal.key.file)
+                            .ok_or_else(|| self.defect("a prefab of a module without a path"))?;
+                        let mut out = Vec::with_capacity(literal.params.len());
+                        for param in &literal.params {
+                            let value = match written.iter().find(|(n, _)| *n == param.name) {
+                                Some((_, value)) => self.expr(value)?,
+                                None => Expr {
+                                    kind: ExprKind::Const {
+                                        value: param.default.as_ref().map(Value::from).ok_or_else(
+                                            || self.defect("a prefab literal without a param"),
+                                        )?,
+                                    },
+                                    ty: self.display(param.ty),
+                                    span: expr.span,
+                                },
+                            };
+                            out.push(NamedExpr {
+                                name: param.name.clone(),
+                                value,
+                            });
+                        }
+                        make(ExprKind::PrefabLiteral {
+                            prefab: Symbol::item(path, &literal.name),
+                            params: out,
+                        })
+                    }
                     _ => {
                         return Err(self.defect(&format!(
                             "a descriptor literal '{}' of a type this build does not lower",
@@ -1070,7 +1112,14 @@ impl FnLowering<'_, '_> {
             | AstExpr::Str { .. }
             | AstExpr::Color { .. }
             | AstExpr::Bool(_) => return Err(self.defect("a literal that was not folded")),
-            AstExpr::SelfValue | AstExpr::Error => {
+            // `self` is an `entity_ref` to the entity whose body this is (decision 0064).
+            AstExpr::SelfValue => match self.lowering.resolution.res(expr.id) {
+                Some(Res::Def(def)) => make(ExprKind::EntityRef {
+                    entity: self.entity_index(def)?,
+                }),
+                _ => return Err(self.defect("a `self` outside an entity")),
+            },
+            AstExpr::Error => {
                 return Err(self.defect("an expression this build does not lower"));
             }
         })

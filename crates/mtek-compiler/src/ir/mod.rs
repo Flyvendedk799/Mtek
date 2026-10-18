@@ -28,6 +28,8 @@ mod model;
 mod prefab_tests;
 mod render;
 #[cfg(test)]
+mod spawn_tests;
+#[cfg(test)]
 mod tests;
 
 pub use model::{

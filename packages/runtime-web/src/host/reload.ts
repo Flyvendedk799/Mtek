@@ -2,7 +2,7 @@
  * Candidate-based hot reload helpers (`spec/runtime-abi.md` section 11): structural comparison,
  * state migration by identity, and the W8070 restart diagnostic.
  */
-import type { MtekBody, MtekEntity, MtekManifest, MtekScene, MtekStateEntry } from "../abi/manifest-types.js";
+import type { MtekBody, MtekEntity, MtekManifest, MtekPrefab, MtekScene, MtekStateEntry } from "../abi/manifest-types.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import { resolveSpan, spanOfSymbol } from "./failures.js";
 import type { EntityRecord, World } from "../scene/world.js";
@@ -26,15 +26,24 @@ function parentSymbol(entities: readonly MtekEntity[], parent: number | null): s
   return entities[parent]?.symbol ?? `index:${String(parent)}`;
 }
 
+/** `name: type` of each param of a spawned prefab, in order: what spawned entities were made from (decision 0064). */
+function paramSignature(prefab: MtekPrefab): string {
+  return prefab.params.map((param) => `${param.name}: ${param.type}`).join(", ");
+}
+
 /**
  * Detects hierarchy, body and prefab-set changes that cannot be migrated
- * (`spec/runtime-abi.md` section 11.3). Returns the first forcing declaration.
+ * (`spec/runtime-abi.md` section 11.3). Returns the first forcing declaration. A prefab that the program spawns
+ * and whose params changed also forces a restart: the params the live instances were spawned with no longer fit
+ * its `init` (decision 0064).
  */
 export function findStructuralChange(
   previous: MtekScene,
   next: MtekScene,
   previousPrefabs: ReadonlySet<string>,
   nextPrefabs: ReadonlySet<string>,
+  previousSpawned: readonly MtekPrefab[] = [],
+  nextSpawned: readonly MtekPrefab[] = [],
 ): StructuralChange | undefined {
   for (const name of nextPrefabs) {
     if (!previousPrefabs.has(name)) {
@@ -44,6 +53,14 @@ export function findStructuralChange(
   for (const name of previousPrefabs) {
     if (!nextPrefabs.has(name)) {
       return { symbol: name, reason: `prefab '${name}' was removed` };
+    }
+  }
+
+  const previousSpawnedBySymbol = new Map(previousSpawned.map((prefab) => [prefab.symbol, prefab]));
+  for (const prefab of nextSpawned) {
+    const before = previousSpawnedBySymbol.get(prefab.symbol);
+    if (before !== undefined && paramSignature(before) !== paramSignature(prefab)) {
+      return { symbol: prefab.symbol, reason: `the params of prefab '${prefab.name}' changed (${paramSignature(before)} became ${paramSignature(prefab)})` };
     }
   }
 
@@ -118,6 +135,39 @@ function stateBySymbol(entries: readonly MtekStateEntry[], values: Record<string
 }
 
 /**
+ * Carries what the program kept in one entity from `before` onto `after`: transform, visibility, the state whose
+ * identity (symbol) and type are unchanged, and the imperative material params, which are written through the
+ * context so the parameter store sees them (a param that `init` supplied stays as the new `init` left it, so a
+ * changed default is applied).
+ */
+function carryEntity(
+  before: EntityRecord,
+  beforeState: ReadonlyMap<string, string>,
+  after: EntityRecord,
+  afterState: readonly MtekStateEntry[],
+  imperative: readonly string[],
+  setParam: (entity: object, name: string, value: unknown) => void,
+): void {
+  after.position = copyValue(before.position) as EntityRecord["position"];
+  after.rotation = copyValue(before.rotation) as EntityRecord["rotation"];
+  after.scale = copyValue(before.scale) as EntityRecord["scale"];
+  after.visible = before.visible;
+
+  for (const entry of afterState) {
+    if (beforeState.get(entry.symbol) === entry.type && Object.hasOwn(before.state, entry.name)) {
+      after.state[entry.name] = copyValue(before.state[entry.name]);
+    }
+  }
+
+  if (after.mat !== null && before.mat !== null) {
+    for (const name of imperative) {
+      if (!Object.hasOwn(before.mat.p, name)) continue;
+      setParam(after, name, copyValue(before.mat.p[name]));
+    }
+  }
+}
+
+/**
  * Carries compatible state from `previous` onto `next` by identity
  * (`path::Qualified.Name` with identical types). Material `initial` params stay as the new
  * `init` left them (so a changed literal default is applied); imperative mirrors are migrated.
@@ -140,37 +190,34 @@ export function migrateWorld(previous: World, previousManifest: MtekManifest, ne
     previousManifest.scene.entities.map((entity) => [entity.symbol, stateTypeMap(entity.state)]),
   );
 
+  const setParam = (next.ctx as { setParam: (entity: object, name: string, value: unknown) => void }).setParam;
   nextManifest.scene.entities.forEach((entity, index) => {
     const nextRecord = next.entities[index];
     const before = previousEntities.get(entity.symbol);
     if (nextRecord === undefined || before === undefined) return;
+    const nextInstance = nextManifest.scene.materialInstances[entity.material?.instance ?? -1];
+    carryEntity(
+      before,
+      previousEntityStateTypes.get(entity.symbol) ?? new Map(),
+      nextRecord,
+      entity.state,
+      (nextInstance?.params ?? []).filter((param) => param.class === "imperative").map((param) => param.name),
+      setParam,
+    );
+  });
 
-    nextRecord.position = copyValue(before.position) as EntityRecord["position"];
-    nextRecord.rotation = copyValue(before.rotation) as EntityRecord["rotation"];
-    nextRecord.scale = copyValue(before.scale) as EntityRecord["scale"];
-    nextRecord.visible = before.visible;
-
-    const beforeTypes = previousEntityStateTypes.get(entity.symbol);
-    for (const entry of entity.state) {
-      const beforeType = beforeTypes?.get(entry.symbol);
-      if (beforeType === entry.type && Object.hasOwn(before.state, entry.name)) {
-        nextRecord.state[entry.name] = copyValue(before.state[entry.name]);
-      }
-    }
-
-    // Imperative material params: migrate by name when both sides have a material mirror.
-    // Initial params keep the values `init` wrote on the candidate (changed defaults apply).
-    if (nextRecord.mat !== null && before.mat !== null) {
-      const nextInstance = nextManifest.scene.materialInstances[entity.material?.instance ?? -1];
-      const setParam = (next.ctx as { setParam: (entity: object, name: string, value: unknown) => void }).setParam;
-      if (nextInstance !== undefined) {
-        for (const param of nextInstance.params) {
-          if (param.class !== "imperative") continue;
-          if (!Object.hasOwn(before.mat.p, param.name)) continue;
-          setParam(nextRecord, param.name, copyValue(before.mat.p[param.name]));
-        }
-      }
-    }
+  // The spawned entities that exist (decision 0064): created again under the same slot and generation by the
+  // new program's `init`, with the params they were spawned with; what the program kept moves over like a
+  // named entity's. References held in state stay valid for them and dead for everything else.
+  next.dynamic.restoreFrom(previous.dynamic, (before, after) => {
+    carryEntity(
+      before.record,
+      new Map(before.prefab.resolved.state.map((entry) => [entry.symbol, entry.type])),
+      after.record,
+      after.prefab.resolved.state,
+      (after.prefab.resolved.material?.params ?? []).filter((param) => param.class === "imperative").map((param) => param.name),
+      setParam,
+    );
   });
 
   // Camera: preserve when the active camera symbol and projection kind match.

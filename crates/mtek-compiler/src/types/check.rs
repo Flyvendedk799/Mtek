@@ -44,15 +44,15 @@ use super::{FnSig, MaterialInfo, Typeck};
 /// The largest length of `array<T, N>` (`spec/language.md` 5.1).
 pub(super) const MAX_ARRAY_LENGTH: u32 = 65_536;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
-use crate::resolve::gate::{gate_message, gate_note, is_implemented};
+use crate::resolve::gate::is_implemented;
 use crate::resolve::{
     Construct, DefId, DefKind, PreludeItem, Res, Resolution, binary_construct,
     construct_implemented, unary_construct,
 };
 use crate::source::Span;
 use crate::stdlib::{
-    ArgType, Domain, IntrinsicDef, Milestone, NamespaceMember, Registry, SchemaCategory, SigType,
-    TypeKind, registry,
+    ArgType, Domain, IntrinsicDef, NamespaceMember, Registry, SchemaCategory, SigType, TypeKind,
+    registry,
 };
 use crate::syntax::ast::{
     ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr,
@@ -265,6 +265,11 @@ pub(super) struct Checker<'a> {
     /// What the scene checks know of the prefab behind each static instance, by the instance's
     /// declaration.
     pub(super) instances: BTreeMap<DefId, super::prefab::InstanceFacts>,
+    /// The params of every prefab the module declares, by its declaration: checked before any
+    /// prefab body, so that a `spawn` finds its prefab wherever it is declared (decision 0064).
+    pub(super) prefab_params: BTreeMap<DefId, Vec<super::PrefabParam>>,
+    /// The prefab literal that is the argument of the `spawn` being checked (decision 0064).
+    pub(super) spawn_argument: Option<NodeId>,
 }
 
 impl<'a> Checker<'a> {
@@ -326,6 +331,8 @@ impl<'a> Checker<'a> {
             current_prefab: None,
             dynamic_descriptors: BTreeSet::new(),
             instances: BTreeMap::new(),
+            prefab_params: BTreeMap::new(),
+            spawn_argument: None,
         }
     }
 
@@ -383,6 +390,11 @@ impl<'a> Checker<'a> {
         }
         // Every prefab before any scene, so that an instance finds its prefab wherever it is
         // declared (decision 0062).
+        for item in &module.items {
+            if let ItemKind::Prefab(decl) = &item.kind {
+                self.prefab_signature(decl);
+            }
+        }
         for item in &module.items {
             if let ItemKind::Prefab(decl) = &item.kind {
                 self.prefab(decl);
@@ -968,7 +980,7 @@ impl<'a> Checker<'a> {
             // value it is an `entity_ref`; its fields and state are read as `self.name`.
             ExprKind::SelfValue if construct_implemented(Construct::SelfValue) => {
                 match self.res.res(expr.id) {
-                    Some(Res::Def(_)) => self.entity_ref_value_is_gated(expr.span),
+                    Some(Res::Def(_)) => TyId::ENTITY_REF,
                     _ => TyId::ERROR,
                 }
             }
@@ -1002,32 +1014,6 @@ impl<'a> Checker<'a> {
         }
     }
 
-    /// A named entity or `self` used as an `entity_ref` value (`other == Floor`) needs the
-    /// `entity_ref` expressions of task M5-02; this build reports the gate instead of failing in
-    /// the lowering (decision 0065). The fields and body commands of a named entity do not come
-    /// here.
-    fn entity_ref_value_is_gated(&mut self, span: Span) -> TyId {
-        // Outside a body (a constant, a field value) the name is reported as what it is not, a
-        // constant (`E3090`), as before.
-        if self.body.is_none() {
-            return TyId::ENTITY_REF;
-        }
-        self.report(
-            Diagnostic::new(
-                Code::E9010,
-                gate_message(
-                    "Named entities and `self` as `entity_ref` values (`other == Floor`)",
-                    true,
-                    Milestone::M5,
-                ),
-            )
-            .at(span)
-            .note(gate_note())
-            .help("use the entity's fields and body commands by name (`Floor.position`, `Floor.body.apply_impulse(..)`), which are implemented"),
-        );
-        TyId::ERROR
-    }
-
     fn def_value(&mut self, expr: &Expr, id: DefId) -> TyId {
         let Some(def) = self.res.def(id) else {
             return TyId::ERROR;
@@ -1041,7 +1027,7 @@ impl<'a> Checker<'a> {
             // A named entity converts to `entity_ref` where one is expected
             // (`spec/scenes.md` 8.3); that is the only meaning of a bare
             // entity name.
-            DefKind::Entity => self.entity_ref_value_is_gated(expr.span),
+            DefKind::Entity => TyId::ENTITY_REF,
             DefKind::SceneObject { kind: Some(_) }
             | DefKind::Scene
             | DefKind::Fn
@@ -1318,7 +1304,7 @@ impl<'a> Checker<'a> {
                         None => TyId::ERROR,
                     },
                     DefKind::Material => self.material_instance(expr, name, id, fields),
-                    DefKind::Prefab => self.prefab_literal(name, fields),
+                    DefKind::Prefab => self.prefab_literal(expr, name, id, fields),
                     DefKind::SceneObject { kind: None } => TyId::ERROR,
                     kind => {
                         let (def_name, noun, span) = (def.name.clone(), kind.noun(), def.span);
@@ -1866,7 +1852,14 @@ impl<'a> Checker<'a> {
                         name: function.name,
                         const_eligible: function.const_eligible,
                     };
-                    return self.function_call(expr, name, function, args, kind, expected);
+                    if name == "spawn" {
+                        self.note_spawn_argument(args);
+                    }
+                    let ty = self.function_call(expr, name, function, args, kind, expected);
+                    if name == "destroy" {
+                        self.check_destroy_target(args);
+                    }
+                    return ty;
                 }
                 Some(Res::Def(id)) if self.names_function(id) => {
                     return self.user_call(expr, id, args);
@@ -2403,6 +2396,9 @@ impl<'a> Checker<'a> {
             }
         }
         let base_ty = self.check(base, None);
+        if base_ty == TyId::ENTITY_REF {
+            return self.entity_ref_field(expr, name);
+        }
         if self.out.interner.struct_def(base_ty).is_some() {
             return self.struct_field(expr, base_ty, name);
         }

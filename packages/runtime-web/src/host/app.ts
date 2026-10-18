@@ -340,6 +340,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         manifest.scene,
         prefabNames(this.deps.program.prefabs),
         prefabNames(candidate.prefabs),
+        this.deps.manifest.prefabs ?? [],
+        manifest.prefabs ?? [],
       );
 
       // Asset files that did not change (same url, hash and length) are not fetched again.
@@ -828,14 +830,20 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         this.behaviors.dispatchInput(this.input.deliver());
       },
       phase2_tick: (step) => {
+        // (a) of `spec/scenes.md` section 10: the lifecycle queue is applied before each tick.
+        this.deps.scene.world.dynamic.flush();
         this.behaviors.fixedUpdate(step);
       },
       phase3_update: (delta) => {
         this.behaviors.update(delta);
       },
-      phase4_flush: () => undefined,
+      phase4_flush: () => {
+        this.deps.scene.world.dynamic.flush();
+      },
       phase5_bindings: () => {
         this.deps.scene.bindings.evaluate();
+        // The spawned entities' bindings follow the scene's (decision 0064).
+        this.deps.scene.world.dynamic.evaluateBindings();
       },
       phase6_transforms: () => {
         this.deps.scene.world.propagate();
@@ -931,6 +939,18 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
           rotation: record.rotation,
           ...(record.mat === null ? {} : { mat: { p: { ...record.mat.p } } }),
         })),
+        spawned: this.deps.scene.world.dynamic.live.map((entity) => ({
+          prefab: entity.prefab.resolved.name,
+          slot: entity.ref.slot,
+          gen: entity.ref.gen,
+          alive: !entity.removing,
+          position: entity.record.position,
+          rotation: entity.record.rotation,
+          scale: entity.record.scale,
+          visible: entity.record.visible,
+          state: { ...entity.record.state },
+          ...(entity.record.mat === null ? {} : { mat: { p: { ...entity.record.mat.p } } }),
+        })),
       }),
     };
   }
@@ -958,7 +978,12 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       sharedParamBlocks: materials.sharedParamBlocks,
       ownedParamBlocks: materials.ownedParamBlocks,
       discardedSteps: this.scheduler.discardedSteps,
-      liveEntities: world.entities.length,
+      liveEntities: world.dynamic.aliveCount,
+      pendingSpawns: world.dynamic.pendingSpawns,
+      pendingRemovals: world.dynamic.pendingRemovals,
+      entitySlots: world.dynamic.slotCapacity,
+      entitiesSpawned: world.dynamic.spawned,
+      entitiesDestroyed: world.dynamic.destroyed,
       framesRendered: this.deps.surface.framesRendered,
       framesSkipped: this.deps.surface.framesSkipped,
       deviceLosses: this.losses,

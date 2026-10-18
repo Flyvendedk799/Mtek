@@ -1025,17 +1025,18 @@ fn since_milestones_follow_the_work_plan() {
         panic!("lighting.pbr is not a function");
     };
     assert_eq!(pbr.since, Milestone::M1);
-    // M5: spawn, destroy and alive (task M5-02). Collision events and `entity_ref` landed with
-    // task M5-03 (decision 0065).
+    // Dynamic entities landed with task M5-02, before the M5 gate (decision 0064): `entity_ref`,
+    // `spawn`, `destroy` and `alive` are implemented by the current build. Collision events and the
+    // physics schemas landed with task M5-03 (decision 0065).
     for name in ["spawn", "destroy", "alive"] {
-        assert_eq!(intrinsic_since(name), Milestone::M5, "{name}");
+        assert_eq!(intrinsic_since(name), Milestone::M1, "{name}");
     }
     assert_eq!(
-        registry.event("collision_enter").unwrap().since,
+        registry.type_def("entity_ref").unwrap().since,
         Milestone::M1
     );
     assert_eq!(
-        registry.type_def("entity_ref").unwrap().since,
+        registry.event("collision_enter").unwrap().since,
         Milestone::M1
     );
 }

@@ -1,0 +1,9 @@
+// `destroy` and `alive` take an entity_ref.
+scene Demo {
+    state count: i32 = 0;
+    camera Main {}
+    on key_down(Key.Space) {
+        destroy(count);
+        let live = alive(1.0);
+    }
+}

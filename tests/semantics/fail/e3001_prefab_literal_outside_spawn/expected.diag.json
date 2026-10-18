@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 409,
+    "endByte": 447,
+    "message": "The prefab literal `Crate { .. }` is not a value: it can only be the argument of `spawn`.",
+    "expected": "a value",
+    "actual": "a prefab literal",
+    "notes": [
+      "help: create the instance with `spawn(Crate { .. })` in a lifecycle function or an event handler, or declare a static instance: `entity Name: Crate { param: value; }`"
+    ]
+  }
+]

@@ -199,7 +199,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             "spawn",
             Domain::Cpu,
             false,
-            Milestone::M5,
+            Milestone::M1,
             "Queues creation of a prefab instance as a root entity; the reference is valid immediately and `alive` turns true after the next lifecycle flush.",
             vec![sig(
                 &[p("prefab", exact(TypeRef::PrefabDescriptor))],
@@ -211,7 +211,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             "destroy",
             Domain::Cpu,
             false,
-            Milestone::M5,
+            Milestone::M1,
             "Queues removal of a spawned entity; it counts as dead from the moment of the call.",
             vec![sig(&[p("target", exact(TypeRef::EntityRef))], exact(TypeRef::Unit))],
         )
@@ -220,7 +220,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             "alive",
             Domain::Cpu,
             false,
-            Milestone::M5,
+            Milestone::M1,
             "Whether the entity reference points at a live entity.",
             vec![sig(&[p("target", exact(TypeRef::EntityRef))], exact(TypeRef::Bool))],
         ),

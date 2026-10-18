@@ -1,0 +1,23 @@
+[
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 295,
+    "endByte": 300,
+    "message": "'orign' is not a param of prefab Crate: a prefab literal may set only params.",
+    "notes": [
+      "the params of Crate are: origin, tint",
+      "help: did you mean 'origin'?"
+    ]
+  },
+  {
+    "code": "MTEK-E5042",
+    "file": "src/main.mtek",
+    "startByte": 339,
+    "endByte": 347,
+    "message": "'position' is not a param of prefab Crate: a prefab literal may set only params.",
+    "notes": [
+      "the params of Crate are: origin, tint"
+    ]
+  }
+]

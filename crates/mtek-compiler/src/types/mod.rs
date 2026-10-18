@@ -287,6 +287,28 @@ pub struct PrefabParam {
     pub span: Span,
 }
 
+/// A prefab literal checked as the argument of `spawn` (`spec/scenes.md` section 9, decision 0064):
+/// the prefab and, for each of its params in declaration order, the written value or the default.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PrefabLiteral {
+    /// The prefab, in every module.
+    pub key: PrefabKey,
+    pub name: String,
+    pub params: Vec<LiteralParam>,
+}
+
+/// One param of a [`PrefabLiteral`].
+#[derive(Clone, Debug, PartialEq)]
+pub struct LiteralParam {
+    pub name: String,
+    /// The type, an id of the interner of the module that holds the literal.
+    pub ty: TyId,
+    /// The value expression as written; `None` where the default is used.
+    pub value: Option<NodeId>,
+    /// The folded default of the prefab's param.
+    pub default: Option<ConstValue>,
+}
+
 /// The physics a named entity or a prefab declares (`spec/physics.md` section 2, decision 0065):
 /// what the ownership rules of poses and the body commands are checked against.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -494,6 +516,8 @@ pub struct Typeck {
     /// constant: the param's name and its value expression. The checked field holds a stand-in
     /// for each; the prefab's `init` evaluates the expression.
     init_params: BTreeMap<NodeId, Vec<(String, NodeId)>>,
+    /// The prefab literals that are the argument of a `spawn`, without errors (decision 0064).
+    prefab_literals: BTreeMap<NodeId, PrefabLiteral>,
 }
 
 impl Typeck {
@@ -522,7 +546,14 @@ impl Typeck {
             prefabs: BTreeMap::new(),
             checked_prefabs: Vec::new(),
             init_params: BTreeMap::new(),
+            prefab_literals: BTreeMap::new(),
         }
+    }
+
+    /// The prefab literal `node` (the argument of a `spawn`), if it was checked without errors.
+    #[must_use]
+    pub fn prefab_literal(&self, node: NodeId) -> Option<&PrefabLiteral> {
+        self.prefab_literals.get(&node)
     }
 
     /// The prefab declared as `def`.

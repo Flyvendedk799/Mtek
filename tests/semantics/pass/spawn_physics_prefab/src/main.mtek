@@ -1,0 +1,18 @@
+// A prefab with a body and a collider that the program only spawns: the manifest's `prefabs` table
+// carries its construction data (decision 0064), and the program needs the physics subsystem
+// although no entity of the scene has a body.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    material: Unlit { color: #6b5cff };
+    body: Dynamic { mass: 1.5; linear_damping: 0.05 };
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); friction: 0.6; restitution: 0.2 };
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        spawn(Crate { origin: vec3(0.0, 5.0, 0.0); });
+    }
+}

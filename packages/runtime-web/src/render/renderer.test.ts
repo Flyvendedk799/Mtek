@@ -123,7 +123,7 @@ function lastDraws(host: FakeHost): readonly FakeDrawRecord[] {
 }
 
 describe("compareDraws (the draw-list order of spec/runtime-abi.md section 8.4)", () => {
-  const key = (pipelineKey: string, instance: number, mesh: number, entity: number): DrawSortKey => ({ pipelineKey, instance, mesh, entity });
+  const key = (pipelineKey: string, instance: number, mesh: number, entity: number): DrawSortKey => ({ pipelineKey, instance, mesh, entity, order: entity });
 
   it("orders by pipeline key, then material instance, then mesh, then instance order", () => {
     const items = [
@@ -181,7 +181,7 @@ describe("startup (spec/runtime-abi.md section 6.1)", () => {
     const host = new FakeHost();
     installProgram(host);
     const program = fakeProgram((context) => {
-      void (context as Record<string, unknown>)["spawn"];
+      void (context as Record<string, unknown>)["body"];
     });
     await expect(mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), program)).rejects.toThrow(RuntimeInternalError);
     expect(host.device.destroyed).toBe(true);
@@ -673,6 +673,12 @@ function blockCounters(fixture: string, instances: number): { ownedParamBlocks: 
   return fixture === "lights" ? { ownedParamBlocks: 0, sharedParamBlocks: 1 } : { ownedParamBlocks: instances, sharedParamBlocks: 0 };
 }
 
+/** The materials of spawnable prefabs with an instanced entry point: each gets a second pipeline at startup. */
+function instancedPrefabMaterials(manifest: MtekManifest): number {
+  const ids = new Set((manifest.prefabs ?? []).filter((prefab) => prefab.mesh !== null).flatMap((prefab) => (prefab.material === null ? [] : [prefab.material.id])));
+  return manifest.materials.filter((material) => ids.has(material.id) && manifest.shaders.some((shader) => shader.hash === material.shader && shader.instancedVertexEntry !== undefined)).length;
+}
+
 /**
  * The golden programs whose handlers need the physics body handle (`ctx.body`, `spec/runtime-abi.md` section 4.2): the
  * runtime executes them from task M5-05 on; until then they are checked by `abi.test.ts` (the manifest) and by the
@@ -697,7 +703,8 @@ describe("the golden programs end to end on the fake GPU", () => {
     expect(lastDraws(host)).toHaveLength(drawn);
     expect(debug.counters()).toMatchObject({
       drawCalls: drawn,
-      pipelinesCreated: golden.manifest.materials.length,
+      // One pipeline per material, and the instanced variant of the material of every spawnable prefab (decision 0064).
+      pipelinesCreated: golden.manifest.materials.length + instancedPrefabMaterials(golden.manifest),
       ...blockCounters(name, golden.manifest.scene.materialInstances.length),
       liveEntities: golden.manifest.scene.entities.length,
     });

@@ -1343,7 +1343,8 @@ fn every_gated_construct_has_a_gating_fixture() {
             .any(|(_, message)| message.starts_with(prefix) && message.ends_with(&ending))
     };
     // Prefabs (task M5-01, decision 0062) were the last constructs of the table gated in this
-    // build; what is still gated are registry items (below) and the literals of prefabs.
+    // build; what is still gated are registry items (below). Prefab literals and `entity_ref`
+    // landed with task M5-02 (decision 0064).
     for construct in Construct::ALL {
         let gate = construct_gate(construct);
         if gate.since.is_reached_by(IMPLEMENTED_MILESTONE) {
@@ -1356,14 +1357,13 @@ fn every_gated_construct_has_a_gating_fixture() {
             "no gate_* fixture reports {construct:?}: {messages:#?}"
         );
     }
-    // Registry items, by kind (each message names the item and its `since`).
-    // Physics (task M5-03, decision 0065) lifted the gates of `Static` and the other body and
-    // collider schemas, `Entity.body`, `Entity.collider`, `Scene.gravity`, the collision events and
-    // `entity_ref`; `spawn`, `destroy` and the prefab literal are the last M5 items (task M5-02).
-    for (prefix, milestone) in [
-        ("Prefab literals", "M5"),
-        ("Named entities and `self` as `entity_ref` values", "M5"),
-    ] {
+    // Registry items: every item of the registry is implemented by this build now. Physics (task M5-03,
+    // decision 0065) lifted the gates of the body and collider schemas, `Entity.body`, `Entity.collider`,
+    // `Scene.gravity` and the collision events; dynamic entities (task M5-02, decision 0064) those of
+    // `entity_ref`, `spawn`, `destroy`, `alive` and the prefab literal. A registry gate that returns needs
+    // a `gate_*` fixture and a row here.
+    let gated_registry_items: [(&str, &str); 0] = [];
+    for (prefix, milestone) in gated_registry_items {
         assert!(
             produced(prefix, milestone),
             "no gate_* fixture reports {prefix}: {messages:#?}"
@@ -1408,20 +1408,10 @@ fn registry_gates_without_a_fixture_are_unreachable_in_this_build() {
     }
 }
 
-#[test]
-fn a_construct_inside_a_gated_construct_is_not_reported_again() {
-    // The outermost unimplemented construct is reported once; what it
-    // contains is not gated again (no cascades), but its names are still
-    // resolved.
-    let result = check_fixture("fail", "gate_nested_reported_once");
-    let codes: Vec<&str> = result
-        .report
-        .diagnostics
-        .iter()
-        .map(|d| d.code.short())
-        .collect();
-    assert_eq!(codes, ["E9010", "E2003"], "{}", semantic_json(&result));
-}
+// No construct is gated any more (the last, the prefab literal, was implemented by task M5-02), so
+// the fixture `gate_nested_reported_once` ("the outermost unimplemented construct is reported
+// once, what it contains is not gated again") was removed with its test; a gate that returns
+// brings its own nested fixture.
 
 #[test]
 fn the_syntax_corpus_resolves_without_panicking() {
@@ -1469,8 +1459,6 @@ fn the_syntax_corpus_resolves_without_panicking() {
 /// that implement them.
 const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
-    ("E5030", "M5: spawn and destroy"),
-    ("E5074", "M5: entity_ref"),
     (
         "E5901",
         "no v0.1 construct switches scenes (`spec/scenes.md` section 1)",
@@ -1485,10 +1473,22 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ),
     ("E8011", "M3: run-time field writes"),
     ("W8030", "M2: arrays (run-time index clamping)"),
-    ("E8030", "M5: spawn and destroy"),
-    ("W8031", "M5: spawn and destroy"),
-    ("W8032", "M5: spawn and destroy"),
-    ("E8033", "M5: spawn and destroy"),
+    (
+        "E8030",
+        "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)",
+    ),
+    (
+        "W8031",
+        "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)",
+    ),
+    (
+        "W8032",
+        "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)",
+    ),
+    (
+        "E8033",
+        "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)",
+    ),
     ("E8041", "M3: host inputs (decision 0018)"),
     ("W8070", "M3: candidate-based hot reload"),
     ("E8080", "M6: preview builds"),

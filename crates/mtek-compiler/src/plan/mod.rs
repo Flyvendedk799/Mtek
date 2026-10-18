@@ -148,6 +148,31 @@ pub struct PlannedMaterial {
     pub resources: Vec<PlannedResource>,
 }
 
+/// A parameter of a planned prefab.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PlannedPrefabParam {
+    pub name: String,
+    /// The Mtek type spelling.
+    pub ty: String,
+}
+
+/// A prefab the program spawns (decision 0064): what the runtime needs to create an instance.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PlannedPrefab {
+    /// The declared name.
+    pub name: String,
+    /// `src/main.mtek::Crate`, the key of the `prefabs` table of `app.js`.
+    pub symbol: Symbol,
+    /// The params in declaration order.
+    pub params: Vec<PlannedPrefabParam>,
+    /// The prefab's mesh: its position in [`ResourcePlan::meshes`].
+    pub mesh: Option<u32>,
+    /// The prefab's material instance (`index` 0 of the prefab, `entity` 0 is the instance).
+    pub instance: Option<PlannedInstance>,
+    /// The whole declaration.
+    pub span: Span,
+}
+
 /// The resource plan of a scene.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ResourcePlan {
@@ -159,8 +184,11 @@ pub struct ResourcePlan {
     pub instances: Vec<PlannedInstance>,
     /// Per static entity index: its material instance's index.
     pub entity_instances: Vec<Option<u32>>,
-    /// The distinct materials the instances use, sorted by symbol.
+    /// The distinct materials the instances and the spawned prefabs use, sorted by symbol.
     pub materials: Vec<PlannedMaterial>,
+    /// The prefabs the program spawns, sorted by symbol (decision 0064). Their meshes follow the
+    /// scene's in [`ResourcePlan::meshes`].
+    pub prefabs: Vec<PlannedPrefab>,
 }
 
 impl ResourcePlan {
@@ -289,85 +317,65 @@ pub fn plan_scene(program: &Program, scene: &Scene) -> Result<ResourcePlan, Stri
     let mut entity_instances = Vec::with_capacity(scene.entities.len());
     let mut materials: Vec<PlannedMaterial> = Vec::new();
     for entity in &scene.entities {
-        let mesh = match &entity.mesh {
-            Some(mesh) => {
-                let index = match meshes.iter().position(|m| same_mesh(m, &mesh.desc)) {
-                    Some(index) => index,
-                    None => {
-                        meshes.push(mesh.desc.clone());
-                        meshes.len() - 1
-                    }
-                };
-                Some(index_u32(index)?)
-            }
-            None => None,
-        };
-        entity_meshes.push(mesh);
+        entity_meshes.push(plan_mesh(&mut meshes, entity.mesh.as_ref())?);
         let instance = match &entity.material {
             Some(material) => {
-                let item = program
-                    .materials()
-                    .find(|m| m.symbol == material.material)
-                    .ok_or_else(|| {
-                        format!(
-                            "the material '{}' of '{}' is not a material of the program",
-                            material.material, entity.symbol
-                        )
-                    })?;
-                let declared: Vec<&str> = item.params.iter().map(|p| p.name.as_str()).collect();
-                let given: Vec<&str> = material.params.iter().map(|p| p.name.as_str()).collect();
-                if declared != given {
-                    return Err(format!(
-                        "the material instance of '{}' has the params {given:?}, but '{}' declares {declared:?}",
-                        entity.symbol, item.symbol
-                    ));
-                }
-                if !materials.iter().any(|m| m.symbol == item.symbol) {
-                    materials.push(planned_material(item));
-                }
                 let index = index_u32(instances.len())?;
-                let mut params = Vec::with_capacity(material.params.len());
-                for param in &material.params {
-                    let (value, binding, dependencies) = match &param.source {
-                        ir::Source::Const(value) => (Some(value.clone()), None, Vec::new()),
-                        // The prefab's `init` computes the value when it runs (decision 0062).
-                        ir::Source::Expr(_) => (None, None, Vec::new()),
-                        ir::Source::Bound(id) => {
-                            let bound = scene.bindings.iter().find(|b| b.id == *id).ok_or_else(|| {
-                                format!(
-                                    "the parameter '{}' of the material instance of '{}' names the missing binding {id}",
-                                    param.name, entity.symbol
-                                )
-                            })?;
-                            (
-                                None,
-                                Some(*id),
-                                bound.deps.iter().map(dependency_text).collect(),
-                            )
-                        }
-                    };
-                    params.push(PlannedParam {
-                        name: param.name.clone(),
-                        ty: param.ty.clone(),
-                        value,
-                        class: param.update.into(),
-                        binding,
-                        dependencies,
-                        span: param.span,
-                    });
-                }
-                instances.push(PlannedInstance {
+                instances.push(plan_instance(
+                    program,
+                    &mut materials,
+                    &scene.bindings,
+                    Owned {
+                        symbol: &entity.symbol,
+                        index: entity.index,
+                    },
+                    material,
                     index,
-                    entity: entity.index,
-                    entity_symbol: entity.symbol.clone(),
-                    material: material.material.clone(),
-                    params,
-                });
+                )?);
                 Some(index)
             }
             None => None,
         };
         entity_instances.push(instance);
+    }
+    let mut prefabs = Vec::new();
+    for symbol in spawned_prefabs(program, scene) {
+        let prefab = program
+            .prefabs()
+            .find(|p| p.symbol == symbol)
+            .ok_or_else(|| format!("the prefab '{symbol}' is spawned but not in the program"))?;
+        prefabs.push(PlannedPrefab {
+            name: prefab.name.clone(),
+            symbol: prefab.symbol.clone(),
+            params: prefab
+                .params
+                .iter()
+                .map(|p| PlannedPrefabParam {
+                    name: p.name.clone(),
+                    ty: written_type(&p.ty),
+                })
+                .collect(),
+            mesh: plan_mesh(&mut meshes, prefab.entity.mesh.as_ref())?,
+            instance: prefab
+                .entity
+                .material
+                .as_ref()
+                .map(|material| {
+                    plan_instance(
+                        program,
+                        &mut materials,
+                        &prefab.bindings,
+                        Owned {
+                            symbol: &prefab.symbol,
+                            index: 0,
+                        },
+                        material,
+                        0,
+                    )
+                })
+                .transpose()?,
+            span: prefab.span,
+        });
     }
     materials.sort_by(|a, b| a.symbol.cmp(&b.symbol));
     Ok(ResourcePlan {
@@ -376,7 +384,219 @@ pub fn plan_scene(program: &Program, scene: &Scene) -> Result<ResourcePlan, Stri
         instances,
         entity_instances,
         materials,
+        prefabs,
     })
+}
+
+/// The entity a material instance belongs to.
+struct Owned<'a> {
+    symbol: &'a Symbol,
+    index: u32,
+}
+
+/// The position of `mesh`'s descriptor in `meshes`, which it joins if it is new.
+fn plan_mesh(meshes: &mut Vec<MeshDesc>, mesh: Option<&ir::Mesh>) -> Result<Option<u32>, String> {
+    let Some(mesh) = mesh else {
+        return Ok(None);
+    };
+    let index = match meshes.iter().position(|m| same_mesh(m, &mesh.desc)) {
+        Some(index) => index,
+        None => {
+            meshes.push(mesh.desc.clone());
+            meshes.len() - 1
+        }
+    };
+    index_u32(index).map(Some)
+}
+
+/// The material instance `material` of `owner`, whose bound params read `bindings` (the scene's, or
+/// the prefab's); the material joins `materials` if it is new.
+fn plan_instance(
+    program: &Program,
+    materials: &mut Vec<PlannedMaterial>,
+    bindings: &[ir::Binding],
+    owner: Owned<'_>,
+    material: &ir::MaterialInstanceDesc,
+    index: u32,
+) -> Result<PlannedInstance, String> {
+    let item = program
+        .materials()
+        .find(|m| m.symbol == material.material)
+        .ok_or_else(|| {
+            format!(
+                "the material '{}' of '{}' is not a material of the program",
+                material.material, owner.symbol
+            )
+        })?;
+    let declared: Vec<&str> = item.params.iter().map(|p| p.name.as_str()).collect();
+    let given: Vec<&str> = material.params.iter().map(|p| p.name.as_str()).collect();
+    if declared != given {
+        return Err(format!(
+            "the material instance of '{}' has the params {given:?}, but '{}' declares {declared:?}",
+            owner.symbol, item.symbol
+        ));
+    }
+    if !materials.iter().any(|m| m.symbol == item.symbol) {
+        materials.push(planned_material(item));
+    }
+    let mut params = Vec::with_capacity(material.params.len());
+    for param in &material.params {
+        let (value, binding, dependencies) = match &param.source {
+            ir::Source::Const(value) => (Some(value.clone()), None, Vec::new()),
+            // The prefab's `init` computes the value when it runs (decision 0062).
+            ir::Source::Expr(_) => (None, None, Vec::new()),
+            ir::Source::Bound(id) => {
+                let bound = bindings.iter().find(|b| b.id == *id).ok_or_else(|| {
+                    format!(
+                        "the parameter '{}' of the material instance of '{}' names the missing binding {id}",
+                        param.name, owner.symbol
+                    )
+                })?;
+                (
+                    None,
+                    Some(*id),
+                    bound.deps.iter().map(dependency_text).collect(),
+                )
+            }
+        };
+        params.push(PlannedParam {
+            name: param.name.clone(),
+            ty: param.ty.clone(),
+            value,
+            class: param.update.into(),
+            binding,
+            dependencies,
+            span: param.span,
+        });
+    }
+    Ok(PlannedInstance {
+        index,
+        entity: owner.index,
+        entity_symbol: owner.symbol.clone(),
+        material: material.material.clone(),
+        params,
+    })
+}
+
+/// The prefabs some lifecycle function or handler spawns, directly in the scene or through the
+/// handlers of a prefab that is spawned itself, sorted by symbol (decision 0064). A prefab that
+/// nothing spawns is in the program's `prefabs` table but needs no mesh, material or pipeline.
+fn spawned_prefabs(program: &Program, scene: &Scene) -> Vec<Symbol> {
+    fn literals(block: &ir::Block, out: &mut Vec<Symbol>) {
+        fn expr(e: &ir::Expr, out: &mut Vec<Symbol>) {
+            use ir::ExprKind as K;
+            match &e.kind {
+                K::PrefabLiteral { prefab, params } => {
+                    out.push(prefab.clone());
+                    params.iter().for_each(|p| expr(&p.value, out));
+                }
+                K::Const { .. }
+                | K::Local { .. }
+                | K::Param { .. }
+                | K::State { .. }
+                | K::EntityRef { .. }
+                | K::EntityField { .. }
+                | K::CameraField { .. }
+                | K::InstanceParam { .. }
+                | K::LightField { .. }
+                | K::Frame { .. }
+                | K::EnumMember { .. } => {}
+                K::Unary { operand, .. } => expr(operand, out),
+                K::Binary { lhs, rhs, .. } => {
+                    expr(lhs, out);
+                    expr(rhs, out);
+                }
+                K::Call { args, .. } | K::Builtin { args, .. } | K::Construct { args } => {
+                    args.iter().for_each(|a| expr(a, out));
+                }
+                K::Convert { arg } => expr(arg, out),
+                K::Components { base, .. } | K::Field { base, .. } => expr(base, out),
+                K::Index { base, index } => {
+                    expr(base, out);
+                    expr(index, out);
+                }
+                K::Array { elements } => elements.iter().for_each(|a| expr(a, out)),
+                K::Struct { fields }
+                | K::Descriptor { fields, .. }
+                | K::Material { params: fields, .. } => {
+                    fields.iter().for_each(|f| expr(&f.value, out));
+                }
+                K::BodyCommand { target, args, .. } => {
+                    if let ir::BodyTarget::Ref { target } = target {
+                        expr(target, out);
+                    }
+                    args.iter().for_each(|a| expr(a, out));
+                }
+                K::BodyProperty { target, .. } => {
+                    if let ir::BodyTarget::Ref { target } = target {
+                        expr(target, out);
+                    }
+                }
+            }
+        }
+        for stmt in &block.stmts {
+            match stmt {
+                ir::Stmt::Let { value, .. } | ir::Stmt::Var { value, .. } => expr(value, out),
+                ir::Stmt::Assign { target, value, .. } => {
+                    for step in &target.steps {
+                        if let ir::PlaceStep::Index { index, .. } = step {
+                            expr(index, out);
+                        }
+                    }
+                    expr(value, out);
+                }
+                ir::Stmt::If {
+                    branches,
+                    otherwise,
+                    ..
+                } => {
+                    for branch in branches {
+                        expr(&branch.cond, out);
+                        literals(&branch.body, out);
+                    }
+                    if let Some(body) = otherwise {
+                        literals(body, out);
+                    }
+                }
+                ir::Stmt::ForRange {
+                    start, end, body, ..
+                } => {
+                    expr(start, out);
+                    expr(end, out);
+                    literals(body, out);
+                }
+                ir::Stmt::ForEach { array, body, .. } => {
+                    expr(array, out);
+                    literals(body, out);
+                }
+                ir::Stmt::Return { value, .. } => {
+                    if let Some(value) = value {
+                        expr(value, out);
+                    }
+                }
+                ir::Stmt::Block { body } => literals(body, out),
+                ir::Stmt::Expr { expr: e, .. } => expr(e, out),
+                ir::Stmt::Const { .. } | ir::Stmt::Break { .. } | ir::Stmt::Continue { .. } => {}
+            }
+        }
+    }
+    let mut found: Vec<Symbol> = Vec::new();
+    for behavior in &scene.behaviors {
+        literals(&behavior.body, &mut found);
+    }
+    let mut spawned: std::collections::BTreeSet<Symbol> = std::collections::BTreeSet::new();
+    while let Some(symbol) = found.pop() {
+        if !spawned.insert(symbol.clone()) {
+            continue;
+        }
+        // A spawned prefab's handlers may spawn further prefabs.
+        if let Some(prefab) = program.prefabs().find(|p| p.symbol == symbol) {
+            for behavior in &prefab.behaviors {
+                literals(&behavior.body, &mut found);
+            }
+        }
+    }
+    spawned.into_iter().collect()
 }
 
 /// How `mtek inspect --bindings` names what a binding reads.

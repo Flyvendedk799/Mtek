@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E5074",
+    "file": "src/main.mtek",
+    "startByte": 398,
+    "endByte": 411,
+    "message": "'.position' accesses a field through an entity_ref, but fields cannot be read or written through an entity_ref in v0.1.",
+    "notes": [
+      "through an entity_ref you may compare it (`==`, `!=`), test `alive(r)`, `destroy(r)` it and issue body commands",
+      "help: a named entity's fields are read by its name: `Floor.position`; keep the data you need in state"
+    ]
+  },
+  {
+    "code": "MTEK-E5074",
+    "file": "src/main.mtek",
+    "startByte": 443,
+    "endByte": 452,
+    "message": "'.hits' accesses a field through an entity_ref, but fields cannot be read or written through an entity_ref in v0.1.",
+    "notes": [
+      "through an entity_ref you may compare it (`==`, `!=`), test `alive(r)`, `destroy(r)` it and issue body commands",
+      "help: a named entity's fields are read by its name: `Floor.position`; keep the data you need in state"
+    ]
+  }
+]

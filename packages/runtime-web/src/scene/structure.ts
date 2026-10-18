@@ -8,14 +8,17 @@
  * material reads (decisions 0058 and 0060).
  */
 import type {
+  MtekBinding,
   MtekBuiltinResourceName,
   MtekCamera,
   MtekImageAsset,
+  MtekInstanceParam,
   MtekLayoutRecord,
   MtekManifest,
   MtekMaterialParam,
   MtekMaterialResource,
   MtekShader,
+  MtekStateEntry,
   MtekVertexAttribute,
 } from "../abi/manifest-types.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
@@ -76,14 +79,44 @@ export interface ResolvedMesh {
 }
 
 export interface ResolvedEntity {
-  /** Static index: stable instance order (depth-first pre-order). */
+  /**
+   * Static index: stable instance order (depth-first pre-order). For a spawned entity (decision 0064) the slot of
+   * the entity table, which is at least the number of static entities and is reused after a destroy.
+   */
   readonly index: number;
   readonly name: string;
   readonly symbol: string;
-  /** Always lower than `index` (parents come first). */
+  /** Always lower than `index` (parents come first); `null` for a spawned entity, a root. */
   readonly parent: number | null;
   readonly mesh: ResolvedMesh | null;
   readonly instance: ResolvedInstance | null;
+}
+
+/** The material instance of a prefab, before an instance exists: every instance starts with these classes. */
+export interface ResolvedPrefabMaterial {
+  readonly material: ResolvedMaterial;
+  readonly params: readonly MtekInstanceParam[];
+  readonly shareable: boolean;
+  /** In the order of `material.resources`. */
+  readonly resources: readonly ResolvedInstanceResource[];
+}
+
+/** A prefab of `manifest.prefabs`, resolved (decision 0064). */
+export interface ResolvedPrefab {
+  /** The key of the program module's `prefabs` table. */
+  readonly symbol: string;
+  readonly name: string;
+  /** Position in `manifest.prefabs`. */
+  readonly index: number;
+  readonly params: readonly { readonly name: string; readonly type: string }[];
+  readonly mesh: ResolvedMesh | null;
+  readonly material: ResolvedPrefabMaterial | null;
+  readonly state: readonly MtekStateEntry[];
+  readonly update: boolean;
+  readonly fixedUpdate: boolean;
+  /** In binding-id order; entity 0 is the instance and material instance 0 its material. */
+  readonly bindings: readonly MtekBinding[];
+  readonly span: number;
 }
 
 /** A light of `scene.lights`: which entity carries it and what it was constructed with. */
@@ -112,6 +145,8 @@ export interface SceneStructure {
   readonly lights: readonly ResolvedLight[];
   /** The length of `MtekFrame.lights`, read from the frame layout. */
   readonly lightCapacity: number;
+  /** The prefabs the program spawns, in manifest order (decision 0064). */
+  readonly prefabs: readonly ResolvedPrefab[];
 }
 
 export type StructureResult =
@@ -226,6 +261,41 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
   const materialById = new Map(materials.map((material) => [material.id, material]));
 
   const assetsByUrl = new Map(manifest.assets.map((asset) => [asset.url, asset]));
+
+  /** The texture and sampler bindings of one material instance (or prefab material), or undefined (reported). */
+  function resolveResources(
+    field: string,
+    owner: string,
+    material: ResolvedMaterial,
+    params: readonly MtekInstanceParam[],
+  ): ResolvedInstanceResource[] | undefined {
+    const resources: ResolvedInstanceResource[] = [];
+    for (const resource of material.resources) {
+      const param = params.find((candidate) => candidate.name === resource.name);
+      if (param?.class !== "resource") {
+        diagnostics.push(broken(field, `${owner} gives the ${resource.kind} param '${resource.name}' no resource value.`));
+        return undefined;
+      }
+      if (param.value.kind === "asset") {
+        const image = assetsByUrl.get(param.value.asset);
+        if (resource.kind !== "texture" || image?.kind !== "image") {
+          diagnostics.push(
+            broken(field, `the ${resource.kind} param '${resource.name}' of ${owner} names '${param.value.asset}', which is not an image of the assets table.`),
+          );
+          return undefined;
+        }
+        resources.push({ name: resource.name, kind: "texture", binding: resource.binding, value: image.url, asset: image });
+        continue;
+      }
+      if (!param.value.name.startsWith(`${resource.kind}.`)) {
+        diagnostics.push(broken(field, `the ${resource.kind} param '${resource.name}' of ${owner} holds '${param.value.name}'.`));
+        return undefined;
+      }
+      resources.push({ name: resource.name, kind: resource.kind, binding: resource.binding, value: param.value.name });
+    }
+    return resources;
+  }
+
   const meshes: ResolvedMesh[] = [];
   manifest.meshes.forEach((mesh, index) => {
     if (mesh.kind === "asset") {
@@ -266,37 +336,8 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
       }
       return;
     }
-    const resources: ResolvedInstanceResource[] = [];
-    for (const resource of material.resources) {
-      const param = instance.params.find((candidate) => candidate.name === resource.name);
-      if (param?.class !== "resource") {
-        diagnostics.push(
-          broken(`${field}.params`, `material instance ${String(index)} gives the ${resource.kind} param '${resource.name}' no resource value.`),
-        );
-        return;
-      }
-      if (param.value.kind === "asset") {
-        const image = assetsByUrl.get(param.value.asset);
-        if (resource.kind !== "texture" || image?.kind !== "image") {
-          diagnostics.push(
-            broken(
-              `${field}.params`,
-              `the ${resource.kind} param '${resource.name}' of material instance ${String(index)} names '${param.value.asset}', which is not an image of the assets table.`,
-            ),
-          );
-          return;
-        }
-        resources.push({ name: resource.name, kind: "texture", binding: resource.binding, value: image.url, asset: image });
-        continue;
-      }
-      if (!param.value.name.startsWith(`${resource.kind}.`)) {
-        diagnostics.push(
-          broken(`${field}.params`, `the ${resource.kind} param '${resource.name}' of material instance ${String(index)} holds '${param.value.name}'.`),
-        );
-        return;
-      }
-      resources.push({ name: resource.name, kind: resource.kind, binding: resource.binding, value: param.value.name });
-    }
+    const resources = resolveResources(`${field}.params`, `material instance ${String(index)}`, material, instance.params);
+    if (resources === undefined) return;
     instances[index] = { index, material, entity: instance.entity, shareable: instance.shareable, resources };
   });
 
@@ -394,8 +435,102 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
     });
   }
 
+  const prefabs: ResolvedPrefab[] = [];
+  const prefabSymbols = new Set<string>();
+  (manifest.prefabs ?? []).forEach((prefab, index) => {
+    const field = `prefabs[${String(index)}]`;
+    if (prefabSymbols.has(prefab.symbol)) {
+      diagnostics.push(broken(`${field}.symbol`, `the prefab '${prefab.symbol}' is listed twice.`));
+      return;
+    }
+    prefabSymbols.add(prefab.symbol);
+    let mesh: ResolvedMesh | null = null;
+    if (prefab.mesh !== null) {
+      const found = meshById.get(prefab.mesh);
+      if (found === undefined) {
+        if (!manifest.meshes.some((candidate) => candidate.id === prefab.mesh)) {
+          diagnostics.push(broken(`${field}.mesh`, `prefab '${prefab.name}' names the unknown mesh '${prefab.mesh}'.`));
+        }
+        return;
+      }
+      mesh = found;
+    }
+    let material: ResolvedPrefabMaterial | null = null;
+    if (prefab.material !== null) {
+      const resolved = materialById.get(prefab.material.id);
+      if (resolved === undefined) {
+        if (!manifest.materials.some((candidate) => candidate.id === prefab.material?.id)) {
+          diagnostics.push(broken(`${field}.material`, `prefab '${prefab.name}' names the unknown material '${prefab.material.id}'.`));
+        }
+        return;
+      }
+      const declared = new Set(resolved.params.map((param) => param.name));
+      const given = prefab.material.params.map((param) => param.name);
+      if (given.length !== declared.size || given.some((name) => !declared.has(name))) {
+        diagnostics.push(
+          broken(`${field}.material.params`, `prefab '${prefab.name}' lists the material params [${given.join(", ")}], not those of '${resolved.id}'.`),
+        );
+        return;
+      }
+      const resources = resolveResources(`${field}.material.params`, `prefab '${prefab.name}'`, resolved, prefab.material.params);
+      if (resources === undefined) return;
+      material = { material: resolved, params: prefab.material.params, shareable: prefab.material.shareable, resources };
+    }
+    if ((mesh === null) !== (material === null)) {
+      diagnostics.push(broken(field, `prefab '${prefab.name}' has a mesh without a material or a material without a mesh.`));
+      return;
+    }
+    const source = mesh?.descriptor;
+    if (source?.kind === "asset" && material !== null) {
+      const missing = material.material.shader.vertexAttributes.find((attribute) => !source.layout.attributes.includes(attribute));
+      if (missing !== undefined) {
+        diagnostics.push(
+          broken(field, `prefab '${prefab.name}' draws the mesh '${mesh?.id ?? ""}' with material '${material.material.id}', which reads '${missing}'; primitive ${String(source.primitive)} of '${source.asset}' has [${source.layout.attributes.join(", ")}].`),
+        );
+        return;
+      }
+    }
+    // Entity 0 of a prefab's bindings is the instance and material instance 0 its material; a prefab has no camera or light.
+    for (const [position, binding] of prefab.bindings.entries()) {
+      const at = `${field}.bindings[${String(position)}]`;
+      const target = binding.target;
+      const problem =
+        binding.id !== position
+          ? `carries id ${String(binding.id)}`
+          : (target.kind === "transform" || target.kind === "visible") && target.entity !== 0
+            ? `targets entity ${String(target.entity)}, but a prefab binds only its instance (entity 0)`
+            : target.kind === "param" && (target.instance !== 0 || material === null)
+              ? "targets a material instance the prefab does not have"
+              : target.kind === "camera" || target.kind === "light"
+                ? `targets a ${target.kind}, which a prefab cannot bind`
+                : undefined;
+      if (problem !== undefined) diagnostics.push(broken(at, `binding ${String(position)} of prefab '${prefab.name}' ${problem}.`));
+    }
+    for (const param of prefab.material?.params ?? []) {
+      if (param.class === "bound" && prefab.bindings[param.binding] === undefined) {
+        diagnostics.push(broken(`${field}.material.params`, `the param '${param.name}' of prefab '${prefab.name}' names the missing binding ${String(param.binding)}.`));
+      }
+    }
+    prefabs.push({
+      symbol: prefab.symbol,
+      name: prefab.name,
+      index,
+      params: prefab.params,
+      mesh,
+      material,
+      state: prefab.state,
+      update: prefab.update,
+      fixedUpdate: prefab.fixedUpdate,
+      bindings: prefab.bindings,
+      span: prefab.span,
+    });
+  });
+
   if (diagnostics.length > 0 || frameLayout === undefined || objectLayout === undefined || camera === undefined) {
     return { ok: false, diagnostics };
   }
-  return { ok: true, structure: { frameLayout, objectLayout, camera, entities, materials, instances, meshes, lights, lightCapacity } };
+  return {
+    ok: true,
+    structure: { frameLayout, objectLayout, camera, entities, materials, instances, meshes, lights, lightCapacity, prefabs },
+  };
 }

@@ -50,6 +50,11 @@
     "materials": { "type": "array", "items": { "$ref": "#/$defs/material" } },
     "meshes": { "type": "array", "items": { "$ref": "#/$defs/mesh" } },
     "assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } },
+    "prefabs": {
+      "type": "array",
+      "description": "The prefabs the program spawns, sorted by symbol (decision 0064). Absent when it spawns none.",
+      "items": { "$ref": "#/$defs/prefab" }
+    },
     "scene": { "$ref": "#/$defs/scene" }
   },
   "$defs": {
@@ -633,6 +638,54 @@
         "entity": { "$ref": "#/$defs/index" },
         "kind": { "const": "point" },
         "range": { "type": "number", "minimum": 0, "description": "0 = unlimited." }
+      }
+    },
+
+    "prefab": {
+      "type": "object",
+      "description": "A prefab the program spawns (spec/runtime-abi.md section 5.6, decision 0064). In its bindings entity 0 is the instance and material instance 0 is its material.",
+      "additionalProperties": false,
+      "required": ["symbol", "name", "params", "mesh", "material", "body", "collider", "state", "update", "fixedUpdate", "bindings", "span"],
+      "properties": {
+        "symbol": { "$ref": "#/$defs/symbolId", "description": "The key of the prefabs table of app.js." },
+        "name": { "$ref": "#/$defs/name" },
+        "params": {
+          "type": "array",
+          "description": "The params in declaration order: the keys of the params object that spawn passes.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "type"],
+            "properties": { "name": { "$ref": "#/$defs/name" }, "type": { "$ref": "#/$defs/mtekTypeName" } }
+          }
+        },
+        "mesh": { "type": ["string", "null"], "pattern": "^mesh:[0-9]+$", "description": "Id of an entry of the meshes table, or null." },
+        "material": {
+          "type": ["object", "null"],
+          "description": "The material instance every instance of the prefab starts with.",
+          "additionalProperties": false,
+          "required": ["id", "params", "shareable"],
+          "properties": {
+            "id": { "$ref": "#/$defs/symbolId" },
+            "params": { "type": "array", "items": { "$ref": "#/$defs/instanceParam" } },
+            "shareable": { "type": "boolean", "description": "Every param is initial or a resource: instances with identical bytes may share one parameter block." }
+          }
+        },
+        "body": {
+          "type": ["object", "null"],
+          "if": { "type": "object" },
+          "then": { "$ref": "#/$defs/body" }
+        },
+        "collider": {
+          "type": ["object", "null"],
+          "if": { "type": "object" },
+          "then": { "$ref": "#/$defs/collider" }
+        },
+        "state": { "type": "array", "items": { "$ref": "#/$defs/stateEntry" } },
+        "update": { "type": "boolean", "description": "The prefab declares update(dt)." },
+        "fixedUpdate": { "type": "boolean", "description": "The prefab declares fixed_update(dt)." },
+        "bindings": { "type": "array", "items": { "$ref": "#/$defs/binding" } },
+        "span": { "$ref": "#/$defs/spanId", "description": "The declaration." }
       }
     },
 

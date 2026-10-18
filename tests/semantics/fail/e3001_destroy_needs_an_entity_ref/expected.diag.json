@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 148,
+    "endByte": 153,
+    "message": "Argument 1 of `destroy(target: entity_ref)` expects entity_ref, but received i32.",
+    "expected": "entity_ref",
+    "actual": "i32"
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 181,
+    "endByte": 184,
+    "message": "Argument 1 of `alive(target: entity_ref)` expects entity_ref, but received f32.",
+    "expected": "entity_ref",
+    "actual": "f32"
+  }
+]

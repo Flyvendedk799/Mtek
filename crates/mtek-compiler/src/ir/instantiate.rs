@@ -682,6 +682,13 @@ impl Substitution<'_> {
                 material: material.clone(),
                 params: self.named(params)?,
             },
+            ExprKind::PrefabLiteral { prefab, params } => ExprKind::PrefabLiteral {
+                prefab: prefab.clone(),
+                params: self.named(params)?,
+            },
+            ExprKind::EntityRef { entity } => ExprKind::EntityRef {
+                entity: self.index(*entity),
+            },
             ExprKind::State { owner, name } => ExprKind::State {
                 owner: self.owner(*owner),
                 name: name.clone(),

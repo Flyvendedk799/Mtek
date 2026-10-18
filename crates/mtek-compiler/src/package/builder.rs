@@ -34,7 +34,9 @@ use crate::emit_wgsl::{ShaderArtifact, emit_shader};
 use crate::ir::{self, BehaviorKind, MeshDesc, Owner, Program};
 use crate::layout::{LayoutRecord, builtin_blocks, compute};
 use crate::lowering::shader::lower_material;
-use crate::plan::{ParamClass, PlannedMaterial, ResourcePlan, check_limits, plan_program};
+use crate::plan::{
+    ParamClass, PlannedInstance, PlannedMaterial, ResourcePlan, check_limits, plan_program,
+};
 use crate::project::{Project, ResolvedHostInput, validate_host_inputs};
 use crate::source::Span;
 use crate::{BuildMode, COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI, TargetProfile};
@@ -45,8 +47,9 @@ use super::manifest::{
     Binding, BindingDep, BindingTarget, Body, Camera, Collider, Entity, EntityMaterial,
     InstanceParam, Layout, Light as ManifestLight, LightKind as ManifestLightKind, MANIFEST_SCHEMA,
     Manifest, Material, MaterialInstance, MaterialParam, MaterialResource, Mesh, MeshShape, Num,
-    ParamClass as ManifestClass, RequiredCapabilities, ResourceValue, RuntimeConfig, Scene,
-    SceneFields, Shader, SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
+    ParamClass as ManifestClass, Prefab, PrefabMaterial, PrefabParam, RequiredCapabilities,
+    ResourceValue, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, StateEntry, Subsystems,
+    SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -237,6 +240,7 @@ pub fn package(
     // The binding spans come before app.js too, for the same reason.
     let manifest_scene =
         manifest_scene(scene, &plan, &packed, &mut spans, &host_inputs).map_err(defect)?;
+    let manifest_prefabs = manifest_prefabs(program, &plan, &packed, &mut spans).map_err(defect)?;
 
     // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
     // other span, so a program's span ids do not depend on its function bodies.
@@ -314,6 +318,7 @@ pub fn package(
         materials: manifest_materials,
         meshes: meshes(&plan, &packed).map_err(defect)?,
         assets: packed.assets.clone(),
+        prefabs: manifest_prefabs,
         scene: manifest_scene,
     };
 
@@ -555,6 +560,11 @@ pub fn asset_references(plan: &ResourcePlan) -> (Vec<MeshRef>, Vec<ImageRef>) {
     let images: Vec<ImageRef> = plan
         .instances
         .iter()
+        .chain(
+            plan.prefabs
+                .iter()
+                .filter_map(|prefab| prefab.instance.as_ref()),
+        )
         .flat_map(|instance| instance.params.iter())
         .filter_map(|param| match &param.value {
             Some(ir::Value::Image(image)) => Some(ImageRef {
@@ -781,42 +791,18 @@ fn manifest_scene(
                 index: instance.index,
                 material: instance.material.to_string(),
                 entity: instance.entity,
-                params: instance
-                    .params
-                    .iter()
-                    .map(|param| {
-                        Ok(InstanceParam {
-                            name: param.name.clone(),
-                            class: match (param.class, param.binding) {
-                                (ParamClass::Initial, _) => ManifestClass::Initial,
-                                (ParamClass::Imperative, _) => ManifestClass::Imperative,
-                                (ParamClass::Resource, _) => ManifestClass::Resource {
-                                    value: resource_value(param.value.as_ref(), packed)
-                                        .ok_or_else(|| {
-                                            format!(
-                                                "the resource parameter '{}' has no packaged value",
-                                                param.name
-                                            )
-                                        })?,
-                                },
-                                (ParamClass::Bound, Some(binding)) => {
-                                    ManifestClass::Bound { binding }
-                                }
-                                (ParamClass::Bound, None) => {
-                                    return Err(format!(
-                                        "the bound parameter '{}' has no binding",
-                                        param.name
-                                    ));
-                                }
-                            },
-                        })
-                    })
-                    .collect::<Result<Vec<_>, String>>()?,
+                params: instance_params(instance, packed)?,
                 shareable: instance.shareable(),
             })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let bindings = manifest_bindings(scene, plan, spans)?;
+    let bindings = manifest_bindings(&scene.bindings, spans, |entity| {
+        plan.entity_instances
+            .get(entity as usize)
+            .copied()
+            .flatten()
+            .ok_or_else(|| format!("the entity {entity} has no material instance to bind"))
+    })?;
     Ok(Scene {
         name: scene.name.clone(),
         symbol: scene.symbol.to_string(),
@@ -849,22 +835,124 @@ fn resource_value(value: Option<&ir::Value>, packed: &Packed) -> Option<Resource
     }
 }
 
-/// The manifest's `bindings`, by id: targets and dependencies by static entity index, material
-/// params by instance index (`spec/runtime-abi.md` section 5.2).
-fn manifest_bindings(
-    scene: &ir::Scene,
+/// The params of a planned material instance as the manifest lists them.
+fn instance_params(
+    instance: &PlannedInstance,
+    packed: &Packed,
+) -> Result<Vec<InstanceParam>, String> {
+    instance
+        .params
+        .iter()
+        .map(|param| {
+            Ok(InstanceParam {
+                name: param.name.clone(),
+                class: match (param.class, param.binding) {
+                    (ParamClass::Initial, _) => ManifestClass::Initial,
+                    (ParamClass::Imperative, _) => ManifestClass::Imperative,
+                    (ParamClass::Resource, _) => ManifestClass::Resource {
+                        value: resource_value(param.value.as_ref(), packed).ok_or_else(|| {
+                            format!(
+                                "the resource parameter '{}' has no packaged value",
+                                param.name
+                            )
+                        })?,
+                    },
+                    (ParamClass::Bound, Some(binding)) => ManifestClass::Bound { binding },
+                    (ParamClass::Bound, None) => {
+                        return Err(format!(
+                            "the bound parameter '{}' has no binding",
+                            param.name
+                        ));
+                    }
+                },
+            })
+        })
+        .collect()
+}
+
+/// The manifest's `prefabs`: one entry for every prefab the program spawns, sorted by symbol
+/// (decision 0064). Entity 0 of its bindings is the instance and material instance 0 its material.
+fn manifest_prefabs(
+    program: &Program,
     plan: &ResourcePlan,
+    packed: &Packed,
     spans: &mut SpanTable,
+) -> Result<Vec<Prefab>, String> {
+    let mut out = Vec::with_capacity(plan.prefabs.len());
+    for planned in &plan.prefabs {
+        let item = program
+            .prefabs()
+            .find(|p| p.symbol == planned.symbol)
+            .ok_or_else(|| format!("the prefab '{}' is not in the IR", planned.symbol))?;
+        let has = |kind: &BehaviorKind| item.behaviors.iter().any(|b| b.kind == *kind);
+        let bindings = manifest_bindings(&item.bindings, spans, |entity| {
+            if entity == 0 && planned.instance.is_some() {
+                Ok(0)
+            } else {
+                Err(format!(
+                    "the prefab '{}' binds the material of entity {entity}, which it does not have",
+                    planned.symbol
+                ))
+            }
+        })?;
+        out.push(Prefab {
+            symbol: planned.symbol.to_string(),
+            name: planned.name.clone(),
+            params: planned
+                .params
+                .iter()
+                .map(|p| PrefabParam {
+                    name: p.name.clone(),
+                    ty: p.ty.clone(),
+                })
+                .collect(),
+            mesh: planned.mesh.map(ResourcePlan::mesh_id),
+            material: planned
+                .instance
+                .as_ref()
+                .map(|instance| {
+                    Ok::<_, String>(PrefabMaterial {
+                        id: instance.material.to_string(),
+                        params: instance_params(instance, packed)?,
+                        shareable: instance.shareable(),
+                    })
+                })
+                .transpose()?,
+            body: item.entity.body.as_ref().map(manifest_body).transpose()?,
+            collider: item
+                .entity
+                .collider
+                .as_ref()
+                .map(manifest_collider)
+                .transpose()?,
+            state: item
+                .state
+                .iter()
+                .map(|state| StateEntry {
+                    name: state.name.clone(),
+                    ty: state.ty.clone(),
+                    symbol: state.symbol.to_string(),
+                })
+                .collect(),
+            update: has(&BehaviorKind::Update),
+            fixed_update: has(&BehaviorKind::FixedUpdate),
+            bindings,
+            span: spans.intern(item.span)?,
+        });
+    }
+    Ok(out)
+}
+
+/// The manifest's `bindings`, by id: targets and dependencies by static entity index, material
+/// params by instance index (`spec/runtime-abi.md` section 5.2). `instance` names the material
+/// instance of an entity.
+fn manifest_bindings(
+    bindings: &[ir::Binding],
+    spans: &mut SpanTable,
+    instance: impl Fn(u32) -> Result<u32, String>,
 ) -> Result<Vec<Binding>, String> {
-    let instance = |entity: u32| -> Result<u32, String> {
-        plan.entity_instances
-            .get(entity as usize)
-            .copied()
-            .flatten()
-            .ok_or_else(|| format!("the entity {entity} has no material instance to bind"))
-    };
-    let mut out = Vec::with_capacity(scene.bindings.len());
-    for binding in &scene.bindings {
+    let mut out = Vec::with_capacity(bindings.len());
+    for binding in bindings {
         let target = match &binding.target {
             ir::BindingTarget::Transform { entity, field } => BindingTarget::Transform {
                 entity: *entity,

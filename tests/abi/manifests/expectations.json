@@ -228,6 +228,18 @@
     "invalid/capabilities-limit-bad-name.json": {
       "code": "E8006",
       "field": "requiredCapabilities.limits.bindGroups"
+    },
+    "invalid/prefab-extra-key.json": {
+      "code": "E8006",
+      "field": "prefabs[0].tags"
+    },
+    "invalid/prefab-material-without-shareable.json": {
+      "code": "E8006",
+      "field": "prefabs[0].material.shareable"
+    },
+    "invalid/prefab-mesh-id-malformed.json": {
+      "code": "E8006",
+      "field": "prefabs[0].mesh"
     }
   }
 }

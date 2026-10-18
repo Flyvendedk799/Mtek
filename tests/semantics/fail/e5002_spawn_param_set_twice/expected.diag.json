@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5002",
+    "file": "src/main.mtek",
+    "startByte": 301,
+    "endByte": 305,
+    "message": "The param 'tint' of prefab Crate is set twice.",
+    "related": [
+      {
+        "message": "'tint' is first set here",
+        "file": "src/main.mtek",
+        "startByte": 286,
+        "endByte": 290
+      }
+    ],
+    "notes": [
+      "help: remove one of the two"
+    ]
+  }
+]

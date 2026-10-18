@@ -1,0 +1,16 @@
+[
+  {
+    "code": "MTEK-E3014",
+    "file": "src/main.mtek",
+    "startByte": 200,
+    "endByte": 205,
+    "message": "The operator `<` is not defined for entity_ref and entity_ref."
+  },
+  {
+    "code": "MTEK-E3014",
+    "file": "src/main.mtek",
+    "startByte": 226,
+    "endByte": 232,
+    "message": "The operator `==` is not defined for entity_ref and i32."
+  }
+]

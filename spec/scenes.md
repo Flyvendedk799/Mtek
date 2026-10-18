@@ -184,6 +184,7 @@ Fields the schema marks construction-only (e.g. `mesh`, `body`, `scale` of bodie
 - **References are generation-checked.** An `entity_ref` is `(slot, generation)`. Slots are reused; generations are not, so a reference to a destroyed entity can never reach a later entity in the same slot.
 - A newly created entity never joins an iteration already in progress: it first runs in the next phase that starts after its flush.
 - The maximum number of live entities is a runtime limit (`mtek.toml` `[runtime] max_entities`, default 16 384). Exceeding it makes `spawn` return a dead reference and report `E8033`.
+- **Details fixed by decision 0064.** The flush points are the start of each fixed tick and the end of the frame after `update`; removals are applied before creations, creations in spawn order. A spawn that is destroyed before its flush is cancelled: nothing is created and `init` does not run. The limit counts named entities, alive ones, pending spawns and pending removals. The argument of `spawn` is a prefab literal whose params may be run-time values; `destroy` of a named entity is `E5030` (`E8030` through a reference). A spawned entity's GPU resources are released when it is removed; reloading a running program re-creates the spawned entities in the same slots (`spec/runtime-abi.md` §11.3).
 
 ## 10. Frame order (normative summary)
 

@@ -455,6 +455,7 @@ describe("debug API (options.test)", () => {
           mat: { p: { color: { r: 0.25, g: 0.5, b: 0.75, a: 1 } } },
         },
       ],
+      spawned: [],
     });
     app.dispose();
   });

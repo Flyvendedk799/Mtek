@@ -1,0 +1,42 @@
+// Spawn from `update` and destroy what was spawned: a scene function keeps the reference in
+// state; a prefab destroys itself when it has lived long enough and spawns the next one.
+prefab Spark {
+    param life: f32 = 1.0;
+    mesh: Sphere { radius: 0.1 };
+    state age: f32 = 0.0;
+    update(dt: f32) {
+        self.age += dt;
+        if self.age >= life {
+            destroy(self);
+        }
+    }
+}
+
+prefab Beacon {
+    mesh: Box {};
+    state spark: entity_ref = self;
+    on key_down(Key.Enter) {
+        if !alive(self.spark) || self.spark == self {
+            self.spark = spawn(Spark { life: 0.5; });
+        }
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Anchor: Beacon {}
+    state held: entity_ref = Anchor;
+    state seconds: f32 = 0.0;
+    update(dt: f32) {
+        seconds += dt;
+        if seconds > 1.0 && !alive(held) {
+            held = spawn(Spark { life: seconds; });
+            seconds = 0.0;
+        }
+    }
+    fixed_update(dt: f32) {
+        if alive(held) && held != Anchor {
+            destroy(held);
+        }
+    }
+}

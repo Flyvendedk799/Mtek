@@ -1,0 +1,15 @@
+// `bind` is for fields and material params, not for the params of a prefab literal.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box {};
+    material: Unlit { color: tint };
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        spawn(Crate { origin: bind(vec3(0.0)); });
+    }
+}

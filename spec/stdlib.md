@@ -181,8 +181,8 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `random` | `() → f32` | cpu | — | `[0, 1)`, seeded PRNG (xoshiro128**, seed from mount options) — deterministic under a fixed seed |
 | `print` | `(string) → ()` | cpu | — | dev console; no-op in release builds |
 | `is_key_down` | `(Key) → bool` | cpu | — | |
-| `spawn` | `(prefab descriptor) → entity_ref` | cpu (handlers only) | — | |
-| `destroy` | `(entity_ref) → ()` | cpu (handlers only) | — | |
-| `alive` | `(entity_ref) → bool` | cpu | — | |
+| `spawn` | `(prefab descriptor) → entity_ref` | cpu (handlers only) | — | the argument is a prefab literal `Prefab { param: value; }`; params may be run-time values (decision 0064) |
+| `destroy` | `(entity_ref) → ()` | cpu (handlers only) | — | `E5030` for a named entity |
+| `alive` | `(entity_ref) → bool` | cpu | — | false for a pending spawn, a pending removal and a dead reference |
 
 Conformance: `tests/semantics/intrinsics/` holds a table of inputs and expected CPU results for every row, and the GPU conformance test (`spec/testing.md` §5) evaluates the same inputs on the GPU through a probe shader and compares with the per-function tolerances.

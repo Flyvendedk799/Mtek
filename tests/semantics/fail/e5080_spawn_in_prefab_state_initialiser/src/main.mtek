@@ -1,0 +1,9 @@
+// The same holds in a prefab: a state initialiser runs when the instance is created.
+prefab Crate {
+    mesh: Box {};
+    state child: entity_ref = spawn(Crate {});
+}
+
+scene Demo {
+    camera Main {}
+}

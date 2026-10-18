@@ -1,0 +1,10 @@
+// References are compared for equality only; they are not numbers and have no order.
+scene Demo {
+    camera Main {}
+    entity A {}
+    entity B {}
+    on key_down(Key.Space) {
+        let before = A < B;
+        let same = A == 0;
+    }
+}

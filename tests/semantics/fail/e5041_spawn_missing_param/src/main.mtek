@@ -1,0 +1,15 @@
+// A param without a default is required in the literal, as in a static instance.
+prefab Crate {
+    param origin: vec3;
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box {};
+    material: Unlit { color: tint };
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        spawn(Crate { tint: #ff0000; });
+    }
+}

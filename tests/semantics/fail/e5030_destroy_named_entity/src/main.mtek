@@ -1,0 +1,8 @@
+// A named entity lives as long as the scene: `destroy(Cube)` is E5030 (hide it instead).
+scene Demo {
+    camera Main {}
+    entity Cube { mesh: Box {}; }
+    on key_down(Key.Space) {
+        destroy(Cube);
+    }
+}

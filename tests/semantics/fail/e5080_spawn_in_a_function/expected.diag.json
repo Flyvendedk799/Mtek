@@ -1,0 +1,22 @@
+[
+  {
+    "code": "MTEK-E5080",
+    "file": "src/main.mtek",
+    "startByte": 328,
+    "endByte": 343,
+    "message": "`spawn` may be called only in lifecycle functions and event handlers, not in the function 'make'.",
+    "notes": [
+      "spawning and destroying entities are lifecycle operations of the scene"
+    ]
+  },
+  {
+    "code": "MTEK-E5080",
+    "file": "src/main.mtek",
+    "startByte": 388,
+    "endByte": 403,
+    "message": "`destroy` may be called only in lifecycle functions and event handlers, not in the function 'remove'.",
+    "notes": [
+      "spawning and destroying entities are lifecycle operations of the scene"
+    ]
+  }
+]

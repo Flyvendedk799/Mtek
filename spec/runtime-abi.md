@@ -132,7 +132,7 @@ The runtime passes `ctx` to every generated function. Its shape is part of ABI 1
 | `ctx.setVisible(e, value)` | |
 | `ctx.setParam(e, name, value)` | writes the instance's mirror through the generated field writer; validates opaque colours (`E8100`). |
 | `ctx.setCamera(field, value)`, `ctx.setLight(e, field, value)` | |
-| `ctx.spawn(prefabId, params) → entity_ref`, `ctx.destroy(ref)`, `ctx.alive(ref)` | `spec/scenes.md` §9 |
+| `ctx.spawn(prefabSymbol, params, spanId) → entity_ref`, `ctx.destroy(ref, spanId)`, `ctx.alive(ref)` | `spec/scenes.md` §9, decision 0064. `prefabSymbol` is the key of the `prefabs` table of `app.js`; `params` is the object of evaluated params (every param, defaults filled in by the generated code), which the runtime freezes and hands to `init` and to `self.params`. An `entity_ref` is a frozen `{ slot, gen }`; two references are equal when both fields are (`rt.refEq`). `E8030`, `W8032` and `E8033` carry `spanId`. |
 | `ctx.body(refOrEntity)` | the **body handle** of an entity record (`ctx.e[i]`, `self`) or of an `entity_ref`, for the body commands and velocity reads of `spec/physics.md` §3 (decision 0065): `h.applyImpulse(v)`, `h.applyForce(v)`, `h.setKinematicTarget(position, rotation)`, `h.teleport(position, rotation, keepVelocity)`, `h.setLinearVelocity(v)` (commands: queued for the next tick, in the category order of physics §4) and the read-only `h.linearVelocity`, `h.angularVelocity` (`vec3`, as of the last completed tick, zero before the first). The compiler has checked the body kind of a record; for an `entity_ref` the handle reports `E8101` and drops a command the body kind of its target does not support (and `W8031` for a pending or dead target). Generated code calls it as `ctx.body(self).applyImpulse(..)`, `ctx.body(ctx.e[3]).teleport(..)`, `ctx.body(a_other).applyForce(..)` |
 | `ctx.random()`, `ctx.print(message, spanId)`, `ctx.isKeyDown(code)` | CPU intrinsics |
 | `ctx.warn(code, spanId)` | report a mapped runtime warning (e.g. index clamping `W8030`, once per span) |
@@ -204,7 +204,7 @@ The runtime **rejects** a manifest whose `manifestSchema` or `runtimeAbi` it doe
 ```
 
 - `fields` carries the **constant** scene-field values (linear colours as `[r, g, b, a]`, the result of compile-time colour conversion), so the runtime needs no code to obtain them. `gravity` is the scene's `gravity` (default `[0, -9.81, 0]`), read when the physics world is created.
-- `body` and `collider` of an entity (decision 0065) are `null` or, exactly together, the construction data of its physics body in the shapes of `spec/manifest.schema.json`: `{ "kind": "static" }`, `{ "kind": "kinematic" }` or `{ "kind": "dynamic", "mass", "linearDamping", "angularDamping" }`, and `{ "kind": "box", "size": [x, y, z], "sensor", "friction", "restitution" }` (full extents, `spec/physics.md` §5.1 halves them) or `{ "kind": "sphere", "radius", "sensor", "friction", "restitution" }`. Every field is written out, defaults included; the values are in the ranges of `spec/stdlib.md` §3.7; the body of an entity is on a root entity; the initial pose is the entity's world pose after `init(ctx)` and the bindings (`spec/scenes.md` §11, step 5). A **static prefab instance** is an ordinary entity of the table with the prefab's body and collider; the body data of a prefab for `spawn` is part of the prefab description that task M5-02 adds (the compiler builds it with the same functions).
+- `body` and `collider` of an entity (decision 0065) are `null` or, exactly together, the construction data of its physics body in the shapes of `spec/manifest.schema.json`: `{ "kind": "static" }`, `{ "kind": "kinematic" }` or `{ "kind": "dynamic", "mass", "linearDamping", "angularDamping" }`, and `{ "kind": "box", "size": [x, y, z], "sensor", "friction", "restitution" }` (full extents, `spec/physics.md` §5.1 halves them) or `{ "kind": "sphere", "radius", "sensor", "friction", "restitution" }`. Every field is written out, defaults included; the values are in the ranges of `spec/stdlib.md` §3.7; the body of an entity is on a root entity; the initial pose is the entity's world pose after `init(ctx)` and the bindings (`spec/scenes.md` §11, step 5). A **static prefab instance** is an ordinary entity of the table with the prefab's body and collider; the body data of a prefab for `spawn` is in the `prefabs` table (§5.6, decision 0064; the compiler builds it with the same functions).
 - `subsystems.physics` is `true` exactly when the entry scene has an entity with a `body` or a prefab of the program declares one (the program may `spawn` it); then `physics/<h16>.js` is part of the build (decision 0063). Otherwise the runtime never requests it.
 - Binding **target** kinds: `{ "kind": "transform", "entity": i, "field": "position" | "rotation" | "scale" }`, `{ "kind": "visible", "entity": i }`, `{ "kind": "param", "instance": i, "name": … }`, `{ "kind": "camera", "field": "position" | "target" | "rotation" | "projection.fov_y" | "projection.height" | "projection.near" | "projection.far" }`, `{ "kind": "light", "entity": i, "field": "color" | "intensity" }`.
 - Binding **dependency** kinds: `{ "kind": "state", "name": … }`, `{ "kind": "frame", "name": "time" | "delta" | "index" }`, `{ "kind": "entityField", "entity": i, "field": … }`, `{ "kind": "entityState", "entity": i, "name": … }`, `{ "kind": "param", "instance": i, "name": … }`.
@@ -242,6 +242,25 @@ One entry per emitted WGSL statement/expression that originates in Mtek source; 
 - **Images.** The file is a PNG or JPEG exactly as the author wrote it; `colorSpace` says how to upload it (`"srgb"`: `rgba8unorm-srgb`, `"linear"`: `rgba8unorm`, `spec/assets.md` §5). An instance's `texture` param is `{ "name": "base_color_texture", "class": "resource", "value": { "kind": "asset", "asset": <url of an image entry> } }`; its `sampler` param is a built-in preset. `preprocessing` lists what the compiler decided instead of the author (`mipmaps not generated`: the file's sampler asked for mip-maps, v0.1 samples the base level).
 - **Loading.** The runtime fetches each `url` from `baseUrl`, verifies `bytes` and `sha256`, decodes images, uploads meshes and textures and keeps the verified bytes for device recovery and hot reload; every state, diagnostic and limit check is decision 0060.
 - **Names.** The `<h16>` of a `.bin` is the first 16 hex digits of the SHA-256 of the GLB's project path, a zero byte and the file's bytes; of an image, of the colour space name, a zero byte and the image bytes. The same image bytes used in both colour spaces are two files.
+
+### 5.6 Prefabs (decision 0064)
+
+`prefabs` (optional; absent when the program spawns nothing) describes the prefabs the program can `spawn`, sorted by `symbol`: those named by a prefab literal, transitively through the handlers of those prefabs. Static instances are ordinary entities and are not in it. The shapes are `spec/manifest.schema.json` `#/$defs/prefab`:
+
+```json
+{ "symbol": "src/main.mtek::Bullet", "name": "Bullet",
+  "params": [ { "name": "origin", "type": "vec3" }, { "name": "life", "type": "f32" } ],
+  "mesh": "mesh:0", "material": { "id": "unlit", "params": { … }, "shareable": true },
+  "body": null, "collider": null,
+  "state": [ { "name": "age", "type": "f32", "symbol": "src/main.mtek::Bullet.age" } ],
+  "update": true, "fixedUpdate": false, "bindings": [ … ], "span": 12 }
+```
+
+- `material.params` and `shareable` follow the instances of §5.2 (classes of decision 0059): the runtime gives a spawned entity a shared parameter block when `shareable` and an identical block exists, an arena slot otherwise.
+- `body` and `collider` are those of §5.2 (decision 0065), the data a physics subsystem needs to build the body of a spawned entity.
+- **Bindings** use the target and dependency kinds of §5.2 with the instance as **entity 0** and its material instance as **instance 0**; the runtime evaluates them for the entity in `order`, after `init`, in phase 5, and the ids index the prefab's own `bindings` array in `app.js`.
+- The runtime creates the record with `self.params` set to the frozen params object `ctx.spawn` received, which is also the `params` argument of `init` (decision 0062).
+- **Slots and generations.** The named entities of the scene are slots `0..S-1` (generation 0, never freed); spawned entities take the slots above, a freed slot's generation increases, and `entity_ref` values are `{ slot, gen }` (§4.1). Flush points: the start of each fixed tick and `phase4_flush` (§7).
 
 ## 6. Host API
 
@@ -377,6 +396,7 @@ onAnimationFrame(nowMs):
 
 - `pause()` sets `state = paused` and stops accumulating; `resume()` sets `lastMs = null`, so the first frame after resuming has delta 0 and the paused interval is never simulated. Visibility changes call pause/resume when `pauseWhenHidden`.
 - **Manual clock (tests).** With `options.test.manualClock`, `requestAnimationFrame` is not used; `app.debug.step(n, dtSeconds)` runs `n` frames with the given delta synchronously (rendering included). This makes every behavioural test deterministic.
+- **Flush points** (decision 0064): `phase2_tick` calls the entity flush before every fixed tick, `phase4_flush` after `update`. A flush removes the entities pending removal (releasing their resources), then creates the pending spawns in spawn order (`init`, first binding evaluation); a created entity first runs in the next phase that starts after its flush.
 - All per-frame iteration uses arrays in stable instance order. Never iterate `Object.keys` of user-named objects to decide execution order.
 
 ## 8. Rendering
@@ -418,7 +438,7 @@ The resize and pixel-ratio watchers, the device-loss rebuild (what is retained, 
 
 ## 10. Counters, overlay and test control
 
-10.1 **Counters** (per frame and cumulative): `frameTimeMs`, `cpuUpdateMs`, `renderPrepMs`, `drawCalls`, `instancedDraws`, `culledObjects`, `uploads`, `uploadBytes`, `pipelinesCreated`, `shaderModulesCreated`, `bindGroupsCreated`, `buffersAllocated`, `texturesAllocated`, live counts `liveBuffers`, `liveTextures`, `liveSamplers`, `liveShaderModules`, `livePipelines`, `liveBindGroups`, `liveListeners`, `sharedParamBlocks`, `ownedParamBlocks`, `discardedSteps`, `liveEntities`, `failedMaterials` (materials no longer drawn after a later shader or pipeline failure, §12), `deviceLosses`, `deviceRecoveries`, `recoveryAttempts` (cumulative, §9.4). GPU time is reported only when the `timestamp-query` feature is available and requested; otherwise the overlay says "GPU time unavailable" (blueprint §12.3 — never relabel CPU submission time as GPU time). How the counters are exposed (per-frame and cumulative forms, `gpuTimeMs` / `gpuTimeAvailable`) is decision 0055.
+10.1 **Counters** (per frame and cumulative): `frameTimeMs`, `cpuUpdateMs`, `renderPrepMs`, `drawCalls`, `instancedDraws`, `culledObjects`, `uploads`, `uploadBytes`, `pipelinesCreated`, `shaderModulesCreated`, `bindGroupsCreated`, `buffersAllocated`, `texturesAllocated`, live counts `liveBuffers`, `liveTextures`, `liveSamplers`, `liveShaderModules`, `livePipelines`, `liveBindGroups`, `liveListeners`, `sharedParamBlocks`, `ownedParamBlocks`, `discardedSteps`, `liveEntities` (named + alive spawned; not the pending removals), `pendingSpawns`, `pendingRemovals`, `entitySlots` (the capacity of the entity table), `entitiesSpawned`, `entitiesDestroyed` (cumulative; a cancelled spawn is in neither), `failedMaterials` (materials no longer drawn after a later shader or pipeline failure, §12), `deviceLosses`, `deviceRecoveries`, `recoveryAttempts` (cumulative, §9.4). GPU time is reported only when the `timestamp-query` feature is available and requested; otherwise the overlay says "GPU time unavailable" (blueprint §12.3 — never relabel CPU submission time as GPU time). How the counters are exposed (per-frame and cumulative forms, `gpuTimeMs` / `gpuTimeAvailable`) is decision 0055.
 
 10.2 **Test control** (`options.test`, never in production builds of examples):
 ```ts
@@ -442,7 +462,8 @@ interface MtekDebug {
   loseDevice(): void;      // destroys the GPU device; handled as a device loss (§9.4, decision 0056)
   failAllocation(): void;  // reports E8063 as an out-of-memory scope would (§9.5)
   assets(): ReadonlyArray<{ url: string; kind: "mesh-data" | "image"; state: "pending" | "ready" | "failed"; bytes: number }>;  // M4-06: the asset files of the running program (decision 0060)
-  scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }> };
+  scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }>;
+             spawned: Array<{ prefab: string; slot: number; gen: number; alive: boolean; position: unknown; rotation: unknown; scale: unknown; visible: boolean; state: Record<string, unknown>; mat?: { p: Record<string, unknown> } }> };   // M5-02: the spawned entities that exist, in spawn order (decision 0064)
 }
 ```
 With `renderTarget`, frames render into an offscreen `rgba8unorm-srgb` texture of that size (fixed format regardless of the platform's preferred canvas format); `readPixels` copies it to a buffer (`bytesPerRow` padded to 256), maps it and returns tightly packed rows. With `canvasRenderTarget` the offscreen texture always has the canvas's backing size and is recreated with the depth texture whenever that size changes (`readPixels` rejects while the canvas has no pixels).
@@ -454,6 +475,8 @@ With `renderTarget`, frames render into an offscreen `rgba8unorm-srgb` texture o
 11.2 **Candidate validation.** `app.replaceProgram(candidate)` (dev builds only): fetch and validate the candidate manifest (§5.1); create every *new* shader module and pipeline on the current device inside a validation error scope and await `getCompilationInfo()`; prepare new arenas/bind groups for changed layouts. If anything fails, discard the candidate, keep the running program untouched, report the mapped diagnostics (blueprint §7.5). Nothing is half-updated.
 
 11.3 **Swap.** At the start of the next frame (before phase 1): carry state across by identity — `normalised module path :: qualified declaration name` (e.g. `src/main.mtek::Demo.speed`, `src/main.mtek::Demo.Cube`) — when the declared type is identical; reset values whose identity is new or whose type changed. Material instances keep their slot when layout id and bytes-layout are unchanged; a changed default value is applied only if the instance's param was `initial` and the source literal changed. Unchanged shader hashes reuse existing pipelines (so a colour edit creates **no** pipeline — M3 gate). If the scene's structure changed in a way that cannot be migrated (entity hierarchy changed, a body added/removed, prefab set changed), the scene restarts and the runtime reports `W8070` explaining which declaration forced the restart.
+
+**Spawned entities** (decision 0064). A reload that does not restart the scene re-creates every spawned entity that exists in the same slot and generation, by the new program's `init` with the params it was spawned with, and carries its state, pose and imperative material params by identity like a named entity's; references kept in state stay valid for them. A spawned prefab whose param list (`name: type`) changed, or a prefab added to or removed from the program, restarts the scene (`W8070`). A prefab the program no longer spawns drops its live entities silently and their references stay dead. After a device loss the entities keep their slots and instance indices (§9.4).
 
 ## 12. Runtime diagnostics
 

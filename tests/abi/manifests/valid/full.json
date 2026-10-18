@@ -931,6 +931,177 @@
       "span": 23
     }
   ],
+  "prefabs": [
+    {
+      "symbol": "src/props.mtek::Crate",
+      "name": "Crate",
+      "params": [
+        {
+          "name": "origin",
+          "type": "vec3"
+        },
+        {
+          "name": "tint",
+          "type": "color"
+        }
+      ],
+      "mesh": "mesh:0",
+      "material": {
+        "id": "src/main.mtek::Pulse",
+        "params": [
+          {
+            "name": "tint",
+            "class": "bound",
+            "binding": 0
+          },
+          {
+            "name": "phase",
+            "class": "imperative"
+          }
+        ],
+        "shareable": false
+      },
+      "body": {
+        "kind": "dynamic",
+        "mass": 1,
+        "linearDamping": 0,
+        "angularDamping": 0.05
+      },
+      "collider": {
+        "kind": "box",
+        "size": [
+          1,
+          1,
+          1
+        ],
+        "sensor": false,
+        "friction": 0.5,
+        "restitution": 0
+      },
+      "state": [
+        {
+          "name": "bounces",
+          "type": "i32",
+          "symbol": "src/props.mtek::Crate.bounces"
+        }
+      ],
+      "update": true,
+      "fixedUpdate": false,
+      "bindings": [
+        {
+          "id": 0,
+          "target": {
+            "kind": "param",
+            "instance": 0,
+            "name": "tint"
+          },
+          "deps": [
+            {
+              "kind": "entityState",
+              "entity": 0,
+              "name": "bounces"
+            },
+            {
+              "kind": "frame",
+              "name": "time"
+            }
+          ],
+          "order": 0,
+          "span": 12
+        }
+      ],
+      "span": 11
+    },
+    {
+      "symbol": "src/props.mtek::Marble",
+      "name": "Marble",
+      "params": [],
+      "mesh": "mesh:1",
+      "material": {
+        "id": "std/materials.mtek::Pbr",
+        "params": [
+          {
+            "name": "base_color",
+            "class": "initial"
+          },
+          {
+            "name": "metallic",
+            "class": "initial"
+          },
+          {
+            "name": "roughness",
+            "class": "initial"
+          },
+          {
+            "name": "base_color_texture",
+            "class": "resource",
+            "value": {
+              "kind": "asset",
+              "asset": "assets/de7030234493a8be.png"
+            }
+          },
+          {
+            "name": "base_color_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_clamp"
+            }
+          }
+        ],
+        "shareable": true
+      },
+      "body": {
+        "kind": "kinematic"
+      },
+      "collider": {
+        "kind": "sphere",
+        "radius": 0.5,
+        "sensor": true,
+        "friction": 0.5,
+        "restitution": 0.25
+      },
+      "state": [],
+      "update": false,
+      "fixedUpdate": true,
+      "bindings": [
+        {
+          "id": 0,
+          "target": {
+            "kind": "transform",
+            "entity": 0,
+            "field": "position"
+          },
+          "deps": [
+            {
+              "kind": "entityField",
+              "entity": 0,
+              "field": "rotation"
+            }
+          ],
+          "order": 0,
+          "span": 12
+        },
+        {
+          "id": 1,
+          "target": {
+            "kind": "visible",
+            "entity": 0
+          },
+          "deps": [
+            {
+              "kind": "param",
+              "instance": 0,
+              "name": "metallic"
+            }
+          ],
+          "order": 1,
+          "span": 13
+        }
+      ],
+      "span": 14
+    }
+  ],
   "scene": {
     "name": "Demo",
     "symbol": "src/main.mtek::Demo",

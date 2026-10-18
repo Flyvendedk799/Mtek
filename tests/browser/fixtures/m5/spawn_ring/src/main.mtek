@@ -1,0 +1,51 @@
+// M5-02: dynamic entities render through WebGPU and leave nothing behind. A ring of eight slots holds the
+// references of the blocks on screen; every press of Space destroys the block in the next slot (when there is one)
+// and spawns a new block in its place, so the scene churns through spawn and destroy with a bounded population.
+// The orthographic camera makes the picture easy to derive: the view is 20 x 10 units, so a block at
+// (x, 0) covers the pixels around ((x + 10) * 16, 80) of a 320 x 160 target. support/m5-scenes.ts transcribes
+// the program for the browser spec.
+prefab Block {
+    param column: i32;
+    param tint: color;
+    position: vec3(f32(column) * 2.0 - 7.0, 0.0, 0.0);
+    mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+    material: Unlit { color: tint; };
+}
+
+scene Ring {
+    clear_color: #202830;
+    state ring: array<entity_ref, 8> = [Marker, Marker, Marker, Marker, Marker, Marker, Marker, Marker];
+    state presses: i32 = 0;
+    camera Lens {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 10.0; near: 0.1; far: 100.0; };
+    }
+    entity Marker {
+        position: vec3(-9.0, 4.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+        material: Unlit { color: #ffffff; };
+    }
+    on key_down(Key.Space) {
+        let slot = presses % 8;
+        if ring[slot] != Marker && alive(ring[slot]) {
+            destroy(ring[slot]);
+        }
+        var tint: color = #ff4040;
+        if presses % 3 == 1 {
+            tint = #40d060;
+        } else if presses % 3 == 2 {
+            tint = #4080ff;
+        }
+        ring[slot] = spawn(Block { column: slot; tint: tint; });
+        presses += 1;
+    }
+    on key_down(Key.C) {
+        for i in 0..8 {
+            if ring[i] != Marker && alive(ring[i]) {
+                destroy(ring[i]);
+            }
+            ring[i] = Marker;
+        }
+    }
+}

@@ -21,6 +21,12 @@
  *
  * A texture param whose value is an image file of the `assets` table binds that file's texture instead of a
  * built-in one (`AssetTextures`, decision 0060); two instances naming the same file share one texture.
+ *
+ * Spawned entities (decision 0064) add and remove instances while the scene runs: `createInstance` gives a
+ * new instance (its index chosen by the caller, above those of the scene) a block, `shareInstance` lets it join
+ * an identical block once its values are written, and `removeInstance` leaves its block, releasing the arena
+ * slot and the bind groups when it was the last user. A block is named by its lowest user, also after users
+ * left, so draw order stays a function of the live instances.
  */
 import type { ArenaDevice, ArenaWriter } from "../gpu/uniform-arena.js";
 import { UniformArena } from "../gpu/uniform-arena.js";
@@ -32,13 +38,27 @@ import type { BindingPlan } from "./pipelines.js";
 import type { DecodedImages } from "../assets/loader.js";
 import { AssetTextures, BuiltinResources, type TextureOverrides } from "./resources.js";
 
-/** One parameter block: a slot of an arena, used by `users` instances (more than one when shared). */
-interface InstanceStorage {
+/** The arena slot of a parameter block with its writers and bind group layout. */
+interface BlockStorage {
   readonly arena: UniformArena;
   readonly slot: number;
   readonly writers: LayoutWriters;
   readonly layout: GPUBindGroupLayout;
-  users: number;
+}
+
+/**
+ * A parameter block: the slot (when the material has value params) used by `members`, the instances that share it.
+ * Instances of materials with texture or sampler params only share a bind group instead of a slot.
+ */
+interface Block {
+  readonly storage: BlockStorage | null;
+  readonly members: Set<number>;
+  /** The lowest member: what `blockOf` returns. */
+  name: number;
+  /** The group-1 bind group of a block without storage whose instances have resources; created on first use. */
+  resourceGroup: GPUBindGroup | undefined;
+  /** The key of the sharing bucket the block is listed in. */
+  key: string | undefined;
 }
 
 /** The textures and samplers of one instance: its group-1 layout and the entries after the block. */
@@ -46,6 +66,9 @@ interface InstanceResources {
   readonly layout: GPUBindGroupLayout;
   readonly entries: readonly GPUBindGroupEntry[];
 }
+
+/** The arena of a layout that no instance of the scene uses at mount starts with this many slots. */
+const SPAWNED_ARENA_CAPACITY = 16;
 
 /** FNV-1a over the words of a block: the bucket key of `shareIdentical` (equal blocks are then compared word by word). */
 function hashWords(words: Uint32Array): number {
@@ -67,25 +90,25 @@ function resourceSignature(instance: ResolvedInstance): string {
 
 export class MaterialStore implements ParamSink {
   private readonly arenas = new Map<string, UniformArena>();
-  /** By material instance index; `null` for instances of materials without value params. Instances that share a block hold the same object. */
-  private readonly storage: (InstanceStorage | null)[] = [];
-  /** By material instance index: the lowest-indexed instance that uses the same parameter block (itself when not shared). */
-  private readonly blocks: number[] = [];
+  /** The live instances by index (the scene's, then the spawned ones). */
+  private readonly instances = new Map<number, ResolvedInstance>();
+  /** By material instance index: the block it uses. Instances that share a block hold the same object. */
+  private readonly blocks: (Block | undefined)[] = [];
+  /** Blocks that were offered for sharing, by `(material, hash of the bytes, resources)`. */
+  private readonly buckets = new Map<string, Block[]>();
   private blockChanges = 0;
   /** Textures and samplers by instance index; absent for instances without resources. */
   private readonly resources = new Map<number, InstanceResources>();
-  /** Bind groups of instances that have resources but no block, by block (see `blockOf`), created on first use. */
-  private readonly resourceGroups = new Map<number, GPUBindGroup>();
   private readonly builtins: BuiltinResources;
   private readonly assetTextures: AssetTextures;
 
   /** `images`: the decoded image files that instances' texture params may name (`spec/assets.md` section 5). */
   constructor(
-    device: ArenaDevice,
+    private readonly device: ArenaDevice,
     private readonly registry: ResourceRegistry,
     private readonly plan: BindingPlan,
-    private readonly structure: SceneStructure,
-    writers: ReadonlyMap<string, LayoutWriters>,
+    structure: SceneStructure,
+    private readonly writers: ReadonlyMap<string, LayoutWriters>,
     textures?: TextureOverrides,
     images: DecodedImages = new Map(),
   ) {
@@ -97,31 +120,8 @@ export class MaterialStore implements ParamSink {
       if (layout !== null) counts.set(layout.id, (counts.get(layout.id) ?? 0) + 1);
     }
     for (const instance of structure.instances) {
-      this.blocks[instance.index] = instance.index;
-      const layout = instance.material.layout;
-      const kinds = instance.material.resources;
-      if (instance.resources.length > 0) {
-        this.resources.set(instance.index, {
-          layout: plan.material(layout, kinds),
-          entries: instance.resources.map((resource) => ({
-            binding: resource.binding,
-            resource: "asset" in resource ? this.assetTextures.textureView(resource.asset) : resource.kind === "texture" ? this.builtins.textureView(resource.value) : this.builtins.sampler(resource.value),
-          })),
-        });
-      }
-      if (layout === null) {
-        this.storage[instance.index] = null;
-        continue;
-      }
-      let arena = this.arenas.get(layout.id);
-      if (arena === undefined) {
-        // Sized for every instance of the layout, so a static scene never grows the arena.
-        arena = new UniformArena(device, registry, layout, { initialCapacity: counts.get(layout.id) ?? 1 });
-        this.arenas.set(layout.id, arena);
-      }
-      const layoutWriters = writers.get(layout.id);
-      if (layoutWriters === undefined) throw new Error(`internal error: no writers for the layout '${layout.id}'`);
-      this.storage[instance.index] = { arena, slot: arena.allocate(), writers: layoutWriters, layout: plan.material(layout, kinds), users: 1 };
+      // Sized for every instance of the layout, so a static scene never grows the arena.
+      this.add(instance, counts.get(instance.material.layout?.id ?? "") ?? 1);
     }
   }
 
@@ -135,10 +135,12 @@ export class MaterialStore implements ParamSink {
     return this.countBlocks(2, Infinity);
   }
 
-  /** Counts the distinct blocks used by `min` to `max` instances. */
+  /** Counts the distinct blocks with a slot that are used by `min` to `max` instances. */
   private countBlocks(min: number, max: number): number {
     let count = 0;
-    for (const storage of new Set(this.storage)) if (storage !== null && storage !== undefined && storage.users >= min && storage.users <= max) count += 1;
+    for (const block of new Set(this.blocks)) {
+      if (block !== undefined && block.storage !== null && block.members.size >= min && block.members.size <= max) count += 1;
+    }
     return count;
   }
 
@@ -149,12 +151,96 @@ export class MaterialStore implements ParamSink {
   blockOf(instance: number): number {
     const block = this.blocks[instance];
     if (block === undefined) throw new Error(`internal error: no material instance ${String(instance)}`);
-    return block;
+    return block.name;
   }
 
-  /** Increases whenever `blockOf` changes for some instance (`shareIdentical`, copy on write). */
+  /** Increases whenever `blockOf` changes for some instance (`shareIdentical`, copy on write, an instance added or removed). */
   get blockVersion(): number {
     return this.blockChanges;
+  }
+
+  /** The number of live material instances. */
+  get instanceCount(): number {
+    return this.instances.size;
+  }
+
+  /** Gives `instance` a block of its own, and its texture and sampler bindings. `capacity`: arena slots to start with. */
+  private add(instance: ResolvedInstance, capacity: number): void {
+    if (this.instances.has(instance.index)) throw new Error(`internal error: material instance ${String(instance.index)} exists already`);
+    const layout = instance.material.layout;
+    const kinds = instance.material.resources;
+    if (instance.resources.length > 0) {
+      this.resources.set(instance.index, {
+        layout: this.plan.material(layout, kinds),
+        entries: instance.resources.map((resource) => ({
+          binding: resource.binding,
+          resource: "asset" in resource ? this.assetTextures.textureView(resource.asset) : resource.kind === "texture" ? this.builtins.textureView(resource.value) : this.builtins.sampler(resource.value),
+        })),
+      });
+    }
+    let storage: BlockStorage | null = null;
+    if (layout !== null) {
+      let arena = this.arenas.get(layout.id);
+      if (arena === undefined) {
+        arena = new UniformArena(this.device, this.registry, layout, { initialCapacity: capacity });
+        this.arenas.set(layout.id, arena);
+      }
+      const layoutWriters = this.writers.get(layout.id);
+      if (layoutWriters === undefined) throw new Error(`internal error: no writers for the layout '${layout.id}'`);
+      storage = { arena, slot: arena.allocate(), writers: layoutWriters, layout: this.plan.material(layout, kinds) };
+    }
+    this.instances.set(instance.index, instance);
+    this.blocks[instance.index] = { storage, members: new Set([instance.index]), name: instance.index, resourceGroup: undefined, key: undefined };
+  }
+
+  /**
+   * A spawned entity's material instance (decision 0064): `instance.index` is chosen by the caller, above the
+   * scene's, and free. The instance starts with a block of its own at zero bytes; the entity's `init` writes the
+   * values, then {@link MaterialStore.shareInstance} may let it join an identical block.
+   */
+  createInstance(instance: ResolvedInstance): void {
+    this.add(instance, SPAWNED_ARENA_CAPACITY);
+    this.blockChanges += 1;
+  }
+
+  /** Removes a spawned entity's instance: leaves its block, releasing the slot and the bind groups with the last user. */
+  removeInstance(index: number): void {
+    if (!this.instances.has(index)) throw new Error(`internal error: no material instance ${String(index)}`);
+    this.leave(index);
+    this.instances.delete(index);
+    this.blocks[index] = undefined;
+    this.resources.delete(index);
+    this.blockChanges += 1;
+  }
+
+  /** Takes `index` out of its block; frees the block when it was the last user, renames it when it was the lowest. */
+  private leave(index: number): void {
+    const block = this.blocks[index];
+    if (block === undefined) return;
+    block.members.delete(index);
+    if (block.members.size === 0) {
+      this.free(block);
+      return;
+    }
+    if (block.name === index) block.name = Math.min(...block.members);
+  }
+
+  /** Releases a block nobody uses. */
+  private free(block: Block): void {
+    if (block.storage !== null) block.storage.arena.release(block.storage.slot);
+    if (block.resourceGroup !== undefined) {
+      this.registry.release(block.resourceGroup);
+      block.resourceGroup = undefined;
+    }
+    if (block.key !== undefined) {
+      const bucket = this.buckets.get(block.key);
+      if (bucket !== undefined) {
+        const at = bucket.indexOf(block);
+        if (at >= 0) bucket.splice(at, 1);
+        if (bucket.length === 0) this.buckets.delete(block.key);
+      }
+      block.key = undefined;
+    }
   }
 
   /**
@@ -164,47 +250,45 @@ export class MaterialStore implements ParamSink {
    * never shares different blocks. The lowest-indexed instance keeps its slot; the others release theirs.
    */
   shareIdentical(): void {
-    const buckets = new Map<string, number[]>();
-    for (const instance of this.structure.instances) {
-      if (!instance.shareable || this.blocks[instance.index] !== instance.index) continue;
-      const storage = this.storage[instance.index];
-      const hash = storage === null || storage === undefined ? 0 : hashWords(storage.arena.slotWords(storage.slot));
-      const key = `${instance.material.id}\0${String(hash)}\0${resourceSignature(instance)}`;
-      const candidates = buckets.get(key);
-      if (candidates === undefined) {
-        buckets.set(key, [instance.index]);
-        continue;
-      }
-      const match = candidates.find((candidate) => this.identical(candidate, instance.index));
-      if (match === undefined) candidates.push(instance.index);
-      else this.join(instance.index, match);
-    }
+    for (const index of [...this.instances.keys()].sort((a, b) => a - b)) this.shareInstance(index);
   }
 
-  /** Same bytes (when the material has a block). Both instances are `shareable`, of the same material and resources, and unshared. */
-  private identical(a: number, b: number): boolean {
-    const left = this.storage[a];
-    const right = this.storage[b];
-    if (left === undefined || right === undefined) return false;
-    if (left === null || right === null) return left === right;
-    return left.arena === right.arena && sameWords(left.arena.slotWords(left.slot), right.arena.slotWords(right.slot));
+  /** {@link MaterialStore.shareIdentical} for one instance, which joins the first identical block offered before it. */
+  shareInstance(index: number): void {
+    const instance = this.instances.get(index);
+    const block = this.blocks[index];
+    // A block that is shared already, or was offered already, has nothing to do.
+    if (instance === undefined || block === undefined || !instance.shareable || block.members.size !== 1 || block.key !== undefined) return;
+    const hash = block.storage === null ? 0 : hashWords(block.storage.arena.slotWords(block.storage.slot));
+    const key = `${instance.material.id}\0${String(hash)}\0${resourceSignature(instance)}`;
+    const candidates = this.buckets.get(key);
+    if (candidates === undefined) {
+      this.buckets.set(key, [block]);
+      block.key = key;
+      return;
+    }
+    const match = candidates.find((candidate) => candidate !== block && this.identical(candidate, block));
+    if (match === undefined) {
+      candidates.push(block);
+      block.key = key;
+      return;
+    }
+    this.join(index, block, match);
   }
 
-  /** Makes `member` use the block of `representative`. */
-  private join(member: number, representative: number): void {
-    const own = this.storage[member];
-    const shared = this.storage[representative];
-    if (own !== null && own !== undefined && shared !== null && shared !== undefined) {
-      own.arena.release(own.slot);
-      shared.users += 1;
-      this.storage[member] = shared;
-    }
-    const group = this.resourceGroups.get(member);
-    if (group !== undefined) {
-      this.registry.release(group);
-      this.resourceGroups.delete(member);
-    }
-    this.blocks[member] = representative;
+  /** Same bytes (when the material has a block). Both blocks belong to `shareable` instances of one material and resources. */
+  private identical(a: Block, b: Block): boolean {
+    if (a.storage === null || b.storage === null) return a.storage === b.storage;
+    return a.storage.arena === b.storage.arena && sameWords(a.storage.arena.slotWords(a.storage.slot), b.storage.arena.slotWords(b.storage.slot));
+  }
+
+  /** Makes instance `index`, the only user of `own`, use `target`. */
+  private join(index: number, own: Block, target: Block): void {
+    own.members.delete(index);
+    this.free(own);
+    target.members.add(index);
+    if (index < target.name) target.name = index;
+    this.blocks[index] = target;
     this.blockChanges += 1;
   }
 
@@ -214,58 +298,59 @@ export class MaterialStore implements ParamSink {
    * its block gets a block of its own first when the write would change the bytes.
    */
   writeParam(instance: number, name: string, value: unknown): void {
-    let storage = this.storageOf(instance);
+    let block = this.blockOfInstance(instance);
+    let storage = block.storage;
     if (storage === null) throw new Error(`internal error: material instance ${String(instance)} has no value params`);
     const writer = storage.writers.fields.get(name);
     if (writer === undefined) throw new Error(`internal error: the layout '${storage.arena.id}' has no field '${name}'`);
     const write: ArenaWriter = (views, base) => {
       writer(views, base, value);
     };
-    if (storage.users > 1) {
+    if (block.members.size > 1) {
       if (!storage.arena.wouldChange(storage.slot, write)) return;
-      storage = this.detach(instance, storage);
+      block = this.detach(instance, block, storage);
+      storage = block.storage;
+      if (storage === null) throw new Error(`internal error: material instance ${String(instance)} lost its block`);
     }
     storage.arena.writeIfChanged(storage.slot, write);
   }
 
   /** Copy on write: a new block holding the bytes of `shared`, used by `instance` alone. */
-  private detach(instance: number, shared: InstanceStorage): InstanceStorage {
-    const { arena } = shared;
+  private detach(instance: number, shared: Block, storage: BlockStorage): Block {
+    const { arena } = storage;
     const slot = arena.allocate();
     // Read after `allocate()`: growth replaces the mirror.
-    const source = arena.slotWords(shared.slot);
+    const source = arena.slotWords(storage.slot);
     arena.writeIfChanged(slot, (views, base) => {
       views.u32.set(source, base >>> 2);
     });
-    const own: InstanceStorage = { arena, slot, writers: shared.writers, layout: shared.layout, users: 1 };
-    shared.users -= 1;
-    this.storage[instance] = own;
-    // The lowest-indexed user names a block: name them again for the users of the old block and of the new one.
-    const first = new Map<InstanceStorage, number>();
-    for (const candidate of this.structure.instances) {
-      const storage = this.storage[candidate.index];
-      if (storage === null || storage === undefined) continue;
-      const known = first.get(storage);
-      if (known === undefined) first.set(storage, candidate.index);
-      this.blocks[candidate.index] = known ?? candidate.index;
-    }
+    const own: Block = {
+      storage: { arena, slot, writers: storage.writers, layout: storage.layout },
+      members: new Set([instance]),
+      name: instance,
+      resourceGroup: undefined,
+      key: undefined,
+    };
+    // The users that stay keep the block, named by the lowest of them.
+    shared.members.delete(instance);
+    if (shared.name === instance) shared.name = Math.min(...shared.members);
+    this.blocks[instance] = own;
     this.blockChanges += 1;
     return own;
   }
 
-  /** The group-1 bind group of an instance (cached by its arena, or by this store when it has no block). */
+  /** The group-1 bind group of an instance (cached by its arena, or by its block when it has no slot). */
   bindGroup(instance: number): GPUBindGroup {
-    const storage = this.storageOf(instance);
+    const block = this.blockOfInstance(instance);
     const resources = this.resources.get(instance);
-    if (storage !== null) return storage.arena.bindGroupForSlot(storage.slot, storage.layout, resources?.entries);
+    if (block.storage !== null) return block.storage.arena.bindGroupForSlot(block.storage.slot, block.storage.layout, resources?.entries);
     if (resources === undefined) return this.plan.emptyMaterialGroup();
-    const block = this.blockOf(instance);
-    let group = this.resourceGroups.get(block);
-    if (group === undefined) {
-      group = this.registry.createBindGroup({ label: `mtek material instance ${String(block)} resources`, layout: resources.layout, entries: [...resources.entries] });
-      this.resourceGroups.set(block, group);
-    }
-    return group;
+    block.resourceGroup ??= this.registry.createBindGroup({
+      label: `mtek material instance ${String(block.name)} resources`,
+      layout: resources.layout,
+      entries: [...resources.entries],
+    });
+    return block.resourceGroup;
   }
 
   /** Uploads every dirty slot; returns the number of uploads. */
@@ -279,17 +364,20 @@ export class MaterialStore implements ParamSink {
   dispose(): void {
     for (const arena of this.arenas.values()) arena.dispose();
     this.arenas.clear();
-    this.storage.length = 0;
-    for (const group of this.resourceGroups.values()) this.registry.release(group);
-    this.resourceGroups.clear();
+    for (const block of new Set(this.blocks)) {
+      if (block?.resourceGroup !== undefined) this.registry.release(block.resourceGroup);
+    }
+    this.blocks.length = 0;
+    this.instances.clear();
+    this.buckets.clear();
     this.resources.clear();
     this.builtins.dispose();
     this.assetTextures.dispose();
   }
 
-  private storageOf(instance: number): InstanceStorage | null {
-    const storage = this.storage[instance];
-    if (storage === undefined) throw new Error(`internal error: no material instance ${String(instance)}`);
-    return storage;
+  private blockOfInstance(instance: number): Block {
+    const block = this.blocks[instance];
+    if (block === undefined) throw new Error(`internal error: no material instance ${String(instance)}`);
+    return block;
   }
 }

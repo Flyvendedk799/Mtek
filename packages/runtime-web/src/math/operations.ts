@@ -171,6 +171,7 @@ export const RT_STRUCTURAL_EXPORTS: readonly string[] = [
   "m4col",
   "clampIndex",
   "copy",
+  "refEq",
   "srgbChannelToLinear",
   "I32_MIN",
   "I32_MAX",

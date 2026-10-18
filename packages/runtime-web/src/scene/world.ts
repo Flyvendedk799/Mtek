@@ -20,7 +20,10 @@ import {
 } from "../diagnostics/types.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { fromRotationTranslationScale, multiply, type Mat4 } from "../math/mat4.js";
-import type { SceneStructure } from "./structure.js";
+import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic.js";
+import { RuntimeInternalError } from "./errors.js";
+import { makeRef, type EntityRef } from "./slots.js";
+import type { ResolvedEntity, SceneStructure } from "./structure.js";
 import {
   describeValue,
   isColor,
@@ -34,15 +37,10 @@ import {
   type Vec3,
 } from "./values.js";
 
-/** A runtime bug or a program that breaks the ABI in a way the compiler rules out. Never a user error. */
-export class RuntimeInternalError extends Error {
-  constructor(message: string) {
-    super(`internal error: ${message}`);
-    this.name = "RuntimeInternalError";
-  }
-}
+export { RuntimeInternalError };
+export type { EntityRef };
 
-/** The members of `ctx` this runtime build provides (decisions 0031 and 0050). */
+/** The members of `ctx` this runtime build provides (decisions 0031, 0050 and 0064). */
 export const CONTEXT_MEMBERS = [
   "s",
   "e",
@@ -53,17 +51,14 @@ export const CONTEXT_MEMBERS = [
   "setParam",
   "setCamera",
   "setLight",
+  "spawn",
+  "destroy",
+  "alive",
   "warn",
   "random",
   "isKeyDown",
   "print",
 ] as const;
-
-/** `entity_ref` (`spec/runtime-abi.md` section 4.1). Static entities: slot = static index, generation 0. */
-export interface EntityRef {
-  readonly slot: number;
-  readonly gen: number;
-}
 
 /**
  * The light of an entity (`entity.light`, `spec/materials.md` section 7). `color` and `intensity` are
@@ -155,6 +150,8 @@ export interface WorldOptions {
   readonly report: (diagnostic: MtekDiagnostic) => void;
   /** Defaults to {@link INERT_SERVICES}. */
   readonly services?: CpuServices;
+  /** The prefabs the program spawns (`manifest.prefabs`) with their code; none when the program spawns nothing. */
+  readonly prefabs?: ReadonlyMap<string, PrefabRuntime>;
 }
 
 const CAMERA_FIELDS = [
@@ -258,11 +255,13 @@ function guarded<T extends object>(members: T, name: string): T {
 export class World {
   /** The generated-code context. */
   readonly ctx: object;
-  /** Entity records by static index. */
+  /** Entity records of the named entities by static index (`ctx.e`). Spawned entities: {@link World.dynamic}. */
   readonly entities: readonly EntityRecord[];
   readonly camera: CameraRecord;
   /** The scene state (`ctx.s`). */
   readonly sceneState: Record<string, unknown>;
+  /** The spawned entities: queues, flush points, records (decision 0064). */
+  readonly dynamic: DynamicEntities;
   /** Phase recorded in diagnostics. `runtime:mount` during initialisation. */
   phase: MtekRuntimePhase = "runtime:mount";
 
@@ -270,13 +269,19 @@ export class World {
   private readonly structure: SceneStructure;
   private params: ParamSink;
   private readonly report: (diagnostic: MtekDiagnostic) => void;
+  /** The slot of every record: the static index, or the slot of a spawned entity. */
   private readonly indexByRecord = new Map<object, number>();
-  private readonly worlds: Mat4[];
-  private readonly transformDirty: Uint8Array;
-  private readonly worldChanged: Uint8Array;
+  /** The records by slot: the named entities, then the spawned ones that exist. */
+  private readonly records: (EntityRecord | undefined)[] = [];
+  /** What the setters know of each slot (name, symbol, material instance). */
+  private readonly resolvedBySlot: (ResolvedEntity | undefined)[] = [];
+  private worlds: (Mat4 | undefined)[];
+  private transformDirty: Uint8Array;
+  private worldChanged: Uint8Array;
   private frameValues: FrameValues = Object.freeze({ time: 0, delta: 0, index: 0 });
   private initialising = false;
   private visibility = 0;
+  private readonly materialParamTypes: ReadonlyMap<string, readonly { readonly name: string; readonly type: string }[]>;
 
   constructor(options: WorldOptions) {
     this.manifest = options.manifest;
@@ -285,6 +290,7 @@ export class World {
     this.report = options.report;
 
     const materialParams = new Map(this.structure.materials.map((material) => [material.id, material.params]));
+    this.materialParamTypes = materialParams;
     const lightOf = new Map(this.structure.lights.map((light) => [light.entity, light]));
     this.entities = Object.freeze(
       this.structure.entities.map((entity): EntityRecord => {
@@ -300,9 +306,11 @@ export class World {
           mat: params === undefined ? null : { p: Object.fromEntries(params.map((param) => [param.name, zeroValue(param.type)])) },
           // The registry defaults (`spec/stdlib.md` section 3.6); `init` sets every unbound field.
           light: light === undefined ? null : { color: WHITE, intensity: 1, range: light.range },
-          ref: Object.freeze({ slot: entity.index, gen: 0 }),
+          ref: makeRef(entity.index, 0),
         };
         this.indexByRecord.set(record, entity.index);
+        this.records[entity.index] = record;
+        this.resolvedBySlot[entity.index] = entity;
         return record;
       }),
     );
@@ -310,6 +318,35 @@ export class World {
     this.worlds = Array.from({ length: count }, () => new Float32Array(16));
     this.transformDirty = new Uint8Array(count).fill(1);
     this.worldChanged = new Uint8Array(count);
+    const host: DynamicHost = {
+      get ctx(): object {
+        if (holder.ctx === undefined) throw new RuntimeInternalError("the context was used before the world was built.");
+        return holder.ctx;
+      },
+      get phase(): MtekRuntimePhase {
+        return currentPhase();
+      },
+      makeRecord: (ref, resolved, prefab, params) => this.makeDynamicRecord(ref, resolved, prefab, params),
+      register: (slot, record, resolved) => {
+        this.registerDynamic(slot, record, resolved);
+      },
+      unregister: (slot, record) => {
+        this.unregisterDynamic(slot, record);
+      },
+      source: (spanId) => resolveSpan(this.manifest, spanId),
+      report: (diagnostic) => {
+        this.report(diagnostic);
+      },
+    };
+    const holder: { ctx?: object } = {};
+    const currentPhase = (): MtekRuntimePhase => this.phase;
+    this.dynamic = new DynamicEntities({
+      prefabs: options.prefabs ?? new Map(),
+      staticCount: count,
+      maxEntities: this.manifest.runtimeConfig.maxEntities,
+      firstInstance: this.structure.instances.length,
+      host,
+    });
 
     const camera = this.structure.camera;
     this.camera = {
@@ -343,6 +380,11 @@ export class World {
       setLight: (entity: unknown, field: unknown, value: unknown): void => {
         this.setLight(entity, field, value);
       },
+      spawn: (prefab: unknown, params: unknown, spanId: unknown): EntityRef => this.dynamic.spawn(prefab, params, spanId),
+      destroy: (ref: unknown, spanId: unknown): void => {
+        this.dynamic.destroy(ref, spanId);
+      },
+      alive: (ref: unknown): boolean => this.dynamic.alive(ref),
       warn: (code: unknown, spanId: unknown): void => {
         this.warn(code, spanId);
       },
@@ -357,6 +399,7 @@ export class World {
     };
     Object.defineProperty(members, "frame", { enumerable: true, get: () => this.frameValues });
     this.ctx = guarded(members, "ctx");
+    holder.ctx = this.ctx;
   }
 
   /** `ctx.frame` as generated code sees it. */
@@ -407,6 +450,7 @@ export class World {
         sink.writeParam(entity.instance.index, param.name, record.mat.p[param.name]);
       }
     }
+    // The spawned entities are rebuilt by `dynamic.rebuild` once the new stores exist.
     this.worldChanged.fill(1);
   }
 
@@ -418,7 +462,7 @@ export class World {
   /**
    * Propagates local transforms to world matrices, parents before children (`spec/scenes.md` section 12:
    * `L = T * R * S`, `W = W_parent * L`). Only entities whose transform or parent changed are recomputed.
-   * Returns the number of world matrices recomputed.
+   * The named entities come first; a spawned entity is a root. Returns the number of world matrices recomputed.
    */
   propagate(): number {
     const recomputed = new Uint8Array(this.entities.length);
@@ -437,17 +481,26 @@ export class World {
       recomputed[i] = 1;
       count += 1;
     }
+    for (const entity of this.dynamic.live) {
+      const i = entity.ref.slot;
+      if (this.transformDirty[i] !== 1) continue;
+      const record = entity.record;
+      this.worlds[i] = fromRotationTranslationScale(record.rotation, record.position, record.scale);
+      this.transformDirty[i] = 0;
+      this.worldChanged[i] = 1;
+      count += 1;
+    }
     return count;
   }
 
-  /** The world matrix of entity `index` as of the last `propagate()`. */
+  /** The world matrix of the entity in slot `index` as of the last `propagate()`. */
   worldMatrix(index: number): Mat4 {
     const matrix = this.worlds[index];
     if (matrix === undefined) throw new RangeError(`no entity ${String(index)}`);
     return matrix;
   }
 
-  /** Returns, in instance order, the entities whose world matrix changed since the last call, and forgets them. */
+  /** Returns, by slot, the entities whose world matrix changed since the last call, and forgets them. */
   takeWorldChanges(): number[] {
     const changed: number[] = [];
     this.worldChanged.forEach((flag, index) => {
@@ -455,6 +508,70 @@ export class World {
     });
     this.worldChanged.fill(0);
     return changed;
+  }
+
+  /** The record in slot `slot`: a named entity or a spawned one that exists. */
+  recordAt(slot: number): EntityRecord | undefined {
+    return this.records[slot];
+  }
+
+  /** What the world knows of the entity in slot `slot` (name, symbol, mesh, material instance). */
+  resolvedAt(slot: number): ResolvedEntity | undefined {
+    return this.resolvedBySlot[slot];
+  }
+
+  // ---- the spawned entities' side of the world ----
+
+  /** A new record for a spawned entity at the registry defaults (decision 0064). */
+  private makeDynamicRecord(
+    ref: EntityRef,
+    resolved: ResolvedEntity,
+    prefab: PrefabRuntime,
+    params: Readonly<Record<string, unknown>>,
+  ): EntityRecord {
+    const material = resolved.instance === null ? undefined : this.materialParamTypes.get(resolved.instance.material.id);
+    return {
+      position: ORIGIN,
+      rotation: IDENTITY,
+      scale: UNIT_SCALE,
+      visible: true,
+      state: stateObject(prefab.resolved.state),
+      params,
+      mat: material === undefined ? null : { p: Object.fromEntries(material.map((param) => [param.name, zeroValue(param.type)])) },
+      light: null,
+      ref,
+    };
+  }
+
+  /** Grows the per-slot arrays to hold `slots` slots. */
+  private ensureSlots(slots: number): void {
+    if (slots <= this.transformDirty.length) return;
+    const capacity = Math.max(slots, this.transformDirty.length * 2);
+    const dirty = new Uint8Array(capacity);
+    dirty.set(this.transformDirty);
+    const changed = new Uint8Array(capacity);
+    changed.set(this.worldChanged);
+    this.transformDirty = dirty;
+    this.worldChanged = changed;
+  }
+
+  private registerDynamic(slot: number, record: EntityRecord, resolved: ResolvedEntity): void {
+    this.ensureSlots(slot + 1);
+    this.records[slot] = record;
+    this.resolvedBySlot[slot] = resolved;
+    this.indexByRecord.set(record, slot);
+    this.worlds[slot] = new Float32Array(16);
+    this.transformDirty[slot] = 1;
+    this.worldChanged[slot] = 0;
+  }
+
+  private unregisterDynamic(slot: number, record: EntityRecord): void {
+    this.indexByRecord.delete(record);
+    this.records[slot] = undefined;
+    this.resolvedBySlot[slot] = undefined;
+    this.worlds[slot] = undefined;
+    this.transformDirty[slot] = 0;
+    this.worldChanged[slot] = 0;
   }
 
   // ---- the setters of the context ----
@@ -466,14 +583,14 @@ export class World {
   }
 
   private entitySource(index: number): ReturnType<typeof resolveSpan> {
-    const symbol = this.structure.entities[index]?.symbol;
+    const symbol = this.resolvedBySlot[index]?.symbol;
     const span = symbol === undefined ? undefined : spanOfSymbol(this.manifest, symbol);
     return span === undefined ? null : resolveSpan(this.manifest, span);
   }
 
   private setTransform(entity: unknown, field: unknown, value: unknown): void {
     const index = this.indexOf(entity, "setTransform");
-    const record = this.entities[index];
+    const record = this.records[index];
     if (record === undefined) return;
     if (!TRANSFORM_FIELDS.includes(field as TransformField)) {
       throw new RuntimeInternalError(`ctx.setTransform got the field ${describeValue(field)}; expected position, rotation or scale.`);
@@ -489,7 +606,7 @@ export class World {
         this.report(
           makeRuntimeDiagnostic("E8090", {
             phase: this.phase,
-            message: `The scale ${describeValue(value)} written to entity '${this.structure.entities[index]?.name ?? String(index)}' is invalid: every component must be finite and greater than 0. The write is ignored.`,
+            message: `The scale ${describeValue(value)} written to entity '${this.resolvedBySlot[index]?.name ?? String(index)}' is invalid: every component must be finite and greater than 0. The write is ignored.`,
             source: this.entitySource(index),
           }),
         );
@@ -504,7 +621,7 @@ export class World {
 
   private setVisible(entity: unknown, value: unknown): void {
     const index = this.indexOf(entity, "setVisible");
-    const record = this.entities[index];
+    const record = this.records[index];
     if (record === undefined) return;
     if (typeof value !== "boolean") throw new RuntimeInternalError(`ctx.setVisible got ${describeValue(value)}; expected a bool.`);
     if (record.visible !== value) {
@@ -545,8 +662,8 @@ export class World {
 
   private setParam(entity: unknown, name: unknown, value: unknown): void {
     const index = this.indexOf(entity, "setParam");
-    const record = this.entities[index];
-    const instance = this.structure.entities[index]?.instance;
+    const record = this.records[index];
+    const instance = this.resolvedBySlot[index]?.instance;
     if (record === undefined || record.mat === null || instance === null || instance === undefined) {
       throw new RuntimeInternalError(`ctx.setParam was called for entity ${String(index)}, which has no material.`);
     }
@@ -560,7 +677,7 @@ export class World {
         this.report(
           makeRuntimeDiagnostic("E8100", {
             phase: this.phase,
-            message: `The colour ${describeValue(value)} for param '${param.name}' of entity '${this.structure.entities[index]?.name ?? String(index)}' is not opaque: material colours must have alpha 1.0 in v0.1. The previous value stays.`,
+            message: `The colour ${describeValue(value)} for param '${param.name}' of entity '${this.resolvedBySlot[index]?.name ?? String(index)}' is not opaque: material colours must have alpha 1.0 in v0.1. The previous value stays.`,
             source: this.entitySource(index),
           }),
         );
@@ -574,7 +691,7 @@ export class World {
   /** `ctx.setLight(e, "color" | "intensity", value)`; `range` is construction-only and never written. */
   private setLight(entity: unknown, field: unknown, value: unknown): void {
     const index = this.indexOf(entity, "setLight");
-    const light = this.entities[index]?.light;
+    const light = this.records[index]?.light;
     if (light === null || light === undefined) {
       throw new RuntimeInternalError(`ctx.setLight was called for entity ${String(index)}, which has no light.`);
     }

@@ -1,0 +1,89 @@
+// Dynamic entities (spec/scenes.md section 9, decision 0064): prefab literals whose params are computed at
+// run time, entity_ref values in state, comparison and `alive`, spawn and destroy inside one handler,
+// destroying a named entity through a reference (E8030 at run time), a prefab that destroys itself and a
+// prefab with bindings and a user material.
+material Glow {
+    param tint: color = #ffffff;
+    param level: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * level, 1.0);
+    }
+}
+
+prefab Bullet {
+    param origin: vec3;
+    param speed: f32 = 2.0;
+    param tint: color = #ff8800;
+    param life: f32 = 1.0;
+    position: origin;
+    scale: vec3(0.5, 0.5, 0.5);
+    mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+    material: Unlit { color: tint; };
+    state age: f32 = 0.0;
+    update(dt: f32) {
+        self.age += dt;
+        self.position = self.position + vec3(speed * dt, 0.0, 0.0);
+        if self.age >= life {
+            destroy(self);
+        }
+    }
+    on key_down(Key.X) {
+        self.age = life;
+    }
+}
+
+prefab Pulse {
+    param base: f32 = 1.0;
+    state hits: i32 = 0;
+    position: vec3(0.0, 2.0, 0.0);
+    scale: bind(vec3(base + frame.time, base + frame.time, base + frame.time));
+    mesh: Sphere { radius: 0.5; segments: 16; rings: 8; };
+    material: Glow { tint: #00ff00; level: bind(base + frame.time); };
+    on key_down(Key.H) {
+        self.hits += 1;
+    }
+}
+
+scene Demo {
+    state last: entity_ref = Floor;
+    state anchor: entity_ref = Floor;
+    state shots: i32 = 0;
+    state same: bool = false;
+    state live: bool = false;
+    camera Main {
+        position: vec3(0.0, 2.0, 8.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Floor {
+        mesh: Plane { size: vec2(10.0, 10.0); };
+    }
+    on key_down(Key.Space) {
+        last = spawn(Bullet { origin: vec3(f32(shots), 0.0, 0.0); speed: f32(shots + 1); });
+        shots += 1;
+        same = last == Floor;
+        live = alive(last);
+    }
+    on key_down(Key.Enter) {
+        destroy(last);
+        live = alive(last);
+    }
+    on key_down(Key.B) {
+        let made = spawn(Bullet { origin: vec3(9.0, 0.0, 0.0); });
+        destroy(made);
+        last = made;
+        live = alive(made);
+    }
+    on key_down(Key.D) {
+        destroy(last);
+        destroy(last);
+    }
+    on key_down(Key.F) {
+        destroy(anchor);
+    }
+    on key_down(Key.P) {
+        spawn(Pulse { base: 0.5; });
+    }
+    on key_down(Key.L) {
+        live = alive(last);
+    }
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5080",
+    "file": "src/main.mtek",
+    "startByte": 149,
+    "endByte": 164,
+    "message": "`spawn` may be called only in lifecycle functions and event handlers, not in the initialiser of the state 'child'.",
+    "notes": [
+      "spawning and destroying entities are lifecycle operations of the scene"
+    ]
+  }
+]
