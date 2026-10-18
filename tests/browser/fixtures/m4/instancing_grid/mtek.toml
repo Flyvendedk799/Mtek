@@ -1,0 +1,6 @@
+[project]
+name = "fixture"
+language = "0.1"
+
+[host.inputs]
+camera_x = "Grid.camera_x"
