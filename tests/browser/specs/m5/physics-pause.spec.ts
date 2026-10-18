@@ -125,7 +125,6 @@ test.describe("pause and resume with physics (M5-06)", () => {
           }
           return now.steps >= beforeResume.steps + 3;
         }, "3 steps after the resume");
-        const counters = { ...app.debug.counters() };
         app.dispose();
         return { reported, atPause, beforeResume, reads, resumedAt, discardedAtResume, discardedAfterFirstFrame, duringState, step };
       },
