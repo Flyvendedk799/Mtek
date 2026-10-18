@@ -956,6 +956,15 @@ describe("input the engine could not survive is rejected before it reaches the e
     expect(world.counts()).toEqual({ bodies: 0, colliders: 0 });
   });
 
+  it("rejects negative damping, friction and restitution", () => {
+    const world = newWorld(v3(0, 0, 0));
+    expect(() => world.addBody(dynamic(1, -0.1, 0), ball(0.5), at(0, 0, 0), 1)).toThrow(RangeError);
+    expect(() => world.addBody(dynamic(1, 0, -0.1), ball(0.5), at(0, 0, 0), 1)).toThrow(RangeError);
+    expect(() => world.addBody(STATIC, box(1, 1, 1, -0.5), at(0, 0, 0), 1)).toThrow(RangeError);
+    expect(() => world.addBody(STATIC, box(1, 1, 1, 0.5, -0.5), at(0, 0, 0), 1)).toThrow(RangeError);
+    expect(world.counts()).toEqual({ bodies: 0, colliders: 0 });
+  });
+
   it("rejects non-finite poses, impulses, forces, velocities and targets", () => {
     const world = newWorld(v3(0, 0, 0));
     expect(() => world.addBody(STATIC, box(1, 1, 1), at(Number.NaN, 0, 0), 1)).toThrow(RangeError);

@@ -36,6 +36,10 @@ function requireFinite(value: number, what: string): void {
   if (!Number.isFinite(value)) throw new RangeError(`physics: ${what} must be finite, got ${value}`);
 }
 
+function requireNonNegative(value: number, what: string): void {
+  if (!(Number.isFinite(value) && value >= 0)) throw new RangeError(`physics: ${what} must be non-negative and finite, got ${value}`);
+}
+
 function requirePositive(value: number, what: string): void {
   if (!(Number.isFinite(value) && value > 0)) throw new RangeError(`physics: ${what} must be positive and finite, got ${value}`);
 }
@@ -97,8 +101,8 @@ class RapierWorld implements PhysicsWorld {
         break;
       case "dynamic":
         requirePositive(desc.mass, "a dynamic body's mass");
-        requireFinite(desc.linearDamping, "linearDamping");
-        requireFinite(desc.angularDamping, "angularDamping");
+        requireNonNegative(desc.linearDamping, "linearDamping");
+        requireNonNegative(desc.angularDamping, "angularDamping");
         bodyDesc = RAPIER.RigidBodyDesc.dynamic().setLinearDamping(desc.linearDamping).setAngularDamping(desc.angularDamping);
         break;
     }
@@ -122,8 +126,8 @@ class RapierWorld implements PhysicsWorld {
     }
 
     // Row "sensor, friction, restitution".
-    requireFinite(collider.friction, "friction");
-    requireFinite(collider.restitution, "restitution");
+    requireNonNegative(collider.friction, "friction");
+    requireNonNegative(collider.restitution, "restitution");
     colliderDesc.setSensor(collider.sensor).setFriction(collider.friction).setRestitution(collider.restitution);
     // Row "Dynamic": the mass goes on the collider, and Rapier derives a consistent inertia from the shape.
     if (desc.kind === "dynamic") colliderDesc.setMass(desc.mass);
