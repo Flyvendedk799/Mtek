@@ -295,7 +295,7 @@ test.describe("the PBR material against the CPU oracle (M4-03)", () => {
     testInfo.annotations.push({ type: "m4-pbr-max-error", description: notes.join("; ") });
   });
 
-  test("ambient light only: base colour times the ambient colour, independent of metallic and roughness", async ({ page, gpu }, testInfo) => {
+  test("ambient light only: (1 − metallic) times base colour times the ambient colour, independent of roughness", async ({ page, gpu }, testInfo) => {
     void gpu;
     const scenarios: Scenario[] = [
       { label: "ambient, dielectric, rough 0.8", metallic: 0, roughness: 0.8, base: BASE },
@@ -308,16 +308,18 @@ test.describe("the PBR material against the CPU oracle (M4-03)", () => {
     scenarios.forEach((scenario, index) => {
       const comparison = compare(scenario, result.rgb[index] ?? [], POINTS);
       notes.push(`${scenario.label}: max error ${String(comparison.maxError)}/255 (${comparison.worst || "exact"})`);
-      // The value is the closed form c * ambient_color * ambient_intensity at every pixel.
+      // The value is the closed form (1 − m) * c * ambient_color * ambient_intensity at every pixel (decision 0080).
       for (const linear of comparison.expectedLinear) {
-        scenario.base.forEach((c, channel) => expect(linear[channel]).toBeCloseTo(c * (AMBIENT_COLOR[channel] ?? 0) * AMBIENT_INTENSITY, 12));
+        scenario.base.forEach((c, channel) =>
+          expect(linear[channel]).toBeCloseTo((1 - scenario.metallic) * c * (AMBIENT_COLOR[channel] ?? 0) * AMBIENT_INTENSITY, 12),
+        );
       }
     });
     testInfo.annotations.push({ type: "m4-pbr-max-error", description: notes.join("; ") });
-    // Flat: every sphere pixel has the same colour, and ambient does not depend on metallic or roughness.
+    // Flat: every sphere pixel has the same colour; a metal receives no ambient light (decision 0080).
     const first = result.rgb[0] ?? [];
     expect(new Set(first.map(String)).size).toBe(1);
-    expect(result.rgb[1]).toEqual(first);
+    for (const rgb of result.rgb[1] ?? []) expect(rgb).toEqual([0, 0, 0]);
     expect(first[0]?.[0], "the red channel of the ambient colour dominates the blue one").toBeGreaterThan(first[0]?.[2] ?? 255);
     for (const rgb of result.rgb[2] ?? []) expect(rgb).toEqual([0, 0, 0]);
   });

@@ -135,17 +135,18 @@ Lights are components on **named** entities only in v0.1 (a `light` in a prefab 
 
 ## 8. Lighting model: the documented PBR subset (M4)
 
-The built-in `Pbr` material and the GPU intrinsic `lighting.pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` implement exactly the following. The runtime test-suite contains a CPU reference implementation of the same formulas (`spec/testing.md` §6.4); images are compared against it with tolerances, so these formulas are a test oracle, not just documentation. How the model is lowered to WGSL (one generated helper over `mtek_frame`), which `SurfaceInput` fields a call reads, where binary32 evaluation needs a guard, and the measured agreement with the oracle are decision `spec/decisions/0057-pbr-lighting.md`.
+The built-in `Pbr` material and the GPU intrinsic `lighting.pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` implement exactly the following. The runtime test-suite contains a CPU reference implementation of the same formulas (`spec/testing.md` §6.4); images are compared against it with tolerances, so these formulas are a test oracle, not just documentation. How the model is lowered to WGSL (one generated helper over `mtek_frame`), which `SurfaceInput` fields a call reads, where binary32 evaluation needs a guard, and the measured agreement with the oracle are decision `spec/decisions/0057-pbr-lighting.md`. Rules 2, 3, 5, 6, 7 and 8 follow the glTF Sample Renderer and `KHR_lights_punctual` with physical light units since decision `spec/decisions/0080-pbr-gltf-alignment.md`.
 
 Notation: `N` = normalised world normal; `V = normalize(camera_position − world_position)`; for each light, `L` = unit vector from the surface towards the light, `H = normalize(L + V)`; `NL = max(dot(N, L), 0)`, `NV = max(dot(N, V), 1e-4)`, `NH = max(dot(N, H), 0)`, `VH = max(dot(V, H), 0)`; `c = base_color.rgb`.
 
 1. Roughness: `r = clamp(roughness, 0.045, 1.0)`, `α = r²`. Metallic: `m = clamp(metallic, 0.0, 1.0)`.
-2. Distribution (GGX / Trowbridge-Reitz): `D = α² / (π · (NH² · (α² − 1) + 1)²)`.
-3. Visibility (height-correlated Smith-GGX): `Vis = 0.5 / (NL · sqrt(NV² · (1 − α²) + α²) + NV · sqrt(NL² · (1 − α²) + α²))`; if the denominator is `0`, `Vis = 0`.
-4. Fresnel (Schlick): `F0 = mix(vec3(0.04), c, m)`; `F = F0 + (1 − F0) · (1 − VH)⁵`.
-5. Specular `= D · Vis · F`. Diffuse `= (1 − F) · (1 − m) · c / π`.
-6. Radiance of a directional light: `E = light.color.rgb · intensity`. Of a point light at distance `d`: `E = light.color.rgb · intensity / max(d², 1e-4) · w`, with `w = 1` if `range = 0`, else `w = clamp(1 − (d / range)⁴, 0, 1)²`.
-7. Result: `rgb = Σ_lights (Diffuse + Specular) · E · NL + c · ambient_color.rgb · ambient_intensity`; alpha `= 1`.
+2. Distribution (GGX / Trowbridge-Reitz): `D = α² / (π · f²)` with `f = (1 − NH²) + NH² · α²`. (This is the same value as `NH² · (α² − 1) + 1`, written so that it does not cancel at `NH ≈ 1` when `α²` is small; implementations use this form.)
+3. Visibility (height-correlated Smith-GGX): `Vis = 0.5 / (NL · sqrt(NV² · (1 − α²) + α²) + NV · sqrt(NL² · (1 − α²) + α²))`; if the denominator is `0`, `Vis = 0`. Under the clamps of rule 1 and the notation (`NV ≥ 1e-4`, `α ≥ 0.002025`) the denominator is at least `2.025e-7`, so the zero case is **unreachable**; it is kept as a guard only.
+4. Fresnel (Schlick): `F0 = mix(vec3(0.04), c, m)`; `F = F0 + (1 − F0) · (1 − VH)⁵`. The dielectric Fresnel is `F_d = 0.04 + 0.96 · (1 − VH)⁵` (a scalar).
+5. Specular `= D · Vis · F`. Diffuse `= (1 − m) · (1 − F_d) · c / π`. (Together this is glTF's `mix(dielectric_brdf, metal_brdf, m)` exactly.)
+6. Radiance of a directional light: `E = light.color.rgb · intensity`. Of a point light at distance `d`: `E = light.color.rgb · intensity / max(d², 1e-4) · w`, with `w = 1` if `range = 0`, else `w = clamp(1 − (d / range)⁴, 0, 1)` (the `KHR_lights_punctual` window, not squared).
+7. Result: `rgb = Σ_lights (Diffuse + Specular) · E · NL + (1 − m) · c · ambient_color.rgb · ambient_intensity`; alpha `= 1`. A metal receives no diffuse ambient.
+8. No `NaN`: a light's term is exactly `0` when `NL ≤ 0`, and when `L + V = 0` (no half vector, reachable with `NL > 0` only for a back-facing normal). Implementations must test both before forming `H = normalize(L + V)`.
 
 No image-based lighting, emissive, occlusion, normal mapping, clear-coat or shadows in v0.1. A call `lighting.pbr(input, …)` reads `world_position` and `world_normal` of the stage input (§3.1), and of nothing else.
 

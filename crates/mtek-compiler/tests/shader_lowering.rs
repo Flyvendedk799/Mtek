@@ -269,10 +269,19 @@ fn lighting_pbr_is_a_helper_over_the_frame_block_that_reads_two_surface_fields()
             "for (var mtek_i = 0u; mtek_i < min(mtek_frame.light_count, 4u); mtek_i++) {",
             "mtek_frame.lights[mtek_i]",
             "mtek_surface.world_normal",
-            "mtek_c * mtek_frame.ambient",
+            // Rule 7: ambient scaled by (1 - m) (decision 0080).
+            "(mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient",
             "return vec4<f32>(",
-            // The half vector is computed only for a light that faces the surface (NL > 0).
-            "if mtek_nl > 0.0 {\n            let mtek_h = normalize(mtek_l + mtek_v);",
+            // Rule 8: the half vector is computed only for a light that faces the surface
+            // (NL > 0) and only when L + V is not zero (decision 0080).
+            "if mtek_nl > 0.0 {\n            let mtek_lv = mtek_l + mtek_v;\n            if dot(mtek_lv, mtek_lv) > 0.0 {\n                let mtek_h = normalize(mtek_lv);",
+            // Rule 2, the stable form (decision 0080).
+            "let mtek_spread = (1.0 - mtek_nh2) + (mtek_nh2 * mtek_a2);",
+            // Rule 5, the glTF diffuse with the dielectric Fresnel.
+            "let mtek_fresnel_d = 0.04 + (0.96 * mtek_t5);",
+            "let mtek_diffuse = mtek_c * (((1.0 - mtek_m) * (1.0 - mtek_fresnel_d)) / 3.1415927);",
+            // Rule 6, the un-squared window.
+            "let mtek_window = select(mtek_falloff, 1.0, mtek_range == 0.0);",
             // (1 - VH)^5 by multiplication; no `pow` is involved.
             "let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;",
         ] {

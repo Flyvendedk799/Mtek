@@ -68,25 +68,30 @@ fn mtek_lighting_pbr(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>,
         let mtek_ratio = sqrt(mtek_distance2) / select(mtek_range, 1.0, mtek_range == 0.0);
         let mtek_ratio2 = mtek_ratio * mtek_ratio;
         let mtek_falloff = clamp(1.0 - (mtek_ratio2 * mtek_ratio2), 0.0, 1.0);
-        let mtek_window = select(mtek_falloff * mtek_falloff, 1.0, mtek_range == 0.0);
+        let mtek_window = select(mtek_falloff, 1.0, mtek_range == 0.0);
         let mtek_radiance = select(mtek_light.color, mtek_light.color * (mtek_window / max(mtek_distance2, 0.0001)), mtek_is_point);
         if mtek_nl > 0.0 {
-            let mtek_h = normalize(mtek_l + mtek_v);
-            let mtek_nh = max(dot(mtek_n, mtek_h), 0.0);
-            let mtek_vh = max(dot(mtek_v, mtek_h), 0.0);
-            let mtek_spread = ((mtek_nh * mtek_nh) * (mtek_a2 - 1.0)) + 1.0;
-            let mtek_d = mtek_a2 / ((3.1415927 * mtek_spread) * mtek_spread);
-            let mtek_denominator = (mtek_nl * sqrt(((mtek_nv * mtek_nv) * (1.0 - mtek_a2)) + mtek_a2)) + (mtek_nv * sqrt(((mtek_nl * mtek_nl) * (1.0 - mtek_a2)) + mtek_a2));
-            let mtek_vis = select(0.5 / mtek_denominator, 0.0, mtek_denominator == 0.0);
-            let mtek_t = 1.0 - mtek_vh;
-            let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;
-            let mtek_fresnel = mtek_f0 + ((vec3<f32>(1.0) - mtek_f0) * mtek_t5);
-            let mtek_specular = mtek_fresnel * (mtek_d * mtek_vis);
-            let mtek_diffuse = ((vec3<f32>(1.0) - mtek_fresnel) * mtek_c) * ((1.0 - mtek_m) / 3.1415927);
-            mtek_rgb = mtek_rgb + (((mtek_diffuse + mtek_specular) * mtek_radiance) * mtek_nl);
+            let mtek_lv = mtek_l + mtek_v;
+            if dot(mtek_lv, mtek_lv) > 0.0 {
+                let mtek_h = normalize(mtek_lv);
+                let mtek_nh = max(dot(mtek_n, mtek_h), 0.0);
+                let mtek_vh = max(dot(mtek_v, mtek_h), 0.0);
+                let mtek_nh2 = mtek_nh * mtek_nh;
+                let mtek_spread = (1.0 - mtek_nh2) + (mtek_nh2 * mtek_a2);
+                let mtek_d = mtek_a2 / ((3.1415927 * mtek_spread) * mtek_spread);
+                let mtek_denominator = (mtek_nl * sqrt(((mtek_nv * mtek_nv) * (1.0 - mtek_a2)) + mtek_a2)) + (mtek_nv * sqrt(((mtek_nl * mtek_nl) * (1.0 - mtek_a2)) + mtek_a2));
+                let mtek_vis = select(0.5 / mtek_denominator, 0.0, mtek_denominator == 0.0);
+                let mtek_t = 1.0 - mtek_vh;
+                let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;
+                let mtek_fresnel = mtek_f0 + ((vec3<f32>(1.0) - mtek_f0) * mtek_t5);
+                let mtek_fresnel_d = 0.04 + (0.96 * mtek_t5);
+                let mtek_specular = mtek_fresnel * (mtek_d * mtek_vis);
+                let mtek_diffuse = mtek_c * (((1.0 - mtek_m) * (1.0 - mtek_fresnel_d)) / 3.1415927);
+                mtek_rgb = mtek_rgb + (((mtek_diffuse + mtek_specular) * mtek_radiance) * mtek_nl);
+            }
         }
     }
-    return vec4<f32>(mtek_rgb + (mtek_c * mtek_frame.ambient), 1.0);
+    return vec4<f32>(mtek_rgb + ((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient), 1.0);
 }
 
 fn mtek_fragment(u_p_surface: MtekSurfaceInput) -> vec4<f32> {

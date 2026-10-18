@@ -552,12 +552,12 @@ impl Builder {
     }
 
     /// `mtek_lighting_pbr`: `spec/materials.md` section 8 over `mtek_frame.lights`, one
-    /// numbered rule per block (decision 0057). Every operation is the specification's, in
-    /// its order; the only additions are the guards that keep an undefined intermediate
-    /// out of a defined result:
+    /// numbered rule per block (decisions 0057 and 0080). Every operation is the
+    /// specification's, in its order; the guards keep an undefined intermediate out of a
+    /// defined result:
     ///
-    /// - a light term is skipped when `NL == 0` (rule 7 multiplies it by `NL`, so it is
-    ///   exactly 0 whatever the half vector is, and `normalize(L + V)` is `NaN` for `L = -V`);
+    /// - a light term is skipped when `NL == 0` or `L + V = 0` (rule 8: it is 0 there, and
+    ///   `normalize(L + V)` would be `NaN`);
     /// - a divisor that a `select` discards is made harmless first (`range = 0` is
     ///   unlimited, where `d / range` is not used).
     ///
@@ -591,26 +591,21 @@ impl Builder {
         let range = || s("range");
         let unlimited = || self.bin(BinaryOp::Equal, range(), self.f(0.0));
 
-        // The per-light term, evaluated only for a light that faces the surface (NL > 0).
+        // The per-light term, evaluated only for a light that faces the surface (NL > 0) and
+        // has a half vector (L + V != 0), rule 8.
         let light_term = vec![
             // Rule 2 and 4: the half vector and its two cosines.
             self.let_(
                 "h",
-                self.call(
-                    Intrinsic::Normalize,
-                    vec![self.add(v3("l"), v3("v"))],
-                    ShaderType::VEC3,
-                ),
+                self.call(Intrinsic::Normalize, vec![v3("lv")], ShaderType::VEC3),
             ),
             self.let_("nh", max(dot(v3("n"), v3("h")), self.f(0.0))),
             self.let_("vh", max(dot(v3("v"), v3("h")), self.f(0.0))),
-            // Rule 2: D = a2 / (pi * (NH^2 * (a2 - 1) + 1)^2).
+            // Rule 2: D = a2 / (pi * f^2), the stable form f = (1 - NH^2) + NH^2 * a2.
+            self.let_("nh2", self.mul(s("nh"), s("nh"))),
             self.let_(
                 "spread",
-                self.add(
-                    self.mul(self.mul(s("nh"), s("nh")), self.sub(s("a2"), self.f(1.0))),
-                    self.f(1.0),
-                ),
+                self.add(one_minus(s("nh2")), self.mul(s("nh2"), s("a2"))),
             ),
             self.let_(
                 "d",
@@ -622,8 +617,9 @@ impl Builder {
                     ),
                 ),
             ),
-            // Rule 3: Vis = 0.5 / (NL sqrt(NV^2 (1 - a2) + a2) + NV sqrt(NL^2 (1 - a2) + a2)),
-            // 0 for a zero denominator.
+            // Rule 3: Vis = 0.5 / (NL sqrt(NV^2 (1 - a2) + a2) + NV sqrt(NL^2 (1 - a2) + a2)).
+            // The denominator is at least 2.025e-7 under the clamps; the zero case is kept as
+            // the documented, unreachable guard of the specification.
             self.let_(
                 "denominator",
                 self.add(
@@ -664,7 +660,12 @@ impl Builder {
                 "fresnel",
                 self.add(v3("f0"), self.mul(self.sub(splat(1.0), v3("f0")), s("t5"))),
             ),
-            // Rule 5: specular = D Vis F; diffuse = (1 - F) (1 - m) c / pi.
+            // Rule 4: the dielectric Fresnel F_d = 0.04 + 0.96 (1 - VH)^5 of the diffuse term.
+            self.let_(
+                "fresnel_d",
+                self.add(self.f(0.04), self.mul(self.f(0.96), s("t5"))),
+            ),
+            // Rule 5: specular = D Vis F; diffuse = (1 - m) (1 - F_d) c / pi (glTF).
             self.let_(
                 "specular",
                 self.mul(v3("fresnel"), self.mul(s("d"), s("vis"))),
@@ -672,8 +673,11 @@ impl Builder {
             self.let_(
                 "diffuse",
                 self.mul(
-                    self.mul(self.sub(splat(1.0), v3("fresnel")), v3("c")),
-                    self.div(one_minus(s("m")), self.f(std::f32::consts::PI)),
+                    v3("c"),
+                    self.div(
+                        self.mul(one_minus(s("m")), one_minus(s("fresnel_d"))),
+                        self.f(std::f32::consts::PI),
+                    ),
                 ),
             ),
             // Rule 7: (Diffuse + Specular) E NL.
@@ -739,8 +743,8 @@ impl Builder {
                 ),
             ),
             self.let_("nl", max(dot(v3("n"), v3("l")), self.f(0.0))),
-            // Rule 6: w = 1 without a range, else clamp(1 - (d / range)^4, 0, 1)^2; the divisor
-            // is 1 for the unlimited light, whose quotient is not used.
+            // Rule 6: w = 1 without a range, else clamp(1 - (d / range)^4, 0, 1) (glTF, not
+            // squared); the divisor is 1 for the unlimited light, whose quotient is not used.
             self.let_(
                 "ratio",
                 self.div(
@@ -753,14 +757,7 @@ impl Builder {
                 "falloff",
                 clamp(one_minus(self.mul(s("ratio2"), s("ratio2"))), 0.0, 1.0),
             ),
-            self.let_(
-                "window",
-                select(
-                    self.mul(s("falloff"), s("falloff")),
-                    self.f(1.0),
-                    unlimited(),
-                ),
-            ),
+            self.let_("window", select(s("falloff"), self.f(1.0), unlimited())),
             // E: the packed colour is already `color.rgb * intensity` (decision 0053 item 10).
             self.let_(
                 "radiance",
@@ -776,7 +773,17 @@ impl Builder {
             Statement::If {
                 branches: vec![(
                     self.bin(BinaryOp::Greater, s("nl"), self.f(0.0)),
-                    light_term,
+                    vec![
+                        self.let_("lv", self.add(v3("l"), v3("v"))),
+                        Statement::If {
+                            branches: vec![(
+                                self.bin(BinaryOp::Greater, dot(v3("lv"), v3("lv")), self.f(0.0)),
+                                light_term,
+                            )],
+                            otherwise: None,
+                            span: self.span,
+                        },
+                    ],
                 )],
                 otherwise: None,
                 span: self.span,
@@ -837,12 +844,13 @@ impl Builder {
                 body: per_light,
                 span: self.span,
             },
-            // Rule 7, ambient: c * ambient_color * ambient_intensity, packed as `ambient`.
+            // Rule 7, ambient: (1 - m) * c * ambient_color * ambient_intensity, the last two
+            // packed as `ambient`.
             self.ret(self.vec4(vec![
                 self.add(
                     v3("rgb"),
                     self.mul(
-                        v3("c"),
+                        self.mul(v3("c"), one_minus(s("m"))),
                         frame().field("ambient", ShaderType::VEC3, self.span),
                     ),
                 ),
