@@ -6,7 +6,7 @@
 //! specification and fails if a code, severity or title differs.
 //!
 //! The table lists exactly the concrete codes of the specification, in the
-//! order of its tables. Ranges such as `E7001-E7099` are reserved by the
+//! order of its tables. Ranges such as `E7032-E7099` are reserved by the
 //! specification but are not codes yet; they are added here when the owning
 //! specification section (assets, physics) lists them.
 

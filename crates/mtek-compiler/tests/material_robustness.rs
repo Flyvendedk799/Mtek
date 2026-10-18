@@ -77,7 +77,7 @@ const PARAMS: &[&str] = &[
     "string = \"x\"",
     "mesh = Box {}",
     "SurfaceInput",
-    "glb_asset",
+    "entity_ref",
     "texture = texture.white()",
     "sampler = sampler.linear_repeat()",
 ];

@@ -1185,7 +1185,9 @@ mod tests {
     fn every_implemented_const_eligible_namespace_function_has_an_evaluator() {
         let registry = registry();
         for namespace in &registry.namespaces {
-            if !namespace.since.is_reached_by(IMPLEMENTED_MILESTONE) {
+            // The asset functions read files: the checker evaluates them through the asset
+            // host (decision 0058), not through `namespace_function`.
+            if !namespace.since.is_reached_by(IMPLEMENTED_MILESTONE) || namespace.name == "asset" {
                 continue;
             }
             for member in &namespace.members {

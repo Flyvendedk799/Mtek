@@ -294,6 +294,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7031"></a>E7031 | image decode failure | runtime: the browser could not decode the image (M4-06) |
 | <a id="mtek-e7901"></a>E7901 | remote assets not supported | an `http:`, `https:` or other URL as an asset path |
 | <a id="mtek-e7902"></a>E7902 | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy |
+| (E7032–E7099) | further asset codes | reserved; added with the feature that needs them |
 
 ### 5.8 Runtime (`8xxx`)
 | Code | Title | Trigger |

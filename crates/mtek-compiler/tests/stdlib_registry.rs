@@ -646,7 +646,8 @@ fn namespace_function_domains_and_constness() {
             f.const_eligible,
             "asset.{name} is const-eligible (spec/assets.md section 2)"
         );
-        assert_eq!(f.since, Milestone::M4);
+        // Implemented by task M4-05 before the M4 gate (decision 0058).
+        assert_eq!(f.since, Milestone::M1);
     }
     // `color.srgb` is folded in binary32 (decision 0024 item 6); only GPU-only functions are
     // excluded.
@@ -977,23 +978,25 @@ fn since_milestones_follow_the_work_plan() {
     assert_eq!(registry.event("key_down").unwrap().since, Milestone::M1);
     assert_eq!(registry.enum_def("Key").unwrap().since, Milestone::M1);
     // M4: textures and samplers landed with task M4-04, before the M4 gate; they are marked as
-    // implemented by the current build (decision 0054). Assets and lighting are still M4.
+    // implemented by the current build (decision 0054), and assets with task M4-05
+    // (decision 0058). Lighting is still M4.
     assert_eq!(intrinsic_since("sample"), Milestone::M1);
-    for name in ["texture", "sampler"] {
+    for name in ["texture", "sampler", "asset"] {
         assert_eq!(
             registry.namespace(name).unwrap().since,
             Milestone::M1,
             "{name}"
         );
+    }
+    for name in ["texture", "sampler"] {
         assert_eq!(registry.type_def(name).unwrap().since, Milestone::M1);
     }
-    for name in ["asset", "lighting"] {
-        assert_eq!(
-            registry.namespace(name).unwrap().since,
-            Milestone::M4,
-            "{name}"
-        );
-    }
+    assert_eq!(registry.type_def("glb_asset").unwrap().since, Milestone::M1);
+    assert_eq!(
+        registry.namespace("lighting").unwrap().since,
+        Milestone::M4,
+        "lighting"
+    );
     // M5: spawn, destroy, alive, collision events.
     for name in ["spawn", "destroy", "alive"] {
         assert_eq!(intrinsic_since(name), Milestone::M5, "{name}");
