@@ -152,16 +152,30 @@ impl Label {
     }
 }
 
-/// One replacement of bytes of one file.
+/// One replacement of the bytes of one file: the half-open byte range `span`
+/// (offsets into the file as stored on disk, like every other span) is
+/// replaced by `replacement`. An empty `span` is an insertion at its offset;
+/// an empty `replacement` would be a deletion, which no suggested edit is
+/// allowed to be (`spec/diagnostics.md` section 6).
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TextEdit {
     pub span: Span,
     pub replacement: String,
 }
 
-/// A mechanical fix (`spec/diagnostics.md` section 6). Attaching an edit is
-/// the reporter's promise that it re-checked the program with the edit
-/// applied; this crate does not verify that.
+/// A mechanical fix (`spec/diagnostics.md` section 6): one named change made of
+/// one or more [`TextEdit`]s that are applied together, all in original
+/// offsets.
+///
+/// `description` is the title a user interface shows for the change (a code
+/// action title). The edits of one suggestion never overlap each other, and
+/// the edits of the suggestions of different diagnostics of one report never
+/// overlap either ([`crate::edits`]).
+///
+/// A `SuggestedEdit` built by a reporting stage is only a *proposal*
+/// ([`Diagnostic::candidate`]); it becomes an attached edit
+/// ([`Diagnostic::edits`]) only when [`crate::edits`] has re-checked the
+/// project with it applied.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct SuggestedEdit {
     pub description: String,
@@ -186,6 +200,12 @@ impl SuggestedEdit {
         });
         self
     }
+
+    /// Add one insertion of `text` at the offset `at` (an empty span).
+    #[must_use]
+    pub fn insert(self, at: Span, text: impl Into<String>) -> Self {
+        self.replace(Span::at(at.file, at.start), text)
+    }
 }
 
 /// Prefix that marks a note as a `help:` hint (`spec/diagnostics.md` 2.1:
@@ -207,7 +227,15 @@ pub struct Diagnostic {
     pub expected: Option<String>,
     pub actual: Option<String>,
     pub notes: Vec<String>,
+    /// Validated suggested edits (`spec/diagnostics.md` section 6). Only
+    /// [`crate::edits`] fills this field, after it re-checked the project with
+    /// each proposal applied.
     pub edits: Vec<SuggestedEdit>,
+    /// Edits the reporting stage proposes, not yet validated. The report
+    /// finisher ([`crate::edits`]) validates them, moves the survivors to
+    /// [`Self::edits`] and empties this list; it is never part of the JSON
+    /// envelope.
+    pub candidates: Vec<SuggestedEdit>,
     pub phase: Phase,
 }
 
@@ -228,6 +256,7 @@ impl Diagnostic {
             actual: None,
             notes: Vec::new(),
             edits: Vec::new(),
+            candidates: Vec::new(),
             phase: code.default_phase(),
         }
     }
@@ -298,10 +327,23 @@ impl Diagnostic {
         self
     }
 
-    /// Attach a validated suggested edit.
+    /// Attach an edit that was already validated. Reporting stages never call
+    /// this: they propose with [`Self::candidate`] and [`crate::edits`]
+    /// attaches what survives its re-check (a test of this crate asserts that
+    /// no other source file calls it).
     #[must_use]
     pub fn edit(mut self, edit: SuggestedEdit) -> Self {
         self.edits.push(edit);
+        self
+    }
+
+    /// Propose a mechanical fix. It is attached to the finished report only if
+    /// the project, re-checked with it applied, no longer has this diagnostic
+    /// and has no new error; a diagnostic with several proposals is ambiguous
+    /// and gets none (`spec/diagnostics.md` section 6).
+    #[must_use]
+    pub fn candidate(mut self, edit: SuggestedEdit) -> Self {
+        self.candidates.push(edit);
         self
     }
 

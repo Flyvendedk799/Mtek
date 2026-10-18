@@ -22,6 +22,7 @@ use std::collections::BTreeMap;
 
 use crate::assets::{AssetLimits, AssetLoader, AssetStore, attributes::check_attributes};
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report};
+use crate::edits::{self, Recheck};
 use crate::prelude::{compile_materials, uses_builtin_material};
 use crate::project::{
     LoadedModule, ModuleId, Project, ProjectRoot, SceneSelection, edit_distance, load_modules,
@@ -190,7 +191,13 @@ pub fn analyze(root: &ProjectRoot, fs: &dyn Fs) -> Analysis {
 pub fn analyze_with(root: &ProjectRoot, fs: &dyn Fs, options: &AnalyzeOptions) -> Analysis {
     let mut sink = Diagnostics::new();
     let front = front_end_with(root, fs, options, &mut sink);
-    front.finish(sink.finish())
+    let recheck = Recheck { root, fs, options };
+    let report = edits::finish(
+        sink,
+        &recheck,
+        front.project.as_ref().map(|project| &project.sources),
+    );
+    front.finish(report)
 }
 
 /// The front end, reporting to `sink`.

@@ -26,8 +26,9 @@ pub mod view;
 
 use crate::TargetProfile;
 use crate::assets::AssetStore;
-use crate::check::front_end;
+use crate::check::{AnalyzeOptions, front_end};
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report};
+use crate::edits::{self, Recheck};
 use crate::ir::{self, LowerError, Program};
 use crate::package::{checked_plan, material_shaders};
 use crate::project::ProjectRoot;
@@ -168,10 +169,17 @@ pub fn inspect(root: &ProjectRoot, fs: &dyn Fs, what: Inspect) -> InspectResult 
             Err(diagnostics) => sink.extend(diagnostics),
         }
     }
+    let options = AnalyzeOptions::default();
+    let recheck = Recheck {
+        root,
+        fs,
+        options: &options,
+    };
+    let report = edits::finish(sink, &recheck, Some(&sources));
     InspectResult {
         project_name,
         sources,
-        report: sink.finish(),
+        report,
         ir,
         what,
         shaders,

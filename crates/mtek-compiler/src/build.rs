@@ -18,8 +18,9 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use crate::check::front_end;
+use crate::check::{AnalyzeOptions, front_end};
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report};
+use crate::edits::{self, Recheck};
 use crate::ir::{self, LowerError};
 use crate::package::{PackageInput, package};
 use crate::project::ProjectRoot;
@@ -227,6 +228,13 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
         }
     }
 
+    let analyze_options = AnalyzeOptions::default();
+    let recheck = Recheck {
+        root,
+        fs,
+        options: &analyze_options,
+    };
+    let report = edits::finish(sink, &recheck, Some(&sources));
     let (project_name, out_dir) = match front.project {
         Some(project) => (
             Some(project.config.project.name),
@@ -234,7 +242,6 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
         ),
         None => (None, None),
     };
-    let report = sink.finish();
     match packaged {
         Some(result) if report.summary.errors == 0 => BuildResult {
             project_name,

@@ -387,6 +387,7 @@ impl Parser<'_> {
     fn report_missing_semi(&mut self, what: &str) {
         let at = Span::at(self.file, self.prev_end);
         let found = self.found();
+        let edit = SuggestedEdit::new("insert the missing `;`").replace(at, ";");
         let diagnostic = Diagnostic::new(
             Code::E1003,
             format!("Missing `;` at the end of the {what}, found {found}."),
@@ -394,9 +395,9 @@ impl Parser<'_> {
         .at(at)
         .expected("`;`")
         .actual(found)
-        .help("end every statement, field and declaration with `;`");
+        .help("end every statement, field and declaration with `;`")
+        .candidate(edit.clone());
         if self.error(diagnostic) {
-            let edit = SuggestedEdit::new("insert the missing `;`").replace(at, ";");
             self.candidate_edits.push(CandidateEdit {
                 code: Code::E1003,
                 at,

@@ -21,7 +21,7 @@
 //! A literal that received a diagnostic carries
 //! [`TokenValue::Malformed`], so that the parser does not report it again.
 
-use crate::diagnostics::{Code, Diagnostic, Diagnostics, Severity};
+use crate::diagnostics::{Code, Diagnostic, Diagnostics, Severity, SuggestedEdit};
 use crate::source::{FileId, SourceFile, Span};
 
 use super::token::{
@@ -34,8 +34,10 @@ use super::token::{
 ///
 /// The lexer cannot validate the edit: `spec/diagnostics.md` section 6 only
 /// allows attaching an edit after the file was re-checked with it applied.
-/// The driver that can do that looks the fix up by the span of the `E0022`
-/// diagnostic and attaches it as a suggested edit if the re-check passes.
+/// The same edit travels with the `E0022` diagnostic as a proposal
+/// ([`Diagnostic::candidate`]); [`crate::edits`] attaches it as a suggested edit
+/// if the re-check passes. This list is the lexer's own record of the same
+/// proposals, for tools and tests that run the lexer alone.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FloatFix {
     pub span: Span,
@@ -652,7 +654,11 @@ impl<'a> Lexer<'a> {
             ),
         )
         .at(span)
-        .help(format!("write `{replacement}`"));
+        .help(format!("write `{replacement}`"))
+        .candidate(
+            SuggestedEdit::new(format!("write the float literal as `{replacement}`"))
+                .replace(span, replacement.as_str()),
+        );
         if self.report(diagnostic) {
             self.float_fixes.push(FloatFix { span, replacement });
         }
