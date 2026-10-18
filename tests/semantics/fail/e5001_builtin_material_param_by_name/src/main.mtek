@@ -1,6 +1,18 @@
+// A param the built-in material does not declare is E5001 with the list of its params, as for a
+// user material (decision 0087): on `Unlit`, on `Pbr`, on the default `Unlit {}` of a mesh, on a
+// static instance of a prefab and through `self` in the prefab. An entity without a mesh and
+// without a material has no material at all.
+prefab Lamp {
+    mesh: Sphere {};
+    material: Pbr { roughness: 0.25 };
+
+    on key_down(Key.L) {
+        self.material.gloss = 0.5;
+    }
+}
+
 scene Demo {
     clear_color: #202020;
-    state taps: i32 = 0;
 
     camera Main {
         position: vec3(0.0, 0.0, 10.0);
@@ -17,13 +29,22 @@ scene Demo {
         mesh: Box { size: vec3(4.0, 0.2, 1.0) };
     }
 
-    on key_down(Key.Space) {
-        Cube.material.color = #ff0000;
-        taps += 1;
+    entity Ball {
+        mesh: Sphere {};
+        material: Pbr {};
     }
 
-    on key_down(Key.Enter) {
-        let current: color = Cube.material.color;
-        Floor.material.color = current;
+    entity Empty {
+        position: vec3(0.0, 1.0, 0.0);
+    }
+
+    entity Hanging: Lamp {}
+
+    on key_down(Key.Space) {
+        Cube.material.colour = #ff0000;
+        let albedo: color = Ball.material.albedo;
+        Floor.material.tint = albedo;
+        Hanging.material.shininess = 1.0;
+        Empty.material.color = #ffffff;
     }
 }

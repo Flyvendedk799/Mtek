@@ -1,0 +1,73 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 516,
+    "endByte": 535,
+    "message": "Cannot assign a value of type vec3 to a place of type color.",
+    "expected": "color",
+    "actual": "vec3"
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 571,
+    "endByte": 575,
+    "message": "Cannot assign a value of type bool to a place of type f32.",
+    "expected": "f32",
+    "actual": "bool"
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 612,
+    "endByte": 615,
+    "message": "Cannot assign a value of type f32 to a place of type color.",
+    "expected": "color",
+    "actual": "f32"
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 642,
+    "endByte": 665,
+    "message": "The local 'rough' is declared as i32, but its value has type f32.",
+    "expected": "i32",
+    "actual": "f32",
+    "related": [
+      {
+        "message": "the local 'rough' is declared as i32 here",
+        "file": "src/main.mtek",
+        "startByte": 636,
+        "endByte": 639
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 692,
+    "endByte": 712,
+    "message": "The local 'tint' is declared as vec4, but its value has type color.",
+    "expected": "vec4",
+    "actual": "color",
+    "related": [
+      {
+        "message": "the local 'tint' is declared as vec4 here",
+        "file": "src/main.mtek",
+        "startByte": 685,
+        "endByte": 689
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E3010",
+    "file": "src/main.mtek",
+    "startByte": 743,
+    "endByte": 745,
+    "message": "The operator `+` is not defined for color: colours have no arithmetic.",
+    "notes": [
+      "help: compute with the linear components `.rgb` (a vec3) and build the colour with `color.linear(rgb, a)`"
+    ]
+  }
+]

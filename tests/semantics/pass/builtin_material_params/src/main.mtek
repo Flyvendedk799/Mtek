@@ -1,0 +1,68 @@
+// The params of the built-in materials are read and written by name like those of a user material
+// (decision 0087): `Unlit` and `Pbr` written in the descriptor, the default `Unlit {}` of an entity
+// with a mesh, assignments and compound assignments from the scene and from an entity's own handler
+// (`self.material`), reads into locals, state and a binding, and a bound param next to written ones.
+scene Demo {
+    clear_color: #101418;
+    state taps: i32 = 0;
+    state seen: color = #000000;
+    state shine: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 1.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Sun {
+        rotation: quat.axis_angle(vec3(1.0, 0.0, 0.0), -0.7);
+        light: DirectionalLight { intensity: 2.0 };
+    }
+
+    entity Badge {
+        position: vec3(-1.5, 0.0, 0.0);
+        mesh: Box {};
+        material: Unlit { color: #22c55e };
+
+        on key_down(Key.B) {
+            self.material.color = #3b82f6;
+        }
+    }
+
+    entity Ball {
+        mesh: Sphere { radius: 0.6 };
+        material: Pbr { base_color: #c0c0c0; metallic: bind(shine); roughness: 0.5 };
+    }
+
+    entity Plain {
+        position: vec3(1.5, 0.0, 0.0);
+        mesh: Box { size: vec3(0.5, 0.5, 0.5) };
+    }
+
+    entity Marker {
+        position: bind(vec3(Ball.material.roughness, Ball.material.metallic, 0.0));
+        mesh: Box { size: vec3(0.1, 0.1, 0.1) };
+        material: Unlit { color: bind(Badge.material.color) };
+    }
+
+    update(dt: f32) {
+        Ball.material.roughness += dt * 0.25;
+        if Ball.material.roughness > 1.0 {
+            Ball.material.roughness = 0.1;
+        }
+    }
+
+    on key_down(Key.Space) {
+        taps += 1;
+        Badge.material.color = #ff0000;
+        Ball.material.base_color = color.linear(vec3(0.9, 0.6, 0.2), 1.0);
+        shine = 1.0 - shine;
+    }
+
+    on key_down(Key.Enter) {
+        let current: color = Badge.material.color;
+        seen = current;
+        Plain.material.color = current;
+        let rough: f32 = Ball.material.roughness;
+        Ball.material.roughness = rough * 0.5;
+    }
+}

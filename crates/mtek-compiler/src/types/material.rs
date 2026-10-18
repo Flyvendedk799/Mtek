@@ -43,9 +43,10 @@ use super::value::ConstValue;
 use super::{MaterialInfo, MaterialParam, StageInfo};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::project::edit_distance;
+use crate::resolve::gate::is_implemented;
 use crate::resolve::{DefId, DefKind, Res, STAGE_CAPTURE_NOTE};
 use crate::source::Span;
-use crate::stdlib::NamespaceMember;
+use crate::stdlib::{NamespaceMember, SchemaCategory};
 use crate::syntax::ast::{
     DescField, Expr, ExprKind, FieldValue, Ident, MaterialDecl, MaterialMember, StageFn,
 };
@@ -1008,10 +1009,34 @@ impl<'a> Checker<'a> {
         ty
     }
 
-    /// The params of the material instance type `instance`, in declaration order, with their types.
-    pub(super) fn instance_params(&self, instance: TyId) -> Vec<(String, TyId)> {
-        let Ty::MaterialInstance(key) = self.out.interner.get(instance) else {
-            return Vec::new();
+    /// The params of the material instance type `instance`, in declaration order, with their types:
+    /// those of a material of the program, or, for the descriptor of a built-in material (`Unlit`,
+    /// `Pbr`, typed as its registry schema), the implemented fields of the schema. The prelude
+    /// declares the same params with the same types (decision 0044 item 5, checked by test), so a
+    /// built-in instance's params are read, written and bound like a user material's (decision 0087).
+    pub(super) fn instance_params(&mut self, instance: TyId) -> Vec<(String, TyId)> {
+        let key = match self.out.interner.get(instance) {
+            Ty::MaterialInstance(key) => key,
+            Ty::Schema(name) => {
+                let Some(schema) = self
+                    .registry
+                    .schema(name)
+                    .filter(|schema| schema.category == SchemaCategory::Material)
+                else {
+                    return Vec::new();
+                };
+                let fields: Vec<_> = schema
+                    .fields
+                    .iter()
+                    .filter(|field| is_implemented(field.since))
+                    .map(|field| (field.name, field.ty))
+                    .collect();
+                return fields
+                    .into_iter()
+                    .map(|(name, ty)| (name.to_owned(), self.out.interner.from_type_ref(ty)))
+                    .collect();
+            }
+            _ => return Vec::new(),
         };
         let info = self
             .out

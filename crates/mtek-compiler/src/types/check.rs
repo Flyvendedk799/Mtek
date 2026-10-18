@@ -556,6 +556,7 @@ impl<'a> Checker<'a> {
                 _ => {}
             }
         }
+        self.note_default_material(self.res.def_of(entity.id), &entity.members);
     }
 
     /// `name: value;` of a scene, entity or scene object: the value is typed

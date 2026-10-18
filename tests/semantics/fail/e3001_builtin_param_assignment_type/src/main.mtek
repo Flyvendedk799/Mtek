@@ -1,0 +1,25 @@
+// The params of a built-in material have the types of the prelude's declarations (decision 0087):
+// an assignment of another type and a read into a local of another type are E3001, a colour has
+// no arithmetic (E3010), as for a user material's params.
+scene Demo {
+    camera Main {}
+
+    entity Badge {
+        mesh: Box {};
+        material: Unlit { color: #22c55e };
+    }
+
+    entity Ball {
+        mesh: Sphere {};
+        material: Pbr {};
+    }
+
+    on key_down(Key.Space) {
+        Badge.material.color = vec3(1.0, 0.0, 0.0);
+        Ball.material.roughness = true;
+        Ball.material.base_color = 0.5;
+        let rough: i32 = Ball.material.roughness;
+        let tint: vec4 = Badge.material.color;
+        Badge.material.color += #010101;
+    }
+}

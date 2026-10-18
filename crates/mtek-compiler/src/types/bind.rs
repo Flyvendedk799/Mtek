@@ -319,30 +319,13 @@ impl Checker<'_> {
     }
 
     /// The params and their types of the material instance literal `value` of `entity`: those of a
-    /// user material, or the fields of a registry material schema (`Unlit`).
+    /// user material, or the fields of a registry material schema (`Unlit`), as
+    /// [`Checker::instance_params`] gives them.
     fn descriptor_params(&mut self, value: &Expr, entity: DefId) -> Vec<(String, TyId)> {
-        if let Some(instance) = self.out.entity_material(entity) {
-            return self.instance_params(instance);
+        match self.out.entity_material(entity).or_else(|| self.ty_of(value.id)) {
+            Some(instance) => self.instance_params(instance),
+            None => Vec::new(),
         }
-        let Some(ty) = self.ty_of(value.id) else {
-            return Vec::new();
-        };
-        let super::ty::Ty::Schema(schema) = self.out.interner.get(ty) else {
-            return Vec::new();
-        };
-        let Some(schema) = self.registry.schema(schema) else {
-            return Vec::new();
-        };
-        let fields: Vec<_> = schema
-            .fields
-            .iter()
-            .filter(|f| is_implemented(f.since))
-            .map(|f| (f.name.to_owned(), f.ty))
-            .collect();
-        fields
-            .into_iter()
-            .map(|(name, ty)| (name, self.out.interner.from_type_ref(ty)))
-            .collect()
     }
 
     /// Type, purity and dependencies of one binding; pushes it when it is sound.

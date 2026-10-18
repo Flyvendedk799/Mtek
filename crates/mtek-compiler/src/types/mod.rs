@@ -508,11 +508,10 @@ pub struct Typeck {
     /// Every assignment to state, entity and camera fields and material
     /// params, in source order.
     writes: Vec<WriteSite>,
-    /// The type of the material instance of each named entity that has one.
+    /// The type of the material instance of each named entity and prefab that has one: a user
+    /// material's instance type, or the registry schema of a built-in material (`Unlit`, `Pbr`),
+    /// also when it is the default `Unlit {}` of an entity with a `mesh` (decision 0087).
     entity_materials: BTreeMap<DefId, TyId>,
-    /// The built-in material (`Unlit`, `Pbr`) of each named entity whose material is a built-in descriptor:
-    /// its params can be bound in the descriptor but not assigned (decision 0086).
-    entity_builtin_materials: BTreeMap<DefId, &'static str>,
     /// The schema (`DirectionalLight`, `PointLight`) of the light of each named entity that has one.
     entity_lights: BTreeMap<DefId, &'static str>,
     /// The body and collider of each named entity, prefab and static prefab instance that declares
@@ -553,7 +552,6 @@ impl Typeck {
             cpu_bodies: Vec::new(),
             writes: Vec::new(),
             entity_materials: BTreeMap::new(),
-            entity_builtin_materials: BTreeMap::new(),
             entity_lights: BTreeMap::new(),
             entity_physics: BTreeMap::new(),
             bindings: Vec::new(),

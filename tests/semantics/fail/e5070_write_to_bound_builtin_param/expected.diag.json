@@ -1,0 +1,74 @@
+[
+  {
+    "code": "MTEK-E5070",
+    "file": "src/main.mtek",
+    "startByte": 412,
+    "endByte": 434,
+    "message": "`self.material.metallic` is bound, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "`self.material.metallic` is bound here",
+        "file": "src/main.mtek",
+        "startByte": 341,
+        "endByte": 374
+      }
+    ],
+    "notes": [
+      "help: update the binding's source instead"
+    ]
+  },
+  {
+    "code": "MTEK-E5070",
+    "file": "src/main.mtek",
+    "startByte": 706,
+    "endByte": 725,
+    "message": "`Badge.material.color` is bound, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "`Badge.material.color` is bound here",
+        "file": "src/main.mtek",
+        "startByte": 627,
+        "endByte": 663
+      }
+    ],
+    "notes": [
+      "help: update the binding's source instead"
+    ]
+  },
+  {
+    "code": "MTEK-E5070",
+    "file": "src/main.mtek",
+    "startByte": 920,
+    "endByte": 943,
+    "message": "`Ball.material.roughness` is bound, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "`Ball.material.roughness` is bound here",
+        "file": "src/main.mtek",
+        "startByte": 832,
+        "endByte": 843
+      }
+    ],
+    "notes": [
+      "help: update the binding's source instead"
+    ]
+  },
+  {
+    "code": "MTEK-E5070",
+    "file": "src/main.mtek",
+    "startByte": 998,
+    "endByte": 1023,
+    "message": "`Hanging.material.metallic` is bound by its prefab Lamp, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "`material.metallic` is bound here, in the prefab Lamp",
+        "file": "src/main.mtek",
+        "startByte": 341,
+        "endByte": 374
+      }
+    ],
+    "notes": [
+      "help: update the binding's source instead, or declare the field without `bind` in the prefab"
+    ]
+  }
+]

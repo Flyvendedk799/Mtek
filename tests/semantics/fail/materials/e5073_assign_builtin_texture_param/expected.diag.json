@@ -1,0 +1,42 @@
+[
+  {
+    "code": "MTEK-E5073",
+    "file": "src/main.mtek",
+    "startByte": 314,
+    "endByte": 346,
+    "message": "The texture or sampler param 'base_color_sampler' is construction-only and cannot be assigned.",
+    "notes": [
+      "resource params are bound when the material instance is created; replacing a texture is planned for v0.2"
+    ]
+  },
+  {
+    "code": "MTEK-E5073",
+    "file": "src/main.mtek",
+    "startByte": 567,
+    "endByte": 599,
+    "message": "The texture or sampler param 'base_color_texture' is construction-only and cannot be assigned.",
+    "notes": [
+      "resource params are bound when the material instance is created; replacing a texture is planned for v0.2"
+    ]
+  },
+  {
+    "code": "MTEK-E5073",
+    "file": "src/main.mtek",
+    "startByte": 700,
+    "endByte": 733,
+    "message": "The texture or sampler param 'base_color_sampler' is construction-only and cannot be assigned.",
+    "notes": [
+      "resource params are bound when the material instance is created; replacing a texture is planned for v0.2"
+    ]
+  },
+  {
+    "code": "MTEK-E5073",
+    "file": "src/main.mtek",
+    "startByte": 770,
+    "endByte": 803,
+    "message": "The texture or sampler param 'base_color_texture' is construction-only and cannot be assigned.",
+    "notes": [
+      "resource params are bound when the material instance is created; replacing a texture is planned for v0.2"
+    ]
+  }
+]
