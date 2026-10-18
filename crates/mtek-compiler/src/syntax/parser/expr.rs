@@ -51,35 +51,54 @@ pub(super) struct Sub {
 }
 
 /// A binary operator at its place in the precedence table.
-#[derive(Clone, Copy)]
-struct Infix {
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct BinaryOperator {
+    /// The operator token.
+    pub token: TokenKind,
+    pub op: BinaryOp,
+    /// The level of `spec/language.md` 6.1; a higher level binds tighter.
+    pub level: u8,
+    /// `a < b < c` is `E1010`.
+    pub non_associative: bool,
+}
+
+const fn binary(
+    token: TokenKind,
     op: BinaryOp,
     level: u8,
     non_associative: bool,
-}
-
-fn infix(kind: TokenKind) -> Option<Infix> {
-    let (op, level, non_associative) = match kind {
-        TokenKind::OrOr => (BinaryOp::Or, 1, false),
-        TokenKind::AndAnd => (BinaryOp::And, 2, false),
-        TokenKind::EqEq => (BinaryOp::Eq, 3, true),
-        TokenKind::BangEq => (BinaryOp::Ne, 3, true),
-        TokenKind::Lt => (BinaryOp::Lt, 4, true),
-        TokenKind::Le => (BinaryOp::Le, 4, true),
-        TokenKind::Gt => (BinaryOp::Gt, 4, true),
-        TokenKind::Ge => (BinaryOp::Ge, 4, true),
-        TokenKind::Plus => (BinaryOp::Add, 5, false),
-        TokenKind::Minus => (BinaryOp::Sub, 5, false),
-        TokenKind::Star => (BinaryOp::Mul, 6, false),
-        TokenKind::Slash => (BinaryOp::Div, 6, false),
-        TokenKind::Percent => (BinaryOp::Rem, 6, false),
-        _ => return None,
-    };
-    Some(Infix {
+) -> BinaryOperator {
+    BinaryOperator {
+        token,
         op,
         level,
         non_associative,
-    })
+    }
+}
+
+/// The binary operators, the one precedence table the parser reads (and the context export
+/// prints, decision 0072): loosest first.
+pub const BINARY_OPERATORS: [BinaryOperator; 13] = [
+    binary(TokenKind::OrOr, BinaryOp::Or, 1, false),
+    binary(TokenKind::AndAnd, BinaryOp::And, 2, false),
+    binary(TokenKind::EqEq, BinaryOp::Eq, 3, true),
+    binary(TokenKind::BangEq, BinaryOp::Ne, 3, true),
+    binary(TokenKind::Lt, BinaryOp::Lt, 4, true),
+    binary(TokenKind::Le, BinaryOp::Le, 4, true),
+    binary(TokenKind::Gt, BinaryOp::Gt, 4, true),
+    binary(TokenKind::Ge, BinaryOp::Ge, 4, true),
+    binary(TokenKind::Plus, BinaryOp::Add, 5, false),
+    binary(TokenKind::Minus, BinaryOp::Sub, 5, false),
+    binary(TokenKind::Star, BinaryOp::Mul, 6, false),
+    binary(TokenKind::Slash, BinaryOp::Div, 6, false),
+    binary(TokenKind::Percent, BinaryOp::Rem, 6, false),
+];
+
+fn infix(kind: TokenKind) -> Option<BinaryOperator> {
+    BINARY_OPERATORS
+        .iter()
+        .find(|row| row.token == kind)
+        .copied()
 }
 
 /// The non-associative operator that produced the left operand of the loop

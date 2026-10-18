@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use clap::error::ErrorKind;
 use clap::{Args, CommandFactory, Parser, Subcommand, ValueEnum};
 use mtek_compiler::BuildMode;
+use mtek_compiler::context::DEFAULT_MAX_BYTES;
 
 /// The output format of `--format`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ValueEnum)]
@@ -19,6 +20,14 @@ pub enum Format {
     #[default]
     Human,
     /// Exactly one JSON document on stdout.
+    Json,
+}
+
+/// The output format of `mtek context`: JSON only.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ValueEnum)]
+enum ContextFormat {
+    /// One JSON document on stdout (`spec/ai-and-benchmarks.md` section 2).
+    #[default]
     Json,
 }
 
@@ -151,8 +160,22 @@ enum CliCommand {
     Fmt(Unimplemented),
     #[command(hide = true)]
     Test(Unimplemented),
-    #[command(hide = true)]
-    Context(Unimplemented),
+    /// Export a versioned language and project context for AI agents (JSON)
+    Context {
+        /// The entry module of the project; the project is the nearest directory above it with
+        /// an mtek.toml, and the file must be its `project.entry`
+        #[arg(long, value_name = "FILE")]
+        entry: PathBuf,
+        /// A declaration to focus on, such as Demo.Cube (repeatable); without one, the entry scene
+        #[arg(long = "symbol", value_name = "NAME", num_args = 1..)]
+        symbols: Vec<String>,
+        /// The most bytes the output may have; the lowest-priority parts are left out to fit
+        #[arg(long, value_name = "N", default_value_t = DEFAULT_MAX_BYTES, value_parser = clap::value_parser!(usize))]
+        max_bytes: usize,
+        /// Output format
+        #[arg(long, value_enum, default_value_t)]
+        format: ContextFormat,
+    },
     #[command(hide = true)]
     Grammar(Unimplemented),
     #[command(hide = true)]
@@ -192,6 +215,12 @@ pub enum Request {
     },
     /// `mtek new NAME`.
     New { name: String },
+    /// `mtek context --entry FILE`.
+    Context {
+        entry: PathBuf,
+        symbols: Vec<String>,
+        max_bytes: usize,
+    },
 }
 
 impl Request {
@@ -201,6 +230,7 @@ impl Request {
             Request::Version | Request::Help(_) | Request::Dev { .. } | Request::New { .. } => {
                 Format::Human
             }
+            Request::Context { .. } => Format::Json,
             Request::Check { format, .. }
             | Request::Build { format, .. }
             | Request::Inspect { format, .. } => *format,
@@ -216,6 +246,7 @@ impl Request {
             Request::Inspect { .. } => "inspect",
             Request::Dev { .. } => "dev",
             Request::New { .. } => "new",
+            Request::Context { .. } => "context",
         }
     }
 }
@@ -304,7 +335,16 @@ where
         CliCommand::New { name } => Ok(Request::New { name }),
         CliCommand::Fmt(_) => Err(not_yet("mtek fmt", "M6")),
         CliCommand::Test(_) => Err(not_yet("mtek test", "M6")),
-        CliCommand::Context(_) => Err(not_yet("mtek context", "M6")),
+        CliCommand::Context {
+            entry,
+            symbols,
+            max_bytes,
+            format: ContextFormat::Json,
+        } => Ok(Request::Context {
+            entry,
+            symbols,
+            max_bytes,
+        }),
         CliCommand::Grammar(_) => Err(not_yet("mtek grammar", "M6")),
         CliCommand::Lsp(_) => Err(not_yet("mtek lsp", "M6")),
     }
@@ -475,7 +515,6 @@ mod tests {
         for (command, milestone) in [
             ("fmt", "M6"),
             ("test", "M6"),
-            ("context", "M6"),
             ("grammar", "M6"),
             ("lsp", "M6"),
         ] {

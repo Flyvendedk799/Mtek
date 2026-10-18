@@ -16,8 +16,8 @@ mod walk;
 pub use dump::{dump_expr, dump_module};
 pub use lexer::{FloatFix, Lexed, MAX_LEXICAL_DIAGNOSTICS, lex, lex_str};
 pub use parser::{
-    CandidateEdit, MAX_NESTING_DEPTH, ParsedExpr, ParsedModule, parse_expression,
-    parse_expression_no_desc, parse_module,
+    BINARY_OPERATORS, BinaryOperator, CandidateEdit, MAX_NESTING_DEPTH, ParsedExpr, ParsedModule,
+    parse_expression, parse_expression_no_desc, parse_module,
 };
 pub use token::{
     KEYWORDS, PUNCTUATION, RESERVED_WORDS, Token, TokenKind, TokenValue, Trivia, TriviaItem,

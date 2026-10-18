@@ -16,7 +16,7 @@
 | `mtek new NAME` | M3 | scaffold a project from the built-in template (`mtek.toml`, `src/main.mtek` with the Demo scene, `.gitignore`) |
 | `mtek fmt [--check] [PATHS…]` | M6 | canonical formatter |
 | `mtek test [PATH]` | M6 | run a project's declarative test fixtures (§6) |
-| `mtek context --entry FILE [--symbol NAME…] --format json` | M6 | AI context export (`spec/ai-and-benchmarks.md` §2) |
+| `mtek context --entry FILE [--symbol NAME…] --format json` | M6 | AI context export (`spec/ai-and-benchmarks.md` §2; `--max-bytes N` defaults to 24000; format `spec/context.schema.json`; exit codes, `--entry` and the failure modes are decision 0072) |
 | `mtek grammar export --format ebnf\|gbnf` | M6 | grammar export (`spec/ai-and-benchmarks.md` §3) |
 | `mtek lsp` | M6 | language server over stdio |
 | `mtek --version` | M0 | prints `mtek 0.1.0-dev (language 0.1, runtime ABI 1)` |

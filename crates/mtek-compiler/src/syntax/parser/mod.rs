@@ -68,6 +68,8 @@ use super::ast::{Expr, Module, NodeId};
 use super::token::{Token, TokenKind, TokenValue, Trivia, TriviaKind};
 use recover::Nest;
 
+pub use expr::{BINARY_OPERATORS, BinaryOperator};
+
 /// The deepest nesting the parser accepts (`spec/compiler-architecture.md`
 /// section 9, `E1050`).
 pub const MAX_NESTING_DEPTH: u32 = 256;

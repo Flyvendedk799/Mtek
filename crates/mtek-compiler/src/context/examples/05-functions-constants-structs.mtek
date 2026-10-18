@@ -1,0 +1,31 @@
+// Constants, structs and functions. A `fn` runs on the CPU and in materials; `cpu fn` is for CPU-only code.
+const FLOOR_Y: f32 = -0.5;
+
+struct Orbit {
+    radius: f32;
+    speed: f32;
+}
+
+fn orbit_position(orbit: Orbit, t: f32) -> vec3 {
+    return vec3(cos(t * orbit.speed) * orbit.radius, 0.5, sin(t * orbit.speed) * orbit.radius);
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 4.0, 8.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+
+    entity Floor {
+        mesh: Plane {};
+        position: vec3(0.0, FLOOR_Y, 0.0);
+    }
+
+    entity Ball {
+        mesh: Sphere { radius: 0.5; };
+
+        update(dt: f32) {
+            self.position = orbit_position(Orbit { radius: 2.0; speed: 1.5; }, frame.time);
+        }
+    }
+}

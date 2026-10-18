@@ -45,7 +45,9 @@ Rules:
 - Built only from the registry and the resolved project. The `supported` list is derived from what **this compiler build implements** (registry `since` ≤ current milestone and not `E9010`); planned features appear only under `notSupported` with their planned version. Never advertise planned features as supported (blueprint §10).
 - **Neighbourhood, not the whole library** (blueprint §9.2): with `--symbol`, include those symbols, their types, the schemas of fields they use, symbols one reference away, and examples tagged with those features. Without `--symbol`, include the entry scene's symbols and the schemas it uses.
 - Examples are compiled by a test on every build (they must check without errors).
-- `--max-bytes` truncates the lowest-priority sections first (examples, then neighbour symbols) and records what was dropped in a `truncated` field.
+- `--max-bytes` truncates the lowest-priority sections first (examples, then neighbour symbols, then schemas, then the requested symbols) and records what was dropped in a `truncated` field (per section: a count and the first names).
+
+Implemented by `crates/mtek-compiler/src/context/` and `crates/mtek-cli/src/context_cmd.rs`. The format is fixed by `spec/context.schema.json` (`contextFormat` 1; `truncated` is the only key beyond the sketch above and is absent when nothing was dropped). What the sketch leaves open — how `supported`/`notSupported` are derived, the neighbourhood algorithm, example selection, the truncation order and the failure modes — is decision 0072.
 
 ## 3. Grammar export and the first constrained-decoding adapter (M6)
 

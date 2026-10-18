@@ -36,6 +36,7 @@ All commands work from a clean checkout after `npm ci && npm run build` (`build`
 | Physics (hardware) | `tests/browser/specs/physics/` | contacts, impulses, sensors, authority, destruction/restart |
 | Tooling | `crates/mtek-cli/tests/`, `tests/tooling/` | formatter idempotence, source maps, JSON diagnostics, clean install |
 | AI workflow | `tools/ai-eval/test/` | harness logic with recorded transcripts (M6) |
+| AI context export | `crates/mtek-compiler/tests/context.rs`, `crates/mtek-compiler/src/context/**` unit tests, `crates/mtek-cli/tests/context.rs`, goldens in `tests/context/golden/` (decision 0072) | `supported`/`notSupported` against the registry as a second path (`stdlib-schema.json`) and against mutated registries, every syntax rule against the compiler, every example (library and emitted) through `check`, neighbourhoods, truncation order and bisection, determinism, `spec/context.schema.json`, the real binary |
 
 ## 3. Compiler fixtures
 

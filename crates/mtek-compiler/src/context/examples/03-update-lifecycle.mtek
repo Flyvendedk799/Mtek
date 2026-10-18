@@ -1,0 +1,18 @@
+// `update(dt)` runs every frame; assign to `self.rotation` to turn the entity.
+scene Demo {
+    state speed: f32 = 0.7;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box {};
+        position: vec3(0.0, 0.5, 0.0);
+
+        update(dt: f32) {
+            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);
+        }
+    }
+}

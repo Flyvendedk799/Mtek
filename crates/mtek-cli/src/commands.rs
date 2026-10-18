@@ -197,7 +197,7 @@ pub fn internal_error(verb: &'static str, format: Format, color: bool, note: &st
 }
 
 /// `path` made absolute against `cwd`, with `.` and `..` resolved lexically.
-fn absolute(cwd: &Path, path: &Path) -> PathBuf {
+pub fn absolute(cwd: &Path, path: &Path) -> PathBuf {
     let mut out = PathBuf::new();
     for component in cwd.join(path).components() {
         match component {
@@ -248,11 +248,23 @@ pub fn execute(request: &Request, context: &Context) -> Outcome {
         format: request.format(),
         color: context.color,
     };
+    if let Request::Context {
+        entry,
+        symbols,
+        max_bytes,
+    } = request
+    {
+        return crate::context_cmd::run(entry, symbols, *max_bytes, context);
+    }
     let path = match request {
         Request::Check { path, .. }
         | Request::Build { path, .. }
         | Request::Inspect { path, .. } => path.as_deref(),
-        Request::Version | Request::Help(_) | Request::Dev { .. } | Request::New { .. } => {
+        Request::Version
+        | Request::Help(_)
+        | Request::Dev { .. }
+        | Request::New { .. }
+        | Request::Context { .. } => {
             return printer.single(internal_diagnostic(
                 "--version, --help, new and dev are not one-shot library commands",
             ));

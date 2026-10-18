@@ -6,6 +6,7 @@
 
 mod args;
 mod commands;
+mod context_cmd;
 mod dev;
 mod dist;
 mod guard;
