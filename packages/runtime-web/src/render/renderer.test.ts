@@ -123,7 +123,7 @@ function lastDraws(host: FakeHost): readonly FakeDrawRecord[] {
 }
 
 describe("compareDraws (the draw-list order of spec/runtime-abi.md section 8.4)", () => {
-  const key = (pipelineKey: string, instance: number, mesh: number, entity: number): DrawSortKey => ({ pipelineKey, instance, mesh, entity });
+  const key = (pipelineKey: string, instance: number, mesh: number, entity: number): DrawSortKey => ({ pipelineKey, instance, mesh, entity, order: entity });
 
   it("orders by pipeline key, then material instance, then mesh, then instance order", () => {
     const items = [

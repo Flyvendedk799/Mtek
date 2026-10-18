@@ -7,7 +7,7 @@
  * from different builds: an incompatible program (`E8003`).
  */
 import type { MtekLayoutRecord, MtekManifest } from "../abi/manifest-types.js";
-import type { MtekProgramScene, MtekWriterMemory } from "../abi/program.js";
+import type { MtekProgramPrefab, MtekProgramScene, MtekWriterMemory } from "../abi/program.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 
 /** A generated writer, as the runtime calls it: the value's CPU representation is checked by the caller. */
@@ -23,6 +23,8 @@ export interface LayoutWriters {
 /** The parts of the program module the M1 runtime executes, checked against the manifest. */
 export interface CheckedProgram {
   readonly scene: MtekProgramScene;
+  /** The code of the prefabs the manifest lists (`manifest.prefabs`), by symbol (decision 0064). */
+  readonly prefabs: ReadonlyMap<string, MtekProgramPrefab>;
   /** By layout id; holds every layout of the manifest. */
   readonly writers: ReadonlyMap<string, LayoutWriters>;
 }
@@ -35,6 +37,7 @@ export type ProgramResult =
 export interface ProgramModuleParts {
   readonly writers: unknown;
   readonly scenes: unknown;
+  readonly prefabs?: unknown;
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -139,6 +142,34 @@ function sceneShapeProblem(
   return undefined;
 }
 
+/** The shape of a prefab's entry in the `prefabs` table beyond what the manifest says (`spec/runtime-abi.md` section 3): `undefined` when it is right. */
+function prefabShapeProblem(entry: Readonly<Record<string, unknown>>, bindingCount: number): { field: string; problem: string } | undefined {
+  if (typeof own(entry, "init") !== "function") return { field: "init", problem: "has no `init` function" };
+  for (const name of ["update", "fixedUpdate"] as const) {
+    if (!functionOrNull(own(entry, name))) return { field: name, problem: `has a \`${name}\` that is neither a function nor null` };
+  }
+  const bindings = own(entry, "bindings");
+  if (!Array.isArray(bindings) || bindings.length !== bindingCount || !bindings.every((fn: unknown) => typeof fn === "function")) {
+    return { field: "bindings", problem: `needs 'bindings' to be an array of ${String(bindingCount)} functions (one per binding of the manifest's prefab)` };
+  }
+  const events = own(entry, "events");
+  if (!isRecord(events)) return { field: "events", problem: "has no `events` table" };
+  for (const name of EVENT_NAMES) {
+    const list = own(events, name);
+    if (list === undefined) continue;
+    const keyed = name === "key_down" || name === "key_up";
+    const valid =
+      Array.isArray(list) &&
+      list.every((handler: unknown) => {
+        if (!isRecord(handler)) return false;
+        const key = own(handler, "key");
+        return typeof own(handler, "fn") === "function" && own(handler, "owner") === "self" && (keyed ? typeof key === "string" : key === undefined);
+      });
+    if (!valid) return { field: `events.${name}`, problem: `has a malformed \`${name}\` handler list (every owner must be "self")` };
+  }
+  return undefined;
+}
+
 /** Checks `program` against `manifest`; reports every mismatch found. */
 export function checkProgram(program: ProgramModuleParts, manifest: MtekManifest): ProgramResult {
   const diagnostics: MtekDiagnostic[] = [];
@@ -155,6 +186,23 @@ export function checkProgram(program: ProgramModuleParts, manifest: MtekManifest
     else diagnostics.push(incompatible(`scenes.${entry}.${shape.field}`, `the scene '${entry}' ${shape.problem}.`));
   }
 
+  const prefabs = new Map<string, MtekProgramPrefab>();
+  const listed = manifest.prefabs ?? [];
+  if (listed.length > 0 && !isRecord(program.prefabs)) {
+    diagnostics.push(incompatible("prefabs", "the program module has no `prefabs` table, but the manifest lists prefabs."));
+  }
+  for (const prefab of listed) {
+    const entry = isRecord(program.prefabs) ? own(program.prefabs, prefab.symbol) : undefined;
+    const field = `prefabs["${prefab.symbol}"]`;
+    if (!isRecord(entry)) {
+      if (isRecord(program.prefabs)) diagnostics.push(incompatible(field, `the program module has no prefab '${prefab.symbol}'.`));
+      continue;
+    }
+    const shape = prefabShapeProblem(entry, prefab.bindings.length);
+    if (shape === undefined) prefabs.set(prefab.symbol, entry as unknown as MtekProgramPrefab);
+    else diagnostics.push(incompatible(`${field}.${shape.field}`, `the prefab '${prefab.symbol}' ${shape.problem}.`));
+  }
+
   const writers = new Map<string, LayoutWriters>();
   const table = isRecord(program.writers) ? program.writers : undefined;
   if (table === undefined) {
@@ -167,5 +215,5 @@ export function checkProgram(program: ProgramModuleParts, manifest: MtekManifest
   }
 
   if (diagnostics.length > 0 || scene === undefined) return { ok: false, diagnostics };
-  return { ok: true, program: { scene, writers } };
+  return { ok: true, program: { scene, prefabs, writers } };
 }

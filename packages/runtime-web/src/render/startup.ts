@@ -20,6 +20,7 @@ import type { ResourceRegistry } from "../gpu/registry.js";
 import type { CheckedProgram } from "../scene/program.js";
 import type { ResolvedMaterial, SceneStructure } from "../scene/structure.js";
 import { Bindings } from "../scene/bindings.js";
+import { buildPrefabRuntimes } from "../scene/dynamic.js";
 import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
@@ -103,7 +104,14 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   let world: World;
   let bindings: Bindings;
   if (recover === undefined) {
-    const fresh = new World({ manifest, structure, params: materials, report, ...(services === undefined ? {} : { services }) });
+    const fresh = new World({
+      manifest,
+      structure,
+      params: materials,
+      report,
+      prefabs: buildPrefabRuntimes(structure.prefabs, program.prefabs),
+      ...(services === undefined ? {} : { services }),
+    });
     const freshBindings = new Bindings(manifest, program.scene.bindings, fresh);
     fresh.initialise(program.scene.init, () => {
       freshBindings.evaluate();
@@ -177,5 +185,9 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     ...(options.instancing === undefined ? {} : { instancing: options.instancing }),
   });
   for (const { id, diagnostic } of failed) renderer.failMaterial(id, diagnostic);
+  // Spawned entities are created through these stores (decision 0064). After a device loss the entities that
+  // exist get their material instance and object block again in the rebuilt ones.
+  if (recover === undefined) world.dynamic.attach(renderer, materials);
+  else world.dynamic.rebuild(renderer, materials);
   return { ok: true, scene: { world, bindings, materials, meshes, plan, pipelines, renderer } };
 }

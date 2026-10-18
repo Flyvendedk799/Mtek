@@ -67,9 +67,12 @@ export function batchDraws<D extends InstanceKey>(draws: readonly D[], canInstan
 
 /** What the structure of a scene allows to be instanced at all. */
 export interface InstancingCandidates {
-  /** Ids of the materials that have at least one other entity with the same mesh and parameter block and pipeline key. */
+  /**
+   * Ids of the materials that have at least one other entity with the same mesh and parameter block and pipeline
+   * key, and of the materials of spawned prefabs (decision 0064).
+   */
   readonly materials: ReadonlySet<string>;
-  /** The most instance records one frame can need: the entities of the groups of two or more. */
+  /** The most instance records one frame can need from the named entities: those of the groups of two or more. */
   readonly capacity: number;
 }
 
@@ -101,6 +104,13 @@ export function instancingCandidates(
     if (group.count < 2) continue;
     materials.add(group.material);
     capacity += group.count;
+  }
+  // Spawned entities (decision 0064): how many of a prefab exist is not known before they are spawned, so
+  // its material always gets the instanced variant of its pipeline; the instance buffer grows when needed.
+  for (const prefab of structure.prefabs) {
+    const material = prefab.material?.material;
+    if (prefab.mesh === null || material === undefined || material.shader.instancedVertexEntry === undefined) continue;
+    materials.add(material.id);
   }
   return { materials, capacity };
 }

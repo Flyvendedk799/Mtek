@@ -347,6 +347,33 @@ export interface MtekMaterialInstance {
   readonly shareable: boolean;
 }
 
+/**
+ * A prefab the program spawns (spec/runtime-abi.md section 5.6, decision 0064). In its bindings entity 0 is the
+ * instance and material instance 0 is its material.
+ */
+export interface MtekPrefab {
+  /** The key of the `prefabs` table of the program module. */
+  readonly symbol: SymbolId;
+  readonly name: string;
+  /** The params in declaration order. */
+  readonly params: readonly { readonly name: string; readonly type: MtekTypeName }[];
+  /** Id of an entry of the meshes table. */
+  readonly mesh: string | null;
+  /** The material instance every instance starts with. */
+  readonly material: {
+    readonly id: SymbolId;
+    readonly params: readonly MtekInstanceParam[];
+    readonly shareable: boolean;
+  } | null;
+  readonly body: MtekBody | null;
+  readonly collider: MtekCollider | null;
+  readonly state: readonly MtekStateEntry[];
+  readonly update: boolean;
+  readonly fixedUpdate: boolean;
+  readonly bindings: readonly MtekBinding[];
+  readonly span: SpanId;
+}
+
 export type MtekBindingTarget =
   | { readonly kind: "transform"; readonly entity: number; readonly field: "position" | "rotation" | "scale" }
   | { readonly kind: "visible"; readonly entity: number }
@@ -443,5 +470,7 @@ export interface MtekManifest {
   readonly materials: readonly MtekMaterial[];
   readonly meshes: readonly MtekMesh[];
   readonly assets: readonly MtekAsset[];
+  /** The prefabs the program spawns, by symbol; absent when it spawns none (decision 0064). */
+  readonly prefabs?: readonly MtekPrefab[];
   readonly scene: MtekScene;
 }

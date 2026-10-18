@@ -155,7 +155,16 @@ export interface MtekDebug {
   failAllocation(): void;
   /** Every asset file of the running program with its state; after a successful mount all are ready. */
   assets(): readonly MtekAssetStatus[];
-  scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }> };
+  /**
+   * The scene's state, its named entities and, in spawn order, the spawned entities that exist (decision 0064): the
+   * prefab's name, the slot and generation of its `entity_ref`, whether it is alive (not pending removal), its pose
+   * and its state.
+   */
+  scene(): {
+    state: Record<string, unknown>;
+    entities: Array<{ name: string; position: unknown; rotation: unknown }>;
+    spawned: Array<{ prefab: string; slot: number; gen: number; alive: boolean; position: unknown; rotation: unknown; state: Record<string, unknown> }>;
+  };
 }
 
 export interface MtekApp<I = Record<string, unknown>> {

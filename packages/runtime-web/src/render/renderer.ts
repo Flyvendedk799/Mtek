@@ -34,7 +34,7 @@ import { UniformArena, type ArenaDevice } from "../gpu/uniform-arena.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { multiply, normalMatrix, orthographic, perspective, viewMatrix, identity, type Mat4 } from "../math/mat4.js";
 import type { BlockWriter, LayoutWriters } from "../scene/program.js";
-import type { SceneStructure } from "../scene/structure.js";
+import type { ResolvedEntity, SceneStructure } from "../scene/structure.js";
 import type { World } from "../scene/world.js";
 import { emptyPackedLights, packLights, type LightSource, type PackedLight } from "./lights.js";
 import { extractFrustumPlanes, sphereIntersectsFrustum, worldBoundingSphere, type WorldSphere } from "./frustum.js";
@@ -65,14 +65,16 @@ export interface DrawSortKey {
   readonly instance: number;
   /** Mesh upload order. */
   readonly mesh: number;
-  /** Static entity index: instance order. */
+  /** The entity's slot (its static index, or the slot of a spawned entity): indexes the per-entity render state. */
   readonly entity: number;
+  /** Instance order (`spec/scenes.md` section 10.1): the static index; a spawned entity follows every static one, in spawn order. */
+  readonly order: number;
 }
 
 /** Compares draws by (pipeline key, material instance, mesh), ties by instance order. Never locale-dependent. */
 export function compareDraws(a: DrawSortKey, b: DrawSortKey): number {
   if (a.pipelineKey !== b.pipelineKey) return a.pipelineKey < b.pipelineKey ? -1 : 1;
-  return a.instance - b.instance || a.mesh - b.mesh || a.entity - b.entity;
+  return a.instance - b.instance || a.mesh - b.mesh || a.order - b.order;
 }
 
 /** One draw of the draw list. */
@@ -135,6 +137,7 @@ export class Renderer {
   private draws: readonly DrawItem[] = [];
   private drawsVersion = -1;
   private drawsBlockVersion = -1;
+  private drawsPopulation = -1;
   private drawCallsLastFrame = 0;
   private instancedLastFrame = 0;
   private culledLastFrame = 0;
@@ -145,19 +148,23 @@ export class Renderer {
   private readonly drawn: DrawItem[] = [];
   private readonly planes = new Float64Array(24);
   /** Per static entity index, from its last object-block write: world-space sphere centre (x, y, z) and largest world scale. */
-  private readonly sphereCentres: Float64Array;
-  private readonly sphereScales: Float64Array;
+  private sphereCentres: Float64Array;
+  private sphereScales: Float64Array;
   /** Per static entity index: the local-space centre of its mesh's bounding sphere; `undefined` at the mesh origin (every primitive shape). */
   private readonly localCentres: (readonly [number, number, number] | undefined)[] = [];
   private readonly sphere: WorldSphere = { x: 0, y: 0, z: 0, radius: 0 };
   private cullingEnabled = true;
   /** The instance vertex buffer (`INSTANCE_STRIDE` bytes per record); absent when no draw can ever be instanced. */
-  private readonly instanceBuffer: GPUBuffer | undefined;
-  /** Per static entity index: its model matrix, then its normal matrix (`INSTANCE_FLOATS` f32), refreshed with its object block. */
-  private readonly entityMatrices: Float32Array;
+  private instanceBuffer: GPUBuffer | undefined;
+  /** How many instance records `instanceBuffer` holds. */
+  private instanceRecords = 0;
+  /** Whether draws can be instanced at all: instancing is on and some entity or prefab has a material with an instanced entry point. */
+  private readonly instancingPossible: boolean;
+  /** Per entity slot: its model matrix, then its normal matrix (`INSTANCE_FLOATS` f32), refreshed with its object block. */
+  private entityMatrices: Float32Array;
   /** The records of the instanced draws of this frame, and what the GPU buffer holds (to upload only what changed). */
-  private readonly instanceStaging: Float32Array;
-  private readonly instanceMirror: Float32Array;
+  private instanceStaging: Float32Array;
+  private instanceMirror: Float32Array;
   /** The draw calls of this frame (reused between frames). */
   private readonly batches: Batch[] = [];
   /** Materials that failed after mount (`failMaterial`): never drawn. */
@@ -202,20 +209,82 @@ export class Renderer {
     this.sphereScales = new Float64Array(structure.entities.length);
 
     // The instance buffer is created here, with the other GPU objects of the scene (so device recovery
-    // rebuilds it): as large as the entities that could ever be instanced, never grown.
-    const capacity =
+    // rebuilds it): as large as the entities of the scene that could ever be instanced. Spawned entities
+    // (decision 0064) can need more: it grows (`ensureInstances`) and the old buffer is released.
+    const candidates =
       options.instancing === false
-        ? 0
+        ? undefined
         : instancingCandidates(
             structure,
             (instance) => options.materials.blockOf(instance),
             (material) => options.pipelines.get(material.id)?.key ?? "",
-          ).capacity;
-    this.instanceBuffer =
-      capacity === 0 ? undefined : registry.createBuffer({ label: "mtek instance matrices", size: capacity * INSTANCE_STRIDE, usage: BUFFER_USAGE_VERTEX | BUFFER_USAGE_COPY_DST });
-    this.entityMatrices = new Float32Array(capacity === 0 ? 0 : structure.entities.length * INSTANCE_FLOATS);
-    this.instanceStaging = new Float32Array(capacity * INSTANCE_FLOATS);
-    this.instanceMirror = new Float32Array(capacity * INSTANCE_FLOATS);
+          );
+    const capacity = candidates?.capacity ?? 0;
+    this.instancingPossible = candidates !== undefined && (capacity > 0 || candidates.materials.size > 0);
+    this.instanceStaging = new Float32Array(0);
+    this.instanceMirror = new Float32Array(0);
+    this.entityMatrices = new Float32Array(this.instancingPossible ? structure.entities.length * INSTANCE_FLOATS : 0);
+    if (capacity > 0) this.allocateInstances(capacity);
+    // Spawned entities that exist already (device recovery) are added by `DynamicEntities.rebuild`.
+  }
+
+  /** Makes the instance buffer hold `records` records (a new buffer, zeroed, with the old one released). */
+  private allocateInstances(records: number): void {
+    const { registry } = this.options;
+    const old = this.instanceBuffer;
+    this.instanceBuffer = registry.createBuffer({ label: "mtek instance matrices", size: records * INSTANCE_STRIDE, usage: BUFFER_USAGE_VERTEX | BUFFER_USAGE_COPY_DST });
+    this.instanceRecords = records;
+    this.instanceStaging = new Float32Array(records * INSTANCE_FLOATS);
+    this.instanceMirror = new Float32Array(records * INSTANCE_FLOATS);
+    if (old !== undefined) registry.release(old);
+  }
+
+  /** Grows the instance buffer to hold at least `records` records. Called before the frame's commands are encoded. */
+  private ensureInstances(records: number): void {
+    if (records <= this.instanceRecords) return;
+    this.allocateInstances(Math.max(records, this.instanceRecords * 2));
+  }
+
+  /** Grows the per-entity render state to `slots` entity slots. */
+  private ensureEntitySlots(slots: number): void {
+    if (slots * 3 > this.sphereCentres.length) {
+      const capacity = Math.max(slots, this.sphereScales.length * 2);
+      const centres = new Float64Array(capacity * 3);
+      centres.set(this.sphereCentres);
+      const scales = new Float64Array(capacity);
+      scales.set(this.sphereScales);
+      this.sphereCentres = centres;
+      this.sphereScales = scales;
+    }
+    if (this.instancingPossible && slots * INSTANCE_FLOATS > this.entityMatrices.length) {
+      const matrices = new Float32Array(Math.max(slots, (this.entityMatrices.length / INSTANCE_FLOATS) * 2) * INSTANCE_FLOATS);
+      matrices.set(this.entityMatrices);
+      this.entityMatrices = matrices;
+    }
+  }
+
+  /**
+   * A spawned entity exists (decision 0064): it gets an object block when it has a mesh, and the draw list is
+   * rebuilt to include it. Its material instance was created in the material store by the caller.
+   */
+  addEntity(entity: ResolvedEntity): void {
+    this.ensureEntitySlots(entity.index + 1);
+    if (entity.mesh !== null) {
+      this.objectSlots[entity.index] = this.objectArena.allocate();
+      const centre = this.options.meshes.get(entity.mesh.id).boundingCenter;
+      this.localCentres[entity.index] = centre !== undefined && (centre[0] !== 0 || centre[1] !== 0 || centre[2] !== 0) ? centre : undefined;
+    }
+    this.drawsVersion = -1;
+  }
+
+  /** A spawned entity was removed: its object block is released and the draw list forgets it. */
+  removeEntity(entity: ResolvedEntity): void {
+    const slot = this.objectSlots[entity.index];
+    if (slot !== undefined) this.objectArena.release(slot);
+    this.objectSlots[entity.index] = undefined;
+    this.localCentres[entity.index] = undefined;
+    this.sphereScales[entity.index] = 0;
+    this.drawsVersion = -1;
   }
 
   /** Draw calls encoded by the last rendered frame. */
@@ -280,13 +349,18 @@ export class Renderer {
   /** The current draw list (rebuilt when visibility or the set of failed materials changed). */
   drawList(): readonly DrawItem[] {
     const { world, structure, pipelines, meshes, materials } = this.options;
-    if (this.drawsVersion === world.visibilityVersion && this.drawsBlockVersion === materials.blockVersion) return this.draws;
+    if (
+      this.drawsVersion === world.visibilityVersion &&
+      this.drawsBlockVersion === materials.blockVersion &&
+      this.drawsPopulation === world.dynamic.version
+    ) {
+      return this.draws;
+    }
     const items: DrawItem[] = [];
-    for (const entity of structure.entities) {
-      const record = world.entities[entity.index];
+    const list = (entity: ResolvedEntity, visible: boolean | undefined, order: number): void => {
       const objectSlot = this.objectSlots[entity.index];
-      if (record?.visible !== true || entity.mesh === null || entity.instance === null || objectSlot === undefined) continue;
-      if (this.failedMaterials.has(entity.instance.material.id)) continue;
+      if (visible !== true || entity.mesh === null || entity.instance === null || objectSlot === undefined) return;
+      if (this.failedMaterials.has(entity.instance.material.id)) return;
       const pipeline = pipelines.get(entity.instance.material.id);
       if (pipeline === undefined) throw new Error(`internal error: no pipeline for material '${entity.instance.material.id}'`);
       const gpuMesh = meshes.get(entity.mesh.id);
@@ -295,16 +369,21 @@ export class Renderer {
         instance: materials.blockOf(entity.instance.index),
         mesh: gpuMesh.order,
         entity: entity.index,
+        order,
         pipeline: pipeline.pipeline,
         instancedPipeline: pipeline.instanced,
         attributes: entity.instance.material.shader.vertexAttributes,
         gpuMesh,
         objectSlot,
       });
-    }
+    };
+    for (const entity of structure.entities) list(entity, world.entities[entity.index]?.visible, entity.index);
+    // The spawned entities follow the named ones, in spawn order (`spec/scenes.md` section 10.1).
+    for (const spawned of world.dynamic.live) list(spawned.resolved, spawned.record.visible, structure.entities.length + spawned.order);
     this.draws = items.sort(compareDraws);
     this.drawsVersion = world.visibilityVersion;
     this.drawsBlockVersion = materials.blockVersion;
+    this.drawsPopulation = world.dynamic.version;
     return this.draws;
   }
 
@@ -360,18 +439,20 @@ export class Renderer {
    * matrices of their entities into the instance buffer in draw order. Returns the number of instanced draws.
    */
   private groupDraws(draws: readonly DrawItem[]): number {
-    const { instanceBuffer } = this;
-    const instanced = batchDraws(draws, (draw) => instanceBuffer !== undefined && draw.instancedPipeline !== undefined, this.batches);
-    if (instanceBuffer === undefined) return 0;
-    const { entityMatrices, instanceStaging } = this;
+    const possible = this.instancingPossible;
+    const instanced = batchDraws(draws, (draw) => possible && draw.instancedPipeline !== undefined, this.batches);
+    if (instanced === 0) return 0;
     let records = 0;
+    for (const batch of this.batches) if (batch.firstInstance >= 0) records = batch.firstInstance + batch.count;
+    this.ensureInstances(records);
+    const { instanceBuffer, entityMatrices, instanceStaging } = this;
+    if (instanceBuffer === undefined) return 0;
     for (const batch of this.batches) {
       if (batch.firstInstance < 0) continue;
       for (let k = 0; k < batch.count; k++) {
         const entity = draws[batch.start + k]?.entity ?? 0;
         instanceStaging.set(entityMatrices.subarray(entity * INSTANCE_FLOATS, (entity + 1) * INSTANCE_FLOATS), (batch.firstInstance + k) * INSTANCE_FLOATS);
       }
-      records = batch.firstInstance + batch.count;
     }
     this.uploadInstances(instanceBuffer, records * INSTANCE_FLOATS);
     return instanced;
@@ -449,7 +530,7 @@ export class Renderer {
       this.sphereCentres[index * 3 + 2] = this.sphere.z;
       this.sphereScales[index] = this.sphere.radius;
       const normal = normalMatrix(model);
-      if (this.instanceBuffer !== undefined) {
+      if (this.instancingPossible) {
         this.entityMatrices.set(model, index * INSTANCE_FLOATS);
         this.entityMatrices.set(normal, index * INSTANCE_FLOATS + 16);
       }
