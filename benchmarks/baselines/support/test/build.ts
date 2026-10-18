@@ -1,7 +1,7 @@
 // Bundles a baseline project (`src/main.ts`) into a directory a static server can serve. No type
 // checking happens here (esbuild strips types); `tsc` is a separate step, so that a starter that does
 // not type-check still runs and its failure shows up in the browser behaviour.
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { build } from "esbuild";
 
@@ -35,4 +35,8 @@ export async function buildBaseline(projectDir: string, outDir: string): Promise
     logLevel: "warning",
   });
   writeFileSync(join(outDir, "index.html"), PAGE);
+  // The files a task provides (`assets/` of the project, byte for byte; the Mtek side of the task has the same files) are served beside
+  // the page, so the application loads them by the relative URL `assets/<name>`.
+  const assets = join(resolve(projectDir), "assets");
+  if (existsSync(assets)) cpSync(assets, join(outDir, "assets"), { recursive: true });
 }

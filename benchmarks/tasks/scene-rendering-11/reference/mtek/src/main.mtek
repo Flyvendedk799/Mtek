@@ -1,0 +1,42 @@
+// The picture is an sRGB colour texture (asset.texture), so `sample` returns linear values and the sRGB target shows the
+// stored bytes again. The material is unlit: the texel is the colour; `tiles` multiplies the picture coordinates.
+const SWATCH = asset.texture("../assets/swatch.png");
+
+material Picture {
+    param image: texture = texture.white();
+    param filter: sampler = sampler.nearest_clamp();
+    param tiles: f32 = 1.0;
+
+    fragment(input: SurfaceInput) -> color {
+        let texel = sample(image, filter, input.uv * tiles);
+        return color.linear(texel.xyz, 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #1b2430;
+
+    camera Main {
+        position: vec3(0.0, 11.0, 3.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective { fov_y: 0.72; near: 0.1; far: 1000.0 };
+    }
+
+    entity Plain {
+        position: vec3(-2.0, 0.0, -2.0);
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: Picture { image: SWATCH; filter: sampler.nearest_clamp() };
+    }
+
+    entity Tiled {
+        position: vec3(0.0, 0.0, 2.0);
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: Picture { image: SWATCH; filter: sampler.nearest_repeat(); tiles: 2.0 };
+    }
+
+    entity Smooth {
+        position: vec3(2.0, 0.0, -2.0);
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: Picture { image: SWATCH; filter: sampler.linear_clamp() };
+    }
+}

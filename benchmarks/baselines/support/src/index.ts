@@ -13,4 +13,12 @@ export {
 } from "./helpers.ts";
 export type { InputResult, Pixels, TaskHooks } from "./hooks.ts";
 export { FIXED_STEP, MAX_CATCH_UP_STEPS, MAX_FRAME_DELTA } from "./frame.ts";
-export { startTask, TARGET_SIZE, type TaskApp, type TaskHost } from "./task.ts";
+export { startTask, TARGET_SIZE, type BuildTaskApp, type TaskApp, type TaskHost } from "./task.ts";
+export {
+  configureTexture,
+  loadTexture,
+  type TextureColorSpace,
+  type TextureFilter,
+  type TextureOptions,
+  type TextureWrap,
+} from "./texture.ts";

@@ -1,0 +1,368 @@
+# Expected pixels derived from the scene of the prompt by an independent CPU model
+# (evidence/M6/benchmark-texture/derive.mjs, f64; the CPU sampler of tests/browser/support/texture-reference.ts; no three.js and no
+# Mtek runtime). The picture is the 4 x 4 swatch.png (sRGB bytes, make-swatch.mjs); its top row lies along the far edge (smaller z) of
+# each panel and its left column along the smaller x. A point (x, z) of a panel of side 3.6 centred at (cx, 0, cz) has the picture
+# coordinate u = (x - cx) / 3.6 + 1/2, v = (z - cz) / 3.6 + 1/2 (u to the right, v towards the camera). Panels: Plain at (-2, -2), Smooth
+# at (2, -2), Tiled at (0, 2), all in the plane y = 0; camera (0, 11, 3) looking at the origin, vertical field of view 0.72, a 128 x 128
+# target. A ray through each pixel centre is intersected with the plane y = 0.
+# Plain: the picture once, nearest filtering: a texel is shown exactly as stored (decoding the sRGB bytes to linear and encoding them for
+# the sRGB target is the identity). Tiled: coordinates times 2, repeat, nearest: the picture twice across and down. Smooth: the picture
+# once, linear filtering (bilinear between texel centres, in linear light after decoding, so the midpoint of #bc4020 and #e0a010 is
+# sRGB((lin(bc) + lin(e0)) / 2) per channel = #cf7c19, not the mean of the bytes #ce7018), clamped: in the outer half texels the colour is
+# that of the edge texel. The expected value of every Smooth pixel is computed at the exact coordinate of its pixel centre.
+# Every pixel of a nearest panel is chosen so that the nine points within 1.5 pixels of its centre fall in the same texel; every Smooth
+# pixel lies at least 1.5 pixels inside its panel, every border pixel 1.5 to 2.5 pixels inside (or, for the clear colour, outside) a panel,
+# so neither rasterisation rules nor the interpolation precision of the coordinates decide a value. The texel-centre pixels are the
+# pixels nearest to the forward projection of the texel centres (the view and projection matrices of the runtime ABI), confirmed by the rays.
+# Tolerance 2 (nearest panels, clear colour) or 3 (linear filtering: hardware filter weights have limited precision).
+name = "a textured floor: a picture shown exactly, tiled, and smoothed"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # Plain panel
+  # Plain: texel 0,0 (#bc4020)
+  { expect_pixel = { x = 17, y = 19, color = "#bc4020", tolerance = 2 } },
+  # Plain: texel 1,0 (#e0a010)
+  { expect_pixel = { x = 30, y = 19, color = "#e0a010", tolerance = 2 } },
+  # Plain: texel 2,0 (#20a060)
+  { expect_pixel = { x = 42, y = 19, color = "#20a060", tolerance = 2 } },
+  # Plain: texel 3,0 (#6060dc)
+  { expect_pixel = { x = 55, y = 19, color = "#6060dc", tolerance = 2 } },
+  # Plain: texel 0,1 (#d02890)
+  { expect_pixel = { x = 16, y = 30, color = "#d02890", tolerance = 2 } },
+  # Plain: texel 1,1 (#40c8c8)
+  { expect_pixel = { x = 29, y = 30, color = "#40c8c8", tolerance = 2 } },
+  # Plain: texel 2,1 (#a0a0a0)
+  { expect_pixel = { x = 42, y = 30, color = "#a0a0a0", tolerance = 2 } },
+  # Plain: texel 3,1 (#101050)
+  { expect_pixel = { x = 54, y = 30, color = "#101050", tolerance = 2 } },
+  # Plain: texel 0,2 (#f0e060)
+  { expect_pixel = { x = 15, y = 42, color = "#f0e060", tolerance = 2 } },
+  # Plain: texel 1,2 (#804010)
+  { expect_pixel = { x = 28, y = 42, color = "#804010", tolerance = 2 } },
+  # Plain: texel 2,2 (#30d030)
+  { expect_pixel = { x = 41, y = 42, color = "#30d030", tolerance = 2 } },
+  # Plain: texel 3,2 (#c060f0)
+  { expect_pixel = { x = 54, y = 42, color = "#c060f0", tolerance = 2 } },
+  # Plain: texel 0,3 (#606060)
+  { expect_pixel = { x = 14, y = 54, color = "#606060", tolerance = 2 } },
+  # Plain: texel 1,3 (#e03030)
+  { expect_pixel = { x = 28, y = 54, color = "#e03030", tolerance = 2 } },
+  # Plain: texel 2,3 (#2080e0)
+  { expect_pixel = { x = 41, y = 54, color = "#2080e0", tolerance = 2 } },
+  # Plain: texel 3,3 (#f8f8f8)
+  { expect_pixel = { x = 54, y = 54, color = "#f8f8f8", tolerance = 2 } },
+  # Tiled panel
+  # Tiled: tile 0,0 texel 0,0 (#bc4020)
+  { expect_pixel = { x = 40, y = 70, color = "#bc4020", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 1,0 (#e0a010)
+  { expect_pixel = { x = 47, y = 70, color = "#e0a010", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 2,0 (#20a060)
+  { expect_pixel = { x = 53, y = 70, color = "#20a060", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 3,0 (#6060dc)
+  { expect_pixel = { x = 60, y = 70, color = "#6060dc", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 0,0 (#bc4020)
+  { expect_pixel = { x = 67, y = 70, color = "#bc4020", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 1,0 (#e0a010)
+  { expect_pixel = { x = 74, y = 70, color = "#e0a010", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 2,0 (#20a060)
+  { expect_pixel = { x = 80, y = 70, color = "#20a060", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 3,0 (#6060dc)
+  { expect_pixel = { x = 87, y = 70, color = "#6060dc", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 0,1 (#d02890)
+  { expect_pixel = { x = 40, y = 76, color = "#d02890", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 1,1 (#40c8c8)
+  { expect_pixel = { x = 46, y = 76, color = "#40c8c8", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 2,1 (#a0a0a0)
+  { expect_pixel = { x = 53, y = 76, color = "#a0a0a0", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 3,1 (#101050)
+  { expect_pixel = { x = 60, y = 76, color = "#101050", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 0,1 (#d02890)
+  { expect_pixel = { x = 67, y = 76, color = "#d02890", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 1,1 (#40c8c8)
+  { expect_pixel = { x = 74, y = 76, color = "#40c8c8", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 2,1 (#a0a0a0)
+  { expect_pixel = { x = 81, y = 76, color = "#a0a0a0", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 3,1 (#101050)
+  { expect_pixel = { x = 87, y = 76, color = "#101050", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 0,2 (#f0e060)
+  { expect_pixel = { x = 39, y = 83, color = "#f0e060", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 1,2 (#804010)
+  { expect_pixel = { x = 46, y = 83, color = "#804010", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 2,2 (#30d030)
+  { expect_pixel = { x = 53, y = 83, color = "#30d030", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 3,2 (#c060f0)
+  { expect_pixel = { x = 60, y = 83, color = "#c060f0", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 0,2 (#f0e060)
+  { expect_pixel = { x = 67, y = 83, color = "#f0e060", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 1,2 (#804010)
+  { expect_pixel = { x = 74, y = 83, color = "#804010", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 2,2 (#30d030)
+  { expect_pixel = { x = 81, y = 83, color = "#30d030", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 3,2 (#c060f0)
+  { expect_pixel = { x = 88, y = 83, color = "#c060f0", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 0,3 (#606060)
+  { expect_pixel = { x = 39, y = 90, color = "#606060", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 1,3 (#e03030)
+  { expect_pixel = { x = 46, y = 90, color = "#e03030", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 2,3 (#2080e0)
+  { expect_pixel = { x = 53, y = 90, color = "#2080e0", tolerance = 2 } },
+  # Tiled: tile 0,0 texel 3,3 (#f8f8f8)
+  { expect_pixel = { x = 60, y = 90, color = "#f8f8f8", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 0,3 (#606060)
+  { expect_pixel = { x = 67, y = 90, color = "#606060", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 1,3 (#e03030)
+  { expect_pixel = { x = 74, y = 90, color = "#e03030", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 2,3 (#2080e0)
+  { expect_pixel = { x = 81, y = 90, color = "#2080e0", tolerance = 2 } },
+  # Tiled: tile 1,0 texel 3,3 (#f8f8f8)
+  { expect_pixel = { x = 88, y = 90, color = "#f8f8f8", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 0,0 (#bc4020)
+  { expect_pixel = { x = 39, y = 97, color = "#bc4020", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 1,0 (#e0a010)
+  { expect_pixel = { x = 46, y = 97, color = "#e0a010", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 2,0 (#20a060)
+  { expect_pixel = { x = 53, y = 97, color = "#20a060", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 3,0 (#6060dc)
+  { expect_pixel = { x = 60, y = 97, color = "#6060dc", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 0,0 (#bc4020)
+  { expect_pixel = { x = 67, y = 97, color = "#bc4020", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 1,0 (#e0a010)
+  { expect_pixel = { x = 74, y = 97, color = "#e0a010", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 2,0 (#20a060)
+  { expect_pixel = { x = 81, y = 97, color = "#20a060", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 3,0 (#6060dc)
+  { expect_pixel = { x = 88, y = 97, color = "#6060dc", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 0,1 (#d02890)
+  { expect_pixel = { x = 38, y = 105, color = "#d02890", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 1,1 (#40c8c8)
+  { expect_pixel = { x = 46, y = 105, color = "#40c8c8", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 2,1 (#a0a0a0)
+  { expect_pixel = { x = 53, y = 105, color = "#a0a0a0", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 3,1 (#101050)
+  { expect_pixel = { x = 60, y = 105, color = "#101050", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 0,1 (#d02890)
+  { expect_pixel = { x = 67, y = 105, color = "#d02890", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 1,1 (#40c8c8)
+  { expect_pixel = { x = 74, y = 105, color = "#40c8c8", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 2,1 (#a0a0a0)
+  { expect_pixel = { x = 81, y = 105, color = "#a0a0a0", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 3,1 (#101050)
+  { expect_pixel = { x = 89, y = 105, color = "#101050", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 0,2 (#f0e060)
+  { expect_pixel = { x = 38, y = 112, color = "#f0e060", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 1,2 (#804010)
+  { expect_pixel = { x = 45, y = 112, color = "#804010", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 2,2 (#30d030)
+  { expect_pixel = { x = 53, y = 112, color = "#30d030", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 3,2 (#c060f0)
+  { expect_pixel = { x = 60, y = 112, color = "#c060f0", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 0,2 (#f0e060)
+  { expect_pixel = { x = 67, y = 112, color = "#f0e060", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 1,2 (#804010)
+  { expect_pixel = { x = 74, y = 112, color = "#804010", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 2,2 (#30d030)
+  { expect_pixel = { x = 82, y = 112, color = "#30d030", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 3,2 (#c060f0)
+  { expect_pixel = { x = 89, y = 112, color = "#c060f0", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 0,3 (#606060)
+  { expect_pixel = { x = 38, y = 120, color = "#606060", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 1,3 (#e03030)
+  { expect_pixel = { x = 45, y = 120, color = "#e03030", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 2,3 (#2080e0)
+  { expect_pixel = { x = 53, y = 120, color = "#2080e0", tolerance = 2 } },
+  # Tiled: tile 0,1 texel 3,3 (#f8f8f8)
+  { expect_pixel = { x = 60, y = 120, color = "#f8f8f8", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 0,3 (#606060)
+  { expect_pixel = { x = 67, y = 120, color = "#606060", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 1,3 (#e03030)
+  { expect_pixel = { x = 74, y = 120, color = "#e03030", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 2,3 (#2080e0)
+  { expect_pixel = { x = 82, y = 120, color = "#2080e0", tolerance = 2 } },
+  # Tiled: tile 1,1 texel 3,3 (#f8f8f8)
+  { expect_pixel = { x = 89, y = 120, color = "#f8f8f8", tolerance = 2 } },
+  # Smooth panel
+  # Smooth: texel 0,0 centre
+  { expect_pixel = { x = 72, y = 19, color = "#bc4027", tolerance = 3 } },
+  # Smooth: texel 1,0 centre
+  { expect_pixel = { x = 85, y = 19, color = "#dea124", tolerance = 3 } },
+  # Smooth: texel 2,0 centre
+  { expect_pixel = { x = 97, y = 19, color = "#3da061", tolerance = 3 } },
+  # Smooth: texel 3,0 centre
+  { expect_pixel = { x = 110, y = 19, color = "#5f5fda", tolerance = 3 } },
+  # Smooth: texel 0,1 centre
+  { expect_pixel = { x = 73, y = 30, color = "#ce3591", tolerance = 3 } },
+  # Smooth: texel 1,1 centre
+  { expect_pixel = { x = 85, y = 30, color = "#4ec5c6", tolerance = 3 } },
+  # Smooth: texel 2,1 centre
+  { expect_pixel = { x = 98, y = 30, color = "#9fa0a0", tolerance = 3 } },
+  # Smooth: texel 3,1 centre
+  { expect_pixel = { x = 111, y = 30, color = "#131354", tolerance = 3 } },
+  # Smooth: texel 0,2 centre
+  { expect_pixel = { x = 73, y = 42, color = "#efdf60", tolerance = 3 } },
+  # Smooth: texel 1,2 centre
+  { expect_pixel = { x = 86, y = 42, color = "#804511", tolerance = 3 } },
+  # Smooth: texel 2,2 centre
+  { expect_pixel = { x = 99, y = 42, color = "#37cf3c", tolerance = 3 } },
+  # Smooth: texel 3,2 centre
+  { expect_pixel = { x = 112, y = 42, color = "#c061f0", tolerance = 3 } },
+  # Smooth: texel 0,3 centre
+  { expect_pixel = { x = 73, y = 54, color = "#666560", tolerance = 3 } },
+  # Smooth: texel 1,3 centre
+  { expect_pixel = { x = 86, y = 54, color = "#dd3231", tolerance = 3 } },
+  # Smooth: texel 2,3 centre
+  { expect_pixel = { x = 99, y = 54, color = "#3981da", tolerance = 3 } },
+  # Smooth: texel 3,3 centre
+  { expect_pixel = { x = 113, y = 54, color = "#f7f6f8", tolerance = 3 } },
+  # Smooth: between texels 0,0 and 1,0
+  { expect_pixel = { x = 79, y = 19, color = "#cf7e25", tolerance = 3 } },
+  # Smooth: between texels 1,0 and 2,0
+  { expect_pixel = { x = 91, y = 19, color = "#a7a14a", tolerance = 3 } },
+  # Smooth: between texels 2,0 and 3,0
+  { expect_pixel = { x = 104, y = 19, color = "#4b83af", tolerance = 3 } },
+  # Smooth: between texels 0,1 and 1,1
+  { expect_pixel = { x = 79, y = 30, color = "#9f94ae", tolerance = 3 } },
+  # Smooth: between texels 1,1 and 2,1
+  { expect_pixel = { x = 92, y = 30, color = "#7eb4b4", tolerance = 3 } },
+  # Smooth: between texels 2,1 and 3,1
+  { expect_pixel = { x = 104, y = 30, color = "#787983", tolerance = 3 } },
+  # Smooth: between texels 0,2 and 1,2
+  { expect_pixel = { x = 79, y = 42, color = "#c5ad48", tolerance = 3 } },
+  # Smooth: between texels 1,2 and 2,2
+  { expect_pixel = { x = 92, y = 42, color = "#649b24", tolerance = 3 } },
+  # Smooth: between texels 2,2 and 3,2
+  { expect_pixel = { x = 105, y = 42, color = "#8ea7b0", tolerance = 3 } },
+  # Smooth: between texels 0,3 and 1,3
+  { expect_pixel = { x = 80, y = 54, color = "#b34f4b", tolerance = 3 } },
+  # Smooth: between texels 1,3 and 2,3
+  { expect_pixel = { x = 93, y = 54, color = "#a365a7", tolerance = 3 } },
+  # Smooth: between texels 2,3 and 3,3
+  { expect_pixel = { x = 106, y = 54, color = "#b6c7eb", tolerance = 3 } },
+  # Smooth: between texels 0,0 and 0,1
+  { expect_pixel = { x = 73, y = 24, color = "#c54069", tolerance = 3 } },
+  # Smooth: between texels 1,0 and 1,1
+  { expect_pixel = { x = 85, y = 24, color = "#aeb38e", tolerance = 3 } },
+  # Smooth: between texels 2,0 and 2,1
+  { expect_pixel = { x = 98, y = 24, color = "#729f84", tolerance = 3 } },
+  # Smooth: between texels 3,0 and 3,1
+  { expect_pixel = { x = 110, y = 24, color = "#494cad", tolerance = 3 } },
+  # Smooth: between texels 0,1 and 0,2
+  { expect_pixel = { x = 73, y = 36, color = "#dfa67b", tolerance = 3 } },
+  # Smooth: between texels 1,1 and 1,2
+  { expect_pixel = { x = 86, y = 36, color = "#679992", tolerance = 3 } },
+  # Smooth: between texels 2,1 and 2,2
+  { expect_pixel = { x = 98, y = 36, color = "#78b97a", tolerance = 3 } },
+  # Smooth: between texels 3,1 and 3,2
+  { expect_pixel = { x = 111, y = 36, color = "#8d4bb6", tolerance = 3 } },
+  # Smooth: between texels 0,2 and 0,3
+  { expect_pixel = { x = 73, y = 48, color = "#bbb060", tolerance = 3 } },
+  # Smooth: between texels 1,2 and 1,3
+  { expect_pixel = { x = 86, y = 48, color = "#b83a24", tolerance = 3 } },
+  # Smooth: between texels 2,2 and 2,3
+  { expect_pixel = { x = 99, y = 48, color = "#2daea6", tolerance = 3 } },
+  # Smooth: between texels 3,2 and 3,3
+  { expect_pixel = { x = 112, y = 48, color = "#dcbff3", tolerance = 3 } },
+  # Smooth: between texels 0,0 1,0 0,1 1,1
+  { expect_pixel = { x = 79, y = 24, color = "#ba897d", tolerance = 3 } },
+  # Smooth: between texels 1,0 2,0 1,1 2,1
+  { expect_pixel = { x = 91, y = 24, color = "#96ab89", tolerance = 3 } },
+  # Smooth: between texels 2,0 3,0 2,1 3,1
+  { expect_pixel = { x = 104, y = 24, color = "#607e9a", tolerance = 3 } },
+  # Smooth: between texels 0,1 1,1 0,2 1,2
+  { expect_pixel = { x = 79, y = 36, color = "#b3a087", tolerance = 3 } },
+  # Smooth: between texels 1,1 2,1 1,2 2,2
+  { expect_pixel = { x = 92, y = 36, color = "#70aa87", tolerance = 3 } },
+  # Smooth: between texels 2,1 3,1 2,2 3,2
+  { expect_pixel = { x = 105, y = 36, color = "#848e9d", tolerance = 3 } },
+  # Smooth: between texels 0,2 1,2 0,3 1,3
+  { expect_pixel = { x = 79, y = 48, color = "#ba8a4b", tolerance = 3 } },
+  # Smooth: between texels 1,2 2,2 1,3 2,3
+  { expect_pixel = { x = 93, y = 48, color = "#85887f", tolerance = 3 } },
+  # Smooth: between texels 2,2 3,2 2,3 3,3
+  { expect_pixel = { x = 106, y = 48, color = "#a9b8d4", tolerance = 3 } },
+  # Smooth: the outer half texel at the left edge, along texel 0
+  { expect_pixel = { x = 69, y = 19, color = "#bc4027", tolerance = 3 } },
+  # Smooth: the outer half texel at the right edge, along texel 0
+  { expect_pixel = { x = 113, y = 19, color = "#5f5fda", tolerance = 3 } },
+  # Smooth: the outer half texel at the top edge, along texel 0
+  { expect_pixel = { x = 72, y = 16, color = "#bc4020", tolerance = 3 } },
+  # Smooth: the outer half texel at the bottom edge, along texel 0
+  { expect_pixel = { x = 73, y = 57, color = "#606060", tolerance = 3 } },
+  # Smooth: the outer half texel at the left edge, along texel 1
+  { expect_pixel = { x = 69, y = 30, color = "#d0288f", tolerance = 3 } },
+  # Smooth: the outer half texel at the right edge, along texel 1
+  { expect_pixel = { x = 114, y = 30, color = "#131354", tolerance = 3 } },
+  # Smooth: the outer half texel at the top edge, along texel 1
+  { expect_pixel = { x = 85, y = 16, color = "#dfa013", tolerance = 3 } },
+  # Smooth: the outer half texel at the bottom edge, along texel 1
+  { expect_pixel = { x = 86, y = 57, color = "#de3232", tolerance = 3 } },
+  # Smooth: the outer half texel at the left edge, along texel 2
+  { expect_pixel = { x = 70, y = 42, color = "#f0e060", tolerance = 3 } },
+  # Smooth: the outer half texel at the right edge, along texel 2
+  { expect_pixel = { x = 115, y = 42, color = "#c061f0", tolerance = 3 } },
+  # Smooth: the outer half texel at the top edge, along texel 2
+  { expect_pixel = { x = 97, y = 16, color = "#30a05f", tolerance = 3 } },
+  # Smooth: the outer half texel at the bottom edge, along texel 2
+  { expect_pixel = { x = 100, y = 57, color = "#3785e1", tolerance = 3 } },
+  # Smooth: the outer half texel at the left edge, along texel 3
+  { expect_pixel = { x = 70, y = 54, color = "#666560", tolerance = 3 } },
+  # Smooth: the outer half texel at the right edge, along texel 3
+  { expect_pixel = { x = 116, y = 54, color = "#f7f6f8", tolerance = 3 } },
+  # Smooth: the outer half texel at the top edge, along texel 3
+  { expect_pixel = { x = 110, y = 16, color = "#6060dc", tolerance = 3 } },
+  # Smooth: the outer half texel at the bottom edge, along texel 3
+  { expect_pixel = { x = 113, y = 57, color = "#f8f8f8", tolerance = 3 } },
+  # borders of the panels
+  # Plain: near its border, inside
+  { expect_pixel = { x = 22, y = 59, color = "#e03030", tolerance = 2 } },
+  # Plain: near its border, inside
+  { expect_pixel = { x = 35, y = 59, color = "#2080e0", tolerance = 2 } },
+  # Plain: near its border, inside
+  { expect_pixel = { x = 59, y = 37, color = "#c060f0", tolerance = 2 } },
+  # just outside Plain
+  { expect_pixel = { x = 5, y = 63, color = "#1b2430", tolerance = 2 } },
+  # just outside Plain
+  { expect_pixel = { x = 9, y = 11, color = "#1b2430", tolerance = 2 } },
+  # just outside Plain
+  { expect_pixel = { x = 62, y = 11, color = "#1b2430", tolerance = 2 } },
+  # Tiled: near its border, inside
+  { expect_pixel = { x = 36, y = 117, color = "#606060", tolerance = 2 } },
+  # Tiled: near its border, inside
+  { expect_pixel = { x = 91, y = 117, color = "#f8f8f8", tolerance = 2 } },
+  # Tiled: near its border, inside
+  { expect_pixel = { x = 37, y = 102, color = "#d02890", tolerance = 2 } },
+  # just outside Tiled
+  { expect_pixel = { x = 63, y = 61, color = "#1b2430", tolerance = 2 } },
+  # just outside Tiled
+  { expect_pixel = { x = 32, y = 125, color = "#1b2430", tolerance = 2 } },
+  # just outside Tiled
+  { expect_pixel = { x = 95, y = 125, color = "#1b2430", tolerance = 2 } },
+  # Smooth: near its border, inside
+  { expect_pixel = { x = 68, y = 59, color = "#606060", tolerance = 3 } },
+  # Smooth: near its border, inside
+  { expect_pixel = { x = 78, y = 59, color = "#9f5252", tolerance = 3 } },
+  # Smooth: near its border, inside
+  { expect_pixel = { x = 91, y = 59, color = "#bb568f", tolerance = 3 } },
+  # just outside Smooth
+  { expect_pixel = { x = 122, y = 63, color = "#1b2430", tolerance = 2 } },
+  # just outside Smooth
+  { expect_pixel = { x = 118, y = 11, color = "#1b2430", tolerance = 2 } },
+  # just outside Smooth
+  { expect_pixel = { x = 64, y = 48, color = "#1b2430", tolerance = 2 } },
+  # the clear colour
+  # the clear colour
+  { expect_pixel = { x = 127, y = 101, color = "#1b2430", tolerance = 2 } },
+  # the clear colour
+  { expect_pixel = { x = 0, y = 106, color = "#1b2430", tolerance = 2 } },
+  # the clear colour
+  { expect_pixel = { x = 122, y = 127, color = "#1b2430", tolerance = 2 } },
+  # the clear colour
+  { expect_pixel = { x = 14, y = 86, color = "#1b2430", tolerance = 2 } },
+  # the clear colour
+  { expect_pixel = { x = 111, y = 84, color = "#1b2430", tolerance = 2 } },
+  # the clear colour
+  { expect_pixel = { x = 9, y = 127, color = "#1b2430", tolerance = 2 } },
+  # the clear colour
+  { expect_pixel = { x = 36, y = 0, color = "#1b2430", tolerance = 2 } },
+  # the clear colour
+  { expect_pixel = { x = 110, y = 111, color = "#1b2430", tolerance = 2 } },
+]
