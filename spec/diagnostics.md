@@ -225,7 +225,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5013"></a>E5013 | ambiguous active camera | |
 | <a id="mtek-e5014"></a>E5014 | unknown scene object kind | `lamp Main { … }`; v0.1 kinds: `camera` |
 | <a id="mtek-e5020"></a>E5020 | material without mesh | |
-| <a id="mtek-e5030"></a>E5030 | named entity cannot be destroyed | |
+| <a id="mtek-e5030"></a>E5030 | named entity cannot be destroyed | `destroy(Cube)`, or `self` of a named entity (decision 0064) |
 | <a id="mtek-e5040"></a>E5040 | prefab cannot contain entities | a nested `entity` in a `prefab` (at the nested entity's name; decision 0062) |
 | <a id="mtek-e5041"></a>E5041 | missing prefab parameter | an instance leaves out a param without a default; one diagnostic per param, with the param's declaration as related span |
 | <a id="mtek-e5042"></a>E5042 | prefab instance sets non-parameter | a name that is no param, or a member other than `name: value;`; a note lists the params |
@@ -239,9 +239,9 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5071"></a>E5071 | write to physics-owned field | an assignment to the `position` or `rotation` of an entity with any body, or to a body velocity; names the allowed operation (decision 0065) |
 | <a id="mtek-e5072"></a>E5072 | binding on physics-owned field | `bind` on the `position` or `rotation` of an entity or prefab with any body (decision 0065) |
 | <a id="mtek-e5073"></a>E5073 | write to construction-only field | |
-| <a id="mtek-e5074"></a>E5074 | field access through entity_ref | not in v0.1 |
+| <a id="mtek-e5074"></a>E5074 | field access through entity_ref | not in v0.1; read or write of a field or state through a reference (decision 0064) |
 | <a id="mtek-e5075"></a>E5075 | binding cycle | full path |
-| <a id="mtek-e5080"></a>E5080 | lifecycle operation during initialisation | `spawn` in initialisers; a handler-only built-in function (`spawn`, `destroy`, a body command) called in a function (decision 0065) |
+| <a id="mtek-e5080"></a>E5080 | lifecycle operation during initialisation | `spawn` or `destroy` in initialisers (decision 0064); a handler-only built-in function (`spawn`, `destroy`, a body command) called in a function (decision 0065) |
 | <a id="mtek-e5081"></a>E5081 | entity field read during initialisation | |
 | <a id="mtek-e5090"></a>E5090 | invalid scale | non-positive or non-finite constant |
 | <a id="mtek-e5091"></a>E5091 | body on non-root entity | a body on a nested entity, or a static instance of a prefab with a body nested in an entity (decision 0065) |
@@ -311,10 +311,10 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e8006"></a>E8006 | manifest invalid | schema validation failed |
 | <a id="mtek-e8011"></a>E8011 | invalid camera value | run-time write |
 | <a id="mtek-w8030"></a>W8030 | index clamped | dev builds |
-| <a id="mtek-e8030"></a>E8030 | named entity cannot be destroyed | via `entity_ref` |
-| <a id="mtek-w8031"></a>W8031 | command for pending entity dropped | |
-| <a id="mtek-w8032"></a>W8032 | entity already destroyed | |
-| <a id="mtek-e8033"></a>E8033 | entity limit reached | |
+| <a id="mtek-e8030"></a>E8030 | named entity cannot be destroyed | via `entity_ref`; the call does nothing (decision 0064) |
+| <a id="mtek-w8031"></a>W8031 | command for pending entity dropped | a body command for an entity that is pending removal, a pending spawn or a dead reference |
+| <a id="mtek-w8032"></a>W8032 | entity already destroyed | `destroy` of a reference that is pending removal, stale or dead: no-op |
+| <a id="mtek-e8033"></a>E8033 | entity limit reached | `spawn` returns a dead reference and creates nothing; the limit counts named, alive, pending-spawn and pending-removal entities |
 | <a id="mtek-e8040"></a>E8040 | unknown host input | |
 | <a id="mtek-e8041"></a>E8041 | host input has wrong type | |
 | <a id="mtek-e8050"></a>E8050 | uncaptured GPU validation error | |

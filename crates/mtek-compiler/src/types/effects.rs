@@ -14,7 +14,8 @@
 //!   CPU-only operation as related spans;
 //! * `W4003` for a `cpu fn` that needs no CPU effect;
 //! * `E5080` for a call of a handler-only built-in function (`spawn`,
-//!   `destroy`) in any function;
+//!   `destroy`) in any function and in an initialiser of state or of a field
+//!   (decision 0064);
 //! * for the bodies reachable from the GPU roots through `fn`s: `E4010` for a
 //!   range loop without constant bounds, `E4011` for a declaration of a
 //!   CPU-only type, `E4012` for a call of a CPU-only built-in function (in
