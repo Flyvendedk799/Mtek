@@ -49,7 +49,7 @@ Diagnostics are the main interface between Mtek and anyone repairing a program �
 | `expected`, `actual` | when relevant | rendered Mtek types or forms |
 | `related` | yes (may be empty) | secondary locations with their own message (e.g. the earlier declaration, the `bind`, each step of a cycle) |
 | `notes` | yes (may be empty) | extra explanation, "help:" hints, unsupported-feature context |
-| `suggestedEdits` | yes (may be empty) | validated edits only (§6) |
+| `suggestedEdits` | yes (may be empty) | validated edits only, at most one per diagnostic (§6) |
 | `phase` | yes | `parse` \| `check` \| `emit` \| `validate` (Naga) \| `runtime:<scheduler phase or mount>` |
 | `docs` | yes | anchor into this file |
 
@@ -149,7 +149,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 |---|---|---|
 | <a id="mtek-e2001"></a>E2001 | shadowed name | declaration hides a visible name |
 | <a id="mtek-e2002"></a>E2002 | duplicate name | |
-| <a id="mtek-e2003"></a>E2003 | unknown name | related "did you mean" span when unambiguous |
+| <a id="mtek-e2003"></a>E2003 | unknown name | related "did you mean" span when unambiguous; a rename edit when the renamed program checks (§6) |
 | <a id="mtek-e2004"></a>E2004 | built-in hidden by local | calling a prelude function hidden by a local |
 | <a id="mtek-e2005"></a>E2005 | parameter name used as namespace | e.g. param `color` used as `color.linear` |
 | <a id="mtek-w2010"></a>W2010 | variable never reassigned | `var` could be `let` |
@@ -291,7 +291,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7021"></a>E7021 | asset path outside project | the path escapes the project root, is absolute or malformed |
 | <a id="mtek-e7022"></a>E7022 | invalid use of asset value | a `glb_asset` outside a `const` and its accessors, or a path that is not a string literal |
 | <a id="mtek-e7023"></a>E7023 | asset path case mismatch | the path differs from the file system entry in case |
-| <a id="mtek-e7024"></a>E7024 | unknown name in asset | no mesh, material or node of that name, or the name is ambiguous; lists the names |
+| <a id="mtek-e7024"></a>E7024 | unknown name in asset | no mesh, material or node of that name, or the name is ambiguous; lists the names; a rename edit when one name is within edit distance 2 and the renamed program checks (§6) |
 | <a id="mtek-e7025"></a>E7025 | accessor out of bounds | buffer view or accessor outside its buffer, bad stride or alignment, non-finite values |
 | <a id="mtek-e7026"></a>E7026 | asset limit exceeded | more vertices than `max_vertices_per_primitive`, or packaged assets over `max_total_bytes` |
 | <a id="mtek-e7030"></a>E7030 | asset fetch or integrity failure | runtime: fetch failed, length or SHA-256 mismatch (M4-06, decision 0060) |
@@ -351,21 +351,69 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 
 ## 6. Suggested edits
 
+A diagnostic may carry one **suggested edit**: a mechanical change, with a title, that repairs the program without anyone having to decide anything. It is the main way an agent or a language server repairs code locally, so the rules are strict: an edit that has not been proven is never attached.
+
+### 6.1 The data model
+
 ```json
-{ "description": "use a float literal", "edits": [ { "file": "src/main.mtek", "startByte": 120, "endByte": 122, "replacement": "1.0" } ] }
+{
+  "description": "write the float literal as `1.0`",
+  "edits": [ { "file": "src/main.mtek", "startByte": 120, "endByte": 122, "replacement": "1.0" } ]
+}
 ```
+
+- `description` is the **title**: a short imperative phrase a user interface shows for the change (a code action title). It is never empty.
+- `edits` is a non-empty list of **text edits**. `file` is the project path of the edited file (an edit may be in another file than the diagnostic's `source`: an imported module). `startByte` and `endByte` are a half-open byte range of that file as stored on disk (a byte-order mark included), the same offsets as every `source`; `replacement` is the text that takes the place of the range. An *insertion* has `startByte == endByte`. A text edit never deletes: a non-empty range has a non-empty replacement.
+- All the edits of one suggestion are in **original offsets** and are applied together, in any order: the result is the original text with every range replaced. The edits of one suggestion do not overlap (two insertions at one offset count as overlapping, because their order would be ambiguous; an insertion at the start or end of a replaced range does not overlap it and comes before or after the replacement). A consumer maps the byte offsets to its own positions with the file's text (the language server uses 0-based lines and UTF-16 columns).
+- A diagnostic has **at most one** suggestion. Two or more candidate fixes mean the intent is ambiguous, and then there is none.
+- The suggestions of different diagnostics of one report **never overlap**: where they would, only the first diagnostic in report order keeps its edit. Two edits that merely touch (one ends where the other starts, or an insertion sits at the start of a replaced range) do not overlap, and both are attached. Each suggestion is validated on its own (§6.3); applying several together is not re-checked.
+
+### 6.2 What may be offered
 
 An edit may be attached **only** if all of these hold:
 1. It is mechanical: the intended program is unambiguous (e.g. `1.` → `1.0`, missing `;`, parenthesising a descriptor literal in a condition, renaming to the **single** in-scope candidate within edit distance 2 whose type fits).
-2. The compiler has **re-checked** the file with the edit applied and the edit removes this diagnostic without introducing a new error (validated edits, blueprint §9.4). The check runs on an in-memory copy.
+2. The compiler has **re-checked** the project with the edit applied and the edit removes this diagnostic without introducing a new error (validated edits, blueprint §9.4; §6.3). The check runs on an in-memory copy.
 3. It does not change meaning in a way the author did not write: no inserted conversions to make types fit (`f32(x)` when `x: i32` is a suggestion in `notes`, never an edit), no deleted code, no invented values.
 
 Edits from different diagnostics never overlap; if they would, only the first (in report order) keeps its edit.
 
+The codes that carry validated edits in v0.1, and what they offer:
+
+| Code | The edit |
+|---|---|
+| `E0022` | write the malformed float literal with its missing digits: `1.` → `1.0`, `.5` → `0.5`, `1e3` → `1.0e3` |
+| `E1003` | insert the missing `;` |
+| `E1011` | parenthesise the descriptor literal that is the condition of `if` or the iterable of `for` |
+| `E2003` | replace the unknown name (for a member of a built-in namespace or enum, the member) by the single visible name within edit distance 2; none if two names are that close |
+| `E7024` | replace the string literal naming a mesh, material or node of a glTF file by the single name of the file within edit distance 2 |
+
+No other code carries an edit. In particular `E3003`, `E5001`, `E3023`, `E5042` and the other "did you mean" hints are hints only (renaming a type or a field is as mechanical, but it is not wired yet); a conversion, a deleted declaration or a guessed value (`E3001`, `E3102`, `E3041`) is never an edit.
+
+### 6.3 Validation
+
+Reporting stages only *propose*. When the report is finished, every proposal is judged once, by the same procedure for every code:
+
+1. **Well-formed**: a title, at least one edit, no deletion, edits inside the file, on character boundaries and not overlapping each other, and not overlapping the edits already attached to earlier diagnostics (§6.1).
+2. **Re-check**: the front end (load, lex, parse, resolve, type-check, scenes, assets, effects: every stage that reports a code of the table above) runs again on a copy of the project in which the edited files have their new contents. Nothing on disk changes.
+3. **Compare**: diagnostics are compared by severity, code, file and message (byte offsets move with the edit and are left out). The edit is attached only if the diagnostic has disappeared (one fewer of its kind) and every error of the copy is also an error of the unedited project (at most as often). An edit may remove other errors too, but must not add one.
+
+The comparison is conservative; it rejects an edit when it cannot prove it:
+
+- An error that the parser's recovery had hidden, because it reports at most one syntax error per three tokens, counts as new when the edit reveals it. Two missing semicolons in a row therefore get no edit until one is written by hand.
+- When diagnostics were suppressed (`W9003`, more than 200 in a file), no edit is attached: a suppressed error could hide a new one.
+- At most 32 proposals per report are re-checked, in report order; later ones get no edit. Each re-check is a whole front-end run.
+- Errors of the emit stage (`mtek build`) are not part of the comparison: `check` does not report them either, and the stage does not run while the front end has errors.
+
+`mtek check`, `mtek build` and `mtek inspect` attach edits the same way. `crates/mtek-compiler/src/edits.rs` is the single implementation, `crates/mtek-compiler/tests/suggested_edits.rs` re-proves every edit of every fixture with a separate re-check, and the fixtures `tests/semantics/fail/edits_*` and `tests/assets/fail/e7024_*` assert both the edits and their absence (decision 0071).
+
 ## 7. Writing messages (rules for implementers)
 
-- Name the construct and the specific entity: "Material parameter 'phase' expects f32, but received vec3." not "type error".
+- Name the construct and the specific entity: "Material parameter 'phase' expects f32, but received vec3." not "type error". A diagnostic about the inside of a file (an asset) names the file, in the message or in a note.
 - Prefer Mtek vocabulary (`entity`, `param`, `bind`) over compiler internals (`DefId`, `NodeId`, WGSL).
 - For unsupported features, say "not supported in v0.1" and, if planned, "planned for v0.2".
 - Never blame the user for compiler defects: `E6100`/`E9999` say "this is a compiler bug".
 - Every message has a negative fixture asserting code, primary span and message text (`spec/testing.md` §3.2).
+- A message is one complete sentence: it starts with a capital letter, a name in quotes or a code span (never a lowercase word), ends with a full stop, has no line break and no stray spaces, and is more specific than the catalogue `title`. A `help:` note continues in lowercase.
+- A diagnostic about a name or a type that comes from a declaration of the program points at that declaration with a related span: the first of two duplicates, the opener of an unclosed delimiter, the declaration of the param, struct, function or annotation the expectation comes from. Built-in declarations have no source text and no related span.
+
+`crates/mtek-compiler/tests/diagnostics_audit.rs` checks the mechanical part of these rules over every diagnostic of every golden file, and the wording of internal errors over the sources.

@@ -50,7 +50,10 @@ fn proposal(description: &str, edits: &[(u32, u32, &str)]) -> SuggestedEdit {
         })
 }
 
-fn attached(report: &Report) -> Vec<(Code, Vec<(u32, u32, String)>)> {
+/// `(start, end, replacement)` of one edit.
+type Replacement = (u32, u32, String);
+
+fn attached(report: &Report) -> Vec<(Code, Vec<Replacement>)> {
     report
         .diagnostics
         .iter()
