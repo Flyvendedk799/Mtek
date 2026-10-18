@@ -59,6 +59,9 @@ pub const APP_JS_MAP: &str = "app.js.map";
 pub const APP_DTS: &str = "app.d.ts";
 pub const RUNTIME_DTS: &str = "runtime.d.ts";
 pub const MANIFEST_JSON: &str = "program.manifest.json";
+/// The directory of the content-addressed physics bundle (`physics/<h16>.js`, `spec/physics.md`
+/// section 5).
+pub const PHYSICS_DIR: &str = "physics";
 
 /// What [`package`] needs besides the project and the IR.
 #[derive(Clone, Copy, Debug)]
@@ -69,6 +72,12 @@ pub struct PackageInput<'a> {
     pub runtime_bundle: &'a [u8],
     /// The runtime host declarations (`runtime.d.ts`).
     pub runtime_declarations: &'a [u8],
+    /// The physics bundle (`physics/<h16>.js`, decision 0063); written, and required, only when the
+    /// program uses physics.
+    pub physics_bundle: Option<&'a [u8]>,
+    /// Treat the program as using physics although no source construct says so
+    /// ([`CompileOptions::force_physics_subsystem`](crate::CompileOptions::force_physics_subsystem)).
+    pub force_physics_subsystem: bool,
     /// The assets the front end loaded (decision 0058).
     pub assets: &'a AssetStore,
 }
@@ -122,6 +131,22 @@ pub fn package(
     })?;
     let plan = checked_plan(program, input.profile)?;
     let host_inputs = resolve_host_inputs(project, scene);
+    // `subsystems.physics`: no source construct sets it before the physics schemas reach the checker
+    // (M5-03 makes it true when any body exists); until then only the test option does (decision 0063).
+    let uses_physics = input.force_physics_subsystem;
+    let physics_bundle = match (uses_physics, input.physics_bundle) {
+        (false, _) => None,
+        (true, Some(bundle)) => Some(bundle),
+        (true, None) => {
+            return Err(vec![
+                Diagnostic::new(
+                    Code::E9030,
+                    "Cannot build: the physics bundle is not available to the compiler, but the program uses physics.",
+                )
+                .help("build the runtime first (`npm run build`), then rebuild the mtek command line tool"),
+            ]);
+        }
+    };
     let materials: Vec<BuiltMaterial<'_>> = plan
         .materials
         .iter()
@@ -272,7 +297,9 @@ pub fn package(
             limits: BTreeMap::new(),
             wgsl_language_features: Vec::new(),
         },
-        subsystems: Subsystems { physics: false },
+        subsystems: Subsystems {
+            physics: uses_physics,
+        },
         runtime_config: RuntimeConfig {
             fixed_step: number(runtime.fixed_step, "runtime.fixed_step")?,
             max_catch_up_steps: runtime.max_catch_up_steps,
@@ -305,6 +332,9 @@ pub fn package(
     files.insert(APP_DTS.to_owned(), emit_app_dts(&host_inputs).into_bytes());
     files.insert(RUNTIME_DTS.to_owned(), input.runtime_declarations.to_vec());
     files.insert(runtime_file, input.runtime_bundle.to_vec());
+    if let Some(bundle) = physics_bundle {
+        files.insert(format!("{PHYSICS_DIR}/{}.js", h16(bundle)), bundle.to_vec());
+    }
     files.insert(MANIFEST_JSON.to_owned(), manifest.to_json().into_bytes());
     for (path, bytes) in shader_files {
         files.insert(path, bytes);

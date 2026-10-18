@@ -31,7 +31,7 @@ dist/
   shaders/<h16>.wgsl               # one per material (and probe shaders in test builds)
   shaders/<h16>.mtek-map.json      # WGSL span map (§5.4)
   assets/<h16>.<ext>               # packaged assets (spec/assets.md)
-  physics/<h16>.js                 # only if the program uses physics (spec/physics.md)
+  physics/<h16>.js                 # only if the program uses physics (spec/physics.md; decision 0063)
 ```
 
 - `<h16>` is the first 16 lowercase hex digits of the SHA-256 of the file's bytes; the manifest records the full 64-digit hash.

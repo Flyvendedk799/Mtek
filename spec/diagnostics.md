@@ -337,7 +337,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e9010"></a>E9010 | not implemented by this compiler build | specified, not yet built |
 | <a id="mtek-e9020"></a>E9020 | host input target not exposable | not scene state, or unsupported type |
 | <a id="mtek-e9021"></a>E9021 | unknown host input target | |
-| <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built without `packages/runtime-web/dist` |
+| <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built without `packages/runtime-web/dist`; also a program that uses physics built without `packages/physics-rapier/dist/physics.js` (decision 0063) |
 | <a id="mtek-e9031"></a>E9031 | build output not written | `mtek build` could not write the output directory (I/O failure; exit code 3, the previous output stays in place; decision 0032) |
 | <a id="mtek-e9999"></a>E9999 | internal compiler error | panic converted; asks for a report |
 
