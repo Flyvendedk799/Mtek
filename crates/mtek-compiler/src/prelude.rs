@@ -15,8 +15,9 @@
 //! - its material declarations take the names of the registry's built-in materials, which
 //!   they define (the resolver's prelude mode, [`crate::resolve::resolve_prelude_module`]);
 //! - a declaration of a built-in material whose registry milestone this build has not reached
-//!   (`Pbr`, M4) is left out before resolution, so the build compiles exactly the built-ins it
-//!   implements; using `Pbr` stays the resolver's `E9010` in the user's module.
+//!   is left out before resolution, so the build compiles exactly the built-ins it implements;
+//!   using such a material stays the resolver's `E9010` in the user's module (every built-in
+//!   is implemented since `Pbr` landed with task M4-03, decision 0057).
 //!
 //! The prelude is fixed text, so any diagnostic it produced would be a compiler defect: it is
 //! compiled into a sink of its own and reported as one `E9999` naming each diagnostic.
@@ -205,13 +206,18 @@ mod tests {
     #[test]
     fn only_builtin_materials_of_reached_milestones_are_compiled() {
         assert!(implemented("Unlit"));
-        assert_eq!(
-            implemented("Pbr"),
-            is_implemented(registry().schema("Pbr").expect("Pbr").since)
-        );
+        // `Pbr` landed with task M4-03, before the M4 gate (decision 0057), so the build compiles it;
+        // the gate itself is the same comparison for any built-in whose milestone is later.
+        for name in ["Unlit", "Pbr"] {
+            assert_eq!(
+                implemented(name),
+                is_implemented(registry().schema(name).expect(name).since),
+                "{name}"
+            );
+        }
         assert!(
-            !implemented("Pbr"),
-            "Pbr is M4; this build is {CURRENT_MILESTONE:?}"
+            implemented("Pbr"),
+            "Pbr is implemented by this build ({CURRENT_MILESTONE:?})"
         );
         assert!(implemented("helper"));
     }

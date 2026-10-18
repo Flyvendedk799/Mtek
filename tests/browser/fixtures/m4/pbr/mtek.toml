@@ -1,0 +1,16 @@
+[project]
+name = "fixture"
+language = "0.1"
+
+[host.inputs]
+metal = "Shading.metal"
+rough = "Shading.rough"
+base = "Shading.base"
+sun_pitch = "Shading.sun_pitch"
+sun_yaw = "Shading.sun_yaw"
+sun_intensity = "Shading.sun_intensity"
+sun_color = "Shading.sun_color"
+lamp_pos = "Shading.lamp_pos"
+lamp_intensity = "Shading.lamp_intensity"
+free_pos = "Shading.free_pos"
+free_intensity = "Shading.free_intensity"

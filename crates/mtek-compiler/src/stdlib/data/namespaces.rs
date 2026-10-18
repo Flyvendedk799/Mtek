@@ -271,15 +271,17 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 )),
             ],
         ),
+        // `lighting.pbr` and the `Pbr` material landed with task M4-03, before the M4 gate
+        // (decision 0057).
         namespace(
             "lighting",
-            Milestone::M4,
+            Milestone::M1,
             "Lighting functions for material fragment stages.",
             vec![NamespaceMember::Function(function(
                 "pbr",
                 Domain::Gpu,
                 false,
-                Milestone::M4,
+                Milestone::M1,
                 "The documented PBR subset evaluated for every light in the scene.",
                 vec![sig(
                     &[

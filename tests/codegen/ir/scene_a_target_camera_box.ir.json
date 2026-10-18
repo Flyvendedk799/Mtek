@@ -223,6 +223,269 @@
             "span": {"file": 1, "start": 310, "end": 368}
           },
           "span": {"file": 1, "start": 255, "end": 370}
+        },
+        {
+          "kind": "material",
+          "name": "Pbr",
+          "symbol": "std/materials.mtek::Pbr",
+          "params": [
+            {
+              "name": "base_color",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 1, "start": 398, "end": 432}
+            },
+            {
+              "name": "metallic",
+              "type": "f32",
+              "default": {"f32": 0.0},
+              "span": {"file": 1, "start": 437, "end": 463}
+            },
+            {
+              "name": "roughness",
+              "type": "f32",
+              "default": {"f32": 0.5},
+              "span": {"file": 1, "start": 468, "end": 495}
+            },
+            {
+              "name": "base_color_texture",
+              "type": "texture",
+              "default": {
+                "texture": "texture.white"
+              },
+              "span": {"file": 1, "start": 500, "end": 552}
+            },
+            {
+              "name": "base_color_sampler",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.linear_repeat"
+              },
+              "span": {"file": 1, "start": 557, "end": 617}
+            }
+          ],
+          "layout": {
+            "id": "material:std/materials.mtek::Pbr",
+            "wgslStruct": "MtekParams_2b212d15_Pbr",
+            "size": 32,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "std/materials.mtek::Pbr",
+              "offset": 0,
+              "size": 32,
+              "align": 16,
+              "members": [
+                {
+                  "name": "base_color",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                },
+                {
+                  "name": "metallic",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 16,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                },
+                {
+                  "name": "roughness",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 20,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "std/materials.mtek::Pbr.fragment",
+            "surfaceInputs": [
+              "world_position",
+              "world_normal",
+              "uv"
+            ],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "surface",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 1, "start": 631, "end": 638}
+              },
+              {
+                "index": 1,
+                "name": "texel",
+                "type": "vec4",
+                "kind": "let",
+                "span": {"file": 1, "start": 677, "end": 682}
+              },
+              {
+                "index": 2,
+                "name": "albedo",
+                "type": "color",
+                "kind": "let",
+                "span": {"file": 1, "start": 757, "end": 763}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "let",
+                  "local": 1,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "sample",
+                    "args": [
+                      {
+                        "kind": "param",
+                        "param": 3,
+                        "name": "base_color_texture",
+                        "type": "texture",
+                        "span": {"file": 1, "start": 692, "end": 710}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 4,
+                        "name": "base_color_sampler",
+                        "type": "sampler",
+                        "span": {"file": 1, "start": 712, "end": 730}
+                      },
+                      {
+                        "kind": "field",
+                        "base": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "surface",
+                          "type": "SurfaceInput",
+                          "span": {"file": 1, "start": 732, "end": 739}
+                        },
+                        "field": "uv",
+                        "index": 3,
+                        "type": "vec2",
+                        "span": {"file": 1, "start": 732, "end": 742}
+                      }
+                    ],
+                    "type": "vec4",
+                    "span": {"file": 1, "start": 685, "end": 743}
+                  },
+                  "span": {"file": 1, "start": 673, "end": 744}
+                },
+                {
+                  "kind": "let",
+                  "local": 2,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "color.linear",
+                    "args": [
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "param",
+                            "param": 0,
+                            "name": "base_color",
+                            "type": "color",
+                            "span": {"file": 1, "start": 779, "end": 789}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 1, "start": 779, "end": 793}
+                        },
+                        "rhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "local",
+                            "local": 1,
+                            "name": "texel",
+                            "type": "vec4",
+                            "span": {"file": 1, "start": 796, "end": 801}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 1, "start": 796, "end": 805}
+                        },
+                        "type": "vec3",
+                        "span": {"file": 1, "start": 779, "end": 805}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 1, "start": 807, "end": 810}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 1, "start": 766, "end": 811}
+                  },
+                  "span": {"file": 1, "start": 753, "end": 812}
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "builtin",
+                    "function": "lighting.pbr",
+                    "args": [
+                      {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "surface",
+                        "type": "SurfaceInput",
+                        "span": {"file": 1, "start": 841, "end": 848}
+                      },
+                      {
+                        "kind": "local",
+                        "local": 2,
+                        "name": "albedo",
+                        "type": "color",
+                        "span": {"file": 1, "start": 850, "end": 856}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 1,
+                        "name": "metallic",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 858, "end": 866}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 2,
+                        "name": "roughness",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 868, "end": 877}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 1, "start": 828, "end": 878}
+                  },
+                  "span": {"file": 1, "start": 821, "end": 879}
+                }
+              ],
+              "span": {"file": 1, "start": 663, "end": 885}
+            },
+            "span": {"file": 1, "start": 622, "end": 885}
+          },
+          "span": {"file": 1, "start": 379, "end": 887}
         }
       ]
     }

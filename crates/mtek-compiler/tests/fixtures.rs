@@ -1360,7 +1360,7 @@ fn every_gated_construct_has_a_gating_fixture() {
     // Registry items, by kind (each message names the item and its `since`).
     for (prefix, milestone) in [
         ("The built-in type `glb_asset`", "M4"),
-        ("The built-in schema `Pbr`", "M4"),
+        ("The built-in schema `Static`", "M5"),
         ("The `Entity` field `body`", "M5"),
         ("The `Scene` field `gravity`", "M5"),
         ("Event handlers (`on collision_enter`)", "M5"),

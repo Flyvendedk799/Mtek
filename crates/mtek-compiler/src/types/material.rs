@@ -648,6 +648,42 @@ impl<'a> Checker<'a> {
         self.out.interner.from_type_ref(field.ty)
     }
 
+    /// `lighting.pbr(surface, ..)` given the stage's own `SurfaceInput` parameter by name reads
+    /// exactly `world_position` and `world_normal` of it (decision 0057): the call is the one
+    /// use of the parameter other than a field read that does not make the stage read them all,
+    /// so the vertex interface of `Pbr` carries what the lighting model needs and nothing more.
+    pub(super) fn note_lighting_surface(&mut self, args: &[Expr]) {
+        let Some(first) = args.first() else {
+            return;
+        };
+        let reads_input = match self.res.res(strip_parens(first).id) {
+            Some(Res::Def(id)) => self
+                .body
+                .as_ref()
+                .and_then(|b| b.stage.as_ref())
+                .is_some_and(|s| s.surface == Some(id)),
+            _ => false,
+        };
+        if !reads_input || !matches!(strip_parens(first).kind, ExprKind::Name(_)) {
+            return;
+        }
+        let Some(record) = self.registry.type_def(SURFACE_INPUT) else {
+            return;
+        };
+        let fields: Vec<usize> = record
+            .fields
+            .iter()
+            .enumerate()
+            .filter(|(_, field)| matches!(field.name, "world_position" | "world_normal"))
+            .map(|(index, _)| index)
+            .collect();
+        if let Some(stage) = self.body.as_mut().and_then(|b| b.stage.as_mut()) {
+            // The name was counted as a use; it is a read of these two fields instead.
+            stage.surface_field_reads += 1;
+            stage.surface_reads.extend(fields);
+        }
+    }
+
     /// Whether `ty` is a resource type: `texture` or `sampler`.
     pub(super) fn is_resource(&self, ty: TyId) -> bool {
         matches!(self.out.interner.get(ty), Ty::Texture | Ty::Sampler)

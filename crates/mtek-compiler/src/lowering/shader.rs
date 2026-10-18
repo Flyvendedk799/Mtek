@@ -163,6 +163,17 @@ impl<'p> ShaderLowering<'p> {
                 .ok_or_else(|| format!("the SurfaceInput field '{name}' is unknown"))?;
             surface_inputs.insert(field);
         }
+        // `lighting.pbr` reads these two members of the `MtekSurfaceInput` it is given.
+        if self.helpers.contains(&Helper::LightingPbr) {
+            for needed in [SurfaceField::WorldPosition, SurfaceField::WorldNormal] {
+                if !surface_inputs.contains(&needed) {
+                    return Err(format!(
+                        "lighting.pbr is called but the stage does not read '{}'",
+                        needed.name()
+                    ));
+                }
+            }
+        }
 
         // Every function the stage reaches, lowered once.
         let mut lowered: BTreeMap<String, (Function, Vec<String>)> = BTreeMap::new();
@@ -889,6 +900,7 @@ impl<'p> ShaderLowering<'p> {
             }
             "color.linear" => return Ok(Expr::construct(ShaderType::VEC4, args, span)),
             "color.srgb" => Helper::ColorSrgb,
+            "lighting.pbr" => Helper::LightingPbr,
             "quat.axis_angle" => Helper::QuatAxisAngle,
             "quat.euler" => Helper::QuatEuler,
             "mat4.translation" => Helper::Mat4Translation,

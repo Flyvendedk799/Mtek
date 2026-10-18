@@ -1,0 +1,44 @@
+// `lighting.pbr` in the WGSL of materials (spec/materials.md 8, decision 0057): a user material
+// that passes its whole stage input and nothing else of it (vertex attributes position and normal,
+// varyings world_position and world_normal), one that also reads `uv` and calls the model in a
+// branch, and the prelude `Pbr` (texture and sampler params, the model over the frame's lights).
+material Matte {
+    param tint: color = #c0a060;
+    param roughness: f32 = 0.9;
+
+    fragment(input: SurfaceInput) -> color {
+        return lighting.pbr(input, tint, 0.0, roughness);
+    }
+}
+
+material Checker {
+    param metallic: f32 = 0.5;
+
+    fragment(input: SurfaceInput) -> color {
+        if input.uv.x < 0.5 {
+            return lighting.pbr(input, #ffffff, metallic, 0.3);
+        }
+        return lighting.pbr(input, #202020, 0.0, input.uv.y);
+    }
+}
+
+scene Demo {
+    ambient_intensity: 0.2;
+    camera Main {}
+    entity Sun {
+        mesh: Box {};
+        light: DirectionalLight {};
+    }
+    entity A {
+        mesh: Sphere {};
+        material: Matte {};
+    }
+    entity B {
+        mesh: Sphere {};
+        material: Checker {};
+    }
+    entity C {
+        mesh: Sphere {};
+        material: Pbr { metallic: 1.0 };
+    }
+}

@@ -213,6 +213,88 @@ fn textures_and_samplers_are_group_1_bindings_from_1_in_param_order() {
 }
 
 #[test]
+fn lighting_pbr_is_a_helper_over_the_frame_block_that_reads_two_surface_fields() {
+    // Decision 0057: `lighting.pbr(input, ..)` is one generated helper over `mtek_frame` (the
+    // lights, the camera position and the ambient term); the stage that passes its input to it
+    // and reads nothing else of it needs the world position and the world normal and nothing
+    // more, so the vertex stage carries a normal attribute and two varyings (spec/materials.md
+    // 3.1 and 3.3). A stage that also reads `uv` adds that attribute and varying.
+    let (program, _) = lowered(&materials_dir().join("pbr"));
+    let lit = shaders(&program);
+    let names = |artifact: &ShaderArtifact| {
+        (
+            artifact
+                .vertex_attributes
+                .iter()
+                .map(|a| a.name())
+                .collect::<Vec<_>>(),
+            artifact
+                .surface_inputs
+                .iter()
+                .map(|s| s.name())
+                .collect::<Vec<_>>(),
+        )
+    };
+    let matte = names(&lit["main.Matte"]);
+    assert_eq!(matte.0, ["position", "normal"]);
+    assert_eq!(matte.1, ["world_position", "world_normal"]);
+    let checker = names(&lit["main.Checker"]);
+    assert_eq!(checker.0, ["position", "normal", "uv"]);
+    assert_eq!(checker.1, ["world_position", "world_normal", "uv"]);
+    let pbr = names(&lit["materials.Pbr"]);
+    assert_eq!(pbr, checker);
+
+    for (key, artifact) in &lit {
+        if key == "materials.Unlit" {
+            assert!(!artifact.wgsl.contains("mtek_lighting_pbr"));
+            continue;
+        }
+        let wgsl = &artifact.wgsl;
+        if key == "main.Checker" {
+            // Two calls, one helper.
+            assert_eq!(wgsl.matches("fn mtek_lighting_pbr(").count(), 1, "{wgsl}");
+            assert_eq!(
+                wgsl.matches("mtek_lighting_pbr(u_p_input").count(),
+                2,
+                "{wgsl}"
+            );
+        }
+        let helper = wgsl.split("fn mtek_lighting_pbr(").nth(1).unwrap();
+        let helper = helper.split("\n}\n").next().unwrap();
+        for expected in [
+            "mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>, mtek_metallic: f32, mtek_roughness: f32) -> vec4<f32> {",
+            "clamp(mtek_roughness, 0.045, 1.0)",
+            "clamp(mtek_metallic, 0.0, 1.0)",
+            "mtek_frame.camera_position - mtek_surface.world_position",
+            "for (var mtek_i = 0u; mtek_i < min(mtek_frame.light_count, 4u); mtek_i++) {",
+            "mtek_frame.lights[mtek_i]",
+            "mtek_surface.world_normal",
+            "mtek_c * mtek_frame.ambient",
+            "return vec4<f32>(",
+            // The half vector is computed only for a light that faces the surface (NL > 0).
+            "if mtek_nl > 0.0 {\n            let mtek_h = normalize(mtek_l + mtek_v);",
+            // (1 - VH)^5 by multiplication; no `pow` is involved.
+            "let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;",
+        ] {
+            assert!(helper.contains(expected), "{key}: {expected}\n{helper}");
+        }
+        assert!(!helper.contains("pow("), "{key}\n{helper}");
+        // The vertex stage forwards the world normal, normalised.
+        assert!(
+            wgsl.contains(
+                "normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz)"
+            ),
+            "{key}\n{wgsl}"
+        );
+    }
+    // A material that does not call it has no helper.
+    let (program, _) = lowered(&materials_dir().join("pulse"));
+    for artifact in shaders(&program).values() {
+        assert!(!artifact.wgsl.contains("mtek_lighting_pbr"));
+    }
+}
+
+#[test]
 fn every_material_of_every_fixture_lowers_validates_and_is_deterministic() {
     let mut roots = projects(&repo().join("tests/semantics/pass"));
     roots.extend(projects(&repo().join("tests/codegen")));

@@ -1,0 +1,53 @@
+// M4-03 PBR fixture (decision 0057): one finely tessellated unit sphere lit through the prelude `Pbr` by up to
+// three lights, a camera on the +Z axis and a coloured ambient term. Everything a test varies is scene state exposed
+// as a host input, so one build serves every case: the material (`metal`, `rough`, `base`), a directional light
+// whose direction is `quat.euler(sun_pitch, sun_yaw, 0)` applied to world -Z, a point light with range 5 and a
+// point light without a range. Every light is off (intensity 0) until a test turns it on.
+//
+// The sphere has radius 1 and its vertex normals are exactly radial, so for a pixel the test intersects the pixel's
+// ray with the sphere analytically: that gives N and the surface point, hence V and every light vector.
+scene Shading {
+    clear_color: #000000;
+    ambient_color: #ffc080;
+    ambient_intensity: 0.15;
+
+    state metal: f32 = 0.0;
+    state rough: f32 = 0.5;
+    state base: vec3 = vec3(0.8, 0.8, 0.8);
+    state sun_pitch: f32 = -0.5;
+    state sun_yaw: f32 = 0.6;
+    state sun_intensity: f32 = 0.0;
+    state sun_color: vec3 = vec3(1.0, 1.0, 1.0);
+    state lamp_pos: vec3 = vec3(1.2, 1.6, 2.0);
+    state lamp_intensity: f32 = 0.0;
+    state free_pos: vec3 = vec3(-2.0, 1.0, 3.0);
+    state free_intensity: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 3.5);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective { fov_y: 0.9; near: 0.1; far: 50.0 };
+    }
+
+    entity Sun {
+        rotation: bind(quat.euler(sun_pitch, sun_yaw, 0.0));
+        light: DirectionalLight { color: bind(color.linear(sun_color, 1.0)); intensity: bind(sun_intensity) };
+    }
+    entity Lamp {
+        position: bind(lamp_pos);
+        light: PointLight { color: #ffffff; intensity: bind(lamp_intensity); range: 5.0 };
+    }
+    entity Free {
+        position: bind(free_pos);
+        light: PointLight { color: #ffe0c0; intensity: bind(free_intensity) };
+    }
+
+    entity Ball {
+        mesh: Sphere { radius: 1.0; segments: 256; rings: 128 };
+        material: Pbr {
+            base_color: bind(color.linear(base, 1.0));
+            metallic: bind(metal);
+            roughness: bind(rough);
+        };
+    }
+}

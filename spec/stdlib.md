@@ -54,7 +54,7 @@ Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material tex
 | `sampler` | `linear_repeat()`, `linear_clamp()`, `nearest_repeat()`, `nearest_clamp()` |
 | `frame` | `time: f32`, `delta: f32`, `index: u32` (`spec/scenes.md` §7.5) |
 | `asset` | `glb(path: string) -> glb_asset`, `texture(path: string) -> texture`, `linear_texture(path: string) -> texture` (M4, `spec/assets.md` §2; `glb_asset` accessors in §2.1 there) |
-| `lighting` | `pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` — GPU only (M4) |
+| `lighting` | `pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` — GPU only (implemented by M4-03, decision 0057) |
 | `Key` | enum constants (§5.2) |
 
 ## 3. Schemas

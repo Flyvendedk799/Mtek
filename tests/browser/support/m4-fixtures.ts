@@ -40,3 +40,6 @@ export function buildM4Fixtures(cli: string): void {
     }
   }
 }
+
+/** The PBR fixture (M4-03, decision 0057): a unit sphere lit by up to three lights, everything varied through host inputs. */
+export const PBR = "pbr";

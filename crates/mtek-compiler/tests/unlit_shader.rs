@@ -280,9 +280,9 @@ fn the_prelude_is_the_last_module_and_source_after_the_project() {
     let prelude = sources.files().last().unwrap();
     assert_eq!(prelude.text(), materials_text().unwrap());
     assert_eq!(program.modules[3].file, prelude.id().0);
-    // Only the built-ins this build implements: `Pbr` (M4) is left out.
+    // Every built-in this build implements, used or not (`Pbr` since task M4-03, decision 0057).
     let materials: Vec<&str> = program.materials().map(|m| m.symbol.as_str()).collect();
-    assert_eq!(materials, [UNLIT]);
+    assert_eq!(materials, [UNLIT, "std/materials.mtek::Pbr"]);
     // The entity's instance names the prelude's material item.
     let crate_entity = &program.entry().unwrap().entities[0];
     let instance = crate_entity.material.as_ref().unwrap();

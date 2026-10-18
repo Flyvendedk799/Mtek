@@ -2018,7 +2018,11 @@ impl<'a> Checker<'a> {
                 };
                 let name = format!("{namespace}.{member}");
                 self.record_builtin_call(expr.span, name.clone(), function);
-                self.function_call(expr, &name, function, args, kind, None)
+                let ty = self.function_call(expr, &name, function, args, kind, None);
+                if name == "lighting.pbr" {
+                    self.note_lighting_surface(args);
+                }
+                ty
             }
             Some(NamespaceMember::Value(value)) => {
                 if !is_implemented(value.since) {

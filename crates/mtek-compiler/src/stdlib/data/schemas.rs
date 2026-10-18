@@ -348,7 +348,7 @@ fn materials() -> Vec<SchemaDef> {
         schema(
             "Pbr",
             SchemaCategory::Material,
-            Milestone::M4,
+            Milestone::M1,
             "The documented PBR subset (metallic-roughness, no image-based lighting). Defined in the embedded prelude source `std/materials.mtek`.",
             vec![
                 field(
@@ -357,24 +357,21 @@ fn materials() -> Vec<SchemaDef> {
                     writable_bindable(),
                     "Linear base colour multiplied with the base colour texture.",
                 )
-                .default(ConstValue::srgb(0xff, 0xff, 0xff))
-                .since(Milestone::M4),
+                .default(ConstValue::srgb(0xff, 0xff, 0xff)),
                 field(
                     "metallic",
                     TypeRef::F32,
                     writable_bindable(),
                     "Metalness; clamped to 0..1 by the lighting model.",
                 )
-                .default(ConstValue::F32(0.0))
-                .since(Milestone::M4),
+                .default(ConstValue::F32(0.0)),
                 field(
                     "roughness",
                     TypeRef::F32,
                     writable_bindable(),
                     "Perceptual roughness; clamped to 0.045..1 by the lighting model.",
                 )
-                .default(ConstValue::F32(0.5))
-                .since(Milestone::M4),
+                .default(ConstValue::F32(0.5)),
                 field(
                     "base_color_texture",
                     TypeRef::Texture,
@@ -383,8 +380,7 @@ fn materials() -> Vec<SchemaDef> {
                 )
                 .default(ConstValue::Texture(
                     crate::stdlib::value::BuiltinTexture::White,
-                ))
-                .since(Milestone::M4),
+                )),
                 field(
                     "base_color_sampler",
                     TypeRef::Sampler,
@@ -393,8 +389,7 @@ fn materials() -> Vec<SchemaDef> {
                 )
                 .default(ConstValue::Sampler(
                     crate::stdlib::value::BuiltinSampler::LinearRepeat,
-                ))
-                .since(Milestone::M4),
+                )),
             ],
         ),
     ]

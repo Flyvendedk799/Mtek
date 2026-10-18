@@ -1,0 +1,71 @@
+bindings of scene src/main.mtek::Gallery (target profile webgpu-core-2026)
+
+block builtin:frame MtekFrame  group 0 binding 0  visibility vertex+fragment  owner runtime  size 288 align 16
+  field            type                 wgsl                 offset  size  padding  array
+  view_proj        mat4                 mat4x4<f32>               0    64        0
+  camera_position  vec3                 vec3<f32>                64    12        0
+  light_count      u32                  u32                      76     4        0
+  ambient          vec3                 vec3<f32>                80    12        0
+  reserved0        f32                  f32                      92     4        0
+  lights           array<MtekLight, 4>  array<MtekLight, 4>      96   192        0  4 x stride 48
+
+block builtin:object MtekObject  group 2 binding 0 (dynamic offset)  visibility vertex  owner object  size 128 align 16
+  field          type  wgsl         offset  size  padding  array
+  model          mat4  mat4x4<f32>       0    64        0
+  normal_matrix  mat4  mat4x4<f32>      64    64        0
+
+block material:src/main.mtek::Banded MtekParams_e2cab98b_Banded  group 1 binding 0  visibility fragment  owner material instance  size 8 align 4
+  field      type  wgsl  offset  size  padding  array  declared at
+  roughness  f32   f32        0     4        0         src/main.mtek:15:5-15:32
+  bands      f32   f32        4     4        0         src/main.mtek:16:5-16:28
+
+block material:src/main.mtek::Shiny MtekParams_e2cab98b_Shiny  group 1 binding 0  visibility fragment  owner material instance  size 32 align 16
+  field      type   wgsl       offset  size  padding  array  declared at
+  tint       color  vec4<f32>       0    16        0         src/main.mtek:5:5-5:33
+  metallic   f32    f32            16     4        0         src/main.mtek:6:5-6:31
+  roughness  f32    f32            20     4        8         src/main.mtek:7:5-7:32
+
+block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr  group 1 binding 0  visibility fragment  owner material instance  size 32 align 16
+  field       type   wgsl       offset  size  padding  array  declared at
+  base_color  color  vec4<f32>       0    16        0         std/materials.mtek:11:5-11:39
+  metallic    f32    f32            16     4        0         std/materials.mtek:12:5-12:31
+  roughness   f32    f32            20     4        8         std/materials.mtek:13:5-13:32
+
+block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit  group 1 binding 0  visibility fragment  owner material instance  size 16 align 16
+  field  type   wgsl       offset  size  padding  array  declared at
+  color  color  vec4<f32>       0    16        0         std/materials.mtek:6:5-6:34
+
+instance #0 of std/materials.mtek::Unlit  entity src/main.mtek::Gallery.Sun (#0)  block material:std/materials.mtek::Unlit  group 1 binding 0  storage shareable
+  param  type   update   dependencies  field  offset  size  declared at                  instance at
+  color  color  initial  -             color       0    16  std/materials.mtek:6:5-6:34  src/main.mtek:38:5-42:6
+
+instance #1 of std/materials.mtek::Unlit  entity src/main.mtek::Gallery.Lamp (#1)  block material:std/materials.mtek::Unlit  group 1 binding 0  storage shareable
+  param  type   update   dependencies  field  offset  size  declared at                  instance at
+  color  color  initial  -             color       0    16  std/materials.mtek:6:5-6:34  src/main.mtek:43:5-47:6
+
+instance #2 of std/materials.mtek::Pbr  entity src/main.mtek::Gallery.Metal (#2)  block material:std/materials.mtek::Pbr  group 1 binding 0  storage shareable
+  param               type     update    dependencies  field                              offset  size  declared at                    instance at
+  base_color          color    initial   -             base_color                              0    16  std/materials.mtek:11:5-11:39  src/main.mtek:52:9-52:58
+  metallic            f32      initial   -             metallic                               16     4  std/materials.mtek:12:5-12:31  src/main.mtek:52:9-52:58
+  roughness           f32      initial   -             roughness                              20     4  std/materials.mtek:13:5-13:32  src/main.mtek:52:9-52:58
+  base_color_texture  texture  resource  -             binding 1 = texture.white               -     -  std/materials.mtek:14:5-14:57  src/main.mtek:52:9-52:58
+  base_color_sampler  sampler  resource  -             binding 2 = sampler.linear_repeat       -     -  std/materials.mtek:15:5-15:65  src/main.mtek:52:9-52:58
+
+instance #3 of std/materials.mtek::Pbr  entity src/main.mtek::Gallery.Plastic (#3)  block material:std/materials.mtek::Pbr  group 1 binding 0  storage shareable
+  param               type     update    dependencies  field                              offset  size  declared at                    instance at
+  base_color          color    initial   -             base_color                              0    16  std/materials.mtek:11:5-11:39  src/main.mtek:56:9-56:123
+  metallic            f32      initial   -             metallic                               16     4  std/materials.mtek:12:5-12:31  src/main.mtek:56:9-56:123
+  roughness           f32      initial   -             roughness                              20     4  std/materials.mtek:13:5-13:32  src/main.mtek:56:9-56:123
+  base_color_texture  texture  resource  -             binding 1 = texture.white               -     -  std/materials.mtek:14:5-14:57  src/main.mtek:56:9-56:123
+  base_color_sampler  sampler  resource  -             binding 2 = sampler.nearest_clamp       -     -  std/materials.mtek:15:5-15:65  src/main.mtek:56:9-56:123
+
+instance #4 of src/main.mtek::Shiny  entity src/main.mtek::Gallery.Custom (#4)  block material:src/main.mtek::Shiny  group 1 binding 0  storage shareable
+  param      type   update   dependencies  field      offset  size  declared at             instance at
+  tint       color  initial  -             tint            0    16  src/main.mtek:5:5-5:33  src/main.mtek:61:9-61:44
+  metallic   f32    initial  -             metallic       16     4  src/main.mtek:6:5-6:31  src/main.mtek:61:9-61:44
+  roughness  f32    initial  -             roughness      20     4  src/main.mtek:7:5-7:32  src/main.mtek:61:9-61:44
+
+instance #5 of src/main.mtek::Banded  entity src/main.mtek::Gallery.Floor (#5)  block material:src/main.mtek::Banded  group 1 binding 0  storage shareable
+  param      type  update   dependencies  field      offset  size  declared at               instance at
+  roughness  f32   initial  -             roughness       0     4  src/main.mtek:15:5-15:32  src/main.mtek:66:9-66:29
+  bands      f32   initial  -             bands           4     4  src/main.mtek:16:5-16:28  src/main.mtek:66:9-66:29
