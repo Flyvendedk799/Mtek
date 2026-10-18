@@ -141,7 +141,12 @@ pub fn run(check: bool, paths: &[PathBuf], context: &Context) -> Outcome {
     }
     for path in paths {
         let path_shown = path.display().to_string();
-        find_files(&absolute(&context.cwd, path), &path_shown, &mut files, &mut run);
+        find_files(
+            &absolute(&context.cwd, path),
+            &path_shown,
+            &mut files,
+            &mut run,
+        );
     }
     files.sort();
     files.dedup();
@@ -206,7 +211,13 @@ fn finish(
     listing: String,
 ) -> Outcome {
     let report = sink.finish();
-    let mut stderr = render_report(&report, sources, RenderOptions { color: context.color });
+    let mut stderr = render_report(
+        &report,
+        sources,
+        RenderOptions {
+            color: context.color,
+        },
+    );
     for line in &run.io_errors {
         stderr.push_str(&format!("error: {line}\n"));
     }
@@ -224,10 +235,7 @@ fn finish(
         let summary = match (check, changed) {
             (true, _) => format!("checked {total} {}: all formatted", noun(total)),
             (false, 0) => format!("{total} {} already formatted", noun(total)),
-            (false, _) => format!(
-                "formatted {changed} of {total} {}",
-                noun(total)
-            ),
+            (false, _) => format!("formatted {changed} of {total} {}", noun(total)),
         };
         stdout.push_str(&summary);
         stdout.push('\n');
@@ -249,7 +257,10 @@ fn finish(
         }
         if !run.io_errors.is_empty() {
             let n = run.io_errors.len();
-            problems.push(format!("{n} I/O {}", if n == 1 { "error" } else { "errors" }));
+            problems.push(format!(
+                "{n} I/O {}",
+                if n == 1 { "error" } else { "errors" }
+            ));
         }
         stderr.push_str(&format!(
             "fmt {}failed: {}\n",

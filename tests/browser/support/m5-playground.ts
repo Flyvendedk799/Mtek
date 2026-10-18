@@ -40,17 +40,17 @@ export function exampleConstant(name: string, source: string = playgroundSource(
  * the model cannot drift from the program unnoticed.
  */
 export const PLAYGROUND_SOURCE_LITERALS = [
-  "mesh: Box { size: vec3(14.0, 1.0, 8.0); };",
-  "body: Dynamic { mass: 2.0; };",
+  "mesh: Box { size: vec3(14.0, 1.0, 8.0) };",
+  "body: Dynamic { mass: 2.0 };",
   "origin: vec3(-4.5, 0.5, 0.0);",
   "position: vec3(4.0, 1.5, 0.0);",
-  "collider: BoxCollider { size: vec3(4.0, 2.0, 6.0); sensor: true; };",
+  "collider: BoxCollider { size: vec3(4.0, 2.0, 6.0); sensor: true };",
   "let x = (random() * 2.0 - 1.0) * SPAWN_RANGE_X;",
   "let z = (random() * 2.0 - 1.0) * SPAWN_RANGE_Z;",
-  "spawn(Crate { origin: vec3(x, SPAWN_HEIGHT, z); });",
+  "spawn(Crate { origin: vec3(x, SPAWN_HEIGHT, z) });",
   "position: vec3(0.0, 8.0, 17.0);",
   "target: vec3(0.0, 1.5, 0.0);",
-  "projection: Perspective { fov_y: 0.8; near: 0.1; far: 100.0; };",
+  "projection: Perspective { fov_y: 0.8; near: 0.1; far: 100.0 };",
   "position: bind(vec3(-8.0 + (0.4 + 0.5 * f32(entered)) * 0.5, 6.0, -3.0));",
   "scale: bind(vec3(0.4 + 0.5 * f32(entered), 0.4, 0.4));",
 ] as const;

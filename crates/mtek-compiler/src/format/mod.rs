@@ -108,9 +108,7 @@ fn verify(
     lexed.report_into(&mut sink);
     let parsed = parse_module(formatted, &lexed.tokens, &lexed.trivia, &mut sink);
     if sink.has_errors() {
-        return Err(vec![defect(
-            "the formatted text does not parse".to_owned(),
-        )]);
+        return Err(vec![defect("the formatted text does not parse".to_owned())]);
     }
     if dump_module(&parsed.module) != original_tree {
         return Err(vec![defect(

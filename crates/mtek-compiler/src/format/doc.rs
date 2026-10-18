@@ -405,7 +405,13 @@ mod tests {
 
     #[test]
     fn a_hang_indents_only_a_line_that_has_something_on_it() {
-        let hang = |text: &str| Doc::hang(Doc::concat(vec![Doc::text("// c"), Doc::HardLine, Doc::text(text)]));
+        let hang = |text: &str| {
+            Doc::hang(Doc::concat(vec![
+                Doc::text("// c"),
+                Doc::HardLine,
+                Doc::text(text),
+            ]))
+        };
         let doc = Doc::concat(vec![
             Doc::text("x ="),
             Doc::Space,

@@ -215,5 +215,11 @@ fn the_repository_sources_that_ci_checks_are_canonical() {
             "crates/mtek-cli/templates",
         ],
     );
-    assert_eq!(out.status.code(), Some(0), "{}{}", stdout(&out), stderr(&out));
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "{}{}",
+        stdout(&out),
+        stderr(&out)
+    );
 }

@@ -52,7 +52,10 @@ fn an_empty_body_is_one_pair_of_braces() {
 fn line_endings_are_lf_and_the_file_ends_in_one_newline() {
     assert_eq!(fmt("fn f() {}\r\n\r\n\r\n"), "fn f() {}\n");
     assert_eq!(fmt("fn f() {}"), "fn f() {}\n");
-    assert_eq!(fmt("fn f() {   \r\n   return;   \r\n}\r\n"), "fn f() {\n    return;\n}\n");
+    assert_eq!(
+        fmt("fn f() {   \r\n   return;   \r\n}\r\n"),
+        "fn f() {\n    return;\n}\n"
+    );
 }
 
 #[test]
@@ -64,7 +67,8 @@ fn an_empty_file_stays_empty_and_a_byte_order_mark_goes() {
 
 #[test]
 fn members_stay_in_their_order() {
-    let text = "scene S {\n    update(dt: f32) {}\n    state a: f32 = 1.0;\n    clear_color: #000000;\n}";
+    let text =
+        "scene S {\n    update(dt: f32) {}\n    state a: f32 = 1.0;\n    clear_color: #000000;\n}";
     stays(text);
 }
 
@@ -87,12 +91,18 @@ fn operators_have_spaces_and_unary_operators_do_not() {
 #[test]
 fn parentheses_are_the_authors() {
     // `-(5)` and `-5` differ (`spec/language.md` 6.6), and redundant parentheses are kept.
-    check("fn f(){let a=-( 5 );let b=( a+b )*c;let c=((a));}", "fn f() {\n    let a = -(5);\n    let b = (a + b) * c;\n    let c = ((a));\n}");
+    check(
+        "fn f(){let a=-( 5 );let b=( a+b )*c;let c=((a));}",
+        "fn f() {\n    let a = -(5);\n    let b = (a + b) * c;\n    let c = ((a));\n}",
+    );
 }
 
 #[test]
 fn for_headers_have_no_spaces_around_the_range() {
-    check("fn f(){for i in 0..10{}for j in xs{}}", "fn f() {\n    for i in 0..10 {}\n    for j in xs {}\n}");
+    check(
+        "fn f(){for i in 0..10{}for j in xs{}}",
+        "fn f() {\n    for i in 0..10 {}\n    for j in xs {}\n}",
+    );
 }
 
 #[test]
@@ -195,7 +205,10 @@ fn nested_descriptors_break_from_the_outside() {
 
 #[test]
 fn bind_is_part_of_a_field_value() {
-    check("scene S { a: Pulse { tint: bind( tint ); phase: bind(frame.time) }; }", "scene S {\n    a: Pulse { tint: bind(tint); phase: bind(frame.time) };\n}");
+    check(
+        "scene S { a: Pulse { tint: bind( tint ); phase: bind(frame.time) }; }",
+        "scene S {\n    a: Pulse { tint: bind(tint); phase: bind(frame.time) };\n}",
+    );
 }
 
 // ----- width ------------------------------------------------------------------------------
@@ -216,7 +229,10 @@ fn a_call_that_is_too_wide_has_one_argument_per_line_and_a_trailing_comma() {
 
 #[test]
 fn a_call_that_fits_has_no_trailing_comma_whatever_the_source_had() {
-    check("fn f(){g(a,b,);let v=[1.0,2.0,];}", "fn f() {\n    g(a, b);\n    let v = [1.0, 2.0];\n}");
+    check(
+        "fn f(){g(a,b,);let v=[1.0,2.0,];}",
+        "fn f() {\n    g(a, b);\n    let v = [1.0, 2.0];\n}",
+    );
 }
 
 #[test]
@@ -325,19 +341,28 @@ fn comments_at_the_edges_of_a_body() {
     // last
 }",
     );
-    check("fn f() {\n    // only a comment\n}", "fn f() {\n    // only a comment\n}");
+    check(
+        "fn f() {\n    // only a comment\n}",
+        "fn f() {\n    // only a comment\n}",
+    );
     check("fn f() { /* only */ }", "fn f() { /* only */\n}");
 }
 
 #[test]
 fn comments_at_the_top_and_bottom_of_a_file() {
     stays("// header\n\n// second paragraph\nfn f() {}\n\n// footer");
-    check("fn f() {}\n// glued footer\n\n\n// spaced footer", "fn f() {}\n// glued footer\n\n// spaced footer");
+    check(
+        "fn f() {}\n// glued footer\n\n\n// spaced footer",
+        "fn f() {}\n// glued footer\n\n// spaced footer",
+    );
 }
 
 #[test]
 fn a_comment_before_an_item_stays_with_it_and_the_items_are_a_blank_line_apart() {
-    check("const A = 1;\n// about B\nconst B = 2;", "const A = 1;\n\n// about B\nconst B = 2;");
+    check(
+        "const A = 1;\n// about B\nconst B = 2;",
+        "const A = 1;\n\n// about B\nconst B = 2;",
+    );
 }
 
 #[test]
@@ -406,7 +431,10 @@ fn a_comment_on_its_own_line_inside_a_list_keeps_its_line() {
 #[test]
 fn a_comment_between_the_header_and_the_brace_stays_before_the_brace() {
     check("fn f() /* before */ {}", "fn f() /* before */ {}");
-    check("fn f() // before\n{ return; }", "fn f() // before\n{\n    return;\n}");
+    check(
+        "fn f() // before\n{ return; }",
+        "fn f() // before\n{\n    return;\n}",
+    );
 }
 
 #[test]
@@ -420,8 +448,14 @@ fn block_comments_nest_and_are_kept_verbatim() {
 
 #[test]
 fn a_line_comment_loses_its_trailing_white_space_and_nothing_else() {
-    assert_eq!(fmt("//   spaced   \t\nfn f() {}"), "//   spaced\nfn f() {}\n");
-    assert_eq!(fmt("//no space\n/// doc\nfn f() {}"), "//no space\n/// doc\nfn f() {}\n");
+    assert_eq!(
+        fmt("//   spaced   \t\nfn f() {}"),
+        "//   spaced\nfn f() {}\n"
+    );
+    assert_eq!(
+        fmt("//no space\n/// doc\nfn f() {}"),
+        "//no space\n/// doc\nfn f() {}\n"
+    );
 }
 
 #[test]

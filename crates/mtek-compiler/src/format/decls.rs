@@ -53,9 +53,12 @@ impl Printer<'_> {
     fn import(&mut self, decl: &ImportDecl) -> Doc {
         let after_names = decl.names.last().map_or(decl.span.start, |n| n.span.end);
         let close = self.token_start(TokenKind::RBrace, after_names, decl.source.span.start);
-        let names = self.list(&ListStyle::IMPORT_BRACES, &decl.names, close, &mut |p, n| {
-            p.ident(n)
-        });
+        let names = self.list(
+            &ListStyle::IMPORT_BRACES,
+            &decl.names,
+            close,
+            &mut |p, n| p.ident(n),
+        );
         let source = Doc::text(self.slice(decl.source.span));
         let source = self.with_leading(decl.source.span.start, source);
         let semicolon = self.semicolon(decl.span.end);
@@ -208,9 +211,11 @@ impl Printer<'_> {
         };
         let open = self.token_start(TokenKind::LBrace, header_end, decl.span.start);
         parts.push(Doc::Space);
-        parts.push(self.braced(open, closing(decl.span), &decl.members, &mut |p, m| {
-            p.entity_member(m)
-        }));
+        parts.push(
+            self.braced(open, closing(decl.span), &decl.members, &mut |p, m| {
+                p.entity_member(m)
+            }),
+        );
         Doc::concat(parts)
     }
 
@@ -280,12 +285,15 @@ impl Printer<'_> {
             .last()
             .map_or(handler.event.span.end, |arg| arg.span().end);
         let close = self.token_start(TokenKind::RParen, after_args, handler.span.start);
-        let args = self.list(&ListStyle::PARENS, &handler.args, close, &mut |p, arg| {
-            match arg {
+        let args = self.list(
+            &ListStyle::PARENS,
+            &handler.args,
+            close,
+            &mut |p, arg| match arg {
                 HandlerArg::Param(param) => p.param(param),
                 HandlerArg::Filter(filter) => p.expr(filter),
-            }
-        });
+            },
+        );
         let body = self.block(&handler.body);
         Doc::concat(vec![Doc::text("on "), event, args, Doc::Space, body])
     }
