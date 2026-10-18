@@ -2,6 +2,7 @@
 
 mod analysis;
 mod clock;
+mod completion;
 mod definition;
 mod hover;
 mod overlay;
@@ -12,6 +13,8 @@ mod transport;
 mod uri;
 
 #[cfg(test)]
-mod testkit;
+mod completion_tests;
 #[cfg(test)]
 mod feature_tests;
+#[cfg(test)]
+mod testkit;

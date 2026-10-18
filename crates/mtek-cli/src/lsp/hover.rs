@@ -141,7 +141,7 @@ fn decl_markdown(view: &ModuleView<'_>, def: &Def) -> Option<String> {
 }
 
 /// The declaration as Mtek writes it, with the types the checker found.
-fn decl_signature(view: &ModuleView<'_>, def: &Def) -> Option<String> {
+pub(super) fn decl_signature(view: &ModuleView<'_>, def: &Def) -> Option<String> {
     let name = &def.name;
     let Some(types) = view.types else {
         return Some(format!("{} {name}", def.kind.noun()));
