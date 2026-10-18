@@ -1,0 +1,46 @@
+# Perspective camera at (0, 0, 8) looking at the origin, fov_y 0.9, 128 x 128 target: in the plane z = 0 one
+# world unit is 16.6 pixels, the origin is at pixel (64, 64), +X to the right, +Y up. World poses that follow
+# from the task text (the parent's transform T . R . S applies to its children):
+#   Arm    local x scaled by 2, then turned 90 degrees: world x 0.5 .. 1.5, y -2 .. 0
+#   Hand   centre (1, 1); its own 0.5 box is stretched by the parent: world width 0.5 (x), height 1.0 (y)
+#   Spark  centre (0, 1); the sphere is stretched by the parent too: semi-axis 0.4 in x, 0.8 in y
+# The pixels come from an independent CPU ray caster (f64) of exactly this description, not from any
+# renderer: every probe is at least 1 pixel away from a silhouette (2 to 3 pixels near the sphere), so the
+# different tessellation of the sphere does not matter. The probes tell apart: a clockwise turn, a scale
+# that is ignored or applied on the wrong axis, a turn that is ignored, children that do not follow.
+name = "a scaled and rotated arm with a hand and a spark"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # background
+  { expect_pixel = { x = 2, y = 2, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 125, y = 125, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 80, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 70, y = 80, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 91, y = 80, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 80, y = 62, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 80, y = 100, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 74, y = 47, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 87, y = 47, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 80, y = 36, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 80, y = 58, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 63, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 31, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 100, y = 47, color = "#10141c", tolerance = 2 } },
+  { expect_pixel = { x = 40, y = 80, color = "#10141c", tolerance = 2 } },
+  # Arm
+  { expect_pixel = { x = 80, y = 80, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 75, y = 80, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 86, y = 80, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 80, y = 70, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 80, y = 94, color = "#f59e0b", tolerance = 2 } },
+  # Hand
+  { expect_pixel = { x = 80, y = 47, color = "#22d3ee", tolerance = 2 } },
+  { expect_pixel = { x = 78, y = 41, color = "#22d3ee", tolerance = 2 } },
+  { expect_pixel = { x = 82, y = 54, color = "#22d3ee", tolerance = 2 } },
+  # Spark
+  { expect_pixel = { x = 64, y = 47, color = "#f472b6", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 38, color = "#f472b6", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 56, color = "#f472b6", tolerance = 2 } },
+  { expect_pixel = { x = 60, y = 47, color = "#f472b6", tolerance = 2 } },
+  { expect_pixel = { x = 68, y = 47, color = "#f472b6", tolerance = 2 } },
+]

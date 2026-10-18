@@ -1,0 +1,689 @@
+{
+  "schemaVersion": 1,
+  "what": "tools/ai-eval validate on the Mtek reference and the Mtek starter of every holdout task (ids, layer outcomes and counts only)",
+  "commit": "a461ceb",
+  "environment": {
+    "browser": {
+      "name": "chromium",
+      "channel": "chromium",
+      "version": "153.0.8010.12",
+      "headless": true,
+      "launchArgs": [
+        "--enable-unsafe-webgpu",
+        "--ignore-gpu-blocklist",
+        "--enable-webgpu-developer-features"
+      ]
+    },
+    "gpu": {
+      "available": true,
+      "reason": null,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      }
+    }
+  },
+  "tasks": [
+    {
+      "id": "holdout-01",
+      "compilerVersion": "0.1.0-dev",
+      "reference": {
+        "verdict": "pass",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "pass"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 4,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "pass",
+            "stepsRun": 26,
+            "stepsTotal": 26
+          }
+        ]
+      },
+      "starter": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "fail",
+          "build": "not-run",
+          "start": "not-run",
+          "tests": "not-run"
+        },
+        "requiredSymbols": {
+          "outcome": "fail",
+          "checked": 4,
+          "missing": 4
+        },
+        "diagnosticCodes": [
+          "MTEK-E9006"
+        ],
+        "fixtures": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": []
+      }
+    },
+    {
+      "id": "holdout-02",
+      "compilerVersion": "0.1.0-dev",
+      "reference": {
+        "verdict": "pass",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "pass"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 3,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "pass",
+            "stepsRun": 29,
+            "stepsTotal": 29
+          }
+        ]
+      },
+      "starter": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "fail",
+          "build": "not-run",
+          "start": "not-run",
+          "tests": "not-run"
+        },
+        "requiredSymbols": {
+          "outcome": "fail",
+          "checked": 3,
+          "missing": 3
+        },
+        "diagnosticCodes": [
+          "MTEK-E9006"
+        ],
+        "fixtures": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": []
+      }
+    },
+    {
+      "id": "holdout-03",
+      "compilerVersion": "0.1.0-dev",
+      "reference": {
+        "verdict": "pass",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "pass"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 6,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "pass",
+            "stepsRun": 30,
+            "stepsTotal": 30
+          }
+        ]
+      },
+      "starter": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "fail",
+          "build": "not-run",
+          "start": "not-run",
+          "tests": "not-run"
+        },
+        "requiredSymbols": {
+          "outcome": "fail",
+          "checked": 6,
+          "missing": 6
+        },
+        "diagnosticCodes": [
+          "MTEK-E9006"
+        ],
+        "fixtures": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": []
+      }
+    },
+    {
+      "id": "holdout-04",
+      "compilerVersion": "0.1.0-dev",
+      "reference": {
+        "verdict": "pass",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "pass"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 5,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 5,
+          "passed": 5,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "pass",
+            "stepsRun": 13,
+            "stepsTotal": 13
+          },
+          {
+            "index": 2,
+            "status": "pass",
+            "stepsRun": 9,
+            "stepsTotal": 9
+          },
+          {
+            "index": 3,
+            "status": "pass",
+            "stepsRun": 61,
+            "stepsTotal": 61
+          },
+          {
+            "index": 4,
+            "status": "pass",
+            "stepsRun": 85,
+            "stepsTotal": 85
+          },
+          {
+            "index": 5,
+            "status": "pass",
+            "stepsRun": 61,
+            "stepsTotal": 61
+          }
+        ]
+      },
+      "starter": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 5,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 5,
+          "passed": 1,
+          "failed": 4,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "fail",
+            "failureKind": "expect_pixel",
+            "failedStep": 6,
+            "stepsRun": 5,
+            "stepsTotal": 13
+          },
+          {
+            "index": 2,
+            "status": "pass",
+            "stepsRun": 9,
+            "stepsTotal": 9
+          },
+          {
+            "index": 3,
+            "status": "fail",
+            "failureKind": "expect_pixel",
+            "failedStep": 6,
+            "stepsRun": 5,
+            "stepsTotal": 61
+          },
+          {
+            "index": 4,
+            "status": "fail",
+            "failureKind": "expect_pixel",
+            "failedStep": 6,
+            "stepsRun": 5,
+            "stepsTotal": 85
+          },
+          {
+            "index": 5,
+            "status": "fail",
+            "failureKind": "expect_pixel",
+            "failedStep": 6,
+            "stepsRun": 5,
+            "stepsTotal": 61
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout-05",
+      "compilerVersion": "0.1.0-dev",
+      "reference": {
+        "verdict": "pass",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "pass"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 3,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 4,
+          "passed": 4,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "pass",
+            "stepsRun": 53,
+            "stepsTotal": 53
+          },
+          {
+            "index": 2,
+            "status": "pass",
+            "stepsRun": 26,
+            "stepsTotal": 26
+          },
+          {
+            "index": 3,
+            "status": "pass",
+            "stepsRun": 6,
+            "stepsTotal": 6
+          },
+          {
+            "index": 4,
+            "status": "pass",
+            "stepsRun": 38,
+            "stepsTotal": 38
+          }
+        ]
+      },
+      "starter": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 3,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 4,
+          "passed": 1,
+          "failed": 3,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "fail",
+            "failureKind": "expect_pixel",
+            "failedStep": 5,
+            "stepsRun": 4,
+            "stepsTotal": 53
+          },
+          {
+            "index": 2,
+            "status": "fail",
+            "failureKind": "expect_pixel",
+            "failedStep": 5,
+            "stepsRun": 4,
+            "stepsTotal": 26
+          },
+          {
+            "index": 3,
+            "status": "pass",
+            "stepsRun": 6,
+            "stepsTotal": 6
+          },
+          {
+            "index": 4,
+            "status": "fail",
+            "failureKind": "expect_pixel",
+            "failedStep": 11,
+            "stepsRun": 10,
+            "stepsTotal": 38
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout-06",
+      "compilerVersion": "0.1.0-dev",
+      "reference": {
+        "verdict": "pass",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "pass"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 2,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 3,
+          "passed": 3,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "pass",
+            "stepsRun": 75,
+            "stepsTotal": 75
+          },
+          {
+            "index": 2,
+            "status": "pass",
+            "stepsRun": 21,
+            "stepsTotal": 21
+          },
+          {
+            "index": 3,
+            "status": "pass",
+            "stepsRun": 55,
+            "stepsTotal": 55
+          }
+        ]
+      },
+      "starter": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 2,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 3,
+          "passed": 1,
+          "failed": 2,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "fail",
+            "failureKind": "set_input",
+            "failedStep": 2,
+            "stepsRun": 1,
+            "stepsTotal": 75
+          },
+          {
+            "index": 2,
+            "status": "pass",
+            "stepsRun": 21,
+            "stepsTotal": 21
+          },
+          {
+            "index": 3,
+            "status": "fail",
+            "failureKind": "set_input",
+            "failedStep": 2,
+            "stepsRun": 1,
+            "stepsTotal": 55
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout-07",
+      "compilerVersion": "0.1.0-dev",
+      "reference": {
+        "verdict": "pass",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "pass"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 3,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 2,
+          "passed": 2,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "pass",
+            "stepsRun": 18,
+            "stepsTotal": 18
+          },
+          {
+            "index": 2,
+            "status": "pass",
+            "stepsRun": 18,
+            "stepsTotal": 18
+          }
+        ]
+      },
+      "starter": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 3,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 2,
+          "passed": 0,
+          "failed": 2,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "fail",
+            "failureKind": "expect_pixel",
+            "failedStep": 3,
+            "stepsRun": 2,
+            "stepsTotal": 18
+          },
+          {
+            "index": 2,
+            "status": "fail",
+            "failureKind": "expect_pixel",
+            "failedStep": 3,
+            "stepsRun": 2,
+            "stepsTotal": 18
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout-08",
+      "compilerVersion": "0.1.0-dev",
+      "reference": {
+        "verdict": "pass",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "pass"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 2,
+          "missing": 0
+        },
+        "diagnosticCodes": [],
+        "fixtures": {
+          "total": 4,
+          "passed": 4,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "pass",
+            "stepsRun": 57,
+            "stepsTotal": 57
+          },
+          {
+            "index": 2,
+            "status": "pass",
+            "stepsRun": 9,
+            "stepsTotal": 9
+          },
+          {
+            "index": 3,
+            "status": "pass",
+            "stepsRun": 129,
+            "stepsTotal": 129
+          },
+          {
+            "index": 4,
+            "status": "pass",
+            "stepsRun": 57,
+            "stepsTotal": 57
+          }
+        ]
+      },
+      "starter": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "fail",
+          "build": "not-run",
+          "start": "not-run",
+          "tests": "not-run"
+        },
+        "requiredSymbols": {
+          "outcome": "pass",
+          "checked": 2,
+          "missing": 0
+        },
+        "diagnosticCodes": [
+          "MTEK-E5070"
+        ],
+        "fixtures": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "notRun": 0
+        },
+        "fixtureResults": []
+      }
+    }
+  ],
+  "totals": {
+    "tasks": 8,
+    "referencesPassing": 8,
+    "referenceFixtures": 21,
+    "referenceFixturesPassed": 21
+  }
+}

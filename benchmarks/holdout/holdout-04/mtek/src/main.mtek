@@ -1,0 +1,38 @@
+scene Demo {
+    clear_color: #111827;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 7.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Slot0 {
+        position: vec3(-3.0, 0.0, 0.0);
+        mesh: Box { size: vec3(1.2, 1.2, 1.2) };
+        material: Unlit { color: #475569 };
+    }
+
+    entity Slot1 {
+        position: vec3(-1.0, 0.0, 0.0);
+        mesh: Box { size: vec3(1.2, 1.2, 1.2) };
+        material: Unlit { color: #475569 };
+    }
+
+    entity Slot2 {
+        position: vec3(1.0, 0.0, 0.0);
+        mesh: Box { size: vec3(1.2, 1.2, 1.2) };
+        material: Unlit { color: #475569 };
+    }
+
+    entity Slot3 {
+        position: vec3(3.0, 0.0, 0.0);
+        mesh: Box { size: vec3(1.2, 1.2, 1.2) };
+        material: Unlit { color: #475569 };
+    }
+
+    entity Cursor {
+        position: vec3(-3.0, 1.0, 0.0);
+        mesh: Sphere { radius: 0.3 };
+        material: Unlit { color: #facc15 };
+    }
+}

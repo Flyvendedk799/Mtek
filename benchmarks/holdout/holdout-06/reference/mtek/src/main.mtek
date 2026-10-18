@@ -1,0 +1,27 @@
+material Split {
+    param edge: f32 = 0.0;
+    param accent: color = #2563eb;
+
+    fragment(surface: SurfaceInput) -> color {
+        if surface.local_position.x < edge {
+            return #e11d48;
+        }
+        return accent;
+    }
+}
+
+scene Demo {
+    clear_color: #0f0f1a;
+    state edge_x: f32 = 0.0;
+    state accent_color: color = #2563eb;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Split { edge: bind(edge_x); accent: bind(accent_color) };
+    }
+}

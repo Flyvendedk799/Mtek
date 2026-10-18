@@ -1,0 +1,13 @@
+id = "holdout-07"
+category = "maintenance"
+mode = "edit"
+title = "Repair a planet and moon animation that moves wrongly"
+prompt = """The scene Demo shows a Sun at the origin, a planet named Planet that orbits it, and a small moon named Moon that is a child of Planet and orbits it. The program runs but does not behave as intended. Repair it without removing anything.
+Intended behaviour: everything moves in the plane z = 0, seen from the camera at (0, 0, 10). Planet orbits the Sun on a circle of radius 3, counter-clockwise as the camera sees it: with the angle measured from the +X axis, the angle starts at 0 and grows by 0.8 radians per second, so at time t Planet is at (3 cos a, 3 sin a, 0) with a = 0.8 t. Moon orbits Planet on a circle of radius 1, also counter-clockwise: its angle starts at 0 and grows by 2.5 radians per second, so at time t Moon is at Planet's position plus (cos b, sin b, 0) with b = 2.5 t. The motion follows the time that passes, not the number of frames drawn: the same positions are reached at the same time at any frame rate. Colours and sizes are as they are in the project."""
+required_symbols = ["Demo.Sun", "Demo.Planet", "Demo.Planet.Moon"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

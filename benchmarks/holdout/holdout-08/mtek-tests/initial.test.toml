@@ -1,0 +1,21 @@
+# Orthographic camera at (0, 0, 10), visible height 8 on a 128 pixel target: 16 pixels per world unit, the
+# origin at pixel (64, 64), +Y up. The Fill box (1.6 wide, 1 high) is scaled along y by 1 + 4 * level around
+# its centre, so its height is h = 1 + 4 * level and it reaches 8 h pixels either side of row 64; the Frame behind
+# it is 2.2 wide and 5.6 high (35 by 90 pixels). The level starts at 0.5 and each key press changes it by 0.25
+# within 0 to 1. Probes (independent CPU ray caster, f64): inside the fill 3 pixels from its top and bottom edge,
+# outside it 3 pixels beyond them (frame or background, skipped when closer than 1 pixel to an edge), and
+# across at x = 74 (fill), 79 (frame) and 84 (background). A key press is applied at the start of the next
+# frame, so a step follows each press.
+name = "the gauge starts at level 0.5"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # start: level 0.5, height 3 (fill from row 40.0 to 88.0)
+  { expect_pixel = { x = 64, y = 43, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 85, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 37, color = "#334155", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 91, color = "#334155", tolerance = 2 } },
+  { expect_pixel = { x = 74, y = 64, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 79, y = 64, color = "#334155", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 64, color = "#101820", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#22c55e", tolerance = 2 } },
+]

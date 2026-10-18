@@ -1,0 +1,16 @@
+id = "holdout-08"
+category = "maintenance"
+mode = "edit"
+title = "Repair a level gauge whose keys do not work as intended"
+prompt = """The scene Demo shows a gauge: a dark box named Frame and a green box named Fill in front of it. The scene state level (initially 0.5) is the gauge's level and the height of Fill follows it: Fill is scaled along y by 1.0 + 4.0 * level (its width and depth never change), so it grows and shrinks around its centre.
+Intended behaviour: each press of ArrowUp raises the level by 0.25 and each press of ArrowDown lowers it by 0.25, and the level never leaves the range 0 to 1 (a press that would leave the range sets the limit instead). The project does not behave like this. Repair it without removing anything."""
+required_symbols = ["Demo.Frame", "Demo.Fill"]
+mtek_side_status = "verified"
+# The one error of the Mtek starter: a handler assigns Fill.scale, which is bound to the level
+# (the single-writer rule). The second defect of the starter, a missing upper limit, produces no diagnostic.
+starter_diagnostics = ["MTEK-E5070"]
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

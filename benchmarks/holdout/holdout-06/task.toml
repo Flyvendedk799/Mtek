@@ -1,0 +1,13 @@
+id = "holdout-06"
+category = "shader-bridge"
+mode = "edit"
+title = "Make the split position and the far colour of a cube material host inputs"
+prompt = """The scene Demo shows a cube named Cube drawn with a custom material named Split. Split paints every part of the cube whose local x coordinate is below 0 in rose (#e11d48) and the rest in blue (#2563eb).
+Make two things settable from the host page. An input named edge, a number: the local x coordinate where the colour changes (initially 0.0; the cube has edge length 1, so values between -0.5 and 0.5 show a boundary on it). An input named accent, a colour string such as "#22c55e": the colour of the part of the cube at or beyond the edge (initially #2563eb). Both must be parameters of the material that follow scene state written by the host inputs, so that changing them updates values only and the material and its shader are not replaced. The rose colour stays fixed. Everything else stays as it is."""
+required_symbols = ["Demo.Cube", "Split"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

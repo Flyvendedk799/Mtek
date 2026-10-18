@@ -1,0 +1,17 @@
+name = "a key that is held down moves the cursor once"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # a key held for 40 frames is one press
+  { press = "ArrowRight" },
+  { step = 40, dt = 0.016666668 },
+  { release = "ArrowRight" },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 7, y = 45, color = "#111827", tolerance = 2 } },
+  { expect_pixel = { x = 45, y = 45, color = "#facc15", tolerance = 2 } },
+  { expect_pixel = { x = 82, y = 45, color = "#111827", tolerance = 2 } },
+  { expect_pixel = { x = 121, y = 45, color = "#111827", tolerance = 2 } },
+  { expect_pixel = { x = 10, y = 64, color = "#475569", tolerance = 2 } },
+  { expect_pixel = { x = 43, y = 64, color = "#475569", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 64, color = "#475569", tolerance = 2 } },
+  { expect_pixel = { x = 117, y = 64, color = "#475569", tolerance = 2 } },
+]

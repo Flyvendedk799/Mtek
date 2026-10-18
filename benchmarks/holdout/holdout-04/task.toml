@@ -1,0 +1,13 @@
+id = "holdout-04"
+category = "interaction"
+mode = "edit"
+title = "Move a cursor between four slots with the arrow keys, wrapping around"
+prompt = """The scene Demo shows four boxes in a row named Slot0, Slot1, Slot2 and Slot3 (at x = -3, -1, 1 and 3) and a small sphere named Cursor hovering 1.0 above the middle of Slot0.
+Change the program so that the arrow keys move the cursor between the slots: ArrowRight moves it to the next slot on the right and ArrowLeft to the next slot on the left. Going right from the last slot wraps around to the first, and going left from the first slot wraps around to the last. Each key press moves the cursor exactly one slot, at once, even when the key is held down for a while, and the cursor always stays 1.0 above the middle of a slot. Everything else stays as it is."""
+required_symbols = ["Demo.Cursor", "Demo.Slot0", "Demo.Slot1", "Demo.Slot2", "Demo.Slot3"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

@@ -1,0 +1,13 @@
+id = "holdout-05"
+category = "interaction"
+mode = "edit"
+title = "Slide a box between two ends with Space"
+prompt = """The scene Demo shows a box named Slider resting at x = -2.5 and two decorative posts named PostLeft and PostRight at x = -3.5 and x = 3.5.
+Change the program so that Slider travels between its two end positions, x = -2.5 and x = 2.5: when Space is pressed while the slider is at rest at one end, it starts moving towards the other end at a constant speed of 2.5 units per second, measured in frame time, and it stops exactly at that end (it never goes beyond it, whatever the frame time). A Space press while the slider is moving is ignored. The slider only ever moves along x. Everything else stays as it is."""
+required_symbols = ["Demo.Slider", "Demo.PostLeft", "Demo.PostRight"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

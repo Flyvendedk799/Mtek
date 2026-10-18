@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "what": "MTEK_REQUIRE_GPU=1 npm run test:benchmarks -- holdout (reference), the same with MTEK_BASELINE_SOURCE=starter, and plausible wrong solutions with MTEK_BASELINE_DIR (ids and counts only)",
+  "commit": "a461ceb",
+  "environment": {
+    "gpu": {
+      "available": true,
+      "reason": null,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      }
+    },
+    "browser": {
+      "name": "chromium",
+      "version": "153.0.8010.12",
+      "headless": true
+    }
+  },
+  "reference": {
+    "tasks": [
+      {
+        "id": "holdout-01",
+        "fixtures": 1,
+        "passed": 1,
+        "failed": 0
+      },
+      {
+        "id": "holdout-02",
+        "fixtures": 1,
+        "passed": 1,
+        "failed": 0
+      },
+      {
+        "id": "holdout-03",
+        "fixtures": 1,
+        "passed": 1,
+        "failed": 0
+      },
+      {
+        "id": "holdout-04",
+        "fixtures": 5,
+        "passed": 5,
+        "failed": 0
+      },
+      {
+        "id": "holdout-05",
+        "fixtures": 4,
+        "passed": 4,
+        "failed": 0
+      },
+      {
+        "id": "holdout-06",
+        "fixtures": 3,
+        "passed": 3,
+        "failed": 0
+      },
+      {
+        "id": "holdout-07",
+        "fixtures": 2,
+        "passed": 2,
+        "failed": 0
+      },
+      {
+        "id": "holdout-08",
+        "fixtures": 4,
+        "passed": 4,
+        "failed": 0
+      }
+    ],
+    "total": 21,
+    "passed": 21
+  },
+  "starter": {
+    "tasks": [
+      {
+        "id": "holdout-01",
+        "fixtures": 1,
+        "passed": 0,
+        "failed": 1,
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "failed",
+            "failedStep": 2,
+            "failureKind": "expect_pixel"
+          }
+        ]
+      },
+      {
+        "id": "holdout-02",
+        "fixtures": 1,
+        "passed": 0,
+        "failed": 1,
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "failed",
+            "failedStep": 2,
+            "failureKind": "expect_pixel"
+          }
+        ]
+      },
+      {
+        "id": "holdout-03",
+        "fixtures": 1,
+        "passed": 0,
+        "failed": 1,
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "failed",
+            "failedStep": 2,
+            "failureKind": "expect_pixel"
+          }
+        ]
+      },
+      {
+        "id": "holdout-04",
+        "fixtures": 5,
+        "passed": 1,
+        "failed": 4,
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "failed",
+            "failedStep": 6,
+            "failureKind": "expect_pixel"
+          },
+          {
+            "index": 2,
+            "status": "passed"
+          },
+          {
+            "index": 3,
+            "status": "failed",
+            "failedStep": 6,
+            "failureKind": "expect_pixel"
+          },
+          {
+            "index": 4,
+            "status": "failed",
+            "failedStep": 6,
+            "failureKind": "expect_pixel"
+          },
+          {
+            "index": 5,
+            "status": "failed",
+            "failedStep": 6,
+            "failureKind": "expect_pixel"
+          }
+        ]
+      },
+      {
+        "id": "holdout-05",
+        "fixtures": 4,
+        "passed": 1,
+        "failed": 3,
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "failed",
+            "failedStep": 5,
+            "failureKind": "expect_pixel"
+          },
+          {
+            "index": 2,
+            "status": "failed",
+            "failedStep": 5,
+            "failureKind": "expect_pixel"
+          },
+          {
+            "index": 3,
+            "status": "passed"
+          },
+          {
+            "index": 4,
+            "status": "failed",
+            "failedStep": 11,
+            "failureKind": "expect_pixel"
+          }
+        ]
+      },
+      {
+        "id": "holdout-06",
+        "fixtures": 3,
+        "passed": 1,
+        "failed": 2,
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "failed",
+            "failedStep": 2,
+            "failureKind": "set_input"
+          },
+          {
+            "index": 2,
+            "status": "passed"
+          },
+          {
+            "index": 3,
+            "status": "failed",
+            "failedStep": 2,
+            "failureKind": "set_input"
+          }
+        ]
+      },
+      {
+        "id": "holdout-07",
+        "fixtures": 2,
+        "passed": 0,
+        "failed": 2,
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "failed",
+            "failedStep": 3,
+            "failureKind": "expect_pixel"
+          },
+          {
+            "index": 2,
+            "status": "failed",
+            "failedStep": 3,
+            "failureKind": "expect_pixel"
+          }
+        ]
+      },
+      {
+        "id": "holdout-08",
+        "fixtures": 4,
+        "passed": 1,
+        "failed": 3,
+        "fixtureResults": [
+          {
+            "index": 1,
+            "status": "failed",
+            "failedStep": 16,
+            "failureKind": "expect_pixel"
+          },
+          {
+            "index": 2,
+            "status": "passed"
+          },
+          {
+            "index": 3,
+            "status": "failed",
+            "failedStep": 40,
+            "failureKind": "expect_pixel"
+          },
+          {
+            "index": 4,
+            "status": "failed",
+            "failedStep": 40,
+            "failureKind": "expect_pixel"
+          }
+        ]
+      }
+    ],
+    "total": 21,
+    "passed": 4,
+    "failed": 17
+  },
+  "mutants": {
+    "tasks": [
+      {
+        "id": "holdout-04",
+        "mutants": 2,
+        "caught": 2
+      },
+      {
+        "id": "holdout-05",
+        "mutants": 2,
+        "caught": 2
+      },
+      {
+        "id": "holdout-06",
+        "mutants": 2,
+        "caught": 2
+      },
+      {
+        "id": "holdout-07",
+        "mutants": 2,
+        "caught": 2
+      },
+      {
+        "id": "holdout-08",
+        "mutants": 2,
+        "caught": 2
+      }
+    ],
+    "total": 10,
+    "caught": 10
+  }
+}

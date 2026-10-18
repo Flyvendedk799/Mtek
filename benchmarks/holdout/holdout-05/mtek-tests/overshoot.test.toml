@@ -1,0 +1,35 @@
+# The 0.09 s frames give 0.225 per frame: the 23rd frame would reach 2.675 and is cut at 2.5.
+name = "the box stops exactly at the end even when a frame would carry it past"
+steps = [
+  { press = "Space" },
+  { step = 23, dt = 0.09 },
+  { release = "Space" },
+  # after 23 frames of 0.09 s: slider centre x = 2.5 (pixel 104.0)
+  { expect_pixel = { x = 95, y = 64, color = "#0b1020", tolerance = 2 } },
+  { expect_pixel = { x = 100, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 104, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 108, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 64, color = "#0b1020", tolerance = 2 } },
+  # the frame that would carry the box to x = 2.675 (pixel 106.8, right edge 113.2) is cut at 2.5 (right edge 110.4):
+  { expect_pixel = { x = 98, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 112, y = 64, color = "#0b1020", tolerance = 2 } },
+  { step = 5, dt = 0.09 },
+  # five more frames: slider centre x = 2.5 (pixel 104.0)
+  { expect_pixel = { x = 95, y = 64, color = "#0b1020", tolerance = 2 } },
+  { expect_pixel = { x = 100, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 104, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 108, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 64, color = "#0b1020", tolerance = 2 } },
+  { press = "Space" },
+  { step = 23, dt = 0.09 },
+  { release = "Space" },
+  # and back, cut at the left end: slider centre x = -2.5 (pixel 24.0)
+  { expect_pixel = { x = 15, y = 64, color = "#0b1020", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 28, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 33, y = 64, color = "#0b1020", tolerance = 2 } },
+  # cut at -2.5 (edges 17.6 and 30.4), not carried on to -2.675 (edges 14.8 and 27.6):
+  { expect_pixel = { x = 29, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 16, y = 64, color = "#0b1020", tolerance = 2 } },
+]

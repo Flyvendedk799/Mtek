@@ -1,0 +1,31 @@
+# Camera: position (0, 0, 10) looking at the origin, fov_y 0.9, 128 x 128 target: in the plane z = 0 one world unit
+# is 13.25 pixels, the origin is at pixel (64, 64), +X right, +Y up. Everything moves in that plane. With a = 0.8 t
+# and b = 2.5 t the Planet is at (3 cos a, 3 sin a) and the Moon at the Planet's position plus (cos b, sin b),
+# counter-clockwise as seen. Expected pixels come from an independent CPU ray caster (f64) of the spheres at those
+# positions (every probe is at least 2 pixels inside a sphere, or 3 pixels outside, here in the background where
+# the Planet and the Moon would be if the planet turned clockwise). The same times are reached with frames of
+# 1/60 s and of 1/30 s: the motion follows the frame time.
+name = "Planet and Moon orbit counter-clockwise at 0.8 and 2.5 rad/s (frames of 1/60 s)"
+steps = [
+  { step = 30, dt = 0.016666668 },
+  # after 0.5 s: Planet at (2.763, 1.168) = pixel (100.6, 48.5); Moon at (3.079, 2.117) = pixel (104.8, 35.9)
+  { expect_pixel = { x = 64, y = 64, color = "#fbbf24", tolerance = 2 } },
+  { expect_pixel = { x = 100, y = 48, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 104, y = 35, color = "#e2e8f0", tolerance = 2 } },
+  { expect_pixel = { x = 100, y = 79, color = "#0a0a14", tolerance = 2 } },
+  { expect_pixel = { x = 104, y = 66, color = "#0a0a14", tolerance = 2 } },
+  { step = 30, dt = 0.016666668 },
+  # after 1 s: Planet at (2.090, 2.152) = pixel (91.7, 35.5); Moon at (1.289, 2.751) = pixel (81.1, 27.6)
+  { expect_pixel = { x = 64, y = 64, color = "#fbbf24", tolerance = 2 } },
+  { expect_pixel = { x = 91, y = 35, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 81, y = 27, color = "#e2e8f0", tolerance = 2 } },
+  { expect_pixel = { x = 91, y = 92, color = "#0a0a14", tolerance = 2 } },
+  { expect_pixel = { x = 81, y = 84, color = "#0a0a14", tolerance = 2 } },
+  { step = 90, dt = 0.016666668 },
+  # after 2.5 s: Planet at (-1.248, 2.728) = pixel (47.5, 27.9); Moon at (-0.249, 2.695) = pixel (60.7, 28.3)
+  { expect_pixel = { x = 64, y = 64, color = "#fbbf24", tolerance = 2 } },
+  { expect_pixel = { x = 47, y = 27, color = "#38bdf8", tolerance = 2 } },
+  { expect_pixel = { x = 60, y = 28, color = "#e2e8f0", tolerance = 2 } },
+  { expect_pixel = { x = 47, y = 100, color = "#0a0a14", tolerance = 2 } },
+  { expect_pixel = { x = 60, y = 100, color = "#0a0a14", tolerance = 2 } },
+]

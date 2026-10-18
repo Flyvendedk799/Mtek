@@ -1,0 +1,45 @@
+# Perspective camera at (0, 5, 10) looking at the origin, fov_y 0.9, 128 x 128 target. The floor is the 8 x 8
+# square of the x-z plane at y = 0 (seen from above); every object is drawn with a depth test, so what is
+# nearer to the camera wins whatever the declaration order. The expected pixels come from an independent
+# CPU ray caster (f64) of exactly the described scene, not from any renderer; each probe is at least 1 pixel
+# away from a silhouette or an intersection curve (2 to 3 pixels near the sphere). They tell apart: a floor
+# that is missing, facing down or of the wrong size, a hidden box that is drawn, objects drawn in
+# declaration order instead of by depth.
+name = "a floor with four boxes and a sphere, one box hidden, drawn by depth"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # background
+  { expect_pixel = { x = 2, y = 2, color = "#0f172a", tolerance = 2 } },
+  { expect_pixel = { x = 125, y = 125, color = "#0f172a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 100, color = "#0f172a", tolerance = 2 } },
+  { expect_pixel = { x = 5, y = 60, color = "#0f172a", tolerance = 2 } },
+  { expect_pixel = { x = 122, y = 60, color = "#0f172a", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 20, color = "#0f172a", tolerance = 2 } },
+  { expect_pixel = { x = 30, y = 100, color = "#0f172a", tolerance = 2 } },
+  { expect_pixel = { x = 110, y = 45, color = "#0f172a", tolerance = 2 } },
+  # floor, and where the hidden box would stand
+  { expect_pixel = { x = 64, y = 70, color = "#4d7c0f", tolerance = 2 } },
+  { expect_pixel = { x = 10, y = 86, color = "#4d7c0f", tolerance = 2 } },
+  { expect_pixel = { x = 118, y = 86, color = "#4d7c0f", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 88, color = "#4d7c0f", tolerance = 2 } },
+  { expect_pixel = { x = 30, y = 78, color = "#4d7c0f", tolerance = 2 } },
+  { expect_pixel = { x = 100, y = 66, color = "#4d7c0f", tolerance = 2 } },
+  { expect_pixel = { x = 66, y = 64, color = "#4d7c0f", tolerance = 2 } },
+  { expect_pixel = { x = 70, y = 66, color = "#4d7c0f", tolerance = 2 } },
+  # Front, in front of Back
+  { expect_pixel = { x = 45, y = 60, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 40, y = 47, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 45, y = 46, color = "#2563eb", tolerance = 2 } },
+  { expect_pixel = { x = 55, y = 68, color = "#2563eb", tolerance = 2 } },
+  # Back
+  { expect_pixel = { x = 45, y = 30, color = "#dc2626", tolerance = 2 } },
+  { expect_pixel = { x = 50, y = 38, color = "#dc2626", tolerance = 2 } },
+  { expect_pixel = { x = 41, y = 28, color = "#dc2626", tolerance = 2 } },
+  # Tall and Orb, which pass through each other
+  { expect_pixel = { x = 92, y = 50, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 90, y = 40, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 95, y = 59, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 75, y = 50, color = "#14b8a6", tolerance = 2 } },
+  { expect_pixel = { x = 73, y = 44, color = "#14b8a6", tolerance = 2 } },
+  { expect_pixel = { x = 78, y = 55, color = "#14b8a6", tolerance = 2 } },
+]

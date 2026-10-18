@@ -1,0 +1,30 @@
+scene Demo {
+    clear_color: #101820;
+    state level: f32 = 0.5;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 8.0; near: 0.1; far: 50.0 };
+    }
+
+    entity Frame {
+        position: vec3(0.0, 0.0, -1.0);
+        mesh: Box { size: vec3(2.2, 5.6, 0.2) };
+        material: Unlit { color: #334155 };
+    }
+
+    entity Fill {
+        scale: bind(vec3(1.0, 1.0 + 4.0 * level, 1.0));
+        mesh: Box { size: vec3(1.6, 1.0, 0.5) };
+        material: Unlit { color: #22c55e };
+    }
+
+    on key_down(Key.ArrowUp) {
+        level = min(level + 0.25, 1.0);
+    }
+
+    on key_down(Key.ArrowDown) {
+        level = max(level - 0.25, 0.0);
+    }
+}

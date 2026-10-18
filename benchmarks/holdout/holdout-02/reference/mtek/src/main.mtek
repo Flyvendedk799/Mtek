@@ -1,0 +1,29 @@
+scene Demo {
+    clear_color: #10141c;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective { fov_y: 0.9; near: 0.1; far: 100.0 };
+    }
+
+    entity Arm {
+        position: vec3(1.0, -1.0, 0.0);
+        rotation: quat.axis_angle(vec3(0.0, 0.0, 1.0), radians(90.0));
+        scale: vec3(2.0, 1.0, 1.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #f59e0b };
+
+        entity Hand {
+            position: vec3(1.0, 0.0, 0.0);
+            mesh: Box { size: vec3(0.5, 0.5, 0.5) };
+            material: Unlit { color: #22d3ee };
+
+            entity Spark {
+                position: vec3(0.0, 1.0, 0.0);
+                mesh: Sphere { radius: 0.4 };
+                material: Unlit { color: #f472b6 };
+            }
+        }
+    }
+}

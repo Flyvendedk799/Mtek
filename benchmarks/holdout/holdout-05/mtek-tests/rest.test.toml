@@ -1,0 +1,18 @@
+# Orthographic camera at (0, 0, 10) looking at the origin, visible height 8 on a 128 pixel target: 16 pixels per
+# world unit, the origin at pixel (64, 64), +X to the right. The slider is a box of edge 0.8 (6.4 pixels either
+# side of its centre); the probes lie 4 and 9 pixels either side of the centre of the row y = 64 (inside and
+# outside the box, at least 1 pixel from an edge, skipped where a post is within a pixel). The slider moves
+# 2.5 units per second between x = -2.5 and x = 2.5, so a travel takes 2 s = 120 frames of 1/60 s; a press is
+# applied at the start of the next frame, so the frame of the press already moves (a step after a press of N
+# frames puts the slider at -2.5 + 2.5 * N / 60). Expectations come from this model, in f64.
+# Retention: nothing moves by itself.
+name = "without a key the slider stays at the left end"
+steps = [
+  { step = 30, dt = 0.016666668 },
+  # after 0.5 s: slider centre x = -2.5 (pixel 24.0)
+  { expect_pixel = { x = 15, y = 64, color = "#0b1020", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 28, y = 64, color = "#f97316", tolerance = 2 } },
+  { expect_pixel = { x = 33, y = 64, color = "#0b1020", tolerance = 2 } },
+]
