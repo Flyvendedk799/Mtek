@@ -138,6 +138,13 @@ impl Checker<'_> {
         if !is_implemented(def.since) {
             return;
         }
+        // The pose of an entity with a body belongs to physics (`E5072`, decision 0065).
+        if schema == self.registry.declaration_schemas.entity
+            && let Some(owner) = owner
+            && self.physics_bind(bind.span, owner, noun, object, def.name)
+        {
+            return;
+        }
         let bindable: Vec<&str> = self
             .registry
             .schema(schema)
@@ -511,6 +518,10 @@ impl Checker<'_> {
                             .unwrap_or_default();
                         camera_reads
                             .push((span, format!("the light field `{name}.light.{field}`")));
+                    }
+                    // Nor does it have a body property (decision 0065).
+                    FieldKind::BodyProperty { property, .. } => {
+                        camera_reads.push((span, format!("the body property `body.{property}`")));
                     }
                     FieldKind::NamespaceValue(name) => {
                         if let Some(member) = name.strip_prefix("frame.") {

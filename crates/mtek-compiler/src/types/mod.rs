@@ -64,6 +64,7 @@ pub mod facts;
 mod intrinsics;
 mod material;
 mod ops;
+mod physics;
 mod prefab;
 pub mod scene;
 mod scene_body;
@@ -82,6 +83,7 @@ pub use check::{CallKind, FieldKind};
 pub use effects::{EffectLevel, FnEffect, FnRef, ProgramEffects, Roots};
 pub use facts::{BodyFacts, BuiltinCall, CallFact, Callee, CpuOnlySite};
 pub use material::MAX_MATERIAL_PARAMS;
+pub use physics::{BodyTarget};
 pub use scene::{
     CheckedEntity, CheckedField, CheckedInstance, CheckedObject, CheckedParam, CheckedPrefab,
     CheckedScene, CheckedState, FieldOrigin,
@@ -92,6 +94,7 @@ pub use value::{ArithOp, ConstValue, EvalError, EvalResult, Scalar};
 use crate::diagnostics::Diagnostics;
 use crate::resolve::{DefId, Resolution};
 use crate::source::Span;
+use crate::stdlib::BodyKind;
 use crate::syntax::ast::{Module, NodeId};
 
 /// The type and value of one constant declaration.
@@ -248,6 +251,8 @@ pub struct PrefabInfo {
     /// The params and their types of the user material instance written as the prefab's
     /// `material`, if there is one: `Name.material.param` reads them.
     pub material_params: Option<Vec<(String, TyId)>>,
+    /// The prefab's body and collider: an instance owns a body of this kind (decision 0065).
+    pub physics: EntityPhysics,
     /// The entity fields the prefab binds, with the `bind` (an instance's field is written by
     /// its binding, so assigning it is `E5070`).
     pub bound_fields: Vec<(String, Span)>,
@@ -280,6 +285,19 @@ pub struct PrefabParam {
     pub name_span: Span,
     /// The whole `param name: T = default;`.
     pub span: Span,
+}
+
+/// The physics a named entity or a prefab declares (`spec/physics.md` section 2, decision 0065):
+/// what the ownership rules of poses and the body commands are checked against.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct EntityPhysics {
+    /// The kind of the `body` and the `body: ..;` member that declares it.
+    pub body: Option<(BodyKind, Span)>,
+    /// The `collider: ..;` member.
+    pub collider: Option<Span>,
+    /// A `body` is declared, but its value is not a body descriptor (an error was reported where
+    /// it is written).
+    pub malformed_body: bool,
 }
 
 /// A `state` declaration of a scene or an entity (`spec/scenes.md` sections 2 and 4.4).
@@ -462,6 +480,9 @@ pub struct Typeck {
     entity_materials: BTreeMap<DefId, TyId>,
     /// The schema (`DirectionalLight`, `PointLight`) of the light of each named entity that has one.
     entity_lights: BTreeMap<DefId, &'static str>,
+    /// The body and collider of each named entity, prefab and static prefab instance that declares
+    /// one (decision 0065).
+    entity_physics: BTreeMap<DefId, EntityPhysics>,
     /// Every `bind(..)` of every scene and prefab, scene by scene in declaration order.
     bindings: Vec<BindInfo>,
     /// Every prefab the module declares, by its `DefId` (decision 0062).
@@ -496,6 +517,7 @@ impl Typeck {
             writes: Vec::new(),
             entity_materials: BTreeMap::new(),
             entity_lights: BTreeMap::new(),
+            entity_physics: BTreeMap::new(),
             bindings: Vec::new(),
             prefabs: BTreeMap::new(),
             checked_prefabs: Vec::new(),
@@ -580,6 +602,12 @@ impl Typeck {
     #[must_use]
     pub fn entity_light(&self, entity: DefId) -> Option<&'static str> {
         self.entity_lights.get(&entity).copied()
+    }
+
+    /// The body and collider of the named entity, prefab or static prefab instance `entity`.
+    #[must_use]
+    pub fn entity_physics(&self, entity: DefId) -> Option<EntityPhysics> {
+        self.entity_physics.get(&entity).copied()
     }
 
     /// The material declared as `def`.

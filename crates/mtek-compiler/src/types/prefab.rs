@@ -23,7 +23,7 @@ use super::scene::{CheckedInstance, CheckedParam, FieldOrigin};
 use super::ty::TyId;
 use super::value::ConstValue;
 use super::{
-    CpuBody, CpuBodyKind, NonConstant, NonConstantKind, PrefabInfo, PrefabKey, PrefabParam,
+    CpuBody, EntityPhysics, CpuBodyKind, NonConstant, NonConstantKind, PrefabInfo, PrefabKey, PrefabParam,
 };
 use crate::diagnostics::{Code, Diagnostic};
 use crate::project::edit_distance;
@@ -122,6 +122,7 @@ impl<'a> Checker<'a> {
                     self.allow_param_bind = false;
                     self.note_entity_material(Some(def), field);
                     self.note_entity_light(Some(def), field);
+                    self.note_entity_physics(Some(def), field);
                 }
                 EntityMember::Const(constant) if construct_implemented(Construct::BodyConst) => {
                     self.const_decl(constant);
@@ -179,6 +180,7 @@ impl<'a> Checker<'a> {
                 params,
                 states,
                 material_params,
+                physics: self.physics_of(def),
                 bound_fields,
                 bound_params,
             },
@@ -346,7 +348,9 @@ impl<'a> Checker<'a> {
         if self.is_material_field(&name) {
             self.dynamic_descriptors.insert(strip_parens(value).id);
         }
+        self.field_initialiser = true;
         self.check(value, expected);
+        self.field_initialiser = false;
         self.fold_root(value);
         let facts = self.body.take().map(|b| b.facts).unwrap_or_default();
         self.out.cpu_bodies.push(CpuBody {
@@ -460,6 +464,10 @@ impl<'a> Checker<'a> {
             }
             return;
         };
+        // An instance owns the body its prefab declares (decision 0065).
+        if info.physics != EntityPhysics::default() {
+            self.out.entity_physics.insert(def, info.physics);
+        }
         let mut given: Vec<GivenParam> = Vec::new();
         let mut ok = true;
         for member in &entity.members {

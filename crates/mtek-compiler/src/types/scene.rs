@@ -549,7 +549,7 @@ impl Checker<'_> {
                     }
                 }
                 SceneMember::Entity(entity) if construct_implemented(Construct::Entity) => {
-                    if let Some(entity) = self.entity_decl(entity, &mut count) {
+                    if let Some(entity) = self.entity_decl(entity, &mut count, None) {
                         entities.push(entity);
                     }
                 }
@@ -644,12 +644,16 @@ impl Checker<'_> {
         &mut self,
         entity: &EntityDecl,
         count: &mut EntityCount,
+        parent: Option<&Ident>,
     ) -> Option<CheckedEntity> {
         count.count += 1;
         if count.count == MAX_STATIC_ENTITIES + 1 {
             count.first_over = Some(entity.name.span);
         }
         if entity.prefab.is_some() {
+            if let Some(parent) = parent {
+                self.physics_instance(self.res.def_of(entity.id), &entity.name, parent);
+            }
             return self.instance_decl(entity);
         }
         let schema = self.registry.entity_schema()?;
@@ -664,7 +668,7 @@ impl Checker<'_> {
                     self.descriptors_in(&constant.value);
                 }
                 EntityMember::Entity(child) => {
-                    if let Some(child) = self.entity_decl(child, count) {
+                    if let Some(child) = self.entity_decl(child, count, Some(&entity.name)) {
                         children.push(child);
                     }
                 }
@@ -677,6 +681,13 @@ impl Checker<'_> {
             name: &entity.name.name,
         };
         let fields = self.body(schema, holder, &entity.name, &inits);
+        self.physics_declaration(
+            self.res.def_of(entity.id),
+            &entity.name,
+            "entity",
+            &fields,
+            parent,
+        );
         Some(CheckedEntity {
             def: self.res.def_of(entity.id),
             name: entity.name.name.clone(),
@@ -741,6 +752,7 @@ impl Checker<'_> {
         self.current_prefab = self.res.def_of(decl.id);
         let fields = self.body(schema, holder, &decl.name, &inits);
         self.current_prefab = None;
+        self.physics_declaration(self.res.def_of(decl.id), &decl.name, "prefab", &fields, None);
         self.out.checked_prefabs.push(CheckedPrefab {
             def: self.res.def_of(decl.id),
             name: decl.name.name.clone(),
@@ -1233,10 +1245,15 @@ impl Checker<'_> {
                     field,
                     requires,
                     code,
+                    help,
                 } => {
                     if let Some(w) = find(field)
                         && find(requires).is_none()
                     {
+                        let help = help.map_or_else(
+                            || format!("declare '{requires}', or remove '{field}'"),
+                            str::to_owned,
+                        );
                         self.sink.push(
                             Diagnostic::new(
                                 code,
@@ -1247,7 +1264,7 @@ impl Checker<'_> {
                             )
                             .at(w.name.span)
                             .note(format!("'{field}' is used only together with '{requires}'"))
-                            .help(format!("declare '{requires}', or remove '{field}'")),
+                            .help(help),
                         );
                     }
                 }

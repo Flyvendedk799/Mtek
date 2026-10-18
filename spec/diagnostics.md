@@ -250,6 +250,10 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w5101"></a>W5101 | fragment alpha ignored | constant alpha ≠ 1 |
 | <a id="mtek-e5110"></a>E5110 | light in prefab | at the `light` member; the light is not part of the prefab's entity (decisions 0053, 0062) |
 | <a id="mtek-e5111"></a>E5111 | too many lights | > 4 |
+| <a id="mtek-e5120"></a>E5120 | collider without body | a `collider` on an entity or prefab that declares no `body`; help: `body: Static {}` for fixed geometry (decision 0065) |
+| <a id="mtek-e5121"></a>E5121 | body without collider | a `body` without a `collider`; the body would have no shape |
+| <a id="mtek-e5122"></a>E5122 | scaled dynamic or kinematic body | `scale` of a `Dynamic` or `Kinematic` body that is not the constant `vec3(1.0)` |
+| <a id="mtek-e5123"></a>E5123 | command not valid for this body kind | `Name.body.<command>(..)` or `Name.body.<velocity>` that the entity's body kind does not support, or on an entity without a body |
 | <a id="mtek-e5901"></a>E5901 | scene switching not supported | switching the active scene at run time |
 | <a id="mtek-e5902"></a>E5902 | transparency not supported | |
 
@@ -323,7 +327,10 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e8080"></a>E8080 | execution budget exceeded | untrusted preview (M6) |
 | <a id="mtek-e8090"></a>E8090 | invalid scale value | run-time write ignored |
 | <a id="mtek-e8100"></a>E8100 | non-opaque color value | run-time value rejected |
-| (E8101–E8199) | physics runtime codes | defined in `spec/physics.md` §8 |
+| <a id="mtek-e8101"></a>E8101 | command not valid for the target's body kind | a body command through an `entity_ref` whose body kind, or lack of a body, the command does not support; the command is dropped (implemented by M5-05) |
+| <a id="mtek-e8102"></a>E8102 | physics module failed to load | mount fails with the kind `physics-failed` (implemented by M5-05) |
+| <a id="mtek-e8103"></a>E8103 | non-finite pose produced by the solver | the body is frozen and the code is reported once (implemented by M5-05) |
+| (E8104–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
 
 ### 5.9 Project and internal (`9xxx`)
 | Code | Title | Trigger |
