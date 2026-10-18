@@ -36,7 +36,7 @@ use mtek_compiler::{
     BuildMode, BuildResult, CompileOptions, STUB_PHYSICS_BUNDLE, STUB_RUNTIME_BUNDLE,
     STUB_RUNTIME_DECLARATIONS, build, check,
 };
-use serde_json::Value;
+use serde_json::{Value, json};
 
 fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -193,6 +193,8 @@ fn the_two_m1_scenes_are_codegen_fixtures_with_the_semantic_sources() {
             "assignable_places",
             "bindings",
             "cpu_functions",
+            "light_bindings",
+            "light_bindings_edited",
             "lights",
             "numeric_cpu_table",
             "physics",
@@ -557,6 +559,76 @@ fn the_manifest_carries_structure_but_no_entity_or_camera_values() {
             assert_eq!(instance["shareable"], shareable, "{label}");
         }
     }
+}
+
+#[test]
+fn bindings_that_read_light_fields_are_ordered_by_them_and_lights_carry_update_classes() {
+    // Decision 0067. `tests/codegen/light_bindings`: Marker (entity 0) is declared first and reads
+    // the intensities of Fill (1) and Sun (2); Fill binds its colour to the colour of Sun, which is
+    // a constant, and its intensity to the bound intensity of Sun; Sun binds its intensity to
+    // state. So Fill.color (id 1) and Sun.intensity (id 3) have nothing to wait for, in id order;
+    // Fill.intensity (id 2) follows Sun.intensity and Marker.position (id 0) both.
+    let result = built(&codegen_dir().join("light_bindings"), BuildMode::Release);
+    let manifest: Value = serde_json::from_slice(&result.files["program.manifest.json"]).unwrap();
+    let scene = &manifest["scene"];
+    let summary: Vec<(u64, u64, &Value, &Value)> = scene["bindings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|b| {
+            (
+                b["id"].as_u64().unwrap(),
+                b["order"].as_u64().unwrap(),
+                &b["target"],
+                &b["deps"],
+            )
+        })
+        .collect();
+    let expected = [
+        (
+            0,
+            3,
+            json!({ "kind": "transform", "entity": 0, "field": "position" }),
+            json!([
+                { "kind": "light", "entity": 1, "field": "intensity" },
+                { "kind": "light", "entity": 2, "field": "intensity" }
+            ]),
+        ),
+        (
+            1,
+            0,
+            json!({ "kind": "light", "entity": 1, "field": "color" }),
+            json!([{ "kind": "light", "entity": 2, "field": "color" }]),
+        ),
+        (
+            2,
+            2,
+            json!({ "kind": "light", "entity": 1, "field": "intensity" }),
+            json!([{ "kind": "light", "entity": 2, "field": "intensity" }]),
+        ),
+        (
+            3,
+            1,
+            json!({ "kind": "light", "entity": 2, "field": "intensity" }),
+            json!([{ "kind": "state", "name": "warmth" }]),
+        ),
+    ];
+    assert_eq!(summary.len(), expected.len());
+    for (actual, (id, order, target, deps)) in summary.iter().zip(&expected) {
+        assert_eq!(actual, &(*id, *order, target, deps), "binding {id}");
+    }
+    // The update class of each field: written by a handler, bound, or neither.
+    assert_eq!(
+        scene["lights"],
+        json!([
+            { "index": 0, "entity": 1, "kind": "point", "range": 8.0,
+              "classes": { "color": "bound", "intensity": "bound" } },
+            { "index": 1, "entity": 2, "kind": "directional",
+              "classes": { "color": "initial", "intensity": "bound" } },
+            { "index": 2, "entity": 3, "kind": "point", "range": 6.5,
+              "classes": { "color": "imperative", "intensity": "imperative" } }
+        ])
+    );
 }
 
 #[test]

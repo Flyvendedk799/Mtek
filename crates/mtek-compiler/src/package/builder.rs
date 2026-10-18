@@ -45,11 +45,11 @@ use super::html::index_html;
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
     Binding, BindingDep, BindingTarget, Body, Camera, Collider, Entity, EntityMaterial,
-    InstanceParam, Layout, Light as ManifestLight, LightKind as ManifestLightKind, MANIFEST_SCHEMA,
-    Manifest, Material, MaterialInstance, MaterialParam, MaterialResource, Mesh, MeshShape, Num,
-    ParamClass as ManifestClass, Prefab, PrefabMaterial, PrefabParam, RequiredCapabilities,
-    ResourceValue, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry, StateEntry, Subsystems,
-    SymbolEntry, SymbolKind,
+    InstanceParam, Layout, Light as ManifestLight, LightClass, LightClasses,
+    LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material, MaterialInstance,
+    MaterialParam, MaterialResource, Mesh, MeshShape, Num, ParamClass as ManifestClass, Prefab,
+    PrefabMaterial, PrefabParam, RequiredCapabilities, ResourceValue, RuntimeConfig, Scene,
+    SceneFields, Shader, SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -753,6 +753,10 @@ fn manifest_scene(
                             ManifestLightKind::Point { range: num(range)? }
                         }
                     },
+                    classes: LightClasses {
+                        color: light_class(light.color_update)?,
+                        intensity: light_class(light.intensity_update)?,
+                    },
                 });
                 Some(index)
             }
@@ -955,6 +959,18 @@ fn manifest_prefabs(
     Ok(out)
 }
 
+/// The manifest's update class of a light field: a light field is never a resource.
+fn light_class(update: ir::UpdateClass) -> Result<LightClass, String> {
+    match update {
+        ir::UpdateClass::Initial => Ok(LightClass::Initial),
+        ir::UpdateClass::Imperative => Ok(LightClass::Imperative),
+        ir::UpdateClass::Bound => Ok(LightClass::Bound),
+        ir::UpdateClass::Resource => {
+            Err("a light field has the update class `resource`".to_owned())
+        }
+    }
+}
+
 /// The manifest's `bindings`, by id: targets and dependencies by static entity index, material
 /// params by instance index (`spec/runtime-abi.md` section 5.2). `instance` names the material
 /// instance of an entity.
@@ -999,6 +1015,10 @@ fn manifest_bindings(
                 ir::BindingDep::Param { entity, name } => BindingDep::Param {
                     instance: instance(*entity)?,
                     name: name.clone(),
+                },
+                ir::BindingDep::Light { entity, field } => BindingDep::Light {
+                    entity: *entity,
+                    field: field.clone(),
                 },
             });
         }

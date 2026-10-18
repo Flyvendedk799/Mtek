@@ -1,0 +1,35 @@
+// A binding may read the colour and intensity of a light (decision 0067): they are dependencies, so the
+// bindings are ordered by them. Marker is declared first but reads what Fill binds, which reads what Sun
+// binds; a light may also be bound to the field of another entity. `range` is fixed at construction: a
+// binding can read it and it is no dependency.
+scene Demo {
+    clear_color: #101418;
+    state pulse: f32 = 1.0;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Marker {
+        position: bind(vec3(Fill.light.intensity, Sun.light.intensity, Fill.light.range));
+        mesh: Box { size: vec3(0.2, 0.2, 0.2) };
+    }
+
+    entity Fill {
+        light: PointLight { color: bind(Sun.light.color); intensity: bind(Sun.light.intensity * 0.5); range: 8.0; };
+    }
+
+    entity Sun {
+        light: DirectionalLight { color: #ffe0b0; intensity: bind(pulse * 3.0); };
+    }
+
+    entity Lamp {
+        position: bind(vec3(0.0, Sun.light.intensity, 0.0));
+        light: PointLight { intensity: bind(Lamp.position.y + 1.0); };
+    }
+
+    update(dt: f32) {
+        pulse = pulse + dt;
+    }
+}

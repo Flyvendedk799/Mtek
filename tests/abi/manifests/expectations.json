@@ -177,6 +177,18 @@
       "code": "E8006",
       "field": "scene.lights[0].range"
     },
+    "invalid/light-missing-classes.json": {
+      "code": "E8006",
+      "field": "scene.lights[0].classes"
+    },
+    "invalid/light-unknown-class.json": {
+      "code": "E8006",
+      "field": "scene.lights[1].classes.color"
+    },
+    "invalid/binding-light-dep-bad-field.json": {
+      "code": "E8006",
+      "field": "scene.bindings[5].deps[1].field"
+    },
     "invalid/instance-unknown-class.json": {
       "code": "E8006",
       "field": "scene.materialInstances[0].params[0].class"

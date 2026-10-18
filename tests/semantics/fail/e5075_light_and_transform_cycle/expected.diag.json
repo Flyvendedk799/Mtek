@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E5075",
+    "file": "src/main.mtek",
+    "startByte": 220,
+    "endByte": 262,
+    "message": "The bindings of Lamp.position, Lamp.light.intensity depend on each other.",
+    "related": [
+      {
+        "message": "binds Lamp.position, which reads Lamp.light.intensity",
+        "file": "src/main.mtek",
+        "startByte": 220,
+        "endByte": 262
+      },
+      {
+        "message": "binds Lamp.light.intensity, which reads Lamp.position",
+        "file": "src/main.mtek",
+        "startByte": 303,
+        "endByte": 330
+      }
+    ],
+    "notes": [
+      "help: break the cycle: bind one of them to something else, or update it from `update`"
+    ]
+  }
+]

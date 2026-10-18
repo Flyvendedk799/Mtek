@@ -1,0 +1,43 @@
+// Bindings that read light fields and feed lights (decision 0067). The runtime tests run it for the
+// evaluation order (Marker is declared first and reads what Fill and Sun bind, so it is evaluated last)
+// and, with `light_bindings_edited` (the same scene with other literals and one other formula), for
+// hot reload: Sun.color is `initial`, Sun.intensity and the whole of Fill are `bound`, the light Lamp
+// is written by the scene's `update` and so `imperative`.
+scene Demo {
+    clear_color: #101418;
+    state warmth: f32 = 0.5;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Marker {
+        mesh: Box { size: vec3(0.2, 0.2, 0.2) };
+        position: bind(vec3(Fill.light.intensity, Sun.light.intensity, 0.0));
+    }
+
+    entity Fill {
+        position: vec3(-2.0, 1.0, 0.0);
+        mesh: Sphere {};
+        light: PointLight { color: bind(Sun.light.color); intensity: bind(Sun.light.intensity * 0.5); range: 8.0; };
+    }
+
+    entity Sun {
+        rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.9);
+        mesh: Box { size: vec3(0.2, 0.2, 0.2) };
+        light: DirectionalLight { color: #ffe0b0; intensity: bind(2.0 + warmth * 4.0); };
+    }
+
+    entity Lamp {
+        position: vec3(2.0, 1.0, 0.0);
+        mesh: Sphere {};
+        light: PointLight { color: #ff8040; intensity: 4.0; range: 6.5; };
+    }
+
+    update(dt: f32) {
+        warmth = warmth + dt;
+        Lamp.light.intensity = Lamp.light.intensity + dt;
+        Lamp.light.color = color.linear(vec3(0.25, warmth, 0.75), 1.0);
+    }
+}

@@ -1395,12 +1395,20 @@
       {
         "index": 0,
         "entity": 3,
-        "kind": "directional"
+        "kind": "directional",
+        "classes": {
+          "color": "initial",
+          "intensity": "bound"
+        }
       },
       {
         "index": 1,
         "entity": 4,
-        "kind": "point"
+        "kind": "point",
+        "classes": {
+          "color": "imperative",
+          "intensity": "initial"
+        }
       }
     ]
   }

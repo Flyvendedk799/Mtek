@@ -476,6 +476,10 @@ impl Lowering<'_> {
         let order = checked.entities_in_order();
         let mut deferred = Vec::new();
         for write in self.types.writes() {
+            if let crate::types::WriteTarget::LightField { entity, field } = &write.target {
+                Self::mark_light_imperative(&order, entities, *entity, field);
+                continue;
+            }
             let crate::types::WriteTarget::MaterialParam { entity, param } = &write.target else {
                 continue;
             };
@@ -501,6 +505,27 @@ impl Lowering<'_> {
             }
         }
         deferred
+    }
+
+    /// A light field that some lifecycle function or handler writes is `imperative`, so a hot
+    /// reload keeps the value it holds at run time (decision 0067).
+    fn mark_light_imperative(
+        order: &[&CheckedEntity],
+        entities: &mut [Entity],
+        entity: DefId,
+        field: &str,
+    ) {
+        let Some(index) = order.iter().position(|e| e.def == Some(entity)) else {
+            return;
+        };
+        let Some(light) = entities.get_mut(index).and_then(|e| e.light.as_mut()) else {
+            return;
+        };
+        match field {
+            "color" => light.color_update = UpdateClass::Imperative,
+            "intensity" => light.intensity_update = UpdateClass::Imperative,
+            _ => {}
+        }
     }
 
     /// The `state` and the lifecycle functions and handlers of the scene and, in stable instance
@@ -1064,26 +1089,35 @@ impl Lowering<'_> {
                 ));
             }
         };
-        let field = |name: &str| -> Result<Field, Defect> {
+        // The update class starts as `initial` (or `bound`); `mark_imperative` raises it.
+        let field = |name: &str| -> Result<(Field, UpdateClass), Defect> {
             let binding = entity.and_then(|entity| {
                 self.types.bindings().iter().find(|b| {
                     matches!(&b.target, crate::types::BindTarget::LightField { entity: e, field } if *e == entity && field == name)
                 })
             });
-            let source = match binding {
-                Some(binding) => Source::Bound(binding.id),
-                None => Source::Const(Value::from(member(schema, fields, name)?)),
+            let (source, update) = match binding {
+                Some(binding) => (Source::Bound(binding.id), UpdateClass::Bound),
+                None => (
+                    Source::Const(Value::from(member(schema, fields, name)?)),
+                    UpdateClass::Initial,
+                ),
             };
-            Ok(Field {
+            let field = Field {
                 source,
                 origin,
                 span,
-            })
+            };
+            Ok((field, update))
         };
+        let (color, color_update) = field("color")?;
+        let (intensity, intensity_update) = field("intensity")?;
         Ok(Light {
             kind,
-            color: field("color")?,
-            intensity: field("intensity")?,
+            color,
+            intensity,
+            color_update,
+            intensity_update,
             origin,
             span,
         })

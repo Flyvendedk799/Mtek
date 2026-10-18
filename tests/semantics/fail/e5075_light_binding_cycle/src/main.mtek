@@ -1,0 +1,11 @@
+// Two lights whose intensities are bound to each other: a cycle through lights is E5075 like any other
+// (decision 0067), reported at the first binding with every binding of the cycle as a related span.
+scene Demo {
+    camera Main {}
+    entity Sun {
+        light: DirectionalLight { intensity: bind(Fill.light.intensity * 2.0); };
+    }
+    entity Fill {
+        light: PointLight { intensity: bind(Sun.light.intensity * 0.5); };
+    }
+}

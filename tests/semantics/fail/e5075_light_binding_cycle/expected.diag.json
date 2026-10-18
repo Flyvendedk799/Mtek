@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E5075",
+    "file": "src/main.mtek",
+    "startByte": 299,
+    "endByte": 331,
+    "message": "The bindings of Sun.light.intensity, Fill.light.intensity depend on each other.",
+    "related": [
+      {
+        "message": "binds Sun.light.intensity, which reads Fill.light.intensity",
+        "file": "src/main.mtek",
+        "startByte": 299,
+        "endByte": 331
+      },
+      {
+        "message": "binds Fill.light.intensity, which reads Sun.light.intensity",
+        "file": "src/main.mtek",
+        "startByte": 399,
+        "endByte": 430
+      }
+    ],
+    "notes": [
+      "help: break the cycle: bind one of them to something else, or update it from `update`"
+    ]
+  }
+]

@@ -607,6 +607,7 @@ fn dependency_text(dep: &ir::BindingDep) -> String {
         ir::BindingDep::EntityField { entity, field } => format!("entity#{entity}.{field}"),
         ir::BindingDep::EntityState { entity, name } => format!("entity#{entity}.{name}"),
         ir::BindingDep::Param { entity, name } => format!("entity#{entity}.material.{name}"),
+        ir::BindingDep::Light { entity, field } => format!("entity#{entity}.light.{field}"),
     }
 }
 
