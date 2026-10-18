@@ -308,7 +308,8 @@ fn at_most_the_validation_budget_of_proposals_is_rechecked() {
 #[test]
 fn analysis_without_edits_has_the_same_diagnostics_and_never_an_edit() {
     // Two proposals the validator accepts (`1.` and a missing `;`) and an unknown name.
-    let text = "const A: f32 = 1.;\nconst B: f32 = A\nconst C: f32 = Z;\nscene Demo { camera Main {} }\n";
+    let text =
+        "const A: f32 = 1.;\nconst B: f32 = A\nconst C: f32 = Z;\nscene Demo { camera Main {} }\n";
     let fs = project(text);
     let validated = analyze(&ProjectRoot::at_base(), &fs);
     let plain = crate::analyze_without_edits(&ProjectRoot::at_base(), &fs);

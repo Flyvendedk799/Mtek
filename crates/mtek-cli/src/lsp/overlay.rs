@@ -134,7 +134,10 @@ mod tests {
         let fs = OverlayFs::new(&base, &buffers);
         assert_eq!(fs.read(&p("src/new.mtek")), Ok(b"new".to_vec()));
         assert!(fs.exact_case_exists(&p("src/new.mtek")));
-        assert!(fs.exact_case_exists(&p("extra")), "a directory made by a buffer");
+        assert!(
+            fs.exact_case_exists(&p("extra")),
+            "a directory made by a buffer"
+        );
         assert!(fs.exact_case_exists(&p("extra/deep")));
         assert!(!fs.exact_case_exists(&p("extra/Deep")), "case-exact");
         assert!(!fs.exact_case_exists(&p("extra/dee")));
@@ -174,7 +177,10 @@ mod tests {
         let base = base();
         let none = Buffers::new();
         let fs = OverlayFs::new(&base, &none);
-        assert_eq!(fs.list_dir(&ProjectPath::root()), base.list_dir(&ProjectPath::root()));
+        assert_eq!(
+            fs.list_dir(&ProjectPath::root()),
+            base.list_dir(&ProjectPath::root())
+        );
         assert_eq!(fs.read(&p("mtek.toml")), Ok(b"toml".to_vec()));
         assert!(!fs.exact_case_exists(&p("zzz")));
     }

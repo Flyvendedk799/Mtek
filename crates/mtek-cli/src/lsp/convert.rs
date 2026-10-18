@@ -18,12 +18,11 @@
 //!   the validation is the compiler's (decision 0071), the server adds none and drops none.
 
 use std::collections::{BTreeMap, HashMap};
-use std::str::FromStr;
 
 use lsp_types::{
     CodeAction, CodeActionKind, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity,
     DocumentChanges, Location, NumberOrString, OneOf, OptionalVersionedTextDocumentIdentifier,
-    Position, Range, TextDocumentEdit, TextEdit, Uri, WorkspaceEdit,
+    Range, TextDocumentEdit, TextEdit, Uri, WorkspaceEdit,
 };
 use mtek_compiler::diagnostics::{
     Diagnostic as CompilerDiagnostic, Diagnostics, HELP_PREFIX, Report, Severity,
@@ -197,11 +196,7 @@ fn fix(
 }
 
 /// The quick fixes of `located` (one per validated suggestion), as code actions.
-pub fn code_actions(
-    located: &Located,
-    uris: &dyn Uris,
-    document_changes: bool,
-) -> Vec<CodeAction> {
+pub fn code_actions(located: &Located, uris: &dyn Uris, document_changes: bool) -> Vec<CodeAction> {
     located
         .fixes
         .iter()
@@ -237,11 +232,7 @@ fn workspace_edit(fix: &Fix, uris: &dyn Uris, document_changes: bool) -> Option<
                     uri: uris.uri(path)?,
                     version: uris.version(path),
                 },
-                edits: by_file
-                    .remove(path)?
-                    .into_iter()
-                    .map(OneOf::Left)
-                    .collect(),
+                edits: by_file.remove(path)?.into_iter().map(OneOf::Left).collect(),
             });
         }
         Some(WorkspaceEdit {
@@ -249,6 +240,9 @@ fn workspace_edit(fix: &Fix, uris: &dyn Uris, document_changes: bool) -> Option<
             ..WorkspaceEdit::default()
         })
     } else {
+        // `Uri` hashes and compares by its text; the cached parts of `fluent_uri` that clippy
+        // sees as interior mutability never change its key.
+        #[allow(clippy::mutable_key_type)]
         let mut changes: HashMap<Uri, Vec<TextEdit>> = HashMap::new();
         for path in order {
             changes.insert(uris.uri(path)?, by_file.remove(path)?);
@@ -299,18 +293,11 @@ impl Uris for OneDocument {
     }
 }
 
-/// The start of a document.
-pub fn origin() -> Position {
-    Position::default()
-}
-
-/// Parse a URI the server made itself; `None` if it is not one.
-pub fn parse_uri(text: &str) -> Option<Uri> {
-    Uri::from_str(text).ok()
-}
-
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use lsp_types::Position;
     use mtek_compiler::diagnostics::{Code, Diagnostic as D, SuggestedEdit};
     use mtek_compiler::source::{FileId, Span};
 
@@ -333,7 +320,7 @@ mod tests {
 
     fn uris() -> OneDocument {
         OneDocument {
-            uri: parse_uri("file:///p/src/main.mtek").unwrap(),
+            uri: Uri::from_str("file:///p/src/main.mtek").unwrap(),
             version: Some(3),
         }
     }
@@ -353,11 +340,20 @@ mod tests {
             .note("a plain note")
             .help("write `1.0`");
         let w = D::new(Code::W3081, "Unreachable code.").at(Span::new(f, 18, 23));
-        let converted = convert(&report(vec![d, w]), &map, PositionEncoding::Utf16, &uris(), &fallback());
+        let converted = convert(
+            &report(vec![d, w]),
+            &map,
+            PositionEncoding::Utf16,
+            &uris(),
+            &fallback(),
+        );
         let list = &converted[&ProjectPath::new("src/main.mtek").unwrap()];
         assert_eq!(list.len(), 2);
         let first = &list[0].lsp;
-        assert_eq!(first.code, Some(NumberOrString::String("MTEK-E3001".to_owned())));
+        assert_eq!(
+            first.code,
+            Some(NumberOrString::String("MTEK-E3001".to_owned()))
+        );
         assert_eq!(first.source.as_deref(), Some("mtek"));
         assert_eq!(first.severity, Some(DiagnosticSeverity::ERROR));
         assert_eq!(
@@ -367,8 +363,14 @@ mod tests {
         assert_eq!(
             first.range,
             Range {
-                start: Position { line: 0, character: 15 },
-                end: Position { line: 0, character: 16 }
+                start: Position {
+                    line: 0,
+                    character: 15
+                },
+                end: Position {
+                    line: 0,
+                    character: 16
+                }
             }
         );
         assert_eq!(list[0].bytes, (15, 16));
@@ -377,7 +379,13 @@ mod tests {
         assert_eq!(related[0].message, "declared here");
         assert_eq!(related[0].location.range.start.character, 6);
         assert_eq!(list[1].lsp.severity, Some(DiagnosticSeverity::WARNING));
-        assert_eq!(list[1].lsp.range.start, Position { line: 1, character: 0 });
+        assert_eq!(
+            list[1].lsp.range.start,
+            Position {
+                line: 1,
+                character: 0
+            }
+        );
         assert!(list[1].lsp.related_information.is_none());
     }
 
@@ -402,7 +410,13 @@ mod tests {
     fn a_diagnostic_without_a_location_goes_to_the_fallback_file_at_the_start() {
         let map = sources("");
         let d = D::new(Code::E9001, "Invalid project configuration.");
-        let converted = convert(&report(vec![d]), &map, PositionEncoding::Utf16, &uris(), &fallback());
+        let converted = convert(
+            &report(vec![d]),
+            &map,
+            PositionEncoding::Utf16,
+            &uris(),
+            &fallback(),
+        );
         assert_eq!(converted.len(), 1);
         let list = &converted[&fallback()];
         assert_eq!(list[0].lsp.range, Range::default());
@@ -414,9 +428,18 @@ mod tests {
         let text = "const A: f32 = 1.;\n";
         let map = sources(text);
         let f = FileId(0);
-        let edit = SuggestedEdit::new("write the float literal as `1.0`").replace(Span::new(f, 15, 17), "1.0");
-        let d = D::new(Code::E0022, "Malformed float.").at(Span::new(f, 15, 17)).edit(edit);
-        let converted = convert(&report(vec![d]), &map, PositionEncoding::Utf16, &uris(), &fallback());
+        let edit = SuggestedEdit::new("write the float literal as `1.0`")
+            .replace(Span::new(f, 15, 17), "1.0");
+        let d = D::new(Code::E0022, "Malformed float.")
+            .at(Span::new(f, 15, 17))
+            .edit(edit);
+        let converted = convert(
+            &report(vec![d]),
+            &map,
+            PositionEncoding::Utf16,
+            &uris(),
+            &fallback(),
+        );
         let located = &converted[&ProjectPath::new("src/main.mtek").unwrap()][0];
         assert_eq!(located.fixes.len(), 1);
         // With `changes`.
@@ -427,6 +450,7 @@ mod tests {
         assert_eq!(action.kind, Some(CodeActionKind::QUICKFIX));
         assert_eq!(action.is_preferred, Some(true));
         assert_eq!(action.diagnostics.as_ref().unwrap().len(), 1);
+        #[allow(clippy::mutable_key_type)]
         let changes = action.edit.as_ref().unwrap().changes.as_ref().unwrap();
         let edits = &changes[&uris().uri];
         assert_eq!(edits.len(), 1);
@@ -435,7 +459,9 @@ mod tests {
         assert_eq!(edits[0].range.end.character, 17);
         // With `documentChanges`, the version of the open document is there.
         let actions = code_actions(located, &uris(), true);
-        let Some(DocumentChanges::Edits(documents)) = &actions[0].edit.as_ref().unwrap().document_changes else {
+        let Some(DocumentChanges::Edits(documents)) =
+            &actions[0].edit.as_ref().unwrap().document_changes
+        else {
             panic!("no document changes");
         };
         assert_eq!(documents.len(), 1);
@@ -446,9 +472,16 @@ mod tests {
     #[test]
     fn diagnostics_in_the_reserved_prelude_directory_have_no_file_to_show() {
         let mut map = SourceMap::new();
-        map.add(ProjectPath::new("std/materials.mtek").unwrap(), b"x").unwrap();
+        map.add(ProjectPath::new("std/materials.mtek").unwrap(), b"x")
+            .unwrap();
         let d = D::new(Code::E9999, "Internal.").at(Span::new(FileId(0), 0, 1));
-        let converted = convert(&report(vec![d]), &map, PositionEncoding::Utf16, &uris(), &fallback());
+        let converted = convert(
+            &report(vec![d]),
+            &map,
+            PositionEncoding::Utf16,
+            &uris(),
+            &fallback(),
+        );
         assert!(converted.contains_key(&fallback()));
         assert_eq!(converted.len(), 1);
     }
@@ -466,7 +499,16 @@ mod tests {
         let (map, r) = syntax_report(&huge);
         assert_eq!(r.diagnostics.len(), 1);
         assert_eq!(r.diagnostics[0].code.as_str(), "MTEK-E0004");
-        let converted = convert(&r, &map, PositionEncoding::Utf16, &uris(), &ProjectPath::new(LOOSE_PATH).unwrap());
-        assert_eq!(converted[&ProjectPath::new(LOOSE_PATH).unwrap()][0].bytes, (0, 0));
+        let converted = convert(
+            &r,
+            &map,
+            PositionEncoding::Utf16,
+            &uris(),
+            &ProjectPath::new(LOOSE_PATH).unwrap(),
+        );
+        assert_eq!(
+            converted[&ProjectPath::new(LOOSE_PATH).unwrap()][0].bytes,
+            (0, 0)
+        );
     }
 }

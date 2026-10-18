@@ -77,7 +77,8 @@ impl Harness {
     /// A harness whose project is the standard two-module one, initialised with `capabilities`.
     fn standard(capabilities: Value) -> Self {
         let mut h = Self::new(&[("src/lib.mtek", LIB), ("src/main.mtek", MAIN)]);
-        h.initialize(json!({ "capabilities": capabilities })).unwrap();
+        h.initialize(json!({ "capabilities": capabilities }))
+            .unwrap();
         h
     }
 
@@ -223,8 +224,14 @@ fn initialize_answers_with_the_capabilities_of_the_features() {
     assert_eq!(c["hoverProvider"], true);
     assert_eq!(c["definitionProvider"], true);
     assert_eq!(c["completionProvider"]["triggerCharacters"], json!(["."]));
-    assert_eq!(c["codeActionProvider"]["codeActionKinds"], json!(["quickfix"]));
-    assert_eq!(c["workspace"]["textDocumentContent"]["schemes"], json!(["mtek-prelude"]));
+    assert_eq!(
+        c["codeActionProvider"]["codeActionKinds"],
+        json!(["quickfix"])
+    );
+    assert_eq!(
+        c["workspace"]["textDocumentContent"]["schemes"],
+        json!(["mtek-prelude"])
+    );
     assert_eq!(result["serverInfo"]["name"], "mtek");
 }
 
@@ -243,23 +250,37 @@ fn the_position_encoding_is_utf8_when_offered_and_utf16_otherwise() {
         let result = h
             .initialize(json!({"capabilities": {"general": {"positionEncodings": offered}}}))
             .unwrap();
-        assert_eq!(result["capabilities"]["positionEncoding"], expected, "{offered}");
+        assert_eq!(
+            result["capabilities"]["positionEncoding"], expected,
+            "{offered}"
+        );
     }
 }
 
 #[test]
 fn initialize_accepts_clients_that_send_nothing_useful() {
-    for params in [Value::Null, json!([]), json!({}), json!({"capabilities": 5}), json!({"capabilities": {"general": 3}})] {
+    for params in [
+        Value::Null,
+        json!([]),
+        json!({}),
+        json!({"capabilities": 5}),
+        json!({"capabilities": {"general": 3}}),
+    ] {
         let mut h = Harness::new(&[]);
         let result = h.request("initialize", params.clone()).unwrap();
-        assert_eq!(result["capabilities"]["positionEncoding"], "utf-16", "{params}");
+        assert_eq!(
+            result["capabilities"]["positionEncoding"], "utf-16",
+            "{params}"
+        );
     }
 }
 
 #[test]
 fn requests_before_initialize_are_refused_and_a_second_initialize_too() {
     let mut h = Harness::new(&[]);
-    let (code, _) = h.request("textDocument/hover", at("file:///x.mtek", 0, 0)).unwrap_err();
+    let (code, _) = h
+        .request("textDocument/hover", at("file:///x.mtek", 0, 0))
+        .unwrap_err();
     assert_eq!(code, ErrorCode::ServerNotInitialized as i32);
     let (code, _) = h.request("shutdown", Value::Null).unwrap_err();
     assert_eq!(code, ErrorCode::ServerNotInitialized as i32);
@@ -277,7 +298,9 @@ fn shutdown_then_exit_is_code_zero_and_exit_alone_is_code_one() {
     let mut h = Harness::standard(json!({}));
     assert_eq!(h.request("shutdown", Value::Null), Ok(Value::Null));
     assert_eq!(h.server.exit_code(), None, "the server runs until `exit`");
-    let (code, _) = h.request("textDocument/hover", at("file:///x.mtek", 0, 0)).unwrap_err();
+    let (code, _) = h
+        .request("textDocument/hover", at("file:///x.mtek", 0, 0))
+        .unwrap_err();
     assert_eq!(code, ErrorCode::InvalidRequest as i32, "after shutdown");
     h.notify("textDocument/didOpen", json!({}));
     h.notify("exit", Value::Null);
@@ -304,7 +327,9 @@ fn the_input_ending_is_code_one_unless_the_client_shut_down() {
     assert_eq!(h.server.exit_code(), Some(0));
 
     let mut h = Harness::standard(json!({}));
-    h.send(Inbound::Closed { reason: Some("damaged".to_owned()) });
+    h.send(Inbound::Closed {
+        reason: Some("damaged".to_owned()),
+    });
     assert_eq!(h.server.exit_code(), Some(1));
 }
 
@@ -314,22 +339,50 @@ fn unknown_methods_and_bad_parameters_are_errors_that_leave_the_session_running(
     let (code, message) = h.request("textDocument/rename", json!({})).unwrap_err();
     assert_eq!(code, ErrorCode::MethodNotFound as i32);
     assert!(message.contains("textDocument/rename"), "{message}");
-    for method in ["textDocument/hover", "textDocument/definition", "textDocument/completion", "textDocument/codeAction"] {
-        for params in [json!(null), json!([]), json!({}), json!({"textDocument": 5}), json!({"textDocument": {"uri": 5}, "position": 1}), json!("x")] {
+    for method in [
+        "textDocument/hover",
+        "textDocument/definition",
+        "textDocument/completion",
+        "textDocument/codeAction",
+    ] {
+        for params in [
+            json!(null),
+            json!([]),
+            json!({}),
+            json!({"textDocument": 5}),
+            json!({"textDocument": {"uri": 5}, "position": 1}),
+            json!("x"),
+        ] {
             let (code, _) = h.request(method, params.clone()).unwrap_err();
             assert_eq!(code, ErrorCode::InvalidParams as i32, "{method} {params}");
         }
     }
     // Malformed notifications are ignored.
-    for method in ["textDocument/didOpen", "textDocument/didChange", "textDocument/didClose", "textDocument/didSave", "workspace/didChangeWatchedFiles", "nonsense/method"] {
-        for params in [json!(null), json!([]), json!({}), json!({"textDocument": 5}), json!("x")] {
+    for method in [
+        "textDocument/didOpen",
+        "textDocument/didChange",
+        "textDocument/didClose",
+        "textDocument/didSave",
+        "workspace/didChangeWatchedFiles",
+        "nonsense/method",
+    ] {
+        for params in [
+            json!(null),
+            json!([]),
+            json!({}),
+            json!({"textDocument": 5}),
+            json!("x"),
+        ] {
             h.notify(method, params);
         }
     }
     h.advance(1000);
     assert!(h.published().is_empty());
     // Still alive.
-    assert!(h.request("textDocument/hover", at("file:///nothing.mtek", 0, 0)).is_ok());
+    assert!(
+        h.request("textDocument/hover", at("file:///nothing.mtek", 0, 0))
+            .is_ok()
+    );
     assert_eq!(h.server.exit_code(), None);
 }
 
@@ -348,7 +401,8 @@ fn rejected_payloads_are_answered_by_the_server_loop() {
 // ----- diagnostics -----------------------------------------------------------------------------
 
 /// A program with an unknown name after multi-byte text on its line.
-const BROKEN: &str = "/* \u{e9}\u{1f600} */ const A: f32 = Unknown;\nscene Demo { camera Main {} }\n";
+const BROKEN: &str =
+    "/* \u{e9}\u{1f600} */ const A: f32 = Unknown;\nscene Demo { camera Main {} }\n";
 
 #[test]
 fn diagnostics_have_exact_ranges_after_multibyte_text_in_utf16() {
@@ -373,7 +427,8 @@ fn diagnostics_have_exact_ranges_after_multibyte_text_in_utf16() {
 #[test]
 fn the_same_diagnostic_in_utf8_counts_bytes() {
     let mut h = Harness::new(&[("src/main.mtek", BROKEN)]);
-    h.initialize(json!({"capabilities": {"general": {"positionEncodings": ["utf-8", "utf-16"]}}})).unwrap();
+    h.initialize(json!({"capabilities": {"general": {"positionEncodings": ["utf-8", "utf-16"]}}}))
+        .unwrap();
     h.open("src/main.mtek", BROKEN);
     h.poll();
     let published = h.published();
@@ -392,7 +447,10 @@ fn a_clean_program_publishes_an_empty_list_once_and_not_again() {
     assert_eq!(published.len(), 2, "{published:?}");
     assert!(published.iter().all(|(_, _, d)| d.is_empty()));
     // An unchanged analysis publishes nothing more.
-    h.notify("textDocument/didSave", json!({"textDocument": {"uri": h.uri("src/main.mtek")}}));
+    h.notify(
+        "textDocument/didSave",
+        json!({"textDocument": {"uri": h.uri("src/main.mtek")}}),
+    );
     h.poll();
     assert!(h.published().is_empty());
 }
@@ -419,16 +477,31 @@ fn diagnostics_are_debounced_and_changes_restart_the_timer() {
     assert_eq!(published[0].len(), 1, "the error of the new text");
 
     // Typing: every change restarts the timer; one publication, with the last text.
-    h.change(&uri, 3, "const A: f32 = 1.;\nscene Demo { camera Main {} }\n");
+    h.change(
+        &uri,
+        3,
+        "const A: f32 = 1.;\nscene Demo { camera Main {} }\n",
+    );
     h.advance(100);
-    h.change(&uri, 4, "const A: f32 = 1.0;\nscene Demo { camera Main {} }\n");
+    h.change(
+        &uri,
+        4,
+        "const A: f32 = 1.0;\nscene Demo { camera Main {} }\n",
+    );
     h.advance(100);
-    assert!(h.published().is_empty(), "200 ms after the first change, 100 after the last");
+    assert!(
+        h.published().is_empty(),
+        "200 ms after the first change, 100 after the last"
+    );
     h.advance(49);
     assert!(h.published().is_empty());
     h.advance(1);
     let published = h.published();
-    assert_eq!(published.len(), 1, "one publication for two changes: {published:?}");
+    assert_eq!(
+        published.len(),
+        1,
+        "one publication for two changes: {published:?}"
+    );
     assert_eq!(published[0].1, Some(4), "the version of the last change");
     assert!(published[0].2.is_empty(), "the last text is clean");
 }
@@ -450,7 +523,11 @@ fn opening_publishes_without_waiting_and_a_burst_of_opens_is_one_analysis() {
     h.change(&uri, 2, BROKEN);
     h.poll();
     let published = h.published_for(&uri);
-    assert_eq!(published.len(), 1, "published at once, with the changed text");
+    assert_eq!(
+        published.len(),
+        1,
+        "published at once, with the changed text"
+    );
     assert_eq!(published[0].len(), 1);
 }
 
@@ -458,7 +535,10 @@ impl Harness {
     fn close_all(&mut self) {
         for relative in ["src/main.mtek", "src/lib.mtek"] {
             let uri = self.uri(relative);
-            self.notify("textDocument/didClose", json!({"textDocument": {"uri": uri}}));
+            self.notify(
+                "textDocument/didClose",
+                json!({"textDocument": {"uri": uri}}),
+            );
         }
         self.poll();
         self.published();
@@ -473,15 +553,24 @@ fn closing_the_last_document_of_a_project_clears_its_diagnostics() {
     h.poll();
     assert_eq!(h.published()[0].2.len(), 1);
     let uri = h.uri("src/main.mtek");
-    h.notify("textDocument/didClose", json!({"textDocument": {"uri": uri}}));
+    h.notify(
+        "textDocument/didClose",
+        json!({"textDocument": {"uri": uri}}),
+    );
     h.poll();
     let published = h.published();
     assert_eq!(published.len(), 1);
     assert_eq!(published[0].0, uri);
     assert!(published[0].2.is_empty());
     // Closing it again, or a document that was never open, is nothing.
-    h.notify("textDocument/didClose", json!({"textDocument": {"uri": uri}}));
-    h.notify("textDocument/didClose", json!({"textDocument": {"uri": "file:///never.mtek"}}));
+    h.notify(
+        "textDocument/didClose",
+        json!({"textDocument": {"uri": uri}}),
+    );
+    h.notify(
+        "textDocument/didClose",
+        json!({"textDocument": {"uri": "file:///never.mtek"}}),
+    );
     h.advance(1000);
     assert!(h.published().is_empty());
 }
@@ -491,7 +580,10 @@ fn diagnostics_of_an_imported_file_are_published_to_that_file() {
     let broken_lib = "export const X: f32 = Nope;\n";
     let mut h = Harness::new(&[
         ("src/lib.mtek", broken_lib),
-        ("src/main.mtek", "import { X } from \"./lib.mtek\";\nscene Demo { camera Main {} }\n"),
+        (
+            "src/main.mtek",
+            "import { X } from \"./lib.mtek\";\nscene Demo { camera Main {} }\n",
+        ),
     ]);
     h.initialize(json!({})).unwrap();
     let main = h.project.path("src/main.mtek");
@@ -500,22 +592,32 @@ fn diagnostics_of_an_imported_file_are_published_to_that_file() {
     let lib_uri = h.uri("src/lib.mtek");
     let main_uri = h.uri("src/main.mtek");
     let published = h.published();
-    let lib = published.iter().find(|(u, _, _)| *u == lib_uri).expect("lib is published");
+    let lib = published
+        .iter()
+        .find(|(u, _, _)| *u == lib_uri)
+        .expect("lib is published");
     assert_eq!(lib.1, None, "not an open document: no version");
     assert_eq!(code_of(&lib.2[0]), "MTEK-E2003");
-    assert_eq!(lib.2[0]["range"], json!({"start": pos(0, 22), "end": pos(0, 26)}));
+    assert_eq!(
+        lib.2[0]["range"],
+        json!({"start": pos(0, 22), "end": pos(0, 26)})
+    );
     let main = published.iter().find(|(u, _, _)| *u == main_uri).unwrap();
     assert!(main.2.is_empty(), "{:?}", main.2);
 
     // Fixed on disk by something else; the client says the file changed.
-    h.project.write("src/lib.mtek", "export const X: f32 = 1.0;\n");
+    h.project
+        .write("src/lib.mtek", "export const X: f32 = 1.0;\n");
     h.notify(
         "workspace/didChangeWatchedFiles",
         json!({"changes": [{"uri": lib_uri, "type": 2}]}),
     );
     h.poll();
     let published = h.published();
-    let lib = published.iter().find(|(u, _, _)| *u == lib_uri).expect("lib is published again");
+    let lib = published
+        .iter()
+        .find(|(u, _, _)| *u == lib_uri)
+        .expect("lib is published again");
     assert!(lib.2.is_empty());
 }
 
@@ -530,13 +632,26 @@ fn an_unsaved_buffer_is_what_the_compiler_reads() {
     h.open_uri(&lib_uri, "export struct Light { intensity: f32; }\n", 1);
     h.poll();
     let published = h.published();
-    let main = published.iter().find(|(u, _, _)| *u == h.uri("src/main.mtek")).unwrap();
-    assert!(main.2.iter().any(|d| code_of(d) == "MTEK-E2033"), "{:?}", main.2);
+    let main = published
+        .iter()
+        .find(|(u, _, _)| *u == h.uri("src/main.mtek"))
+        .unwrap();
+    assert!(
+        main.2.iter().any(|d| code_of(d) == "MTEK-E2033"),
+        "{:?}",
+        main.2
+    );
     // Closing the buffer goes back to the disk.
-    h.notify("textDocument/didClose", json!({"textDocument": {"uri": lib_uri}}));
+    h.notify(
+        "textDocument/didClose",
+        json!({"textDocument": {"uri": lib_uri}}),
+    );
     h.poll();
     let published = h.published();
-    let main = published.iter().find(|(u, _, _)| *u == h.uri("src/main.mtek")).unwrap();
+    let main = published
+        .iter()
+        .find(|(u, _, _)| *u == h.uri("src/main.mtek"))
+        .unwrap();
     assert!(main.2.is_empty(), "{:?}", main.2);
 }
 
@@ -549,7 +664,11 @@ fn a_new_file_that_exists_only_as_a_buffer_can_be_imported() {
     h.poll();
     let main_uri = h.uri("src/main.mtek");
     let first = h.published_for(&main_uri);
-    assert!(first[0].iter().any(|d| code_of(d).starts_with("MTEK-E203")), "{:?}", first[0]);
+    assert!(
+        first[0].iter().any(|d| code_of(d).starts_with("MTEK-E203")),
+        "{:?}",
+        first[0]
+    );
     // The new file is opened (never saved): the import resolves.
     let extra_uri = h.uri("src/extra.mtek");
     h.open_uri(&extra_uri, "export const Extra: f32 = 2.0;\n", 1);
@@ -578,7 +697,10 @@ fn a_file_without_a_project_gets_its_syntax_diagnostics_and_loses_them_on_close(
     h.advance(DEBOUNCE_MS);
     let published = h.published();
     assert!(published[0].2.is_empty());
-    h.notify("textDocument/didClose", json!({"textDocument": {"uri": uri}}));
+    h.notify(
+        "textDocument/didClose",
+        json!({"textDocument": {"uri": uri}}),
+    );
     h.poll();
     let published = h.published();
     assert_eq!(published.len(), 1, "closing publishes an empty list");
@@ -615,7 +737,10 @@ fn a_project_that_does_not_load_reports_on_the_project_file() {
         .find(|(u, _, _)| *u == h.uri("mtek.toml"))
         .unwrap_or_else(|| panic!("{published:?}"));
     assert_eq!(code_of(&toml.2[0]), "MTEK-E9001");
-    assert_eq!(toml.2[0]["range"], json!({"start": pos(0, 0), "end": pos(0, 0)}));
+    assert_eq!(
+        toml.2[0]["range"],
+        json!({"start": pos(0, 0), "end": pos(0, 0)})
+    );
 }
 
 #[test]
@@ -625,14 +750,32 @@ fn a_deleted_file_is_an_import_error_not_a_crash() {
     h.poll();
     h.published();
     h.project.remove("src/lib.mtek");
-    h.notify("workspace/didChangeWatchedFiles", json!({"changes": [{"uri": h.uri("src/lib.mtek"), "type": 3}]}));
+    h.notify(
+        "workspace/didChangeWatchedFiles",
+        json!({"changes": [{"uri": h.uri("src/lib.mtek"), "type": 3}]}),
+    );
     h.poll();
     let published = h.published();
-    let main = published.iter().find(|(u, _, _)| *u == h.uri("src/main.mtek")).unwrap();
-    assert!(main.2.iter().any(|d| code_of(d).starts_with("MTEK-E203")), "{:?}", main.2);
+    let main = published
+        .iter()
+        .find(|(u, _, _)| *u == h.uri("src/main.mtek"))
+        .unwrap();
+    assert!(
+        main.2.iter().any(|d| code_of(d).starts_with("MTEK-E203")),
+        "{:?}",
+        main.2
+    );
     // The open document of a file that is deleted on disk keeps being served.
-    let hover = h.request("textDocument/hover", at(&h.uri("src/main.mtek"), 3, 8)).unwrap();
-    assert!(hover["contents"]["value"].as_str().unwrap().contains("const SPEED"), "{hover}");
+    let hover = h
+        .request("textDocument/hover", at(&h.uri("src/main.mtek"), 3, 8))
+        .unwrap();
+    assert!(
+        hover["contents"]["value"]
+            .as_str()
+            .unwrap()
+            .contains("const SPEED"),
+        "{hover}"
+    );
 }
 
 // ----- text synchronisation --------------------------------------------------------------------
@@ -653,7 +796,13 @@ fn changes_to_unknown_documents_are_ignored_and_incremental_changes_are_applied(
         ]}),
     );
     let hover = h.request("textDocument/hover", at(&uri, 3, 7)).unwrap();
-    assert!(hover["contents"]["value"].as_str().unwrap().contains("= 0.5"), "{hover}");
+    assert!(
+        hover["contents"]["value"]
+            .as_str()
+            .unwrap()
+            .contains("= 0.5"),
+        "{hover}"
+    );
     // A range past the end of the text clamps; a reversed one is an insertion.
     h.notify(
         "textDocument/didChange",
@@ -663,7 +812,11 @@ fn changes_to_unknown_documents_are_ignored_and_incremental_changes_are_applied(
         ]}),
     );
     h.advance(DEBOUNCE_MS);
-    assert!(h.published().iter().all(|(_, v, _)| *v == Some(3) || v.is_none()));
+    assert!(
+        h.published()
+            .iter()
+            .all(|(_, v, _)| *v == Some(3) || v.is_none())
+    );
 }
 
 // ----- hover, definition, completion -----------------------------------------------------------
@@ -684,40 +837,73 @@ fn hover_positions_are_utf16_with_multibyte_text_earlier_on_the_line() {
     // The use of SPEED after the emoji comment: its column counts each emoji as two units.
     let (use_line, use_character) = position_of(text, "SPEED;", 0);
     assert_eq!((use_line, use_character), (2, 50));
-    let hover = h.request("textDocument/hover", at(&uri, use_line, use_character + 2)).unwrap();
+    let hover = h
+        .request("textDocument/hover", at(&uri, use_line, use_character + 2))
+        .unwrap();
     let markdown = hover["contents"]["value"].as_str().unwrap();
-    assert!(markdown.contains("const SPEED: f32 = 0.7") && markdown.contains("Speed."), "{markdown}");
+    assert!(
+        markdown.contains("const SPEED: f32 = 0.7") && markdown.contains("Speed."),
+        "{markdown}"
+    );
     assert_eq!(hover["contents"]["kind"], "markdown");
     assert_eq!(
         hover["range"],
         json!({"start": pos(use_line, use_character), "end": pos(use_line, use_character + 5)})
     );
     // One unit to the left (inside the comment, on the space before `const B`) is nothing to hover.
-    let before = h.request("textDocument/hover", at(&uri, use_line, use_character - 20)).unwrap();
+    let before = h
+        .request("textDocument/hover", at(&uri, use_line, use_character - 20))
+        .unwrap();
     assert_eq!(before, Value::Null);
     // The same position counted in bytes lands somewhere else: with UTF-8 negotiated it is right.
     let mut h8 = Harness::new(&[("src/main.mtek", text)]);
-    h8.initialize(json!({"capabilities": {"general": {"positionEncodings": ["utf-8"]}}})).unwrap();
+    h8.initialize(json!({"capabilities": {"general": {"positionEncodings": ["utf-8"]}}}))
+        .unwrap();
     h8.open("src/main.mtek", text);
     let (byte_offset, _) = text.match_indices("SPEED;").next().unwrap();
     let line_start = text.lines().take(2).map(|l| l.len() + 1).sum::<usize>();
     let column = byte_offset - line_start;
     let uri8 = h8.uri("src/main.mtek");
-    let hover = h8.request("textDocument/hover", at(&uri8, 2, u32::try_from(column).unwrap() + 2)).unwrap();
-    assert!(hover["contents"]["value"].as_str().unwrap().contains("const SPEED"), "{hover}");
-    assert_eq!(hover["range"]["start"], pos(2, u32::try_from(column).unwrap()));
+    let hover = h8
+        .request(
+            "textDocument/hover",
+            at(&uri8, 2, u32::try_from(column).unwrap() + 2),
+        )
+        .unwrap();
+    assert!(
+        hover["contents"]["value"]
+            .as_str()
+            .unwrap()
+            .contains("const SPEED"),
+        "{hover}"
+    );
+    assert_eq!(
+        hover["range"]["start"],
+        pos(2, u32::try_from(column).unwrap())
+    );
 }
 
 #[test]
 fn hover_is_plain_text_for_a_client_that_does_not_read_markdown() {
     let mut h = Harness::new(&[("src/lib.mtek", LIB), ("src/main.mtek", MAIN)]);
-    h.initialize(json!({"capabilities": {"textDocument": {"hover": {"contentFormat": ["plaintext"]}}}})).unwrap();
+    h.initialize(
+        json!({"capabilities": {"textDocument": {"hover": {"contentFormat": ["plaintext"]}}}}),
+    )
+    .unwrap();
     h.open("src/main.mtek", MAIN);
     let (line, character) = position_of(MAIN, "double(speed)", 0);
-    let hover = h.request("textDocument/hover", at(&h.uri("src/main.mtek"), line, character)).unwrap();
+    let hover = h
+        .request(
+            "textDocument/hover",
+            at(&h.uri("src/main.mtek"), line, character),
+        )
+        .unwrap();
     assert_eq!(hover["contents"]["kind"], "plaintext");
     let text = hover["contents"]["value"].as_str().unwrap();
-    assert!(!text.contains("```") && text.starts_with("fn double(x: f32) -> f32"), "{text}");
+    assert!(
+        !text.contains("```") && text.starts_with("fn double(x: f32) -> f32"),
+        "{text}"
+    );
 }
 
 #[test]
@@ -728,7 +914,9 @@ fn definition_goes_across_modules_and_into_the_standard_library() {
     let lib_uri = h.uri("src/lib.mtek");
     // The use of `double`: the declaration in lib.mtek.
     let (line, character) = position_of(MAIN, "double(speed)", 0);
-    let location = h.request("textDocument/definition", at(&uri, line, character)).unwrap();
+    let location = h
+        .request("textDocument/definition", at(&uri, line, character))
+        .unwrap();
     assert_eq!(location["uri"], lib_uri);
     let (lib_line, lib_character) = position_of(LIB, "double(x", 0);
     assert_eq!(
@@ -737,21 +925,40 @@ fn definition_goes_across_modules_and_into_the_standard_library() {
     );
     // The import specifier: the module.
     let (line, character) = position_of(MAIN, "./lib.mtek", 0);
-    let location = h.request("textDocument/definition", at(&uri, line, character + 3)).unwrap();
+    let location = h
+        .request("textDocument/definition", at(&uri, line, character + 3))
+        .unwrap();
     assert_eq!(location["uri"], lib_uri);
-    assert_eq!(location["range"], json!({"start": pos(0, 0), "end": pos(0, 0)}));
+    assert_eq!(
+        location["range"],
+        json!({"start": pos(0, 0), "end": pos(0, 0)})
+    );
     // A standard-library name: a virtual document whose text has the name at the range.
     let (line, character) = position_of(MAIN, "Box {", 0);
-    let location = h.request("textDocument/definition", at(&uri, line, character)).unwrap();
+    let location = h
+        .request("textDocument/definition", at(&uri, line, character))
+        .unwrap();
     assert_eq!(location["uri"], "mtek-prelude:/std/prelude.mtek");
-    let content = h.request("workspace/textDocumentContent", json!({"uri": location["uri"]})).unwrap();
+    let content = h
+        .request(
+            "workspace/textDocumentContent",
+            json!({"uri": location["uri"]}),
+        )
+        .unwrap();
     let text = content["text"].as_str().unwrap();
     let start = &location["range"]["start"];
-    let line_text = text.lines().nth(usize::try_from(start["line"].as_u64().unwrap()).unwrap()).unwrap();
+    let line_text = text
+        .lines()
+        .nth(usize::try_from(start["line"].as_u64().unwrap()).unwrap())
+        .unwrap();
     assert!(line_text.contains("schema Box"), "{line_text}");
     // Nothing to define.
     let (line, character) = position_of(MAIN, "0.7", 0);
-    assert_eq!(h.request("textDocument/definition", at(&uri, line, character)).unwrap(), Value::Null);
+    assert_eq!(
+        h.request("textDocument/definition", at(&uri, line, character))
+            .unwrap(),
+        Value::Null
+    );
 }
 
 #[test]
@@ -759,16 +966,41 @@ fn the_standard_library_documents_are_served_and_unknown_ones_refused() {
     let mut h = Harness::standard(json!({}));
     for path in ["std/prelude.mtek", "std/materials.mtek"] {
         let content = h
-            .request("workspace/textDocumentContent", json!({"uri": format!("mtek-prelude:/{path}")}))
+            .request(
+                "workspace/textDocumentContent",
+                json!({"uri": format!("mtek-prelude:/{path}")}),
+            )
             .unwrap();
         assert!(!content["text"].as_str().unwrap().is_empty());
     }
-    let materials = h.request("workspace/textDocumentContent", json!({"uri": "mtek-prelude:/std/materials.mtek"})).unwrap();
-    assert!(materials["text"].as_str().unwrap().contains("export material Pbr"));
-    let (code, _) = h.request("workspace/textDocumentContent", json!({"uri": "mtek-prelude:/std/nope.mtek"})).unwrap_err();
+    let materials = h
+        .request(
+            "workspace/textDocumentContent",
+            json!({"uri": "mtek-prelude:/std/materials.mtek"}),
+        )
+        .unwrap();
+    assert!(
+        materials["text"]
+            .as_str()
+            .unwrap()
+            .contains("export material Pbr")
+    );
+    let (code, _) = h
+        .request(
+            "workspace/textDocumentContent",
+            json!({"uri": "mtek-prelude:/std/nope.mtek"}),
+        )
+        .unwrap_err();
     assert_eq!(code, ErrorCode::RequestFailed as i32);
-    for params in [json!({"uri": "file:///x.mtek"}), json!({}), json!({"uri": 3}), Value::Null] {
-        let (code, _) = h.request("workspace/textDocumentContent", params).unwrap_err();
+    for params in [
+        json!({"uri": "file:///x.mtek"}),
+        json!({}),
+        json!({"uri": 3}),
+        Value::Null,
+    ] {
+        let (code, _) = h
+            .request("workspace/textDocumentContent", params)
+            .unwrap_err();
         assert_eq!(code, ErrorCode::InvalidParams as i32);
     }
 }
@@ -781,10 +1013,18 @@ fn completion_replaces_the_typed_part_in_utf16_units() {
     h.initialize(json!({})).unwrap();
     h.open("src/main.mtek", &text);
     let (line, character) = utf16_position(&text, offset);
-    let result = h.request("textDocument/completion", at(&h.uri("src/main.mtek"), line, character)).unwrap();
+    let result = h
+        .request(
+            "textDocument/completion",
+            at(&h.uri("src/main.mtek"), line, character),
+        )
+        .unwrap();
     assert_eq!(result["isIncomplete"], false);
     let items = result["items"].as_array().unwrap();
-    let item = items.iter().find(|i| i["label"] == "smoothstep").expect("smoothstep");
+    let item = items
+        .iter()
+        .find(|i| i["label"] == "smoothstep")
+        .expect("smoothstep");
     assert_eq!(item["kind"], 3, "a function");
     assert_eq!(item["textEdit"]["newText"], "smoothstep");
     // The two typed letters: [cursor - 2, cursor] in UTF-16 units, after the emoji comment.
@@ -806,9 +1046,22 @@ fn completion_after_a_dot_lists_the_members() {
     h.initialize(json!({})).unwrap();
     h.open("src/main.mtek", &text);
     let (line, character) = utf16_position(&text, offset);
-    let result = h.request("textDocument/completion", at(&h.uri("src/main.mtek"), line, character)).unwrap();
-    let labels: Vec<&str> = result["items"].as_array().unwrap().iter().map(|i| i["label"].as_str().unwrap()).collect();
-    assert!(labels.contains(&"Space") && labels.contains(&"ArrowUp"), "{labels:?}");
+    let result = h
+        .request(
+            "textDocument/completion",
+            at(&h.uri("src/main.mtek"), line, character),
+        )
+        .unwrap();
+    let labels: Vec<&str> = result["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|i| i["label"].as_str().unwrap())
+        .collect();
+    assert!(
+        labels.contains(&"Space") && labels.contains(&"ArrowUp"),
+        "{labels:?}"
+    );
     assert!(!labels.contains(&"sin"));
 }
 
@@ -821,11 +1074,16 @@ fn completion_in_a_comment_or_for_an_unknown_document_is_null() {
     h.open("src/main.mtek", &text);
     let (line, character) = utf16_position(&text, offset);
     assert_eq!(
-        h.request("textDocument/completion", at(&h.uri("src/main.mtek"), line, character)).unwrap(),
+        h.request(
+            "textDocument/completion",
+            at(&h.uri("src/main.mtek"), line, character)
+        )
+        .unwrap(),
         Value::Null
     );
     assert_eq!(
-        h.request("textDocument/completion", at("file:///not-open.mtek", 0, 0)).unwrap(),
+        h.request("textDocument/completion", at("file:///not-open.mtek", 0, 0))
+            .unwrap(),
         Value::Null
     );
 }
@@ -896,7 +1154,10 @@ fn a_validated_edit_is_a_quick_fix_that_leaves_a_clean_program() {
     // The edit is in UTF-16 columns (after `/* 😀 */ const A: f32 = `: 4 + 3 + 15 = 22... the emoji is 2 units).
     assert_eq!(edits[0]["range"]["start"], diagnostic["range"]["start"]);
     let fixed = apply(text, edits);
-    assert_eq!(fixed, "/* \u{1f600} */ const A: f32 = 1.0;\nscene Demo { camera Main {} }\n");
+    assert_eq!(
+        fixed,
+        "/* \u{1f600} */ const A: f32 = 1.0;\nscene Demo { camera Main {} }\n"
+    );
     // Applying it, the client sends the new text and the diagnostics go away.
     h.change(&uri, 2, &fixed);
     h.advance(DEBOUNCE_MS);
@@ -909,7 +1170,10 @@ fn a_validated_edit_is_a_quick_fix_that_leaves_a_clean_program() {
 fn quick_fixes_use_document_changes_with_the_version_when_the_client_takes_them() {
     let text = "const A: f32 = 1.;\nscene Demo { camera Main {} }\n";
     let mut h = Harness::new(&[("src/main.mtek", text)]);
-    h.initialize(json!({"capabilities": {"workspace": {"workspaceEdit": {"documentChanges": true}}}})).unwrap();
+    h.initialize(
+        json!({"capabilities": {"workspace": {"workspaceEdit": {"documentChanges": true}}}}),
+    )
+    .unwrap();
     let uri = h.uri("src/main.mtek");
     h.open_uri(&uri, text, 7);
     let actions = h
@@ -940,18 +1204,44 @@ fn quick_fixes_are_only_where_the_range_is_and_only_when_asked_for() {
         .unwrap()
     };
     // The first literal only; the second only; neither (the empty line); both (everything).
-    let first = ask(&mut h, json!({"start": pos(0, 16), "end": pos(0, 16)}), Value::Null);
+    let first = ask(
+        &mut h,
+        json!({"start": pos(0, 16), "end": pos(0, 16)}),
+        Value::Null,
+    );
     assert_eq!(first.as_array().unwrap().len(), 1);
-    assert_eq!(first[0]["edit"]["changes"][&uri][0]["range"]["start"], pos(0, 15));
-    let second = ask(&mut h, json!({"start": pos(2, 17), "end": pos(2, 17)}), json!(["quickfix"]));
+    assert_eq!(
+        first[0]["edit"]["changes"][&uri][0]["range"]["start"],
+        pos(0, 15)
+    );
+    let second = ask(
+        &mut h,
+        json!({"start": pos(2, 17), "end": pos(2, 17)}),
+        json!(["quickfix"]),
+    );
     assert_eq!(second.as_array().unwrap().len(), 1);
-    assert_eq!(second[0]["edit"]["changes"][&uri][0]["range"]["start"], pos(2, 15));
-    let none = ask(&mut h, json!({"start": pos(1, 0), "end": pos(1, 0)}), Value::Null);
+    assert_eq!(
+        second[0]["edit"]["changes"][&uri][0]["range"]["start"],
+        pos(2, 15)
+    );
+    let none = ask(
+        &mut h,
+        json!({"start": pos(1, 0), "end": pos(1, 0)}),
+        Value::Null,
+    );
     assert!(none.as_array().unwrap().is_empty());
-    let both = ask(&mut h, json!({"start": pos(0, 0), "end": pos(3, 0)}), Value::Null);
+    let both = ask(
+        &mut h,
+        json!({"start": pos(0, 0), "end": pos(3, 0)}),
+        Value::Null,
+    );
     assert_eq!(both.as_array().unwrap().len(), 2);
     // Only refactorings were asked for.
-    let refactor = ask(&mut h, json!({"start": pos(0, 16), "end": pos(0, 16)}), json!(["refactor"]));
+    let refactor = ask(
+        &mut h,
+        json!({"start": pos(0, 16), "end": pos(0, 16)}),
+        json!(["refactor"]),
+    );
     assert!(refactor.as_array().unwrap().is_empty());
 }
 
@@ -978,7 +1268,10 @@ fn an_edit_in_another_file_is_one_workspace_edit() {
         .unwrap();
     assert_eq!(actions.as_array().unwrap().len(), 1, "{actions}");
     let edits = actions[0]["edit"]["changes"][&lib_uri].as_array().unwrap();
-    assert_eq!(apply(lib, edits), "export const Known: f32 = 1.0;\nexport const Other: f32 = Known;\n");
+    assert_eq!(
+        apply(lib, edits),
+        "export const Known: f32 = 1.0;\nexport const Other: f32 = Known;\n"
+    );
 }
 
 // ----- survival --------------------------------------------------------------------------------
@@ -1006,14 +1299,23 @@ fn a_panic_in_a_handler_answers_with_an_error_and_loses_no_buffer() {
     // The defect is gone: the same buffer is still there and answers.
     h.server.fault = None;
     let hover = h.request("textDocument/hover", at(&uri, 3, 8)).unwrap();
-    assert!(hover["contents"]["value"].as_str().unwrap().contains("const SPEED"), "{hover}");
+    assert!(
+        hover["contents"]["value"]
+            .as_str()
+            .unwrap()
+            .contains("const SPEED"),
+        "{hover}"
+    );
     // The unsaved text is the buffer the compiler reads: a position in it still resolves.
     let (line, _) = position_of(&unsaved, "// unsaved edit", 0);
     let hover = h.request("textDocument/hover", at(&uri, line, 3)).unwrap();
     assert_eq!(hover, Value::Null);
     h.advance(DEBOUNCE_MS);
     let published = h.published();
-    assert!(published.iter().all(|(_, _, d)| d.is_empty()), "{published:?}");
+    assert!(
+        published.iter().all(|(_, _, d)| d.is_empty()),
+        "{published:?}"
+    );
 }
 
 #[test]
@@ -1021,24 +1323,54 @@ fn huge_and_odd_texts_are_diagnosed_not_fatal() {
     let mut h = Harness::new(&[("src/main.mtek", "scene Demo { camera Main {} }\n")]);
     h.initialize(json!({})).unwrap();
     // More than the 4 MiB the compiler accepts.
-    let huge = format!("{}\n", "// padding padding padding padding\n".repeat(140_000));
+    let huge = format!(
+        "{}\n",
+        "// padding padding padding padding\n".repeat(140_000)
+    );
     assert!(huge.len() > 4 * 1024 * 1024);
     let uri = h.uri("src/main.mtek");
     h.open_uri(&uri, &huge, 1);
     h.poll();
     let published = h.published();
-    assert!(published.iter().flat_map(|(_, _, d)| d).any(|d| code_of(d) == "MTEK-E0004"), "{published:?}");
-    assert_eq!(h.request("textDocument/hover", at(&uri, 5, 5)).unwrap(), Value::Null);
-    assert_eq!(h.request("textDocument/completion", at(&uri, 5, 5)).unwrap(), Value::Null);
+    assert!(
+        published
+            .iter()
+            .flat_map(|(_, _, d)| d)
+            .any(|d| code_of(d) == "MTEK-E0004"),
+        "{published:?}"
+    );
+    assert_eq!(
+        h.request("textDocument/hover", at(&uri, 5, 5)).unwrap(),
+        Value::Null
+    );
+    assert_eq!(
+        h.request("textDocument/completion", at(&uri, 5, 5))
+            .unwrap(),
+        Value::Null
+    );
     // Odd text: NUL bytes, lone surrogates cannot exist in a Rust string, a misplaced BOM, CRLF.
-    for text in ["\u{0}\u{0}", "const\u{feff}A", "a\r\nb\r\n", "\u{feff}scene", "\r", "{\"jsonrpc\"", "\u{1f600}".repeat(1000).as_str()] {
+    for text in [
+        "\u{0}\u{0}",
+        "const\u{feff}A",
+        "a\r\nb\r\n",
+        "\u{feff}scene",
+        "\r",
+        "{\"jsonrpc\"",
+        "\u{1f600}".repeat(1000).as_str(),
+    ] {
         h.change(&uri, 2, text);
         h.advance(DEBOUNCE_MS);
         h.published();
         for (line, character) in [(0, 0), (0, 1), (0, 3), (1, 1), (99, 99)] {
-            let _ = h.request("textDocument/hover", at(&uri, line, character)).unwrap();
-            let _ = h.request("textDocument/definition", at(&uri, line, character)).unwrap();
-            let _ = h.request("textDocument/completion", at(&uri, line, character)).unwrap();
+            let _ = h
+                .request("textDocument/hover", at(&uri, line, character))
+                .unwrap();
+            let _ = h
+                .request("textDocument/definition", at(&uri, line, character))
+                .unwrap();
+            let _ = h
+                .request("textDocument/completion", at(&uri, line, character))
+                .unwrap();
         }
     }
     assert_eq!(h.server.exit_code(), None);

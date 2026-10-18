@@ -26,17 +26,17 @@ use std::sync::Arc;
 use lsp_types::CompletionItemKind;
 use mtek_compiler::resolve::gate::is_implemented;
 use mtek_compiler::resolve::{Def, DefId, DefKind, PreludeItem, Res};
+use mtek_compiler::source::{FileId, ProjectPath};
 use mtek_compiler::stdlib::{
     FieldDef, IntrinsicDef, NamespaceMember, SchemaCategory, TypeKind, registry,
 };
 use mtek_compiler::syntax::{NodeInfo, TokenKind, TriviaKind, lex_str};
-use mtek_compiler::types::ty::Ty;
 use mtek_compiler::types::TyId;
-use mtek_compiler::source::{FileId, ProjectPath};
+use mtek_compiler::types::ty::Ty;
 
 use super::analysis::{ModuleView, Nodes, Snapshot};
-use super::overlay::Buffers;
 use super::hover::decl_signature;
+use super::overlay::Buffers;
 use super::semantic::{Referent, follow_import, material_info, text};
 
 /// The identifier put at the cursor when no name is being typed there.
@@ -100,7 +100,11 @@ pub fn prepare(text: &str, offset: u32) -> Option<Prepared> {
                 });
             }
             TokenKind::String => {
-                if offset < end || !text.get(start as usize..end as usize).is_some_and(|t| t.len() >= 2 && t.ends_with('"')) {
+                if offset < end
+                    || !text
+                        .get(start as usize..end as usize)
+                        .is_some_and(|t| t.len() >= 2 && t.ends_with('"'))
+                {
                     return None;
                 }
             }
@@ -124,6 +128,7 @@ fn clamp_to_boundary(text: &str, offset: u32) -> u32 {
     u32::try_from(offset).unwrap_or(u32::MAX)
 }
 
+#[cfg(test)]
 /// The completion at the byte offset `offset` of `text`, the buffer of the module `path` of the
 /// project in `dir` (`buffers` are all the open buffers, `text` among them). `current` is the
 /// snapshot of exactly these buffers, if the caller has it: it is used when the text needs no
@@ -155,10 +160,7 @@ pub fn complete_prepared(
         (None, Some(current)) => current,
         (patched, _) => {
             let mut buffers = buffers.clone();
-            buffers.insert(
-                path.clone(),
-                Arc::from(patched.as_deref().unwrap_or(text)),
-            );
+            buffers.insert(path.clone(), Arc::from(patched.as_deref().unwrap_or(text)));
             fresh = Snapshot::run(dir, &buffers, false);
             &fresh
         }
@@ -218,13 +220,21 @@ impl Candidate {
 #[derive(Clone, Debug)]
 enum Context {
     /// After `base.`.
-    Member { base: NodeInfo },
+    Member {
+        base: NodeInfo,
+    },
     /// A field name in the body or descriptor `owner`.
-    FieldName { owner: NodeInfo },
+    FieldName {
+        owner: NodeInfo,
+    },
     /// A member of the body of `owner`, or a module item (`owner` is the module node).
-    MemberStart { owner: NodeInfo },
+    MemberStart {
+        owner: NodeInfo,
+    },
     /// A value.
-    Expression { statement_start: bool },
+    Expression {
+        statement_start: bool,
+    },
     Type,
     Event,
     Prefab,
@@ -238,7 +248,7 @@ pub fn candidates(snapshot: &Snapshot, view: &ModuleView<'_>, anchor: u32) -> Ve
     let mut out = match context(&nodes, anchor) {
         Context::Member { base } => member_candidates(snapshot, view, &nodes, base),
         Context::FieldName { owner } => field_candidates(snapshot, view, &nodes, owner, anchor),
-        Context::MemberStart { owner } => member_start_candidates(view, &nodes, owner, anchor),
+        Context::MemberStart { owner } => member_start_candidates(view, owner, anchor),
         Context::Expression { statement_start } => {
             expression_candidates(snapshot, view, &nodes, anchor, statement_start)
         }
@@ -247,11 +257,11 @@ pub fn candidates(snapshot: &Snapshot, view: &ModuleView<'_>, anchor: u32) -> Ve
             .events
             .iter()
             .filter(|event| is_implemented(event.since))
-            .map(|event| {
-                Candidate::new(event.name, CompletionItemKind::EVENT, 1).doc(event.doc)
-            })
+            .map(|event| Candidate::new(event.name, CompletionItemKind::EVENT, 1).doc(event.doc))
             .collect(),
-        Context::Prefab => defs_of_kind(snapshot, view, &nodes, anchor, |kind| kind == DefKind::Prefab),
+        Context::Prefab => defs_of_kind(snapshot, view, &nodes, anchor, |kind| {
+            kind == DefKind::Prefab
+        }),
         Context::Nothing => Vec::new(),
     };
     out.sort_by(|a, b| (a.group, &a.label).cmp(&(b.group, &b.label)));
@@ -267,14 +277,18 @@ fn context(nodes: &Nodes, anchor: u32) -> Context {
     if let Some(name) = name
         && let Some(parent) = nodes.parent(name.id)
     {
-        let index = nodes.children(parent.id).position(|child| child.id == name.id);
+        let index = nodes
+            .children(parent.id)
+            .position(|child| child.id == name.id);
         return match (parent.kind, index) {
             ("field-access", Some(1)) => match nodes.child(parent.id, 0) {
                 Some(base) => Context::Member { base },
                 None => Context::Nothing,
             },
             ("type", _) => Context::Type,
-            ("desc", Some(0)) => Context::Expression { statement_start: false },
+            ("desc", Some(0)) => Context::Expression {
+                statement_start: false,
+            },
             ("field", Some(0)) => nodes
                 .parent(parent.id)
                 .map_or(Context::Nothing, |owner| Context::FieldName { owner }),
@@ -291,8 +305,12 @@ fn context(nodes: &Nodes, anchor: u32) -> Context {
             ("object", Some(0)) => nodes
                 .parent(parent.id)
                 .map_or(Context::Nothing, |owner| Context::MemberStart { owner }),
-            ("expr-stmt", _) => Context::Expression { statement_start: true },
-            _ if name.kind == "name" => Context::Expression { statement_start: false },
+            ("expr-stmt", _) => Context::Expression {
+                statement_start: true,
+            },
+            _ if name.kind == "name" => Context::Expression {
+                statement_start: false,
+            },
             _ => Context::Nothing,
         };
     }
@@ -310,7 +328,9 @@ fn context(nodes: &Nodes, anchor: u32) -> Context {
     match owner {
         Some(owner) => match owner.kind {
             "desc" | "object" => Context::FieldName { owner },
-            "block" => Context::Expression { statement_start: true },
+            "block" => Context::Expression {
+                statement_start: true,
+            },
             _ => Context::MemberStart { owner },
         },
         None => Context::Nothing,
@@ -336,7 +356,9 @@ fn member_candidates(
                 Some(DefKind::Entity) => {
                     return entity_members(view, def, registry.declaration_schemas.entity);
                 }
-                Some(DefKind::SceneObject { kind: Some(keyword) }) => {
+                Some(DefKind::SceneObject {
+                    kind: Some(keyword),
+                }) => {
                     if let Some(kind) = registry.scene_object(keyword) {
                         return schema_fields(kind.schema, &[], 1);
                     }
@@ -356,7 +378,10 @@ fn member_candidates(
         && let (Some(owner), Some(member)) = (nodes.child(base.id, 0), nodes.child(base.id, 1))
         && matches!(owner.kind, "name" | "self")
         && let Some(Res::Def(entity)) = view.res.res(owner.id)
-        && view.res.def(entity).is_some_and(|d| d.kind == DefKind::Entity)
+        && view
+            .res
+            .def(entity)
+            .is_some_and(|d| d.kind == DefKind::Entity)
     {
         match text(view, member.span) {
             Some("material") => {
@@ -475,16 +500,28 @@ fn type_members(snapshot: &Snapshot, view: &ModuleView<'_>, ty: TyId) -> Vec<Can
         return Vec::new();
     };
     let component = |name: &str, of: &str| {
-        Candidate::new(name, CompletionItemKind::FIELD, 0).detail(format!("{name}: f32 (a component of {of})"))
+        Candidate::new(name, CompletionItemKind::FIELD, 0)
+            .detail(format!("{name}: f32 (a component of {of})"))
     };
     match types.interner().get(ty) {
         Ty::Vec2 => ["x", "y"].iter().map(|n| component(n, "vec2")).collect(),
-        Ty::Vec3 => ["x", "y", "z"].iter().map(|n| component(n, "vec3")).collect(),
-        Ty::Vec4 => ["x", "y", "z", "w"].iter().map(|n| component(n, "vec4")).collect(),
-        Ty::Quat => ["x", "y", "z", "w"].iter().map(|n| component(n, "quat")).collect(),
+        Ty::Vec3 => ["x", "y", "z"]
+            .iter()
+            .map(|n| component(n, "vec3"))
+            .collect(),
+        Ty::Vec4 => ["x", "y", "z", "w"]
+            .iter()
+            .map(|n| component(n, "vec4"))
+            .collect(),
+        Ty::Quat => ["x", "y", "z", "w"]
+            .iter()
+            .map(|n| component(n, "quat"))
+            .collect(),
         Ty::Color => {
-            let mut out: Vec<Candidate> =
-                ["r", "g", "b", "a"].iter().map(|n| component(n, "color")).collect();
+            let mut out: Vec<Candidate> = ["r", "g", "b", "a"]
+                .iter()
+                .map(|n| component(n, "color"))
+                .collect();
             out.push(
                 Candidate::new("rgb", CompletionItemKind::FIELD, 0)
                     .detail("rgb: vec3 (the colour channels)"),
@@ -514,7 +551,9 @@ fn type_members(snapshot: &Snapshot, view: &ModuleView<'_>, ty: TyId) -> Vec<Can
                 info.params
                     .iter()
                     .map(|param| {
-                        let ty = module.types.map_or_else(String::new, |t| t.display(param.ty));
+                        let ty = module
+                            .types
+                            .map_or_else(String::new, |t| t.display(param.ty));
                         Candidate::new(param.name.clone(), CompletionItemKind::PROPERTY, 0)
                             .detail(format!("param {}: {ty}", param.name))
                     })
@@ -528,8 +567,11 @@ fn type_members(snapshot: &Snapshot, view: &ModuleView<'_>, ty: TyId) -> Vec<Can
                 def.fields
                     .iter()
                     .map(|f| {
-                        Candidate::new(f.name, CompletionItemKind::FIELD, 0)
-                            .detail(format!("{}: {}", f.name, f.ty.spelling()))
+                        Candidate::new(f.name, CompletionItemKind::FIELD, 0).detail(format!(
+                            "{}: {}",
+                            f.name,
+                            f.ty.spelling()
+                        ))
                     })
                     .collect()
             })
@@ -707,7 +749,9 @@ fn declared_fields(
     }
 }
 
-const STATEMENT_KEYWORDS: &[&str] = &["let", "var", "const", "if", "for", "return", "break", "continue"];
+const STATEMENT_KEYWORDS: &[&str] = &[
+    "let", "var", "const", "if", "for", "return", "break", "continue",
+];
 const LIFECYCLE_KEYWORDS: &[&str] = &["update", "fixed_update"];
 
 fn keywords(words: &[&str]) -> Vec<Candidate> {
@@ -717,16 +761,13 @@ fn keywords(words: &[&str]) -> Vec<Candidate> {
         .collect()
 }
 
-fn member_start_candidates(
-    view: &ModuleView<'_>,
-    nodes: &Nodes,
-    owner: NodeInfo,
-    anchor: u32,
-) -> Vec<Candidate> {
+fn member_start_candidates(view: &ModuleView<'_>, owner: NodeInfo, anchor: u32) -> Vec<Candidate> {
     let registry = registry();
     let written = written_fields(view, owner, anchor);
     match owner.kind {
-        "module" => keywords(&["import", "export", "const", "fn", "cpu", "struct", "material", "prefab", "scene"]),
+        "module" => keywords(&[
+            "import", "export", "const", "fn", "cpu", "struct", "material", "prefab", "scene",
+        ]),
         "scene" => {
             let mut out = schema_fields(registry.declaration_schemas.scene, &written, 0);
             out.extend(
@@ -809,7 +850,10 @@ fn def_candidate(snapshot: &Snapshot, view: &ModuleView<'_>, def: &Def) -> Candi
     // An imported name is what it imports.
     let (target_view, target_def): (Option<ModuleView<'_>>, Option<&Def>) =
         match follow_import(snapshot, view, def.id) {
-            Referent::Decl { module, def: target } => {
+            Referent::Decl {
+                module,
+                def: target,
+            } => {
                 let target_view = snapshot.module(module);
                 let target_def = target_view.as_ref().and_then(|v| v.res.def(target));
                 (target_view, target_def)
@@ -849,7 +893,10 @@ fn defs_of_kind(
         .into_iter()
         .filter(|def| {
             let kind = match follow_import(snapshot, view, def.id) {
-                Referent::Decl { module, def: target } => snapshot
+                Referent::Decl {
+                    module,
+                    def: target,
+                } => snapshot
                     .module(module)
                     .and_then(|v| v.res.def(target).map(|d| d.kind)),
                 _ => None,
@@ -905,7 +952,9 @@ fn expression_candidates(
         registry
             .types
             .iter()
-            .filter(|t| is_implemented(t.since) && matches!(t.kind, TypeKind::Scalar | TypeKind::Vector))
+            .filter(|t| {
+                is_implemented(t.since) && matches!(t.kind, TypeKind::Scalar | TypeKind::Vector)
+            })
             .map(|t| {
                 Candidate::new(t.name, CompletionItemKind::CONSTRUCTOR, 3)
                     .detail(format!("{}(..)", t.name))
@@ -940,9 +989,15 @@ fn type_candidates(
         .types
         .iter()
         .filter(|t| is_implemented(t.since))
-        .map(|t| Candidate::new(t.name, CompletionItemKind::CLASS, 3).detail(format!("type {}", t.name)).doc(t.doc))
+        .map(|t| {
+            Candidate::new(t.name, CompletionItemKind::CLASS, 3)
+                .detail(format!("type {}", t.name))
+                .doc(t.doc)
+        })
         .collect();
-    out.extend(defs_of_kind(snapshot, view, nodes, anchor, |kind| kind == DefKind::Struct));
+    out.extend(defs_of_kind(snapshot, view, nodes, anchor, |kind| {
+        kind == DefKind::Struct
+    }));
     out
 }
 

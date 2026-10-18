@@ -46,7 +46,9 @@ pub enum Inbound {
     },
     /// The stream ended or its framing is damaged beyond repair; `reason` is `None` for a clean
     /// end of input.
-    Closed { reason: Option<String> },
+    Closed {
+        reason: Option<String>,
+    },
 }
 
 /// Why a frame could not be read.
@@ -71,7 +73,9 @@ impl std::fmt::Display for FrameError {
         match self {
             FrameError::BadHeader(line) => write!(f, "malformed header line {line:?}"),
             FrameError::NoLength => f.write_str("a frame without a Content-Length header"),
-            FrameError::BadLength(value) => write!(f, "the Content-Length {value:?} is not a number"),
+            FrameError::BadLength(value) => {
+                write!(f, "the Content-Length {value:?} is not a number")
+            }
             FrameError::TooLarge(size) => write!(
                 f,
                 "a frame of {size} bytes is larger than the limit of {MAX_BODY_BYTES} bytes"
@@ -123,7 +127,9 @@ pub fn read_frame(input: &mut impl BufRead) -> Result<Option<Vec<u8>>, FrameErro
             length = Some(parsed);
         }
     }
-    Err(FrameError::BadHeader("more header lines than allowed".to_owned()))
+    Err(FrameError::BadHeader(
+        "more header lines than allowed".to_owned(),
+    ))
 }
 
 /// One header line without its `\r\n` (or `\n`); `None` at the end of input.
@@ -347,9 +353,15 @@ mod tests {
         assert_eq!(read(b""), Ok(None));
         assert_eq!(read(b"\r\n{}"), Err(FrameError::NoLength));
         assert_eq!(read(b"Content-Length: 5\r\n"), Err(FrameError::Truncated));
-        assert_eq!(read(b"Content-Length: 5\r\n\r\nab"), Err(FrameError::Truncated));
+        assert_eq!(
+            read(b"Content-Length: 5\r\n\r\nab"),
+            Err(FrameError::Truncated)
+        );
         assert_eq!(read(b"Content-Len"), Err(FrameError::Truncated));
-        assert!(matches!(read(b"garbage\r\n\r\n"), Err(FrameError::BadHeader(_))));
+        assert!(matches!(
+            read(b"garbage\r\n\r\n"),
+            Err(FrameError::BadHeader(_))
+        ));
         assert!(matches!(
             read(b"Content-Length: abc\r\n\r\n"),
             Err(FrameError::BadLength(_))
@@ -367,7 +379,10 @@ mod tests {
             Err(FrameError::BadHeader(_))
         ));
         let many = "X: 1\r\n".repeat(MAX_HEADER_LINES + 5);
-        assert!(matches!(read(many.as_bytes()), Err(FrameError::BadHeader(_))));
+        assert!(matches!(
+            read(many.as_bytes()),
+            Err(FrameError::BadHeader(_))
+        ));
         assert!(matches!(
             read(b"\xff\xfe: 1\r\n\r\n"),
             Err(FrameError::BadHeader(_))
@@ -447,7 +462,10 @@ mod tests {
         assert!(matches!(&all[2], Inbound::Notification(n) if n.method == "exit"));
 
         let (sender, receiver) = std::sync::mpsc::channel();
-        pump(Cursor::new(b"Content-Length: 3\r\n\r\nab".to_vec()), &sender);
+        pump(
+            Cursor::new(b"Content-Length: 3\r\n\r\nab".to_vec()),
+            &sender,
+        );
         assert!(matches!(
             receiver.try_iter().last(),
             Some(Inbound::Closed { reason: Some(_) })
@@ -473,7 +491,13 @@ mod tests {
         assert_eq!(value["jsonrpc"], "2.0");
 
         let mut out = Vec::new();
-        write_rejection(&mut out, Some(&RequestId::from(9)), ErrorCode::InvalidRequest, "no").unwrap();
+        write_rejection(
+            &mut out,
+            Some(&RequestId::from(9)),
+            ErrorCode::InvalidRequest,
+            "no",
+        )
+        .unwrap();
         let text = String::from_utf8(out).unwrap();
         let (_, json) = text.split_once("\r\n\r\n").unwrap();
         let value: Value = serde_json::from_str(json).unwrap();

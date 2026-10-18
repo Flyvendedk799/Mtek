@@ -309,7 +309,8 @@ impl Server {
             },
             Err(failure) => Response::new_err(id, failure.code as i32, failure.message),
         };
-        self.out.push(Outbound::Message(Message::Response(response)));
+        self.out
+            .push(Outbound::Message(Message::Response(response)));
     }
 
     fn request(&mut self, method: &str, params: Value) -> Answer {
@@ -362,7 +363,10 @@ impl Server {
             }),
         };
         let mut value = serde_json::to_value(result).map_err(|error| {
-            Failure::new(ErrorCode::InternalError, format!("cannot describe the server: {error}"))
+            Failure::new(
+                ErrorCode::InternalError,
+                format!("cannot describe the server: {error}"),
+            )
         })?;
         // The standard-library documents (LSP 3.18 `workspace/textDocumentContent`), which
         // `lsp-types` does not describe.
@@ -462,7 +466,8 @@ impl Server {
 
     fn definition(&mut self, params: GotoDefinitionParams) -> Answer {
         let position = params.text_document_position_params;
-        let Some((snapshot, path, dir)) = self.module_for(position.text_document.uri.as_str(), false)
+        let Some((snapshot, path, dir)) =
+            self.module_for(position.text_document.uri.as_str(), false)
         else {
             return Ok(Value::Null);
         };
@@ -487,14 +492,16 @@ impl Server {
                     range: Range::default(),
                 })
             }),
-            Target::Prelude(location) => prelude_doc::document(location.path).and_then(|document| {
-                Some(Location {
-                    uri: Uri::from_str(&uri::prelude_uri(location.path)).ok()?,
-                    range: self
-                        .encoding
-                        .range(&document.lines, location.start, location.end),
+            Target::Prelude(location) => {
+                prelude_doc::document(location.path).and_then(|document| {
+                    Some(Location {
+                        uri: Uri::from_str(&uri::prelude_uri(location.path)).ok()?,
+                        range: self
+                            .encoding
+                            .range(&document.lines, location.start, location.end),
+                    })
                 })
-            }),
+            }
         };
         match location {
             Some(location) => to_value(&GotoDefinitionResponse::Scalar(location)),
@@ -664,10 +671,17 @@ impl Server {
         }
         let id = self.next_request_id;
         self.next_request_id += 1;
-        let watchers: Vec<Value> = ["**/*.mtek", "**/mtek.toml", "**/*.glb", "**/*.png", "**/*.jpg", "**/*.jpeg"]
-            .iter()
-            .map(|glob| json!({ "globPattern": glob }))
-            .collect();
+        let watchers: Vec<Value> = [
+            "**/*.mtek",
+            "**/mtek.toml",
+            "**/*.glb",
+            "**/*.png",
+            "**/*.jpg",
+            "**/*.jpeg",
+        ]
+        .iter()
+        .map(|glob| json!({ "globPattern": glob }))
+        .collect();
         self.out.push(Outbound::Message(Message::Request(Request {
             id: RequestId::from(id),
             method: "client/registerCapability".to_owned(),
@@ -858,8 +872,8 @@ impl Server {
         if self.projects.contains_key(dir) {
             return;
         }
-        let prefix = uri::project_dir_uri(doc.uri.as_str(), path)
-            .unwrap_or_else(|| uri::file_uri(dir));
+        let prefix =
+            uri::project_dir_uri(doc.uri.as_str(), path).unwrap_or_else(|| uri::file_uri(dir));
         self.projects.insert(
             dir.clone(),
             ProjectState {
@@ -916,7 +930,11 @@ impl Server {
 
     /// The snapshot of the project of the document `key`, with its path in the project and the
     /// project's directory, if the document is a file of a project.
-    fn module_for(&mut self, key: &str, full: bool) -> Option<(Rc<Snapshot>, ProjectPath, PathBuf)> {
+    fn module_for(
+        &mut self,
+        key: &str,
+        full: bool,
+    ) -> Option<(Rc<Snapshot>, ProjectPath, PathBuf)> {
         let doc = self.docs.get(key)?;
         let Home::Project { dir, path } = doc.home.clone() else {
             return None;
@@ -1017,8 +1035,7 @@ impl Server {
                 {
                     let (sources, report) = convert::syntax_report(&doc.text);
                     let loose = ProjectPath::new(convert::LOOSE_PATH).ok()?;
-                    let by_file =
-                        convert::convert(&report, &sources, self.encoding, &uris, &loose);
+                    let by_file = convert::convert(&report, &sources, self.encoding, &uris, &loose);
                     Some((path.clone(), by_file.into_values().flatten().collect()))
                 }
                 _ => None,
@@ -1111,10 +1128,11 @@ impl Server {
             diagnostics,
             version,
         };
-        self.out.push(Outbound::Message(Message::Notification(Notification::new(
-            "textDocument/publishDiagnostics".to_owned(),
-            params,
-        ))));
+        self.out
+            .push(Outbound::Message(Message::Notification(Notification::new(
+                "textDocument/publishDiagnostics".to_owned(),
+                params,
+            ))));
     }
 
     /// A handler panicked: drop everything computed (it is recomputed from the buffers, which
@@ -1179,7 +1197,10 @@ fn home_of_file(path: &Path) -> Home {
             let Ok(relative) = path.strip_prefix(dir) else {
                 return Home::Loose;
             };
-            let parts: Option<Vec<&str>> = relative.components().map(|c| c.as_os_str().to_str()).collect();
+            let parts: Option<Vec<&str>> = relative
+                .components()
+                .map(|c| c.as_os_str().to_str())
+                .collect();
             let Some(parts) = parts else {
                 return Home::Loose;
             };
@@ -1224,7 +1245,11 @@ fn completion_item(candidate: Candidate, replace: Range) -> CompletionItem {
 }
 
 /// Apply one change event to the text of a document: the whole text, or a range.
-fn apply_change(text: &mut String, encoding: PositionEncoding, change: &TextDocumentContentChangeEvent) {
+fn apply_change(
+    text: &mut String,
+    encoding: PositionEncoding,
+    change: &TextDocumentContentChangeEvent,
+) {
     match change.range {
         None => text.clone_from(&change.text),
         Some(range) => {

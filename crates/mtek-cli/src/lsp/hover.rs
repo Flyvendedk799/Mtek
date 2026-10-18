@@ -39,7 +39,14 @@ fn expression_hover(view: &ModuleView<'_>, nodes: &Nodes, offset: u32) -> Option
         .filter(|info| {
             matches!(
                 info.kind,
-                "lit" | "call" | "binary" | "unary" | "paren" | "index" | "array" | "desc"
+                "lit"
+                    | "call"
+                    | "binary"
+                    | "unary"
+                    | "paren"
+                    | "index"
+                    | "array"
+                    | "desc"
                     | "field-access"
             ) && info.span.start <= offset
                 && offset < info.span.end

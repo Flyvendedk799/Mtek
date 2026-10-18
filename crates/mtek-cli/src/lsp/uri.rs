@@ -80,7 +80,11 @@ fn encode_path_keeping_escapes(path: &str) -> String {
         let escape = byte == b'%'
             && bytes.get(i + 1).copied().and_then(hex).is_some()
             && bytes.get(i + 2).copied().and_then(hex).is_some();
-        if escape || byte == b'/' || byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.' | b'_' | b'~') {
+        if escape
+            || byte == b'/'
+            || byte.is_ascii_alphanumeric()
+            || matches!(byte, b'-' | b'.' | b'_' | b'~')
+        {
             out.push(char::from(byte));
         } else {
             out.push_str(&format!("%{byte:02X}"));
@@ -97,7 +101,11 @@ pub fn join_uri(prefix: &str, path: &ProjectPath) -> String {
     if path.is_root() {
         return prefix.to_owned();
     }
-    format!("{}/{}", prefix.trim_end_matches('/'), encode_path(path.as_str()))
+    format!(
+        "{}/{}",
+        prefix.trim_end_matches('/'),
+        encode_path(path.as_str())
+    )
 }
 
 /// The URI of the project directory, derived from the URI `file_uri` of a file that is `path`
@@ -300,15 +308,24 @@ mod tests {
         let dir = project_dir_uri(file, &p("src/main.mtek")).unwrap();
         assert_eq!(dir, "file:///c%3A/Users/T%20x/proj");
         assert_eq!(join_uri(&dir, &p("src/main.mtek")), file);
-        assert_eq!(join_uri(&dir, &p("src/ü.mtek")), format!("{dir}/src/%C3%BC.mtek"));
+        assert_eq!(
+            join_uri(&dir, &p("src/ü.mtek")),
+            format!("{dir}/src/%C3%BC.mtek")
+        );
         // The client's spelling of the prefix is kept; the segments are compared decoded.
         assert_eq!(
             project_dir_uri("file:///p/src/a%2Dz.mtek", &p("src/a-z.mtek")).as_deref(),
             Some("file:///p")
         );
         // A file that is not below the claimed relative path has no directory.
-        assert_eq!(project_dir_uri("file:///p/src/main.mtek", &p("lib/main.mtek")), None);
-        assert_eq!(project_dir_uri("file:///main.mtek", &p("src/main.mtek")), None);
+        assert_eq!(
+            project_dir_uri("file:///p/src/main.mtek", &p("lib/main.mtek")),
+            None
+        );
+        assert_eq!(
+            project_dir_uri("file:///main.mtek", &p("src/main.mtek")),
+            None
+        );
         assert_eq!(join_uri("file:///p/", &ProjectPath::root()), "file:///p/");
     }
 

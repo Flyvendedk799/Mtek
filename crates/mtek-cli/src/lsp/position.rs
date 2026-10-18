@@ -33,7 +33,11 @@ impl PositionEncoding {
     #[must_use]
     pub fn negotiate(offered: Option<&[String]>) -> Self {
         match offered {
-            Some(list) if list.iter().any(|name| name == PositionEncodingKind::UTF8.as_str()) => {
+            Some(list)
+                if list
+                    .iter()
+                    .any(|name| name == PositionEncodingKind::UTF8.as_str()) =>
+            {
                 Self::Utf8
             }
             _ => Self::Utf16,
@@ -62,7 +66,9 @@ impl PositionEncoding {
                 Position { line, character }
             }
             Self::Utf8 => {
-                let origin = lines.line_range(line_col.line).map_or(0, |range| range.start);
+                let origin = lines
+                    .line_range(line_col.line)
+                    .map_or(0, |range| range.start);
                 Position {
                     line: line_col.line.saturating_sub(1),
                     character: clamped.saturating_sub(origin),

@@ -4,7 +4,9 @@
 //! server started. The real clock is [`SystemClock`]; tests use [`ManualClock`], which only
 //! moves when told to, so that the debounce is tested without sleeping.
 
+#[cfg(test)]
 use std::cell::Cell;
+#[cfg(test)]
 use std::rc::Rc;
 use std::time::Instant;
 
@@ -36,11 +38,13 @@ impl Clock for SystemClock {
 
 /// A clock that moves only through [`ManualClock::advance`] and [`ManualClock::set`]. Clones
 /// share one time, so a test keeps a handle while the server owns another.
+#[cfg(test)]
 #[derive(Clone, Debug, Default)]
 pub struct ManualClock {
     now: Rc<Cell<u64>>,
 }
 
+#[cfg(test)]
 impl ManualClock {
     pub fn new() -> Self {
         Self::default()
@@ -57,6 +61,7 @@ impl ManualClock {
     }
 }
 
+#[cfg(test)]
 impl Clock for ManualClock {
     fn now_ms(&self) -> u64 {
         self.now.get()

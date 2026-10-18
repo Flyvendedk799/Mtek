@@ -19,7 +19,7 @@ use mtek_compiler::source::Span;
 use mtek_compiler::stdlib::registry;
 use mtek_compiler::syntax::NodeInfo;
 use mtek_compiler::types::ty::{MaterialKey, Ty};
-use mtek_compiler::types::{CallKind, FieldKind, MaterialInfo, TyId};
+use mtek_compiler::types::{CallKind, FieldKind, MaterialInfo};
 
 use super::analysis::{ModuleView, Nodes, Snapshot};
 use super::prelude_doc::RefKey;
@@ -150,8 +150,7 @@ fn field_referent(
                     _ => None,
                 },
                 Res::Def(def) => {
-                    let Referent::Decl { module, def } = follow_import(snapshot, view, def)
-                    else {
+                    let Referent::Decl { module, def } = follow_import(snapshot, view, def) else {
                         return None;
                     };
                     declared_member(snapshot, module, def, name)
@@ -172,7 +171,10 @@ fn field_referent(
 fn schema_field(view: &ModuleView<'_>, schema: &str, info: NodeInfo) -> Option<Referent> {
     let field = registry().schema_field(schema, text(view, info.span)?)?;
     let schema = registry().schema(schema)?;
-    Some(Referent::Prelude(RefKey::SchemaField(schema.name, field.name)))
+    Some(Referent::Prelude(RefKey::SchemaField(
+        schema.name,
+        field.name,
+    )))
 }
 
 /// The referent of the name after the dot of the access `access`.
@@ -216,13 +218,16 @@ fn access_referent(
             let object = view.res.def((*object_def)?)?;
             let schema = match object.kind {
                 DefKind::Entity => registry().declaration_schemas.entity,
-                DefKind::SceneObject { kind: Some(keyword) } => {
-                    registry().scene_object(keyword)?.schema
-                }
+                DefKind::SceneObject {
+                    kind: Some(keyword),
+                } => registry().scene_object(keyword)?.schema,
                 _ => return None,
             };
             let field = registry().schema_field(schema, field)?;
-            Some(Referent::Prelude(RefKey::SchemaField(schema_name(schema)?, field.name)))
+            Some(Referent::Prelude(RefKey::SchemaField(
+                schema_name(schema)?,
+                field.name,
+            )))
         }
         FieldKind::EntityState {
             state: Some(state), ..
@@ -249,7 +254,10 @@ fn access_referent(
                 }
                 Ty::Schema(schema) => {
                     let field = registry().schema_field(schema, param)?;
-                    Some(Referent::Prelude(RefKey::SchemaField(schema_name(schema)?, field.name)))
+                    Some(Referent::Prelude(RefKey::SchemaField(
+                        schema_name(schema)?,
+                        field.name,
+                    )))
                 }
                 _ => None,
             }
@@ -257,7 +265,10 @@ fn access_referent(
         FieldKind::LightField { entity, field } => {
             let schema = types.entity_light(*entity)?;
             let field = registry().schema_field(schema, field)?;
-            Some(Referent::Prelude(RefKey::SchemaField(schema_name(schema)?, field.name)))
+            Some(Referent::Prelude(RefKey::SchemaField(
+                schema_name(schema)?,
+                field.name,
+            )))
         }
         FieldKind::StructField(field) => {
             let Some(Ty::Struct(key)) = base_ty else {

@@ -53,7 +53,11 @@ impl Snapshot {
                 self.analysis.types.as_ref(),
             )
         } else {
-            let unit = self.analysis.dependencies.iter().find(|unit| unit.id == id)?;
+            let unit = self
+                .analysis
+                .dependencies
+                .iter()
+                .find(|unit| unit.id == id)?;
             (&unit.module, &unit.resolution, Some(&unit.types))
         };
         Some(ModuleView {
@@ -81,11 +85,6 @@ impl Snapshot {
             .iter()
             .find(|module| module.file() == file)?;
         self.module(module.id())
-    }
-
-    /// The text of the project file `file`.
-    pub fn source(&self, file: FileId) -> Option<&SourceFile> {
-        self.analysis.project.as_ref()?.sources.get(file)
     }
 }
 
@@ -212,7 +211,9 @@ impl Nodes {
     pub fn innermost(&self, offset: u32, kind: &str) -> Option<NodeInfo> {
         self.infos
             .iter()
-            .filter(|info| info.kind == kind && info.span.start <= offset && offset <= info.span.end)
+            .filter(|info| {
+                info.kind == kind && info.span.start <= offset && offset <= info.span.end
+            })
             .min_by_key(|info| info.span.len())
             .copied()
     }
@@ -220,8 +221,8 @@ impl Nodes {
 
 #[cfg(test)]
 mod tests {
-    use mtek_compiler::syntax::{lex_str, parse_module};
     use mtek_compiler::diagnostics::Diagnostics;
+    use mtek_compiler::syntax::{lex_str, parse_module};
 
     use super::*;
 
@@ -247,7 +248,15 @@ mod tests {
         let ancestors: Vec<&str> = nodes.ancestors(name.id).map(|n| n.kind).collect();
         assert_eq!(
             ancestors,
-            ["field-access", "binary", "return", "block", "fn", "item", "module"]
+            [
+                "field-access",
+                "binary",
+                "return",
+                "block",
+                "fn",
+                "item",
+                "module"
+            ]
         );
         assert_eq!(nodes.child(access.id, 1).unwrap().kind, "ident");
         assert!(nodes.child(access.id, 2).is_none());
@@ -277,7 +286,10 @@ mod tests {
         let text = "fn f() { if true { let a = 1; } }";
         let inside = u32::try_from(text.find("let").unwrap()).unwrap();
         let block = nodes.innermost(inside, "block").unwrap();
-        assert!(block.span.start > 8, "the inner block, not the function body");
+        assert!(
+            block.span.start > 8,
+            "the inner block, not the function body"
+        );
         assert!(nodes.innermost(inside, "scene").is_none());
     }
 
