@@ -1,0 +1,17 @@
+{
+  "baselineSource": "starter",
+  "command": "MTEK_BASELINE_SOURCE=starter MTEK_REQUIRE_GPU=1 npm run test:benchmarks -- scene-rendering-11",
+  "counts": {
+    "passed": 0,
+    "failed": 1
+  },
+  "tests": [
+    {
+      "title": "scene-rendering-11 (starter baseline): a textured floor: a picture shown exactly, tiled, and smoothed",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 455,
+      "firstErrorLine": "Error: a textured floor: a picture shown exactly, tiled, and smoothed, step 2 (expect_pixel): pixel (17, 19) is rgb(0, 0, 0), expected #bc4020 within 2"
+    }
+  ]
+}

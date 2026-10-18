@@ -46,10 +46,19 @@ export interface TaskApp {
 }
 
 /**
- * Builds the application and exposes it to the test as `window.mtekTask`. On failure it sets
- * `window.mtekTaskError` instead, so the test can report the reason.
+ * What `startTask` takes: a function that builds the application. It may be asynchronous, so that the application can load
+ * its images (`loadTexture`) before it creates the scene, which is the baseline counterpart of Mtek resolving `mountMtek`
+ * only when every asset of the startup scene is ready (`spec/assets.md` section 5). A function that returns the app directly,
+ * as every task before the textured one does, works unchanged.
  */
-export async function startTask(build: (host: TaskHost) => TaskApp): Promise<void> {
+export type BuildTaskApp = (host: TaskHost) => TaskApp | Promise<TaskApp>;
+
+/**
+ * Builds the application (waiting for the promise `build` returns, if it returns one) and exposes it to the test as
+ * `window.mtekTask`. On failure, also of the asynchronous build, it sets `window.mtekTaskError` instead, so the test can report
+ * the reason.
+ */
+export async function startTask(build: BuildTaskApp): Promise<void> {
   try {
     window.mtekTask = await createHooks(build);
   } catch (error) {
@@ -57,12 +66,12 @@ export async function startTask(build: (host: TaskHost) => TaskApp): Promise<voi
   }
 }
 
-async function createHooks(build: (host: TaskHost) => TaskApp): Promise<TaskHooks> {
+async function createHooks(build: BuildTaskApp): Promise<TaskHooks> {
   const clock = new FrameClock();
   const keyHandlers = new Map<string, Array<() => void>>();
   const keyUpHandlers = new Map<string, Array<() => void>>();
   const inputHandlers = new Map<string, (value: unknown) => void>();
-  const app = build({
+  const app = await build({
     onKeyDown(code, handler) {
       keyHandlers.set(code, [...(keyHandlers.get(code) ?? []), handler]);
     },

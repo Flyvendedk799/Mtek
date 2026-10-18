@@ -1,0 +1,20 @@
+id = "scene-rendering-11"
+category = "scene-rendering"
+mode = "cold"
+title = "Three floor squares showing a 4 x 4 picture: hard-edged, tiled and smoothed"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #1b2430.
+- One camera at (0, 11, 3) looking at the point (0, 0, 0), with a perspective projection (vertical field of view 0.72 radians, near plane 0.1, far plane 1000).
+- The project contains the image file assets/swatch.png (path relative to the project directory): a 4 x 4 pixel picture whose sixteen pixels all have different colours. Three flat squares, each 3.6 x 3.6 units, one-sided, facing up (+Y) and lying in the plane y = 0, show it. The squares are unlit: the colour seen at a point of a square is the picture's colour there and nothing else (no lights, no shading, no tone mapping). On every square the picture is upright and unmirrored when the floor is seen from above with the camera's side (+Z) at the bottom: the picture's top edge lies along the square's far edge (the edge with the smaller z) and its left edge along the edge with the smaller x.
+  - Plain, centred at (-2, 0, -2): the picture once, covering the whole square. The picture is magnified with hard edges: every point shows the colour of exactly one picture pixel, with no smoothing.
+  - Tiled, centred at (0, 0, 2): the picture repeated twice across and twice down (four copies in a 2 x 2 arrangement, each copy upright and unmirrored as described), also with hard edges.
+  - Smooth, centred at (2, 0, -2): the picture once, covering the whole square, magnified smoothly: between the centres of the picture's pixels the colour is the bilinear interpolation of the four nearest pixels, and outside the outermost pixel centres it is the colour of the outermost pixel (the picture does not wrap around).
+- The picture's colours are sRGB-encoded, like those of any ordinary PNG file: a hard-edged picture pixel #bc4020 appears on the screen as #bc4020, and the smoothing blends in linear light (the colours are decoded to linear values, blended, and encoded again), as the filtering of an sRGB image does on a GPU.
+The expected pixels were computed with an independent model of the scene (rays through the pixel centres, the picture's colours, bilinear filtering in linear light) and are checked with a tolerance of 2 per colour channel (3 on Smooth, because GPU filtering has limited precision)."""
+required_symbols = ["Demo.Plain", "Demo.Tiled", "Demo.Smooth"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

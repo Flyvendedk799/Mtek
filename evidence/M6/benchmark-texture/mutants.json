@@ -1,0 +1,242 @@
+{
+  "task": "scene-rendering-11",
+  "mutants": [
+    {
+      "id": "colour-space-linear",
+      "description": "the picture is declared/tagged as linear data instead of sRGB colour",
+      "expect": "fail",
+      "mtek": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "firstFailure": "{\"kind\":\"expect_pixel\",\"step\":2,\"line\":23,\"message\":\"pixel (17, 19) is #df8963, expected #bc4020 within 2 per channel; it differs by 73\",\"details\":[]}"
+      },
+      "baseline": {
+        "outcome": "fail",
+        "firstFailure": "pixel (17, 19) is rgb(223, 137, 99), expected #bc4020 within 2"
+      },
+      "asExpected": true
+    },
+    {
+      "id": "flipped-v",
+      "description": "the picture is upside down (v flipped)",
+      "expect": "fail",
+      "mtek": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "firstFailure": "{\"kind\":\"expect_pixel\",\"step\":2,\"line\":23,\"message\":\"pixel (17, 19) is #606060, expected #bc4020 within 2 per channel; it differs by 92\",\"details\":[]}"
+      },
+      "baseline": {
+        "outcome": "fail",
+        "firstFailure": "pixel (17, 19) is rgb(96, 96, 96), expected #bc4020 within 2"
+      },
+      "asExpected": true
+    },
+    {
+      "id": "mirrored-u",
+      "description": "the picture is mirrored left to right (u flipped)",
+      "expect": "fail",
+      "mtek": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "firstFailure": "{\"kind\":\"expect_pixel\",\"step\":2,\"line\":23,\"message\":\"pixel (17, 19) is #6060dc, expected #bc4020 within 2 per channel; it differs by 188\",\"details\":[]}"
+      },
+      "baseline": {
+        "outcome": "fail",
+        "firstFailure": "pixel (17, 19) is rgb(96, 96, 220), expected #bc4020 within 2"
+      },
+      "asExpected": true
+    },
+    {
+      "id": "transposed-or-rotated",
+      "description": "the texel order is wrong: u and v swapped (Mtek), the picture turned by 90 degrees (three.js; a transposition is a turn plus a flip)",
+      "expect": "fail",
+      "mtek": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "firstFailure": "{\"kind\":\"expect_pixel\",\"step\":3,\"line\":25,\"message\":\"pixel (30, 19) is #d02890, expected #e0a010 within 2 per channel; it differs by 128\",\"details\":[]}"
+      },
+      "baseline": {
+        "outcome": "fail",
+        "firstFailure": "pixel (17, 19) is rgb(96, 96, 220), expected #bc4020 within 2"
+      },
+      "asExpected": true
+    },
+    {
+      "id": "plain-linear",
+      "description": "Plain is smoothed (linear filtering) instead of hard-edged",
+      "expect": "fail",
+      "mtek": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "firstFailure": "{\"kind\":\"expect_pixel\",\"step\":2,\"line\":23,\"message\":\"pixel (17, 19) is #bd4026, expected #bc4020 within 2 per channel; it differs by 6\",\"details\":[]}"
+      },
+      "baseline": {
+        "outcome": "fail",
+        "firstFailure": "pixel (17, 19) is rgb(189, 64, 38), expected #bc4020 within 2"
+      },
+      "asExpected": true
+    },
+    {
+      "id": "tiled-linear",
+      "description": "Tiled is smoothed (linear filtering) instead of hard-edged",
+      "expect": "fail",
+      "mtek": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "firstFailure": "{\"kind\":\"expect_pixel\",\"step\":18,\"line\":56,\"message\":\"pixel (40, 70) is #be462f, expected #bc4020 within 2 per channel; it differs by 15\",\"details\":[]}"
+      },
+      "baseline": {
+        "outcome": "fail",
+        "firstFailure": "pixel (40, 70) is rgb(190, 70, 47), expected #bc4020 within 2"
+      },
+      "asExpected": true
+    },
+    {
+      "id": "smooth-nearest",
+      "description": "Smooth is hard-edged (nearest filtering) instead of smoothed",
+      "expect": "fail",
+      "mtek": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "firstFailure": "{\"kind\":\"expect_pixel\",\"step\":82,\"line\":185,\"message\":\"pixel (72, 19) is #bc4020, expected #bc4027 within 3 per channel; it differs by 7\",\"details\":[]}"
+      },
+      "baseline": {
+        "outcome": "fail",
+        "firstFailure": "pixel (72, 19) is rgb(188, 64, 32), expected #bc4027 within 3"
+      },
+      "asExpected": true
+    },
+    {
+      "id": "smooth-repeat",
+      "description": "Smooth wraps around at the picture's edge instead of holding the edge texel",
+      "expect": "fail",
+      "mtek": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "firstFailure": "{\"kind\":\"expect_pixel\",\"step\":82,\"line\":185,\"message\":\"pixel (72, 19) is #ba413d, expected #bc4027 within 3 per channel; it differs by 22\",\"details\":[]}"
+      },
+      "baseline": {
+        "outcome": "fail",
+        "firstFailure": "pixel (72, 19) is rgb(186, 65, 61), expected #bc4027 within 3"
+      },
+      "asExpected": true
+    },
+    {
+      "id": "tiled-clamp",
+      "description": "Tiled clamps instead of repeating",
+      "expect": "fail",
+      "mtek": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "firstFailure": "{\"kind\":\"expect_pixel\",\"step\":22,\"line\":64,\"message\":\"pixel (67, 70) is #6060dc, expected #bc4020 within 2 per channel; it differs by 188\",\"details\":[]}"
+      },
+      "baseline": {
+        "outcome": "fail",
+        "firstFailure": "pixel (67, 70) is rgb(96, 96, 220), expected #bc4020 within 2"
+      },
+      "asExpected": true
+    },
+    {
+      "id": "no-tiling",
+      "description": "Tiled shows the picture once",
+      "expect": "fail",
+      "mtek": {
+        "verdict": "fail",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "fail"
+        },
+        "firstFailure": "{\"kind\":\"expect_pixel\",\"step\":19,\"line\":58,\"message\":\"pixel (47, 70) is #bc4020, expected #e0a010 within 2 per channel; it differs by 96\",\"details\":[]}"
+      },
+      "baseline": {
+        "outcome": "fail",
+        "firstFailure": "pixel (47, 70) is rgb(188, 64, 32), expected #e0a010 within 2"
+      },
+      "asExpected": true
+    },
+    {
+      "id": "alternative-three-without-helper",
+      "description": "ALTERNATIVE (must pass): the three.js solution without the support texture helper (TextureLoader, colour space and filters by hand)",
+      "expect": "pass",
+      "baseline": {
+        "outcome": "pass",
+        "firstFailure": null
+      },
+      "asExpected": true
+    },
+    {
+      "id": "alternative-mtek-texture-in-material",
+      "description": "ALTERNATIVE (must pass): the Mtek scene written with two materials (the tiling inside the shader as a vec2) and the sampler left to the default or set per entity",
+      "expect": "pass",
+      "mtek": {
+        "verdict": "pass",
+        "layers": {
+          "parse": "pass",
+          "check": "pass",
+          "build": "pass",
+          "start": "pass",
+          "tests": "pass"
+        },
+        "firstFailure": null
+      },
+      "asExpected": true
+    }
+  ]
+}
