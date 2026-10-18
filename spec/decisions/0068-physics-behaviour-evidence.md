@@ -51,4 +51,4 @@ Browser (`MTEK_REQUIRE_GPU=1 npm run test:browser:hardware`, `tests/browser/spec
 
 ## Verification
 
-`cargo test --workspace --locked`, `cargo clippy --workspace --all-targets --locked -- -D warnings` (also with `packages/runtime-web/dist` moved away), `npm run check`, `npm run test:unit`, `MTEK_REQUIRE_GPU=1 npm run test:browser:hardware`; counts are in the task report.
+`cargo test --workspace --locked`, `cargo clippy --workspace --all-targets --locked -- -D warnings` (also with `packages/runtime-web/dist` moved away), `npm run check`, `npm run test:unit`, `MTEK_REQUIRE_GPU=1 npm run test:browser:hardware`. Results of the run of this record (2026-10-18, Windows, the hardware adapter): `cargo test --workspace --locked` 1 229 passed, 0 failed, 1 ignored; clippy clean with and without the runtime bundle; `npm run check` clean; `npm run test:unit` 2 654 passed, 0 failed, 1 skipped across the workspaces (physics-rapier 78, of which 17 are new; the browser support tests 230); the hardware browser run 214 passed, 0 failed, 0 not run (202 before this record plus the twelve of item 1).
