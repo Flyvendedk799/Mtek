@@ -9,6 +9,7 @@
   "workspaces": [
     "packages/runtime-web",
     "packages/physics-rapier",
+    "packages/editor-vscode",
     "tests/browser",
     "tests/codegen",
     "benchmarks",
@@ -31,6 +32,7 @@
     "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run test:browser"
   },
   "allowScripts": {
-    "esbuild": false
+    "esbuild": false,
+    "@vscode/vsce-sign": false
   }
 }

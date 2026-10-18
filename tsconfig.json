@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/runtime-web" },
     { "path": "packages/physics-rapier" },
+    { "path": "packages/editor-vscode" },
     { "path": "tests/browser" },
     { "path": "tests/codegen" },
     { "path": "benchmarks" },

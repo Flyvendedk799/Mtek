@@ -93,3 +93,50 @@ jobs:
           name: browser-software-results
           path: tests/browser/results/
           if-no-files-found: warn
+
+  # The VS Code extension (packages/editor-vscode, decision 0090): the generated TextMate grammar is
+  # current, the unit tests pass, the extension is packaged as a .vsix (uploaded as a workflow
+  # artifact; nothing is published to a marketplace and no secret is used) and its integration
+  # suite runs in a real VS Code (downloaded by @vscode/test-electron and pinned by version in
+  # scripts/run-vscode-tests.ts) against the real `mtek lsp`. A VS Code that cannot be downloaded
+  # or started fails the step (the runner prints NOT-RUN and exits 1); it is never a pass.
+  vscode-extension:
+    name: vscode-extension (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # `npm run build` also builds the CLI with cargo: the integration suite starts `target/debug/mtek`.
+      - name: Install pinned Rust toolchain
+        run: rustup toolchain install --profile minimal
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: TextMate grammar is up to date
+        run: npm run check:grammar -w mtek-vscode
+      - name: Unit tests
+        run: npm run test:unit -w mtek-vscode
+      - name: Package the .vsix
+        run: npm run package -w mtek-vscode
+      - name: Upload the .vsix
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: mtek-vscode-vsix
+          path: packages/editor-vscode/mtek-vscode-*.vsix
+          if-no-files-found: error
+      # Electron needs a display: Linux runs under Xvfb.
+      - name: Integration tests (VS Code, Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:integration -w mtek-vscode
+      - name: Integration tests (VS Code, Windows)
+        if: runner.os == 'Windows'
+        run: npm run test:integration -w mtek-vscode
