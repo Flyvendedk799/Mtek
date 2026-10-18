@@ -36,7 +36,7 @@ const PIXELS: ReadonlyArray<readonly [number, number]> = [
   [108, 73],
   [188, 118],
   [100, 190],
-  [70, 100],
+  [75, 175],
   [135, 175],
 ];
 
@@ -206,6 +206,13 @@ test.describe("the PBR material against the CPU oracle (M4-03)", () => {
       expect(Math.hypot(...point.position)).toBeCloseTo(1, 12);
       expect(point.N[2]).toBeGreaterThan(0.2);
     }
+    // The pixels cover the lit side, grazing incidence and the side facing away from the sun (N . L <= 0, where the
+    // light term is exactly 0 and only ambient light remains).
+    const toSun = sunDirection(SUN.pitch, SUN.yaw).map((c) => -c);
+    const nl = POINTS.map((point) => point.N[0] * (toSun[0] ?? 0) + point.N[1] * (toSun[1] ?? 0) + point.N[2] * (toSun[2] ?? 0));
+    expect(Math.max(...nl)).toBeGreaterThan(0.9);
+    expect(nl.filter((value) => value > 0 && value < 0.25).length, "grazing pixels").toBeGreaterThanOrEqual(1);
+    expect(nl.filter((value) => value <= 0).length, "pixels facing away from the sun").toBeGreaterThanOrEqual(1);
   });
 
   test("the directional light for metallic 0 and 1 and roughness 0.2 and 0.8", async ({ page, gpu }, testInfo) => {
