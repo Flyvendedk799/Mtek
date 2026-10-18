@@ -1,0 +1,6 @@
+[project]
+name = "fixture"
+language = "0.1"
+
+[host.inputs]
+mover_x = "Mixed.mover_x"

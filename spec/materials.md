@@ -95,7 +95,7 @@ material: Unlit { color: #ff8800 };
 
 - Every param without a default must be supplied; unknown/duplicate names are `E5001`/`E5002`; types are checked exactly (`E3102`, e.g. "Material parameter `phase` expects `f32`, but received `vec3`").
 - A supplied value is either an expression evaluated **once** at instance construction (initialisation) or `bind(expr)` (a live dependency re-evaluated every frame, `spec/scenes.md` §10 phase 5). `phase: frame.time` and `phase: bind(frame.time)` therefore mean different things (blueprint §3.2): the first freezes the value at construction.
-- Each entity's descriptor creates a **distinct instance with its own parameter storage**. Two instances never share mutable parameter storage. The runtime may share storage between instances whose every value is constant and never written, because that is unobservable (blueprint §6.3); it must count shared and unshared blocks separately in its counters.
+- Each entity's descriptor creates a **distinct instance with its own parameter storage**. Two instances never share mutable parameter storage. The runtime may share storage between instances whose every value is constant and never written, because that is unobservable (blueprint §6.3); it must count shared and unshared blocks separately in its counters. The M4 runtime does so (decision 0059, `spec/gpu-layout.md` section 8.2).
 - Param values are writable from handlers (`Cube.material.phase = 0.5;`) unless bound (`E5070`). Instance identity (`Cube.material = …`) is construction-only in v0.1 (`E5073`).
 
 **Update classes** (recorded per param in the manifest and shown by `mtek inspect --bindings`):

@@ -9,6 +9,7 @@ import { validManifest } from "../test-support/mount-fixture.js";
 import {
   BindingPlan,
   PipelineCache,
+  instanceBufferLayout,
   materialPipelineKey,
   pipelineDescriptor,
   pipelineKey,
@@ -126,6 +127,37 @@ describe("PipelineCache", () => {
       primitive: { topology: "triangle-list", cullMode: "back", frontFace: "ccw" },
       depthStencil: { format: "depth24plus", depthCompare: "less", depthWriteEnabled: true },
     });
+  });
+
+  it("builds the instanced variant: the instanced entry point and the instance buffer after the attribute buffers", () => {
+    const { plan, material, module } = setup();
+    const instancedMaterial = { ...material, shader: { ...material.shader, instancedVertexEntry: "mtek_vs_instanced" } };
+    const descriptor = pipelineDescriptor(plan, { material: instancedMaterial, module, colorFormat: "rgba8unorm-srgb", instanced: true });
+    expect(descriptor.vertex.entryPoint).toBe("mtek_vs_instanced");
+    // Same layout, fragment and state as the plain pipeline; one more vertex buffer, slot 1 for a position-only material.
+    expect(descriptor.layout).toBe(plan.pipelineLayout(material.layout));
+    expect(descriptor.vertex.buffers).toEqual([...vertexBufferLayouts(["position"]), instanceBufferLayout()]);
+    expect(descriptor.fragment?.entryPoint).toBe("mtek_fs");
+    // A material without the entry point cannot be instanced.
+    expect(() => pipelineDescriptor(plan, { material, module, colorFormat: "rgba8unorm-srgb", instanced: true })).toThrow("no instanced vertex entry");
+  });
+
+  it("the instanced variant has its own key, the plain key with the instance matrices appended to the attribute set", async () => {
+    const { cache, registry, material, module } = setup();
+    const instancedMaterial = { ...material, shader: { ...material.shader, instancedVertexEntry: "mtek_vs_instanced" } };
+    const plainKey = materialPipelineKey(instancedMaterial, "rgba8unorm-srgb");
+    const instancedKey = materialPipelineKey(instancedMaterial, "rgba8unorm-srgb", true);
+    expect(instancedKey).not.toBe(plainKey);
+    expect(instancedKey).toBe(pipelineKey({ ...BASE, shaderHash: material.shader.hash, vertexAttributes: ["position", "instance_matrices"] }));
+    const plain = await cache.obtain({ material: instancedMaterial, module, colorFormat: "rgba8unorm-srgb" });
+    const instanced = await cache.obtain({ material: instancedMaterial, module, colorFormat: "rgba8unorm-srgb", instanced: true });
+    if (!plain.ok || !instanced.ok) throw new Error("expected both pipelines");
+    expect(plain.key).toBe(plainKey);
+    expect(instanced.key).toBe(instancedKey);
+    expect(plain.pipeline).not.toBe(instanced.pipeline);
+    expect(registry.snapshot().pipelinesCreated).toBe(2);
+    expect((await cache.obtain({ material: instancedMaterial, module, colorFormat: "rgba8unorm-srgb", instanced: true })).ok).toBe(true);
+    expect(registry.snapshot().pipelinesCreated).toBe(2);
   });
 
   it("creates a pipeline once per key inside a validation error scope; a cache hit creates nothing", async () => {

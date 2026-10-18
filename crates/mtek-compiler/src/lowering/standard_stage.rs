@@ -1,7 +1,7 @@
 //! The generated standard vertex stage and fragment wrapper (`spec/materials.md` sections
 //! 3.2 and 3.3, `spec/gpu-layout.md` section 6) as shader IR.
 //!
-//! Every material gets the same two entry points, built from a [`MaterialDescription`]:
+//! Every material gets the same three entry points, built from a [`MaterialDescription`]:
 //!
 //! - `mtek_vs` reads `position` (and `normal`, `uv` when used) from their fixed
 //!   `@location`s, computes `world = object.model * vec4(position, 1)`,
@@ -9,6 +9,11 @@
 //!   `normalize((object.normal_matrix * vec4(normal, 0)).xyz)`, and returns the clip
 //!   position plus exactly the `SurfaceInput` fields the material reads as varyings at
 //!   their fixed locations 0–3;
+//! - `mtek_vs_instanced` (decision 0059) is `mtek_vs` with the model and normal matrices taken
+//!   from a per-instance vertex buffer instead of `mtek_object`: the four columns of `model` are
+//!   `@location(3..=6)` and the four columns of `normal_matrix` `@location(7..=10)`, each a
+//!   `vec4<f32>`, right after the fixed vertex attributes (locations 0-2, whichever of them the
+//!   material reads). It returns the same `MtekVertexOutput`, so `mtek_fs` serves both;
 //! - `mtek_fs` rebuilds `SurfaceInput` from the varyings (re-normalising `world_normal`),
 //!   calls the fragment body function `mtek_fragment` and writes
 //!   `vec4(result.rgb, 1.0)` to colour target 0: alpha is always 1.0 in v0.1.
@@ -36,8 +41,17 @@ use super::shader_ir::{
 
 /// The vertex entry point (`vertexEntry` of the manifest's shader entry).
 pub const VERTEX_ENTRY: &str = "mtek_vs";
+/// The instanced vertex entry point (`instancedVertexEntry` of the manifest's shader entry).
+pub const INSTANCED_VERTEX_ENTRY: &str = "mtek_vs_instanced";
 /// The fragment entry point (`fragmentEntry` of the manifest's shader entry).
 pub const FRAGMENT_ENTRY: &str = "mtek_fs";
+/// The `@location` of the first column of the instance `model` matrix: the first location after
+/// the fixed vertex attributes (`position` 0, `normal` 1, `uv` 2).
+pub const INSTANCE_MODEL_LOCATION: u32 = 3;
+/// The `@location` of the first column of the instance `normal_matrix` (four columns after `model`).
+pub const INSTANCE_NORMAL_LOCATION: u32 = INSTANCE_MODEL_LOCATION + 4;
+/// `arrayStride` of the instance vertex buffer: `model` then `normal_matrix`, 16 `f32` each, column-major.
+pub const INSTANCE_STRIDE: u32 = 128;
 /// The struct `mtek_vs` returns and `mtek_fs` receives.
 pub const VERTEX_OUTPUT_STRUCT: &str = "MtekVertexOutput";
 /// The WGSL form of `SurfaceInput`, holding only the fields the material reads; its
@@ -311,14 +325,17 @@ pub fn build_standard_stage(material: &MaterialDescription) -> Result<MaterialSh
     module
         .functions
         .push(fragment_function(material, !inputs.is_empty()));
-    module.functions.push(vertex_entry(
-        &frame,
-        &object,
-        &attributes,
-        &inputs,
-        symbol,
-        span,
-    ));
+    for instanced in [false, true] {
+        module.functions.push(vertex_entry(
+            &frame,
+            &object,
+            &attributes,
+            &inputs,
+            instanced,
+            symbol,
+            span,
+        ));
+    }
     module.functions.push(fragment_entry(&inputs, symbol, span));
 
     Ok(MaterialShader {
@@ -411,16 +428,41 @@ fn fragment_function(material: &MaterialDescription, takes_surface: bool) -> Fun
 
 const XYZ: [Component; 3] = [Component::X, Component::Y, Component::Z];
 
-/// `mtek_vs`: the standard vertex entry point.
+/// The generated name of the vertex-stage parameter holding column `column` of the instance
+/// matrix `which` (`model` or `normal`): `mtek_model_c0` ...
+fn instance_column_name(which: &str, column: u32) -> Name {
+    Name::generated(format!("{which}_c{column}"))
+}
+
+/// `mtek_vs` (`instanced` false) or `mtek_vs_instanced` (true): the standard vertex entry point.
+/// The two differ only in where `model` and `normal_matrix` come from: `mtek_object`, or the
+/// instance attributes.
 fn vertex_entry(
     frame: &GlobalDecl,
     object: &GlobalDecl,
     attributes: &[VertexAttribute],
     inputs: &[SurfaceField],
+    instanced: bool,
     symbol: &str,
     span: Span,
 ) -> Function {
     let attribute = |a: VertexAttribute| Expr::local(a.param_name(), a.ty(), span);
+    // `mtek_object.<member>`, or `mat4x4<f32>(mtek_<which>_c0, .., mtek_<which>_c3)`.
+    let matrix = |member: &str, which: &str| {
+        if instanced {
+            Expr::construct(
+                ShaderType::Mat4,
+                (0..4)
+                    .map(|column| {
+                        Expr::local(instance_column_name(which, column), ShaderType::VEC4, span)
+                    })
+                    .collect(),
+                span,
+            )
+        } else {
+            Expr::global(object, span).field(member, ShaderType::Mat4, span)
+        }
+    };
     let world_name = Name::generated("world");
     let world_normal_name = Name::generated("world_normal");
     let world = || Expr::local(world_name.clone(), ShaderType::VEC4, span);
@@ -430,7 +472,7 @@ fn vertex_entry(
         name: world_name.clone(),
         value: Expr::binary(
             BinaryOp::Multiply,
-            Expr::global(object, span).field("model", ShaderType::Mat4, span),
+            matrix("model", "model"),
             Expr::construct(
                 ShaderType::VEC4,
                 vec![
@@ -451,7 +493,7 @@ fn vertex_entry(
             name: world_normal_name.clone(),
             value: Expr::binary(
                 BinaryOp::Multiply,
-                Expr::global(object, span).field("normal_matrix", ShaderType::Mat4, span),
+                matrix("normal_matrix", "normal"),
                 Expr::construct(
                     ShaderType::VEC4,
                     vec![
@@ -493,18 +535,32 @@ fn vertex_entry(
         span,
     });
 
-    Function {
-        name: Name::generated("vs"),
-        stage: Some(ShaderStage::Vertex),
-        params: attributes
-            .iter()
-            .map(|a| FunctionParam {
-                name: a.param_name(),
-                ty: a.ty(),
-                binding: Some(IoBinding::Location(a.location())),
+    let mut params: Vec<FunctionParam> = attributes
+        .iter()
+        .map(|a| FunctionParam {
+            name: a.param_name(),
+            ty: a.ty(),
+            binding: Some(IoBinding::Location(a.location())),
+            span,
+        })
+        .collect();
+    if instanced {
+        for (which, first) in [
+            ("model", INSTANCE_MODEL_LOCATION),
+            ("normal", INSTANCE_NORMAL_LOCATION),
+        ] {
+            params.extend((0..4).map(|column| FunctionParam {
+                name: instance_column_name(which, column),
+                ty: ShaderType::VEC4,
+                binding: Some(IoBinding::Location(first + column)),
                 span,
-            })
-            .collect(),
+            }));
+        }
+    }
+    Function {
+        name: Name::generated(if instanced { "vs_instanced" } else { "vs" }),
+        stage: Some(ShaderStage::Vertex),
+        params,
         result: Some(FunctionResult {
             ty: ShaderType::named(VERTEX_OUTPUT_STRUCT),
             binding: None,
@@ -842,6 +898,104 @@ mod tests {
             );
             assert_eq!(shader.layout, params);
         }
+    }
+
+    #[test]
+    fn the_instanced_entry_reads_the_matrices_from_locations_after_the_fixed_attributes() {
+        assert_eq!(
+            mangle(&Name::generated("vs_instanced")),
+            INSTANCED_VERTEX_ENTRY
+        );
+        // Hand-derived: model columns at 3, 4, 5, 6; normal-matrix columns at 7, 8, 9, 10;
+        // 8 columns of 16 bytes make the 128-byte instance stride.
+        assert_eq!(INSTANCE_MODEL_LOCATION, 3);
+        assert_eq!(INSTANCE_NORMAL_LOCATION, 7);
+        assert_eq!(INSTANCE_STRIDE, 8 * 16);
+        for inputs in subsets() {
+            let shader = build_standard_stage(&material(&inputs, Some(params_record())))
+                .expect("built-in layouts");
+            let text = print_module(&shader.module).text;
+            let naga = validate_wgsl(&text).unwrap_or_else(|e| panic!("{inputs:?}: {e}\n{text}"));
+            let entry = |name: &str| {
+                naga.entry_points
+                    .iter()
+                    .find(|e| e.name == name)
+                    .unwrap_or_else(|| panic!("{inputs:?}: no entry point {name}\n{text}"))
+            };
+            let plain = entry(VERTEX_ENTRY);
+            let instanced = entry(INSTANCED_VERTEX_ENTRY);
+            assert_eq!(instanced.stage, naga::ShaderStage::Vertex);
+
+            // The fixed attributes first (unchanged), then the eight instance columns.
+            let plain_locations: Vec<Option<u32>> = plain
+                .function
+                .arguments
+                .iter()
+                .map(|a| location(&a.binding))
+                .collect();
+            let mut expected = plain_locations.clone();
+            expected.extend((3..=10).map(Some));
+            let actual: Vec<Option<u32>> = instanced
+                .function
+                .arguments
+                .iter()
+                .map(|a| location(&a.binding))
+                .collect();
+            assert_eq!(actual, expected, "{inputs:?}");
+            // Every instance column is a vec4<f32>.
+            for argument in &instanced.function.arguments[plain_locations.len()..] {
+                assert!(
+                    matches!(
+                        naga.types[argument.ty].inner,
+                        naga::TypeInner::Vector {
+                            size: naga::VectorSize::Quad,
+                            scalar: naga::Scalar {
+                                kind: naga::ScalarKind::Float,
+                                width: 4
+                            }
+                        }
+                    ),
+                    "{inputs:?}"
+                );
+            }
+            // The same output struct, so `mtek_fs` serves both entry points.
+            assert_eq!(
+                plain.function.result.as_ref().map(|r| r.ty),
+                instanced.function.result.as_ref().map(|r| r.ty),
+                "{inputs:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_instanced_entry_builds_the_matrices_from_its_columns_and_ignores_mtek_object() {
+        let shader = build_standard_stage(&material(&SurfaceField::ALL, None)).expect("built");
+        let text = print_module(&shader.module).text;
+        let start = text
+            .find("fn mtek_vs_instanced(")
+            .unwrap_or_else(|| panic!("{text}"));
+        let body = &text[start..];
+        let body = &body[..body.find("\n}\n").expect("end of function")];
+        assert!(
+            body.contains(
+                "mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * \
+                 vec4<f32>(mtek_position, 1.0)"
+            ),
+            "{body}"
+        );
+        assert!(
+            body.contains(
+                "mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * \
+                 vec4<f32>(mtek_normal, 0.0)"
+            ),
+            "{body}"
+        );
+        assert!(!body.contains("mtek_object"), "{body}");
+        // The standard entry point still reads the object block.
+        let start = text.find("fn mtek_vs(").expect("mtek_vs");
+        let plain = &text[start..text.find("fn mtek_vs_instanced(").expect("order")];
+        assert!(plain.contains("mtek_object.model"), "{plain}");
+        assert!(plain.contains("mtek_object.normal_matrix"), "{plain}");
     }
 
     #[test]

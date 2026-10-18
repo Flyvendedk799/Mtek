@@ -111,6 +111,8 @@ export interface MtekTestOptions {
   };
   /** Draw every visible entity, as if frustum culling did not exist (lets a test compare culled and unculled frames). */
   disableCulling?: boolean;
+  /** Draw every entity with its own draw call, as if instancing did not exist (lets a test compare instanced and individual frames). */
+  disableInstancing?: boolean;
   /** Replace the pixels of a built-in texture (a generated texture for a test; no asset needed). */
   textures?: { "texture.white"?: MtekTestTexture; "texture.black"?: MtekTestTexture };
 }

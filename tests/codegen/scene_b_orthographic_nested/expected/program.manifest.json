@@ -396,11 +396,12 @@
   ],
   "shaders": [
     {
-      "hash": "0c483313bae03955efdf9c236346c1df84ab2e47421e5361bc6347a941941101",
-      "url": "shaders/0c483313bae03955.wgsl",
-      "map": "shaders/0c483313bae03955.mtek-map.json",
+      "hash": "ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa",
+      "url": "shaders/ef35824416f65c3f.wgsl",
+      "map": "shaders/ef35824416f65c3f.mtek-map.json",
       "material": "std/materials.mtek::Unlit",
       "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
       "fragmentEntry": "mtek_fs",
       "vertexAttributes": [
         "position"
@@ -412,7 +413,7 @@
     {
       "id": "std/materials.mtek::Unlit",
       "layout": "material:std/materials.mtek::Unlit",
-      "shader": "0c483313bae03955efdf9c236346c1df84ab2e47421e5361bc6347a941941101",
+      "shader": "ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa",
       "resources": [],
       "params": [
         {

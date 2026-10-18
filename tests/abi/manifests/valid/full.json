@@ -701,6 +701,7 @@
       "map": "shaders/5c08635e9bb99393.mtek-map.json",
       "material": "std/materials.mtek::Pbr",
       "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
       "fragmentEntry": "mtek_fs",
       "vertexAttributes": [
         "position",

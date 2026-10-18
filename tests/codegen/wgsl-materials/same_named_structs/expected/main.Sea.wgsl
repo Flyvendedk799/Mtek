@@ -58,6 +58,12 @@ fn mtek_vs(@location(0) mtek_position: vec3<f32>) -> MtekVertexOutput {
     return MtekVertexOutput(mtek_frame.view_proj * mtek_world);
 }
 
+@vertex
+fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+    let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
+    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);
+}
+
 @fragment
 fn mtek_fs() -> @location(0) vec4<f32> {
     let mtek_color = mtek_fragment();

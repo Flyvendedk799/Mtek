@@ -39,6 +39,7 @@ pub struct Shader {
     /// `shaders/<h16>.mtek-map.json` in `dist/`.
     pub map: String,
     pub vertex_entry: &'static str,
+    pub instanced_vertex_entry: &'static str,
     pub fragment_entry: &'static str,
     pub vertex_attributes: Vec<&'static str>,
     pub surface_inputs: Vec<&'static str>,
@@ -92,6 +93,7 @@ pub fn shaders_view(
             url: artifact.wgsl_path(),
             map: artifact.map_path(),
             vertex_entry: artifact.vertex_entry,
+            instanced_vertex_entry: artifact.instanced_vertex_entry,
             fragment_entry: artifact.fragment_entry,
             vertex_attributes: artifact
                 .vertex_attributes
@@ -138,8 +140,8 @@ impl ShadersView {
             ));
             out.push_str(&format!("  file {} (sha256 {})\n", shader.url, shader.hash));
             out.push_str(&format!(
-                "  entry points {} (vertex), {} (fragment)\n",
-                shader.vertex_entry, shader.fragment_entry
+                "  entry points {} (vertex), {} (instanced vertex), {} (fragment)\n",
+                shader.vertex_entry, shader.instanced_vertex_entry, shader.fragment_entry
             ));
             out.push_str(&format!(
                 "  vertex attributes {}\n",

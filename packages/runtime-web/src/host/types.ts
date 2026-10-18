@@ -28,6 +28,12 @@ export interface MtekTestOptions {
    * lets a test compare a culled frame with an unculled one. `culledObjects` stays 0.
    */
   disableCulling?: boolean;
+  /**
+   * Draw every entity with its own draw call, as if compatible instancing did not exist (decision 0059):
+   * lets a test compare an instanced frame with an individually drawn one. Parameter blocks are still shared;
+   * no instanced pipeline and no instance buffer are created. `instancedDraws` stays 0.
+   */
+  disableInstancing?: boolean;
   /** Replace the pixels of a built-in texture (a generated texture for a test; no asset needed). */
   textures?: { "texture.white"?: MtekTestTexture; "texture.black"?: MtekTestTexture };
 }

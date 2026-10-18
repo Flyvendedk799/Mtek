@@ -13,17 +13,18 @@
         "endLine": 31,
         "endColumn": 2
       },
-      "hash": "a3be43de923958737099752c2d10ac74f8d89224805b1240e8a52d526ff25aaf",
-      "url": "shaders/a3be43de92395873.wgsl",
-      "map": "shaders/a3be43de92395873.mtek-map.json",
+      "hash": "b5048ff088f744dd91e6c81b304fd5667d5fffc35f400bc1bad286cdcc4fcc36",
+      "url": "shaders/b5048ff088f744dd.wgsl",
+      "map": "shaders/b5048ff088f744dd.mtek-map.json",
       "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
       "fragmentEntry": "mtek_fs",
       "vertexAttributes": [
         "position"
       ],
       "surfaceInputs": [],
       "layout": "material:src/main.mtek::Ocean",
-      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct S_e2cab98b_Wave {\n    @size(8) u_amplitude: f32,\n    u_direction: vec2<f32>,\n}\n\nstruct MtekPad16_f32 {\n    @size(16) value: f32,\n}\n\nstruct MtekParams_e2cab98b_Ocean {\n    u_base: vec4<f32>,\n    u_depth: f32,\n    u_count: u32,\n    u_enabled: u32,\n    u_offset: i32,\n    u_spin: vec4<f32>,\n    u_warp: mat4x4<f32>,\n    u_tint: vec4<f32>,\n    @align(16) u_wave: S_e2cab98b_Wave,\n    @align(16) u_weights: array<MtekPad16_f32, 3>,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_e2cab98b_Ocean;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_fragment() -> vec4<f32> {\n    var u_l_level = (mtek_params.u_depth * mtek_params.u_weights[0i].value) + mtek_params.u_wave.u_amplitude;\n    if ((mtek_params.u_enabled != 0u) && (mtek_params.u_count > 2u)) && (mtek_params.u_offset < 0i) {\n        u_l_level = u_l_level * 0.5;\n    }\n    return vec4<f32>((mtek_params.u_base.xyz * u_l_level) * mtek_params.u_tint.w, 1.0);\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);\n}\n\n@fragment\nfn mtek_fs() -> @location(0) vec4<f32> {\n    let mtek_color = mtek_fragment();\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
+      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct S_e2cab98b_Wave {\n    @size(8) u_amplitude: f32,\n    u_direction: vec2<f32>,\n}\n\nstruct MtekPad16_f32 {\n    @size(16) value: f32,\n}\n\nstruct MtekParams_e2cab98b_Ocean {\n    u_base: vec4<f32>,\n    u_depth: f32,\n    u_count: u32,\n    u_enabled: u32,\n    u_offset: i32,\n    u_spin: vec4<f32>,\n    u_warp: mat4x4<f32>,\n    u_tint: vec4<f32>,\n    @align(16) u_wave: S_e2cab98b_Wave,\n    @align(16) u_weights: array<MtekPad16_f32, 3>,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_e2cab98b_Ocean;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_fragment() -> vec4<f32> {\n    var u_l_level = (mtek_params.u_depth * mtek_params.u_weights[0i].value) + mtek_params.u_wave.u_amplitude;\n    if ((mtek_params.u_enabled != 0u) && (mtek_params.u_count > 2u)) && (mtek_params.u_offset < 0i) {\n        u_l_level = u_l_level * 0.5;\n    }\n    return vec4<f32>((mtek_params.u_base.xyz * u_l_level) * mtek_params.u_tint.w, 1.0);\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);\n}\n\n@vertex\nfn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {\n    let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);\n}\n\n@fragment\nfn mtek_fs() -> @location(0) vec4<f32> {\n    let mtek_color = mtek_fragment();\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
       "spanMap": [
         {
           "wgsl": {
@@ -1712,7 +1713,7 @@
           "wgsl": {
             "line": 68,
             "colStart": 1,
-            "colEnd": 10
+            "colEnd": 8
           },
           "source": {
             "file": "src/main.mtek",
@@ -1729,7 +1730,160 @@
           "wgsl": {
             "line": 69,
             "colStart": 1,
-            "colEnd": 41
+            "colEnd": 399
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 69,
+            "colStart": 22,
+            "colEnd": 59
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 69,
+            "colStart": 61,
+            "colEnd": 98
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 69,
+            "colStart": 100,
+            "colEnd": 137
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 69,
+            "colStart": 139,
+            "colEnd": 176
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 69,
+            "colStart": 178,
+            "colEnd": 215
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 69,
+            "colStart": 217,
+            "colEnd": 255
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 69,
+            "colStart": 257,
+            "colEnd": 295
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 69,
+            "colStart": 297,
+            "colEnd": 335
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 69,
+            "colStart": 337,
+            "colEnd": 376
           },
           "source": {
             "file": "src/main.mtek",
@@ -1746,7 +1900,7 @@
           "wgsl": {
             "line": 70,
             "colStart": 5,
-            "colEnd": 38
+            "colEnd": 126
           },
           "source": {
             "file": "src/main.mtek",
@@ -1763,7 +1917,143 @@
           "wgsl": {
             "line": 70,
             "colStart": 22,
-            "colEnd": 37
+            "colEnd": 125
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 70,
+            "colStart": 22,
+            "colEnd": 93
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 70,
+            "colStart": 34,
+            "colEnd": 47
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 70,
+            "colStart": 49,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 70,
+            "colStart": 64,
+            "colEnd": 77
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 70,
+            "colStart": 79,
+            "colEnd": 92
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 70,
+            "colStart": 96,
+            "colEnd": 125
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 70,
+            "colStart": 106,
+            "colEnd": 119
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 70,
+            "colStart": 121,
+            "colEnd": 124
           },
           "source": {
             "file": "src/main.mtek",
@@ -1780,7 +2070,7 @@
           "wgsl": {
             "line": 71,
             "colStart": 5,
-            "colEnd": 43
+            "colEnd": 64
           },
           "source": {
             "file": "src/main.mtek",
@@ -1797,7 +2087,7 @@
           "wgsl": {
             "line": 71,
             "colStart": 12,
-            "colEnd": 42
+            "colEnd": 63
           },
           "source": {
             "file": "src/main.mtek",
@@ -1813,6 +2103,176 @@
         {
           "wgsl": {
             "line": 71,
+            "colStart": 29,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 71,
+            "colStart": 29,
+            "colEnd": 49
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 71,
+            "colStart": 29,
+            "colEnd": 39
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 71,
+            "colStart": 52,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 74,
+            "colStart": 1,
+            "colEnd": 10
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 75,
+            "colStart": 1,
+            "colEnd": 41
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 76,
+            "colStart": 5,
+            "colEnd": 38
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 76,
+            "colStart": 22,
+            "colEnd": 37
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 77,
+            "colStart": 5,
+            "colEnd": 43
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 77,
+            "colStart": 12,
+            "colEnd": 42
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 302,
+            "endByte": 980,
+            "startLine": 12,
+            "startColumn": 1,
+            "endLine": 31,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Ocean"
+        },
+        {
+          "wgsl": {
+            "line": 77,
             "colStart": 22,
             "colEnd": 36
           },
@@ -1829,7 +2289,7 @@
         },
         {
           "wgsl": {
-            "line": 71,
+            "line": 77,
             "colStart": 22,
             "colEnd": 32
           },
@@ -1846,7 +2306,7 @@
         },
         {
           "wgsl": {
-            "line": 71,
+            "line": 77,
             "colStart": 38,
             "colEnd": 41
           },

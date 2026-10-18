@@ -258,6 +258,10 @@
         "map": { "type": "string", "pattern": "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" },
         "material": { "$ref": "#/$defs/symbolId", "description": "Id of the material this shader was generated for." },
         "vertexEntry": { "$ref": "#/$defs/wgslIdentifier" },
+        "instancedVertexEntry": {
+          "$ref": "#/$defs/wgslIdentifier",
+          "description": "The vertex entry that reads the model and normal matrices from a per-instance vertex buffer (spec/runtime-abi.md section 8.4, decision 0059). Absent: the runtime draws every entity individually."
+        },
         "fragmentEntry": { "$ref": "#/$defs/wgslIdentifier" },
         "vertexAttributes": {
           "type": "array",

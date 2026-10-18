@@ -323,6 +323,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
         else earlyReports.push(diagnostic);
       },
       ...(options.test?.textures === undefined ? {} : { textures: options.test.textures }),
+      ...(options.test?.disableInstancing === true ? { instancing: false } : {}),
     });
     if (!started.ok) throw mountError(started.diagnostics);
 

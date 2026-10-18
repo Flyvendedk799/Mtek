@@ -13,10 +13,11 @@
         "endLine": 26,
         "endColumn": 2
       },
-      "hash": "cd8c3ac9f1670af5515cac740b1dbcd4649713e2e608e3d6912b7a0a1a14fce3",
-      "url": "shaders/cd8c3ac9f1670af5.wgsl",
-      "map": "shaders/cd8c3ac9f1670af5.mtek-map.json",
+      "hash": "78dd2d35ae7d730c6aa237a984f7d11eb6ec838508152c7cdbe085c5970bc766",
+      "url": "shaders/78dd2d35ae7d730c.wgsl",
+      "map": "shaders/78dd2d35ae7d730c.mtek-map.json",
       "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
       "fragmentEntry": "mtek_fs",
       "vertexAttributes": [
         "position",
@@ -29,7 +30,7 @@
         "uv"
       ],
       "layout": "material:src/main.mtek::Banded",
-      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_e2cab98b_Banded {\n    u_roughness: f32,\n    u_bands: f32,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n    @location(1) world_position: vec3<f32>,\n    @location(2) world_normal: vec3<f32>,\n    @location(3) uv: vec2<f32>,\n}\n\nstruct MtekSurfaceInput {\n    world_position: vec3<f32>,\n    world_normal: vec3<f32>,\n    uv: vec2<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_e2cab98b_Banded;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_lighting_pbr(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>, mtek_metallic: f32, mtek_roughness: f32) -> vec4<f32> {\n    let mtek_c = mtek_base_color.xyz;\n    let mtek_r = clamp(mtek_roughness, 0.045, 1.0);\n    let mtek_alpha = mtek_r * mtek_r;\n    let mtek_a2 = mtek_alpha * mtek_alpha;\n    let mtek_m = clamp(mtek_metallic, 0.0, 1.0);\n    let mtek_f0 = (vec3<f32>(0.04) * (1.0 - mtek_m)) + (mtek_c * mtek_m);\n    let mtek_n = mtek_surface.world_normal;\n    let mtek_v = normalize(mtek_frame.camera_position - mtek_surface.world_position);\n    let mtek_nv = max(dot(mtek_n, mtek_v), 0.0001);\n    var mtek_rgb = vec3<f32>(0.0);\n    for (var mtek_i = 0u; mtek_i < min(mtek_frame.light_count, 4u); mtek_i++) {\n        let mtek_light = mtek_frame.lights[mtek_i];\n        let mtek_range = mtek_light.range;\n        let mtek_is_point = mtek_light.kind == 1u;\n        let mtek_to_light = mtek_light.position - mtek_surface.world_position;\n        let mtek_distance2 = dot(mtek_to_light, mtek_to_light);\n        let mtek_l = normalize(select(-mtek_light.direction, mtek_to_light, mtek_is_point));\n        let mtek_nl = max(dot(mtek_n, mtek_l), 0.0);\n        let mtek_ratio = sqrt(mtek_distance2) / select(mtek_range, 1.0, mtek_range == 0.0);\n        let mtek_ratio2 = mtek_ratio * mtek_ratio;\n        let mtek_falloff = clamp(1.0 - (mtek_ratio2 * mtek_ratio2), 0.0, 1.0);\n        let mtek_window = select(mtek_falloff * mtek_falloff, 1.0, mtek_range == 0.0);\n        let mtek_radiance = select(mtek_light.color, mtek_light.color * (mtek_window / max(mtek_distance2, 0.0001)), mtek_is_point);\n        if mtek_nl > 0.0 {\n            let mtek_h = normalize(mtek_l + mtek_v);\n            let mtek_nh = max(dot(mtek_n, mtek_h), 0.0);\n            let mtek_vh = max(dot(mtek_v, mtek_h), 0.0);\n            let mtek_spread = ((mtek_nh * mtek_nh) * (mtek_a2 - 1.0)) + 1.0;\n            let mtek_d = mtek_a2 / ((3.1415927 * mtek_spread) * mtek_spread);\n            let mtek_denominator = (mtek_nl * sqrt(((mtek_nv * mtek_nv) * (1.0 - mtek_a2)) + mtek_a2)) + (mtek_nv * sqrt(((mtek_nl * mtek_nl) * (1.0 - mtek_a2)) + mtek_a2));\n            let mtek_vis = select(0.5 / mtek_denominator, 0.0, mtek_denominator == 0.0);\n            let mtek_t = 1.0 - mtek_vh;\n            let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;\n            let mtek_fresnel = mtek_f0 + ((vec3<f32>(1.0) - mtek_f0) * mtek_t5);\n            let mtek_specular = mtek_fresnel * (mtek_d * mtek_vis);\n            let mtek_diffuse = ((vec3<f32>(1.0) - mtek_fresnel) * mtek_c) * ((1.0 - mtek_m) / 3.1415927);\n            mtek_rgb = mtek_rgb + (((mtek_diffuse + mtek_specular) * mtek_radiance) * mtek_nl);\n        }\n    }\n    return vec4<f32>(mtek_rgb + (mtek_c * mtek_frame.ambient), 1.0);\n}\n\nfn mtek_fragment(u_p_input: MtekSurfaceInput) -> vec4<f32> {\n    let u_l_level = floor(u_p_input.uv.y * mtek_params.u_bands) / mtek_params.u_bands;\n    let u_l_lit = mtek_lighting_pbr(u_p_input, vec4<f32>(vec3<f32>(u_l_level, 0.5, 1.0 - u_l_level), 1.0), u_l_level, mtek_params.u_roughness);\n    if u_p_input.uv.x > 0.5 {\n        return u_l_lit;\n    }\n    return vec4<f32>(u_l_lit.xyz * 0.5, 1.0);\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    let mtek_world_normal = normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);\n}\n\n@fragment\nfn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {\n    let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);\n    let mtek_color = mtek_fragment(mtek_surface);\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
+      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_e2cab98b_Banded {\n    u_roughness: f32,\n    u_bands: f32,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n    @location(1) world_position: vec3<f32>,\n    @location(2) world_normal: vec3<f32>,\n    @location(3) uv: vec2<f32>,\n}\n\nstruct MtekSurfaceInput {\n    world_position: vec3<f32>,\n    world_normal: vec3<f32>,\n    uv: vec2<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_e2cab98b_Banded;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_lighting_pbr(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>, mtek_metallic: f32, mtek_roughness: f32) -> vec4<f32> {\n    let mtek_c = mtek_base_color.xyz;\n    let mtek_r = clamp(mtek_roughness, 0.045, 1.0);\n    let mtek_alpha = mtek_r * mtek_r;\n    let mtek_a2 = mtek_alpha * mtek_alpha;\n    let mtek_m = clamp(mtek_metallic, 0.0, 1.0);\n    let mtek_f0 = (vec3<f32>(0.04) * (1.0 - mtek_m)) + (mtek_c * mtek_m);\n    let mtek_n = mtek_surface.world_normal;\n    let mtek_v = normalize(mtek_frame.camera_position - mtek_surface.world_position);\n    let mtek_nv = max(dot(mtek_n, mtek_v), 0.0001);\n    var mtek_rgb = vec3<f32>(0.0);\n    for (var mtek_i = 0u; mtek_i < min(mtek_frame.light_count, 4u); mtek_i++) {\n        let mtek_light = mtek_frame.lights[mtek_i];\n        let mtek_range = mtek_light.range;\n        let mtek_is_point = mtek_light.kind == 1u;\n        let mtek_to_light = mtek_light.position - mtek_surface.world_position;\n        let mtek_distance2 = dot(mtek_to_light, mtek_to_light);\n        let mtek_l = normalize(select(-mtek_light.direction, mtek_to_light, mtek_is_point));\n        let mtek_nl = max(dot(mtek_n, mtek_l), 0.0);\n        let mtek_ratio = sqrt(mtek_distance2) / select(mtek_range, 1.0, mtek_range == 0.0);\n        let mtek_ratio2 = mtek_ratio * mtek_ratio;\n        let mtek_falloff = clamp(1.0 - (mtek_ratio2 * mtek_ratio2), 0.0, 1.0);\n        let mtek_window = select(mtek_falloff * mtek_falloff, 1.0, mtek_range == 0.0);\n        let mtek_radiance = select(mtek_light.color, mtek_light.color * (mtek_window / max(mtek_distance2, 0.0001)), mtek_is_point);\n        if mtek_nl > 0.0 {\n            let mtek_h = normalize(mtek_l + mtek_v);\n            let mtek_nh = max(dot(mtek_n, mtek_h), 0.0);\n            let mtek_vh = max(dot(mtek_v, mtek_h), 0.0);\n            let mtek_spread = ((mtek_nh * mtek_nh) * (mtek_a2 - 1.0)) + 1.0;\n            let mtek_d = mtek_a2 / ((3.1415927 * mtek_spread) * mtek_spread);\n            let mtek_denominator = (mtek_nl * sqrt(((mtek_nv * mtek_nv) * (1.0 - mtek_a2)) + mtek_a2)) + (mtek_nv * sqrt(((mtek_nl * mtek_nl) * (1.0 - mtek_a2)) + mtek_a2));\n            let mtek_vis = select(0.5 / mtek_denominator, 0.0, mtek_denominator == 0.0);\n            let mtek_t = 1.0 - mtek_vh;\n            let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;\n            let mtek_fresnel = mtek_f0 + ((vec3<f32>(1.0) - mtek_f0) * mtek_t5);\n            let mtek_specular = mtek_fresnel * (mtek_d * mtek_vis);\n            let mtek_diffuse = ((vec3<f32>(1.0) - mtek_fresnel) * mtek_c) * ((1.0 - mtek_m) / 3.1415927);\n            mtek_rgb = mtek_rgb + (((mtek_diffuse + mtek_specular) * mtek_radiance) * mtek_nl);\n        }\n    }\n    return vec4<f32>(mtek_rgb + (mtek_c * mtek_frame.ambient), 1.0);\n}\n\nfn mtek_fragment(u_p_input: MtekSurfaceInput) -> vec4<f32> {\n    let u_l_level = floor(u_p_input.uv.y * mtek_params.u_bands) / mtek_params.u_bands;\n    let u_l_lit = mtek_lighting_pbr(u_p_input, vec4<f32>(vec3<f32>(u_l_level, 0.5, 1.0 - u_l_level), 1.0), u_l_level, mtek_params.u_roughness);\n    if u_p_input.uv.x > 0.5 {\n        return u_l_lit;\n    }\n    return vec4<f32>(u_l_lit.xyz * 0.5, 1.0);\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    let mtek_world_normal = normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);\n}\n\n@vertex\nfn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {\n    let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);\n    let mtek_world_normal = normalize((mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * vec4<f32>(mtek_normal, 0.0)).xyz);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);\n}\n\n@fragment\nfn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {\n    let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);\n    let mtek_color = mtek_fragment(mtek_surface);\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
       "spanMap": [
         {
           "wgsl": {
@@ -6580,7 +6581,7 @@
           "wgsl": {
             "line": 105,
             "colStart": 1,
-            "colEnd": 10
+            "colEnd": 8
           },
           "source": {
             "file": "src/main.mtek",
@@ -6597,7 +6598,7 @@
           "wgsl": {
             "line": 106,
             "colStart": 1,
-            "colEnd": 66
+            "colEnd": 469
           },
           "source": {
             "file": "src/main.mtek",
@@ -6613,6 +6614,771 @@
         {
           "wgsl": {
             "line": 106,
+            "colStart": 22,
+            "colEnd": 59
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 61,
+            "colEnd": 96
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 98,
+            "colEnd": 129
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 131,
+            "colEnd": 168
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 170,
+            "colEnd": 207
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 209,
+            "colEnd": 246
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 248,
+            "colEnd": 285
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 287,
+            "colEnd": 325
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 327,
+            "colEnd": 365
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 367,
+            "colEnd": 405
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 407,
+            "colEnd": 446
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 5,
+            "colEnd": 126
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 22,
+            "colEnd": 125
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 22,
+            "colEnd": 93
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 34,
+            "colEnd": 47
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 49,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 64,
+            "colEnd": 77
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 79,
+            "colEnd": 92
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 96,
+            "colEnd": 125
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 106,
+            "colEnd": 119
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 121,
+            "colEnd": 124
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 5,
+            "colEnd": 152
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 29,
+            "colEnd": 151
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 39,
+            "colEnd": 150
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 40,
+            "colEnd": 145
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 40,
+            "colEnd": 115
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 52,
+            "colEnd": 66
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 68,
+            "colEnd": 82
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 84,
+            "colEnd": 98
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 100,
+            "colEnd": 114
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 118,
+            "colEnd": 145
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 128,
+            "colEnd": 139
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 141,
+            "colEnd": 144
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 5,
+            "colEnd": 108
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 12,
+            "colEnd": 107
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 29,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 29,
+            "colEnd": 49
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 29,
+            "colEnd": 39
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 52,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 64,
+            "colEnd": 78
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 64,
+            "colEnd": 74
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 80,
+            "colEnd": 97
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 99,
+            "colEnd": 106
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 112,
+            "colStart": 1,
+            "colEnd": 10
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 113,
+            "colStart": 1,
+            "colEnd": 66
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 503,
+            "endByte": 909,
+            "startLine": 14,
+            "startColumn": 1,
+            "endLine": 26,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Banded"
+        },
+        {
+          "wgsl": {
+            "line": 113,
             "colStart": 12,
             "colEnd": 37
           },
@@ -6629,7 +7395,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 5,
             "colEnd": 110
           },
@@ -6646,7 +7412,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 24,
             "colEnd": 109
           },
@@ -6663,7 +7429,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 41,
             "colEnd": 63
           },
@@ -6680,7 +7446,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 41,
             "colEnd": 48
           },
@@ -6697,7 +7463,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 65,
             "colEnd": 96
           },
@@ -6714,7 +7480,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 75,
             "colEnd": 95
           },
@@ -6731,7 +7497,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 75,
             "colEnd": 82
           },
@@ -6748,7 +7514,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 98,
             "colEnd": 108
           },
@@ -6765,7 +7531,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 98,
             "colEnd": 105
           },
@@ -6782,7 +7548,7 @@
         },
         {
           "wgsl": {
-            "line": 108,
+            "line": 115,
             "colStart": 5,
             "colEnd": 50
           },
@@ -6799,7 +7565,7 @@
         },
         {
           "wgsl": {
-            "line": 108,
+            "line": 115,
             "colStart": 22,
             "colEnd": 49
           },
@@ -6816,7 +7582,7 @@
         },
         {
           "wgsl": {
-            "line": 108,
+            "line": 115,
             "colStart": 36,
             "colEnd": 48
           },
@@ -6833,7 +7599,7 @@
         },
         {
           "wgsl": {
-            "line": 109,
+            "line": 116,
             "colStart": 5,
             "colEnd": 43
           },
@@ -6850,7 +7616,7 @@
         },
         {
           "wgsl": {
-            "line": 109,
+            "line": 116,
             "colStart": 12,
             "colEnd": 42
           },
@@ -6867,7 +7633,7 @@
         },
         {
           "wgsl": {
-            "line": 109,
+            "line": 116,
             "colStart": 22,
             "colEnd": 36
           },
@@ -6884,7 +7650,7 @@
         },
         {
           "wgsl": {
-            "line": 109,
+            "line": 116,
             "colStart": 22,
             "colEnd": 32
           },
@@ -6901,7 +7667,7 @@
         },
         {
           "wgsl": {
-            "line": 109,
+            "line": 116,
             "colStart": 38,
             "colEnd": 41
           },
@@ -6929,10 +7695,11 @@
         "endLine": 12,
         "endColumn": 2
       },
-      "hash": "b5d59c5ee0ff9c55c2314d3b9240b2f5ebff15c12453019b5adcdaf2174d571d",
-      "url": "shaders/b5d59c5ee0ff9c55.wgsl",
-      "map": "shaders/b5d59c5ee0ff9c55.mtek-map.json",
+      "hash": "d4feab1a98af0bcb033894878a440af63042cbd46f79f415f8e7b17b92b24e66",
+      "url": "shaders/d4feab1a98af0bcb.wgsl",
+      "map": "shaders/d4feab1a98af0bcb.mtek-map.json",
       "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
       "fragmentEntry": "mtek_fs",
       "vertexAttributes": [
         "position",
@@ -6943,7 +7710,7 @@
         "world_normal"
       ],
       "layout": "material:src/main.mtek::Shiny",
-      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_e2cab98b_Shiny {\n    u_tint: vec4<f32>,\n    u_metallic: f32,\n    u_roughness: f32,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n    @location(1) world_position: vec3<f32>,\n    @location(2) world_normal: vec3<f32>,\n}\n\nstruct MtekSurfaceInput {\n    world_position: vec3<f32>,\n    world_normal: vec3<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_e2cab98b_Shiny;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_lighting_pbr(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>, mtek_metallic: f32, mtek_roughness: f32) -> vec4<f32> {\n    let mtek_c = mtek_base_color.xyz;\n    let mtek_r = clamp(mtek_roughness, 0.045, 1.0);\n    let mtek_alpha = mtek_r * mtek_r;\n    let mtek_a2 = mtek_alpha * mtek_alpha;\n    let mtek_m = clamp(mtek_metallic, 0.0, 1.0);\n    let mtek_f0 = (vec3<f32>(0.04) * (1.0 - mtek_m)) + (mtek_c * mtek_m);\n    let mtek_n = mtek_surface.world_normal;\n    let mtek_v = normalize(mtek_frame.camera_position - mtek_surface.world_position);\n    let mtek_nv = max(dot(mtek_n, mtek_v), 0.0001);\n    var mtek_rgb = vec3<f32>(0.0);\n    for (var mtek_i = 0u; mtek_i < min(mtek_frame.light_count, 4u); mtek_i++) {\n        let mtek_light = mtek_frame.lights[mtek_i];\n        let mtek_range = mtek_light.range;\n        let mtek_is_point = mtek_light.kind == 1u;\n        let mtek_to_light = mtek_light.position - mtek_surface.world_position;\n        let mtek_distance2 = dot(mtek_to_light, mtek_to_light);\n        let mtek_l = normalize(select(-mtek_light.direction, mtek_to_light, mtek_is_point));\n        let mtek_nl = max(dot(mtek_n, mtek_l), 0.0);\n        let mtek_ratio = sqrt(mtek_distance2) / select(mtek_range, 1.0, mtek_range == 0.0);\n        let mtek_ratio2 = mtek_ratio * mtek_ratio;\n        let mtek_falloff = clamp(1.0 - (mtek_ratio2 * mtek_ratio2), 0.0, 1.0);\n        let mtek_window = select(mtek_falloff * mtek_falloff, 1.0, mtek_range == 0.0);\n        let mtek_radiance = select(mtek_light.color, mtek_light.color * (mtek_window / max(mtek_distance2, 0.0001)), mtek_is_point);\n        if mtek_nl > 0.0 {\n            let mtek_h = normalize(mtek_l + mtek_v);\n            let mtek_nh = max(dot(mtek_n, mtek_h), 0.0);\n            let mtek_vh = max(dot(mtek_v, mtek_h), 0.0);\n            let mtek_spread = ((mtek_nh * mtek_nh) * (mtek_a2 - 1.0)) + 1.0;\n            let mtek_d = mtek_a2 / ((3.1415927 * mtek_spread) * mtek_spread);\n            let mtek_denominator = (mtek_nl * sqrt(((mtek_nv * mtek_nv) * (1.0 - mtek_a2)) + mtek_a2)) + (mtek_nv * sqrt(((mtek_nl * mtek_nl) * (1.0 - mtek_a2)) + mtek_a2));\n            let mtek_vis = select(0.5 / mtek_denominator, 0.0, mtek_denominator == 0.0);\n            let mtek_t = 1.0 - mtek_vh;\n            let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;\n            let mtek_fresnel = mtek_f0 + ((vec3<f32>(1.0) - mtek_f0) * mtek_t5);\n            let mtek_specular = mtek_fresnel * (mtek_d * mtek_vis);\n            let mtek_diffuse = ((vec3<f32>(1.0) - mtek_fresnel) * mtek_c) * ((1.0 - mtek_m) / 3.1415927);\n            mtek_rgb = mtek_rgb + (((mtek_diffuse + mtek_specular) * mtek_radiance) * mtek_nl);\n        }\n    }\n    return vec4<f32>(mtek_rgb + (mtek_c * mtek_frame.ambient), 1.0);\n}\n\nfn mtek_fragment(u_p_input: MtekSurfaceInput) -> vec4<f32> {\n    return mtek_lighting_pbr(u_p_input, mtek_params.u_tint, mtek_params.u_metallic, mtek_params.u_roughness);\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    let mtek_world_normal = normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal);\n}\n\n@fragment\nfn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {\n    let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal));\n    let mtek_color = mtek_fragment(mtek_surface);\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
+      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_e2cab98b_Shiny {\n    u_tint: vec4<f32>,\n    u_metallic: f32,\n    u_roughness: f32,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n    @location(1) world_position: vec3<f32>,\n    @location(2) world_normal: vec3<f32>,\n}\n\nstruct MtekSurfaceInput {\n    world_position: vec3<f32>,\n    world_normal: vec3<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_e2cab98b_Shiny;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_lighting_pbr(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>, mtek_metallic: f32, mtek_roughness: f32) -> vec4<f32> {\n    let mtek_c = mtek_base_color.xyz;\n    let mtek_r = clamp(mtek_roughness, 0.045, 1.0);\n    let mtek_alpha = mtek_r * mtek_r;\n    let mtek_a2 = mtek_alpha * mtek_alpha;\n    let mtek_m = clamp(mtek_metallic, 0.0, 1.0);\n    let mtek_f0 = (vec3<f32>(0.04) * (1.0 - mtek_m)) + (mtek_c * mtek_m);\n    let mtek_n = mtek_surface.world_normal;\n    let mtek_v = normalize(mtek_frame.camera_position - mtek_surface.world_position);\n    let mtek_nv = max(dot(mtek_n, mtek_v), 0.0001);\n    var mtek_rgb = vec3<f32>(0.0);\n    for (var mtek_i = 0u; mtek_i < min(mtek_frame.light_count, 4u); mtek_i++) {\n        let mtek_light = mtek_frame.lights[mtek_i];\n        let mtek_range = mtek_light.range;\n        let mtek_is_point = mtek_light.kind == 1u;\n        let mtek_to_light = mtek_light.position - mtek_surface.world_position;\n        let mtek_distance2 = dot(mtek_to_light, mtek_to_light);\n        let mtek_l = normalize(select(-mtek_light.direction, mtek_to_light, mtek_is_point));\n        let mtek_nl = max(dot(mtek_n, mtek_l), 0.0);\n        let mtek_ratio = sqrt(mtek_distance2) / select(mtek_range, 1.0, mtek_range == 0.0);\n        let mtek_ratio2 = mtek_ratio * mtek_ratio;\n        let mtek_falloff = clamp(1.0 - (mtek_ratio2 * mtek_ratio2), 0.0, 1.0);\n        let mtek_window = select(mtek_falloff * mtek_falloff, 1.0, mtek_range == 0.0);\n        let mtek_radiance = select(mtek_light.color, mtek_light.color * (mtek_window / max(mtek_distance2, 0.0001)), mtek_is_point);\n        if mtek_nl > 0.0 {\n            let mtek_h = normalize(mtek_l + mtek_v);\n            let mtek_nh = max(dot(mtek_n, mtek_h), 0.0);\n            let mtek_vh = max(dot(mtek_v, mtek_h), 0.0);\n            let mtek_spread = ((mtek_nh * mtek_nh) * (mtek_a2 - 1.0)) + 1.0;\n            let mtek_d = mtek_a2 / ((3.1415927 * mtek_spread) * mtek_spread);\n            let mtek_denominator = (mtek_nl * sqrt(((mtek_nv * mtek_nv) * (1.0 - mtek_a2)) + mtek_a2)) + (mtek_nv * sqrt(((mtek_nl * mtek_nl) * (1.0 - mtek_a2)) + mtek_a2));\n            let mtek_vis = select(0.5 / mtek_denominator, 0.0, mtek_denominator == 0.0);\n            let mtek_t = 1.0 - mtek_vh;\n            let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;\n            let mtek_fresnel = mtek_f0 + ((vec3<f32>(1.0) - mtek_f0) * mtek_t5);\n            let mtek_specular = mtek_fresnel * (mtek_d * mtek_vis);\n            let mtek_diffuse = ((vec3<f32>(1.0) - mtek_fresnel) * mtek_c) * ((1.0 - mtek_m) / 3.1415927);\n            mtek_rgb = mtek_rgb + (((mtek_diffuse + mtek_specular) * mtek_radiance) * mtek_nl);\n        }\n    }\n    return vec4<f32>(mtek_rgb + (mtek_c * mtek_frame.ambient), 1.0);\n}\n\nfn mtek_fragment(u_p_input: MtekSurfaceInput) -> vec4<f32> {\n    return mtek_lighting_pbr(u_p_input, mtek_params.u_tint, mtek_params.u_metallic, mtek_params.u_roughness);\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    let mtek_world_normal = normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal);\n}\n\n@vertex\nfn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {\n    let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);\n    let mtek_world_normal = normalize((mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * vec4<f32>(mtek_normal, 0.0)).xyz);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal);\n}\n\n@fragment\nfn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {\n    let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal));\n    let mtek_color = mtek_fragment(mtek_surface);\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
       "spanMap": [
         {
           "wgsl": {
@@ -12916,7 +13683,7 @@
           "wgsl": {
             "line": 99,
             "colStart": 1,
-            "colEnd": 10
+            "colEnd": 8
           },
           "source": {
             "file": "src/main.mtek",
@@ -12933,7 +13700,7 @@
           "wgsl": {
             "line": 100,
             "colStart": 1,
-            "colEnd": 66
+            "colEnd": 436
           },
           "source": {
             "file": "src/main.mtek",
@@ -12949,8 +13716,161 @@
         {
           "wgsl": {
             "line": 100,
-            "colStart": 12,
-            "colEnd": 37
+            "colStart": 22,
+            "colEnd": 59
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 100,
+            "colStart": 61,
+            "colEnd": 96
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 100,
+            "colStart": 98,
+            "colEnd": 135
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 100,
+            "colStart": 137,
+            "colEnd": 174
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 100,
+            "colStart": 176,
+            "colEnd": 213
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 100,
+            "colStart": 215,
+            "colEnd": 252
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 100,
+            "colStart": 254,
+            "colEnd": 292
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 100,
+            "colStart": 294,
+            "colEnd": 332
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 100,
+            "colStart": 334,
+            "colEnd": 372
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 100,
+            "colStart": 374,
+            "colEnd": 413
           },
           "source": {
             "file": "src/main.mtek",
@@ -12967,7 +13887,7 @@
           "wgsl": {
             "line": 101,
             "colStart": 5,
-            "colEnd": 98
+            "colEnd": 126
           },
           "source": {
             "file": "src/main.mtek",
@@ -12983,8 +13903,8 @@
         {
           "wgsl": {
             "line": 101,
-            "colStart": 24,
-            "colEnd": 97
+            "colStart": 22,
+            "colEnd": 125
           },
           "source": {
             "file": "src/main.mtek",
@@ -13000,8 +13920,8 @@
         {
           "wgsl": {
             "line": 101,
-            "colStart": 41,
-            "colEnd": 63
+            "colStart": 22,
+            "colEnd": 93
           },
           "source": {
             "file": "src/main.mtek",
@@ -13017,8 +13937,8 @@
         {
           "wgsl": {
             "line": 101,
-            "colStart": 41,
-            "colEnd": 48
+            "colStart": 34,
+            "colEnd": 47
           },
           "source": {
             "file": "src/main.mtek",
@@ -13034,8 +13954,8 @@
         {
           "wgsl": {
             "line": 101,
-            "colStart": 65,
-            "colEnd": 96
+            "colStart": 49,
+            "colEnd": 62
           },
           "source": {
             "file": "src/main.mtek",
@@ -13051,8 +13971,8 @@
         {
           "wgsl": {
             "line": 101,
-            "colStart": 75,
-            "colEnd": 95
+            "colStart": 64,
+            "colEnd": 77
           },
           "source": {
             "file": "src/main.mtek",
@@ -13068,7 +13988,177 @@
         {
           "wgsl": {
             "line": 101,
-            "colStart": 75,
+            "colStart": 79,
+            "colEnd": 92
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 101,
+            "colStart": 96,
+            "colEnd": 125
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 101,
+            "colStart": 106,
+            "colEnd": 119
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 101,
+            "colStart": 121,
+            "colEnd": 124
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 102,
+            "colStart": 5,
+            "colEnd": 152
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 102,
+            "colStart": 29,
+            "colEnd": 151
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 102,
+            "colStart": 39,
+            "colEnd": 150
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 102,
+            "colStart": 40,
+            "colEnd": 145
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 102,
+            "colStart": 40,
+            "colEnd": 115
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 102,
+            "colStart": 52,
+            "colEnd": 66
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 102,
+            "colStart": 68,
             "colEnd": 82
           },
           "source": {
@@ -13085,8 +14175,8 @@
         {
           "wgsl": {
             "line": 102,
-            "colStart": 5,
-            "colEnd": 50
+            "colStart": 84,
+            "colEnd": 98
           },
           "source": {
             "file": "src/main.mtek",
@@ -13102,8 +14192,8 @@
         {
           "wgsl": {
             "line": 102,
-            "colStart": 22,
-            "colEnd": 49
+            "colStart": 100,
+            "colEnd": 114
           },
           "source": {
             "file": "src/main.mtek",
@@ -13119,8 +14209,42 @@
         {
           "wgsl": {
             "line": 102,
-            "colStart": 36,
-            "colEnd": 48
+            "colStart": 118,
+            "colEnd": 145
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 102,
+            "colStart": 128,
+            "colEnd": 139
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 102,
+            "colStart": 141,
+            "colEnd": 144
           },
           "source": {
             "file": "src/main.mtek",
@@ -13137,7 +14261,7 @@
           "wgsl": {
             "line": 103,
             "colStart": 5,
-            "colEnd": 43
+            "colEnd": 99
           },
           "source": {
             "file": "src/main.mtek",
@@ -13154,7 +14278,7 @@
           "wgsl": {
             "line": 103,
             "colStart": 12,
-            "colEnd": 42
+            "colEnd": 98
           },
           "source": {
             "file": "src/main.mtek",
@@ -13170,6 +14294,380 @@
         {
           "wgsl": {
             "line": 103,
+            "colStart": 29,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 103,
+            "colStart": 29,
+            "colEnd": 49
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 103,
+            "colStart": 29,
+            "colEnd": 39
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 103,
+            "colStart": 52,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 103,
+            "colStart": 64,
+            "colEnd": 78
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 103,
+            "colStart": 64,
+            "colEnd": 74
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 103,
+            "colStart": 80,
+            "colEnd": 97
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 1,
+            "colEnd": 10
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 1,
+            "colEnd": 66
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 12,
+            "colEnd": 37
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 5,
+            "colEnd": 98
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 24,
+            "colEnd": 97
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 41,
+            "colEnd": 63
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 41,
+            "colEnd": 48
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 65,
+            "colEnd": 96
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 75,
+            "colEnd": 95
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 75,
+            "colEnd": 82
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 5,
+            "colEnd": 50
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 22,
+            "colEnd": 49
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 36,
+            "colEnd": 48
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 110,
+            "colStart": 5,
+            "colEnd": 43
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 110,
+            "colStart": 12,
+            "colEnd": 42
+          },
+          "source": {
+            "file": "src/main.mtek",
+            "startByte": 272,
+            "endByte": 501,
+            "startLine": 4,
+            "startColumn": 1,
+            "endLine": 12,
+            "endColumn": 2
+          },
+          "symbol": "src/main.mtek::Shiny"
+        },
+        {
+          "wgsl": {
+            "line": 110,
             "colStart": 22,
             "colEnd": 36
           },
@@ -13186,7 +14684,7 @@
         },
         {
           "wgsl": {
-            "line": 103,
+            "line": 110,
             "colStart": 22,
             "colEnd": 32
           },
@@ -13203,7 +14701,7 @@
         },
         {
           "wgsl": {
-            "line": 103,
+            "line": 110,
             "colStart": 38,
             "colEnd": 41
           },
@@ -13231,10 +14729,11 @@
         "endLine": 21,
         "endColumn": 2
       },
-      "hash": "03df8245959cb2a1823807b959b246a63f784035cbcfc9785fc4bdaddb2b9a38",
-      "url": "shaders/03df8245959cb2a1.wgsl",
-      "map": "shaders/03df8245959cb2a1.mtek-map.json",
+      "hash": "5dae93f119e40c42b57bf1f785fa132dc30c882691c7bac926635597374f0904",
+      "url": "shaders/5dae93f119e40c42.wgsl",
+      "map": "shaders/5dae93f119e40c42.mtek-map.json",
       "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
       "fragmentEntry": "mtek_fs",
       "vertexAttributes": [
         "position",
@@ -13247,7 +14746,7 @@
         "uv"
       ],
       "layout": "material:std/materials.mtek::Pbr",
-      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_2b212d15_Pbr {\n    u_base_color: vec4<f32>,\n    u_metallic: f32,\n    u_roughness: f32,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n    @location(1) world_position: vec3<f32>,\n    @location(2) world_normal: vec3<f32>,\n    @location(3) uv: vec2<f32>,\n}\n\nstruct MtekSurfaceInput {\n    world_position: vec3<f32>,\n    world_normal: vec3<f32>,\n    uv: vec2<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_2b212d15_Pbr;\n@group(1) @binding(1) var mtek_texture_base_color_texture: texture_2d<f32>;\n@group(1) @binding(2) var mtek_sampler_base_color_sampler: sampler;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_lighting_pbr(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>, mtek_metallic: f32, mtek_roughness: f32) -> vec4<f32> {\n    let mtek_c = mtek_base_color.xyz;\n    let mtek_r = clamp(mtek_roughness, 0.045, 1.0);\n    let mtek_alpha = mtek_r * mtek_r;\n    let mtek_a2 = mtek_alpha * mtek_alpha;\n    let mtek_m = clamp(mtek_metallic, 0.0, 1.0);\n    let mtek_f0 = (vec3<f32>(0.04) * (1.0 - mtek_m)) + (mtek_c * mtek_m);\n    let mtek_n = mtek_surface.world_normal;\n    let mtek_v = normalize(mtek_frame.camera_position - mtek_surface.world_position);\n    let mtek_nv = max(dot(mtek_n, mtek_v), 0.0001);\n    var mtek_rgb = vec3<f32>(0.0);\n    for (var mtek_i = 0u; mtek_i < min(mtek_frame.light_count, 4u); mtek_i++) {\n        let mtek_light = mtek_frame.lights[mtek_i];\n        let mtek_range = mtek_light.range;\n        let mtek_is_point = mtek_light.kind == 1u;\n        let mtek_to_light = mtek_light.position - mtek_surface.world_position;\n        let mtek_distance2 = dot(mtek_to_light, mtek_to_light);\n        let mtek_l = normalize(select(-mtek_light.direction, mtek_to_light, mtek_is_point));\n        let mtek_nl = max(dot(mtek_n, mtek_l), 0.0);\n        let mtek_ratio = sqrt(mtek_distance2) / select(mtek_range, 1.0, mtek_range == 0.0);\n        let mtek_ratio2 = mtek_ratio * mtek_ratio;\n        let mtek_falloff = clamp(1.0 - (mtek_ratio2 * mtek_ratio2), 0.0, 1.0);\n        let mtek_window = select(mtek_falloff * mtek_falloff, 1.0, mtek_range == 0.0);\n        let mtek_radiance = select(mtek_light.color, mtek_light.color * (mtek_window / max(mtek_distance2, 0.0001)), mtek_is_point);\n        if mtek_nl > 0.0 {\n            let mtek_h = normalize(mtek_l + mtek_v);\n            let mtek_nh = max(dot(mtek_n, mtek_h), 0.0);\n            let mtek_vh = max(dot(mtek_v, mtek_h), 0.0);\n            let mtek_spread = ((mtek_nh * mtek_nh) * (mtek_a2 - 1.0)) + 1.0;\n            let mtek_d = mtek_a2 / ((3.1415927 * mtek_spread) * mtek_spread);\n            let mtek_denominator = (mtek_nl * sqrt(((mtek_nv * mtek_nv) * (1.0 - mtek_a2)) + mtek_a2)) + (mtek_nv * sqrt(((mtek_nl * mtek_nl) * (1.0 - mtek_a2)) + mtek_a2));\n            let mtek_vis = select(0.5 / mtek_denominator, 0.0, mtek_denominator == 0.0);\n            let mtek_t = 1.0 - mtek_vh;\n            let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;\n            let mtek_fresnel = mtek_f0 + ((vec3<f32>(1.0) - mtek_f0) * mtek_t5);\n            let mtek_specular = mtek_fresnel * (mtek_d * mtek_vis);\n            let mtek_diffuse = ((vec3<f32>(1.0) - mtek_fresnel) * mtek_c) * ((1.0 - mtek_m) / 3.1415927);\n            mtek_rgb = mtek_rgb + (((mtek_diffuse + mtek_specular) * mtek_radiance) * mtek_nl);\n        }\n    }\n    return vec4<f32>(mtek_rgb + (mtek_c * mtek_frame.ambient), 1.0);\n}\n\nfn mtek_fragment(u_p_surface: MtekSurfaceInput) -> vec4<f32> {\n    let u_l_texel = textureSampleLevel(mtek_texture_base_color_texture, mtek_sampler_base_color_sampler, u_p_surface.uv, 0.0);\n    let u_l_albedo = vec4<f32>(mtek_params.u_base_color.xyz * u_l_texel.xyz, 1.0);\n    return mtek_lighting_pbr(u_p_surface, u_l_albedo, mtek_params.u_metallic, mtek_params.u_roughness);\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    let mtek_world_normal = normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);\n}\n\n@fragment\nfn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {\n    let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);\n    let mtek_color = mtek_fragment(mtek_surface);\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
+      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_2b212d15_Pbr {\n    u_base_color: vec4<f32>,\n    u_metallic: f32,\n    u_roughness: f32,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n    @location(1) world_position: vec3<f32>,\n    @location(2) world_normal: vec3<f32>,\n    @location(3) uv: vec2<f32>,\n}\n\nstruct MtekSurfaceInput {\n    world_position: vec3<f32>,\n    world_normal: vec3<f32>,\n    uv: vec2<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_2b212d15_Pbr;\n@group(1) @binding(1) var mtek_texture_base_color_texture: texture_2d<f32>;\n@group(1) @binding(2) var mtek_sampler_base_color_sampler: sampler;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_lighting_pbr(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>, mtek_metallic: f32, mtek_roughness: f32) -> vec4<f32> {\n    let mtek_c = mtek_base_color.xyz;\n    let mtek_r = clamp(mtek_roughness, 0.045, 1.0);\n    let mtek_alpha = mtek_r * mtek_r;\n    let mtek_a2 = mtek_alpha * mtek_alpha;\n    let mtek_m = clamp(mtek_metallic, 0.0, 1.0);\n    let mtek_f0 = (vec3<f32>(0.04) * (1.0 - mtek_m)) + (mtek_c * mtek_m);\n    let mtek_n = mtek_surface.world_normal;\n    let mtek_v = normalize(mtek_frame.camera_position - mtek_surface.world_position);\n    let mtek_nv = max(dot(mtek_n, mtek_v), 0.0001);\n    var mtek_rgb = vec3<f32>(0.0);\n    for (var mtek_i = 0u; mtek_i < min(mtek_frame.light_count, 4u); mtek_i++) {\n        let mtek_light = mtek_frame.lights[mtek_i];\n        let mtek_range = mtek_light.range;\n        let mtek_is_point = mtek_light.kind == 1u;\n        let mtek_to_light = mtek_light.position - mtek_surface.world_position;\n        let mtek_distance2 = dot(mtek_to_light, mtek_to_light);\n        let mtek_l = normalize(select(-mtek_light.direction, mtek_to_light, mtek_is_point));\n        let mtek_nl = max(dot(mtek_n, mtek_l), 0.0);\n        let mtek_ratio = sqrt(mtek_distance2) / select(mtek_range, 1.0, mtek_range == 0.0);\n        let mtek_ratio2 = mtek_ratio * mtek_ratio;\n        let mtek_falloff = clamp(1.0 - (mtek_ratio2 * mtek_ratio2), 0.0, 1.0);\n        let mtek_window = select(mtek_falloff * mtek_falloff, 1.0, mtek_range == 0.0);\n        let mtek_radiance = select(mtek_light.color, mtek_light.color * (mtek_window / max(mtek_distance2, 0.0001)), mtek_is_point);\n        if mtek_nl > 0.0 {\n            let mtek_h = normalize(mtek_l + mtek_v);\n            let mtek_nh = max(dot(mtek_n, mtek_h), 0.0);\n            let mtek_vh = max(dot(mtek_v, mtek_h), 0.0);\n            let mtek_spread = ((mtek_nh * mtek_nh) * (mtek_a2 - 1.0)) + 1.0;\n            let mtek_d = mtek_a2 / ((3.1415927 * mtek_spread) * mtek_spread);\n            let mtek_denominator = (mtek_nl * sqrt(((mtek_nv * mtek_nv) * (1.0 - mtek_a2)) + mtek_a2)) + (mtek_nv * sqrt(((mtek_nl * mtek_nl) * (1.0 - mtek_a2)) + mtek_a2));\n            let mtek_vis = select(0.5 / mtek_denominator, 0.0, mtek_denominator == 0.0);\n            let mtek_t = 1.0 - mtek_vh;\n            let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;\n            let mtek_fresnel = mtek_f0 + ((vec3<f32>(1.0) - mtek_f0) * mtek_t5);\n            let mtek_specular = mtek_fresnel * (mtek_d * mtek_vis);\n            let mtek_diffuse = ((vec3<f32>(1.0) - mtek_fresnel) * mtek_c) * ((1.0 - mtek_m) / 3.1415927);\n            mtek_rgb = mtek_rgb + (((mtek_diffuse + mtek_specular) * mtek_radiance) * mtek_nl);\n        }\n    }\n    return vec4<f32>(mtek_rgb + (mtek_c * mtek_frame.ambient), 1.0);\n}\n\nfn mtek_fragment(u_p_surface: MtekSurfaceInput) -> vec4<f32> {\n    let u_l_texel = textureSampleLevel(mtek_texture_base_color_texture, mtek_sampler_base_color_sampler, u_p_surface.uv, 0.0);\n    let u_l_albedo = vec4<f32>(mtek_params.u_base_color.xyz * u_l_texel.xyz, 1.0);\n    return mtek_lighting_pbr(u_p_surface, u_l_albedo, mtek_params.u_metallic, mtek_params.u_roughness);\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    let mtek_world_normal = normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);\n}\n\n@vertex\nfn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {\n    let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);\n    let mtek_world_normal = normalize((mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * vec4<f32>(mtek_normal, 0.0)).xyz);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);\n}\n\n@fragment\nfn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {\n    let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);\n    let mtek_color = mtek_fragment(mtek_surface);\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
       "spanMap": [
         {
           "wgsl": {
@@ -19577,7 +21076,7 @@
           "wgsl": {
             "line": 105,
             "colStart": 1,
-            "colEnd": 10
+            "colEnd": 8
           },
           "source": {
             "file": "std/materials.mtek",
@@ -19594,7 +21093,7 @@
           "wgsl": {
             "line": 106,
             "colStart": 1,
-            "colEnd": 66
+            "colEnd": 469
           },
           "source": {
             "file": "std/materials.mtek",
@@ -19610,6 +21109,771 @@
         {
           "wgsl": {
             "line": 106,
+            "colStart": 22,
+            "colEnd": 59
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 61,
+            "colEnd": 96
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 98,
+            "colEnd": 129
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 131,
+            "colEnd": 168
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 170,
+            "colEnd": 207
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 209,
+            "colEnd": 246
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 248,
+            "colEnd": 285
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 287,
+            "colEnd": 325
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 327,
+            "colEnd": 365
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 367,
+            "colEnd": 405
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 106,
+            "colStart": 407,
+            "colEnd": 446
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 5,
+            "colEnd": 126
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 22,
+            "colEnd": 125
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 22,
+            "colEnd": 93
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 34,
+            "colEnd": 47
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 49,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 64,
+            "colEnd": 77
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 79,
+            "colEnd": 92
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 96,
+            "colEnd": 125
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 106,
+            "colEnd": 119
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 107,
+            "colStart": 121,
+            "colEnd": 124
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 5,
+            "colEnd": 152
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 29,
+            "colEnd": 151
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 39,
+            "colEnd": 150
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 40,
+            "colEnd": 145
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 40,
+            "colEnd": 115
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 52,
+            "colEnd": 66
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 68,
+            "colEnd": 82
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 84,
+            "colEnd": 98
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 100,
+            "colEnd": 114
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 118,
+            "colEnd": 145
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 128,
+            "colEnd": 139
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 108,
+            "colStart": 141,
+            "colEnd": 144
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 5,
+            "colEnd": 108
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 12,
+            "colEnd": 107
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 29,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 29,
+            "colEnd": 49
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 29,
+            "colEnd": 39
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 52,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 64,
+            "colEnd": 78
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 64,
+            "colEnd": 74
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 80,
+            "colEnd": 97
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 109,
+            "colStart": 99,
+            "colEnd": 106
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 112,
+            "colStart": 1,
+            "colEnd": 10
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 113,
+            "colStart": 1,
+            "colEnd": 66
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 379,
+            "endByte": 887,
+            "startLine": 10,
+            "startColumn": 8,
+            "endLine": 21,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Pbr"
+        },
+        {
+          "wgsl": {
+            "line": 113,
             "colStart": 12,
             "colEnd": 37
           },
@@ -19626,7 +21890,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 5,
             "colEnd": 110
           },
@@ -19643,7 +21907,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 24,
             "colEnd": 109
           },
@@ -19660,7 +21924,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 41,
             "colEnd": 63
           },
@@ -19677,7 +21941,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 41,
             "colEnd": 48
           },
@@ -19694,7 +21958,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 65,
             "colEnd": 96
           },
@@ -19711,7 +21975,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 75,
             "colEnd": 95
           },
@@ -19728,7 +21992,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 75,
             "colEnd": 82
           },
@@ -19745,7 +22009,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 98,
             "colEnd": 108
           },
@@ -19762,7 +22026,7 @@
         },
         {
           "wgsl": {
-            "line": 107,
+            "line": 114,
             "colStart": 98,
             "colEnd": 105
           },
@@ -19779,7 +22043,7 @@
         },
         {
           "wgsl": {
-            "line": 108,
+            "line": 115,
             "colStart": 5,
             "colEnd": 50
           },
@@ -19796,7 +22060,7 @@
         },
         {
           "wgsl": {
-            "line": 108,
+            "line": 115,
             "colStart": 22,
             "colEnd": 49
           },
@@ -19813,7 +22077,7 @@
         },
         {
           "wgsl": {
-            "line": 108,
+            "line": 115,
             "colStart": 36,
             "colEnd": 48
           },
@@ -19830,7 +22094,7 @@
         },
         {
           "wgsl": {
-            "line": 109,
+            "line": 116,
             "colStart": 5,
             "colEnd": 43
           },
@@ -19847,7 +22111,7 @@
         },
         {
           "wgsl": {
-            "line": 109,
+            "line": 116,
             "colStart": 12,
             "colEnd": 42
           },
@@ -19864,7 +22128,7 @@
         },
         {
           "wgsl": {
-            "line": 109,
+            "line": 116,
             "colStart": 22,
             "colEnd": 36
           },
@@ -19881,7 +22145,7 @@
         },
         {
           "wgsl": {
-            "line": 109,
+            "line": 116,
             "colStart": 22,
             "colEnd": 32
           },
@@ -19898,7 +22162,7 @@
         },
         {
           "wgsl": {
-            "line": 109,
+            "line": 116,
             "colStart": 38,
             "colEnd": 41
           },
@@ -19926,17 +22190,18 @@
         "endLine": 8,
         "endColumn": 2
       },
-      "hash": "0c483313bae03955efdf9c236346c1df84ab2e47421e5361bc6347a941941101",
-      "url": "shaders/0c483313bae03955.wgsl",
-      "map": "shaders/0c483313bae03955.mtek-map.json",
+      "hash": "ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa",
+      "url": "shaders/ef35824416f65c3f.wgsl",
+      "map": "shaders/ef35824416f65c3f.mtek-map.json",
       "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
       "fragmentEntry": "mtek_fs",
       "vertexAttributes": [
         "position"
       ],
       "surfaceInputs": [],
       "layout": "material:std/materials.mtek::Unlit",
-      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_2b212d15_Unlit {\n    u_color: vec4<f32>,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_2b212d15_Unlit;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_fragment() -> vec4<f32> {\n    return mtek_params.u_color;\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);\n}\n\n@fragment\nfn mtek_fs() -> @location(0) vec4<f32> {\n    let mtek_color = mtek_fragment();\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
+      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    reserved0: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_2b212d15_Unlit {\n    u_color: vec4<f32>,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_2b212d15_Unlit;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_fragment() -> vec4<f32> {\n    return mtek_params.u_color;\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);\n}\n\n@vertex\nfn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {\n    let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);\n}\n\n@fragment\nfn mtek_fs() -> @location(0) vec4<f32> {\n    let mtek_color = mtek_fragment();\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
       "spanMap": [
         {
           "wgsl": {
@@ -20690,7 +22955,7 @@
           "wgsl": {
             "line": 46,
             "colStart": 1,
-            "colEnd": 10
+            "colEnd": 8
           },
           "source": {
             "file": "std/materials.mtek",
@@ -20707,7 +22972,160 @@
           "wgsl": {
             "line": 47,
             "colStart": 1,
-            "colEnd": 41
+            "colEnd": 399
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 22,
+            "colEnd": 59
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 61,
+            "colEnd": 98
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 100,
+            "colEnd": 137
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 139,
+            "colEnd": 176
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 178,
+            "colEnd": 215
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 217,
+            "colEnd": 255
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 257,
+            "colEnd": 295
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 297,
+            "colEnd": 335
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 47,
+            "colStart": 337,
+            "colEnd": 376
           },
           "source": {
             "file": "std/materials.mtek",
@@ -20724,7 +23142,7 @@
           "wgsl": {
             "line": 48,
             "colStart": 5,
-            "colEnd": 38
+            "colEnd": 126
           },
           "source": {
             "file": "std/materials.mtek",
@@ -20741,7 +23159,143 @@
           "wgsl": {
             "line": 48,
             "colStart": 22,
-            "colEnd": 37
+            "colEnd": 125
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 22,
+            "colEnd": 93
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 34,
+            "colEnd": 47
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 49,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 64,
+            "colEnd": 77
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 79,
+            "colEnd": 92
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 96,
+            "colEnd": 125
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 106,
+            "colEnd": 119
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 48,
+            "colStart": 121,
+            "colEnd": 124
           },
           "source": {
             "file": "std/materials.mtek",
@@ -20758,7 +23312,7 @@
           "wgsl": {
             "line": 49,
             "colStart": 5,
-            "colEnd": 43
+            "colEnd": 64
           },
           "source": {
             "file": "std/materials.mtek",
@@ -20775,7 +23329,7 @@
           "wgsl": {
             "line": 49,
             "colStart": 12,
-            "colEnd": 42
+            "colEnd": 63
           },
           "source": {
             "file": "std/materials.mtek",
@@ -20791,6 +23345,176 @@
         {
           "wgsl": {
             "line": 49,
+            "colStart": 29,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 29,
+            "colEnd": 49
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 29,
+            "colEnd": 39
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 49,
+            "colStart": 52,
+            "colEnd": 62
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 52,
+            "colStart": 1,
+            "colEnd": 10
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 53,
+            "colStart": 1,
+            "colEnd": 41
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 54,
+            "colStart": 5,
+            "colEnd": 38
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 54,
+            "colStart": 22,
+            "colEnd": 37
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 55,
+            "colStart": 5,
+            "colEnd": 43
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 55,
+            "colStart": 12,
+            "colEnd": 42
+          },
+          "source": {
+            "file": "std/materials.mtek",
+            "startByte": 255,
+            "endByte": 370,
+            "startLine": 5,
+            "startColumn": 8,
+            "endLine": 8,
+            "endColumn": 2
+          },
+          "symbol": "std/materials.mtek::Unlit"
+        },
+        {
+          "wgsl": {
+            "line": 55,
             "colStart": 22,
             "colEnd": 36
           },
@@ -20807,7 +23531,7 @@
         },
         {
           "wgsl": {
-            "line": 49,
+            "line": 55,
             "colStart": 22,
             "colEnd": 32
           },
@@ -20824,7 +23548,7 @@
         },
         {
           "wgsl": {
-            "line": 49,
+            "line": 55,
             "colStart": 38,
             "colEnd": 41
           },

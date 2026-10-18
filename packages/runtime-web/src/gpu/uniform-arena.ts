@@ -233,24 +233,38 @@ export class UniformArena {
    * `write` throws, the mirror is untouched.
    */
   writeIfChanged(slot: number, write: ArenaWriter): boolean {
+    if (!this.stage(slot, write)) return false;
+    new Uint8Array(this.mirror, slot * this.slotStride, this.size).set(this.scratchBytes);
+    this.markDirty(slot);
+    return true;
+  }
+
+  /** Whether `write` would change the slot's bytes: `writeIfChanged` without the write. */
+  wouldChange(slot: number, write: ArenaWriter): boolean {
+    return this.stage(slot, write);
+  }
+
+  /**
+   * The block's bytes as `size / 4` words, a view into the CPU mirror: for hashing and comparing blocks
+   * (`spec/gpu-layout.md` section 8.2). Replaced on growth (read it again after `allocate()`), never written through.
+   */
+  slotWords(slot: number): Uint32Array {
+    this.checkAllocated(slot);
+    return new Uint32Array(this.mirror, slot * this.slotStride, this.size >>> 2);
+  }
+
+  /** Runs `write` on the scratch block holding the slot's bytes; true when the result differs from the mirror. */
+  private stage(slot: number, write: ArenaWriter): boolean {
     this.checkLive();
     this.checkAllocated(slot);
-    const offset = slot * this.slotStride;
-    const mirror = new Uint32Array(this.mirror, offset, this.size >>> 2);
+    const mirror = new Uint32Array(this.mirror, slot * this.slotStride, this.size >>> 2);
     this.scratch.u32.set(mirror);
     write(this.scratch, 0);
     const scratchWords = this.scratch.u32;
-    let changed = false;
     for (let i = 0; i < scratchWords.length; i++) {
-      if (scratchWords[i] !== mirror[i]) {
-        changed = true;
-        break;
-      }
+      if (scratchWords[i] !== mirror[i]) return true;
     }
-    if (!changed) return false;
-    new Uint8Array(this.mirror, offset, this.size).set(this.scratchBytes);
-    this.markDirty(slot);
-    return true;
+    return false;
   }
 
   /**

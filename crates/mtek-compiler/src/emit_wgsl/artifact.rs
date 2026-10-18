@@ -10,7 +10,8 @@ use sha2::{Digest, Sha256};
 use crate::diagnostics::Diagnostic;
 use crate::layout::LayoutRecord;
 use crate::lowering::standard_stage::{
-    FRAGMENT_ENTRY, MaterialShader, SurfaceField, VERTEX_ENTRY, VertexAttribute,
+    FRAGMENT_ENTRY, INSTANCED_VERTEX_ENTRY, MaterialShader, SurfaceField, VERTEX_ENTRY,
+    VertexAttribute,
 };
 use crate::source::Span;
 
@@ -24,7 +25,7 @@ use super::validate::validate;
 /// with the bytes of `wgsl`; its span map is `shaders/<h16>.mtek-map.json`
 /// ([`ShaderArtifact::map_path`], contents from [`ShaderArtifact::span_map_document`]);
 /// the manifest's shader entry is `{ hash: sha256, url, map, material, vertexEntry,
-/// fragmentEntry, vertexAttributes, surfaceInputs }` and the material's `layout` record
+/// instancedVertexEntry, fragmentEntry, vertexAttributes, surfaceInputs }` and the material's `layout` record
 /// goes into the manifest's `layouts`.
 ///
 /// For the runtime: the pipeline's vertex state uses `vertex_entry` and one vertex
@@ -46,6 +47,9 @@ pub struct ShaderArtifact {
     pub span_map: SpanMap,
     /// `mtek_vs`.
     pub vertex_entry: &'static str,
+    /// `mtek_vs_instanced` (decision 0059): `mtek_vs` with the model and normal matrices read from
+    /// a per-instance vertex buffer (`spec/runtime-abi.md` section 8.4).
+    pub instanced_vertex_entry: &'static str,
     /// `mtek_fs`.
     pub fragment_entry: &'static str,
     /// Present vertex attributes in vertex-buffer slot order (`spec/materials.md` 3.3).
@@ -101,6 +105,7 @@ pub fn emit_shader(shader: &MaterialShader) -> Result<ShaderArtifact, Vec<Diagno
         wgsl: printed.text,
         span_map: printed.span_map,
         vertex_entry: VERTEX_ENTRY,
+        instanced_vertex_entry: INSTANCED_VERTEX_ENTRY,
         fragment_entry: FRAGMENT_ENTRY,
         vertex_attributes: shader.vertex_attributes.clone(),
         surface_inputs: shader.surface_inputs.clone(),
@@ -176,8 +181,12 @@ mod tests {
             format!("shaders/{}.mtek-map.json", &artifact.sha256[..16])
         );
         assert_eq!(
-            (artifact.vertex_entry, artifact.fragment_entry),
-            ("mtek_vs", "mtek_fs")
+            (
+                artifact.vertex_entry,
+                artifact.instanced_vertex_entry,
+                artifact.fragment_entry
+            ),
+            ("mtek_vs", "mtek_vs_instanced", "mtek_fs")
         );
         assert_eq!(artifact.material, "src/main.mtek::M");
         let document = artifact.span_map_document(|_| 0);

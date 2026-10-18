@@ -16,6 +16,10 @@ export const M4_RELEASE_OUT_DIR = join(BROWSER_ROOT, ".out", "m4-release");
 /** The frustum culling fixture: nine spheres in a row, a camera moved by the host input `camera_x`. */
 export const CULLING = "culling";
 
+/** The M4-08 fixtures (decision 0059): 500 identical boxes (one group), and 17 entities in groups that must stay apart. */
+export const INSTANCING_GRID = "instancing_grid";
+export const INSTANCING_MIXED = "instancing_mixed";
+
 /** Every fixture directory under `fixtures/m4/`, sorted. */
 export function m4FixtureNames(): string[] {
   return readdirSync(M4_FIXTURES_DIR, { withFileTypes: true })

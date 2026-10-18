@@ -49,11 +49,11 @@ function recordingWriters(layouts: readonly MtekLayoutRecord[], calls: WriteCall
   );
 }
 
-function harness(materials: readonly ResolvedMaterial[], writerLayouts: readonly MtekLayoutRecord[] = [PULSE_LAYOUT, TINT_LAYOUT]) {
+function harness(materials: readonly ResolvedMaterial[], writerLayouts: readonly MtekLayoutRecord[] = [PULSE_LAYOUT, TINT_LAYOUT], shareable = false) {
   const device = new FakeDevice();
   const registry = new ResourceRegistry(asGpu<RegistryDevice>(device));
   const plan = new BindingPlan(registry, FRAME, OBJECT);
-  const instances: ResolvedInstance[] = materials.map((m, index) => ({ index, material: m, entity: index, resources: [] }));
+  const instances: ResolvedInstance[] = materials.map((m, index) => ({ index, material: m, entity: index, shareable, resources: [] }));
   const structure = { instances } as unknown as SceneStructure;
   const calls: WriteCall[] = [];
   const store = new MaterialStore(asGpu<GPUDevice>(device), registry, plan, structure, recordingWriters(writerLayouts, calls));
@@ -93,6 +93,89 @@ describe("MaterialStore: one arena per layout id", () => {
     const { device, store } = harness([PLAIN, PLAIN]);
     expect(arenaBuffers(device)).toHaveLength(0);
     expect(store.ownedParamBlocks).toBe(0);
+  });
+});
+
+describe("MaterialStore: identical immutable instances share a block (spec/gpu-layout.md 8.2, decision 0059)", () => {
+  function sharing(materials: readonly ResolvedMaterial[], values: readonly number[]) {
+    const h = harness(materials, [PULSE_LAYOUT, TINT_LAYOUT], true);
+    values.forEach((value, instance) => {
+      if (!Number.isNaN(value)) h.store.writeParam(instance, "a", value);
+    });
+    h.store.shareIdentical();
+    return h;
+  }
+
+  it("shares the slot of byte-identical instances of one material and names the block by its lowest instance", () => {
+    // Instances 0..4 of Pulse with a = 1, 2, 1, 1, 2: blocks {0, 2, 3} and {1, 4}.
+    const { store, device } = sharing([PULSE, PULSE, PULSE, PULSE, PULSE], [1, 2, 1, 1, 2]);
+    expect([0, 1, 2, 3, 4].map((i) => store.blockOf(i))).toEqual([0, 1, 0, 0, 1]);
+    expect(store.sharedParamBlocks).toBe(2);
+    expect(store.ownedParamBlocks).toBe(0);
+    expect(store.blockVersion).toBeGreaterThan(0);
+    // Shared instances use the bind group of their block.
+    expect(store.bindGroup(2)).toBe(store.bindGroup(0));
+    expect(store.bindGroup(4)).toBe(store.bindGroup(1));
+    expect(store.bindGroup(1)).not.toBe(store.bindGroup(0));
+    // Only the two live slots upload.
+    expect(store.flush(asGpu<GPUQueue>(device.queue))).toBe(2);
+  });
+
+  it("never shares different materials, even with equal bytes, or instances that are not shareable", () => {
+    const blue = { ...PULSE, id: "src/main.mtek::PulseBlue", index: 3 };
+    const { store } = sharing([PULSE, blue, PULSE], [1, 1, 1]);
+    expect([0, 1, 2].map((i) => store.blockOf(i))).toEqual([0, 1, 0]);
+    expect(store.sharedParamBlocks).toBe(1);
+    expect(store.ownedParamBlocks).toBe(1);
+
+    const mutable = harness([PULSE, PULSE]);
+    mutable.store.writeParam(0, "a", 1);
+    mutable.store.writeParam(1, "a", 1);
+    mutable.store.shareIdentical();
+    expect([0, 1].map((i) => mutable.store.blockOf(i))).toEqual([0, 1]);
+    expect(mutable.store.ownedParamBlocks).toBe(2);
+    expect(mutable.store.blockVersion).toBe(0);
+  });
+
+  it("shares instances of a material without value params", () => {
+    const { store } = sharing([PLAIN, PLAIN, PLAIN], []);
+    expect([0, 1, 2].map((i) => store.blockOf(i))).toEqual([0, 0, 0]);
+    // No block, so no arena slot to count.
+    expect(store.sharedParamBlocks).toBe(0);
+    expect(store.ownedParamBlocks).toBe(0);
+  });
+
+  it("gives a written instance a block of its own, copying the shared bytes, and leaves the others alone", () => {
+    const { store, device } = sharing([PULSE, PULSE, PULSE], [1, 1, 1]);
+    const queue = asGpu<GPUQueue>(device.queue);
+    store.flush(queue);
+    const before = store.blockVersion;
+    // The same value changes nothing.
+    store.writeParam(1, "a", 1);
+    expect(store.blockVersion).toBe(before);
+    expect(store.sharedParamBlocks).toBe(1);
+    // A different value: instance 1 leaves; 0 and 2 keep the block named 0.
+    store.writeParam(1, "b", 7);
+    expect(store.blockVersion).toBeGreaterThan(before);
+    expect([0, 1, 2].map((i) => store.blockOf(i))).toEqual([0, 1, 0]);
+    expect(store.sharedParamBlocks).toBe(1);
+    expect(store.ownedParamBlocks).toBe(1);
+    store.flush(queue);
+    const pulse = arenaBuffers(device).find((buffer) => buffer.label?.endsWith("::Pulse"));
+    const words = new Float32Array(pulse?.contents.buffer.slice(0, 3 * 256) ?? new ArrayBuffer(0));
+    // The shared slot (0) still holds a = 1, b = 0. The new block copied a = 1 and holds b = 7.
+    expect([words[0], words[1]]).toEqual([1, 0]);
+    const newSlot = [1, 2].map((slot) => [words[(slot * 256) / 4], words[(slot * 256) / 4 + 1]]).find((pair) => pair[1] === 7);
+    expect(newSlot).toEqual([1, 7]);
+    // The leaving instance has its own bind group now; the others still share one.
+    expect(store.bindGroup(1)).not.toBe(store.bindGroup(0));
+    expect(store.bindGroup(2)).toBe(store.bindGroup(0));
+  });
+
+  it("names the remaining users when the instance that named the block leaves", () => {
+    const { store } = sharing([PULSE, PULSE, PULSE], [1, 1, 1]);
+    store.writeParam(0, "a", 9);
+    expect([0, 1, 2].map((i) => store.blockOf(i))).toEqual([0, 1, 1]);
   });
 });
 
@@ -204,6 +287,7 @@ describe("MaterialStore: textures and samplers (decision 0054)", () => {
         index,
         material: m,
         entity: index,
+        shareable: false,
         resources: [
           { name: "map", kind: "texture", binding: 1, value: texture },
           { name: "filter", kind: "sampler", binding: 2, value: sampler },

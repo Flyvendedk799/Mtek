@@ -354,6 +354,9 @@ pub struct Shader {
     pub map: String,
     pub material: String,
     pub vertex_entry: String,
+    /// `mtek_vs_instanced`; absent in manifests of older compilers (the runtime then draws individually).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instanced_vertex_entry: Option<String>,
     pub fragment_entry: String,
     pub vertex_attributes: Vec<String>,
     pub surface_inputs: Vec<String>,

@@ -1,12 +1,12 @@
 shaders of scene src/main.mtek::Gallery (target profile webgpu-core-2026)
 
 shader of material src/main.mtek::Banded (declared at src/main.mtek:14:1-26:2)
-  file shaders/cd8c3ac9f1670af5.wgsl (sha256 cd8c3ac9f1670af5515cac740b1dbcd4649713e2e608e3d6912b7a0a1a14fce3)
-  entry points mtek_vs (vertex), mtek_fs (fragment)
+  file shaders/78dd2d35ae7d730c.wgsl (sha256 78dd2d35ae7d730c6aa237a984f7d11eb6ec838508152c7cdbe085c5970bc766)
+  entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position, normal, uv
   surface inputs world_position, world_normal, uv
   parameter block material:src/main.mtek::Banded (group 1 binding 0)
-  span map 405 entries over 110 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 450 entries over 117 lines; a line is followed by `// <source> <symbol>` where its origin changes
     1 | struct MtekLight {  // src/main.mtek:14:1-26:2 src/main.mtek::Banded
     2 |     color: vec3<f32>,
     3 |     kind: u32,
@@ -111,20 +111,27 @@ shader of material src/main.mtek::Banded (declared at src/main.mtek:14:1-26:2)
   102 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);
   103 | }
   104 |
-  105 | @fragment
-  106 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
-  107 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);
-  108 |     let mtek_color = mtek_fragment(mtek_surface);
-  109 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  105 | @vertex
+  106 | fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+  107 |     let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
+  108 |     let mtek_world_normal = normalize((mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * vec4<f32>(mtek_normal, 0.0)).xyz);
+  109 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);
   110 | }
+  111 |
+  112 | @fragment
+  113 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
+  114 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);
+  115 |     let mtek_color = mtek_fragment(mtek_surface);
+  116 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  117 | }
 
 shader of material src/main.mtek::Shiny (declared at src/main.mtek:4:1-12:2)
-  file shaders/b5d59c5ee0ff9c55.wgsl (sha256 b5d59c5ee0ff9c55c2314d3b9240b2f5ebff15c12453019b5adcdaf2174d571d)
-  entry points mtek_vs (vertex), mtek_fs (fragment)
+  file shaders/d4feab1a98af0bcb.wgsl (sha256 d4feab1a98af0bcb033894878a440af63042cbd46f79f415f8e7b17b92b24e66)
+  entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position, normal
   surface inputs world_position, world_normal
   parameter block material:src/main.mtek::Shiny (group 1 binding 0)
-  span map 369 entries over 104 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 412 entries over 111 lines; a line is followed by `// <source> <symbol>` where its origin changes
     1 | struct MtekLight {  // src/main.mtek:4:1-12:2 src/main.mtek::Shiny
     2 |     color: vec3<f32>,
     3 |     kind: u32,
@@ -223,20 +230,27 @@ shader of material src/main.mtek::Shiny (declared at src/main.mtek:4:1-12:2)
    96 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal);
    97 | }
    98 |
-   99 | @fragment
-  100 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
-  101 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal));
-  102 |     let mtek_color = mtek_fragment(mtek_surface);
-  103 |     return vec4<f32>(mtek_color.xyz, 1.0);
+   99 | @vertex
+  100 | fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+  101 |     let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
+  102 |     let mtek_world_normal = normalize((mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * vec4<f32>(mtek_normal, 0.0)).xyz);
+  103 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal);
   104 | }
+  105 |
+  106 | @fragment
+  107 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
+  108 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal));
+  109 |     let mtek_color = mtek_fragment(mtek_surface);
+  110 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  111 | }
 
 shader of material std/materials.mtek::Pbr (declared at std/materials.mtek:10:8-21:2)
-  file shaders/03df8245959cb2a1.wgsl (sha256 03df8245959cb2a1823807b959b246a63f784035cbcfc9785fc4bdaddb2b9a38)
-  entry points mtek_vs (vertex), mtek_fs (fragment)
+  file shaders/5dae93f119e40c42.wgsl (sha256 5dae93f119e40c42b57bf1f785fa132dc30c882691c7bac926635597374f0904)
+  entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position, normal, uv
   surface inputs world_position, world_normal, uv
   parameter block material:std/materials.mtek::Pbr (group 1 binding 0)
-  span map 392 entries over 110 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 437 entries over 117 lines; a line is followed by `// <source> <symbol>` where its origin changes
     1 | struct MtekLight {  // std/materials.mtek:10:8-21:2 std/materials.mtek::Pbr
     2 |     color: vec3<f32>,
     3 |     kind: u32,
@@ -341,20 +355,27 @@ shader of material std/materials.mtek::Pbr (declared at std/materials.mtek:10:8-
   102 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);
   103 | }
   104 |
-  105 | @fragment
-  106 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
-  107 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);
-  108 |     let mtek_color = mtek_fragment(mtek_surface);
-  109 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  105 | @vertex
+  106 | fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+  107 |     let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
+  108 |     let mtek_world_normal = normalize((mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * vec4<f32>(mtek_normal, 0.0)).xyz);
+  109 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);
   110 | }
+  111 |
+  112 | @fragment
+  113 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
+  114 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);
+  115 |     let mtek_color = mtek_fragment(mtek_surface);
+  116 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  117 | }
 
 shader of material std/materials.mtek::Unlit (declared at std/materials.mtek:5:8-8:2)
-  file shaders/0c483313bae03955.wgsl (sha256 0c483313bae03955efdf9c236346c1df84ab2e47421e5361bc6347a941941101)
-  entry points mtek_vs (vertex), mtek_fs (fragment)
+  file shaders/ef35824416f65c3f.wgsl (sha256 ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa)
+  entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position
   surface inputs none
   parameter block material:std/materials.mtek::Unlit (group 1 binding 0)
-  span map 53 entries over 50 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 80 entries over 56 lines; a line is followed by `// <source> <symbol>` where its origin changes
    1 | struct MtekLight {  // std/materials.mtek:5:8-8:2 std/materials.mtek::Unlit
    2 |     color: vec3<f32>,
    3 |     kind: u32,
@@ -400,8 +421,14 @@ shader of material std/materials.mtek::Unlit (declared at std/materials.mtek:5:8
   43 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world);
   44 | }
   45 |
-  46 | @fragment
-  47 | fn mtek_fs() -> @location(0) vec4<f32> {
-  48 |     let mtek_color = mtek_fragment();
-  49 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  46 | @vertex
+  47 | fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+  48 |     let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
+  49 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world);
   50 | }
+  51 |
+  52 | @fragment
+  53 | fn mtek_fs() -> @location(0) vec4<f32> {
+  54 |     let mtek_color = mtek_fragment();
+  55 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  56 | }
