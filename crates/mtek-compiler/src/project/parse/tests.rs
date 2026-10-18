@@ -486,7 +486,7 @@ fn a_table_where_a_value_is_expected_and_the_reverse() {
 fn out_of_range_values_name_the_key_the_accepted_range_and_the_value() {
     const SECONDS: &str = "a number greater than 0 and at most 1";
     // (toml, key path, accepted, found as written)
-    let cases: [(&str, &str, &str, &str); 18] = [
+    let cases: [(&str, &str, &str, &str); 21] = [
         (
             "[runtime]\nfixed_step = 0.0",
             "runtime.fixed_step",
@@ -582,6 +582,24 @@ fn out_of_range_values_name_the_key_the_accepted_range_and_the_value() {
             "assets.max_file_bytes",
             "an integer from 1 to 4294967295",
             "4294967296",
+        ),
+        (
+            "[assets]\nmax_total_bytes = 0",
+            "assets.max_total_bytes",
+            "an integer from 1 to 17179869184",
+            "0",
+        ),
+        (
+            "[assets]\nmax_texture_dimension = 8193",
+            "assets.max_texture_dimension",
+            "an integer from 1 to 8192",
+            "8193",
+        ),
+        (
+            "[assets]\nmax_vertices_per_primitive = 0",
+            "assets.max_vertices_per_primitive",
+            "an integer from 1 to 4294967295",
+            "0",
         ),
         // Beyond 64 bits: the TOML parser keeps the digits, the range check rejects them.
         (
@@ -945,4 +963,26 @@ fn articles_agree_with_the_noun() {
     assert_eq!(with_article("string"), "a string");
     assert_eq!(with_article("date-time"), "a date-time");
     assert_eq!(with_article("table"), "a table");
+}
+
+#[test]
+fn every_asset_limit_can_be_set_and_has_the_documented_default() {
+    let defaults = valid(MINIMAL).assets;
+    assert_eq!(defaults.max_file_bytes, 64 * 1024 * 1024);
+    assert_eq!(defaults.max_total_bytes, 256 * 1024 * 1024);
+    assert_eq!(defaults.max_texture_dimension, 8_192);
+    assert_eq!(defaults.max_vertices_per_primitive, 4_194_304);
+    let text = format!(
+        "{MINIMAL}[assets]\nmax_file_bytes = 10\nmax_total_bytes = 20\nmax_texture_dimension = 512\nmax_vertices_per_primitive = 99\n"
+    );
+    let set = valid(&text).assets;
+    assert_eq!(
+        (
+            set.max_file_bytes,
+            set.max_total_bytes,
+            set.max_texture_dimension,
+            set.max_vertices_per_primitive
+        ),
+        (10, 20, 512, 99)
+    );
 }

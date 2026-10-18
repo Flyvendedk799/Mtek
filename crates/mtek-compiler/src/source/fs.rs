@@ -216,6 +216,15 @@ mod tests {
     }
 
     #[test]
+    fn len_is_the_size_of_a_file() {
+        let fs = sample();
+        assert_eq!(fs.len(&p("assets/b.bin")), Ok(3));
+        assert_eq!(fs.len(&p("src/main.mtek")), Ok(4));
+        assert_eq!(fs.len(&p("src")), Err(FsError::IsADirectory(p("src"))));
+        assert_eq!(fs.len(&p("nope")), Err(FsError::NotFound(p("nope"))));
+    }
+
+    #[test]
     fn read_errors() {
         let fs = sample();
         assert_eq!(

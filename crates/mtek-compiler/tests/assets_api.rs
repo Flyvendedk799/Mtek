@@ -17,11 +17,11 @@ const GLB_MAGIC: u32 = 0x4654_6C67;
 
 fn container(json: &Value, bin: &[u8]) -> Vec<u8> {
     let mut text = serde_json::to_vec(json).unwrap();
-    while text.len() % 4 != 0 {
+    while !text.len().is_multiple_of(4) {
         text.push(b' ');
     }
     let mut padded = bin.to_vec();
-    while padded.len() % 4 != 0 {
+    while !padded.len().is_multiple_of(4) {
         padded.push(0);
     }
     let total = 12 + 8 + text.len() + 8 + padded.len();
@@ -49,9 +49,7 @@ fn model() -> Vec<u8> {
     for index in [0_u16, 1, 2, 0] {
         bin.extend_from_slice(&index.to_le_bytes());
     }
-    let primitive = |material: usize| {
-        json!({ "attributes": { "POSITION": 0 }, "indices": 1, "material": material })
-    };
+    let primitive = |material: usize| json!({ "attributes": { "POSITION": 0 }, "indices": 1, "material": material });
     let json = json!({
         "asset": { "version": "2.0" },
         "scene": 0,
@@ -116,7 +114,11 @@ fn a_named_mesh_with_one_primitive_is_a_mesh() {
 fn a_name_used_twice_is_ambiguous() {
     let failure = evaluate(&file(), "mesh", "Twin", None).unwrap_err();
     assert_eq!(failure.code, Code::E7024);
-    assert!(failure.message.contains("has 2 meshes named 'Twin'"), "{}", failure.message);
+    assert!(
+        failure.message.contains("has 2 meshes named 'Twin'"),
+        "{}",
+        failure.message
+    );
     assert!(!failure.unknown_name);
 }
 
@@ -139,7 +141,11 @@ fn an_unknown_name_lists_the_names_and_offers_a_validated_rename() {
         "{:?}",
         failure.notes
     );
-    assert!(failure.notes[1].contains("1 mesh in the file has no name"), "{:?}", failure.notes);
+    assert!(
+        failure.notes[1].contains("1 mesh in the file has no name"),
+        "{:?}",
+        failure.notes
+    );
 }
 
 #[test]
@@ -153,7 +159,12 @@ fn a_rename_that_would_not_work_is_not_offered_as_an_edit() {
 #[test]
 fn no_rename_when_two_names_are_close() {
     // "Seaf" is within 2 of "Seat" only; "Emptx" of "Empty" only; "Es" of nothing close.
-    assert!(evaluate_checked(&file(), "mesh", "Es", None).unwrap_err().rename.is_none());
+    assert!(
+        evaluate_checked(&file(), "mesh", "Es", None)
+            .unwrap_err()
+            .rename
+            .is_none()
+    );
     let materials = evaluate_checked(&file(), "material_roughness", "Oa", None).unwrap_err();
     assert_eq!(materials.rename.as_deref(), Some("Oak"));
 }
@@ -201,9 +212,16 @@ fn materials_give_their_factors() {
         evaluate(&f, "material_base_color", "Oak", None),
         Ok(Accessed::Color([1.0; 4]))
     );
-    assert_eq!(evaluate(&f, "material_texture", "Oak", None), Ok(Accessed::Texture(None)));
-    let Ok(Accessed::Material { metallic, roughness, texture, .. }) =
-        evaluate(&f, "material", "Fabric", None)
+    assert_eq!(
+        evaluate(&f, "material_texture", "Oak", None),
+        Ok(Accessed::Texture(None))
+    );
+    let Ok(Accessed::Material {
+        metallic,
+        roughness,
+        texture,
+        ..
+    }) = evaluate(&f, "material", "Fabric", None)
     else {
         panic!("not a material");
     };
@@ -217,7 +235,10 @@ fn nodes_give_their_world_transform_in_the_default_scene() {
         evaluate(&f, "node_position", "Seat", None),
         Ok(Accessed::Vec3([1.0, 4.0, 3.0]))
     );
-    assert_eq!(evaluate(&f, "node_scale", "Seat", None), Ok(Accessed::Vec3([2.0; 3])));
+    assert_eq!(
+        evaluate(&f, "node_scale", "Seat", None),
+        Ok(Accessed::Vec3([2.0; 3]))
+    );
     assert_eq!(
         evaluate(&f, "node_rotation", "Seat", None),
         Ok(Accessed::Quat([0.0, 0.0, 0.0, 1.0]))
@@ -228,7 +249,12 @@ fn nodes_give_their_world_transform_in_the_default_scene() {
 fn a_node_outside_the_default_scene_is_unknown_with_a_reason() {
     let failure = evaluate(&file(), "node_position", "Orphan", None).unwrap_err();
     assert_eq!(failure.code, Code::E7024);
-    assert!(failure.notes.iter().any(|n| n.contains("not part of the default scene")));
+    assert!(
+        failure
+            .notes
+            .iter()
+            .any(|n| n.contains("not part of the default scene"))
+    );
     assert!(failure.message.ends_with("in the default scene."));
 }
 
@@ -259,7 +285,13 @@ fn declare_glb(fs: &MemFs, limits: AssetLimits) -> (AssetStore, Diagnostics) {
     let mut loader = AssetLoader::new(fs, limits);
     let mut sink = Diagnostics::new();
     let from = ProjectPath::new("src/main.mtek").unwrap();
-    let handle = loader.declare(&from, AssetKind::Glb, "../models/m.glb", span(10), &mut sink);
+    let handle = loader.declare(
+        &from,
+        AssetKind::Glb,
+        "../models/m.glb",
+        span(10),
+        &mut sink,
+    );
     assert_eq!(
         handle,
         Some(AssetHandle::Glb {
@@ -277,7 +309,13 @@ fn a_file_is_loaded_once_and_a_failure_is_reported_at_every_declaration() {
     let from = ProjectPath::new("src/main.mtek").unwrap();
     for start in [10, 40] {
         assert_eq!(
-            loader.declare(&from, AssetKind::Glb, "../models/bad.glb", span(start), &mut sink),
+            loader.declare(
+                &from,
+                AssetKind::Glb,
+                "../models/bad.glb",
+                span(start),
+                &mut sink
+            ),
             None
         );
     }
@@ -418,7 +456,11 @@ fn images_are_merged_by_bytes_and_colour_space() {
         (20, "../a/two.png", AssetKind::LinearTexture),
         (30, "../a/three.png", AssetKind::Texture),
     ] {
-        assert!(loader.declare(&from, kind, path, span(start), &mut sink).is_some());
+        assert!(
+            loader
+                .declare(&from, kind, path, span(start), &mut sink)
+                .is_some()
+        );
     }
     let store = loader.into_store();
     let image = |path: &str, space| ImageRef {
@@ -466,7 +508,13 @@ fn a_path_is_resolved_against_the_declaring_module() {
     let nested = ProjectPath::new("src/scenes/main.mtek").unwrap();
     assert!(
         loader
-            .declare(&nested, AssetKind::Glb, "../../models/m.glb", span(0), &mut sink)
+            .declare(
+                &nested,
+                AssetKind::Glb,
+                "../../models/m.glb",
+                span(0),
+                &mut sink
+            )
             .is_some()
     );
     let root = ProjectPath::new("main.mtek").unwrap();

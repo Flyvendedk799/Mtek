@@ -295,9 +295,10 @@ fn parse_container<'a>(bytes: &'a [u8], limits: &AssetLimits) -> Result<Chunks<'
     let mut bin = None;
     let mut index = 0_usize;
     while offset < bytes.len() {
-        let (Some(chunk_length), Some(kind)) =
-            (le_u32(bytes, offset), le_u32(bytes, offset.saturating_add(4)))
-        else {
+        let (Some(chunk_length), Some(kind)) = (
+            le_u32(bytes, offset),
+            le_u32(bytes, offset.saturating_add(4)),
+        ) else {
             return Err(container(format!(
                 "Chunk {index} has a truncated header at byte {offset}."
             )));
@@ -318,7 +319,7 @@ fn parse_container<'a>(bytes: &'a [u8], limits: &AssetLimits) -> Result<Chunks<'
                 chunk_name(kind)
             )));
         };
-        if chunk_length % 4 != 0 {
+        if !chunk_length.is_multiple_of(4) {
             return Err(container(format!(
                 "The {} chunk is {chunk_length} bytes; chunk lengths are multiples of 4.",
                 chunk_name(kind)
@@ -340,8 +341,7 @@ fn parse_container<'a>(bytes: &'a [u8], limits: &AssetLimits) -> Result<Chunks<'
             }
             (_, CHUNK_JSON) => {
                 return Err(container(
-                    "The file has more than one JSON chunk; the profile allows exactly one."
-                        .into(),
+                    "The file has more than one JSON chunk; the profile allows exactly one.".into(),
                 ));
             }
             (_, other) => {
@@ -517,7 +517,10 @@ fn validation_issue(path: &str, error: json::validation::Error) -> Issue {
     }
     if error == E::Missing && path.ends_with("attributes[\"POSITION\"]") {
         let primitive = path.trim_end_matches(".attributes[\"POSITION\"]");
-        return Issue::new(Code::E7010, format!("{primitive} has no POSITION attribute."));
+        return Issue::new(
+            Code::E7010,
+            format!("{primitive} has no POSITION attribute."),
+        );
     }
     if error == E::Missing
         && path.contains("attributes[\"POSITION\"].")
@@ -526,7 +529,9 @@ fn validation_issue(path: &str, error: json::validation::Error) -> Issue {
         let primitive = path.split(".attributes[").next().unwrap_or(path);
         return Issue::new(
             Code::E7001,
-            format!("The POSITION accessor of {primitive} has no `min` and `max`, which glTF requires for positions."),
+            format!(
+                "The POSITION accessor of {primitive} has no `min` and `max`, which glTF requires for positions."
+            ),
         );
     }
     let shown = if path.is_empty() { "the root" } else { path };
@@ -618,7 +623,11 @@ fn finish(mut issues: Vec<(u8, Issue)>) -> Vec<Issue> {
     const CAP: usize = 24;
     issues.sort_by_key(|(row, _)| *row);
     let total = issues.len();
-    let mut out: Vec<Issue> = issues.into_iter().map(|(_, issue)| issue).take(CAP).collect();
+    let mut out: Vec<Issue> = issues
+        .into_iter()
+        .map(|(_, issue)| issue)
+        .take(CAP)
+        .collect();
     if total > CAP {
         out.push(Issue::new(
             Code::E7001,
@@ -904,7 +913,7 @@ impl<'a> Validator<'a> {
             }
             Some(stride) => {
                 let stride = stride.0;
-                if stride < element || stride % 4 != 0 {
+                if stride < element || !stride.is_multiple_of(4) {
                     return bad(format!(
                         "has a buffer view `byteStride` of {stride}, which is smaller than its {element}-byte elements or not a multiple of 4"
                     ));
@@ -932,7 +941,7 @@ impl<'a> Validator<'a> {
             Checked::Invalid => 1,
         };
         let offset = view_offset + accessor_offset;
-        if offset % component != 0 {
+        if !offset.is_multiple_of(component) {
             return bad(format!(
                 "starts at byte {offset}, which is not a multiple of its {component}-byte component size"
             ));
@@ -1103,7 +1112,9 @@ impl<'a> Validator<'a> {
             None => None,
         };
         let uv_ok = match uv {
-            Some((index, _)) => self.check_attribute_data(what, "TEXCOORD_0", index, 2, vertex_count),
+            Some((index, _)) => {
+                self.check_attribute_data(what, "TEXCOORD_0", index, 2, vertex_count)
+            }
             None => None,
         };
         let (indices, index_count) = self.check_indices(what, primitive, vertex_count);
@@ -1227,7 +1238,9 @@ impl<'a> Validator<'a> {
                         7,
                         Issue::new(
                             Code::E7025,
-                            format!("{what}: {name} has a value that is not finite at vertex {vertex}."),
+                            format!(
+                                "{what}: {name} has a value that is not finite at vertex {vertex}."
+                            ),
                         ),
                     );
                     return None;
@@ -1247,7 +1260,7 @@ impl<'a> Validator<'a> {
         vertex_count: u64,
     ) -> (Option<Option<IndexSource>>, u32) {
         let Some(accessor_index) = &primitive.indices else {
-            if vertex_count % 3 != 0 {
+            if !vertex_count.is_multiple_of(3) {
                 self.report(
                     6,
                     Issue::new(
@@ -1266,15 +1279,18 @@ impl<'a> Validator<'a> {
             return (None, 0);
         };
         let kind = match (accessor.component_type, accessor.type_) {
-            (Checked::Valid(GenericComponentType(ComponentType::U8)), Checked::Valid(Type::Scalar)) => {
-                Some(IndexKind::U8)
-            }
-            (Checked::Valid(GenericComponentType(ComponentType::U16)), Checked::Valid(Type::Scalar)) => {
-                Some(IndexKind::U16)
-            }
-            (Checked::Valid(GenericComponentType(ComponentType::U32)), Checked::Valid(Type::Scalar)) => {
-                Some(IndexKind::U32)
-            }
+            (
+                Checked::Valid(GenericComponentType(ComponentType::U8)),
+                Checked::Valid(Type::Scalar),
+            ) => Some(IndexKind::U8),
+            (
+                Checked::Valid(GenericComponentType(ComponentType::U16)),
+                Checked::Valid(Type::Scalar),
+            ) => Some(IndexKind::U16),
+            (
+                Checked::Valid(GenericComponentType(ComponentType::U32)),
+                Checked::Valid(Type::Scalar),
+            ) => Some(IndexKind::U32),
             _ => None,
         };
         let Some(kind) = kind.filter(|_| !accessor.normalized) else {
@@ -1295,7 +1311,7 @@ impl<'a> Validator<'a> {
             }
         };
         let count = resolved.count;
-        if count % 3 != 0 {
+        if !count.is_multiple_of(3) {
             self.report(
                 6,
                 Issue::new(
@@ -1456,7 +1472,10 @@ impl<'a> Validator<'a> {
         let Some(view_index) = &image.buffer_view else {
             self.report(
                 9,
-                Issue::new(Code::E7017, format!("The {what} has neither a `uri` nor a buffer view.")),
+                Issue::new(
+                    Code::E7017,
+                    format!("The {what} has neither a `uri` nor a buffer view."),
+                ),
             );
             return None;
         };
@@ -1548,7 +1567,9 @@ impl<'a> Validator<'a> {
                     8,
                     Issue::new(
                         Code::E7015,
-                        format!("The {what} has alphaMode {mode}; the profile supports OPAQUE only."),
+                        format!(
+                            "The {what} has alphaMode {mode}; the profile supports OPAQUE only."
+                        ),
                     )
                     .help("v0.1 has no transparency (`spec/materials.md` section 2)"),
                 );
@@ -1683,7 +1704,7 @@ fn semantic_name(semantic: &Semantic) -> String {
 fn bounding_sphere(positions: &[f32]) -> ([f32; 3], f32) {
     let mut min = [f64::INFINITY; 3];
     let mut max = [f64::NEG_INFINITY; 3];
-    for vertex in positions.chunks_exact(3) {
+    for vertex in positions.as_chunks::<3>().0 {
         for (axis, value) in vertex.iter().enumerate() {
             let value = f64::from(*value);
             if let (Some(low), Some(high)) = (min.get_mut(axis), max.get_mut(axis)) {
@@ -1694,12 +1715,14 @@ fn bounding_sphere(positions: &[f32]) -> ([f32; 3], f32) {
     }
     let mut center = [0.0_f32; 3];
     for axis in 0..3 {
-        if let (Some(c), Some(low), Some(high)) = (center.get_mut(axis), min.get(axis), max.get(axis)) {
+        if let (Some(c), Some(low), Some(high)) =
+            (center.get_mut(axis), min.get(axis), max.get(axis))
+        {
             *c = ((low + high) / 2.0) as f32;
         }
     }
     let mut radius = 0.0_f64;
-    for vertex in positions.chunks_exact(3) {
+    for vertex in positions.as_chunks::<3>().0 {
         let mut squared = 0.0_f64;
         for (axis, value) in vertex.iter().enumerate() {
             let delta = f64::from(*value) - f64::from(center.get(axis).copied().unwrap_or(0.0));

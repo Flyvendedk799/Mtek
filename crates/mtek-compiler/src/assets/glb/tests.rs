@@ -13,12 +13,12 @@ fn le(values: &[f32]) -> Vec<u8> {
 /// The container around `json` and `bin`.
 fn container(json: &Value, bin: Option<&[u8]>) -> Vec<u8> {
     let mut text = serde_json::to_vec(json).unwrap();
-    while text.len() % 4 != 0 {
+    while !text.len().is_multiple_of(4) {
         text.push(b' ');
     }
     let mut bin_chunk = bin.map(<[u8]>::to_vec);
     if let Some(bin) = &mut bin_chunk {
-        while bin.len() % 4 != 0 {
+        while !bin.len().is_multiple_of(4) {
             bin.push(0);
         }
     }
@@ -91,7 +91,13 @@ fn a_valid_triangle_reads_with_its_values() {
     let primitive = &file.meshes[0].primitives[0];
     assert_eq!(primitive.vertex_count, 3);
     assert_eq!(primitive.index_count, 3);
-    assert_eq!(primitive.position, Strided { offset: 0, stride: 12 });
+    assert_eq!(
+        primitive.position,
+        Strided {
+            offset: 0,
+            stride: 12
+        }
+    );
     assert_eq!(
         primitive.indices,
         Some(IndexSource {
@@ -115,7 +121,10 @@ fn the_bounding_sphere_encloses_every_vertex_and_is_centred_on_the_box() {
     assert_eq!(primitive.bounds_center, [0.5, 0.5, 0.0]);
     let half_diagonal = (0.5_f64 * 0.5 + 0.5 * 0.5).sqrt();
     let radius = f64::from(primitive.bounds_radius);
-    assert!(radius >= half_diagonal && radius - half_diagonal < 1e-6, "{radius}");
+    assert!(
+        radius >= half_diagonal && radius - half_diagonal < 1e-6,
+        "{radius}"
+    );
 }
 
 #[test]
@@ -150,7 +159,8 @@ fn the_container_and_extension_rows_report_together() {
 fn an_extension_is_listed_once_whether_declared_or_found() {
     let (mut json, bin) = base();
     json["extensionsUsed"] = json!(["KHR_materials_unlit"]);
-    json["materials"][0]["extensions"] = json!({ "KHR_materials_unlit": {}, "KHR_materials_ior": {} });
+    json["materials"][0]["extensions"] =
+        json!({ "KHR_materials_unlit": {}, "KHR_materials_ior": {} });
     let issues = read(&json, &bin).unwrap_err();
     assert_eq!(issues.len(), 1);
     assert_eq!(
@@ -168,7 +178,10 @@ fn many_problems_are_capped_with_a_count_of_the_rest() {
     json["materials"] = Value::Array(materials);
     let issues = read(&json, &bin).unwrap_err();
     assert_eq!(issues.len(), 25);
-    assert_eq!(issues[24].message, "16 more problems in this file are not shown.");
+    assert_eq!(
+        issues[24].message,
+        "16 more problems in this file are not shown."
+    );
 }
 
 #[test]
@@ -228,7 +241,7 @@ fn png_header(width: u32, height: u32) -> Vec<u8> {
 
 fn with_image(bytes: &[u8], mime: &str) -> (Value, Vec<u8>) {
     let (mut json, mut bin) = base();
-    while bin.len() % 4 != 0 {
+    while !bin.len().is_multiple_of(4) {
         bin.push(0);
     }
     let start = bin.len();
@@ -279,11 +292,21 @@ fn sampler_choice(sampler: Value) -> Result<SamplerChoice, Vec<Issue>> {
 fn samplers_map_to_presets() {
     let default = with_image(&png_header(2, 2), "image/png");
     let file = read(&default.0, &default.1).unwrap();
-    assert_eq!(file.materials[0].texture.unwrap().sampler, SamplerChoice::DEFAULT);
-    assert_eq!(SamplerChoice::DEFAULT.builtin().name(), "sampler.linear_repeat");
+    assert_eq!(
+        file.materials[0].texture.unwrap().sampler,
+        SamplerChoice::DEFAULT
+    );
+    assert_eq!(
+        SamplerChoice::DEFAULT.builtin().name(),
+        "sampler.linear_repeat"
+    );
     let cases = [
         (json!({}), "sampler.linear_repeat", false),
-        (json!({ "wrapS": 33071, "wrapT": 33071 }), "sampler.linear_clamp", false),
+        (
+            json!({ "wrapS": 33071, "wrapT": 33071 }),
+            "sampler.linear_clamp",
+            false,
+        ),
         (
             json!({ "magFilter": 9728, "minFilter": 9728 }),
             "sampler.nearest_repeat",
@@ -300,7 +323,11 @@ fn samplers_map_to_presets() {
             true,
         ),
         (json!({ "minFilter": 9729 }), "sampler.linear_repeat", false),
-        (json!({ "magFilter": 9728 }), "sampler.nearest_repeat", false),
+        (
+            json!({ "magFilter": 9728 }),
+            "sampler.nearest_repeat",
+            false,
+        ),
     ];
     for (sampler, preset, mipmapped) in cases {
         let choice = sampler_choice(sampler.clone()).unwrap();
@@ -365,7 +392,8 @@ fn nodes_scenes_and_the_default_scene_are_read() {
 #[test]
 fn unreferenced_cameras_extras_and_unused_data_are_not_inspected() {
     let (mut json, bin) = base();
-    json["cameras"] = json!([{ "type": "perspective", "perspective": { "yfov": 1.0, "znear": 0.1 } }]);
+    json["cameras"] =
+        json!([{ "type": "perspective", "perspective": { "yfov": 1.0, "znear": 0.1 } }]);
     json["nodes"][0]["extras"] = json!({ "anything": [1, 2, 3] });
     json["asset"]["generator"] = json!("some exporter");
     json["scenes"][0]["name"] = json!("Main");

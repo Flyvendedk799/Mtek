@@ -189,7 +189,11 @@ fn decompose(m: &Mat) -> Result<Trs, String> {
         .map(|(c, l)| [c[0] / l, c[1] / l, c[2] / l])
         .collect();
     let (a0, a1, a2) = (axes[0], axes[1], axes[2]);
-    for (first, second, names) in [(a0, a1, "X and Y"), (a0, a2, "X and Z"), (a1, a2, "Y and Z")] {
+    for (first, second, names) in [
+        (a0, a1, "X and Y"),
+        (a0, a2, "X and Z"),
+        (a1, a2, "Y and Z"),
+    ] {
         if dot(first, second).abs() > SHEAR_TOLERANCE {
             return Err(format!(
                 "its world matrix has shear (the {names} axes are not perpendicular), usually from a non-uniform scale below a rotated parent"
@@ -294,8 +298,14 @@ mod tests {
     #[test]
     fn translation_and_scale_compose_down_the_hierarchy() {
         let f = file(vec![
-            (vec![1], trs([1.0, 2.0, 3.0], [0.0, 0.0, 0.0, 1.0], [2.0, 2.0, 2.0])),
-            (vec![], trs([1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 3.0, 1.0])),
+            (
+                vec![1],
+                trs([1.0, 2.0, 3.0], [0.0, 0.0, 0.0, 1.0], [2.0, 2.0, 2.0]),
+            ),
+            (
+                vec![],
+                trs([1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 3.0, 1.0]),
+            ),
         ]);
         let world = node_world_trs(&f, 1).unwrap();
         assert_eq!(world.translation, [3.0, 2.0, 3.0]);
@@ -332,17 +342,36 @@ mod tests {
     fn shear_mirror_zero_scale_and_conflicts_are_not_representable() {
         // A rotation below a parent with a non-uniform scale shears.
         let sheared = file(vec![
-            (vec![1], trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0, 2.0, 1.0])),
-            (vec![], trs([0.0; 3], [0.0, 0.0, 0.382_683_43, 0.923_879_5], [1.0; 3])),
+            (
+                vec![1],
+                trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0, 2.0, 1.0]),
+            ),
+            (
+                vec![],
+                trs([0.0; 3], [0.0, 0.0, 0.382_683_43, 0.923_879_5], [1.0; 3]),
+            ),
         ]);
         assert!(node_world_trs(&sheared, 1).unwrap_err().contains("shear"));
-        let mirrored = file(vec![(vec![], trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [-1.0, 1.0, 1.0]))]);
+        let mirrored = file(vec![(
+            vec![],
+            trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [-1.0, 1.0, 1.0]),
+        )]);
         assert!(node_world_trs(&mirrored, 0).unwrap_err().contains("mirror"));
-        let flat = file(vec![(vec![], trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0]))]);
+        let flat = file(vec![(
+            vec![],
+            trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0]),
+        )]);
         assert!(node_world_trs(&flat, 0).unwrap_err().contains("zero"));
         let both = file(vec![(vec![], LocalTransform::Conflict)]);
         assert!(node_world_trs(&both, 0).unwrap_err().contains("both"));
-        let missing = file(vec![(vec![], trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]))]);
-        assert!(node_world_trs(&missing, 5).unwrap_err().contains("default scene"));
+        let missing = file(vec![(
+            vec![],
+            trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]),
+        )]);
+        assert!(
+            node_world_trs(&missing, 5)
+                .unwrap_err()
+                .contains("default scene")
+        );
     }
 }

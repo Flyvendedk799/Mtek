@@ -58,7 +58,10 @@ fn material_value(
             ("metallic".to_owned(), ConstValue::F32(metallic)),
             ("roughness".to_owned(), ConstValue::F32(roughness)),
             ("base_color_texture".to_owned(), texture),
-            ("base_color_sampler".to_owned(), ConstValue::Sampler(sampler)),
+            (
+                "base_color_sampler".to_owned(),
+                ConstValue::Sampler(sampler),
+            ),
         ],
     }
 }
@@ -115,7 +118,10 @@ pub(super) fn accessed_value(file: &str, accessed: Accessed) -> ConstValue {
 /// A string as an Mtek string literal, or `None` if it needs an escape the edit should not
 /// invent.
 fn string_literal(text: &str) -> Option<String> {
-    if text.chars().any(|c| c.is_control() || c == '"' || c == '\\') {
+    if text
+        .chars()
+        .any(|c| c.is_control() || c == '"' || c == '\\')
+    {
         return None;
     }
     Some(format!("\"{text}\""))

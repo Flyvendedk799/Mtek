@@ -447,7 +447,11 @@ fn a_build_with_assets_writes_them_next_to_the_program() {
     for asset in manifest["assets"].as_array().unwrap() {
         let url = asset["url"].as_str().unwrap();
         let bytes = fs::read(project.join("dist").join(url)).unwrap();
-        assert_eq!(asset["bytes"].as_u64().unwrap(), bytes.len() as u64, "{url}");
+        assert_eq!(
+            asset["bytes"].as_u64().unwrap(),
+            bytes.len() as u64,
+            "{url}"
+        );
     }
 }
 

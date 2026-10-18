@@ -193,7 +193,9 @@ impl<'f> AssetLoader<'f> {
             return Err(malformed("it is empty".into()));
         }
         if literal.contains('\\') {
-            return Err(malformed("paths are separated by `/`, not by backslashes".into()));
+            return Err(malformed(
+                "paths are separated by `/`, not by backslashes".into(),
+            ));
         }
         if literal.starts_with('/') || literal.get(1..2) == Some(":") {
             return Err(malformed("absolute paths are not allowed".into()));

@@ -189,6 +189,20 @@ mod tests {
     }
 
     #[test]
+    fn len_is_the_size_of_the_file_without_reading_it() {
+        let (_scratch, fs) = sample("len");
+        assert_eq!(fs.len(&p("mtek.toml")), Ok(10));
+        assert_eq!(fs.len(&p("src/deep/a.mtek")), Ok(1));
+        assert_eq!(fs.len(&p("src")), Err(FsError::IsADirectory(p("src"))));
+        assert_eq!(fs.len(&p("nope")), Err(FsError::NotFound(p("nope"))));
+        assert_eq!(
+            fs.len(&p("src/main.mtek")),
+            Err(FsError::NotFound(p("src/main.mtek"))),
+            "a different case is another file"
+        );
+    }
+
+    #[test]
     fn a_path_that_differs_in_case_is_not_found() {
         let (_scratch, fs) = sample("case");
         for wrong in [

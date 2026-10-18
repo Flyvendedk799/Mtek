@@ -166,10 +166,9 @@ fn copy_indices(bin: &[u8], primitive: &GlbPrimitive, out: &mut Vec<u8>) -> Opti
                 let at = source.offset + position * source.kind.size();
                 let value = match source.kind {
                     IndexKind::U8 => u32::from(*bin.get(at)?),
-                    IndexKind::U16 => u32::from(u16::from_le_bytes(<[u8; 2]>::try_from(
-                        bin.get(at..at + 2)?,
-                    )
-                    .ok()?)),
+                    IndexKind::U16 => u32::from(u16::from_le_bytes(
+                        <[u8; 2]>::try_from(bin.get(at..at + 2)?).ok()?,
+                    )),
                     IndexKind::U32 => read_u32_at(bin, at)?,
                 };
                 emit(value, out)?;
@@ -232,11 +231,17 @@ pub fn pack(
             .meshes
             .iter()
             .position(|m| m.name.as_deref() == Some(reference.mesh.as_str()))
-            .ok_or_else(|| defect(format!("no mesh '{}' in '{}'", reference.mesh, reference.file)))?;
-        by_file
-            .entry(reference.file.as_str())
-            .or_default()
-            .insert((index, reference.primitive, reference));
+            .ok_or_else(|| {
+                defect(format!(
+                    "no mesh '{}' in '{}'",
+                    reference.mesh, reference.file
+                ))
+            })?;
+        by_file.entry(reference.file.as_str()).or_default().insert((
+            index,
+            reference.primitive,
+            reference,
+        ));
     }
     for (path, wanted) in &by_file {
         let declared = store
@@ -252,7 +257,10 @@ pub fn pack(
                 .get(*mesh_index)
                 .and_then(|m| m.primitives.get(*primitive_index))
                 .ok_or_else(|| {
-                    defect(format!("no primitive {primitive_index} in mesh '{}'", reference.mesh))
+                    defect(format!(
+                        "no primitive {primitive_index} in mesh '{}'",
+                        reference.mesh
+                    ))
                 })?;
             layout.push((reference, *mesh_index, primitive, size));
             size += primitive_size(primitive);
@@ -300,7 +308,7 @@ pub fn pack(
                     reference.mesh, reference.primitive
                 ));
             }
-            while blob.len() % 4 != 0 {
+            while !blob.len().is_multiple_of(4) {
                 blob.push(0);
             }
             let (format, _) = index_format(primitive.vertex_count);
@@ -312,7 +320,8 @@ pub fn pack(
                 attributes.push("uv".to_owned());
             }
             let center = primitive.bounds_center.map(num);
-            let (Some(radius), [Some(x), Some(y), Some(z)]) = (num(primitive.bounds_radius), center)
+            let (Some(radius), [Some(x), Some(y), Some(z)]) =
+                (num(primitive.bounds_radius), center)
             else {
                 return Err(defect("a bounding sphere is not finite"));
             };

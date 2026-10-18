@@ -32,8 +32,8 @@ use crate::source::{Fs, SourceMap};
 use crate::syntax::ast::{ItemKind, Module};
 use crate::types::effects::{ProgramUnit, RootBody, check_program};
 use crate::types::{
-    FnRef, ImportedConst, ImportedConsts, ImportedFn, ImportedMaterial, ImportedStruct, Imports,
-    AssetHookup, ProgramEffects, Roots, Typeck, check_module_with_assets,
+    AssetHookup, FnRef, ImportedConst, ImportedConsts, ImportedFn, ImportedMaterial,
+    ImportedStruct, Imports, ProgramEffects, Roots, Typeck, check_module_with_assets,
 };
 
 /// What [`check`] produced: diagnostics only (`spec/compiler-architecture.md`
@@ -260,14 +260,8 @@ pub(crate) fn front_end_with(
             host: &mut loader,
             module: module.path().clone(),
         });
-        let checked = check_module_with_assets(
-            &unit.ast,
-            source.text(),
-            resolution,
-            &imports,
-            hookup,
-            sink,
-        );
+        let checked =
+            check_module_with_assets(&unit.ast, source.text(), resolution, &imports, hookup, sink);
         if let Some(slot) = types.get_mut(index) {
             *slot = Some(checked);
         }

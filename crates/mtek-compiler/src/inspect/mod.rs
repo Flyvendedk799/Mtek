@@ -213,7 +213,11 @@ fn views(
 }
 
 /// The shaders, bindings and assets views; at most one is present.
-type ViewSet = (Option<ShadersView>, Option<BindingsView>, Option<AssetsView>);
+type ViewSet = (
+    Option<ShadersView>,
+    Option<BindingsView>,
+    Option<AssetsView>,
+);
 
 /// `E9999` for a checked program the typed IR cannot represent.
 fn internal_error(defect: &str) -> Diagnostic {

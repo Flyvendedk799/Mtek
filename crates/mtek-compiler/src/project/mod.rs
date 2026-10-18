@@ -35,8 +35,8 @@ pub use config::{
     DEFAULT_MAX_VERTICES_PER_PRIMITIVE, DEFAULT_OUT_DIR, DEV_PORT_RANGE, DevSection,
     MAX_ASSET_FILE_BYTES_RANGE, MAX_ASSET_TOTAL_BYTES_RANGE, MAX_CATCH_UP_STEPS_RANGE,
     MAX_ENTITIES_RANGE, MAX_TEXTURE_DIMENSION_RANGE, MAX_TIME_SECONDS,
-    MAX_VERTICES_PER_PRIMITIVE_RANGE, PROJECT_FILE, ProjectConfig, ProjectSection, RESERVED_DIRECTORY, RuntimeSection,
-    SOURCE_EXTENSION,
+    MAX_VERTICES_PER_PRIMITIVE_RANGE, PROJECT_FILE, ProjectConfig, ProjectSection,
+    RESERVED_DIRECTORY, RuntimeSection, SOURCE_EXTENSION,
 };
 pub use graph::{GraphError, Import, ImportCycle, MAX_MODULES, Module, ModuleGraph, ModuleId};
 pub use host_inputs::{ResolvedHostInput, states_feeding_opaque_color, validate_host_inputs};

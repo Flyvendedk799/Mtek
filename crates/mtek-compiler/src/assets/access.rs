@@ -42,7 +42,10 @@ pub fn is_accessor(method: &str) -> bool {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Accessed {
     /// Primitive `primitive` of the glTF mesh called `mesh`.
-    Mesh { mesh: String, primitive: usize },
+    Mesh {
+        mesh: String,
+        primitive: usize,
+    },
     Color([f32; 4]),
     Scalar(f32),
     Vec3([f32; 3]),
@@ -97,7 +100,10 @@ fn plural(noun: &str) -> &'static str {
 fn noun(method: &str) -> &'static str {
     match method {
         "mesh" | "primitive" => "mesh",
-        "material" | "material_base_color" | "material_metallic" | "material_roughness"
+        "material"
+        | "material_base_color"
+        | "material_metallic"
+        | "material_roughness"
         | "material_texture" => "material",
         _ => "node",
     }
@@ -156,7 +162,9 @@ fn unknown_name(file: &GlbFile, method: &str, name: &str, found: &[(usize, Strin
     failure.unknown_name = true;
     let plural = plural(noun);
     if names.is_empty() {
-        failure.notes.push(format!("the file has no named {plural}{scope}"));
+        failure
+            .notes
+            .push(format!("the file has no named {plural}{scope}"));
     } else {
         let shown: Vec<String> = names
             .iter()
@@ -184,14 +192,11 @@ fn unknown_name(file: &GlbFile, method: &str, name: &str, found: &[(usize, Strin
         ));
     }
     if noun == "node" {
-        let elsewhere = file
-            .nodes
-            .iter()
-            .any(|n| n.name.as_deref() == Some(name));
+        let elsewhere = file.nodes.iter().any(|n| n.name.as_deref() == Some(name));
         if elsewhere {
-            failure
-                .notes
-                .push(format!("a node named '{name}' exists, but it is not part of the default scene"));
+            failure.notes.push(format!(
+                "a node named '{name}' exists, but it is not part of the default scene"
+            ));
         }
     }
     failure
@@ -227,9 +232,9 @@ pub fn evaluate(
                     plural(noun)
                 ),
             );
-            failure
-                .notes
-                .push("names must be unique to be referenced; rename them in the authoring tool".into());
+            failure.notes.push(
+                "names must be unique to be referenced; rename them in the authoring tool".into(),
+            );
             return Err(failure);
         }
     };
@@ -280,7 +285,10 @@ pub fn evaluate(
                 primitive,
             })
         }
-        "material" | "material_base_color" | "material_metallic" | "material_roughness"
+        "material"
+        | "material_base_color"
+        | "material_metallic"
+        | "material_roughness"
         | "material_texture" => {
             let material = file
                 .materials

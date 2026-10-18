@@ -11,7 +11,10 @@ use crate::diagnostics::{Code, Diagnostic, Diagnostics};
 use crate::types::{CheckedEntity, ConstValue, MaterialInfo, Typeck};
 
 /// The `SurfaceInput` fields `material` reads.
-fn surface_inputs<'t>(typecks: &[&'t Typeck], value: &ConstValue) -> Option<(&'t MaterialInfo, String)> {
+fn surface_inputs<'t>(
+    typecks: &[&'t Typeck],
+    value: &ConstValue,
+) -> Option<(&'t MaterialInfo, String)> {
     for typeck in typecks {
         for (_, info) in typeck.materials() {
             let found = match value {
@@ -27,12 +30,7 @@ fn surface_inputs<'t>(typecks: &[&'t Typeck], value: &ConstValue) -> Option<(&'t
     None
 }
 
-fn visit(
-    entity: &CheckedEntity,
-    typecks: &[&Typeck],
-    store: &AssetStore,
-    sink: &mut Diagnostics,
-) {
+fn visit(entity: &CheckedEntity, typecks: &[&Typeck], store: &AssetStore, sink: &mut Diagnostics) {
     check_entity(entity, typecks, store, sink);
     for child in &entity.children {
         visit(child, typecks, store, sink);

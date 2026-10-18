@@ -3,8 +3,8 @@
 
 use imagesize::ImageType;
 
-use super::glb::ImageFormat;
 use super::Issue;
+use super::glb::ImageFormat;
 use crate::diagnostics::Code;
 
 /// What the header of a PNG or JPEG file says.

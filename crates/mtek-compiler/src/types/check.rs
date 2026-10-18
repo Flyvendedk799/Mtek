@@ -2551,7 +2551,12 @@ impl Checker<'_> {
 
     /// Record, for the program-wide passes, a call of a built-in function
     /// whose domain or handler restriction matters (decision 0038).
-    pub(super) fn record_builtin_call(&mut self, span: Span, name: String, function: &IntrinsicDef) {
+    pub(super) fn record_builtin_call(
+        &mut self,
+        span: Span,
+        name: String,
+        function: &IntrinsicDef,
+    ) {
         if function.domain == Domain::Both && !function.handlers_only {
             return;
         }

@@ -504,10 +504,9 @@ fn meshes(plan: &ResourcePlan, packed: &Packed) -> Result<Vec<Mesh>, String> {
                     mesh: mesh.clone(),
                     primitive: *primitive as usize,
                 };
-                let location = packed
-                    .meshes
-                    .get(&key)
-                    .ok_or_else(|| format!("the asset mesh '{mesh}' of '{file}' was not packaged"))?;
+                let location = packed.meshes.get(&key).ok_or_else(|| {
+                    format!("the asset mesh '{mesh}' of '{file}' was not packaged")
+                })?;
                 MeshShape::Asset {
                     asset: location.asset.clone(),
                     primitive: location.primitive,
@@ -678,14 +677,13 @@ fn manifest_scene(
                                 (ParamClass::Initial, _) => ManifestClass::Initial,
                                 (ParamClass::Imperative, _) => ManifestClass::Imperative,
                                 (ParamClass::Resource, _) => ManifestClass::Resource {
-                                    value: resource_value(param.value.as_ref(), packed).ok_or_else(
-                                        || {
+                                    value: resource_value(param.value.as_ref(), packed)
+                                        .ok_or_else(|| {
                                             format!(
                                                 "the resource parameter '{}' has no packaged value",
                                                 param.name
                                             )
-                                        },
-                                    )?,
+                                        })?,
                                 },
                                 (ParamClass::Bound, Some(binding)) => {
                                     ManifestClass::Bound { binding }

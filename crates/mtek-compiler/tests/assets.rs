@@ -99,7 +99,10 @@ fn diagnostics_json(sources: &SourceMap, diagnostics: &[Diagnostic]) -> String {
             object.insert("code".into(), d.code.as_str().into());
             let span = d.primary.as_ref().map(|label| label.span);
             object.insert("file".into(), path_of(sources, d));
-            object.insert("startByte".into(), span.map_or(Value::Null, |s| s.start.into()));
+            object.insert(
+                "startByte".into(),
+                span.map_or(Value::Null, |s| s.start.into()),
+            );
             object.insert("endByte".into(), span.map_or(Value::Null, |s| s.end.into()));
             object.insert("message".into(), d.message.as_str().into());
             if !d.notes.is_empty() {
@@ -157,7 +160,10 @@ fn every_failing_project_reports_exactly_its_diagnostics() {
             continue;
         }
         let expected = fs::read_to_string(&path).unwrap_or_else(|e| {
-            panic!("missing {} ({e}); run MTEK_BLESS=1 and review it", path.display())
+            panic!(
+                "missing {} ({e}); run MTEK_BLESS=1 and review it",
+                path.display()
+            )
         });
         assert_eq!(
             expected, actual,
@@ -321,7 +327,9 @@ fn the_supported_project_packages_the_referenced_primitives_only() {
     assert_eq!(offsets["indices"], 128);
     assert_eq!(
         f32s(bin, 0, 12),
-        [-1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 0.0, 1.0, -1.0, 0.0, 1.0]
+        [
+            -1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 0.0, 1.0, -1.0, 0.0, 1.0
+        ]
     );
     assert_eq!(f32s(bin, 48, 4), [0.0, 1.0, 0.0, 0.0]);
     assert_eq!(f32s(bin, 96, 8), [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]);
@@ -333,7 +341,10 @@ fn the_supported_project_packages_the_referenced_primitives_only() {
     let sphere = &quad["boundingSphere"];
     assert_eq!(sphere["center"], json!([0.0, 0.0, 0.0]));
     let radius = sphere["radius"].as_f64().unwrap();
-    assert!(radius >= std::f64::consts::SQRT_2 && radius < 1.414214, "{radius}");
+    assert!(
+        radius >= std::f64::consts::SQRT_2 && radius - std::f64::consts::SQRT_2 < 1e-6,
+        "{radius}"
+    );
     // Every section starts on a multiple of 4 and every primitive is inside the file.
     for primitive in primitives {
         for key in ["position", "normal", "uv", "indices"] {
@@ -367,7 +378,12 @@ fn the_supported_project_packages_the_referenced_primitives_only() {
     let asset_meshes: Vec<(&str, u64)> = meshes
         .iter()
         .filter(|m| m["kind"] == "asset")
-        .map(|m| (m["asset"].as_str().unwrap(), m["primitive"].as_u64().unwrap()))
+        .map(|m| {
+            (
+                m["asset"].as_str().unwrap(),
+                m["primitive"].as_u64().unwrap(),
+            )
+        })
         .collect();
     assert_eq!(asset_meshes.len(), 6);
     assert!(asset_meshes.iter().all(|(asset, _)| *asset == url));
@@ -405,7 +421,12 @@ fn the_supported_project_copies_images_byte_for_byte_with_their_colour_space() {
     spaces.sort_unstable();
     assert_eq!(
         spaces,
-        [("jpg", "srgb"), ("png", "linear"), ("png", "srgb"), ("png", "srgb")]
+        [
+            ("jpg", "srgb"),
+            ("png", "linear"),
+            ("png", "srgb"),
+            ("png", "srgb")
+        ]
     );
     for image in &images {
         let url = image["url"].as_str().unwrap();
@@ -448,28 +469,15 @@ fn the_supported_project_takes_its_transforms_and_factors_from_the_file() {
     let types = analysis.types.as_ref().unwrap();
     let def = analysis.resolution.as_ref().unwrap().entry_scene().unwrap();
     let scene = types.scene(def).unwrap();
-    let entity = |name: &str| scene.entities.iter().find(|e| e.name == name).unwrap();
-    let value = |entity: &str, field: &str| {
-        entity_field(&entity_of(scene, entity), field)
-    };
-    fn entity_of<'s>(
-        scene: &'s mtek_compiler::types::CheckedScene,
-        name: &str,
-    ) -> &'s mtek_compiler::types::CheckedEntity {
-        scene.entities.iter().find(|e| e.name == name).unwrap()
-    }
-    fn entity_field(
-        entity: &mtek_compiler::types::CheckedEntity,
-        field: &str,
-    ) -> ConstValue {
-        entity
-            .fields
+    let value = |entity: &str, field: &str| -> ConstValue {
+        scene
+            .entities
             .iter()
-            .find(|f| f.name == field)
+            .find(|e| e.name == entity)
+            .and_then(|e| e.fields.iter().find(|f| f.name == field))
             .and_then(|f| f.value.clone())
-            .unwrap_or_else(|| panic!("no value for {field}"))
-    }
-    let _ = entity("Seat");
+            .unwrap_or_else(|| panic!("no value for {entity}.{field}"))
+    };
     // Root: translation (1, 2, 3), scale 2. Seat: translation (0, 1, 0) below it, a quarter turn
     // about +Y: world translation (1, 4, 3), scale 2.
     assert_eq!(value("Seat", "position"), ConstValue::Vec3([1.0, 4.0, 3.0]));
@@ -477,13 +485,39 @@ fn the_supported_project_takes_its_transforms_and_factors_from_the_file() {
     let ConstValue::Quat(q) = value("Seat", "rotation") else {
         panic!("not a quaternion")
     };
-    for (got, want) in q.iter().zip([0.0, std::f32::consts::FRAC_1_SQRT_2, 0.0, std::f32::consts::FRAC_1_SQRT_2]) {
+    for (got, want) in q.iter().zip([
+        0.0,
+        std::f32::consts::FRAC_1_SQRT_2,
+        0.0,
+        std::f32::consts::FRAC_1_SQRT_2,
+    ]) {
         assert!((got - want).abs() < 1e-6, "{q:?}");
     }
     // Frame is a matrix node: world translation (1,2,3) + 2 * (5,6,7), scale 2 * (1,2,3).
-    assert_eq!(value("Frame", "position"), ConstValue::Vec3([11.0, 14.0, 17.0]));
+    assert_eq!(
+        value("Frame", "position"),
+        ConstValue::Vec3([11.0, 14.0, 17.0])
+    );
     assert_eq!(value("Frame", "scale"), ConstValue::Vec3([2.0, 4.0, 6.0]));
     assert_eq!(value("Wide", "position"), ConstValue::Vec3([1.0, 2.0, 3.0]));
+    // Factors: the Oak material of the file is the colour of the frame.
+    let ConstValue::Struct { name, fields } = value("Frame", "material") else {
+        panic!("not a descriptor")
+    };
+    assert_eq!(name, "Unlit");
+    assert_eq!(
+        fields,
+        [(
+            "color".to_owned(),
+            ConstValue::Color([0.5, 0.25, 0.125, 1.0])
+        )]
+    );
+    // The Fabric material has a white base colour, the Steel material its own.
+    let ConstValue::Material { params, .. } = value("Right", "material") else {
+        panic!("not a material instance")
+    };
+    let tint = params.iter().find(|(n, _)| n == "tint").unwrap();
+    assert_eq!(tint.1, ConstValue::Color([0.75, 0.75, 0.75, 1.0]));
 }
 
 #[test]
@@ -589,7 +623,7 @@ fn apply(source: &str, diagnostics: &[Value]) -> String {
             )
         })
         .collect();
-    edits.sort_by(|a, b| b.0.cmp(&a.0));
+    edits.sort_by_key(|edit| std::cmp::Reverse(edit.0));
     let mut text = source.to_owned();
     for (start, end, replacement) in edits {
         text.replace_range(start..end, &replacement);
@@ -608,8 +642,14 @@ fn a_suggested_rename_removes_its_diagnostic_and_introduces_none() {
         &before.report.diagnostics,
     ))
     .unwrap();
-    let with_edits = report.iter().filter(|d| d.get("suggestedEdits").is_some()).count();
-    assert_eq!(with_edits, 3, "three of the names are one typo away from a name");
+    let with_edits = report
+        .iter()
+        .filter(|d| d.get("suggestedEdits").is_some())
+        .count();
+    assert_eq!(
+        with_edits, 3,
+        "three of the names are one typo away from a name"
+    );
     let mut memory = project_fs("fail", name, None);
     let path = ProjectPath::new("src/main.mtek").unwrap();
     let source = String::from_utf8(memory.read(&path).unwrap()).unwrap();
@@ -626,7 +666,11 @@ fn a_suggested_rename_removes_its_diagnostic_and_introduces_none() {
         .map(|d| d.message.as_str())
         .collect();
     assert_eq!(remaining.len(), report.len() - with_edits, "{remaining:#?}");
-    assert!(remaining.iter().all(|m| !m.contains("'Qaud'") && !m.contains("'Rot'") && !m.contains("'Oakk'")));
+    assert!(
+        remaining
+            .iter()
+            .all(|m| !m.contains("'Qaud'") && !m.contains("'Rot'") && !m.contains("'Oakk'"))
+    );
 }
 
 #[test]
@@ -719,13 +763,23 @@ fn inspect_assets_agrees_with_the_manifest_of_the_build() {
         .unwrap()
         .iter()
         .filter(|m| m["kind"] == "asset")
-        .map(|m| (m["asset"].as_str().unwrap(), m["primitive"].as_u64().unwrap()))
+        .map(|m| {
+            (
+                m["asset"].as_str().unwrap(),
+                m["primitive"].as_u64().unwrap(),
+            )
+        })
         .collect();
     let from_view: Vec<(&str, u64)> = view["meshes"]
         .as_array()
         .unwrap()
         .iter()
-        .map(|m| (m["asset"].as_str().unwrap(), m["primitive"].as_u64().unwrap()))
+        .map(|m| {
+            (
+                m["asset"].as_str().unwrap(),
+                m["primitive"].as_u64().unwrap(),
+            )
+        })
         .collect();
     assert_eq!(from_view, from_manifest);
 }

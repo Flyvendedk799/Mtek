@@ -9,8 +9,8 @@ use std::collections::BTreeMap;
 
 use serde::Serialize;
 
-use crate::assets::pack::{ImageSource, pack};
 use crate::assets::AssetStore;
+use crate::assets::pack::{ImageSource, pack};
 use crate::diagnostics::Diagnostic;
 use crate::ir::MeshDesc;
 use crate::package::asset_references;
@@ -253,7 +253,8 @@ impl AssetsView {
                     .iter()
                     .enumerate()
                     .map(|(index, p)| {
-                        let offset = |value: Option<u64>| value.map_or("-".to_owned(), |v| v.to_string());
+                        let offset =
+                            |value: Option<u64>| value.map_or("-".to_owned(), |v| v.to_string());
                         vec![
                             index.to_string(),
                             format!("{} #{}", p.source.mesh, p.source.primitive),
