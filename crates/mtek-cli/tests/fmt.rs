@@ -201,20 +201,50 @@ fn no_project_is_needed_and_there_is_no_format_option() {
     assert_eq!(stdout(&out), "0 files already formatted\n");
 }
 
+/// Starters that are broken on purpose: their task is to repair a syntax error, so `mtek fmt` must
+/// refuse them. Every other Mtek source of the benchmarks is canonical.
+const BROKEN_ON_PURPOSE: [&str; 1] = ["benchmarks/tasks/maintenance-03/mtek"];
+
+/// The directories named `mtek` below `dir` (starters and references of the benchmark tasks).
+fn mtek_dirs(dir: &Path, found: &mut Vec<PathBuf>) {
+    for entry in fs::read_dir(dir).unwrap() {
+        let path = entry.unwrap().path();
+        if !path.is_dir() {
+            continue;
+        }
+        if path.file_name().is_some_and(|name| name == "mtek") {
+            found.push(path);
+        } else {
+            mtek_dirs(&path, found);
+        }
+    }
+}
+
 #[test]
 fn the_repository_sources_that_ci_checks_are_canonical() {
-    // What CI runs: `mtek fmt --check examples benchmarks crates/mtek-cli/templates`.
+    // What CI checks (decision 0070): the examples, the CLI templates and every Mtek source of the
+    // benchmark tasks and the holdout, except the starters that are broken on purpose.
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let out = run_in(
-        &root,
-        &[
-            "fmt",
-            "--check",
-            "examples",
-            "benchmarks",
-            "crates/mtek-cli/templates",
-        ],
+    let mut dirs = Vec::new();
+    mtek_dirs(&root.join("benchmarks"), &mut dirs);
+    let mut paths: Vec<String> = vec!["examples".into(), "crates/mtek-cli/templates".into()];
+    for dir in dirs {
+        let relative = dir
+            .strip_prefix(&root)
+            .unwrap()
+            .to_string_lossy()
+            .replace('\\', "/");
+        if !BROKEN_ON_PURPOSE.contains(&relative.as_str()) {
+            paths.push(relative);
+        }
+    }
+    assert!(
+        paths.len() > 60,
+        "the benchmark sources were found: {paths:?}"
     );
+    let mut args = vec!["fmt", "--check"];
+    args.extend(paths.iter().map(String::as_str));
+    let out = run_in(&root, &args);
     assert_eq!(
         out.status.code(),
         Some(0),

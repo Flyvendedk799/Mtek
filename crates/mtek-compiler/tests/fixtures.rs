@@ -708,6 +708,11 @@ fn the_benchmark_programs_parse() {
     );
     let mut items = 0;
     for path in files {
+        // The starter of `maintenance-03` has syntax errors on purpose: repairing them is its task.
+        let normalised = path.to_string_lossy().replace('\\', "/");
+        if normalised.contains("/maintenance-03/mtek/") {
+            continue;
+        }
         let text = fs::read_to_string(&path).unwrap();
         let mut lexed = lex_str(FileId(0), &text);
         let mut sink = Diagnostics::new();

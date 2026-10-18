@@ -29,10 +29,9 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Test
         run: cargo test --workspace --locked
-      # The Mtek sources of the repository are canonical (decision 0070): lists the files that
-      # `mtek fmt` would change and fails if there are any.
-      - name: Mtek format check
-        run: cargo run -p mtek-cli --locked -- fmt --check examples benchmarks crates/mtek-cli/templates
+      # The Mtek sources of the repository are canonical (decision 0070): the `Test` step runs
+      # `mtek fmt --check` over the examples, the templates and the benchmark sources
+      # (crates/mtek-cli/tests/fmt.rs), which lists the files `mtek fmt` would change.
 
   node:
     name: node (ubuntu-latest)
