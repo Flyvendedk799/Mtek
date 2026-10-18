@@ -1,0 +1,22 @@
+// `on pointer_down(event: PointerEvent)` receives a click; arrays have a fixed length and index with `[i]`.
+const PALETTE: array<color, 3> = [#ff5a5f, #ffd166, #06d6a0];
+
+scene Demo {
+    state index: i32 = 0;
+    state tint: color = #ff5a5f;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box {};
+        material: Unlit { color: bind(tint); };
+    }
+
+    on pointer_down(event: PointerEvent) {
+        index = (index + 1) % 3;
+        tint = PALETTE[index];
+    }
+}

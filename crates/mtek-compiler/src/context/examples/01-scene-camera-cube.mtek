@@ -1,0 +1,14 @@
+// A scene needs a camera; an entity with a mesh is drawn with the default material.
+scene Demo {
+    clear_color: #101418;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0); };
+        position: vec3(0.0, 0.5, 0.0);
+    }
+}

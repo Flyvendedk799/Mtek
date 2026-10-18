@@ -1,0 +1,501 @@
+{
+  "languageVersion": "0.1",
+  "compilerVersion": "0.1.0-dev",
+  "contextFormat": 1,
+  "supported": {
+    "features": [
+      "imports",
+      "exports",
+      "constants",
+      "body-constants",
+      "functions",
+      "cpu-functions",
+      "structs",
+      "materials",
+      "prefabs",
+      "scenes",
+      "scene-fields",
+      "state",
+      "scene-objects",
+      "entities",
+      "entity-fields",
+      "prefab-instances",
+      "lifecycle-functions",
+      "handlers",
+      "bind",
+      "self",
+      "descriptors",
+      "strings",
+      "arrays",
+      "indexing",
+      "negation",
+      "arithmetic",
+      "remainder",
+      "comparison",
+      "equality",
+      "logical",
+      "body-command:apply_force",
+      "body-command:apply_impulse",
+      "body-command:set_kinematic_target",
+      "body-command:set_linear_velocity",
+      "body-command:teleport",
+      "body-property:angular_velocity",
+      "body-property:linear_velocity",
+      "enum:Key",
+      "event:collision_enter",
+      "event:collision_exit",
+      "event:key_down",
+      "event:key_up",
+      "event:pointer_down",
+      "event:pointer_move",
+      "event:pointer_up",
+      "function:abs",
+      "function:acos",
+      "function:alive",
+      "function:asin",
+      "function:asset.glb",
+      "function:asset.linear_texture",
+      "function:asset.texture",
+      "function:atan",
+      "function:atan2",
+      "function:ceil",
+      "function:clamp",
+      "function:color.linear",
+      "function:color.srgb",
+      "function:cos",
+      "function:cross",
+      "function:degrees",
+      "function:destroy",
+      "function:distance",
+      "function:dot",
+      "function:exp",
+      "function:exp2",
+      "function:floor",
+      "function:fract",
+      "function:inverse_sqrt",
+      "function:is_key_down",
+      "function:length",
+      "function:lighting.pbr",
+      "function:log",
+      "function:log2",
+      "function:mat4.columns",
+      "function:mat4.identity",
+      "function:mat4.rotation",
+      "function:mat4.scale",
+      "function:mat4.translation",
+      "function:max",
+      "function:min",
+      "function:mix",
+      "function:normalize",
+      "function:pow",
+      "function:print",
+      "function:quat.axis_angle",
+      "function:quat.euler",
+      "function:quat.identity",
+      "function:radians",
+      "function:random",
+      "function:reflect",
+      "function:round",
+      "function:sample",
+      "function:sampler.linear_clamp",
+      "function:sampler.linear_repeat",
+      "function:sampler.nearest_clamp",
+      "function:sampler.nearest_repeat",
+      "function:saturate",
+      "function:sign",
+      "function:sin",
+      "function:smoothstep",
+      "function:spawn",
+      "function:sqrt",
+      "function:step",
+      "function:tan",
+      "function:texture.black",
+      "function:texture.white",
+      "function:transpose",
+      "function:trunc",
+      "method:glb_asset.material",
+      "method:glb_asset.material_base_color",
+      "method:glb_asset.material_metallic",
+      "method:glb_asset.material_roughness",
+      "method:glb_asset.material_texture",
+      "method:glb_asset.mesh",
+      "method:glb_asset.node_position",
+      "method:glb_asset.node_rotation",
+      "method:glb_asset.node_scale",
+      "method:glb_asset.primitive",
+      "namespace:asset",
+      "namespace:color",
+      "namespace:frame",
+      "namespace:lighting",
+      "namespace:mat4",
+      "namespace:quat",
+      "namespace:sampler",
+      "namespace:texture",
+      "scene-object:camera",
+      "schema:Box",
+      "schema:BoxCollider",
+      "schema:Camera",
+      "schema:DirectionalLight",
+      "schema:Dynamic",
+      "schema:Entity",
+      "schema:Kinematic",
+      "schema:Orthographic",
+      "schema:Pbr",
+      "schema:Perspective",
+      "schema:Plane",
+      "schema:PointLight",
+      "schema:Scene",
+      "schema:Sphere",
+      "schema:SphereCollider",
+      "schema:Static",
+      "schema:Unlit",
+      "type:PointerEvent",
+      "type:SurfaceInput",
+      "type:array",
+      "type:bool",
+      "type:color",
+      "type:entity_ref",
+      "type:f32",
+      "type:glb_asset",
+      "type:i32",
+      "type:mat4",
+      "type:material",
+      "type:mesh",
+      "type:quat",
+      "type:sampler",
+      "type:string",
+      "type:texture",
+      "type:u32",
+      "type:vec2",
+      "type:vec3",
+      "type:vec4",
+      "value:frame.delta",
+      "value:frame.index",
+      "value:frame.time"
+    ],
+    "notSupported": [
+      "non-constant-initial-values (planned for M3)",
+      "as",
+      "async",
+      "await",
+      "enum",
+      "extern",
+      "impl",
+      "loop",
+      "match",
+      "mod",
+      "move",
+      "mut",
+      "priv",
+      "pub",
+      "static",
+      "super",
+      "trait",
+      "type",
+      "unsafe",
+      "use",
+      "where",
+      "while",
+      "yield",
+      "compute",
+      "vertex",
+      "storage",
+      "uniform",
+      "workgroup",
+      "system",
+      "query",
+      "component",
+      "bitwise operators (& | ^ ~ << >>)",
+      "stage functions other than `fragment` (vertex, compute)",
+      "switching the active scene at run time",
+      "transparency (alpha blending)",
+      "remote assets (URLs as asset paths)",
+      "instancing a whole node hierarchy of a glTF asset"
+    ]
+  },
+  "syntax": {
+    "keywords": [
+      "bind",
+      "break",
+      "const",
+      "continue",
+      "cpu",
+      "else",
+      "entity",
+      "export",
+      "false",
+      "fn",
+      "for",
+      "if",
+      "import",
+      "in",
+      "let",
+      "material",
+      "on",
+      "param",
+      "prefab",
+      "return",
+      "scene",
+      "self",
+      "state",
+      "struct",
+      "true",
+      "var"
+    ],
+    "precedence": [
+      "level 8: call f(...), field .x, index [i] (left)",
+      "level 7: unary - ! (right)",
+      "level 6: * / % (left)",
+      "level 5: + - (left)",
+      "level 4: < <= > >= (non-associative)",
+      "level 3: == != (non-associative)",
+      "level 2: && (left)",
+      "level 1: || (left)"
+    ],
+    "rules": [
+      "Declarations, fields, assignments and statements end with ';', also the last one before '}'.",
+      "Float literals have digits on both sides of the point (1.0, 0.5, 2.5e-3), never 1. or .5; integer literals have no sign, no leading zeros and no hexadecimal form.",
+      "Colours are written #RRGGBB or #RRGGBBAA.",
+      "Comparison operators (< <= > >=) and equality operators (== !=) do not chain: write (a < b) && (b < c).",
+      "Typed values are never converted implicitly: an i32 value is not an f32 value, and only a literal such as 1 may stand where an f32 is expected.",
+      "An import is import { Name } from \"./path.mtek\"; the path is relative (starts with ./ or ../) and ends in .mtek.",
+      "Every scene needs a camera: camera Main { position: vec3(0.0, 2.0, 5.0); }.",
+      "Fields and parameters must exist on their schema or declaration: an unknown name is an error, never ignored."
+    ]
+  },
+  "project": {
+    "entry": "src/main.mtek",
+    "scene": "Playground",
+    "modules": [
+      "src/main.mtek"
+    ]
+  },
+  "symbols": [
+    {
+      "name": "KILL_HEIGHT",
+      "kind": "const",
+      "type": "f32",
+      "doc": "",
+      "file": "src/main.mtek",
+      "line": 12
+    },
+    {
+      "name": "Crate",
+      "kind": "prefab",
+      "type": "prefab",
+      "doc": "",
+      "file": "src/main.mtek",
+      "line": 24
+    },
+    {
+      "name": "Crate.origin",
+      "kind": "param",
+      "type": "vec3",
+      "doc": "",
+      "file": "src/main.mtek",
+      "line": 25
+    },
+    {
+      "name": "Crate.tint",
+      "kind": "param",
+      "type": "color",
+      "doc": "",
+      "file": "src/main.mtek",
+      "line": 26
+    },
+    {
+      "name": "Playground",
+      "kind": "scene",
+      "type": "scene",
+      "doc": "",
+      "file": "src/main.mtek",
+      "line": 42
+    },
+    {
+      "name": "Playground.First",
+      "kind": "entity",
+      "type": "entity: Crate",
+      "doc": "",
+      "file": "src/main.mtek",
+      "line": 76
+    }
+  ],
+  "schemas": [
+    {
+      "name": "Box",
+      "fields": [
+        {
+          "name": "size",
+          "type": "vec3",
+          "default": "vec3(1.0, 1.0, 1.0)",
+          "flags": "C"
+        }
+      ]
+    },
+    {
+      "name": "BoxCollider",
+      "fields": [
+        {
+          "name": "size",
+          "type": "vec3",
+          "default": null,
+          "flags": "RC"
+        },
+        {
+          "name": "sensor",
+          "type": "bool",
+          "default": "false",
+          "flags": "C"
+        },
+        {
+          "name": "friction",
+          "type": "f32",
+          "default": "0.5",
+          "flags": "C"
+        },
+        {
+          "name": "restitution",
+          "type": "f32",
+          "default": "0.0",
+          "flags": "C"
+        }
+      ]
+    },
+    {
+      "name": "Dynamic",
+      "fields": [
+        {
+          "name": "mass",
+          "type": "f32",
+          "default": "1.0",
+          "flags": "C"
+        },
+        {
+          "name": "linear_damping",
+          "type": "f32",
+          "default": "0.0",
+          "flags": "C"
+        },
+        {
+          "name": "angular_damping",
+          "type": "f32",
+          "default": "0.05",
+          "flags": "C"
+        }
+      ]
+    },
+    {
+      "name": "Entity",
+      "fields": [
+        {
+          "name": "position",
+          "type": "vec3",
+          "default": "vec3(0.0, 0.0, 0.0)",
+          "flags": "WB"
+        },
+        {
+          "name": "rotation",
+          "type": "quat",
+          "default": "quat.identity()",
+          "flags": "WB"
+        },
+        {
+          "name": "scale",
+          "type": "vec3",
+          "default": "vec3(1.0, 1.0, 1.0)",
+          "flags": "WB"
+        },
+        {
+          "name": "visible",
+          "type": "bool",
+          "default": "true",
+          "flags": "WB"
+        },
+        {
+          "name": "mesh",
+          "type": "mesh",
+          "default": null,
+          "flags": "C"
+        },
+        {
+          "name": "material",
+          "type": "material",
+          "default": "Unlit {}",
+          "flags": "C"
+        },
+        {
+          "name": "light",
+          "type": "light",
+          "default": null,
+          "flags": "C"
+        },
+        {
+          "name": "body",
+          "type": "body",
+          "default": null,
+          "flags": "C"
+        },
+        {
+          "name": "collider",
+          "type": "collider",
+          "default": null,
+          "flags": "C"
+        }
+      ]
+    },
+    {
+      "name": "Pbr",
+      "fields": [
+        {
+          "name": "base_color",
+          "type": "color",
+          "default": "#ffffff",
+          "flags": "WB"
+        },
+        {
+          "name": "metallic",
+          "type": "f32",
+          "default": "0.0",
+          "flags": "WB"
+        },
+        {
+          "name": "roughness",
+          "type": "f32",
+          "default": "0.5",
+          "flags": "WB"
+        },
+        {
+          "name": "base_color_texture",
+          "type": "texture",
+          "default": "texture.white()",
+          "flags": "C"
+        },
+        {
+          "name": "base_color_sampler",
+          "type": "sampler",
+          "default": "sampler.linear_repeat()",
+          "flags": "C"
+        }
+      ]
+    }
+  ],
+  "examples": [
+    {
+      "title": "Spawn and destroy entities",
+      "source": "// `spawn(Prefab { params })` creates an entity from a handler or update; `destroy(self)` removes one.\nprefab Crate {\n    param origin: vec3 = vec3(0.0, 4.0, 0.0);\n\n    position: origin;\n    mesh: Box {};\n    body: Dynamic { mass: 1.0; };\n    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };\n\n    fixed_update(dt: f32) {\n        if self.position.y < -10.0 {\n            destroy(self);\n        }\n    }\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 4.0, 12.0);\n        target: vec3(0.0, 1.0, 0.0);\n    }\n\n    entity Floor {\n        position: vec3(0.0, -0.5, 0.0);\n        mesh: Box { size: vec3(10.0, 1.0, 10.0); };\n        body: Static {};\n        collider: BoxCollider { size: vec3(10.0, 1.0, 10.0); };\n    }\n\n    on key_down(Key.C) {\n        spawn(Crate { origin: vec3(0.0, 6.0, 0.0); });\n    }\n}\n"
+    },
+    {
+      "title": "Prefabs and prefab instances",
+      "source": "// A prefab is a reusable entity with params; `entity Name: Prefab { param: value; }` makes one.\nprefab Crate {\n    param origin: vec3 = vec3(0.0, 0.5, 0.0);\n    param tint: color = #5b8def;\n\n    position: origin;\n    mesh: Box {};\n    material: Pbr { base_color: tint; };\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 3.0, 8.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Left: Crate {\n        origin: vec3(-1.5, 0.5, 0.0);\n    }\n\n    entity Right: Crate {\n        origin: vec3(1.5, 0.5, 0.0);\n        tint: #ff8a3d;\n    }\n}\n"
+    },
+    {
+      "title": "Animate an entity in update",
+      "source": "// `update(dt)` runs every frame; assign to `self.rotation` to turn the entity.\nscene Demo {\n    state speed: f32 = 0.7;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n        position: vec3(0.0, 0.5, 0.0);\n\n        update(dt: f32) {\n            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);\n        }\n    }\n}\n"
+    },
+    {
+      "title": "React to a key press",
+      "source": "// `on key_down(Key.Space)` runs when the key goes down; handlers may assign scene state.\nscene Demo {\n    state speed: f32 = 0.7;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n\n        update(dt: f32) {\n            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);\n        }\n    }\n\n    on key_down(Key.Space) {\n        speed = -speed;\n    }\n}\n"
+    }
+  ],
+  "diagnosticsGuide": "`mtek check --format json` prints one JSON report; each diagnostic has code, severity, title, message, source (file, startByte, endByte, startLine, startColumn, endLine, endColumn), expected and actual (when relevant), related, notes, suggestedEdits and phase. Fix errors in report order, apply a suggestedEdit only when it is present (they are validated), and never delete the feature a diagnostic is about."
+}

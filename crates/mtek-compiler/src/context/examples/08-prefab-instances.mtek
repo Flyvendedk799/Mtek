@@ -1,0 +1,25 @@
+// A prefab is a reusable entity with params; `entity Name: Prefab { param: value; }` makes one.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 0.5, 0.0);
+    param tint: color = #5b8def;
+
+    position: origin;
+    mesh: Box {};
+    material: Pbr { base_color: tint; };
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 3.0, 8.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+
+    entity Left: Crate {
+        origin: vec3(-1.5, 0.5, 0.0);
+    }
+
+    entity Right: Crate {
+        origin: vec3(1.5, 0.5, 0.0);
+        tint: #ff8a3d;
+    }
+}

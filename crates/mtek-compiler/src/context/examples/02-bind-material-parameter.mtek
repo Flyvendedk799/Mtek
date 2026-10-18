@@ -1,0 +1,22 @@
+// A material declares params with defaults; `bind(name)` keeps a param equal to scene state.
+material Tinted {
+    param tint: color = #6b5cff;
+
+    fragment(input: SurfaceInput) -> color {
+        return tint;
+    }
+}
+
+scene Demo {
+    state tint: color = #ff8a3d;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.5, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box {};
+        material: Tinted { tint: bind(tint); };
+    }
+}

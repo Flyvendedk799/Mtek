@@ -226,6 +226,35 @@ pub const fn is_implemented(since: Milestone) -> bool {
     since.is_reached_by(IMPLEMENTED_MILESTONE)
 }
 
+/// A construct the build rejects with `E9010` from a check of its own, whatever
+/// [`IMPLEMENTED_MILESTONE`] says: it is not a row of the construct table and not a registry
+/// item, so nothing above would lift it. The checker takes its wording from here and the context
+/// export (`spec/decisions/0072-context-export.md`) lists every one under `notSupported`, so the
+/// export and the build cannot disagree about it.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct HardGate {
+    /// The name the context export gives the construct.
+    pub feature: &'static str,
+    /// How diagnostics name the construct, at the start of a sentence.
+    pub subject: &'static str,
+    /// Whether `subject` is plural.
+    pub plural: bool,
+    /// The milestone that is planned to implement the construct.
+    pub since: Milestone,
+}
+
+/// A state initialiser, constant or field initialiser that is not a constant expression and is
+/// not allowed to be (decision 0039): the value would have to be computed during initialisation.
+pub const NON_CONSTANT_INITIAL_VALUES: HardGate = HardGate {
+    feature: "non-constant-initial-values",
+    subject: "Initial values that are not constant expressions",
+    plural: true,
+    since: Milestone::M3,
+};
+
+/// Every [`HardGate`] of the build.
+pub const HARD_GATES: [HardGate; 1] = [NON_CONSTANT_INITIAL_VALUES];
+
 /// The `E9010` message for `subject` (`plural` selects "are" over "is"),
 /// planned for `since`.
 #[must_use]
