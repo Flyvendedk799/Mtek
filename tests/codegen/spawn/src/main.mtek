@@ -83,4 +83,7 @@ scene Demo {
     on key_down(Key.P) {
         spawn(Pulse { base: 0.5; });
     }
+    on key_down(Key.L) {
+        live = alive(last);
+    }
 }

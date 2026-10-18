@@ -124,7 +124,7 @@ export function buildPrefabRuntimes(prefabs: readonly ResolvedPrefab[], code: Re
       .map((binding): BindingStep => {
         const compute = program.bindings[binding.id];
         if (compute === undefined) throw new RuntimeInternalError(`binding ${String(binding.id)} of prefab '${resolved.symbol}' has no function in the program module.`);
-        return { binding, compute: compute as BindingStep["compute"] };
+        return { binding, compute };
       });
     const handlers = new Map<MtekEventName, readonly MtekPrefabEventHandler[]>();
     for (const event of INPUT_EVENTS) {

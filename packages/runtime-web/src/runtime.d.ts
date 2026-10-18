@@ -157,13 +157,24 @@ export interface MtekDebug {
   assets(): readonly MtekAssetStatus[];
   /**
    * The scene's state, its named entities and, in spawn order, the spawned entities that exist (decision 0064): the
-   * prefab's name, the slot and generation of its `entity_ref`, whether it is alive (not pending removal), its pose
-   * and its state.
+   * prefab's name, the slot and generation of its `entity_ref`, whether it is alive (not pending removal), its pose,
+   * visibility, state and material params.
    */
   scene(): {
     state: Record<string, unknown>;
     entities: Array<{ name: string; position: unknown; rotation: unknown }>;
-    spawned: Array<{ prefab: string; slot: number; gen: number; alive: boolean; position: unknown; rotation: unknown; state: Record<string, unknown> }>;
+    spawned: Array<{
+      prefab: string;
+      slot: number;
+      gen: number;
+      alive: boolean;
+      position: unknown;
+      rotation: unknown;
+      scale: unknown;
+      visible: boolean;
+      state: Record<string, unknown>;
+      mat?: { p: Record<string, unknown> };
+    }>;
   };
 }
 

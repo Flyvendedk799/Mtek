@@ -946,7 +946,10 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
           alive: !entity.removing,
           position: entity.record.position,
           rotation: entity.record.rotation,
+          scale: entity.record.scale,
+          visible: entity.record.visible,
           state: { ...entity.record.state },
+          ...(entity.record.mat === null ? {} : { mat: { p: { ...entity.record.mat.p } } }),
         })),
       }),
     };

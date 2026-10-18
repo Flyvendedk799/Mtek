@@ -154,6 +154,11 @@ function b_5_on_key_down(ctx, self) {
   ctx.spawn("src/main.mtek::Pulse", { base: 0.5 }, 42);
 }
 
+// on key_down (src/main.mtek::Demo.on_key_down_L)
+function b_6_on_key_down(ctx, self) {
+  ctx.s.live = ctx.alive(ctx.s.last);
+}
+
 // scene Demo (src/main.mtek::Demo): the initialisation order of spec/scenes.md section 11
 function s_Demo_init(ctx) {
   ctx.s.last = ctx.e[0].ref;
@@ -231,7 +236,7 @@ export const scenes = {
     fixedUpdate: null,
     entityUpdate: [null],
     entityFixedUpdate: [null],
-    events: { key_down: [{ key: "Space", owner: -1, fn: b_0_on_key_down }, { key: "Enter", owner: -1, fn: b_1_on_key_down }, { key: "KeyB", owner: -1, fn: b_2_on_key_down }, { key: "KeyD", owner: -1, fn: b_3_on_key_down }, { key: "KeyF", owner: -1, fn: b_4_on_key_down }, { key: "KeyP", owner: -1, fn: b_5_on_key_down }] },
+    events: { key_down: [{ key: "Space", owner: -1, fn: b_0_on_key_down }, { key: "Enter", owner: -1, fn: b_1_on_key_down }, { key: "KeyB", owner: -1, fn: b_2_on_key_down }, { key: "KeyD", owner: -1, fn: b_3_on_key_down }, { key: "KeyF", owner: -1, fn: b_4_on_key_down }, { key: "KeyP", owner: -1, fn: b_5_on_key_down }, { key: "KeyL", owner: -1, fn: b_6_on_key_down }] },
     bindings: [],
   },
 };

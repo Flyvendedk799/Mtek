@@ -20,7 +20,7 @@ import {
 } from "../diagnostics/types.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { fromRotationTranslationScale, multiply, type Mat4 } from "../math/mat4.js";
-import { DynamicEntities, type DynamicEntity, type DynamicHost, type PrefabRuntime } from "./dynamic.js";
+import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic.js";
 import { RuntimeInternalError } from "./errors.js";
 import { makeRef, type EntityRef } from "./slots.js";
 import type { ResolvedEntity, SceneStructure } from "./structure.js";
@@ -320,8 +320,8 @@ export class World {
     this.worldChanged = new Uint8Array(count);
     const host: DynamicHost = {
       get ctx(): object {
-        if (contextHolder === undefined) throw new RuntimeInternalError("the context was used before the world was built.");
-        return contextHolder;
+        if (holder.ctx === undefined) throw new RuntimeInternalError("the context was used before the world was built.");
+        return holder.ctx;
       },
       get phase(): MtekRuntimePhase {
         return currentPhase();
@@ -338,7 +338,7 @@ export class World {
         this.report(diagnostic);
       },
     };
-    let contextHolder: object | undefined;
+    const holder: { ctx?: object } = {};
     const currentPhase = (): MtekRuntimePhase => this.phase;
     this.dynamic = new DynamicEntities({
       prefabs: options.prefabs ?? new Map(),
@@ -399,7 +399,7 @@ export class World {
     };
     Object.defineProperty(members, "frame", { enumerable: true, get: () => this.frameValues });
     this.ctx = guarded(members, "ctx");
-    contextHolder = this.ctx;
+    holder.ctx = this.ctx;
   }
 
   /** `ctx.frame` as generated code sees it. */
