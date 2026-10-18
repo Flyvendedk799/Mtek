@@ -1,0 +1,25 @@
+# Camera: position (0, 0, 8) looking at the origin, fov_y 0.9, 128 x 128 target (CPU projection,
+# benchmarks/baselines/support/test/projection.ts). The five pips are boxes of edge 0.7 at x = -3, -1.5, 0, 1.5, 3,
+# y = -2, centred on pixels (12, 99), (38, 99), (64, 99), (90, 99) and (116, 99) and 12 pixels wide; the gaps between
+# them (pixels 26, 51, 77 and 102 on row 99) are background. The alarm is a box of edge 1 at (0, 2, 0): its front
+# face is centred on pixel (64, 29) and spans pixels 20 to 38 in y.
+# Before any key press nothing is lit and there is no alarm (the starter's behaviour, which the new feature must
+# not break).
+name = "before any key press nothing is lit"
+steps = [
+  { step = 3, dt = 0.016666668 },
+  { expect_pixel = { x = 12, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 38, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 90, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 116, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 29, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 36, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 26, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 51, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 77, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 102, y = 99, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 10, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 118, color = "#202020", tolerance = 2 } },
+]

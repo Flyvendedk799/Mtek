@@ -1,0 +1,32 @@
+scene Demo {
+    clear_color: #202020;
+    /// The lamp's brightness from 0.0 (small) to 1.0 (large); the host page sets it.
+    state glow: f32 = 0.5;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    // The housing never changes.
+    entity Housing {
+        mesh: Box { size: vec3(5.0, 5.0, 1.0) };
+        material: Unlit { color: #4b5563 };
+    }
+
+    // The bulb is a square plate in front of the housing; its edge is 1.0 + 2.0 * glow.
+    entity Bulb {
+        position: vec3(0.0, 0.0, 1.0);
+        scale: bind(vec3(0.5 + glow, 0.5 + glow, 1.0));
+        mesh: Box { size: vec3(2.0, 2.0, 0.2) };
+        material: Unlit { color: #fde047 };
+    }
+
+    on key_down(Key.Space) {
+        glow = 1.0;
+    }
+
+    on key_down(Key.D) {
+        glow = 0.0;
+    }
+}

@@ -1,0 +1,2 @@
+{"text":"<<<FILE src/main.mtek\n<<<SEARCH\nvec3(0.0, 1.0, 0.0), -heading)\n===\nvec3(0.0, 1.0, 0.0), -radians(heading))\n>>>REPLACE\n","finish":"stop","usage":{"inputTokens":null,"outputTokens":null}}
+{"text":"<<<FILE src/main.mtek\n<<<SEARCH\nvec3(0.0, 1.0, 0.0), -radians(heading))\n===\nvec3(0.0, 1.0, 0.0), radians(heading))\n>>>REPLACE\n","finish":"stop","usage":{"inputTokens":null,"outputTokens":null}}

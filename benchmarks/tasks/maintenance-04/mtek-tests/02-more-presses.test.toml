@@ -1,0 +1,66 @@
+# The turns add up, 30 degrees per press (CPU projection, see 00-initial.test.toml). The barrel is at world
+# (2.2 sin a, 0, 2.2 cos a) for the heading a:
+#   three presses, a =  90: (2.2, 0, 0)       pixel (100.4, 64): straight to the right, 6.5 pixels inside
+#   four presses,  a = 120: (1.905, 0, -1.1)  pixel (91.7, 64):  to the right and behind the turret's centre
+#   six presses,   a = 180: (0, 0, -2.2)      pixel (64, 64):    directly behind the turret, hidden by it
+# The turret is a cube, so after 90 and 180 degrees it looks as it did at 0; its purple face is sampled at
+# (55, 64) and (64, 64). The mirror image of the first position (x = -2.2) is pixel 28, background.
+name = "three presses point the barrel to the right, more presses turn it further round"
+steps = [
+  { step = 2, dt = 0.016666668 },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 100, y = 64, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 96, y = 64, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 55, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 28, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 118, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 30, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 100, color = "#202020", tolerance = 2 } },
+
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 92, y = 64, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 55, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 36, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 105, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 30, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 100, color = "#202020", tolerance = 2 } },
+
+  # two more presses: the barrel is directly behind the turret and cannot be seen
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 50, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 78, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 50, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 28, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 100, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 36, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 92, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 30, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 100, color = "#202020", tolerance = 2 } },
+]

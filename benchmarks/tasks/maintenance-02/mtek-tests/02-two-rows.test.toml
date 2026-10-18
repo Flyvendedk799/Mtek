@@ -1,0 +1,36 @@
+# The second press places a second row 2.5 lower (y = -0.5, pixel row 73) at the same five x; the first row
+# (pixel row 29) is still there and the places between the markers are still empty (CPU projection, see
+# 00-rail-only).
+name = "a second press places a second row below the first"
+steps = [
+  { step = 2, dt = 0.016666668 },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 2, dt = 0.016666668 },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 2, dt = 0.016666668 },
+  # first row
+  { expect_pixel = { x = 12, y = 29, color = "#facc15", tolerance = 2 } },
+  { expect_pixel = { x = 38, y = 29, color = "#facc15", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 29, color = "#facc15", tolerance = 2 } },
+  { expect_pixel = { x = 90, y = 29, color = "#facc15", tolerance = 2 } },
+  { expect_pixel = { x = 116, y = 29, color = "#facc15", tolerance = 2 } },
+  # second row
+  { expect_pixel = { x = 12, y = 73, color = "#facc15", tolerance = 2 } },
+  { expect_pixel = { x = 38, y = 73, color = "#facc15", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 73, color = "#facc15", tolerance = 2 } },
+  { expect_pixel = { x = 90, y = 73, color = "#facc15", tolerance = 2 } },
+  { expect_pixel = { x = 116, y = 73, color = "#facc15", tolerance = 2 } },
+  # the places between the markers of both rows, and below the second row
+  { expect_pixel = { x = 26, y = 73, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 51, y = 73, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 77, y = 73, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 101, y = 73, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 51, y = 29, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 77, y = 29, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 104, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 114, color = "#475569", tolerance = 2 } },
+]

@@ -1,0 +1,17 @@
+# Camera: position (0, 0, 8) looking at the origin, fov_y 0.9, 128 x 128 target (CPU projection,
+# benchmarks/baselines/support/test/projection.ts). The Turret is a cube of edge 2 at the origin (purple); its
+# child Barrel is a cube of edge 0.8 (orange) at local (0, 0, 2.2), i.e. between the turret and the camera,
+# centred on pixel (64, 64) and about 20 pixels wide, in front of the turret. The turret's visible ring around the
+# barrel is purple. The sampled points are at least 3 pixels from every silhouette they are not meant to be in.
+# With no key pressed nothing is turned (the starter's behaviour, which a repair must not break).
+name = "before any key press the barrel points at the camera"
+steps = [
+  { step = 3, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 50, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 78, y = 64, color = "#6b5cff", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 105, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 30, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 100, color = "#202020", tolerance = 2 } },
+]

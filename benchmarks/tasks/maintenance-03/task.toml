@@ -1,0 +1,18 @@
+id = "maintenance-03"
+category = "maintenance"
+mode = "edit"
+title = "Repair a program with a malformed number, a missing separator, a misspelled name and a type error"
+prompt = """The project is meant to show a scene named Demo with a pink box that swings from side to side and rises when Space is pressed, and it does not build. Repair it without removing anything.
+Intended behaviour: clear colour #202020; one camera at (0, 0, 8) looking at the origin; a unit cube named Bob with the flat colour #ec4899 (no lighting). The program keeps the elapsed time in seconds, accumulated from the frame time of every frame, in a variable named elapsed, and the number of Space presses so far, a whole number, in a variable named presses. In every frame Bob is placed at x = 2 * sin(t), where t is the elapsed time in radians, at y = 0.5 for each press so far (0 before the first press) and at z = 0."""
+required_symbols = ["Demo.Bob", "Demo.elapsed", "Demo.presses"]
+mtek_side_status = "verified"
+# The four errors of the Mtek starter, as the compiler reports them (listed in code order): a float literal
+# without digits after the point (E0022), a missing `;` (E1003), a misspelled state name (E2003) and an `f32`
+# multiplied by an `i32` (E3014). The first three carry a validated suggested edit (decision 0071); the type
+# error has none (a conversion would be invented, spec/diagnostics.md section 6.2).
+starter_diagnostics = ["MTEK-E0022", "MTEK-E1003", "MTEK-E2003", "MTEK-E3014"]
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

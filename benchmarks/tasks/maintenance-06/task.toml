@@ -1,0 +1,14 @@
+id = "maintenance-06"
+category = "maintenance"
+mode = "edit"
+title = "Add an alarm lamp and a reset key to a working counter without changing what it does"
+prompt = """The project is a counter: five green pips in a row, and every press of Space lights one more pip from the left, never more than five. It works. Extend it with two features without changing anything that already works.
+Present behaviour (it must stay): clear colour #202020; one camera at (0, 0, 8) looking at the origin; five boxes named Pip1 to Pip5, edge length 0.7, flat colour #22c55e, at x = -3, -1.5, 0, 1.5 and 3 (y = -2, z = 0); pip number n is visible exactly while the count of presses is at least n; the count is kept in a variable named count and stops at 5 (further presses change nothing); no pip is visible at the start.
+New: (1) a box named Alarm, edge length 1, flat colour #ef4444, at (0, 2, 0), that is visible exactly while all five pips are lit and hidden otherwise (so it is hidden at the start); (2) pressing R sets the count back to 0, so that every pip and the alarm are hidden again and counting starts again from the left. All surfaces are flat colours (no lighting)."""
+required_symbols = ["Demo.count", "Demo.Pip1", "Demo.Pip2", "Demo.Pip3", "Demo.Pip4", "Demo.Pip5"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

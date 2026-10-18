@@ -1,0 +1,109 @@
+{
+  "baselineSource": "starter",
+  "command": "MTEK_REQUIRE_GPU=1 MTEK_BASELINE_SOURCE=starter npm run test:benchmarks -- \"maintenance-0[2-6]\"",
+  "counts": {
+    "passed": 6,
+    "failed": 8,
+    "skipped": 1
+  },
+  "tests": [
+    {
+      "title": "maintenance-02 (starter baseline): a second press places a second row below the first",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 469,
+      "firstErrorLine": "Error: a second press places a second row below the first, step 10 (expect_pixel): pixel (12, 29) is rgb(32, 32, 32), expected #facc15 within 2"
+    },
+    {
+      "title": "maintenance-02 (starter baseline): before any key press only the rail is drawn",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 493
+    },
+    {
+      "title": "maintenance-02 (starter baseline): one press of Space places a row of five markers",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 417,
+      "firstErrorLine": "Error: one press of Space places a row of five markers, step 6 (expect_pixel): pixel (12, 29) is rgb(32, 32, 32), expected #facc15 within 2"
+    },
+    {
+      "title": "maintenance-03 (starter baseline): Bob swings sideways with x = 2 sin(t)",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 0,
+      "firstErrorLine": "Error: Build failed with 1 error:"
+    },
+    {
+      "title": "maintenance-03 (starter baseline): every press of Space raises Bob by half a unit",
+      "project": "benchmarks",
+      "status": "skipped",
+      "durationMs": 0
+    },
+    {
+      "title": "maintenance-04 (starter baseline): before any key press the barrel points at the camera",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 450
+    },
+    {
+      "title": "maintenance-04 (starter baseline): one press of Space turns the turret 30 degrees to the right",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 406,
+      "firstErrorLine": "Error: one press of Space turns the turret 30 degrees to the right, step 6 (expect_pixel): pixel (86, 64) is rgb(32, 32, 32), expected #f59e0b within 2"
+    },
+    {
+      "title": "maintenance-04 (starter baseline): three presses point the barrel to the right, more presses turn it further round",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 475,
+      "firstErrorLine": "Error: three presses point the barrel to the right, more presses turn it further round, step 14 (expect_pixel): pixel (100, 64) is rgb(32, 32, 32), expected #f59e0b within 2"
+    },
+    {
+      "title": "maintenance-05 (starter baseline): Space sets full brightness and D the smallest",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 566
+    },
+    {
+      "title": "maintenance-05 (starter baseline): the host input brightness sets the lamp",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 234,
+      "firstErrorLine": "Error: the host input brightness sets the lamp, step 2 (set_input): setInput('brightness') was rejected: unknown-input: no host input named 'brightness'"
+    },
+    {
+      "title": "maintenance-05 (starter baseline): the lamp starts at brightness 0.5",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 460
+    },
+    {
+      "title": "maintenance-06 (starter baseline): before any key press nothing is lit",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 440
+    },
+    {
+      "title": "maintenance-06 (starter baseline): each press of Space lights one more pip",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 744
+    },
+    {
+      "title": "maintenance-06 (starter baseline): five presses light every pip and the alarm, more presses change nothing",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 578,
+      "firstErrorLine": "Error: five presses light every pip and the alarm, more presses change nothing, step 34 (expect_pixel): pixel (64, 29) is rgb(32, 32, 32), expected #ef4444 within 2"
+    },
+    {
+      "title": "maintenance-06 (starter baseline): R switches everything off and counting starts again",
+      "project": "benchmarks",
+      "status": "failed",
+      "durationMs": 492,
+      "firstErrorLine": "Error: R switches everything off and counting starts again, step 27 (expect_pixel): pixel (64, 29) is rgb(32, 32, 32), expected #ef4444 within 2"
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "task": "maintenance-02",
+  "project": "starter",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "fail",
+      "reason": "2 of 3 fixtures failed: 'one press of Space places a row of five markers', 'a second press places a second row below the first' (expect_pixel: pixel (12, 29) is #202020, expected #facc15 within 2 per channel; it differs by 218)",
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Rail",
+      "Marker"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "fail",
+    "exitCode": 1,
+    "summary": {
+      "total": 3,
+      "passed": 1,
+      "failed": 2,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/00-rail-only.test.toml",
+        "name": "before any key press only the rail is drawn",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 11,
+        "stepsTotal": 11
+      },
+      {
+        "file": "tests/01-one-row.test.toml",
+        "name": "one press of Space places a row of five markers",
+        "status": "fail",
+        "reason": null,
+        "failure": {
+          "kind": "expect_pixel",
+          "step": 6,
+          "line": 13,
+          "message": "pixel (12, 29) is #202020, expected #facc15 within 2 per channel; it differs by 218",
+          "details": []
+        },
+        "stepsRun": 5,
+        "stepsTotal": 18
+      },
+      {
+        "file": "tests/02-two-rows.test.toml",
+        "name": "a second press places a second row below the first",
+        "status": "fail",
+        "reason": null,
+        "failure": {
+          "kind": "expect_pixel",
+          "step": 10,
+          "line": 16,
+          "message": "pixel (12, 29) is #202020, expected #facc15 within 2 per channel; it differs by 218",
+          "details": []
+        },
+        "stepsRun": 9,
+        "stepsTotal": 27
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "fail",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 123,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Rail",
+      "exitCode": 0,
+      "durationMs": 115,
+      "timedOut": false
+    },
+    {
+      "command": "context Marker",
+      "exitCode": 0,
+      "durationMs": 113,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 137,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 1,
+      "durationMs": 1934,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 2424
+}

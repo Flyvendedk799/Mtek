@@ -1,0 +1,28 @@
+# Every press of Space raises Bob by 0.5 (y = 0.5 per press) while it keeps swinging, x = 2 sin(t). A key
+# press is applied at the start of the next frame. CPU projection as in 00-swing.test.toml; the front face is
+# centred on pixel y = 64 - 17.66 y:
+#   frame 32 (t = 0.533), one press:  Bob at (1.017, 0.5)  -> pixel (82.0, 55.2): the box covers y 46 to 64
+#   frame 34 (t = 0.567), two presses: Bob at (1.074, 1.0) -> pixel (83.0, 46.3): the box covers y 37 to 55
+name = "every press of Space raises Bob by half a unit"
+steps = [
+  { step = 30, dt = 0.016666668 },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 82, y = 60, color = "#ec4899", tolerance = 2 } },
+  { expect_pixel = { x = 82, y = 52, color = "#ec4899", tolerance = 2 } },
+  { expect_pixel = { x = 82, y = 70, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 82, y = 76, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 60, color = "#202020", tolerance = 2 } },
+
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 83, y = 46, color = "#ec4899", tolerance = 2 } },
+  { expect_pixel = { x = 83, y = 52, color = "#ec4899", tolerance = 2 } },
+  { expect_pixel = { x = 83, y = 60, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 83, y = 70, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 66, y = 46, color = "#202020", tolerance = 2 } },
+]

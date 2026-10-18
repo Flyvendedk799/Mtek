@@ -1,0 +1,13 @@
+id = "maintenance-02"
+category = "maintenance"
+mode = "edit"
+title = "Fix an off-by-one in the loop that places a row of markers"
+prompt = """The project is meant to build up rows of markers: every press of Space places one new row, and it does not place the rows correctly. Repair it without removing or renaming anything.
+Intended behaviour: clear colour #202020; one camera at (0, 0, 8) looking at the origin; a box named Rail, 8 x 0.4 x 1, at (0, -3, 0) with the flat colour #475569, which is always there. A marker is a box with edge length 0.8 and the flat colour #facc15. Each press of Space places one new row of exactly five markers: their x are -3, -1.5, 0, 1.5 and 3 (centred on x = 0, 1.5 apart) and their z is 0. The first row is at y = 2.0 and every further row is 2.5 lower than the previous one; the markers of earlier rows stay where they are. Before the first press there are no markers. All surfaces are flat colours (no lighting)."""
+required_symbols = ["Demo.Rail", "Marker"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

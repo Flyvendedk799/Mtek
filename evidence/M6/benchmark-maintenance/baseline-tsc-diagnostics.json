@@ -1,0 +1,58 @@
+{
+  "command": "TypeScript getPreEmitDiagnostics on each project's tsconfig.json (the compiler API, as benchmarks/baselines/support/test/starters.test.ts does)",
+  "projects": {
+    "benchmarks/tasks/maintenance-02/baseline": [],
+    "benchmarks/tasks/maintenance-02/reference/baseline": [],
+    "benchmarks/tasks/maintenance-03/baseline": [
+      {
+        "code": "TS1005",
+        "file": "benchmarks/tasks/maintenance-03/baseline/src/main.ts",
+        "line": 24,
+        "column": 4,
+        "message": "')' expected."
+      },
+      {
+        "code": "TS2552",
+        "file": "benchmarks/tasks/maintenance-03/baseline/src/main.ts",
+        "line": 31,
+        "column": 7,
+        "message": "Cannot find name 'elapsd'. Did you mean 'elapsed'?"
+      },
+      {
+        "code": "TS1351",
+        "file": "benchmarks/tasks/maintenance-03/baseline/src/main.ts",
+        "line": 32,
+        "column": 41,
+        "message": "An identifier or keyword cannot immediately follow a numeric literal."
+      },
+      {
+        "code": "TS2304",
+        "file": "benchmarks/tasks/maintenance-03/baseline/src/main.ts",
+        "line": 32,
+        "column": 41,
+        "message": "Cannot find name 'f'."
+      },
+      {
+        "code": "TS2554",
+        "file": "benchmarks/tasks/maintenance-03/baseline/src/main.ts",
+        "line": 32,
+        "column": 41,
+        "message": "Expected 2 arguments, but got 3."
+      },
+      {
+        "code": "TS2363",
+        "file": "benchmarks/tasks/maintenance-03/baseline/src/main.ts",
+        "line": 32,
+        "column": 52,
+        "message": "The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type."
+      }
+    ],
+    "benchmarks/tasks/maintenance-03/reference/baseline": [],
+    "benchmarks/tasks/maintenance-04/baseline": [],
+    "benchmarks/tasks/maintenance-04/reference/baseline": [],
+    "benchmarks/tasks/maintenance-05/baseline": [],
+    "benchmarks/tasks/maintenance-05/reference/baseline": [],
+    "benchmarks/tasks/maintenance-06/baseline": [],
+    "benchmarks/tasks/maintenance-06/reference/baseline": []
+  }
+}

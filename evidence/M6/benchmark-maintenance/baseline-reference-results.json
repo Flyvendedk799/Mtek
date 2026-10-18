@@ -1,0 +1,101 @@
+{
+  "baselineSource": "reference",
+  "command": "MTEK_REQUIRE_GPU=1 npm run test:benchmarks -- \"maintenance-0[2-6]\"",
+  "counts": {
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "maintenance-02 (reference baseline): a second press places a second row below the first",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 389
+    },
+    {
+      "title": "maintenance-02 (reference baseline): before any key press only the rail is drawn",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 482
+    },
+    {
+      "title": "maintenance-02 (reference baseline): one press of Space places a row of five markers",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 398
+    },
+    {
+      "title": "maintenance-03 (reference baseline): Bob swings sideways with x = 2 sin(t)",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 1007
+    },
+    {
+      "title": "maintenance-03 (reference baseline): every press of Space raises Bob by half a unit",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 561
+    },
+    {
+      "title": "maintenance-04 (reference baseline): before any key press the barrel points at the camera",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 523
+    },
+    {
+      "title": "maintenance-04 (reference baseline): one press of Space turns the turret 30 degrees to the right",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 406
+    },
+    {
+      "title": "maintenance-04 (reference baseline): three presses point the barrel to the right, more presses turn it further round",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 733
+    },
+    {
+      "title": "maintenance-05 (reference baseline): Space sets full brightness and D the smallest",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 572
+    },
+    {
+      "title": "maintenance-05 (reference baseline): the host input brightness sets the lamp",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 1107
+    },
+    {
+      "title": "maintenance-05 (reference baseline): the lamp starts at brightness 0.5",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 518
+    },
+    {
+      "title": "maintenance-06 (reference baseline): before any key press nothing is lit",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 527
+    },
+    {
+      "title": "maintenance-06 (reference baseline): each press of Space lights one more pip",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 736
+    },
+    {
+      "title": "maintenance-06 (reference baseline): five presses light every pip and the alarm, more presses change nothing",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 767
+    },
+    {
+      "title": "maintenance-06 (reference baseline): R switches everything off and counting starts again",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 885
+    }
+  ]
+}
