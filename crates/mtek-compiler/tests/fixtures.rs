@@ -1491,7 +1491,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ),
     ("E8041", "M3: host inputs (decision 0018)"),
     ("W8070", "M3: candidate-based hot reload"),
-    ("E8080", "M6: preview builds"),
     ("E8090", "M3: run-time field writes"),
     ("E8100", "M3: run-time field writes and host inputs"),
 ];
@@ -1533,6 +1532,13 @@ const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
     ("E6001", "tests/build.rs"),
     // An I/O failure of the command line tool while writing `dist/`.
     ("E9031", "../mtek-cli/tests/cli.rs"),
+    // The compile time limit of `mtek build --mode preview` (decision 0075).
+    ("E9032", "../mtek-cli/src/limits.rs"),
+    // The loop budget of a preview build, enforced by the runtime (decision 0075).
+    (
+        "E8080",
+        "../../packages/runtime-web/src/host/budget.test.ts",
+    ),
     // Too large to review as fixtures: more than 200 diagnostics in one
     // file, more than 16 384 entities (generated in this file).
     ("W9003", "src/diagnostics/sink.rs"),

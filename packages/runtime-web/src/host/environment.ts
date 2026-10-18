@@ -125,3 +125,51 @@ export function defaultEnvironment(): HostEnvironment {
     },
   };
 }
+
+/** Why a request of an untrusted preview was refused (decision 0075). */
+export class NetworkRefusedError extends Error {
+  readonly url: string;
+
+  constructor(url: string, base: URL) {
+    super(`refused ${url}: a preview may only request files below its own directory (${base.href})`);
+    this.name = "NetworkRefusedError";
+    this.url = url;
+  }
+}
+
+/**
+ * Whether `url` names a file below `base` and nothing else: the same scheme, host and port, a path that starts with
+ * the path of `base` after the URL parser has resolved every `.` and `..`, no credentials, and, below `base`, no
+ * percent-encoded dot, slash or backslash (a server may decode those after the check). `base` is a directory URL
+ * (its path ends with `/`). A relative `url` is resolved against `base`; one that does not parse is outside.
+ */
+export function isWithinBase(url: string, base: URL): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url, base);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== base.protocol || parsed.host !== base.host) return false;
+  if (parsed.username !== "" || parsed.password !== "") return false;
+  const directory = base.pathname.endsWith("/") ? base.pathname : `${base.pathname}/`;
+  if (!parsed.pathname.startsWith(directory)) return false;
+  return !/%2e|%2f|%5c/i.test(parsed.pathname.slice(directory.length));
+}
+
+/**
+ * `environment` with every network access checked by {@link isWithinBase}: `fetch`, `fetchBytes` and `importModule`
+ * (the physics module) reject with a {@link NetworkRefusedError} for any URL outside `base`, and the request is
+ * never made. An untrusted preview mounts with this (decision 0075): the compiler never emits an outside URL, so
+ * a refusal means a manifest that was not made by it.
+ */
+export function restrictToBase(environment: HostEnvironment, base: URL): HostEnvironment {
+  const guarded = <T>(url: string, request: () => Promise<T>): Promise<T> =>
+    isWithinBase(url, base) ? request() : Promise.reject(new NetworkRefusedError(url, base));
+  return {
+    ...environment,
+    fetch: (url) => guarded(url, () => environment.fetch(url)),
+    fetchBytes: (url) => guarded(url, () => environment.fetchBytes(url)),
+    importModule: (url) => guarded(url, () => environment.importModule(url)),
+  };
+}

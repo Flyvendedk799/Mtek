@@ -8,6 +8,11 @@ import { codegenDir, outDir } from "./fixtures.js";
 
 /** Where the global setup builds the codegen fixtures. */
 export const programsDir = resolve(outDir, "programs");
+/** Where it builds them in `--mode preview` (loop budget checks, decision 0075). */
+export const previewProgramsDir = resolve(outDir, "programs-preview");
+
+/** A release build of a fixture, or its `--mode preview` build. */
+export type ProgramVariant = "release" | "preview";
 
 /** The codegen fixtures: directories under tests/codegen with an mtek.toml, sorted. */
 export function codegenFixtures(): string[] {
@@ -63,8 +68,8 @@ export function record(value: unknown, where: string): Readonly<Record<string, u
 
 const loaded = new Map<string, Promise<BuiltProgram>>();
 
-async function importProgram(name: string): Promise<BuiltProgram> {
-  const dir = resolve(programsDir, name);
+async function importProgram(name: string, variant: ProgramVariant): Promise<BuiltProgram> {
+  const dir = resolve(variant === "preview" ? previewProgramsDir : programsDir, name);
   const appFile = resolve(dir, "app.js");
   const appText = readFileSync(appFile, "utf8");
   const runtimeFile = RUNTIME_LINE.exec(appText)?.[1];
@@ -72,16 +77,18 @@ async function importProgram(name: string): Promise<BuiltProgram> {
   const appUrl = pathToFileURL(appFile).href;
   const module = record(await import(/* @vite-ignore */ appUrl), name);
   const manifest = JSON.parse(readFileSync(resolve(dir, "program.manifest.json"), "utf8")) as Manifest;
-  const ir: unknown = JSON.parse(readFileSync(resolve(dir, "ir.json"), "utf8"));
+  // The typed IR is the same program's, whatever the mode.
+  const ir: unknown = JSON.parse(readFileSync(resolve(programsDir, name, "ir.json"), "utf8"));
   return { name, dir, appUrl, appText, runtimeFile, module, manifest, ir };
 }
 
 /** The fixture `name` as built by the global setup (imported once per test file). */
-export function loadProgram(name: string): Promise<BuiltProgram> {
-  let program = loaded.get(name);
+export function loadProgram(name: string, variant: ProgramVariant = "release"): Promise<BuiltProgram> {
+  const key = `${variant}:${name}`;
+  let program = loaded.get(key);
   if (program === undefined) {
-    program = importProgram(name);
-    loaded.set(name, program);
+    program = importProgram(name, variant);
+    loaded.set(key, program);
   }
   return program;
 }

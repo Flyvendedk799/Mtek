@@ -166,7 +166,8 @@ export type MtekMountErrorKind =
   | "shader-failed"
   | "asset-failed"
   | "allocation-failed"
-  | "physics-failed";
+  | "physics-failed"
+  | "budget-exceeded";
 
 const MOUNT_KIND_BY_CODE: Readonly<Record<string, MtekMountErrorKind>> = {
   E8001: "webgpu-unavailable",
@@ -180,6 +181,7 @@ const MOUNT_KIND_BY_CODE: Readonly<Record<string, MtekMountErrorKind>> = {
   E7031: "asset-failed",
   E8063: "allocation-failed",
   E8102: "physics-failed",
+  E8080: "budget-exceeded",
 };
 
 /**

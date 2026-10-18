@@ -3,8 +3,9 @@
 //  1. the runtime bundle `packages/runtime-web/dist/runtime.js` from the current sources, so the
 //     execution tests never run against a stale runtime;
 //  2. the layout record and generated writers of every layout fixture (`layout_fixtures`);
-//  3. every codegen fixture built with that real runtime bundle, its typed IR and the compiler's
-//     copy of the runtime's operation index (`codegen_programs`, decision 0040).
+//  3. every codegen fixture built with that real runtime bundle, in release and in `--mode preview`
+//     (decision 0075), its typed IR and the compiler's copy of the runtime's operation index
+//     (`codegen_programs`, decision 0040).
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, readdirSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -37,10 +38,12 @@ export default function setup(): void {
   // Next to each built program (test files run in parallel workers, so they only read): the
   // sources its app.js.map names (decision 0030) and the runtime bundle's own source map, which
   // `dist/` does not ship.
-  const programs = resolve(outDir, "programs");
   const runtimeMap = resolve(repoRoot, "packages/runtime-web/dist/runtime.js.map");
-  for (const name of readdirSync(programs)) {
-    cpSync(resolve(here, name, "src"), resolve(programs, name, "src"), { recursive: true });
-    if (existsSync(runtimeMap)) cpSync(runtimeMap, resolve(programs, name, "runtime.js.map"));
+  for (const variant of ["programs", "programs-preview"]) {
+    const programs = resolve(outDir, variant);
+    for (const name of readdirSync(programs)) {
+      cpSync(resolve(here, name, "src"), resolve(programs, name, "src"), { recursive: true });
+      if (existsSync(runtimeMap)) cpSync(runtimeMap, resolve(programs, name, "runtime.js.map"));
+    }
   }
 }

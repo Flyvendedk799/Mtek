@@ -20,6 +20,7 @@ import {
 } from "../diagnostics/types.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { fromRotationTranslationScale, multiply, type Mat4 } from "../math/mat4.js";
+import type { LoopBudget } from "./budget.js";
 import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic.js";
 import { RuntimeInternalError } from "./errors.js";
 import { makeRef, type EntityRef } from "./slots.js";
@@ -55,6 +56,7 @@ export const CONTEXT_MEMBERS = [
   "destroy",
   "alive",
   "body",
+  "budget",
   "warn",
   "random",
   "isKeyDown",
@@ -293,6 +295,10 @@ export class World {
   private frameValues: FrameValues = Object.freeze({ time: 0, delta: 0, index: 0 });
   private initialising = false;
   private visibility = 0;
+  /** `ctx.budget` (decision 0075): the iterations of CPU loops left in this frame. Only a preview build checks it. */
+  private readonly loopBudget: LoopBudget = { n: 0 };
+  /** `manifest.preview.loopBudget`: what {@link resetBudget} refills the counter with; `undefined` outside a preview. */
+  private readonly loopBudgetLimit: number | undefined;
   private readonly materialParamTypes: ReadonlyMap<string, readonly { readonly name: string; readonly type: string }[]>;
 
   constructor(options: WorldOptions) {
@@ -300,6 +306,7 @@ export class World {
     this.structure = options.structure;
     this.params = options.params;
     this.report = options.report;
+    this.loopBudgetLimit = options.manifest.preview?.loopBudget;
 
     const materialParams = new Map(this.structure.materials.map((material) => [material.id, material.params]));
     this.materialParamTypes = materialParams;
@@ -403,6 +410,7 @@ export class World {
         }
         return this.bodies.handle(target, spanId);
       },
+      budget: this.loopBudget,
       warn: (code: unknown, spanId: unknown): void => {
         this.warn(code, spanId);
       },
@@ -418,6 +426,15 @@ export class World {
     Object.defineProperty(members, "frame", { enumerable: true, get: () => this.frameValues });
     this.ctx = guarded(members, "ctx");
     holder.ctx = this.ctx;
+  }
+
+  /**
+   * Refills `ctx.budget` for a new frame (and for `init`): `manifest.preview.loopBudget` iterations. Without a
+   * `preview` object in the manifest the counter stays at 0, so an instrumented `app.js` mounted against a
+   * manifest that does not say so fails at its first loop instead of running without a bound (decision 0075).
+   */
+  resetBudget(): void {
+    if (this.loopBudgetLimit !== undefined) this.loopBudget.n = this.loopBudgetLimit;
   }
 
   /** `ctx.frame` as generated code sees it. */
@@ -436,6 +453,7 @@ export class World {
    * already checked them, `E5010`/`E5011`) and propagates transforms. Errors thrown by `init` propagate.
    */
   initialise(init: (ctx: object) => void, afterInit?: () => void): void {
+    this.resetBudget();
     this.initialising = true;
     try {
       init(this.ctx);

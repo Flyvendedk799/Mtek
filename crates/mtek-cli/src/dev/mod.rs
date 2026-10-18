@@ -232,7 +232,7 @@ async fn rebuild(app: &App, scope: &Scope, dir: PathBuf, context: Context) {
                 dir: &project_dir,
                 fs: &fs,
             };
-            commands::compile_and_write(&context, &project, BuildMode::Dev, None)
+            commands::compile_and_write(&context, &project, BuildMode::Dev.into(), None)
         })
     })
     .await;

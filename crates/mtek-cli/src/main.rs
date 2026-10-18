@@ -9,6 +9,7 @@ mod commands;
 mod dev;
 mod dist;
 mod guard;
+mod limits;
 mod real_fs;
 mod runtime;
 mod scaffold;

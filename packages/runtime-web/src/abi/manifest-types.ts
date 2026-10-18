@@ -466,6 +466,12 @@ export interface MtekScene {
 
 // ---- the manifest ----
 
+/** The `preview` object of an untrusted-preview manifest (decision 0075). */
+export interface MtekPreview {
+  /** Iterations of CPU loops allowed per frame (and during `init`); at least 1. */
+  readonly loopBudget: number;
+}
+
 export interface MtekManifest {
   readonly manifestSchema: number;
   readonly runtimeAbi: number;
@@ -481,6 +487,11 @@ export interface MtekManifest {
    */
   readonly subsystems: { readonly physics: boolean; readonly physicsModule?: string };
   readonly runtimeConfig: MtekRuntimeConfig;
+  /**
+   * Present exactly in the manifest of a `--mode preview` build (decision 0075): the program was instrumented with a
+   * loop budget the runtime enforces (`E8080`), and the runtime refuses every request outside `baseUrl`.
+   */
+  readonly preview?: MtekPreview;
   readonly entryScene: string;
   readonly sources: readonly MtekSource[];
   readonly spans: readonly MtekSpan[];

@@ -24,6 +24,11 @@ pub fn install_panic_hook() {
     }));
 }
 
+/// The text of the last recorded panic, once (the hook of [`install_panic_hook`] records it).
+pub fn take_last_panic() -> Option<String> {
+    LAST_PANIC.lock().ok().and_then(|mut slot| slot.take())
+}
+
 /// The message of a panic payload.
 fn payload_text(payload: &(dyn Any + Send)) -> String {
     if let Some(text) = payload.downcast_ref::<&str>() {
@@ -54,8 +59,7 @@ where
         Ok(Ok(value)) => return Ok(value),
         Ok(Err(payload)) | Err(payload) => payload,
     };
-    let recorded = LAST_PANIC.lock().ok().and_then(|mut slot| slot.take());
-    Err(recorded.unwrap_or_else(|| payload_text(payload.as_ref())))
+    Err(take_last_panic().unwrap_or_else(|| payload_text(payload.as_ref())))
 }
 
 #[cfg(test)]

@@ -41,7 +41,7 @@ use crate::source::Span;
 
 use super::ast::{Expr, Item, JsModule, Module, Number, Stmt, print};
 use super::cpu::{
-    InitScope, emit_behaviors, emit_functions, emit_init_expr, emit_prefab_behaviors,
+    CpuFlags, InitScope, emit_behaviors, emit_functions, emit_init_expr, emit_prefab_behaviors,
     emit_state_init,
 };
 use super::printer::identifier_part;
@@ -58,8 +58,9 @@ pub struct ProgramParts<'a> {
     /// The layout records whose writers the module carries, in `writers` table order
     /// (`builtin:frame`, `builtin:object`, then the material blocks by id).
     pub layouts: &'a [LayoutRecord],
-    /// A release build: `print` is compiled out of lifecycle functions and handlers.
-    pub release: bool,
+    /// What the build mode changes: `print` is compiled out of lifecycle functions and handlers
+    /// in a release or preview build, and a preview build checks the loop budget in every loop.
+    pub flags: CpuFlags,
 }
 
 /// The comment on the first line of every generated file.
@@ -138,7 +139,7 @@ pub fn emit_program(
         name: "writers".to_owned(),
         value: Expr::object_lines(table),
     });
-    let functions = emit_functions(program, span_id)?;
+    let functions = emit_functions(program, parts.flags.loop_budget, span_id)?;
     items.extend(functions.stmts.into_iter().map(Item::Stmt));
     items.push(Item::Stmt(Stmt::Blank));
     items.push(Item::ExportConst {
@@ -152,7 +153,7 @@ pub fn emit_program(
         ),
     });
 
-    let behaviors = emit_behaviors(scene, parts.release, span_id)?;
+    let behaviors = emit_behaviors(scene, parts.flags, span_id)?;
     items.extend(behaviors.stmts.iter().cloned().map(Item::Stmt));
     let init = init_function_name(scene);
     items.push(Item::Stmt(Stmt::Blank));
@@ -168,7 +169,7 @@ pub fn emit_program(
     }));
     // The prefabs of every module (`spec/runtime-abi.md` section 3): their functions, then the
     // `prefabs` table after `scenes`.
-    let (prefab_stmts, prefab_table) = emit_prefabs(program, parts.release, span_id)?;
+    let (prefab_stmts, prefab_table) = emit_prefabs(program, parts.flags, span_id)?;
     items.extend(prefab_stmts.into_iter().map(Item::Stmt));
     let function_or_null = |name: &Option<String>| match name {
         Some(name) => Expr::Ident(name.clone()),
@@ -320,7 +321,7 @@ type PrefabParts = (Vec<Stmt>, Vec<(String, Expr)>);
 /// ```
 fn emit_prefabs(
     program: &Program,
-    release: bool,
+    flags: CpuFlags,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<PrefabParts, String> {
     let mut stmts = Vec::new();
@@ -328,7 +329,7 @@ fn emit_prefabs(
     for prefab in program.prefabs() {
         let prefix = prefab_prefix(&prefab.symbol)?;
         let init = format!("{prefix}_init");
-        let behaviors = emit_prefab_behaviors(prefab, &prefix, release, span_id)?;
+        let behaviors = emit_prefab_behaviors(prefab, &prefix, flags, span_id)?;
         stmts.push(Stmt::Blank);
         stmts.push(Stmt::Comment(format!(
             "prefab {} ({}): init(ctx, self, params) sets the state and the fields of an instance",
