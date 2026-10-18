@@ -77,3 +77,4 @@ recorded here before code depends on it (blueprint §15).
 | 0054 | Textures and samplers: params, built-ins, `sample` and the test texture |
 | 0055 | Frustum culling, renderer counters and the development overlay: planes, bounding spheres, `culledObjects`, GPU time, release/development runtime flavours, overlay keys |
 | 0056 | Resilience: resize and pixel ratio, device loss recovery, allocation failure and their test hooks |
+| 0059 | Compatible instancing: shared parameter blocks, the instanced vertex entry and pipeline variant, the instance buffer, grouping, counters and `test.disableInstancing` |
