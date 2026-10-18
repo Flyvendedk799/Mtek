@@ -219,7 +219,13 @@ export async function loadAssets(options: AssetLoadOptions): Promise<AssetLoadRe
   const { manifest, onState } = options;
   const list = manifest.assets;
   const event = (asset: MtekAsset, state: AssetState): void => {
-    onState?.({ url: asset.url, kind: asset.kind, state });
+    try {
+      onState?.({ url: asset.url, kind: asset.kind, state });
+    } catch (error) {
+      // A throwing observer must not fail the load (the loader never rejects); surface it like any uncaught host error.
+      if (typeof reportError === "function") reportError(error);
+      else console.error(error);
+    }
   };
   for (const asset of list) event(asset, "pending");
 

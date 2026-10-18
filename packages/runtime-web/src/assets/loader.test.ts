@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { MtekManifest } from "../abi/manifest-types.js";
 import { checkManifest } from "../abi/validate.js";
 import { BASE_URL, FakeHost, fakeImage, minimalManifestJson } from "../test-support/fake-host.js";
@@ -91,6 +91,24 @@ describe("loadAssets: success", () => {
     await load(host, manifestWith([meshEntry(), imageEntry()]), { onState: (e) => events.push(`${e.state} ${e.kind}`) });
     expect(events.slice(0, 2)).toEqual(["pending mesh-data", "pending image"]);
     expect(events.slice(2).sort()).toEqual(["ready image", "ready mesh-data"]);
+  });
+
+  it("is not failed by an observer that throws", async () => {
+    const host = hostWith({ [MESH_URL]: MESH_BYTES });
+    const reported: unknown[] = [];
+    vi.stubGlobal("reportError", (error: unknown) => reported.push(error));
+    try {
+      const result = await load(host, manifestWith([meshEntry()]), {
+        onState: () => {
+          throw new Error("observer");
+        },
+      });
+      expect(result.diagnostics).toEqual([]);
+      expect(result.assets.has(MESH_URL)).toBe(true);
+      expect(reported).toHaveLength(2); // pending and ready
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("resolves urls relative to the program's base URL", async () => {

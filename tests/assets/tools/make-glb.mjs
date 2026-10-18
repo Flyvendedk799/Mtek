@@ -1,4 +1,6 @@
-// Generates the asset fixtures of tests/assets (spec/assets.md section 7, decision 0058).
+// Generates the asset fixtures of tests/assets (spec/assets.md section 7, decision 0058) and the two browser fixtures of
+// the runtime asset spec (tests/browser/fixtures/m4/assets_scene and assets_corrupt, decision 0060), whose expected pixels
+// are derived by hand from the data written here.
 //
 // Every file is built from explicit data in this script: no model was downloaded or exported, so
 // the expected vertex values, transforms and image texels are known by construction. The

@@ -18,6 +18,9 @@
  * the built-in texture views and samplers its resource params name, created once per instance. A
  * material with resources and no value params has no arena; its instances still get a bind group (one
  * per block, shared by identical `shareable` instances like a block).
+ *
+ * A texture param whose value is an image file of the `assets` table binds that file's texture instead of a
+ * built-in one (`AssetTextures`, decision 0060); two instances naming the same file share one texture.
  */
 import type { ArenaDevice, ArenaWriter } from "../gpu/uniform-arena.js";
 import { UniformArena } from "../gpu/uniform-arena.js";
