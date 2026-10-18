@@ -109,6 +109,12 @@ test.describe("pause and resume with physics (M5-06)", () => {
         // Resume and read in one task, then wait for three more steps and read each time the count changed.
         app.resume();
         const resumedAt = performance.now();
+        const discardedAtResume = app.debug.counters()["discardedSteps"] ?? Number.NaN;
+        // resume() asked for the scheduler's frame, so a callback registered now runs in the same animation frame, after it.
+        // The first frame after a resume has delta 0 however long it takes, so it can discard nothing unless the resume kept
+        // the last timestamp.
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+        const discardedAfterFirstFrame = app.debug.counters()["discardedSteps"] ?? Number.NaN;
         const reads: Array<{ steps: number; y: number; at: number }> = [];
         let last = beforeResume.steps;
         await until(() => {
@@ -121,7 +127,7 @@ test.describe("pause and resume with physics (M5-06)", () => {
         }, "3 steps after the resume");
         const counters = { ...app.debug.counters() };
         app.dispose();
-        return { reported, atPause, beforeResume, reads, resumedAt, counters, duringState, step };
+        return { reported, atPause, beforeResume, reads, resumedAt, discardedAtResume, discardedAfterFirstFrame, duringState, step };
       },
       { target: TARGET, step: STEP },
     );
@@ -144,6 +150,9 @@ test.describe("pause and resume with physics (M5-06)", () => {
       const allowed = Math.floor(((read.at - run.resumedAt) / 1000) / run.step) + 1;
       expect(read.steps - run.atPause.steps, `steps since the resume after ${(read.at - run.resumedAt).toFixed(1)} ms`).toBeLessThanOrEqual(allowed);
     }
-    expect(run.counters["discardedSteps"], "no backlog was dropped: there was none").toBe(0);
+    // The resume itself dropped no backlog: had it kept the last timestamp, the first frame would have carried the clamped
+    // delta of the 700 ms and discarded the surplus steps. The total of the run is not asserted: a slow frame later on (a
+    // software adapter on a CI runner) legitimately discards steps, and the bound above is what catches a catch-up.
+    expect(run.discardedAfterFirstFrame, "steps discarded by the first frame after the resume").toBe(run.discardedAtResume);
   });
 });
