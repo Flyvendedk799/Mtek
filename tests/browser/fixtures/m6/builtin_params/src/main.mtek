@@ -1,0 +1,61 @@
+// Decision 0087: the params of the built-in `Unlit` and `Pbr` are assigned by name from key handlers and read back.
+// Badge is an `Unlit` box in the upper right corner, away from the sphere; Ball is the unit sphere of the PBR fixture
+// (camera on +Z at 3.5, fov 0.9, exposure scale 1), lit by one directional light along `quat.euler(-0.5, 0.6, 0)`
+// applied to world -Z and a white ambient term. Space recolours the badge, M changes the base colour, metallic and
+// roughness of the ball, U adds to its roughness, R reads the params into state. Nothing is bound: every param a
+// handler writes is `imperative`.
+scene Params {
+    clear_color: #000000;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.1;
+
+    state seen_color: color = #000000;
+    state seen_base: color = #000000;
+    state seen_metallic: f32 = -1.0;
+    state seen_roughness: f32 = -1.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 3.5);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective { fov_y: 0.9; near: 0.1; far: 50.0 };
+        // EV100 -log2(1.2): exposure scale 1 (decision 0081), as in the PBR fixture.
+        exposure: -0.2630344;
+    }
+
+    entity Sun {
+        rotation: quat.euler(-0.5, 0.6, 0.0);
+        light: DirectionalLight { color: #ffffff; intensity: 3.0 };
+    }
+
+    entity Badge {
+        position: vec3(1.3, 1.0, 0.0);
+        mesh: Box { size: vec3(0.3, 0.3, 0.3) };
+        material: Unlit { color: #22c55e };
+    }
+
+    entity Ball {
+        mesh: Sphere { radius: 1.0; segments: 256; rings: 128 };
+        material: Pbr { base_color: #ffffff; metallic: 0.0; roughness: 0.5 };
+    }
+
+    on key_down(Key.Space) {
+        Badge.material.color = #3b82f6;
+    }
+
+    on key_down(Key.M) {
+        Ball.material.base_color = color.linear(vec3(0.9, 0.55, 0.25), 1.0);
+        Ball.material.metallic = 0.5;
+        Ball.material.roughness = 0.3;
+    }
+
+    on key_down(Key.U) {
+        Ball.material.roughness += 0.4;
+    }
+
+    on key_down(Key.R) {
+        seen_color = Badge.material.color;
+        seen_base = Ball.material.base_color;
+        seen_metallic = Ball.material.metallic;
+        seen_roughness = Ball.material.roughness;
+    }
+}
