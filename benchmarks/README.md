@@ -5,11 +5,12 @@ This directory holds the benchmark infrastructure of Mtek: the task format of th
 and the three.js baselines. Task M0-10 created everything except `baselines/m0-bridge` (task M0-09).
 The runtime benchmark (`benchmarks/runtime/`, spec section 7) does not exist yet (M7).
 
-**Nothing here is a Mtek result.** There is no Mtek compiler yet. Every Mtek file in a task (starter,
-reference, expected diagnostics) was written by hand from the specification and has never been
-compiled or run; every task says so in `task.toml` (`mtek_side_status = "unverified-until-M6"`) and
-every Mtek reference source starts with an `// UNVERIFIED` comment that the validator requires. Task
-M6-07 compiles and tests the Mtek side and only then changes the status.
+**Nothing here is a model result.** The Mtek files of a task (starter, reference, expected diagnostics)
+were written by hand from the specification. Task M6-07 (`tools/ai-eval`, decision 0077) compiled and
+ran them: the Mtek side of the four tasks in `tasks/` is **verified** (`mtek_side_status = "verified"`,
+evidence in `evidence/M6/ai-eval/`). The holdout task was not opened for this and keeps
+`mtek_side_status = "unverified-until-M6"`; while a task is unverified the validator requires an
+`// UNVERIFIED` comment on its Mtek reference sources.
 
 ## Status
 
@@ -19,9 +20,12 @@ M6-07 compiles and tests the Mtek side and only then changes the status.
 | Five seed tasks (4 in `tasks/`, 1 in `holdout/`) | written; the baseline side is verified on hardware (below) |
 | three.js baseline reference solutions | **verified**: 7 of 7 fixtures pass on a hardware adapter |
 | three.js baseline starters | verified to fail as intended: 5 of 7 fixtures fail, and the 2 that pass are retention checks (below) |
-| Mtek starters, references, `starter_diagnostics` | **unverified** (no compiler; M6-07) |
-| `mtek test` and the `set_input` step | not implemented (M6); the fixtures are executed only by the baseline interpreter |
-| The other 25 tasks, the 7 further holdout tasks, the harness, model runs, token counts | not started (M6, M7) |
+| Mtek references of the four tasks in `tasks/` | **verified** on 2026-10-18 on a hardware adapter (AMD Radeon RX 7900 XTX): every layer passes (parse, check, build, start, 7 of 7 fixtures) and every required symbol is declared |
+| Mtek starters of the four tasks | **verified to fail as intended** on the same adapter: `maintenance-01` fails `check` with exactly its `starter_diagnostics` (`MTEK-E3102`, `MTEK-E5001`), `scene-rendering-01` fails `check` with `MTEK-E9006` (no scene yet), the starters of `interaction-01` and `shader-bridge-01` pass their retention fixture and fail the other |
+| Mtek side of the holdout task | **unverified**, deliberately not opened |
+| `mtek test` and the `set_input` step | implemented (M6-09, decision 0074) |
+| The harness | `tools/ai-eval` (M6-07, decision 0077): tested with the replay client only; no model has been run |
+| The other 25 tasks, the 7 further holdout tasks, model runs, token counts | not started (M6, M7) |
 
 ## Layout
 
@@ -50,7 +54,7 @@ mtek/                 Mtek starter project: mtek.toml, src/main.mtek (a stub for
 mtek-tests/           *.test.toml fixtures (spec/tooling.md section 6); they define success for both sides
 baseline/             TypeScript + three/webgpu starter: src/main.ts, tsconfig.json
 baseline-tests/       one Playwright spec that runs the fixtures against the baseline
-reference/mtek/       a solution of the task in Mtek (UNVERIFIED)
+reference/mtek/       a solution of the task in Mtek (verified by M6-07 for the tasks in tasks/)
 reference/baseline/   a solution of the task in three.js (verified)
 ```
 
@@ -115,6 +119,7 @@ return in a text file instead of normalising it. If the holdout must change on p
 | `npm run check:tasks` | runs the validator (task.toml keys, the six parts of each task, fixture syntax, `UNVERIFIED` headers, required symbols, holdout ids, holdout hash) |
 | `npm run test:unit` | unit tests of the validator, the hash, the TOML parser, the fixture parser, the projection and the starters' types |
 | `npm run test:benchmarks` | the `benchmarks` Playwright project: each task's fixtures against its baseline **reference**, on the hardware configuration; use `MTEK_REQUIRE_GPU=1` for evidence (a missing adapter is then a failure, not a pass) |
+| `node tools/ai-eval/src/cli.ts validate --task benchmarks/tasks/<id> [--project benchmarks/tasks/<id>/reference/mtek]` | the Mtek side: every layer of the outcome taxonomy for the starter or a project, with the task's own fixtures (`tools/ai-eval/README.md`; the start and test layers need a hardware adapter, otherwise they are reported NOT-RUN and the verdict is `not-run`, never `pass`) |
 | `MTEK_BASELINE_SOURCE=starter npm run test:benchmarks` | the same against the baseline **starters** (most fixtures must fail) |
 | `MTEK_BASELINE_DIR=<dir> npm run test:benchmarks` | against any project directory with `src/main.ts`, for example a model's candidate |
 

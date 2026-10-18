@@ -9,7 +9,7 @@ prompt = """Build a scene named Demo that renders exactly as follows. The pictur
 - A blue sphere named Ball at (2, 0, 0), that is to the right of the box as seen from the camera: colour #3b82f6, radius 0.5.
 All surfaces are flat colours (no lighting)."""
 required_symbols = ["Demo.Cube", "Demo.Ball"]
-mtek_side_status = "unverified-until-M6"
+mtek_side_status = "verified"
 
 [budgets]
 max_repairs = 3

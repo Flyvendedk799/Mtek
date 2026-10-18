@@ -1,0 +1,138 @@
+{
+  "task": "shader-bridge-01",
+  "project": "starter",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "fail",
+      "reason": "1 of 2 fixtures failed: 'the host input tint sets the cube colour' (set_input: the host input 'tint' was rejected: MTEK-E8040: Unknown host input 'tint'.)",
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Cube",
+      "Flat"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "fail",
+    "exitCode": 1,
+    "summary": {
+      "total": 2,
+      "passed": 1,
+      "failed": 1,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/default.test.toml",
+        "name": "without a host input the cube stays #808080",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 4,
+        "stepsTotal": 4
+      },
+      {
+        "file": "tests/tint.test.toml",
+        "name": "the host input tint sets the cube colour",
+        "status": "fail",
+        "reason": null,
+        "failure": {
+          "kind": "set_input",
+          "step": 3,
+          "line": 9,
+          "message": "the host input 'tint' was rejected: MTEK-E8040: Unknown host input 'tint'.",
+          "details": []
+        },
+        "stepsRun": 2,
+        "stepsTotal": 17
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "fail",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 116,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Cube",
+      "exitCode": 0,
+      "durationMs": 109,
+      "timedOut": false
+    },
+    {
+      "command": "context Flat",
+      "exitCode": 0,
+      "durationMs": 107,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 128,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 1,
+      "durationMs": 1596,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 2057
+}

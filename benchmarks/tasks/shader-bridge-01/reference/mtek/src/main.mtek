@@ -1,5 +1,3 @@
-// UNVERIFIED: written by hand from spec/language.md, spec/scenes.md and spec/materials.md; never compiled
-// (no compiler exists yet). Task M6-07 compiles and tests it; until then nothing here is a result.
 material Flat {
     param base: color = #808080;
 

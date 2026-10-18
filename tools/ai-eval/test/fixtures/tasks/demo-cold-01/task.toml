@@ -1,0 +1,12 @@
+id = "demo-cold-01"
+category = "scene-rendering"
+mode = "cold"
+title = "Write the scene"
+prompt = """Write a scene named Demo with one entity named Cube."""
+required_symbols = ["Demo.Cube"]
+mtek_side_status = "unverified-until-M6"
+
+[budgets]
+max_repairs = 2
+max_output_tokens = 4000
+max_wall_seconds = 300

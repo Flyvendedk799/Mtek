@@ -1,0 +1,28 @@
+{
+  "name": "@mtek/ai-eval",
+  "version": "0.1.0-dev",
+  "private": true,
+  "type": "module",
+  "description": "The repair harness (spec/ai-and-benchmarks.md section 4, decision 0077): a provider-independent, bounded generate-validate-repair loop that records everything and never counts syntax as success.",
+  "scripts": {
+    "lint": "eslint . && node src/check-boundary.ts",
+    "test:unit": "vitest run",
+    "boundary": "node src/check-boundary.ts",
+    "eval": "node src/cli.ts"
+  },
+  "dependencies": {
+    "@mtek/benchmarks": "0.1.0-dev"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "0.135.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.1",
+    "ajv": "8.20.0",
+    "eslint": "10.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}

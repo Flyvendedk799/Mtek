@@ -1,0 +1,467 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mtek repair-harness record",
+  "description": "One line of records.jsonl written by tools/ai-eval (spec/ai-and-benchmarks.md section 4.1, decision 0077). Schema version 1: keys are only ever added within a version. Every line is canonical JSON (keys sorted, no whitespace). Each layer of an attempt is recorded on its own and no layer implies another; a layer that did not run is `not-run`, never a pass.",
+  "oneOf": [
+    { "$ref": "#/$defs/runStart" },
+    { "$ref": "#/$defs/trialStart" },
+    { "$ref": "#/$defs/modelCall" },
+    { "$ref": "#/$defs/edit" },
+    { "$ref": "#/$defs/validation" },
+    { "$ref": "#/$defs/trialEnd" }
+  ],
+  "$defs": {
+    "envelope": {
+      "type": "object",
+      "required": ["schemaVersion", "runId", "seq", "type"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+        "seq": { "description": "0-based position in the file; records are written in seq order.", "type": "integer", "minimum": 0 }
+      }
+    },
+    "count": { "type": ["integer", "null"], "minimum": 0 },
+    "usage": {
+      "description": "Token counts as the provider reported them; null is unknown, never zero. inputTokens includes cached input tokens, so uncached input is the difference.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputTokens", "outputTokens"],
+      "properties": {
+        "inputTokens": { "$ref": "#/$defs/count" },
+        "outputTokens": { "$ref": "#/$defs/count" },
+        "cachedInputTokens": { "$ref": "#/$defs/count" }
+      }
+    },
+    "layerOutcome": { "enum": ["pass", "fail", "not-run"] },
+    "layerResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "reason", "notRun"],
+      "properties": {
+        "outcome": { "$ref": "#/$defs/layerOutcome" },
+        "reason": { "description": "What failed, or why the layer did not run; null for pass.", "type": ["string", "null"] },
+        "notRun": { "description": "skipped: an earlier layer failed. environment: this machine cannot run it (no GPU, browser or Node). Null unless the outcome is not-run.", "enum": ["skipped", "environment", null] }
+      },
+      "allOf": [
+        { "if": { "properties": { "outcome": { "const": "not-run" } } }, "then": { "properties": { "notRun": { "type": "string" }, "reason": { "type": "string" } } } },
+        { "if": { "properties": { "outcome": { "const": "pass" } } }, "then": { "properties": { "notRun": { "type": "null" }, "reason": { "type": "null" } } } },
+        { "if": { "properties": { "outcome": { "const": "fail" } } }, "then": { "properties": { "notRun": { "type": "null" }, "reason": { "type": "string" } } } }
+      ]
+    },
+    "layers": {
+      "description": "The layers of spec section 1, each on its own. `build` is the spec's shader/target validation (mtek build emits and validates the shaders); `start` and `tests` come from one `mtek test` run, whose fixtures each run in a fresh browser context.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parse", "check", "build", "start", "tests"],
+      "properties": {
+        "parse": { "$ref": "#/$defs/layerResult" },
+        "check": { "$ref": "#/$defs/layerResult" },
+        "build": { "$ref": "#/$defs/layerResult" },
+        "start": { "$ref": "#/$defs/layerResult" },
+        "tests": { "$ref": "#/$defs/layerResult" }
+      }
+    },
+    "symbolCheck": {
+      "description": "The task's required declarations (`mtek context --symbol S` for each): a repair that deletes the feature under test fails here even when it checks.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "checked", "missing", "reason"],
+      "properties": {
+        "outcome": { "$ref": "#/$defs/layerOutcome" },
+        "checked": { "type": "array", "items": { "type": "string" } },
+        "missing": { "type": "array", "items": { "type": "string" } },
+        "reason": { "type": ["string", "null"] }
+      }
+    },
+    "verdict": { "description": "pass needs every layer and every required symbol to pass; not-run means nothing failed but something could not run; error means the tool chain failed, not the candidate.", "enum": ["pass", "fail", "not-run", "error"] },
+    "trialKind": { "enum": ["unconstrained", "constrained"] },
+    "replyFormat": { "enum": ["edit-blocks", "module"] },
+    "diagnostic": {
+      "description": "A diagnostic envelope as `mtek check|build --format json` printed it (spec/diagnostic.schema.json); kept whole.",
+      "type": "object",
+      "required": ["code", "severity", "message", "phase", "source"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^MTEK-[EWN][0-9]{4}$" },
+        "severity": { "enum": ["error", "warning", "note"] },
+        "message": { "type": "string" },
+        "phase": { "type": "string" },
+        "source": { "type": ["object", "null"] }
+      }
+    },
+    "condition": {
+      "description": "Everything that identifies a condition (spec 4.2): provider, model, temperature, token cap, stop sequences, seed, prompt version, feedback, context budget and the loop budgets. Changing any of it is a new condition (conditionId).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider", "model", "temperature", "maxOutputTokens", "stop", "seed", "promptVersion", "testFeedback",
+        "contextMaxBytes", "maxRepairs", "maxWallSeconds", "maxTotalTokens", "trialKind", "replyFormat"
+      ],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "temperature": { "description": "null: no sampling parameter was sent.", "type": ["number", "null"] },
+        "maxOutputTokens": { "type": "integer", "minimum": 1 },
+        "stop": { "type": ["array", "null"], "items": { "type": "string" } },
+        "seed": { "type": ["integer", "null"] },
+        "promptVersion": { "type": "string" },
+        "testFeedback": { "enum": ["messages", "status-only"] },
+        "contextMaxBytes": { "type": "integer", "minimum": 1 },
+        "maxRepairs": { "type": "integer", "minimum": 0 },
+        "maxWallSeconds": { "type": "integer", "minimum": 1 },
+        "maxTotalTokens": { "type": ["integer", "null"], "minimum": 1 },
+        "trialKind": { "$ref": "#/$defs/trialKind" },
+        "replyFormat": { "$ref": "#/$defs/replyFormat" }
+      }
+    },
+    "runStart": {
+      "allOf": [{ "$ref": "#/$defs/envelope" }],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runId", "seq", "type", "harnessVersion", "startedAt"],
+      "properties": {
+        "schemaVersion": true,
+        "runId": true,
+        "seq": true,
+        "type": { "const": "run-start" },
+        "harnessVersion": { "type": "string" },
+        "startedAt": { "type": "string" }
+      }
+    },
+    "trialStart": {
+      "allOf": [{ "$ref": "#/$defs/envelope" }],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion", "runId", "seq", "type", "trialId", "taskId", "category", "mode", "trialKind", "trial", "condition", "conditionId",
+        "grammar", "compilerVersion", "contextSha256", "contextBytes", "contextTruncated", "startedAt"
+      ],
+      "properties": {
+        "schemaVersion": true,
+        "runId": true,
+        "seq": true,
+        "type": { "const": "trial-start" },
+        "trialId": { "type": "string", "minLength": 1 },
+        "taskId": { "type": "string", "minLength": 1 },
+        "category": { "type": "string" },
+        "mode": { "enum": ["cold", "edit"] },
+        "trialKind": { "$ref": "#/$defs/trialKind" },
+        "trial": { "description": "The index among the repetitions of this condition (spec 6.4: at least 5 per task per condition).", "type": "integer", "minimum": 0 },
+        "condition": { "$ref": "#/$defs/condition" },
+        "conditionId": { "description": "SHA-256 of the canonical JSON of `condition`.", "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "grammar": {
+          "description": "Constrained trials that ran: the backend label of the capability check. Null otherwise.",
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["backend", "replyFormat"],
+              "properties": { "backend": { "type": "string" }, "replyFormat": { "$ref": "#/$defs/replyFormat" } }
+            }
+          ]
+        },
+        "compilerVersion": { "type": ["string", "null"] },
+        "contextSha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "contextBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "contextTruncated": { "description": "The `truncated` object of the context document when the compiler dropped sections to fit; null when nothing was dropped.", "type": ["object", "null"] },
+        "startedAt": { "type": "string" }
+      }
+    },
+    "modelCall": {
+      "$ref": "#/$defs/envelope",
+      "description": "One model call, or (generation `budget-exceeded`) the call that a budget prevented, with no request and no response.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion", "runId", "seq", "type", "trialId", "round", "promptHash", "request", "promptSections", "response", "usage",
+        "finish", "generation", "error", "budget", "startedAt", "durationMs"
+      ],
+      "properties": {
+        "schemaVersion": true,
+        "runId": true,
+        "seq": true,
+        "type": { "const": "model-call" },
+        "trialId": { "type": "string", "minLength": 1 },
+        "round": { "description": "0 is the first generation; n is the n-th repair.", "type": "integer", "minimum": 0 },
+        "promptHash": { "description": "SHA-256 of the canonical JSON of the request (system, messages, token cap, temperature, stop, seed, grammar hash).", "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "request": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["system", "messages", "maxOutputTokens", "temperature", "stop", "seed", "grammarSha256"],
+              "properties": {
+                "system": { "type": "string" },
+                "messages": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["role", "content"],
+                    "properties": { "role": { "enum": ["user", "assistant"] }, "content": { "type": "string" } }
+                  }
+                },
+                "maxOutputTokens": { "type": "integer", "minimum": 1 },
+                "temperature": { "type": ["number", "null"] },
+                "stop": { "type": ["array", "null"], "items": { "type": "string" } },
+                "seed": { "type": ["integer", "null"] },
+                "grammarSha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+              }
+            }
+          ]
+        },
+        "promptSections": {
+          "description": "Characters (not tokens) per section of the prompt: system, task, requiredSymbols, context, project, instructions, layers, diagnostics, required-symbols, test-feedback, edit-errors, current-files. For attributing prompt size (spec 6.4).",
+          "type": ["object", "null"],
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "response": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "object", "additionalProperties": false, "required": ["text"], "properties": { "text": { "type": "string" } } }
+          ]
+        },
+        "usage": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/usage" }] },
+        "finish": { "enum": ["stop", "length", "refusal", "cancelled", "error", null] },
+        "generation": { "description": "`completed` only for finish `stop`; a truncated generation (finish `length`) is a failure even when its partial output parses (spec 1).", "enum": ["completed", "truncated", "refused", "cancelled", "backend-error", "budget-exceeded"] },
+        "error": { "type": ["string", "null"] },
+        "budget": { "description": "For generation `budget-exceeded`: which budget ran out.", "enum": ["wall-clock", "total-tokens", null] },
+        "startedAt": { "type": "string" },
+        "durationMs": { "type": "integer", "minimum": 0 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "generation": { "const": "budget-exceeded" } } },
+          "then": { "properties": { "request": { "type": "null" }, "response": { "type": "null" }, "budget": { "type": "string" } } },
+          "else": { "properties": { "request": { "type": "object" }, "response": { "type": "object" }, "budget": { "type": "null" } } }
+        },
+        {
+          "if": { "properties": { "generation": { "const": "completed" } } },
+          "then": { "properties": { "finish": { "const": "stop" } } }
+        },
+        {
+          "if": { "properties": { "generation": { "const": "truncated" } } },
+          "then": { "properties": { "finish": { "const": "length" } } }
+        }
+      ]
+    },
+    "edit": {
+      "$ref": "#/$defs/envelope",
+      "description": "What happened to one reply's edits under the exact-match rule (spec 4.3). A rejected reply applies nothing and is a repair round.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runId", "seq", "type", "trialId", "round", "format", "outcome", "applied", "rejected", "projectHash"],
+      "properties": {
+        "schemaVersion": true,
+        "runId": true,
+        "seq": true,
+        "type": { "const": "edit" },
+        "trialId": { "type": "string", "minLength": 1 },
+        "round": { "type": "integer", "minimum": 0 },
+        "format": { "enum": ["blocks", "json", "module"] },
+        "outcome": { "enum": ["applied", "rejected"] },
+        "applied": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["index", "file", "kind"],
+            "properties": {
+              "index": { "type": "integer", "minimum": 1 },
+              "file": { "type": "string" },
+              "kind": { "enum": ["replace", "whole-replace", "whole-create"] }
+            }
+          }
+        },
+        "rejected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["index", "file", "code", "message"],
+            "properties": {
+              "index": { "type": ["integer", "null"], "minimum": 1 },
+              "file": { "type": ["string", "null"] },
+              "code": {
+                "enum": [
+                  "no-edit-blocks", "malformed-block", "json-invalid", "path-invalid", "path-not-allowed", "file-not-found", "empty-search",
+                  "search-not-found", "search-ambiguous", "whole-file-not-allowed", "empty-whole-file", "no-change"
+                ]
+              },
+              "message": { "type": "string" },
+              "matches": { "type": "integer", "minimum": 2 }
+            }
+          }
+        },
+        "projectHash": { "description": "SHA-256 over the candidate's mtek.toml and sources and their paths after this reply.", "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "allOf": [
+        { "if": { "properties": { "outcome": { "const": "rejected" } } }, "then": { "properties": { "applied": { "maxItems": 0 }, "rejected": { "minItems": 1 } } } },
+        { "if": { "properties": { "outcome": { "const": "applied" } } }, "then": { "properties": { "applied": { "minItems": 1 }, "rejected": { "maxItems": 0 } } } }
+      ]
+    },
+    "testReport": {
+      "description": "What the harness keeps of the `mtek test --format json` report (spec/test-report.schema.json, decision 0074).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "exitCode", "summary", "fixtures", "environment", "fallbackAdapter"],
+      "properties": {
+        "status": { "enum": ["pass", "fail", "not-run"] },
+        "exitCode": { "type": "integer" },
+        "summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["total", "passed", "failed", "notRun"],
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "passed": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 },
+            "notRun": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "fixtures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["file", "name", "status", "reason", "failure", "stepsRun", "stepsTotal"],
+            "properties": {
+              "file": { "type": "string" },
+              "name": { "type": "string" },
+              "status": { "enum": ["pass", "fail", "not-run"] },
+              "reason": { "type": ["string", "null"] },
+              "failure": {
+                "oneOf": [
+                  { "type": "null" },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["kind", "step", "line", "message", "details"],
+                    "properties": {
+                      "kind": { "type": "string" },
+                      "step": { "type": ["integer", "null"] },
+                      "line": { "type": ["integer", "null"] },
+                      "message": { "type": "string" },
+                      "details": { "type": "array", "items": { "type": "string" } }
+                    }
+                  }
+                ]
+              },
+              "stepsRun": { "type": "integer", "minimum": 0 },
+              "stepsTotal": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "environment": { "description": "The report's `environment` (browser, GPU adapter) as printed; null when no browser started.", "type": ["object", "null"] },
+        "fallbackAdapter": { "description": "True when the fixtures ran on a software adapter: correctness only, never hardware evidence.", "type": ["boolean", "null"] }
+      }
+    },
+    "validation": {
+      "$ref": "#/$defs/envelope",
+      "description": "The validation of one candidate: every layer on its own.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion", "runId", "seq", "type", "trialId", "round", "projectHash", "verdict", "layers", "requiredSymbols", "diagnostics",
+        "testReport", "compilerVersion", "toolError", "commands", "startedAt", "durationMs"
+      ],
+      "properties": {
+        "schemaVersion": true,
+        "runId": true,
+        "seq": true,
+        "type": { "const": "validation" },
+        "trialId": { "type": "string", "minLength": 1 },
+        "round": { "type": "integer", "minimum": 0 },
+        "projectHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "verdict": { "$ref": "#/$defs/verdict" },
+        "layers": { "$ref": "#/$defs/layers" },
+        "requiredSymbols": { "$ref": "#/$defs/symbolCheck" },
+        "diagnostics": { "description": "The diagnostics of the layer that failed (check, else build); empty when both passed.", "type": "array", "items": { "$ref": "#/$defs/diagnostic" } },
+        "testReport": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/testReport" }] },
+        "compilerVersion": { "type": ["string", "null"] },
+        "toolError": { "description": "For verdict `error`: what failed in the tool chain.", "type": ["string", "null"] },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["command", "exitCode", "durationMs", "timedOut"],
+            "properties": {
+              "command": { "type": "string" },
+              "exitCode": { "type": ["integer", "null"] },
+              "durationMs": { "type": "integer", "minimum": 0 },
+              "timedOut": { "type": "boolean" }
+            }
+          }
+        },
+        "startedAt": { "type": "string" },
+        "durationMs": { "type": "integer", "minimum": 0 }
+      },
+      "allOf": [
+        { "if": { "properties": { "verdict": { "const": "pass" } } }, "then": { "properties": { "toolError": { "type": "null" }, "requiredSymbols": { "properties": { "outcome": { "const": "pass" } } }, "layers": { "properties": { "parse": { "properties": { "outcome": { "const": "pass" } } }, "check": { "properties": { "outcome": { "const": "pass" } } }, "build": { "properties": { "outcome": { "const": "pass" } } }, "start": { "properties": { "outcome": { "const": "pass" } } }, "tests": { "properties": { "outcome": { "const": "pass" } } } } } } } },
+        { "if": { "properties": { "verdict": { "const": "error" } } }, "then": { "properties": { "toolError": { "type": "string" } } } }
+      ]
+    },
+    "trialEnd": {
+      "$ref": "#/$defs/envelope",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion", "runId", "seq", "type", "trialId", "outcome", "reason", "message", "calls", "repairsUsed", "firstAttempt", "final",
+        "totals", "durationMs", "finalProject"
+      ],
+      "properties": {
+        "schemaVersion": true,
+        "runId": true,
+        "seq": true,
+        "type": { "const": "trial-end" },
+        "trialId": { "type": "string", "minLength": 1 },
+        "outcome": { "description": "success only when the final candidate passed every layer and every required symbol exists. not-run: nothing failed but a layer could not run here (never a success). error: the tool chain failed. unavailable: a constrained trial was asked for and the capability is absent (never run unconstrained instead).", "enum": ["success", "failure", "not-run", "error", "unavailable"] },
+        "reason": {
+          "enum": [
+            "max-repairs", "budget-wall-clock", "budget-total-tokens", "generation-truncated", "generation-refused", "generation-cancelled",
+            "generation-error", "validation-not-run", "tool-error", "grammar-unavailable", null
+          ]
+        },
+        "message": { "type": ["string", "null"] },
+        "calls": { "description": "Model calls made (the first generation and every repair, whatever its outcome).", "type": "integer", "minimum": 0 },
+        "repairsUsed": { "type": "integer", "minimum": 0 },
+        "firstAttempt": {
+          "description": "The first candidate that was validated (first-attempt parse, check, start and task-test success are metrics of their own, spec 6.4); null when none was.",
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/attempt" }]
+        },
+        "final": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/attempt" }] },
+        "totals": {
+          "description": "Token usage over all calls; null when any call's usage was unknown.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["inputTokens", "outputTokens", "cachedInputTokens"],
+          "properties": {
+            "inputTokens": { "$ref": "#/$defs/count" },
+            "outputTokens": { "$ref": "#/$defs/count" },
+            "cachedInputTokens": { "$ref": "#/$defs/count" }
+          }
+        },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "finalProject": { "description": "Where the final candidate was preserved, relative to the run directory; null when none was.", "type": ["string", "null"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "outcome": { "const": "success" } } }, "then": { "properties": { "reason": { "type": "null" }, "final": { "type": "object", "properties": { "verdict": { "const": "pass" } } } } } },
+        { "if": { "properties": { "outcome": { "const": "unavailable" } } }, "then": { "properties": { "reason": { "const": "grammar-unavailable" }, "calls": { "const": 0 } } } },
+        { "if": { "properties": { "outcome": { "enum": ["failure", "not-run", "error", "unavailable"] } } }, "then": { "properties": { "reason": { "type": "string" } } } }
+      ]
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "layers", "requiredSymbols"],
+      "properties": {
+        "verdict": { "$ref": "#/$defs/verdict" },
+        "layers": { "$ref": "#/$defs/layers" },
+        "requiredSymbols": { "$ref": "#/$defs/symbolCheck" }
+      }
+    }
+  }
+}

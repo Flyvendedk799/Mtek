@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Benchmark tasks (spec/ai-and-benchmarks.md section 6), their validator and the three.js baseline support module.",
   "exports": {
-    "./baseline-support": "./baselines/support/src/index.ts"
+    "./baseline-support": "./baselines/support/src/index.ts",
+    "./toml-subset": "./tools/toml-subset.mjs"
   },
   "scripts": {
     "validate": "node tools/validate-tasks.mjs",

@@ -1,0 +1,1 @@
+{"text":"<<<FILE src/main.mtek\n<<<SEARCH\n        Cube.rotation = quat.axis_angle(vec3(0.0, 1.0, 0.0), angle);\n    }\n===\n        Cube.rotation = quat.axis_angle(vec3(0.0, 1.0, 0.0), angle);\n    }\n\n    on key_down(Key.Space) {\n        speed = -speed;\n    }\n>>>REPLACE\n","finish":"stop","usage":{"inputTokens":null,"outputTokens":null}}
