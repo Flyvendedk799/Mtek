@@ -1,0 +1,26 @@
+// M4-12 default-exposure fixture (decision 0081): a white sphere under one head-on directional light of 1 lux, a camera
+// on the +Z axis that declares NO exposure (so it gets the default, EV100 = -log2(1.2 pi)), and no ambient light. A white
+// Lambertian-like surface (roughness 1 keeps the specular term below one percent) under 1 lux then renders as white:
+// radiance 1/pi times the default exposure scale pi is about 0.97 linear, sRGB 252. The camera geometry is the one of
+// the PBR fixture, so the test reads the pixel's surface point from support/pbr-scene.ts.
+scene Exposure {
+    clear_color: #000000;
+    ambient_color: #000000;
+    ambient_intensity: 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 3.5);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective { fov_y: 0.9; near: 0.1; far: 50.0 };
+    }
+
+    entity Sun {
+        rotation: quat.identity();
+        light: DirectionalLight { color: #ffffff; intensity: 1.0 };
+    }
+
+    entity Ball {
+        mesh: Sphere { radius: 1.0; segments: 128; rings: 64 };
+        material: Pbr { base_color: #ffffff; metallic: 0.0; roughness: 1.0 };
+    }
+}

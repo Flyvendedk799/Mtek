@@ -144,7 +144,7 @@
             }
           },
           {
-            "name": "reserved0",
+            "name": "exposure",
             "mtekType": "f32",
             "node": {
               "kind": "scalar",

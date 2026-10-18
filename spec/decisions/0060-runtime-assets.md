@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-10-18
 - Blueprint origin: §7.3 (assets are explicit dependencies; a missing or invalid asset never produces an unexplained black canvas), §7.4 (resource lifetime, device loss), §9.4 (diagnostics); `spec/assets.md` §5 and §6, `spec/runtime-abi.md` §5.5, §6.1, §9.4, §9.5, §10; decisions 0054 (textures and samplers), 0055 (culling), 0056 (resilience), 0057 (Pbr), 0058 (the asset compiler, whose manifest this consumes), 0059 (instancing).
+- Amended by: decision 0082 (the image `source` gap and the EXIF question are closed).
 - Supersedes: the `E8003` that decisions 0031 and 0054 gave to an asset mesh and an asset-valued texture param (the runtime now renders both).
 
 ## Context

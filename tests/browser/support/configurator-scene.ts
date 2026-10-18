@@ -404,6 +404,8 @@ scene Repeated {
         position: ${vec(REPEAT_CAMERA.position)};
         target: ${vec(REPEAT_CAMERA.target)};
         projection: Perspective { fov_y: 0.8; near: 0.1; far: 40.0 };
+        // EV100 -log2(1.2): exposure scale 1, so lit radiance reaches the target unscaled (decision 0081).
+        exposure: -0.2630344;
     }
 
     entity Sun {

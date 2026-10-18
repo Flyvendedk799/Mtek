@@ -247,6 +247,8 @@ export interface MtekImageAsset {
   readonly colorSpace: "srgb" | "linear";
   readonly preprocessing: readonly string[];
   readonly span: SpanId;
+  /** The author's file (decision 0082): a project path, or `<glb path>#images[N]`. Optional. */
+  readonly source?: string;
 }
 
 export type MtekAsset = MtekMeshDataAsset | MtekImageAsset;
@@ -273,6 +275,8 @@ export interface MtekCamera {
   readonly projection: "perspective" | "orthographic";
   readonly hasTarget: boolean;
   readonly active: boolean;
+  /** EV100 (decision 0081): lit materials are scaled by `1 / (1.2 * 2^exposure)`. */
+  readonly exposure: number;
 }
 
 export type MtekBody =

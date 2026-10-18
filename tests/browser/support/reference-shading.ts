@@ -2,9 +2,9 @@
 // implementation of the formulas of spec/materials.md section 8, one numbered rule per block below, so
 // that a GPU image can be compared against it with a tolerance. It is a test oracle: it shares no code
 // with the runtime or the compiler (only a type is imported from the sibling M1 reference), and it
-// implements the specification as written. Where the specification differs from a published
-// reference (glTF Sample Renderer, Filament) the difference is recorded as an operator question, not
-// "corrected" here; see the review notes in `reference-shading.test.ts`.
+// implements the specification as written. Since decision 0080 (task M4-11) section 8 follows the glTF
+// Sample Renderer and KHR_lights_punctual for the diffuse term, the range window and the ambient term;
+// see the review notes in `reference-shading.test.ts`.
 //
 // Conventions of the inputs, all in world space:
 // - `N` and `V` are normalised here (the shader re-normalises the interpolated normal, and computes
@@ -15,9 +15,9 @@
 //   when omitted). `L` and `d` are the unit vector and the distance from the surface to the light.
 // - Light colours, base colour and ambient colour are linear RGB. Nothing is clamped except what
 //   section 8 clamps, and a light is not limited to the shader's four lights.
-// A configuration for which section 8 has no defined value (`normalize` of a zero vector for the half
-// vector, a point light exactly at the surface point, non-finite numbers) throws instead of returning a
-// number that a shader would not reliably produce.
+// A configuration for which section 8 has no defined value (a point light exactly at the surface point,
+// non-finite numbers) throws instead of returning a number that a shader would not reliably produce.
+// `L + V = 0` (no half vector) is defined since decision 0080: the light term is 0 (rule 8).
 
 import type { Vec3 } from "./m1-reference.ts";
 
@@ -60,6 +60,16 @@ export interface ShadeInput {
   /** Linear RGB. */
   readonly ambientColor: Vec3;
   readonly ambientIntensity: number;
+  /**
+   * The camera's exposure scale `1 / (1.2 * 2^EV100)` (rule 9, decision 0081); the result is multiplied by
+   * it. Default 1 (EV100 = -log2(1.2), the value the lit GPU fixtures declare).
+   */
+  readonly exposure?: number;
+}
+
+/** The exposure scale of an EV100 value, `1 / (1.2 * 2^ev100)` (spec/materials.md section 8 rule 9). */
+export function exposureScale(ev100: number): number {
+  return 1 / (1.2 * 2 ** finite(ev100, "ev100"));
 }
 
 /** Lower bound of the roughness clamp and of `NV` (spec/materials.md section 8, notation and rule 1). */
@@ -122,8 +132,8 @@ function lightAt(light: Light, p: Vec3): { readonly L: Vec3; readonly E: Vec3 } 
   if (d === 0) throw new RangeError("a point light at the shaded point has no direction");
   const L = normalize(toLight, "point light direction");
   // Rule 6: E = colour · intensity / max(d², 1e-4) · w, with w = 1 for an unlimited light and the
-  // squared smooth window clamp(1 − (d / range)⁴, 0, 1)² otherwise.
-  const window = range === 0 ? 1 : clamp(1 - Math.pow(d / range, 4), 0, 1) ** 2;
+  // KHR_lights_punctual window clamp(1 − (d / range)⁴, 0, 1) (not squared, decision 0080) otherwise.
+  const window = range === 0 ? 1 : clamp(1 - Math.pow(d / range, 4), 0, 1);
   const scale = (light.intensity / Math.max(d * d, MIN_DISTANCE_SQUARED)) * window;
   return { L, E: [light.color[0] * scale, light.color[1] * scale, light.color[2] * scale] };
 }
@@ -157,35 +167,39 @@ export function shadePbr(input: ShadeInput): Vec3 {
   for (const light of input.lights) {
     const { L, E } = lightAt(light, p);
     const NL = Math.max(dot(N, L), 0);
-    // Rule 7 multiplies the whole light term by NL, so NL = 0 is exactly 0. Skipping here also covers
-    // L = −V, where the half vector is undefined but the term is still 0 (a shader that evaluates
-    // `normalize(L + V)` first gets NaN there, which is why it is worth a test).
+    // Rule 8: the light term is 0 when NL <= 0, and when L + V = 0 (no half vector; only reachable
+    // with NL > 0 for a back-facing normal), so no NaN can reach the sum.
     if (NL === 0) continue;
     const sum: Vec3 = [L[0] + V[0], L[1] + V[1], L[2] + V[2]];
+    if (length(sum) === 0) continue;
     const H = normalize(sum, "L + V (the half vector)");
     const NH = Math.max(dot(N, H), 0);
     const VH = Math.max(dot(V, H), 0);
 
-    // Rule 2: GGX / Trowbridge-Reitz distribution.
-    const f = NH * NH * (alpha2 - 1) + 1;
+    // Rule 2: GGX / Trowbridge-Reitz distribution, in the stable form f = (1 − NH²) + NH²·α².
+    const f = 1 - NH * NH + NH * NH * alpha2;
     const D = alpha2 / (Math.PI * f * f);
-    // Rule 3: height-correlated Smith-GGX visibility, 0 when the denominator is 0.
+    // Rule 3: height-correlated Smith-GGX visibility (the denominator is >= 2.025e-7 under the clamps; the
+    // zero case is kept only as a documented, unreachable guard).
     const denominator = NL * Math.sqrt(NV * NV * (1 - alpha2) + alpha2) + NV * Math.sqrt(NL * NL * (1 - alpha2) + alpha2);
     const Vis = denominator === 0 ? 0 : 0.5 / denominator;
-    // Rule 4: Schlick Fresnel.
+    // Rule 4: Schlick Fresnel, and the dielectric Fresnel F_d of the diffuse term.
     const w5 = oneMinusToFifth(VH);
+    const Fd = DIELECTRIC_F0 + (1 - DIELECTRIC_F0) * w5;
     for (let i = 0; i < 3; i += 1) {
       const F = f0[i]! + (1 - f0[i]!) * w5;
-      // Rule 5.
+      // Rule 5 (glTF): specular = D·Vis·F, diffuse = (1 − m)(1 − F_d)·c/π.
       const specular = D * Vis * F;
-      const diffuse = ((1 - F) * (1 - m) * c[i]!) / Math.PI;
+      const diffuse = ((1 - m) * (1 - Fd) * c[i]!) / Math.PI;
       // Rule 7, per light.
       rgb[i] = rgb[i]! + (diffuse + specular) * E[i]! * NL;
     }
   }
-  // Rule 7, ambient: c · ambient_color · ambient_intensity (independent of metallic and roughness).
-  for (let i = 0; i < 3; i += 1) rgb[i] = rgb[i]! + c[i]! * ambientColor[i]! * input.ambientIntensity;
-  return rgb;
+  // Rule 7, ambient: (1 − m) · c · ambient_color · ambient_intensity (a metal receives no diffuse ambient).
+  for (let i = 0; i < 3; i += 1) rgb[i] = rgb[i]! + (1 - m) * c[i]! * ambientColor[i]! * input.ambientIntensity;
+  // Rule 9: the camera's exposure scale.
+  const exposure = finite(input.exposure ?? 1, "exposure");
+  return [rgb[0] * exposure, rgb[1] * exposure, rgb[2] * exposure];
 }
 
 /**

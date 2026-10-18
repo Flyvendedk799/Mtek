@@ -40,10 +40,12 @@ Members may appear in any order except that **initialisation order follows decla
 | `rotation` | `quat` | `quat.identity()` | yes | yes |
 | `projection` | `Perspective { fov_y: f32 = 0.9; near: f32 = 0.1; far: f32 = 1000.0 }` or `Orthographic { height: f32 = 10.0; near: f32 = 0.1; far: f32 = 1000.0 }` | `Perspective {}` | fields writable | fields bindable |
 | `active` | `bool` | see below | no | no |
+| `exposure` | `f32` (EV100) | `-log2(1.2 · π)` ≈ `-1.9145305` | no (constant) | no |
 
 - If `target` is declared, orientation is a look-at from `position` to `target` with up `+Y`; `rotation` must then not be declared (`E5010`). With `f = normalize(target − position)`, if `|dot(f, +Y)| > 1 − 1e-6` the up vector `−Z` is used instead (documented, tested). The exact view-matrix construction is normative in `spec/runtime-abi.md` §8.3. `position == target` at run time is `E8011` (write ignored).
 - Without `target`, the camera looks along its local `-Z` rotated by `rotation`.
 - Projection formulas (right-handed, view looks down `-Z`, clip depth `[0, 1]`) are normative and defined in `spec/runtime-abi.md` §8.3. `fov_y` is the full vertical field of view in radians. `near > 0`, `far > near`, `fov_y` in `(0, π)`, `height > 0`; constant violations are `E5011`, run-time violations from writes are `E8011` (write ignored).
+- **Exposure** (decision 0081): the camera's exposure value at ISO 100. Lit materials (`lighting.pbr`) multiply their result by `1 / (1.2 · 2^exposure)` (`spec/materials.md` §8 rule 9); Unlit and other materials are not affected. The default makes a white Lambertian surface under the default 1 lux `DirectionalLight` render white; real-world values work as on a camera (a sunny day of about 100 000 lux is about `15`, an office of about 500 lux about `7`). One EV more halves the brightness. A constant (`E3090` otherwise); writing and binding it is not in v0.1.
 - **Exactly one active camera.** A scene with no camera is `E5012` (an unexplained black canvas is not acceptable). With several cameras, exactly one must declare `active: true` (`E5013`). Camera switching at run time is not in v0.1.
 
 ## 4. Entities

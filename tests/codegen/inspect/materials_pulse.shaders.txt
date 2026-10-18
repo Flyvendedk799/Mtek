@@ -1,7 +1,7 @@
 shaders of scene src/main.mtek::Demo (target profile webgpu-core-2026)
 
 shader of material src/main.mtek::Pulse (declared at src/main.mtek:8:1-15:2)
-  file shaders/745dc8401b0e18fd.wgsl (sha256 745dc8401b0e18fdf82014748f0eac37709fee1f89c464fe3a64861bf506ad28)
+  file shaders/131089bf80118bdf.wgsl (sha256 131089bf80118bdf5d1e666e186abfefcb763bce6d7270984735b7695b862ff4)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position
   surface inputs none
@@ -21,7 +21,7 @@ shader of material src/main.mtek::Pulse (declared at src/main.mtek:8:1-15:2)
   12 |     camera_position: vec3<f32>,
   13 |     light_count: u32,
   14 |     ambient: vec3<f32>,
-  15 |     reserved0: f32,
+  15 |     exposure: f32,
   16 |     @align(16) lights: array<MtekLight, 4>,
   17 | }
   18 |

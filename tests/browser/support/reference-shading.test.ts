@@ -5,59 +5,26 @@
 // Rule numbers refer to the numbered list of section 8: (1) clamps, (2) GGX D, (3) height-correlated
 // Smith visibility, (4) Schlick Fresnel, (5) specular and diffuse, (6) light radiance, (7) the sum.
 //
-// FORMULA REVIEW (task M4-01 part 3). Compared rule by rule with the glTF Sample Renderer shaders
-// (`brdf.glsl`, `punctual.glsl`, `pbr.frag`, fetched from the KhronosGroup/glTF-Sample-Renderer
-// repository) and with Filament's `getSquareFalloffAttenuation` / `getDistanceAttenuation`
-// (`surface_light_punctual.fs`). The Filament materials document and `shading_model_standard.fs` could
-// not be fetched (HTTP 404), so for the points marked (memory) the review rests on the published
-// formulas as I know them, not on a re-read of the source.
+// FORMULA REVIEW (task M4-01 part 3) AND ITS RESOLUTION (task M4-11, decision 0080). The M4-01 review
+// compared section 8 rule by rule with the glTF Sample Renderer (`brdf.glsl`, `punctual.glsl`,
+// `pbr.frag`) and Filament (`surface_light_punctual.fs`) and recorded the discrepancies as operator
+// questions. The owner chose glTF / KHR_lights_punctual, keeping physical light units (camera exposure is
+// task M4-12). Section 8 now reads:
 //
-//   Rule 1  roughness clamp 0.045        Filament's minimum perceptual roughness 0.045 (memory); glTF has
-//                                        none. alpha = r² in both. AGREES.
-//   Rule 2  GGX D                        glTF `D_GGX(NdotH, alpha)`: alpha²/(π f²) with
-//                                        f = NH²(alpha²−1)+1, alpha being the already squared roughness.
-//                                        AGREES (spec "α" = glTF alphaRoughness, spec "α²" = its square).
-//   Rule 3  Smith visibility             glTF `V_GGX`: identical expression, including `if (GGX > 0)
-//                                        return 0.5/GGX; return 0`. AGREES. Note: with NV >= 1e-4 and
-//                                        alpha >= 0.002025 the denominator is at least 2e-7, so the
-//                                        spec's zero-denominator rule can never fire (see the test).
-//   Rule 4  Schlick, F0 = 0.04           glTF: dielectric f0 0.04 (ior 1.5), metal F0 = base colour,
-//                                        f90 = 1, x = 1 − VdotH. AGREES. The spec's F0 = mix(0.04, c, m)
-//                                        is linear in m, so the specular lobe (1−m)·Fd·S + m·Fc·S of
-//                                        glTF's mix(dielectric, metal, m) equals S·F exactly.
-//   Rule 5  diffuse = (1−F)(1−m)c/π      DISCREPANCY (a) with glTF, which uses the dielectric Fresnel only:
-//                                        (1−m)(1−Fd)c/π, F = Schlick(0.04). Equal at m = 0 and m = 1; for
-//                                        0 < m < 1 the spec's mixed F removes more diffuse light (pinned
-//                                        by a test below). Filament uses Lambert with no (1−F) at all
-//                                        (memory): DISCREPANCY (b), at every m.
-//   Rule 6  directional E = colour·I     glTF the same; the unit is lux, so I = 1 gives a white
-//                                        Lambertian surface radiance 1/π ≈ 0.32 (not a discrepancy, but
-//                                        the default `intensity: 1.0` renders dim: operator note).
-//           point E = colour·I/max(d²,1e-4)·w
-//                                        Filament: attenuation = smoothFactor² / max(d², 1e-4) with
-//                                        smoothFactor = saturate(1 − (d²/range²)²): the same window
-//                                        and the same 1e-4 floor. AGREES with Filament.
-//                                        glTF `getRangeAttenuation`: max(min(1−(d/range)⁴,1),0)/d²,
-//                                        i.e. NOT squared: DISCREPANCY (c) with glTF (the spec's window
-//                                        falls off faster; both are 1 at d = 0 and 0 at d = range).
-//   Rule 7  ambient = c·ambient          no glTF counterpart (IBL there). Not scaled by (1−m): a metal
-//                                        receives full base colour as ambient. Observation (d).
+//   Rule 2  GGX D                        f = (1 − NH²) + NH²·α² (the same value as NH²(α²−1)+1, without its
+//                                        cancellation at NH ≈ 1 for small α², review note (e)).
+//   Rule 3  Smith visibility             unchanged; the zero-denominator case is unreachable under the
+//                                        clamps (>= 2.025e-7, see the test) and documented as such (f).
+//   Rule 5  diffuse                      (1 − m)(1 − F_d)·c/π with the dielectric Fresnel F_d =
+//                                        Schlick(0.04): glTF's mix(dielectric, metal, m) exactly (a).
+//   Rule 6  point window                 clamp(1 − (d/range)⁴, 0, 1), not squared (KHR_lights_punctual), with
+//                                        the 1e-4 floor of d² kept (b).
+//   Rule 7  ambient                      (1 − m)·c·ambient: a metal gets no diffuse ambient (c).
+//   Rule 8  no NaN                       a light term is 0 when NL <= 0 or L + V = 0 (g).
 //
-//   Numerics of rule 2                  (e) f = NH²(α²−1)+1 cancels at NH ≈ 1 when α² is small (α² = 4.1e-6 at
-//                                        the roughness floor): binary32 keeps ~2 significant digits there
-//                                        (f64 keeps ~11). glTF has the same form. The peak is far above 1
-//                                        so it clips; a GPU comparison should not assert pixels inside the
-//                                        highlight core of very smooth materials.
-//   Rule 3/7 at L = −V                   (f) normalize(L + V) is normalize(0) there; a shader that computes H
-//                                        before the NL test yields NaN · 0 = NaN. The spec is silent; the
-//                                        oracle treats NL = 0 as contributing 0 (rule 7), which is the only
-//                                        defined reading, and a test pins it.
-//
-// (a)-(f) are recorded as two non-blocking questions on the task (their letters differ: question 1 has
-// a = (a)+(b) here, b = (c), c = (d); question 2 has d = the lux note, e = (e), f = the dead zero rule,
-// g = (f)); the spec is unchanged.
+// The "formula review pins" below pin each resolved point against the glTF expression.
 import { describe, expect, it } from "vitest";
-import { linearRgbToSrgb8, linearToSrgb8, shadePbr, type Light, type ShadeInput, type Vec3 } from "./reference-shading.ts";
+import { exposureScale, linearRgbToSrgb8, linearToSrgb8, shadePbr, type Light, type ShadeInput, type Vec3 } from "./reference-shading.ts";
 
 const PI = Math.PI;
 
@@ -156,10 +123,10 @@ describe("normal incidence, N = V = L = +Z, white light of intensity 1", () => {
     expectRgb(shadePbr(scene({ lights: [sun(UP)], metallic: 2, baseColor: [1, 0.5, 0.25] })), [4 / PI, 2 / PI, 1 / PI]);
   });
 
-  it("intermediate metallic follows rule 5 literally: m = 0.5, c = 0.5, roughness 0.5", () => {
+  it("intermediate metallic follows rule 5: m = 0.5, c = 0.5, roughness 0.5", () => {
     // F0 = mix(0.04, 0.5, 0.5) = 0.27 and F = F0. Specular = (16/π)(1/4)(0.27) = 1.08/π.
-    // Diffuse = (1−F)(1−m)c/π = 0.73 · 0.5 · 0.5/π = 0.1825/π. Sum = 1.2625/π.
-    expectRgb(shadePbr(scene({ lights: [sun(UP)], metallic: 0.5 })), [1.2625 / PI, 1.2625 / PI, 1.2625 / PI]);
+    // Diffuse = (1−m)(1−F_d)c/π with F_d = 0.04 (VH = 1) = 0.5 · 0.96 · 0.5/π = 0.24/π. Sum = 1.32/π.
+    expectRgb(shadePbr(scene({ lights: [sun(UP)], metallic: 0.5 })), [1.32 / PI, 1.32 / PI, 1.32 / PI]);
   });
 });
 
@@ -252,12 +219,13 @@ describe("light radiance (rule 6) and the sum (rule 7)", () => {
     expectRgb(rgb, [2 * unit + 0.25, 2 * unit + 0.125, 2 * unit + 0.0625]);
   });
 
-  it("with no lights the result is the ambient term only, for dielectrics and metals alike", () => {
+  it("with no lights the result is the ambient term only, scaled by (1 − m)", () => {
     // c = (0.2, 0.4, 0.6), ambient colour (1, 0.5, 0.25), intensity 0.5:
-    // (0.2·1·0.5, 0.4·0.5·0.5, 0.6·0.25·0.5) = (0.1, 0.1, 0.075).
-    for (const metallic of [0, 1]) {
+    // (0.2·1·0.5, 0.4·0.5·0.5, 0.6·0.25·0.5) = (0.1, 0.1, 0.075) times (1 − m): m = 0 → all of it,
+    // m = 0.5 → half, m = 1 → black.
+    for (const [metallic, k] of [[0, 1], [0.5, 0.5], [1, 0]] as const) {
       const rgb = shadePbr(scene({ lights: [], baseColor: [0.2, 0.4, 0.6], metallic, ambientColor: [1, 0.5, 0.25], ambientIntensity: 0.5 }));
-      expectRgb(rgb, [0.1, 0.1, 0.075]);
+      expectRgb(rgb, [0.1 * k, 0.1 * k, 0.075 * k]);
     }
   });
 
@@ -277,11 +245,11 @@ describe("light radiance (rule 6) and the sum (rule 7)", () => {
       expectRgb(at(2, 8, 0), [2 * unit, 2 * unit, 2 * unit]);
     });
 
-    it("inside the range the window is (1 − (d/range)⁴)²", () => {
-      // d = 2, range 4: (1 − 0.5⁴)² = 0.9375² = 0.87890625.
-      expectRgb(at(2, 8, 4), [2 * unit * 0.87890625, 2 * unit * 0.87890625, 2 * unit * 0.87890625]);
-      // d = 2, range 3: (2/3)⁴ = 16/81, 1 − 16/81 = 65/81, squared = 4225/6561.
-      const w = 4225 / 6561;
+    it("inside the range the window is 1 − (d/range)⁴ (KHR_lights_punctual, not squared)", () => {
+      // d = 2, range 4: 1 − 0.5⁴ = 0.9375.
+      expectRgb(at(2, 8, 4), [2 * unit * 0.9375, 2 * unit * 0.9375, 2 * unit * 0.9375]);
+      // d = 2, range 3: (2/3)⁴ = 16/81, 1 − 16/81 = 65/81.
+      const w = 65 / 81;
       expectRgb(at(2, 8, 3), [2 * unit * w, 2 * unit * w, 2 * unit * w]);
     });
 
@@ -305,26 +273,75 @@ describe("light radiance (rule 6) and the sum (rule 7)", () => {
   });
 });
 
-describe("formula review pins (discrepancies recorded on the task, spec unchanged)", () => {
+describe("formula review pins (resolved in favour of glTF, decision 0080)", () => {
   // Normal incidence, roughness 0.5, c = 0.5, m = 0.5: S = D·Vis = (16/π)(1/4) = 4/π, VH = 1, so the
   // dielectric Fresnel is Fd = 0.04 and the metal Fresnel is Fc = c = 0.5.
-  it("(a) between m = 0 and m = 1 the spec's diffuse differs from glTF's mix(dielectric, metal)", () => {
+  it("(a) the diffuse term equals glTF's mix(dielectric, metal) at every m", () => {
     // glTF (pbr.frag): (1−m)[(1−Fd)·c/π + Fd·S] + m·Fc·S
     //   = 0.5 [0.96 · 0.5/π + 0.04 · 4/π] + 0.5 · 0.5 · 4/π = 0.5 · (0.48 + 0.16)/π + 1/π = 1.32/π.
-    // Its specular part, 0.5·0.04·4/π + 0.5·0.5·4/π = 1.08/π, equals the spec's S·F (F = F0 = 0.27) exactly;
-    // only the diffuse part differs: glTF 0.5 · 0.96 · 0.5/π = 0.24/π against the spec's 0.1825/π, a
-    // difference of m(1−m)(c−0.04)c/π = 0.25 · 0.46 · 0.5/π = 0.0575/π. At m = 0 and m = 1 the two
-    // agree (the first two normal-incidence tests).
-    const spec = shadePbr(scene({ lights: [sun(UP)], metallic: 0.5 }))[0];
-    expectClose(1.32 / PI - spec, 0.0575 / PI);
+    // The previous rule ((1−F)(1−m)c/π with the metal-mixed F) gave 1.2625/π.
+    for (const m of [0, 0.25, 0.5, 0.75, 1]) {
+      const gltf = (1 - m) * ((0.96 * 0.5) / PI + (0.04 * 4) / PI) + (m * 0.5 * 4) / PI;
+      expectClose(shadePbr(scene({ lights: [sun(UP)], metallic: m }))[0], gltf);
+    }
   });
 
-  it("(c) the spec's range window is squared, glTF's is not: at d = 2, range 4 the weights are 0.8789 and 0.9375", () => {
-    // glTF: 1 − (2/4)⁴ = 0.9375. Spec (and Filament): 0.9375² = 0.87890625.
+  it("(b) the range window is glTF's un-squared one: at d = 2, range 4 the weight is 0.9375", () => {
+    // glTF getRangeAttenuation: max(min(1 − (d/range)⁴, 1), 0) = 1 − (2/4)⁴ = 0.9375 (Filament's squared
+    // window would give 0.87890625).
     const lit = (range: number): number =>
       shadePbr(scene({ lights: [{ kind: "point", position: [0, 0, 2], color: WHITE, intensity: 8, range }] }))[0];
-    expectClose(lit(4) / lit(0), 0.87890625);
-    expect(Math.abs(lit(4) / lit(0) - 0.9375)).toBeGreaterThan(0.05);
+    expectClose(lit(4) / lit(0), 0.9375);
+  });
+
+  it("(b) the d² floor of 1e-4 is kept with the window", () => {
+    // d = 0.001, range 1: window 1 − 1e-12 (≈ 1), E = 1e-6 / 1e-4 · window.
+    const rgb = shadePbr(scene({ lights: [{ kind: "point", position: [0, 0, 0.001], color: WHITE, intensity: 1e-6, range: 1 }] }));
+    expectClose(rgb[0], 0.01 * (1 - 1e-12) * (0.64 / PI));
+  });
+
+  it("(c) a metal receives no ambient, a dielectric all of it", () => {
+    expectRgb(shadePbr(scene({ lights: [], metallic: 1, ambientIntensity: 1 })), NONE);
+    expectRgb(shadePbr(scene({ lights: [], metallic: 0, ambientIntensity: 1 })), [0.5, 0.5, 0.5]);
+  });
+
+  it("(e) the stable GGX form keeps the peak exact at the roughness floor", () => {
+    // At NH = 1, f = (1 − 1) + 1·α² = α² exactly, so D = 1/(π α²) with no cancellation: metal, c = 1, the
+    // specular is 1/(4π α²) to f64 rounding (tolerance 1e-14, where the old form needed 1e-9).
+    const expected = 1 / (4 * PI * 0.045 ** 4);
+    expectClose(shadePbr(scene({ lights: [sun(UP)], baseColor: WHITE, metallic: 1, roughness: 0.045 }))[0], expected, 1e-14);
+  });
+
+  it("(g) L + V = 0 with NL > 0 (back-facing normal, light behind the viewer) contributes 0, not NaN", () => {
+    // N = +Z, V = −Z (NV clamps to 1e-4), light from +Z: L = +Z = −V, NL = 1, L + V = 0.
+    const rgb = shadePbr(scene({ V: [0, 0, -1], lights: [sun(UP)], ambientIntensity: 0.5 }));
+    expectRgb(rgb, [0.25, 0.25, 0.25]);
+  });
+});
+
+describe("camera exposure (rule 9, decision 0081)", () => {
+  it("the default EV100 -log2(1.2π) shows a white Lambertian surface under 1 lux as white", () => {
+    // Roughness 1, metallic 0, c = 1, N = V = L: diffuse 0.96/π, specular (1/π)(1/4)(0.04) = 0.01/π, so the
+    // radiance is 0.97/π and times π it is 0.97: "near white" (sRGB byte 252). A pure Lambertian 1/π gives 1.
+    const ev = -Math.log2(1.2 * PI);
+    expectClose(exposureScale(ev), PI);
+    const rgb = shadePbr(scene({ lights: [sun(UP)], baseColor: WHITE, roughness: 1, exposure: exposureScale(ev) }));
+    expectRgb(rgb, [0.97, 0.97, 0.97]);
+    expect(linearRgbToSrgb8(rgb)).toEqual([252, 252, 252]);
+  });
+
+  it("scales lights and ambient alike; EV100 -log2(1.2) is the unit exposure; +1 EV halves", () => {
+    expectClose(exposureScale(-Math.log2(1.2)), 1);
+    expectClose(exposureScale(3) / exposureScale(4), 2);
+    const base = shadePbr(scene({ lights: [sun(UP)], ambientIntensity: 0.5 }));
+    const scaled = shadePbr(scene({ lights: [sun(UP)], ambientIntensity: 0.5, exposure: 0.25 }));
+    expectRgb(scaled, [base[0] * 0.25, base[1] * 0.25, base[2] * 0.25]);
+  });
+
+  it("a sunny day: 100 000 lux at EV100 15 is a mid-to-bright value, as photographed", () => {
+    // White Lambertian (roughness 1, c = 1): 0.97/π · 1e5 / (1.2 · 2^15) = 0.785...
+    const rgb = shadePbr(scene({ lights: [sun(UP, 1e5)], baseColor: WHITE, roughness: 1, exposure: exposureScale(15) }));
+    expectClose(rgb[0], (0.97 / PI) * 1e5 / (1.2 * 32768));
   });
 });
 
@@ -391,8 +408,7 @@ describe("undefined configurations throw instead of returning a number", () => {
     expect(() => shadePbr(scene({ lights: [{ kind: "point", position: [0, 0, 1], color: WHITE, intensity: 1, range: -1 }] }))).toThrow(RangeError);
   });
 
-  it("L + V = 0 (the light exactly behind the view ray) has no half vector; a point light on the surface has no direction", () => {
-    expect(() => shadePbr(scene({ V: [0, 0, -1], lights: [sun(UP)] }))).toThrow(RangeError);
+  it("a point light on the surface has no direction", () => {
     expect(() => shadePbr(scene({ lights: [{ kind: "point", position: [0, 0, 0], color: WHITE, intensity: 1 }] }))).toThrow(RangeError);
   });
 });

@@ -1,5 +1,5 @@
 {
-  "shader": "301aadc3435dc5c94856e9ce915c71e43ee65c540bda9b6a98c974a91d5d6232",
+  "shader": "c7cfabe6cbe016ee45c3e9b2ca230c7a318178bdea1e62cb2e8d9ecb24734bd1",
   "entries": [
     {
       "wgsl": {
@@ -113,7 +113,7 @@
       "wgsl": {
         "line": 15,
         "colStart": 5,
-        "colEnd": 20
+        "colEnd": 19
       },
       "span": 8,
       "symbol": "src/main.mtek::Glow"

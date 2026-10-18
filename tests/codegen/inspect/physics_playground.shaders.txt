@@ -1,7 +1,7 @@
 shaders of scene src/main.mtek::Playground (target profile webgpu-core-2026)
 
 shader of material std/materials.mtek::Unlit (declared at std/materials.mtek:5:8-8:2)
-  file shaders/ef35824416f65c3f.wgsl (sha256 ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa)
+  file shaders/385b28531dc27b69.wgsl (sha256 385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position
   surface inputs none
@@ -21,7 +21,7 @@ shader of material std/materials.mtek::Unlit (declared at std/materials.mtek:5:8
   12 |     camera_position: vec3<f32>,
   13 |     light_count: u32,
   14 |     ambient: vec3<f32>,
-  15 |     reserved0: f32,
+  15 |     exposure: f32,
   16 |     @align(16) lights: array<MtekLight, 4>,
   17 | }
   18 |

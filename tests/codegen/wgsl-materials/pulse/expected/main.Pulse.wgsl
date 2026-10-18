@@ -12,7 +12,7 @@ struct MtekFrame {
     camera_position: vec3<f32>,
     light_count: u32,
     ambient: vec3<f32>,
-    reserved0: f32,
+    exposure: f32,
     @align(16) lights: array<MtekLight, 4>,
 }
 

@@ -47,3 +47,6 @@ export function buildM4Fixtures(cli: string): void {
 
 /** The PBR fixture (M4-03, decision 0057): a unit sphere lit by up to three lights, everything varied through host inputs. */
 export const PBR = "pbr";
+
+/** The default-exposure fixture (M4-12, decision 0081): a white sphere under 1 lux, a camera without an `exposure` field. */
+export const EXPOSURE = "exposure";

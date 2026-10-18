@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-10-18
 - Blueprint origin: M4 (blueprint §11), task M4-03; `spec/materials.md` §3.1, §3.3, §8, §9; `spec/gpu-layout.md` §6.1; `spec/testing.md` §6.4; decisions 0029 (shader IR), 0035 and 0053 and 0054 (items that land before their milestone's gate), 0041 (helper library), 0044 (prelude materials), 0053 (lights in the frame block), 0054 (`sample`).
+- Amended by: decision 0080 (the review questions of item 4, resolved in favour of glTF).
 - Supersedes: nothing. Lifts the M4 gating of the `Pbr` schema and its fields, the namespace `lighting` and `lighting.pbr`. Assets (`asset`, `glb_asset`) stay M4 items of other tasks.
 
 ## Context

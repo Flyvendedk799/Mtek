@@ -3,7 +3,7 @@
   "runtimeAbi": 1,
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "buildId": "05461c3d893e13b6fabb2ca57d07955c5e5128e700850ae0d89c4ee58dbb3b75",
+  "buildId": "1f8af25c123c047123400dafa81511056456c9545bd9785bd314b344166f168c",
   "targetProfile": "webgpu-core-2026",
   "requiredCapabilities": {
     "features": [],
@@ -25,7 +25,7 @@
     {
       "id": 0,
       "path": "src/main.mtek",
-      "sha256": "78bd66921fbfe3e029f075ca2a668dfa4e8bf0bd5ec755123445bd14ac39d66c"
+      "sha256": "03b38e4951ef22701d714c0284de2581a0879f637d85c6469cddd8130b192bfc"
     },
     {
       "id": 1,
@@ -37,10 +37,10 @@
     {
       "file": 0,
       "start": 161,
-      "end": 1177,
+      "end": 1291,
       "startLine": 3,
       "startColumn": 1,
-      "endLine": 40,
+      "endLine": 42,
       "endColumn": 2
     },
     {
@@ -64,37 +64,37 @@
     {
       "file": 0,
       "start": 319,
-      "end": 414,
+      "end": 528,
       "startLine": 10,
       "startColumn": 5,
-      "endLine": 13,
+      "endLine": 15,
       "endColumn": 6
     },
     {
       "file": 0,
-      "start": 420,
-      "end": 631,
-      "startLine": 15,
+      "start": 534,
+      "end": 745,
+      "startLine": 17,
       "startColumn": 5,
-      "endLine": 19,
+      "endLine": 21,
       "endColumn": 6
     },
     {
       "file": 0,
-      "start": 637,
-      "end": 1118,
-      "startLine": 21,
+      "start": 751,
+      "end": 1232,
+      "startLine": 23,
       "startColumn": 5,
-      "endLine": 35,
+      "endLine": 37,
       "endColumn": 6
     },
     {
       "file": 0,
-      "start": 747,
-      "end": 1112,
-      "startLine": 25,
+      "start": 861,
+      "end": 1226,
+      "startLine": 27,
       "startColumn": 9,
-      "endLine": 34,
+      "endLine": 36,
       "endColumn": 10
     },
     {
@@ -144,11 +144,11 @@
     },
     {
       "file": 0,
-      "start": 604,
-      "end": 621,
-      "startLine": 18,
+      "start": 718,
+      "end": 735,
+      "startLine": 20,
       "startColumn": 62,
-      "endLine": 18,
+      "endLine": 20,
       "endColumn": 79
     }
   ],
@@ -260,7 +260,7 @@
             }
           },
           {
-            "name": "reserved0",
+            "name": "exposure",
             "mtekType": "f32",
             "node": {
               "kind": "scalar",
@@ -433,9 +433,9 @@
   ],
   "shaders": [
     {
-      "hash": "ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa",
-      "url": "shaders/ef35824416f65c3f.wgsl",
-      "map": "shaders/ef35824416f65c3f.mtek-map.json",
+      "hash": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
+      "url": "shaders/385b28531dc27b69.wgsl",
+      "map": "shaders/385b28531dc27b69.mtek-map.json",
       "material": "std/materials.mtek::Unlit",
       "vertexEntry": "mtek_vs",
       "instancedVertexEntry": "mtek_vs_instanced",
@@ -450,7 +450,7 @@
     {
       "id": "std/materials.mtek::Unlit",
       "layout": "material:std/materials.mtek::Unlit",
-      "shader": "ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa",
+      "shader": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
       "resources": [],
       "params": [
         {
@@ -530,7 +530,8 @@
         "symbol": "src/main.mtek::Demo.Main",
         "projection": "perspective",
         "hasTarget": true,
-        "active": true
+        "active": true,
+        "exposure": 1.25
       }
     ],
     "entities": [

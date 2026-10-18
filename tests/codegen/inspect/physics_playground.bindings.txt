@@ -6,7 +6,7 @@ block builtin:frame MtekFrame  group 0 binding 0  visibility vertex+fragment  ow
   camera_position  vec3                 vec3<f32>                64    12        0
   light_count      u32                  u32                      76     4        0
   ambient          vec3                 vec3<f32>                80    12        0
-  reserved0        f32                  f32                      92     4        0
+  exposure         f32                  f32                      92     4        0
   lights           array<MtekLight, 4>  array<MtekLight, 4>      96   192        0  4 x stride 48
 
 block builtin:object MtekObject  group 2 binding 0 (dynamic offset)  visibility vertex  owner object  size 128 align 16

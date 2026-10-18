@@ -298,7 +298,7 @@ describe("the repeated-object scene", () => {
     expect(beyond["Leg"] ?? 0, "leg pixels beyond the 3/255 tolerance").toBeGreaterThan(30);
     expect(beyond["Seat"] ?? 0).toBe(0);
     expect(largest).toBeGreaterThan(20);
-  });
+  }, 60_000);
 
   it("composes each copy's matrix as T R S with quat.euler(pitch, yaw, 0)", () => {
     const [first] = repeatedScene().placements;

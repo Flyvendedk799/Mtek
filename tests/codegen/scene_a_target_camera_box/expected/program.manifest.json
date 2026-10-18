@@ -195,7 +195,7 @@
             }
           },
           {
-            "name": "reserved0",
+            "name": "exposure",
             "mtekType": "f32",
             "node": {
               "kind": "scalar",
@@ -368,9 +368,9 @@
   ],
   "shaders": [
     {
-      "hash": "ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa",
-      "url": "shaders/ef35824416f65c3f.wgsl",
-      "map": "shaders/ef35824416f65c3f.mtek-map.json",
+      "hash": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
+      "url": "shaders/385b28531dc27b69.wgsl",
+      "map": "shaders/385b28531dc27b69.mtek-map.json",
       "material": "std/materials.mtek::Unlit",
       "vertexEntry": "mtek_vs",
       "instancedVertexEntry": "mtek_vs_instanced",
@@ -385,7 +385,7 @@
     {
       "id": "std/materials.mtek::Unlit",
       "layout": "material:std/materials.mtek::Unlit",
-      "shader": "ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa",
+      "shader": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
       "resources": [],
       "params": [
         {
@@ -438,7 +438,8 @@
         "symbol": "src/main.mtek::Gallery.Main",
         "projection": "perspective",
         "hasTarget": true,
-        "active": true
+        "active": true,
+        "exposure": -1.9145305
       }
     ],
     "entities": [

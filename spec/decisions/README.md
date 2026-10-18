@@ -86,3 +86,6 @@ recorded here before code depends on it (blueprint §15).
 | 0063 | The physics backend: the adapter types, the Rapier adapter and its engine behaviours, the lazily loaded `physics/<h16>.js` bundle and when the compiler emits it |
 | 0064 | `entity_ref`, `spawn` and `destroy`: the entity table with generations, the flush points and the limit, the `prefabs` manifest table, the physics lifecycle hook, and what reload and device recovery do to spawned entities |
 | 0065 | Physics schemas and ownership checks: gates lifted, pairing and root rules, one pose authority, body commands and velocities, the IR and manifest data, and when `subsystems.physics` is true |
+| 0080 | PBR lighting aligned with glTF: dielectric-Fresnel diffuse, un-squared range window, `(1 − m)` ambient, stable GGX form, no-NaN rule (0064–0079 left free for parallel M5 work) |
+| 0081 | Camera exposure (EV100): `Camera.exposure`, the scale `1 / (1.2 · 2^EV100)` applied by `lighting.pbr`, `MtekFrame.exposure`, default `-log2(1.2π)` |
+| 0082 | Asset diagnostics follow-ups: the optional image `source` in the manifest and overlay, EXIF-oriented JPEGs rejected with `E7017`, the E70xx codes of 0058 made final |

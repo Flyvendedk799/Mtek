@@ -12,12 +12,13 @@ struct MtekFrame {
     camera_position: vec3<f32>,
     light_count: u32,
     ambient: vec3<f32>,
-    reserved0: f32,
+    exposure: f32,
     @align(16) lights: array<MtekLight, 4>,
 }
 
-struct MtekParams_2b212d15_Unlit {
-    u_color: vec4<f32>,
+struct MtekParams_e2cab98b_Glow {
+    u_tint: vec4<f32>,
+    u_level: f32,
 }
 
 struct MtekObject {
@@ -30,11 +31,11 @@ struct MtekVertexOutput {
 }
 
 @group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;
-@group(1) @binding(0) var<uniform> mtek_params: MtekParams_2b212d15_Unlit;
+@group(1) @binding(0) var<uniform> mtek_params: MtekParams_e2cab98b_Glow;
 @group(2) @binding(0) var<uniform> mtek_object: MtekObject;
 
 fn mtek_fragment() -> vec4<f32> {
-    return mtek_params.u_color;
+    return vec4<f32>(mtek_params.u_tint.xyz * mtek_params.u_level, 1.0);
 }
 
 @vertex

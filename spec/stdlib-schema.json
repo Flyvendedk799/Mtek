@@ -97,6 +97,18 @@
           "doc": "Marks the active camera. Optional when the scene has exactly one camera; with several cameras exactly one must declare `active: true`."
         },
         {
+          "name": "exposure",
+          "type": "f32",
+          "default": "-1.9145305",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Exposure value EV100 of the camera; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15."
+        },
+        {
           "name": "position",
           "type": "vec3",
           "default": "vec3(0.0, 0.0, 5.0)",

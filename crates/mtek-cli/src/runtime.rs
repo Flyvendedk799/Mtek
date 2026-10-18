@@ -20,12 +20,12 @@ pub struct Runtime {
     pub physics_bundle: Option<&'static [u8]>,
 }
 
-/// The physics bundle embedded in this binary.
-#[cfg(mtek_physics_embedded)]
+/// The physics bundle embedded in this binary (only meaningful together with the runtime).
+#[cfg(all(mtek_runtime_embedded, mtek_physics_embedded))]
 const PHYSICS_BUNDLE: Option<&[u8]> = Some(include_bytes!(concat!(env!("OUT_DIR"), "/physics.js")));
 
 /// The physics bundle embedded in this binary: none (built without `npm run build`).
-#[cfg(not(mtek_physics_embedded))]
+#[cfg(all(mtek_runtime_embedded, not(mtek_physics_embedded)))]
 const PHYSICS_BUNDLE: Option<&[u8]> = None;
 
 /// The runtime embedded in this binary.

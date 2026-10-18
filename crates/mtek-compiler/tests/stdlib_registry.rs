@@ -124,6 +124,7 @@ fn schema_rows() -> Vec<Row> {
             None,
         ),
         ("Camera", "active", "bool", None, "C", None),
+        ("Camera", "exposure", "f32", Some("-1.9145305"), "C", None),
         (
             "Perspective",
             "fov_y",

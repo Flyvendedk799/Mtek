@@ -108,9 +108,12 @@ function quoted(text: string): string {
   return `'${text}'`;
 }
 
-/** What a file is, for messages: the GLB project path(s) a mesh-data file was packed from, or "image". */
+/**
+ * What a file is, for messages: the GLB project path(s) a mesh-data file was packed from, or "image" with the
+ * author's file when the entry names it (`source`, decision 0082).
+ */
 function describe(asset: MtekAsset): string {
-  if (asset.kind === "image") return "image";
+  if (asset.kind === "image") return asset.source === undefined ? "image" : `image ${quoted(asset.source)}`;
   const sources = [...new Set(asset.primitives.map((primitive) => primitive.source.file))];
   return `mesh data of ${sources.map(quoted).join(", ")}`;
 }
@@ -128,7 +131,11 @@ function diagnostic(
     source: resolveSpan(options.manifest, asset.span),
     ...(extra.expected === undefined ? {} : { expected: extra.expected }),
     ...(extra.actual === undefined ? {} : { actual: extra.actual }),
-    notes: [`asset file: ${asset.url}`, ...(extra.notes ?? [])],
+    notes: [
+      `asset file: ${asset.url}`,
+      ...(asset.kind === "image" && asset.source !== undefined ? [`source file: ${asset.source}`] : []),
+      ...(extra.notes ?? []),
+    ],
   });
 }
 
@@ -188,7 +195,7 @@ async function decodeVerified(options: AssetLoadOptions, asset: MtekImageAsset, 
   } catch (error) {
     return {
       ok: false,
-      diagnostic: diagnostic(options, "E7031", asset, `The browser could not decode the image ${quoted(asset.url)}: ${errorText(error)}`, {
+      diagnostic: diagnostic(options, "E7031", asset, `The browser could not decode the image ${quoted(asset.url)}${asset.source === undefined ? "" : ` (from ${quoted(asset.source)})`}: ${errorText(error)}`, {
         notes: ["help: the file is not a valid PNG or JPEG, although its header was accepted at build time"],
       }),
     };

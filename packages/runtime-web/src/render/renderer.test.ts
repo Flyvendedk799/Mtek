@@ -21,7 +21,7 @@ import {
 } from "../test-support/fake-host.js";
 import { installProgram } from "../test-support/mount-fixture.js";
 import { CODEGEN_FIXTURES, loadGoldenProgram } from "../test-support/program.js";
-import { compareDraws, type DrawSortKey } from "./renderer.js";
+import { compareDraws, exposureScale, type DrawSortKey } from "./renderer.js";
 
 type Json = Record<string, unknown>;
 
@@ -230,6 +230,23 @@ describe("a rendered frame", () => {
     expect(Array.from(floats(frame, offset("camera_position"), 3))).toEqual([0, 2, 6]);
     expect(new Uint32Array(frame.contents.buffer.slice(offset("light_count"), offset("light_count") + 4))[0]).toBe(0);
     expect(floats(frame, offset("ambient"), 3)).toEqual(new Float32Array([0.1, 0.2, 0.3]));
+    app.dispose();
+  });
+
+  it("writes the active camera's exposure scale 1 / (1.2 * 2^EV100) into MtekFrame.exposure (decision 0081)", async () => {
+    // The default EV100 -log2(1.2 pi) gives pi: a white Lambertian surface under 1 lux (radiance 1/pi) is 1.0.
+    expect(exposureScale(-Math.log2(1.2 * Math.PI))).toBeCloseTo(Math.PI, 12);
+    // EV100 15 (sunny day): 1 / (1.2 * 32768).
+    expect(exposureScale(15)).toBeCloseTo(1 / 39321.6, 15);
+    const { host, debug, app, manifest } = await mountScene({
+      edit: (json) => {
+        const camera = (json["scene"] as { cameras: Json[] }).cameras[0];
+        if (camera !== undefined) camera["exposure"] = 2;
+      },
+    });
+    debug.step(1, 0.016);
+    const frame = bufferLabelled(host, "mtek:uniform-arena:builtin:frame");
+    expect(floats(frame, memberOffset(manifest, "builtin:frame", "exposure"), 1)).toEqual(new Float32Array([1 / 4.8]));
     app.dispose();
   });
 

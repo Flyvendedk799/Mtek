@@ -83,7 +83,7 @@ Flags: **R** required · **W** writable from handlers · **B** bindable · **C**
 | `collider` | collider schema | — | C |
 
 ### 3.3 `Camera` (scene-object kind `camera`), `Perspective`, `Orthographic`
-As in `spec/scenes.md` §3. `Perspective { fov_y: f32 = 0.9 (0, π); near: f32 = 0.1 (> 0); far: f32 = 1000.0 (> near) }`, `Orthographic { height: f32 = 10.0 (> 0); near: f32 = 0.1; far: f32 = 1000.0 }`; all projection fields W B.
+As in `spec/scenes.md` §3, including `exposure: f32 = -1.9145305` (EV100, C, decision 0081). `Perspective { fov_y: f32 = 0.9 (0, π); near: f32 = 0.1 (> 0); far: f32 = 1000.0 (> near) }`, `Orthographic { height: f32 = 10.0 (> 0); near: f32 = 0.1; far: f32 = 1000.0 }`; all projection fields W B.
 
 ### 3.4 Meshes (category `mesh`, all fields C)
 | Schema | Fields |

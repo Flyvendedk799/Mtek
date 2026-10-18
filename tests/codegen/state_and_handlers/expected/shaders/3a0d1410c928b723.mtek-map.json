@@ -1,5 +1,5 @@
 {
-  "shader": "ef35824416f65c3ff02a1e383ec65bb0177260c62a8ec67338acaf5e999dd9fa",
+  "shader": "3a0d1410c928b723b34c60f166f8f9b4df3b9a346d4c43ab3edcdd8980665948",
   "entries": [
     {
       "wgsl": {
@@ -8,7 +8,7 @@
         "colEnd": 19
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -17,7 +17,7 @@
         "colEnd": 22
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -26,7 +26,7 @@
         "colEnd": 15
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -35,7 +35,7 @@
         "colEnd": 25
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -44,7 +44,7 @@
         "colEnd": 16
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -53,7 +53,7 @@
         "colEnd": 26
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -62,7 +62,7 @@
         "colEnd": 19
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -71,7 +71,7 @@
         "colEnd": 19
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -80,7 +80,7 @@
         "colEnd": 28
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -89,7 +89,7 @@
         "colEnd": 32
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -98,7 +98,7 @@
         "colEnd": 22
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -107,16 +107,16 @@
         "colEnd": 24
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
         "line": 15,
         "colStart": 5,
-        "colEnd": 20
+        "colEnd": 19
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -125,7 +125,7 @@
         "colEnd": 44
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -134,16 +134,16 @@
         "colEnd": 35
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
         "line": 20,
         "colStart": 5,
-        "colEnd": 24
+        "colEnd": 18
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -152,7 +152,7 @@
         "colEnd": 20
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -161,7 +161,7 @@
         "colEnd": 24
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -170,7 +170,7 @@
         "colEnd": 32
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -179,7 +179,7 @@
         "colEnd": 26
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -188,7 +188,7 @@
         "colEnd": 49
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -197,7 +197,7 @@
         "colEnd": 58
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -206,7 +206,7 @@
         "colEnd": 75
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -215,7 +215,7 @@
         "colEnd": 60
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -223,35 +223,107 @@
         "colStart": 1,
         "colEnd": 34
       },
-      "span": 9,
-      "symbol": "std/materials.mtek::Unlit.fragment"
+      "span": 10,
+      "symbol": "src/main.mtek::Pulse.fragment"
     },
     {
       "wgsl": {
         "line": 37,
         "colStart": 5,
-        "colEnd": 32
+        "colEnd": 78
       },
-      "span": 10,
-      "symbol": "std/materials.mtek::Unlit.fragment"
+      "span": 11,
+      "symbol": "src/main.mtek::Pulse.fragment"
     },
     {
       "wgsl": {
         "line": 37,
         "colStart": 12,
-        "colEnd": 31
+        "colEnd": 77
       },
-      "span": 11,
-      "symbol": "std/materials.mtek::Unlit.fragment"
+      "span": 12,
+      "symbol": "src/main.mtek::Pulse.fragment"
     },
     {
       "wgsl": {
         "line": 37,
-        "colStart": 12,
-        "colEnd": 23
+        "colStart": 22,
+        "colEnd": 71
       },
-      "span": 11,
-      "symbol": "std/materials.mtek::Unlit.fragment"
+      "span": 13,
+      "symbol": "src/main.mtek::Pulse.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 32,
+        "colEnd": 70
+      },
+      "span": 14,
+      "symbol": "src/main.mtek::Pulse.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 32,
+        "colEnd": 35
+      },
+      "span": 15,
+      "symbol": "src/main.mtek::Pulse.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 39,
+        "colEnd": 69
+      },
+      "span": 16,
+      "symbol": "src/main.mtek::Pulse.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 39,
+        "colEnd": 42
+      },
+      "span": 17,
+      "symbol": "src/main.mtek::Pulse.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 45,
+        "colEnd": 69
+      },
+      "span": 18,
+      "symbol": "src/main.mtek::Pulse.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 49,
+        "colEnd": 68
+      },
+      "span": 19,
+      "symbol": "src/main.mtek::Pulse.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 49,
+        "colEnd": 60
+      },
+      "span": 19,
+      "symbol": "src/main.mtek::Pulse.fragment"
+    },
+    {
+      "wgsl": {
+        "line": 37,
+        "colStart": 73,
+        "colEnd": 76
+      },
+      "span": 20,
+      "symbol": "src/main.mtek::Pulse.fragment"
     },
     {
       "wgsl": {
@@ -260,7 +332,7 @@
         "colEnd": 8
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -269,7 +341,7 @@
         "colEnd": 72
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -278,7 +350,7 @@
         "colEnd": 49
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -287,7 +359,7 @@
         "colEnd": 72
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -296,7 +368,7 @@
         "colEnd": 71
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -305,7 +377,7 @@
         "colEnd": 39
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -314,7 +386,7 @@
         "colEnd": 33
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -323,7 +395,7 @@
         "colEnd": 71
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -332,7 +404,7 @@
         "colEnd": 65
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -341,7 +413,7 @@
         "colEnd": 70
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -350,7 +422,7 @@
         "colEnd": 64
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -359,7 +431,7 @@
         "colEnd": 63
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -368,7 +440,7 @@
         "colEnd": 62
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -377,7 +449,7 @@
         "colEnd": 49
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -386,7 +458,7 @@
         "colEnd": 39
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -395,7 +467,7 @@
         "colEnd": 62
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -404,7 +476,7 @@
         "colEnd": 8
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -413,7 +485,7 @@
         "colEnd": 399
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -422,7 +494,7 @@
         "colEnd": 59
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -431,7 +503,7 @@
         "colEnd": 98
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -440,7 +512,7 @@
         "colEnd": 137
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -449,7 +521,7 @@
         "colEnd": 176
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -458,7 +530,7 @@
         "colEnd": 215
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -467,7 +539,7 @@
         "colEnd": 255
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -476,7 +548,7 @@
         "colEnd": 295
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -485,7 +557,7 @@
         "colEnd": 335
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -494,7 +566,7 @@
         "colEnd": 376
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -503,7 +575,7 @@
         "colEnd": 126
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -512,7 +584,7 @@
         "colEnd": 125
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -521,7 +593,7 @@
         "colEnd": 93
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -530,7 +602,7 @@
         "colEnd": 47
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -539,7 +611,7 @@
         "colEnd": 62
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -548,7 +620,7 @@
         "colEnd": 77
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -557,7 +629,7 @@
         "colEnd": 92
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -566,7 +638,7 @@
         "colEnd": 125
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -575,7 +647,7 @@
         "colEnd": 119
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -584,7 +656,7 @@
         "colEnd": 124
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -593,7 +665,7 @@
         "colEnd": 64
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -602,7 +674,7 @@
         "colEnd": 63
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -611,7 +683,7 @@
         "colEnd": 62
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -620,7 +692,7 @@
         "colEnd": 49
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -629,7 +701,7 @@
         "colEnd": 39
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -638,7 +710,7 @@
         "colEnd": 62
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -647,7 +719,7 @@
         "colEnd": 10
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -656,7 +728,7 @@
         "colEnd": 41
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -665,7 +737,7 @@
         "colEnd": 38
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -674,7 +746,7 @@
         "colEnd": 37
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -683,7 +755,7 @@
         "colEnd": 43
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -692,7 +764,7 @@
         "colEnd": 42
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -701,7 +773,7 @@
         "colEnd": 36
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -710,7 +782,7 @@
         "colEnd": 32
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     },
     {
       "wgsl": {
@@ -719,7 +791,7 @@
         "colEnd": 41
       },
       "span": 7,
-      "symbol": "std/materials.mtek::Unlit"
+      "symbol": "src/main.mtek::Pulse"
     }
   ]
 }

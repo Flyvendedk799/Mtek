@@ -443,6 +443,11 @@ pub enum AssetKind {
         color_space: String,
         preprocessing: Vec<String>,
         span: u32,
+        /// The author's file (decision 0082): the project path of a standalone image, or
+        /// `<glb path>#images[N]` for an embedded one. Optional in the schema; this compiler
+        /// always writes it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source: Option<String>,
     },
 }
 
@@ -525,6 +530,9 @@ pub struct Camera {
     pub projection: String,
     pub has_target: bool,
     pub active: bool,
+    /// The camera's exposure as EV100 (decision 0081); lit materials are scaled by
+    /// `1 / (1.2 * 2^exposure)`.
+    pub exposure: Num,
 }
 
 /// An entity: structure only; its transform and visibility are set by `init(ctx)`.

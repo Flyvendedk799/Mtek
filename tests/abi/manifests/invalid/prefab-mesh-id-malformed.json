@@ -416,7 +416,8 @@
         "symbol": "src/main.mtek::Demo.Main",
         "projection": "perspective",
         "hasTarget": true,
-        "active": true
+        "active": true,
+        "exposure": -1.9145305
       }
     ],
     "entities": [

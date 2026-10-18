@@ -56,6 +56,13 @@
                 "origin": "default",
                 "span": {"file": 0, "start": 221, "end": 316}
               },
+              "exposure": {
+                "source": {
+                  "const": {"f32": -1.9145305}
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 221, "end": 316}
+              },
               "projection": {
                 "desc": {
                   "kind": "perspective",

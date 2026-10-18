@@ -63,7 +63,7 @@
             }
           },
           {
-            "name": "reserved0",
+            "name": "exposure",
             "mtekType": "f32",
             "node": {
               "kind": "scalar",
@@ -208,7 +208,7 @@
           "padding": 0
         },
         {
-          "path": "reserved0",
+          "path": "exposure",
           "mtekType": "f32",
           "wgslType": "f32",
           "offset": 92,
