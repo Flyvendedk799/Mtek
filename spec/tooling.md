@@ -25,7 +25,7 @@
 
 **Exit codes:** `0` success (warnings allowed) · `1` the program has errors · `2` usage error (bad arguments) · `3` internal error (`E9999`) or I/O failure. **Output:** human diagnostics on stderr; `--format json` prints exactly one JSON document (the report of `spec/diagnostics.md` §2.2) on stdout and nothing else on stdout. `mtek check` never touches the GPU; target-device validation is a separate operation (`mtek build` + runtime, blueprint §10).
 
-`mtek build` embeds the runtime bundle compiled into the CLI binary (`mtek-cli/build.rs` reads `packages/runtime-web/dist/runtime.js` and `runtime.dev.js` if present; `release` builds embed the former, which has no development code, and `dev` and `test` builds the latter, decision 0055). A CLI built without it still checks and inspects, but `build` fails with `E9030` explaining how to build the runtime first (`npm run build`).
+`mtek build` embeds the runtime bundle compiled into the CLI binary (`mtek-cli/build.rs` reads `packages/runtime-web/dist/runtime.js` and `runtime.dev.js` if present; `release` builds embed the former, which has no development code, and `dev` and `test` builds the latter, decision 0055). A CLI built without it still checks and inspects, but `build` fails with `E9030` explaining how to build the runtime first (`npm run build`). The physics bundle `packages/physics-rapier/dist/physics.js` is embedded the same way but on its own: without it only a program that uses physics fails to build with `E9030` (decision 0063).
 
 What the commands print besides diagnostics, the colour rule for stderr, `--out` resolution, the project search on disk, `E9031` for an output directory that cannot be written, and the embedding mechanics are decision 0032.
 

@@ -82,6 +82,8 @@ export type LoadPhysics = () => Promise<PhysicsBackend>;   // default export of 
 
 The runtime core depends only on these types. `packages/physics-rapier` implements them with `@dimforge/rapier3d-compat` (pinned exactly, initially 0.21.0) and is bundled by the build into `physics/<h16>.js`, loaded with a dynamic `import()` during mount only when `subsystems.physics` is true. A test asserts that a non-physics program performs no request for any `physics/` URL (M5 gate).
 
+The descriptor types the listing uses (`Vec3`, `Quat`, `Pose`, `BodyHandle`, `BodyDesc`, `ColliderDesc`), the Rapier adapter (M5-04), the engine behaviours the integration must account for (collision events lag the poses by one step, undrained events are discarded at the next step, events of removed entities are dropped, the 5 mm contact skin, averaged friction and restitution), the bundle and the rule for when the compiler writes it (`subsystems.physics` only; the library-only option `force_physics_subsystem` until the checker sets it, M5-03) are decision 0063. The runtime integration (stepping, commands, event delivery, loading the bundle at mount) is M5-05.
+
 ### 5.1 Rapier mapping
 | Mtek | Rapier |
 |---|---|

@@ -139,7 +139,7 @@ The **typed high-level IR**: the semantic contract between language and code gen
 ### 4.12 Public API (`lib.rs`)
 
 ```rust
-pub struct CompileOptions { pub profile: TargetProfile, pub mode: BuildMode /* Dev | Release | Test | Preview */, pub runtime_bundle: Option<Arc<[u8]>>, pub runtime_declarations: Option<Arc<[u8]>> /* runtime.d.ts */ }
+pub struct CompileOptions { pub profile: TargetProfile, pub mode: BuildMode /* Dev | Release | Test | Preview */, pub runtime_bundle: Option<Arc<[u8]>>, pub runtime_declarations: Option<Arc<[u8]>> /* runtime.d.ts */, pub physics_bundle: Option<Arc<[u8]>> /* decision 0063 */, pub force_physics_subsystem: bool /* test option, decision 0063 */ }
 pub fn check(project: &ProjectRoot, fs: &dyn Fs) -> CheckResult;            // diagnostics only; no GPU, no emission
 pub fn analyze(project: &ProjectRoot, fs: &dyn Fs) -> Analysis;             // the front end's full result (IR input, tests, LSP); decision 0028
 pub fn build(project: &ProjectRoot, fs: &dyn Fs, opts: &CompileOptions) -> BuildResult; // files + diagnostics
@@ -149,6 +149,8 @@ pub fn context(project: &ProjectRoot, fs: &dyn Fs, req: &ContextRequest) -> Cont
 The CLI, the tests and the LSP all call these; none re-implements compiler logic (blueprint §13). The result types of `check`, `analyze` and `inspect` are decision 0028 (the `--shaders` and `--bindings` views decision 0044); `BuildResult` (files, build id, output directory, the build's source map) and the stub runtime constants are decision 0030.
 
 **Runtime bundle in tests.** Compiler fixture tests and codegen goldens pass a fixed **stub bundle** — the bytes `// mtek test runtime stub\n` — as `runtime_bundle`, so the hashed runtime file name inside golden `app.js` files never changes when the runtime is edited, and `cargo test` never needs a Node build. Execution tests (Node) and browser tests build with the real bundle. `build` without any bundle fails with `E9030`.
+
+**Physics bundle.** `physics_bundle` (`packages/physics-rapier/dist/physics.js`, stub `// mtek test physics stub\n`) is written as `physics/<h16>.js` only for a program whose manifest says `subsystems.physics`, and such a program without it is `E9030`; programs without physics never get it, whatever the options carry. Until the checker sets `subsystems.physics` (M5-03: any body), `force_physics_subsystem` is the only way to produce such a program; it is a library option with no command-line spelling and no source syntax (decision 0063).
 
 ## 5. Determinism
 

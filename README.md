@@ -27,7 +27,7 @@ From a clean checkout:
 | Command | Purpose |
 |---|---|
 | `npm ci` | install the exact locked npm dependencies |
-| `npm run build` | bundle `@mtek/runtime-web` to `packages/runtime-web/dist/runtime.js`, then `cargo build -p mtek-cli --locked` |
+| `npm run build` | bundle `@mtek/runtime-web` to `packages/runtime-web/dist/runtime.js` and the Rapier adapter to `packages/physics-rapier/dist/physics.js`, then `cargo build -p mtek-cli --locked` |
 | `npm run check` | `cargo fmt --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `npm run check:ts`, `npm run lint`, `npm run check:naming`, `npm run check:tasks` |
 | `npm run check:ts` | `tsc -b` over all TypeScript projects |
 | `npm run lint` | ESLint (`recommended-type-checked`, no `any`) |

@@ -18,12 +18,14 @@ const PACKAGE_ROOT = fileURLToPath(new URL("../", import.meta.url));
 
 let directory: string;
 let bundlePath: string;
+let inputs: string[];
 
 beforeAll(async () => {
   directory = mkdtempSync(join(tmpdir(), "mtek-physics-bundle-"));
   // .mjs only so that Node needs no package.json to know it is a module; the shipped name is physics/<h16>.js.
   bundlePath = join(directory, "physics.mjs");
-  await build(bundleOptions({ absWorkingDir: PACKAGE_ROOT, outfile: bundlePath, logLevel: "silent" }));
+  const result = await build(bundleOptions({ absWorkingDir: PACKAGE_ROOT, outfile: bundlePath, logLevel: "silent", metafile: true }));
+  inputs = Object.keys(result.metafile?.inputs ?? {});
 });
 
 afterAll(() => {
@@ -44,6 +46,15 @@ function inFreshNode(body: string): unknown {
 describe("the physics bundle", () => {
   it("is written where the compiler's embedding expects it", () => {
     expect(OUTFILE).toBe("dist/physics.js");
+  });
+
+  it("bundles the pinned Rapier of this package, not the older copy hoisted to the repository root", () => {
+    // @types/three pulls @dimforge/rapier3d-compat 0.12.0 into the root node_modules (decision 0007); this
+    // package's own 0.21.0 sits under packages/physics-rapier/node_modules and must be the one bundled.
+    const rapier = inputs.filter((path) => path.includes("@dimforge/rapier3d-compat/"));
+    expect(rapier.length).toBeGreaterThan(0);
+    for (const path of rapier) expect(path.startsWith("node_modules/@dimforge/rapier3d-compat/")).toBe(true);
+    expect(readFileSync(join(PACKAGE_ROOT, "node_modules/@dimforge/rapier3d-compat/package.json"), "utf8")).toContain('"version": "0.21.0"');
   });
 
   it("is one self-contained ES module: no imports, no requires", () => {
