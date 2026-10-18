@@ -8,6 +8,7 @@ import type { MtekApp, MtekDebug, MtekMountOptions } from "../host/types.js";
 import { lookAt, multiply, normalMatrix, perspective, translation } from "../math/mat4.js";
 import { RuntimeInternalError } from "../scene/world.js";
 import { FakeBuffer } from "../test-support/fake-gpu.js";
+import { FakePhysicsBackend } from "../test-support/fake-physics.js";
 import {
   BASE_URL,
   FakeHost,
@@ -181,7 +182,7 @@ describe("startup (spec/runtime-abi.md section 6.1)", () => {
     const host = new FakeHost();
     installProgram(host);
     const program = fakeProgram((context) => {
-      void (context as Record<string, unknown>)["body"];
+      void (context as Record<string, unknown>)["raycast"];
     });
     await expect(mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), program)).rejects.toThrow(RuntimeInternalError);
     expect(host.device.destroyed).toBe(true);
@@ -687,7 +688,11 @@ describe("a material that fails after mount", () => {
  * instances are `shareable` and hold the same colour, so they share one block (decision 0059).
  */
 function blockCounters(fixture: string, instances: number): { ownedParamBlocks: number; sharedParamBlocks: number } {
-  return fixture === "lights" ? { ownedParamBlocks: 0, sharedParamBlocks: 1 } : { ownedParamBlocks: instances, sharedParamBlocks: 0 };
+  if (fixture === "lights") return { ownedParamBlocks: 0, sharedParamBlocks: 1 };
+  // `physics`: Floor, Ball and Mover have the default `Unlit {}` and share one block; the crates `A` and `B` have
+  // different tints (the default and `#ff4040`), so each owns one.
+  if (fixture === "physics") return { ownedParamBlocks: 2, sharedParamBlocks: 1 };
+  return { ownedParamBlocks: instances, sharedParamBlocks: 0 };
 }
 
 /** The materials of spawnable prefabs with an instanced entry point: each gets a second pipeline at startup. */
@@ -696,18 +701,16 @@ function instancedPrefabMaterials(manifest: MtekManifest): number {
   return manifest.materials.filter((material) => ids.has(material.id) && manifest.shaders.some((shader) => shader.hash === material.shader && shader.instancedVertexEntry !== undefined)).length;
 }
 
-/**
- * The golden programs whose handlers need the physics body handle (`ctx.body`, `spec/runtime-abi.md` section 4.2): the
- * runtime executes them from task M5-05 on; until then they are checked by `abi.test.ts` (the manifest) and by the
- * compiler's execution test against a fake context (`tests/codegen/physics.test.ts`).
- */
-const NEEDS_THE_PHYSICS_RUNTIME = new Set(["physics"]);
-
 describe("the golden programs end to end on the fake GPU", () => {
-  it.each(CODEGEN_FIXTURES.filter((name) => !NEEDS_THE_PHYSICS_RUNTIME.has(name)))("%s mounts, renders every entity once and caches its pipeline", async (name) => {
+  it.each(CODEGEN_FIXTURES)("%s mounts, renders every entity once and caches its pipeline", async (name) => {
     const golden = await loadGoldenProgram(name);
     const host = new FakeHost();
     for (const [url, text] of golden.files) host.files.set(url, text);
+    // A program with bodies imports its physics module (`spec/physics.md` section 5, decision 0066): here, the
+    // recording fake in place of the engine. A program without bodies never imports anything.
+    const physics = new FakePhysicsBackend();
+    const physicsModule = golden.manifest.subsystems.physicsModule;
+    if (physicsModule !== undefined) host.modules.set(new URL(physicsModule, golden.program.baseUrl).href, physics.module);
     const reported: MtekDiagnostic[] = [];
     const app = await mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), golden.program, {
       test: { manualClock: true, renderTarget: TARGET },
@@ -739,8 +742,11 @@ describe("the golden programs end to end on the fake GPU", () => {
       expect([model[12], model[13], model[14]], entity.name).toEqual([expected.x, expected.y, expected.z].map(Math.fround));
     });
     expect(reported).toEqual([]);
+    // The physics module is requested exactly when the manifest asks for it, and the bodies of the scene exist.
+    expect(host.imported).toEqual(physicsModule === undefined ? [] : [new URL(physicsModule, golden.program.baseUrl).href]);
+    expect(debug.counters()["physicsBodies"]).toBe(golden.manifest.scene.entities.filter((entity) => entity.body !== null).length);
     app.dispose();
-    expect(debug.counters()).toMatchObject({ liveBuffers: 0, livePipelines: 0, liveBindGroups: 0 });
+    expect(debug.counters()).toMatchObject({ liveBuffers: 0, livePipelines: 0, liveBindGroups: 0, physicsBodies: 0, physicsColliders: 0 });
   });
 });
 

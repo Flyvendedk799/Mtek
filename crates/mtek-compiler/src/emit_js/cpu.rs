@@ -596,14 +596,18 @@ impl FnLowering<'_, '_> {
         }
     }
 
-    /// `ctx.body(target)`: the body handle of a named entity (its record) or of an `entity_ref`
-    /// (`spec/runtime-abi.md` section 4.2, decision 0065).
-    fn body_handle(&mut self, target: &ir::BodyTarget) -> Result<Expr, String> {
+    /// `ctx.body(target, spanId)`: the body handle of a named entity (its record) or of an
+    /// `entity_ref` (`spec/runtime-abi.md` section 4.2, decisions 0065 and 0066); `span` is the
+    /// command or property, so a run-time diagnostic points at the Mtek source.
+    fn body_handle(&mut self, target: &ir::BodyTarget, span: Span) -> Result<Expr, String> {
         let target = match target {
             ir::BodyTarget::Entity { entity } => self.entity(*entity),
             ir::BodyTarget::Ref { target } => self.expr(target)?,
         };
-        Ok(Expr::ident("ctx").member("body").call(vec![target]))
+        let span_id = (self.span_id)(span)?;
+        Ok(Expr::ident("ctx")
+            .member("body")
+            .call(vec![target, Expr::Num(Number::U32(span_id))]))
     }
 
     /// The current value of a field or param root (`spec/runtime-abi.md` section 4.2: the
@@ -836,12 +840,13 @@ impl FnLowering<'_, '_> {
                 command,
                 args,
             } => {
-                let handle = self.body_handle(target)?;
+                let handle = self.body_handle(target, expr.span)?;
                 let arguments = self.exprs(args)?;
                 handle.member(&camel_case(command)).call(arguments)
             }
             ir::ExprKind::BodyProperty { target, property } => {
-                self.body_handle(target)?.member(&camel_case(property))
+                self.body_handle(target, expr.span)?
+                    .member(&camel_case(property))
             }
             ir::ExprKind::Frame { member } => Expr::ident("ctx").member("frame").member(member),
             ir::ExprKind::EnumMember { code, .. } => Expr::string(code),

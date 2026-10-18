@@ -38,7 +38,17 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["physics"],
-      "properties": { "physics": { "type": "boolean" } }
+      "properties": {
+        "physics": { "type": "boolean" },
+        "physicsModule": {
+          "type": "string",
+          "pattern": "^physics/[0-9a-f]{16}\\.js$",
+          "description": "The content-addressed physics bundle, relative to the program (decision 0066); present exactly when physics is true."
+        }
+      },
+      "if": { "properties": { "physics": { "const": true }, "physicsModule": {} }, "required": ["physics"], "additionalProperties": false },
+      "then": { "properties": { "physics": {}, "physicsModule": {} }, "required": ["physicsModule"], "additionalProperties": false },
+      "else": { "properties": { "physics": {}, "physicsModule": false }, "additionalProperties": false }
     },
     "runtimeConfig": { "$ref": "#/$defs/runtimeConfig" },
     "entryScene": { "type": "string", "minLength": 1 },

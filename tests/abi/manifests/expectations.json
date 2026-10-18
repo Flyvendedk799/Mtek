@@ -53,6 +53,18 @@
       "code": "E8006",
       "field": "subsystems.physics"
     },
+    "invalid/physics-module-missing.json": {
+      "code": "E8006",
+      "field": "subsystems.physicsModule"
+    },
+    "invalid/physics-module-without-physics.json": {
+      "code": "E8006",
+      "field": "subsystems.physicsModule"
+    },
+    "invalid/physics-module-bad-path.json": {
+      "code": "E8006",
+      "field": "subsystems.physicsModule"
+    },
     "invalid/zero-fixed-step.json": {
       "code": "E8006",
       "field": "runtimeConfig.fixedStep"

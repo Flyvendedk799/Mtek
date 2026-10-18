@@ -41,6 +41,11 @@ export interface HostEnvironment {
   /** `fetch` for a binary body: the packaged assets (`spec/assets.md` section 5). */
   fetchBytes(url: string): Promise<BytesResponseLike>;
   /**
+   * A dynamic `import()` of the ES module at `url` (an absolute URL): how `physics/<h16>.js` is loaded, only for a
+   * program whose manifest has `subsystems.physics` (`spec/physics.md` section 5, decision 0066).
+   */
+  importModule(url: string): Promise<unknown>;
+  /**
    * The lowercase hex SHA-256 of `bytes`; `undefined` when `crypto.subtle` does not exist (an insecure
    * context), in which case the asset loader verifies the byte length only (`spec/assets.md` section 5).
    */
@@ -97,6 +102,8 @@ export function defaultEnvironment(): HostEnvironment {
     gpu: holder?.gpu ?? null,
     fetch: (url) => fetch(url),
     fetchBytes: (url) => fetch(url),
+    // A computed specifier: the bundler keeps this a real `import()` of the file the manifest names.
+    importModule: (url) => import(/* @vite-ignore */ url) as Promise<unknown>,
     sha256: browserSha256(),
     decodeImage: browserDecodeImage,
     document: typeof document === "undefined" ? undefined : document,

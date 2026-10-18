@@ -930,6 +930,10 @@ export class FakeHost {
   readonly gpu: FakeHostGpu;
   readonly files = new Map<string, FakeFile>();
   readonly fetched: string[] = [];
+  /** The ES modules `importModule` can serve by URL (an `Error` makes the import reject, like a missing file). */
+  readonly modules = new Map<string, unknown>();
+  /** Every URL the runtime tried to `import()`, in order: the physics module is the only one (decision 0066). */
+  readonly imported: string[] = [];
   /** Every bitmap the fake decoder produced, in order; tests assert they are closed. */
   readonly bitmaps: FakeImageBitmap[] = [];
   readonly resizeObservers: FakeResizeObserver[] = [];
@@ -969,6 +973,13 @@ export class FakeHost {
       ...(options.littleEndian === undefined ? {} : { littleEndian: options.littleEndian }),
       fetch: (url) => this.fetch(url),
       fetchBytes: (url) => this.fetchBytes(url),
+      importModule: (url) => {
+        this.imported.push(url);
+        const module = this.modules.get(url);
+        if (module instanceof Error) return Promise.reject(module);
+        if (module === undefined) return Promise.reject(new TypeError(`Failed to fetch dynamically imported module: ${url}`));
+        return Promise.resolve(module);
+      },
       sha256:
         options.subtleCrypto === false
           ? undefined

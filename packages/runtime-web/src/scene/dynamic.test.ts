@@ -35,6 +35,8 @@ function resolvedPrefab(name: string, extra: Partial<ResolvedPrefab> = {}): Reso
     params: [{ name: "n", type: "i32" }],
     mesh: MESH,
     material: { material: MATERIAL, params: [], shareable: true, resources: [] },
+    body: null,
+    collider: null,
     state: [{ name: "age", type: "f32", symbol: `src/main.mtek::${name}.age` }],
     update: false,
     fixedUpdate: false,

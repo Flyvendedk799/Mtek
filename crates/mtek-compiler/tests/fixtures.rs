@@ -1494,12 +1494,6 @@ const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
     ("E8080", "M6: preview builds"),
     ("E8090", "M3: run-time field writes"),
     ("E8100", "M3: run-time field writes and host inputs"),
-    (
-        "E8101",
-        "M5-05: body commands through an entity_ref at run time",
-    ),
-    ("E8102", "M5-05: loading the physics module at mount"),
-    ("E8103", "M5-05: reading the solver's poses back"),
 ];
 
 /// Codes this build implements that no program checked by this build can
@@ -1559,6 +1553,20 @@ const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
     (
         "E7031",
         "../../packages/runtime-web/src/assets/loader.test.ts",
+    ),
+    // The physics subsystem (`spec/physics.md`, decision 0066).
+    (
+        "E8101",
+        "../../packages/runtime-web/src/physics/system.test.ts",
+    ),
+    ("E8102", "../../packages/runtime-web/src/physics/load.test.ts"),
+    (
+        "E8103",
+        "../../packages/runtime-web/src/physics/system.test.ts",
+    ),
+    (
+        "E8104",
+        "../../packages/runtime-web/src/physics/system.test.ts",
     ),
     ("E8040", "../../packages/runtime-web/src/host/app.test.ts"),
     ("E8050", "../../packages/runtime-web/src/host/app.test.ts"),

@@ -463,7 +463,11 @@ export interface MtekManifest {
   readonly buildId: string;
   readonly targetProfile: "webgpu-core-2026";
   readonly requiredCapabilities: MtekRequiredCapabilities;
-  readonly subsystems: { readonly physics: boolean };
+  /**
+   * `physicsModule` is `physics/<h16>.js`, relative to the program, and present exactly when `physics` is true
+   * (decision 0066): the file name is the hash of the bundle, which the runtime cannot derive.
+   */
+  readonly subsystems: { readonly physics: boolean; readonly physicsModule?: string };
   readonly runtimeConfig: MtekRuntimeConfig;
   readonly entryScene: string;
   readonly sources: readonly MtekSource[];

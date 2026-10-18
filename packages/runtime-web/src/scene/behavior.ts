@@ -15,7 +15,8 @@
  */
 import type { MtekEntityRecord, MtekEventHandler, MtekEventName, MtekProgramScene } from "../abi/program.js";
 import type { InputTransition } from "../input/input.js";
-import { INPUT_EVENTS } from "./dynamic.js";
+import { COLLISION_EVENTS, INPUT_EVENTS } from "./dynamic.js";
+import type { EntityRef } from "./slots.js";
 import { RuntimeInternalError } from "./errors.js";
 import type { World } from "./world.js";
 
@@ -26,6 +27,8 @@ function pointerEvent(x: number, y: number, button: number): unknown {
 
 export class Behaviors {
   private readonly handlers = new Map<MtekEventName, readonly MtekEventHandler[]>();
+  /** The collision handlers of the named entities: by event, then by static index, each list in declaration order. */
+  private readonly collisionHandlers = new Map<MtekEventName, ReadonlyMap<number, readonly MtekEventHandler[]>>();
 
   constructor(
     private readonly scene: MtekProgramScene,
@@ -36,6 +39,33 @@ export class Behaviors {
       // Array.prototype.sort is stable: handlers of one owner keep their declaration order.
       if (declared !== undefined && declared.length > 0) this.handlers.set(event, [...declared].sort((a, b) => a.owner - b.owner));
     }
+    for (const event of COLLISION_EVENTS) {
+      const byOwner = new Map<number, MtekEventHandler[]>();
+      for (const handler of scene.events[event] ?? []) {
+        const list = byOwner.get(handler.owner);
+        if (list === undefined) byOwner.set(handler.owner, [handler]);
+        else list.push(handler);
+      }
+      if (byOwner.size > 0) this.collisionHandlers.set(event, byOwner);
+    }
+  }
+
+  /**
+   * Delivers a collision event to the entity in `slot` (`spec/physics.md` section 6): its `collision_enter` or
+   * `collision_exit` handlers in declaration order, each called with the other entity's reference. A named entity
+   * (a slot below the number of static entities) uses the scene's handler table, a spawned one its prefab's; an
+   * entity that declares none is a no-op. The physics subsystem decides the order of calls and whether the entity
+   * may still receive one (it is not pending removal).
+   */
+  collision(kind: (typeof COLLISION_EVENTS)[number], slot: number, other: EntityRef): void {
+    if (slot < this.world.entities.length) {
+      const record = this.entity(slot);
+      for (const handler of this.collisionHandlers.get(kind)?.get(slot) ?? []) handler.fn(this.world.ctx, record, other);
+      return;
+    }
+    const entity = this.world.dynamic.entityAt(slot);
+    if (entity === undefined) return;
+    for (const handler of entity.prefab.handlers.get(kind) ?? []) handler.fn(this.world.ctx, entity.record, other);
   }
 
   /** The DOM codes that some `key_down` or `key_up` handler names, of the scene, its entities or a spawned prefab. */

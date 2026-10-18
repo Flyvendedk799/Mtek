@@ -126,6 +126,14 @@ pub struct RequiredCapabilities {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Subsystems {
     pub physics: bool,
+    /// The content-addressed physics bundle (`physics/<h16>.js`), present exactly when `physics`
+    /// is true: the runtime cannot derive the hashed name (decision 0066).
+    #[serde(
+        rename = "physicsModule",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub physics_module: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

@@ -301,6 +301,7 @@ pub fn package(
         },
         subsystems: Subsystems {
             physics: uses_physics,
+            physics_module: physics_bundle.map(|bundle| format!("{PHYSICS_DIR}/{}.js", h16(bundle))),
         },
         runtime_config: RuntimeConfig {
             fixed_step: number(runtime.fixed_step, "runtime.fixed_step")?,
@@ -335,8 +336,8 @@ pub fn package(
     files.insert(APP_DTS.to_owned(), emit_app_dts(&host_inputs).into_bytes());
     files.insert(RUNTIME_DTS.to_owned(), input.runtime_declarations.to_vec());
     files.insert(runtime_file, input.runtime_bundle.to_vec());
-    if let Some(bundle) = physics_bundle {
-        files.insert(format!("{PHYSICS_DIR}/{}.js", h16(bundle)), bundle.to_vec());
+    if let (Some(bundle), Some(module)) = (physics_bundle, &manifest.subsystems.physics_module) {
+        files.insert(module.clone(), bundle.to_vec());
     }
     files.insert(MANIFEST_JSON.to_owned(), manifest.to_json().into_bytes());
     for (path, bytes) in shader_files {

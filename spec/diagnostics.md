@@ -327,10 +327,11 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e8080"></a>E8080 | execution budget exceeded | untrusted preview (M6) |
 | <a id="mtek-e8090"></a>E8090 | invalid scale value | run-time write ignored |
 | <a id="mtek-e8100"></a>E8100 | non-opaque color value | run-time value rejected |
-| <a id="mtek-e8101"></a>E8101 | command not valid for the target's body kind | a body command through an `entity_ref` whose body kind, or lack of a body, the command does not support; the command is dropped (implemented by M5-05) |
-| <a id="mtek-e8102"></a>E8102 | physics module failed to load | mount fails with the kind `physics-failed` (implemented by M5-05) |
-| <a id="mtek-e8103"></a>E8103 | non-finite pose produced by the solver | the body is frozen and the code is reported once (implemented by M5-05) |
-| (E8104–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
+| <a id="mtek-e8101"></a>E8101 | command not valid for the target's body kind | a body command through an `entity_ref` (or a velocity read) whose body kind, or lack of a body, it does not support; the command is dropped and a read gives zero (decision 0066) |
+| <a id="mtek-e8102"></a>E8102 | physics module failed to load | mount fails with the kind `physics-failed`; a reload whose physics module cannot load is refused (decision 0066) |
+| <a id="mtek-e8103"></a>E8103 | non-finite pose produced by the solver | the body is frozen (taken out of the simulation, the entity keeps its last finite pose) and the code is reported once per body (decision 0066) |
+| <a id="mtek-e8104"></a>E8104 | non-finite value given to a body | a body command with an argument that is not finite (a rotation of zero length counts), or a body whose initial pose is not finite; the command is dropped, the body is not created (decision 0066) |
+| (E8105–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
 
 ### 5.9 Project and internal (`9xxx`)
 | Code | Title | Trigger |
