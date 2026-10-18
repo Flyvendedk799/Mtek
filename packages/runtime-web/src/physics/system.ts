@@ -204,7 +204,7 @@ export class PhysicsSystem implements BodyService {
     const { dynamic } = this.options.world;
     // `commandTarget` is the one place that decides on `W8031`; a named entity is never dropped by it.
     if (dynamic.status(ref) !== "static" && dynamic.commandTarget(ref, spanId, command) === undefined) return undefined;
-    return this.supported(ref, spanId, command);
+    return this.supported(ref, spanId, command, "command");
   }
 
   /**
@@ -214,24 +214,23 @@ export class PhysicsSystem implements BodyService {
   entryForRead(ref: EntityRef, spanId: number, property: string): BodyEntry | undefined {
     const status = this.options.world.dynamic.status(ref);
     if (status !== "static" && status !== "alive") return undefined;
-    return this.supported(ref, spanId, property);
+    return this.supported(ref, spanId, property, "read");
   }
 
-  private supported(ref: EntityRef, spanId: number, command: string): BodyEntry | undefined {
+  /** The entry for `command` (a command or a readable property), or `undefined` with `E8101` / silently when frozen. */
+  private supported(ref: EntityRef, spanId: number, command: string, what: "command" | "read"): BodyEntry | undefined {
     const entry = this.bodies[ref.slot];
     const resolved = this.options.world.resolvedAt(ref.slot);
+    const outcome = what === "command" ? `The command ${command} was dropped` : `The read of ${command} gave zero`;
     if (entry === undefined || entry.ref.gen !== ref.gen) {
-      this.reportAt("E8101", spanId, `The command ${command} was dropped: '${resolved?.name ?? String(ref.slot)}' has no body.`, []);
+      this.reportAt("E8101", spanId, `${outcome}: '${resolved?.name ?? String(ref.slot)}' has no body.`, []);
       return undefined;
     }
     const kinds = SUPPORTED[command] ?? [];
     if (!kinds.includes(entry.kind)) {
-      this.reportAt(
-        "E8101",
-        spanId,
-        `The command ${command} was dropped: '${entry.name}' has a ${entry.kind} body, which does not support it.`,
-        [`${command} applies to ${kinds.join(" and ")} bodies`],
-      );
+      this.reportAt("E8101", spanId, `${outcome}: '${entry.name}' has a ${entry.kind} body, which does not support it.`, [
+        `${command} applies to ${kinds.join(" and ")} bodies`,
+      ]);
       return undefined;
     }
     // A frozen (`E8103`) or never created (`E8104`) body has been reported; its commands are dropped without a word.
