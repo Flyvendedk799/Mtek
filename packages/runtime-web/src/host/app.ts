@@ -350,6 +350,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         pipelineCache: this.deps.scene.pipelines,
         bindingPlan: this.deps.scene.plan,
         ...(this.deps.test?.textures === undefined ? {} : { textures: this.deps.test.textures }),
+        ...(this.deps.test?.disableInstancing === true ? { instancing: false } : {}),
       });
       if (!started.ok) {
         for (const module of shaders.created) registry.release(module);
@@ -661,6 +662,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         },
         recover: { world, bindings },
         ...(this.deps.test?.textures === undefined ? {} : { textures: this.deps.test.textures }),
+        ...(this.deps.test?.disableInstancing === true ? { instancing: false } : {}),
       });
       if (!started.ok) throw new Error(started.diagnostics.map((diagnostic) => diagnostic.message).join(" "));
       this.ensureRecovering();
@@ -898,7 +900,8 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
       drawCalls: renderer.drawCalls,
       drawCallsTotal: renderer.drawCallsCumulative,
       failedMaterials: renderer.failedMaterialCount,
-      instancedDraws: 0,
+      instancedDraws: renderer.instancedDraws,
+      instancedDrawsTotal: renderer.instancedDrawsCumulative,
       culledObjects: renderer.culledObjects,
       culledObjectsTotal: renderer.culledObjectsCumulative,
       sharedParamBlocks: materials.sharedParamBlocks,
