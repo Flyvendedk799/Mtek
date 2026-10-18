@@ -7,7 +7,8 @@
 // likewise the M2 fixtures (`fixtures/m2/*` into `.out/m2/`, support/m2-fixtures.ts) and the M4-04 texture
 // fixture (`fixtures/m4/texture_sampling` into `.out/m4/`, support/m4-textures.ts), the material configurator example and its
 // variants (`examples/material-configurator` into `.out/m4-configurator/`, support/m4-configurator.ts), the M5-01 prefab
-// fixture (`fixtures/m5/*` into `.out/m5/`, support/m5-fixtures.ts),
+// fixture (`fixtures/m5/*` into `.out/m5/`, support/m5-fixtures.ts), the physics playground example
+// (`examples/physics-playground` into `.out/m5-playground/`, support/m5-playground.ts),
 // and the numeric probe (`.out/numeric/`, support/numeric-probe.ts) with its page.
 import { execFileSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -20,6 +21,7 @@ import { buildPulseCube, buildPulseCubeVariants } from "./m3-fixtures.ts";
 import { buildConfigurator } from "./m4-configurator.ts";
 import { buildM4Fixtures } from "./m4-fixtures.ts";
 import { buildM5Fixtures } from "./m5-fixtures.ts";
+import { buildPlayground } from "./m5-playground.ts";
 import { buildTextureSamplingFixture } from "./m4-textures.ts";
 import { buildNumericProbe } from "./numeric-probe.ts";
 import { startStaticServer } from "./serve.ts";
@@ -107,6 +109,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   buildConfigurator(cli);
   // M5-01: static instances of prefabs, in `.out/m5/`.
   buildM5Fixtures(cli);
+  // M5-07: the physics playground example, in `.out/m5-playground/`.
+  buildPlayground(cli);
 
   // The numeric probe (M2-08): the compiler's WGSL for every operation of cpu.json plus a test-only harness.
   buildNumericProbe(cli, join(out, "numeric"));

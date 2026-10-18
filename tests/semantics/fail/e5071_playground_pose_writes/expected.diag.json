@@ -1,0 +1,56 @@
+[
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 779,
+    "endByte": 792,
+    "message": "`self.position` belongs to the physics subsystem, because the prefab 'Crate' has a Dynamic body, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 614,
+        "endByte": 643
+      }
+    ],
+    "notes": [
+      "the solver owns the pose of a dynamic body; move it with `apply_impulse`, `apply_force`, `set_linear_velocity` or `teleport`"
+    ]
+  },
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 1184,
+    "endByte": 1198,
+    "message": "`First.position` belongs to the physics subsystem, because 'First' has a Dynamic body, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 614,
+        "endByte": 643
+      }
+    ],
+    "notes": [
+      "the solver owns the pose of a dynamic body; move it with `apply_impulse`, `apply_force`, `set_linear_velocity` or `teleport`"
+    ]
+  },
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 1248,
+    "endByte": 1262,
+    "message": "`First.rotation` belongs to the physics subsystem, because 'First' has a Dynamic body, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 614,
+        "endByte": 643
+      }
+    ],
+    "notes": [
+      "the solver owns the pose of a dynamic body; move it with `apply_impulse`, `apply_force`, `set_linear_velocity` or `teleport`"
+    ]
+  }
+]
