@@ -651,13 +651,12 @@ mod tests {
 
     #[test]
     fn later_commands_are_named_in_the_error() {
-        for (command, milestone) in [("lsp", "M6")] {
-            let text = usage(&[command, "--port", "1", "x"]);
-            assert!(
-                text.contains(&format!("'mtek {command}'")) && text.contains(milestone),
-                "{text}"
-            );
-        }
+        let (command, milestone) = ("lsp", "M6");
+        let text = usage(&[command, "--port", "1", "x"]);
+        assert!(
+            text.contains(&format!("'mtek {command}'")) && text.contains(milestone),
+            "{text}"
+        );
     }
 
     #[test]
