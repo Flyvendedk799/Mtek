@@ -253,7 +253,11 @@ fn lighting_pbr_is_a_helper_over_the_frame_block_that_reads_two_surface_fields()
         if key == "main.Checker" {
             // Two calls, one helper.
             assert_eq!(wgsl.matches("fn mtek_lighting_pbr(").count(), 1, "{wgsl}");
-            assert_eq!(wgsl.matches("mtek_lighting_pbr(u_p_input").count(), 2, "{wgsl}");
+            assert_eq!(
+                wgsl.matches("mtek_lighting_pbr(u_p_input").count(),
+                2,
+                "{wgsl}"
+            );
         }
         let helper = wgsl.split("fn mtek_lighting_pbr(").nth(1).unwrap();
         let helper = helper.split("\n}\n").next().unwrap();
@@ -277,7 +281,9 @@ fn lighting_pbr_is_a_helper_over_the_frame_block_that_reads_two_surface_fields()
         assert!(!helper.contains("pow("), "{key}\n{helper}");
         // The vertex stage forwards the world normal, normalised.
         assert!(
-            wgsl.contains("normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz)"),
+            wgsl.contains(
+                "normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz)"
+            ),
             "{key}\n{wgsl}"
         );
     }

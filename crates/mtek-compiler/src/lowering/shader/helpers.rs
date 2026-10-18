@@ -608,10 +608,7 @@ impl Builder {
             self.let_(
                 "spread",
                 self.add(
-                    self.mul(
-                        self.mul(s("nh"), s("nh")),
-                        self.sub(s("a2"), self.f(1.0)),
-                    ),
+                    self.mul(self.mul(s("nh"), s("nh")), self.sub(s("a2"), self.f(1.0))),
                     self.f(1.0),
                 ),
             ),
@@ -619,7 +616,10 @@ impl Builder {
                 "d",
                 self.div(
                     s("a2"),
-                    self.mul(self.mul(self.f(std::f32::consts::PI), s("spread")), s("spread")),
+                    self.mul(
+                        self.mul(self.f(std::f32::consts::PI), s("spread")),
+                        s("spread"),
+                    ),
                 ),
             ),
             // Rule 3: Vis = 0.5 / (NL sqrt(NV^2 (1 - a2) + a2) + NV sqrt(NL^2 (1 - a2) + a2)),
@@ -655,14 +655,20 @@ impl Builder {
             self.let_("t", one_minus(s("vh"))),
             self.let_(
                 "t5",
-                self.mul(self.mul(self.mul(s("t"), s("t")), self.mul(s("t"), s("t"))), s("t")),
+                self.mul(
+                    self.mul(self.mul(s("t"), s("t")), self.mul(s("t"), s("t"))),
+                    s("t"),
+                ),
             ),
             self.let_(
                 "fresnel",
                 self.add(v3("f0"), self.mul(self.sub(splat(1.0), v3("f0")), s("t5"))),
             ),
             // Rule 5: specular = D Vis F; diffuse = (1 - F) (1 - m) c / pi.
-            self.let_("specular", self.mul(v3("fresnel"), self.mul(s("d"), s("vis")))),
+            self.let_(
+                "specular",
+                self.mul(v3("fresnel"), self.mul(s("d"), s("vis"))),
+            ),
             self.let_(
                 "diffuse",
                 self.mul(
@@ -698,12 +704,13 @@ impl Builder {
                         },
                         self.span,
                     )
-                    .index(self.local("i", ShaderType::U32), ShaderType::named("MtekLight"), self.span),
+                    .index(
+                        self.local("i", ShaderType::U32),
+                        ShaderType::named("MtekLight"),
+                        self.span,
+                    ),
             ),
-            self.let_(
-                "range",
-                light_field("range", ShaderType::F32),
-            ),
+            self.let_("range", light_field("range", ShaderType::F32)),
             self.let_(
                 "is_point",
                 self.bin(
@@ -723,7 +730,8 @@ impl Builder {
                 self.call(
                     Intrinsic::Normalize,
                     vec![select(
-                        light_field("direction", ShaderType::VEC3).unary(UnaryOp::Negate, self.span),
+                        light_field("direction", ShaderType::VEC3)
+                            .unary(UnaryOp::Negate, self.span),
                         v3("to_light"),
                         self.local("is_point", ShaderType::BOOL),
                     )],
@@ -747,7 +755,11 @@ impl Builder {
             ),
             self.let_(
                 "window",
-                select(self.mul(s("falloff"), s("falloff")), self.f(1.0), unlimited()),
+                select(
+                    self.mul(s("falloff"), s("falloff")),
+                    self.f(1.0),
+                    unlimited(),
+                ),
             ),
             // E: the packed colour is already `color.rgb * intensity` (decision 0053 item 10).
             self.let_(
@@ -762,7 +774,10 @@ impl Builder {
                 ),
             ),
             Statement::If {
-                branches: vec![(self.bin(BinaryOp::Greater, s("nl"), self.f(0.0)), light_term)],
+                branches: vec![(
+                    self.bin(BinaryOp::Greater, s("nl"), self.f(0.0)),
+                    light_term,
+                )],
                 otherwise: None,
                 span: self.span,
             },
