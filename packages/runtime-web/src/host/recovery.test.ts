@@ -4,7 +4,8 @@
 import { describe, expect, it } from "vitest";
 import type { MtekProgramScene } from "../abi/program.js";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
-import { FakeHost, FakeHostDevice, asDom, fakeProgram } from "../test-support/fake-host.js";
+import { checkManifest } from "../abi/validate.js";
+import { FakeHost, FakeHostDevice, asDom, fakeProgram, minimalSceneInit, type InitContext } from "../test-support/fake-host.js";
 import { healthyHost, installProgram, mountOn } from "../test-support/mount-fixture.js";
 import { DEFAULT_RECOVERY_DELAYS_MS, RECOVERY_ATTEMPTS } from "./app.js";
 import { mountMtekWith } from "./mount.js";
@@ -239,6 +240,78 @@ describe("a successful recovery", () => {
     debugOf(app).step(1, 0.016);
     expect(gpuSnapshot(host.latestDevice).buffers).toEqual(before.buffers);
     app.dispose();
+  });
+});
+
+/** Five identical boxes in a row, one material, instancing available: draws as one instanced draw. */
+async function mountInstanced(host: FakeHost, options: MtekMountOptions = manual()): Promise<MtekApp> {
+  const json = installProgram(host, (manifest) => {
+    const shaders = manifest["shaders"] as Record<string, unknown>[];
+    if (shaders[0] !== undefined) shaders[0]["instancedVertexEntry"] = "mtek_vs_instanced";
+    const scene = manifest["scene"] as { entities: Record<string, unknown>[]; materialInstances: Record<string, unknown>[] };
+    const template = scene.entities[0] ?? {};
+    const unlit = "std/materials.mtek::Unlit";
+    scene.entities = [0, 1, 2, 3, 4].map((index) => ({ ...template, index, name: `E${String(index)}`, symbol: `src/main.mtek::Demo.E${String(index)}`, material: { id: unlit, instance: index } }));
+    scene.materialInstances = [0, 1, 2, 3, 4].map((index) => ({ index, material: unlit, entity: index, params: [{ name: "color", class: "initial" }], shareable: true }));
+  });
+  const parsed = checkManifest(json);
+  if (!parsed.ok) throw new Error(JSON.stringify(parsed.failures));
+  const init = (context: object): void => {
+    minimalSceneInit(context);
+    const ctx = context as InitContext;
+    ctx.setCamera("position", { x: 0, y: 0, z: 10 });
+    ctx.setCamera("target", { x: 0, y: 0, z: 0 });
+    ctx.e.forEach((entity, i) => {
+      ctx.setTransform(entity, "position", { x: i * 2 - 4, y: 0, z: 0 });
+    });
+  };
+  return mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), fakeProgram(init, parsed.manifest), options);
+}
+
+function lastDrawShape(device: FakeHostDevice): [number, number][] {
+  return (device.renderPasses.at(-1)?.draws ?? []).map((draw) => [draw.instanceCount, draw.firstInstance]);
+}
+
+/** The first `records` records of the live instance buffer (the ones the last draws read; the tail may hold stale data). */
+function instanceBytes(device: FakeHostDevice, records: number): number[] {
+  const live = device.buffers.filter((buffer) => !buffer.destroyed && buffer.label === "mtek instance matrices");
+  if (live.length !== 1 || live[0] === undefined) throw new Error(`expected one live instance buffer, found ${String(live.length)}`);
+  return [...live[0].contents.slice(0, records * 128)];
+}
+
+describe("a recovery with instancing active", () => {
+  it("rebuilds the instance buffer and the instanced pipelines and draws exactly what a run without the loss draws", async () => {
+    const withLoss = new FakeHost();
+    const control = new FakeHost();
+    const appA = await mountInstanced(withLoss);
+    const appB = await mountInstanced(control);
+    // E2 gets its own parameters, so the rebuild has to recreate a shared block, a split-off block and the groups.
+    for (const app of [appA, appB]) {
+      debugOf(app).step(2, 1 / 60);
+      debugOf(app).setParam("E2", "color", { r: 1, g: 0, b: 0, a: 1 });
+      debugOf(app).step(1, 1 / 60);
+    }
+    expect(lastDrawShape(withLoss.device)).toEqual([[4, 0], [1, 0]]);
+    const lost = withLoss.device;
+    expect(instanceBytes(lost, 5)).toHaveLength(5 * 128);
+
+    await lose(withLoss, appA);
+    await runAttempt(withLoss, appA);
+    debugOf(appA).step(1, 1 / 60);
+    debugOf(appB).step(1, 1 / 60);
+
+    // The lost device's instance buffer is gone, a new one exists on the new device, with the same records.
+    expect(lost.buffers.filter((buffer) => buffer.label === "mtek instance matrices").every((buffer) => buffer.destroyed)).toBe(true);
+    expect(instanceBytes(withLoss.latestDevice, 4)).toEqual(instanceBytes(control.device, 4));
+    expect(lastDrawShape(withLoss.latestDevice)).toEqual([[4, 0], [1, 0]]);
+    const a = debugOf(appA).counters();
+    const b = debugOf(appB).counters();
+    for (const name of ["drawCalls", "instancedDraws", "sharedParamBlocks", "ownedParamBlocks", "liveBuffers", "livePipelines"]) expect(a[name], name).toBe(b[name]);
+    expect(a["drawCalls"]).toBe(2);
+    expect(a["instancedDraws"]).toBe(1);
+    expect([...(await debugOf(appA).readPixels()).data]).toEqual([...(await debugOf(appB).readPixels()).data]);
+    appA.dispose();
+    appB.dispose();
   });
 });
 
