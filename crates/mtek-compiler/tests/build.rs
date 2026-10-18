@@ -845,7 +845,9 @@ fn a_build_has_a_physics_file_exactly_when_the_program_has_a_body() {
             let result = build_dir(&root, None, mode);
             assert!(!result.has_errors(), "{label}");
             let manifest = manifest_of(&result);
-            let has_body = manifest.scene.entities.iter().any(|e| e.body.is_some());
+            // A prefab the program can spawn counts as well (decision 0064).
+            let has_body = manifest.scene.entities.iter().any(|e| e.body.is_some())
+                || manifest.prefabs.iter().any(|p| p.body.is_some());
             let physics_files: Vec<&String> = result
                 .files
                 .keys()
@@ -910,6 +912,43 @@ fn a_build_that_uses_physics_has_the_bundle_under_its_hash_and_says_so_in_the_ma
             assert_eq!(with.build_id, plain.build_id, "{label} {mode:?}");
         }
     }
+}
+
+#[test]
+fn a_spawned_prefab_carries_its_body_and_collider_in_the_manifest_and_needs_the_physics_bundle() {
+    // No entity of the scene has a body, the spawned prefab has (decision 0064, items 6 and 16 of 0065).
+    let root = repo().join("tests/semantics/pass/spawn_physics_prefab");
+    let result = built(&root, BuildMode::Release);
+    let manifest: Value = serde_json::from_slice(&result.files["program.manifest.json"]).unwrap();
+    assert!(
+        manifest["scene"]["entities"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|entity| entity["body"].is_null())
+    );
+    assert_eq!(manifest["subsystems"]["physics"], Value::Bool(true));
+    assert_eq!(
+        result.files.keys().filter(|p| is_physics_file(p)).count(),
+        1
+    );
+    let prefabs = manifest["prefabs"].as_array().unwrap();
+    assert_eq!(prefabs.len(), 1);
+    assert_eq!(
+        prefabs[0]["body"],
+        serde_json::json!({ "kind": "dynamic", "mass": 1.5, "linearDamping": 0.05, "angularDamping": 0.05 })
+    );
+    assert_eq!(prefabs[0]["collider"]["kind"], "box");
+    assert_eq!(
+        prefabs[0]["collider"]["size"],
+        serde_json::json!([1.0, 1.0, 1.0])
+    );
+    assert_eq!(prefabs[0]["collider"]["sensor"], Value::Bool(false));
+    assert_eq!(prefabs[0]["collider"]["friction"], serde_json::json!(0.6));
+    assert_eq!(
+        prefabs[0]["collider"]["restitution"],
+        serde_json::json!(0.2)
+    );
 }
 
 #[test]
