@@ -44,15 +44,15 @@ use super::{FnSig, MaterialInfo, Typeck};
 /// The largest length of `array<T, N>` (`spec/language.md` 5.1).
 pub(super) const MAX_ARRAY_LENGTH: u32 = 65_536;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics};
-use crate::resolve::gate::is_implemented;
+use crate::resolve::gate::{gate_message, gate_note, is_implemented};
 use crate::resolve::{
     Construct, DefId, DefKind, PreludeItem, Res, Resolution, binary_construct,
     construct_implemented, unary_construct,
 };
 use crate::source::Span;
 use crate::stdlib::{
-    ArgType, Domain, IntrinsicDef, NamespaceMember, Registry, SchemaCategory, SigType, TypeKind,
-    registry,
+    ArgType, Domain, IntrinsicDef, Milestone, NamespaceMember, Registry, SchemaCategory, SigType,
+    TypeKind, registry,
 };
 use crate::syntax::ast::{
     ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr,
@@ -968,7 +968,7 @@ impl<'a> Checker<'a> {
             // value it is an `entity_ref`; its fields and state are read as `self.name`.
             ExprKind::SelfValue if construct_implemented(Construct::SelfValue) => {
                 match self.res.res(expr.id) {
-                    Some(Res::Def(_)) => TyId::ENTITY_REF,
+                    Some(Res::Def(_)) => self.entity_ref_value_is_gated(expr.span),
                     _ => TyId::ERROR,
                 }
             }
@@ -1002,6 +1002,27 @@ impl<'a> Checker<'a> {
         }
     }
 
+    /// A named entity or `self` used as an `entity_ref` value (`other == Floor`) needs the
+    /// `entity_ref` expressions of task M5-02; this build reports the gate instead of failing in
+    /// the lowering (decision 0065). The fields and body commands of a named entity do not come
+    /// here.
+    fn entity_ref_value_is_gated(&mut self, span: Span) -> TyId {
+        self.report(
+            Diagnostic::new(
+                Code::E9010,
+                gate_message(
+                    "Named entities and `self` as `entity_ref` values (`other == Floor`)",
+                    true,
+                    Milestone::M5,
+                ),
+            )
+            .at(span)
+            .note(gate_note())
+            .help("use the entity's fields and body commands by name (`Floor.position`, `Floor.body.apply_impulse(..)`), which are implemented"),
+        );
+        TyId::ERROR
+    }
+
     fn def_value(&mut self, expr: &Expr, id: DefId) -> TyId {
         let Some(def) = self.res.def(id) else {
             return TyId::ERROR;
@@ -1015,7 +1036,7 @@ impl<'a> Checker<'a> {
             // A named entity converts to `entity_ref` where one is expected
             // (`spec/scenes.md` 8.3); that is the only meaning of a bare
             // entity name.
-            DefKind::Entity => TyId::ENTITY_REF,
+            DefKind::Entity => self.entity_ref_value_is_gated(expr.span),
             DefKind::SceneObject { kind: Some(_) }
             | DefKind::Scene
             | DefKind::Fn
