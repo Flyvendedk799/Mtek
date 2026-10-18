@@ -1,0 +1,26 @@
+// One standalone PNG with a valid header and undecodable pixel data (task M4-06): the compiler accepts it, the browser
+// cannot decode it, and the mount fails with E7031 at this declaration.
+const BROKEN = asset.texture("../textures/broken.png");
+
+// Unlit: the tint times the texel, in linear space (the texture is sampled as linear values).
+material Decal {
+    param tint: color = #ffffff;
+    param base: texture = texture.white();
+    param filter: sampler = sampler.nearest_clamp();
+
+    fragment(input: SurfaceInput) -> color {
+        let texel = sample(base, filter, input.uv);
+        return color.linear(tint.rgb * texel.xyz, 1.0);
+    }
+}
+
+scene Corrupt {
+    camera Main {
+        position: vec3(0.0, 0.0, 4.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Decal { base: BROKEN };
+    }
+}

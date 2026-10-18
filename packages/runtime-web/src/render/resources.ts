@@ -15,15 +15,18 @@
  *
  * A test program may replace the pixels of a built-in texture (`options.test.textures`, `spec/runtime-abi.md`
  * section 10.2): the same creation path with other dimensions, data and colour space, so tests can sample
- * a generated texture without an asset.
+ * a generated texture without an asset. Textures of image files (`asset.texture`, a GLB's base colour images)
+ * are `AssetTextures`, below.
  */
-import type { MtekBuiltinResourceName } from "../abi/manifest-types.js";
+import type { MtekBuiltinResourceName, MtekImageAsset } from "../abi/manifest-types.js";
+import type { DecodedImages } from "../assets/loader.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import type { MtekTestTexture } from "../host/types.js";
 
 // WebGPU texture usage flags (constants of the standard).
 const USAGE_COPY_DST = 0x02;
 const USAGE_TEXTURE_BINDING = 0x04;
+const USAGE_RENDER_ATTACHMENT = 0x10;
 
 /** The format of a colour texture (`srgb`, the default) and of a data texture (`linear`). */
 const TEXTURE_FORMATS = { srgb: "rgba8unorm-srgb", linear: "rgba8unorm" } as const satisfies Record<"srgb" | "linear", GPUTextureFormat>;
@@ -74,6 +77,48 @@ export function checkTestTextures(overrides: TextureOverrides): ReadonlyMap<stri
     checked.set(name, checkedPixels(name, texture));
   }
   return checked;
+}
+
+/**
+ * The textures made from the image files of the `assets` table (`spec/assets.md` section 5, decision 0060): one
+ * `rgba8unorm-srgb` (`srgb`) or `rgba8unorm` (`linear`) texture per file, created on first use through the
+ * registry and filled by `copyExternalImageToTexture` from the decoded bitmap. `copyExternalImageToTexture`
+ * requires `COPY_DST | RENDER_ATTACHMENT` besides `TEXTURE_BINDING`. One mip level in v0.1. The bitmaps belong to
+ * the caller (`startScene` closes none; mount, recovery and reload close theirs after the scene started).
+ */
+export class AssetTextures {
+  private readonly textures = new Map<string, { readonly texture: GPUTexture; readonly view: GPUTextureView }>();
+
+  constructor(
+    private readonly registry: ResourceRegistry,
+    private readonly queue: GPUQueue,
+    private readonly images: DecodedImages,
+  ) {}
+
+  /** The view of the texture of image file `asset`, created and filled on first use. */
+  textureView(asset: MtekImageAsset): GPUTextureView {
+    let found = this.textures.get(asset.url);
+    if (found === undefined) {
+      const bitmap = this.images.get(asset.url);
+      if (bitmap === undefined) throw new Error(`internal error: the image '${asset.url}' was not decoded`);
+      const texture = this.registry.createTexture({
+        label: `mtek asset ${asset.url}`,
+        size: [bitmap.width, bitmap.height],
+        format: TEXTURE_FORMATS[asset.colorSpace],
+        usage: USAGE_TEXTURE_BINDING | USAGE_COPY_DST | USAGE_RENDER_ATTACHMENT,
+      });
+      this.registry.copyExternalImage(this.queue, bitmap, texture);
+      found = { texture, view: texture.createView() };
+      this.textures.set(asset.url, found);
+    }
+    return found.view;
+  }
+
+  /** Releases every texture this scene created. */
+  dispose(): void {
+    for (const { texture } of this.textures.values()) this.registry.release(texture);
+    this.textures.clear();
+  }
 }
 
 /** The built-in textures and samplers of one scene. */

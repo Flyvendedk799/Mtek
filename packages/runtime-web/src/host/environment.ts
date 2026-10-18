@@ -11,6 +11,13 @@ export interface FetchResponseLike {
   text(): Promise<string>;
 }
 
+/** The part of a `fetch` response the asset loader uses: the body as bytes. */
+export interface BytesResponseLike {
+  readonly ok: boolean;
+  readonly status: number;
+  arrayBuffer(): Promise<ArrayBuffer>;
+}
+
 /** The part of `ResizeObserver` the runtime uses. */
 export interface ResizeObserverLike {
   observe(target: Element): void;
@@ -31,6 +38,19 @@ export interface HostEnvironment {
   /** Platform endianness override for tests; default: detected. */
   readonly littleEndian?: boolean;
   fetch(url: string): Promise<FetchResponseLike>;
+  /** `fetch` for a binary body: the packaged assets (`spec/assets.md` section 5). */
+  fetchBytes(url: string): Promise<BytesResponseLike>;
+  /**
+   * The lowercase hex SHA-256 of `bytes`; `undefined` when `crypto.subtle` does not exist (an insecure
+   * context), in which case the asset loader verifies the byte length only (`spec/assets.md` section 5).
+   */
+  readonly sha256: ((bytes: Uint8Array) => Promise<string>) | undefined;
+  /**
+   * Decodes a PNG or JPEG without colour space conversion or alpha premultiplication
+   * (`createImageBitmap` with `colorSpaceConversion` and `premultiplyAlpha` `"none"`). Rejects when the
+   * browser cannot decode the bytes.
+   */
+  decodeImage(bytes: Uint8Array): Promise<ImageBitmap>;
   /** `undefined` when there is no document (the overlay and the visibility pause are then unavailable). */
   readonly document: DocumentLike | undefined;
   readonly ResizeObserver: ResizeObserverFactory | undefined;
@@ -51,12 +71,34 @@ export interface HostEnvironment {
   clearTimeout(handle: unknown): void;
 }
 
+/** `crypto.subtle.digest("SHA-256")` as lowercase hex, or `undefined` where `crypto.subtle` does not exist. */
+export function browserSha256(): ((bytes: Uint8Array) => Promise<string>) | undefined {
+  const subtle = typeof crypto === "undefined" ? undefined : (crypto as Partial<Crypto>).subtle;
+  if (subtle === undefined) return undefined;
+  return async (bytes) => {
+    // `digest` takes a BufferSource; a view into a larger buffer is copied so only its own bytes are hashed.
+    const digest = await subtle.digest("SHA-256", bytes.slice());
+    let hex = "";
+    for (const byte of new Uint8Array(digest)) hex += byte.toString(16).padStart(2, "0");
+    return hex;
+  };
+}
+
+/** `createImageBitmap` of the raw bytes with every implicit conversion switched off (`spec/assets.md` section 5). */
+export function browserDecodeImage(bytes: Uint8Array): Promise<ImageBitmap> {
+  // The browser sniffs the format, so no MIME type is passed (and no file name is parsed).
+  return createImageBitmap(new Blob([bytes.slice()]), { colorSpaceConversion: "none", premultiplyAlpha: "none" });
+}
+
 /** Reads the browser globals. Fields whose global is missing become `null`/`undefined`, so mounting fails with a typed error rather than a `ReferenceError`. */
 export function defaultEnvironment(): HostEnvironment {
   const holder: Partial<Pick<Navigator, "gpu">> | undefined = typeof navigator === "undefined" ? undefined : navigator;
   return {
     gpu: holder?.gpu ?? null,
     fetch: (url) => fetch(url),
+    fetchBytes: (url) => fetch(url),
+    sha256: browserSha256(),
+    decodeImage: browserDecodeImage,
     document: typeof document === "undefined" ? undefined : document,
     ResizeObserver: typeof ResizeObserver === "undefined" ? undefined : ResizeObserver,
     window: typeof window === "undefined" ? undefined : window,

@@ -115,6 +115,22 @@ export interface MtekTestOptions {
   disableInstancing?: boolean;
   /** Replace the pixels of a built-in texture (a generated texture for a test; no asset needed). */
   textures?: { "texture.white"?: MtekTestTexture; "texture.black"?: MtekTestTexture };
+  /** Called for every state change of every asset file: all pending first, then ready or failed, before mountMtek settles. */
+  onAssetState?: (event: MtekAssetStateEvent) => void;
+}
+
+/** One state change of one asset file: pending, then ready or failed. */
+export interface MtekAssetStateEvent {
+  /** The file's url in the manifest's assets table. */
+  readonly url: string;
+  readonly kind: "mesh-data" | "image";
+  readonly state: "pending" | "ready" | "failed";
+}
+
+/** An asset file and its state, as debug.assets() lists it. */
+export interface MtekAssetStatus extends MtekAssetStateEvent {
+  /** The file's byte length. */
+  readonly bytes: number;
 }
 
 export interface MtekTestTexture {
@@ -137,6 +153,8 @@ export interface MtekDebug {
   loseDevice(): void;
   /** Reports an allocation failure as the out-of-memory error scope would (spec/runtime-abi.md section 9.5). */
   failAllocation(): void;
+  /** Every asset file of the running program with its state; after a successful mount all are ready. */
+  assets(): readonly MtekAssetStatus[];
   scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }> };
 }
 

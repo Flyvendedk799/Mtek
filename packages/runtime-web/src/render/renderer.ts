@@ -40,7 +40,7 @@ import { emptyPackedLights, packLights, type LightSource, type PackedLight } fro
 import { extractFrustumPlanes, sphereIntersectsFrustum, worldBoundingSphere, type WorldSphere } from "./frustum.js";
 import { batchDraws, instancingCandidates, type Batch } from "./instancing.js";
 import type { MaterialStore } from "./materials.js";
-import type { GpuMesh, MeshStore } from "./meshes.js";
+import { vertexBufferOf, type GpuMesh, type MeshStore } from "./meshes.js";
 import { INSTANCE_FLOATS, INSTANCE_STRIDE, type BindingPlan } from "./pipelines.js";
 
 /** What the renderer needs of the drawing surface (`host/surface.ts`). */
@@ -147,6 +147,8 @@ export class Renderer {
   /** Per static entity index, from its last object-block write: world-space sphere centre (x, y, z) and largest world scale. */
   private readonly sphereCentres: Float64Array;
   private readonly sphereScales: Float64Array;
+  /** Per static entity index: the local-space centre of its mesh's bounding sphere; `undefined` at the mesh origin (every primitive shape). */
+  private readonly localCentres: (readonly [number, number, number] | undefined)[] = [];
   private readonly sphere: WorldSphere = { x: 0, y: 0, z: 0, radius: 0 };
   private cullingEnabled = true;
   /** The instance vertex buffer (`INSTANCE_STRIDE` bytes per record); absent when no draw can ever be instanced. */
@@ -191,7 +193,11 @@ export class Renderer {
     this.frameSlot = this.frameArena.allocate();
     const drawable = structure.entities.filter((entity) => entity.mesh !== null);
     this.objectArena = new UniformArena(device, registry, structure.objectLayout, { dynamicOffset: true, initialCapacity: Math.max(1, drawable.length) });
-    for (const entity of drawable) this.objectSlots[entity.index] = this.objectArena.allocate();
+    for (const entity of drawable) {
+      this.objectSlots[entity.index] = this.objectArena.allocate();
+      const centre = entity.mesh === null ? undefined : options.meshes.get(entity.mesh.id).boundingCenter;
+      if (centre !== undefined && (centre[0] !== 0 || centre[1] !== 0 || centre[2] !== 0)) this.localCentres[entity.index] = centre;
+    }
     this.sphereCentres = new Float64Array(structure.entities.length * 3);
     this.sphereScales = new Float64Array(structure.entities.length);
 
@@ -435,8 +441,9 @@ export class Renderer {
       const slot = this.objectSlots[index];
       if (slot === undefined) continue;
       const model = world.worldMatrix(index);
-      // The mesh-independent part of the bounding sphere: the centre, and the largest scale (radius of a unit-radius mesh).
-      worldBoundingSphere(model, 1, this.sphere);
+      // The mesh-independent part of the bounding sphere: the centre (the model matrix applied to the mesh's local
+      // centre, which is the origin for the primitive shapes), and the largest scale (radius of a unit-radius mesh).
+      worldBoundingSphere(model, 1, this.sphere, this.localCentres[index]);
       this.sphereCentres[index * 3] = this.sphere.x;
       this.sphereCentres[index * 3 + 1] = this.sphere.y;
       this.sphereCentres[index * 3 + 2] = this.sphere.z;
@@ -481,7 +488,7 @@ export class Renderer {
       }
       if (draw.gpuMesh !== mesh) {
         draw.attributes.forEach((attribute, slot) => {
-          pass.setVertexBuffer(slot, draw.gpuMesh.vertexBuffers[attribute]);
+          pass.setVertexBuffer(slot, vertexBufferOf(draw.gpuMesh, attribute));
         });
         pass.setIndexBuffer(draw.gpuMesh.indexBuffer, draw.gpuMesh.indexFormat);
         mesh = draw.gpuMesh;

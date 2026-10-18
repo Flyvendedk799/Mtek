@@ -6,13 +6,15 @@
  *  2. The world with its records at the registry defaults; `scenes.<Entry>.init(ctx)` sets every value,
  *     material params through the generated writers into the arenas; transforms are propagated. Identical
  *     `shareable` instances then share one parameter block (`MaterialStore.shareIdentical`, decision 0059).
- *  3. The meshes are generated and uploaded.
+ *  3. The meshes are generated (primitive shapes) or read from the loaded asset files, and uploaded; the
+ *     material store made the textures of image assets (`options.assets`, decision 0060) with its instances.
  *  4. Every startup pipeline (one per material, for the surface's colour format, and the instanced
  *     variant of each material that has entities to instance) is created; a failure is `E8051` and
  *     fails the mount.
  *  5. The renderer allocates the frame and object blocks.
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
+import type { DecodedImages, LoadedAssets } from "../assets/loader.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic, type MtekRuntimePhase } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import type { CheckedProgram } from "../scene/program.js";
@@ -58,6 +60,12 @@ export interface SceneStartupOptions {
   readonly textures?: TextureOverrides;
   /** Group compatible draws into instanced draws (default true; `options.test.disableInstancing` makes it false). */
   readonly instancing?: boolean;
+  /**
+   * The verified files of the manifest's `assets` table and the decoded images (`assets/loader.ts`): the meshes and
+   * textures that come from assets are made from them. The caller closes the bitmaps once the scene has started
+   * (the textures are filled by then). Required when the manifest has assets.
+   */
+  readonly assets?: { readonly files: LoadedAssets; readonly images: DecodedImages };
 }
 
 /** The running scene: its CPU world, its GPU state and its renderer. */
@@ -90,7 +98,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
 
   const plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
-  const materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures);
+  const materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures, options.assets?.images);
   const { recover } = options;
   let world: World;
   let bindings: Bindings;
@@ -109,8 +117,8 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   // Every instance holds its initial values: identical immutable ones now share a parameter block.
   materials.shareIdentical();
 
-  const meshes = new MeshStore(registry, device.queue);
-  meshes.upload(structure.meshes);
+  const meshes = new MeshStore(registry, device.queue, undefined, device.limits.maxBufferSize);
+  meshes.upload(structure.meshes, options.assets?.files);
 
   const pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest);
   const phase: MtekRuntimePhase | undefined = recover === undefined ? undefined : "runtime:device";

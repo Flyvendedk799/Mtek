@@ -18,6 +18,9 @@
  * the built-in texture views and samplers its resource params name, created once per instance. A
  * material with resources and no value params has no arena; its instances still get a bind group (one
  * per block, shared by identical `shareable` instances like a block).
+ *
+ * A texture param whose value is an image file of the `assets` table binds that file's texture instead of a
+ * built-in one (`AssetTextures`, decision 0060); two instances naming the same file share one texture.
  */
 import type { ArenaDevice, ArenaWriter } from "../gpu/uniform-arena.js";
 import { UniformArena } from "../gpu/uniform-arena.js";
@@ -26,7 +29,8 @@ import type { LayoutWriters } from "../scene/program.js";
 import type { ResolvedInstance, SceneStructure } from "../scene/structure.js";
 import type { ParamSink } from "../scene/world.js";
 import type { BindingPlan } from "./pipelines.js";
-import { BuiltinResources, type TextureOverrides } from "./resources.js";
+import type { DecodedImages } from "../assets/loader.js";
+import { AssetTextures, BuiltinResources, type TextureOverrides } from "./resources.js";
 
 /** One parameter block: a slot of an arena, used by `users` instances (more than one when shared). */
 interface InstanceStorage {
@@ -73,7 +77,9 @@ export class MaterialStore implements ParamSink {
   /** Bind groups of instances that have resources but no block, by block (see `blockOf`), created on first use. */
   private readonly resourceGroups = new Map<number, GPUBindGroup>();
   private readonly builtins: BuiltinResources;
+  private readonly assetTextures: AssetTextures;
 
+  /** `images`: the decoded image files that instances' texture params may name (`spec/assets.md` section 5). */
   constructor(
     device: ArenaDevice,
     private readonly registry: ResourceRegistry,
@@ -81,8 +87,10 @@ export class MaterialStore implements ParamSink {
     private readonly structure: SceneStructure,
     writers: ReadonlyMap<string, LayoutWriters>,
     textures?: TextureOverrides,
+    images: DecodedImages = new Map(),
   ) {
     this.builtins = new BuiltinResources(registry, device.queue, textures);
+    this.assetTextures = new AssetTextures(registry, device.queue, images);
     const counts = new Map<string, number>();
     for (const instance of structure.instances) {
       const layout = instance.material.layout;
@@ -97,7 +105,7 @@ export class MaterialStore implements ParamSink {
           layout: plan.material(layout, kinds),
           entries: instance.resources.map((resource) => ({
             binding: resource.binding,
-            resource: resource.kind === "texture" ? this.builtins.textureView(resource.value) : this.builtins.sampler(resource.value),
+            resource: "asset" in resource ? this.assetTextures.textureView(resource.asset) : resource.kind === "texture" ? this.builtins.textureView(resource.value) : this.builtins.sampler(resource.value),
           })),
         });
       }
@@ -276,6 +284,7 @@ export class MaterialStore implements ParamSink {
     this.resourceGroups.clear();
     this.resources.clear();
     this.builtins.dispose();
+    this.assetTextures.dispose();
   }
 
   private storageOf(instance: number): InstanceStorage | null {

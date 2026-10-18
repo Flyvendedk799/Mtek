@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
-import { FakeDevice, asGpu } from "../test-support/fake-gpu.js";
+import { FakeDevice, FakeImageBitmap, asGpu, type FakeTexture } from "../test-support/fake-gpu.js";
 import { ResourceRegistry, type RegistryDevice } from "./registry.js";
 
 const UNIFORM_COPY_DST = 0x40 | 0x08;
@@ -320,6 +320,29 @@ describe("writeBuffer", () => {
     expect(() => registry.writeBuffer(queue, b, 2, data, 0, 8)).toThrow(RangeError);
     expect(() => registry.writeBuffer(queue, b, 0, data, 0, 6)).toThrow(RangeError);
     expect(fake.queue.writes).toHaveLength(0);
+    expect(registry.snapshot().uploads).toBe(0);
+  });
+});
+
+describe("copyExternalImage", () => {
+  const TEXTURE_USAGE = 0x04 | 0x02 | 0x10; // TEXTURE_BINDING | COPY_DST | RENDER_ATTACHMENT
+
+  it("copies a decoded image into the texture as it is stored and counts one upload of width x height x 4 bytes", () => {
+    const { registry, fake } = setup();
+    const texture = registry.createTexture({ size: [2, 1], format: "rgba8unorm-srgb", usage: TEXTURE_USAGE });
+    const bitmap = new FakeImageBitmap(2, 1, Uint8Array.from([10, 20, 30, 255, 40, 50, 60, 128]));
+    registry.copyExternalImage(asGpu<GPUQueue>(fake.queue), asGpu<ImageBitmap>(bitmap), texture);
+    expect([...(texture as unknown as FakeTexture).pixels]).toEqual([10, 20, 30, 255, 40, 50, 60, 128]);
+    // No flip and no premultiplication are asked for; the destination colour space is sRGB.
+    expect(fake.queue.externalCopies.map((copy) => [copy.width, copy.height, copy.colorSpace])).toEqual([[2, 1, "srgb"]]);
+    expect(registry.snapshot()).toMatchObject({ uploads: 1, uploadBytes: 8 });
+  });
+
+  it("is refused by the destination rules of WebGPU: a texture without RENDER_ATTACHMENT cannot receive an image", () => {
+    const { registry, fake } = setup();
+    const texture = registry.createTexture({ size: [1, 1], format: "rgba8unorm", usage: 0x04 | 0x02 });
+    const bitmap = new FakeImageBitmap(1, 1, Uint8Array.from([1, 2, 3, 4]));
+    expect(() => registry.copyExternalImage(asGpu<GPUQueue>(fake.queue), asGpu<ImageBitmap>(bitmap), texture)).toThrow(/RENDER_ATTACHMENT/);
     expect(registry.snapshot().uploads).toBe(0);
   });
 });

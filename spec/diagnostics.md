@@ -290,8 +290,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7024"></a>E7024 | unknown name in asset | no mesh, material or node of that name, or the name is ambiguous; lists the names |
 | <a id="mtek-e7025"></a>E7025 | accessor out of bounds | buffer view or accessor outside its buffer, bad stride or alignment, non-finite values |
 | <a id="mtek-e7026"></a>E7026 | asset limit exceeded | more vertices than `max_vertices_per_primitive`, or packaged assets over `max_total_bytes` |
-| <a id="mtek-e7030"></a>E7030 | asset fetch or integrity failure | runtime: fetch failed, length or SHA-256 mismatch (M4-06) |
-| <a id="mtek-e7031"></a>E7031 | image decode failure | runtime: the browser could not decode the image (M4-06) |
+| <a id="mtek-e7030"></a>E7030 | asset fetch or integrity failure | runtime: fetch failed, length or SHA-256 mismatch (M4-06, decision 0060) |
+| <a id="mtek-e7031"></a>E7031 | image decode failure | runtime: the browser could not decode the image (M4-06, decision 0060) |
 | <a id="mtek-e7901"></a>E7901 | remote assets not supported | an `http:`, `https:` or other URL as an asset path |
 | <a id="mtek-e7902"></a>E7902 | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy |
 | (E7032–E7099) | further asset codes | reserved; added with the feature that needs them |
@@ -300,7 +300,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | Code | Title | Trigger |
 |---|---|---|
 | <a id="mtek-e8001"></a>E8001 | unsupported platform endianness | |
-| <a id="mtek-e8002"></a>E8002 | device below target profile | |
+| <a id="mtek-e8002"></a>E8002 | device below target profile | also: an asset image larger than the device's `maxTextureDimension2D` (decision 0060) |
 | <a id="mtek-e8003"></a>E8003 | incompatible program | manifest/ABI/language version mismatch |
 | <a id="mtek-e8004"></a>E8004 | WebGPU unavailable | no `navigator.gpu` |
 | <a id="mtek-e8005"></a>E8005 | no suitable adapter | `requestAdapter()` returned null |

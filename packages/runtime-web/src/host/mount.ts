@@ -9,7 +9,9 @@
  * transforms, mesh uploads, every startup pipeline, the renderer: `render/startup.ts`); flush pending
  * validation results; resolve with the application handle.
  *
- * Startup assets are not loaded yet (M1 programs have none; asset meshes are rejected with `E8003`).
+ * The startup assets (`manifest.assets`, `assets/loader.ts`) are fetched, verified and decoded while the
+ * shaders compile; the scene is only started when every one is `ready`, and a file that is missing, altered
+ * or undecodable rejects the mount with `asset-failed` (decision 0060).
  *
  * Every failure rejects with an `MtekMountError` of the documented kind, reports its diagnostics through
  * `onDiagnostic`, shows the overlay (unless `failureDisplay: "none"`), and leaves no live resource,
@@ -21,6 +23,7 @@ import {
   type DeviceCapabilities,
   type MtekManifest,
 } from "../abi/index.js";
+import { closeImages, loadAssets, type DecodedImages, type LoadedAssets } from "../assets/loader.js";
 import { MtekMountError, makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import { acquireDevice, type AcquiredDevice } from "../gpu/device.js";
 import { ResourceRegistry } from "../gpu/registry.js";
@@ -65,6 +68,9 @@ function validateOptions(options: MtekMountOptions<never>): void {
     throw new RangeError(`mountMtek: seed must be a finite number, got ${String(seed)}`);
   }
   if (test?.textures !== undefined) checkTestTextures(test.textures);
+  if (test?.onAssetState !== undefined && typeof test.onAssetState !== "function") {
+    throw new TypeError("mountMtek: test.onAssetState must be a function");
+  }
   const target = test?.renderTarget;
   if (target !== undefined) {
     for (const [name, value] of [["width", target.width], ["height", target.height]] as const) {
@@ -174,6 +180,8 @@ export async function mountMtekWith<I = Record<string, unknown>>(
   let registry: ResourceRegistry | undefined;
   let surface: Surface | undefined;
   let app: MountedApp<I> | undefined;
+  // Decoded images wait here until the scene has uploaded them; closed in every case (idempotent).
+  let images: DecodedImages | undefined;
   // A holder object, because the callbacks below assign it and TypeScript does not track that.
   const early: { lost?: GPUDeviceLostInfo } = {};
   const allocationFailures: MtekDiagnostic[] = [];
@@ -283,16 +291,30 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       throw mountError(allocationFailures);
     }
 
-    // Startup shaders. The files are remembered for the rebuild after a device loss.
+    // Startup shaders and assets, concurrently. The shader files are remembered for the rebuild after a device
+    // loss; the verified asset bytes are retained for the same purpose (decision 0060). Every failure of
+    // either is reported, shaders first.
     const fetchShaderFile = rememberingFetch(environment);
-    const shaders = await loadStartupShaders({
-      manifest,
-      baseUrl: program.baseUrl,
-      device,
-      registry,
-      fetch: fetchShaderFile,
-    });
-    if (shaders.diagnostics.length > 0) throw mountError(shaders.diagnostics);
+    const [shaders, loadedAssets] = await Promise.all([
+      loadStartupShaders({
+        manifest,
+        baseUrl: program.baseUrl,
+        device,
+        registry,
+        fetch: fetchShaderFile,
+      }),
+      loadAssets({
+        manifest,
+        baseUrl: program.baseUrl,
+        environment,
+        maxTextureDimension2D: device.limits.maxTextureDimension2D,
+        ...(options.test?.onAssetState === undefined ? {} : { onState: options.test.onAssetState }),
+      }),
+    ]);
+    images = loadedAssets.images;
+    const startupFailures = [...shaders.diagnostics, ...loadedAssets.diagnostics];
+    if (startupFailures.length > 0) throw mountError(startupFailures);
+    const assets: LoadedAssets = loadedAssets.assets;
 
     // The CPU services generated code reaches through ctx, from `init` on: the seeded generator, the
     // delivered key state and the development console.
@@ -309,22 +331,32 @@ export async function mountMtekWith<I = Record<string, unknown>>(
 
     // The scene: init(ctx), meshes and every startup pipeline. Run-time diagnostics of init (E8090,
     // E8011, E8100) are not fatal; they are delivered once the application exists.
-    const started = await startScene({
-      manifest,
-      structure: structure.structure,
-      program: checked.program,
-      device,
-      registry,
-      surface,
-      modules: shaders.modules,
-      services,
-      report: (diagnostic) => {
-        if (app !== undefined) app.report(diagnostic);
-        else earlyReports.push(diagnostic);
-      },
-      ...(options.test?.textures === undefined ? {} : { textures: options.test.textures }),
-      ...(options.test?.disableInstancing === true ? { instancing: false } : {}),
-    });
+    let started: Awaited<ReturnType<typeof startScene>>;
+    try {
+      started = await startScene({
+        manifest,
+        structure: structure.structure,
+        program: checked.program,
+        device,
+        registry,
+        surface,
+        modules: shaders.modules,
+        services,
+        report: (diagnostic) => {
+          if (app !== undefined) app.report(diagnostic);
+          else earlyReports.push(diagnostic);
+        },
+        assets: { files: assets, images },
+        ...(options.test?.textures === undefined ? {} : { textures: options.test.textures }),
+        ...(options.test?.disableInstancing === true ? { instancing: false } : {}),
+      });
+    } catch (error) {
+      // An allocation the registry reported (E8063) is the diagnosis of the exception it rethrew.
+      if (allocationFailures.length > 0) throw mountError(allocationFailures);
+      throw error;
+    }
+    // The textures are filled: the bitmaps are no longer needed (the bytes stay for the rebuild after a device loss).
+    closeImages(images);
     if (!started.ok) throw mountError(started.diagnostics);
 
     // Allocation errors arrive asynchronously (the out-of-memory scopes pop after a round trip); wait
@@ -367,6 +399,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
       test: options.test,
       watchPixelRatio: dprOption === "auto",
       fetchShaderFile,
+      assets,
       acquireDevice: (handlers) =>
         acquireDevice({
           requiredFeatures: [...required.features] as GPUFeatureName[],
@@ -403,6 +436,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
     return app;
   } catch (error) {
     // Release everything acquired so far, then make the failure visible.
+    if (images !== undefined) closeImages(images);
     surface?.dispose();
     registry?.destroyAll();
     if (acquired !== undefined) {

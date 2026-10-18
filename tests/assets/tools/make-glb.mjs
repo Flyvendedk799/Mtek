@@ -1,4 +1,6 @@
-// Generates the asset fixtures of tests/assets (spec/assets.md section 7, decision 0058).
+// Generates the asset fixtures of tests/assets (spec/assets.md section 7, decision 0058) and the two browser fixtures of
+// the runtime asset spec (tests/browser/fixtures/m4/assets_scene and assets_corrupt, decision 0060), whose expected pixels
+// are derived by hand from the data written here.
 //
 // Every file is built from explicit data in this script: no model was downloaded or exported, so
 // the expected vertex values, transforms and image texels are known by construction. The
@@ -1166,6 +1168,217 @@ textureProject("e7017_texture_over_configured_limit", CHECKER, `${TOML}\n[assets
 textureProject("e7002_texture_file_too_large", bigPng(2000, 2000), `${TOML}\n[assets]\nmax_file_bytes = 64\n`);
 
 // ---------------------------------------------------------------------------
+// The browser fixtures of task M4-06 (decision 0060): `tests/browser/fixtures/m4/assets_scene` and `assets_corrupt`. Like
+// everything above they are written from explicit data, so the expected pixels of `specs/m4/assets.spec.ts` are derived by
+// hand from the numbers in this section, never from what the renderer draws.
+//
+// `assets_scene` is a 3 x 3 grid of 2 x 2 unit cells seen by an orthographic camera (height 6, so 16 pixels per unit) on
+// a 96 x 96 target: cell (i, j) is centred at pixel (16 + 32 i, 16 + 32 j). Every mesh lies in the z = 0 plane, faces +Z
+// and spans [-0.8, 0.8] in x and y (25.6 pixels) around its cell centre.
+//
+//   (0, 0) Checker  Panel with the GLB's 2 x 2 checker texture (red, green / blue, white), nearest and clamped
+//   (1, 0) Corner   a non-indexed right triangle (right angle bottom left) in the base colour of "Oak"
+//   (2, 0) Lacquer  Panel with the Pbr material "Lacquer" of the GLB, lit by a sun and an ambient term
+//   (0, 1) Square   primitive 0 of the two-primitive mesh "Pair": a square (u16 indices), colour of "Slate"
+//   (1, 1) Roof     primitive 1 of "Pair": an isosceles triangle with u8 indices (widened to u16), colour of "Oak"
+//   (2, 1) Wood     Panel with the standalone sRGB texture textures/wood.png
+//   (0, 2) Mask     Panel with the standalone linear texture textures/mask.png
+//   (1, 2) Grey     Panel with the GLB's JPEG (one flat grey of 200)
+//   (2, 2) Wood2    exactly like Wood: the two share a parameter block and are drawn with one instanced draw
+//
+// `assets_corrupt` has one standalone PNG whose header is valid (the compiler accepts it) and whose pixel data is not
+// (the browser cannot decode it): the mount must fail with E7031.
+
+const BROWSER_FIXTURES = "../browser/fixtures/m4";
+const MASK_TEXELS = [
+  [255, 255, 255, 255],
+  [128, 128, 128, 255],
+  [64, 64, 64, 255],
+  [0, 0, 0, 255],
+];
+const MASK_PNG = png(2, 2, MASK_TEXELS);
+
+/** A PNG with a valid signature, header and CRCs whose compressed pixel data is not a valid zlib stream. */
+function corruptPng() {
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(2, 0);
+  header.writeUInt32BE(2, 4);
+  header[8] = 8;
+  header[9] = 6;
+  // A stored deflate block whose length complement is wrong ("invalid stored block lengths").
+  const garbage = Buffer.from([0x78, 0x01, 0x01, 0x05, 0x00, 0x00, 0x00, 1, 2, 3, 4, 5, 0, 0, 0, 0]);
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk("IHDR", header),
+    pngChunk("IDAT", garbage),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+function sceneModel() {
+  const m = new Model();
+  const h = 0.8;
+  // Panel: interleaved position / normal / uv, u16 indices. uv (0, 0) is the top left of the image: the vertex at the
+  // top left of the quad (-h, +h) has uv (0, 0).
+  const panel = m.interleaved([
+    [[-h, -h, 0], [0, 0, 1], [0, 1]],
+    [[h, -h, 0], [0, 0, 1], [1, 1]],
+    [[h, h, 0], [0, 0, 1], [1, 0]],
+    [[-h, h, 0], [0, 0, 1], [0, 0]],
+  ]);
+  const panelIndices = m.indices16([0, 1, 2, 0, 2, 3]);
+  // Corner: not indexed; the right angle is at (-h, -h).
+  const corner = { POSITION: m.positions([-h, -h, 0, h, -h, 0, -h, h, 0]) };
+  // Pair: a square with u16 indices, then a triangle with u8 indices.
+  const square = { POSITION: m.positions([-h, -h, 0, h, -h, 0, h, h, 0, -h, h, 0]) };
+  const squareIndices = m.indices16([0, 1, 2, 0, 2, 3]);
+  const roof = { POSITION: m.positions([-h, -h, 0, h, -h, 0, 0, h, 0]) };
+  const roofIndices = m.indices8([0, 1, 2]);
+
+  const checker = m.image(CHECKER, "image/png");
+  const grey = m.image(jpegGrey(200), "image/jpeg");
+  // NEAREST magnification and minification, CLAMP_TO_EDGE both ways: the preset sampler.nearest_clamp.
+  m.json.samplers = [{ magFilter: 9728, minFilter: 9728, wrapS: 33071, wrapT: 33071 }];
+  m.json.textures = [{ source: checker, sampler: 0 }, { source: grey }];
+  m.json.materials.push(
+    { name: "Checker", pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], baseColorTexture: { index: 0 }, metallicFactor: 0, roughnessFactor: 1 } },
+    { name: "Oak", pbrMetallicRoughness: { baseColorFactor: [0.6, 0.3, 0.1, 1], metallicFactor: 0, roughnessFactor: 1 } },
+    { name: "Slate", pbrMetallicRoughness: { baseColorFactor: [0.2, 0.4, 0.8, 1], metallicFactor: 0, roughnessFactor: 1 } },
+    { name: "Lacquer", pbrMetallicRoughness: { baseColorFactor: [0.8, 0.2, 0.1, 1], metallicFactor: 0, roughnessFactor: 0.5 } },
+    { name: "Grey", pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1], baseColorTexture: { index: 1 }, metallicFactor: 0, roughnessFactor: 1 } },
+  );
+  const meshes = {
+    Panel: m.mesh("Panel", [{ attributes: panel, indices: panelIndices, material: 0 }]),
+    Corner: m.mesh("Corner", [{ attributes: corner, material: 1 }]),
+    Pair: m.mesh("Pair", [
+      { attributes: square, indices: squareIndices, material: 2 },
+      { attributes: roof, indices: roofIndices, material: 1 },
+    ]),
+  };
+  // The nodes the scene takes its first row of positions from.
+  m.node({ name: "CheckerNode", translation: [-2, 2, 0], mesh: meshes.Panel }, true);
+  m.node({ name: "CornerNode", translation: [0, 2, 0], mesh: meshes.Corner }, true);
+  m.node({ name: "LacquerNode", translation: [2, 2, 0], mesh: meshes.Panel }, true);
+  m.node({ name: "PairNode", mesh: meshes.Pair }, true);
+  return m.glb();
+}
+
+const SCENE_TOML = `[project]\nname = "fixture"\nlanguage = "0.1"\n`;
+const DECAL = `// Unlit: the tint times the texel, in linear space (the texture is sampled as linear values).
+material Decal {
+    param tint: color = #ffffff;
+    param base: texture = texture.white();
+    param filter: sampler = sampler.nearest_clamp();
+
+    fragment(input: SurfaceInput) -> color {
+        let texel = sample(base, filter, input.uv);
+        return color.linear(tint.rgb * texel.xyz, 1.0);
+    }
+}
+`;
+
+put(`${BROWSER_FIXTURES}/assets_scene/mtek.toml`, SCENE_TOML);
+put(`${BROWSER_FIXTURES}/assets_scene/models/scene.glb`, sceneModel());
+put(`${BROWSER_FIXTURES}/assets_scene/textures/wood.png`, WOOD);
+put(`${BROWSER_FIXTURES}/assets_scene/textures/mask.png`, MASK_PNG);
+put(
+  `${BROWSER_FIXTURES}/assets_scene/src/main.mtek`,
+  `// Assets end to end (task M4-06, decision 0060): a GLB with three meshes (one with two primitives), five materials and
+// two images, and two standalone textures, drawn in a 3 x 3 grid. The layout and the expected pixels are written down in
+// tests/assets/tools/make-glb.mjs, which generates the GLB and the PNGs from explicit data.
+const SCENE = asset.glb("../models/scene.glb");
+const WOOD = asset.texture("../textures/wood.png");
+const MASK = asset.linear_texture("../textures/mask.png");
+
+${DECAL}
+scene Showroom {
+    clear_color: #102030;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.2;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 6.0; near: 0.1; far: 20.0 };
+    }
+
+    entity Sun {
+        rotation: quat.euler(-0.9, 0.4, 0.0);
+        light: DirectionalLight { intensity: 3.0 };
+    }
+
+    entity Checker {
+        mesh: SCENE.mesh("Panel");
+        position: SCENE.node_position("CheckerNode");
+        material: Decal { base: SCENE.material_texture("Checker") };
+    }
+    entity Corner {
+        mesh: SCENE.mesh("Corner");
+        position: SCENE.node_position("CornerNode");
+        material: Unlit { color: SCENE.material_base_color("Oak") };
+    }
+    entity Lacquer {
+        mesh: SCENE.mesh("Panel");
+        position: SCENE.node_position("LacquerNode");
+        material: SCENE.material("Lacquer");
+    }
+    entity Square {
+        mesh: SCENE.primitive("Pair", 0);
+        position: vec3(-2.0, 0.0, 0.0);
+        material: Unlit { color: SCENE.material_base_color("Slate") };
+    }
+    entity Roof {
+        mesh: SCENE.primitive("Pair", 1);
+        position: vec3(0.0, 0.0, 0.0);
+        material: Unlit { color: SCENE.material_base_color("Oak") };
+    }
+    entity Wood {
+        mesh: SCENE.mesh("Panel");
+        position: vec3(2.0, 0.0, 0.0);
+        material: Decal { base: WOOD };
+    }
+    entity Mask {
+        mesh: SCENE.mesh("Panel");
+        position: vec3(-2.0, -2.0, 0.0);
+        material: Decal { base: MASK };
+    }
+    entity Grey {
+        mesh: SCENE.mesh("Panel");
+        position: vec3(0.0, -2.0, 0.0);
+        material: Decal { base: SCENE.material_texture("Grey") };
+    }
+    entity Wood2 {
+        mesh: SCENE.mesh("Panel");
+        position: vec3(2.0, -2.0, 0.0);
+        material: Decal { base: WOOD };
+    }
+}
+`,
+);
+
+put(`${BROWSER_FIXTURES}/assets_corrupt/mtek.toml`, SCENE_TOML);
+put(`${BROWSER_FIXTURES}/assets_corrupt/textures/broken.png`, corruptPng());
+put(
+  `${BROWSER_FIXTURES}/assets_corrupt/src/main.mtek`,
+  `// One standalone PNG with a valid header and undecodable pixel data (task M4-06): the compiler accepts it, the browser
+// cannot decode it, and the mount fails with E7031 at this declaration.
+const BROKEN = asset.texture("../textures/broken.png");
+
+${DECAL}
+scene Corrupt {
+    camera Main {
+        position: vec3(0.0, 0.0, 4.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Decal { base: BROKEN };
+    }
+}
+`,
+);
+
+// ---------------------------------------------------------------------------
 
 function walk(dir, out = []) {
   if (!existsSync(dir)) return out;
@@ -1183,7 +1396,7 @@ for (const [path, content] of [...files].sort(([a], [b]) => (a < b ? -1 : 1))) {
   const target = join(root, path);
   if (check) {
     if (!existsSync(target) || !readFileSync(target).equals(content)) {
-      console.error(`tests/assets/${path} is out of date; run node tests/assets/tools/make-glb.mjs`);
+      console.error(`${relative(resolve(root, "../.."), target).split("\\").join("/")} is out of date; run node tests/assets/tools/make-glb.mjs`);
       problems += 1;
     }
   } else {
@@ -1202,4 +1415,4 @@ for (const file of walk(root)) {
   }
 }
 if (check && problems > 0) process.exit(1);
-if (!check) console.log(`wrote ${files.size} files under tests/assets`);
+if (!check) console.log(`wrote ${files.size} files under tests/assets and the browser asset fixtures`);

@@ -70,16 +70,30 @@ export interface WorldSphere {
 }
 
 /**
- * The world-space bounding sphere of a mesh whose bounding sphere has radius `meshRadius` around the
- * mesh origin: centred at the translation of `world`, with the radius multiplied by the largest scale
- * of the world matrix (the longest of its three basis columns, so non-uniform and inherited scales are
- * covered). Written into `out` and returned.
+ * The world-space bounding sphere of a mesh whose bounding sphere has radius `meshRadius` around `center`
+ * in the mesh's local space (the mesh origin when omitted, as for the primitive shapes): centred at `world`
+ * applied to `center` (the translation of `world` for the origin), with the radius multiplied by the largest
+ * scale of the world matrix (the longest of its three basis columns, so non-uniform and inherited scales are
+ * covered). An asset mesh's sphere does not lie around its origin (decision 0060). Written into `out` and returned.
  */
-export function worldBoundingSphere(world: Mat4, meshRadius: number, out: WorldSphere = { x: 0, y: 0, z: 0, radius: 0 }): WorldSphere {
+export function worldBoundingSphere(
+  world: Mat4,
+  meshRadius: number,
+  out: WorldSphere = { x: 0, y: 0, z: 0, radius: 0 },
+  center?: readonly [number, number, number],
+): WorldSphere {
   const column = (c: number): number => Math.hypot(world[c * 4] ?? 0, world[c * 4 + 1] ?? 0, world[c * 4 + 2] ?? 0);
-  out.x = world[12] ?? 0;
-  out.y = world[13] ?? 0;
-  out.z = world[14] ?? 0;
+  const m = (i: number): number => world[i] ?? 0;
+  if (center === undefined) {
+    out.x = m(12);
+    out.y = m(13);
+    out.z = m(14);
+  } else {
+    const [cx, cy, cz] = center;
+    out.x = m(0) * cx + m(4) * cy + m(8) * cz + m(12);
+    out.y = m(1) * cx + m(5) * cy + m(9) * cz + m(13);
+    out.z = m(2) * cx + m(6) * cy + m(10) * cz + m(14);
+  }
   out.radius = meshRadius * Math.max(column(0), column(1), column(2));
   return out;
 }
