@@ -238,12 +238,9 @@ fn max_bytes_truncates_and_says_so() {
     );
     let context = context_of(&out);
     assert!(stdout(&out).len() <= 9_000, "{}", stdout(&out).len());
-    assert!(
-        !context["truncated"]["examples"]
-            .as_array()
-            .unwrap()
-            .is_empty()
-    );
+    let dropped = &context["truncated"]["examples"];
+    assert_eq!(dropped["count"], 4);
+    assert_eq!(dropped["names"].as_array().unwrap().len(), 4);
     // A budget that already fits leaves everything and has no `truncated` field.
     let fits = mtek(
         &project,

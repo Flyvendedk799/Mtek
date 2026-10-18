@@ -1111,8 +1111,9 @@ fn a_budget_drops_examples_then_neighbours_then_schemas_then_symbols() {
                 let truncated = context.truncated.clone().unwrap_or_default();
                 // Examples go first, the least relevant first.
                 let kept = context.examples.len();
+                assert_eq!(truncated.examples.count, full_titles.len() - kept);
                 assert_eq!(
-                    truncated.examples,
+                    truncated.examples.names,
                     full_titles[kept..]
                         .iter()
                         .rev()
@@ -1126,7 +1127,10 @@ fn a_budget_drops_examples_then_neighbours_then_schemas_then_symbols() {
                 }
                 // ... schemas only once every neighbour is gone ...
                 if !truncated.schemas.is_empty() {
-                    assert_eq!(truncated.neighbours, ["clampy", "Main.speed", "Pulse"]);
+                    assert_eq!(
+                        truncated.neighbours.names,
+                        ["clampy", "Main.speed", "Pulse"]
+                    );
                     phases.insert("schemas");
                 }
                 // ... and requested symbols last.
@@ -1159,7 +1163,8 @@ fn a_budget_drops_examples_then_neighbours_then_schemas_then_symbols() {
     assert!(smallest.context.symbols.is_empty());
     assert!(smallest.context.schemas.is_empty() && smallest.context.examples.is_empty());
     let truncated = smallest.context.truncated.as_ref().unwrap();
-    assert_eq!(truncated.symbols, ["Main.A"]);
+    assert_eq!(truncated.symbols.names, ["Main.A"]);
+    assert_eq!(truncated.symbols.count, 1);
     match run(&fs, &options(&["Main.A"], minimum - 1)) {
         Err(ContextError::BudgetTooSmall { minimum: again, .. }) => assert_eq!(again, minimum),
         other => panic!("{other:?}"),
@@ -1378,7 +1383,8 @@ fn goldens() {
 
 #[test]
 fn goldens_are_all_used_and_the_example_projects_have_no_errors() {
-    let used: BTreeSet<&str> = GOLDENS.iter().map(|g| g.name).collect();
+    let mut used: BTreeSet<&str> = GOLDENS.iter().map(|g| g.name).collect();
+    used.insert("examples.features.json");
     let dir = repo("tests/context/golden");
     if dir.exists() {
         for entry in fs::read_dir(&dir).unwrap() {
@@ -1417,4 +1423,74 @@ fn symbol_kinds_are_the_documented_ones() {
             );
         }
     }
+}
+
+#[test]
+fn a_large_scene_fits_the_default_budget_and_says_what_it_left_out() {
+    let mut source = String::from("scene Big {\n    camera Main {}\n");
+    for i in 0..400 {
+        source.push_str(&format!(
+            "    entity E{i} {{\n        mesh: Box {{}};\n    }}\n"
+        ));
+    }
+    source.push_str("}\n");
+    let output = ok(&project(&source), &default_options());
+    assert!(
+        output.text.len() <= DEFAULT_MAX_BYTES,
+        "{}",
+        output.text.len()
+    );
+    let truncated = output.context.truncated.as_ref().unwrap();
+    // The scene and its first entities are kept, the rest is counted, and only the first few
+    // names are listed, so the note itself stays short however much was left out.
+    let dropped = &truncated.symbols;
+    assert!(dropped.count > 200, "{}", dropped.count);
+    assert_eq!(dropped.names.len(), 16);
+    assert_eq!(dropped.names[0], "Big.E399");
+    assert_eq!(output.context.symbols[0].name, "Big");
+    assert_eq!(output.context.symbols.len() + dropped.count, 402);
+    assert_valid(&output);
+    // Asking for one entity of it is cheap.
+    let one = ok(
+        &project(&source),
+        &options(&["Big.E123"], DEFAULT_MAX_BYTES),
+    );
+    assert!(one.context.truncated.is_none());
+    assert_eq!(names(&one.context), ["Big.E123"]);
+}
+
+#[test]
+fn the_embedded_prelude_is_not_part_of_the_project() {
+    // A program that uses a built-in material compiles `std/materials.mtek` with it.
+    let example = LIBRARY
+        .iter()
+        .find(|e| e.title == "Lights and the Pbr material")
+        .unwrap();
+    let output = ok(&project(example.source), &default_options());
+    assert_eq!(output.context.project.modules, ["src/main.mtek"]);
+    assert!(
+        output
+            .context
+            .symbols
+            .iter()
+            .all(|s| s.file == "src/main.mtek")
+    );
+    assert!(output.context.schemas.iter().any(|s| s.name == "Pbr"));
+}
+
+/// The features of every example, pinned: which examples a neighbourhood gets follows from them.
+#[test]
+fn example_features_are_pinned() {
+    let tags: Vec<Value> = LIBRARY
+        .iter()
+        .map(|example| {
+            serde_json::json!({
+                "title": example.title,
+                "features": features_of(example).into_iter().collect::<Vec<_>>(),
+            })
+        })
+        .collect();
+    let mut text = serde_json::to_string_pretty(&tags).unwrap();
+    text.push('\n');
+    assert_golden("examples.features.json", &text);
 }

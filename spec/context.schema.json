@@ -112,23 +112,37 @@
       "minLength": 1
     },
     "truncated": {
-      "description": "Present only when --max-bytes made the export leave something out: the names dropped, lowest priority first.",
+      "description": "Present only when --max-bytes made the export leave something out: per section how many items were dropped and the names of the first few, lowest priority first.",
       "type": "object",
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "examples": { "$ref": "#/$defs/names" },
-        "neighbours": { "$ref": "#/$defs/names" },
-        "schemas": { "$ref": "#/$defs/names" },
-        "symbols": { "$ref": "#/$defs/names" }
+        "examples": { "$ref": "#/$defs/dropped" },
+        "neighbours": { "$ref": "#/$defs/dropped" },
+        "schemas": { "$ref": "#/$defs/dropped" },
+        "symbols": { "$ref": "#/$defs/dropped" }
       }
     }
   },
   "$defs": {
-    "names": {
-      "type": "array",
-      "items": { "type": "string" },
-      "minItems": 1
+    "dropped": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "names"],
+      "properties": {
+        "count": {
+          "description": "How many items were left out.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "names": {
+          "description": "The names of the first (at most 16) items left out, lowest priority first.",
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "maxItems": 16
+        }
+      }
     },
     "symbol": {
       "type": "object",

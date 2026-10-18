@@ -103,21 +103,48 @@ pub struct ExampleEntry {
     pub source: String,
 }
 
-/// What was dropped to fit `--max-bytes`, by section, lowest priority first.
+/// The most names `truncated` keeps per section, so that dropping a long list stays short.
+pub const MAX_DROPPED_NAMES: usize = 16;
+
+/// What one section lost.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
+pub struct Dropped {
+    /// How many items were left out.
+    pub count: usize,
+    /// The names of the first [`MAX_DROPPED_NAMES`] of them, lowest priority first.
+    pub names: Vec<String>,
+}
+
+impl Dropped {
+    /// Record that `name` was left out.
+    pub fn push(&mut self, name: String) {
+        self.count += 1;
+        if self.names.len() < MAX_DROPPED_NAMES {
+            self.names.push(name);
+        }
+    }
+
+    /// Whether nothing was left out.
+    pub fn is_empty(&self) -> bool {
+        self.count == 0
+    }
+}
+
+/// What was dropped to fit `--max-bytes`, by section; a section that lost nothing is absent.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct Truncated {
-    /// Titles of the examples left out.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub examples: Vec<String>,
-    /// Names of the symbols one reference away that were left out.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub neighbours: Vec<String>,
-    /// Names of the schemas left out.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub schemas: Vec<String>,
-    /// Names of the requested symbols (or of the entry scene's declarations) left out.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub symbols: Vec<String>,
+    /// Examples, by title.
+    #[serde(skip_serializing_if = "Dropped::is_empty")]
+    pub examples: Dropped,
+    /// Symbols one reference away from the requested ones, by name.
+    #[serde(skip_serializing_if = "Dropped::is_empty")]
+    pub neighbours: Dropped,
+    /// Schemas, by name.
+    #[serde(skip_serializing_if = "Dropped::is_empty")]
+    pub schemas: Dropped,
+    /// The requested symbols (or the entry scene's declarations), by name.
+    #[serde(skip_serializing_if = "Dropped::is_empty")]
+    pub symbols: Dropped,
 }
 
 impl Truncated {

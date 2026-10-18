@@ -11,6 +11,7 @@
 //! entity `Demo.Cube` is a reference from `Demo.Cube` to `Demo.speed`.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::ops::Range;
 
 use super::capabilities::{feature_name, prelude_feature};
 use crate::resolve::{Construct, DefId, DefKind, PreludeItem, Res, Resolution};
@@ -436,7 +437,11 @@ impl Collector<'_, '_> {
 /// used inside them.
 pub struct Program<'a> {
     pub modules: Vec<Option<ModuleCtx<'a>>>,
+    /// Every declaration, module by module, each module in source order with parents before
+    /// their members.
     pub decls: Vec<Decl>,
+    /// The declarations of each module, as a range of `decls`.
+    ranges: Vec<Range<usize>>,
     by_def: BTreeMap<(usize, DefId), usize>,
     /// `(from, to)`: a name inside `from` resolves to the declaration `to`.
     edges: BTreeSet<(usize, usize)>,
@@ -449,7 +454,9 @@ impl<'a> Program<'a> {
     /// the project's own sources, such as the embedded prelude).
     pub fn new(modules: Vec<Option<ModuleCtx<'a>>>) -> Self {
         let mut decls = Vec::new();
+        let mut ranges = Vec::new();
         for (index, ctx) in modules.iter().enumerate() {
+            let first = decls.len();
             if let Some(ctx) = ctx {
                 let mut collector = Collector {
                     ctx,
@@ -460,6 +467,7 @@ impl<'a> Program<'a> {
                     collector.item(item);
                 }
             }
+            ranges.push(first..decls.len());
         }
         let by_def = decls
             .iter()
@@ -469,6 +477,7 @@ impl<'a> Program<'a> {
         let mut program = Program {
             modules,
             decls,
+            ranges,
             by_def,
             edges: BTreeSet::new(),
             prelude_uses: Vec::new(),
@@ -498,13 +507,22 @@ impl<'a> Program<'a> {
     }
 
     /// The innermost declaration of `module` that contains `span`.
+    ///
+    /// The declarations of a module are properly nested intervals in source order, so the last
+    /// one that starts at or before `span` is the innermost one that contains it or lies inside
+    /// it, and the innermost one that contains `span` is on its chain of parents.
     fn innermost(&self, module: usize, span: Span) -> Option<usize> {
-        self.decls
-            .iter()
-            .enumerate()
-            .filter(|(_, decl)| decl.module == module && decl.extent.contains_span(span))
-            .min_by_key(|(_, decl)| decl.extent.len())
-            .map(|(index, _)| index)
+        let range = self.ranges.get(module)?;
+        let of_module = self.decls.get(range.clone())?;
+        let started = of_module.partition_point(|decl| decl.extent.start <= span.start);
+        let mut at = range.start + started.checked_sub(1)?;
+        loop {
+            let decl = self.decls.get(at)?;
+            if decl.extent.contains_span(span) {
+                return Some(at);
+            }
+            at = decl.parent?;
+        }
     }
 
     fn link(&mut self) {
@@ -559,7 +577,8 @@ impl<'a> Program<'a> {
 
     /// The seeds and every declaration nested in one of them.
     pub fn closure(&self, seeds: &[usize]) -> BTreeSet<usize> {
-        let mut all: BTreeSet<usize> = seeds.iter().copied().collect();
+        let seeds: BTreeSet<usize> = seeds.iter().copied().collect();
+        let mut all = seeds.clone();
         for (index, decl) in self.decls.iter().enumerate() {
             let mut at = decl.parent;
             while let Some(parent) = at {
@@ -593,18 +612,26 @@ impl<'a> Program<'a> {
 
     /// The standard-library names used inside `inside`.
     pub fn prelude_items(&self, inside: &BTreeSet<usize>) -> Vec<PreludeItem> {
+        let covered = self.outermost(inside);
         self.prelude_uses
             .iter()
-            .filter(|(module, span, _)| self.within(inside, *module, *span))
+            .filter(|(module, span, _)| covers(&covered, *module, *span))
             .map(|(_, _, item)| *item)
             .collect()
     }
 
-    fn within(&self, inside: &BTreeSet<usize>, module: usize, span: Span) -> bool {
-        inside.iter().any(|&index| {
-            let decl = &self.decls[index];
-            decl.module == module && decl.extent.contains_span(span)
-        })
+    /// The declarations of `inside` that are not nested in another one of it: disjoint, in
+    /// module and source order. A declaration of `inside` contains exactly what the outermost
+    /// ones that contain it do.
+    fn outermost(&self, inside: &BTreeSet<usize>) -> Vec<(usize, Span)> {
+        inside
+            .iter()
+            .filter_map(|&index| {
+                let decl = self.decls.get(index)?;
+                let nested = decl.parent.is_some_and(|parent| inside.contains(&parent));
+                (!nested).then_some((decl.module, decl.extent))
+            })
+            .collect()
     }
 
     /// The language and library features used inside `inside`, named as in
@@ -614,10 +641,11 @@ impl<'a> Program<'a> {
         for &index in inside {
             features.extend(self.decls[index].features.iter().map(|f| (*f).to_owned()));
         }
+        let covered = self.outermost(inside);
         for (module, ctx) in self.modules.iter().enumerate() {
             let Some(ctx) = ctx else { continue };
             for (feature, span) in &ctx.feature_nodes {
-                if self.within(inside, module, *span) {
+                if covers(&covered, module, *span) {
                     features.insert((*feature).to_owned());
                 }
             }
@@ -645,4 +673,13 @@ impl<'a> Program<'a> {
         let def = self.modules.first()?.as_ref()?.resolution.entry_scene()?;
         self.by_def.get(&(0, def)).copied()
     }
+}
+
+/// Whether one of the disjoint `extents` (sorted by module and start) contains `span` of `module`.
+fn covers(extents: &[(usize, Span)], module: usize, span: Span) -> bool {
+    let started = extents.partition_point(|(m, extent)| (*m, extent.start) <= (module, span.start));
+    started
+        .checked_sub(1)
+        .and_then(|last| extents.get(last))
+        .is_some_and(|(m, extent)| *m == module && extent.contains_span(span))
 }

@@ -320,19 +320,28 @@
   "examples": [],
   "diagnosticsGuide": "`mtek check --format json` prints one JSON report; each diagnostic has code, severity, title, message, source (file, startByte, endByte, startLine, startColumn, endLine, endColumn), expected and actual (when relevant), related, notes, suggestedEdits and phase. Fix errors in report order, apply a suggestedEdit only when it is present (they are validated), and never delete the feature a diagnostic is about.",
   "truncated": {
-    "examples": [
-      "React to a key press",
-      "Animate an entity in update",
-      "Bind a material parameter to scene state",
-      "A material with a fragment stage"
-    ],
-    "neighbours": [
-      "Demo.tint",
-      "Demo.speed",
-      "pulse"
-    ],
-    "schemas": [
-      "Entity"
-    ]
+    "examples": {
+      "count": 4,
+      "names": [
+        "React to a key press",
+        "Animate an entity in update",
+        "Bind a material parameter to scene state",
+        "A material with a fragment stage"
+      ]
+    },
+    "neighbours": {
+      "count": 3,
+      "names": [
+        "Demo.tint",
+        "Demo.speed",
+        "pulse"
+      ]
+    },
+    "schemas": {
+      "count": 1,
+      "names": [
+        "Entity"
+      ]
+    }
   }
 }

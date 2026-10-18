@@ -1,0 +1,218 @@
+[
+  {
+    "title": "A scene with a camera and a cube",
+    "features": [
+      "descriptors",
+      "entities",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:Box",
+      "type:vec3"
+    ]
+  },
+  {
+    "title": "Bind a material parameter to scene state",
+    "features": [
+      "bind",
+      "descriptors",
+      "entities",
+      "materials",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:Box",
+      "state",
+      "type:SurfaceInput",
+      "type:color",
+      "type:vec3"
+    ]
+  },
+  {
+    "title": "Animate an entity in update",
+    "features": [
+      "descriptors",
+      "entities",
+      "function:quat.axis_angle",
+      "lifecycle-functions",
+      "namespace:quat",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:Box",
+      "self",
+      "state",
+      "type:f32",
+      "type:vec3"
+    ]
+  },
+  {
+    "title": "React to a key press",
+    "features": [
+      "descriptors",
+      "entities",
+      "enum:Key",
+      "event:key_down",
+      "function:quat.axis_angle",
+      "handlers",
+      "lifecycle-functions",
+      "namespace:quat",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:Box",
+      "self",
+      "state",
+      "type:f32",
+      "type:vec3"
+    ]
+  },
+  {
+    "title": "Constants, structs and functions",
+    "features": [
+      "constants",
+      "descriptors",
+      "entities",
+      "function:cos",
+      "function:sin",
+      "functions",
+      "lifecycle-functions",
+      "namespace:frame",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:Plane",
+      "schema:Sphere",
+      "self",
+      "structs",
+      "type:f32",
+      "type:vec3",
+      "value:frame.time"
+    ]
+  },
+  {
+    "title": "A material with a fragment stage",
+    "features": [
+      "bind",
+      "descriptors",
+      "entities",
+      "function:color.linear",
+      "function:sin",
+      "functions",
+      "materials",
+      "namespace:color",
+      "namespace:frame",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:Box",
+      "type:SurfaceInput",
+      "type:color",
+      "type:f32",
+      "type:vec3",
+      "value:frame.time"
+    ]
+  },
+  {
+    "title": "Lights and the Pbr material",
+    "features": [
+      "descriptors",
+      "entities",
+      "function:quat.euler",
+      "namespace:quat",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:DirectionalLight",
+      "schema:Pbr",
+      "schema:Sphere",
+      "type:vec3"
+    ]
+  },
+  {
+    "title": "Prefabs and prefab instances",
+    "features": [
+      "descriptors",
+      "entities",
+      "prefab-instances",
+      "prefabs",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:Box",
+      "schema:Pbr",
+      "type:color",
+      "type:vec3"
+    ]
+  },
+  {
+    "title": "Spawn and destroy entities",
+    "features": [
+      "descriptors",
+      "entities",
+      "enum:Key",
+      "event:key_down",
+      "function:destroy",
+      "function:spawn",
+      "handlers",
+      "lifecycle-functions",
+      "prefabs",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:Box",
+      "schema:BoxCollider",
+      "schema:Dynamic",
+      "schema:Static",
+      "self",
+      "type:f32",
+      "type:vec3"
+    ]
+  },
+  {
+    "title": "Physics bodies and collision events",
+    "features": [
+      "descriptors",
+      "entities",
+      "event:collision_enter",
+      "handlers",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:Box",
+      "schema:BoxCollider",
+      "schema:Dynamic",
+      "schema:Sphere",
+      "schema:SphereCollider",
+      "schema:Static",
+      "state",
+      "type:entity_ref",
+      "type:i32",
+      "type:vec3"
+    ]
+  },
+  {
+    "title": "Pointer events and arrays",
+    "features": [
+      "arrays",
+      "bind",
+      "constants",
+      "descriptors",
+      "entities",
+      "event:pointer_down",
+      "handlers",
+      "indexing",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "schema:Box",
+      "schema:Unlit",
+      "state",
+      "type:PointerEvent",
+      "type:array",
+      "type:color",
+      "type:i32",
+      "type:vec3"
+    ]
+  }
+]
