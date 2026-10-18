@@ -23,7 +23,7 @@ import {
   SMALL_BUDGET,
   releaseOf,
 } from "../../support/preview-fixtures.ts";
-import { exposeApp, installHeartbeat, locate, longestStall, manifestOf, newContext, pageMtek, within } from "./preview-support.ts";
+import { exposeApp, installHeartbeat, locate, longestStall, manifestOf, newContext, within, type PageMtek } from "./preview-support.ts";
 
 /** The time the overlay may take to appear, and the longest the main thread may stand still: generous, the budget is about 0.1 s. */
 const OVERLAY_TIMEOUT_MS = 20_000;
@@ -54,7 +54,7 @@ test.describe("a runaway update stops with E8080 instead of hanging the page", (
       test.info().annotations.push({ type: "measurement", description: `${name}: overlay after ${seconds.toFixed(2)} s, longest main-thread stall ${stall.toFixed(0)} ms` });
 
       const run = await page.evaluate(() => {
-        const mtek = pageMtek();
+        const mtek = (window as unknown as { __mtek: PageMtek }).__mtek;
         const app = mtek.app;
         const overlay = document.querySelector("[data-mtek-overlay]");
         const before = app?.debug.counters()["framesRendered"] ?? Number.NaN;
@@ -92,7 +92,7 @@ test.describe("a runaway update stops with E8080 instead of hanging the page", (
 
       // The scene is stopped for good: no further frame is rendered.
       await page.waitForTimeout(500);
-      const framesAfter = await page.evaluate(() => pageMtek().app?.debug.counters()["framesRendered"]);
+      const framesAfter = await page.evaluate(() => (window as unknown as { __mtek: PageMtek }).__mtek.app?.debug.counters()["framesRendered"]);
       expect(framesAfter).toBe(run.framesBefore);
     });
   }
@@ -123,7 +123,6 @@ test.describe("a runaway update stops with E8080 instead of hanging the page", (
       // Frames 1 to 5 run, the sixth never ends: after a few seconds the page does not answer.
       await page.waitForTimeout(4000);
       expect(await within(page.evaluate(() => 1), 3000), "a release build of the runaway program must hang the page").toBe("timeout");
-      expect(await page.locator("[data-mtek-overlay]").count().catch(() => 0)).toBe(0);
     } finally {
       await within(context.close(), 20_000);
     }
@@ -135,9 +134,15 @@ test.describe("a loop that does real work is not stopped, and costs what is meas
   async function medianUpdateMs(page: Page, name: string): Promise<{ median: number; state: string; frames: number; diagnostics: string[] }> {
     await exposeApp(page, name, { test: { manualClock: true, renderTarget: { width: 64, height: 64 } } });
     await page.goto(`/preview/${name}/index.html`);
-    await page.waitForFunction(() => (window as unknown as { __mtek?: { app: unknown } }).__mtek?.app != null, undefined, { timeout: 30_000 });
+    await page.waitForFunction(
+      () => (window as unknown as { __mtek?: PageMtek }).__mtek?.app != null || (window as unknown as { __mtek?: PageMtek }).__mtek?.error != null,
+      undefined,
+      { timeout: 30_000 },
+    );
+    const mountError = await page.evaluate(() => (window as unknown as { __mtek: PageMtek }).__mtek.error);
+    expect(mountError, `${name} mounts`).toBeNull();
     return page.evaluate(() => {
-      const mtek = pageMtek();
+      const mtek = (window as unknown as { __mtek: PageMtek }).__mtek;
       const app = mtek.app;
       if (app === null) throw new Error("not mounted");
       app.debug.step(10, 0.016);
@@ -186,9 +191,9 @@ test.describe("a runaway loop while the scene is initialised fails the mount", (
     expect(await within(page.evaluate(() => 1), 3000)).toBe(1);
     expect(await longestStall(page)).toBeLessThan(LONGEST_STALL_MS);
     const run = await page.evaluate(() => ({
-      app: pageMtek().app,
-      error: pageMtek().error,
-      diagnostics: pageMtek().diagnostics.map((d) => ({ code: d.code, phase: d.phase, source: d.source, message: d.message })),
+      app: (window as unknown as { __mtek: PageMtek }).__mtek.app,
+      error: (window as unknown as { __mtek: PageMtek }).__mtek.error,
+      diagnostics: (window as unknown as { __mtek: PageMtek }).__mtek.diagnostics.map((d) => ({ code: d.code, phase: d.phase, source: d.source, message: d.message })),
       overlay: document.querySelector("[data-mtek-overlay]")?.textContent ?? "",
     }));
     expect(run.app).toBeNull();

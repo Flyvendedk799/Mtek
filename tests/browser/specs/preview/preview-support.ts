@@ -35,13 +35,12 @@ export interface PageMtek {
   diagnostics: DiagnosticLike[];
 }
 
-export const pageMtek = (): PageMtek => (window as unknown as { __mtek: PageMtek }).__mtek;
-
 /**
  * Replaces `bootstrap.js` of the preview build `name` by a module that mounts exactly like the generated one and also
  * keeps the application, the mount error and every diagnostic on `window.__mtek`. Only that one file differs: `index.html`
  * (with its policy), `app.js`, the runtime and the manifest are the build's own, and the replacement is served from the
- * page's own directory like the original, so the policy treats it the same way. Call before `page.goto`.
+ * page's own directory like the original, so the policy treats it the same way. The release controls (`*.release`) have
+ * no `bootstrap.js`: their inline script is swapped for the external one. Call before `page.goto`.
  */
 export async function exposeApp(page: Page, name: string, options: object): Promise<void> {
   const body = [
@@ -56,6 +55,14 @@ export async function exposeApp(page: Page, name: string, options: object): Prom
     "",
   ].join("\n");
   await page.route(`**/preview/${name}/bootstrap.js`, (route) => route.fulfill({ contentType: "text/javascript; charset=utf-8", body }));
+  if (name.endsWith(".release")) {
+    // A release page mounts from an inline script: swap that one script for the external one above, nothing else.
+    await page.route(`**/preview/${name}/index.html`, async (route) => {
+      const response = await route.fetch();
+      const html = (await response.text()).replace(/<script type="module">[\s\S]*?<\/script>/, '<script type="module" src="./bootstrap.js"></script>');
+      await route.fulfill({ response, body: html });
+    });
+  }
 }
 
 /** Starts a heartbeat in every page of `page`: `window.__beat.max` is the longest gap between two 10 ms timer ticks. */
@@ -98,9 +105,10 @@ export function newContext(browser: Browser): Promise<BrowserContext> {
   return browser.newContext({ baseURL });
 }
 
-/** The text of the fixture's `src/main.mtek`. */
+/** The text of the fixture's `src/main.mtek` (a variant such as `runaway_update.budget-12345` has its base's source). */
 export function fixtureSource(name: string): string {
-  return readFileSync(join(PREVIEW_FIXTURES_DIR, name, "src", "main.mtek"), "utf8");
+  const base = name.split(".")[0] ?? name;
+  return readFileSync(join(PREVIEW_FIXTURES_DIR, base, "src", "main.mtek"), "utf8");
 }
 
 /** The 1-based line and column of the first occurrence of `needle` in the fixture's source. */

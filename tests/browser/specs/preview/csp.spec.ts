@@ -21,9 +21,9 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import type { Page } from "@playwright/test";
 import { expect, test } from "../../support/fixtures.ts";
-import { PREVIEW_OUT_DIR, PREVIEW_PHYSICS } from "../../support/preview-fixtures.ts";
-import { M5_OUT_DIR, PHYSICS_DROP } from "../../support/m5-fixtures.ts";
-import { exposeApp, manifestOf, pageMtek, type PreviewAppLike } from "./preview-support.ts";
+import { PREVIEW_PHYSICS } from "../../support/preview-fixtures.ts";
+import { PHYSICS_DROP } from "../../support/m5-fixtures.ts";
+import { exposeApp, manifestOf, type PageMtek, type PreviewAppLike } from "./preview-support.ts";
 
 /** `manifest.runtimeConfig.fixedStep`: a frame of exactly this length is exactly one fixed tick (decision 0066 item 12). */
 const STEP = 0.016666668;
@@ -107,22 +107,23 @@ test.describe("a physics program runs under the preview policy", () => {
 
     const run = await page.evaluate(
       ({ dt, g }) => {
-        const mtek = pageMtek();
+        const mtek = (window as unknown as { __mtek: PageMtek }).__mtek;
         const app = mtek.app as PreviewAppLike;
         const crateY = (): number => app.debug.scene().entities.find((entity) => entity.name === "Crate")?.position.y ?? Number.NaN;
-        const heights: number[] = [crateY()];
-        app.debug.step(10, dt);
-        const fallen = crateY();
-        const expectedFall = 3 - g * dt * dt * (100 / 2 + 10 / 8);
-        for (let i = 0; i < 17; i += 1) {
+        const initial = crateY();
+        // Nineteen samples, one every ten ticks: 190 ticks, three simulated seconds, well past the 0.71 s of the fall.
+        const samples: number[] = [];
+        for (let i = 0; i < 19; i += 1) {
           app.debug.step(10, dt);
-          heights.push(crateY());
+          samples.push(crateY());
         }
-        app.debug.step(10, dt);
-        const rest = crateY();
+        const heights = [initial, ...samples];
+        const fallen = samples[0] ?? Number.NaN;
+        const expectedFall = 3 - g * dt * dt * (100 / 2 + 10 / 8);
+        const rest = samples[18] ?? Number.NaN;
         const state = { ...app.debug.scene().state };
         const counters = { ...app.debug.counters() };
-        return { fallen, expectedFall, rest, heights, state, counters, appState: app.state, diagnostics: mtek.diagnostics.map((d) => d.code) };
+        return { fallen, expectedFall, rest, heights, samples, state, counters, appState: app.state, diagnostics: mtek.diagnostics.map((d) => d.code) };
       },
       { dt: STEP, g: GRAVITY },
     );
@@ -163,12 +164,10 @@ test.describe("a physics program runs under the preview policy", () => {
         },
         { target: TARGET, dt: STEP },
       );
-      // `run.heights` has the 10-tick samples 1..18 after the first and the initial height; compare the shared samples.
-      expect(unrestricted.slice(0, 18)).toEqual(run.heights.slice(1, 19));
+      expect(unrestricted).toEqual(run.samples);
     } finally {
       await reference.close();
     }
-    expect(M5_OUT_DIR).toContain(".out");
   });
 
   test("the unmodified page (generated bootstrap.js, the real clock) runs the same program: crate down, no violation", async ({ page }) => {
@@ -205,6 +204,21 @@ test.describe("the policy refuses what the program never asks for", () => {
       const seen = await watch(page);
       await page.goto(PREVIEW_URL);
       await page.waitForResponse((response) => new URL(response.url()).pathname.includes("/physics/"), { timeout: 30_000 });
+      // eval and `new Function` are tried by a script of the page's own origin: code that the test harness evaluates over the
+      // debugging protocol is not subject to the page's policy, a script the page loads is.
+      await page.route("**/probe.js", (route) =>
+        route.fulfill({
+          contentType: "text/javascript; charset=utf-8",
+          body: [
+            "const probe = {};",
+            'try { probe.eval = String(eval("1 + 1")); } catch (error) { probe.eval = error.name; }',
+            'try { probe.function = String(new Function("return 7")()); } catch (error) { probe.function = error.name; }',
+            "window.__probe = probe;",
+          ].join("\n"),
+        }),
+      );
+      await page.addScriptTag({ url: new URL("probe.js", page.url()).href });
+      const probe = await page.evaluate(() => (window as unknown as { __probe: Record<string, string> }).__probe);
       const outcome = await page.evaluate(async (origin) => {
         const results: Record<string, string> = {};
         try {
@@ -212,18 +226,6 @@ test.describe("the policy refuses what the program never asks for", () => {
           results["fetch"] = "allowed";
         } catch (error) {
           results["fetch"] = (error as Error).name;
-        }
-        try {
-          // The point of the test: the policy must refuse it.
-          results["eval"] = String(eval("1 + 1"));
-        } catch (error) {
-          results["eval"] = (error as Error).name;
-        }
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/no-unsafe-call -- ditto
-          results["function"] = String(new Function("return 7")());
-        } catch (error) {
-          results["function"] = (error as Error).name;
         }
         const script = document.createElement("script");
         script.textContent = "window.__inlineRan = true";
@@ -262,8 +264,7 @@ test.describe("the policy refuses what the program never asks for", () => {
       }, other.url);
 
       expect(outcome["fetch"]).toBe("TypeError");
-      expect(outcome["eval"]).toBe("EvalError");
-      expect(outcome["function"]).toBe("EvalError");
+      expect(probe).toEqual({ eval: "EvalError", function: "EvalError" });
       expect(outcome["inline"]).toBe("blocked");
       expect(outcome["image"]).toBe("blocked");
       expect(outcome["worker"]).not.toBe("ran");
@@ -295,10 +296,9 @@ test.describe("the policy refuses what the program never asks for", () => {
     await exposeApp(page, PREVIEW_PHYSICS, { test: { manualClock: true, renderTarget: TARGET } });
     await page.goto(PREVIEW_URL);
     await page.waitForFunction(() => (window as unknown as { __mtek?: { error: unknown } }).__mtek?.error != null, undefined, { timeout: 30_000 });
-    const error = await page.evaluate(() => pageMtek().error);
+    const error = await page.evaluate(() => (window as unknown as { __mtek: PageMtek }).__mtek.error);
     expect(error).toMatchObject({ kind: "physics-failed", codes: ["MTEK-E8102"] });
     expect((await seen.violations()).map((v) => v.directive)).toContain("script-src");
     expect(await page.locator("[data-mtek-overlay]").textContent()).toContain("MTEK-E8102");
-    expect(PREVIEW_OUT_DIR).toContain("preview");
   });
 });
