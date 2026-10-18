@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 265,
+    "endByte": 285,
+    "message": "`set_kinematic_target` is not valid for 'Ball': it applies to Kinematic bodies, but 'Ball' has a Dynamic body.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 141,
+        "endByte": 158
+      }
+    ],
+    "notes": [
+      "commands for a Dynamic body: apply_impulse, apply_force, teleport, set_linear_velocity"
+    ]
+  }
+]

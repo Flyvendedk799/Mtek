@@ -1,0 +1,13 @@
+// A binding depends on state, frame values and entity fields, not on a body's velocity.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+    }
+    entity Gauge {
+        mesh: Box {};
+        scale: bind(vec3(0.1, Ball.body.linear_velocity.y, 0.1));
+    }
+}

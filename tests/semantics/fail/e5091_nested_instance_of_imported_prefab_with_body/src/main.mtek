@@ -1,0 +1,10 @@
+// An imported prefab's body counts for the nesting rule too.
+import { Ball } from "./props/ball.mtek";
+
+scene Demo {
+    camera Main {}
+    entity Holder {
+        mesh: Box {};
+        entity Inner: Ball {}
+    }
+}

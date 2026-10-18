@@ -1,0 +1,13 @@
+// Arguments are checked against the parameters.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+        on key_down(Key.Space) {
+            self.body.apply_impulse(5.0);
+            self.body.teleport(vec3(0.0), quat.identity(), 1);
+        }
+    }
+}

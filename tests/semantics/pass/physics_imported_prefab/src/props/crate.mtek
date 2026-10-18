@@ -1,0 +1,18 @@
+// A prefab with physics declared in another module.
+export prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    body: Dynamic { mass: 3.0 };
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0) };
+    state hits: i32 = 0;
+    on collision_enter(other: entity_ref) { self.hits += 1; }
+}
+
+export prefab Pillar {
+    param origin: vec3 = vec3(0.0);
+    position: origin;
+    mesh: Box { size: vec3(1.0, 4.0, 1.0) };
+    body: Static {};
+    collider: BoxCollider { size: vec3(1.0, 4.0, 1.0) };
+}

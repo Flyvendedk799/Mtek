@@ -1,0 +1,41 @@
+// Collision events are delivered to entities and prefabs with a collider: enter and exit, on a
+// dynamic body, a sensor and a static body, and in a prefab.
+prefab Coin {
+    param spot: vec3 = vec3(0.0);
+    position: spot;
+    mesh: Sphere { radius: 0.2 };
+    body: Static {};
+    collider: SphereCollider { radius: 0.2; sensor: true };
+    state taken: bool = false;
+    on collision_enter(who: entity_ref) { self.taken = true; }
+    on collision_exit(who: entity_ref) { self.taken = false; }
+}
+
+scene Demo {
+    state hits: i32 = 0;
+    camera Main {
+        position: vec3(0.0, 4.0, 12.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Ball {
+        position: vec3(0.0, 3.0, 0.0);
+        mesh: Sphere { radius: 0.5 };
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5 };
+        on collision_enter(other: entity_ref) {
+            hits += 1;
+        }
+        on collision_exit(other: entity_ref) {
+            hits -= 1;
+        }
+    }
+    entity Zone {
+        position: vec3(0.0, 0.0, 0.0);
+        body: Static {};
+        collider: BoxCollider { size: vec3(4.0, 1.0, 4.0); sensor: true };
+        on collision_enter(other: entity_ref) {
+            hits += 10;
+        }
+    }
+    entity Pickup: Coin { spot: vec3(2.0, 0.5, 0.0); }
+}

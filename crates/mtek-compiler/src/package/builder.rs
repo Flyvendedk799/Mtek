@@ -21,9 +21,9 @@
 //!
 //! The manifest carries structure and constant scene fields only; entity and camera values
 //! are set by `init(ctx)` (`spec/scenes.md` section 11); a light's kind and range are structure
-//! and live in `scene.lights`, its colour and intensity are set by `init(ctx)`. `gravity` is a
-//! registry field that M5 implements: until then it is the registry default of the `Scene`
-//! schema.
+//! and live in `scene.lights`, its colour and intensity are set by `init(ctx)`. A body and its
+//! collider are structure and live in the entity (`spec/physics.md` section 2); `subsystems.physics`
+//! is true when any body exists, and `gravity` is the scene field.
 
 use std::collections::BTreeMap;
 
@@ -37,16 +37,14 @@ use crate::lowering::shader::lower_material;
 use crate::plan::{ParamClass, PlannedMaterial, ResourcePlan, check_limits, plan_program};
 use crate::project::{Project, ResolvedHostInput, validate_host_inputs};
 use crate::source::Span;
-use crate::stdlib::registry;
-use crate::types::ConstValue;
 use crate::{BuildMode, COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI, TargetProfile};
 
 use super::html::index_html;
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
-    Binding, BindingDep, BindingTarget, Camera, Entity, EntityMaterial, InstanceParam, Layout,
-    Light as ManifestLight, LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material,
-    MaterialInstance, MaterialParam, MaterialResource, Mesh, MeshShape, Num,
+    Binding, BindingDep, BindingTarget, Body, Camera, Collider, Entity, EntityMaterial,
+    InstanceParam, Layout, Light as ManifestLight, LightKind as ManifestLightKind, MANIFEST_SCHEMA,
+    Manifest, Material, MaterialInstance, MaterialParam, MaterialResource, Mesh, MeshShape, Num,
     ParamClass as ManifestClass, RequiredCapabilities, ResourceValue, RuntimeConfig, Scene,
     SceneFields, Shader, SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
 };
@@ -131,9 +129,9 @@ pub fn package(
     })?;
     let plan = checked_plan(program, input.profile)?;
     let host_inputs = resolve_host_inputs(project, scene);
-    // `subsystems.physics`: no source construct sets it before the physics schemas reach the checker
-    // (M5-03 makes it true when any body exists); until then only the test option does (decision 0063).
-    let uses_physics = input.force_physics_subsystem;
+    // `subsystems.physics` is true when any body exists (decision 0065); the library-only option
+    // of decision 0063 forces it for the packaging tests and never turns it off.
+    let uses_physics = input.force_physics_subsystem || program_uses_physics(program, scene);
     let physics_bundle = match (uses_physics, input.physics_bundle) {
         (false, _) => None,
         (true, Some(bundle)) => Some(bundle),
@@ -477,6 +475,63 @@ fn num(value: f32) -> Result<Num, String> {
     Num::from_f32(value).ok_or_else(|| format!("the value {value} is not finite"))
 }
 
+/// The manifest's `body` of an entity (`spec/runtime-abi.md` section 5.2, decision 0065).
+pub(crate) fn manifest_body(body: &ir::Body) -> Result<Body, String> {
+    Ok(match body.desc {
+        ir::BodyDesc::Static => Body::Static,
+        ir::BodyDesc::Kinematic => Body::Kinematic,
+        ir::BodyDesc::Dynamic {
+            mass,
+            linear_damping,
+            angular_damping,
+        } => Body::Dynamic {
+            mass: num(mass)?,
+            linear_damping: num(linear_damping)?,
+            angular_damping: num(angular_damping)?,
+        },
+    })
+}
+
+/// The manifest's `collider` of an entity.
+pub(crate) fn manifest_collider(collider: &ir::Collider) -> Result<Collider, String> {
+    Ok(match collider.desc {
+        ir::ColliderDesc::Box {
+            size,
+            sensor,
+            friction,
+            restitution,
+        } => Collider::Box {
+            size: nums(&size)?,
+            sensor,
+            friction: num(friction)?,
+            restitution: num(restitution)?,
+        },
+        ir::ColliderDesc::Sphere {
+            radius,
+            sensor,
+            friction,
+            restitution,
+        } => Collider::Sphere {
+            radius: num(radius)?,
+            sensor,
+            friction: num(friction)?,
+            restitution: num(restitution)?,
+        },
+    })
+}
+
+/// Whether the program needs the physics subsystem: the entry scene has a body, or a prefab of
+/// the program declares one (a prefab can be spawned from any handler, so the runtime must be
+/// able to create its body; spawn sites are not tracked, decision 0065).
+fn program_uses_physics(program: &Program, scene: &ir::Scene) -> bool {
+    scene.entities.iter().any(|entity| entity.body.is_some())
+        || program
+            .modules
+            .iter()
+            .flat_map(|module| module.items.iter())
+            .any(|item| matches!(item, ir::Item::Prefab(prefab) if prefab.entity.body.is_some()))
+}
+
 /// The asset meshes of `plan.meshes` and the image values of the resource params of its
 /// material instances: what `mtek build` and `mtek inspect --assets` package.
 #[must_use]
@@ -567,15 +622,6 @@ fn meshes(plan: &ResourcePlan, packed: &Packed) -> Result<Vec<Mesh>, String> {
     Ok(meshes)
 }
 
-/// The registry default of the `Scene` field `name` (fields that later milestones implement).
-fn scene_default(name: &str) -> Result<ConstValue, String> {
-    registry()
-        .schema_field("Scene", name)
-        .and_then(|field| field.default.as_ref())
-        .and_then(crate::types::value::from_registry)
-        .ok_or_else(|| format!("the registry has no constant default for 'Scene.{name}'"))
-}
-
 /// The manifest's `scene`.
 fn resolve_host_inputs(project: &Project, scene: &ir::Scene) -> Vec<ResolvedHostInput> {
     let mut sink = crate::diagnostics::Diagnostics::new();
@@ -645,9 +691,9 @@ fn manifest_scene(
         Some(ir::Value::F32(v)) => num(*v)?,
         _ => return Err("the scene's ambient_intensity is not a constant f32".to_owned()),
     };
-    let gravity = match scene_default("gravity")? {
-        ConstValue::Vec3(v) => nums(&v)?,
-        _ => return Err("the default of 'Scene.gravity' is not a vec3".to_owned()),
+    let gravity = match scene.fields.gravity.source.as_const() {
+        Some(ir::Value::Vec3(v)) => nums(v)?,
+        _ => return Err("the scene's gravity is not a constant vec3".to_owned()),
     };
     let fields = SceneFields {
         clear_color,
@@ -711,8 +757,12 @@ fn manifest_scene(
                 instance: i.index,
             }),
             light,
-            body: None,
-            collider: None,
+            body: entity.body.as_ref().map(manifest_body).transpose()?,
+            collider: entity
+                .collider
+                .as_ref()
+                .map(manifest_collider)
+                .transpose()?,
             state: state_entries(
                 scene,
                 Owner::Entity {

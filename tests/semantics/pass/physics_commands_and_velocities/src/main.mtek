@@ -1,0 +1,59 @@
+// Every body command on the body kind it applies to, through a named entity, `self` and an
+// `entity_ref`, and the readable velocities of dynamic and kinematic bodies.
+scene Demo {
+    state peak: f32 = 0.0;
+    camera Main {
+        position: vec3(0.0, 4.0, 12.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Ball {
+        position: vec3(0.0, 3.0, 0.0);
+        mesh: Sphere { radius: 0.5 };
+        body: Dynamic { mass: 2.0 };
+        collider: SphereCollider { radius: 0.5 };
+        fixed_update(dt: f32) {
+            let v = self.body.linear_velocity;
+            let w: vec3 = self.body.angular_velocity;
+            if v.y > peak {
+                peak = v.y;
+            }
+            self.body.apply_force(vec3(0.0, 0.0, -2.0 * w.x));
+        }
+        on key_down(Key.Space) {
+            self.body.apply_impulse(vec3(0.0, 4.0, 0.0));
+            self.body.set_linear_velocity(vec3(1.0, 0.0, 0.0));
+        }
+        on key_down(Key.T) {
+            Ball.body.teleport(vec3(0.0, 3.0, 0.0), quat.identity(), true);
+        }
+        on collision_enter(other: entity_ref) {
+            other.body.apply_impulse(vec3(0.0, 1.0, 0.0));
+            other.body.teleport(vec3(0.0), quat.identity(), false);
+            let speed = other.body.linear_velocity.x;
+        }
+    }
+    entity Platform {
+        position: vec3(0.0, 0.0, 0.0);
+        mesh: Box { size: vec3(4.0, 0.2, 4.0) };
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(4.0, 0.2, 4.0) };
+        fixed_update(dt: f32) {
+            self.body.set_kinematic_target(vec3(sin(frame.time), 0.0, 0.0), quat.identity());
+        }
+        on key_down(Key.P) {
+            Platform.body.teleport(vec3(0.0), quat.identity(), false);
+            let along = Platform.body.linear_velocity;
+            peak = along.x;
+        }
+    }
+    entity Wall {
+        position: vec3(5.0, 1.0, 0.0);
+        mesh: Box { size: vec3(0.5, 2.0, 4.0) };
+        body: Static {};
+        collider: BoxCollider { size: vec3(0.5, 2.0, 4.0) };
+    }
+    update(dt: f32) {
+        Ball.body.apply_force(vec3(0.0));
+        Platform.body.set_kinematic_target(Platform.position, Platform.rotation);
+    }
+}

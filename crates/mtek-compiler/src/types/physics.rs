@@ -41,7 +41,10 @@ pub enum BodyTarget {
 
 /// How a `.body` access found its owner.
 enum Owner {
-    Entity { def: DefId, name: String },
+    Entity {
+        def: DefId,
+        name: String,
+    },
     Ref,
     /// The owner has an error, reported already.
     Error,
@@ -183,11 +186,7 @@ impl Checker<'_> {
         } else {
             format!("the entity '{}' declares", name.name)
         };
-        let at = if instance {
-            name.span
-        } else {
-            body_span
-        };
+        let at = if instance { name.span } else { body_span };
         let mut diagnostic = Diagnostic::new(
             Code::E5091,
             format!(
@@ -356,7 +355,10 @@ impl Checker<'_> {
         if self.physics_of(def).collider.is_some() {
             return;
         }
-        let name = self.res.def(def).map_or_else(String::new, |d| d.name.clone());
+        let name = self
+            .res
+            .def(def)
+            .map_or_else(String::new, |d| d.name.clone());
         let noun = if host == EventHost::Prefab {
             "prefab"
         } else {
@@ -366,7 +368,7 @@ impl Checker<'_> {
             Diagnostic::new(
                 Code::E5062,
                 format!(
-                    "`on {}` is delivered only to {noun}s with a collider, but the {noun} '{name}' declares none.",
+                    "`on {}` needs a collider, but the {noun} '{name}' declares none.",
                     event.name
                 ),
             )
@@ -521,11 +523,17 @@ impl Checker<'_> {
         self.report(
             Diagnostic::new(
                 Code::E5001,
-                format!("The body of '{owner}' has no command or property '{}'.", name.name),
+                format!(
+                    "The body of '{owner}' has no command or property '{}'.",
+                    name.name
+                ),
             )
             .at(name.span)
             .note(format!("body commands: {}", commands.join(", ")))
-            .note(format!("readable body properties: {}", properties.join(", "))),
+            .note(format!(
+                "readable body properties: {}",
+                properties.join(", ")
+            )),
         );
     }
 
@@ -560,7 +568,10 @@ impl Checker<'_> {
                 .at(name.span)
                 .expected("a command")
                 .actual(property.ty.spelling())
-                .help(format!("read it without a call: `{owner_name}.body.{}`", property.name)),
+                .help(format!(
+                    "read it without a call: `{owner_name}.body.{}`",
+                    property.name
+                )),
             );
             return Some(TyId::ERROR);
         }
@@ -569,25 +580,14 @@ impl Checker<'_> {
             self.unknown_body_member(&owner_name, name);
             return Some(TyId::ERROR);
         };
-        let initialising = self.scope.is_some_and(|scope| scope.initialiser.is_some())
-            || self.field_initialiser;
-        if initialising {
-            self.synth_args(args);
-            self.report(
-                Diagnostic::new(
-                    Code::E5080,
-                    format!(
-                        "The body command `{}` cannot be issued while a value is being initialised.",
-                        command.name
-                    ),
-                )
-                .at(expr.span)
-                .note("body commands are lifecycle operations: they are allowed in lifecycle functions and event handlers"),
-            );
-            return Some(TyId::ERROR);
-        }
         let allowed = def.is_none_or(|def| {
-            self.body_kind_allows(name.span, def, &owner_name, command.name, command.applies_to)
+            self.body_kind_allows(
+                name.span,
+                def,
+                &owner_name,
+                command.name,
+                command.applies_to,
+            )
         });
         let args_ok = self.body_command_args(expr, command, args);
         if let Some(body) = &mut self.body {
@@ -694,7 +694,13 @@ impl Checker<'_> {
             return Some(TyId::ERROR);
         }
         if let Some(def) = def
-            && !self.body_kind_allows(name.span, def, &owner_name, property.name, property.applies_to)
+            && !self.body_kind_allows(
+                name.span,
+                def,
+                &owner_name,
+                property.name,
+                property.applies_to,
+            )
         {
             return Some(TyId::ERROR);
         }
@@ -746,7 +752,9 @@ fn ownership_note(kind: BodyKind) -> (&'static str, Option<&'static str>) {
         ),
         BodyKind::Static => (
             "static bodies cannot move: their pose is fixed at creation",
-            Some("make the body `Kinematic` if the program moves it, or `Dynamic` if the solver does"),
+            Some(
+                "make the body `Kinematic` if the program moves it, or `Dynamic` if the solver does",
+            ),
         ),
     }
 }

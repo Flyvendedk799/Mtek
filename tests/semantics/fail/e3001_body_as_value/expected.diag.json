@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 244,
+    "endByte": 253,
+    "message": "`Ball.body` is a construction-only component, not a value.",
+    "expected": "a value",
+    "actual": "body",
+    "notes": [
+      "help: read `Ball.body.linear_velocity` or issue a command such as `Ball.body.apply_impulse(..)`"
+    ]
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 271,
+    "endByte": 284,
+    "message": "`Ball.collider` is a construction-only component, not a value.",
+    "expected": "a value",
+    "actual": "collider",
+    "notes": [
+      "help: components are set where the entity is declared"
+    ]
+  }
+]

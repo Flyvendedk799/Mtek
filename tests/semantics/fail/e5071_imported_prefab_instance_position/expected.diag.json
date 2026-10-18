@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 218,
+    "endByte": 230,
+    "message": "`One.position` belongs to the physics subsystem, because 'One' has a Dynamic body, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/props/ball.mtek",
+        "startByte": 46,
+        "endByte": 63
+      }
+    ],
+    "notes": [
+      "the solver owns the pose of a dynamic body; move it with `apply_impulse`, `apply_force`, `set_linear_velocity` or `teleport`"
+    ]
+  }
+]

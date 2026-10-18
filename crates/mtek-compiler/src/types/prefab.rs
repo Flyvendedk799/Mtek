@@ -23,7 +23,8 @@ use super::scene::{CheckedInstance, CheckedParam, FieldOrigin};
 use super::ty::TyId;
 use super::value::ConstValue;
 use super::{
-    CpuBody, EntityPhysics, CpuBodyKind, NonConstant, NonConstantKind, PrefabInfo, PrefabKey, PrefabParam,
+    CpuBody, CpuBodyKind, EntityPhysics, NonConstant, NonConstantKind, PrefabInfo, PrefabKey,
+    PrefabParam,
 };
 use crate::diagnostics::{Code, Diagnostic};
 use crate::project::edit_distance;
@@ -348,9 +349,7 @@ impl<'a> Checker<'a> {
         if self.is_material_field(&name) {
             self.dynamic_descriptors.insert(strip_parens(value).id);
         }
-        self.field_initialiser = true;
         self.check(value, expected);
-        self.field_initialiser = false;
         self.fold_root(value);
         let facts = self.body.take().map(|b| b.facts).unwrap_or_default();
         self.out.cpu_bodies.push(CpuBody {

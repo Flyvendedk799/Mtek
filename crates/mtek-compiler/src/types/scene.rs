@@ -752,7 +752,13 @@ impl Checker<'_> {
         self.current_prefab = self.res.def_of(decl.id);
         let fields = self.body(schema, holder, &decl.name, &inits);
         self.current_prefab = None;
-        self.physics_declaration(self.res.def_of(decl.id), &decl.name, "prefab", &fields, None);
+        self.physics_declaration(
+            self.res.def_of(decl.id),
+            &decl.name,
+            "prefab",
+            &fields,
+            None,
+        );
         self.out.checked_prefabs.push(CheckedPrefab {
             def: self.res.def_of(decl.id),
             name: decl.name.name.clone(),

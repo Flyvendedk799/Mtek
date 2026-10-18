@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 264,
+    "endByte": 277,
+    "message": "`apply_impulse` is not valid for 'One': it applies to Dynamic bodies, but 'One' has a Static body.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 84,
+        "endByte": 100
+      }
+    ],
+    "notes": [
+      "static bodies take no commands: their pose is fixed at creation",
+      "help: make the body `Kinematic` for something the program moves, or `Dynamic` for something the solver moves"
+    ]
+  }
+]

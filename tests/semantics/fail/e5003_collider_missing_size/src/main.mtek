@@ -1,0 +1,14 @@
+// The size of a box collider and the radius of a sphere collider are required.
+scene Demo {
+    camera Main {}
+    entity Wall {
+        mesh: Box {};
+        body: Static {};
+        collider: BoxCollider {};
+    }
+    entity Ball {
+        mesh: Sphere {};
+        body: Static {};
+        collider: SphereCollider { sensor: true; };
+    }
+}

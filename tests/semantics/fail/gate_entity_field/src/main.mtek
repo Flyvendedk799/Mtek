@@ -1,6 +1,0 @@
-scene Demo {
-    camera Main {}
-    entity Ball {
-        body: Static {};
-    }
-}

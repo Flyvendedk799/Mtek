@@ -1,0 +1,13 @@
+// Impulses, forces and velocities apply to dynamic bodies only.
+scene Demo {
+    camera Main {}
+    entity Lift {
+        mesh: Box {};
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+        on key_down(Key.Space) {
+            self.body.apply_force(vec3(0.0, 1.0, 0.0));
+            self.body.set_linear_velocity(vec3(0.0, 1.0, 0.0));
+        }
+    }
+}

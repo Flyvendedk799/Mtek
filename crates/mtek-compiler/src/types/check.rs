@@ -265,9 +265,6 @@ pub(super) struct Checker<'a> {
     /// What the scene checks know of the prefab behind each static instance, by the instance's
     /// declaration.
     pub(super) instances: BTreeMap<DefId, super::prefab::InstanceFacts>,
-    /// Set while the value of a field of a prefab is checked: it is evaluated by the prefab's `init`,
-    /// where body commands are not allowed (decision 0065).
-    pub(super) field_initialiser: bool,
 }
 
 impl<'a> Checker<'a> {
@@ -329,7 +326,6 @@ impl<'a> Checker<'a> {
             current_prefab: None,
             dynamic_descriptors: BTreeSet::new(),
             instances: BTreeMap::new(),
-            field_initialiser: false,
         }
     }
 
@@ -2486,7 +2482,8 @@ impl<'a> Checker<'a> {
                 if matches!(
                     field.ty,
                     crate::stdlib::TypeRef::Descriptor(
-                        crate::stdlib::SchemaCategory::Body | crate::stdlib::SchemaCategory::Collider
+                        crate::stdlib::SchemaCategory::Body
+                            | crate::stdlib::SchemaCategory::Collider
                     )
                 ) =>
             {

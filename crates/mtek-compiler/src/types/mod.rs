@@ -83,7 +83,7 @@ pub use check::{CallKind, FieldKind};
 pub use effects::{EffectLevel, FnEffect, FnRef, ProgramEffects, Roots};
 pub use facts::{BodyFacts, BuiltinCall, CallFact, Callee, CpuOnlySite};
 pub use material::MAX_MATERIAL_PARAMS;
-pub use physics::{BodyTarget};
+pub use physics::BodyTarget;
 pub use scene::{
     CheckedEntity, CheckedField, CheckedInstance, CheckedObject, CheckedParam, CheckedPrefab,
     CheckedScene, CheckedState, FieldOrigin,

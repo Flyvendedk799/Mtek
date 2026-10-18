@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 210,
+    "endByte": 223,
+    "message": "`self.position` belongs to the physics subsystem, because 'self' has a Dynamic body, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 108,
+        "endByte": 125
+      }
+    ],
+    "notes": [
+      "the solver owns the pose of a dynamic body; move it with `apply_impulse`, `apply_force`, `set_linear_velocity` or `teleport`"
+    ]
+  }
+]

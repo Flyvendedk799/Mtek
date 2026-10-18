@@ -1,0 +1,13 @@
+// A command is called; a property is read.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+        on key_down(Key.Space) {
+            let f = self.body.apply_impulse;
+            self.body.linear_velocity(vec3(0.0));
+        }
+    }
+}

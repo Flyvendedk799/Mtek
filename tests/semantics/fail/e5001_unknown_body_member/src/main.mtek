@@ -1,0 +1,13 @@
+// A body has the commands and properties of spec/physics.md section 3.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+        on key_down(Key.Space) {
+            self.body.explode(vec3(0.0));
+            let m = self.body.mass;
+        }
+    }
+}

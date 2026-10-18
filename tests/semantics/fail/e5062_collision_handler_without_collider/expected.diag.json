@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E5062",
+    "file": "src/main.mtek",
+    "startByte": 135,
+    "endByte": 150,
+    "message": "`on collision_enter` needs a collider, but the entity 'Lamp' declares none.",
+    "notes": [
+      "collision events are reported for pairs of colliders, after each physics step",
+      "help: add `body: Static {}` or another body and a `collider: BoxCollider { size: .. }` to the entity"
+    ]
+  },
+  {
+    "code": "MTEK-E5062",
+    "file": "src/main.mtek",
+    "startByte": 193,
+    "endByte": 207,
+    "message": "`on collision_exit` needs a collider, but the entity 'Lamp' declares none.",
+    "notes": [
+      "collision events are reported for pairs of colliders, after each physics step",
+      "help: add `body: Static {}` or another body and a `collider: BoxCollider { size: .. }` to the entity"
+    ]
+  }
+]

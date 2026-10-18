@@ -1,0 +1,12 @@
+// Body commands are lifecycle operations: handlers and lifecycle functions only.
+cpu fn kick(target: entity_ref) {
+    target.body.apply_impulse(vec3(0.0, 1.0, 0.0));
+}
+
+fn pure_kick(target: entity_ref) {
+    target.body.apply_force(vec3(0.0, 1.0, 0.0));
+}
+
+scene Demo {
+    camera Main {}
+}

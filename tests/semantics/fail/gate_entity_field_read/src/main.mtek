@@ -1,6 +1,0 @@
-// Reading an entity field is gated by the field's own milestone.
-scene Demo {
-    camera Main {}
-    const BODY = Lamp.body;
-    entity Lamp { mesh: Box {}; }
-}

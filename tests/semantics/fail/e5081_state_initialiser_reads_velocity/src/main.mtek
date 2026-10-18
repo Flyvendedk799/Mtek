@@ -1,0 +1,10 @@
+// A state initialiser cannot read a body: bodies exist after initialisation.
+scene Demo {
+    state start: vec3 = Ball.body.linear_velocity;
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+    }
+}
