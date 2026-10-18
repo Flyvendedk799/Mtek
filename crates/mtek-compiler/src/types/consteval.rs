@@ -310,6 +310,8 @@ impl Checker<'_> {
 
         let name = decl.name.name.clone();
         let declared = decl.ty.as_ref().map(|ty| self.annotation(ty));
+        // A `glb_asset` may be stored in a constant (decision 0058).
+        self.asset_state.glb_ok.insert(decl.value.id);
         let actual = self.check(&decl.value, declared);
         let mut ty = actual;
         let mut type_ok = true;
@@ -480,7 +482,7 @@ impl Checker<'_> {
                     _ => Err(EvalError::Mismatch),
                 })
             }
-            ExprKind::Call { args, .. } => self.fold_call(expr, args),
+            ExprKind::Call { callee, args } => self.fold_call(expr, callee, args),
             ExprKind::Field { base, .. } => self.fold_field(expr, base),
             ExprKind::Descriptor { fields, .. } => self.fold_descriptor(expr, fields),
             ExprKind::Str { value } => match self.typed(expr) {
@@ -558,12 +560,20 @@ impl Checker<'_> {
         }
     }
 
-    fn fold_call(&mut self, expr: &Expr, args: &[Expr]) -> Folded {
+    fn fold_call(&mut self, expr: &Expr, callee: &Expr, args: &[Expr]) -> Folded {
+        // The accessors of a `glb_asset` fold their receiver and arguments themselves.
+        if let Some(CallKind::GlbAccessor { method }) = self.calls.get(&expr.id).cloned() {
+            return self.fold_glb_accessor(expr, callee, args, method);
+        }
         let folded: Vec<Folded> = args.iter().map(|arg| self.fold(arg)).collect();
         let Some(kind) = self.calls.get(&expr.id).cloned() else {
             return Folded::Unknown;
         };
         match kind {
+            CallKind::GlbAccessor { .. } => Folded::Unknown,
+            CallKind::Namespace {
+                namespace: "asset", ..
+            } => self.fold_asset_declaration(expr),
             CallKind::UserFunction { name, .. } => Folded::NotConstant(NonConstant {
                 span: expr.span,
                 kind: NonConstantKind::Call,

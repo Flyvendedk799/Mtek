@@ -1047,6 +1047,13 @@ pub enum MeshDesc {
     },
     /// Extent along X and Z.
     Plane { size: [f32; 2] },
+    /// Primitive `primitive` of the glTF mesh called `mesh` in the GLB at the project path
+    /// `file` (decision 0058).
+    Asset {
+        file: String,
+        mesh: String,
+        primitive: u32,
+    },
 }
 
 /// A material instance of an entity.
@@ -1131,6 +1138,9 @@ pub enum Value {
     Texture(String),
     /// A built-in sampler preset: `{ "sampler": "sampler.linear_repeat" }`.
     Sampler(String),
+    /// A texture from an image file or an image embedded in a GLB (decision 0058):
+    /// `{ "image": { "source": { "file": "textures/wood.png" }, "space": "srgb", "mipmapped": false } }`.
+    Image(crate::assets::AssetImage),
 }
 
 /// A field of a [`Value::Struct`].
@@ -1168,6 +1178,31 @@ impl From<&crate::types::ConstValue> for Value {
             C::Str(text) => Value::String(text.clone()),
             C::Texture(texture) => Value::Texture(texture.name().to_owned()),
             C::Sampler(sampler) => Value::Sampler(sampler.name().to_owned()),
+            C::AssetTexture(image) => Value::Image(image.clone()),
+            // The handle of a GLB and an asset mesh are consumed by the lowering of entities
+            // (`MeshDesc::Asset`); as plain values they are only descriptive text.
+            C::GlbAsset(file) => Value::String(file.clone()),
+            C::AssetMesh {
+                file,
+                mesh,
+                primitive,
+            } => Value::Struct {
+                name: "AssetMesh".to_owned(),
+                fields: vec![
+                    NamedValue {
+                        name: "file".to_owned(),
+                        value: Value::String(file.clone()),
+                    },
+                    NamedValue {
+                        name: "mesh".to_owned(),
+                        value: Value::String(mesh.clone()),
+                    },
+                    NamedValue {
+                        name: "primitive".to_owned(),
+                        value: Value::U32(*primitive),
+                    },
+                ],
+            },
             // A material instance as a value: the material's name and its
             // parameters, like a descriptor (decision 0039); entities carry
             // instances as `MaterialInstanceDesc` with the material's symbol.
@@ -1239,6 +1274,7 @@ impl fmt::Display for Value {
                 f.write_str("]")
             }
             Value::Texture(name) | Value::Sampler(name) => write!(f, "{name}()"),
+            Value::Image(image) => write!(f, "{image}"),
             Value::String(text) => {
                 f.write_str("\"")?;
                 for c in text.chars() {

@@ -15,6 +15,7 @@
 use std::fmt;
 
 use super::ty::MaterialKey;
+use crate::assets::AssetImage;
 use crate::stdlib::{BuiltinSampler, BuiltinTexture, ColorValue, srgb_channel_to_linear_f32};
 
 /// A value computed at compile time.
@@ -47,6 +48,17 @@ pub enum ConstValue {
     Texture(BuiltinTexture),
     /// A built-in sampler preset, `sampler.linear_repeat()` and friends (decision 0054).
     Sampler(BuiltinSampler),
+    /// The compile-time handle of `asset.glb(..)`: the project path of the validated file
+    /// (decision 0058). It exists only in constants; nothing downstream sees it.
+    GlbAsset(String),
+    /// A mesh of a GLB: primitive `primitive` of the glTF mesh called `mesh` in `file`.
+    AssetMesh {
+        file: String,
+        mesh: String,
+        primitive: u32,
+    },
+    /// A texture from an image file or an image embedded in a GLB (decision 0058).
+    AssetTexture(AssetImage),
     /// An instance of a user material (decision 0039): the material, its
     /// name, and every parameter in declaration order, written or defaulted.
     Material {
@@ -132,6 +144,13 @@ impl fmt::Display for ConstValue {
                     crate::stdlib::ConstValue::Sampler(*sampler).canonical_text()
                 )
             }
+            ConstValue::GlbAsset(file) => write!(f, "asset.glb({file:?})"),
+            ConstValue::AssetMesh {
+                file,
+                mesh,
+                primitive,
+            } => write!(f, "{file}: mesh {mesh:?} primitive {primitive}"),
+            ConstValue::AssetTexture(image) => write!(f, "{image}"),
         }
     }
 }

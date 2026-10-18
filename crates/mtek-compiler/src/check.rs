@@ -20,6 +20,7 @@
 
 use std::collections::BTreeMap;
 
+use crate::assets::{AssetLimits, AssetLoader, AssetStore};
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report};
 use crate::prelude::{compile_materials, uses_builtin_material};
 use crate::project::{
@@ -32,7 +33,7 @@ use crate::syntax::ast::{ItemKind, Module};
 use crate::types::effects::{ProgramUnit, RootBody, check_program};
 use crate::types::{
     FnRef, ImportedConst, ImportedConsts, ImportedFn, ImportedMaterial, ImportedStruct, Imports,
-    ProgramEffects, Roots, Typeck, check_module_with_imports,
+    AssetHookup, ProgramEffects, Roots, Typeck, check_module_with_assets,
 };
 
 /// What [`check`] produced: diagnostics only (`spec/compiler-architecture.md`
@@ -75,6 +76,8 @@ pub struct Analysis {
     /// The effect level and reachability of every function of the program
     /// (decision 0038).
     pub effects: ProgramEffects,
+    /// The asset files the program declares, validated (decision 0058).
+    pub assets: AssetStore,
     /// Every diagnostic, in report order.
     pub report: Report,
 }
@@ -135,6 +138,7 @@ pub(crate) struct FrontEnd {
     pub(crate) types: Option<Typeck>,
     pub(crate) dependencies: Vec<ModuleUnit>,
     pub(crate) effects: ProgramEffects,
+    pub(crate) assets: AssetStore,
 }
 
 impl FrontEnd {
@@ -147,6 +151,7 @@ impl FrontEnd {
             types: None,
             dependencies: Vec::new(),
             effects: ProgramEffects::default(),
+            assets: AssetStore::default(),
         }
     }
 
@@ -159,6 +164,7 @@ impl FrontEnd {
             types: self.types,
             dependencies: self.dependencies,
             effects: self.effects,
+            assets: self.assets,
             report,
         }
     }
@@ -230,6 +236,7 @@ pub(crate) fn front_end_with(
         );
     }
 
+    let mut loader = AssetLoader::new(fs, AssetLimits::from(&project.config.assets));
     let mut types: Vec<Option<Typeck>> = loaded.iter().map(|_| None).collect();
     for id in project.modules.dependency_order() {
         let index = id.index();
@@ -249,8 +256,18 @@ pub(crate) fn front_end_with(
             fns: imported_fns(resolution, &resolutions, &types),
             materials: imported_materials(resolution, &resolutions, &types),
         };
-        let checked =
-            check_module_with_imports(&unit.ast, source.text(), resolution, &imports, sink);
+        let hookup = project.modules.get(id).map(|module| AssetHookup {
+            host: &mut loader,
+            module: module.path().clone(),
+        });
+        let checked = check_module_with_assets(
+            &unit.ast,
+            source.text(),
+            resolution,
+            &imports,
+            hookup,
+            sink,
+        );
         if let Some(slot) = types.get_mut(index) {
             *slot = Some(checked);
         }
@@ -342,6 +359,7 @@ pub(crate) fn front_end_with(
         types: entry_types,
         dependencies,
         effects,
+        assets: loader.into_store(),
     }
 }
 

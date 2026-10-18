@@ -864,6 +864,9 @@ impl FnLowering<'_, '_> {
                     function: format!("{namespace}.{member}"),
                     args: list(args)?,
                 }),
+                Some(CallKind::GlbAccessor { .. }) => {
+                    return Err(self.defect("an asset accessor that was not folded to a constant"));
+                }
                 Some(CallKind::Vector(_)) => make(ExprKind::Construct { args: list(args)? }),
                 Some(CallKind::Conversion(_)) => match args.as_slice() {
                     [arg] => make(ExprKind::Convert { arg: boxed(arg)? }),

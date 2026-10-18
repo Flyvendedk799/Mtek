@@ -544,6 +544,7 @@ pub fn value_expr(value: &Value) -> Result<Expr, String> {
         // The name of the built-in resource, as the manifest spells it. Nothing in generated code
         // consumes one: resource params are bound from the manifest.
         Value::Texture(name) | Value::Sampler(name) => Expr::string(name),
+        Value::Image(image) => Expr::string(&image.to_string()),
     })
 }
 

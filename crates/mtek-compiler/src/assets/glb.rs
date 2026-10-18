@@ -126,14 +126,15 @@ impl SamplerChoice {
         mipmapped: false,
     };
 
-    /// The manifest name of the preset (`sampler.linear_repeat`, …).
+    /// The sampler preset that expresses the choice.
     #[must_use]
-    pub fn preset(self) -> &'static str {
+    pub fn builtin(self) -> crate::stdlib::BuiltinSampler {
+        use crate::stdlib::BuiltinSampler as S;
         match (self.nearest, self.clamp) {
-            (false, false) => "sampler.linear_repeat",
-            (false, true) => "sampler.linear_clamp",
-            (true, false) => "sampler.nearest_repeat",
-            (true, true) => "sampler.nearest_clamp",
+            (false, false) => S::LinearRepeat,
+            (false, true) => S::LinearClamp,
+            (true, false) => S::NearestRepeat,
+            (true, true) => S::NearestClamp,
         }
     }
 }

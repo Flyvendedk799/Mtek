@@ -9,6 +9,7 @@
 
 use std::collections::BTreeMap;
 
+use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use super::glb::{GlbFile, read_glb};
@@ -30,7 +31,8 @@ pub enum AssetKind {
 }
 
 /// The colour space an image is sampled in (`texture` is sRGB, `linear_texture` is linear).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum ImageSpace {
     Srgb,
     Linear,

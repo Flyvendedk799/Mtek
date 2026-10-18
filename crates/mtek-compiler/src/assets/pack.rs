@@ -13,6 +13,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use super::glb::{GlbFile, GlbPrimitive, IndexKind};
@@ -25,7 +26,8 @@ use crate::package::manifest::{
 use crate::source::Span;
 
 /// Where an image's bytes are.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub enum ImageSource {
     /// A standalone file (`asset.texture`, `asset.linear_texture`), by project path.
     File(String),

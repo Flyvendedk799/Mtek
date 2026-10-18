@@ -24,10 +24,16 @@ pub use glb::{
     IndexKind, IndexSource, LocalTransform, SamplerChoice, Strided, read_glb,
 };
 pub use host::{
-    AssetHandle, AssetHost, AssetKind, AssetStore, DeclaredFile, ImageSpace, SourceKey,
+    AssetHandle, AssetHost, AssetKind, AssetLoader, AssetStore, DeclaredFile, ImageFile,
+    ImageSpace,
 };
 pub use image::{ImageInfo, sniff_image};
+pub use pack::{ImageRef, ImageSource, MeshRef};
 pub use transform::{Trs, node_world_trs};
+
+use std::fmt;
+
+use serde::Serialize;
 
 use crate::diagnostics::{Code, Diagnostic};
 use crate::project::AssetsSection;
@@ -108,7 +114,32 @@ impl Issue {
     }
 }
 
-/// `value` as a quoted name for a message.
-pub(crate) fn quoted(value: &str) -> String {
-    format!("'{value}'")
+/// An image a texture constant stands for: where its bytes are and how it is sampled.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AssetImage {
+    pub source: ImageSource,
+    pub space: ImageSpace,
+    /// The file's sampler asked for mip-maps, which v0.1 does not generate.
+    pub mipmapped: bool,
+}
+
+impl fmt::Display for AssetImage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self.source {
+            ImageSource::File(path) => write!(f, "{}({path:?})", self.constructor()),
+            ImageSource::Embedded { glb, image } => {
+                write!(f, "image {image} of {glb:?} ({})", self.space.as_str())
+            }
+        }
+    }
+}
+
+impl AssetImage {
+    fn constructor(&self) -> &'static str {
+        match self.space {
+            ImageSpace::Srgb => "asset.texture",
+            ImageSpace::Linear => "asset.linear_texture",
+        }
+    }
 }

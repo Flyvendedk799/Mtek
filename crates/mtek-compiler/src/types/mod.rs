@@ -52,6 +52,7 @@
 //!   calls and declares; [`effects`]: the program-wide pass;
 //! - [`scene`]: the scene and schema checks and their result.
 
+mod assets;
 mod bind;
 mod body;
 mod check;
@@ -75,6 +76,7 @@ pub mod value;
 
 use std::collections::BTreeMap;
 
+pub(crate) use assets::AssetHookup;
 pub use check::{CallKind, FieldKind};
 pub use effects::{EffectLevel, FnEffect, FnRef, ProgramEffects, Roots};
 pub use facts::{BodyFacts, BuiltinCall, CallFact, Callee, CpuOnlySite};
@@ -657,7 +659,23 @@ pub fn check_module_with_imports(
     imports: &Imports<'_>,
     sink: &mut Diagnostics,
 ) -> Typeck {
+    check_module_with_assets(module, text, resolution, imports, None, sink)
+}
+
+/// [`check_module_with_imports`] with the asset host of the front end: `asset.glb(..)` and its
+/// siblings open and validate their files through it (decision 0058). Without a host, asset
+/// declarations are typed but have no value.
+#[must_use]
+pub(crate) fn check_module_with_assets<'a>(
+    module: &'a Module,
+    text: &'a str,
+    resolution: &'a Resolution,
+    imports: &Imports<'_>,
+    assets: Option<AssetHookup<'a>>,
+    sink: &'a mut Diagnostics,
+) -> Typeck {
     let mut checker = check::Checker::new(module, text, resolution, sink);
+    checker.assets = assets;
     for (def, imported) in &imports.structs {
         let ty = checker
             .out
