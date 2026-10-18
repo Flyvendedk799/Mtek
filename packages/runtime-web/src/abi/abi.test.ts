@@ -88,6 +88,7 @@ describe("compiled manifests (tests/codegen/*/expected)", () => {
       "cpu_functions",
       "lights",
       "numeric_cpu_table",
+      "physics",
       "prefabs",
       "scene_a_target_camera_box",
       "scene_b_orthographic_nested",

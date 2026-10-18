@@ -1,0 +1,12 @@
+// A kinematic body is moved with set_kinematic_target or teleport.
+scene Demo {
+    camera Main {}
+    entity Lift {
+        mesh: Box {};
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    }
+    update(dt: f32) {
+        Lift.rotation = quat.axis_angle(vec3(0.0, 1.0, 0.0), frame.time);
+    }
+}

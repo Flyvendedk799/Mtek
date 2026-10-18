@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 275,
+    "endByte": 306,
+    "message": "Field 'body' of entity 'Ball' expects body, but received SphereCollider.",
+    "expected": "body",
+    "actual": "SphereCollider"
+  },
+  {
+    "code": "MTEK-E3102",
+    "file": "src/main.mtek",
+    "startByte": 326,
+    "endByte": 336,
+    "message": "Field 'collider' of entity 'Ball' expects collider, but received Dynamic.",
+    "expected": "collider",
+    "actual": "Dynamic"
+  }
+]

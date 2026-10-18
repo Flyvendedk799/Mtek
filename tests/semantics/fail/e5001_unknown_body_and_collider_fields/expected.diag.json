@@ -1,0 +1,16 @@
+[
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 175,
+    "endByte": 181,
+    "message": "Unknown field 'weight' on Dynamic. Valid fields: mass, linear_damping, angular_damping."
+  },
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 239,
+    "endByte": 249,
+    "message": "Unknown field 'bounciness' on SphereCollider. Valid fields: radius, sensor, friction, restitution."
+  }
+]

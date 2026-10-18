@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E5122",
+    "file": "src/main.mtek",
+    "startByte": 98,
+    "endByte": 125,
+    "message": "The scale of the Kinematic body of entity 'Lift' must be the constant vec3(1.0), but it is vec3(1.0, 0.5, 1.0).",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 156,
+        "endByte": 175
+      }
+    ],
+    "notes": [
+      "a collider is never scaled with the mesh: scaled dynamic and kinematic bodies are not part of v0.1",
+      "help: size the mesh and the collider instead (`Box { size: .. }`, `BoxCollider { size: .. }`), or use a `Static` body"
+    ]
+  }
+]

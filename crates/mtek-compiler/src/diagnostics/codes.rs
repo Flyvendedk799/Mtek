@@ -184,6 +184,10 @@ catalogue! {
     W5101 Warning "fragment alpha ignored",
     E5110 Error "light in prefab",
     E5111 Error "too many lights",
+    E5120 Error "collider without body",
+    E5121 Error "body without collider",
+    E5122 Error "scaled dynamic or kinematic body",
+    E5123 Error "command not valid for this body kind",
     E5901 Error "scene switching not supported",
     E5902 Error "transparency not supported",
     // 5.6 GPU and target (`6xxx`)
@@ -247,6 +251,9 @@ catalogue! {
     E8080 Error "execution budget exceeded",
     E8090 Error "invalid scale value",
     E8100 Error "non-opaque color value",
+    E8101 Error "command not valid for the target's body kind",
+    E8102 Error "physics module failed to load",
+    E8103 Error "non-finite pose produced by the solver",
     // 5.9 Project and internal (`9xxx`)
     E9001 Error "invalid project configuration",
     E9002 Error "too many modules",

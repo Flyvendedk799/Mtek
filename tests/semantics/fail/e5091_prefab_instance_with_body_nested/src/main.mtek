@@ -1,0 +1,14 @@
+// An instance of a prefab with a body is an entity with a body: it must be a root entity.
+prefab Ball {
+    mesh: Sphere {};
+    body: Dynamic {};
+    collider: SphereCollider { radius: 0.5; };
+}
+
+scene Demo {
+    camera Main {}
+    entity Holder {
+        mesh: Box {};
+        entity Inner: Ball {}
+    }
+}

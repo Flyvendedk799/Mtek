@@ -25,7 +25,7 @@
     {
       "name": "BoxCollider",
       "category": "collider",
-      "since": "M5",
+      "since": "M1",
       "doc": "A box collision shape.",
       "fields": [
         {
@@ -36,8 +36,8 @@
           "writable": false,
           "bindable": false,
           "constructionOnly": true,
-          "range": "≥ 0",
-          "since": "M5",
+          "range": "≥ 0, finite",
+          "since": "M1",
           "doc": "Coulomb friction coefficient."
         },
         {
@@ -49,7 +49,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": "0…1",
-          "since": "M5",
+          "since": "M1",
           "doc": "Bounciness, 0 (none) to 1 (perfect)."
         },
         {
@@ -61,7 +61,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": null,
-          "since": "M5",
+          "since": "M1",
           "doc": "A sensor reports collisions but does not push other bodies."
         },
         {
@@ -72,8 +72,8 @@
           "writable": false,
           "bindable": false,
           "constructionOnly": true,
-          "range": "every component > 0",
-          "since": "M5",
+          "range": "every component > 0, finite",
+          "since": "M1",
           "doc": "Full extents along X, Y and Z."
         }
       ]
@@ -181,7 +181,7 @@
     {
       "name": "Dynamic",
       "category": "body",
-      "since": "M5",
+      "since": "M1",
       "doc": "A solver-controlled body; forces, impulses and teleports are explicit commands.",
       "fields": [
         {
@@ -192,8 +192,8 @@
           "writable": false,
           "bindable": false,
           "constructionOnly": true,
-          "range": "≥ 0",
-          "since": "M5",
+          "range": "≥ 0, finite",
+          "since": "M1",
           "doc": "Rate at which angular velocity decays."
         },
         {
@@ -204,8 +204,8 @@
           "writable": false,
           "bindable": false,
           "constructionOnly": true,
-          "range": "≥ 0",
-          "since": "M5",
+          "range": "≥ 0, finite",
+          "since": "M1",
           "doc": "Rate at which linear velocity decays."
         },
         {
@@ -217,7 +217,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": "> 0, finite",
-          "since": "M5",
+          "since": "M1",
           "doc": "Mass in kilograms."
         }
       ]
@@ -237,8 +237,8 @@
           "bindable": false,
           "constructionOnly": true,
           "range": null,
-          "since": "M5",
-          "doc": "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only."
+          "since": "M1",
+          "doc": "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`."
         },
         {
           "name": "collider",
@@ -249,7 +249,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": null,
-          "since": "M5",
+          "since": "M1",
           "doc": "A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`."
         },
         {
@@ -342,7 +342,7 @@
     {
       "name": "Kinematic",
       "category": "body",
-      "since": "M5",
+      "since": "M1",
       "doc": "A body whose pose the program sets with `set_kinematic_target`.",
       "fields": []
     },
@@ -616,8 +616,8 @@
           "writable": false,
           "bindable": false,
           "constructionOnly": true,
-          "range": null,
-          "since": "M5",
+          "range": "finite",
+          "since": "M1",
           "doc": "Gravitational acceleration in metres per second squared. Used only when the scene has physics bodies."
         }
       ]
@@ -669,7 +669,7 @@
     {
       "name": "SphereCollider",
       "category": "collider",
-      "since": "M5",
+      "since": "M1",
       "doc": "A sphere collision shape.",
       "fields": [
         {
@@ -680,8 +680,8 @@
           "writable": false,
           "bindable": false,
           "constructionOnly": true,
-          "range": "≥ 0",
-          "since": "M5",
+          "range": "≥ 0, finite",
+          "since": "M1",
           "doc": "Coulomb friction coefficient."
         },
         {
@@ -692,8 +692,8 @@
           "writable": false,
           "bindable": false,
           "constructionOnly": true,
-          "range": "> 0",
-          "since": "M5",
+          "range": "> 0, finite",
+          "since": "M1",
           "doc": "Radius in metres."
         },
         {
@@ -705,7 +705,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": "0…1",
-          "since": "M5",
+          "since": "M1",
           "doc": "Bounciness, 0 (none) to 1 (perfect)."
         },
         {
@@ -717,7 +717,7 @@
           "bindable": false,
           "constructionOnly": true,
           "range": null,
-          "since": "M5",
+          "since": "M1",
           "doc": "A sensor reports collisions but does not push other bodies."
         }
       ]
@@ -725,7 +725,7 @@
     {
       "name": "Static",
       "category": "body",
-      "since": "M5",
+      "since": "M1",
       "doc": "An immovable body; its pose is fixed at creation from the entity transform.",
       "fields": []
     },
@@ -760,7 +760,7 @@
         "prefab"
       ],
       "requiresCollider": true,
-      "since": "M5",
+      "since": "M1",
       "doc": "The entity's collider started touching another entity's collider; the parameter is the other entity."
     },
     {
@@ -772,7 +772,7 @@
         "prefab"
       ],
       "requiresCollider": true,
-      "since": "M5",
+      "since": "M1",
       "doc": "The entity's collider stopped touching another entity's collider; the parameter is the other entity."
     },
     {
@@ -2331,7 +2331,7 @@
       "appliesTo": [
         "Dynamic"
       ],
-      "since": "M5",
+      "since": "M1",
       "doc": "A force in newtons applied for exactly the next tick, then cleared."
     },
     {
@@ -2345,7 +2345,7 @@
       "appliesTo": [
         "Dynamic"
       ],
-      "since": "M5",
+      "since": "M1",
       "doc": "Instantaneous change of momentum in newton-seconds, at the centre of mass, applied at the start of the next tick."
     },
     {
@@ -2363,7 +2363,7 @@
       "appliesTo": [
         "Kinematic"
       ],
-      "since": "M5",
+      "since": "M1",
       "doc": "The pose reached at the end of the next tick; the solver derives the velocity."
     },
     {
@@ -2377,7 +2377,7 @@
       "appliesTo": [
         "Dynamic"
       ],
-      "since": "M5",
+      "since": "M1",
       "doc": "Sets the linear velocity at the start of the next tick."
     },
     {
@@ -2400,7 +2400,7 @@
         "Dynamic",
         "Kinematic"
       ],
-      "since": "M5",
+      "since": "M1",
       "doc": "Sets the pose before the next tick; velocities are zeroed unless `keep_velocity` is true."
     }
   ],
@@ -2412,7 +2412,7 @@
         "Dynamic",
         "Kinematic"
       ],
-      "since": "M5",
+      "since": "M1",
       "doc": "Angular velocity as of the last completed tick. Read-only."
     },
     {
@@ -2422,7 +2422,7 @@
         "Dynamic",
         "Kinematic"
       ],
-      "since": "M5",
+      "since": "M1",
       "doc": "Linear velocity as of the last completed tick. Read-only."
     }
   ],

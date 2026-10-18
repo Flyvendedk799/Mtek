@@ -177,6 +177,17 @@ fn expr(e: &Expr, out: &mut Expected) {
         ExprKind::Call { args, .. }
         | ExprKind::Builtin { args, .. }
         | ExprKind::Construct { args } => children.extend(args),
+        ExprKind::BodyCommand { target, args, .. } => {
+            if let ir::BodyTarget::Ref { target } = target {
+                children.push(target);
+            }
+            children.extend(args);
+        }
+        ExprKind::BodyProperty { target, .. } => {
+            if let ir::BodyTarget::Ref { target } = target {
+                children.push(target);
+            }
+        }
         ExprKind::Convert { arg } => children.push(arg),
         ExprKind::Components { base, .. } | ExprKind::Field { base, .. } => children.push(base),
         ExprKind::Index { base, index } => children.extend([&**base, &**index]),

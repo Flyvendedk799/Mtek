@@ -1,0 +1,1447 @@
+{
+  "entryScene": "src/main.mtek::Demo",
+  "modules": [
+    {
+      "path": "src/main.mtek",
+      "file": 0,
+      "span": {"file": 0, "start": 0, "end": 2180},
+      "items": [
+        {
+          "kind": "scene",
+          "name": "Demo",
+          "symbol": "src/main.mtek::Demo",
+          "span": {"file": 0, "start": 170, "end": 2179},
+          "fields": {
+            "clearColor": {
+              "source": {
+                "const": {
+                  "color": [0.0, 0.0, 0.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 0, "start": 170, "end": 2179}
+            }
+          },
+          "constants": [],
+          "cameras": [
+            {
+              "name": "Main",
+              "symbol": "src/main.mtek::Demo.Main",
+              "span": {"file": 0, "start": 214, "end": 310},
+              "active": true,
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 4.0, 12.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 236, "end": 267}
+              },
+              "target": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 1.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 276, "end": 304}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 214, "end": 310}
+              },
+              "projection": {
+                "desc": {
+                  "kind": "perspective",
+                  "fovY": 0.9,
+                  "near": 0.1,
+                  "far": 1000.0
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 214, "end": 310}
+              }
+            }
+          ],
+          "entities": [
+            {
+              "index": 0,
+              "name": "Ball",
+              "symbol": "src/main.mtek::Demo.Ball",
+              "parent": null,
+              "span": {"file": 0, "start": 315, "end": 1293},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 3.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 337, "end": 367}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 315, "end": 1293}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 315, "end": 1293}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 315, "end": 1293}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.5,
+                  "segments": 32,
+                  "rings": 16
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 376, "end": 405}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 315, "end": 1293}
+                  }
+                ],
+                "origin": "default",
+                "span": {"file": 0, "start": 315, "end": 1293}
+              },
+              "body": {
+                "desc": {
+                  "kind": "dynamic",
+                  "mass": 2.0,
+                  "linearDamping": 0.0,
+                  "angularDamping": 0.05
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 414, "end": 442}
+              },
+              "collider": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.5,
+                  "sensor": false,
+                  "friction": 0.5,
+                  "restitution": 0.0
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 451, "end": 492}
+              }
+            },
+            {
+              "index": 1,
+              "name": "Platform",
+              "symbol": "src/main.mtek::Demo.Platform",
+              "parent": null,
+              "span": {"file": 0, "start": 1298, "end": 1827},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1324, "end": 1354}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1298, "end": 1827}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1298, "end": 1827}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1298, "end": 1827}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "box",
+                  "size": [4.0, 0.2, 4.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1363, "end": 1403}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 1298, "end": 1827}
+                  }
+                ],
+                "origin": "default",
+                "span": {"file": 0, "start": 1298, "end": 1827}
+              },
+              "body": {
+                "desc": {
+                  "kind": "kinematic"
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1412, "end": 1431}
+              },
+              "collider": {
+                "desc": {
+                  "kind": "box",
+                  "size": [4.0, 0.2, 4.0],
+                  "sensor": false,
+                  "friction": 0.5,
+                  "restitution": 0.0
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1440, "end": 1492}
+              }
+            },
+            {
+              "index": 2,
+              "name": "Wall",
+              "symbol": "src/main.mtek::Demo.Wall",
+              "parent": null,
+              "span": {"file": 0, "start": 1832, "end": 2025},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [5.0, 1.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1854, "end": 1884}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1832, "end": 2025}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1832, "end": 2025}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1832, "end": 2025}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "box",
+                  "size": [0.5, 2.0, 4.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1893, "end": 1933}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 1832, "end": 2025}
+                  }
+                ],
+                "origin": "default",
+                "span": {"file": 0, "start": 1832, "end": 2025}
+              },
+              "body": {
+                "desc": {
+                  "kind": "static"
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1942, "end": 1958}
+              },
+              "collider": {
+                "desc": {
+                  "kind": "box",
+                  "size": [0.5, 2.0, 4.0],
+                  "sensor": false,
+                  "friction": 0.5,
+                  "restitution": 0.0
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1967, "end": 2019}
+              }
+            }
+          ],
+          "state": [
+            {
+              "name": "peak",
+              "symbol": "src/main.mtek::Demo.peak",
+              "type": "f32",
+              "owner": {
+                "kind": "scene"
+              },
+              "init": {
+                "kind": "const",
+                "value": {"f32": 0.0},
+                "type": "f32",
+                "span": {"file": 0, "start": 205, "end": 208}
+              },
+              "span": {"file": 0, "start": 187, "end": 209}
+            }
+          ],
+          "behaviors": [
+            {
+              "kind": {
+                "kind": "update"
+              },
+              "owner": {
+                "kind": "scene"
+              },
+              "symbol": "src/main.mtek::Demo.update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "dt",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 2037, "end": 2039}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 0
+                      },
+                      "command": "apply_force",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 0.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 2078, "end": 2087}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 2056, "end": 2088}
+                    },
+                    "span": {"file": 0, "start": 2056, "end": 2089}
+                  },
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 1
+                      },
+                      "command": "set_kinematic_target",
+                      "args": [
+                        {
+                          "kind": "entityField",
+                          "entity": 1,
+                          "field": "position",
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 2133, "end": 2150}
+                        },
+                        {
+                          "kind": "entityField",
+                          "entity": 1,
+                          "field": "rotation",
+                          "type": "quat",
+                          "span": {"file": 0, "start": 2152, "end": 2169}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 2098, "end": 2170}
+                    },
+                    "span": {"file": 0, "start": 2098, "end": 2171}
+                  }
+                ],
+                "span": {"file": 0, "start": 2046, "end": 2177}
+              },
+              "span": {"file": 0, "start": 2030, "end": 2177}
+            },
+            {
+              "kind": {
+                "kind": "fixedUpdate"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Demo.Ball.fixed_update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "dt",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 514, "end": 516}
+                },
+                {
+                  "index": 1,
+                  "name": "v",
+                  "type": "vec3",
+                  "kind": "let",
+                  "span": {"file": 0, "start": 541, "end": 542}
+                },
+                {
+                  "index": 2,
+                  "name": "w",
+                  "type": "vec3",
+                  "kind": "let",
+                  "span": {"file": 0, "start": 588, "end": 589}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "let",
+                    "local": 1,
+                    "value": {
+                      "kind": "bodyProperty",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 0
+                      },
+                      "property": "linear_velocity",
+                      "type": "vec3",
+                      "span": {"file": 0, "start": 545, "end": 570}
+                    },
+                    "span": {"file": 0, "start": 537, "end": 571}
+                  },
+                  {
+                    "kind": "let",
+                    "local": 2,
+                    "value": {
+                      "kind": "bodyProperty",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 0
+                      },
+                      "property": "angular_velocity",
+                      "type": "vec3",
+                      "span": {"file": 0, "start": 598, "end": 624}
+                    },
+                    "span": {"file": 0, "start": 584, "end": 625}
+                  },
+                  {
+                    "kind": "if",
+                    "branches": [
+                      {
+                        "cond": {
+                          "kind": "binary",
+                          "op": ">",
+                          "lhs": {
+                            "kind": "components",
+                            "base": {
+                              "kind": "local",
+                              "local": 1,
+                              "name": "v",
+                              "type": "vec3",
+                              "span": {"file": 0, "start": 641, "end": 642}
+                            },
+                            "components": [1],
+                            "type": "f32",
+                            "span": {"file": 0, "start": 641, "end": 644}
+                          },
+                          "rhs": {
+                            "kind": "state",
+                            "owner": {
+                              "kind": "scene"
+                            },
+                            "name": "peak",
+                            "type": "f32",
+                            "span": {"file": 0, "start": 647, "end": 651}
+                          },
+                          "type": "bool",
+                          "span": {"file": 0, "start": 641, "end": 651}
+                        },
+                        "body": {
+                          "stmts": [
+                            {
+                              "kind": "assign",
+                              "target": {
+                                "root": {
+                                  "kind": "state",
+                                  "owner": {
+                                    "kind": "scene"
+                                  },
+                                  "name": "peak",
+                                  "type": "f32",
+                                  "span": {"file": 0, "start": 670, "end": 674}
+                                },
+                                "steps": [],
+                                "type": "f32",
+                                "span": {"file": 0, "start": 670, "end": 674}
+                              },
+                              "op": "=",
+                              "value": {
+                                "kind": "components",
+                                "base": {
+                                  "kind": "local",
+                                  "local": 1,
+                                  "name": "v",
+                                  "type": "vec3",
+                                  "span": {"file": 0, "start": 677, "end": 678}
+                                },
+                                "components": [1],
+                                "type": "f32",
+                                "span": {"file": 0, "start": 677, "end": 680}
+                              },
+                              "span": {"file": 0, "start": 670, "end": 681}
+                            }
+                          ],
+                          "span": {"file": 0, "start": 652, "end": 695}
+                        }
+                      }
+                    ],
+                    "else": null,
+                    "span": {"file": 0, "start": 638, "end": 695}
+                  },
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 0
+                      },
+                      "command": "apply_force",
+                      "args": [
+                        {
+                          "kind": "construct",
+                          "args": [
+                            {
+                              "kind": "const",
+                              "value": {"f32": 0.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 735, "end": 738}
+                            },
+                            {
+                              "kind": "const",
+                              "value": {"f32": 0.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 740, "end": 743}
+                            },
+                            {
+                              "kind": "binary",
+                              "op": "*",
+                              "lhs": {
+                                "kind": "const",
+                                "value": {"f32": -2.0},
+                                "type": "f32",
+                                "span": {"file": 0, "start": 745, "end": 749}
+                              },
+                              "rhs": {
+                                "kind": "components",
+                                "base": {
+                                  "kind": "local",
+                                  "local": 2,
+                                  "name": "w",
+                                  "type": "vec3",
+                                  "span": {"file": 0, "start": 752, "end": 753}
+                                },
+                                "components": [0],
+                                "type": "f32",
+                                "span": {"file": 0, "start": 752, "end": 755}
+                              },
+                              "type": "f32",
+                              "span": {"file": 0, "start": 745, "end": 755}
+                            }
+                          ],
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 730, "end": 756}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 708, "end": 757}
+                    },
+                    "span": {"file": 0, "start": 708, "end": 758}
+                  }
+                ],
+                "span": {"file": 0, "start": 523, "end": 768}
+              },
+              "span": {"file": 0, "start": 501, "end": 768}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "Space"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Demo.Ball.on_key_down_Space",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 0
+                      },
+                      "command": "apply_impulse",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 4.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 838, "end": 857}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 814, "end": 858}
+                    },
+                    "span": {"file": 0, "start": 814, "end": 859}
+                  },
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 0
+                      },
+                      "command": "set_linear_velocity",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [1.0, 0.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 902, "end": 921}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 872, "end": 922}
+                    },
+                    "span": {"file": 0, "start": 872, "end": 923}
+                  }
+                ],
+                "span": {"file": 0, "start": 800, "end": 933}
+              },
+              "span": {"file": 0, "start": 777, "end": 933}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "KeyT"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Demo.Ball.on_key_down_T",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 0
+                      },
+                      "command": "teleport",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 3.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 994, "end": 1013}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "quat": [0.0, 0.0, 0.0, 1.0]
+                          },
+                          "type": "quat",
+                          "span": {"file": 0, "start": 1015, "end": 1030}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "bool": true
+                          },
+                          "type": "bool",
+                          "span": {"file": 0, "start": 1032, "end": 1036}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 975, "end": 1037}
+                    },
+                    "span": {"file": 0, "start": 975, "end": 1038}
+                  }
+                ],
+                "span": {"file": 0, "start": 961, "end": 1048}
+              },
+              "span": {"file": 0, "start": 942, "end": 1048}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "collision_enter",
+                "filter": null
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Demo.Ball.on_collision_enter",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "other",
+                  "type": "entity_ref",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1076, "end": 1081}
+                },
+                {
+                  "index": 1,
+                  "name": "speed",
+                  "type": "f32",
+                  "kind": "let",
+                  "span": {"file": 0, "start": 1240, "end": 1245}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "ref",
+                        "target": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "other",
+                          "type": "entity_ref",
+                          "span": {"file": 0, "start": 1109, "end": 1114}
+                        }
+                      },
+                      "command": "apply_impulse",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 1.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 1134, "end": 1153}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 1109, "end": 1154}
+                    },
+                    "span": {"file": 0, "start": 1109, "end": 1155}
+                  },
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "ref",
+                        "target": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "other",
+                          "type": "entity_ref",
+                          "span": {"file": 0, "start": 1168, "end": 1173}
+                        }
+                      },
+                      "command": "teleport",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 0.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 1188, "end": 1197}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "quat": [0.0, 0.0, 0.0, 1.0]
+                          },
+                          "type": "quat",
+                          "span": {"file": 0, "start": 1199, "end": 1214}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "bool": false
+                          },
+                          "type": "bool",
+                          "span": {"file": 0, "start": 1216, "end": 1221}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 1168, "end": 1222}
+                    },
+                    "span": {"file": 0, "start": 1168, "end": 1223}
+                  },
+                  {
+                    "kind": "let",
+                    "local": 1,
+                    "value": {
+                      "kind": "components",
+                      "base": {
+                        "kind": "bodyProperty",
+                        "target": {
+                          "kind": "ref",
+                          "target": {
+                            "kind": "local",
+                            "local": 0,
+                            "name": "other",
+                            "type": "entity_ref",
+                            "span": {"file": 0, "start": 1248, "end": 1253}
+                          }
+                        },
+                        "property": "linear_velocity",
+                        "type": "vec3",
+                        "span": {"file": 0, "start": 1248, "end": 1274}
+                      },
+                      "components": [0],
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1248, "end": 1276}
+                    },
+                    "span": {"file": 0, "start": 1236, "end": 1277}
+                  }
+                ],
+                "span": {"file": 0, "start": 1095, "end": 1287}
+              },
+              "span": {"file": 0, "start": 1057, "end": 1287}
+            },
+            {
+              "kind": {
+                "kind": "fixedUpdate"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "symbol": "src/main.mtek::Demo.Platform.fixed_update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "dt",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1514, "end": 1516}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 1
+                      },
+                      "command": "set_kinematic_target",
+                      "args": [
+                        {
+                          "kind": "construct",
+                          "args": [
+                            {
+                              "kind": "builtin",
+                              "function": "sin",
+                              "args": [
+                                {
+                                  "kind": "frame",
+                                  "member": "time",
+                                  "type": "f32",
+                                  "span": {"file": 0, "start": 1577, "end": 1587}
+                                }
+                              ],
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1573, "end": 1588}
+                            },
+                            {
+                              "kind": "const",
+                              "value": {"f32": 0.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1590, "end": 1593}
+                            },
+                            {
+                              "kind": "const",
+                              "value": {"f32": 0.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1595, "end": 1598}
+                            }
+                          ],
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 1568, "end": 1599}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "quat": [0.0, 0.0, 0.0, 1.0]
+                          },
+                          "type": "quat",
+                          "span": {"file": 0, "start": 1601, "end": 1616}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 1537, "end": 1617}
+                    },
+                    "span": {"file": 0, "start": 1537, "end": 1618}
+                  }
+                ],
+                "span": {"file": 0, "start": 1523, "end": 1628}
+              },
+              "span": {"file": 0, "start": 1501, "end": 1628}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "KeyP"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "symbol": "src/main.mtek::Demo.Platform.on_key_down_P",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "along",
+                  "type": "vec3",
+                  "kind": "let",
+                  "span": {"file": 0, "start": 1745, "end": 1750}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 1
+                      },
+                      "command": "teleport",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 0.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 1693, "end": 1702}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "quat": [0.0, 0.0, 0.0, 1.0]
+                          },
+                          "type": "quat",
+                          "span": {"file": 0, "start": 1704, "end": 1719}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "bool": false
+                          },
+                          "type": "bool",
+                          "span": {"file": 0, "start": 1721, "end": 1726}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 1670, "end": 1727}
+                    },
+                    "span": {"file": 0, "start": 1670, "end": 1728}
+                  },
+                  {
+                    "kind": "let",
+                    "local": 0,
+                    "value": {
+                      "kind": "bodyProperty",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 1
+                      },
+                      "property": "linear_velocity",
+                      "type": "vec3",
+                      "span": {"file": 0, "start": 1753, "end": 1782}
+                    },
+                    "span": {"file": 0, "start": 1741, "end": 1783}
+                  },
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "scene"
+                        },
+                        "name": "peak",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1796, "end": 1800}
+                      },
+                      "steps": [],
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1796, "end": 1800}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "components",
+                      "base": {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "along",
+                        "type": "vec3",
+                        "span": {"file": 0, "start": 1803, "end": 1808}
+                      },
+                      "components": [0],
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1803, "end": 1810}
+                    },
+                    "span": {"file": 0, "start": 1796, "end": 1811}
+                  }
+                ],
+                "span": {"file": 0, "start": 1656, "end": 1821}
+              },
+              "span": {"file": 0, "start": 1637, "end": 1821}
+            }
+          ],
+          "bindings": []
+        }
+      ]
+    },
+    {
+      "path": "std/materials.mtek",
+      "file": 1,
+      "span": {"file": 1, "start": 0, "end": 888},
+      "items": [
+        {
+          "kind": "material",
+          "name": "Unlit",
+          "symbol": "std/materials.mtek::Unlit",
+          "params": [
+            {
+              "name": "color",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 1, "start": 276, "end": 305}
+            }
+          ],
+          "layout": {
+            "id": "material:std/materials.mtek::Unlit",
+            "wgslStruct": "MtekParams_2b212d15_Unlit",
+            "size": 16,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "std/materials.mtek::Unlit",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "members": [
+                {
+                  "name": "color",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "std/materials.mtek::Unlit.fragment",
+            "surfaceInputs": [],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "surface",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 1, "start": 319, "end": 326}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "param",
+                    "param": 0,
+                    "name": "color",
+                    "type": "color",
+                    "span": {"file": 1, "start": 360, "end": 365}
+                  },
+                  "span": {"file": 1, "start": 353, "end": 366}
+                }
+              ],
+              "span": {"file": 1, "start": 351, "end": 368}
+            },
+            "span": {"file": 1, "start": 310, "end": 368}
+          },
+          "span": {"file": 1, "start": 255, "end": 370}
+        },
+        {
+          "kind": "material",
+          "name": "Pbr",
+          "symbol": "std/materials.mtek::Pbr",
+          "params": [
+            {
+              "name": "base_color",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 1, "start": 398, "end": 432}
+            },
+            {
+              "name": "metallic",
+              "type": "f32",
+              "default": {"f32": 0.0},
+              "span": {"file": 1, "start": 437, "end": 463}
+            },
+            {
+              "name": "roughness",
+              "type": "f32",
+              "default": {"f32": 0.5},
+              "span": {"file": 1, "start": 468, "end": 495}
+            },
+            {
+              "name": "base_color_texture",
+              "type": "texture",
+              "default": {
+                "texture": "texture.white"
+              },
+              "span": {"file": 1, "start": 500, "end": 552}
+            },
+            {
+              "name": "base_color_sampler",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.linear_repeat"
+              },
+              "span": {"file": 1, "start": 557, "end": 617}
+            }
+          ],
+          "layout": {
+            "id": "material:std/materials.mtek::Pbr",
+            "wgslStruct": "MtekParams_2b212d15_Pbr",
+            "size": 32,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "std/materials.mtek::Pbr",
+              "offset": 0,
+              "size": 32,
+              "align": 16,
+              "members": [
+                {
+                  "name": "base_color",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                },
+                {
+                  "name": "metallic",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 16,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                },
+                {
+                  "name": "roughness",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 20,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "std/materials.mtek::Pbr.fragment",
+            "surfaceInputs": [
+              "world_position",
+              "world_normal",
+              "uv"
+            ],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "surface",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 1, "start": 631, "end": 638}
+              },
+              {
+                "index": 1,
+                "name": "texel",
+                "type": "vec4",
+                "kind": "let",
+                "span": {"file": 1, "start": 677, "end": 682}
+              },
+              {
+                "index": 2,
+                "name": "albedo",
+                "type": "color",
+                "kind": "let",
+                "span": {"file": 1, "start": 757, "end": 763}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "let",
+                  "local": 1,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "sample",
+                    "args": [
+                      {
+                        "kind": "param",
+                        "param": 3,
+                        "name": "base_color_texture",
+                        "type": "texture",
+                        "span": {"file": 1, "start": 692, "end": 710}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 4,
+                        "name": "base_color_sampler",
+                        "type": "sampler",
+                        "span": {"file": 1, "start": 712, "end": 730}
+                      },
+                      {
+                        "kind": "field",
+                        "base": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "surface",
+                          "type": "SurfaceInput",
+                          "span": {"file": 1, "start": 732, "end": 739}
+                        },
+                        "field": "uv",
+                        "index": 3,
+                        "type": "vec2",
+                        "span": {"file": 1, "start": 732, "end": 742}
+                      }
+                    ],
+                    "type": "vec4",
+                    "span": {"file": 1, "start": 685, "end": 743}
+                  },
+                  "span": {"file": 1, "start": 673, "end": 744}
+                },
+                {
+                  "kind": "let",
+                  "local": 2,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "color.linear",
+                    "args": [
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "param",
+                            "param": 0,
+                            "name": "base_color",
+                            "type": "color",
+                            "span": {"file": 1, "start": 779, "end": 789}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 1, "start": 779, "end": 793}
+                        },
+                        "rhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "local",
+                            "local": 1,
+                            "name": "texel",
+                            "type": "vec4",
+                            "span": {"file": 1, "start": 796, "end": 801}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 1, "start": 796, "end": 805}
+                        },
+                        "type": "vec3",
+                        "span": {"file": 1, "start": 779, "end": 805}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 1, "start": 807, "end": 810}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 1, "start": 766, "end": 811}
+                  },
+                  "span": {"file": 1, "start": 753, "end": 812}
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "builtin",
+                    "function": "lighting.pbr",
+                    "args": [
+                      {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "surface",
+                        "type": "SurfaceInput",
+                        "span": {"file": 1, "start": 841, "end": 848}
+                      },
+                      {
+                        "kind": "local",
+                        "local": 2,
+                        "name": "albedo",
+                        "type": "color",
+                        "span": {"file": 1, "start": 850, "end": 856}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 1,
+                        "name": "metallic",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 858, "end": 866}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 2,
+                        "name": "roughness",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 868, "end": 877}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 1, "start": 828, "end": 878}
+                  },
+                  "span": {"file": 1, "start": 821, "end": 879}
+                }
+              ],
+              "span": {"file": 1, "start": 663, "end": 885}
+            },
+            "span": {"file": 1, "start": 622, "end": 885}
+          },
+          "span": {"file": 1, "start": 379, "end": 887}
+        }
+      ]
+    }
+  ]
+}

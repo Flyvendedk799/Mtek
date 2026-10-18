@@ -195,6 +195,7 @@ fn the_two_m1_scenes_are_codegen_fixtures_with_the_semantic_sources() {
             "cpu_functions",
             "lights",
             "numeric_cpu_table",
+            "physics",
             "prefabs",
             "scene_a_target_camera_box",
             "scene_b_orthographic_nested",
@@ -373,7 +374,9 @@ fn content_addressed_files_are_named_by_their_hash() {
             "runtime.d.ts",
             "program.manifest.json",
         ];
-        let expected_count = fixed.len() + 1 + 2 * manifest.shaders.len();
+        // A program with a body also has the physics bundle (decision 0063, decision 0065).
+        let physics_files = usize::from(manifest.subsystems.physics);
+        let expected_count = fixed.len() + 1 + physics_files + 2 * manifest.shaders.len();
         assert_eq!(
             result.files.len(),
             expected_count,
@@ -833,21 +836,36 @@ fn is_physics_file(path: &str) -> bool {
 }
 
 #[test]
-fn a_build_without_physics_has_no_physics_file_even_when_the_bundle_is_available() {
-    // `stub` carries a physics bundle; no program uses physics, so none is written.
+fn a_build_has_a_physics_file_exactly_when_the_program_has_a_body() {
+    // `stub` carries a physics bundle; only the programs with a body write it (decision 0065).
     assert!(stub(BuildMode::Release).physics_bundle.is_some());
+    let (mut with_body, mut without_body) = (0, 0);
     for (label, root) in every_project() {
         for mode in [BuildMode::Release, BuildMode::Dev, BuildMode::Test] {
             let result = build_dir(&root, None, mode);
             assert!(!result.has_errors(), "{label}");
-            assert!(
-                result.files.keys().all(|path| !is_physics_file(path)),
-                "{label} {mode:?}: {:?}",
-                result.files.keys()
+            let manifest = manifest_of(&result);
+            let has_body = manifest.scene.entities.iter().any(|e| e.body.is_some());
+            let physics_files: Vec<&String> = result
+                .files
+                .keys()
+                .filter(|path| is_physics_file(path))
+                .collect();
+            assert_eq!(manifest.subsystems.physics, has_body, "{label} {mode:?}");
+            assert_eq!(
+                physics_files.len(),
+                usize::from(has_body),
+                "{label} {mode:?}: {physics_files:?}"
             );
-            assert!(!manifest_of(&result).subsystems.physics, "{label}");
+            if has_body {
+                with_body += 1;
+            } else {
+                without_body += 1;
+            }
         }
     }
+    // Both kinds of program are among the fixtures, so neither half of the test is empty.
+    assert!(with_body > 0 && without_body > 0);
 }
 
 #[test]
@@ -859,6 +877,11 @@ fn a_build_that_uses_physics_has_the_bundle_under_its_hash_and_says_so_in_the_ma
             let plain = build(&ProjectRoot::at_base(), &memory, &stub(mode));
             let with = build(&ProjectRoot::at_base(), &memory, &physics(mode));
             assert!(!with.has_errors(), "{label} {mode:?}");
+            if manifest_of(&plain).subsystems.physics {
+                // A program with a body is a physics program already: the option changes nothing.
+                assert_eq!(with.files, plain.files, "{label} {mode:?}");
+                continue;
+            }
 
             let name = format!("physics/{}.js", h16(STUB_PHYSICS_BUNDLE));
             assert_eq!(with.files[&name], STUB_PHYSICS_BUNDLE, "{label} {mode:?}");
@@ -947,6 +970,162 @@ fn a_program_that_uses_physics_cannot_be_built_without_the_physics_bundle() {
     let result = build(&ProjectRoot::at_base(), &memory, &options);
     assert!(codes(&result).is_empty());
     assert!(result.files.keys().all(|path| !is_physics_file(path)));
+}
+
+/// A project of one source file.
+fn inline_project(source: &str) -> MemFs {
+    let mut memory = MemFs::new();
+    memory
+        .insert(
+            ProjectPath::new("mtek.toml").unwrap(),
+            "[project]\nname = \"inline\"\nlanguage = \"0.1\"\n",
+        )
+        .insert(ProjectPath::new("src/main.mtek").unwrap(), source);
+    memory
+}
+
+const PLAIN_SCENE: &str =
+    "scene Demo {\n    camera Main {}\n    entity Crate { mesh: Box {}; }\n}\n";
+
+const BODY_SCENE: &str = "scene Demo {
+    gravity: vec3(0.0, -3.0, 0.0);
+    camera Main {}
+    entity Floor {
+        mesh: Box {};
+        body: Static {};
+        collider: BoxCollider { size: vec3(10.0, 1.0, 10.0); friction: 0.75; };
+    }
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic { mass: 2.5; linear_damping: 0.125; };
+        collider: SphereCollider { radius: 0.5; restitution: 0.5; sensor: true; };
+    }
+    entity Lift {
+        mesh: Box {};
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(2.0, 0.5, 2.0); };
+    }
+    entity Marker { mesh: Box {}; }
+}
+";
+
+#[test]
+fn a_program_with_a_body_packages_the_physics_bundle_without_any_option() {
+    // No `force_physics_subsystem`: the bodies alone make `subsystems.physics` true, the bundle
+    // is written under its hash, and the manifest carries what the runtime needs to create them
+    // (decision 0065, `spec/runtime-abi.md` section 5.2).
+    let options = stub(BuildMode::Release);
+    assert!(!options.force_physics_subsystem);
+    let result = build(
+        &ProjectRoot::at_base(),
+        &inline_project(BODY_SCENE),
+        &options,
+    );
+    assert!(!result.has_errors(), "{:#?}", result.report.diagnostics);
+    let name = format!("physics/{}.js", h16(STUB_PHYSICS_BUNDLE));
+    assert_eq!(result.files[&name], STUB_PHYSICS_BUNDLE);
+    let text = std::str::from_utf8(&result.files["program.manifest.json"]).unwrap();
+    assert_valid(&validator(), "inline", text);
+    let manifest = manifest_of(&result);
+    assert!(manifest.subsystems.physics);
+    assert_eq!(
+        serde_json::to_value(&manifest.scene.fields.gravity).unwrap(),
+        serde_json::json!([0.0, -3.0, 0.0])
+    );
+    let bodies: Vec<Value> = manifest
+        .scene
+        .entities
+        .iter()
+        .map(|e| serde_json::to_value((&e.body, &e.collider)).unwrap())
+        .collect();
+    assert_eq!(
+        bodies,
+        [
+            serde_json::json!([
+                { "kind": "static" },
+                { "kind": "box", "size": [10.0, 1.0, 10.0], "sensor": false, "friction": 0.75, "restitution": 0.0 }
+            ]),
+            serde_json::json!([
+                { "kind": "dynamic", "mass": 2.5, "linearDamping": 0.125, "angularDamping": 0.05 },
+                { "kind": "sphere", "radius": 0.5, "sensor": true, "friction": 0.5, "restitution": 0.5 }
+            ]),
+            serde_json::json!([
+                { "kind": "kinematic" },
+                { "kind": "box", "size": [2.0, 0.5, 2.0], "sensor": false, "friction": 0.5, "restitution": 0.0 }
+            ]),
+            serde_json::json!([null, null]),
+        ]
+    );
+}
+
+#[test]
+fn a_program_without_a_body_has_no_physics_module_and_the_default_gravity() {
+    let result = build(
+        &ProjectRoot::at_base(),
+        &inline_project(PLAIN_SCENE),
+        &stub(BuildMode::Release),
+    );
+    assert!(!result.has_errors(), "{:#?}", result.report.diagnostics);
+    assert!(result.files.keys().all(|path| !is_physics_file(path)));
+    let manifest = manifest_of(&result);
+    assert!(!manifest.subsystems.physics);
+    assert!(
+        manifest
+            .scene
+            .entities
+            .iter()
+            .all(|e| e.body.is_none() && e.collider.is_none())
+    );
+    assert_eq!(
+        serde_json::to_value(&manifest.scene.fields.gravity).unwrap(),
+        serde_json::json!([0.0, -9.81, 0.0])
+    );
+}
+
+#[test]
+fn a_program_with_a_body_cannot_be_built_without_the_physics_bundle() {
+    let mut options = stub(BuildMode::Release);
+    options.physics_bundle = None;
+    let result = build(
+        &ProjectRoot::at_base(),
+        &inline_project(BODY_SCENE),
+        &options,
+    );
+    assert_eq!(codes(&result), ["E9030"]);
+    assert!(result.files.is_empty());
+    // The same options build the program without bodies.
+    let result = build(
+        &ProjectRoot::at_base(),
+        &inline_project(PLAIN_SCENE),
+        &options,
+    );
+    assert!(codes(&result).is_empty());
+}
+
+#[test]
+fn a_prefab_with_a_body_makes_a_physics_program_even_without_an_instance() {
+    // A prefab can be spawned from any handler (spawn sites are not tracked), so its body counts.
+    let source = "prefab Crate {
+    mesh: Box {};
+    body: Dynamic {};
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+}
+
+scene Demo {
+    camera Main {}
+}
+";
+    let result = build(
+        &ProjectRoot::at_base(),
+        &inline_project(source),
+        &stub(BuildMode::Release),
+    );
+    assert!(!result.has_errors(), "{:#?}", result.report.diagnostics);
+    assert!(manifest_of(&result).subsystems.physics);
+    assert_eq!(
+        result.files.keys().filter(|p| is_physics_file(p)).count(),
+        1
+    );
 }
 
 #[test]

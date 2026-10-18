@@ -6,7 +6,7 @@
     "endByte": 182,
     "message": "The entity 'First' has no field 'misses'.",
     "notes": [
-      "the fields of Entity are position, rotation, scale, visible, mesh, material, light"
+      "the fields of Entity are position, rotation, scale, visible, mesh, material, light, body, collider"
     ]
   }
 ]

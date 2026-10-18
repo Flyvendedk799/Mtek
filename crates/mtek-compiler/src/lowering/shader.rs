@@ -673,6 +673,8 @@ impl<'p> ShaderLowering<'p> {
             | ir::ExprKind::CameraField { .. }
             | ir::ExprKind::InstanceParam { .. }
             | ir::ExprKind::LightField { .. }
+            | ir::ExprKind::BodyCommand { .. }
+            | ir::ExprKind::BodyProperty { .. }
             | ir::ExprKind::Frame { .. }
             | ir::ExprKind::EnumMember { .. } => {
                 return Err("a scene value in GPU code".to_owned());

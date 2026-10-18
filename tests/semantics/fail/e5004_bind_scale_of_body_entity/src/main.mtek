@@ -1,0 +1,11 @@
+// The scale of an entity with a body is construction-only.
+scene Demo {
+    state size: f32 = 1.0;
+    camera Main {}
+    entity Floor {
+        scale: bind(vec3(size));
+        mesh: Box {};
+        body: Static {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    }
+}

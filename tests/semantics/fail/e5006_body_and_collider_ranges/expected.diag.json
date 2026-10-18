@@ -1,0 +1,58 @@
+[
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 222,
+    "endByte": 225,
+    "message": "Field 'mass' of Dynamic must be greater than 0 and finite, but the value is 0.0."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 243,
+    "endByte": 247,
+    "message": "Field 'linear_damping' of Dynamic must be at least 0 and finite, but the value is -1.0."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 266,
+    "endByte": 270,
+    "message": "Field 'angular_damping' of Dynamic must be at least 0 and finite, but the value is -0.5."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 313,
+    "endByte": 332,
+    "message": "Every component of field 'size' of BoxCollider must be greater than 0 and finite, but the value is vec3(1.0, 0.0, 1.0)."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 344,
+    "endByte": 348,
+    "message": "Field 'friction' of BoxCollider must be at least 0 and finite, but the value is -0.1."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 363,
+    "endByte": 366,
+    "message": "Field 'restitution' of BoxCollider must be between 0 and 1, but the value is 1.5."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 450,
+    "endByte": 454,
+    "message": "Field 'mass' of Dynamic must be greater than 0 and finite, but the value is -2.0."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 502,
+    "endByte": 505,
+    "message": "Field 'radius' of SphereCollider must be greater than 0 and finite, but the value is 0.0."
+  }
+]

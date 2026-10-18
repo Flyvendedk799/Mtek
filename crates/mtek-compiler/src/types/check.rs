@@ -36,6 +36,7 @@ use super::facts::{BuiltinCall, CallFact, Callee};
 use super::ops::{
     arithmetic_result, comparison_result, literal_operand_type, logical_result, negation_result,
 };
+use super::physics::BodyTarget;
 use super::ty::{MAX_TYPE_DEPTH, Ty, TyId};
 use super::value::{ArithOp, CompareOp, ConstValue, LogicOp, Scalar};
 use super::{FnSig, MaterialInfo, Typeck};
@@ -152,6 +153,11 @@ pub enum CallKind {
     /// the declaration the callee resolved to (a `fn` of this module or the
     /// imported name).
     UserFunction { name: String, def: DefId },
+    /// A body command, `Name.body.apply_impulse(..)` (`spec/physics.md` section 3, decision 0065).
+    BodyCommand {
+        command: &'static str,
+        target: BodyTarget,
+    },
 }
 
 /// What a field access turned out to be (for constant evaluation and the
@@ -188,6 +194,11 @@ pub enum FieldKind {
     /// A field of a registry record value (`input.uv` of a `SurfaceInput`,
     /// decision 0039), with its position in the record.
     RecordField { field: &'static str, index: usize },
+    /// A readable body property, `Name.body.linear_velocity` (`spec/physics.md` section 3).
+    BodyProperty {
+        property: &'static str,
+        target: BodyTarget,
+    },
 }
 
 pub(super) struct Checker<'a> {
@@ -347,11 +358,11 @@ impl<'a> Checker<'a> {
         self.out.interner.display(ty)
     }
 
-    fn is_error(&self, ty: TyId) -> bool {
+    pub(super) fn is_error(&self, ty: TyId) -> bool {
         self.out.interner.is_error(ty)
     }
 
-    fn assignable(&self, actual: TyId, expected: TyId) -> bool {
+    pub(super) fn assignable(&self, actual: TyId, expected: TyId) -> bool {
         self.out.interner.assignable(actual, expected)
     }
 
@@ -531,6 +542,7 @@ impl<'a> Checker<'a> {
                     self.allow_param_bind = false;
                     self.note_entity_material(self.res.def_of(entity.id), field);
                     self.note_entity_light(self.res.def_of(entity.id), field);
+                    self.note_entity_physics(self.res.def_of(entity.id), field);
                 }
                 EntityMember::Const(decl) if construct_implemented(Construct::BodyConst) => {
                     self.const_decl(decl);
@@ -1873,6 +1885,9 @@ impl<'a> Checker<'a> {
                 }
                 _ => {}
             }
+            if let Some(ty) = self.body_command_call(expr, base, name, args) {
+                return ty;
+            }
             if let Some(ty) = self.glb_accessor_call(expr, base, name, args) {
                 return ty;
             }
@@ -2349,6 +2364,9 @@ impl<'a> Checker<'a> {
             Some(Res::Error) => return TyId::ERROR,
             _ => {}
         }
+        if let Some(ty) = self.body_property_read(expr, base, name) {
+            return ty;
+        }
         if let Some(ty) = self.material_param(expr, base, name) {
             return ty;
         }
@@ -2481,6 +2499,19 @@ impl<'a> Checker<'a> {
         }
         match self.registry.schema_field(schema, &name.name) {
             Some(field) if !is_implemented(field.since) => TyId::ERROR,
+            // The body and the collider are components, not values (decision 0065).
+            Some(field)
+                if matches!(
+                    field.ty,
+                    crate::stdlib::TypeRef::Descriptor(
+                        crate::stdlib::SchemaCategory::Body
+                            | crate::stdlib::SchemaCategory::Collider
+                    )
+                ) =>
+            {
+                self.descriptor_field_is_not_a_value(expr, object, field.name);
+                TyId::ERROR
+            }
             Some(field) => {
                 self.fields.insert(
                     expr.id,

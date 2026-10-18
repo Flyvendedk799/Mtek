@@ -1,0 +1,87 @@
+program (entry scene src/main.mtek::Demo)
+  module src/main.mtek @1:1-31:1
+    prefab Crate [src/main.mtek::Crate] @4:1-17:2
+      param #0 origin: vec3 = vec3(0.0, 2.0, 0.0) @5:5-5:46
+      param #1 tint: color = color(0.14702727, 0.107023105, 1.0, 1.0) @6:5-6:33
+      entity #0 Crate [src/main.mtek::Crate] root @4:1-17:2
+        position = init param origin#0 (written @7:5-7:22)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @4:1-17:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @4:1-17:2)
+        visible = true (default @4:1-17:2)
+        mesh = Box { size: vec3(1.0, 1.0, 1.0) } (written @8:5-8:45)
+        material = std/materials.mtek::Unlit (written @9:5-9:37)
+          color: color = init param tint#1
+        body = Dynamic { mass: 1.0, linear_damping: 0.0, angular_damping: 0.05 } (written @10:5-10:33)
+        collider = BoxCollider { size: vec3(1.0, 1.0, 1.0), sensor: false, friction: 0.5, restitution: 0.0 } (written @11:5-11:57)
+      state bounces: i32 = i32(0) [src/main.mtek::Crate.bounces] @12:5-12:28
+      on collision_enter of entity#0 [src/main.mtek::Crate.on_collision_enter] @13:5-13:65
+        local #0 other: entity_ref (param) @13:24-13:29
+        entity#0.state.bounces += i32(1) @13:45-13:63
+      on key_down(Space) of entity#0 [src/main.mtek::Crate.on_key_down_Space] @14:5-16:6
+        (entity#0.body.apply_impulse(vec3(0.0, 5.0, 0.0))): () @15:9-15:54
+    scene Demo [src/main.mtek::Demo] @19:1-30:2
+      fields
+        clear_color = color(0.0, 0.0, 0.0, 1.0) (default @19:1-30:2)
+      camera Main [src/main.mtek::Demo.Main] active @20:5-23:6
+        position = vec3(0.0, 2.0, 8.0) (written @21:9-21:39)
+        target = vec3(0.0, 1.0, 0.0) (written @22:9-22:37)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @20:5-23:6)
+        projection = Perspective { fov_y: 0.9, near: 0.1, far: 1000.0 } (default @20:5-23:6)
+      entity #0 First [src/main.mtek::Demo.First] root @24:5-24:57
+        instance of src/main.mtek::Crate { origin: vec3(0.0, 3.0, 0.0), tint: color(0.14702727, 0.107023105, 1.0, 1.0) }
+        position = vec3(0.0, 3.0, 0.0) (written @7:5-7:22)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @4:1-17:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @4:1-17:2)
+        visible = true (default @4:1-17:2)
+        mesh = Box { size: vec3(1.0, 1.0, 1.0) } (written @8:5-8:45)
+        material = std/materials.mtek::Unlit (written @9:5-9:37)
+          color: color = color(0.14702727, 0.107023105, 1.0, 1.0)
+        body = Dynamic { mass: 1.0, linear_damping: 0.0, angular_damping: 0.05 } (written @10:5-10:33)
+        collider = BoxCollider { size: vec3(1.0, 1.0, 1.0), sensor: false, friction: 0.5, restitution: 0.0 } (written @11:5-11:57)
+      entity #1 Second [src/main.mtek::Demo.Second] root @25:5-25:44
+        instance of src/main.mtek::Crate { origin: vec3(0.0, 2.0, 0.0), tint: color(1.0, 0.051269457, 0.051269457, 1.0) }
+        position = vec3(0.0, 2.0, 0.0) (written @7:5-7:22)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @4:1-17:2)
+        scale = vec3(1.0, 1.0, 1.0) (default @4:1-17:2)
+        visible = true (default @4:1-17:2)
+        mesh = Box { size: vec3(1.0, 1.0, 1.0) } (written @8:5-8:45)
+        material = std/materials.mtek::Unlit (written @9:5-9:37)
+          color: color = color(1.0, 0.051269457, 0.051269457, 1.0)
+        body = Dynamic { mass: 1.0, linear_damping: 0.0, angular_damping: 0.05 } (written @10:5-10:33)
+        collider = BoxCollider { size: vec3(1.0, 1.0, 1.0), sensor: false, friction: 0.5, restitution: 0.0 } (written @11:5-11:57)
+      state bounces: i32 = i32(0) [src/main.mtek::Demo.First.bounces] @12:5-12:28
+      state bounces: i32 = i32(0) [src/main.mtek::Demo.Second.bounces] @12:5-12:28
+      on key_down(KeyR) of scene [src/main.mtek::Demo.on_key_down_R] @26:5-29:6
+        (entity#0.body.teleport(vec3(0.0, 3.0, 0.0), quat(0.0, 0.0, 0.0, 1.0), false)): () @27:9-27:74
+        entity#1.state.bounces = i32(0) @28:9-28:28
+      on collision_enter of entity#0 [src/main.mtek::Demo.First.on_collision_enter] @13:5-13:65
+        local #0 other: entity_ref (param) @13:24-13:29
+        entity#0.state.bounces += i32(1) @13:45-13:63
+      on key_down(Space) of entity#0 [src/main.mtek::Demo.First.on_key_down_Space] @14:5-16:6
+        (entity#0.body.apply_impulse(vec3(0.0, 5.0, 0.0))): () @15:9-15:54
+      on collision_enter of entity#1 [src/main.mtek::Demo.Second.on_collision_enter] @13:5-13:65
+        local #0 other: entity_ref (param) @13:24-13:29
+        entity#1.state.bounces += i32(1) @13:45-13:63
+      on key_down(Space) of entity#1 [src/main.mtek::Demo.Second.on_key_down_Space] @14:5-16:6
+        (entity#1.body.apply_impulse(vec3(0.0, 5.0, 0.0))): () @15:9-15:54
+  module std/materials.mtek @1:1-22:1
+    material Unlit [std/materials.mtek::Unlit] @5:8-8:2
+      param #0 color: color = color(1.0, 1.0, 1.0, 1.0) @6:5-6:34
+      block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit (size 16, align 16)
+      fragment -> color [std/materials.mtek::Unlit.fragment] reads none @7:5-7:63
+        local #0 surface: SurfaceInput (param) @7:14-7:21
+        return param color#0 @7:48-7:61
+    material Pbr [std/materials.mtek::Pbr] @10:8-21:2
+      param #0 base_color: color = color(1.0, 1.0, 1.0, 1.0) @11:5-11:39
+      param #1 metallic: f32 = 0.0 @12:5-12:31
+      param #2 roughness: f32 = 0.5 @13:5-13:32
+      param #3 base_color_texture: texture = texture.white() @14:5-14:57
+      param #4 base_color_sampler: sampler = sampler.linear_repeat() @15:5-15:65
+      block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr (size 32, align 16)
+      fragment -> color [std/materials.mtek::Pbr.fragment] reads world_position, world_normal, uv @16:5-20:6
+        local #0 surface: SurfaceInput (param) @16:14-16:21
+        local #1 texel: vec4 (let) @17:13-17:18
+        local #2 albedo: color (let) @18:13-18:19
+        let texel#1 = (sample(param base_color_texture#3, param base_color_sampler#4, (surface#0.uv): vec2)): vec4 @17:9-17:80
+        let albedo#2 = (color.linear(((param base_color#0.rgb): vec3 * (texel#1.xyz): vec3): vec3, 1.0)): color @18:9-18:68
+        return (lighting.pbr(surface#0, albedo#2, param metallic#1, param roughness#2)): color @19:9-19:67

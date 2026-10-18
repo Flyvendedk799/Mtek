@@ -1,0 +1,13 @@
+// A body is a Static, Dynamic or Kinematic descriptor and a collider a BoxCollider or SphereCollider;
+// a wrong descriptor is a type error and does not cascade into the physics rules.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: SphereCollider { radius: 0.5; };
+        collider: Dynamic {};
+        on key_down(Key.Space) {
+            self.body.apply_impulse(vec3(0.0, 1.0, 0.0));
+        }
+    }
+}

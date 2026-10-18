@@ -1,0 +1,23 @@
+[
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 270,
+    "endByte": 295,
+    "message": "`body.linear_velocity` belongs to the physics subsystem and is read-only.",
+    "notes": [
+      "a velocity is read as of the last completed tick",
+      "help: set it with `set_linear_velocity(v)`, or change it with `apply_impulse(v)`"
+    ]
+  },
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 331,
+    "endByte": 357,
+    "message": "`body.angular_velocity` belongs to the physics subsystem and is read-only.",
+    "notes": [
+      "the angular velocity is read as of the last completed tick; v0.1 has no command that sets it"
+    ]
+  }
+]

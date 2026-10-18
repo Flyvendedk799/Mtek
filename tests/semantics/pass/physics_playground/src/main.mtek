@@ -1,0 +1,54 @@
+// The shape of the physics Playground of blueprint section 8: a static floor, a few dynamic
+// crates, a kinematic mover, a scene gravity and handlers that push the crates.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    material: Unlit { color: tint };
+    body: Dynamic { mass: 1.0; linear_damping: 0.05 };
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); friction: 0.6; restitution: 0.2 };
+}
+
+scene Playground {
+    gravity: vec3(0.0, -9.81, 0.0);
+    clear_color: #101418;
+    camera Main {
+        position: vec3(0.0, 4.0, 12.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Floor {
+        position: vec3(0.0, -0.5, 0.0);
+        mesh: Box { size: vec3(30.0, 1.0, 30.0) };
+        material: Unlit { color: #3a3f4a };
+        body: Static {};
+        collider: BoxCollider { size: vec3(30.0, 1.0, 30.0); friction: 0.8 };
+    }
+    entity Ball {
+        position: vec3(-3.0, 4.0, 0.0);
+        mesh: Sphere { radius: 0.5 };
+        material: Unlit { color: #ff8040 };
+        body: Dynamic { mass: 2.0 };
+        collider: SphereCollider { radius: 0.5; restitution: 0.7 };
+    }
+    entity Mover {
+        position: vec3(3.0, 0.5, 0.0);
+        mesh: Box { size: vec3(2.0, 1.0, 2.0) };
+        material: Unlit { color: #40c0ff };
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(2.0, 1.0, 2.0) };
+        fixed_update(dt: f32) {
+            self.body.set_kinematic_target(vec3(3.0 + 2.0 * sin(frame.time), 0.5, 0.0), quat.identity());
+        }
+    }
+    entity A: Crate { origin: vec3(0.0, 1.5, 0.0); }
+    entity B: Crate { origin: vec3(0.2, 3.0, 0.1); tint: #ff4040; }
+    entity C: Crate { origin: vec3(-0.2, 4.5, -0.1); tint: #40ff40; }
+    on key_down(Key.Space) {
+        Ball.body.apply_impulse(vec3(4.0, 6.0, 0.0));
+    }
+    on key_down(Key.R) {
+        Ball.body.teleport(vec3(-3.0, 4.0, 0.0), quat.identity(), false);
+        A.body.teleport(vec3(0.0, 1.5, 0.0), quat.identity(), false);
+    }
+}

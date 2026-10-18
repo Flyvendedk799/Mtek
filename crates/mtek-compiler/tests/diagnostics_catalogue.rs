@@ -251,7 +251,7 @@ fn the_parser_finds_the_whole_catalogue() {
     // Range placeholders are not codes.
     assert!(rows.iter().all(|r| is_code(&r.code)));
     assert!(!rows.iter().any(|r| r.code == "E7032"));
-    assert!(!rows.iter().any(|r| r.code == "E8101"));
+    assert!(!rows.iter().any(|r| r.code == "E8104"));
 }
 
 #[test]

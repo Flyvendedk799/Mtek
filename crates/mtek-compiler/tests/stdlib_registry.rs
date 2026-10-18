@@ -64,7 +64,7 @@ fn schema_rows() -> Vec<Row> {
             "vec3",
             Some("vec3(0.0, -9.81, 0.0)"),
             "C",
-            None,
+            Some("finite"),
         ),
         // 3.2 Entity
         ("Entity", "position", "vec3", Some(V3_ZERO), "WB", None),
@@ -262,7 +262,7 @@ fn schema_rows() -> Vec<Row> {
             "f32",
             Some("0.0"),
             "C",
-            Some("\u{2265} 0"),
+            Some("\u{2265} 0, finite"),
         ),
         (
             "Dynamic",
@@ -270,7 +270,7 @@ fn schema_rows() -> Vec<Row> {
             "f32",
             Some("0.05"),
             "C",
-            Some("\u{2265} 0"),
+            Some("\u{2265} 0, finite"),
         ),
         (
             "BoxCollider",
@@ -278,7 +278,7 @@ fn schema_rows() -> Vec<Row> {
             "vec3",
             None,
             "RC",
-            Some("every component > 0"),
+            Some("every component > 0, finite"),
         ),
         ("BoxCollider", "sensor", "bool", Some("false"), "C", None),
         (
@@ -287,7 +287,7 @@ fn schema_rows() -> Vec<Row> {
             "f32",
             Some("0.5"),
             "C",
-            Some("\u{2265} 0"),
+            Some("\u{2265} 0, finite"),
         ),
         (
             "BoxCollider",
@@ -297,7 +297,14 @@ fn schema_rows() -> Vec<Row> {
             "C",
             Some("0\u{2026}1"),
         ),
-        ("SphereCollider", "radius", "f32", None, "RC", Some("> 0")),
+        (
+            "SphereCollider",
+            "radius",
+            "f32",
+            None,
+            "RC",
+            Some("> 0, finite"),
+        ),
         ("SphereCollider", "sensor", "bool", Some("false"), "C", None),
         (
             "SphereCollider",
@@ -305,7 +312,7 @@ fn schema_rows() -> Vec<Row> {
             "f32",
             Some("0.5"),
             "C",
-            Some("\u{2265} 0"),
+            Some("\u{2265} 0, finite"),
         ),
         (
             "SphereCollider",
@@ -455,11 +462,30 @@ fn field_rules_and_range_codes_follow_the_scene_specification() {
     let registry = registry();
     assert_eq!(
         registry.schema("Entity").unwrap().rules,
-        vec![FieldRule::Requires {
-            field: "material",
-            requires: "mesh",
-            code: Code::E5020,
-        }]
+        vec![
+            FieldRule::Requires {
+                field: "material",
+                requires: "mesh",
+                code: Code::E5020,
+                help: None,
+            },
+            FieldRule::Requires {
+                field: "collider",
+                requires: "body",
+                code: Code::E5120,
+                help: Some(
+                    "add `body: Static {}` for fixed geometry, or `Dynamic` or `Kinematic` for a moving body"
+                ),
+            },
+            FieldRule::Requires {
+                field: "body",
+                requires: "collider",
+                code: Code::E5121,
+                help: Some(
+                    "add a `collider: BoxCollider { size: ... }` or `SphereCollider { radius: ... }` that gives the body its shape"
+                ),
+            }
+        ]
     );
     assert_eq!(
         registry.schema("Camera").unwrap().rules,
@@ -704,7 +730,7 @@ fn events_follow_section_5_1() {
     for name in ["collision_enter", "collision_exit"] {
         let event = registry.event(name).unwrap();
         assert_eq!(event.form, EventForm::Parameter(TypeRef::EntityRef));
-        assert_eq!(event.since, Milestone::M5);
+        assert_eq!(event.since, Milestone::M1);
         assert!(event.requires_collider);
         let hosts: Vec<&str> = event.hosts.iter().map(|h| h.as_str()).collect();
         assert_eq!(hosts, ["entity", "prefab"]);
@@ -898,7 +924,7 @@ fn body_commands_follow_the_physics_specification() {
         assert_eq!(format!("({})", spelled.join(", ")), params, "{name}");
         let applies: Vec<&str> = command.applies_to.iter().map(|b| b.as_str()).collect();
         assert_eq!(applies, bodies, "{name}");
-        assert_eq!(command.since, Milestone::M5);
+        assert_eq!(command.since, Milestone::M1);
         assert!(
             command
                 .params
@@ -949,16 +975,17 @@ fn since_milestones_follow_the_work_plan() {
     assert_eq!(since("PointLight", "range"), Milestone::M1);
     // The `Pbr` material and `lighting.pbr` landed with task M4-03 (decision 0057).
     assert_eq!(since("Pbr", "roughness"), Milestone::M1);
-    // M5: physics.
-    assert_eq!(since("Entity", "body"), Milestone::M5);
-    assert_eq!(since("Dynamic", "mass"), Milestone::M5);
-    assert_eq!(since("BoxCollider", "size"), Milestone::M5);
+    // Physics landed with task M5-03, before the M5 gate (decision 0065).
+    assert_eq!(since("Entity", "body"), Milestone::M1);
+    assert_eq!(since("Scene", "gravity"), Milestone::M1);
+    assert_eq!(since("Dynamic", "mass"), Milestone::M1);
+    assert_eq!(since("BoxCollider", "size"), Milestone::M1);
     let schema_since = |name: &str| registry.schema(name).unwrap().since;
     assert_eq!(schema_since("Unlit"), Milestone::M1);
     assert_eq!(schema_since("Pbr"), Milestone::M1);
     assert_eq!(schema_since("PointLight"), Milestone::M1);
     assert_eq!(schema_since("DirectionalLight"), Milestone::M1);
-    assert_eq!(schema_since("Static"), Milestone::M5);
+    assert_eq!(schema_since("Static"), Milestone::M1);
     let intrinsic_since = |name: &str| registry.intrinsic(name).unwrap().since;
     // M2: functions and materials. The math intrinsics and `mat4` landed with task M2-01,
     // `SurfaceInput` with M2-04, before the M2 gate; they are marked as implemented by the
@@ -999,15 +1026,18 @@ fn since_milestones_follow_the_work_plan() {
     };
     assert_eq!(pbr.since, Milestone::M1);
     // Dynamic entities landed with task M5-02, before the M5 gate (decision 0064): `entity_ref`,
-    // `spawn`, `destroy` and `alive` are implemented by the current build.
+    // `spawn`, `destroy` and `alive` are implemented by the current build. Collision events and the
+    // physics schemas landed with task M5-03 (decision 0065).
     for name in ["spawn", "destroy", "alive"] {
         assert_eq!(intrinsic_since(name), Milestone::M1, "{name}");
     }
-    assert_eq!(registry.type_def("entity_ref").unwrap().since, Milestone::M1);
-    // M5: collision events.
+    assert_eq!(
+        registry.type_def("entity_ref").unwrap().since,
+        Milestone::M1
+    );
     assert_eq!(
         registry.event("collision_enter").unwrap().since,
-        Milestone::M5
+        Milestone::M1
     );
 }
 
@@ -1042,6 +1072,7 @@ fn validation_reports_broken_tables() {
         field: "radius",
         requires: "colour",
         code: Code::E5020,
+        help: None,
     });
     broken.schemas[sphere].fields[1].range_code = Code::E3001;
     broken.schemas[schema].rules.push(FieldRule::ExcludedBy {

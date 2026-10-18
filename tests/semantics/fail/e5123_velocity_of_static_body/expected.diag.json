@@ -1,0 +1,40 @@
+[
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 264,
+    "endByte": 279,
+    "message": "`linear_velocity` is not valid for 'Floor': it applies to Dynamic and Kinematic bodies, but 'Floor' has a Static body.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 123,
+        "endByte": 139
+      }
+    ],
+    "notes": [
+      "static bodies take no commands: their pose is fixed at creation",
+      "help: make the body `Kinematic` for something the program moves, or `Dynamic` for something the solver moves"
+    ]
+  },
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 308,
+    "endByte": 324,
+    "message": "`angular_velocity` is not valid for 'Floor': it applies to Dynamic and Kinematic bodies, but 'Floor' has a Static body.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 123,
+        "endByte": 139
+      }
+    ],
+    "notes": [
+      "static bodies take no commands: their pose is fixed at creation",
+      "help: make the body `Kinematic` for something the program moves, or `Dynamic` for something the solver moves"
+    ]
+  }
+]

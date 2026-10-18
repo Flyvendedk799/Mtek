@@ -521,6 +521,17 @@ fn spawned_prefabs(program: &Program, scene: &Scene) -> Vec<Symbol> {
                 | K::Material { params: fields, .. } => {
                     fields.iter().for_each(|f| expr(&f.value, out));
                 }
+                K::BodyCommand { target, args, .. } => {
+                    if let ir::BodyTarget::Ref { target } = target {
+                        expr(target, out);
+                    }
+                    args.iter().for_each(|a| expr(a, out));
+                }
+                K::BodyProperty { target, .. } => {
+                    if let ir::BodyTarget::Ref { target } = target {
+                        expr(target, out);
+                    }
+                }
             }
         }
         for stmt in &block.stmts {

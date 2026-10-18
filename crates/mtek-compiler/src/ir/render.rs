@@ -3,10 +3,11 @@
 //! deterministic: they depend only on the program and the source text.
 
 use super::model::{
-    Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Camera, Const, Entity, Expr,
-    ExprKind, Field, Function, Item, Light, LightKind, LocalItem, LocalKind, MaterialInstanceDesc,
-    MaterialItem, Mesh, MeshDesc, NamedExpr, Origin, Owner, Place, PlaceRoot, PlaceStep,
-    PrefabItem, Program, Projection, ProjectionDesc, Scene, Source, State, Stmt, StructItem,
+    Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, BodyDesc, BodyTarget,
+    Camera, ColliderDesc, Const, Entity, Expr, ExprKind, Field, Function, Item, Light, LightKind,
+    LocalItem, LocalKind, MaterialInstanceDesc, MaterialItem, Mesh, MeshDesc, NamedExpr, Origin,
+    Owner, Place, PlaceRoot, PlaceStep, PrefabItem, Program, Projection, ProjectionDesc, Scene,
+    Source, State, Stmt, StructItem,
 };
 use crate::source::{SourceMap, Span};
 
@@ -480,6 +481,9 @@ impl Tree<'_> {
                 &scene.fields.ambient_intensity,
             );
         }
+        if scene.fields.gravity.origin == Origin::Written {
+            self.field(depth + 2, "gravity", &scene.fields.gravity);
+        }
         if !scene.constants.is_empty() {
             self.line(depth + 1, "constants".to_owned());
             for constant in &scene.constants {
@@ -662,6 +666,49 @@ impl Tree<'_> {
         if let Some(light) = &entity.light {
             self.light(depth + 1, light);
         }
+        if let Some(body) = &entity.body {
+            let location = self.location(body.span);
+            let desc = match body.desc {
+                BodyDesc::Static => "Static {}".to_owned(),
+                BodyDesc::Kinematic => "Kinematic {}".to_owned(),
+                BodyDesc::Dynamic {
+                    mass,
+                    linear_damping,
+                    angular_damping,
+                } => format!(
+                    "Dynamic {{ mass: {mass:?}, linear_damping: {linear_damping:?}, angular_damping: {angular_damping:?} }}"
+                ),
+            };
+            self.line(
+                depth + 1,
+                format!("body = {desc} ({} {location})", origin(body.origin)),
+            );
+        }
+        if let Some(collider) = &entity.collider {
+            let location = self.location(collider.span);
+            let desc = match collider.desc {
+                ColliderDesc::Box {
+                    size: [x, y, z],
+                    sensor,
+                    friction,
+                    restitution,
+                } => format!(
+                    "BoxCollider {{ size: vec3({x:?}, {y:?}, {z:?}), sensor: {sensor}, friction: {friction:?}, restitution: {restitution:?} }}"
+                ),
+                ColliderDesc::Sphere {
+                    radius,
+                    sensor,
+                    friction,
+                    restitution,
+                } => format!(
+                    "SphereCollider {{ radius: {radius:?}, sensor: {sensor}, friction: {friction:?}, restitution: {restitution:?} }}"
+                ),
+            };
+            self.line(
+                depth + 1,
+                format!("collider = {desc} ({} {location})", origin(collider.origin)),
+            );
+        }
     }
 
     fn light(&mut self, depth: usize, light: &Light) {
@@ -809,6 +856,14 @@ fn expr_text(expr: &Expr) -> String {
         ExprKind::LightField { entity, field } => {
             return format!("entity#{entity}.light.{field}");
         }
+        ExprKind::BodyCommand {
+            target,
+            command,
+            args,
+        } => format!("{}.body.{command}({})", target_text(target), list(args)),
+        ExprKind::BodyProperty { target, property } => {
+            return format!("{}.body.{property}", target_text(target));
+        }
         ExprKind::Frame { member } => return format!("frame.{member}"),
         ExprKind::EnumMember {
             enumeration,
@@ -824,6 +879,14 @@ fn expr_text(expr: &Expr) -> String {
         ExprKind::EntityRef { entity } => return format!("ref entity#{entity}"),
     };
     format!("({text}): {}", expr.ty)
+}
+
+/// `entity#2` for a named entity, the expression for an `entity_ref`.
+fn target_text(target: &BodyTarget) -> String {
+    match target {
+        BodyTarget::Entity { entity } => format!("entity#{entity}"),
+        BodyTarget::Ref { target } => expr_text(target),
+    }
 }
 
 /// `state.` for scene state and `entity#2.state.` for an entity's.

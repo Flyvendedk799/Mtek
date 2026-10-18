@@ -29,8 +29,9 @@ use serde_json::Value;
 /// function bodies of M2-02 and the materials of M2-04 (a group fixture
 /// `materials/pulse` has the golden `materials_pulse.ir.json`), the textures and
 /// samplers of M4-04 (decision 0054), the assignable places of M2-13 (decision 0045) and the
-/// prefabs with their static instances of M5-01 (decision 0062).
-const GOLDEN_FIXTURES: [&str; 9] = [
+/// prefabs with their static instances of M5-01 (decision 0062) and the physics bodies, colliders and
+/// body commands of M5-03 (decision 0065).
+const GOLDEN_FIXTURES: [&str; 12] = [
     "scene_a_target_camera_box",
     "scene_b_orthographic_nested",
     "functions_statements_and_calls",
@@ -40,6 +41,9 @@ const GOLDEN_FIXTURES: [&str; 9] = [
     "functions/assignable_places",
     "prefab_behaviours",
     "modules_imported_prefab",
+    "physics_commands_and_velocities",
+    "physics_body_collider_matrix",
+    "physics_prefab_crate",
 ];
 
 /// The file name stem of the golden of `fixture`.

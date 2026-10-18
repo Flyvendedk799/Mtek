@@ -1,0 +1,11 @@
+// A binding is a second writer of the pose.
+scene Demo {
+    state height: f32 = 1.0;
+    camera Main {}
+    entity Ball {
+        position: bind(vec3(0.0, height, 0.0));
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+    }
+}

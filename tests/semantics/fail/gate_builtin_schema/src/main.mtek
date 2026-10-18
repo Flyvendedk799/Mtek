@@ -1,7 +1,0 @@
-scene Demo {
-    camera Main {}
-    entity Ball {
-        mesh: Sphere {};
-        material: Static {};
-    }
-}

@@ -1,0 +1,30 @@
+// The prefab of blueprint section 3.3 with its physics fields: a dynamic body and a collider
+// declared by the prefab, a collision handler, a body command from the prefab, and static
+// instances that are root entities with the prefab's body.
+prefab Crate {
+    param origin: vec3 = vec3(0.0, 2.0, 0.0);
+    param tint: color = #6b5cff;
+    position: origin;
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    material: Unlit { color: tint };
+    body: Dynamic { mass: 1.0 };
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0) };
+    state bounces: i32 = 0;
+    on collision_enter(other: entity_ref) { self.bounces += 1; }
+    on key_down(Key.Space) {
+        self.body.apply_impulse(vec3(0.0, 5.0, 0.0));
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 8.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity First: Crate { origin: vec3(0.0, 3.0, 0.0); }
+    entity Second: Crate { tint: #ff4040; }
+    on key_down(Key.R) {
+        First.body.teleport(vec3(0.0, 3.0, 0.0), quat.identity(), false);
+        Second.bounces = 0;
+    }
+}

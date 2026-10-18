@@ -397,10 +397,7 @@ fn cpu_roots(program: &[ProgramUnit<'_>]) -> Vec<RootBody> {
                 label: body.label.clone(),
                 span: body.span,
                 facts: body.facts.clone(),
-                initialiser: matches!(
-                    body.kind,
-                    CpuBodyKind::StateInit | CpuBodyKind::FieldInit
-                ),
+                initialiser: matches!(body.kind, CpuBodyKind::StateInit | CpuBodyKind::FieldInit),
             })
         })
         .collect()

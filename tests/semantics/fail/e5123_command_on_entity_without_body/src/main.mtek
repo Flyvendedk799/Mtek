@@ -1,0 +1,10 @@
+// An entity without a body has nothing to command.
+scene Demo {
+    camera Main {}
+    entity Lamp {
+        mesh: Sphere {};
+    }
+    on key_down(Key.Space) {
+        Lamp.body.apply_impulse(vec3(0.0, 1.0, 0.0));
+    }
+}

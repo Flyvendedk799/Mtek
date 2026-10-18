@@ -1,0 +1,10 @@
+// Mass is an f32, a size is a vec3, and gravity is a vec3.
+scene Demo {
+    gravity: 9.81;
+    camera Main {}
+    entity Crate {
+        mesh: Box {};
+        body: Dynamic { mass: vec3(1.0); };
+        collider: BoxCollider { size: 1.0; sensor: 1.0; };
+    }
+}

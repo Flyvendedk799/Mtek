@@ -1,0 +1,16 @@
+// The solver owns the pose of a dynamic body.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic {};
+        collider: SphereCollider { radius: 0.5; };
+        fixed_update(dt: f32) {
+            self.position = vec3(0.0, 1.0, 0.0);
+        }
+    }
+    on key_down(Key.Space) {
+        Ball.position = vec3(0.0, 5.0, 0.0);
+        Ball.rotation = quat.identity();
+    }
+}

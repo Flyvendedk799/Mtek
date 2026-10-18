@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 233,
+    "endByte": 247,
+    "message": "`Floor.position` belongs to the physics subsystem, because 'Floor' has a Static body, so it cannot be assigned.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 111,
+        "endByte": 127
+      }
+    ],
+    "notes": [
+      "static bodies cannot move: their pose is fixed at creation",
+      "help: make the body `Kinematic` if the program moves it, or `Dynamic` if the solver does"
+    ]
+  }
+]

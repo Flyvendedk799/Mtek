@@ -149,8 +149,14 @@ fn a_value_computed_at_run_time_stays_an_expression() {
         panic!("a literal")
     };
     // origin reads the entity's position; life divides the param.
-    assert!(matches!(&params[0].value.kind, ExprKind::Binary { op: "+", .. }));
-    assert!(matches!(&params[2].value.kind, ExprKind::Binary { op: "/", .. }));
+    assert!(matches!(
+        &params[0].value.kind,
+        ExprKind::Binary { op: "+", .. }
+    ));
+    assert!(matches!(
+        &params[2].value.kind,
+        ExprKind::Binary { op: "/", .. }
+    ));
     assert!(matches!(
         &params[1].value.kind,
         ExprKind::Const {
@@ -180,7 +186,10 @@ fn a_named_entity_and_self_used_as_values_are_entity_refs_by_index() {
     let ExprKind::Binary { lhs, rhs, .. } = &comparison.kind else {
         unreachable!()
     };
-    assert_eq!((lhs.ty.as_str(), rhs.ty.as_str()), ("entity_ref", "entity_ref"));
+    assert_eq!(
+        (lhs.ty.as_str(), rhs.ty.as_str()),
+        ("entity_ref", "entity_ref")
+    );
     assert_eq!(rhs.kind, ExprKind::EntityRef { entity: 0 });
 }
 

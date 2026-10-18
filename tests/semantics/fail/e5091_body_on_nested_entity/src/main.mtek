@@ -1,0 +1,13 @@
+// Physics poses are world poses: a body is allowed on a root entity only.
+scene Demo {
+    camera Main {}
+    entity Car {
+        mesh: Box {};
+        entity Wheel {
+            position: vec3(1.0, 0.0, 0.0);
+            mesh: Sphere {};
+            body: Dynamic {};
+            collider: SphereCollider { radius: 0.5; };
+        }
+    }
+}

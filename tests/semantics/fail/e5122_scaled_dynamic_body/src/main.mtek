@@ -1,0 +1,10 @@
+// The scale of a dynamic body must be vec3(1.0): the collider is not scaled with the mesh.
+scene Demo {
+    camera Main {}
+    entity Crate {
+        scale: vec3(2.0, 1.0, 1.0);
+        mesh: Box {};
+        body: Dynamic {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    }
+}

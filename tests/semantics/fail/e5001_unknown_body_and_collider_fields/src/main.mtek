@@ -1,0 +1,9 @@
+// Unknown fields of the body and collider descriptors list the valid ones.
+scene Demo {
+    camera Main {}
+    entity Ball {
+        mesh: Sphere {};
+        body: Dynamic { weight: 1.0; };
+        collider: SphereCollider { radius: 0.5; bounciness: 0.5; };
+    }
+}

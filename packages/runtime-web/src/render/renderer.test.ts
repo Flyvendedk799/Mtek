@@ -679,8 +679,15 @@ function instancedPrefabMaterials(manifest: MtekManifest): number {
   return manifest.materials.filter((material) => ids.has(material.id) && manifest.shaders.some((shader) => shader.hash === material.shader && shader.instancedVertexEntry !== undefined)).length;
 }
 
+/**
+ * The golden programs whose handlers need the physics body handle (`ctx.body`, `spec/runtime-abi.md` section 4.2): the
+ * runtime executes them from task M5-05 on; until then they are checked by `abi.test.ts` (the manifest) and by the
+ * compiler's execution test against a fake context (`tests/codegen/physics.test.ts`).
+ */
+const NEEDS_THE_PHYSICS_RUNTIME = new Set(["physics"]);
+
 describe("the golden programs end to end on the fake GPU", () => {
-  it.each(CODEGEN_FIXTURES)("%s mounts, renders every entity once and caches its pipeline", async (name) => {
+  it.each(CODEGEN_FIXTURES.filter((name) => !NEEDS_THE_PHYSICS_RUNTIME.has(name)))("%s mounts, renders every entity once and caches its pipeline", async (name) => {
     const golden = await loadGoldenProgram(name);
     const host = new FakeHost();
     for (const [url, text] of golden.files) host.files.set(url, text);

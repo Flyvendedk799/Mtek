@@ -303,6 +303,7 @@ impl Registry {
                     field,
                     requires,
                     code,
+                    ..
                 } => (field, requires, code),
                 FieldRule::ExcludedBy {
                     field,

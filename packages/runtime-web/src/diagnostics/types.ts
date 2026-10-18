@@ -69,8 +69,8 @@ export interface MtekDiagnostic {
 
 /**
  * The runtime part (`8xxx`) of the catalogue of `spec/diagnostics.md` section 5.8, in the order of
- * that table. A test asserts that this list equals the table. Ranges of codes defined in other
- * documents (physics runtime codes) are added when those documents' milestones land.
+ * that table. A test asserts that this list equals the table. The physics codes (E8101 to E8103,
+ * decision 0065) are catalogued here; the runtime reports them from M5-05 on.
  */
 export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8001: "unsupported platform endianness",
@@ -97,6 +97,9 @@ export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8080: "execution budget exceeded",
   E8090: "invalid scale value",
   E8100: "non-opaque color value",
+  E8101: "command not valid for the target's body kind",
+  E8102: "physics module failed to load",
+  E8103: "non-finite pose produced by the solver",
 } as const;
 
 /**

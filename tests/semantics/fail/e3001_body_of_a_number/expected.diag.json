@@ -1,0 +1,11 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 135,
+    "endByte": 146,
+    "message": "`.body` is a member of entities and `entity_ref` values, but this expression has type f32.",
+    "expected": "an entity or entity_ref",
+    "actual": "f32"
+  }
+]

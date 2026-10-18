@@ -600,6 +600,11 @@ impl Checker<'_> {
                 kind: NonConstantKind::Call,
                 reason: format!("`{name}` is not a constant function"),
             }),
+            CallKind::BodyCommand { command, .. } => Folded::NotConstant(NonConstant {
+                span: expr.span,
+                kind: NonConstantKind::Call,
+                reason: format!("`body.{command}` is a command, not a constant function"),
+            }),
             CallKind::Vector(dim) => {
                 self.combine(expr, folded, |values| construct_vector(dim, values))
             }
@@ -671,6 +676,11 @@ impl Checker<'_> {
                 span: expr.span,
                 kind: NonConstantKind::ObjectField,
                 reason: format!("it reads the field '{field}' of an entity's light"),
+            }),
+            FieldKind::BodyProperty { property, .. } => Folded::NotConstant(NonConstant {
+                span: expr.span,
+                kind: NonConstantKind::ObjectField,
+                reason: format!("it reads the body property '{property}' of an entity"),
             }),
             FieldKind::NamespaceValue(name) => Folded::NotConstant(NonConstant {
                 span: expr.span,

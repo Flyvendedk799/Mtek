@@ -1,0 +1,10 @@
+// The body of a prefab from another module still owns the pose of its instances.
+import { Ball } from "./props/ball.mtek";
+
+scene Demo {
+    camera Main {}
+    entity One: Ball {}
+    on key_down(Key.Space) {
+        One.position = vec3(0.0, 2.0, 0.0);
+    }
+}

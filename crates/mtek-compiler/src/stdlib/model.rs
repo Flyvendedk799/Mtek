@@ -248,6 +248,8 @@ pub enum FieldRule {
         field: &'static str,
         requires: &'static str,
         code: Code,
+        /// The help line of the diagnostic; `None` gives "declare `requires`, or remove `field`".
+        help: Option<&'static str>,
     },
     /// `field` must not be declared together with `excluded_by` (`Camera.rotation` when a
     /// `target` is declared, `E5010`).
@@ -581,6 +583,13 @@ impl BodyKind {
             BodyKind::Dynamic => "Dynamic",
             BodyKind::Kinematic => "Kinematic",
         }
+    }
+
+    /// The body kind whose schema is named `schema` (`Dynamic`).
+    pub fn from_schema(schema: &str) -> Option<BodyKind> {
+        [BodyKind::Static, BodyKind::Dynamic, BodyKind::Kinematic]
+            .into_iter()
+            .find(|kind| kind.as_str() == schema)
     }
 }
 

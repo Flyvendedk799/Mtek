@@ -1,0 +1,7 @@
+// `.body` is a member of entities and entity_ref values.
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        let v = (1.0 + 2.0).body.linear_velocity;
+    }
+}

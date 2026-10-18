@@ -1,0 +1,14 @@
+// Inside a prefab `self` is the entity it describes, with the prefab's body kind.
+prefab Post {
+    mesh: Box {};
+    body: Static {};
+    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    on key_down(Key.Space) {
+        self.body.teleport(vec3(0.0), quat.identity(), false);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity One: Post {}
+}

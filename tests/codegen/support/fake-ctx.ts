@@ -28,6 +28,31 @@ export interface FakeEntityRecord {
   readonly params: Readonly<Record<string, unknown>>;
 }
 
+/** One recorded call of a body handle (`ctx.body(target).applyImpulse(v)`; spec/runtime-abi.md section 4.2). */
+export interface BodyCall {
+  /** The static index of the entity record passed, or the `entity_ref` of the target. */
+  readonly target: number | { readonly slot: number; readonly gen: number };
+  readonly method: string;
+  readonly args: readonly unknown[];
+}
+
+interface FakeVector {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+}
+
+/** The body handle `ctx.body(target)` returns: the commands record, the velocities are read. */
+export interface FakeBodyHandle {
+  applyImpulse(v: FakeVector): void;
+  applyForce(v: FakeVector): void;
+  setKinematicTarget(position: FakeVector, rotation: unknown): void;
+  teleport(position: FakeVector, rotation: unknown, keepVelocity: boolean): void;
+  setLinearVelocity(v: FakeVector): void;
+  readonly linearVelocity: FakeVector;
+  readonly angularVelocity: FakeVector;
+}
+
 export interface FakeContext {
   /** The scene's `state`. */
   readonly s: Record<string, unknown>;
@@ -37,6 +62,7 @@ export interface FakeContext {
   setVisible(entity: FakeEntityRecord, value: unknown): void;
   setParam(entity: FakeEntityRecord, name: string, value: unknown): void;
   setLight(entity: FakeEntityRecord, field: string, value: unknown): void;
+  body(target: FakeEntityRecord | { readonly slot: number; readonly gen: number }): FakeBodyHandle;
   warn(code: string, spanId: number): void;
 }
 
@@ -51,9 +77,16 @@ export function createFakeContext(
   ctx: FakeContext;
   calls: SetterCall[];
   warnings: WarningCall[];
+  /** Every body command issued, in order. */
+  bodyCalls: BodyCall[];
+  /** The velocities `ctx.body(entity)` reads, by entity index (zero when absent). */
+  velocities: Map<number, { linear: FakeVector; angular: FakeVector }>;
 } {
   const calls: SetterCall[] = [];
   const warnings: WarningCall[] = [];
+  const bodyCalls: BodyCall[] = [];
+  const velocities = new Map<number, { linear: FakeVector; angular: FakeVector }>();
+  const zero: FakeVector = { x: 0, y: 0, z: 0 };
   const e: FakeEntityRecord[] = Array.from({ length: entityCount }, (_, index) =>
     Object.freeze({
       index,
@@ -85,9 +118,25 @@ export function createFakeContext(
     setLight(entity: FakeEntityRecord, field: string, value: unknown): void {
       calls.push({ method: "setLight", entity: indexOf(entity), field, value });
     },
+    body(target: FakeEntityRecord | { readonly slot: number; readonly gen: number }): FakeBodyHandle {
+      const key = "index" in target ? indexOf(target) : target;
+      const record = (method: string) => (...args: unknown[]): void => {
+        bodyCalls.push({ target: key, method, args });
+      };
+      const velocity = typeof key === "number" ? velocities.get(key) : undefined;
+      return {
+        applyImpulse: record("applyImpulse"),
+        applyForce: record("applyForce"),
+        setKinematicTarget: record("setKinematicTarget"),
+        teleport: record("teleport"),
+        setLinearVelocity: record("setLinearVelocity"),
+        linearVelocity: velocity?.linear ?? zero,
+        angularVelocity: velocity?.angular ?? zero,
+      };
+    },
     warn(code: string, spanId: number): void {
       warnings.push({ code, spanId });
     },
   });
-  return { ctx, calls, warnings };
+  return { ctx, calls, warnings, bodyCalls, velocities };
 }

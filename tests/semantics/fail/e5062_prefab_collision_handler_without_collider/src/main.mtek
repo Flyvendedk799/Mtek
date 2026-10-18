@@ -1,0 +1,11 @@
+// The rule holds for prefabs.
+prefab Coin {
+    mesh: Sphere {};
+    on collision_enter(other: entity_ref) {
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity One: Coin {}
+}

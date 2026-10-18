@@ -115,6 +115,14 @@ fn entity(rng: &mut Rng, depth: usize, counter: &mut usize, out: &mut String) {
                 "light: PointLight {}; ",
                 "positon: vec3(0.0); ",
                 "visible: 1; ",
+                "body: Static {}; ",
+                "body: Dynamic { mass: 2.0 }; ",
+                "body: Kinematic {}; ",
+                "body: Dynamic { mass: 0.0 }; ",
+                "body: Box {}; ",
+                "collider: BoxCollider { size: SIZE }; ",
+                "collider: SphereCollider { radius: 0.5 }; ",
+                "collider: SphereCollider { radius: 0.0 }; ",
             ])),
             8 => out.push_str("const LOCAL = 2.0; "),
             _ => {
@@ -258,7 +266,7 @@ fn random_scenes_never_break_the_scene_checks() {
             assert!(clean > 0, "no program without diagnostics");
             for code in [
                 "E3001", "E3041", "E3102", "E5001", "E5002", "E5006", "E5010", "E5011", "E5012",
-                "E5013", "E5020", "E5081", "E5090", "E5100", "E9010",
+                "E5013", "E5020", "E5081", "E5090", "E5091", "E5100", "E5120", "E5121",
             ] {
                 assert!(codes.contains(code), "{code} never reported: {codes:?}");
             }

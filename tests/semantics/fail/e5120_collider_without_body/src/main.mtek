@@ -1,0 +1,8 @@
+// A collider needs a body (spec/physics.md section 2).
+scene Demo {
+    camera Main {}
+    entity Wall {
+        mesh: Box {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    }
+}

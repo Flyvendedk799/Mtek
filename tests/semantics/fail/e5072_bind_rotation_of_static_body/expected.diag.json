@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E5072",
+    "file": "src/main.mtek",
+    "startByte": 120,
+    "endByte": 174,
+    "message": "`bind` cannot drive the field 'rotation' of entity 'Floor': it has a Static body, which owns the pose.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 206,
+        "endByte": 222
+      }
+    ],
+    "notes": [
+      "static bodies cannot move: their pose is fixed at creation",
+      "help: make the body `Kinematic` if the program moves it, or `Dynamic` if the solver does"
+    ]
+  }
+]
