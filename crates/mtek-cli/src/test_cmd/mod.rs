@@ -120,8 +120,7 @@ impl Run {
         };
         if found.is_empty() {
             self.report.error = Some(format!(
-                "no fixtures: '{}' has no {}/*{}; a project with nothing to run has verified nothing",
-                dir.display(),
+                "no fixtures: the project has no {}/*{}; a project with nothing to run has verified nothing",
                 fixture::DIRECTORY,
                 fixture::SUFFIX
             ));

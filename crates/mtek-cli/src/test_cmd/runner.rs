@@ -48,11 +48,20 @@ fn locate_with(
     exe: Option<&Path>,
 ) -> Result<Runner, String> {
     let node = node.unwrap_or_else(|| OsString::from("node"));
-    check_node(&node)?;
-    Ok(Runner {
-        node,
-        script: locate_script(script, exe)?,
-    })
+    let (version, major) = node_version(&node)?;
+    let script = locate_script(script, exe)?;
+    // Node strips the types of a TypeScript runner itself, from version 24 on without a flag; a
+    // JavaScript runner (a stand-in set with `MTEK_TEST_RUNNER`) runs on any Node.
+    if script
+        .extension()
+        .is_some_and(|extension| extension == "ts")
+        && major < MIN_NODE_MAJOR
+    {
+        return Err(format!(
+            "Node.js {MIN_NODE_MAJOR} or newer is required to run the browser runner, found {version}"
+        ));
+    }
+    Ok(Runner { node, script })
 }
 
 /// The runner script: the one named by `script`, else the one of the checkout `exe` is in.
@@ -89,8 +98,8 @@ fn find_beside(exe: &Path) -> Option<PathBuf> {
     })
 }
 
-/// Whether `node` runs and is new enough.
-fn check_node(node: &OsString) -> Result<(), String> {
+/// The version text and the major version of `node`, if it runs.
+fn node_version(node: &OsString) -> Result<(String, u32), String> {
     let output = match Command::new(node).arg("--version").output() {
         Ok(output) if output.status.success() => output,
         Ok(output) => {
@@ -109,10 +118,7 @@ fn check_node(node: &OsString) -> Result<(), String> {
     };
     let version = String::from_utf8_lossy(&output.stdout).trim().to_owned();
     match node_major(&version) {
-        Some(major) if major >= MIN_NODE_MAJOR => Ok(()),
-        Some(_) => Err(format!(
-            "Node.js {MIN_NODE_MAJOR} or newer is required to run the browser runner, found {version}"
-        )),
+        Some(major) => Ok((version, major)),
         None => Err(format!("cannot read the Node.js version '{version}'")),
     }
 }

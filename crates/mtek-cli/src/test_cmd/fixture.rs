@@ -207,11 +207,12 @@ pub fn discover(dir: &Path) -> Result<Vec<(String, std::path::PathBuf)>, String>
     let entries = match fs::read_dir(&tests) {
         Ok(entries) => entries,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(error) => return Err(format!("cannot list '{}': {error}", tests.display())),
+        Err(error) => return Err(format!("cannot list the directory '{DIRECTORY}': {error}")),
     };
     let mut found = Vec::new();
     for entry in entries {
-        let entry = entry.map_err(|error| format!("cannot list '{}': {error}", tests.display()))?;
+        let entry =
+            entry.map_err(|error| format!("cannot list the directory '{DIRECTORY}': {error}"))?;
         let name = entry.file_name().to_string_lossy().into_owned();
         // Windows file systems are case-insensitive, so the suffix is too there; the spelling is
         // checked as written to keep the rule the same everywhere.
