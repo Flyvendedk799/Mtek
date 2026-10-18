@@ -1,0 +1,10 @@
+prefab Crate {
+    param origin: vec3 = 3.0;
+    position: origin;
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate {}
+}

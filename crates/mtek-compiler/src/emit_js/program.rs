@@ -28,15 +28,22 @@
 //! `null`, `entityUpdate`/`entityFixedUpdate` hold `null` per entity, `events` is `{}` and
 //! `bindings` `[]` (the shapes of the runtime's `MtekProgramScene`).
 
-use crate::ir::{Camera, Entity, Owner, Program, ProjectionDesc, Scene, State, Value};
+use crate::ir::{
+    Camera, Entity, Owner, PrefabItem, Program, ProjectionDesc, Scene, Source, State, Symbol,
+    UpdateClass, Value,
+};
+use crate::layout::naming::hash8;
 use crate::layout::{LayoutNode, LayoutRecord};
-use crate::plan::{ParamClass, ResourcePlan};
+use crate::plan::ResourcePlan;
 use crate::{COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI};
 
 use crate::source::Span;
 
 use super::ast::{Expr, Item, JsModule, Module, Number, Stmt, print};
-use super::cpu::{emit_behaviors, emit_functions, emit_state_init};
+use super::cpu::{
+    InitScope, emit_behaviors, emit_functions, emit_init_expr, emit_prefab_behaviors,
+    emit_state_init,
+};
 use super::printer::identifier_part;
 use super::writers::{emit_writer_parts, writer_qualifier};
 
@@ -159,6 +166,10 @@ pub fn emit_program(
         body: init_body(scene, plan, span_id)?,
         span: Some(scene.span),
     }));
+    // The prefabs of every module (`spec/runtime-abi.md` section 3): their functions, then the
+    // `prefabs` table after `scenes`.
+    let (prefab_stmts, prefab_table) = emit_prefabs(program, parts.release, span_id)?;
+    items.extend(prefab_stmts.into_iter().map(Item::Stmt));
     let function_or_null = |name: &Option<String>| match name {
         Some(name) => Expr::Ident(name.clone()),
         None => Expr::Null,
@@ -202,7 +213,7 @@ pub fn emit_program(
     items.push(Item::Stmt(Stmt::Blank));
     items.push(Item::ExportConst {
         name: "prefabs".to_owned(),
-        value: Expr::object_lines(Vec::new()),
+        value: Expr::object_lines(prefab_table),
     });
     items.push(Item::Stmt(Stmt::Blank));
     let surface = [
@@ -259,17 +270,24 @@ fn writer_entry(record: &LayoutRecord, function_names: &[String]) -> Expr {
 /// in declaration order (the scene's, then each entity's in stable instance order);
 /// `key` is the DOM `KeyboardEvent.code`, never the Mtek name.
 fn events_table(behaviors: &super::cpu::EmittedBehaviors) -> Expr {
+    events_table_of(&behaviors.events, |owner| match owner {
+        Some(index) => Expr::Num(Number::U32(index)),
+        None => Expr::Num(Number::I32(-1)),
+    })
+}
+
+/// The `events` table of `entries`; `owner` gives the `owner` of an entry.
+fn events_table_of(
+    entries: &[super::cpu::EmittedEvent],
+    owner: impl Fn(Option<u32>) -> Expr,
+) -> Expr {
     let mut events: Vec<(String, Vec<Expr>)> = Vec::new();
-    for entry in &behaviors.events {
+    for entry in entries {
         let mut fields = Vec::new();
         if let Some(key) = &entry.key {
             fields.push(("key".to_owned(), Expr::string(key)));
         }
-        let owner = match entry.owner {
-            Some(index) => Expr::Num(Number::U32(index)),
-            None => Expr::Num(Number::I32(-1)),
-        };
-        fields.push(("owner".to_owned(), owner));
+        fields.push(("owner".to_owned(), owner(entry.owner)));
         fields.push(("fn".to_owned(), Expr::Ident(entry.function.clone())));
         let object = Expr::object(fields);
         match events.iter_mut().find(|(name, _)| *name == entry.event) {
@@ -283,6 +301,106 @@ fn events_table(behaviors: &super::cpu::EmittedBehaviors) -> Expr {
             .map(|(name, list)| (name, Expr::Array(list)))
             .collect(),
     )
+}
+
+/// The functions of the prefabs and the entries of the `prefabs` table (symbol, entry).
+type PrefabParts = (Vec<Stmt>, Vec<(String, Expr)>);
+
+/// The functions of every prefab of `program` and the entries of the `prefabs` table, keyed by
+/// symbol (`spec/runtime-abi.md` section 3):
+///
+/// ```js
+/// "src/props.mtek::Crate": {
+///   init,        // (ctx, self, params) => void: the state, then the fields of the instance
+///   update,      // (ctx, self, dt) => void, or null
+///   fixedUpdate, // (ctx, self, dt) => void, or null
+///   events,      // as for a scene; every owner is "self"
+///   bindings,    // [(ctx, self) => value, …] by the prefab's binding id
+/// }
+/// ```
+fn emit_prefabs(
+    program: &Program,
+    release: bool,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
+) -> Result<PrefabParts, String> {
+    let mut stmts = Vec::new();
+    let mut table = Vec::new();
+    for prefab in program.prefabs() {
+        let prefix = prefab_prefix(&prefab.symbol)?;
+        let init = format!("{prefix}_init");
+        let behaviors = emit_prefab_behaviors(prefab, &prefix, release, span_id)?;
+        stmts.push(Stmt::Blank);
+        stmts.push(Stmt::Comment(format!(
+            "prefab {} ({}): init(ctx, self, params) sets the state and the fields of an instance",
+            prefab.name, prefab.symbol
+        )));
+        stmts.push(prefab_init(prefab, &init, span_id)?);
+        stmts.extend(behaviors.stmts);
+        let function_or_null = |name: &Option<String>| match name {
+            Some(name) => Expr::Ident(name.clone()),
+            None => Expr::Null,
+        };
+        table.push((
+            prefab.symbol.to_string(),
+            Expr::object_lines(vec![
+                ("init".to_owned(), Expr::Ident(init)),
+                ("update".to_owned(), function_or_null(&behaviors.update)),
+                (
+                    "fixedUpdate".to_owned(),
+                    function_or_null(&behaviors.fixed_update),
+                ),
+                (
+                    "events".to_owned(),
+                    events_table_of(&behaviors.events, |_| Expr::string("self")),
+                ),
+                (
+                    "bindings".to_owned(),
+                    Expr::Array(
+                        behaviors
+                            .bindings
+                            .iter()
+                            .map(|name| Expr::Ident(name.clone()))
+                            .collect(),
+                    ),
+                ),
+            ]),
+        ));
+    }
+    Ok((stmts, table))
+}
+
+/// `p_<hash8>_<Name>`, the stem of the names of a prefab's functions, module-qualified like
+/// the names of `fn`s so that equal names in two modules never collide.
+fn prefab_prefix(symbol: &Symbol) -> Result<String, String> {
+    let (path, name) = symbol
+        .as_str()
+        .rsplit_once("::")
+        .filter(|(path, name)| !path.is_empty() && !name.is_empty())
+        .ok_or_else(|| format!("'{symbol}' is not the symbol of a module item"))?;
+    Ok(format!("p_{}_{}", hash8(path), identifier_part(name)))
+}
+
+/// `function <name>(ctx, self, params)`: the initialisation order of `spec/scenes.md`
+/// section 11 for one instance of `prefab` — its state in declaration order, then its fields.
+/// `params` is the object of the instance's params, which the runtime also keeps as
+/// `self.params`.
+fn prefab_init(
+    prefab: &PrefabItem,
+    name: &str,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
+) -> Result<Stmt, String> {
+    let scope = InitScope::PREFAB;
+    let mut body = Vec::new();
+    for state in &prefab.state {
+        body.push(state_statement(state, scope, span_id)?);
+    }
+    field_statements(&prefab.entity, "self", scope, span_id, &mut body)?;
+    Ok(Stmt::Function {
+        name: name.to_owned(),
+        params: vec!["ctx".to_owned(), "self".to_owned(), "params".to_owned()],
+        body,
+        span: Some(prefab.span),
+    })
 }
 
 /// A declaration of the scene body that `init` initialises.
@@ -300,13 +418,18 @@ impl Declaration<'_> {
     }
 }
 
-/// `target = initialiser;` for `state`: `ctx.s.name` or `e<i>.state.name`.
+/// `target = initialiser;` for `state`: `ctx.s.name` or `ctx.e[i].state.name`
+/// (`self.state.name` in the `init` of a prefab, where entity 0 is `self`).
 fn state_statement(
     state: &State,
+    scope: InitScope,
     span_id: &mut dyn FnMut(crate::source::Span) -> Result<u32, String>,
 ) -> Result<Stmt, String> {
     let target = match state.owner {
         Owner::Scene => Expr::ident("ctx").member("s").member(&state.name),
+        Owner::Entity { .. } if scope.owner == Some(state.owner) => {
+            Expr::ident("self").member("state").member(&state.name)
+        }
         Owner::Entity { index } => Expr::ident("ctx")
             .member("e")
             .index(index)
@@ -315,7 +438,7 @@ fn state_statement(
     };
     Ok(Stmt::Assign {
         target,
-        value: emit_state_init(state, span_id)?,
+        value: emit_state_init(state, scope, span_id)?,
         span: Some(state.span),
     })
 }
@@ -338,7 +461,7 @@ fn init_body(
     let mut body = Vec::new();
     // Scene state first, in declaration order (`spec/scenes.md` section 11, step 2).
     for state in scene.state.iter().filter(|s| s.owner == Owner::Scene) {
-        body.push(state_statement(state, span_id)?);
+        body.push(state_statement(state, InitScope::SCENE, span_id)?);
     }
     for declaration in declarations {
         match declaration {
@@ -349,9 +472,9 @@ fn init_body(
                     index: entity.index,
                 };
                 for state in scene.state.iter().filter(|s| s.owner == owner) {
-                    body.push(state_statement(state, span_id)?);
+                    body.push(state_statement(state, InitScope::SCENE, span_id)?);
                 }
-                entity_statements(entity, plan, &mut body)?;
+                entity_statements(entity, plan, span_id, &mut body)?;
             }
         }
     }
@@ -409,89 +532,127 @@ fn camera_statements(camera: &Camera, body: &mut Vec<Stmt>) -> Result<(), String
 fn entity_statements(
     entity: &Entity,
     plan: &ResourcePlan,
+    span_id: &mut dyn FnMut(crate::source::Span) -> Result<u32, String>,
     body: &mut Vec<Stmt>,
 ) -> Result<(), String> {
     let record = format!("e{}", entity.index);
-    body.push(Stmt::Comment(format!(
-        "entity #{} {} ({})",
-        entity.index, entity.name, entity.symbol
-    )));
+    body.push(Stmt::Comment(match &entity.prefab {
+        Some(instance) => format!(
+            "entity #{} {} ({}), an instance of {}",
+            entity.index, entity.name, entity.symbol, instance.prefab
+        ),
+        None => format!(
+            "entity #{} {} ({})",
+            entity.index, entity.name, entity.symbol
+        ),
+    }));
     body.push(Stmt::Const {
         name: record.clone(),
         value: Expr::ident("ctx").member("e").index(entity.index),
         span: Some(entity.span),
     });
+    if plan.entity_instances.get(entity.index as usize).is_none() {
+        return Err(format!("the entity '{}' is not in the plan", entity.symbol));
+    }
+    field_statements(entity, &record, InitScope::SCENE, span_id, body)
+}
+
+/// The statements that set the fields of `entity` through the context, on the record `record`
+/// (`spec/scenes.md` section 11: the fields in declaration order). A constant is set as it is;
+/// an expression of a prefab is lowered for `scope`; a bound field or param is the runtime's
+/// to set after `init`, and a texture or sampler is not written at all, the manifest names it
+/// (decision 0054). Every field is set in registry order, which the order of the source can
+/// only change for the fields of a prefab, whose expressions may call `random()`: then they
+/// are set in the order of their declarations.
+fn field_statements(
+    entity: &Entity,
+    record: &str,
+    scope: InitScope,
+    span_id: &mut dyn FnMut(crate::source::Span) -> Result<u32, String>,
+    body: &mut Vec<Stmt>,
+) -> Result<(), String> {
+    // The value to set and where it was declared; `None` for a value the runtime sets.
+    let mut value_of = |source: &Source| -> Result<Option<Expr>, String> {
+        Ok(match source {
+            Source::Const(value) => Some(value_expr(value)?),
+            Source::Bound(_) => None,
+            Source::Expr(expr) => Some(emit_init_expr(expr, scope, &mut *span_id)?),
+        })
+    };
+    let mut sets: Vec<(u32, Stmt)> = Vec::new();
+    let mut computed = false;
     for (name, field) in [
         ("position", &entity.position),
         ("rotation", &entity.rotation),
         ("scale", &entity.scale),
     ] {
-        let Some(value) = field.source.as_const() else {
+        computed |= matches!(field.source, Source::Expr(_));
+        let Some(value) = value_of(&field.source)? else {
             continue;
         };
-        body.push(Stmt::Expr {
-            expr: ctx_call(
-                "setTransform",
-                vec![Expr::ident(&record), Expr::string(name), value_expr(value)?],
-            ),
-            span: Some(field.span),
-        });
+        sets.push((
+            field.span.start,
+            Stmt::Expr {
+                expr: ctx_call(
+                    "setTransform",
+                    vec![Expr::ident(record), Expr::string(name), value],
+                ),
+                span: Some(field.span),
+            },
+        ));
     }
-    if let Some(visible) = entity.visible.source.as_const() {
-        body.push(Stmt::Expr {
-            expr: ctx_call(
-                "setVisible",
-                vec![Expr::ident(&record), value_expr(visible)?],
-            ),
-            span: Some(entity.visible.span),
-        });
+    computed |= matches!(entity.visible.source, Source::Expr(_));
+    if let Some(visible) = value_of(&entity.visible.source)? {
+        sets.push((
+            entity.visible.span.start,
+            Stmt::Expr {
+                expr: ctx_call("setVisible", vec![Expr::ident(record), visible]),
+                span: Some(entity.visible.span),
+            },
+        ));
     }
-    let instance = plan
-        .entity_instances
-        .get(entity.index as usize)
-        .ok_or_else(|| format!("the entity '{}' is not in the plan", entity.symbol))?;
-    if let (Some(index), Some(material)) = (instance, &entity.material) {
-        let planned = plan
-            .instances
-            .get(*index as usize)
-            .ok_or_else(|| format!("the material instance {index} is not in the plan"))?;
-        for (param, desc) in planned.params.iter().zip(&material.params) {
-            // A bound param's value is the binding's, written after `init`; a texture or
-            // sampler is not written at all, the manifest names it (decision 0054).
-            let Some(value) = &param.value else {
-                continue;
-            };
-            if param.class == ParamClass::Resource {
+    if let Some(material) = &entity.material {
+        for param in &material.params {
+            if param.update == UpdateClass::Resource {
                 continue;
             }
-            body.push(Stmt::Expr {
-                expr: ctx_call(
-                    "setParam",
-                    vec![
-                        Expr::ident(&record),
-                        Expr::string(&param.name),
-                        value_expr(value)?,
-                    ],
-                ),
-                span: Some(desc.span),
-            });
+            computed |= matches!(param.source, Source::Expr(_));
+            let Some(value) = value_of(&param.source)? else {
+                continue;
+            };
+            sets.push((
+                param.span.start,
+                Stmt::Expr {
+                    expr: ctx_call(
+                        "setParam",
+                        vec![Expr::ident(record), Expr::string(&param.name), value],
+                    ),
+                    span: Some(param.span),
+                },
+            ));
         }
     }
     if let Some(light) = &entity.light {
         for (name, field) in [("color", &light.color), ("intensity", &light.intensity)] {
-            // A bound field's value is the binding's, written after `init`.
-            let Some(value) = field.source.as_const() else {
+            let Some(value) = value_of(&field.source)? else {
                 continue;
             };
-            body.push(Stmt::Expr {
-                expr: ctx_call(
-                    "setLight",
-                    vec![Expr::ident(&record), Expr::string(name), value_expr(value)?],
-                ),
-                span: Some(field.span),
-            });
+            sets.push((
+                field.span.start,
+                Stmt::Expr {
+                    expr: ctx_call(
+                        "setLight",
+                        vec![Expr::ident(record), Expr::string(name), value],
+                    ),
+                    span: Some(field.span),
+                },
+            ));
         }
     }
+    if computed {
+        sets.sort_by_key(|(start, _)| *start);
+    }
+    body.extend(sets.into_iter().map(|(_, statement)| statement));
     Ok(())
 }
 

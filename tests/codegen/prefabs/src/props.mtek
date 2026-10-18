@@ -1,0 +1,36 @@
+// The prefab of another module: params with and without defaults, a user material whose param
+// is bound, a function of its own module, bindings, per-instance state, a lifecycle function
+// and handlers (spec/scenes.md section 5, decision 0062).
+const LIFT = 0.5;
+
+material Glow {
+    param tint: color = #ffffff;
+    param level: f32 = 1.0;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * level, 1.0);
+    }
+}
+
+fn wobble(t: f32, amount: f32) -> f32 {
+    return sin(t) * amount;
+}
+
+export prefab Lamp {
+    param origin: vec3;
+    param tint: color = #ff8800;
+    param spin: f32 = 1.0;
+    state hits: i32 = 0;
+    state phase: f32 = spin * 2.0;
+    position: bind(origin + vec3(0.0, LIFT + wobble(frame.time, 0.25), 0.0));
+    scale: vec3(spin, spin, spin);
+    mesh: Sphere { radius: 0.5; segments: 16; rings: 8; };
+    material: Glow { tint: tint; level: bind(1.0 + wobble(frame.time, 0.5)); };
+
+    update(dt: f32) {
+        self.rotation = quat.axis_angle(vec3(0.0, 1.0, 0.0), frame.time * spin + phase);
+    }
+    on key_down(Key.Space) {
+        self.hits += 1;
+        self.material.tint = #00ff00;
+    }
+}

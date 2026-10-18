@@ -1,19 +1,9 @@
 [
   {
-    "code": "MTEK-E9010",
-    "file": "src/main.mtek",
-    "startByte": 132,
-    "endByte": 173,
-    "message": "`prefab` declarations are specified for v0.1 but not implemented by this compiler build yet (planned for M5).",
-    "notes": [
-      "this compiler build implements the language up to milestone M1"
-    ]
-  },
-  {
     "code": "MTEK-E5110",
     "file": "src/main.mtek",
-    "startByte": 150,
-    "endByte": 155,
+    "startByte": 95,
+    "endByte": 100,
     "message": "The prefab 'Lamp' declares a light, but lights are allowed only on the named entities of a scene.",
     "notes": [
       "a prefab can be spawned any number of times, so the number of lights would not be static",

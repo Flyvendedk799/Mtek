@@ -226,9 +226,9 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5014"></a>E5014 | unknown scene object kind | `lamp Main { … }`; v0.1 kinds: `camera` |
 | <a id="mtek-e5020"></a>E5020 | material without mesh | |
 | <a id="mtek-e5030"></a>E5030 | named entity cannot be destroyed | |
-| <a id="mtek-e5040"></a>E5040 | prefab cannot contain entities | |
-| <a id="mtek-e5041"></a>E5041 | missing prefab parameter | |
-| <a id="mtek-e5042"></a>E5042 | prefab instance sets non-parameter | |
+| <a id="mtek-e5040"></a>E5040 | prefab cannot contain entities | a nested `entity` in a `prefab` (at the nested entity's name; decision 0062) |
+| <a id="mtek-e5041"></a>E5041 | missing prefab parameter | an instance leaves out a param without a default; one diagnostic per param, with the param's declaration as related span |
+| <a id="mtek-e5042"></a>E5042 | prefab instance sets non-parameter | a name that is no param, or a member other than `name: value;`; a note lists the params |
 | <a id="mtek-e5050"></a>E5050 | invalid lifecycle signature | |
 | <a id="mtek-e5051"></a>E5051 | duplicate lifecycle function | |
 | <a id="mtek-e5052"></a>E5052 | unknown lifecycle function | |
@@ -248,7 +248,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5092"></a>E5092 | too many static entities | |
 | <a id="mtek-e5100"></a>E5100 | non-opaque color in material parameter | |
 | <a id="mtek-w5101"></a>W5101 | fragment alpha ignored | constant alpha ≠ 1 |
-| <a id="mtek-e5110"></a>E5110 | light in prefab | |
+| <a id="mtek-e5110"></a>E5110 | light in prefab | at the `light` member; the light is not part of the prefab's entity (decisions 0053, 0062) |
 | <a id="mtek-e5111"></a>E5111 | too many lights | > 4 |
 | <a id="mtek-e5901"></a>E5901 | scene switching not supported | switching the active scene at run time |
 | <a id="mtek-e5902"></a>E5902 | transparency not supported | |

@@ -1,0 +1,8 @@
+prefab Crate {
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crat {}
+}

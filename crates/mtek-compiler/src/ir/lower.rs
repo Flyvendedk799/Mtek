@@ -149,16 +149,31 @@ pub(super) fn lower(
     };
     let mut modules = Vec::with_capacity(units.len());
     let mut entry_scene = None;
+    let mut deferred = Vec::new();
     for (index, unit) in units.iter().enumerate() {
-        let (module, scene) = lower_module(project, unit, index == 0, &context)?;
+        let (module, scene, marks) = lower_module(project, unit, index == 0, &context)?;
         modules.push(module);
+        deferred.extend(marks);
         entry_scene = entry_scene.or(scene);
     }
     let entry_scene = entry_scene.ok_or("the entry scene is not a scene of the entry module")?;
+    // The static instances of prefabs become entities with the prefab's fields, state,
+    // behaviours and bindings, once every prefab is lowered (decision 0062).
+    super::instantiate::instantiate(&mut modules, &deferred)?;
     Ok(Program {
         entry_scene,
         modules,
     })
+}
+
+/// A material param of a static prefab instance that a lifecycle function or handler of its
+/// scene writes. The instance has no material until it is instantiated, so the update class
+/// `imperative` is applied afterwards.
+#[derive(Clone, Debug)]
+pub(super) struct ImperativeMark {
+    pub(super) scene: Symbol,
+    pub(super) entity: u32,
+    pub(super) param: String,
 }
 
 /// What every module's lowering needs to know about the whole program.
@@ -191,7 +206,7 @@ fn lower_module(
     unit: &Unit<'_>,
     entry: bool,
     context: &Context<'_>,
-) -> Result<(Module, Option<Symbol>), Defect> {
+) -> Result<(Module, Option<Symbol>, Vec<ImperativeMark>), Defect> {
     let Unit {
         module,
         resolution,
@@ -216,6 +231,7 @@ fn lower_module(
     };
     let mut items = Vec::new();
     let mut entry_scene = None;
+    let mut marks = Vec::new();
     for item in &module.items {
         match &item.kind {
             ItemKind::Const(decl) => {
@@ -229,10 +245,11 @@ fn lower_module(
                 let checked = types
                     .scene(def)
                     .ok_or_else(|| format!("scene '{}' was not checked", decl.name.name))?;
-                let scene = lowering.scene(decl, checked)?;
+                let (scene, scene_marks) = lowering.scene(decl, checked)?;
                 if entry && resolution.entry_scene() == Some(def) {
                     entry_scene = Some(scene.symbol.clone());
                 }
+                marks.extend(scene_marks);
                 items.push(Item::Scene(scene));
             }
             ItemKind::Import(_) => {}
@@ -248,9 +265,12 @@ fn lower_module(
                 let symbol = Symbol::item(&path, &decl.name.name);
                 items.push(Item::Material(lowering.material(decl, symbol)?));
             }
-            // Everything else is gated in this build (`E9010`), so a program
-            // without errors has none of it.
-            ItemKind::Prefab(_) | ItemKind::Error => {
+            ItemKind::Prefab(decl) => {
+                let symbol = Symbol::item(&path, &decl.name.name);
+                items.push(Item::Prefab(Box::new(lowering.prefab(decl, symbol)?)));
+            }
+            // A syntax error never reaches the lowering.
+            ItemKind::Error => {
                 return Err("a module item of a kind this build does not lower".to_owned());
             }
         }
@@ -263,12 +283,13 @@ fn lower_module(
             items,
         },
         entry_scene,
+        marks,
     ))
 }
 
 /// How many handlers of the same event (and filter) the body of `owner` has declared before
 /// `handler`: the number that keeps their symbols apart.
-fn handler_ordinal(
+pub(super) fn handler_ordinal(
     counts: &mut BTreeMap<String, usize>,
     owner: Owner,
     handler: &ast::Handler,
@@ -366,7 +387,11 @@ impl Lowering<'_> {
         })
     }
 
-    fn scene(&self, decl: &ast::SceneDecl, checked: &CheckedScene) -> Result<Scene, Defect> {
+    fn scene(
+        &self,
+        decl: &ast::SceneDecl,
+        checked: &CheckedScene,
+    ) -> Result<(Scene, Vec<ImperativeMark>), Defect> {
         let symbol = Symbol::item(self.path, &checked.name);
         let what = format!("scene '{}'", checked.name);
         known_fields(&what, &checked.fields, &SCENE_FIELDS)?;
@@ -404,25 +429,35 @@ impl Lowering<'_> {
             self.entity(entity, &symbol, None, &mut entities)?;
         }
         let (state, behaviors, bindings) = self.state_and_behaviors(decl, checked, &symbol)?;
-        self.mark_imperative(checked, &mut entities);
-        Ok(Scene {
-            name: checked.name.clone(),
-            symbol,
-            span: checked.span,
-            fields,
-            constants,
-            cameras,
-            entities,
-            state,
-            behaviors,
-            bindings,
-        })
+        let marks = self.mark_imperative(checked, &symbol, &mut entities);
+        Ok((
+            Scene {
+                name: checked.name.clone(),
+                symbol,
+                span: checked.span,
+                fields,
+                constants,
+                cameras,
+                entities,
+                state,
+                behaviors,
+                bindings,
+            },
+            marks,
+        ))
     }
 
     /// A material param that some lifecycle function or handler writes is `imperative`
-    /// (`spec/materials.md` section 4).
-    fn mark_imperative(&self, checked: &CheckedScene, entities: &mut [Entity]) {
+    /// (`spec/materials.md` section 4). The material of a static prefab instance is not known
+    /// yet: its marks are returned, for the instantiation to apply.
+    fn mark_imperative(
+        &self,
+        checked: &CheckedScene,
+        scene: &Symbol,
+        entities: &mut [Entity],
+    ) -> Vec<ImperativeMark> {
         let order = checked.entities_in_order();
+        let mut deferred = Vec::new();
         for write in self.types.writes() {
             let crate::types::WriteTarget::MaterialParam { entity, param } = &write.target else {
                 continue;
@@ -430,14 +465,25 @@ impl Lowering<'_> {
             let Some(index) = order.iter().position(|e| e.def == Some(*entity)) else {
                 continue;
             };
-            let params = entities
-                .get_mut(index)
-                .and_then(|e| e.material.as_mut())
-                .map(|m| &mut m.params);
+            let Some(target) = entities.get_mut(index) else {
+                continue;
+            };
+            if target.prefab.is_some() {
+                if let Ok(entity) = u32::try_from(index) {
+                    deferred.push(ImperativeMark {
+                        scene: scene.clone(),
+                        entity,
+                        param: param.clone(),
+                    });
+                }
+                continue;
+            }
+            let params = target.material.as_mut().map(|m| &mut m.params);
             if let Some(slot) = params.and_then(|p| p.iter_mut().find(|p| p.name == *param)) {
                 slot.update = UpdateClass::Imperative;
             }
         }
+        deferred
     }
 
     /// The `state` and the lifecycle functions and handlers of the scene and, in stable instance
@@ -509,6 +555,10 @@ impl Lowering<'_> {
     ) -> Result<(), Defect> {
         let index = *next;
         *next += 1;
+        // An instance's state, behaviours and bindings are its prefab's (instantiated later).
+        if entity.prefab.is_some() {
+            return Ok(());
+        }
         let who = Owner::Entity { index };
         let symbol = owner.child(&entity.name.name);
         for member in &entity.members {
@@ -536,7 +586,7 @@ impl Lowering<'_> {
 
     /// The constants of a scene body and, depth first, of its entities'
     /// bodies, in source order.
-    fn body_constants(
+    pub(super) fn body_constants(
         &self,
         members: &[SceneMember],
         scene: &Symbol,
@@ -562,6 +612,9 @@ impl Lowering<'_> {
         symbol: &Symbol,
         out: &mut Vec<Const>,
     ) -> Result<(), Defect> {
+        if entity.prefab.is_some() {
+            return Ok(());
+        }
         for member in &entity.members {
             match member {
                 EntityMember::Const(decl) => {
@@ -601,7 +654,7 @@ impl Lowering<'_> {
     }
 
     /// Append `checked` and then its children (pre-order) to `out`.
-    fn entity(
+    pub(super) fn entity(
         &self,
         checked: &CheckedEntity,
         owner: &Symbol,
@@ -613,6 +666,10 @@ impl Lowering<'_> {
         let fields = &checked.fields;
         let index = u32::try_from(out.len()).map_err(|_| "too many entities".to_owned())?;
         let symbol = owner.child(&checked.name);
+        if let Some(instance) = &checked.instance {
+            out.push(self.pending_instance(checked, instance, index, symbol, parent)?);
+            return Ok(());
+        }
         let mesh = match fields.iter().find(|f| f.name == "mesh") {
             Some(field) => {
                 let (value, origin, span) = parts(&what, field, checked.span)?;
@@ -656,6 +713,7 @@ impl Lowering<'_> {
             mesh,
             material,
             light,
+            prefab: None,
         });
         for child in &checked.children {
             self.entity(child, &symbol, Some(index), out)?;

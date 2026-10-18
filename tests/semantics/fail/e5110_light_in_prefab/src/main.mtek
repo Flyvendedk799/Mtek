@@ -1,5 +1,4 @@
-// A prefab may not declare a light: the light count must be static (E5110). Prefabs themselves
-// are not implemented yet (E9010).
+// A prefab may not declare a light: the light count must be static (E5110).
 prefab Lamp {
     light: PointLight {};
 }

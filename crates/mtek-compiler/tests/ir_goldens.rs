@@ -28,8 +28,9 @@ use serde_json::Value;
 /// The fixtures with IR goldens: pass scenes A and B of M1-11, the
 /// function bodies of M2-02 and the materials of M2-04 (a group fixture
 /// `materials/pulse` has the golden `materials_pulse.ir.json`), the textures and
-/// samplers of M4-04 (decision 0054) and the assignable places of M2-13 (decision 0045).
-const GOLDEN_FIXTURES: [&str; 7] = [
+/// samplers of M4-04 (decision 0054), the assignable places of M2-13 (decision 0045) and the
+/// prefabs with their static instances of M5-01 (decision 0062).
+const GOLDEN_FIXTURES: [&str; 9] = [
     "scene_a_target_camera_box",
     "scene_b_orthographic_nested",
     "functions_statements_and_calls",
@@ -37,6 +38,8 @@ const GOLDEN_FIXTURES: [&str; 7] = [
     "materials/params_and_defaults",
     "materials/textures",
     "functions/assignable_places",
+    "prefab_behaviours",
+    "modules_imported_prefab",
 ];
 
 /// The file name stem of the golden of `fixture`.
@@ -276,12 +279,28 @@ fn every_node_has_a_span_in_its_file_and_every_symbol_is_qualified() {
                     .map(|(path, object)| (path, object, prefix.clone(), file)),
             );
         }
+        // The state, behaviours and bindings of a static prefab instance are copies of the
+        // prefab's, which keep its spans (decision 0062): a span may also be in the file of a
+        // module that declares a prefab.
+        let prefab_files: Vec<u64> = value["modules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|module| {
+                module["items"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|item| item["kind"] == "prefab")
+            })
+            .map(|module| module["file"].as_u64().unwrap())
+            .collect();
         let mut symbols = 0;
         for (path, object, prefix, module_file) in &found {
             if let Some(Value::Object(span)) = object.get("span") {
-                assert_eq!(
-                    span["file"].as_u64(),
-                    Some(*module_file),
+                let file = span["file"].as_u64();
+                assert!(
+                    file == Some(*module_file) || file.is_some_and(|f| prefab_files.contains(&f)),
                     "pass/{name} {path}"
                 );
             }

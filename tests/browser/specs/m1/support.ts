@@ -38,10 +38,26 @@ export interface Capture {
   overlayPresent: boolean;
 }
 
+/** Where a fixture is served from and how long it runs before it is read back. */
+export interface CaptureOptions {
+  /** The directory of `.out/` that holds the built fixture (`m1`, `m5`). */
+  bucket?: string;
+  /** Frames stepped before the read-back. */
+  frames?: number;
+  /** The manual clock's step, seconds. */
+  dt?: number;
+}
+
 /** Opens a built fixture's test page, mounts it with a fixed offscreen target, steps one frame and reads it back. */
-export async function mountAndCapture(page: Page, fixture: string, target: { width: number; height: number }): Promise<Capture> {
-  await page.goto(`/m1/${fixture}/index.html`);
-  const raw = await page.evaluate(async (renderTarget) => {
+export async function mountAndCapture(
+  page: Page,
+  fixture: string,
+  target: { width: number; height: number },
+  options: CaptureOptions = {},
+): Promise<Capture> {
+  const { bucket = "m1", frames = 1, dt = 1 / 60 } = options;
+  await page.goto(`/${bucket}/${fixture}/index.html`);
+  const raw = await page.evaluate(async ({ renderTarget, frames: count, dt: step }) => {
     const w = window as unknown as TestBootstrapWindow;
     const reported: DiagnosticLike[] = [];
     let app: AppLike;
@@ -51,7 +67,7 @@ export async function mountAndCapture(page: Page, fixture: string, target: { wid
       const failed = error as { kind?: string; diagnostics?: unknown };
       throw new Error(`mount rejected: ${String(failed.kind)} ${JSON.stringify(failed.diagnostics)}`, { cause: error });
     }
-    app.debug.step(1, 1 / 60);
+    app.debug.step(count, step);
     const pixels = await app.debug.readPixels();
     let binary = "";
     for (let i = 0; i < pixels.data.length; i += 0x8000) binary += String.fromCharCode(...pixels.data.subarray(i, i + 0x8000));
@@ -67,7 +83,7 @@ export async function mountAndCapture(page: Page, fixture: string, target: { wid
     };
     app.dispose();
     return result;
-  }, target);
+  }, { renderTarget: target, frames, dt });
   const { base64, ...rest } = raw;
   return { ...rest, data: new Uint8Array(Buffer.from(base64, "base64")) };
 }

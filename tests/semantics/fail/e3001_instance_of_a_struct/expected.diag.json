@@ -1,0 +1,22 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 79,
+    "endByte": 83,
+    "message": "'Pair' is a struct, not a prefab.",
+    "expected": "a prefab",
+    "actual": "struct",
+    "related": [
+      {
+        "message": "'Pair' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 7,
+        "endByte": 11
+      }
+    ],
+    "notes": [
+      "`entity Name: Prefab { .. }` instantiates a prefab"
+    ]
+  }
+]

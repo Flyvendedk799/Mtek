@@ -5,8 +5,8 @@
 use super::model::{
     Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Camera, Const, Entity, Expr,
     ExprKind, Field, Function, Item, Light, LightKind, LocalItem, LocalKind, MaterialInstanceDesc,
-    MaterialItem, Mesh, MeshDesc, NamedExpr, Origin, Owner, Place, PlaceRoot, PlaceStep, Program,
-    Projection, ProjectionDesc, Scene, Source, State, Stmt, StructItem,
+    MaterialItem, Mesh, MeshDesc, NamedExpr, Origin, Owner, Place, PlaceRoot, PlaceStep,
+    PrefabItem, Program, Projection, ProjectionDesc, Scene, Source, State, Stmt, StructItem,
 };
 use crate::source::{SourceMap, Span};
 
@@ -107,6 +107,7 @@ pub fn to_human(program: &Program, sources: &SourceMap) -> String {
                 Item::Struct(item) => out.structure(2, item),
                 Item::Function(function) => out.function(2, function),
                 Item::Material(material) => out.material_item(2, material),
+                Item::Prefab(prefab) => out.prefab(2, prefab),
             }
         }
     }
@@ -208,6 +209,46 @@ impl Tree<'_> {
         );
         self.locals(depth + 1, &function.locals);
         self.block(depth + 1, &function.body, &function.locals);
+    }
+
+    /// A prefab: its params and, as a one-entity scene, its entity (`entity #0` is `self`), state,
+    /// behaviours and bindings.
+    fn prefab(&mut self, depth: usize, prefab: &PrefabItem) {
+        let location = self.location(prefab.span);
+        self.line(
+            depth,
+            format!("prefab {} [{}] {location}", prefab.name, prefab.symbol),
+        );
+        for (index, param) in prefab.params.iter().enumerate() {
+            let location = self.location(param.span);
+            let default = param
+                .default
+                .as_ref()
+                .map_or_else(String::new, |value| format!(" = {value}"));
+            self.line(
+                depth + 1,
+                format!(
+                    "param #{index} {}: {}{default} {location}",
+                    param.name, param.ty
+                ),
+            );
+        }
+        if !prefab.constants.is_empty() {
+            self.line(depth + 1, "constants".to_owned());
+            for constant in &prefab.constants {
+                self.constant(depth + 2, constant);
+            }
+        }
+        self.entity(depth + 1, &prefab.entity);
+        for state in &prefab.state {
+            self.state(depth + 1, state);
+        }
+        for behavior in &prefab.behaviors {
+            self.behavior(depth + 1, behavior);
+        }
+        for binding in &prefab.bindings {
+            self.binding(depth + 1, binding);
+        }
     }
 
     fn locals(&mut self, depth: usize, locals: &[LocalItem]) {
@@ -593,6 +634,21 @@ impl Tree<'_> {
                 entity.index, entity.name, entity.symbol
             ),
         );
+        if let Some(instance) = &entity.prefab {
+            let params: Vec<String> = instance
+                .params
+                .iter()
+                .map(|p| format!("{}: {}", p.name, p.value))
+                .collect();
+            self.line(
+                depth + 1,
+                format!(
+                    "instance of {} {{ {} }}",
+                    instance.prefab,
+                    params.join(", ")
+                ),
+            );
+        }
         self.field(depth + 1, "position", &entity.position);
         self.field(depth + 1, "rotation", &entity.rotation);
         self.field(depth + 1, "scale", &entity.scale);
@@ -663,11 +719,13 @@ impl Tree<'_> {
     }
 }
 
-/// A field or param's source: its constant, or the binding that supplies it.
+/// A field or param's source: its constant, the binding that supplies it, or the expression a
+/// prefab's `init` computes.
 fn source_text(source: &Source) -> String {
     match source {
         Source::Const(value) => value.to_string(),
         Source::Bound(id) => format!("bind#{id}"),
+        Source::Expr(expr) => format!("init {}", expr_text(expr)),
     }
 }
 

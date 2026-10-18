@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E5075",
+    "file": "src/main.mtek",
+    "startByte": 110,
+    "endByte": 144,
+    "message": "The bindings of self.position, self.scale depend on each other.",
+    "related": [
+      {
+        "message": "binds self.position, which reads self.scale",
+        "file": "src/main.mtek",
+        "startByte": 110,
+        "endByte": 144
+      },
+      {
+        "message": "binds self.scale, which reads self.position",
+        "file": "src/main.mtek",
+        "startByte": 157,
+        "endByte": 194
+      }
+    ],
+    "notes": [
+      "help: break the cycle: bind one of them to something else, or update it from `update`"
+    ]
+  }
+]

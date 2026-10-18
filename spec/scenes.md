@@ -105,6 +105,8 @@ prefab Crate {
 - **Static instance:** `entity First: Crate { origin: vec3(0.0, 3.0, 0.0); }` — the body may set **only params** (`E5042` for anything else, with a note listing the prefab's params). Static instances are named entities (§4.5).
 - **Dynamic instance:** `spawn(Crate { origin: p })` (§9).
 - A prefab has no access to scene state (it is not inside a scene); its handlers use `self`, its params, its state, constants and functions. Referencing a scene name from a prefab is `E2003`.
+- A field value, a state initialiser or a material param of a prefab may read its params, constants and state (§11) and call functions; it is computed when an instance is created. Construction-only values (`mesh`, `body`, `collider`) are constants (`E3090`). A prefab's `bind` follows §8.4 with `self` for the entity. An instance's fields, state and material params are read and written from the scene like those of any named entity (§4.4, §8), except that what the prefab binds cannot be assigned (`E5070`).
+- The params of a **static** instance are constant expressions (`E3090`); a run-time value is what `spawn` passes (§9). A prefab with a `body`, a `collider` or a collision handler is part of M5-03; `light` in a prefab is `E5110`. Decision `spec/decisions/0062-prefabs.md` records the details this section leaves open.
 
 ## 6. Lifecycle functions
 

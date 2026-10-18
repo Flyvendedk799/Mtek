@@ -1,0 +1,2142 @@
+{
+  "entryScene": "src/main.mtek::Demo",
+  "modules": [
+    {
+      "path": "src/main.mtek",
+      "file": 0,
+      "span": {"file": 0, "start": 0, "end": 1781},
+      "items": [
+        {
+          "kind": "const",
+          "name": "LIFT",
+          "symbol": "src/main.mtek::LIFT",
+          "type": "f32",
+          "value": {"f32": 0.5},
+          "span": {"file": 0, "start": 332, "end": 349}
+        },
+        {
+          "kind": "material",
+          "name": "Glow",
+          "symbol": "src/main.mtek::Glow",
+          "params": [
+            {
+              "name": "tint",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 0, "start": 371, "end": 399}
+            },
+            {
+              "name": "level",
+              "type": "f32",
+              "default": {"f32": 1.0},
+              "span": {"file": 0, "start": 404, "end": 427}
+            }
+          ],
+          "layout": {
+            "id": "material:src/main.mtek::Glow",
+            "wgslStruct": "MtekParams_e2cab98b_Glow",
+            "size": 32,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "src/main.mtek::Glow",
+              "offset": 0,
+              "size": 32,
+              "align": 16,
+              "members": [
+                {
+                  "name": "tint",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                },
+                {
+                  "name": "level",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 16,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "src/main.mtek::Glow.fragment",
+            "surfaceInputs": [],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "input",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 0, "start": 441, "end": 446}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "builtin",
+                    "function": "color.linear",
+                    "args": [
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "param",
+                            "param": 0,
+                            "name": "tint",
+                            "type": "color",
+                            "span": {"file": 0, "start": 501, "end": 505}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 501, "end": 509}
+                        },
+                        "rhs": {
+                          "kind": "param",
+                          "param": 1,
+                          "name": "level",
+                          "type": "f32",
+                          "span": {"file": 0, "start": 512, "end": 517}
+                        },
+                        "type": "vec3",
+                        "span": {"file": 0, "start": 501, "end": 517}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 0, "start": 519, "end": 522}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 0, "start": 488, "end": 523}
+                  },
+                  "span": {"file": 0, "start": 481, "end": 524}
+                }
+              ],
+              "span": {"file": 0, "start": 471, "end": 530}
+            },
+            "span": {"file": 0, "start": 432, "end": 530}
+          },
+          "span": {"file": 0, "start": 351, "end": 532}
+        },
+        {
+          "kind": "function",
+          "name": "wobble",
+          "symbol": "src/main.mtek::wobble",
+          "effect": "pure",
+          "gpuReachable": false,
+          "cpuReachable": true,
+          "result": "f32",
+          "locals": [
+            {
+              "index": 0,
+              "name": "t",
+              "type": "f32",
+              "kind": "param",
+              "span": {"file": 0, "start": 544, "end": 545}
+            },
+            {
+              "index": 1,
+              "name": "amount",
+              "type": "f32",
+              "kind": "param",
+              "span": {"file": 0, "start": 552, "end": 558}
+            }
+          ],
+          "body": {
+            "stmts": [
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "binary",
+                  "op": "*",
+                  "lhs": {
+                    "kind": "builtin",
+                    "function": "sin",
+                    "args": [
+                      {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "t",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 589, "end": 590}
+                      }
+                    ],
+                    "type": "f32",
+                    "span": {"file": 0, "start": 585, "end": 591}
+                  },
+                  "rhs": {
+                    "kind": "local",
+                    "local": 1,
+                    "name": "amount",
+                    "type": "f32",
+                    "span": {"file": 0, "start": 594, "end": 600}
+                  },
+                  "type": "f32",
+                  "span": {"file": 0, "start": 585, "end": 600}
+                },
+                "span": {"file": 0, "start": 578, "end": 601}
+              }
+            ],
+            "span": {"file": 0, "start": 572, "end": 603}
+          },
+          "span": {"file": 0, "start": 534, "end": 603}
+        },
+        {
+          "kind": "function",
+          "name": "pick",
+          "symbol": "src/main.mtek::pick",
+          "effect": "cpu",
+          "gpuReachable": false,
+          "cpuReachable": true,
+          "result": "i32",
+          "locals": [
+            {
+              "index": 0,
+              "name": "limit",
+              "type": "i32",
+              "kind": "param",
+              "span": {"file": 0, "start": 617, "end": 622}
+            }
+          ],
+          "body": {
+            "stmts": [
+              {
+                "kind": "return",
+                "value": {
+                  "kind": "binary",
+                  "op": "+",
+                  "lhs": {
+                    "kind": "local",
+                    "local": 0,
+                    "name": "limit",
+                    "type": "i32",
+                    "span": {"file": 0, "start": 649, "end": 654}
+                  },
+                  "rhs": {
+                    "kind": "convert",
+                    "arg": {
+                      "kind": "binary",
+                      "op": "*",
+                      "lhs": {
+                        "kind": "builtin",
+                        "function": "random",
+                        "args": [],
+                        "type": "f32",
+                        "span": {"file": 0, "start": 661, "end": 669}
+                      },
+                      "rhs": {
+                        "kind": "const",
+                        "value": {"f32": 0.0},
+                        "type": "f32",
+                        "span": {"file": 0, "start": 672, "end": 675}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 661, "end": 675}
+                    },
+                    "type": "i32",
+                    "span": {"file": 0, "start": 657, "end": 676}
+                  },
+                  "type": "i32",
+                  "span": {"file": 0, "start": 649, "end": 676}
+                },
+                "span": {"file": 0, "start": 642, "end": 677}
+              }
+            ],
+            "span": {"file": 0, "start": 636, "end": 679}
+          },
+          "span": {"file": 0, "start": 605, "end": 679}
+        },
+        {
+          "kind": "prefab",
+          "name": "Lamp",
+          "symbol": "src/main.mtek::Lamp",
+          "params": [
+            {
+              "name": "origin",
+              "type": "vec3",
+              "default": null,
+              "span": {"file": 0, "start": 722, "end": 741}
+            },
+            {
+              "name": "tint",
+              "type": "color",
+              "default": {
+                "color": [1.0, 0.24620132, 0.0, 1.0]
+              },
+              "span": {"file": 0, "start": 746, "end": 774}
+            },
+            {
+              "name": "spin",
+              "type": "f32",
+              "default": {"f32": 1.0},
+              "span": {"file": 0, "start": 779, "end": 801}
+            }
+          ],
+          "constants": [
+            {
+              "name": "SPEED",
+              "symbol": "src/main.mtek::Lamp.SPEED",
+              "type": "f32",
+              "value": {"f32": 2.0},
+              "span": {"file": 0, "start": 699, "end": 717}
+            }
+          ],
+          "entity": {
+            "index": 0,
+            "name": "Lamp",
+            "symbol": "src/main.mtek::Lamp",
+            "parent": null,
+            "span": {"file": 0, "start": 681, "end": 1526},
+            "position": {
+              "source": {"bound": 0},
+              "origin": "written",
+              "span": {"file": 0, "start": 874, "end": 947}
+            },
+            "rotation": {
+              "source": {
+                "const": {
+                  "quat": [0.0, 0.0, 0.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 0, "start": 681, "end": 1526}
+            },
+            "scale": {
+              "source": {
+                "expr": {
+                  "kind": "construct",
+                  "args": [
+                    {
+                      "kind": "param",
+                      "param": 2,
+                      "name": "spin",
+                      "type": "f32",
+                      "span": {"file": 0, "start": 964, "end": 968}
+                    },
+                    {
+                      "kind": "param",
+                      "param": 2,
+                      "name": "spin",
+                      "type": "f32",
+                      "span": {"file": 0, "start": 970, "end": 974}
+                    },
+                    {
+                      "kind": "param",
+                      "param": 2,
+                      "name": "spin",
+                      "type": "f32",
+                      "span": {"file": 0, "start": 976, "end": 980}
+                    }
+                  ],
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 959, "end": 981}
+                }
+              },
+              "origin": "written",
+              "span": {"file": 0, "start": 952, "end": 982}
+            },
+            "visible": {
+              "source": {
+                "expr": {
+                  "kind": "binary",
+                  "op": ">",
+                  "lhs": {
+                    "kind": "param",
+                    "param": 2,
+                    "name": "spin",
+                    "type": "f32",
+                    "span": {"file": 0, "start": 996, "end": 1000}
+                  },
+                  "rhs": {
+                    "kind": "const",
+                    "value": {"f32": 0.0},
+                    "type": "f32",
+                    "span": {"file": 0, "start": 1003, "end": 1006}
+                  },
+                  "type": "bool",
+                  "span": {"file": 0, "start": 996, "end": 1006}
+                }
+              },
+              "origin": "written",
+              "span": {"file": 0, "start": 987, "end": 1007}
+            },
+            "mesh": {
+              "desc": {
+                "kind": "sphere",
+                "radius": 0.5,
+                "segments": 16,
+                "rings": 8
+              },
+              "origin": "written",
+              "span": {"file": 0, "start": 1012, "end": 1066}
+            },
+            "material": {
+              "material": "src/main.mtek::Glow",
+              "params": [
+                {
+                  "name": "tint",
+                  "type": "color",
+                  "source": {
+                    "expr": {
+                      "kind": "param",
+                      "param": 1,
+                      "name": "tint",
+                      "type": "color",
+                      "span": {"file": 0, "start": 1094, "end": 1098}
+                    }
+                  },
+                  "update": "imperative",
+                  "span": {"file": 0, "start": 1071, "end": 1146}
+                },
+                {
+                  "name": "level",
+                  "type": "f32",
+                  "source": {"bound": 1},
+                  "update": "bound",
+                  "span": {"file": 0, "start": 1071, "end": 1146}
+                }
+              ],
+              "origin": "written",
+              "span": {"file": 0, "start": 1071, "end": 1146}
+            }
+          },
+          "state": [
+            {
+              "name": "hits",
+              "symbol": "src/main.mtek::Lamp.hits",
+              "type": "i32",
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "init": {
+                "kind": "call",
+                "function": "src/main.mtek::pick",
+                "args": [
+                  {
+                    "kind": "const",
+                    "value": {"i32": 1},
+                    "type": "i32",
+                    "span": {"file": 0, "start": 829, "end": 830}
+                  }
+                ],
+                "type": "i32",
+                "span": {"file": 0, "start": 824, "end": 831}
+              },
+              "span": {"file": 0, "start": 806, "end": 832}
+            },
+            {
+              "name": "phase",
+              "symbol": "src/main.mtek::Lamp.phase",
+              "type": "f32",
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "init": {
+                "kind": "binary",
+                "op": "*",
+                "lhs": {
+                  "kind": "param",
+                  "param": 2,
+                  "name": "spin",
+                  "type": "f32",
+                  "span": {"file": 0, "start": 856, "end": 860}
+                },
+                "rhs": {
+                  "kind": "const",
+                  "value": {"f32": 2.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 863, "end": 868}
+                },
+                "type": "f32",
+                "span": {"file": 0, "start": 856, "end": 868}
+              },
+              "span": {"file": 0, "start": 837, "end": 869}
+            }
+          ],
+          "behaviors": [
+            {
+              "kind": {
+                "kind": "update"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Lamp.update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "dt",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1159, "end": 1161}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "entityField",
+                        "entity": 0,
+                        "field": "rotation",
+                        "type": "quat",
+                        "span": {"file": 0, "start": 1178, "end": 1191}
+                      },
+                      "steps": [],
+                      "type": "quat",
+                      "span": {"file": 0, "start": 1178, "end": 1191}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "builtin",
+                      "function": "quat.axis_angle",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 1.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 1210, "end": 1229}
+                        },
+                        {
+                          "kind": "binary",
+                          "op": "+",
+                          "lhs": {
+                            "kind": "binary",
+                            "op": "*",
+                            "lhs": {
+                              "kind": "frame",
+                              "member": "time",
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1231, "end": 1241}
+                            },
+                            "rhs": {
+                              "kind": "param",
+                              "param": 2,
+                              "name": "spin",
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1244, "end": 1248}
+                            },
+                            "type": "f32",
+                            "span": {"file": 0, "start": 1231, "end": 1248}
+                          },
+                          "rhs": {
+                            "kind": "state",
+                            "owner": {
+                              "kind": "entity",
+                              "index": 0
+                            },
+                            "name": "phase",
+                            "type": "f32",
+                            "span": {"file": 0, "start": 1251, "end": 1256}
+                          },
+                          "type": "f32",
+                          "span": {"file": 0, "start": 1231, "end": 1256}
+                        }
+                      ],
+                      "type": "quat",
+                      "span": {"file": 0, "start": 1194, "end": 1257}
+                    },
+                    "span": {"file": 0, "start": 1178, "end": 1258}
+                  }
+                ],
+                "span": {"file": 0, "start": 1168, "end": 1264}
+              },
+              "span": {"file": 0, "start": 1152, "end": 1264}
+            },
+            {
+              "kind": {
+                "kind": "fixedUpdate"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Lamp.fixed_update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "step",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1282, "end": 1286}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 0
+                        },
+                        "name": "phase",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1303, "end": 1313}
+                      },
+                      "steps": [],
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1303, "end": 1313}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "binary",
+                      "op": "+",
+                      "lhs": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 0
+                        },
+                        "name": "phase",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1316, "end": 1326}
+                      },
+                      "rhs": {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "step",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1329, "end": 1333}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1316, "end": 1333}
+                    },
+                    "span": {"file": 0, "start": 1303, "end": 1334}
+                  }
+                ],
+                "span": {"file": 0, "start": 1293, "end": 1340}
+              },
+              "span": {"file": 0, "start": 1269, "end": 1340}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "Space"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Lamp.on_key_down_Space",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 0
+                        },
+                        "name": "hits",
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1378, "end": 1387}
+                      },
+                      "steps": [],
+                      "type": "i32",
+                      "span": {"file": 0, "start": 1378, "end": 1387}
+                    },
+                    "op": "+=",
+                    "value": {
+                      "kind": "const",
+                      "value": {"i32": 1},
+                      "type": "i32",
+                      "span": {"file": 0, "start": 1391, "end": 1392}
+                    },
+                    "span": {"file": 0, "start": 1378, "end": 1393}
+                  },
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "instanceParam",
+                        "entity": 0,
+                        "param": "tint",
+                        "type": "color",
+                        "span": {"file": 0, "start": 1402, "end": 1420}
+                      },
+                      "steps": [],
+                      "type": "color",
+                      "span": {"file": 0, "start": 1402, "end": 1420}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "const",
+                      "value": {
+                        "color": [0.0, 1.0, 0.0, 1.0]
+                      },
+                      "type": "color",
+                      "span": {"file": 0, "start": 1423, "end": 1430}
+                    },
+                    "span": {"file": 0, "start": 1402, "end": 1431}
+                  }
+                ],
+                "span": {"file": 0, "start": 1368, "end": 1437}
+              },
+              "span": {"file": 0, "start": 1345, "end": 1437}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "pointer_down",
+                "filter": null
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Lamp.on_pointer_down",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "event",
+                  "type": "PointerEvent",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1458, "end": 1463}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "entityField",
+                        "entity": 0,
+                        "field": "visible",
+                        "type": "bool",
+                        "span": {"file": 0, "start": 1489, "end": 1501}
+                      },
+                      "steps": [],
+                      "type": "bool",
+                      "span": {"file": 0, "start": 1489, "end": 1501}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "unary",
+                      "op": "!",
+                      "operand": {
+                        "kind": "entityField",
+                        "entity": 0,
+                        "field": "visible",
+                        "type": "bool",
+                        "span": {"file": 0, "start": 1505, "end": 1517}
+                      },
+                      "type": "bool",
+                      "span": {"file": 0, "start": 1504, "end": 1517}
+                    },
+                    "span": {"file": 0, "start": 1489, "end": 1518}
+                  }
+                ],
+                "span": {"file": 0, "start": 1479, "end": 1524}
+              },
+              "span": {"file": 0, "start": 1442, "end": 1524}
+            }
+          ],
+          "bindings": [
+            {
+              "id": 0,
+              "symbol": "src/main.mtek::Lamp.bind_0",
+              "target": {
+                "kind": "transform",
+                "entity": 0,
+                "field": "position"
+              },
+              "deps": [
+                {
+                  "kind": "frame",
+                  "name": "time"
+                }
+              ],
+              "order": 0,
+              "type": "vec3",
+              "expr": {
+                "kind": "binary",
+                "op": "+",
+                "lhs": {
+                  "kind": "param",
+                  "param": 0,
+                  "name": "origin",
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 889, "end": 895}
+                },
+                "rhs": {
+                  "kind": "construct",
+                  "args": [
+                    {
+                      "kind": "const",
+                      "value": {"f32": 0.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 903, "end": 906}
+                    },
+                    {
+                      "kind": "binary",
+                      "op": "+",
+                      "lhs": {
+                        "kind": "const",
+                        "value": {"f32": 0.5},
+                        "type": "f32",
+                        "span": {"file": 0, "start": 908, "end": 912}
+                      },
+                      "rhs": {
+                        "kind": "call",
+                        "function": "src/main.mtek::wobble",
+                        "args": [
+                          {
+                            "kind": "frame",
+                            "member": "time",
+                            "type": "f32",
+                            "span": {"file": 0, "start": 922, "end": 932}
+                          },
+                          {
+                            "kind": "const",
+                            "value": {"f32": 0.25},
+                            "type": "f32",
+                            "span": {"file": 0, "start": 934, "end": 938}
+                          }
+                        ],
+                        "type": "f32",
+                        "span": {"file": 0, "start": 915, "end": 939}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 908, "end": 939}
+                    },
+                    {
+                      "kind": "const",
+                      "value": {"f32": 0.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 941, "end": 944}
+                    }
+                  ],
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 898, "end": 945}
+                },
+                "type": "vec3",
+                "span": {"file": 0, "start": 889, "end": 945}
+              },
+              "span": {"file": 0, "start": 884, "end": 946}
+            },
+            {
+              "id": 1,
+              "symbol": "src/main.mtek::Lamp.bind_1",
+              "target": {
+                "kind": "param",
+                "entity": 0,
+                "name": "level"
+              },
+              "deps": [
+                {
+                  "kind": "frame",
+                  "name": "time"
+                }
+              ],
+              "order": 1,
+              "type": "f32",
+              "expr": {
+                "kind": "binary",
+                "op": "+",
+                "lhs": {
+                  "kind": "const",
+                  "value": {"f32": 1.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1112, "end": 1115}
+                },
+                "rhs": {
+                  "kind": "call",
+                  "function": "src/main.mtek::wobble",
+                  "args": [
+                    {
+                      "kind": "frame",
+                      "member": "time",
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1125, "end": 1135}
+                    },
+                    {
+                      "kind": "const",
+                      "value": {"f32": 0.5},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1137, "end": 1140}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1118, "end": 1141}
+                },
+                "type": "f32",
+                "span": {"file": 0, "start": 1112, "end": 1141}
+              },
+              "span": {"file": 0, "start": 1107, "end": 1142}
+            }
+          ],
+          "span": {"file": 0, "start": 681, "end": 1526}
+        },
+        {
+          "kind": "scene",
+          "name": "Demo",
+          "symbol": "src/main.mtek::Demo",
+          "span": {"file": 0, "start": 1528, "end": 1780},
+          "fields": {
+            "clearColor": {
+              "source": {
+                "const": {
+                  "color": [0.0, 0.0, 0.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 0, "start": 1528, "end": 1780}
+            }
+          },
+          "constants": [],
+          "cameras": [
+            {
+              "name": "Main",
+              "symbol": "src/main.mtek::Demo.Main",
+              "span": {"file": 0, "start": 1545, "end": 1640},
+              "active": true,
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 2.0, 8.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1567, "end": 1597}
+              },
+              "target": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 1.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1606, "end": 1634}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1545, "end": 1640}
+              },
+              "projection": {
+                "desc": {
+                  "kind": "perspective",
+                  "fovY": 0.9,
+                  "near": 0.1,
+                  "far": 1000.0
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1545, "end": 1640}
+              }
+            }
+          ],
+          "entities": [
+            {
+              "index": 0,
+              "name": "Left",
+              "symbol": "src/main.mtek::Demo.Left",
+              "parent": null,
+              "span": {"file": 0, "start": 1645, "end": 1696},
+              "position": {
+                "source": {"bound": 0},
+                "origin": "written",
+                "span": {"file": 0, "start": 874, "end": 947}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 681, "end": 1526}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 952, "end": 982}
+              },
+              "visible": {
+                "source": {
+                  "expr": {
+                    "kind": "binary",
+                    "op": ">",
+                    "lhs": {
+                      "kind": "const",
+                      "value": {"f32": 1.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 996, "end": 1000}
+                    },
+                    "rhs": {
+                      "kind": "const",
+                      "value": {"f32": 0.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1003, "end": 1006}
+                    },
+                    "type": "bool",
+                    "span": {"file": 0, "start": 996, "end": 1006}
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 987, "end": 1007}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.5,
+                  "segments": 16,
+                  "rings": 8
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1012, "end": 1066}
+              },
+              "material": {
+                "material": "src/main.mtek::Glow",
+                "params": [
+                  {
+                    "name": "tint",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 0.24620132, 0.0, 1.0]
+                      }
+                    },
+                    "update": "imperative",
+                    "span": {"file": 0, "start": 1071, "end": 1146}
+                  },
+                  {
+                    "name": "level",
+                    "type": "f32",
+                    "source": {"bound": 1},
+                    "update": "bound",
+                    "span": {"file": 0, "start": 1071, "end": 1146}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 0, "start": 1071, "end": 1146}
+              },
+              "prefab": {
+                "prefab": "src/main.mtek::Lamp",
+                "params": [
+                  {
+                    "name": "origin",
+                    "value": {
+                      "vec3": [-2.0, 0.0, 0.0]
+                    }
+                  },
+                  {
+                    "name": "tint",
+                    "value": {
+                      "color": [1.0, 0.24620132, 0.0, 1.0]
+                    }
+                  },
+                  {
+                    "name": "spin",
+                    "value": {"f32": 1.0}
+                  }
+                ]
+              }
+            },
+            {
+              "index": 1,
+              "name": "Right",
+              "symbol": "src/main.mtek::Demo.Right",
+              "parent": null,
+              "span": {"file": 0, "start": 1701, "end": 1778},
+              "position": {
+                "source": {"bound": 2},
+                "origin": "written",
+                "span": {"file": 0, "start": 874, "end": 947}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 681, "end": 1526}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [2.0, 2.0, 2.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 952, "end": 982}
+              },
+              "visible": {
+                "source": {
+                  "expr": {
+                    "kind": "binary",
+                    "op": ">",
+                    "lhs": {
+                      "kind": "const",
+                      "value": {"f32": 2.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 996, "end": 1000}
+                    },
+                    "rhs": {
+                      "kind": "const",
+                      "value": {"f32": 0.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1003, "end": 1006}
+                    },
+                    "type": "bool",
+                    "span": {"file": 0, "start": 996, "end": 1006}
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 987, "end": 1007}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.5,
+                  "segments": 16,
+                  "rings": 8
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1012, "end": 1066}
+              },
+              "material": {
+                "material": "src/main.mtek::Glow",
+                "params": [
+                  {
+                    "name": "tint",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [0.0, 0.24620132, 1.0, 1.0]
+                      }
+                    },
+                    "update": "imperative",
+                    "span": {"file": 0, "start": 1071, "end": 1146}
+                  },
+                  {
+                    "name": "level",
+                    "type": "f32",
+                    "source": {"bound": 3},
+                    "update": "bound",
+                    "span": {"file": 0, "start": 1071, "end": 1146}
+                  }
+                ],
+                "origin": "written",
+                "span": {"file": 0, "start": 1071, "end": 1146}
+              },
+              "prefab": {
+                "prefab": "src/main.mtek::Lamp",
+                "params": [
+                  {
+                    "name": "origin",
+                    "value": {
+                      "vec3": [2.0, 0.0, 0.0]
+                    }
+                  },
+                  {
+                    "name": "tint",
+                    "value": {
+                      "color": [0.0, 0.24620132, 1.0, 1.0]
+                    }
+                  },
+                  {
+                    "name": "spin",
+                    "value": {"f32": 2.0}
+                  }
+                ]
+              }
+            }
+          ],
+          "state": [
+            {
+              "name": "hits",
+              "symbol": "src/main.mtek::Demo.Left.hits",
+              "type": "i32",
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "init": {
+                "kind": "call",
+                "function": "src/main.mtek::pick",
+                "args": [
+                  {
+                    "kind": "const",
+                    "value": {"i32": 1},
+                    "type": "i32",
+                    "span": {"file": 0, "start": 829, "end": 830}
+                  }
+                ],
+                "type": "i32",
+                "span": {"file": 0, "start": 824, "end": 831}
+              },
+              "span": {"file": 0, "start": 806, "end": 832}
+            },
+            {
+              "name": "phase",
+              "symbol": "src/main.mtek::Demo.Left.phase",
+              "type": "f32",
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "init": {
+                "kind": "binary",
+                "op": "*",
+                "lhs": {
+                  "kind": "const",
+                  "value": {"f32": 1.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 856, "end": 860}
+                },
+                "rhs": {
+                  "kind": "const",
+                  "value": {"f32": 2.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 863, "end": 868}
+                },
+                "type": "f32",
+                "span": {"file": 0, "start": 856, "end": 868}
+              },
+              "span": {"file": 0, "start": 837, "end": 869}
+            },
+            {
+              "name": "hits",
+              "symbol": "src/main.mtek::Demo.Right.hits",
+              "type": "i32",
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "init": {
+                "kind": "call",
+                "function": "src/main.mtek::pick",
+                "args": [
+                  {
+                    "kind": "const",
+                    "value": {"i32": 1},
+                    "type": "i32",
+                    "span": {"file": 0, "start": 829, "end": 830}
+                  }
+                ],
+                "type": "i32",
+                "span": {"file": 0, "start": 824, "end": 831}
+              },
+              "span": {"file": 0, "start": 806, "end": 832}
+            },
+            {
+              "name": "phase",
+              "symbol": "src/main.mtek::Demo.Right.phase",
+              "type": "f32",
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "init": {
+                "kind": "binary",
+                "op": "*",
+                "lhs": {
+                  "kind": "const",
+                  "value": {"f32": 2.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 856, "end": 860}
+                },
+                "rhs": {
+                  "kind": "const",
+                  "value": {"f32": 2.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 863, "end": 868}
+                },
+                "type": "f32",
+                "span": {"file": 0, "start": 856, "end": 868}
+              },
+              "span": {"file": 0, "start": 837, "end": 869}
+            }
+          ],
+          "behaviors": [
+            {
+              "kind": {
+                "kind": "update"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Demo.Left.update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "dt",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1159, "end": 1161}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "entityField",
+                        "entity": 0,
+                        "field": "rotation",
+                        "type": "quat",
+                        "span": {"file": 0, "start": 1178, "end": 1191}
+                      },
+                      "steps": [],
+                      "type": "quat",
+                      "span": {"file": 0, "start": 1178, "end": 1191}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "builtin",
+                      "function": "quat.axis_angle",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 1.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 1210, "end": 1229}
+                        },
+                        {
+                          "kind": "binary",
+                          "op": "+",
+                          "lhs": {
+                            "kind": "binary",
+                            "op": "*",
+                            "lhs": {
+                              "kind": "frame",
+                              "member": "time",
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1231, "end": 1241}
+                            },
+                            "rhs": {
+                              "kind": "const",
+                              "value": {"f32": 1.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1244, "end": 1248}
+                            },
+                            "type": "f32",
+                            "span": {"file": 0, "start": 1231, "end": 1248}
+                          },
+                          "rhs": {
+                            "kind": "state",
+                            "owner": {
+                              "kind": "entity",
+                              "index": 0
+                            },
+                            "name": "phase",
+                            "type": "f32",
+                            "span": {"file": 0, "start": 1251, "end": 1256}
+                          },
+                          "type": "f32",
+                          "span": {"file": 0, "start": 1231, "end": 1256}
+                        }
+                      ],
+                      "type": "quat",
+                      "span": {"file": 0, "start": 1194, "end": 1257}
+                    },
+                    "span": {"file": 0, "start": 1178, "end": 1258}
+                  }
+                ],
+                "span": {"file": 0, "start": 1168, "end": 1264}
+              },
+              "span": {"file": 0, "start": 1152, "end": 1264}
+            },
+            {
+              "kind": {
+                "kind": "fixedUpdate"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Demo.Left.fixed_update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "step",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1282, "end": 1286}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 0
+                        },
+                        "name": "phase",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1303, "end": 1313}
+                      },
+                      "steps": [],
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1303, "end": 1313}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "binary",
+                      "op": "+",
+                      "lhs": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 0
+                        },
+                        "name": "phase",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1316, "end": 1326}
+                      },
+                      "rhs": {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "step",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1329, "end": 1333}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1316, "end": 1333}
+                    },
+                    "span": {"file": 0, "start": 1303, "end": 1334}
+                  }
+                ],
+                "span": {"file": 0, "start": 1293, "end": 1340}
+              },
+              "span": {"file": 0, "start": 1269, "end": 1340}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "Space"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Demo.Left.on_key_down_Space",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 0
+                        },
+                        "name": "hits",
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1378, "end": 1387}
+                      },
+                      "steps": [],
+                      "type": "i32",
+                      "span": {"file": 0, "start": 1378, "end": 1387}
+                    },
+                    "op": "+=",
+                    "value": {
+                      "kind": "const",
+                      "value": {"i32": 1},
+                      "type": "i32",
+                      "span": {"file": 0, "start": 1391, "end": 1392}
+                    },
+                    "span": {"file": 0, "start": 1378, "end": 1393}
+                  },
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "instanceParam",
+                        "entity": 0,
+                        "param": "tint",
+                        "type": "color",
+                        "span": {"file": 0, "start": 1402, "end": 1420}
+                      },
+                      "steps": [],
+                      "type": "color",
+                      "span": {"file": 0, "start": 1402, "end": 1420}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "const",
+                      "value": {
+                        "color": [0.0, 1.0, 0.0, 1.0]
+                      },
+                      "type": "color",
+                      "span": {"file": 0, "start": 1423, "end": 1430}
+                    },
+                    "span": {"file": 0, "start": 1402, "end": 1431}
+                  }
+                ],
+                "span": {"file": 0, "start": 1368, "end": 1437}
+              },
+              "span": {"file": 0, "start": 1345, "end": 1437}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "pointer_down",
+                "filter": null
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 0
+              },
+              "symbol": "src/main.mtek::Demo.Left.on_pointer_down",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "event",
+                  "type": "PointerEvent",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1458, "end": 1463}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "entityField",
+                        "entity": 0,
+                        "field": "visible",
+                        "type": "bool",
+                        "span": {"file": 0, "start": 1489, "end": 1501}
+                      },
+                      "steps": [],
+                      "type": "bool",
+                      "span": {"file": 0, "start": 1489, "end": 1501}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "unary",
+                      "op": "!",
+                      "operand": {
+                        "kind": "entityField",
+                        "entity": 0,
+                        "field": "visible",
+                        "type": "bool",
+                        "span": {"file": 0, "start": 1505, "end": 1517}
+                      },
+                      "type": "bool",
+                      "span": {"file": 0, "start": 1504, "end": 1517}
+                    },
+                    "span": {"file": 0, "start": 1489, "end": 1518}
+                  }
+                ],
+                "span": {"file": 0, "start": 1479, "end": 1524}
+              },
+              "span": {"file": 0, "start": 1442, "end": 1524}
+            },
+            {
+              "kind": {
+                "kind": "update"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "symbol": "src/main.mtek::Demo.Right.update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "dt",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1159, "end": 1161}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "entityField",
+                        "entity": 1,
+                        "field": "rotation",
+                        "type": "quat",
+                        "span": {"file": 0, "start": 1178, "end": 1191}
+                      },
+                      "steps": [],
+                      "type": "quat",
+                      "span": {"file": 0, "start": 1178, "end": 1191}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "builtin",
+                      "function": "quat.axis_angle",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 1.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 1210, "end": 1229}
+                        },
+                        {
+                          "kind": "binary",
+                          "op": "+",
+                          "lhs": {
+                            "kind": "binary",
+                            "op": "*",
+                            "lhs": {
+                              "kind": "frame",
+                              "member": "time",
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1231, "end": 1241}
+                            },
+                            "rhs": {
+                              "kind": "const",
+                              "value": {"f32": 2.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1244, "end": 1248}
+                            },
+                            "type": "f32",
+                            "span": {"file": 0, "start": 1231, "end": 1248}
+                          },
+                          "rhs": {
+                            "kind": "state",
+                            "owner": {
+                              "kind": "entity",
+                              "index": 1
+                            },
+                            "name": "phase",
+                            "type": "f32",
+                            "span": {"file": 0, "start": 1251, "end": 1256}
+                          },
+                          "type": "f32",
+                          "span": {"file": 0, "start": 1231, "end": 1256}
+                        }
+                      ],
+                      "type": "quat",
+                      "span": {"file": 0, "start": 1194, "end": 1257}
+                    },
+                    "span": {"file": 0, "start": 1178, "end": 1258}
+                  }
+                ],
+                "span": {"file": 0, "start": 1168, "end": 1264}
+              },
+              "span": {"file": 0, "start": 1152, "end": 1264}
+            },
+            {
+              "kind": {
+                "kind": "fixedUpdate"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "symbol": "src/main.mtek::Demo.Right.fixed_update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "step",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1282, "end": 1286}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 1
+                        },
+                        "name": "phase",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1303, "end": 1313}
+                      },
+                      "steps": [],
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1303, "end": 1313}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "binary",
+                      "op": "+",
+                      "lhs": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 1
+                        },
+                        "name": "phase",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1316, "end": 1326}
+                      },
+                      "rhs": {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "step",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1329, "end": 1333}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1316, "end": 1333}
+                    },
+                    "span": {"file": 0, "start": 1303, "end": 1334}
+                  }
+                ],
+                "span": {"file": 0, "start": 1293, "end": 1340}
+              },
+              "span": {"file": 0, "start": 1269, "end": 1340}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "Space"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "symbol": "src/main.mtek::Demo.Right.on_key_down_Space",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "entity",
+                          "index": 1
+                        },
+                        "name": "hits",
+                        "type": "i32",
+                        "span": {"file": 0, "start": 1378, "end": 1387}
+                      },
+                      "steps": [],
+                      "type": "i32",
+                      "span": {"file": 0, "start": 1378, "end": 1387}
+                    },
+                    "op": "+=",
+                    "value": {
+                      "kind": "const",
+                      "value": {"i32": 1},
+                      "type": "i32",
+                      "span": {"file": 0, "start": 1391, "end": 1392}
+                    },
+                    "span": {"file": 0, "start": 1378, "end": 1393}
+                  },
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "instanceParam",
+                        "entity": 1,
+                        "param": "tint",
+                        "type": "color",
+                        "span": {"file": 0, "start": 1402, "end": 1420}
+                      },
+                      "steps": [],
+                      "type": "color",
+                      "span": {"file": 0, "start": 1402, "end": 1420}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "const",
+                      "value": {
+                        "color": [0.0, 1.0, 0.0, 1.0]
+                      },
+                      "type": "color",
+                      "span": {"file": 0, "start": 1423, "end": 1430}
+                    },
+                    "span": {"file": 0, "start": 1402, "end": 1431}
+                  }
+                ],
+                "span": {"file": 0, "start": 1368, "end": 1437}
+              },
+              "span": {"file": 0, "start": 1345, "end": 1437}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "pointer_down",
+                "filter": null
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "symbol": "src/main.mtek::Demo.Right.on_pointer_down",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "event",
+                  "type": "PointerEvent",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1458, "end": 1463}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "entityField",
+                        "entity": 1,
+                        "field": "visible",
+                        "type": "bool",
+                        "span": {"file": 0, "start": 1489, "end": 1501}
+                      },
+                      "steps": [],
+                      "type": "bool",
+                      "span": {"file": 0, "start": 1489, "end": 1501}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "unary",
+                      "op": "!",
+                      "operand": {
+                        "kind": "entityField",
+                        "entity": 1,
+                        "field": "visible",
+                        "type": "bool",
+                        "span": {"file": 0, "start": 1505, "end": 1517}
+                      },
+                      "type": "bool",
+                      "span": {"file": 0, "start": 1504, "end": 1517}
+                    },
+                    "span": {"file": 0, "start": 1489, "end": 1518}
+                  }
+                ],
+                "span": {"file": 0, "start": 1479, "end": 1524}
+              },
+              "span": {"file": 0, "start": 1442, "end": 1524}
+            }
+          ],
+          "bindings": [
+            {
+              "id": 0,
+              "symbol": "src/main.mtek::Demo.bind_0",
+              "target": {
+                "kind": "transform",
+                "entity": 0,
+                "field": "position"
+              },
+              "deps": [
+                {
+                  "kind": "frame",
+                  "name": "time"
+                }
+              ],
+              "order": 0,
+              "type": "vec3",
+              "expr": {
+                "kind": "binary",
+                "op": "+",
+                "lhs": {
+                  "kind": "const",
+                  "value": {
+                    "vec3": [-2.0, 0.0, 0.0]
+                  },
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 889, "end": 895}
+                },
+                "rhs": {
+                  "kind": "construct",
+                  "args": [
+                    {
+                      "kind": "const",
+                      "value": {"f32": 0.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 903, "end": 906}
+                    },
+                    {
+                      "kind": "binary",
+                      "op": "+",
+                      "lhs": {
+                        "kind": "const",
+                        "value": {"f32": 0.5},
+                        "type": "f32",
+                        "span": {"file": 0, "start": 908, "end": 912}
+                      },
+                      "rhs": {
+                        "kind": "call",
+                        "function": "src/main.mtek::wobble",
+                        "args": [
+                          {
+                            "kind": "frame",
+                            "member": "time",
+                            "type": "f32",
+                            "span": {"file": 0, "start": 922, "end": 932}
+                          },
+                          {
+                            "kind": "const",
+                            "value": {"f32": 0.25},
+                            "type": "f32",
+                            "span": {"file": 0, "start": 934, "end": 938}
+                          }
+                        ],
+                        "type": "f32",
+                        "span": {"file": 0, "start": 915, "end": 939}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 908, "end": 939}
+                    },
+                    {
+                      "kind": "const",
+                      "value": {"f32": 0.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 941, "end": 944}
+                    }
+                  ],
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 898, "end": 945}
+                },
+                "type": "vec3",
+                "span": {"file": 0, "start": 889, "end": 945}
+              },
+              "span": {"file": 0, "start": 884, "end": 946}
+            },
+            {
+              "id": 1,
+              "symbol": "src/main.mtek::Demo.bind_1",
+              "target": {
+                "kind": "param",
+                "entity": 0,
+                "name": "level"
+              },
+              "deps": [
+                {
+                  "kind": "frame",
+                  "name": "time"
+                }
+              ],
+              "order": 1,
+              "type": "f32",
+              "expr": {
+                "kind": "binary",
+                "op": "+",
+                "lhs": {
+                  "kind": "const",
+                  "value": {"f32": 1.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1112, "end": 1115}
+                },
+                "rhs": {
+                  "kind": "call",
+                  "function": "src/main.mtek::wobble",
+                  "args": [
+                    {
+                      "kind": "frame",
+                      "member": "time",
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1125, "end": 1135}
+                    },
+                    {
+                      "kind": "const",
+                      "value": {"f32": 0.5},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1137, "end": 1140}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1118, "end": 1141}
+                },
+                "type": "f32",
+                "span": {"file": 0, "start": 1112, "end": 1141}
+              },
+              "span": {"file": 0, "start": 1107, "end": 1142}
+            },
+            {
+              "id": 2,
+              "symbol": "src/main.mtek::Demo.bind_2",
+              "target": {
+                "kind": "transform",
+                "entity": 1,
+                "field": "position"
+              },
+              "deps": [
+                {
+                  "kind": "frame",
+                  "name": "time"
+                }
+              ],
+              "order": 2,
+              "type": "vec3",
+              "expr": {
+                "kind": "binary",
+                "op": "+",
+                "lhs": {
+                  "kind": "const",
+                  "value": {
+                    "vec3": [2.0, 0.0, 0.0]
+                  },
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 889, "end": 895}
+                },
+                "rhs": {
+                  "kind": "construct",
+                  "args": [
+                    {
+                      "kind": "const",
+                      "value": {"f32": 0.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 903, "end": 906}
+                    },
+                    {
+                      "kind": "binary",
+                      "op": "+",
+                      "lhs": {
+                        "kind": "const",
+                        "value": {"f32": 0.5},
+                        "type": "f32",
+                        "span": {"file": 0, "start": 908, "end": 912}
+                      },
+                      "rhs": {
+                        "kind": "call",
+                        "function": "src/main.mtek::wobble",
+                        "args": [
+                          {
+                            "kind": "frame",
+                            "member": "time",
+                            "type": "f32",
+                            "span": {"file": 0, "start": 922, "end": 932}
+                          },
+                          {
+                            "kind": "const",
+                            "value": {"f32": 0.25},
+                            "type": "f32",
+                            "span": {"file": 0, "start": 934, "end": 938}
+                          }
+                        ],
+                        "type": "f32",
+                        "span": {"file": 0, "start": 915, "end": 939}
+                      },
+                      "type": "f32",
+                      "span": {"file": 0, "start": 908, "end": 939}
+                    },
+                    {
+                      "kind": "const",
+                      "value": {"f32": 0.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 941, "end": 944}
+                    }
+                  ],
+                  "type": "vec3",
+                  "span": {"file": 0, "start": 898, "end": 945}
+                },
+                "type": "vec3",
+                "span": {"file": 0, "start": 889, "end": 945}
+              },
+              "span": {"file": 0, "start": 884, "end": 946}
+            },
+            {
+              "id": 3,
+              "symbol": "src/main.mtek::Demo.bind_3",
+              "target": {
+                "kind": "param",
+                "entity": 1,
+                "name": "level"
+              },
+              "deps": [
+                {
+                  "kind": "frame",
+                  "name": "time"
+                }
+              ],
+              "order": 3,
+              "type": "f32",
+              "expr": {
+                "kind": "binary",
+                "op": "+",
+                "lhs": {
+                  "kind": "const",
+                  "value": {"f32": 1.0},
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1112, "end": 1115}
+                },
+                "rhs": {
+                  "kind": "call",
+                  "function": "src/main.mtek::wobble",
+                  "args": [
+                    {
+                      "kind": "frame",
+                      "member": "time",
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1125, "end": 1135}
+                    },
+                    {
+                      "kind": "const",
+                      "value": {"f32": 0.5},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1137, "end": 1140}
+                    }
+                  ],
+                  "type": "f32",
+                  "span": {"file": 0, "start": 1118, "end": 1141}
+                },
+                "type": "f32",
+                "span": {"file": 0, "start": 1112, "end": 1141}
+              },
+              "span": {"file": 0, "start": 1107, "end": 1142}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

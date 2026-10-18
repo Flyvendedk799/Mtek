@@ -1059,9 +1059,19 @@ impl<'a> Checker<'a> {
                 bound.push(field.name.name.as_str());
                 continue;
             };
-            let folded = self.fold(value);
+            let mut folded = self.fold(value);
             if let Folded::NotConstant(reason) = &folded {
                 self.out.non_constant.insert(value.id, reason.clone());
+                // A param of a prefab's `material` that reads the prefab's params is computed
+                // by its `init`; a stand-in keeps the instance complete (decision 0062).
+                let stand_in = info
+                    .param(&field.name.name)
+                    .and_then(|param| self.zero_const(param.ty));
+                if let Some(stand_in) =
+                    self.dynamic_param(expr.id, &field.name.name, value.id, reason, stand_in)
+                {
+                    folded = Folded::Value(stand_in);
+                }
             }
             if let (Folded::Value(ConstValue::Color([_, _, _, alpha])), Some(param)) =
                 (&folded, info.param(&field.name.name))

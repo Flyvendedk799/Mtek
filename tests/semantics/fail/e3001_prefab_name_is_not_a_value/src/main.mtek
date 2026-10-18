@@ -1,0 +1,11 @@
+// The name of a prefab is not an entity: `Crate.position` is not a field read (inside the prefab
+// `self` is the entity).
+prefab Crate {
+    mesh: Box {};
+    position: Crate.position;
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate {}
+}

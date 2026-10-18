@@ -1,0 +1,11 @@
+// The bindings of a prefab are ordered like those of a scene: a cycle is E5075.
+prefab Chase {
+    position: bind(vec3(self.scale.x, 0.0, 0.0));
+    scale: bind(vec3(self.position.x, 1.0, 1.0));
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Chase {}
+}

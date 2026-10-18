@@ -99,11 +99,11 @@ pub struct Gate {
 pub const NEGATIVE_PRODUCTIONS: &[(&str, &str)] = &[("Reserved", "E0013")];
 
 /// The rules of `spec/grammar.ebnf` that check a construct this build may
-/// gate (`E9010`, decision 0025), with the construct.
-pub const GATED_RULES: &[(&str, Construct)] = &[
-    ("prefab-no-nested-entity", Construct::Prefab),
-    ("prefab-instance-params", Construct::PrefabInstance),
-];
+/// gate (`E9010`, decision 0025), with the construct. None is left: prefabs, the last gated
+/// constructs with rules of their own, landed with task M5-01 (decision 0062), so
+/// `prefab-no-nested-entity` (`E5040`) and `prefab-instance-params` (`E5042`) are covered by
+/// fixtures that report their codes.
+pub const GATED_RULES: &[(&str, Construct)] = &[];
 
 /// The gates of [`GATED_RULES`] in this build.
 #[must_use]

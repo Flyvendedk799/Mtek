@@ -1,0 +1,16 @@
+// A name that is neither a param nor a field of the entity: E5042, with the params as a note and
+// the nearest one as help.
+prefab Crate {
+    param height: f32 = 1.0;
+    param colour: color = #ffffff;
+    position: vec3(0.0, height, 0.0);
+    mesh: Box {};
+    material: Unlit { color: colour };
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate { hieght: 2.0; }
+    entity Second: Crate { speed: 2.0; }
+}
+// covers: [S: prefab-instance-params]

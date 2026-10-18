@@ -64,6 +64,7 @@ pub mod facts;
 mod intrinsics;
 mod material;
 mod ops;
+mod prefab;
 pub mod scene;
 mod scene_body;
 #[cfg(test)]
@@ -82,7 +83,8 @@ pub use effects::{EffectLevel, FnEffect, FnRef, ProgramEffects, Roots};
 pub use facts::{BodyFacts, BuiltinCall, CallFact, Callee, CpuOnlySite};
 pub use material::MAX_MATERIAL_PARAMS;
 pub use scene::{
-    CheckedEntity, CheckedField, CheckedObject, CheckedScene, CheckedState, FieldOrigin,
+    CheckedEntity, CheckedField, CheckedInstance, CheckedObject, CheckedParam, CheckedPrefab,
+    CheckedScene, CheckedState, FieldOrigin,
 };
 pub use ty::{MaterialKey, StructDef, StructKey, Ty, TyId, TyInterner};
 pub use value::{ArithOp, ConstValue, EvalError, EvalResult, Scalar};
@@ -218,6 +220,68 @@ pub struct StageInfo {
     pub facts: BodyFacts,
 }
 
+/// The identity of a prefab: its declaration, by the file that declares it and its `DefId`
+/// there, like [`MaterialKey`] (decision 0062).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct PrefabKey {
+    /// The file of the declaring module.
+    pub file: crate::source::FileId,
+    /// The declaration in that module's resolution.
+    pub def: DefId,
+}
+
+/// A checked prefab declaration (`spec/scenes.md` section 5, decision 0062): what an instance of
+/// it, in any module, needs to know. Types are ids of the declaring module's interner.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PrefabInfo {
+    pub name: String,
+    /// Its identity in every module.
+    pub key: PrefabKey,
+    /// The declared name.
+    pub name_span: Span,
+    /// The whole declaration.
+    pub span: Span,
+    /// The `param`s in declaration order.
+    pub params: Vec<PrefabParam>,
+    /// The `state` in declaration order: an instance's state is read as `Name.state`.
+    pub states: Vec<(String, TyId)>,
+    /// The params and their types of the user material instance written as the prefab's
+    /// `material`, if there is one: `Name.material.param` reads them.
+    pub material_params: Option<Vec<(String, TyId)>>,
+    /// The entity fields the prefab binds, with the `bind` (an instance's field is written by
+    /// its binding, so assigning it is `E5070`).
+    pub bound_fields: Vec<(String, Span)>,
+    /// The params of the prefab's material instance that it binds.
+    pub bound_params: Vec<(String, Span)>,
+}
+
+impl PrefabInfo {
+    /// The param `name`.
+    #[must_use]
+    pub fn param(&self, name: &str) -> Option<&PrefabParam> {
+        self.params.iter().find(|p| p.name == name)
+    }
+}
+
+/// One `param` of a prefab (`spec/scenes.md` section 5).
+#[derive(Clone, Debug, PartialEq)]
+pub struct PrefabParam {
+    pub name: String,
+    /// The param's declaration (`None` for a prefab imported from another module, whose
+    /// declarations live in that module's resolution).
+    pub def: Option<DefId>,
+    /// Its type; `Error` if the annotation has an error.
+    pub ty: TyId,
+    /// The folded default, if one is written and valid.
+    pub default: Option<ConstValue>,
+    /// A default is written (valid or not): an instance need not supply the param (`E5041`).
+    pub has_default: bool,
+    /// The declared name.
+    pub name_span: Span,
+    /// The whole `param name: T = default;`.
+    pub span: Span,
+}
+
 /// A `state` declaration of a scene or an entity (`spec/scenes.md` sections 2 and 4.4).
 #[derive(Clone, Debug, PartialEq)]
 pub struct StateInfo {
@@ -242,6 +306,8 @@ pub struct StateInfo {
 pub enum CpuBodyKind {
     /// The initialiser of a `state`.
     StateInit,
+    /// The value of a field of a prefab, which its `init` computes from the instance's params.
+    FieldInit,
     /// `update` or `fixed_update`.
     Lifecycle,
     /// `on event(…)`.
@@ -273,6 +339,8 @@ pub struct CpuBody {
 pub enum WriteTarget {
     /// Scene or entity `state`.
     State(DefId),
+    /// The `state` of a static prefab instance (`First.bounces`), declared by the prefab.
+    InstanceState { entity: DefId, name: String },
     /// A field of a named entity or camera (`Cube.position`, `Main.target`), by the
     /// declaration of the object and the registry field name.
     Field { object: DefId, field: String },
@@ -302,8 +370,8 @@ pub enum BindDep {
     Frame(String),
     /// A field of a named entity or camera.
     Field { object: DefId, field: String },
-    /// The state of an entity.
-    EntityState { entity: DefId, state: DefId },
+    /// The state `name` of an entity.
+    EntityState { entity: DefId, name: String },
     /// A param of the material instance of a named entity.
     MaterialParam { entity: DefId, param: String },
 }
@@ -332,10 +400,10 @@ impl BindDep {
     }
 }
 
-/// One `bind(expr)` of a scene, after the checks (decision 0051).
+/// One `bind(expr)` of a scene or a prefab, after the checks (decisions 0051 and 0062).
 #[derive(Clone, Debug, PartialEq)]
 pub struct BindInfo {
-    /// The scene it belongs to.
+    /// The scene or prefab it belongs to.
     pub scene: Option<DefId>,
     /// The `bind(..)` node.
     pub node: NodeId,
@@ -394,8 +462,17 @@ pub struct Typeck {
     entity_materials: BTreeMap<DefId, TyId>,
     /// The schema (`DirectionalLight`, `PointLight`) of the light of each named entity that has one.
     entity_lights: BTreeMap<DefId, &'static str>,
-    /// Every `bind(..)` of every scene, scene by scene in declaration order.
+    /// Every `bind(..)` of every scene and prefab, scene by scene in declaration order.
     bindings: Vec<BindInfo>,
+    /// Every prefab the module declares, by its `DefId` (decision 0062).
+    prefabs: BTreeMap<DefId, PrefabInfo>,
+    /// The prefabs after the scene checks, in source order: the input of the prefab items of the
+    /// typed IR.
+    checked_prefabs: Vec<CheckedPrefab>,
+    /// For a descriptor literal of the `material` of a prefab, the params whose value is not a
+    /// constant: the param's name and its value expression. The checked field holds a stand-in
+    /// for each; the prefab's `init` evaluates the expression.
+    init_params: BTreeMap<NodeId, Vec<(String, NodeId)>>,
 }
 
 impl Typeck {
@@ -420,7 +497,40 @@ impl Typeck {
             entity_materials: BTreeMap::new(),
             entity_lights: BTreeMap::new(),
             bindings: Vec::new(),
+            prefabs: BTreeMap::new(),
+            checked_prefabs: Vec::new(),
+            init_params: BTreeMap::new(),
         }
+    }
+
+    /// The prefab declared as `def`.
+    #[must_use]
+    pub fn prefab(&self, def: DefId) -> Option<&PrefabInfo> {
+        self.prefabs.get(&def)
+    }
+
+    /// Every prefab the module declares, in `DefId` (source) order.
+    pub fn prefabs(&self) -> impl Iterator<Item = (DefId, &PrefabInfo)> + '_ {
+        self.prefabs.iter().map(|(def, info)| (*def, info))
+    }
+
+    /// Every prefab the module declares, as the scene checks left it, in source order.
+    #[must_use]
+    pub fn checked_prefabs(&self) -> &[CheckedPrefab] {
+        &self.checked_prefabs
+    }
+
+    /// The prefab declared as `def`, as the scene checks left it (decision 0062).
+    #[must_use]
+    pub fn checked_prefab(&self, def: DefId) -> Option<&CheckedPrefab> {
+        self.checked_prefabs.iter().find(|p| p.def == Some(def))
+    }
+
+    /// The params of the descriptor literal `descriptor` that are evaluated at run time by the
+    /// prefab's `init`: name and value expression.
+    #[must_use]
+    pub fn init_params(&self, descriptor: NodeId) -> &[(String, NodeId)] {
+        self.init_params.get(&descriptor).map_or(&[], Vec::as_slice)
     }
 
     /// Every `bind(..)` of the module, scene by scene, in declaration order.
@@ -618,8 +728,17 @@ pub struct ImportedMaterial<'a> {
     pub info: &'a MaterialInfo,
 }
 
+/// A prefab another module exports (decision 0062): its params, state and material params in
+/// the exporting module's interner.
+#[derive(Clone, Copy, Debug)]
+pub struct ImportedPrefab<'a> {
+    /// The exporting module's types.
+    pub interner: &'a TyInterner,
+    pub info: &'a PrefabInfo,
+}
+
 /// Everything a module imports that has a type: constants, structs,
-/// functions and materials, by the `DefId` of the imported name in the
+/// functions, materials and prefabs, by the `DefId` of the imported name in the
 /// importing module.
 #[derive(Clone, Debug, Default)]
 pub struct Imports<'a> {
@@ -627,6 +746,7 @@ pub struct Imports<'a> {
     pub structs: BTreeMap<DefId, ImportedStruct<'a>>,
     pub fns: BTreeMap<DefId, ImportedFn<'a>>,
     pub materials: BTreeMap<DefId, ImportedMaterial<'a>>,
+    pub prefabs: BTreeMap<DefId, ImportedPrefab<'a>>,
 }
 
 /// Type-check `module` (whose source text is `text`) and fold its constant
@@ -740,6 +860,39 @@ pub(crate) fn check_module_with_assets<'a>(
             MaterialInfo {
                 params,
                 fragment: None,
+                ..info.clone()
+            },
+        );
+    }
+    for (def, imported) in &imports.prefabs {
+        let info = imported.info;
+        let mut carry = |ty: TyId| checker.out.interner.import_from(imported.interner, ty);
+        let params = info
+            .params
+            .iter()
+            .map(|param| PrefabParam {
+                def: None,
+                ty: carry(param.ty),
+                ..param.clone()
+            })
+            .collect();
+        let states = info
+            .states
+            .iter()
+            .map(|(name, ty)| (name.clone(), carry(*ty)))
+            .collect();
+        let material_params = info.material_params.as_ref().map(|params| {
+            params
+                .iter()
+                .map(|(name, ty)| (name.clone(), carry(*ty)))
+                .collect()
+        });
+        checker.imported_prefabs.insert(
+            *def,
+            PrefabInfo {
+                params,
+                states,
+                material_params,
                 ..info.clone()
             },
         );

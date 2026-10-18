@@ -1,0 +1,12 @@
+prefab Crate {
+    param height: f32 = 1.0;
+    mesh: Box {};
+    update(dt: f32) {
+        height = height + dt;
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate {}
+}

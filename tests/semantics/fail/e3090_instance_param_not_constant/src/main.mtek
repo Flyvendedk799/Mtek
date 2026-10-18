@@ -1,0 +1,17 @@
+// The params of a static instance are construction-only: a constant expression, not scene state.
+fn raised(y: f32) -> f32 {
+    return y + 1.0;
+}
+
+prefab Crate {
+    param height: f32 = 1.0;
+    position: vec3(0.0, height, 0.0);
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    state level: f32 = 2.0;
+    entity First: Crate { height: level; }
+    entity Second: Crate { height: raised(1.0); }
+}

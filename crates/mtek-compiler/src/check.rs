@@ -33,7 +33,8 @@ use crate::syntax::ast::{ItemKind, Module};
 use crate::types::effects::{ProgramUnit, RootBody, check_program};
 use crate::types::{
     AssetHookup, FnRef, ImportedConst, ImportedConsts, ImportedFn, ImportedMaterial,
-    ImportedStruct, Imports, ProgramEffects, Roots, Typeck, check_module_with_assets,
+    ImportedPrefab, ImportedStruct, Imports, ProgramEffects, Roots, Typeck,
+    check_module_with_assets,
 };
 
 /// What [`check`] produced: diagnostics only (`spec/compiler-architecture.md`
@@ -255,6 +256,7 @@ pub(crate) fn front_end_with(
             structs: imported_structs(resolution, &resolutions, &types),
             fns: imported_fns(resolution, &resolutions, &types),
             materials: imported_materials(resolution, &resolutions, &types),
+            prefabs: imported_prefabs(resolution, &resolutions, &types),
         };
         let hookup = project.modules.get(id).map(|module| AssetHookup {
             host: &mut loader,
@@ -418,6 +420,33 @@ fn imported_materials<'a>(
             Some((
                 def,
                 ImportedMaterial {
+                    interner: exporter.interner(),
+                    info,
+                },
+            ))
+        })
+        .collect()
+}
+
+/// The prefabs `resolution`'s module imports, with their params and state in the exporting
+/// modules (decision 0062).
+fn imported_prefabs<'a>(
+    resolution: &Resolution,
+    resolutions: &[Resolution],
+    types: &'a [Option<Typeck>],
+) -> BTreeMap<DefId, ImportedPrefab<'a>> {
+    resolution
+        .imports()
+        .filter(|(_, target)| target.kind == DefKind::Prefab)
+        .filter_map(|(def, target)| {
+            let exporter = types.get(target.module.index())?.as_ref()?;
+            let exported = resolutions
+                .get(target.module.index())?
+                .def_of(target.node)?;
+            let info = exporter.prefab(exported)?;
+            Some((
+                def,
+                ImportedPrefab {
                     interner: exporter.interner(),
                     info,
                 },

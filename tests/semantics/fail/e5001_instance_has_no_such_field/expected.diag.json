@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 176,
+    "endByte": 182,
+    "message": "The entity 'First' has no field 'misses'.",
+    "notes": [
+      "the fields of Entity are position, rotation, scale, visible, mesh, material, light"
+    ]
+  }
+]

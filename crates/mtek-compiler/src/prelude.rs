@@ -32,7 +32,9 @@ use crate::source::ProjectPath;
 use crate::stdlib::{SchemaCategory, registry};
 use crate::syntax::ast::{ItemKind, Module};
 use crate::syntax::{lex, parse_module};
-use crate::types::{CheckedEntity, ConstValue, Imports, Typeck, check_module_with_imports};
+use crate::types::{
+    CheckedEntity, CheckedField, ConstValue, Imports, Typeck, check_module_with_imports,
+};
 
 /// The prelude module that declares the built-in materials; their symbols are
 /// `std/materials.mtek::Unlit`, … (decision 0028).
@@ -66,17 +68,26 @@ fn implemented(name: &str) -> bool {
 /// has a material that is a descriptor of a built-in material (a user material's instance
 /// is a [`ConstValue::Material`] instead).
 pub(crate) fn uses_builtin_material(types: &[Option<Typeck>]) -> bool {
-    fn entity_uses(entity: &CheckedEntity) -> bool {
-        let own = entity.field("material").is_some_and(|field| {
+    fn uses(field: Option<&CheckedField>) -> bool {
+        field.is_some_and(|field| {
             matches!(&field.value, Some(ConstValue::Struct { name, .. }) if is_builtin_material(name))
-        });
-        own || entity.children.iter().any(entity_uses)
+        })
     }
-    types
+    fn entity_uses(entity: &CheckedEntity) -> bool {
+        uses(entity.field("material")) || entity.children.iter().any(entity_uses)
+    }
+    let scenes = types
         .iter()
         .flatten()
         .flat_map(Typeck::scenes)
-        .any(|scene| scene.entities.iter().any(entity_uses))
+        .any(|scene| scene.entities.iter().any(entity_uses));
+    // A prefab draws with a built-in material as an entity does (decision 0062).
+    scenes
+        || types
+            .iter()
+            .flatten()
+            .flat_map(Typeck::checked_prefabs)
+            .any(|prefab| uses(prefab.field("material")))
 }
 
 /// The compiled materials prelude: its place in the module graph and what the front end

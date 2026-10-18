@@ -1,0 +1,19 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 171,
+    "endByte": 176,
+    "message": "'Crate' is a prefab, not a value.",
+    "expected": "a value",
+    "actual": "prefab",
+    "related": [
+      {
+        "message": "the prefab 'Crate' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 131,
+        "endByte": 136
+      }
+    ]
+  }
+]

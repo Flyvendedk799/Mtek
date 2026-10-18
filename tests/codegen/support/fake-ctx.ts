@@ -24,6 +24,8 @@ export interface FakeEntityRecord {
   readonly state: Record<string, unknown>;
   /** The entity's current position, as the runtime keeps it (read by `Entity.position.y = …`). */
   readonly position: { readonly x: number; readonly y: number; readonly z: number };
+  /** The params of a prefab instance (`self.params`); empty for a static entity. */
+  readonly params: Readonly<Record<string, unknown>>;
 }
 
 export interface FakeContext {
@@ -38,8 +40,14 @@ export interface FakeContext {
   warn(code: string, spanId: number): void;
 }
 
-/** A context with `entityCount` entity records and the calls and warnings it records. */
-export function createFakeContext(entityCount: number): {
+/**
+ * A context with `entityCount` entity records and the calls and warnings it records. `params`
+ * gives the records of prefab instances their `self.params` (by record index).
+ */
+export function createFakeContext(
+  entityCount: number,
+  params: readonly Readonly<Record<string, unknown>>[] = [],
+): {
   ctx: FakeContext;
   calls: SetterCall[];
   warnings: WarningCall[];
@@ -47,7 +55,12 @@ export function createFakeContext(entityCount: number): {
   const calls: SetterCall[] = [];
   const warnings: WarningCall[] = [];
   const e: FakeEntityRecord[] = Array.from({ length: entityCount }, (_, index) =>
-    Object.freeze({ index, state: {}, position: { x: 0, y: 0, z: 0 } }),
+    Object.freeze({
+      index,
+      state: {},
+      position: { x: 0, y: 0, z: 0 },
+      params: Object.freeze({ ...params[index] }),
+    }),
   );
   const indexOf = (entity: FakeEntityRecord): number => {
     const index = e.indexOf(entity);

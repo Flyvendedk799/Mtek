@@ -1,0 +1,13 @@
+// A prefab literal creates a dynamic instance; `spawn` is M5 (task M5-02). Static instances are
+// declarations, `entity Name: Prefab { .. }`.
+prefab Crate {
+    param lift: f32 = 1.0;
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        let crate = Crate { lift: 2.0; };
+    }
+}

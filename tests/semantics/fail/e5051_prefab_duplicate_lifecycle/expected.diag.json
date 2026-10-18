@@ -1,0 +1,19 @@
+[
+  {
+    "code": "MTEK-E5051",
+    "file": "src/main.mtek",
+    "startByte": 60,
+    "endByte": 66,
+    "message": "The prefab 'Crate' declares `update` more than once."
+  },
+  {
+    "code": "MTEK-E5052",
+    "file": "src/main.mtek",
+    "startByte": 85,
+    "endByte": 89,
+    "message": "`spin` is not a lifecycle function.",
+    "notes": [
+      "v0.1 lifecycle functions are `update` and `fixed_update`"
+    ]
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5073",
+    "file": "src/main.mtek",
+    "startByte": 70,
+    "endByte": 79,
+    "message": "The field 'mesh' of 'Crate' is construction-only and cannot be assigned.",
+    "notes": [
+      "construction-only fields are set where the object is declared"
+    ]
+  }
+]

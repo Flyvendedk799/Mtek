@@ -68,7 +68,8 @@ pub struct PlannedParam {
     pub name: String,
     /// The Mtek type spelling (`color`).
     pub ty: String,
-    /// The constant initial value; `None` for a bound param, whose value the binding supplies.
+    /// The constant initial value; `None` for a bound param, whose value the binding supplies,
+    /// and for a param of a prefab instance that `init` computes from the instance's params.
     pub value: Option<Value>,
     pub class: ParamClass,
     /// The binding that supplies a bound param (its id in the scene's `bindings`).
@@ -329,6 +330,8 @@ pub fn plan_scene(program: &Program, scene: &Scene) -> Result<ResourcePlan, Stri
                 for param in &material.params {
                     let (value, binding, dependencies) = match &param.source {
                         ir::Source::Const(value) => (Some(value.clone()), None, Vec::new()),
+                        // The prefab's `init` computes the value when it runs (decision 0062).
+                        ir::Source::Expr(_) => (None, None, Vec::new()),
                         ir::Source::Bound(id) => {
                             let bound = scene.bindings.iter().find(|b| b.id == *id).ok_or_else(|| {
                                 format!(

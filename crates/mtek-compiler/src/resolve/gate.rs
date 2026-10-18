@@ -142,7 +142,7 @@ const fn row(subject: &'static str, plural: bool, since: Milestone) -> Construct
 /// 0026).
 #[must_use]
 pub const fn construct_gate(construct: Construct) -> ConstructGate {
-    use Milestone::{M1, M5};
+    use Milestone::M1;
     match construct {
         // Modules (task M2-03, decision 0036) are implemented ahead of the M2
         // gate; this build still reports milestone M1, so the rows say M1.
@@ -157,7 +157,8 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::Struct => row("`struct` declarations", true, M1),
         // Planned for M2; implemented by task M2-04 before the M2 gate (decision 0039).
         Construct::Material => row("`material` declarations", true, M1),
-        Construct::Prefab => row("`prefab` declarations", true, M5),
+        // Planned for M5; implemented by task M5-01 before the M5 gate (decision 0062).
+        Construct::Prefab => row("`prefab` declarations", true, M1),
         Construct::Scene => row("Scenes", true, M1),
         Construct::SceneField => row("Scene fields", true, M1),
         // Planned for M3; implemented by task M3-01 before the M3 gate (decision 0049).
@@ -165,7 +166,7 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::SceneObject => row("Scene objects", true, M1),
         Construct::Entity => row("Entities", true, M1),
         Construct::EntityField => row("Entity fields", true, M1),
-        Construct::PrefabInstance => row("Prefab instances (`entity Name: Prefab`)", true, M5),
+        Construct::PrefabInstance => row("Prefab instances (`entity Name: Prefab`)", true, M1),
         // Planned for M3; implemented by tasks M3-01 and M3-02 before the M3 gate (decision 0049).
         Construct::LifecycleFn => row("Lifecycle functions", true, M1),
         Construct::Handler => row("Event handlers", true, M1),
@@ -307,9 +308,11 @@ mod tests {
                 "{construct:?}"
             );
         }
+        // Prefabs (task M5-01, decision 0062) land ahead of the M5 gate; the M1 rows mark them
+        // implemented, as decision 0035 prescribes.
         for construct in [Construct::Prefab, Construct::PrefabInstance] {
             assert!(
-                !is_implemented(construct_gate(construct).since),
+                is_implemented(construct_gate(construct).since),
                 "{construct:?}"
             );
         }
@@ -376,12 +379,12 @@ mod tests {
     fn messages_follow_the_specified_wording() {
         let gate = construct_gate(Construct::Prefab);
         assert_eq!(
-            gate_message(gate.subject, gate.plural, gate.since),
+            gate_message(gate.subject, gate.plural, Milestone::M5),
             "`prefab` declarations are specified for v0.1 but not implemented by this compiler build yet (planned for M5)."
         );
         let gate = construct_gate(Construct::PrefabInstance);
         assert_eq!(
-            gate_message(gate.subject, gate.plural, gate.since),
+            gate_message(gate.subject, gate.plural, Milestone::M5),
             "Prefab instances (`entity Name: Prefab`) are specified for v0.1 but not implemented by this compiler build yet (planned for M5)."
         );
         assert_eq!(

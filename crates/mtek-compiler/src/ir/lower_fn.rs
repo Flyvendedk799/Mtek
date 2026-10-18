@@ -21,11 +21,13 @@ use crate::syntax::ast::{self, ElseBranch, ExprKind as AstExpr, FieldValue, ForI
 use crate::types::{CallKind, EffectLevel, FieldKind, FnRef, Ty, TyId};
 
 /// What the lowering of a scene body needs to name entities and cameras: the static index of
-/// every entity declaration and the name of every camera.
+/// every entity declaration and the name of every camera. For a prefab body (decision 0062) the
+/// prefab is entity 0 (`self`) and `params` holds the position of each of its params.
 #[derive(Default)]
 pub(super) struct SceneCtx {
     pub(super) entities: BTreeMap<DefId, u32>,
     pub(super) cameras: BTreeMap<DefId, String>,
+    pub(super) params: BTreeMap<DefId, u32>,
 }
 
 /// The state of one function's lowering: its locals so far.
@@ -234,6 +236,26 @@ impl Lowering<'_> {
 }
 
 impl Lowering<'_> {
+    /// An expression of a prefab body that has no locals — the value of one of its fields or of
+    /// a param of its material — lowered with the prefab's params and its `self` as `ctx`
+    /// names them (decision 0062).
+    pub(super) fn prefab_expr(
+        &self,
+        expr: &ast::Expr,
+        what: &str,
+        ctx: &SceneCtx,
+    ) -> Result<Expr, Defect> {
+        let lowering = FnLowering {
+            lowering: self,
+            name: what.to_owned(),
+            locals: Vec::new(),
+            index: BTreeMap::new(),
+            params: ctx.params.clone(),
+            scene: Some(ctx),
+        };
+        lowering.expr(expr)
+    }
+
     /// The `state` `decl` of `owner` with its initialiser lowered as an expression without
     /// locals.
     pub(super) fn state(
@@ -254,7 +276,7 @@ impl Lowering<'_> {
             name: format!("state '{name}'"),
             locals: Vec::new(),
             index: BTreeMap::new(),
-            params: BTreeMap::new(),
+            params: ctx.params.clone(),
             scene: Some(ctx),
         };
         Ok(State {
@@ -285,7 +307,7 @@ impl Lowering<'_> {
             name: format!("{} of {scope}", decl.name.name),
             locals: Vec::new(),
             index: BTreeMap::new(),
-            params: BTreeMap::new(),
+            params: ctx.params.clone(),
             scene: Some(ctx),
         };
         for param in &decl.params {
@@ -319,7 +341,7 @@ impl Lowering<'_> {
             name: format!("on {event} of {scope}"),
             locals: Vec::new(),
             index: BTreeMap::new(),
-            params: BTreeMap::new(),
+            params: ctx.params.clone(),
             scene: Some(ctx),
         };
         let mut member_name = None;
@@ -390,7 +412,7 @@ impl FnLowering<'_, '_> {
             .ok_or_else(|| self.defect("a state without an owner"))?;
         match self.lowering.resolution.def(parent).map(|d| d.kind) {
             Some(DefKind::Scene) => Ok(Owner::Scene),
-            Some(DefKind::Entity) => self.entity_owner(parent),
+            Some(DefKind::Entity | DefKind::Prefab) => self.entity_owner(parent),
             _ => Err(self.defect("a state of a construct this build does not lower")),
         }
     }
@@ -426,7 +448,7 @@ impl FnLowering<'_, '_> {
                 field,
             } => {
                 let def = object_def.ok_or_else(|| self.defect("a field of an unknown object"))?;
-                if *noun == "entity" {
+                if matches!(*noun, "entity" | "prefab") {
                     ExprKind::EntityField {
                         entity: self.entity_index(def)?,
                         field: field.clone(),
@@ -1067,17 +1089,46 @@ impl Lowering<'_> {
         scene: &Symbol,
         ctx: &SceneCtx,
     ) -> Result<Vec<Binding>, Defect> {
+        let mut sources: BTreeMap<ast::NodeId, &ast::Bind> = BTreeMap::new();
+        collect_binds(decl, &mut sources);
+        self.owner_bindings(checked.def, &sources, scene, ctx)
+    }
+
+    /// The `bind(..)` of the prefab `decl`, lowered like those of a scene: entity 0 is the
+    /// prefab's `self`.
+    pub(super) fn prefab_bindings(
+        &self,
+        decl: &ast::PrefabDecl,
+        def: DefId,
+        prefab: &Symbol,
+        ctx: &SceneCtx,
+    ) -> Result<Vec<Binding>, Defect> {
+        let mut sources: BTreeMap<ast::NodeId, &ast::Bind> = BTreeMap::new();
+        for member in &decl.members {
+            if let ast::EntityMember::Field(field) = member {
+                field_binds(field, &mut sources);
+            }
+        }
+        self.owner_bindings(Some(def), &sources, prefab, ctx)
+    }
+
+    /// The bindings of `owner` (a scene or a prefab) found in `sources` by node.
+    fn owner_bindings(
+        &self,
+        owner: Option<DefId>,
+        sources: &BTreeMap<ast::NodeId, &ast::Bind>,
+        scene: &Symbol,
+        ctx: &SceneCtx,
+    ) -> Result<Vec<Binding>, Defect> {
         let infos: Vec<&crate::types::BindInfo> = self
             .types
             .bindings()
             .iter()
-            .filter(|b| b.scene == checked.def)
+            .filter(|b| b.scene == owner)
             .collect();
         if infos.is_empty() {
             return Ok(Vec::new());
         }
-        let mut sources: BTreeMap<ast::NodeId, &ast::Bind> = BTreeMap::new();
-        collect_binds(decl, &mut sources);
         let entity = |def: DefId| -> Result<u32, Defect> {
             ctx.entities
                 .get(&def)
@@ -1132,14 +1183,10 @@ impl Lowering<'_> {
                         entity: entity(*object)?,
                         field: field.clone(),
                     },
-                    crate::types::BindDep::EntityState { entity: e, state } => {
+                    crate::types::BindDep::EntityState { entity: e, name } => {
                         BindingDep::EntityState {
                             entity: entity(*e)?,
-                            name: self
-                                .types
-                                .state(*state)
-                                .map(|s| s.name.clone())
-                                .ok_or("a binding reads a state that was not checked")?,
+                            name: name.clone(),
                         }
                     }
                     crate::types::BindDep::MaterialParam { entity: e, param } => {
@@ -1155,7 +1202,7 @@ impl Lowering<'_> {
                 name: format!("binding {}", info.id),
                 locals: Vec::new(),
                 index: BTreeMap::new(),
-                params: BTreeMap::new(),
+                params: ctx.params.clone(),
                 scene: Some(ctx),
             };
             out.push(Binding {
@@ -1173,26 +1220,32 @@ impl Lowering<'_> {
     }
 }
 
-/// Every `bind(..)` of the scene's fields, cameras and entities (and their `material` params).
-fn collect_binds<'a>(decl: &'a ast::SceneDecl, out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>) {
-    use ast::{EntityMember, SceneMember};
-    fn field_binds<'a>(field: &'a ast::FieldInit, out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>) {
-        match &field.value {
-            FieldValue::Bind(bind) => {
-                out.insert(bind.id, bind);
-            }
-            FieldValue::Expr(value) => {
-                if let AstExpr::Descriptor { fields, .. } = &value.kind {
-                    for param in fields {
-                        if let FieldValue::Bind(bind) = &param.value {
-                            out.insert(bind.id, bind);
-                        }
+/// The `bind(..)` that is the value of `field`, or of a param of the descriptor that is.
+fn field_binds<'a>(field: &'a ast::FieldInit, out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>) {
+    match &field.value {
+        FieldValue::Bind(bind) => {
+            out.insert(bind.id, bind);
+        }
+        FieldValue::Expr(value) => {
+            if let AstExpr::Descriptor { fields, .. } = &value.kind {
+                for param in fields {
+                    if let FieldValue::Bind(bind) = &param.value {
+                        out.insert(bind.id, bind);
                     }
                 }
             }
         }
     }
+}
+
+/// Every `bind(..)` of the scene's fields, cameras and entities (and their `material` params).
+fn collect_binds<'a>(decl: &'a ast::SceneDecl, out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>) {
+    use ast::{EntityMember, SceneMember};
     fn entity_binds<'a>(decl: &'a ast::EntityDecl, out: &mut BTreeMap<ast::NodeId, &'a ast::Bind>) {
+        // An instance sets params; its prefab's bindings are the prefab's.
+        if decl.prefab.is_some() {
+            return;
+        }
         for member in &decl.members {
             match member {
                 EntityMember::Field(f) => field_binds(f, out),

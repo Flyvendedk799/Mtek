@@ -1,0 +1,18 @@
+// A prefab is not inside a scene: scene state, entities and cameras are not in scope in it, in an
+// initialiser, a handler or a binding.
+prefab Probe {
+    mesh: Box {};
+    state mood: f32 = speed;
+    position: bind(Anchor.position);
+    update(dt: f32) {
+        speed = speed + dt;
+        Main.position = vec3(0.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    state speed: f32 = 1.0;
+    entity Anchor { mesh: Box {}; }
+    entity First: Probe {}
+}

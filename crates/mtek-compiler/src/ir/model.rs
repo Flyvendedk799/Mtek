@@ -94,7 +94,11 @@ impl Program {
             .flat_map(|module| module.items.iter())
             .filter_map(|item| match item {
                 Item::Scene(scene) => Some(scene),
-                Item::Const(_) | Item::Struct(_) | Item::Function(_) | Item::Material(_) => None,
+                Item::Const(_)
+                | Item::Struct(_)
+                | Item::Function(_)
+                | Item::Material(_)
+                | Item::Prefab(_) => None,
             })
     }
 
@@ -105,7 +109,26 @@ impl Program {
             .flat_map(|module| module.items.iter())
             .filter_map(|item| match item {
                 Item::Material(material) => Some(material),
-                Item::Const(_) | Item::Struct(_) | Item::Function(_) | Item::Scene(_) => None,
+                Item::Const(_)
+                | Item::Struct(_)
+                | Item::Function(_)
+                | Item::Scene(_)
+                | Item::Prefab(_) => None,
+            })
+    }
+
+    /// Every prefab of every module, in order.
+    pub fn prefabs(&self) -> impl Iterator<Item = &PrefabItem> {
+        self.modules
+            .iter()
+            .flat_map(|module| module.items.iter())
+            .filter_map(|item| match item {
+                Item::Prefab(prefab) => Some(prefab.as_ref()),
+                Item::Const(_)
+                | Item::Struct(_)
+                | Item::Function(_)
+                | Item::Scene(_)
+                | Item::Material(_) => None,
             })
     }
 }
@@ -141,6 +164,65 @@ pub enum Item {
     /// A user material: params, parameter block and fragment stage (M2-04,
     /// decision 0039).
     Material(MaterialItem),
+    /// A prefab: the template of one entity with its params (M5-01, decision 0062).
+    Prefab(Box<PrefabItem>),
+}
+
+/// A prefab declaration (decision 0062): the template of one entity and everything that
+/// belongs to it, as the program module's `prefabs` table (`spec/runtime-abi.md` section 3)
+/// and the instantiation of static instances need it.
+///
+/// The template is the IR of a one-entity scene: the entity is [`PrefabItem::entity`], its
+/// static index is 0, and in every body of the prefab (initialisers, handlers, bindings) the
+/// entity index 0 is `self`, the instance. A prefab body reads its params as
+/// [`ExprKind::Param`] (a prefab has no material stage, so the node is unambiguous).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PrefabItem {
+    pub name: String,
+    pub symbol: Symbol,
+    /// The params in declaration order (the order of the `params` object the runtime passes).
+    pub params: Vec<PrefabParamItem>,
+    /// The constants declared in the prefab body, in source order.
+    pub constants: Vec<Const>,
+    /// The entity the prefab describes: its fields, mesh and material instance. A field whose
+    /// value reads a param or the prefab's state is [`Source::Expr`]. `index` is 0 and `symbol`
+    /// is the prefab's.
+    pub entity: Entity,
+    /// The prefab's `state` with its initialisers, owned by entity 0, in declaration order.
+    pub state: Vec<State>,
+    /// Lifecycle functions and event handlers, owned by entity 0, in declaration order.
+    pub behaviors: Vec<Behavior>,
+    /// The `bind(..)` of the prefab, by id (declaration order); targets and dependencies name
+    /// entity 0.
+    pub bindings: Vec<Binding>,
+    /// The whole declaration, `prefab Name { … }`.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// One `param` of a [`PrefabItem`].
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PrefabParamItem {
+    pub name: String,
+    /// The param's type, as Mtek spells it.
+    #[serde(rename = "type")]
+    pub ty: String,
+    /// The folded default; `None` when every instance must give the param.
+    pub default: Option<Value>,
+    /// The whole `param name: T = default;`.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// What makes an [`Entity`] an instance of a prefab: the prefab and the value of each of its
+/// params, in the prefab's order, defaults filled in (decision 0062).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PrefabInstance {
+    pub prefab: Symbol,
+    pub params: Vec<NamedValue>,
 }
 
 /// A material declaration (decision 0039): the input of shader lowering
@@ -616,7 +698,9 @@ pub enum ExprKind {
     },
     /// A param of the material whose stage this is (decision 0039): its
     /// position in [`MaterialItem::params`] and its name. Params are read
-    /// from the instance's parameter block, never folded.
+    /// from the instance's parameter block, never folded. In a prefab body (decision 0062) it
+    /// is a param of the prefab, at its position in [`PrefabItem::params`]: CPU code reads it
+    /// from the instance, and an instance's copy of the body has it substituted by a constant.
     Param { param: u32, name: String },
     /// A descriptor literal of a user material that is not constant: every
     /// param in declaration order, the written value or the default as a
@@ -880,6 +964,10 @@ pub enum Source {
     /// The value of binding `id` of the scene, evaluated at run time (`bind(..)`): the field or
     /// param has no initial constant, the runtime evaluates every binding once after `init`.
     Bound(u32),
+    /// An expression over a prefab's params, constants and state, evaluated by `init` when the
+    /// instance is created (decision 0062). In a prefab item it reads the params as
+    /// [`ExprKind::Param`]; in an instance they are substituted by the instance's constants.
+    Expr(Box<Expr>),
 }
 
 impl Source {
@@ -888,7 +976,7 @@ impl Source {
     pub fn as_const(&self) -> Option<&Value> {
         match self {
             Source::Const(value) => Some(value),
-            Source::Bound(_) => None,
+            Source::Bound(_) | Source::Expr(_) => None,
         }
     }
 }
@@ -993,6 +1081,11 @@ pub struct Entity {
     /// The light component, if the entity has one.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub light: Option<Light>,
+    /// `entity Name: Prefab { .. }`: the prefab this entity instantiates. The fields, mesh and
+    /// material above are the prefab's with the instance's params substituted; the scene's
+    /// `state`, `behaviors` and `bindings` hold the copies that belong to the instance.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prefab: Option<PrefabInstance>,
 }
 
 /// An entity's light component (`spec/materials.md` section 7, decision 0053).

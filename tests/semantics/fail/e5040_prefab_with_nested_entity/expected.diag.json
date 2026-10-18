@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E5040",
+    "file": "src/main.mtek",
+    "startByte": 104,
+    "endByte": 107,
+    "message": "The prefab 'Crate' declares the entity 'Lid', but a prefab describes exactly one entity.",
+    "related": [
+      {
+        "message": "the prefab is declared here",
+        "file": "src/main.mtek",
+        "startByte": 67,
+        "endByte": 72
+      }
+    ],
+    "notes": [
+      "prefabs with children are not part of v0.1",
+      "help: make the child a prefab of its own and declare both as entities of the scene, or declare the child in the scene"
+    ]
+  }
+]

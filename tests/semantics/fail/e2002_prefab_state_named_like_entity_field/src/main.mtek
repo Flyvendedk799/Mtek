@@ -1,0 +1,10 @@
+// `self.position` would be ambiguous: a prefab's state may not take the name of an entity field.
+prefab Crate {
+    state position: vec3 = vec3(0.0);
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate {}
+}

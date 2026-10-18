@@ -1123,9 +1123,14 @@ fn run_time_values_are_typed_and_never_constant() {
 fn every_construct_the_checker_does_not_type_is_gated_in_this_build() {
     // The checker skips these (`Ty::Error`, no descent): they must be gated,
     // so the resolver reports them. When a milestone implements one, this
-    // test fails until the checker types it.
-    for construct in [Construct::Prefab, Construct::PrefabInstance] {
+    // test fails until the checker types it. Prefabs (decision 0062) are typed
+    // now; nothing is left.
+    let skipped: [Construct; 0] = [];
+    for construct in skipped {
         assert!(!construct_implemented(construct), "{construct:?}");
+    }
+    for construct in [Construct::Prefab, Construct::PrefabInstance] {
+        assert!(construct_implemented(construct), "{construct:?}");
     }
 }
 

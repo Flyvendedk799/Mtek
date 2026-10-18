@@ -1,0 +1,30 @@
+bindings of scene src/main.mtek::Demo (target profile webgpu-core-2026)
+
+block builtin:frame MtekFrame  group 0 binding 0  visibility vertex+fragment  owner runtime  size 288 align 16
+  field            type                 wgsl                 offset  size  padding  array
+  view_proj        mat4                 mat4x4<f32>               0    64        0
+  camera_position  vec3                 vec3<f32>                64    12        0
+  light_count      u32                  u32                      76     4        0
+  ambient          vec3                 vec3<f32>                80    12        0
+  reserved0        f32                  f32                      92     4        0
+  lights           array<MtekLight, 4>  array<MtekLight, 4>      96   192        0  4 x stride 48
+
+block builtin:object MtekObject  group 2 binding 0 (dynamic offset)  visibility vertex  owner object  size 128 align 16
+  field          type  wgsl         offset  size  padding  array
+  model          mat4  mat4x4<f32>       0    64        0
+  normal_matrix  mat4  mat4x4<f32>      64    64        0
+
+block material:src/main.mtek::Glow MtekParams_e2cab98b_Glow  group 1 binding 0  visibility fragment  owner material instance  size 32 align 16
+  field  type   wgsl       offset  size  padding  array  declared at
+  tint   color  vec4<f32>       0    16        0         src/main.mtek:8:5-8:33
+  level  f32    f32            16     4       12         src/main.mtek:9:5-9:28
+
+instance #0 of src/main.mtek::Glow  entity src/main.mtek::Demo.Left (#0)  block material:src/main.mtek::Glow  group 1 binding 0  storage owned
+  param  type   update      dependencies  field  offset  size  declared at             instance at
+  tint   color  imperative  -             tint        0    16  src/main.mtek:8:5-8:33  src/main.mtek:34:5-34:80
+  level  f32    bound       frame.time    level      16     4  src/main.mtek:9:5-9:28  src/main.mtek:34:5-34:80
+
+instance #1 of src/main.mtek::Glow  entity src/main.mtek::Demo.Right (#1)  block material:src/main.mtek::Glow  group 1 binding 0  storage owned
+  param  type   update      dependencies  field  offset  size  declared at             instance at
+  tint   color  imperative  -             tint        0    16  src/main.mtek:8:5-8:33  src/main.mtek:34:5-34:80
+  level  f32    bound       frame.time    level      16     4  src/main.mtek:9:5-9:28  src/main.mtek:34:5-34:80

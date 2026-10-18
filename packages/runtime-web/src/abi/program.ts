@@ -45,13 +45,24 @@ export type MtekEventName =
 export interface MtekEventHandler {
   /** DOM `KeyboardEvent.code` (`"Space"`, `"KeyA"`); present for `key_down` and `key_up` only. */
   readonly key?: string;
-  /** `-1` for a scene handler, otherwise the static entity index (prefab handlers: always the instance itself). */
+  /** `-1` for a scene handler, otherwise the static entity index. */
   readonly owner: number;
   /** `self` is the entity record, or null for scene handlers; `arg` is a PointerEvent, an `entity_ref` or undefined. */
   readonly fn: (ctx: MtekContext, self: MtekEntityRecord | null, arg: unknown) => void;
 }
 
 export type MtekProgramEvents = Readonly<Partial<Record<MtekEventName, readonly MtekEventHandler[]>>>;
+
+/** One handler of a prefab: its owner is always the instance itself, `"self"` (decision 0062). */
+export interface MtekPrefabEventHandler {
+  /** DOM `KeyboardEvent.code`; present for `key_down` and `key_up` only. */
+  readonly key?: string;
+  readonly owner: "self";
+  /** `self` is the instance's entity record; `arg` is a PointerEvent, an `entity_ref` or undefined. */
+  readonly fn: (ctx: MtekContext, self: MtekEntityRecord, arg: unknown) => void;
+}
+
+export type MtekPrefabEvents = Readonly<Partial<Record<MtekEventName, readonly MtekPrefabEventHandler[]>>>;
 
 export type MtekSceneUpdate = ((ctx: MtekContext, dt: number) => void) | null;
 export type MtekEntityUpdate = ((ctx: MtekContext, self: MtekEntityRecord, dt: number) => void) | null;
@@ -69,12 +80,18 @@ export interface MtekProgramScene {
   readonly bindings: readonly ((ctx: MtekContext) => unknown)[];
 }
 
+/**
+ * A prefab (`prefabs` is keyed by its symbol). `init` sets the state, then the fields of one instance; the
+ * runtime creates the instance's record with `self.params` set to the same `params` object (handlers and
+ * bindings read it there). A field or material param that a binding supplies is left to the runtime's
+ * evaluation of `bindings`, which are indexed by the prefab's binding id.
+ */
 export interface MtekProgramPrefab {
   /** `params`: object of evaluated prefab params by name. */
   readonly init: (ctx: MtekContext, self: MtekEntityRecord, params: Readonly<Record<string, unknown>>) => void;
   readonly update: MtekEntityUpdate;
   readonly fixedUpdate: MtekEntityUpdate;
-  readonly events: MtekProgramEvents;
+  readonly events: MtekPrefabEvents;
   readonly bindings: readonly ((ctx: MtekContext, self: MtekEntityRecord) => unknown)[];
 }
 

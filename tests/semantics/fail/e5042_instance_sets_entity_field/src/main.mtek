@@ -1,0 +1,13 @@
+// An instance may set only the prefab's params: `position` is an entity field, so it is E5042,
+// with a note listing the params.
+prefab Crate {
+    param lift: f32 = 1.0;
+    position: vec3(0.0, lift, 0.0);
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Crate { position: vec3(0.0, 1.0, 0.0); }
+}
+// covers: [S: prefab-instance-params]

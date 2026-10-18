@@ -172,8 +172,9 @@ pub enum FieldKind {
     EntityState {
         /// The entity.
         entity: DefId,
-        /// The `state` declaration.
-        state: DefId,
+        /// The `state` declaration; `None` for the state of a static prefab instance
+        /// (`First.bounces`), which its prefab declares, possibly in another module.
+        state: Option<DefId>,
         name: String,
     },
     /// A param of the material instance of a named entity (`Cube.material.phase`).
@@ -241,6 +242,18 @@ pub(super) struct Checker<'a> {
     /// (decision 0058).
     pub(super) assets: Option<super::assets::AssetHookup<'a>>,
     pub(super) asset_state: super::assets::AssetState,
+    /// The prefabs this module imports, by the `DefId` of the imported name (seeded by
+    /// [`super::check_module_with_imports`], decision 0062).
+    pub(super) imported_prefabs: BTreeMap<DefId, super::PrefabInfo>,
+    /// The prefab whose declaration is being checked: its fields, state, bindings, lifecycle
+    /// functions and handlers are those of the one entity it describes.
+    pub(super) current_prefab: Option<DefId>,
+    /// The descriptor literals of the `material` of a prefab: a param of one whose value is not
+    /// constant is computed by the prefab's `init` (see [`Self::fold_descriptor`]).
+    pub(super) dynamic_descriptors: BTreeSet<NodeId>,
+    /// What the scene checks know of the prefab behind each static instance, by the instance's
+    /// declaration.
+    pub(super) instances: BTreeMap<DefId, super::prefab::InstanceFacts>,
 }
 
 impl<'a> Checker<'a> {
@@ -298,6 +311,10 @@ impl<'a> Checker<'a> {
             material_literals: BTreeMap::new(),
             assets: None,
             asset_state: super::assets::AssetState::default(),
+            imported_prefabs: BTreeMap::new(),
+            current_prefab: None,
+            dynamic_descriptors: BTreeSet::new(),
+            instances: BTreeMap::new(),
         }
     }
 
@@ -353,6 +370,13 @@ impl<'a> Checker<'a> {
                 self.function_signature(decl);
             }
         }
+        // Every prefab before any scene, so that an instance finds its prefab wherever it is
+        // declared (decision 0062).
+        for item in &module.items {
+            if let ItemKind::Prefab(decl) = &item.kind {
+                self.prefab(decl);
+            }
+        }
         for item in &module.items {
             match &item.kind {
                 ItemKind::Const(decl) if construct_implemented(Construct::ConstItem) => {
@@ -372,8 +396,7 @@ impl<'a> Checker<'a> {
                 ItemKind::Material(decl) if construct_implemented(Construct::Material) => {
                     self.material_stages(decl);
                 }
-                // Prefabs are gated in this build (see the tests); imports
-                // have nothing to check here.
+                // Prefabs were checked above; imports have nothing to check here.
                 _ => {}
             }
         }
@@ -394,6 +417,9 @@ impl<'a> Checker<'a> {
                 ItemKind::Material(decl) if construct_implemented(Construct::Material) => {
                     self.collect_material(decl);
                 }
+                ItemKind::Prefab(decl) if construct_implemented(Construct::Prefab) => {
+                    self.collect_prefab_constants(decl);
+                }
                 ItemKind::Scene(scene) => {
                     for member in &scene.members {
                         match member {
@@ -408,7 +434,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    fn collect_constant(&mut self, decl: &'a ConstDecl) {
+    pub(super) fn collect_constant(&mut self, decl: &'a ConstDecl) {
         if let Some(def) = self.res.def_of(decl.id) {
             self.const_decls.insert(def, decl);
         }
@@ -428,7 +454,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    fn const_decl(&mut self, decl: &ConstDecl) {
+    pub(super) fn const_decl(&mut self, decl: &ConstDecl) {
         if let Some(def) = self.res.def_of(decl.id) {
             self.const_info(def, None);
         }
@@ -475,8 +501,13 @@ impl<'a> Checker<'a> {
     }
 
     fn entity(&mut self, entity: &EntityDecl) {
-        if !construct_implemented(Construct::Entity) || entity.prefab.is_some() {
-            // Prefab instances are gated in this build.
+        if !construct_implemented(Construct::Entity) {
+            return;
+        }
+        if entity.prefab.is_some() {
+            if construct_implemented(Construct::PrefabInstance) {
+                self.instance(entity);
+            }
             return;
         }
         for member in &entity.members {
@@ -486,8 +517,8 @@ impl<'a> Checker<'a> {
                         || self.is_light_field(&field.name.name);
                     self.schema_field(self.registry.declaration_schemas.entity, field);
                     self.allow_param_bind = false;
-                    self.note_entity_material(entity, field);
-                    self.note_entity_light(entity, field);
+                    self.note_entity_material(self.res.def_of(entity.id), field);
+                    self.note_entity_light(self.res.def_of(entity.id), field);
                 }
                 EntityMember::Const(decl) if construct_implemented(Construct::BodyConst) => {
                     self.const_decl(decl);
@@ -496,7 +527,8 @@ impl<'a> Checker<'a> {
                 EntityMember::State(state) if construct_implemented(Construct::State) => {
                     self.state_init(state, self.res.def_of(entity.id));
                 }
-                // `param`, lifecycle functions and handlers are gated or checked after the scene.
+                // `param` is a member of prefabs (`E1040` in an entity, the parser's);
+                // lifecycle functions and handlers are checked after the scene.
                 _ => {}
             }
         }
@@ -505,15 +537,19 @@ impl<'a> Checker<'a> {
     /// `name: value;` of a scene, entity or scene object: the value is typed
     /// with the field's registry type as expected type and folded. Whether
     /// the type fits is the schema checks' business (`E3102`).
-    fn schema_field(&mut self, schema: &str, field: &FieldInit) {
+    pub(super) fn schema_field(&mut self, schema: &str, field: &FieldInit) {
         let expected = match self.registry.schema_field(schema, &field.name.name) {
             // Gated by the field's milestone: reported by the resolver.
             Some(def) if !is_implemented(def.since) => return,
             Some(def) => Some(self.out.interner.from_type_ref(def.ty)),
             None => None,
         };
-        // `bind(..)` is gated in this build.
+        // A `bind(..)` is checked with the bindings of its scene or prefab.
         if let FieldValue::Expr(value) = &field.value {
+            if self.current_prefab.is_some() {
+                self.prefab_field_value(field, value, expected);
+                return;
+            }
             self.check(value, expected);
             self.fold_root(value);
         }
@@ -1043,7 +1079,11 @@ impl<'a> Checker<'a> {
                 ),
             )
             .at(expr.span)
-            .note("initialisers may read constants, scene state and earlier state, but not the fields of entities or cameras"),
+            .note(if self.current_prefab.is_some() {
+                "initialisers of a prefab may read constants, params and earlier state, but not the fields of the entity"
+            } else {
+                "initialisers may read constants, scene state and earlier state, but not the fields of entities or cameras"
+            }),
         );
     }
 
@@ -1240,8 +1280,7 @@ impl<'a> Checker<'a> {
                         None => TyId::ERROR,
                     },
                     DefKind::Material => self.material_instance(expr, name, id, fields),
-                    // Gated in this build.
-                    DefKind::Prefab => TyId::ERROR,
+                    DefKind::Prefab => self.prefab_literal(name, fields),
                     DefKind::SceneObject { kind: None } => TyId::ERROR,
                     kind => {
                         let (def_name, noun, span) = (def.name.clone(), kind.noun(), def.span);
@@ -2303,6 +2342,10 @@ impl<'a> Checker<'a> {
         {
             let object = match def.kind {
                 DefKind::Entity => Some((self.registry.declaration_schemas.entity, "entity")),
+                // `self` of a prefab; the prefab's name is not a value (`E3001` below).
+                DefKind::Prefab if matches!(base.kind, ExprKind::SelfValue) => {
+                    Some((self.registry.declaration_schemas.entity, "prefab"))
+                }
                 DefKind::SceneObject { kind: Some(kind) } => self
                     .registry
                     .scene_object(kind)
@@ -2390,11 +2433,29 @@ impl<'a> Checker<'a> {
                 expr.id,
                 FieldKind::EntityState {
                     entity: owner,
-                    state,
+                    state: Some(state),
                     name: name.name.clone(),
                 },
             );
             return self.out.locals.get(&state).copied().unwrap_or(TyId::ERROR);
+        }
+        // The state of a static prefab instance is declared by its prefab.
+        if let Some(ty) = self.instances.get(&owner).and_then(|facts| {
+            facts
+                .states
+                .iter()
+                .find(|(state, _)| *state == name.name)
+                .map(|(_, ty)| *ty)
+        }) {
+            self.fields.insert(
+                expr.id,
+                FieldKind::EntityState {
+                    entity: owner,
+                    state: None,
+                    name: name.name.clone(),
+                },
+            );
+            return ty;
         }
         match self.registry.schema_field(schema, &name.name) {
             Some(field) if !is_implemented(field.since) => TyId::ERROR,
