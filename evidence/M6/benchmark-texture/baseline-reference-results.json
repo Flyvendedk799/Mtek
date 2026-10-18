@@ -1,0 +1,16 @@
+{
+  "baselineSource": "reference",
+  "command": "MTEK_REQUIRE_GPU=1 npm run test:benchmarks -- scene-rendering-11",
+  "counts": {
+    "passed": 1,
+    "failed": 0
+  },
+  "tests": [
+    {
+      "title": "scene-rendering-11 (reference baseline): a textured floor: a picture shown exactly, tiled, and smoothed",
+      "project": "benchmarks",
+      "status": "passed",
+      "durationMs": 603
+    }
+  ]
+}
