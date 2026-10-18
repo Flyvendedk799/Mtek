@@ -83,6 +83,37 @@ impl Lexed {
             std::mem::take(&mut self.suppressed_errors),
         );
     }
+
+    /// The documentation comment of the declaration whose first token starts at the byte
+    /// offset `start` (`spec/language.md` 1.5): the `///` lines directly before it, with the
+    /// marker and one space removed, joined by a line feed and trimmed. Empty if the token is
+    /// not at `start` or no documentation comment precedes it. `text` is the text that was
+    /// lexed. The context export and the language server share this one reading.
+    #[must_use]
+    pub fn doc_comment_before(&self, text: &str, start: u32) -> String {
+        let Ok(index) = self
+            .tokens
+            .binary_search_by_key(&start, |token| token.span.start)
+        else {
+            return String::new();
+        };
+        let group = self.trivia.before(index);
+        let from = group
+            .iter()
+            .rposition(|comment| comment.kind != TriviaKind::DocComment)
+            .map_or(0, |last| last + 1);
+        let lines: Vec<&str> = group
+            .get(from..)
+            .unwrap_or(&[])
+            .iter()
+            .map(|comment| {
+                let line = text.get(comment.span.range()).unwrap_or("");
+                let line = line.strip_prefix("///").unwrap_or(line);
+                line.strip_prefix(' ').unwrap_or(line).trim_end()
+            })
+            .collect();
+        lines.join("\n").trim().to_owned()
+    }
 }
 
 /// The lexer stores at most this many diagnostics per file; the driver's sink

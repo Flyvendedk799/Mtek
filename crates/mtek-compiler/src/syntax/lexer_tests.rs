@@ -776,6 +776,25 @@ fn line_and_doc_comments_are_trivia_keyed_by_the_following_token() {
 }
 
 #[test]
+fn doc_comment_before_joins_the_doc_lines_directly_before_a_token() {
+    let src = "/// first\n///second\n\n/// third  \nfn a() {}\n// plain\n/// only\nfn b() {}\nfn c() {}\n// plain\nfn d() {}";
+    let lexed = lex_str(FILE, src);
+    let start = |needle: &str| u32::try_from(src.find(needle).unwrap()).unwrap();
+    // Blank lines do not break the group; the marker and one space are removed.
+    assert_eq!(
+        lexed.doc_comment_before(src, start("fn a")),
+        "first\nsecond\nthird"
+    );
+    // An ordinary comment ends the group: only the doc lines after it count.
+    assert_eq!(lexed.doc_comment_before(src, start("fn b")), "only");
+    assert_eq!(lexed.doc_comment_before(src, start("fn c")), "");
+    assert_eq!(lexed.doc_comment_before(src, start("fn d")), "");
+    // Not the start of a token: no documentation.
+    assert_eq!(lexed.doc_comment_before(src, start("fn a") + 1), "");
+    assert_eq!(lexed.doc_comment_before(src, u32::MAX), "");
+}
+
+#[test]
 fn a_doc_comment_is_three_slashes_not_followed_by_a_fourth() {
     use TriviaKind as T;
     assert_eq!(trivia_of("///"), vec![(T::DocComment, "///", 0)]);

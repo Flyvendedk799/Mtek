@@ -186,6 +186,24 @@ pub fn analyze(root: &ProjectRoot, fs: &dyn Fs) -> Analysis {
     analyze_with(root, fs, &AnalyzeOptions::default())
 }
 
+/// [`analyze`] without the validation of suggested edits (decision 0076): the report carries
+/// no [`Diagnostic::edits`](crate::diagnostics::Diagnostic::edits), where [`analyze`] re-checks the
+/// project once per proposal (up to [`crate::edits::MAX_EDIT_VALIDATIONS`] whole front-end runs
+/// for a program with errors). For callers that need what the front end produced for text that
+/// is being edited (the language server's hover, definition and completion) and not the proofs.
+/// The diagnostics, their order and the typed tree are exactly those of [`analyze`].
+#[must_use]
+pub fn analyze_without_edits(root: &ProjectRoot, fs: &dyn Fs) -> Analysis {
+    let mut sink = Diagnostics::new();
+    let front = front_end_with(root, fs, &AnalyzeOptions::default(), &mut sink);
+    let mut report = sink.finish();
+    for diagnostic in &mut report.diagnostics {
+        // A proposal that was not validated is never shown.
+        diagnostic.candidates.clear();
+    }
+    front.finish(report)
+}
+
 /// [`analyze`] with `options` (the GPU-root test hook of decision 0038).
 #[must_use]
 pub fn analyze_with(root: &ProjectRoot, fs: &dyn Fs, options: &AnalyzeOptions) -> Analysis {

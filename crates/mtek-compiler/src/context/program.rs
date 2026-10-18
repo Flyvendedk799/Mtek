@@ -21,7 +21,7 @@ use crate::syntax::ast::{
     MaterialMember, Module, NodeId, ParamDecl, SceneDecl, SceneMember, SceneObject, StateDecl,
     StructDecl, Type,
 };
-use crate::syntax::{Lexed, NodeInfo, TriviaKind, lex, walk_module};
+use crate::syntax::{Lexed, NodeInfo, lex, walk_module};
 use crate::types::Typeck;
 
 /// A module of the project with everything the export reads from it.
@@ -98,27 +98,7 @@ impl<'a> ModuleCtx<'a> {
     /// The documentation comment of the declaration whose first token starts at `start`: the
     /// `///` lines directly before it (`spec/language.md` 1.5), joined by a line feed.
     fn doc(&self, start: u32) -> String {
-        let tokens = &self.lexed.tokens;
-        let Ok(index) = tokens.binary_search_by_key(&start, |token| token.span.start) else {
-            return String::new();
-        };
-        let group = self.lexed.trivia.before(index);
-        let from = group
-            .iter()
-            .rposition(|comment| comment.kind != TriviaKind::DocComment)
-            .map_or(0, |last| last + 1);
-        let lines: Vec<&str> = group[from..]
-            .iter()
-            .map(|comment| {
-                let text = self
-                    .source
-                    .slice(comment.span.start, comment.span.end)
-                    .unwrap_or("");
-                let text = text.strip_prefix("///").unwrap_or(text);
-                text.strip_prefix(' ').unwrap_or(text).trim_end()
-            })
-            .collect();
-        lines.join("\n").trim().to_owned()
+        self.lexed.doc_comment_before(self.source.text(), start)
     }
 
     fn line(&self, offset: u32) -> u32 {
