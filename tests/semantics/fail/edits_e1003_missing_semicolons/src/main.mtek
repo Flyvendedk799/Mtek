@@ -1,0 +1,14 @@
+const A: f32 = 1.0
+const B = vec3(A, 0.0, 1.0)
+
+fn double(x: f32) -> f32 {
+    let y = x * 2.0;
+    return y
+}
+
+scene Demo {
+    camera Main { position: B }
+    entity Cube {
+        mesh: Box { size: vec3(1.0) }
+    }
+}

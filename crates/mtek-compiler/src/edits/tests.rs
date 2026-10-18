@@ -128,7 +128,10 @@ fn touching_ranges_do_not_overlap() {
 fn a_float_fix_that_removes_the_error_is_attached() {
     let text = "const A: f32 = 1.;\nscene Demo { camera Main {} }\n";
     let result = analyze(&ProjectRoot::at_base(), &project(text));
-    assert_eq!(attached(&result.report), [(Code::E0022, vec![(15, 17, "1.0".to_owned())])]);
+    assert_eq!(
+        attached(&result.report),
+        [(Code::E0022, vec![(15, 17, "1.0".to_owned())])]
+    );
     let d = &result.report.diagnostics[0];
     assert_eq!(d.edits[0].description, "write the float literal as `1.0`");
     assert!(d.candidates.is_empty(), "proposals are consumed");
@@ -226,13 +229,22 @@ fn ill_formed_proposals_are_dropped() {
     let report = finish_with(&fs, |sink| {
         for (code, edit) in [
             // A deletion.
-            (Code::E5012, SuggestedEdit::new("delete").replace(Span::new(F, 0, 3), "")),
+            (
+                Code::E5012,
+                SuggestedEdit::new("delete").replace(Span::new(F, 0, 3), ""),
+            ),
             // No edits.
             (Code::E5013, SuggestedEdit::new("nothing")),
             // No title.
-            (Code::E5014, SuggestedEdit::new("").replace(Span::new(F, 0, 0), "x")),
+            (
+                Code::E5014,
+                SuggestedEdit::new("").replace(Span::new(F, 0, 0), "x"),
+            ),
             // Out of range.
-            (Code::E5020, SuggestedEdit::new("far").replace(Span::new(F, 999, 1000), "x")),
+            (
+                Code::E5020,
+                SuggestedEdit::new("far").replace(Span::new(F, 999, 1000), "x"),
+            ),
             // Two insertions at one offset.
             (
                 Code::E5030,
@@ -241,7 +253,11 @@ fn ill_formed_proposals_are_dropped() {
                     .replace(Span::new(F, 0, 0), "b"),
             ),
         ] {
-            sink.push(Diagnostic::new(code, "x.").at(Span::new(F, 0, 1)).candidate(edit));
+            sink.push(
+                Diagnostic::new(code, "x.")
+                    .at(Span::new(F, 0, 1))
+                    .candidate(edit),
+            );
         }
     });
     assert!(
@@ -292,7 +308,8 @@ fn the_edited_copy_is_in_memory_only() {
     let fs = project(text);
     let _ = analyze(&ProjectRoot::at_base(), &fs);
     assert_eq!(
-        fs.read(&ProjectPath::new("src/main.mtek").unwrap()).unwrap(),
+        fs.read(&ProjectPath::new("src/main.mtek").unwrap())
+            .unwrap(),
         text.as_bytes()
     );
 }

@@ -7,6 +7,19 @@
     "message": "Unknown name 'quatt'.",
     "notes": [
       "help: did you mean the built-in 'quat'?"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'quatt' to 'quat'",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 41,
+            "endByte": 46,
+            "replacement": "quat"
+          }
+        ]
+      }
     ]
   }
 ]

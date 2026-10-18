@@ -12,6 +12,19 @@
         "startByte": 7,
         "endByte": 12
       }
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'Crat' to 'Crate'",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 86,
+            "endByte": 90,
+            "replacement": "Crate"
+          }
+        ]
+      }
     ]
   }
 ]

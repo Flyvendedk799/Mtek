@@ -1,0 +1,53 @@
+[
+  {
+    "code": "MTEK-E0022",
+    "file": "src/palette.mtek",
+    "startByte": 46,
+    "endByte": 48,
+    "message": "Float literal `.5` has no digits before the decimal point; floats need digits on both sides of the point.",
+    "notes": [
+      "help: write `0.5`"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "write the float literal as `0.5`",
+        "edits": [
+          {
+            "file": "src/palette.mtek",
+            "startByte": 46,
+            "endByte": 48,
+            "replacement": "0.5"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/palette.mtek",
+    "startByte": 77,
+    "endByte": 82,
+    "message": "Unknown name 'ACCNT'.",
+    "related": [
+      {
+        "message": "did you mean 'ACCENT'?",
+        "file": "src/palette.mtek",
+        "startByte": 6,
+        "endByte": 12
+      }
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'ACCNT' to 'ACCENT'",
+        "edits": [
+          {
+            "file": "src/palette.mtek",
+            "startByte": 77,
+            "endByte": 82,
+            "replacement": "ACCENT"
+          }
+        ]
+      }
+    ]
+  }
+]

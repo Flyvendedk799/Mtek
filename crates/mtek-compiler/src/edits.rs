@@ -49,7 +49,9 @@ use std::collections::BTreeMap;
 use std::fmt;
 
 use crate::check::{AnalyzeOptions, front_end_with};
-use crate::diagnostics::{Code, Diagnostic, Diagnostics, Report, Severity, SuggestedEdit, TextEdit};
+use crate::diagnostics::{
+    Code, Diagnostic, Diagnostics, Report, Severity, SuggestedEdit, TextEdit,
+};
 use crate::project::ProjectRoot;
 use crate::source::{Fs, FsError, ProjectPath, SourceMap, Span};
 

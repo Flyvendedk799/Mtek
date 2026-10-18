@@ -1,0 +1,71 @@
+[
+  {
+    "code": "MTEK-E0022",
+    "file": "src/main.mtek",
+    "startByte": 15,
+    "endByte": 17,
+    "message": "Float literal `1.` has no digits after the decimal point; floats need digits on both sides of the point.",
+    "notes": [
+      "help: write `1.0`"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "write the float literal as `1.0`",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 15,
+            "endByte": 17,
+            "replacement": "1.0"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E0022",
+    "file": "src/main.mtek",
+    "startByte": 34,
+    "endByte": 36,
+    "message": "Float literal `.5` has no digits before the decimal point; floats need digits on both sides of the point.",
+    "notes": [
+      "help: write `0.5`"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "write the float literal as `0.5`",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 34,
+            "endByte": 36,
+            "replacement": "0.5"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MTEK-E0022",
+    "file": "src/main.mtek",
+    "startByte": 53,
+    "endByte": 56,
+    "message": "Float literal `2e3` has an exponent but no decimal point; floats need digits on both sides of the point.",
+    "notes": [
+      "help: write `2.0e3`"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "write the float literal as `2.0e3`",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 53,
+            "endByte": 56,
+            "replacement": "2.0e3"
+          }
+        ]
+      }
+    ]
+  }
+]

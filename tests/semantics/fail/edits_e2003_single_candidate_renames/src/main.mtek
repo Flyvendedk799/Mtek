@@ -1,0 +1,23 @@
+const SPEED = 1.0;
+const ALPHA = 1.0;
+const ALPHB = 2.0;
+
+fn measure(v: vec3) -> f32 {
+    // One candidate, and it fits: an edit.
+    let a: f32 = lenght(v);
+    // One candidate, but the result does not fit a vec3: no edit.
+    let b: vec3 = lenght(v);
+    // A member of a built-in enum: an edit.
+    let c = Key.Spce;
+    // Two candidates (ALPHA and ALPHB): ambiguous, no edit.
+    let d = ALPHC;
+    // No candidate: no edit.
+    let e = wholly_unrelated;
+    // A declared name: an edit.
+    let f = SPED;
+    return a;
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,7 @@
+const A: f32 = 1.;
+const B: f32 = .5;
+const C: f32 = 2e3;
+
+scene Demo {
+    camera Main { position: vec3(0.0, 0.0, A + B + C); }
+}

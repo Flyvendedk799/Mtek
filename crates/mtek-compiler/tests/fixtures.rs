@@ -316,6 +316,15 @@ fn check_diagnostics(path: &Path, actual: &str) {
                 );
             }
         }
+        // Suggested edits are compared whether or not the expected diagnostic
+        // has them: a golden without `suggestedEdits` asserts that none is
+        // attached (decision 0071).
+        assert_eq!(
+            want.get("suggestedEdits"),
+            got.get("suggestedEdits"),
+            "{}: diagnostic {index}, `suggestedEdits` (a diagnostic without the key has no edit); if the change is intended run `MTEK_BLESS=1 cargo test` and review the diff",
+            path.display()
+        );
     }
 }
 
@@ -902,6 +911,31 @@ fn semantic_json(result: &Analysis) -> String {
             }
             if !d.notes.is_empty() {
                 object.insert("notes".into(), d.notes.clone().into());
+            }
+            if !d.edits.is_empty() {
+                let suggestions: Vec<Value> = d
+                    .edits
+                    .iter()
+                    .map(|suggestion| {
+                        let edits: Vec<Value> = suggestion
+                            .edits
+                            .iter()
+                            .map(|edit| {
+                                let mut one = Map::new();
+                                one.insert("file".into(), path_of(result, edit.span.file));
+                                one.insert("startByte".into(), edit.span.start.into());
+                                one.insert("endByte".into(), edit.span.end.into());
+                                one.insert("replacement".into(), edit.replacement.as_str().into());
+                                Value::Object(one)
+                            })
+                            .collect();
+                        let mut one = Map::new();
+                        one.insert("description".into(), suggestion.description.as_str().into());
+                        one.insert("edits".into(), Value::Array(edits));
+                        Value::Object(one)
+                    })
+                    .collect();
+                object.insert("suggestedEdits".into(), Value::Array(suggestions));
             }
             Value::Object(object)
         })

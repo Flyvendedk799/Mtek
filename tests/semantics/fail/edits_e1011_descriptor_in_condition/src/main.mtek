@@ -1,0 +1,19 @@
+struct Flag { ready: bool; }
+
+// Parenthesised, the first condition is a bool. The second is a `Flag`, which
+// `E3070` reports with or without the parentheses: the edit repairs the syntax
+// and introduces no error, so it is offered too (it does not make the program
+// pass, and says so no more than the diagnostic it belongs to does).
+fn pick() -> f32 {
+    if Flag { ready: true }.ready {
+        return 1.0;
+    }
+    if Flag { ready: true } {
+        return 2.0;
+    }
+    return 0.0;
+}
+
+scene Demo {
+    camera Main {}
+}
