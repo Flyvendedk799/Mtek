@@ -13,6 +13,8 @@ use clap::{Args, CommandFactory, Parser, Subcommand, ValueEnum};
 use mtek_compiler::BuildMode;
 use mtek_compiler::context::DEFAULT_MAX_BYTES;
 
+use crate::test_cmd::TestArgs;
+
 /// The output format of `--format`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ValueEnum)]
 pub enum Format {
@@ -158,8 +160,8 @@ enum CliCommand {
     },
     #[command(hide = true)]
     Fmt(Unimplemented),
-    #[command(hide = true)]
-    Test(Unimplemented),
+    /// Run the declarative test fixtures (`tests/*.test.toml`) of a project in a browser
+    Test(TestArgs),
     /// Export a versioned language and project context for AI agents (JSON)
     Context {
         /// The entry module of the project; the project is the nearest directory above it with
@@ -221,6 +223,8 @@ pub enum Request {
         symbols: Vec<String>,
         max_bytes: usize,
     },
+    /// `mtek test`.
+    Test(TestArgs),
 }
 
 impl Request {
@@ -234,6 +238,7 @@ impl Request {
             Request::Check { format, .. }
             | Request::Build { format, .. }
             | Request::Inspect { format, .. } => *format,
+            Request::Test(args) => args.format,
         }
     }
 
@@ -247,6 +252,7 @@ impl Request {
             Request::Dev { .. } => "dev",
             Request::New { .. } => "new",
             Request::Context { .. } => "context",
+            Request::Test(_) => "test",
         }
     }
 }
@@ -334,7 +340,7 @@ where
         CliCommand::Dev { port, open, path } => Ok(Request::Dev { port, open, path }),
         CliCommand::New { name } => Ok(Request::New { name }),
         CliCommand::Fmt(_) => Err(not_yet("mtek fmt", "M6")),
-        CliCommand::Test(_) => Err(not_yet("mtek test", "M6")),
+        CliCommand::Test(args) => Ok(Request::Test(args)),
         CliCommand::Context {
             entry,
             symbols,
@@ -511,13 +517,36 @@ mod tests {
     }
 
     #[test]
+    fn test_defaults_and_options() {
+        assert_eq!(
+            parse_args(&["test"]),
+            Ok(Request::Test(TestArgs {
+                allow_not_run: false,
+                format: Format::Human,
+                path: None
+            }))
+        );
+        let request = parse_args(&["test", "--allow-not-run", "--format", "json", "proj"]);
+        assert_eq!(
+            request,
+            Ok(Request::Test(TestArgs {
+                allow_not_run: true,
+                format: Format::Json,
+                path: Some(PathBuf::from("proj"))
+            }))
+        );
+        assert_eq!(
+            request.map(|r| (r.format(), r.verb())),
+            Ok((Format::Json, "test"))
+        );
+        assert!(usage(&["test", "--format", "yaml"]).contains("yaml"));
+        usage(&["test", "--allow-not-run=yes"]);
+        usage(&["test", "a", "b"]);
+    }
+
+    #[test]
     fn later_commands_are_named_in_the_error() {
-        for (command, milestone) in [
-            ("fmt", "M6"),
-            ("test", "M6"),
-            ("grammar", "M6"),
-            ("lsp", "M6"),
-        ] {
+        for (command, milestone) in [("fmt", "M6"), ("grammar", "M6"), ("lsp", "M6")] {
             let text = usage(&[command, "--port", "1", "x"]);
             assert!(
                 text.contains(&format!("'mtek {command}'")) && text.contains(milestone),

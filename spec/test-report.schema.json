@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mtek test report",
+  "description": "The single JSON document that `mtek test --format json` prints on stdout (spec/tooling.md section 6, decision 0074). Schema version 1: keys are only ever added within a version. A report is a result, never a pass by default: `status` is `pass` only when at least one fixture ran and every fixture passed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "command",
+    "project",
+    "status",
+    "exitCode",
+    "allowNotRun",
+    "error",
+    "summary",
+    "build",
+    "environment",
+    "fixtures"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "command": { "const": "mtek test" },
+    "project": {
+      "description": "`project.name` of mtek.toml; null when the project could not be loaded.",
+      "type": ["string", "null"]
+    },
+    "status": {
+      "description": "`fail` if any fixture failed, the project does not build, a fixture file is invalid, there is no fixture or the tool itself failed; else `not-run` if any fixture could not run; else `pass`.",
+      "enum": ["pass", "fail", "not-run"]
+    },
+    "exitCode": {
+      "description": "The exit code of the process: 0 for `pass`, and for `not-run` with allowNotRun; 1 for `fail`, and for `not-run` without allowNotRun; 3 when the tool itself failed (a crashed runner, a scratch directory that cannot be created, a build that could not be written; the document is still printed when it can be). 2 (usage error) prints no report.",
+      "enum": [0, 1, 3]
+    },
+    "allowNotRun": { "type": "boolean" },
+    "error": {
+      "description": "A problem that belongs to no fixture: no fixtures found, a fixture directory that cannot be listed, no project found, the tool's own failure. Null otherwise.",
+      "type": ["string", "null"]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "passed", "failed", "notRun"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "notRun": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "build": {
+      "description": "The build of the project in test mode; null when the run ended before the build (no fixtures, a directory that cannot be listed).",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ok", "mode", "buildId", "errors", "warnings", "diagnostics"],
+          "properties": {
+            "ok": { "type": "boolean" },
+            "mode": { "const": "test" },
+            "buildId": { "type": ["string", "null"] },
+            "errors": { "type": "integer", "minimum": 0 },
+            "warnings": { "type": "integer", "minimum": 0 },
+            "diagnostics": {
+              "description": "The `diagnostics` array of the report of spec/diagnostics.md section 2.2 (each item validates against spec/diagnostic.schema.json).",
+              "type": "array",
+              "items": { "type": "object", "required": ["code", "severity", "message"] }
+            }
+          }
+        }
+      ]
+    },
+    "environment": {
+      "description": "The browser and the WebGPU adapter the fixtures ran on; null when the browser did not start or no fixture was sent to it.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["browser", "gpu"],
+          "properties": {
+            "browser": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "channel", "version", "headless", "launchArgs"],
+              "properties": {
+                "name": { "type": "string" },
+                "channel": { "type": "string" },
+                "version": { "type": "string" },
+                "headless": { "type": "boolean" },
+                "launchArgs": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "gpu": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["available", "reason", "adapter"],
+              "properties": {
+                "available": { "type": "boolean" },
+                "reason": { "description": "Why there is no adapter; null when there is one.", "type": ["string", "null"] },
+                "adapter": {
+                  "oneOf": [
+                    { "type": "null" },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["vendor", "architecture", "device", "description", "isFallbackAdapter"],
+                      "properties": {
+                        "vendor": { "type": "string" },
+                        "architecture": { "type": "string" },
+                        "device": { "type": "string" },
+                        "description": { "type": "string" },
+                        "isFallbackAdapter": { "description": "True for a software adapter: correctness evidence only, never hardware evidence.", "type": "boolean" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fixtures": {
+      "description": "One entry per fixture file, in file name order.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/fixture" }
+    }
+  },
+  "$defs": {
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "name", "status", "reason", "failure", "seed", "stepsRun", "stepsTotal", "durationMs"],
+      "properties": {
+        "file": { "description": "The path relative to the project, `/` as the separator.", "type": "string" },
+        "name": { "description": "`name` of the fixture; the file path when the file could not be read that far.", "type": "string" },
+        "status": { "enum": ["pass", "fail", "not-run"] },
+        "reason": { "description": "Why the fixture is NOT-RUN; null otherwise.", "type": ["string", "null"] },
+        "failure": {
+          "description": "What failed; null unless the status is `fail`.",
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/failure" }]
+        },
+        "seed": { "description": "The `random()` seed of the run.", "type": "integer", "minimum": 0 },
+        "stepsRun": { "description": "Steps that completed without failing.", "type": "integer", "minimum": 0 },
+        "stepsTotal": { "type": "integer", "minimum": 0 },
+        "durationMs": { "type": "integer", "minimum": 0 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "not-run" } } },
+          "then": { "properties": { "reason": { "type": "string" }, "failure": { "type": "null" } } }
+        },
+        {
+          "if": { "properties": { "status": { "const": "fail" } } },
+          "then": { "properties": { "failure": { "type": "object" } } }
+        },
+        {
+          "if": { "properties": { "status": { "const": "pass" } } },
+          "then": { "properties": { "reason": { "type": "null" }, "failure": { "type": "null" } } }
+        }
+      ]
+    },
+    "failure": {
+      "type": "object",
+      "required": ["kind", "message"],
+      "properties": {
+        "kind": {
+          "description": "`invalid-fixture` (the file has problems, see details), `build` (the project does not build), `mount` (the program did not mount), `step` (a step threw), `set_input` (the input was rejected), `runtime-error` (the program reported an error diagnostic, see details), `timeout`, or the kind of the expectation that did not hold: `expect_state`, `expect_pixel`, `expect_counter`.",
+          "type": "string"
+        },
+        "step": { "description": "The 1-based index of the step that failed.", "type": ["integer", "null"], "minimum": 1 },
+        "line": { "description": "The 1-based line of that step in the fixture file.", "type": ["integer", "null"], "minimum": 1 },
+        "message": { "type": "string" },
+        "details": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

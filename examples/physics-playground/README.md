@@ -57,3 +57,7 @@ mountMtek(document.getElementById("mtek"), program, { seed: 166 });
 - `crates/mtek-cli/tests/cli.rs`: every example under `examples/` checks clean, and the real source of this example with two of those mistakes edited in is rejected with exactly two `E5071`.
 
 Evidence of the hardware run is in `evidence/M5/`.
+
+## `mtek test`
+
+`tests/*.test.toml` are declarative fixtures that `mtek test examples/physics-playground` runs with seed 166 (decision 0074): `space-lifts-first` (the lift derived from the impulse, the return to rest, the step counter) and `crates-and-sensor` (the seeded crates, the sensor counts at the derived ticks, the destroyed crates, the meter pixels). The derivations are at the top of each file.

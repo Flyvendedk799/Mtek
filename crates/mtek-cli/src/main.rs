@@ -13,6 +13,7 @@ mod guard;
 mod real_fs;
 mod runtime;
 mod scaffold;
+mod test_cmd;
 
 use std::io::{IsTerminal, Write};
 use std::process::ExitCode;

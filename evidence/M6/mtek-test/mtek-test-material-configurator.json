@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "command": "mtek test",
+  "project": "material-configurator",
+  "status": "pass",
+  "exitCode": 0,
+  "allowNotRun": false,
+  "error": null,
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "notRun": 0
+  },
+  "build": {
+    "ok": true,
+    "mode": "test",
+    "buildId": "3de1813fba35c4b9745542b1706198dd1d8c97862eada5d2875f4d16d761f8d4",
+    "errors": 0,
+    "warnings": 0,
+    "diagnostics": []
+  },
+  "environment": {
+    "browser": {
+      "name": "chromium",
+      "channel": "chromium",
+      "version": "153.0.8010.12",
+      "headless": true,
+      "launchArgs": [
+        "--enable-unsafe-webgpu",
+        "--ignore-gpu-blocklist",
+        "--enable-webgpu-developer-features"
+      ]
+    },
+    "gpu": {
+      "available": true,
+      "reason": null,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      }
+    }
+  },
+  "fixtures": [
+    {
+      "file": "tests/chair-defaults.test.toml",
+      "name": "the chair starts with the factors of its model and is drawn as the documented lighting model predicts",
+      "status": "pass",
+      "reason": null,
+      "failure": null,
+      "seed": 0,
+      "stepsRun": 11,
+      "stepsTotal": 11,
+      "durationMs": 289
+    },
+    {
+      "file": "tests/host-inputs.test.toml",
+      "name": "host inputs recolour what they drive, as the lighting model predicts, without creating a pipeline",
+      "status": "pass",
+      "reason": null,
+      "failure": null,
+      "seed": 0,
+      "stepsRun": 40,
+      "stepsTotal": 40,
+      "durationMs": 356
+    }
+  ]
+}

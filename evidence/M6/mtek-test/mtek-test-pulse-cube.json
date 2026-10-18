@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "command": "mtek test",
+  "project": "pulse-cube",
+  "status": "pass",
+  "exitCode": 0,
+  "allowNotRun": false,
+  "error": null,
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "notRun": 0
+  },
+  "build": {
+    "ok": true,
+    "mode": "test",
+    "buildId": "8d7b5a31763e171fe95ba31dc9c30591e9fb16342fd6d129f62e46e6b3e2be4b",
+    "errors": 0,
+    "warnings": 0,
+    "diagnostics": []
+  },
+  "environment": {
+    "browser": {
+      "name": "chromium",
+      "channel": "chromium",
+      "version": "153.0.8010.12",
+      "headless": true,
+      "launchArgs": [
+        "--enable-unsafe-webgpu",
+        "--ignore-gpu-blocklist",
+        "--enable-webgpu-developer-features"
+      ]
+    },
+    "gpu": {
+      "available": true,
+      "reason": null,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      }
+    }
+  },
+  "fixtures": [
+    {
+      "file": "tests/host-tint.test.toml",
+      "name": "the host tint recolours the cube and the pulse still scales it",
+      "status": "pass",
+      "reason": null,
+      "failure": null,
+      "seed": 0,
+      "stepsRun": 10,
+      "stepsTotal": 10,
+      "durationMs": 265
+    },
+    {
+      "file": "tests/rotation-and-pulse.test.toml",
+      "name": "the cube turns at 0.7 rad/s and pulses with the bound frame time",
+      "status": "pass",
+      "reason": null,
+      "failure": null,
+      "seed": 0,
+      "stepsRun": 10,
+      "stepsTotal": 10,
+      "durationMs": 266
+    },
+    {
+      "file": "tests/space-reverses.test.toml",
+      "name": "Space reverses the direction of rotation each time it is pressed",
+      "status": "pass",
+      "reason": null,
+      "failure": null,
+      "seed": 0,
+      "stepsRun": 11,
+      "stepsTotal": 11,
+      "durationMs": 246
+    }
+  ]
+}

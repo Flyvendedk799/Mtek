@@ -1,0 +1,103 @@
+# C spawns a crate at a seeded random position; the sensor zone counts the crates that enter it; crates that miss
+# the floor destroy themselves. The expectations are derived from the geometry in the program and from the seed.
+#
+# The seed. `random()` is xoshiro128** seeded through splitmix32 (spec/stdlib.md), here with seed 166. Each C press takes
+# x = (random() * 2 - 1) * 9 and then z = (random() * 2 - 1) * 2.5, all in binary32; computed independently of the runtime
+# (tests/browser/support/m5-playground.ts, itself unit-tested), the first six presses give
+#     crate  x        z        floor spans x in [-7, 7], z in [-4, 4]; the zone spans x in [2, 6], z in [-3, 3]
+#       0     5.9642   0.3959   footprint overlaps the zone: rests in the zone
+#       1    -7.9596   0.9150   |x| - 0.5 > 7: misses the floor
+#       2     7.8734   1.8516   misses the floor
+#       3    -0.2324  -2.0269   on the floor, clear of the zone
+#       4     2.5497   2.0301   rests in the zone
+#       5    -3.0836   2.4785   on the floor, clear of the zone
+#   and no crate lands on another or on First. So after six presses: spawned 6, entered 2, destroyed 2, four crates alive.
+#
+# Time. Frames are exactly one fixed step (0.016666668 s), so `step = 1` is one physics tick. A press is applied at the start
+# of the next frame, which creates the crate and steps it (tick 1); `step = 149` more make 150 ticks per crate.
+#   sensor    a crate dropped from y = 6 has its bottom meet the top of the zone (y = 2.5) when it has fallen 3 m, which takes
+#             fallTicks(3) = 47 ticks in the engine's model; the event reaches the program within two ticks (ticks 47 to 49).
+#             Tick 46: entered is still 0; tick 50: it is 1. Never counted twice.
+#   destroy   a crate that misses the floor falls 16 m to y = -10: 109 ticks; its fixed_update sees that on the next tick
+#             and the flush that removes it is the one after (ticks 110 to 112). Tick 109: not destroyed; tick 113: destroyed.
+#   bodies    Floor, First and Zone: 3. Each crate that stays adds one, each one that is destroyed leaves again.
+#   entities  Sun, Floor, First, Zone, ZoneMarker and Meter are the 6 named entities; liveEntities adds the crates alive.
+#   meter     the yellow bar (Unlit #ffd040) starts at x = -8 and is 0.4 + 0.5 * entered long, its centre bound to the count:
+#             Meter.position = (-8 + (0.4 + 0.5 n) / 2, 6, -3). On the 128 x 128 target (camera at (0, 8, 17) looking at
+#             (0, 1.5, 0), fov_y 0.8, projected on the CPU) the bar covers pixel columns 1.6 to 8.6 with one entry and 1.6 to
+#             12.5 with two, and 1.6 to 4.7 with none, on row 22; the rest of that row is the clear colour #14181f. So
+#             pixel (3, 22) is yellow always, (5, 22) from the first entry on, (7, 22) clear until the first entry and
+#             (11, 22) yellow only with the second.
+name = "C spawns seeded crates; the sensor counts the ones that land in the zone and the ones that miss the floor are destroyed"
+seed = 166
+steps = [
+  { step = 60, dt = 0.016666668 },
+  { expect_state = { entered = 0, inside = 0, spawned = 0, "Meter.position" = { value = [-7.8, 6, -3], tolerance = 1e-4 } } },
+  { expect_counter = { liveEntities = 6, physicsBodies = 3, entitiesSpawned = 0, entitiesDestroyed = 0 } },
+  { expect_pixel = { x = 3, y = 22, color = "#ffd040", tolerance = 2 } },
+  { expect_pixel = { x = 7, y = 22, color = "#14181f", tolerance = 2 } },
+
+  # Crate 0: rests in the zone. Not counted at tick 46, counted once by tick 50.
+  { press = "KeyC" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyC" },
+  { expect_state = { spawned = 1 } },
+  { expect_counter = { entitiesSpawned = 1, liveEntities = 7, physicsBodies = 4 } },
+  { step = 45, dt = 0.016666668 },
+  { expect_state = { entered = 0, inside = 0 } },
+  { step = 4, dt = 0.016666668 },
+  { expect_state = { entered = 1, inside = 1 } },
+  { step = 100, dt = 0.016666668 },
+  { expect_state = { entered = 1, inside = 1, spawned = 1, "Meter.position" = { value = [-7.55, 6, -3], tolerance = 1e-4 } } },
+  { expect_counter = { liveEntities = 7, physicsBodies = 4, entitiesDestroyed = 0 } },
+  { expect_pixel = { x = 5, y = 22, color = "#ffd040", tolerance = 2 } },
+  { expect_pixel = { x = 11, y = 22, color = "#14181f", tolerance = 2 } },
+
+  # Crate 1: misses the floor and destroys itself.
+  { press = "KeyC" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyC" },
+  { expect_counter = { liveEntities = 8, physicsBodies = 5, entitiesSpawned = 2 } },
+  { step = 108, dt = 0.016666668 },
+  { expect_counter = { entitiesDestroyed = 0, physicsBodies = 5 } },
+  { step = 4, dt = 0.016666668 },
+  { expect_counter = { entitiesDestroyed = 1, physicsBodies = 4, liveEntities = 7 } },
+  { step = 37, dt = 0.016666668 },
+  { expect_state = { entered = 1, inside = 1, spawned = 2 } },
+
+  # Crate 2: misses the floor too.
+  { press = "KeyC" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyC" },
+  { step = 149, dt = 0.016666668 },
+  { expect_state = { entered = 1, inside = 1, spawned = 3 } },
+  { expect_counter = { entitiesSpawned = 3, entitiesDestroyed = 2, physicsBodies = 4, liveEntities = 7 } },
+
+  # Crate 3: on the floor, clear of the zone.
+  { press = "KeyC" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyC" },
+  { step = 149, dt = 0.016666668 },
+  { expect_state = { entered = 1, inside = 1, spawned = 4 } },
+  { expect_counter = { entitiesSpawned = 4, entitiesDestroyed = 2, physicsBodies = 5, liveEntities = 8 } },
+
+  # Crate 4: rests in the zone: the second entry.
+  { press = "KeyC" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyC" },
+  { step = 149, dt = 0.016666668 },
+  { expect_state = { entered = 2, inside = 2, spawned = 5, "Meter.position" = { value = [-7.3, 6, -3], tolerance = 1e-4 } } },
+  { expect_counter = { entitiesSpawned = 5, entitiesDestroyed = 2, physicsBodies = 6, liveEntities = 9 } },
+  { expect_pixel = { x = 11, y = 22, color = "#ffd040", tolerance = 2 } },
+
+  # Crate 5: on the floor, clear of the zone.
+  { press = "KeyC" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyC" },
+  { step = 149, dt = 0.016666668 },
+  { expect_state = { entered = 2, inside = 2, spawned = 6, "First.position" = { value = [-4.5, 0.5, 0], tolerance = 0.01 } } },
+  { expect_counter = { entitiesSpawned = 6, entitiesDestroyed = 2, physicsBodies = 7, physicsColliders = 7, liveEntities = 10, pendingSpawns = 0, pendingRemovals = 0, physicsSteps = 960 } },
+  { expect_pixel = { x = 5, y = 22, color = "#ffd040", tolerance = 2 } },
+  { expect_pixel = { x = 11, y = 22, color = "#ffd040", tolerance = 2 } },
+  { expect_pixel = { x = 20, y = 22, color = "#14181f", tolerance = 2 } },
+]

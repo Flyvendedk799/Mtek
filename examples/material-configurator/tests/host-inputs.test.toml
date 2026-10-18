@@ -1,0 +1,67 @@
+# The host changes the material inputs one after another; each change recolours exactly the entities it drives and
+# nothing is rebuilt.
+#
+# A host input is validated when it is set and applied at the start of the next frame, so each change is followed by a
+# `step`. Colours are sRGB hex and read back as the same colour (a state of type color is compared in linear light).
+#
+# The pixels are those of chair-defaults.test.toml and the expected colours are the shading of the CPU ray tracer of
+# tests/browser/support/configurator-scene.ts for the inputs set so far (the changes accumulate), with the 3/255 tolerance
+# of lit colours. Which entity an input drives follows from src/main.mtek: seat_* the seat, frame_* both rails, stripe_*
+# and back_roughness the back, sun_intensity the directional light, which lights everything.
+#   seat   (64, 64)      back   (62, 48) dark band, (54, 36) light band      rails  (69, 84), (63, 76)
+#   floor  (63, 98)      leg    (79, 77)
+# A change of inputs is not a rebuild: no pipeline and no shader module is created (3 and 2, as at the start).
+# tests/browser/support/mtek-test/example-fixtures.test.ts recomputes every pixel.
+name = "host inputs recolour what they drive, as the lighting model predicts, without creating a pipeline"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#c36256", tolerance = 3 } },
+
+  # A green, rough seat. Nothing else changes: the rails, the back, the legs and the floor keep their colours.
+  { set_input = { seat_color = "#2e7d32" } },
+  { set_input = { seat_metallic = 0 } },
+  { set_input = { seat_roughness = 0.5 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_state = { seat_color = "#2e7d32", seat_metallic = 0, seat_roughness = 0.5 } },
+  { expect_pixel = { x = 64, y = 64, color = "#31782f", tolerance = 3 } },
+  { expect_pixel = { x = 69, y = 84, color = "#1e1c19", tolerance = 3 } },
+  { expect_pixel = { x = 62, y = 48, color = "#384559", tolerance = 3 } },
+  { expect_pixel = { x = 79, y = 77, color = "#9d7447", tolerance = 3 } },
+  { expect_pixel = { x = 63, y = 98, color = "#96928e", tolerance = 3 } },
+  { expect_counter = { pipelinesCreated = 3, shaderModulesCreated = 2 } },
+
+  # A gold metal seat: a metal reflects only the lights, so it is dark here (there is no environment to reflect).
+  { set_input = { seat_color = "#d4af37" } },
+  { set_input = { seat_metallic = 1 } },
+  { set_input = { seat_roughness = 0.25 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#110b01", tolerance = 3 } },
+
+  # Copper, matte rails (they were bare steel): only the rails change.
+  { set_input = { frame_color = "#b87333" } },
+  { set_input = { frame_metallic = 0 } },
+  { set_input = { frame_roughness = 0.7 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 69, y = 84, color = "#a6652e", tolerance = 3 } },
+  { expect_pixel = { x = 63, y = 76, color = "#a96830", tolerance = 3 } },
+  { expect_pixel = { x = 64, y = 64, color = "#110b01", tolerance = 3 } },
+
+  # Red and white stripes, smoother: only the back changes.
+  { set_input = { stripe_a = "#ffffff" } },
+  { set_input = { stripe_b = "#c0392b" } },
+  { set_input = { back_roughness = 0.2 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 62, y = 48, color = "#bb3625", tolerance = 3 } },
+  { expect_pixel = { x = 54, y = 36, color = "#fdf5e7", tolerance = 3 } },
+  { expect_pixel = { x = 69, y = 84, color = "#a6652e", tolerance = 3 } },
+
+  # The sun off: everything is lit by the lamp and the ambient light alone.
+  { set_input = { sun_intensity = 0 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_state = { sun_intensity = 0, seat_metallic = 1, frame_metallic = 0 } },
+  { expect_pixel = { x = 63, y = 98, color = "#58585b", tolerance = 3 } },
+  { expect_pixel = { x = 62, y = 48, color = "#5f1810", tolerance = 3 } },
+  { expect_pixel = { x = 79, y = 77, color = "#44321e", tolerance = 3 } },
+  { expect_pixel = { x = 0, y = 0, color = "#1b1f27", tolerance = 0 } },
+  { expect_counter = { pipelinesCreated = 3, shaderModulesCreated = 2, failedMaterials = 0 } },
+]

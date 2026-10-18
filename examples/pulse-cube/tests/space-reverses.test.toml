@@ -1,0 +1,28 @@
+# Space negates `speed` (`on key_down(Key.Space) { speed = -speed; }`) and the cube then turns the other way.
+#
+# A key press is applied in phase 1 of the next frame, before `update` of that frame, so the frame after
+# `press` already turns the new way. With dt = pi/180 s (one degree of time per frame, so 90 frames are
+# t = pi/2 and the pulse factor is exactly 1.0):
+#   30 frames at +0.7 rad/s        angle +0.7 * 30 * dt = +0.3665191 rad
+#   Space, then 1 + 59 frames      angle -0.7 * 60 * dt = -0.7330383 rad more
+#   in total                       angle -0.3665191 rad, quaternion (0, sin(a/2), 0, cos(a/2)) = (0, -0.1822355, 0, 0.9832549)
+# A second Space turns it back: 90 more frames at +0.7 rad/s add +1.0995574 rad, in total +0.7330383 rad,
+# quaternion (0, 0.3583679, 0, 0.9335804).
+# Holding the key does not repeat the press: only the transition counts, so speed is negated once per press.
+name = "Space reverses the direction of rotation each time it is pressed"
+steps = [
+  { step = 30, dt = 0.017453292519943295 },
+  { expect_state = { speed = 0.7, "Cube.rotation" = { value = [0, 0.1822355, 0, 0.9832549], tolerance = 2e-5 } } },
+
+  { press = "Space" },
+  { step = 1, dt = 0.017453292519943295 },
+  { release = "Space" },
+  { step = 59, dt = 0.017453292519943295 },
+  { expect_state = { speed = -0.7, "Cube.rotation" = { value = [0, -0.1822355, 0, 0.9832549], tolerance = 2e-5 } } },
+  # t = pi/2 here: the pulse factor is 1, the cube shows its tint.
+  { expect_pixel = { x = 64, y = 64, color = "#6b5cff", tolerance = 2 } },
+
+  { press = "Space" },
+  { step = 90, dt = 0.017453292519943295 },
+  { expect_state = { speed = 0.7, "Cube.rotation" = { value = [0, 0.3583679, 0, 0.9335804], tolerance = 5e-5 } } },
+]

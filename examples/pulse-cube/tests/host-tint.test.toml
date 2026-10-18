@@ -1,0 +1,27 @@
+# The host input `tint` (`mtek.toml`: tint = "Demo.tint") sets the state `tint`, which the cube's material binds.
+#
+# `set_input` is validated at once and applied in phase 1 of the next frame, so the state changes with the
+# next `step`. Colours go in as sRGB hex and are converted like a colour literal. The cube is lit by nothing:
+# its pixel is tint scaled by the pulse factor 0.65 + 0.35 sin t, in linear light, sRGB-encoded.
+# With dt = pi/180 s per frame: 90 frames are t = pi/2 (factor 1.0), 270 frames t = 3 pi/2 (factor 0.30).
+#   #f04f72 at factor 1.00 is #f04f72
+#   #f04f72 at factor 0.30 is #8c2a3f   (linear 0.8714, 0.0782, 0.1683 x 0.3, encoded)
+name = "the host tint recolours the cube and the pulse still scales it"
+steps = [
+  # Nothing has been set yet: the program's own tint.
+  { step = 90, dt = 0.017453292519943295 },
+  { expect_state = { tint = "#6b5cff" } },
+  { expect_pixel = { x = 64, y = 64, color = "#6b5cff", tolerance = 2 } },
+
+  { set_input = { tint = "#f04f72" } },
+  # Queued, not applied: nothing has changed before the next frame.
+  { expect_state = { tint = "#6b5cff" } },
+  { step = 1, dt = 0.0 },
+  { expect_state = { tint = "#f04f72", "Cube.material.tint" = "#f04f72" } },
+
+  # t is still pi/2 (a frame of 0 s): factor 1.0.
+  { expect_pixel = { x = 64, y = 64, color = "#f04f72", tolerance = 2 } },
+  { step = 180, dt = 0.017453292519943295 },
+  # t = 3 pi/2: factor 0.30.
+  { expect_pixel = { x = 64, y = 64, color = "#8c2a3f", tolerance = 2 } },
+]

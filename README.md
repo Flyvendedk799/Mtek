@@ -69,6 +69,21 @@ npx playwright install chromium
 
 The working configuration on the development machine is recorded in decision 0012 (amendment) and `evidence/environments/`.
 
+#### `mtek test`
+
+`mtek test [--allow-not-run] [--format human|json] [PATH]` runs the declarative fixtures `tests/*.test.toml` of a project (the three examples have theirs) in Chromium with the launch configuration of the hardware project (`spec/tooling.md` section 6, decision 0074, report schema `spec/test-report.schema.json`). A fixture that cannot run (no WebGPU adapter, no Playwright, no Node) is reported **NOT-RUN**, never as a pass; that exits 1 unless `--allow-not-run`. It uses the browser variables above and these:
+
+| Variable | Effect |
+|---|---|
+| `MTEK_NODE` | the Node.js executable that runs the browser runner [default: `node`; version 24 or newer] |
+| `MTEK_TEST_RUNNER` | the runner script [default: `tests/browser/support/mtek-test/main.ts`, found above the `mtek` executable] |
+| `MTEK_TEST_TIMEOUT_MS` | the longest one fixture may take [default: 120000] |
+
+```
+cargo run -p mtek-cli -- test examples/pulse-cube
+MTEK_BROWSER_ARGS=--disable-gpu cargo run -p mtek-cli -- test examples/pulse-cube --allow-not-run   # NOT-RUN, exit 0
+```
+
 #### The CPU/GPU bridge specs (M0)
 
 `tests/browser/specs/bridge/` proves on real WebGPU that values written by the **generated** JavaScript
