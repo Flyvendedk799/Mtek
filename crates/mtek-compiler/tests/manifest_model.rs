@@ -225,6 +225,7 @@ const REJECTED_BY_THE_MODEL: &[&str] = &[
     "invalid/missing-build-id.json",
     "invalid/negative-span.json",
     "invalid/physics-not-boolean.json",
+    "invalid/prefab-material-without-shareable.json",
     "invalid/runtime-abi-as-string.json",
     "invalid/scene-missing-gravity.json",
     "invalid/span-missing-end-column.json",

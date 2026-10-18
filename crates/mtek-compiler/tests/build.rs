@@ -198,6 +198,7 @@ fn the_two_m1_scenes_are_codegen_fixtures_with_the_semantic_sources() {
             "prefabs",
             "scene_a_target_camera_box",
             "scene_b_orthographic_nested",
+            "spawn",
             "state_and_handlers"
         ]
     );

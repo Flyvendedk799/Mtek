@@ -191,7 +191,6 @@ export class MaterialStore implements ParamSink {
     }
     this.instances.set(instance.index, instance);
     this.blocks[instance.index] = { storage, members: new Set([instance.index]), name: instance.index, resourceGroup: undefined, key: undefined };
-    this.blockChanges += 1;
   }
 
   /**
@@ -201,6 +200,7 @@ export class MaterialStore implements ParamSink {
    */
   createInstance(instance: ResolvedInstance): void {
     this.add(instance, SPAWNED_ARENA_CAPACITY);
+    this.blockChanges += 1;
   }
 
   /** Removes a spawned entity's instance: leaves its block, releasing the slot and the bind groups with the last user. */
