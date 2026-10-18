@@ -1,0 +1,22 @@
+id = "scene-rendering-09"
+category = "scene-rendering"
+mode = "cold"
+title = "Near and far clipping planes and a hidden object"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #1e293b.
+- One camera at (0, 0, 10) looking at the origin, with a perspective projection: vertical field of view 0.9 radians, near plane 4.0, far plane 12.0. The depth of a point is its distance from the camera measured along the viewing direction, so the camera shows only what lies at a depth between 4 and 12; what is nearer than 4 or farther than 12 is cut off.
+- Six boxes, all with flat colours (no lighting), each with its own name. Edge length 2.0 in every direction unless stated:
+  - Mid at (0, 0, 0): colour #ef4444.
+  - Slab at (-2.5, 0, 5.5): colour #22c55e.
+  - Far at (3.2, 0, -4): colour #3b82f6, edge length 3.0.
+  - Behind at (0, 0, 14): colour #ec4899.
+  - Ghost at (3, 0, 2): colour #facc15. It exists in the scene but is hidden: it must not be drawn.
+  - Rim at (3.2, -2.2, 0): colour #a855f7, edge lengths 2.0 (x), 2.0 (y) and 5.0 (z).
+Nothing special has to be programmed for the clipping: it is what the camera's near and far planes do to ordinary solid boxes. As usual for solid surfaces, only the outside of a box is drawn (a face seen from behind is not drawn), so where a near or far plane cuts a box the part that is cut off simply is not there and the box is not filled in."""
+required_symbols = ["Demo.Mid", "Demo.Slab", "Demo.Far", "Demo.Behind", "Demo.Ghost", "Demo.Rim"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

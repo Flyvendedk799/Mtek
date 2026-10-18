@@ -1,0 +1,18 @@
+id = "scene-rendering-05"
+category = "scene-rendering"
+mode = "edit"
+title = "Switch to an orthographic camera, move the crate and sink a dome into the floor"
+prompt = """The scene Demo shows a floor and a crate seen by a perspective camera. Change it so that it renders exactly as follows. The picture is square.
+- The clear (background) colour stays #1a1d23.
+- The camera becomes an orthographic one (parallel projection, no perspective foreshortening) at (0, 6, 6), looking at the origin. It shows a world height of 8 units and, because the picture is square, a world width of 8 units; near plane 0.1, far plane 100.
+- The floor Floor stays as it is: a 7 x 7 one-sided surface facing up (+Y), lying in the plane y = 0, centred on the origin, colour #3f4a5a.
+- The crate Crate keeps its size and colour and moves to (2, 0.75, -1).
+- A new sphere named Dome, colour #38bdf8, radius 1.2, centred at (-1.5, 0, 1). Half of it is below the floor and is hidden by it.
+All surfaces are flat colours (no lighting). Do not remove anything that already exists, except what the changes above replace."""
+required_symbols = ["Demo.Floor", "Demo.Crate"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

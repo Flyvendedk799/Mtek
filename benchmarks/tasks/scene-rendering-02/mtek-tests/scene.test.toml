@@ -1,0 +1,43 @@
+# Expected pixels derived from the scene of the prompt by an independent CPU ray caster
+# (evidence/M6/benchmark-scene-rendering/derive.mjs and oracle.mjs: f64, entry-point ray casts, no three.js and no Mtek
+# runtime; lit surfaces shaded with the CPU oracle of spec/materials.md section 8). Every sampled pixel lies in a
+# surface whose boundary is at least 3 pixels away ("inside") or 1.5 to 2.25 pixels away ("near edge"), so neither
+# rasterisation rules nor the tessellation of a sphere decide a value.
+# Scene: a box 4 x 1 x 0.5 turned about Z by atan2(0.8, 0.6) and a sphere of radius 0.6 on its +x end face, seen from (0, 0, 8).
+name = "a bar tilted by 0.9272952 rad about Z with a red ball at its end, on a dark blue-grey background"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # centre of Bar
+  { expect_pixel = { x = 64, y = 64, color = "#f59e0b", tolerance = 2 } },
+  # centre of Tip
+  { expect_pixel = { x = 86, y = 33, color = "#ef4444", tolerance = 2 } },
+  # the clear colour
+  { expect_pixel = { x = 0, y = 0, color = "#101820", tolerance = 2 } },
+  { expect_pixel = { x = 0, y = 127, color = "#101820", tolerance = 2 } },
+  { expect_pixel = { x = 127, y = 127, color = "#101820", tolerance = 2 } },
+  { expect_pixel = { x = 1, y = 63, color = "#101820", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 127, color = "#101820", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 32, y = 92, color = "#101820", tolerance = 2 } },
+  { expect_pixel = { x = 59, y = 90, color = "#101820", tolerance = 2 } },
+  { expect_pixel = { x = 42, y = 71, color = "#101820", tolerance = 2 } },
+  { expect_pixel = { x = 65, y = 41, color = "#101820", tolerance = 2 } },
+  # Bar +Z
+  { expect_pixel = { x = 47, y = 96, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 47, y = 75, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 70, y = 45, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 61, y = 78, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 47, color = "#f59e0b", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 35, y = 88, color = "#f59e0b", tolerance = 2 } },
+  { expect_pixel = { x = 77, y = 59, color = "#f59e0b", tolerance = 2 } },
+  # Tip
+  { expect_pixel = { x = 91, y = 26, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 94, y = 35, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 81, y = 27, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 81, y = 37, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 89, y = 39, color = "#ef4444", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 78, y = 32, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 86, y = 24, color = "#ef4444", tolerance = 2 } },
+]

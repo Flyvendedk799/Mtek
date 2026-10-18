@@ -1,0 +1,22 @@
+id = "scene-rendering-03"
+category = "scene-rendering"
+mode = "cold"
+title = "A two-segment arm built as a hierarchy of nodes"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #14161c.
+- One camera at (0, 0, 9) looking at the origin, with a perspective projection (vertical field of view 0.8 radians, near plane 0.1, far plane 1000).
+- A grey box named Base at (-2.5, -1.5, 0): colour #64748b, edge length 1.2.
+- An arm made of nodes in a hierarchy. Every position, rotation and scale below is given relative to the node's PARENT, so a child moves, turns and scales with its parent. Rotations are counter-clockwise about the Z axis as seen from the camera, in radians.
+  - Arm: a node with no shape at (-2.5, -1.5, 0), rotated by 0.6435011 (cosine 0.8, sine 0.6), scale 1. Its children:
+    - Upper: a box named Upper at (2, 0, 0) in the Arm's frame, colour #3b82f6, edge lengths 4.0 along its own x axis, 0.8 along y and 0.6 along z.
+    - Elbow: a node with no shape at (4, 0, 0) in the Arm's frame, rotated by -1.287002, uniform scale 0.75. Its children:
+      - Fore: a box named Fore at (1.5, 0, 0) in the Elbow's frame, colour #22c55e, edge lengths 3.0 x 0.7 x 0.5 (before the Elbow's scale applies).
+      - Hand: a sphere named Hand at (3, 0, 0) in the Elbow's frame, colour #f43f5e, radius 0.6 (before the Elbow's scale applies).
+All surfaces are flat colours (no lighting)."""
+required_symbols = ["Demo.Base", "Demo.Arm", "Demo.Arm.Upper", "Demo.Arm.Elbow", "Demo.Arm.Elbow.Fore", "Demo.Arm.Elbow.Hand"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

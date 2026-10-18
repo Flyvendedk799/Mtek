@@ -1,0 +1,20 @@
+id = "scene-rendering-07"
+category = "scene-rendering"
+mode = "cold"
+title = "A red ball on a floor lit by one point light"
+prompt = """Build a scene named Demo that renders exactly as follows. The picture is square.
+- The clear (background) colour is #10131a.
+- One camera at (0, 3, 8) looking at the point (0, 0.5, 0), with a perspective projection (vertical field of view 0.8 radians, near plane 0.1, far plane 1000).
+- Both solids use a physically based material of the metallic-roughness kind, non-metallic (metalness 0), so they show a diffuse colour and a weak specular highlight:
+  - A sphere named Ball centred at (0, 1, 0), radius 1.0, base colour #e11d48, roughness 0.7.
+  - A flat square named Floor, 14 x 14 units, one-sided, facing up (+Y), lying in the plane y = 0 and centred on the origin, base colour #9aa5b1, roughness 0.9.
+- One white point light named Lamp at (1.5, 3, 2.5) that shines equally in all directions, with no range limit. Its illumination falls off with the inverse square of the distance from the lamp, and its strength is calibrated so that a perfectly matte (Lambertian) white surface that is 3 units from the lamp and whose normal points straight at it renders as exactly white; a surface at an angle to the light receives proportionally less (the cosine of the angle).
+- A white ambient light of 5% of that strength: it adds, to every surface and regardless of its orientation, 5% of the surface's own diffuse colour.
+There are no shadows and no tone mapping: values above full brightness are simply clipped. The expected pixels were computed with the standard model (Lambertian diffuse plus a GGX specular term with Schlick Fresnel) and are checked with a tolerance of 8 per colour channel, which covers the small differences between implementations of that model."""
+required_symbols = ["Demo.Lamp", "Demo.Floor", "Demo.Ball"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

@@ -1,0 +1,72 @@
+# Expected pixels derived from the scene of the prompt by an independent CPU ray caster
+# (evidence/M6/benchmark-scene-rendering/derive.mjs and oracle.mjs: f64, entry-point ray casts, no three.js and no Mtek
+# runtime; lit surfaces shaded with the CPU oracle of spec/materials.md section 8). Every sampled pixel lies in a
+# surface whose boundary is at least 3 pixels away ("inside") or 1.5 to 2.25 pixels away ("near edge"), so neither
+# rasterisation rules nor the tessellation of a sphere decide a value.
+# Scene: near 4, far 12, camera at (0, 0, 10). Slab crosses the near plane (its front face is cut off, a sliver of its +X face
+# remains); Far lies beyond the far plane; Behind is behind the camera; Ghost is hidden; Rim runs through the far plane (its
+# -X face is cut at depth 12). The ray caster discards an entry point outside [near, far] and culls back faces.
+name = "near and far planes cut boxes, a box behind the camera and a hidden box are not drawn"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # centre of Mid
+  { expect_pixel = { x = 64, y = 64, color = "#ef4444", tolerance = 2 } },
+  # where the centre of Far projects: the clear colour
+  { expect_pixel = { x = 94, y = 64, color = "#1e293b", tolerance = 2 } },
+  # where the centre of Ghost projects: the clear colour
+  { expect_pixel = { x = 113, y = 64, color = "#1e293b", tolerance = 2 } },
+  # centre of Rim
+  { expect_pixel = { x = 106, y = 93, color = "#a855f7", tolerance = 2 } },
+  # the clear colour
+  { expect_pixel = { x = 0, y = 0, color = "#1e293b", tolerance = 2 } },
+  { expect_pixel = { x = 0, y = 127, color = "#1e293b", tolerance = 2 } },
+  { expect_pixel = { x = 79, y = 0, color = "#1e293b", tolerance = 2 } },
+  { expect_pixel = { x = 1, y = 63, color = "#1e293b", tolerance = 2 } },
+  { expect_pixel = { x = 58, y = 126, color = "#1e293b", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 29, y = 90, color = "#1e293b", tolerance = 2 } },
+  { expect_pixel = { x = 29, y = 37, color = "#1e293b", tolerance = 2 } },
+  { expect_pixel = { x = 127, y = 123, color = "#1e293b", tolerance = 2 } },
+  { expect_pixel = { x = 99, y = 120, color = "#1e293b", tolerance = 2 } },
+  # Mid +Z
+  { expect_pixel = { x = 52, y = 52, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 75, y = 52, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 52, y = 75, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 75, y = 75, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 53, color = "#ef4444", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 51, y = 63, color = "#ef4444", tolerance = 2 } },
+  { expect_pixel = { x = 76, y = 63, color = "#ef4444", tolerance = 2 } },
+  # Rim -X
+  { expect_pixel = { x = 91, y = 82, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 99, y = 109, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 91, y = 97, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 99, y = 87, color = "#a855f7", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 100, y = 100, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 90, y = 89, color = "#a855f7", tolerance = 2 } },
+  # Rim +Y
+  { expect_pixel = { x = 100, y = 80, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 113, y = 81, color = "#a855f7", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 126, y = 83, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 106, y = 83, color = "#a855f7", tolerance = 2 } },
+  # Rim +Z
+  { expect_pixel = { x = 127, y = 117, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 127, y = 88, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 106, y = 115, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 119, y = 103, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 107, y = 104, color = "#a855f7", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 116, y = 87, color = "#a855f7", tolerance = 2 } },
+  { expect_pixel = { x = 116, y = 118, color = "#a855f7", tolerance = 2 } },
+  # Slab +X
+  { expect_pixel = { x = 17, y = 37, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 17, y = 90, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 63, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 18, y = 76, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 24, y = 49, color = "#22c55e", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 16, y = 56, color = "#22c55e", tolerance = 2 } },
+  { expect_pixel = { x = 25, y = 84, color = "#22c55e", tolerance = 2 } },
+]

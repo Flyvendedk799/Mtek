@@ -1,0 +1,47 @@
+# Expected pixels derived from the scene of the prompt by an independent CPU ray caster
+# (evidence/M6/benchmark-scene-rendering/derive.mjs and oracle.mjs: f64, entry-point ray casts, no three.js and no Mtek
+# runtime; lit surfaces shaded with the CPU oracle of spec/materials.md section 8). Every sampled pixel lies in a
+# surface whose boundary is at least 3 pixels away ("inside") or 1.5 to 2.25 pixels away ("near edge"), so neither
+# rasterisation rules nor the tessellation of a sphere decide a value.
+# Scene: point light at (1.5, 3, 2.5), 9 candela, inverse-square, no range; ambient 0.05.
+# Lit scene: the shading is the oracle of spec/materials.md section 8 (tests/browser/support/reference-shading.ts) with the
+# default camera exposure (scale pi, decision 0081). The prompt calibrates every light in observable terms (a matte white
+# surface facing the light squarely at the stated distance renders white), which in the units of that model is: directional
+# light 1 lux, point light I candela at d metres 1 lux when I = d^2 (9 candela at 3 m), ambient intensity as stated.
+# The tolerance is 8 per channel because three.js's MeshStandardMaterial differs from that model by a few bytes
+# (decision 0078 item 6); it still separates the cases the task is about by far more.
+name = "a red ball on a floor lit by one point light and ambient light"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  # centre of Ball
+  { expect_pixel = { x = 64, y = 55, color = "#de3351", tolerance = 8 } },
+  # the clear colour
+  { expect_pixel = { x = 0, y = 0, color = "#10131a", tolerance = 2 } },
+  { expect_pixel = { x = 127, y = 0, color = "#10131a", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 0, color = "#10131a", tolerance = 2 } },
+  { expect_pixel = { x = 18, y = 44, color = "#10131a", tolerance = 2 } },
+  { expect_pixel = { x = 110, y = 44, color = "#10131a", tolerance = 2 } },
+  # near the boundary
+  { expect_pixel = { x = 42, y = 45, color = "#10131a", tolerance = 2 } },
+  { expect_pixel = { x = 86, y = 45, color = "#10131a", tolerance = 2 } },
+  { expect_pixel = { x = 61, y = 34, color = "#10131a", tolerance = 2 } },
+  { expect_pixel = { x = 0, y = 45, color = "#10131a", tolerance = 2 } },
+  # Ball
+  { expect_pixel = { x = 57, y = 41, color = "#b41e3b", tolerance = 8 } },
+  { expect_pixel = { x = 49, y = 58, color = "#61061a", tolerance = 8 } },
+  { expect_pixel = { x = 73, y = 43, color = "#ff355c", tolerance = 8 } },
+  { expect_pixel = { x = 59, y = 69, color = "#61061a", tolerance = 8 } },
+  { expect_pixel = { x = 76, y = 63, color = "#b21d3b", tolerance = 8 } },
+  # near the boundary
+  { expect_pixel = { x = 79, y = 52, color = "#ec2c52", tolerance = 8 } },
+  { expect_pixel = { x = 49, y = 47, color = "#63071b", tolerance = 8 } },
+  # Floor
+  { expect_pixel = { x = 0, y = 127, color = "#646b73", tolerance = 8 } },
+  { expect_pixel = { x = 127, y = 127, color = "#88919b", tolerance = 8 } },
+  { expect_pixel = { x = 0, y = 62, color = "#4a5056", tolerance = 8 } },
+  { expect_pixel = { x = 127, y = 63, color = "#575d64", tolerance = 8 } },
+  { expect_pixel = { x = 63, y = 119, color = "#828b95", tolerance = 8 } },
+  # near the boundary
+  { expect_pixel = { x = 31, y = 49, color = "#454a50", tolerance = 8 } },
+  { expect_pixel = { x = 97, y = 49, color = "#464c52", tolerance = 8 } },
+]
