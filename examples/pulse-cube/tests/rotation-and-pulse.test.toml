@@ -1,0 +1,33 @@
+# What `Demo` does by itself, checked against values worked out from the program, not read back from a run.
+#
+# Time. Every frame is one degree of time, dt = pi/180 = 0.017453292519943295 s (under the runtime's
+# max_frame_delta of 0.1), so 90 frames are t = pi/2 s, 180 frames t = pi and 270 frames t = 3 pi/2.
+#
+# Rotation. `update(dt)` turns the cube about +Y by speed * dt each frame, speed = 0.7 rad/s, so after
+# 90 frames the angle is 0.7 * pi/2 = 1.0995574 rad and the rotation quaternion is
+# (0, sin(a/2), 0, cos(a/2)) = (0, 0.5224986, 0, 0.8526402). The cube never moves: position (0, 0.5, 0).
+#
+# Colour. `Pulse` returns tint.rgb * pulse(phase) as a linear colour, with phase bound to frame.time and
+# pulse(t) = 0.65 + 0.35 sin t, so the factor is 1.0 at t = pi/2, 0.65 at t = 0 and pi, and 0.30 at
+# t = 3 pi/2. The cube is unlit and faces the camera at the middle of the 128 x 128 target (the camera
+# at (0, 2, 5) looks at the cube's centre), so pixel (64, 64) shows the colour #6b5cff scaled by the factor in
+# linear light and sRGB-encoded: #6b5cff at 1.0, #574bd3 at 0.65, #3b3295 at 0.30. The scene's clear colour is
+# the default #000000 and the corner pixel (4, 4) lies far outside the cube.
+name = "the cube turns at 0.7 rad/s and pulses with the bound frame time"
+steps = [
+  # Before any time has passed (a frame of 0 s): factor 0.65, no rotation yet.
+  { step = 1, dt = 0.0 },
+  { expect_state = { speed = 0.7, "Cube.material.phase" = 0.0, "Cube.rotation" = [0, 0, 0, 1] } },
+  { expect_pixel = { x = 64, y = 64, color = "#574bd3", tolerance = 2 } },
+  { expect_pixel = { x = 4, y = 4, color = "#000000", tolerance = 0 } },
+
+  # t = pi/2: factor 1.0, angle 1.0995574 rad.
+  { step = 90, dt = 0.017453292519943295 },
+  { expect_state = { "Cube.material.phase" = { value = 1.5707963, tolerance = 1e-4 }, "Cube.rotation" = { value = [0, 0.5224986, 0, 0.8526402], tolerance = 2e-5 }, "Cube.position" = [0, 0.5, 0] } },
+  { expect_pixel = { x = 64, y = 64, color = "#6b5cff", tolerance = 2 } },
+
+  # t = 3 pi/2 after 180 more frames: factor 0.30, angle 0.7 * 3 pi/2 = 3.2986723 rad.
+  { step = 180, dt = 0.017453292519943295 },
+  { expect_state = { "Cube.rotation" = { value = [0, 0.9969173, 0, -0.0784591], tolerance = 5e-5 } } },
+  { expect_pixel = { x = 64, y = 64, color = "#3b3295", tolerance = 2 } },
+]

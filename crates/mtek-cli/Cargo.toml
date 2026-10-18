@@ -23,6 +23,8 @@ tokio-stream = { version = "=0.1.19", default-features = false, features = ["syn
 notify = { version = "=8.2.0" }
 # Already in the workspace (decision 0007): the JSON of the `mtek dev` events.
 serde_json = { version = "=1.0.151", features = ["preserve_order"] }
+# Already in the workspace (the compiler reads `mtek.toml` with it): `mtek test` reads its fixtures.
+toml = { version = "=1.1.6", default-features = false, features = ["std", "parse"] }
 
 [dev-dependencies]
 # Already in the workspace (decision 0007): validating the JSON the binary prints.

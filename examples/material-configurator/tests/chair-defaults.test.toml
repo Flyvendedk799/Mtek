@@ -1,0 +1,32 @@
+# The chair before the host sets anything: the state the program starts in, how it is drawn, and the picture.
+#
+# State: the factors of the GLB's own materials and the literals of src/main.mtek. "Fabric" is the colour
+# (0.55, 0.12, 0.10) in linear light, metallic 0, roughness 0.85; "Steel" is (0.80, 0.80, 0.82), metallic 1, roughness 0.30;
+# the stripes are #e8e2d0 and #2a3f5f, the back's roughness 0.6 and the sun's intensity 3.
+#
+# Counters (spec/runtime-abi.md section 8.4, decision 0059): 12 entities are alive, the 10 drawn ones plus the two lights
+# (Sun, Lamp). The four legs share one mesh, one pipeline and one constant "Oak" parameter block, so they are one instanced
+# draw; the other six drawn entities are single draws: 7 draw calls. Five entities own their parameter block (the floor, the
+# seat, the back and the two rails), the Oak block of the legs and the crest is the one shared block. Pipelines: Pbr, the
+# custom Striped material and the instanced variant of Pbr; shader modules: the two materials. Nothing is culled.
+#
+# Pixels (128 x 128, camera at (0, 1.15, 2.6) looking at (0, 0.45, 0), fov_y 0.8, clear colour #1b1f27). Each one is picked
+# where a 1 px wide footprint sees one surface of one entity (a CPU ray tracer over the geometry of chair.glb finds them,
+# tests/browser/support/configurator-scene.ts) and its colour is that tracer's shading with the documented PBR model
+# (spec/materials.md section 8: Sun, Lamp and ambient 0.12), not read from the GPU; lit colours carry the 3/255 tolerance of
+# spec/testing.md section 6.3. tests/browser/support/mtek-test/example-fixtures.test.ts recomputes every one of them.
+name = "the chair starts with the factors of its model and is drawn as the documented lighting model predicts"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  { expect_state = { seat_color = [0.55, 0.12, 0.1, 1.0], seat_metallic = 0, seat_roughness = 0.85, frame_color = [0.8, 0.8, 0.82, 1.0], frame_metallic = 1, frame_roughness = 0.3, stripe_a = "#e8e2d0", stripe_b = "#2a3f5f", back_roughness = 0.6, sun_intensity = 3 } },
+  { expect_counter = { liveEntities = 12, drawCalls = 7, instancedDraws = 1, culledObjects = 0, sharedParamBlocks = 1, ownedParamBlocks = 5, pipelinesCreated = 3, shaderModulesCreated = 2, failedMaterials = 0 } },
+
+  { expect_pixel = { x = 0, y = 0, color = "#1b1f27", tolerance = 0 } },
+  { expect_pixel = { x = 63, y = 98, color = "#96928e", tolerance = 3 } },
+  { expect_pixel = { x = 64, y = 64, color = "#c36256", tolerance = 3 } },
+  { expect_pixel = { x = 62, y = 48, color = "#384559", tolerance = 3 } },
+  { expect_pixel = { x = 54, y = 36, color = "#e9dcbf", tolerance = 3 } },
+  { expect_pixel = { x = 56, y = 32, color = "#c19361", tolerance = 3 } },
+  { expect_pixel = { x = 79, y = 77, color = "#9d7447", tolerance = 3 } },
+  { expect_pixel = { x = 69, y = 84, color = "#1e1c19", tolerance = 3 } },
+]

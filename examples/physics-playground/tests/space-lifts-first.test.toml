@@ -1,0 +1,31 @@
+# Space gives `First` an impulse of 10 N*s straight up (`First.body.apply_impulse(vec3(0.0, JUMP_IMPULSE, 0.0))`).
+# Every number is derived from the program and from the physics model, not read back from a run.
+#
+# Frames are exactly one fixed step (0.016666668 s, the runtime default), so one `step = 1` is one physics tick.
+#   rest      the floor's top face is y = 0 and `First` is a unit cube (mass 2 kg) set down at x = -4.5, so after one
+#             second it rests at (-4.5, 0.5, 0), within 10 mm (spec/physics.md section 7)
+#   lift      10 N*s on 2 kg is v = 5 m/s; with g = 9.81 the apex is v^2 / (2 g) = 1.2742 m above the rest height, 5 / g = 0.51 s
+#             (30.6 ticks) after the impulse. The engine integrates a step in four substeps of semi-implicit Euler (decision
+#             0063), so after n ticks the height gained is v n dt - g dt^2 (n^2 / 2 + n / 8); at n = 31 that is 1.2634 m
+#             (10 mm below the continuous apex), so y = 1.7634. Tolerance 0.03.
+#   landing   the flight lasts 2 v / g = 1.02 s = 61 ticks; 150 ticks after the impulse First has long come to rest again
+#             at the same x and z (a vertical impulse through the centre of mass) and at y = 0.5 within 10 mm
+#   counters  Floor, First and Zone have a body and a collider each; one physics step per frame
+name = "Space lifts First by the height its impulse derives and it comes back to rest"
+steps = [
+  { step = 60, dt = 0.016666668 },
+  { expect_state = { "First.position" = { value = [-4.5, 0.5, 0], tolerance = 0.01 }, entered = 0, inside = 0, spawned = 0 } },
+  { expect_counter = { physicsBodies = 3, physicsColliders = 3, physicsSteps = 60, entitiesSpawned = 0 } },
+
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  # 31 ticks after the impulse was applied (it was applied by the first of them).
+  { step = 30, dt = 0.016666668 },
+  { expect_state = { "First.position" = { value = [-4.5, 1.7634, 0], tolerance = 0.03 } } },
+
+  # 150 ticks after the impulse: back at rest, nothing was spawned or destroyed on the way.
+  { step = 119, dt = 0.016666668 },
+  { expect_state = { "First.position" = { value = [-4.5, 0.5, 0], tolerance = 0.01 } } },
+  { expect_counter = { physicsBodies = 3, physicsColliders = 3, physicsSteps = 210, physicsFrozenBodies = 0, entitiesSpawned = 0, entitiesDestroyed = 0 } },
+]

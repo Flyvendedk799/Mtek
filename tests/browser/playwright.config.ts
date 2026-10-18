@@ -1,5 +1,11 @@
 import { join, resolve } from "node:path";
 import { defineConfig } from "@playwright/test";
+import {
+  browserChannel,
+  extraBrowserArgs,
+  hardwareLaunchArgs,
+  isHeadless,
+} from "./support/launch-args.ts";
 
 const root = import.meta.dirname;
 
@@ -12,23 +18,14 @@ process.env["MTEK_RESULTS_DIR"] ??= join(
 );
 const resultsDir = resolve(process.env["MTEK_RESULTS_DIR"]);
 
-const headless = process.env["MTEK_HEADED"] !== "1";
-// "chromium" selects Chromium's new headless mode; Playwright's default headless shell is the old one.
-const channel = process.env["MTEK_BROWSER_CHANNEL"] ?? "chromium";
+// The hardware configuration is shared with `mtek test` (support/launch-args.ts): headless Chromium in its
+// new mode, the WebGPU switches, and `MTEK_BROWSER_ARGS` for experiments and for simulating a machine
+// without a GPU (`MTEK_BROWSER_ARGS=--disable-gpu`).
+const headless = isHeadless();
+const channel = browserChannel();
 const linux = process.platform === "linux";
-// Extra launch arguments (space separated), for experiments and for simulating a machine without a GPU
-// (`MTEK_BROWSER_ARGS=--disable-gpu`). They are recorded in the environment record.
-const extraArgs = (process.env["MTEK_BROWSER_ARGS"] ?? "").split(/\s+/).filter((arg) => arg !== "");
-
-// `--enable-webgpu-developer-features` makes Chromium report `adapter.info.device` and `description`
-// (otherwise empty), so the environment record names the real GPU. See decision 0012, amendment.
-const hardwareArgs = [
-  "--enable-unsafe-webgpu",
-  "--ignore-gpu-blocklist",
-  "--enable-webgpu-developer-features",
-  ...(linux ? ["--use-angle=vulkan", "--enable-features=Vulkan", "--disable-vulkan-surface"] : []),
-  ...extraArgs,
-];
+const extraArgs = extraBrowserArgs();
+const hardwareArgs = hardwareLaunchArgs();
 
 const softwareArgs = [
   "--enable-unsafe-webgpu",
