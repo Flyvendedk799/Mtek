@@ -46,13 +46,13 @@ All of the following are **proposals** (design choices), not external constraint
 
 8. **Codes owned elsewhere.** `E0013` is reported by the parser wherever a reserved word appears as a name; the resolver treats the word as an ordinary name and does not report it a second time. `E0012` is reported for `_` in any name position, declared or used (a use cannot refer to anything, and "unknown name `_`" would be misleading). Names in type position are resolved here, so the resolver reports `E3003` for an unknown type name and for a name that denotes something other than a type; `Res::Error` always means "already reported" and M1-10 must not report the same name again.
 
-9. **"Did you mean"** (`spec/language.md` §4.3, `spec/diagnostics.md` §6). A suggestion is attached only when exactly one candidate visible at that point (declarations and prelude names alike) is within edit distance 1–2. A declared candidate is a related span; a prelude candidate has no span, so it is a `help:` note. Unknown members of prelude namespaces and enums are `E2003` with the same rule over the members. No suggested edit is attached (an edit needs the re-check of §6, M6-02).
+9. **"Did you mean"** (`spec/language.md` §4.3, `spec/diagnostics.md` §6). A suggestion is attached only when exactly one candidate visible at that point (declarations and prelude names alike) is within edit distance 1–2. A declared candidate is a related span; a prelude candidate has no span, so it is a `help:` note. Unknown members of prelude namespaces and enums are `E2003` with the same rule over the members. No suggested edit is attached (an edit needs the re-check of §6, M6-02). *Since decision 0071 the `E2003` rename is attached as a validated edit when the renamed program checks.*
 
 10. **Contextual words have no `Res`.** Lifecycle and stage function names and event names the registry does not know (`E5052`, `E5060` are the checker's, M3-02) get no side-table entry; known events resolve to `PreludeItem::Event`.
 
 11. **Entry scene and `E9006`.** `check` selects the scene with `project::select_scene`. Ambiguous (several scenes, no `project.scene`): primary span at the second scene's name, related span at the first, help listing the scenes. A configured name that is not declared, or a module without scenes: project-level diagnostics (`source: null`, as for other `mtek.toml` diagnostics, decision 0018) with a "did you mean" under the rule of item 9. "Declares no scene" is not reported when an item failed to parse, because that would be a cascade of the syntax error.
 
-12. **`check` API.** `mtek_compiler::check(&ProjectRoot, &dyn Fs) -> CheckResult { project, module, resolution, report }` (`spec/compiler-architecture.md` §4.12). The parser's candidate edits are not attached yet (they need validation, M6-02).
+12. **`check` API.** `mtek_compiler::check(&ProjectRoot, &dyn Fs) -> CheckResult { project, module, resolution, report }` (`spec/compiler-architecture.md` §4.12). The parser's candidate edits are not attached yet (they need validation, M6-02). *Decision 0071 attaches them, validated, in every report.*
 
 ## Consequences
 
