@@ -1,0 +1,141 @@
+{
+  "task": "shader-bridge-04",
+  "project": "benchmarks/tasks/shader-bridge-04/reference/mtek",
+  "layers": {
+    "parse": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "check": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "build": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "start": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    },
+    "tests": {
+      "outcome": "pass",
+      "reason": null,
+      "notRun": null
+    }
+  },
+  "requiredSymbols": {
+    "outcome": "pass",
+    "checked": [
+      "Demo.Meter",
+      "Gauge"
+    ],
+    "missing": [],
+    "reason": null
+  },
+  "diagnostics": [],
+  "testReport": {
+    "status": "pass",
+    "exitCode": 0,
+    "summary": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0
+    },
+    "fixtures": [
+      {
+        "file": "tests/charge.test.toml",
+        "name": "Space raises the charge to at most 4, Backspace lowers it to at least 0",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 55,
+        "stepsTotal": 55
+      },
+      {
+        "file": "tests/hold.test.toml",
+        "name": "a held key is one press",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 10,
+        "stepsTotal": 10
+      },
+      {
+        "file": "tests/start.test.toml",
+        "name": "before any key the cube is black on #202020",
+        "status": "pass",
+        "reason": null,
+        "failure": null,
+        "stepsRun": 7,
+        "stepsTotal": 7
+      }
+    ],
+    "environment": {
+      "browser": {
+        "name": "chromium",
+        "channel": "chromium",
+        "version": "153.0.8010.12",
+        "headless": true,
+        "launchArgs": [
+          "--enable-unsafe-webgpu",
+          "--ignore-gpu-blocklist",
+          "--enable-webgpu-developer-features"
+        ]
+      },
+      "gpu": {
+        "available": true,
+        "reason": null,
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        }
+      }
+    },
+    "fallbackAdapter": false
+  },
+  "compilerVersion": "0.1.0-dev",
+  "verdict": "pass",
+  "toolError": null,
+  "commands": [
+    {
+      "command": "check",
+      "exitCode": 0,
+      "durationMs": 139,
+      "timedOut": false
+    },
+    {
+      "command": "context Demo.Meter",
+      "exitCode": 0,
+      "durationMs": 125,
+      "timedOut": false
+    },
+    {
+      "command": "context Gauge",
+      "exitCode": 0,
+      "durationMs": 124,
+      "timedOut": false
+    },
+    {
+      "command": "build",
+      "exitCode": 0,
+      "durationMs": 145,
+      "timedOut": false
+    },
+    {
+      "command": "test",
+      "exitCode": 0,
+      "durationMs": 1993,
+      "timedOut": false
+    }
+  ],
+  "durationMs": 2528
+}

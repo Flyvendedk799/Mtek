@@ -1,0 +1,21 @@
+# The colour depends on x only, and the panel is the 4 x 2 box at (0.4, 0, 0) described in sweep.test.toml (front face at pixels
+# x 28.07 to 117.89, y 41.54 to 86.46); the rest is the clear colour #202020. After 16 frames of 0.0625 s, t = 1, and the pixels
+# of column 72 (object-space x = -0.0215) are w = 0.9160, colour #f5ac24 (see sweep.test.toml) on every row of the face; column 92
+# is #ffb303.
+name = "the colour is the same along y, and the panel ends where the box ends"
+steps = [
+  { step = 16, dt = 0.0625 },
+  { expect_pixel = { x = 72, y = 44, color = "#f5ac24", tolerance = 3 } },
+  { expect_pixel = { x = 72, y = 64, color = "#f5ac24", tolerance = 3 } },
+  { expect_pixel = { x = 72, y = 84, color = "#f5ac24", tolerance = 3 } },
+  { expect_pixel = { x = 92, y = 44, color = "#ffb303", tolerance = 3 } },
+  { expect_pixel = { x = 92, y = 84, color = "#ffb303", tolerance = 3 } },
+
+  # outside the panel: left, right, above and below it, and the corners
+  { expect_pixel = { x = 24, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 122, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 38, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 90, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 2, y = 2, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 125, y = 125, color = "#202020", tolerance = 2 } },
+]

@@ -1,0 +1,27 @@
+const COLD: color = #1a237e;
+
+const WARM: color = #ffb300;
+
+material Sweep {
+    param phase: f32 = 0.0;
+
+    fragment(surface: SurfaceInput) -> color {
+        let w = 0.5 + 0.5 * sin(0.8 * surface.local_position.x + phase);
+        return color.linear(mix(COLD.rgb, WARM.rgb, w), 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Panel {
+        position: vec3(0.4, 0.0, 0.0);
+        mesh: Box { size: vec3(4.0, 2.0, 0.2) };
+        material: Sweep { phase: bind(frame.time) };
+    }
+}

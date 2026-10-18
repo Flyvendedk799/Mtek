@@ -1,0 +1,18 @@
+# Only the transition of a key from up to down is a press: holding Space for ten frames raises the charge once, and the
+# held key does not repeat. Charge 1 is the linear grey 0.25, #898989; charge 2 is 0.5, #bcbcbc. A press is applied at the
+# start of the next frame; the sampled pixel is inside the cube's front face (see start.test.toml).
+name = "a held key is one press"
+steps = [
+  { press = "Space" },
+  { step = 10, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#898989", tolerance = 2 } },
+  { release = "Space" },
+  { step = 10, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#898989", tolerance = 2 } },
+
+  # a second hold: one more
+  { press = "Space" },
+  { step = 30, dt = 0.016666668 },
+  { release = "Space" },
+  { expect_pixel = { x = 64, y = 64, color = "#bcbcbc", tolerance = 2 } },
+]

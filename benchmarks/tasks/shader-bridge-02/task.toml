@@ -1,0 +1,13 @@
+id = "shader-bridge-02"
+category = "shader-bridge"
+mode = "edit"
+title = "One host input drives the grey of two cubes"
+prompt = """The scene Demo shows two cubes, Left at (-1.2, 0, 0) and Right at (1.2, 0, 0), each drawn with its own custom material named Shade. Shade is not lit: it draws a flat grey whose red, green and blue values in linear light are all 0.25 (shown on screen as the sRGB grey #898989).
+Make the greys settable from the host page through an input named level, whose value is a number from 0 to 1. The input sets one shared value, the level, which is 0.25 until the host sets it. Left shows the grey whose linear light value equals the level. Right shows the complementary grey, whose linear light value is 1 minus the level. Both cubes keep drawing with a Shade material, and a new level must change values only: no material or shader is replaced. Everything else stays as it is."""
+required_symbols = ["Demo.Left", "Demo.Right", "Shade"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

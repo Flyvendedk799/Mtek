@@ -1,0 +1,15 @@
+# Until the host sets lift, the cube stays at the origin with warmth 0, the colour COOL = #1e3a8a, and nothing changes by itself.
+# Camera: position (0, 0, 6) looking at the origin, fov_y 0.9, 128 x 128 target. The front face of the unit cube at the origin
+# is at depth 5.5 and spans pixels 51.96 to 76.04 in x and y (CPU projection, benchmarks/baselines/support/test/projection.ts);
+# the camera is straight in front of it, so no side face is seen. (The starter passes this fixture: it guards against an edit
+# that breaks what already works.)
+name = "before any input the cube sits at the origin in COOL #1e3a8a"
+steps = [
+  { step = 30, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#1e3a8a", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 56, color = "#1e3a8a", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 72, color = "#1e3a8a", tolerance = 2 } },
+  { expect_pixel = { x = 2, y = 2, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 45, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 64, y = 83, color = "#202020", tolerance = 2 } },
+]

@@ -1,0 +1,42 @@
+# The host input level sets one value; Left shows the linear grey `level`, Right shows the linear grey `1 - level`.
+# A host input is applied at the start of the next frame, hence a `step` after every `set_input`. The greys are
+# the sRGB encoding of the linear value (the exact transfer function, computed independently of any reference):
+#   0.9 -> #f3f3f3 (243.45)   0.1 -> #595959 (89.04)   0.6 -> #cbcbcb (203.42)   0.4 -> #aaaaaa (169.62)
+#   1.0 -> #ffffff            0.0 -> #000000
+# Pixel positions are those of default.test.toml: Left (35, 64), Right (93, 64), both inside the front faces.
+name = "the host input level sets Left to level and Right to 1 - level"
+steps = [
+  # before any input: level is 0.25, so Left is 0.25 and Right is 1 - 0.25 = 0.75 (#e1e1e1, 224.61)
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 35, y = 64, color = "#898989", tolerance = 2 } },
+  { expect_pixel = { x = 93, y = 64, color = "#e1e1e1", tolerance = 2 } },
+
+  { set_input = { level = 0.9 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 35, y = 64, color = "#f3f3f3", tolerance = 2 } },
+  { expect_pixel = { x = 26, y = 54, color = "#f3f3f3", tolerance = 2 } },
+  { expect_pixel = { x = 93, y = 64, color = "#595959", tolerance = 2 } },
+  { expect_pixel = { x = 101, y = 74, color = "#595959", tolerance = 2 } },
+
+  { set_input = { level = 1.0 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 35, y = 64, color = "#ffffff", tolerance = 2 } },
+  { expect_pixel = { x = 93, y = 64, color = "#000000", tolerance = 2 } },
+
+  { set_input = { level = 0.0 } },
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 35, y = 64, color = "#000000", tolerance = 2 } },
+  { expect_pixel = { x = 93, y = 64, color = "#ffffff", tolerance = 2 } },
+
+  { set_input = { level = 0.6 } },
+  { step = 10, dt = 0.016666668 },
+  { expect_pixel = { x = 35, y = 64, color = "#cbcbcb", tolerance = 2 } },
+  { expect_pixel = { x = 44, y = 74, color = "#cbcbcb", tolerance = 2 } },
+  { expect_pixel = { x = 93, y = 64, color = "#aaaaaa", tolerance = 2 } },
+  { expect_pixel = { x = 84, y = 54, color = "#aaaaaa", tolerance = 2 } },
+
+  # only the two cubes change: the background keeps its clear colour
+  { expect_pixel = { x = 64, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 2, y = 2, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 125, y = 125, color = "#202020", tolerance = 2 } },
+]

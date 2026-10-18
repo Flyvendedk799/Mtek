@@ -1,0 +1,16 @@
+id = "shader-bridge-03"
+category = "shader-bridge"
+mode = "cold"
+title = "A panel whose colour sweeps with time, computed in a custom material"
+prompt = """Build a scene named Demo that renders as follows. The picture is square.
+- The clear (background) colour is #202020.
+- One camera at (0, 0, 6) looking at the origin, with a perspective projection (vertical field of view 0.9 radians, near plane 0.1, far plane 1000).
+- A box named Panel at (0.4, 0, 0), 4 wide (x), 2 high (y) and 0.2 deep (z), drawn with a custom material named Sweep. The surface is not lit. Its colour is computed for every pixel from x, the x coordinate of the surface point in the box's own object space (in metres, so it runs from -2 to 2 across the panel wherever the panel stands), and from t, the elapsed time in seconds: let w = 0.5 + 0.5 * sin(0.8 * x + t); the colour is (1 - w) * A + w * B with A = #1a237e and B = #ffb300. The blend is done in linear light, on the two colours converted from sRGB to linear, and the result is displayed as it is.
+- t is the elapsed time of the application: the sum of the durations of all the frames run so far, including the frame being drawn (after 16 frames of 0.0625 seconds each, t is 1). t must reach the material as a value that is updated every frame; the material and its shader are not replaced as time passes."""
+required_symbols = ["Demo.Panel", "Sweep"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

@@ -1,0 +1,13 @@
+id = "shader-bridge-05"
+category = "shader-bridge"
+mode = "edit"
+title = "A cube that shows the intensity of a lamp"
+prompt = """The scene Demo has a point light named Lamp at (2, 3, 2), which draws nothing itself, and a cube named Indicator at the origin, drawn with a custom material named Dial. The host page sets an input named power (a number from 0 to 5), and the lamp's intensity is always twice the power; power is 1.5 until the host sets it, so the intensity starts at 3. Dial is not lit: it draws a flat grey whose red, green and blue values in linear light all equal its parameter level. The level is 0 in the starter, so the cube is black.
+Make the cube show the lamp's intensity: Dial's level is always the lamp's current intensity divided by 10. The level follows the lamp's intensity whenever the host changes power, and reaches the material as a value that is updated; no material or shader is replaced. Everything else stays as it is."""
+required_symbols = ["Demo.Lamp", "Demo.Indicator", "Dial"]
+mtek_side_status = "verified"
+
+[budgets]
+max_repairs = 3
+max_output_tokens = 4000
+max_wall_seconds = 300

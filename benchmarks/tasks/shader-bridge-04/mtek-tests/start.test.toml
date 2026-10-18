@@ -1,0 +1,15 @@
+# The charge starts at 0: the cube is black (linear grey 0) on the clear colour #202020, and nothing changes by itself.
+# Camera: position (0, 0, 6) looking at the origin, fov_y 0.9, 128 x 128 target. The front face of the unit cube is at depth
+# 5.5 and spans pixels 51.96 to 76.04 in x and y (CPU projection, benchmarks/baselines/support/test/projection.ts); the camera
+# is straight in front of it, so no side face is seen. (The starter passes this fixture: it guards against an edit that
+# breaks what already works.)
+name = "before any key the cube is black on #202020"
+steps = [
+  { step = 30, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#000000", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 56, color = "#000000", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 72, color = "#000000", tolerance = 2 } },
+  { expect_pixel = { x = 2, y = 2, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 45, y = 64, color = "#202020", tolerance = 2 } },
+  { expect_pixel = { x = 83, y = 64, color = "#202020", tolerance = 2 } },
+]

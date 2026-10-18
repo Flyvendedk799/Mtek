@@ -1,0 +1,15 @@
+# power is 1.5 until the host sets it, so the lamp's intensity is 2 * 1.5 = 3 and the dial's linear grey is 3 / 10 = 0.3, shown
+# as its sRGB encoding #959595 (148.88 as a byte; exact transfer function, computed independently of any reference). The
+# grey is there from the first frame on, and nothing changes by itself.
+# Camera: position (0, 0, 6) looking at the origin, fov_y 0.9, 128 x 128 target. The front face of the unit cube is at depth
+# 5.5 and spans pixels 51.96 to 76.04 in x and y (CPU projection, benchmarks/baselines/support/test/projection.ts); the camera
+# is straight in front of it, so no side face is seen.
+name = "before any input the indicator shows the intensity 3 as the grey #959595"
+steps = [
+  { step = 1, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#959595", tolerance = 2 } },
+  { step = 30, dt = 0.016666668 },
+  { expect_pixel = { x = 64, y = 64, color = "#959595", tolerance = 2 } },
+  { expect_pixel = { x = 56, y = 56, color = "#959595", tolerance = 2 } },
+  { expect_pixel = { x = 72, y = 72, color = "#959595", tolerance = 2 } },
+]
