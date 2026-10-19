@@ -15,7 +15,8 @@ export interface BudgetLimits {
   maxTotalTokens: number | null;
 }
 
-export type BudgetStop = "wall-clock" | "total-tokens";
+/** `spend` is the money cap of the spend guard (decision 0108). */
+export type BudgetStop = "wall-clock" | "total-tokens" | "spend";
 
 export class BudgetTracker {
   readonly limits: BudgetLimits;

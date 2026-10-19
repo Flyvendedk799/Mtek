@@ -246,7 +246,7 @@ describe("anthropic (the official SDK on a fake transport)", () => {
   it("sends the Messages API request and maps text and usage (cached input is part of input)", async () => {
     const { fetch, seen } = fakeFetch(() => ({ body: message() }));
     const result = await create(fetch).generate({ ...REQUEST, stop: ["END"] });
-    expect(result).toEqual({ text: "hello world", finish: "stop", usage: { inputTokens: 35, outputTokens: 4, cachedInputTokens: 20 } });
+    expect(result).toEqual({ text: "hello world", finish: "stop", usage: { inputTokens: 35, outputTokens: 4, cachedInputTokens: 20, cacheWriteInputTokens: 5 } });
     const [request] = seen;
     expect(request?.url).toBe("https://api.anthropic.com/v1/messages");
     expect(request?.headers.get("x-api-key")).toBe("sk-ant-secret");

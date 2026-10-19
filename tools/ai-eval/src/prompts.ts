@@ -14,6 +14,8 @@ import type { TaskSpec } from "./task.ts";
 import type { ValidationResult } from "./validator.ts";
 
 export const PROMPT_VERSION = "1";
+/** The wording of the baseline (TypeScript + three.js) side: its system prompt, first message and documentation title. The repair messages are shared with the Mtek side. */
+export const BASELINE_PROMPT_VERSION = "b1";
 
 /** How much of the task's tests the model sees after a failure. */
 export type TestFeedback = "messages" | "status-only";
@@ -75,6 +77,58 @@ export function initialPrompt(task: TaskSpec, context: BuiltContext, files: read
     ["task", `# Task: ${task.title}\n\n${task.prompt}\n\n`],
     ["requiredSymbols", `These declarations must exist when you are done: ${names}\n\n`],
     ["context", `# Compiler context (the output of \`mtek context\`)\n\n\`\`\`json\n${context.text.replace(/\n$/, "")}\n\`\`\`\n\n`],
+    ["project", "# Project files\n\n"],
+    ...files.map((file): [string, string] => ["project", `## ${file.path}\n\n\`\`\`\n${file.content.replace(/\n$/, "")}\n\`\`\`\n\n`]),
+    ["instructions", "Reply with edit blocks."],
+  ];
+  return assemble(parts);
+}
+
+/** The baseline's system prompt: the same role, edit format and rules as `systemPrompt`, for a TypeScript + three.js project. */
+export function baselineSystemPrompt(task: TaskSpec, policy: EditPolicy): string {
+  const wholeRule =
+    policy.wholeFile === "any"
+      ? "To write or replace a complete file, use a WHOLE block."
+      : "Existing files change only with SEARCH/REPLACE blocks. A WHOLE block may only create a new file that does not exist yet.";
+  return [
+    "You write and repair programs in TypeScript with three.js r186 (the WebGPU renderer, `three/webgpu`, and its node shading language, `three/tsl`) for a GPU scene. Your work is judged by running the project's real TypeScript type check, its bundler and its tests in a browser; text that merely looks right counts for nothing.",
+    "",
+    "Reply with edit blocks. Text outside the blocks is ignored.",
+    "",
+    "<<<FILE src/main.ts",
+    "<<<SEARCH",
+    "        speed = -speed;",
+    "===",
+    "        speed = -speed * 1.5;",
+    ">>>REPLACE",
+    "",
+    "<<<FILE src/extra.ts",
+    "<<<WHOLE",
+    "...the complete file...",
+    ">>>END",
+    "",
+    "Rules:",
+    "- Marker lines start in column 0. One FILE line may be followed by several SEARCH blocks.",
+    "- The SEARCH text must match the current file exactly once, character for character, indentation included. A SEARCH that matches nothing or several places is rejected and you will be asked again.",
+    `- ${wholeRule}`,
+    `- Only ${policy.writableDescription} can be changed.`,
+    "- The project's tests are hidden and run after your edit. Do not delete, rename or hollow out an object to make an error go away: the objects the task names must still exist and still do their job.",
+    "- Use only the API that the documentation lists or that three.js r186 and the project's typings provide. The project is type-checked with `strict` TypeScript; a type error fails the project.",
+    "- When a diagnostic is shown, it is the TypeScript compiler's own message; otherwise do not guess beyond what the message says.",
+    "",
+    task.mode === "cold"
+      ? "The project is a stub. Write the program."
+      : "The project exists. Change it as the task says and leave everything else as it is.",
+  ].join("\n");
+}
+
+/** The first user message of a baseline trial: the task, the reference documentation and the starter's files. */
+export function baselineInitialPrompt(task: TaskSpec, docs: BuiltContext, files: readonly { path: string; content: string }[], requiredNames: readonly string[]): PromptText {
+  const names = requiredNames.join(", ");
+  const parts: [string, string][] = [
+    ["task", `# Task: ${task.title}\n\n${task.prompt}\n\n`],
+    ["requiredSymbols", `These objects must exist when you are done, each with a three.js \`name\` (or material \`name\`) equal to the identifier: ${names}\n\n`],
+    ["context", `# Reference documentation (three.js r186 and the project's support module)\n\n${docs.text.replace(/\n$/, "")}\n\n`],
     ["project", "# Project files\n\n"],
     ...files.map((file): [string, string] => ["project", `## ${file.path}\n\n\`\`\`\n${file.content.replace(/\n$/, "")}\n\`\`\`\n\n`]),
     ["instructions", "Reply with edit blocks."],

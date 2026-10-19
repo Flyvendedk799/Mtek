@@ -9,6 +9,8 @@ export interface AdapterOptions {
   baseUrl?: string | undefined;
   /** The name of the environment variable that holds the API key. Keys are read from the environment at run time only. */
   apiKeyEnv?: string | undefined;
+  /** `anthropic`: put a prompt-cache breakpoint on the newest message of every call (part of the condition). */
+  promptCaching?: boolean | undefined;
   /** `replay`: the path of the transcript (JSONL). */
   transcript?: string | undefined;
   /** `replay`: whether the client forwards a grammar. */

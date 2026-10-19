@@ -39,7 +39,8 @@ export type Layers = Record<LayerName, LayerResult>;
 export type Verdict = "pass" | "fail" | "not-run" | "error";
 
 /** How a trial ended. */
-export type TrialOutcome = "success" | "failure" | "not-run" | "error" | "unavailable";
+/** `unfinished`: the spend cap stopped the trial before it ended by itself; it is neither a success nor a failure of the model (decision 0108). */
+export type TrialOutcome = "success" | "failure" | "not-run" | "error" | "unavailable" | "unfinished";
 
 /** Why a trial that is not a success ended. */
 export type TrialReason =
@@ -52,4 +53,5 @@ export type TrialReason =
   | "generation-error"
   | "validation-not-run"
   | "tool-error"
-  | "grammar-unavailable";
+  | "grammar-unavailable"
+  | "budget-spend";

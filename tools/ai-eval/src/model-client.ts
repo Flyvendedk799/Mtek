@@ -39,7 +39,10 @@ export type FinishReason = "stop" | "length" | "refusal" | "cancelled" | "error"
 export interface Usage {
   inputTokens: number | null;
   outputTokens: number | null;
+  /** The part of `inputTokens` that was read from the provider's prompt cache. */
   cachedInputTokens?: number | null;
+  /** The part of `inputTokens` that was written to the provider's prompt cache (billed dearer than plain input). Absent when the provider has no such notion or the call did not ask for caching. */
+  cacheWriteInputTokens?: number | null;
 }
 
 export interface GenerateResult {
@@ -48,6 +51,14 @@ export interface GenerateResult {
   finish: FinishReason;
   /** A message for `finish: "error"` (transport or server failure) and `"refusal"` when there is one. */
   error?: string;
+  /** For a failure the provider answered with an HTTP status (an error response is not billed). */
+  httpStatus?: number;
+  /** Set by the spend guard when it refused the call: the provider was not reached. */
+  budgetStop?: "spend";
+  /** Set by the spend guard: what the call was charged, USD (decision 0108). */
+  costUsd?: number;
+  /** Set by the spend guard: the ledger total after the call, USD. */
+  ledgerTotalUsd?: number;
 }
 
 export interface GenerateOptions {
@@ -71,6 +82,8 @@ export interface ModelClient {
   /** The model id exactly as sent; changing it creates a new condition (spec 4.2). */
   readonly model: string;
   readonly capabilities: ClientCapabilities;
+  /** True when the client asks the provider to cache prompts (part of the condition: it changes what is billed, not what is answered). */
+  readonly promptCaching?: boolean;
   generate(request: GenerateRequest, options?: GenerateOptions): Promise<GenerateResult>;
 }
 
@@ -107,5 +120,8 @@ export function addUsage(a: Usage, b: Usage): Usage {
     inputTokens: sum(a.inputTokens, b.inputTokens),
     outputTokens: sum(a.outputTokens, b.outputTokens),
     cachedInputTokens: sum(a.cachedInputTokens, b.cachedInputTokens),
+    ...(a.cacheWriteInputTokens === undefined && b.cacheWriteInputTokens === undefined
+      ? {}
+      : { cacheWriteInputTokens: sum(a.cacheWriteInputTokens === undefined ? 0 : a.cacheWriteInputTokens, b.cacheWriteInputTokens === undefined ? 0 : b.cacheWriteInputTokens) }),
   };
 }

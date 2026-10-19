@@ -36,12 +36,18 @@ export interface Condition {
   maxTotalTokens: number | null;
   trialKind: TrialKind;
   replyFormat: "edit-blocks" | "module";
+  /** Which project of the task the trial works on (decision 0108); absent in records made before the baseline existed (those are `mtek`). */
+  side?: "mtek" | "baseline";
+  /** Whether the client asked the provider to cache prompts. */
+  promptCaching?: boolean;
 }
 
 export interface RunStartRecord {
   type: "run-start";
   harnessVersion: string;
   startedAt: string;
+  /** What the benchmark runner records about a run (decision 0108): settings, the spend cap and the date. Absent for a single `run`. */
+  settings?: Record<string, unknown>;
 }
 
 export interface TrialStartRecord {
@@ -88,6 +94,10 @@ export interface ModelCallRecord {
   generation: GenerationOutcome;
   error: string | null;
   budget: BudgetStop | null;
+  /** What the spend guard charged for this call, USD; null without a guard or when the call was not made. */
+  costUsd?: number | null;
+  /** The ledger total after the call, USD. */
+  ledgerTotalUsd?: number | null;
   startedAt: string;
   durationMs: number;
 }
@@ -135,13 +145,25 @@ export interface TrialEndRecord {
   firstAttempt: { verdict: Verdict; layers: Layers; requiredSymbols: SymbolCheck } | null;
   /** The last validation. */
   final: { verdict: Verdict; layers: Layers; requiredSymbols: SymbolCheck } | null;
-  totals: { inputTokens: number | null; outputTokens: number | null; cachedInputTokens: number | null };
+  totals: { inputTokens: number | null; outputTokens: number | null; cachedInputTokens: number | null; cacheWriteInputTokens?: number | null };
   durationMs: number;
+  /** What the trial's calls were charged, USD; null without a spend guard. */
+  costUsd?: number | null;
   /** Where the final candidate was preserved, relative to the run directory; null when there was none. */
   finalProject: string | null;
 }
 
-export type RecordBody = RunStartRecord | TrialStartRecord | ModelCallRecord | EditRecord | ValidationRecord | TrialEndRecord;
+/** The last record of a benchmark run: how it ended and what it cost (decision 0108). */
+export interface RunEndRecord {
+  type: "run-end";
+  endedAt: string;
+  /** `complete`: every requested trial ended; `stopped-by-budget`: the spend cap stopped the run; `aborted`: it was interrupted. */
+  status: "complete" | "stopped-by-budget" | "aborted";
+  trials: number;
+  spend: { capUsd: number; ledgerTotalAtStartUsd: number; ledgerTotalEndUsd: number; runSpendUsd: number; calls: number; refusedCalls: number } | null;
+}
+
+export type RecordBody = RunStartRecord | TrialStartRecord | ModelCallRecord | EditRecord | ValidationRecord | TrialEndRecord | RunEndRecord;
 export type RecordType = RecordBody["type"];
 
 export interface Recorder {

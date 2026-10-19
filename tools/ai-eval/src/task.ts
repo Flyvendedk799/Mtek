@@ -26,6 +26,8 @@ export interface TaskSpec {
   dir: string;
   /** `<dir>/mtek`: the starter project. */
   projectDir: string;
+  /** `<dir>/baseline`: the TypeScript + three.js starter project of the same task (may not exist for a Mtek-only use). */
+  baselineDir: string;
   /** `<dir>/mtek-tests`: the fixtures that define success. The model never sees them. */
   testsDir: string;
 }
@@ -75,6 +77,7 @@ export function loadTask(taskDir: string): TaskSpec {
     budgets: { maxRepairs: int(budgetTable, "max_repairs", `${where} [budgets]`), maxOutputTokens, maxWallSeconds },
     dir,
     projectDir,
+    baselineDir: join(dir, "baseline"),
     testsDir,
   };
 }

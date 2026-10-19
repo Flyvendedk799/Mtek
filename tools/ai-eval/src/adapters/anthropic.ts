@@ -20,8 +20,21 @@ import type { FinishReason, GenerateOptions, GenerateRequest, GenerateResult, Mo
 export const NAME = "anthropic";
 const MAX_ERROR_LENGTH = 500;
 
-function failure(error: string, finish: FinishReason = "error"): GenerateResult {
-  return { text: "", usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 }, finish, error };
+function failure(error: string, finish: FinishReason = "error", httpStatus?: number): GenerateResult {
+  return {
+    text: "",
+    usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 },
+    finish,
+    error,
+    ...(httpStatus === undefined ? {} : { httpStatus }),
+  };
+}
+
+/** Error text for a record: no API key (by shape or by value) can ever be part of it. */
+export function scrubSecrets(text: string, apiKey: string): string {
+  let out = apiKey === "" ? text : text.split(apiKey).join("<redacted>");
+  out = out.replace(/sk-ant-[A-Za-z0-9_-]+/g, "<redacted>");
+  return out;
 }
 
 /** Maps a Messages API response onto the harness's result. Anything unexpected is an `error`, never a quiet success. */
@@ -34,6 +47,8 @@ export function toResult(message: Anthropic.Message): GenerateResult {
     inputTokens: raw.input_tokens + (cacheRead ?? 0) + (cacheWrite ?? 0),
     outputTokens: raw.output_tokens,
     cachedInputTokens: cacheRead ?? 0,
+    // Only when the provider says: the write count is what makes a cached call dearer than a plain one.
+    ...(typeof cacheWrite === "number" ? { cacheWriteInputTokens: cacheWrite } : {}),
   };
   const reason = message.stop_reason;
   let finish: FinishReason;
@@ -70,21 +85,33 @@ export function createClient(options: AdapterOptions, deps: AdapterDeps): ModelC
   if (apiKey === undefined || apiKey === "") throw new Error(`adapter '${NAME}': the environment variable ${keyName} is not set`);
   const client = new Anthropic({
     apiKey,
+    // A retry is a different call with a different bill; a failed generation is recorded, never retried (decision 0077 item 13).
+    maxRetries: 0,
     ...(options.baseUrl === undefined ? {} : { baseURL: options.baseUrl }),
     ...(deps.fetch === undefined ? {} : { fetch: deps.fetch }),
   });
   return {
     provider: NAME,
     model,
+    promptCaching: options.promptCaching === true,
     capabilities: { grammar: false, seed: false },
     async generate(request: GenerateRequest, generateOptions: GenerateOptions = {}): Promise<GenerateResult> {
       if (request.grammar !== undefined) return failure("this adapter does not forward grammars; refusing to run unconstrained");
       if (request.seed !== undefined) return failure("this adapter does not forward seeds; refusing to run with an unapplied seed");
+      const last = request.messages.length - 1;
       const params: Anthropic.MessageCreateParamsNonStreaming = {
         model,
         max_tokens: request.maxOutputTokens,
         system: request.system,
-        messages: request.messages.map((message) => ({ role: message.role, content: message.content })),
+        // With prompt caching the newest message carries the cache breakpoint, so each call reads the whole earlier
+        // conversation from the cache and writes only what is new (the provider ignores it below its minimum prefix).
+        messages: request.messages.map((message, index) => ({
+          role: message.role,
+          content:
+            options.promptCaching === true && index === last
+              ? [{ type: "text" as const, text: message.content, cache_control: { type: "ephemeral" as const } }]
+              : message.content,
+        })),
         ...(request.temperature === null ? {} : { temperature: request.temperature }),
         ...(request.stop === undefined || request.stop.length === 0 ? {} : { stop_sequences: [...request.stop] }),
       };
@@ -96,8 +123,9 @@ export function createClient(options: AdapterOptions, deps: AdapterDeps): ModelC
         return toResult(message);
       } catch (error) {
         if (generateOptions.signal?.aborted === true) return failure("the request was aborted", "cancelled");
-        const text = error instanceof Error ? error.message : String(error);
-        return failure(text.slice(0, MAX_ERROR_LENGTH));
+        const text = scrubSecrets(error instanceof Error ? error.message : String(error), apiKey);
+        const status = error instanceof Anthropic.APIError && typeof error.status === "number" ? error.status : undefined;
+        return failure(text.slice(0, MAX_ERROR_LENGTH), "error", status);
       }
     },
   };
