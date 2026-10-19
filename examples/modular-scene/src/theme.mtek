@@ -1,0 +1,38 @@
+// The constants every other module of the showroom shares: the palette, the sizes of a pillar and the row that
+// spawned pillars are placed in. Nothing here is a scene or a prefab; it is only imported.
+
+// The colour of the sky behind everything (the scene's clear colour).
+export const CLEAR: color = #14181f;
+
+// The palette. Materials, prefabs and the scene all take their colours from here.
+export const SLATE: color = #3a4150;
+
+export const STONE: color = #9aa3b5;
+
+export const GOLD: color = #e0a526;
+
+export const TEAL: color = #2f9e8f;
+
+export const ROSE: color = #e0527a;
+
+// The default width of a pillar, in metres.
+export const PILLAR_WIDTH: f32 = 0.8;
+
+// The row of pillars that the P key places: `MAX_PLACED` slots, `PLACE_STEP` apart, from `PLACE_X0` on,
+// at depth `PLACE_Z`. Pillar number n is `PLACE_BASE_HEIGHT + PLACE_RISE * n` tall.
+export const MAX_PLACED: i32 = 4;
+
+export const PLACE_X0: f32 = -2.4;
+
+export const PLACE_STEP: f32 = 2.4;
+
+export const PLACE_Z: f32 = -3.0;
+
+export const PLACE_BASE_HEIGHT: f32 = 1.0;
+
+export const PLACE_RISE: f32 = 0.5;
+
+// A pure function, exported like a constant: a body of height `h` standing on the floor has its centre at `h / 2`.
+export fn half(h: f32) -> f32 {
+    return h * 0.5;
+}

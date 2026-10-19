@@ -1,0 +1,103 @@
+// The modular scene (decision 0002, third release demonstration): a showroom built from five files.
+//
+//   src/theme.mtek           constants and one function
+//   src/materials.mtek       the Matte material
+//   src/props/pillar.mtek    the Pillar prefab
+//   src/props/beacon.mtek    the Beacon prefab
+//   src/main.mtek            this file: the scene, which only places things
+//
+//   Space   every Beacon counts a flash; the gauge on the right grows with the total
+//   P       places the next pillar of the back row (at most MAX_PLACED)
+import {
+    CLEAR,
+    GOLD,
+    MAX_PLACED,
+    PLACE_BASE_HEIGHT,
+    PLACE_RISE,
+    PLACE_STEP,
+    PLACE_X0,
+    PLACE_Z,
+    ROSE,
+    SLATE,
+    STONE,
+    TEAL,
+} from "./theme.mtek";
+import { Matte } from "./materials.mtek";
+import { Pillar } from "./props/pillar.mtek";
+import { Beacon } from "./props/beacon.mtek";
+
+scene Showroom {
+    clear_color: CLEAR;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.1;
+
+    // How many pillars the P key has placed.
+    state placed: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 3.5, 14.0);
+        target: vec3(0.0, 1.2, 0.0);
+        projection: Perspective { fov_y: 0.9; near: 0.1; far: 100.0 };
+    }
+
+    // The floor uses the same material as the pillars and the beacons; it is imported here a third time.
+    entity Floor {
+        position: vec3(0.0, -0.05, -1.0);
+        mesh: Box { size: vec3(16.0, 0.1, 8.0) };
+        material: Matte { tint: SLATE };
+    }
+
+    // Three instances of one prefab with different params. `Left` takes every default; the other two say what
+    // differs. Each is a named entity of this scene, although the prefab is declared in another file.
+    entity Left: Pillar {
+        origin: vec3(-3.6, 0.0, 0.0);
+    }
+    entity Middle: Pillar {
+        origin: vec3(-1.2, 0.0, 0.0);
+        height: 3.0;
+        tint: GOLD;
+    }
+    entity Right: Pillar {
+        origin: vec3(1.2, 0.0, 0.0);
+        height: 1.2;
+        width: 1.2;
+        tint: TEAL;
+    }
+
+    // Two instances of the second prefab, with different colours and speeds.
+    entity Lantern: Beacon {
+        origin: vec3(-3.6, 3.4, 0.0);
+        rate: 1.0;
+    }
+    entity Lamp: Beacon {
+        origin: vec3(3.6, 3.0, 0.0);
+        tint: ROSE;
+    }
+
+    // A bar that grows by half a metre for every flash counted by the two beacons. It reads state that is
+    // declared in props/beacon.mtek.
+    entity Gauge {
+        position: bind(vec3(5.4, (0.2 + 0.5 * f32(Lantern.flashes + Lamp.flashes)) * 0.5, 1.5));
+        scale: bind(vec3(0.6, 0.2 + 0.5 * f32(Lantern.flashes + Lamp.flashes), 0.6));
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Matte { tint: STONE };
+    }
+
+    // Spawn a Pillar of another file at run time: params are run-time values here, constants of theme.mtek there.
+    on key_down(Key.P) {
+        if placed < MAX_PLACED {
+            var tint: color = TEAL;
+            if placed % 2 == 1 {
+                tint = ROSE;
+            }
+            spawn(
+                Pillar {
+                    origin: vec3(PLACE_X0 + PLACE_STEP * f32(placed), 0.0, PLACE_Z);
+                    height: PLACE_BASE_HEIGHT + PLACE_RISE * f32(placed);
+                    tint: tint;
+                },
+            );
+            placed += 1;
+        }
+    }
+}

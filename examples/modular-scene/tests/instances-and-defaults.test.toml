@@ -1,0 +1,40 @@
+# Five instances of two prefabs that live in other files than the scene, as the program makes them before any time has passed.
+# Every number is derived from the sources of the example, not read back from a run.
+#
+# Pillar (src/props/pillar.mtek): `position: origin + vec3(0.0, half(height), 0.0)` and `scale: vec3(width, height, width)`,
+# with the defaults height 2.0, width PILLAR_WIDTH = 0.8 (src/theme.mtek) and tint STONE = #9aa3b5; `half` is also from theme.mtek.
+#     Left    origin (-3.6, 0, 0), every default            centre (-3.6, 1.0, 0), scale (0.8, 2, 0.8), #9aa3b5
+#     Middle  origin (-1.2, 0, 0), height 3, tint GOLD      centre (-1.2, 1.5, 0), scale (0.8, 3, 0.8), #e0a526
+#     Right   origin ( 1.2, 0, 0), height 1.2, width 1.2,
+#             tint TEAL                                     centre ( 1.2, 0.6, 0), scale (1.2, 1.2, 1.2), #2f9e8f
+# Beacon (src/props/beacon.mtek): `position: bind(origin + vec3(0.0, 0.25 * sin(rate * frame.time), 0.0))` and
+# `Matte { dim: bind(0.75 + 0.25 * sin(rate * frame.time)) }`. At frame.time = 0 the sine is 0: the beacons rest at their origin,
+# Lantern (-3.6, 3.4, 0) in GOLD and Lamp (3.6, 3.0, 0) in ROSE (#e0527a), both at dim 0.75.
+#
+# Material. All of them use the one Matte of src/materials.mtek, which returns `tint.rgb * dim` as a linear colour, so a pixel
+# that sees an entity head on is its tint in linear light scaled by dim and sRGB-encoded: the pillars and the floor (SLATE =
+# #3a4150, dim 1) show their tints; the beacons show #e0a526 and #e0527a scaled by 0.75: #c59120 and #c5476b.
+#
+# Pixels. The camera (0, 3.5, 14) looks at (0, 1.2, 0), fov_y 0.9, on the 128 x 128 target. The projection (CPU, in
+# tests/browser/support/m7-modular-scene.ts) puts the centres at (30.5, 65.8) for Left, (52.8, 61.2) for Middle, (75.1, 69.5) for
+# Right, (29.5, 43.2) for Lantern and (98.3, 47.1) for Lamp, and the floor (a SLATE slab, y = 0 at its top) fills the middle of
+# the picture below them. Each pixel chosen is one whose 3 x 3 neighbourhood sees the same surface. The clear colour is CLEAR.
+name = "the instances of the imported prefabs have the entities their params make of them"
+steps = [
+  { step = 1, dt = 0.0 },
+  { expect_state = { placed = 0 } },
+  { expect_state = { "Left.position" = [-3.6, 1.0, 0], "Left.material.tint" = "#9aa3b5" } },
+  { expect_state = { "Middle.position" = [-1.2, 1.5, 0], "Middle.material.tint" = "#e0a526" } },
+  { expect_state = { "Right.position" = [1.2, 0.6, 0], "Right.material.tint" = "#2f9e8f" } },
+  { expect_state = { "Lantern.position" = [-3.6, 3.4, 0], "Lantern.material.dim" = 0.75, "Lantern.material.tint" = "#e0a526" } },
+  { expect_state = { "Lamp.position" = [3.6, 3.0, 0], "Lamp.material.dim" = 0.75, "Lamp.material.tint" = "#e0527a" } },
+  { expect_counter = { liveEntities = 7, entitiesSpawned = 0 } },
+
+  { expect_pixel = { x = 62, y = 72, color = "#3a4150", tolerance = 2 } },
+  { expect_pixel = { x = 30, y = 65, color = "#9aa3b5", tolerance = 2 } },
+  { expect_pixel = { x = 52, y = 61, color = "#e0a526", tolerance = 2 } },
+  { expect_pixel = { x = 75, y = 69, color = "#2f9e8f", tolerance = 2 } },
+  { expect_pixel = { x = 29, y = 43, color = "#c59120", tolerance = 2 } },
+  { expect_pixel = { x = 98, y = 47, color = "#c5476b", tolerance = 2 } },
+  { expect_pixel = { x = 4, y = 4, color = "#14181f", tolerance = 2 } },
+]

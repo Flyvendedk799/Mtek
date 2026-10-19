@@ -1,0 +1,18 @@
+// The Pillar prefab: a box of the given height standing on the floor at `origin`. Its params all have defaults, so
+// an instance only says what differs; every default comes from another module.
+import { PILLAR_WIDTH, STONE, half } from "../theme.mtek";
+import { Matte } from "../materials.mtek";
+
+export prefab Pillar {
+    param origin: vec3 = vec3(0.0, 0.0, 0.0);
+    param height: f32 = 2.0;
+    param width: f32 = PILLAR_WIDTH;
+    param tint: color = STONE;
+
+    // `origin` is the point on the floor; the box is centred half its height above it. The value reads params and
+    // calls an imported function, so the prefab computes it for every instance when the instance is created.
+    position: origin + vec3(0.0, half(height), 0.0);
+    scale: vec3(width, height, width);
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    material: Matte { tint: tint };
+}
