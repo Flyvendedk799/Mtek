@@ -303,16 +303,17 @@ export class MaterialStore implements ParamSink {
     if (storage === null) throw new Error(`internal error: material instance ${String(instance)} has no value params`);
     const writer = storage.writers.fields.get(name);
     if (writer === undefined) throw new Error(`internal error: the layout '${storage.arena.id}' has no field '${name}'`);
-    const write: ArenaWriter = (views, base) => {
-      writer(views, base, value);
-    };
     if (block.members.size > 1) {
+      // Rare (a test hook can write a shareable instance): copy on write when the bytes would change.
+      const write: ArenaWriter = (views, base) => {
+        writer(views, base, value);
+      };
       if (!storage.arena.wouldChange(storage.slot, write)) return;
       block = this.detach(instance, block, storage);
       storage = block.storage;
       if (storage === null) throw new Error(`internal error: material instance ${String(instance)} lost its block`);
     }
-    storage.arena.writeIfChanged(storage.slot, write);
+    storage.arena.writeFieldIfChanged(storage.slot, writer, value);
   }
 
   /** Copy on write: a new block holding the bytes of `shared`, used by `instance` alone. */

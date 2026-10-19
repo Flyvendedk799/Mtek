@@ -57,10 +57,8 @@ export class Bindings {
     };
     switch (target.kind) {
       case "transform": {
-        const record = entity(target.entity);
-        return (value) => {
-          ctx.setTransform(record, target.field, value);
-        };
+        // The same validated write as `ctx.setTransform`, with the entity and the field resolved once.
+        return this.world.transformSetter(entity(target.entity), target.field);
       }
       case "visible": {
         const record = entity(target.entity);
@@ -71,10 +69,7 @@ export class Bindings {
       case "param": {
         const instance = manifest.scene.materialInstances[target.instance];
         if (instance === undefined) throw new RuntimeInternalError(`binding ${String(binding.id)} targets material instance ${String(target.instance)}, which the scene does not have.`);
-        const record = entity(instance.entity);
-        return (value) => {
-          ctx.setParam(record, target.name, value);
-        };
+        return this.world.paramSetter(entity(instance.entity), target.name);
       }
       case "camera":
         return (value) => {

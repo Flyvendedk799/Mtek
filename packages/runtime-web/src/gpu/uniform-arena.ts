@@ -41,6 +41,9 @@ export interface ArenaViews {
 /** A generated writer call: write the block's fields at byte offset `base` (a multiple of 4) of `views`. */
 export type ArenaWriter = (views: ArenaViews, base: number) => void;
 
+/** A generated field writer: write `value` into the field at byte offset `base` of `views`. */
+type FieldWriter = (views: ArenaViews, base: number, value: unknown) => void;
+
 export interface BufferReplacedEvent {
   /** Still alive while listeners run; destroyed right after the last listener returned. */
   readonly oldBuffer: GPUBuffer;
@@ -101,7 +104,8 @@ export class UniformArena {
   private disposed = false;
 
   private readonly scratch: ArenaViews;
-  private readonly scratchBytes: Uint8Array;
+  /** Whether the last `stage` found the scratch block different from the mirror. */
+  private stagedChanged = false;
 
   private readonly staticGroups = new Map<GPUBindGroupLayout, Map<number, GPUBindGroup>>();
   private readonly dynamicGroups = new Map<GPUBindGroupLayout, GPUBindGroup>();
@@ -142,7 +146,6 @@ export class UniformArena {
 
     const scratchBuffer = new ArrayBuffer(size);
     this.scratch = makeViews(scratchBuffer);
-    this.scratchBytes = new Uint8Array(scratchBuffer);
   }
 
   /** Current capacity in slots. */
@@ -243,15 +246,34 @@ export class UniformArena {
    * `write` throws, the mirror is untouched.
    */
   writeIfChanged(slot: number, write: ArenaWriter): boolean {
-    if (!this.stage(slot, write)) return false;
-    new Uint8Array(this.mirror, slot * this.slotStride, this.size).set(this.scratchBytes);
+    this.stage(slot, write, undefined, undefined);
+    return this.commitStaged(slot);
+  }
+
+  /**
+   * {@link UniformArena.writeIfChanged} for a generated field writer and its value: `writer(views, base, value)`
+   * without a closure per call (the per-frame path of material params).
+   */
+  writeFieldIfChanged<V>(slot: number, writer: (views: ArenaViews, base: number, value: V) => void, value: V): boolean {
+    this.stage(slot, undefined, writer as FieldWriter, value);
+    return this.commitStaged(slot);
+  }
+
+  /** Copies the staged scratch block into the mirror and marks the slot dirty when `stage` found a difference. */
+  private commitStaged(slot: number): boolean {
+    if (!this.stagedChanged) return false;
+    const mirror = this.mirrorViews.u32;
+    const scratch = this.scratch.u32;
+    const base = (slot * this.slotStride) / 4;
+    for (let i = 0; i < scratch.length; i++) mirror[base + i] = scratch[i] as number;
     this.markDirty(slot);
     return true;
   }
 
   /** Whether `write` would change the slot's bytes: `writeIfChanged` without the write. */
   wouldChange(slot: number, write: ArenaWriter): boolean {
-    return this.stage(slot, write);
+    this.stage(slot, write, undefined, undefined);
+    return this.stagedChanged;
   }
 
   /**
@@ -263,18 +285,27 @@ export class UniformArena {
     return new Uint32Array(this.mirror, slot * this.slotStride, this.size >>> 2);
   }
 
-  /** Runs `write` on the scratch block holding the slot's bytes; true when the result differs from the mirror. */
-  private stage(slot: number, write: ArenaWriter): boolean {
+  /**
+   * Runs the writer (`write`, or `writer` with `value`) on the scratch block holding the slot's bytes and sets
+   * `stagedChanged` to whether the result differs from the mirror. Allocates nothing.
+   */
+  private stage(slot: number, write: ArenaWriter | undefined, writer: FieldWriter | undefined, value: unknown): void {
     this.checkLive();
     this.checkAllocated(slot);
-    const mirror = new Uint32Array(this.mirror, slot * this.slotStride, this.size >>> 2);
-    this.scratch.u32.set(mirror);
-    write(this.scratch, 0);
-    const scratchWords = this.scratch.u32;
-    for (let i = 0; i < scratchWords.length; i++) {
-      if (scratchWords[i] !== mirror[i]) return true;
+    const mirror = this.mirrorViews.u32;
+    const scratch = this.scratch.u32;
+    const base = (slot * this.slotStride) / 4;
+    const words = scratch.length;
+    this.stagedChanged = false;
+    for (let i = 0; i < words; i++) scratch[i] = mirror[base + i] as number;
+    if (write !== undefined) write(this.scratch, 0);
+    else if (writer !== undefined) writer(this.scratch, 0, value);
+    for (let i = 0; i < words; i++) {
+      if (scratch[i] !== mirror[base + i]) {
+        this.stagedChanged = true;
+        return;
+      }
     }
-    return false;
   }
 
   /**

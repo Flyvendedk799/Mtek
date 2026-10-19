@@ -82,18 +82,33 @@ export function worldBoundingSphere(
   out: WorldSphere = { x: 0, y: 0, z: 0, radius: 0 },
   center?: readonly [number, number, number],
 ): WorldSphere {
-  const column = (c: number): number => Math.hypot(world[c * 4] ?? 0, world[c * 4 + 1] ?? 0, world[c * 4 + 2] ?? 0);
-  const m = (i: number): number => world[i] ?? 0;
+  const m0 = world[0] ?? 0;
+  const m1 = world[1] ?? 0;
+  const m2 = world[2] ?? 0;
+  const m4 = world[4] ?? 0;
+  const m5 = world[5] ?? 0;
+  const m6 = world[6] ?? 0;
+  const m8 = world[8] ?? 0;
+  const m9 = world[9] ?? 0;
+  const m10 = world[10] ?? 0;
+  const m12 = world[12] ?? 0;
+  const m13 = world[13] ?? 0;
+  const m14 = world[14] ?? 0;
   if (center === undefined) {
-    out.x = m(12);
-    out.y = m(13);
-    out.z = m(14);
+    out.x = m12;
+    out.y = m13;
+    out.z = m14;
   } else {
     const [cx, cy, cz] = center;
-    out.x = m(0) * cx + m(4) * cy + m(8) * cz + m(12);
-    out.y = m(1) * cx + m(5) * cy + m(9) * cz + m(13);
-    out.z = m(2) * cx + m(6) * cy + m(10) * cz + m(14);
+    out.x = m0 * cx + m4 * cy + m8 * cz + m12;
+    out.y = m1 * cx + m5 * cy + m9 * cz + m13;
+    out.z = m2 * cx + m6 * cy + m10 * cz + m14;
   }
-  out.radius = meshRadius * Math.max(column(0), column(1), column(2));
+  // The longest basis column: the largest squared length, one square root (`Math.hypot` of three arguments is several
+  // times slower and allocates; the values are binary32 widened to binary64, so the two differ by about 1e-16 relative).
+  const c0 = m0 * m0 + m1 * m1 + m2 * m2;
+  const c1 = m4 * m4 + m5 * m5 + m6 * m6;
+  const c2 = m8 * m8 + m9 * m9 + m10 * m10;
+  out.radius = meshRadius * Math.sqrt(Math.max(c0, c1, c2));
   return out;
 }

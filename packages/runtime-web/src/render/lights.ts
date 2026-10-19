@@ -62,7 +62,8 @@ export function emptyPackedLights(capacity: number): PackedLight[] {
  * (`MtekFrame.light_count`). `out` comes from {@link emptyPackedLights} and is reused every frame.
  */
 export function packLights(lights: readonly ResolvedLight[], source: LightSource, out: readonly PackedLight[]): number {
-  lights.forEach((declared, slot) => {
+  for (let slot = 0; slot < lights.length; slot++) {
+    const declared = lights[slot] as ResolvedLight;
     const packed = out[slot];
     if (packed === undefined) throw new RangeError(`light ${String(slot)} does not fit the ${String(out.length)} slots of the frame block`);
     const record = source.light(declared.entity);
@@ -90,6 +91,6 @@ export function packLights(lights: readonly ResolvedLight[], source: LightSource
       packed.direction.y = 0;
       packed.direction.z = -1;
     }
-  });
+  }
   return lights.length;
 }

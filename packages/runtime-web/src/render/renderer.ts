@@ -33,7 +33,7 @@ import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types
 import type { ResourceRegistry } from "../gpu/registry.js";
 import { UniformArena, type ArenaDevice } from "../gpu/uniform-arena.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
-import { multiply, normalMatrix, orthographic, perspective, viewMatrix, identity, type Mat4 } from "../math/mat4.js";
+import { multiply, normalMatrixInto, orthographic, perspective, viewMatrix, identity, type Mat4 } from "../math/mat4.js";
 import type { BlockWriter, LayoutWriters } from "../scene/program.js";
 import type { ResolvedEntity, SceneStructure } from "../scene/structure.js";
 import type { World } from "../scene/world.js";
@@ -201,6 +201,8 @@ export class Renderer {
   private cullDirty = true;
   /** Whether the last `cull` produced the same draws as the frame before. */
   private drawnUnchanged = false;
+  /** The one dynamic offset of every `setBindGroup(2, …)` of `encode` (the browser reads it during the call). */
+  private readonly dynamicOffset: number[] = [0];
   private readonly modelScratch = new Float32Array(16);
   private readonly normalScratch = new Float32Array(16);
   /** Materials that failed after mount (`failMaterial`): never drawn. */
@@ -720,9 +722,9 @@ export class Renderer {
       this.sphereCentres[index * 3 + 1] = this.sphere.y;
       this.sphereCentres[index * 3 + 2] = this.sphere.z;
       this.sphereScales[index] = this.sphere.radius;
-      const normal = normalMatrix(model);
-      entityMatrices.set(model, base);
-      entityMatrices.set(normal, base + 16);
+      // Throws before writing anything when the matrix is singular (as `normalMatrix` always did).
+      normalMatrixInto(entityMatrices, base + 16, model);
+      for (let k = 0; k < 16; k++) entityMatrices[base + k] = model[k] as number;
       objectStale[index] = 1;
       changedEntities[count] = index;
       count += 1;
@@ -761,6 +763,7 @@ export class Renderer {
     const { plan, materials } = this.options;
     pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
     const objectGroup = this.objectArena.bindGroupDynamic(plan.object);
+    const dynamicOffset = this.dynamicOffset;
     let objectBound = false;
     let pipeline: GPURenderPipeline | undefined;
     let instance = -1;
@@ -783,21 +786,23 @@ export class Renderer {
         instance = draw.instance;
       }
       if (draw.gpuMesh !== mesh) {
-        draw.attributes.forEach((attribute, slot) => {
-          pass.setVertexBuffer(slot, vertexBufferOf(draw.gpuMesh, attribute));
-        });
+        for (let slot = 0; slot < draw.attributes.length; slot++) {
+          pass.setVertexBuffer(slot, vertexBufferOf(draw.gpuMesh, draw.attributes[slot] as MtekVertexAttribute));
+        }
         pass.setIndexBuffer(draw.gpuMesh.indexBuffer, draw.gpuMesh.indexFormat);
         mesh = draw.gpuMesh;
       }
       if (instanced) {
         // The instanced entry point does not read group 2, but the pipeline layout has it: bind it once, at any slot.
         if (!objectBound) {
-          pass.setBindGroup(2, objectGroup, [0]);
+          dynamicOffset[0] = 0;
+          pass.setBindGroup(2, objectGroup, dynamicOffset);
           objectBound = true;
         }
         pass.drawIndexed(draw.gpuMesh.indexCount, batch.count, 0, 0, batch.firstInstance);
       } else {
-        pass.setBindGroup(2, objectGroup, [this.objectArena.slotOffset(draw.objectSlot)]);
+        dynamicOffset[0] = this.objectArena.slotOffset(draw.objectSlot);
+        pass.setBindGroup(2, objectGroup, dynamicOffset);
         objectBound = true;
         pass.drawIndexed(draw.gpuMesh.indexCount);
       }

@@ -74,11 +74,18 @@ export function transpose(m: Mat4): Mat4 {
 
 /** `a * b` (apply `b` first, then `a`). Inputs are not modified. */
 export function multiply(a: Mat4, b: Mat4): Mat4 {
-  const out = new Float32Array(16);
+  return multiplyInto(new Float32Array(16), a, b);
+}
+
+/**
+ * `a * b` written into `out`, which must not be `a` or `b` (each output element reads several inputs); returns `out`.
+ * The arithmetic is that of {@link multiply}: f64 sums in the order k = 0..3, one rounding to f32 per stored element.
+ */
+export function multiplyInto(out: Mat4, a: Mat4, b: Mat4): Mat4 {
   for (let col = 0; col < 4; col++) {
     for (let row = 0; row < 4; row++) {
       let sum = 0;
-      for (let k = 0; k < 4; k++) sum += at(a, k * 4 + row) * at(b, col * 4 + k);
+      for (let k = 0; k < 4; k++) sum += (a[k * 4 + row] as number) * (b[col * 4 + k] as number);
       out[col * 4 + row] = sum;
     }
   }
@@ -87,6 +94,11 @@ export function multiply(a: Mat4, b: Mat4): Mat4 {
 
 /** The rotation matrix of the unit quaternion `q` (no translation). */
 export function rotation(q: Quat): Mat4 {
+  return rotationInto(new Float32Array(16), q);
+}
+
+/** {@link rotation} written into `out` (all 16 elements are set); returns `out`. */
+export function rotationInto(m: Mat4, q: Quat): Mat4 {
   const { x, y, z, w } = q;
   const xx = x * x;
   const yy = y * y;
@@ -97,16 +109,21 @@ export function rotation(q: Quat): Mat4 {
   const wx = w * x;
   const wy = w * y;
   const wz = w * z;
-  const m = new Float32Array(16);
   m[0] = 1 - 2 * (yy + zz);
   m[1] = 2 * (xy + wz);
   m[2] = 2 * (xz - wy);
+  m[3] = 0;
   m[4] = 2 * (xy - wz);
   m[5] = 1 - 2 * (xx + zz);
   m[6] = 2 * (yz + wx);
+  m[7] = 0;
   m[8] = 2 * (xz + wy);
   m[9] = 2 * (yz - wx);
   m[10] = 1 - 2 * (xx + yy);
+  m[11] = 0;
+  m[12] = 0;
+  m[13] = 0;
+  m[14] = 0;
   m[15] = 1;
   return m;
 }
@@ -116,21 +133,37 @@ export function rotation(q: Quat): Mat4 {
  * (`spec/scenes.md` 12). Scale is applied first, along the entity's local axes.
  */
 export function fromRotationTranslationScale(rotationQuat: Quat, translationVec: Vec3, scale: Vec3): Mat4 {
-  const r = rotation(rotationQuat);
-  const m = new Float32Array(16);
+  return fromRotationTranslationScaleInto(new Float32Array(16), new Float32Array(16), rotationQuat, translationVec, scale);
+}
+
+/**
+ * {@link fromRotationTranslationScale} written into `out`, with `scratch` (another 16 elements, overwritten) holding
+ * the rotation matrix, which is rounded to f32 before the scale is applied, as in the allocating form. `out` and
+ * `scratch` are different arrays; returns `out`.
+ */
+export function fromRotationTranslationScaleInto(out: Mat4, scratch: Mat4, rotationQuat: Quat, translationVec: Vec3, scale: Vec3): Mat4 {
+  const r = rotationInto(scratch, rotationQuat);
   // Column c of the upper 3x3 is column c of R times scale component c.
-  const scales = [scale.x, scale.y, scale.z] as const;
-  for (let col = 0; col < 3; col++) {
-    const s = scales[col] as number;
-    m[col * 4] = at(r, col * 4) * s;
-    m[col * 4 + 1] = at(r, col * 4 + 1) * s;
-    m[col * 4 + 2] = at(r, col * 4 + 2) * s;
-  }
-  m[12] = translationVec.x;
-  m[13] = translationVec.y;
-  m[14] = translationVec.z;
-  m[15] = 1;
-  return m;
+  const sx = scale.x;
+  const sy = scale.y;
+  const sz = scale.z;
+  out[0] = (r[0] as number) * sx;
+  out[1] = (r[1] as number) * sx;
+  out[2] = (r[2] as number) * sx;
+  out[3] = 0;
+  out[4] = (r[4] as number) * sy;
+  out[5] = (r[5] as number) * sy;
+  out[6] = (r[6] as number) * sy;
+  out[7] = 0;
+  out[8] = (r[8] as number) * sz;
+  out[9] = (r[9] as number) * sz;
+  out[10] = (r[10] as number) * sz;
+  out[11] = 0;
+  out[12] = translationVec.x;
+  out[13] = translationVec.y;
+  out[14] = translationVec.z;
+  out[15] = 1;
+  return out;
 }
 
 /**
@@ -245,6 +278,14 @@ export function viewMatrix(position: Vec3, orientation: CameraOrientation): Mat4
  * `E8090`).
  */
 export function normalMatrix(model: Mat4): Mat4 {
+  return normalMatrixInto(new Float32Array(16), 0, model);
+}
+
+/**
+ * {@link normalMatrix} written into the 16 elements of `out` that start at `offset` (all of them are set); returns
+ * `out`. `out` may not overlap the 16 elements of `model`. On a singular matrix it throws before writing anything.
+ */
+export function normalMatrixInto(out: Float32Array, offset: number, model: Mat4): Float32Array {
   // M(r, c) = model[c * 4 + r]
   const a = at(model, 0);
   const b = at(model, 4);
@@ -273,16 +314,21 @@ export function normalMatrix(model: Mat4): Mat4 {
   }
   const inv = 1 / det;
 
-  const m = new Float32Array(16);
-  m[0] = c00 * inv;
-  m[1] = c10 * inv;
-  m[2] = c20 * inv;
-  m[4] = c01 * inv;
-  m[5] = c11 * inv;
-  m[6] = c21 * inv;
-  m[8] = c02 * inv;
-  m[9] = c12 * inv;
-  m[10] = c22 * inv;
-  m[15] = 1;
-  return m;
+  out[offset] = c00 * inv;
+  out[offset + 1] = c10 * inv;
+  out[offset + 2] = c20 * inv;
+  out[offset + 3] = 0;
+  out[offset + 4] = c01 * inv;
+  out[offset + 5] = c11 * inv;
+  out[offset + 6] = c21 * inv;
+  out[offset + 7] = 0;
+  out[offset + 8] = c02 * inv;
+  out[offset + 9] = c12 * inv;
+  out[offset + 10] = c22 * inv;
+  out[offset + 11] = 0;
+  out[offset + 12] = 0;
+  out[offset + 13] = 0;
+  out[offset + 14] = 0;
+  out[offset + 15] = 1;
+  return out;
 }
