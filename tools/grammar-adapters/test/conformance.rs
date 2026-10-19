@@ -128,10 +128,12 @@ fn mtek_files(dir: &Path, out: &mut Vec<PathBuf>) {
         if path.is_dir() {
             let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
             // Never read the holdout set (spec/ai-and-benchmarks.md 6.2), nor
-            // generated or installed trees.
+            // generated or installed trees, nor stored results: the candidates of the AI
+            // benchmark (`benchmarks/results/ai/*/trials`) are what models wrote, many of them
+            // invalid on purpose, not sources of the project (found by the M7 gate).
             if matches!(
                 name,
-                "holdout" | "node_modules" | "target" | ".cache" | "dist" | ".out"
+                "holdout" | "node_modules" | "target" | ".cache" | "dist" | ".out" | "results"
             ) {
                 continue;
             }
