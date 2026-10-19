@@ -1,0 +1,46 @@
+// Entry module: declare the scene Demo here.
+
+export scene Demo {
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic {
+            height: 12.8;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Track {
+        position: vec3(0.0, -1.0, 0.0);
+        mesh: Box { size: vec3(12.0, 0.2, 0.2); };
+        material: Unlit { color: #404040; };
+    }
+
+    entity Runner {
+        position: vec3(-5.0, 0.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5); };
+        material: Unlit { color: #f97316; };
+    }
+
+    state running: bool = false;
+    state runner_x: f32 = -5.0;
+
+    on key_down(Key.Space) {
+        running = !running;
+    }
+}
+
+fn update(dt: f32) {
+    let is_running = bind(Demo.running);
+    let x = bind(Demo.runner_x);
+    
+    if is_running {
+        let new_x = x + 4.0 * dt;
+        let wrapped_x = if new_x >= 6.0 { new_x - 12.0 } else { new_x };
+        bind(Demo.runner_x, wrapped_x);
+        bind(Demo.Runner.position, vec3(wrapped_x, 0.0, 0.0));
+    }
+}

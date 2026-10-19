@@ -1,0 +1,35 @@
+scene Demo {
+    clear_color: #202020;
+    state value: i32 = 1;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Bar {
+        position: bind(vec3(-6.0 + f32(value) * 0.5, 0.0, 0.0));
+        scale: bind(vec3(f32(value), 1.0, 1.0));
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #ffd24a };
+    }
+
+    on key_down(Key.D) {
+        value = value * 2;
+        if (value > 8) {
+            value = 8;
+        }
+    }
+
+    on key_down(Key.P) {
+        value = value + 3;
+        if (value > 8) {
+            value = 8;
+        }
+    }
+
+    on key_down(Key.R) {
+        value = 1;
+    }
+}

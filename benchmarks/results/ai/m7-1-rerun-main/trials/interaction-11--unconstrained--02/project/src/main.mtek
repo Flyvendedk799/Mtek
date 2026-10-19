@@ -1,0 +1,46 @@
+scene Demo {
+    clear_color: #202020;
+    state accumulated_time: f32 = 0.0;
+    state ticks_this_frame: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Clock {
+        visible: false;
+
+        update(dt: f32) {
+            let capped_dt: f32 = min(dt, 0.1);
+            let total_time: f32 = accumulated_time + capped_dt;
+            let total_ticks: i32 = i32(total_time * 60.0);
+            ticks_this_frame = min(total_ticks, 4);
+            accumulated_time = total_time - f32(ticks_this_frame) / 60.0;
+        }
+    }
+
+    entity Ticker {
+        position: vec3(-5.5, 3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #ef4444 };
+
+        update(dt: f32) {
+            let movement: f32 = f32(ticks_this_frame) * 0.1;
+            self.position = self.position + vec3(movement, 0.0, 0.0);
+        }
+    }
+
+    entity Glider {
+        position: vec3(-5.5, -3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            let capped_dt: f32 = min(dt, 0.1);
+            let movement: f32 = 6.0 * capped_dt;
+            self.position = self.position + vec3(movement, 0.0, 0.0);
+        }
+    }
+}

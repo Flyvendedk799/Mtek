@@ -1,0 +1,53 @@
+const swatch_image = asset.texture("../assets/swatch.png");
+
+scene Demo {
+  clear_color: #1b2430;
+  ambient_color: #ffffff;
+  ambient_intensity: 0.0;
+
+  camera Main {
+    position: vec3(0.0, 11.0, 3.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.72;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  entity Plain {
+    position: vec3(-2.0, 0.0, -2.0);
+    mesh: Plane { size: vec2(3.6, 3.6); };
+    material: Pbr {
+      base_color: #ffffff;
+      base_color_texture: swatch_image;
+      base_color_sampler: sampler.nearest_clamp();
+      metallic: 0.0;
+      roughness: 1.0;
+    };
+  }
+
+  entity Tiled {
+    position: vec3(0.0, 0.0, 2.0);
+    mesh: Plane { size: vec2(3.6, 3.6); };
+    material: Pbr {
+      base_color: #ffffff;
+      base_color_texture: swatch_image;
+      base_color_sampler: sampler.nearest_repeat();
+      metallic: 0.0;
+      roughness: 1.0;
+    };
+  }
+
+  entity Smooth {
+    position: vec3(2.0, 0.0, -2.0);
+    mesh: Plane { size: vec2(3.6, 3.6); };
+    material: Pbr {
+      base_color: #ffffff;
+      base_color_texture: swatch_image;
+      base_color_sampler: sampler.linear_clamp();
+      metallic: 0.0;
+      roughness: 1.0;
+    };
+  }
+}

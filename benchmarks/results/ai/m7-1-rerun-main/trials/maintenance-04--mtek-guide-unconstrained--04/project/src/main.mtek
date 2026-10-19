@@ -1,0 +1,28 @@
+const STEP_DEGREES: f32 = 30.0;
+
+scene Demo {
+    clear_color: #202020;
+    // The turret's heading in degrees: 0 when the barrel points at the camera, growing to the right.
+    state heading: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Turret {
+        mesh: Box { size: vec3(2.0, 2.0, 2.0) };
+        material: Unlit { color: #6b5cff };
+
+        entity Barrel {
+            position: vec3(0.0, 0.0, 2.2);
+            mesh: Box { size: vec3(0.8, 0.8, 0.8) };
+            material: Unlit { color: #f59e0b };
+        }
+    }
+
+    on key_down(Key.Space) {
+        heading += STEP_DEGREES;
+        Turret.rotation = quat.axis_angle(vec3(0.0, 1.0, 0.0), -heading);
+    }
+}

@@ -1,0 +1,51 @@
+export scene Demo {
+  clear_color: #14161c;
+  ambient_color: #ffffff;
+  ambient_intensity: 0.0;
+
+  camera Main {
+    position: vec3(0.0, 0.0, 9.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  entity Base {
+    position: vec3(-2.5, -1.5, 0.0);
+    mesh: Box { size: vec3(1.2, 1.2, 1.2); };
+    material: Unlit { color: #64748b; };
+  }
+
+  entity Arm {
+    position: vec3(-2.5, -1.5, 0.0);
+    rotation: quat.axis_angle(vec3(0.0, 0.0, 1.0), 0.6435011);
+    scale: vec3(1.0, 1.0, 1.0);
+
+    entity Upper {
+      position: vec3(2.0, 0.0, 0.0);
+      mesh: Box { size: vec3(4.0, 0.8, 0.6); };
+      material: Unlit { color: #3b82f6; };
+    }
+
+    entity Elbow {
+      position: vec3(4.0, 0.0, 0.0);
+      rotation: quat.axis_angle(vec3(0.0, 0.0, 1.0), -1.287002);
+      scale: vec3(0.75, 0.75, 0.75);
+
+      entity Fore {
+        position: vec3(1.5, 0.0, 0.0);
+        mesh: Box { size: vec3(3.0, 0.7, 0.5); };
+        material: Unlit { color: #22c55e; };
+      }
+
+      entity Hand {
+        position: vec3(3.0, 0.0, 0.0);
+        mesh: Sphere { radius: 0.6; };
+        material: Unlit { color: #f43f5e; };
+      }
+    }
+  }
+}

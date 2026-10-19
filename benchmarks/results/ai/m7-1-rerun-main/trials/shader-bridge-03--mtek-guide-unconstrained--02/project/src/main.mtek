@@ -1,0 +1,44 @@
+material Sweep {
+    param time: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        // Get x coordinate in object space (-2 to 2 across the 4-wide panel)
+        let x = input.local_position.x;
+        
+        // Compute the blend weight
+        let w = 0.5 + 0.5 * sin(0.8 * x + time);
+        
+        // Define colors A and B in sRGB, convert to linear
+        let A_srgb = vec3(0.1019608, 0.1372549, 0.4941176);  // #1a237e
+        let B_srgb = vec3(1.0, 0.7019608, 0.0);              // #ffb300
+        
+        let A_linear = color.srgb(A_srgb, 1.0);
+        let B_linear = color.srgb(B_srgb, 1.0);
+        
+        // Blend in linear light
+        let result_linear = (1.0 - w) * A_linear.rgb + w * B_linear.rgb;
+        
+        // Return as linear color (no conversion back, display as-is)
+        return color.linear(result_linear, 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.9;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Panel {
+        position: vec3(0.4, 0.0, 0.0);
+        mesh: Box { size: vec3(4.0, 2.0, 0.2) };
+        material: Sweep { time: bind(frame.time) };
+    }
+}

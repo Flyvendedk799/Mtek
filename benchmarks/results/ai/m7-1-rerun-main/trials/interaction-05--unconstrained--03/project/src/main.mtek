@@ -1,0 +1,50 @@
+fn clamp_cursor(value: f32) -> f32 {
+    if value < -4.5 {
+        return -4.5;
+    }
+    if value > 4.5 {
+        return 4.5;
+    }
+    return value;
+}
+
+scene Demo {
+    clear_color: #202020;
+
+    state raw_x: f32 = 0.0;
+    state raw_y: f32 = 0.0;
+    state cursor_x: f32 = 0.0;
+    state cursor_y: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Panel {
+        position: vec3(0.0, 0.0, -1.0);
+        mesh: Box { size: vec3(10.0, 10.0, 0.1) };
+        material: Unlit { color: #2a2a2a };
+    }
+
+    entity Marker {
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+        position: bind(vec3(cursor_x, cursor_y, 0.0));
+
+        update(dt: f32) {
+            if (raw_x != cursor_x) || (raw_y != cursor_y) {
+                cursor_x = clamp_cursor(raw_x);
+                cursor_y = clamp_cursor(raw_y);
+            }
+        }
+    }
+
+    on key_down(Key.Space) {
+        raw_x = 0.0;
+        raw_y = 0.0;
+        cursor_x = 0.0;
+        cursor_y = 0.0;
+    }
+}

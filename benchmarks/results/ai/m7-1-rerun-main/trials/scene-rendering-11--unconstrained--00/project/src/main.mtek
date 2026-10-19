@@ -1,0 +1,66 @@
+const swatch_tex = asset.texture("assets/swatch.png");
+
+material PlainMaterial {
+  param tex: texture = swatch_tex;
+  param sampler_plain: sampler = sampler.nearest_clamp();
+  
+  fragment(input: SurfaceInput) -> color {
+    let uv = vec2(input.uv.x, 1.0 - input.uv.y);
+    let sampled = sample(tex, sampler_plain, uv);
+    return color.linear(vec3(sampled.x, sampled.y, sampled.z), sampled.w);
+  }
+}
+
+material TiledMaterial {
+  param tex: texture = swatch_tex;
+  param sampler_tiled: sampler = sampler.nearest_repeat();
+  
+  fragment(input: SurfaceInput) -> color {
+    let uv = vec2(input.uv.x, 1.0 - input.uv.y);
+    let sampled = sample(tex, sampler_tiled, uv);
+    return color.linear(vec3(sampled.x, sampled.y, sampled.z), sampled.w);
+  }
+}
+
+material SmoothMaterial {
+  param tex: texture = swatch_tex;
+  param sampler_smooth: sampler = sampler.linear_clamp();
+  
+  fragment(input: SurfaceInput) -> color {
+    let uv = vec2(input.uv.x, 1.0 - input.uv.y);
+    let sampled = sample(tex, sampler_smooth, uv);
+    return color.linear(vec3(sampled.x, sampled.y, sampled.z), sampled.w);
+  }
+}
+
+scene Demo {
+  clear_color: #1b2430;
+  
+  camera Main {
+    position: vec3(0.0, 11.0, 3.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.72;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+  
+  entity Plain {
+    position: vec3(-2.0, 0.0, -2.0);
+    mesh: Plane { size: vec2(3.6, 3.6); };
+    material: PlainMaterial {};
+  }
+  
+  entity Tiled {
+    position: vec3(0.0, 0.0, 2.0);
+    mesh: Plane { size: vec2(3.6, 3.6); };
+    material: TiledMaterial {};
+  }
+  
+  entity Smooth {
+    position: vec3(2.0, 0.0, -2.0);
+    mesh: Plane { size: vec2(3.6, 3.6); };
+    material: SmoothMaterial {};
+  }
+}

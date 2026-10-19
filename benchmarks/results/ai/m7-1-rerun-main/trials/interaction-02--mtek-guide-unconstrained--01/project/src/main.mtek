@@ -1,0 +1,49 @@
+scene Demo {
+    clear_color: #202020;
+
+    state handle_x: f32 = 0.0;
+    state handle_color: color = #ffd24a;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Track {
+        position: vec3(0.0, -1.0, 0.0);
+        mesh: Box { size: vec3(10.0, 0.2, 0.2) };
+        material: Unlit { color: #404040 };
+    }
+
+    entity Handle {
+        mesh: Box { size: vec3(0.8, 0.8, 0.5) };
+        material: Unlit { color: bind(handle_color); };
+        position: bind(vec3(handle_x, 0.0, 0.0));
+    }
+
+    on key_down(Key.ArrowRight) {
+        let new_x = handle_x + 1.0;
+        handle_x = min(new_x, 4.0);
+        if (handle_x == 4.0) || (handle_x == -4.0) {
+            handle_color = #ef4444;
+        } else {
+            handle_color = #ffd24a;
+        }
+    }
+
+    on key_down(Key.ArrowLeft) {
+        let new_x = handle_x - 1.0;
+        handle_x = max(new_x, -4.0);
+        if (handle_x == 4.0) || (handle_x == -4.0) {
+            handle_color = #ef4444;
+        } else {
+            handle_color = #ffd24a;
+        }
+    }
+
+    on key_down(Key.Enter) {
+        handle_x = 0.0;
+        handle_color = #ffd24a;
+    }
+}

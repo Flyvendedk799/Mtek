@@ -1,0 +1,33 @@
+scene Demo {
+    clear_color: #202020;
+
+    state cursor: vec2 [B] = vec2(0.0, 0.0);
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Panel {
+        position: vec3(0.0, 0.0, -1.0);
+        mesh: Box { size: vec3(10.0, 10.0, 0.1) };
+        material: Unlit { color: #2a2a2a };
+    }
+
+    entity Marker {
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+        position: vec3(0.0, 0.0, 0.0);
+
+        update(dt: f32) {
+            let clamped_x = clamp(cursor.x, -4.5, 4.5);
+            let clamped_y = clamp(cursor.y, -4.5, 4.5);
+            self.position = vec3(clamped_x, clamped_y, 0.0);
+        }
+    }
+
+    on key_down(Key.Space) {
+        cursor = vec2(0.0, 0.0);
+    }
+}

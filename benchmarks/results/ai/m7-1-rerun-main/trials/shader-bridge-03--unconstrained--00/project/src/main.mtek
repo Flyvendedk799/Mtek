@@ -1,0 +1,42 @@
+// Custom material that sweeps color based on time
+material Sweep {
+  param time: f32;
+  
+  fragment(surface: SurfaceInput) -> color {
+    let x = surface.local_position.x;
+    let w = 0.5 + 0.5 * sin(0.8 * x + time);
+    
+    // A = #1a237e in sRGB, convert to linear
+    let A_linear = color.srgb(vec3(26.0 / 255.0, 35.0 / 255.0, 126.0 / 255.0), 1.0).rgb;
+    
+    // B = #ffb300 in sRGB, convert to linear
+    let B_linear = color.srgb(vec3(1.0, 179.0 / 255.0, 0.0), 1.0).rgb;
+    
+    // Blend in linear light
+    let blended = (1.0 - w) * A_linear + w * B_linear;
+    
+    // Return as linear color
+    return color.linear(blended, 1.0);
+  }
+}
+
+// Scene declaration
+export scene Demo {
+  clear_color: #202020;
+  
+  camera Main {
+    position: vec3(0.0, 0.0, 6.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.9;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+  
+  entity Panel {
+    position: vec3(0.4, 0.0, 0.0);
+    mesh: Box { size: vec3(4.0, 2.0, 0.2); };
+    material: Sweep { time: bind(frame.time); };
+  }
+}

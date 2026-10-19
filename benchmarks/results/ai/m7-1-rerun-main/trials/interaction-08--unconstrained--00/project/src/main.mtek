@@ -1,0 +1,45 @@
+export scene Demo {
+    clear_color: #202020;
+    
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic {
+            height: 12.8;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+    
+    state running: bool = false;
+    state last_time: f32 = 0.0;
+    
+    entity Track {
+        position: vec3(0.0, -1.0, 0.0);
+        mesh: Box { size: vec3(12.0, 0.2, 0.2); };
+        material: Unlit { color: #404040; };
+    }
+    
+    entity Runner {
+        position: vec3(-5.0, 0.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5); };
+        material: Unlit { color: #f97316; };
+    }
+    
+    on key_down(Key.Space) {
+        running = !running;
+        last_time = frame.time;
+    }
+    
+    on key_up(Key.Space) {
+        if running {
+            var dt = frame.time - last_time;
+            last_time = frame.time;
+            var new_x = Runner.position.x + 4.0 * dt;
+            if new_x >= 6.0 {
+                new_x = new_x - 12.0;
+            }
+            Runner.position = vec3(new_x, Runner.position.y, Runner.position.z);
+        }
+    }
+}

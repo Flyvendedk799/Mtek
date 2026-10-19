@@ -1,0 +1,47 @@
+scene Demo {
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Field {
+        position: vec3(0.0, 0.0, -1.0);
+        mesh: Box { size: vec3(10.0, 10.0, 0.2) };
+        material: Unlit { color: #303030 };
+    }
+
+    entity Ship {
+        position: vec3(0.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            var dx: f32 = 0.0;
+            var dy: f32 = 0.0;
+
+            if is_key_down(Key.ArrowRight) {
+                dx = dx + 8.0;
+            }
+            if is_key_down(Key.ArrowLeft) {
+                dx = dx - 8.0;
+            }
+            if is_key_down(Key.ArrowUp) {
+                dy = dy + 8.0;
+            }
+            if is_key_down(Key.ArrowDown) {
+                dy = dy - 8.0;
+            }
+
+            var new_x: f32 = self.position.x + dx * dt;
+            var new_y: f32 = self.position.y + dy * dt;
+
+            new_x = clamp(new_x, -4.0, 4.0);
+            new_y = clamp(new_y, -4.0, 4.0);
+
+            self.position = vec3(new_x, new_y, self.position.z);
+        }
+    }
+}

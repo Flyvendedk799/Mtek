@@ -1,0 +1,42 @@
+scene Demo {
+    clear_color: #202020;
+
+    state beacon_state: i32 = 0;
+    state elapsed: f32 = 0.0;
+    state beacon_color: color = #3a3a3a;
+    state last_frame: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    on key_down(Key.Space) {
+        if beacon_state == 0 {
+            beacon_state = 1;
+            elapsed = 0.0;
+            beacon_color = #ffb000;
+        } else if beacon_state == 2 {
+            beacon_state = 0;
+            beacon_color = #3a3a3a;
+        }
+    }
+
+    on pointer_move(event: PointerEvent) {
+        if beacon_state == 1 {
+            let dt: f32 = frame.time - last_frame;
+            elapsed = elapsed + dt;
+            if elapsed >= 1.5 {
+                beacon_state = 2;
+                beacon_color = #22c55e;
+            }
+        }
+        last_frame = frame.time;
+    }
+
+    entity Beacon {
+        mesh: Box { size: vec3(4.0, 4.0, 0.5) };
+        material: Unlit { color: bind(beacon_color); };
+    }
+}

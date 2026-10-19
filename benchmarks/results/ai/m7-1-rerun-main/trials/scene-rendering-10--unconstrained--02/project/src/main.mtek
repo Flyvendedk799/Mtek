@@ -1,0 +1,57 @@
+export scene Demo {
+    clear_color: #0a0a0f;
+    ambient_color: #6070a0;
+    ambient_intensity: 0.1;
+
+    camera Main {
+        position: vec3(0.0, 3.0, 9.0);
+        target: vec3(0.0, 0.5, 0.0);
+        projection: Perspective {
+            fov_y: 0.8;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Ball {
+        position: vec3(0.0, 1.0, 0.0);
+        mesh: Sphere {
+            radius: 1.0;
+        };
+        material: Pbr {
+            base_color: #f3f4f6;
+            metallic: 0.0;
+            roughness: 0.7;
+        };
+    }
+
+    entity Floor {
+        position: vec3(0.0, 0.0, 0.0);
+        mesh: Plane {
+            size: vec2(12.0, 12.0);
+        };
+        material: Pbr {
+            base_color: #e5e7eb;
+            metallic: 0.0;
+            roughness: 0.9;
+        };
+    }
+
+    entity LampLeft {
+        position: vec3(-3.0, 2.5, 2.0);
+        light: PointLight {
+            color: #ff3030;
+            intensity: 9.0;
+            range: 0.0;
+        };
+    }
+
+    entity LampRight {
+        position: vec3(3.0, 2.5, 2.0);
+        light: PointLight {
+            color: #3050ff;
+            intensity: 9.0;
+            range: 0.0;
+        };
+    }
+}

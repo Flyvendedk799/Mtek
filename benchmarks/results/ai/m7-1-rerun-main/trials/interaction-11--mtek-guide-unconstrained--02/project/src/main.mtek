@@ -1,0 +1,47 @@
+scene Demo {
+    clear_color: #202020;
+
+    state fixed_accumulator: f32 = 0.0;
+    const FIXED_STEP: f32 = 0.016666668;
+    const MAX_TICKS_PER_FRAME: i32 = 4;
+    const MAX_FRAME_DELTA: f32 = 0.1;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Ticker {
+        position: vec3(-5.5, 3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #ef4444 };
+
+        fixed_update(dt: f32) {
+            self.position.x += 0.1;
+        }
+    }
+
+    entity Glider {
+        position: vec3(-5.5, -3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            self.position.x += 6.0 * dt;
+        }
+    }
+
+    update(dt: f32) {
+        let capped_delta = min(dt, MAX_FRAME_DELTA);
+        fixed_accumulator += capped_delta;
+        
+        var ticks = 0;
+        for i in 0..MAX_TICKS_PER_FRAME {
+            if fixed_accumulator >= FIXED_STEP {
+                fixed_accumulator -= FIXED_STEP;
+                ticks += 1;
+            }
+        }
+    }
+}

@@ -1,0 +1,85 @@
+scene Demo {
+    clear_color: #202020;
+
+    state right_held: bool = false;
+    state left_held: bool = false;
+    state up_held: bool = false;
+    state down_held: bool = false;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Field {
+        position: vec3(0.0, 0.0, -1.0);
+        mesh: Box { size: vec3(10.0, 10.0, 0.2) };
+        material: Unlit { color: #303030 };
+    }
+
+    entity Ship {
+        position: vec3(0.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            let speed = 8.0;
+            let dx = 0.0;
+            let dy = 0.0;
+
+            var new_x = self.position.x;
+            var new_y = self.position.y;
+
+            if right_held {
+                new_x = new_x + speed * dt;
+            }
+            if left_held {
+                new_x = new_x - speed * dt;
+            }
+            if up_held {
+                new_y = new_y + speed * dt;
+            }
+            if down_held {
+                new_y = new_y - speed * dt;
+            }
+
+            new_x = clamp(new_x, -4.0, 4.0);
+            new_y = clamp(new_y, -4.0, 4.0);
+
+            self.position = vec3(new_x, new_y, self.position.z);
+        }
+    }
+
+    on key_down(Key.ArrowRight) {
+        right_held = true;
+    }
+
+    on key_up(Key.ArrowRight) {
+        right_held = false;
+    }
+
+    on key_down(Key.ArrowLeft) {
+        left_held = true;
+    }
+
+    on key_up(Key.ArrowLeft) {
+        left_held = false;
+    }
+
+    on key_down(Key.ArrowUp) {
+        up_held = true;
+    }
+
+    on key_up(Key.ArrowUp) {
+        up_held = false;
+    }
+
+    on key_down(Key.ArrowDown) {
+        down_held = true;
+    }
+
+    on key_up(Key.ArrowDown) {
+        down_held = false;
+    }
+}
