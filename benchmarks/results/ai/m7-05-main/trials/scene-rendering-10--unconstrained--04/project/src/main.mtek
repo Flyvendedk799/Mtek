@@ -1,0 +1,65 @@
+// Entry module: declare the scene Demo here.
+
+scene Demo {
+  // Camera at (0, 3, 9) looking at (0, 0.5, 0)
+  camera Main {
+    position: vec3(0.0, 3.0, 9.0);
+    target: vec3(0.0, 0.5, 0.0);
+    projection: Perspective {
+      fov_y: 0.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  // Clear color
+  clear_color: #0a0a0f;
+
+  // Ambient light: #6070a0 at 10% strength
+  ambient_color: #6070a0;
+  ambient_intensity: 0.1;
+
+  // Ball: sphere at (0, 1, 0) with radius 1.0
+  entity Ball {
+    position: vec3(0.0, 1.0, 0.0);
+    mesh: Sphere {
+      radius: 1.0;
+    };
+    material: Pbr {
+      base_color: #f3f4f6;
+      metallic: 0.0;
+      roughness: 0.7;
+    };
+  }
+
+  // Floor: flat square 12x12 units at y=0, one-sided facing up
+  entity Floor {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: Plane {
+      size: vec2(12.0, 12.0);
+    };
+    material: Pbr {
+      base_color: #e5e7eb;
+      metallic: 0.0;
+      roughness: 0.9;
+    };
+  }
+
+  // LampLeft: red point light at (-3, 2.5, 2)
+  entity LampLeft {
+    position: vec3(-3.0, 2.5, 2.0);
+    light: PointLight {
+      color: #ff3030;
+      intensity: 9.0;
+    };
+  }
+
+  // LampRight: blue point light at (3, 2.5, 2)
+  entity LampRight {
+    position: vec3(3.0, 2.5, 2.0);
+    light: PointLight {
+      color: #3050ff;
+      intensity: 9.0;
+    };
+  }
+}

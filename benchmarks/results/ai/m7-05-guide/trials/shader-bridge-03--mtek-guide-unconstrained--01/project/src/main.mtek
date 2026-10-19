@@ -1,0 +1,44 @@
+// Sweep material: color sweeps with time based on x coordinate in object space
+material Sweep {
+    param time: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        // x is the x coordinate in object space (ranges from -2 to 2 across the 4-wide panel)
+        let x = input.local_position.x;
+        let w = 0.5 + 0.5 * sin(0.8 * x + time);
+        
+        // A = #1a237e, B = #ffb300 converted from sRGB to linear
+        let A_srgb = vec3(26.0 / 255.0, 35.0 / 255.0, 126.0 / 255.0);
+        let B_srgb = vec3(1.0, 179.0 / 255.0, 0.0);
+        
+        let A_linear = color.linear(A_srgb, 1.0);
+        let B_linear = color.linear(B_srgb, 1.0);
+        
+        // Blend in linear light: (1 - w) * A + w * B
+        let blended_linear_rgb = (1.0 - w) * A_linear.rgb + w * B_linear.rgb;
+        
+        // Return as sRGB for display
+        return color.srgb(blended_linear_rgb, 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.9;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Panel {
+        position: vec3(0.4, 0.0, 0.0);
+        scale: vec3(1.0, 1.0, 1.0);
+        mesh: Box { size: vec3(4.0, 2.0, 0.2) };
+        material: Sweep { time: bind(frame.time) };
+    }
+}

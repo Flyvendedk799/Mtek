@@ -286,10 +286,12 @@ describe("release notes", () => {
     expect(found).toContain("release-notes/pending-stale");
   });
 
-  it("requires a placeholder for every unfinished M7 item", () => {
-    const only = `# T\n\n## 1. C\n\n- ${PENDING_MARK} x (M7-04). Evidence that will replace this: \`evidence/M7/x.md\`.\n`;
+  it("requires no placeholder once every M7 result exists", () => {
+    // M7-03, -04, -05 and -07 all have their evidence: nothing is required to be pending any more.
+    expect(REQUIRED_PENDING).toEqual([]);
+    const only = `# T\n\n## 1. C\n\n- a claim ([s](../spec/a.md))\n`;
     const found = checkReleaseNotes(only, io).filter((m) => m.check === "release-notes/pending-required");
-    expect(found.map((m) => m.right.value)).toEqual(["no placeholder for M7-05"]);
+    expect(found).toEqual([]);
   });
 
   it("ignores the preface and the exempt section", () => {

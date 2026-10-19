@@ -1,0 +1,65 @@
+material CubeMaterial {
+    param base_color: color = #c8a27a;
+    param metallic: f32 = 0.0;
+    param roughness: f32 = 0.8;
+
+    fragment(input: SurfaceInput) -> color {
+        let albedo = color.linear(base_color.rgb, base_color.a);
+        return lighting.pbr(input, albedo, metallic, roughness);
+    }
+}
+
+material FloorMaterial {
+    param base_color: color = #8a929c;
+    param metallic: f32 = 0.0;
+    param roughness: f32 = 0.9;
+
+    fragment(input: SurfaceInput) -> color {
+        let albedo = color.linear(base_color.rgb, base_color.a);
+        return lighting.pbr(input, albedo, metallic, roughness);
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(2.5, 2.5, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    clear_color: #0b0d12;
+
+    entity Cube {
+        mesh: Box { size: vec3(2.0, 2.0, 2.0) };
+        material: CubeMaterial {
+            base_color: #c8a27a;
+            metallic: 0.0;
+            roughness: 0.8;
+        };
+        position: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Floor {
+        mesh: Plane { size: vec2(10.0, 10.0) };
+        material: FloorMaterial {
+            base_color: #8a929c;
+            metallic: 0.0;
+            roughness: 0.9;
+        };
+        position: vec3(0.0, -1.0, 0.0);
+    }
+
+    entity Sun {
+        light: DirectionalLight {
+            color: #ffffff;
+            intensity: 1.0;
+        };
+        rotation: quat.axis_angle(vec3(1.0, 0.0, 0.0), atan2(0.8, 0.6)) * quat.axis_angle(vec3(0.0, 1.0, 0.0), atan2(0.8, 0.0));
+    }
+
+    entity AmbientLight {
+        light: DirectionalLight {
+            color: #ffffff;
+            intensity: 0.1;
+        };
+    }
+}

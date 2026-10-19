@@ -1,0 +1,50 @@
+const BEACON_IDLE: color = #3a3a3a;
+const BEACON_RUNNING: color = #ffb000;
+const BEACON_DONE: color = #22c55e;
+
+cpu fn get_beacon_color(s: i32) -> color {
+    if s == 0 {
+        return BEACON_IDLE;
+    }
+    if s == 1 {
+        return BEACON_RUNNING;
+    }
+    return BEACON_DONE;
+}
+
+scene Demo {
+    state beacon_state: i32 = 0;
+    state elapsed_time: f32 = 0.0;
+
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Beacon {
+        mesh: Box { size: vec3(4.0, 4.0, 0.5) };
+        material: Unlit { color: bind(get_beacon_color(beacon_state)); };
+
+        update(dt: f32) {
+            if beacon_state == 1 {
+                elapsed_time = elapsed_time + dt;
+                if elapsed_time >= 1.5 {
+                    beacon_state = 2;
+                }
+            }
+        }
+    }
+
+    on key_down(Key.Space) {
+        if beacon_state == 0 {
+            beacon_state = 1;
+            elapsed_time = 0.0;
+        }
+        if beacon_state == 2 {
+            beacon_state = 0;
+        }
+    }
+}

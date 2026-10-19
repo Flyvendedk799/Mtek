@@ -1,0 +1,74 @@
+// Entry module: declare the scene Demo here.
+
+const RUNNER_SPEED = 4.0;
+const WRAP_RIGHT = 6.0;
+const WRAP_WIDTH = 12.0;
+
+material TrackColor {
+  fragment(input: SurfaceInput) -> color {
+    return #404040;
+  }
+}
+
+material RunnerColor {
+  fragment(input: SurfaceInput) -> color {
+    return #f97316;
+  }
+}
+
+prefab RunnerPrefab {
+  entity Runner {
+    position: vec3(-5.0, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(1.0, 1.0, 0.5);
+    };
+    material: RunnerColor;
+  }
+}
+
+scene Demo {
+  state running: bool = false;
+  state runnerX: f32 = -5.0;
+
+  camera Main {
+    position: vec3(0.0, 0.0, 10.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Orthographic {
+      height: 12.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  entity Track {
+    position: vec3(0.0, -1.0, 0.0);
+    mesh: Box {
+      size: vec3(12.0, 0.2, 0.2);
+    };
+    material: TrackColor;
+  }
+
+  entity Runner {
+    position: vec3(-5.0, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(1.0, 1.0, 0.5);
+    };
+    material: RunnerColor;
+  }
+
+  on key_down(Key.Space) {
+    running = !running;
+  }
+
+  fn on_update() {
+    if (running) {
+      runnerX = runnerX + (RUNNER_SPEED * frame.delta);
+      
+      if (runnerX >= WRAP_RIGHT) {
+        runnerX = runnerX - WRAP_WIDTH;
+      }
+    }
+    
+    Runner.position = vec3(runnerX, 0.0, 0.0);
+  }
+}

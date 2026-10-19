@@ -1,0 +1,89 @@
+// Entry module: declare the scene Demo here.
+
+prefab UpperNode {
+    param pos: vec3 = vec3(2.0, 0.0, 0.0);
+
+    position: pos;
+    mesh: Box { size: vec3(4.0, 0.8, 0.6) };
+    material: Unlit { color: #3b82f6 };
+}
+
+prefab ForeNode {
+    param pos: vec3 = vec3(1.5, 0.0, 0.0);
+
+    position: pos;
+    mesh: Box { size: vec3(3.0, 0.7, 0.5) };
+    material: Unlit { color: #22c55e };
+}
+
+prefab HandNode {
+    param pos: vec3 = vec3(3.0, 0.0, 0.0);
+
+    position: pos;
+    mesh: Sphere { radius: 0.6 };
+    material: Unlit { color: #f43f5e };
+}
+
+prefab ElbowNode {
+    param pos: vec3 = vec3(4.0, 0.0, 0.0);
+    param rot: quat = quat.axis_angle(vec3(0.0, 0.0, 1.0), -1.287002);
+    param scl: vec3 = vec3(0.75, 0.75, 0.75);
+
+    position: pos;
+    rotation: rot;
+    scale: scl;
+
+    entity Fore: ForeNode {
+        pos: vec3(1.5, 0.0, 0.0);
+    }
+
+    entity Hand: HandNode {
+        pos: vec3(3.0, 0.0, 0.0);
+    }
+}
+
+prefab ArmNode {
+    param pos: vec3 = vec3(0.0, 0.0, 0.0);
+    param rot: quat = quat.identity();
+    param scl: vec3 = vec3(1.0, 1.0, 1.0);
+
+    position: pos;
+    rotation: rot;
+    scale: scl;
+
+    entity Upper: UpperNode {
+        pos: vec3(2.0, 0.0, 0.0);
+    }
+
+    entity Elbow: ElbowNode {
+        pos: vec3(4.0, 0.0, 0.0);
+        rot: quat.axis_angle(vec3(0.0, 0.0, 1.0), -1.287002);
+        scl: vec3(0.75, 0.75, 0.75);
+    }
+}
+
+scene Demo {
+    state clear: color = #14161c;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 9.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.8;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Base {
+        position: vec3(-2.5, -1.5, 0.0);
+        mesh: Box { size: vec3(1.2, 1.2, 1.2) };
+        material: Unlit { color: #64748b };
+    }
+
+    entity Arm: ArmNode {
+        pos: vec3(-2.5, -1.5, 0.0);
+        rot: quat.axis_angle(vec3(0.0, 0.0, 1.0), 0.6435011);
+        scl: vec3(1.0, 1.0, 1.0);
+    }
+}

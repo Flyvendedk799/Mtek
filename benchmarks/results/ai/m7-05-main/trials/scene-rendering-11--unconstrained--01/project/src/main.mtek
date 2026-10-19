@@ -1,0 +1,69 @@
+// Load textures and samplers at CPU level
+const plain_texture = asset.texture("../assets/swatch.png");
+const plain_sampler = sampler.nearest_clamp();
+
+const tiled_texture = asset.texture("../assets/swatch.png");
+const tiled_sampler = sampler.nearest_repeat();
+
+const smooth_texture = asset.texture("../assets/swatch.png");
+const smooth_sampler = sampler.linear_clamp();
+
+material PlainMat {
+  fragment(input: SurfaceInput) -> color {
+    let sampled = sample(plain_texture, plain_sampler, input.uv);
+    return color.srgb(sampled.x, sampled.y, sampled.z, sampled.w);
+  }
+}
+
+material TiledMat {
+  fragment(input: SurfaceInput) -> color {
+    let uv = input.uv * 2.0;
+    let sampled = sample(tiled_texture, tiled_sampler, uv);
+    return color.srgb(sampled.x, sampled.y, sampled.z, sampled.w);
+  }
+}
+
+material SmoothMat {
+  fragment(input: SurfaceInput) -> color {
+    let sampled = sample(smooth_texture, smooth_sampler, input.uv);
+    return color.srgb(sampled.x, sampled.y, sampled.z, sampled.w);
+  }
+}
+
+export scene Demo {
+  camera Main {
+    position: vec3(0.0, 11.0, 3.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      vertical_fov: 0.72;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+  
+  clear_color: #1b2430;
+  
+  // Plain square: hard-edged, 1x picture, centered at (-2, 0, -2)
+  entity Plain {
+    position: vec3(-2.0, 0.0, -2.0);
+    scale: vec3(1.8, 1.0, 1.8);
+    mesh: asset.glb("../assets/plane.glb").mesh("Plane");
+    material: PlainMat;
+  }
+  
+  // Tiled square: hard-edged, 2x2 tiled, centered at (0, 0, 2)
+  entity Tiled {
+    position: vec3(0.0, 0.0, 2.0);
+    scale: vec3(1.8, 1.0, 1.8);
+    mesh: asset.glb("../assets/plane.glb").mesh("Plane");
+    material: TiledMat;
+  }
+  
+  // Smooth square: bilinear filtered, centered at (2, 0, -2)
+  entity Smooth {
+    position: vec3(2.0, 0.0, -2.0);
+    scale: vec3(1.8, 1.0, 1.8);
+    mesh: asset.glb("../assets/plane.glb").mesh("Plane");
+    material: SmoothMat;
+  }
+}

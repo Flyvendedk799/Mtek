@@ -1,0 +1,64 @@
+material Plain {
+    param image: texture;
+    param samp: sampler;
+
+    fragment(input: SurfaceInput) -> color {
+        let col = sample(image, samp, input.uv);
+        return color.srgb(col.rgb, col.a);
+    }
+}
+
+material Tiled {
+    param image: texture;
+    param samp: sampler;
+
+    fragment(input: SurfaceInput) -> color {
+        let col = sample(image, samp, input.uv);
+        return color.srgb(col.rgb, col.a);
+    }
+}
+
+material Smooth {
+    param image: texture;
+    param samp: sampler;
+
+    fragment(input: SurfaceInput) -> color {
+        let col = sample(image, samp, input.uv);
+        return color.srgb(col.rgb, col.a);
+    }
+}
+
+const SWATCH_TEX = asset.texture("assets/swatch.png");
+const PLAIN_SAMP = sampler.nearest_clamp();
+const TILED_SAMP = sampler.nearest_repeat();
+const SMOOTH_SAMP = sampler.linear_clamp();
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 11.0, 3.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            vfov: 0.72;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Plain {
+        position: vec3(-2.0, 0.0, -2.0);
+        mesh: Plane { size: vec3(3.6, 3.6, 0.0) };
+        material: Plain { image: SWATCH_TEX; samp: PLAIN_SAMP; };
+    }
+
+    entity Tiled {
+        position: vec3(0.0, 0.0, 2.0);
+        mesh: Plane { size: vec3(3.6, 3.6, 0.0) };
+        material: Tiled { image: SWATCH_TEX; samp: TILED_SAMP; };
+    }
+
+    entity Smooth {
+        position: vec3(2.0, 0.0, -2.0);
+        mesh: Plane { size: vec3(3.6, 3.6, 0.0) };
+        material: Smooth { image: SWATCH_TEX; samp: SMOOTH_SAMP; };
+    }
+}

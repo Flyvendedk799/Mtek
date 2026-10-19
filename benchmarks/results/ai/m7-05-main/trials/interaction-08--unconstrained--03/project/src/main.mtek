@@ -1,0 +1,71 @@
+// Entry module: declare the scene Demo here.
+
+const RUNNER_SPEED = 4.0;
+const RUNNER_MAX_X = 6.0;
+const RUNNER_WRAP = 12.0;
+
+struct SceneState {
+  running: bool;
+  runner_x: f32;
+}
+
+material RunnerMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return #f97316;
+  }
+}
+
+material TrackMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return #404040;
+  }
+}
+
+scene Demo {
+  state MyState: SceneState {
+    running: false;
+    runner_x: -5.0;
+  }
+
+  camera Main {
+    position: vec3(0.0, 0.0, 10.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Orthographic {
+      height: 12.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  entity Track {
+    position: vec3(0.0, -1.0, 0.0);
+    mesh: Box {
+      size: vec3(12.0, 0.2, 0.2);
+    };
+    bind material TrackMaterial;
+  }
+
+  entity Runner {
+    position: vec3(MyState.runner_x, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(1.0, 1.0, 0.5);
+    };
+    bind material RunnerMaterial;
+  }
+
+  on key_down(Key.Space) {
+    MyState.running = !MyState.running;
+  }
+
+  on frame_update {
+    if MyState.running {
+      MyState.runner_x = MyState.runner_x + RUNNER_SPEED * frame.delta;
+      
+      if MyState.runner_x >= RUNNER_MAX_X {
+        MyState.runner_x = MyState.runner_x - RUNNER_WRAP;
+      }
+      
+      Runner.position = vec3(MyState.runner_x, 0.0, 0.0);
+    }
+  }
+}

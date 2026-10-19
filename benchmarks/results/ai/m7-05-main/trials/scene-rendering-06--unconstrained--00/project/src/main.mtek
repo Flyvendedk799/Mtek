@@ -1,0 +1,69 @@
+// Entry module: declare the scene Demo here.
+
+// Define the PBR material for the cube
+material CubeMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(
+      input,
+      color.srgb(vec3(0.784, 0.639, 0.478), 1.0),
+      0.0,
+      0.8
+    );
+  }
+}
+
+// Define the PBR material for the floor
+material FloorMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(
+      input,
+      color.srgb(vec3(0.541, 0.573, 0.612), 1.0),
+      0.0,
+      0.9
+    );
+  }
+}
+
+// Define the main scene
+scene Demo {
+  // Camera positioned at (2.5, 2.5, 5) looking at origin
+  camera Main {
+    position: vec3(2.5, 2.5, 5.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.9;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  clear_color: color.srgb(vec3(0.043, 0.051, 0.071), 1.0);
+
+  // Cube: centered at origin, edge length 2.0
+  entity Cube {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(2.0, 2.0, 2.0);
+    };
+    material: CubeMaterial;
+  }
+
+  // Floor: 10x10 flat square at y = -1, centered at (0, -1, 0), facing up
+  entity Floor {
+    position: vec3(0.0, -1.0, 0.0);
+    mesh: Plane {
+      size: vec2(10.0, 10.0);
+    };
+    material: FloorMaterial;
+  }
+
+  // Directional light named Sun
+  entity Sun {
+    position: vec3(0.0, 0.0, 0.0);
+    rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.0);
+    light: DirectionalLight {
+      color: color.srgb(vec3(1.0, 1.0, 1.0), 1.0);
+      intensity: 1.0;
+    };
+  }
+}

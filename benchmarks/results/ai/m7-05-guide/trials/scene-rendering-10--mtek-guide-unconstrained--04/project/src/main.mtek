@@ -1,0 +1,166 @@
+// Entry module: the Demo scene with a white ball and floor lit by point lights and ambient light
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 3.0, 9.0);
+        target: vec3(0.0, 0.5, 0.0);
+        projection: Perspective {
+            vfov: 0.8;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Ball {
+        mesh: Sphere { radius: 1.0 };
+        material: BallMaterial {};
+        position: vec3(0.0, 1.0, 0.0);
+    }
+
+    entity Floor {
+        mesh: Plane { size: vec3(12.0, 12.0, 1.0) };
+        material: FloorMaterial {};
+        position: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity LampLeft {
+        position: vec3(-3.0, 2.5, 2.0);
+    }
+
+    entity LampRight {
+        position: vec3(3.0, 2.5, 2.0);
+    }
+}
+
+material BallMaterial {
+    fragment(input: SurfaceInput) -> color {
+        let base_color = color.linear(vec3(0.953, 0.957, 0.965), 1.0);
+        
+        // Normalize position to get normal (sphere centered at origin in this context)
+        let normal = normalize(input.position);
+        let view_dir = normalize(input.view_dir);
+        
+        // Left lamp: red #ff3030
+        let lamp_left_pos = vec3(-3.0, 2.5, 2.0);
+        let to_left = lamp_left_pos - input.position;
+        let dist_left = length(to_left);
+        let dir_left = normalize(to_left);
+        let intensity_left = 1.0 / (dist_left * dist_left);
+        let cos_left = max(0.0, dot(normal, dir_left));
+        let left_color = color.linear(vec3(1.0, 0.188, 0.188), 1.0);
+        let left_contrib = left_color.rgb * cos_left * intensity_left;
+        
+        // Right lamp: blue #3050ff
+        let lamp_right_pos = vec3(3.0, 2.5, 2.0);
+        let to_right = lamp_right_pos - input.position;
+        let dist_right = length(to_right);
+        let dir_right = normalize(to_right);
+        let intensity_right = 1.0 / (dist_right * dist_right);
+        let cos_right = max(0.0, dot(normal, dir_right));
+        let right_color = color.linear(vec3(0.188, 0.314, 1.0), 1.0);
+        let right_contrib = right_color.rgb * cos_right * intensity_right;
+        
+        // Ambient: #6070a0 at 10% strength
+        let ambient_color = color.linear(vec3(0.376, 0.439, 0.627), 1.0);
+        let ambient_contrib = ambient_color.rgb * 0.1;
+        
+        // Combine with Lambertian diffuse
+        let diffuse = base_color.rgb * (left_contrib + right_contrib + ambient_contrib);
+        
+        // Add specular highlights (GGX with Schlick Fresnel)
+        let roughness = 0.7;
+        let metallic = 0.0;
+        
+        // Simplified specular from left lamp
+        let h_left = normalize(dir_left + view_dir);
+        let cos_h_left = max(0.0, dot(normal, h_left));
+        let alpha = roughness * roughness;
+        let alpha_sq = alpha * alpha;
+        let denom = cos_h_left * cos_h_left * (alpha_sq - 1.0) + 1.0;
+        let d_left = alpha_sq / (denom * denom);
+        let f0 = vec3(0.04, 0.04, 0.04);
+        let f_left = f0 + (vec3(1.0, 1.0, 1.0) - f0) * pow(1.0 - cos_h_left, 5.0);
+        let spec_left = d_left * f_left * left_contrib * 0.25;
+        
+        // Simplified specular from right lamp
+        let h_right = normalize(dir_right + view_dir);
+        let cos_h_right = max(0.0, dot(normal, h_right));
+        let denom_r = cos_h_right * cos_h_right * (alpha_sq - 1.0) + 1.0;
+        let d_right = alpha_sq / (denom_r * denom_r);
+        let f_right = f0 + (vec3(1.0, 1.0, 1.0) - f0) * pow(1.0 - cos_h_right, 5.0);
+        let spec_right = d_right * f_right * right_contrib * 0.25;
+        
+        let final = vec3(
+            clamp(diffuse.x + spec_left.x + spec_right.x, 0.0, 1.0),
+            clamp(diffuse.y + spec_left.y + spec_right.y, 0.0, 1.0),
+            clamp(diffuse.z + spec_left.z + spec_right.z, 0.0, 1.0)
+        );
+        
+        return color.linear(final, 1.0);
+    }
+}
+
+material FloorMaterial {
+    fragment(input: SurfaceInput) -> color {
+        let base_color = color.linear(vec3(0.902, 0.906, 0.922), 1.0);
+        let normal = vec3(0.0, 1.0, 0.0);
+        let view_dir = normalize(input.view_dir);
+        
+        // Left lamp: red #ff3030
+        let lamp_left_pos = vec3(-3.0, 2.5, 2.0);
+        let to_left = lamp_left_pos - input.position;
+        let dist_left = length(to_left);
+        let dir_left = normalize(to_left);
+        let intensity_left = 1.0 / (dist_left * dist_left);
+        let cos_left = max(0.0, dot(normal, dir_left));
+        let left_color = color.linear(vec3(1.0, 0.188, 0.188), 1.0);
+        let left_contrib = left_color.rgb * cos_left * intensity_left;
+        
+        // Right lamp: blue #3050ff
+        let lamp_right_pos = vec3(3.0, 2.5, 2.0);
+        let to_right = lamp_right_pos - input.position;
+        let dist_right = length(to_right);
+        let dir_right = normalize(to_right);
+        let intensity_right = 1.0 / (dist_right * dist_right);
+        let cos_right = max(0.0, dot(normal, dir_right));
+        let right_color = color.linear(vec3(0.188, 0.314, 1.0), 1.0);
+        let right_contrib = right_color.rgb * cos_right * intensity_right;
+        
+        // Ambient: #6070a0 at 10% strength
+        let ambient_color = color.linear(vec3(0.376, 0.439, 0.627), 1.0);
+        let ambient_contrib = ambient_color.rgb * 0.1;
+        
+        // Lambertian diffuse
+        let diffuse = base_color.rgb * (left_contrib + right_contrib + ambient_contrib);
+        
+        // Add specular highlights (high roughness = 0.9)
+        let roughness = 0.9;
+        let alpha = roughness * roughness;
+        let alpha_sq = alpha * alpha;
+        
+        // Specular from left lamp
+        let h_left = normalize(dir_left + view_dir);
+        let cos_h_left = max(0.0, dot(normal, h_left));
+        let denom = cos_h_left * cos_h_left * (alpha_sq - 1.0) + 1.0;
+        let d_left = alpha_sq / (denom * denom);
+        let f0 = vec3(0.04, 0.04, 0.04);
+        let f_left = f0 + (vec3(1.0, 1.0, 1.0) - f0) * pow(1.0 - cos_h_left, 5.0);
+        let spec_left = d_left * f_left * left_contrib * 0.25;
+        
+        // Specular from right lamp
+        let h_right = normalize(dir_right + view_dir);
+        let cos_h_right = max(0.0, dot(normal, h_right));
+        let denom_r = cos_h_right * cos_h_right * (alpha_sq - 1.0) + 1.0;
+        let d_right = alpha_sq / (denom_r * denom_r);
+        let f_right = f0 + (vec3(1.0, 1.0, 1.0) - f0) * pow(1.0 - cos_h_right, 5.0);
+        let spec_right = d_right * f_right * right_contrib * 0.25;
+        
+        let final = vec3(
+            clamp(diffuse.x + spec_left.x + spec_right.x, 0.0, 1.0),
+            clamp(diffuse.y + spec_left.y + spec_right.y, 0.0, 1.0),
+            clamp(diffuse.z + spec_left.z + spec_right.z, 0.0, 1.0)
+        );
+        
+        return color.linear(final, 1.0);
+    }
+}

@@ -1,0 +1,54 @@
+// Demo scene: a cube and floor lit by directional and ambient lights
+
+material CubeMaterial {
+    fragment(input: SurfaceInput) -> color {
+        return lighting.pbr(input, #c8a27a, 0.0, 0.8);
+    }
+}
+
+material FloorMaterial {
+    fragment(input: SurfaceInput) -> color {
+        return lighting.pbr(input, #8a929c, 0.0, 0.9);
+    }
+}
+
+export scene Demo {
+    camera Main {
+        position: vec3(2.5, 2.5, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.9;
+            near: 0.1;
+            far: 1000.0;
+        }
+    };
+
+    clear_color: #0b0d12;
+
+    // Cube entity
+    entity Cube {
+        position: vec3(0.0, 0.0, 0.0);
+        mesh: Box {
+            size: vec3(2.0, 2.0, 2.0);
+        };
+        material: CubeMaterial;
+    };
+
+    // Floor entity
+    entity Floor {
+        position: vec3(0.0, -1.0, 0.0);
+        mesh: Plane {
+            size: vec2(10.0, 10.0);
+        };
+        material: FloorMaterial;
+    };
+
+    // Directional light
+    entity Sun {
+        rotation: quat.euler(0.6435, 0.0, 0.0);
+        light: DirectionalLight {
+            color: #ffffff;
+            intensity: 1.0;
+        }
+    };
+}

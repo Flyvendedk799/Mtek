@@ -1,0 +1,27 @@
+material Dial {
+    param level: f32 = 0.0;
+
+    fragment(surface: SurfaceInput) -> color {
+        return color.linear(vec3(level), 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+    state power: f32 = 1.5;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Lamp {
+        position: vec3(2.0, 3.0, 2.0);
+        light: PointLight { intensity: bind(power * 2.0) };
+    }
+
+    entity Indicator {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Dial { level: bind(power * 2.0 / 10.0) };
+    }
+}

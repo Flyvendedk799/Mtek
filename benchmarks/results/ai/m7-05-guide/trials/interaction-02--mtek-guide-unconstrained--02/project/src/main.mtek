@@ -1,0 +1,46 @@
+fn handle_color(x: f32) -> color {
+    if (x == -4.0) || (x == 4.0) {
+        return #ef4444;
+    }
+    return #ffd24a;
+}
+
+scene Demo {
+    state handle_x: f32 = 0.0;
+
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Track {
+        position: vec3(0.0, -1.0, 0.0);
+        mesh: Box { size: vec3(10.0, 0.2, 0.2) };
+        material: Unlit { color: #404040 };
+    }
+
+    entity Handle {
+        position: bind(vec3(handle_x, 0.0, 0.0));
+        mesh: Box { size: vec3(0.8, 0.8, 0.5) };
+        material: Unlit { color: bind(handle_color(handle_x)); };
+
+        on key_down(Key.ArrowRight) {
+            if handle_x < 4.0 {
+                handle_x = handle_x + 1.0;
+            }
+        }
+
+        on key_down(Key.ArrowLeft) {
+            if handle_x > -4.0 {
+                handle_x = handle_x - 1.0;
+            }
+        }
+
+        on key_down(Key.Enter) {
+            handle_x = 0.0;
+        }
+    }
+}

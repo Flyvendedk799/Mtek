@@ -1,0 +1,64 @@
+prefab Pip {
+    param x: f32;
+    position: vec3(x, 0.0, 0.0);
+    mesh: Box { size: vec3(0.8, 0.8, 0.5) };
+    material: Unlit { color: #38bdf8 };
+}
+
+scene Demo {
+    state pip_count: i32 = 0;
+    state pip0: entity_ref = spawn(Pip { x: 10.0; });
+    state pip1: entity_ref = spawn(Pip { x: 10.0; });
+    state pip2: entity_ref = spawn(Pip { x: 10.0; });
+    state pip3: entity_ref = spawn(Pip { x: 10.0; });
+    state pip4: entity_ref = spawn(Pip { x: 10.0; });
+
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Rail {
+        position: vec3(0.0, -1.5, 0.0);
+        mesh: Box { size: vec3(12.0, 0.2, 0.2) };
+        material: Unlit { color: #404040 };
+    }
+
+    on key_down(Key.Space) {
+        if (pip_count < 5) {
+            let idx: i32 = pip_count;
+            let count_f: f32 = 0.0 + idx;
+            let x: f32 = -6.0 + 2.0 * count_f;
+            let new_pip: entity_ref = spawn(Pip { x: x; });
+            if (idx == 0) { pip0 = new_pip; }
+            if (idx == 1) { pip1 = new_pip; }
+            if (idx == 2) { pip2 = new_pip; }
+            if (idx == 3) { pip3 = new_pip; }
+            if (idx == 4) { pip4 = new_pip; }
+            pip_count = pip_count + 1;
+        }
+    }
+
+    on key_down(Key.Backspace) {
+        if (pip_count > 0) {
+            pip_count = pip_count - 1;
+            if (pip_count == 0) { destroy(pip0); }
+            if (pip_count == 1) { destroy(pip1); }
+            if (pip_count == 2) { destroy(pip2); }
+            if (pip_count == 3) { destroy(pip3); }
+            if (pip_count == 4) { destroy(pip4); }
+        }
+    }
+
+    on key_down(Key.Enter) {
+        if (pip_count > 0) { destroy(pip0); }
+        if (pip_count > 1) { destroy(pip1); }
+        if (pip_count > 2) { destroy(pip2); }
+        if (pip_count > 3) { destroy(pip3); }
+        if (pip_count > 4) { destroy(pip4); }
+        pip_count = 0;
+    }
+}

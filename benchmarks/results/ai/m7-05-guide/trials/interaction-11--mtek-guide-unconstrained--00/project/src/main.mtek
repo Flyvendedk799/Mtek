@@ -1,0 +1,62 @@
+scene Demo {
+    clear_color: #202020;
+
+    state fixed_step_accumulator: f32 = 0.0;
+    state ticks_this_frame: i32 = 0;
+    state last_frame_index: u32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Ticker {
+        position: vec3(-5.5, 3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #ef4444 };
+
+        update(dt: f32) {
+            if frame.index != last_frame_index {
+                last_frame_index = frame.index;
+                let clamped_dt = min(dt, 0.1);
+                fixed_step_accumulator = fixed_step_accumulator + clamped_dt;
+                
+                let step_duration = 1.0 / 60.0;
+                ticks_this_frame = 0;
+                
+                if fixed_step_accumulator >= step_duration && ticks_this_frame < 4 {
+                    fixed_step_accumulator = fixed_step_accumulator - step_duration;
+                    ticks_this_frame = ticks_this_frame + 1;
+                }
+                if fixed_step_accumulator >= step_duration && ticks_this_frame < 4 {
+                    fixed_step_accumulator = fixed_step_accumulator - step_duration;
+                    ticks_this_frame = ticks_this_frame + 1;
+                }
+                if fixed_step_accumulator >= step_duration && ticks_this_frame < 4 {
+                    fixed_step_accumulator = fixed_step_accumulator - step_duration;
+                    ticks_this_frame = ticks_this_frame + 1;
+                }
+                if fixed_step_accumulator >= step_duration && ticks_this_frame < 4 {
+                    fixed_step_accumulator = fixed_step_accumulator - step_duration;
+                    ticks_this_frame = ticks_this_frame + 1;
+                }
+            }
+            
+            let move_distance = f32(ticks_this_frame) * 0.1;
+            self.position = vec3(self.position.x + move_distance, self.position.y, self.position.z);
+        }
+    }
+
+    entity Glider {
+        position: vec3(-5.5, -3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            let clamped_dt = min(dt, 0.1);
+            let move_distance = 6.0 * clamped_dt;
+            self.position = vec3(self.position.x + move_distance, self.position.y, self.position.z);
+        }
+    }
+}

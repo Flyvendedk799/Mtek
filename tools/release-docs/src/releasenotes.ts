@@ -14,7 +14,7 @@ import { mismatch, type Mismatch } from "./model.ts";
 export const RELEASE_NOTES = "docs/release-notes-v0.1.md";
 export const PENDING_MARK = "**Pending: not yet measured.**";
 /** The work items whose results do not exist yet; a placeholder must name each. */
-export const REQUIRED_PENDING = ["M7-05"] as const;
+export const REQUIRED_PENDING: readonly string[] = [];
 
 export interface NotesIo {
   exists: (path: string) => boolean;

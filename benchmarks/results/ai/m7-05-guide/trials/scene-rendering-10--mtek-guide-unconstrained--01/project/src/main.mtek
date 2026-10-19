@@ -1,0 +1,95 @@
+// Scene with a white ball and floor lit by red and blue point lights and tinted ambient light
+scene Demo {
+    clear_color: #0a0a0f;
+
+    // Camera at (0, 3, 9) looking at (0, 0.5, 0)
+    camera Main {
+        position: vec3(0.0, 3.0, 9.0);
+        target: vec3(0.0, 0.5, 0.0);
+        projection: Perspective {
+            fov_y: 0.8;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    // Point light on the left: red, at (-3, 2.5, 2)
+    // Calibrated so at distance 3 with normal pointing at it, white surface renders white
+    // For inverse-square falloff: intensity * 1/distance^2, at distance 3: intensity / 9 = 1.0, so intensity = 9.0
+    entity LampLeft {
+        position: vec3(-3.0, 2.5, 2.0);
+        light: PointLight {
+            color: #ff3030;
+            intensity: 9.0;
+        };
+    }
+
+    // Point light on the right: blue, at (3, 2.5, 2)
+    entity LampRight {
+        position: vec3(3.0, 2.5, 2.0);
+        light: PointLight {
+            color: #3050ff;
+            intensity: 9.0;
+        };
+    }
+
+    // White sphere (Ball) at (0, 1, 0) with radius 1.0
+    entity Ball {
+        position: vec3(0.0, 1.0, 0.0);
+        mesh: Sphere { radius: 1.0 };
+        material: BallMaterial {};
+    }
+
+    // Square floor, 12x12 units, at y=0, centered at origin, facing up
+    entity Floor {
+        position: vec3(0.0, 0.0, 0.0);
+        mesh: Plane { size: vec2(12.0, 12.0) };
+        material: FloorMaterial {};
+    }
+}
+
+// Material for the ball: non-metallic PBR
+// Base color: #f3f4f6 (white-ish)
+// Roughness: 0.7
+// Metalness: 0.0
+material BallMaterial {
+    param base_color: color = #f3f4f6;
+    param metallic: f32 = 0.0;
+    param roughness: f32 = 0.7;
+    param ambient_color: color = #6070a0;
+
+    fragment(input: SurfaceInput) -> color {
+        let linear_base = color.linear(base_color.rgb, base_color.a);
+        let pbr = lighting.pbr(input, linear_base, metallic, roughness);
+        
+        // Add ambient: 10% of ambient color multiplied by surface's diffuse color
+        let ambient_linear = color.linear(ambient_color.rgb, ambient_color.a);
+        let ambient_rgb = linear_base.rgb * ambient_linear.rgb * 0.1;
+        let ambient = color.linear(ambient_rgb, 1.0);
+        
+        return color.linear(pbr.rgb + ambient.rgb, 1.0);
+    }
+}
+
+// Material for the floor: non-metallic PBR
+// Base color: #e5e7eb (light gray)
+// Roughness: 0.9
+// Metalness: 0.0
+material FloorMaterial {
+    param base_color: color = #e5e7eb;
+    param metallic: f32 = 0.0;
+    param roughness: f32 = 0.9;
+    param ambient_color: color = #6070a0;
+
+    fragment(input: SurfaceInput) -> color {
+        let linear_base = color.linear(base_color.rgb, base_color.a);
+        let pbr = lighting.pbr(input, linear_base, metallic, roughness);
+        
+        // Add ambient: 10% of ambient color multiplied by surface's diffuse color
+        let ambient_linear = color.linear(ambient_color.rgb, ambient_color.a);
+        let ambient_rgb = linear_base.rgb * ambient_linear.rgb * 0.1;
+        let ambient = color.linear(ambient_rgb, 1.0);
+        
+        return color.linear(pbr.rgb + ambient.rgb, 1.0);
+    }
+}

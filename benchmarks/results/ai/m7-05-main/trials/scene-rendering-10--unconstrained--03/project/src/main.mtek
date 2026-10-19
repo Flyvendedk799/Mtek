@@ -1,0 +1,103 @@
+// Entry module: declare the scene Demo here.
+
+material BallMaterial {
+  param base_color: color;
+  param metalness: f32;
+  param roughness: f32;
+
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(
+      input,
+      base_color,
+      metalness,
+      roughness
+    );
+  }
+}
+
+material FloorMaterial {
+  param base_color: color;
+  param metalness: f32;
+  param roughness: f32;
+
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(
+      input,
+      base_color,
+      metalness,
+      roughness
+    );
+  }
+}
+
+prefab Sphere {
+  entity {
+    mesh: asset.glb("./sphere.glb").mesh("Sphere");
+    material: BallMaterial(
+      color.srgb(vec3(0.95, 0.96, 0.97), 1.0),
+      0.0,
+      0.7
+    );
+  }
+}
+
+prefab Plane {
+  entity {
+    mesh: asset.glb("./plane.glb").mesh("Plane");
+    material: FloorMaterial(
+      color.srgb(vec3(0.90, 0.91, 0.92), 1.0),
+      0.0,
+      0.9
+    );
+  }
+}
+
+export scene Demo {
+  clear_color: color.srgb(vec3(0.04, 0.04, 0.06), 1.0);
+
+  camera Main {
+    position: vec3(0.0, 3.0, 9.0);
+    target: vec3(0.0, 0.5, 0.0);
+    projection: Perspective {
+      fov_y: 0.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  entity Ball {
+    position: vec3(0.0, 1.0, 0.0);
+    mesh: asset.glb("./sphere.glb").mesh("Sphere");
+    material: BallMaterial(
+      color.srgb(vec3(0.95, 0.96, 0.97), 1.0),
+      0.0,
+      0.7
+    );
+  }
+
+  entity Floor {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: asset.glb("./plane.glb").mesh("Plane");
+    material: FloorMaterial(
+      color.srgb(vec3(0.90, 0.91, 0.92), 1.0),
+      0.0,
+      0.9
+    );
+  }
+
+  entity LampLeft {
+    position: vec3(-3.0, 2.5, 2.0);
+    light: PointLight {
+      color: color.srgb(vec3(1.0, 0.19, 0.19), 1.0);
+      intensity: 0.00884;
+    };
+  }
+
+  entity LampRight {
+    position: vec3(3.0, 2.5, 2.0);
+    light: PointLight {
+      color: color.srgb(vec3(0.19, 0.31, 1.0), 1.0);
+      intensity: 0.00884;
+    };
+  }
+}

@@ -1,0 +1,71 @@
+// Demo scene: three floor squares showing a 4x4 picture with different filtering modes.
+
+const BG_COLOR: color = #1b2430;
+const SWATCH = asset.texture("../assets/swatch.png");
+const SWATCH_LINEAR = asset.linear_texture("../assets/swatch.png");
+
+// Material for hard-edged texture (nearest sampling)
+material HardEdged {
+    param tex: texture = SWATCH;
+    param sampler_obj: sampler = sampler.nearest_clamp();
+
+    fragment(input: SurfaceInput) -> color {
+        let sampled = sample(tex, sampler_obj, input.uv);
+        return color.linear(sampled.xyz, sampled.w);
+    }
+}
+
+// Material for tiled texture (hard edges, repeated)
+material TiledMat {
+    param tex: texture = SWATCH;
+    param sampler_obj: sampler = sampler.nearest_repeat();
+
+    fragment(input: SurfaceInput) -> color {
+        let sampled = sample(tex, sampler_obj, input.uv);
+        return color.linear(sampled.xyz, sampled.w);
+    }
+}
+
+// Material for smooth filtering (bilinear in linear light)
+material SmoothMat {
+    param tex: texture = SWATCH_LINEAR;
+    param sampler_obj: sampler = sampler.linear_clamp();
+
+    fragment(input: SurfaceInput) -> color {
+        let sampled = sample(tex, sampler_obj, input.uv);
+        return color.linear(sampled.xyz, sampled.w);
+    }
+}
+
+export scene Demo {
+    camera Main {
+        position: vec3(0.0, 11.0, 3.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.72;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Plain {
+        position: vec3(-2.0, 0.0, -2.0);
+        scale: vec3(3.6, 1.0, 3.6);
+        mesh: Plane {};
+        material: HardEdged { tex: SWATCH; sampler_obj: sampler.nearest_clamp(); };
+    }
+
+    entity Tiled {
+        position: vec3(0.0, 0.0, 2.0);
+        scale: vec3(3.6, 1.0, 3.6);
+        mesh: Plane {};
+        material: TiledMat { tex: SWATCH; sampler_obj: sampler.nearest_repeat(); };
+    }
+
+    entity Smooth {
+        position: vec3(2.0, 0.0, -2.0);
+        scale: vec3(3.6, 1.0, 3.6);
+        mesh: Plane {};
+        material: SmoothMat { tex: SWATCH_LINEAR; sampler_obj: sampler.linear_clamp(); };
+    }
+}

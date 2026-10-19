@@ -1,0 +1,47 @@
+// Entry module: declare the scene Demo here.
+
+material Sweep {
+  param time: f32: bind(frame.time);
+  
+  fragment(input: SurfaceInput) -> color {
+    let x = input.local_position.x;
+    let t = time;
+    
+    // Compute w = 0.5 + 0.5 * sin(0.8 * x + t)
+    let w = 0.5 + 0.5 * sin(0.8 * x + t);
+    
+    // Convert sRGB colors to linear
+    let A_srgb = #1a237e;
+    let B_srgb = #ffb300;
+    let A_linear = color.linear(A_srgb.rgb, A_srgb.a);
+    let B_linear = color.linear(B_srgb.rgb, B_srgb.a);
+    
+    // Blend in linear light: (1 - w) * A + w * B
+    let blended_rgb = (1.0 - w) * A_linear.rgb + w * B_linear.rgb;
+    let blended = color.linear(blended_rgb, 1.0);
+    
+    // Return as-is (already in linear, displayed as linear)
+    return blended;
+  }
+}
+
+scene Demo {
+  camera Main {
+    position: vec3(0.0, 0.0, 6.0);
+    projection: Perspective {
+      fov_y: 0.9;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+  
+  clear_color: #202020;
+  
+  entity Panel {
+    position: vec3(0.4, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(4.0, 2.0, 0.2);
+    };
+    material: Sweep {};
+  }
+}

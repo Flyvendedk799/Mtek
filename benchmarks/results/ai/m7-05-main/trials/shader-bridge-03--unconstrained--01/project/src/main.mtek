@@ -1,0 +1,57 @@
+// Custom material for color sweeping effect
+material Sweep {
+  param time: f32;
+  
+  fragment(input: SurfaceInput) -> color {
+    // Get x coordinate in object space (runs from -2 to 2)
+    let x = input.local_position.x;
+    
+    // Compute the weight: w = 0.5 + 0.5 * sin(0.8 * x + t)
+    let w = 0.5 + 0.5 * sin(0.8 * x + time);
+    
+    // Colors in sRGB
+    let colorA = #1a237e;
+    let colorB = #ffb300;
+    
+    // Convert from sRGB to linear (extract rgb components and alpha)
+    let linearA = color.linear(colorA.rgb, colorA.a);
+    let linearB = color.linear(colorB.rgb, colorB.a);
+    
+    // Blend in linear space: (1 - w) * A + w * B
+    let blendedRgb = (1.0 - w) * linearA.rgb + w * linearB.rgb;
+    let blended = color.linear(blendedRgb, linearA.a);
+    
+    // Return as-is (already in linear, will be displayed as linear)
+    return blended;
+  }
+}
+
+// Main scene
+export scene Demo {
+  state time: f32 = 0.0;
+  
+  clear_color: #202020;
+  
+  camera Main {
+    position: vec3(0.0, 0.0, 6.0);
+    projection: Perspective {
+      fov_y: 0.9;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+  
+  entity Panel {
+    position: vec3(0.4, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(4.0, 2.0, 0.2);
+    };
+    material: Sweep {
+      time: 0.0;
+    };
+  }
+  
+  on frame.index {
+    Panel.material.time = frame.time;
+  }
+}

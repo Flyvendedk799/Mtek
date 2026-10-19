@@ -1,0 +1,67 @@
+// Entry module: declare the scene Demo here.
+
+material cube_pbr {
+    fragment(input: SurfaceInput) -> color {
+        return lighting.pbr(
+            input,
+            #c8a27a,
+            0.0,
+            0.8
+        );
+    }
+}
+
+material floor_pbr {
+    fragment(input: SurfaceInput) -> color {
+        return lighting.pbr(
+            input,
+            #8a929c,
+            0.0,
+            0.9
+        );
+    }
+}
+
+scene Demo {
+    // Camera at (2.5, 2.5, 5) looking at origin
+    camera Main {
+        position: vec3(2.5, 2.5, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.9;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    // Clear color #0b0d12
+    clear_color: #0b0d12;
+
+    // Directional light Sun
+    // Direction (0, -0.6, -0.8) - set via entity rotation
+    entity Sun {
+        rotation: quat.axis_angle(vec3(1.0, 0.0, 0.0), 0.6435) * quat.axis_angle(vec3(0.0, 0.0, 1.0), 0.9273);
+        light: DirectionalLight {
+            color: #ffffff;
+            intensity: 1.0;
+        };
+    }
+
+    // Cube entity at origin with edge length 2.0
+    entity Cube {
+        position: vec3(0.0, 0.0, 0.0);
+        mesh: Box {
+            size: vec3(2.0, 2.0, 2.0);
+        };
+        material: cube_pbr;
+    }
+
+    // Floor entity - 10x10 square at y=-1, one-sided facing up
+    entity Floor {
+        position: vec3(0.0, -1.0, 0.0);
+        mesh: Plane {
+            size: vec2(10.0, 10.0);
+        };
+        material: floor_pbr;
+    }
+}

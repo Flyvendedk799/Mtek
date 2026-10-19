@@ -1,0 +1,122 @@
+// Entry module: Scene with camera, clipping planes, and six boxes
+
+material RedMaterial {
+  param base_color: color = color.srgb(vec3(0.94, 0.26, 0.26), 1.0);
+  
+  fragment(input: SurfaceInput) -> color {
+    return base_color;
+  }
+}
+
+material GreenMaterial {
+  param base_color: color = color.srgb(vec3(0.13, 0.77, 0.36), 1.0);
+  
+  fragment(input: SurfaceInput) -> color {
+    return base_color;
+  }
+}
+
+material BlueMaterial {
+  param base_color: color = color.srgb(vec3(0.23, 0.51, 0.96), 1.0);
+  
+  fragment(input: SurfaceInput) -> color {
+    return base_color;
+  }
+}
+
+material PinkMaterial {
+  param base_color: color = color.srgb(vec3(0.92, 0.28, 0.60), 1.0);
+  
+  fragment(input: SurfaceInput) -> color {
+    return base_color;
+  }
+}
+
+material YellowMaterial {
+  param base_color: color = color.srgb(vec3(0.98, 0.80, 0.08), 1.0);
+  
+  fragment(input: SurfaceInput) -> color {
+    return base_color;
+  }
+}
+
+material PurpleMaterial {
+  param base_color: color = color.srgb(vec3(0.65, 0.33, 0.97), 1.0);
+  
+  fragment(input: SurfaceInput) -> color {
+    return base_color;
+  }
+}
+
+scene Demo {
+  // Background color: #1e293b (dark slate)
+  clear_color: #1e293b;
+
+  // Camera at (0, 0, 10) looking at origin
+  // Perspective: FOV 0.9 rad, near 4.0, far 12.0
+  camera Main {
+    position: vec3(0.0, 0.0, 10.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.9;
+      near: 4.0;
+      far: 12.0;
+    };
+  }
+
+  // Mid box at (0, 0, 0), edge length 2.0, red
+  entity Mid {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(2.0, 2.0, 2.0);
+    };
+    material: RedMaterial;
+  }
+
+  // Slab box at (-2.5, 0, 5.5), edge length 2.0, green
+  entity Slab {
+    position: vec3(-2.5, 0.0, 5.5);
+    mesh: Box {
+      size: vec3(2.0, 2.0, 2.0);
+    };
+    material: GreenMaterial;
+  }
+
+  // Far box at (3.2, 0, -4), edge length 3.0, blue
+  entity Far {
+    position: vec3(3.2, 0.0, -4.0);
+    mesh: Box {
+      size: vec3(3.0, 3.0, 3.0);
+    };
+    material: BlueMaterial;
+  }
+
+  // Behind box at (0, 0, 14), edge length 2.0, pink
+  entity Behind {
+    position: vec3(0.0, 0.0, 14.0);
+    mesh: Box {
+      size: vec3(2.0, 2.0, 2.0);
+    };
+    material: PinkMaterial;
+  }
+
+  // Ghost box at (3, 0, 2), edge length 2.0, yellow
+  // This box is declared but not rendered (hidden)
+  entity Ghost {
+    position: vec3(3.0, 0.0, 2.0);
+    mesh: Box {
+      size: vec3(2.0, 2.0, 2.0);
+    };
+    material: YellowMaterial;
+    visible: false;
+  }
+
+  // Rim box at (3.2, -2.2, 0), edge lengths 2.0 (x), 2.0 (y), 5.0 (z), purple
+  entity Rim {
+    position: vec3(3.2, -2.2, 0.0);
+    mesh: Box {
+      size: vec3(2.0, 2.0, 5.0);
+    };
+    material: PurpleMaterial;
+  }
+}

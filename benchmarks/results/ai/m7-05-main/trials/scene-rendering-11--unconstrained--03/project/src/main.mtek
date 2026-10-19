@@ -1,0 +1,82 @@
+// Load the swatch images with proper path (relative to src/main.mtek)
+const SWATCH_SRGB = asset.texture("../assets/swatch.png");
+const SWATCH_LINEAR = asset.linear_texture("../assets/swatch.png");
+
+// Material for hard-edged sampling (nearest neighbor)
+material PlainMaterial {
+  param base_texture: texture = bind(SWATCH_SRGB);
+  
+  fragment(input: SurfaceInput) -> color {
+    return color.srgb(sample(base_texture, sampler.nearest_clamp(), input.uv));
+  }
+}
+
+// Material for tiled hard-edged sampling
+material TiledMaterial {
+  param base_texture: texture = bind(SWATCH_SRGB);
+  
+  fragment(input: SurfaceInput) -> color {
+    let uv_tiled = vec2(input.uv.x * 2.0, input.uv.y * 2.0);
+    return color.srgb(sample(base_texture, sampler.nearest_repeat(), uv_tiled));
+  }
+}
+
+// Material for smooth sampling
+material SmoothMaterial {
+  param base_texture: texture = bind(SWATCH_LINEAR);
+  
+  fragment(input: SurfaceInput) -> color {
+    return color.srgb(sample(base_texture, sampler.linear_clamp(), input.uv));
+  }
+}
+
+prefab PlainSquare {
+  entity {
+    position: vec3(-2.0, 0.0, -2.0);
+    mesh: mesh.plane;
+    scale: vec3(3.6, 1.0, 3.6);
+    material: PlainMaterial {
+      unlit { };
+    };
+  };
+}
+
+prefab TiledSquare {
+  entity {
+    position: vec3(0.0, 0.0, 2.0);
+    mesh: mesh.plane;
+    scale: vec3(3.6, 1.0, 3.6);
+    material: TiledMaterial {
+      unlit { };
+    };
+  };
+}
+
+prefab SmoothSquare {
+  entity {
+    position: vec3(2.0, 0.0, -2.0);
+    mesh: mesh.plane;
+    scale: vec3(3.6, 1.0, 3.6);
+    material: SmoothMaterial {
+      unlit { };
+    };
+  };
+}
+
+export scene Demo {
+  clear_color: #1b2430;
+
+  camera Main {
+    position: vec3(0.0, 11.0, 3.0);
+    look_at: vec3(0.0, 0.0, 0.0);
+    perspective {
+      vertical_fov: 0.72;
+      near_plane: 0.1;
+      far_plane: 1000.0;
+    };
+  };
+
+  Plain: PlainSquare { };
+  Tiled: TiledSquare { };
+  Smooth: SmoothSquare { };
+}

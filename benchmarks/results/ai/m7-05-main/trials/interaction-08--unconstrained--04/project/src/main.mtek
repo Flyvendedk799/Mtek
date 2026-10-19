@@ -1,0 +1,68 @@
+// Scene: Demo
+// A runner that Space starts and stops and wraps around a track
+
+export scene Demo {
+  state isRunning: bool = false;
+  state runnerX: f32 = -5.0;
+
+  clear_color: #202020;
+
+  // Camera at (0, 0, 10) looking at origin with orthographic projection
+  // Visible height 12.8, near 0.1, far 1000
+  camera Main {
+    position: vec3(0.0, 0.0, 10.0);
+    projection: Orthographic {
+      height: 12.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  // Dark grey track: 12 wide, 0.2 high, 0.2 deep at (0, -1, 0)
+  entity Track {
+    position: vec3(0.0, -1.0, 0.0);
+    mesh: Box {
+      size: vec3(12.0, 0.2, 0.2);
+    };
+    material: Unlit {
+      color: #404040;
+    };
+  }
+
+  // Orange runner: 1 wide, 1 high, 0.5 deep, starting at (-5, 0, 0)
+  entity Runner {
+    position: vec3(-5.0, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(1.0, 1.0, 0.5);
+    };
+    material: Unlit {
+      color: #f97316;
+    };
+    body: Static {};
+    collider: BoxCollider {
+      size: vec3(1.0, 1.0, 0.5);
+    };
+
+    on key_down(key: Key) {
+      if (key == Key.Space) {
+        bind Demo {
+          isRunning: !isRunning;
+        }
+      }
+    }
+
+    on collision_enter(other) {
+      bind Demo {
+        if (isRunning) {
+          runnerX = runnerX + (4.0 * frame.delta);
+          
+          if (runnerX >= 6.0) {
+            runnerX = runnerX - 12.0;
+          }
+        }
+        
+        position: vec3(runnerX, 0.0, 0.0);
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+scene Demo {
+    clear_color: #202020;
+
+    state right_held: bool = false;
+    state left_held: bool = false;
+    state up_held: bool = false;
+    state down_held: bool = false;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Field {
+        position: vec3(0.0, 0.0, -1.0);
+        mesh: Box { size: vec3(10.0, 10.0, 0.2) };
+        material: Unlit { color: #303030 };
+    }
+
+    entity Ship {
+        position: vec3(0.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            let speed: f32 = 8.0;
+            var movement_x: f32 = 0.0;
+            var movement_y: f32 = 0.0;
+
+            if is_key_down(Key.ArrowRight) {
+                movement_x = movement_x + speed * dt;
+            }
+            if is_key_down(Key.ArrowLeft) {
+                movement_x = movement_x - speed * dt;
+            }
+            if is_key_down(Key.ArrowUp) {
+                movement_y = movement_y + speed * dt;
+            }
+            if is_key_down(Key.ArrowDown) {
+                movement_y = movement_y - speed * dt;
+            }
+
+            let new_x = self.position.x + movement_x;
+            let new_y = self.position.y + movement_y;
+
+            let clamped_x = clamp(new_x, -4.0, 4.0);
+            let clamped_y = clamp(new_y, -4.0, 4.0);
+
+            self.position = vec3(clamped_x, clamped_y, self.position.z);
+        }
+    }
+}

@@ -1,0 +1,41 @@
+// Entry module: declare the scene Demo here.
+
+scene Demo {
+  state running: bool = false;
+  state runner_x: f32 = -5.0;
+
+  camera Main {
+    position: vec3(0.0, 0.0, 10.0);
+    projection: Orthographic {
+      height: 12.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  entity Track {
+    position: vec3(0.0, -1.0, 0.0);
+    mesh: Box { size: vec3(12.0, 0.2, 0.2); };
+    material: Unlit { color: color.srgb(vec3(0.25, 0.25, 0.25), 1.0); };
+  }
+
+  entity Runner {
+    position: vec3(-5.0, 0.0, 0.0);
+    mesh: Box { size: vec3(1.0, 1.0, 0.5); };
+    material: Unlit { color: color.srgb(vec3(0.976, 0.451, 0.094), 1.0); };
+  }
+
+  on key_down(Key.Space) bind(running, runner_x) {
+    running = !running;
+  }
+
+  update(dt: f32) bind(running, runner_x) {
+    if running {
+      runner_x = runner_x + (4.0 * dt);
+      if runner_x >= 6.0 {
+        runner_x = runner_x - 12.0;
+      }
+      Runner.position = vec3(runner_x, 0.0, 0.0);
+    }
+  }
+};

@@ -1,0 +1,87 @@
+scene Demo {
+    clear_color: #202020;
+
+    state key_right_held: bool = false;
+    state key_left_held: bool = false;
+    state key_up_held: bool = false;
+    state key_down_held: bool = false;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Field {
+        position: vec3(0.0, 0.0, -1.0);
+        mesh: Box { size: vec3(10.0, 10.0, 0.2) };
+        material: Unlit { color: #303030 };
+    }
+
+    entity Ship {
+        position: vec3(0.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            var dx: f32 = 0.0;
+            var dy: f32 = 0.0;
+
+            if key_right_held {
+                dx = dx + 8.0 * dt;
+            }
+            if key_left_held {
+                dx = dx - 8.0 * dt;
+            }
+            if key_up_held {
+                dy = dy + 8.0 * dt;
+            }
+            if key_down_held {
+                dy = dy - 8.0 * dt;
+            }
+
+            self.position = self.position + vec3(dx, dy, 0.0);
+
+            if self.position.x > 4.0 {
+                self.position = vec3(4.0, self.position.y, self.position.z);
+            }
+            if self.position.x < -4.0 {
+                self.position = vec3(-4.0, self.position.y, self.position.z);
+            }
+            if self.position.y > 4.0 {
+                self.position = vec3(self.position.x, 4.0, self.position.z);
+            }
+            if self.position.y < -4.0 {
+                self.position = vec3(self.position.x, -4.0, self.position.z);
+            }
+        }
+    }
+
+    on key_down(Key.ArrowRight) {
+        key_right_held = true;
+    }
+    on key_up(Key.ArrowRight) {
+        key_right_held = false;
+    }
+
+    on key_down(Key.ArrowLeft) {
+        key_left_held = true;
+    }
+    on key_up(Key.ArrowLeft) {
+        key_left_held = false;
+    }
+
+    on key_down(Key.ArrowUp) {
+        key_up_held = true;
+    }
+    on key_up(Key.ArrowUp) {
+        key_up_held = false;
+    }
+
+    on key_down(Key.ArrowDown) {
+        key_down_held = true;
+    }
+    on key_up(Key.ArrowDown) {
+        key_down_held = false;
+    }
+}

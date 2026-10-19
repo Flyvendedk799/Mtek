@@ -1,0 +1,71 @@
+// Entry module: declare the scene Demo here.
+
+material FloorMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return #4b5563;
+  }
+}
+
+material TowerMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return #2563eb;
+  }
+}
+
+material BlockMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return #dc2626;
+  }
+}
+
+material BallMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return #eab308;
+  }
+}
+
+scene Demo {
+  clear_color: #9db4cc;
+
+  camera Main {
+    position: vec3(5.0, 4.0, 9.0);
+    target: vec3(0.0, 1.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.7;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  entity Floor {
+    mesh: Plane {
+      size: vec2(12.0, 12.0);
+    };
+    material: FloorMaterial;
+    position: vec3(0.0, 0.0, 0.0);
+  }
+
+  entity Tower {
+    mesh: Box {
+      size: vec3(1.5, 3.0, 1.5);
+    };
+    material: TowerMaterial;
+    position: vec3(0.0, 1.5, 0.0);
+  }
+
+  entity Block {
+    mesh: Box {
+      size: vec3(2.0, 1.0, 2.0);
+    };
+    material: BlockMaterial;
+    position: vec3(1.5, 0.5, 1.8);
+  }
+
+  entity Ball {
+    mesh: Sphere {
+      radius: 0.8;
+    };
+    material: BallMaterial;
+    position: vec3(-1.6, 0.8, 1.2);
+  }
+}

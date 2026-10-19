@@ -1,0 +1,57 @@
+scene Demo {
+    state accumulated_time: f32 = 0.0;
+    state ticks_this_frame: i32 = 0;
+    state last_frame_index: u32 = 0;
+
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Ticker {
+        position: vec3(-5.5, 3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #ef4444 };
+
+        update(dt: f32) {
+            if frame.index != last_frame_index {
+                last_frame_index = frame.index;
+                let capped_dt = min(dt, 0.1);
+                accumulated_time = accumulated_time + capped_dt;
+                let tick_duration = 1.0 / 60.0;
+                let ticks_available = i32(accumulated_time / tick_duration);
+                ticks_this_frame = min(ticks_available, 4);
+                accumulated_time = accumulated_time - (f32(ticks_this_frame) * tick_duration);
+            }
+            
+            let i = 0;
+            if i < ticks_this_frame {
+                self.position = self.position + vec3(0.1, 0.0, 0.0);
+            }
+            if (i + 1) < ticks_this_frame {
+                self.position = self.position + vec3(0.1, 0.0, 0.0);
+            }
+            if (i + 2) < ticks_this_frame {
+                self.position = self.position + vec3(0.1, 0.0, 0.0);
+            }
+            if (i + 3) < ticks_this_frame {
+                self.position = self.position + vec3(0.1, 0.0, 0.0);
+            }
+        }
+    }
+
+    entity Glider {
+        position: vec3(-5.5, -3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            let capped_dt = min(dt, 0.1);
+            let movement = 6.0 * capped_dt;
+            self.position = self.position + vec3(movement, 0.0, 0.0);
+        }
+    }
+}

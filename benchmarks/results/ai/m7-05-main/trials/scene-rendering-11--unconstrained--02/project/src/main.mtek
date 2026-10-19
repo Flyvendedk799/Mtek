@@ -1,0 +1,69 @@
+// Load the swatch image
+const swatch_hard = asset.texture("../assets/swatch.png");
+const swatch_linear = asset.linear_texture("../assets/swatch.png");
+
+// Materials for the three squares
+material PlainMaterial {
+  param texture_hard: texture = swatch_hard;
+  param sampler_hard: sampler = sampler.nearest_clamp();
+  
+  fragment(input: SurfaceInput) -> color {
+    return sample(texture_hard, sampler_hard, input.uv);
+  }
+}
+
+material TiledMaterial {
+  param texture_hard: texture = swatch_hard;
+  param sampler_hard: sampler = sampler.nearest_repeat();
+  
+  fragment(input: SurfaceInput) -> color {
+    return sample(texture_hard, sampler_hard, input.uv);
+  }
+}
+
+material SmoothMaterial {
+  param texture_linear: texture = swatch_linear;
+  param sampler_linear: sampler = sampler.linear_clamp();
+  
+  fragment(input: SurfaceInput) -> color {
+    return sample(texture_linear, sampler_linear, input.uv);
+  }
+}
+
+scene Demo {
+  clear_color: #1b2430;
+  
+  camera Main {
+    position: vec3(0.0, 11.0, 3.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.72;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+  
+  entity Plain {
+    position: vec3(-2.0, 0.0, -2.0);
+    mesh: Plane {
+      size: vec2(3.6, 3.6);
+    };
+    material: PlainMaterial {};
+  }
+  
+  entity Tiled {
+    position: vec3(0.0, 0.0, 2.0);
+    mesh: Plane {
+      size: vec2(3.6, 3.6);
+    };
+    material: TiledMaterial {};
+  }
+  
+  entity Smooth {
+    position: vec3(2.0, 0.0, -2.0);
+    mesh: Plane {
+      size: vec2(3.6, 3.6);
+    };
+    material: SmoothMaterial {};
+  }
+}

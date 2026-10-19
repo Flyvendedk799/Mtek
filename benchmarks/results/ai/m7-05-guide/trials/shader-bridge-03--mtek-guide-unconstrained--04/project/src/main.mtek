@@ -1,0 +1,51 @@
+// Entry module: declare the scene Demo here.
+
+material Sweep {
+    param time: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        // Get x coordinate in object space (ranges from -2 to 2 across the 4-wide panel)
+        let x = input.local_position.x;
+        
+        // Compute w = 0.5 + 0.5 * sin(0.8 * x + t)
+        let w = 0.5 + 0.5 * sin(0.8 * x + time);
+        
+        // A = #1a237e in sRGB, B = #ffb300 in sRGB
+        // Create colors from sRGB values (this interprets them as sRGB)
+        let A_color = color.srgb(vec3(26.0 / 255.0, 35.0 / 255.0, 126.0 / 255.0), 1.0);
+        let B_color = color.srgb(vec3(1.0, 179.0 / 255.0, 0.0), 1.0);
+        
+        // A_color.rgb and B_color.rgb are now in linear space
+        // Blend in linear space: (1 - w) * A + w * B
+        let blended_rgb = (1.0 - w) * A_color.rgb + w * B_color.rgb;
+        
+        // Return the blended linear values as a linear color
+        return color.linear(blended_rgb, 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+    state elapsed_time: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.9;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Panel {
+        position: vec3(0.4, 0.0, 0.0);
+        scale: vec3(4.0, 2.0, 0.2);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Sweep { time: bind(elapsed_time) };
+    }
+
+    update(dt: f32) {
+        elapsed_time += dt;
+    }
+}

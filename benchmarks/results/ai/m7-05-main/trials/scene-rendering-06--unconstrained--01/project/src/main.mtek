@@ -1,0 +1,61 @@
+// Entry module: declare the scene Demo here.
+
+export scene Demo {
+    camera Main {
+        position: vec3(2.5, 2.5, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.9;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    clear_color: #0b0d12;
+
+    // Materials
+    const cube_material = Pbr {
+        base_color: #c8a27a;
+        metallic: 0.0;
+        roughness: 0.8;
+    };
+
+    const floor_material = Pbr {
+        base_color: #8a929c;
+        metallic: 0.0;
+        roughness: 0.9;
+    };
+
+    // Entities
+    entity Cube {
+        mesh: Box {
+            size: vec3(2.0, 2.0, 2.0);
+        };
+        material: cube_material;
+        position: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Floor {
+        mesh: Plane {
+            size: vec2(10.0, 10.0);
+        };
+        material: floor_material;
+        position: vec3(0.0, -1.0, 0.0);
+    }
+
+    entity Sun {
+        light: DirectionalLight {
+            color: #ffffff;
+            intensity: 1.0;
+        };
+        rotation: quat.axis_angle(vec3(1.0, 0.0, 0.0), 0.6435011087932844) * quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.0);
+    }
+
+    entity AmbientLight {
+        light: PointLight {
+            color: #ffffff;
+            intensity: 0.1;
+        };
+        position: vec3(0.0, 0.0, 0.0);
+    }
+}

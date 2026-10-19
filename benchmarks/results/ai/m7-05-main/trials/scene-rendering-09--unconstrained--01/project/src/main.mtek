@@ -1,0 +1,112 @@
+material UnlitRed {
+  fragment(input: SurfaceInput) -> color {
+    return #ef4444;
+  }
+}
+
+material UnlitGreen {
+  fragment(input: SurfaceInput) -> color {
+    return #22c55e;
+  }
+}
+
+material UnlitBlue {
+  fragment(input: SurfaceInput) -> color {
+    return #3b82f6;
+  }
+}
+
+material UnlitPink {
+  fragment(input: SurfaceInput) -> color {
+    return #ec4899;
+  }
+}
+
+material UnlitYellow {
+  fragment(input: SurfaceInput) -> color {
+    return #facc15;
+  }
+}
+
+material UnlitPurple {
+  fragment(input: SurfaceInput) -> color {
+    return #a855f7;
+  }
+}
+
+scene Demo {
+  clear_color: #1e293b;
+
+  camera Main {
+    position: vec3(0.0, 0.0, 10.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: {
+      Perspective: {
+        vfov: 0.9;
+        near: 4.0;
+        far: 12.0;
+      };
+    };
+  }
+
+  entity Mid {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: {
+      Box: {
+        size: vec3(2.0, 2.0, 2.0);
+      };
+    };
+    material: UnlitRed;
+  }
+
+  entity Slab {
+    position: vec3(-2.5, 0.0, 5.5);
+    mesh: {
+      Box: {
+        size: vec3(2.0, 2.0, 2.0);
+      };
+    };
+    material: UnlitGreen;
+  }
+
+  entity Far {
+    position: vec3(3.2, 0.0, -4.0);
+    mesh: {
+      Box: {
+        size: vec3(3.0, 3.0, 3.0);
+      };
+    };
+    material: UnlitBlue;
+  }
+
+  entity Behind {
+    position: vec3(0.0, 0.0, 14.0);
+    mesh: {
+      Box: {
+        size: vec3(2.0, 2.0, 2.0);
+      };
+    };
+    material: UnlitPink;
+  }
+
+  entity Ghost {
+    position: vec3(3.0, 0.0, 2.0);
+    mesh: {
+      Box: {
+        size: vec3(2.0, 2.0, 2.0);
+      };
+    };
+    material: UnlitYellow;
+    visible: false;
+  }
+
+  entity Rim {
+    position: vec3(3.2, -2.2, 0.0);
+    mesh: {
+      Box: {
+        size: vec3(2.0, 2.0, 5.0);
+      };
+    };
+    material: UnlitPurple;
+  }
+}

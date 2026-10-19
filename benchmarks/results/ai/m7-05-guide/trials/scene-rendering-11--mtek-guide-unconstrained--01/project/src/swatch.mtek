@@ -1,0 +1,1 @@
+export const asset = asset.texture("assets/swatch.png");

@@ -1,0 +1,40 @@
+scene Demo {
+    state accumulator: f32 = 0.0;
+    
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Ticker {
+        position: vec3(-5.5, 3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #ef4444 };
+
+        update(dt: f32) {
+            let counted_dt = min(dt, 0.1);
+            accumulator = accumulator + counted_dt;
+            
+            let steps = accumulator * 60.0;
+            let ticks_to_run = min(i32(steps), 4);
+            let ticks_f32 = f32(ticks_to_run);
+            
+            self.position = self.position + vec3(0.1 * ticks_f32, 0.0, 0.0);
+            accumulator = fract(steps) / 60.0;
+        }
+    }
+
+    entity Glider {
+        position: vec3(-5.5, -3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            let counted_dt = min(dt, 0.1);
+            self.position = self.position + vec3(6.0 * counted_dt, 0.0, 0.0);
+        }
+    }
+}

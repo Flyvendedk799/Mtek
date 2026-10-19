@@ -1,0 +1,69 @@
+const OFF_COLOR: color = #3a3a3a;
+const ON_COLOR: color = #ffd24a;
+
+scene Demo {
+    clear_color: #202020;
+
+    state lampA_on: bool = false;
+    state lampB_on: bool = false;
+    state lampA_color: color = OFF_COLOR;
+    state lampB_color: color = OFF_COLOR;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity LampA {
+        position: vec3(-3.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: bind(lampA_color); };
+    }
+
+    entity LampB {
+        position: vec3(3.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: bind(lampB_color); };
+    }
+
+    on key_down(Key.A) {
+        lampA_on = !lampA_on;
+        if lampA_on {
+            lampA_color = ON_COLOR;
+        } else {
+            lampA_color = OFF_COLOR;
+        }
+    }
+
+    on key_down(Key.B) {
+        lampB_on = !lampB_on;
+        if lampB_on {
+            lampB_color = ON_COLOR;
+        } else {
+            lampB_color = OFF_COLOR;
+        }
+    }
+
+    on key_down(Key.Space) {
+        lampA_on = !lampA_on;
+        lampB_on = !lampB_on;
+        if lampA_on {
+            lampA_color = ON_COLOR;
+        } else {
+            lampA_color = OFF_COLOR;
+        }
+        if lampB_on {
+            lampB_color = ON_COLOR;
+        } else {
+            lampB_color = OFF_COLOR;
+        }
+    }
+
+    on key_down(Key.Enter) {
+        lampA_on = false;
+        lampB_on = false;
+        lampA_color = OFF_COLOR;
+        lampB_color = OFF_COLOR;
+    }
+}

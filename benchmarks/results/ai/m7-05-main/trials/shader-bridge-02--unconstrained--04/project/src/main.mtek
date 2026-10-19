@@ -1,0 +1,34 @@
+material Shade {
+    param grey: f32 = 0.25;
+
+    fragment(surface: SurfaceInput) -> color {
+        return color.linear(vec3(grey), 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+
+    state level: f32 = 0.25;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Left {
+        position: vec3(-1.2, 0.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Shade { grey: bind(level); };
+    }
+
+    entity Right {
+        position: vec3(1.2, 0.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Shade { grey: bind(1.0 - level); };
+    }
+
+    on level: (value: f32) {
+        level = value;
+    }
+}

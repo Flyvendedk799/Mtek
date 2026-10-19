@@ -1,0 +1,64 @@
+// Custom material for color sweep effect
+material Sweep {
+  param time: f32;
+  
+  fragment(input: SurfaceInput) -> color {
+    // Get x coordinate in object space (ranges from -2 to 2 for the 4-wide box)
+    let x = input.local_position.x;
+    
+    // Compute w = 0.5 + 0.5 * sin(0.8 * x + t)
+    let w = 0.5 + 0.5 * sin(0.8 * x + time);
+    
+    // Define colors in linear space directly
+    // #1a237e in sRGB converted to linear: vec3(0.0256, 0.0295, 0.2169)
+    // #ffb300 in sRGB converted to linear: vec3(1.0, 0.4953, 0.0)
+    let colorA_rgb_linear = vec3(0.0256, 0.0295, 0.2169);
+    let colorB_rgb_linear = vec3(1.0, 0.4953, 0.0);
+    
+    // Blend in linear space
+    let blended_rgb = (1.0 - w) * colorA_rgb_linear + w * colorB_rgb_linear;
+    
+    // Build color from linear RGB
+    let blended = color.linear(blended_rgb, 1.0);
+    
+    // Return as-is (already linear)
+    return blended;
+  }
+}
+
+// Prefab for the panel that can be updated with time
+prefab PanelPrefab {
+  param current_time: f32 = 0.0;
+  
+  entity {
+    position: vec3(0.4, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(4.0, 2.0, 0.2);
+    };
+    material: Sweep {
+      time: current_time;
+    };
+  }
+}
+
+// Scene definition
+scene Demo {
+  // Clear color: #202020
+  clear_color: #202020;
+  
+  // Camera at (0, 0, 6) looking at origin
+  // Perspective: vFOV 0.9 rad, near 0.1, far 1000
+  camera Main {
+    position: vec3(0.0, 0.0, 6.0);
+    projection: Perspective {
+      fov_y: 0.9;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+  
+  // Instantiate the panel prefab
+  prefab Panel: PanelPrefab {
+    current_time: frame.time;
+  }
+}

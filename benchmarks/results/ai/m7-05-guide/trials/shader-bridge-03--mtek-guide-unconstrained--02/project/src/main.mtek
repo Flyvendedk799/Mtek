@@ -1,0 +1,48 @@
+// Custom material that computes a color sweep based on object-space X coordinate and time
+material Sweep {
+    param time: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        // Get the x coordinate in object space (ranges from -2 to 2 for a 4-wide box)
+        let x = input.local_position.x;
+        
+        // Compute the blend weight: w = 0.5 + 0.5 * sin(0.8 * x + t)
+        let w = 0.5 + 0.5 * sin(0.8 * x + time);
+        
+        // Color A: #1a237e in sRGB, convert to linear
+        let colorA_linear = color.linear(vec3(26.0 / 255.0, 35.0 / 255.0, 126.0 / 255.0), 1.0);
+        
+        // Color B: #ffb300 in sRGB, convert to linear
+        let colorB_linear = color.linear(vec3(1.0, 179.0 / 255.0, 0.0), 1.0);
+        
+        // Blend in linear light: (1 - w) * A + w * B
+        let blended_rgb = (1.0 - w) * colorA_linear.rgb + w * colorB_linear.rgb;
+        
+        // Return the blended linear color directly (already in linear space)
+        return color.linear(blended_rgb, 1.0);
+    }
+}
+
+scene Demo {
+    state elapsed_time: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.9;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Panel {
+        position: vec3(0.4, 0.0, 0.0);
+        mesh: Box { size: vec3(4.0, 2.0, 0.2) };
+        material: Sweep { time: bind(elapsed_time) };
+    }
+
+    update(dt: f32) {
+        elapsed_time += dt;
+    }
+}

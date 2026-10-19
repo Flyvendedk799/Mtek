@@ -1,0 +1,75 @@
+// Entry module: declare the scene Demo here.
+
+// Material for the ball: red, non-metallic, roughness 0.7
+material BallMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(
+      input,
+      color.srgb(vec3(0.8823, 0.1137, 0.2824), 1.0),
+      0.0,
+      0.7
+    );
+  }
+}
+
+// Material for the floor: gray, non-metallic, roughness 0.9
+material FloorMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(
+      input,
+      color.srgb(vec3(0.6039, 0.6471, 0.6941), 1.0),
+      0.0,
+      0.9
+    );
+  }
+}
+
+scene Demo {
+  // Camera at (0, 3, 8) looking at (0, 0.5, 0)
+  // Vertical FOV 0.8 radians, near 0.1, far 1000
+  camera Main {
+    position: vec3(0.0, 3.0, 8.0);
+    rotation: quat.euler(-0.297617, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  clear_color: color.srgb(vec3(0.0627, 0.0745, 0.1020), 1.0);
+
+  // Red ball at (0, 1, 0) with radius 1.0
+  entity Ball {
+    position: vec3(0.0, 1.0, 0.0);
+    mesh: Sphere {
+      radius: 1.0;
+    };
+    material: BallMaterial;
+  }
+
+  // Floor: 14x14 square at y=0, one-sided facing up
+  entity Floor {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: Plane {
+      size: vec2(14.0, 14.0);
+      one_sided: true;
+    };
+    material: FloorMaterial;
+  }
+
+  // White point light at (1.5, 3, 2.5)
+  // Calibrated so white surface 3 units away renders as white
+  // For inverse square falloff: intensity = 9.0 makes a white matte surface at 3 units render as white
+  entity Lamp {
+    position: vec3(1.5, 3.0, 2.5);
+    light: PointLight {
+      color: color.linear(vec3(1.0, 1.0, 1.0), 1.0);
+      intensity: 9.0;
+    };
+  }
+
+  // Ambient light: 5% of point light contribution
+  ambient_color: color.linear(vec3(1.0, 1.0, 1.0), 1.0);
+  ambient_intensity: 0.05;
+}

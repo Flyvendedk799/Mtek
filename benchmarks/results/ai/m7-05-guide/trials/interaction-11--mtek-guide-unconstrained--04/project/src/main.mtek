@@ -1,0 +1,36 @@
+scene Demo {
+    state accumulated_time: f32 = 0.0;
+    state ticker_x: f32 = -5.5;
+    state glider_x: f32 = -5.5;
+
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Ticker {
+        position: bind(vec3(ticker_x, 3.0, 0.0));
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #ef4444 };
+
+        update(dt: f32) {
+            let clamped_duration = min(dt, 0.1);
+            accumulated_time += clamped_duration;
+            glider_x += 6.0 * clamped_duration;
+            let total_steps = accumulated_time * 60.0;
+            let ticks = min(i32(total_steps), 4);
+            ticker_x += 0.1 * f32(ticks);
+            let step_duration = f32(ticks) / 60.0;
+            accumulated_time = accumulated_time - step_duration;
+        }
+    }
+
+    entity Glider {
+        position: bind(vec3(glider_x, -3.0, 0.0));
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+    }
+}

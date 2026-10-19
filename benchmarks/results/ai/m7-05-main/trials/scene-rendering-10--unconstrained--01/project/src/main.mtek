@@ -1,0 +1,75 @@
+// Entry module: declare the scene Demo here.
+
+// Material for the ball: white, non-metallic, roughness 0.7
+material BallMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(
+      input,
+      color.srgb(vec3(0.953, 0.957, 0.965), 1.0),
+      0.0,
+      0.7
+    );
+  }
+}
+
+// Material for the floor: light gray, non-metallic, roughness 0.9
+material FloorMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(
+      input,
+      color.srgb(vec3(0.898, 0.906, 0.922), 1.0),
+      0.0,
+      0.9
+    );
+  }
+}
+
+scene Demo {
+  // Clear color (background)
+  clear_color: color.srgb(vec3(0.039, 0.039, 0.059), 1.0);
+
+  // Camera
+  camera Main {
+    position: vec3(0.0, 3.0, 9.0);
+    target: vec3(0.0, 0.5, 0.0);
+    projection: Perspective {
+      fov_y: 0.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  // Ball (sphere)
+  entity Ball {
+    position: vec3(0.0, 1.0, 0.0);
+    mesh: Sphere {
+      radius: 1.0;
+    } BallMaterial;
+  }
+
+  // Floor (flat square plane)
+  entity Floor {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: Plane {
+      size: vec2(12.0, 12.0);
+    } FloorMaterial;
+  }
+
+  // Left point light (red)
+  entity LampLeft {
+    position: vec3(-3.0, 2.5, 2.0);
+    light: PointLight {
+      color: color.srgb(vec3(1.0, 0.188, 0.188), 1.0);
+      intensity: 1.0;
+    };
+  }
+
+  // Right point light (blue)
+  entity LampRight {
+    position: vec3(3.0, 2.5, 2.0);
+    light: PointLight {
+      color: color.srgb(vec3(0.188, 0.314, 1.0), 1.0);
+      intensity: 1.0;
+    };
+  }
+}

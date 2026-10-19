@@ -1,0 +1,8 @@
+[project]
+name = "interaction-05"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Demo"
+
+[host.inputs]
+cursor = "Demo.cursor_pos"

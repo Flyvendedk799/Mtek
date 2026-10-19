@@ -1,0 +1,70 @@
+material PlainMaterial {
+  param texture: texture = asset.texture("assets/swatch.png");
+  param sampler: sampler = sampler.nearest_clamp();
+  
+  fragment(input: SurfaceInput) -> color {
+    let uv = input.uv * 1.0;
+    let sampled = sample(texture, sampler, uv);
+    return color.srgb(sampled.x, sampled.y, sampled.z, sampled.w);
+  }
+}
+
+material TiledMaterial {
+  param texture: texture = asset.texture("assets/swatch.png");
+  param sampler: sampler = sampler.nearest_clamp();
+  
+  fragment(input: SurfaceInput) -> color {
+    let uv = input.uv * 2.0;
+    let sampled = sample(texture, sampler, uv);
+    return color.srgb(sampled.x, sampled.y, sampled.z, sampled.w);
+  }
+}
+
+material SmoothMaterial {
+  param texture: texture = asset.linear_texture("assets/swatch.png");
+  param sampler: sampler = sampler.linear_clamp();
+  
+  fragment(input: SurfaceInput) -> color {
+    let uv = input.uv * 1.0;
+    let sampled = sample(texture, sampler, uv);
+    return color.srgb(sampled.x, sampled.y, sampled.z, sampled.w);
+  }
+}
+
+export scene Demo {
+  clear_color: #1b2430;
+  
+  camera Main {
+    position: vec3(0.0, 11.0, 3.0);
+    look_at: vec3(0.0, 0.0, 0.0);
+    Perspective {
+      vertical_fov: 0.72;
+      near: 0.1;
+      far: 1000.0;
+    };
+  };
+  
+  Plain: {
+    Plane {
+      size: 3.6;
+      material: PlainMaterial;
+    };
+    position: vec3(-2.0, 0.0, -2.0);
+  };
+  
+  Tiled: {
+    Plane {
+      size: 3.6;
+      material: TiledMaterial;
+    };
+    position: vec3(0.0, 0.0, 2.0);
+  };
+  
+  Smooth: {
+    Plane {
+      size: 3.6;
+      material: SmoothMaterial;
+    };
+    position: vec3(2.0, 0.0, -2.0);
+  };
+}

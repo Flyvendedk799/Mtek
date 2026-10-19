@@ -1,0 +1,64 @@
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 3.0, 9.0);
+        target: vec3(0.0, 0.5, 0.0);
+        projection: Perspective {
+            fov_y: 0.8;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity LampLeft {
+        position: vec3(-3.0, 2.5, 2.0);
+        light: PointLight {
+            color: color.linear(vec3(1.0, 0.188, 0.188), 1.0);
+            intensity: 28.27433388;
+        };
+    }
+
+    entity LampRight {
+        position: vec3(3.0, 2.5, 2.0);
+        light: PointLight {
+            color: color.linear(vec3(0.188, 0.314, 1.0), 1.0);
+            intensity: 28.27433388;
+        };
+    }
+
+    entity Ball {
+        position: vec3(0.0, 1.0, 0.0);
+        mesh: Sphere { radius: 1.0; };
+        material: BallMat {};
+    }
+
+    entity Floor {
+        position: vec3(0.0, 0.0, 0.0);
+        scale: vec3(6.0, 1.0, 6.0);
+        mesh: Box { size: vec3(1.0, 0.001, 1.0); };
+        material: FloorMat {};
+    }
+}
+
+material BallMat {
+    fragment(input: SurfaceInput) -> color {
+        let base_color = color.linear(vec3(0.953125, 0.9609375, 0.9648438), 1.0);
+        let roughness = 0.7;
+        let metallic = 0.0;
+        let ambient_color = color.linear(vec3(0.376, 0.439, 0.627), 1.0);
+        let ambient = ambient_color.rgb * 0.1 * base_color.rgb;
+        let lit = lighting.pbr(input, base_color, metallic, roughness);
+        return color.srgb(lit.rgb + ambient, lit.a);
+    }
+}
+
+material FloorMat {
+    fragment(input: SurfaceInput) -> color {
+        let base_color = color.linear(vec3(0.898, 0.906, 0.922), 1.0);
+        let roughness = 0.9;
+        let metallic = 0.0;
+        let ambient_color = color.linear(vec3(0.376, 0.439, 0.627), 1.0);
+        let ambient = ambient_color.rgb * 0.1 * base_color.rgb;
+        let lit = lighting.pbr(input, base_color, metallic, roughness);
+        return color.srgb(lit.rgb + ambient, lit.a);
+    }
+}

@@ -1,0 +1,16 @@
+fn swatch() -> texture {
+    // Create a 4x4 pixel texture with 16 different colors
+    // Rows from top to bottom (z direction from small to large)
+    // Columns from left to right (x direction from small to large)
+    let pixels = [
+        // Row 0 (top, small z)
+        #FF0000, #00FF00, #0000FF, #FFFF00,
+        // Row 1
+        #FF00FF, #00FFFF, #FFFFFF, #000000,
+        // Row 2
+        #800000, #008000, #000080, #808000,
+        // Row 3 (bottom, large z)
+        #FF8000, #8000FF, #00FF80, #FFC0CB,
+    ];
+    return texture.from_pixels(4, 4, pixels);
+}

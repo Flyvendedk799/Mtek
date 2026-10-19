@@ -1,0 +1,73 @@
+// Entry module: declare the scene Demo here.
+
+export scene Demo {
+    camera Main {
+        position: vec3(0.0, 11.0, 3.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.72;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Plain {
+        position: vec3(-2.0, 0.0, -2.0);
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: PlainMaterial {};
+    }
+
+    entity Tiled {
+        position: vec3(0.0, 0.0, 2.0);
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: TiledMaterial {};
+    }
+
+    entity Smooth {
+        position: vec3(2.0, 0.0, -2.0);
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: SmoothMaterial {};
+    }
+}
+
+const SWATCH_TEX = asset.texture("../assets/swatch.png");
+const SWATCH_LINEAR_TEX = asset.linear_texture("../assets/swatch.png");
+
+cpu fn make_nearest_repeat() -> sampler {
+    return sampler.nearest_repeat();
+}
+
+cpu fn make_linear_clamp() -> sampler {
+    return sampler.linear_clamp();
+}
+
+material PlainMaterial {
+    param tex: texture = SWATCH_TEX;
+    param samp: sampler = make_nearest_repeat();
+
+    fragment(input: SurfaceInput) -> color {
+        let sampled = sample(tex, samp, input.uv);
+        return color.linear(sampled.xyz, sampled.w);
+    }
+}
+
+material TiledMaterial {
+    param tex: texture = SWATCH_TEX;
+    param samp: sampler = make_nearest_repeat();
+
+    fragment(input: SurfaceInput) -> color {
+        let uv = input.uv * 2.0;
+        let sampled = sample(tex, samp, uv);
+        return color.linear(sampled.xyz, sampled.w);
+    }
+}
+
+material SmoothMaterial {
+    param tex: texture = SWATCH_LINEAR_TEX;
+    param samp: sampler = make_linear_clamp();
+
+    fragment(input: SurfaceInput) -> color {
+        let sampled = sample(tex, samp, input.uv);
+        return color.linear(sampled.xyz, sampled.w);
+    }
+}

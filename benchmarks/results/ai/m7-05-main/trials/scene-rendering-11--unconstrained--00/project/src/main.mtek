@@ -1,0 +1,63 @@
+material mat_plain {
+    param texture_swatch: texture = asset.texture("assets/swatch.png");
+    param smp: sampler = sampler.nearest_clamp();
+    
+    fragment(input: SurfaceInput) -> color {
+        let sampled = sample(texture_swatch, smp, input.uv);
+        return color.srgb(sampled.x, sampled.y, sampled.z, sampled.w);
+    }
+}
+
+material mat_tiled {
+    param texture_swatch: texture = asset.texture("assets/swatch.png");
+    param smp: sampler = sampler.nearest_repeat();
+    
+    fragment(input: SurfaceInput) -> color {
+        let sampled = sample(texture_swatch, smp, input.uv);
+        return color.srgb(sampled.x, sampled.y, sampled.z, sampled.w);
+    }
+}
+
+material mat_smooth {
+    param texture_swatch: texture = asset.linear_texture("assets/swatch.png");
+    param smp: sampler = sampler.linear_clamp();
+    
+    fragment(input: SurfaceInput) -> color {
+        let sampled = sample(texture_swatch, smp, input.uv);
+        return color.srgb(sampled.x, sampled.y, sampled.z, sampled.w);
+    }
+}
+
+const PLANE_MESH = asset.glb("assets/plane.glb").mesh("Plane");
+
+scene Demo {
+    clear_color: #1b2430;
+    
+    camera Main {
+        position: vec3(0.0, 11.0, 3.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.72;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+    
+    entity Plain {
+        position: vec3(-2.0, 0.0, -2.0);
+        mesh: PLANE_MESH;
+        material: mat_plain;
+    }
+    
+    entity Tiled {
+        position: vec3(0.0, 0.0, 2.0);
+        mesh: PLANE_MESH;
+        material: mat_tiled;
+    }
+    
+    entity Smooth {
+        position: vec3(2.0, 0.0, -2.0);
+        mesh: PLANE_MESH;
+        material: mat_smooth;
+    }
+}

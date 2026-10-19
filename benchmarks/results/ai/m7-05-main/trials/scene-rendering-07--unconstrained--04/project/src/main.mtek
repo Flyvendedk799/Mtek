@@ -1,0 +1,52 @@
+// Entry module: declare the scene Demo here.
+
+// Define the materials using pbr lighting
+material BallMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(input, #e11d48, 0.0, 0.7);
+  }
+}
+
+material FloorMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(input, #9aa5b1, 0.0, 0.9);
+  }
+}
+
+// Define the scene
+export scene Demo {
+  // Camera positioned at (0, 3, 8) looking at (0, 0.5, 0)
+  camera Main {
+    position: vec3(0.0, 3.0, 8.0);
+    target: vec3(0.0, 0.5, 0.0);
+    projection: Perspective {
+      vertical_fov: 0.8;
+      near_plane: 0.1;
+      far_plane: 1000.0;
+    };
+  }
+
+  // Set background color to #10131a
+  clear_color: #10131a;
+
+  // Red Ball - sphere at (0, 1, 0) with radius 1.0
+  entity Ball {
+    position: vec3(0.0, 1.0, 0.0);
+    mesh: asset.glb("sphere.glb").primitive("Sphere", 0);
+  }
+
+  // Floor - flat square 14x14 units, facing up, at y=0, centered at origin
+  entity Floor {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: asset.glb("plane.glb").primitive("Plane", 0);
+  }
+
+  // Point light - white light at (1.5, 3, 2.5)
+  entity Lamp {
+    position: vec3(1.5, 3.0, 2.5);
+    light: PointLight {
+      color: #ffffff;
+      intensity: 28.648;
+    };
+  }
+}

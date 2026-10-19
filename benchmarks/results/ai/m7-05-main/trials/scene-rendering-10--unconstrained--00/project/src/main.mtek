@@ -1,0 +1,73 @@
+const WHITE = #f3f4f6;
+const LIGHT_GRAY = #e5e7eb;
+const RED_LIGHT = #ff3030;
+const BLUE_LIGHT = #3050ff;
+const AMBIENT_COLOR = #6070a0;
+
+material BallMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(input, color.linear(vec3(0.953, 0.961, 0.965), 1.0), 0.0, 0.7);
+  }
+}
+
+material FloorMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return lighting.pbr(input, color.linear(vec3(0.898, 0.910, 0.922), 1.0), 0.0, 0.9);
+  }
+}
+
+material RedLightMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return color.linear(vec3(1.0, 0.188, 0.188), 1.0);
+  }
+}
+
+material BlueLightMaterial {
+  fragment(input: SurfaceInput) -> color {
+    return color.linear(vec3(0.188, 0.314, 1.0), 1.0);
+  }
+}
+
+scene Demo {
+  clear_color: #0a0a0f;
+
+  camera Main {
+    position: vec3(0.0, 3.0, 9.0);
+    target: vec3(0.0, 0.5, 0.0);
+    projection: Perspective {
+      fov_y: 0.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  entity Ball {
+    position: vec3(0.0, 1.0, 0.0);
+    mesh: Sphere {
+      radius: 1.0;
+    };
+  }
+
+  entity Floor {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: Plane {
+      size: vec2(12.0, 12.0);
+    };
+  }
+
+  light LampLeft {
+    position: vec3(-3.0, 2.5, 2.0);
+    light: PointLight {
+      color: color.linear(vec3(1.0, 0.188, 0.188), 1.0);
+      intensity: 9.0;
+    };
+  }
+
+  light LampRight {
+    position: vec3(3.0, 2.5, 2.0);
+    light: PointLight {
+      color: color.linear(vec3(0.188, 0.314, 1.0), 1.0);
+      intensity: 9.0;
+    };
+  }
+}

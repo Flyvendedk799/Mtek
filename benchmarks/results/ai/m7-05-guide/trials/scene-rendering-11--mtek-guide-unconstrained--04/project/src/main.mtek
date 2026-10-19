@@ -1,0 +1,61 @@
+const SWATCH = asset.texture("assets/swatch.png");
+
+material PlainMaterial {
+    param tex: texture;
+    
+    fragment(input: SurfaceInput) -> color {
+        let sampler_obj = sampler.nearest_clamp();
+        return sample(tex, sampler_obj, input.uv);
+    }
+}
+
+material TiledMaterial {
+    param tex: texture;
+    
+    fragment(input: SurfaceInput) -> color {
+        let sampler_obj = sampler.nearest_repeat();
+        return sample(tex, sampler_obj, input.uv * 2.0);
+    }
+}
+
+material SmoothMaterial {
+    param tex: texture;
+    
+    fragment(input: SurfaceInput) -> color {
+        let sampler_obj = sampler.linear_clamp();
+        return sample(tex, sampler_obj, input.uv);
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 11.0, 3.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov: 0.72;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Plain {
+        position: vec3(-2.0, 0.0, -2.0);
+        scale: vec3(3.6, 1.0, 3.6);
+        mesh: Plane {};
+        material: PlainMaterial { tex: bind(SWATCH) };
+    }
+
+    entity Tiled {
+        position: vec3(0.0, 0.0, 2.0);
+        scale: vec3(3.6, 1.0, 3.6);
+        mesh: Plane {};
+        material: TiledMaterial { tex: bind(SWATCH) };
+    }
+
+    entity Smooth {
+        position: vec3(2.0, 0.0, -2.0);
+        scale: vec3(3.6, 1.0, 3.6);
+        mesh: Plane {};
+        material: SmoothMaterial { tex: bind(SWATCH) };
+    }
+}
