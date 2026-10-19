@@ -1,0 +1,25 @@
+npm run test:unit, clean clone, summary lines only
+ RUN <repo>/packages/runtime-web
+ Test Files  64 passed (64)
+      Tests  1245 passed (1245)
+ RUN <repo>/packages/physics-rapier
+ Test Files  3 passed (3)
+      Tests  78 passed (78)
+ RUN <repo>/packages/editor-vscode
+ Test Files  6 passed (6)
+      Tests  78 passed (78)
+ RUN <repo>/tests/browser
+ Test Files  24 passed (24)
+      Tests  285 passed (285)
+ RUN <repo>/tests/codegen
+ Test Files  10 passed (10)
+      Tests  1932 passed (1932)
+ RUN  v5.0.3 <repo>/benchmarks
+ Test Files  10 passed (10)
+      Tests  169 passed | 1 skipped (170)
+ RUN <repo>/benchmarks/baselines/m0-bridge
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+ RUN <repo>/tools/ai-eval
+ Test Files  9 passed (9)
+      Tests  207 passed (207)

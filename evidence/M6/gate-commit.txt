@@ -1,0 +1,1 @@
+e5da5dd ai-eval: the constrained cli test names no adapter, so it does not run the real check when the pinned backend is installed

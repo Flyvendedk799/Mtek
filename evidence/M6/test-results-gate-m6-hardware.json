@@ -1,0 +1,797 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=hardware",
+      "specs/m6/"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "m6\\builtin-params.spec.ts",
+      "file": "m6/builtin-params.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "the params of the built-in materials, assigned by name (decision 0087)",
+          "file": "m6/builtin-params.spec.ts",
+          "line": 128,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the badge is where the geometry says and the sphere pixels see the sphere",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 26,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:25:41.835Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed58975052d60a4af1e7-1836927aabe54936a0a2",
+              "file": "m6/builtin-params.spec.ts",
+              "line": 129,
+              "column": 3
+            },
+            {
+              "title": "an Unlit colour and the Pbr params written by key handlers change the pixels as the literals and the oracle say",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "builtin-params",
+                      "description": "frame 0 initial (#ffffff, metallic 0, roughness 0.5): max error 1 / 255 over 16 pixels; frame 1 initial (#ffffff, metallic 0, roughness 0.5): max error 1 / 255 over 16 pixels; frame 2 after M (base (0.9, 0.55, 0.25), metallic 0.5, roughness 0.3): max error 1 / 255 over 16 pixels; frame 3 after U (roughness += 0.4): max error 1 / 255 over 16 pixels"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 374,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:25:41.883Z",
+                      "annotations": [
+                        {
+                          "type": "builtin-params",
+                          "description": "frame 0 initial (#ffffff, metallic 0, roughness 0.5): max error 1 / 255 over 16 pixels; frame 1 initial (#ffffff, metallic 0, roughness 0.5): max error 1 / 255 over 16 pixels; frame 2 after M (base (0.9, 0.55, 0.25), metallic 0.5, roughness 0.3): max error 1 / 255 over 16 pixels; frame 3 after U (roughness += 0.4): max error 1 / 255 over 16 pixels"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ed58975052d60a4af1e7-b42a66fe59734a0cedf6",
+              "file": "m6/builtin-params.spec.ts",
+              "line": 147,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m6\\getting-started.spec.ts",
+      "file": "m6/getting-started.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "getting started (docs/getting-started.md), in a browser",
+          "file": "m6/getting-started.spec.ts",
+          "line": 127,
+          "column": 6,
+          "specs": [
+            {
+              "title": "edit, break and fix of the document on a real page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 16503,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:25:42.898Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "de0730bedabf0f3662bc-98a493fe84ad337c3f7b",
+              "file": "m6/getting-started.spec.ts",
+              "line": 128,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m6\\mtek-test.spec.ts",
+      "file": "m6/mtek-test.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "mtek test on the examples (hardware)",
+          "file": "m6/mtek-test.spec.ts",
+          "line": 93,
+          "column": 6,
+          "specs": [
+            {
+              "title": "every fixture of pulse-cube passes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1781,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:25:59.427Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-043adfbb0b97ffb5707f",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 101,
+              "column": 5
+            },
+            {
+              "title": "every fixture of physics-playground passes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1905,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:01.216Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-2a657b3188ade2912ac0",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 101,
+              "column": 5
+            },
+            {
+              "title": "every fixture of material-configurator passes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1635,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:03.134Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-2db95efd962aaf6bb22b",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 101,
+              "column": 5
+            },
+            {
+              "title": "a fixture of pulse-cube fails on a pixel of the wrong colour, at that step",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1854,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:04.776Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-de2bdf77ff3ec328b1f3",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 207,
+              "column": 5
+            },
+            {
+              "title": "a fixture of pulse-cube fails on the wrong direction after Space, at that step",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1739,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:06.638Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-579bd796335aa80be6f9",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 207,
+              "column": 5
+            },
+            {
+              "title": "a fixture of pulse-cube fails on a rotation that is not the derived one, at that step",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1755,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:08.383Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-645ffbd833df27589120",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 207,
+              "column": 5
+            },
+            {
+              "title": "a fixture of pulse-cube fails on a host input that does not exist, at that step",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1749,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:10.145Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-3fea654ce37e9afdd86f",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 207,
+              "column": 5
+            },
+            {
+              "title": "a fixture of physics-playground fails on a sensor that is expected to fire too early, at that step",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1737,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:11.903Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-b1959b28e0ff0e221196",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 207,
+              "column": 5
+            },
+            {
+              "title": "a fixture of physics-playground fails on a lift that is too high, at that step",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1864,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:13.646Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-76c83510a2908c53a535",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 207,
+              "column": 5
+            },
+            {
+              "title": "a fixture of material-configurator fails on a wrong draw call count, at that step",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1614,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:15.516Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-47846523313e145c42b5",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 207,
+              "column": 5
+            },
+            {
+              "title": "a fixture of material-configurator fails on a seat that should not have changed colour, at that step",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1567,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:17.139Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-b1d96701fb7073c5ddda",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 207,
+              "column": 5
+            },
+            {
+              "title": "a fixture file with problems fails as invalid without a browser run, naming each line",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1778,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:18.713Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-73424bbb1617d99f46d3",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 231,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "mtek test reports NOT-RUN, never a pass, when it cannot run",
+          "file": "m6/mtek-test.spec.ts",
+          "line": 252,
+          "column": 6,
+          "specs": [
+            {
+              "title": "without a WebGPU adapter (Chromium with --disable-gpu)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1689,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:20.502Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-5b987a138568bbe49b09",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 271,
+              "column": 3
+            },
+            {
+              "title": "without Playwright (the runner copied where no node_modules is above it)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 580,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:22.199Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-f652a6598057b50f27ac",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 296,
+              "column": 3
+            },
+            {
+              "title": "without Node.js",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 240000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 140,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-19T01:26:22.785Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9d33d521e6695de15e15-1dedb61ab458b108dc59",
+              "file": "m6/mtek-test.spec.ts",
+              "line": 317,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-19T01:25:32.439Z",
+    "duration": 50608.771,
+    "expected": 18,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

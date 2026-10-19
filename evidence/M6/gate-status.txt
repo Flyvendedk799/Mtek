@@ -1,0 +1,12 @@
+npm ci: 0
+build: 0
+check: 0
+fetch backend: 0
+grammar capability: 0
+cargo test (backend required): 0
+unit: 0
+browser (full): 0
+browser m6 hardware: 0
+benchmarks baselines: 0
+vscode integration: 0
+DONE

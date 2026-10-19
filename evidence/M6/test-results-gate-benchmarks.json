@@ -1,0 +1,3987 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=benchmarks"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "..\\..\\..\\benchmarks\\holdout\\holdout-01\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/holdout/holdout-01/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "holdout-01 (reference baseline): three boxes in a row with a cap on the middle one",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 484,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:34.447Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "553de9560206ac14caee-9ebd81762c2ea3f49593",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\holdout\\holdout-02\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/holdout/holdout-02/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "holdout-02 (reference baseline): a scaled and rotated arm with a hand and a spark",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 510,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:35.732Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "be4b6690eed0bb75e4b7-0504add0febd9530ae5f",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\holdout\\holdout-03\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/holdout/holdout-03/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "holdout-03 (reference baseline): a floor with four boxes and a sphere, one box hidden, drawn by depth",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 508,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:36.362Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7469fc2a854b8bcb5366-455393ac198dcc72cd0f",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\holdout\\holdout-04\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/holdout/holdout-04/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "holdout-04 (reference baseline): a key that is held down moves the cursor once",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 513,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:36.982Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7597fb459036c626f14f-1b5ddd4e39d16756a023",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-04 (reference baseline): the cursor starts over the first slot and stays there",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 381,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:37.592Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7597fb459036c626f14f-68868a8444e0a24529e8",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-04 (reference baseline): ArrowLeft moves one slot to the left and wraps from the first slot to the last",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1025,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:37.980Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7597fb459036c626f14f-448ea768df054517ce58",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-04 (reference baseline): left and right undo each other, also across the wrap",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1346,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:39.013Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7597fb459036c626f14f-5b44360b410d71e9f051",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-04 (reference baseline): ArrowRight moves one slot to the right and wraps from the last slot to the first",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1010,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:40.365Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7597fb459036c626f14f-94da00c74a9a6dfafc20",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\holdout\\holdout-05\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/holdout/holdout-05/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "holdout-05 (reference baseline): Space is ignored while the box is moving, and the next Space sends it back",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1479,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:41.403Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f970062dc8422c10dc2a-b6a86d9d6f8af14da212",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-05 (reference baseline): the box stops exactly at the end even when a frame would carry it past",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 697,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:42.981Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f970062dc8422c10dc2a-d8420d2e343c3bbea139",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-05 (reference baseline): without a key the slider stays at the left end",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 383,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:43.684Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f970062dc8422c10dc2a-d5bc3c193220fc354f7e",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-05 (reference baseline): Space slides the box to the right end at 2.5 units per second and stops there",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1169,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:44.073Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f970062dc8422c10dc2a-7638315e4f7d44d83f38",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\holdout\\holdout-06\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/holdout/holdout-06/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "holdout-06 (reference baseline): the host input accent colours the part beyond the edge and leaves the rose part alone",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1039,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:45.273Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1dcaf2c7fdfb40347f32-c6593f9c76f3cb3342e4",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-06 (reference baseline): without a host input the cube is rose left of x = 0 and blue right of it",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 395,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:46.413Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1dcaf2c7fdfb40347f32-7f47643e1acb2f695caa",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-06 (reference baseline): the host input edge moves the boundary between the two colours",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 710,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:46.814Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1dcaf2c7fdfb40347f32-47e11f86a388e57aab1e",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\holdout\\holdout-07\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/holdout/holdout-07/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "holdout-07 (reference baseline): the same positions are reached at the same time with frames of 1/30 s",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 818,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:47.553Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9db88041d5e5049d8407-64d449c8452ea5325a09",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-07 (reference baseline): Planet and Moon orbit counter-clockwise at 0.8 and 2.5 rad/s (frames of 1/60 s)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 739,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:48.469Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9db88041d5e5049d8407-126fe25b0ce9fef66883",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\holdout\\holdout-08\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/holdout/holdout-08/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "holdout-08 (reference baseline): ArrowDown lowers the level by 0.25 down to the limit of 0",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1126,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:49.226Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c687ceca1ac5d0071be7-76bc7f60eb770ce4402d",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-08 (reference baseline): the gauge starts at level 0.5",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 378,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:50.448Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c687ceca1ac5d0071be7-a1615db7116df56ad51f",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-08 (reference baseline): raising and lowering add up, and the limits are not remembered",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1989,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:50.832Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c687ceca1ac5d0071be7-33bddb1aea7f541ba9d1",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "holdout-08 (reference baseline): ArrowUp raises the level by 0.25 up to the limit of 1",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1019,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:52.827Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c687ceca1ac5d0071be7-e228e0bd81dc9478f147",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-01\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-01/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-01 (reference baseline): without a key press the cube keeps turning at 0.7 rad/s",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 507,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:53.865Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "422373272156b42baa39-900c93868edbac9574a4",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-01 (reference baseline): Space reverses the rotation direction each time it is pressed",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 861,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:54.470Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "422373272156b42baa39-bc717e5ec9969154ebdb",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-02\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-02/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-02 (reference baseline): each press of an arrow key moves the handle one unit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1152,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:55.365Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8bd31139767b20e9ae6-0dafc6ed2d2a319a0b99",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-02 (reference baseline): Enter puts the handle back at the centre, yellow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1195,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:56.617Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8bd31139767b20e9ae6-35a1dfb0e32e43253476",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-02 (reference baseline): without a key press the handle stays in the centre, yellow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 386,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:57.821Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8bd31139767b20e9ae6-f07f6b33c493932843ee",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-02 (reference baseline): the handle stops at -4 and +4 and is red there",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1522,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:58.213Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8bd31139767b20e9ae6-d1df8545a2c9a0bf7e43",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-03\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-03/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-03 (reference baseline): A and B each toggle their own lamp",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1297,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:26:59.753Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fd9701db9cd0235fd759-0bc8da7a72e7c8febae8",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-03 (reference baseline): both lamps are off and stay off without a key press",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 381,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:01.149Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fd9701db9cd0235fd759-8cfacdddde3253cec4df",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-03 (reference baseline): key presses of one frame all count, in the order they were made",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1200,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:01.536Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fd9701db9cd0235fd759-00246369668da36a3786",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-03 (reference baseline): Space flips every lamp from its own state; Enter switches both off",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1651,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:02.743Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fd9701db9cd0235fd759-ba055d0bb4a5cea77f73",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-04\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-04/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-04 (reference baseline): Space when done returns to idle; the next run counts the full 1.5 s",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1456,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:04.411Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0a6f2e09a2b596157624-e6cc5a0e590971acd181",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-04 (reference baseline): the beacon stays idle without a key press",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 545,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:05.965Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0a6f2e09a2b596157624-9d757d48926323f3303d",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-04 (reference baseline): Space starts a run that turns the beacon done after 1.5 s",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1178,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:06.516Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0a6f2e09a2b596157624-15028d6ad0a687b00e4f",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-04 (reference baseline): Space while running does nothing and does not restart the run",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 855,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:07.701Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0a6f2e09a2b596157624-d9a00cc7727b8c5c7ba5",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-05\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-05/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-05 (reference baseline): the host input cursor places the marker",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1126,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:08.575Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5fc32dc9ab87f9aef731-b2655d2cd453991a4ca9",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-05 (reference baseline): coordinates beyond 4.5 are limited one by one",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1339,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:09.798Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5fc32dc9ab87f9aef731-07982cf0369663793dd9",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-05 (reference baseline): the marker stays at the centre until the host sets cursor",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 393,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:11.144Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5fc32dc9ab87f9aef731-f1b408e768a594f7addf",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-05 (reference baseline): Space puts the marker back at the centre and the next value moves it again",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1523,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:11.543Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5fc32dc9ab87f9aef731-7ba0e2c7c5ce890e0212",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-06\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-06/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-06 (reference baseline): the bar is one unit long and stays so without a key press",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 510,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:13.085Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "698406bd9535482af5ac-3471c074c1912a13a8d4",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-06 (reference baseline): D doubles, P adds three, R resets, and the value never exceeds 8",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2103,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:13.695Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "698406bd9535482af5ac-d0d4b87cc8aa1979e0fc",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-06 (reference baseline): presses of one frame apply in the order they were made",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2451,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:15.804Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "698406bd9535482af5ac-c9230074cd56381b15f0",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-07\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-07/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-07 (reference baseline): Backspace removes the newest Pip, Enter removes all of them",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3005,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:18.303Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8928e77fb4b159a34b44-994427cd3347a46dc090",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-07 (reference baseline): there is no Pip before the first Space",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 394,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:21.406Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8928e77fb4b159a34b44-307dd3f00797d1f03240",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-07 (reference baseline): presses of one frame apply in the order they were made",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2300,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:21.806Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8928e77fb4b159a34b44-6a6db49f8c76302ed40d",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-07 (reference baseline): Space adds a Pip at the next free slot, up to five",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1490,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:24.112Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8928e77fb4b159a34b44-93eebd66dac12e70a25e",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-08\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-08/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-08 (reference baseline): the runner stays at x = -5 until Space is pressed",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 674,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:25.621Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d83937fc941071665b52-64791c8c5f565f2ff7d8",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-08 (reference baseline): Space starts the runner, the next Space stops it, the next continues",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 879,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:26.391Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d83937fc941071665b52-569c278e90862bc2c0af",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-08 (reference baseline): the runner re-enters at the left after reaching x = 6",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 876,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:27.277Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d83937fc941071665b52-bdad97ca72b766431edb",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-09\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-09/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-09 (reference baseline): key events within one frame are handled in the order they happened",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1464,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:28.174Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07815eedd26c5bdf5920-89852c275fced5342fb4",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-09 (reference baseline): Up counts only while Space is held, up to 5, and a launch stops at x = 5",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1369,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:29.742Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07815eedd26c5bdf5920-0c610806b6adf08e9831",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-09 (reference baseline): the Stone is launched by the release of Space, not by its press",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1712,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:31.117Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07815eedd26c5bdf5920-8d49f584b67f53c96efd",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-09 (reference baseline): nothing happens without a key event",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 547,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:32.836Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07815eedd26c5bdf5920-c4c8061301038a9c41ed",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-10\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-10/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-10 (reference baseline): keys held at the same time all act, opposite keys cancel out",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1271,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:33.402Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8d28674211b2f790c8ef-33265c3a9be09cf2cd17",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-10 (reference baseline): the distance in a frame is 8 times that frame's duration",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1025,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:34.772Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8d28674211b2f790c8ef-d704df801964c9f65bf9",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-10 (reference baseline): a held key moves the Ship in every frame until it is released",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1650,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:35.804Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8d28674211b2f790c8ef-16d733c3052ee3dca14d",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-10 (reference baseline): the centre of the Ship is limited to -4 .. 4 on each axis",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1496,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:37.461Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8d28674211b2f790c8ef-9eb5868f527ae262ee3b",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-10 (reference baseline): the Ship stays at the centre without a held key",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 555,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:38.963Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8d28674211b2f790c8ef-505b94182ac9c3a1bb5e",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\interaction-11\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/interaction-11/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "interaction-11 (reference baseline): a frame longer than 0.1 s counts as 0.1 s",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 667,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:39.537Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ae690e183b6972df8792-a7c18b5c51dc033be3ca",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-11 (reference baseline): at most 4 ticks run in a frame and whole steps beyond them are dropped, not kept",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1014,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:40.303Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ae690e183b6972df8792-dae1a3b968b298239b31",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-11 (reference baseline): the blocks stay where they are while less than a step has passed",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 422,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:41.323Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ae690e183b6972df8792-dcf43bc3b7eb5f70d7e4",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-11 (reference baseline): a frame of 1/60 s runs one tick, a frame of 1/30 s runs two",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 707,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:41.752Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ae690e183b6972df8792-667c2f80d513ebaa3770",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "interaction-11 (reference baseline): what is less than a step is kept for the next frame",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1013,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:42.465Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ae690e183b6972df8792-3e511b2d5e1708c85d29",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-01\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-01/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-01 (reference baseline): two cubes: orange on the left, teal on the right",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 496,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:43.496Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8c4ee4278177bce50424-c0d403af86244875f62e",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-02\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-02/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-02 (reference baseline): before any key press only the rail is drawn",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 499,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:44.131Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c78692ee7bc317e3c5ee-4bad114582b6a072c88f",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-02 (reference baseline): one press of Space places a row of five markers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 387,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:44.729Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c78692ee7bc317e3c5ee-14083456c445e7b794c2",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-02 (reference baseline): a second press places a second row below the first",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 385,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:45.123Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c78692ee7bc317e3c5ee-30a907895e431a907e97",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-03\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-03/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-03 (reference baseline): Bob swings sideways with x = 2 sin(t)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 990,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:45.534Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "af51fedec9ee281568a2-075c2014fe5007fa4bd3",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-03 (reference baseline): every press of Space raises Bob by half a unit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 552,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:46.623Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "af51fedec9ee281568a2-e755c15853d94072d16d",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-04\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-04/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-04 (reference baseline): before any key press the barrel points at the camera",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 505,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:47.211Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5d1ca8e49f066ea564c4-ece433c59c4c65d74fe1",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-04 (reference baseline): one press of Space turns the turret 30 degrees to the right",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 377,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:47.815Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5d1ca8e49f066ea564c4-3a284927bb2ad7e1c1a9",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-04 (reference baseline): three presses point the barrel to the right, more presses turn it further round",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 705,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:48.201Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5d1ca8e49f066ea564c4-d8ccb5561b42b219ceb4",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-05\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-05/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-05 (reference baseline): the lamp starts at brightness 0.5",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 511,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:48.927Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6c2a9b6c9c1e82f4816-6ffed5841f9a6270af9a",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-05 (reference baseline): Space sets full brightness and D the smallest",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 544,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:49.536Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6c2a9b6c9c1e82f4816-6a02e90d73d4cf5cc5b2",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-05 (reference baseline): the host input brightness sets the lamp",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1017,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:50.088Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d6c2a9b6c9c1e82f4816-0e5f67ee586f6c574dd0",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\maintenance-06\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/maintenance-06/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance-06 (reference baseline): before any key press nothing is lit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 488,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:51.138Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ecc339f30be3456e740c-7aa8ea3eff20d0f5b2d2",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-06 (reference baseline): each press of Space lights one more pip",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 707,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:51.722Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ecc339f30be3456e740c-02b778d2fc6981190a27",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-06 (reference baseline): five presses light every pip and the alarm, more presses change nothing",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 707,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:52.436Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ecc339f30be3456e740c-77fcb746e9ca5c713923",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "maintenance-06 (reference baseline): R switches everything off and counting starts again",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 855,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:53.150Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ecc339f30be3456e740c-0659510c51836b790a47",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-01\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-01/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-01 (reference baseline): green box at the origin, blue sphere to its right, dark grey background",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 516,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:54.025Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "365c327eda75a8d3ee63-d36011ab19d5db502779",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-02\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-02/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-02 (reference baseline): a bar tilted by 0.9272952 rad about Z with a red ball at its end, on a dark blue-grey background",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 501,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:54.669Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "908b01451f81761a1745-ce38e982f6f30c098dc2",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-03\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-03/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-03 (reference baseline): a two-segment arm: children follow the rotation and scale of their parents",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 523,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:55.293Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fa425c84340b92b0f8e1-e38c70a54b3e01dc7fec",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-04\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-04/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-04 (reference baseline): three solids on a floor seen from an off-axis camera; nearer solids hide farther ones",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 514,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:55.934Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "cd41abaf6396d8b71384-89072a911dab2f0f15ca",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-05\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-05/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-05 (reference baseline): orthographic camera at (0, 6, 6): floor, moved crate and a dome half sunk into the floor",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 514,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:56.566Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2c3e5e77ceb761945c1e-ef6bcec6e30134e9d746",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-06\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-06/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-06 (reference baseline): a cube and a floor lit by a directional light and ambient light",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 556,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:57.197Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ceb116b4756791c71fef-a3248c1405deb594105d",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-07\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-07/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-07 (reference baseline): a red ball on a floor lit by one point light and ambient light",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 537,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:57.862Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1ac426a8c269abc7fe0c-a955073c0bbff33b5466",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-08\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-08/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-08 (reference baseline): five columns of different heights and colours standing on y = 0",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 517,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:58.506Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d43f8a34df8df9a8ac08-20f66a026dbf746c92e4",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-09\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-09/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-09 (reference baseline): near and far planes cut boxes, a box behind the camera and a hidden box are not drawn",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 515,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:59.140Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9ac9f236a1d2c80c7006-71e16ddeb4b2a98370b5",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-10\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-10/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-10 (reference baseline): a white ball and floor lit by a red and a blue point light and a tinted ambient light",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 554,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:27:59.767Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "916bb607a6ad44cce338-aee8b47ede66de0dbd4e",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\scene-rendering-11\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/scene-rendering-11/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene-rendering-11 (reference baseline): a textured floor: a picture shown exactly, tiled, and smoothed",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 615,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:00.433Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5c36e3d523e7469fd12c-fa584685a8c5554b630d",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\shader-bridge-01\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/shader-bridge-01/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "shader-bridge-01 (reference baseline): without a host input the cube stays #808080",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 514,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:01.180Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8df0e3355683504a6cbf-5af85533cc4898801133",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "shader-bridge-01 (reference baseline): the host input tint sets the cube colour",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 901,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:01.797Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8df0e3355683504a6cbf-c866c4a95dda80789301",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\shader-bridge-02\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/shader-bridge-02/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "shader-bridge-02 (reference baseline): until the host sets level, Left stays #898989 and the background stays #202020",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 534,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:02.732Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8c9f2b55895770e2a0ad-4fdaa80c70ec876a08f5",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "shader-bridge-02 (reference baseline): the host input level sets Left to level and Right to 1 - level",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1020,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:03.365Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8c9f2b55895770e2a0ad-7d875c4a92700c2ba986",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\shader-bridge-03\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/shader-bridge-03/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "shader-bridge-03 (reference baseline): the colour is the same along y, and the panel ends where the box ends",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 520,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:04.419Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f4fb57574de6b54c7789-132d532a82fef1b57058",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "shader-bridge-03 (reference baseline): the panel colour is the sweep of the object-space x and the elapsed time",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 704,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:05.045Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f4fb57574de6b54c7789-afbfe71b9036ef6f3e7f",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\shader-bridge-04\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/shader-bridge-04/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "shader-bridge-04 (reference baseline): Space raises the charge to at most 4, Backspace lowers it to at least 0",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2130,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:05.783Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8b88501d99d05762a6fe-0add2b72a43896369c00",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "shader-bridge-04 (reference baseline): a held key is one press",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 716,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:08.011Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8b88501d99d05762a6fe-15f998efd9cf2c2dd538",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "shader-bridge-04 (reference baseline): before any key the cube is black on #202020",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 388,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:08.735Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8b88501d99d05762a6fe-9a6a83cbb1413a7e61e0",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\shader-bridge-05\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/shader-bridge-05/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "shader-bridge-05 (reference baseline): the dial follows the lamp's intensity when the host changes power",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1312,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:09.151Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "44ba94a960c560b7465f-635605ba4a305a35dd8b",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "shader-bridge-05 (reference baseline): before any input the indicator shows the intensity 3 as the grey #959595",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 565,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:10.562Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "44ba94a960c560b7465f-62583492a59bab0aa9c0",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "shader-bridge-05 (reference baseline): the lamp draws nothing: the surroundings of the cube stay #202020",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 394,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:11.133Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "44ba94a960c560b7465f-4a5e7e328798490105cc",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "..\\..\\..\\benchmarks\\tasks\\shader-bridge-06\\baseline-tests\\fixtures.spec.ts",
+      "file": "../../../benchmarks/tasks/shader-bridge-06/baseline-tests/fixtures.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "shader-bridge-06 (reference baseline): the cube follows lift and its colour follows its height in the same frame",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1309,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:11.556Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7b5fbcd26839fc9c3890-92d110a5dcea663829c5",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        },
+        {
+          "title": "shader-bridge-06 (reference baseline): before any input the cube sits at the origin in COOL #1e3a8a",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "benchmarks",
+              "projectName": "benchmarks",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 393,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-19T01:28:12.964Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7b5fbcd26839fc9c3890-b24ff7c519a356f136fd",
+          "file": "../../../benchmarks/baselines/support/test/suite.ts",
+          "line": 148,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-19T01:26:24.683Z",
+    "duration": 108837.07,
+    "expected": 104,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
