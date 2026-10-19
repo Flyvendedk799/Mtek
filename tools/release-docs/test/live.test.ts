@@ -13,7 +13,9 @@ import { loadCtx, type Ctx } from "../src/ctx.ts";
 import { generateDocs, staleDocs } from "../src/docs.ts";
 import { validateLimitationsData } from "../src/limitations.ts";
 import type { Mismatch } from "../src/model.ts";
-import { buildInputs, checkInputs, loadRuntime, type Inputs } from "../src/run.ts";
+import { checkDocCode } from "../src/doccode.ts";
+import { GUIDE_MAX_BYTES } from "../src/docpages.ts";
+import { buildInputs, checkInputs, codePages, loadRuntime, runDocCode, type Inputs } from "../src/run.ts";
 import type { RuntimeFacts } from "../src/runtimefacts.ts";
 
 const root = repoRoot();
@@ -72,6 +74,47 @@ live("the repository is consistent", () => {
     expect(ctx.compiler.versionAbi).toBe("1");
     expect(runtime.implementedCodecs.length).toBe(10);
     expect(runtime.keyCodes).toContain("Space");
+  });
+});
+
+live("the documentation (decisions 0116 to 0118)", () => {
+  it("writes the index, the tutorial, the concept pages and a guide of at most 16 384 bytes", () => {
+    const docs = generateDocs(ctx);
+    const paths = [...docs.keys()];
+    expect(paths).toContain("docs/README.md");
+    expect(paths).toContain("docs/tutorial.md");
+    expect(paths.filter((p) => p.startsWith("docs/concepts/")).length).toBeGreaterThanOrEqual(11);
+    expect(Buffer.byteLength(docs.get("docs/language-guide.md") ?? "", "utf8")).toBeLessThanOrEqual(GUIDE_MAX_BYTES);
+  });
+
+  it("compiles every code block of every page with the built compiler", async () => {
+    const found = await runDocCode(ctx);
+    expect(found.map((m) => m.message)).toEqual([]);
+    const blocks = codePages(ctx).flatMap((p) => p.text.split("\n").filter((l) => /^```mtek/.test(l)));
+    expect(blocks.length).toBeGreaterThan(100);
+    expect(blocks.filter((l) => l.includes("wrong=")).length).toBeGreaterThan(40);
+  }, 600_000);
+
+  it("fails a page whose wrong block raises another code than it says, naming both", async () => {
+    const page = codePages(ctx).find((p) => p.path === "docs/concepts/state-and-bindings.md");
+    expect(page).toBeDefined();
+    const text = (page?.text ?? "").replace("```mtek wrong=MTEK-E5070", "```mtek wrong=MTEK-E5075");
+    const found = await checkDocCode({ root, mtek: mtek ?? "", language: ctx.compiler.contextLanguage }, [{ path: "docs/concepts/state-and-bindings.md", text }]);
+    expectNamesBoth(found, "docs/code", "errors exactly MTEK-E5075", "MTEK-E5070");
+  }, 120_000);
+
+  it("fails a program that stopped compiling", async () => {
+    const text = "```mtek\nscene A {\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n    }\n    entity E {\n        mesh: Box {};\n        position: 1.0;\n    }\n}\n```\n";
+    const found = await checkDocCode({ root, mtek: mtek ?? "", language: ctx.compiler.contextLanguage }, [{ path: "docs/p.md", text }]);
+    expectNamesBoth(found, "docs/code", "a program that compiles", "MTEK-");
+  }, 120_000);
+
+  it("fails a link to a page that does not exist, an anchor that no heading has, and a page left out of the index", () => {
+    const pages = base.docPages.pages.map((p) => (p.path === "docs/concepts/physics.md" ? { ...p, text: `${p.text}\n[x](#no-such-heading)\n` } : p));
+    const index = pages.map((p) => (p.path === "docs/README.md" ? { ...p, text: p.text.replace("concepts/physics.md", "concepts/physics-gone.md") } : p));
+    const found = checkInputs({ ...base, docPages: { ...base.docPages, pages: index } });
+    expectNamesBoth(found, "docs/anchors", "docs/concepts/physics.md line", "#no-such-heading");
+    expectNamesBoth(found, "docs/index", "docs/README.md", "docs/concepts/physics.md");
   });
 });
 
@@ -167,7 +210,7 @@ live("the generated documents against the compiler (docs/*, limitations/*)", () 
     // A copy of the repository's docs directory with one word changed, judged against the generator.
     const stale = new Map(docs);
     const guide = stale.get("docs/language-guide.md") ?? "";
-    stale.set("docs/language-guide.md", guide.replace("A project", "A projekt"));
+    stale.set("docs/language-guide.md", guide.replace("Mtek language guide", "Mtek language gide"));
     const found = staleDocs(root, stale);
     expectNamesBoth(found, "docs/stale", "tools/release-docs (the generator)", "docs/language-guide.md");
   });
