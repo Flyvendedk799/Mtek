@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
 import { FakeBindGroup, FakeBuffer, FakeDevice, asGpu } from "../test-support/fake-gpu.js";
 import { ResourceRegistry, type RegistryDevice } from "./registry.js";
-import { COALESCE_GAP_BYTES, UniformArena, roundUp, type BufferReplacedEvent } from "./uniform-arena.js";
+import { COALESCE_MIN_GAP_BYTES, UniformArena, roundUp, type BufferReplacedEvent } from "./uniform-arena.js";
 
 const USAGE_UNIFORM = 0x40;
 const USAGE_COPY_DST = 0x08;
@@ -228,35 +228,56 @@ describe("flush", () => {
     expect(h.registry.snapshot().uploads).toBe(after.uploads);
   });
 
-  it("coalesces nearby dirty slots into one upload that leaves the GPU copy byte-identical to per-slot uploads", () => {
+  it("uploads neighbouring dirty slots as one range and slots far apart as separate ranges", () => {
     const h = harness();
-    const arena = h.makeArena(64, { initialCapacity: 16 });
+    const arena = h.makeArena(128, { initialCapacity: 16 });
     for (let i = 0; i < 10; i++) arena.allocate();
     arena.flush(h.queue);
     h.fake.queue.writes.length = 0;
-    // Slots 2, 3, 4 and 6 are dirty (5 is not): one upload from slot 2 to the end of slot 6, covering slot 5's bytes too.
+    // Slots 2, 3 and 4 touch (the 128 bytes of padding between them are within the bound): one upload from slot 2 to
+    // the end of slot 4. Slot 6 is 384 bytes further on: its own upload.
     for (const slot of [6, 3, 2, 4]) poke(arena, slot, 0, 0x100 + slot);
     expect(arena.flush(h.queue)).toBe(4);
-    expect(h.fake.queue.writes.map((w) => [w.bufferOffset, w.size])).toEqual([[2 * 256, 4 * 256 + 64]]);
+    expect(h.fake.queue.writes.map((w) => [w.bufferOffset, w.size])).toEqual([
+      [2 * 256, 2 * 256 + 128],
+      [6 * 256, 128],
+    ]);
     const gpu = bufferOf(arena.buffer).contents;
     const view = new DataView(gpu.buffer, gpu.byteOffset, gpu.byteLength);
     for (const slot of [2, 3, 4, 6]) expect(view.getUint32(slot * 256, true)).toBe(0x100 + slot);
-    expect(view.getUint32(5 * 256, true)).toBe(0); // the clean slot in the middle still holds what the mirror held
-    // The mirror and the GPU copy agree everywhere.
-    expect(Array.from(gpu.subarray(0, 10 * 256))).toEqual(Array.from(new Uint8Array(arena.views.u32.buffer, 0, 10 * 256)));
   });
 
-  it("does not coalesce slots whose ranges are more than COALESCE_GAP_BYTES apart", () => {
-    const h = harness();
-    const apart = Math.ceil(COALESCE_GAP_BYTES / 256) + 2;
-    const arena = h.makeArena(64, { initialCapacity: 64 });
-    for (let i = 0; i <= apart; i++) arena.allocate();
+  it("a range that covers a clean slot uploads the mirror bytes of it, so the GPU copy still equals the mirror", () => {
+    const h = harness({ minUniformBufferOffsetAlignment: 64 });
+    const arena = h.makeArena(32, { initialCapacity: 16 });
+    for (let i = 0; i < 8; i++) arena.allocate();
+    poke(arena, 3, 0, 0x33);
     arena.flush(h.queue);
     h.fake.queue.writes.length = 0;
-    poke(arena, 0, 0, 1);
-    poke(arena, apart, 0, 1);
+    // Slots 2 and 4 are dirty, 3 is clean (stride 64, size 32): 96 bytes between the ranges, one upload from 2 to 4.
+    poke(arena, 2, 0, 0x22);
+    poke(arena, 4, 0, 0x44);
     arena.flush(h.queue);
-    expect(h.fake.queue.writes.map((w) => w.bufferOffset)).toEqual([0, apart * 256]);
+    expect(h.fake.queue.writes.map((w) => [w.bufferOffset, w.size])).toEqual([[2 * 64, 2 * 64 + 32]]);
+    const gpu = bufferOf(arena.buffer).contents;
+    expect(Array.from(gpu.subarray(0, 8 * 64))).toEqual(Array.from(new Uint8Array(arena.views.u32.buffer, 0, 8 * 64)));
+  });
+
+  it("does not coalesce slots whose padding is larger than the bound", () => {
+    const h = harness();
+    const arena = h.makeArena(16, { initialCapacity: 16 });
+    for (let i = 0; i < 4; i++) arena.allocate();
+    arena.flush(h.queue);
+    h.fake.queue.writes.length = 0;
+    // A 16-byte block on a 256-byte stride: 240 bytes of padding, more than max(COALESCE_MIN_GAP_BYTES, 16).
+    poke(arena, 0, 0, 1);
+    poke(arena, 1, 0, 1);
+    arena.flush(h.queue);
+    expect(h.fake.queue.writes.map((w) => [w.bufferOffset, w.size])).toEqual([
+      [0, 16],
+      [256, 16],
+    ]);
+    expect(240).toBeGreaterThan(COALESCE_MIN_GAP_BYTES);
   });
 
   it("only issues writeBuffer calls whose offsets and sizes are multiples of 4 (the fake enforces the real contract)", () => {

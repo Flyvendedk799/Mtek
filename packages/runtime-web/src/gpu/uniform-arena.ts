@@ -57,10 +57,13 @@ const USAGE_UNIFORM = 0x40;
 const DEFAULT_INITIAL_CAPACITY = 16;
 
 /**
- * Two dirty slots whose byte ranges are at most this far apart are uploaded by one `writeBuffer`
- * (`UniformArena.flush`, decision 0119): the extra bytes cost less than a second call into the browser.
+ * Two dirty slots are uploaded by one `writeBuffer` when the bytes between their ranges (padding up to the slot
+ * stride) are at most the larger of this and the block size (`UniformArena.flush`, decision 0119): the upload then
+ * carries at most twice the bytes that changed. The measurement of decision 0119 found no difference in frame time
+ * between merging and not merging on the test machine, so the bound is chosen not to inflate the bytes uploaded
+ * (a 16-byte parameter block on a 256-byte stride is never merged with its neighbour).
  */
-export const COALESCE_GAP_BYTES = 1024;
+export const COALESCE_MIN_GAP_BYTES = 128;
 
 function ascending(a: number, b: number): number {
   return a - b;
@@ -310,12 +313,12 @@ export class UniformArena {
 
   /**
    * Uploads the dirty slots and clears the dirty flags (decision 0119). Dirty slots are visited in ascending
-   * order; a slot whose `[slot x stride, + size)` range starts at most `COALESCE_GAP_BYTES` after the end of
-   * the previous dirty slot's range joins the previous `writeBuffer`, so a run of nearby dirty slots is one
-   * upload that also carries the (up to a few hundred) bytes between them. Those bytes come from the CPU
-   * mirror, which equals the GPU copy for every slot that is not dirty (a released slot's mirror is zero while
-   * its GPU copy is stale; nothing reads a free slot), so the buffer ends up byte-identical to uploading the
-   * slots one by one. Returns the number of dirty slots uploaded (not the number of `writeBuffer` calls: the
+   * order; a slot whose `[slot x stride, + size)` range starts at most `max(COALESCE_MIN_GAP_BYTES, size)` bytes
+   * after the end of the previous dirty slot's range joins the previous `writeBuffer`, so a run of nearby dirty
+   * slots is one upload that also carries the padding between them. Those bytes come from the CPU mirror, which
+   * equals the GPU copy for every slot that is not dirty (a released slot's mirror is zero while its GPU copy
+   * is stale; nothing reads a free slot), so the GPU buffer holds what the mirror holds, as after uploading
+   * the slots one by one. Returns the number of dirty slots uploaded (not the number of `writeBuffer` calls: the
    * registry's `uploads` counts those).
    */
   flush(queue: GPUQueue): number {
@@ -327,12 +330,13 @@ export class UniformArena {
     const { slotStride, size, mirror, gpuBuffer, dirty } = this;
     let start = (slots[0] as number) * slotStride;
     let end = start + size;
+    const maxGap = size > COALESCE_MIN_GAP_BYTES ? size : COALESCE_MIN_GAP_BYTES;
     dirty[slots[0] as number] = 0;
     for (let i = 1; i < count; i++) {
       const slot = slots[i] as number;
       const offset = slot * slotStride;
       dirty[slot] = 0;
-      if (offset - end > COALESCE_GAP_BYTES) {
+      if (offset - end > maxGap) {
         this.registry.writeBuffer(queue, gpuBuffer, start, mirror, start, end - start);
         start = offset;
       }
