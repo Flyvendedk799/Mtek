@@ -311,6 +311,10 @@ export function migrateWorld(previous: World, previousManifest: MtekManifest, ne
     }
   }
 
+  // `carryEntity` assigned the transforms of the records directly, not through the setters that mark them dirty, and the
+  // new world's `init` pass had cleared every flag: without this the world matrices (and so the picture) would keep the
+  // positions `init` gave, while the records hold the carried ones, until each entity is next written (decision 0120).
+  next.markAllTransformsDirty();
   next.propagate();
 }
 

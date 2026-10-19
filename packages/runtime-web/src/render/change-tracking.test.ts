@@ -17,11 +17,13 @@ import type { MtekProgramPrefab, MtekProgramScene } from "../abi/program.js";
 import { checkManifest } from "../abi/validate.js";
 import { mountMtekWith } from "../host/mount.js";
 import type { MtekApp, MtekDebug } from "../host/types.js";
+import { fromRotationTranslationScale, multiply, perspective, viewMatrix, type Mat4 } from "../math/mat4.js";
 import { World } from "../scene/world.js";
 import { FakeHost, asDom, fakeProgram, minimalSceneInit, type FakeDrawRecord, type InitContext } from "../test-support/fake-host.js";
 import type { FakeBuffer } from "../test-support/fake-gpu.js";
 import { installProgram } from "../test-support/mount-fixture.js";
 import { SPARK, manifestEdit } from "../test-support/spawn-fixture.js";
+import { extractFrustumPlanes, sphereIntersectsFrustum, worldBoundingSphere } from "./frustum.js";
 import { Renderer } from "./renderer.js";
 
 type Json = Record<string, unknown>;
@@ -91,6 +93,11 @@ interface Op {
 }
 
 interface Rig {
+  /** A new copy of the program module (for a hot reload); its init reads `variant`. */
+  build: () => unknown;
+  variant: number;
+  /** The context of init (its entity records and camera stay live). */
+  ctx: Ctx;
   readonly host: FakeHost;
   readonly app: MtekApp;
   readonly debug: MtekDebug;
@@ -105,18 +112,20 @@ async function mountRig(): Promise<Rig> {
   const json = installProgram(host, edit);
   const parsed = checkManifest(json);
   if (!parsed.ok) throw new Error(JSON.stringify(parsed.failures));
-  const rig: Rig = { host, app: undefined as unknown as MtekApp, debug: undefined as unknown as MtekDebug, ops: [], refs: [], frame: 0 };
+  const rig: Rig = { build: () => undefined, variant: 0, ctx: undefined as unknown as Ctx, host, app: undefined as unknown as MtekApp, debug: undefined as unknown as MtekDebug, ops: [], refs: [], frame: 0 };
   const init = (context: object): void => {
     minimalSceneInit(context);
     const ctx = context as Ctx;
+    rig.ctx = ctx;
     ctx.setCamera("position", { x: 0, y: 0, z: 14 });
     ctx.setCamera("target", { x: 0, y: 0, z: 0 });
     ctx.e.forEach((entity, i) => {
       ctx.setTransform(entity, "position", { x: f(((i * 5) % 13) - 6), y: f(((i * 3) % 7) - 3), z: 0 });
       // A few share a colour (one block), the rest differ in one channel.
-      ctx.setParam(entity, "color", { r: 0.5, g: 0.25, b: f((i % 3) / 2), a: 1 });
+      ctx.setParam(entity, "color", { r: 0.5, g: 0.25, b: f(((i + rig.variant) % 3) / 2), a: 1 });
     });
   };
+  const build = (): ReturnType<typeof fakeProgram> => {
   const base = fakeProgram(init, parsed.manifest);
   const scene = (base.scenes as Record<string, MtekProgramScene>)[parsed.manifest.entryScene];
   if (scene === undefined) throw new Error("no entry scene");
@@ -174,14 +183,15 @@ async function mountRig(): Promise<Rig> {
     init: (ctx, self, params) => {
       const c = ctx as Ctx;
       const n = Number(params["n"]);
-      c.setTransform(self as object, "position", { x: f((n % 9) - 4), y: f((n % 5) - 2), z: 1 });
+      // Every third n leaves the position at the default: the first world matrix then comes from the spawn alone.
+      if (n % 3 !== 0) c.setTransform(self as object, "position", { x: f((n % 9) - 4), y: f((n % 5) - 2), z: 1 });
       c.setParam(self as object, "color", { r: 0.5, g: 0.25, b: f((n % 3) / 2), a: 1 });
     },
     update: (ctx, self) => {
       // A spark moves every third frame (a function of its n and the frame only, the same in both applications).
       const record = self as { params: { n: number } };
       const n = record.params.n;
-      if ((rig.frame + n) % 3 === 0) (ctx as Ctx).setTransform(self as object, "position", { x: f(((n + rig.frame) % 9) - 4), y: f((n % 5) - 2), z: 1 });
+      if (n % 3 !== 0 && (rig.frame + n) % 3 === 0) (ctx as Ctx).setTransform(self as object, "position", { x: f(((n + rig.frame) % 9) - 4), y: f((n % 5) - 2), z: 1 });
     },
     fixedUpdate: () => undefined,
     events: {},
@@ -194,7 +204,10 @@ async function mountRig(): Promise<Rig> {
       rig.ops = [];
     },
   } as unknown as MtekProgramScene;
-  const program = { ...base, scenes: { [parsed.manifest.entryScene]: next }, prefabs: { [SPARK]: spark } };
+  return { ...base, scenes: { [parsed.manifest.entryScene]: next }, prefabs: { [SPARK]: spark } } as ReturnType<typeof fakeProgram>;
+  };
+  rig.build = build;
+  const program = build();
   const app = await mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), program, { test: { manualClock: true, renderTarget: TARGET } });
   if (app.debug === undefined) throw new Error("no debug API");
   return Object.assign(rig, { app, debug: app.debug });
@@ -278,6 +291,63 @@ function compare(tracked: Rig, full: Rig, label: string): void {
   });
 }
 
+// ---- an oracle that shares no code with the tracking: what should be on screen, worked out from the records ----
+
+interface Pose {
+  readonly position: { x: number; y: number; z: number };
+  readonly rotation: { x: number; y: number; z: number; w: number };
+  readonly scale: { x: number; y: number; z: number };
+  readonly visible: boolean;
+}
+
+/** The world translations of the entities that must be drawn, as sorted strings: records, parents, camera, frustum. */
+function expectedTranslations(rig: Rig): string[] {
+  const statics = rig.ctx.e as unknown as Pose[];
+  const spawned = (rig.debug.scene().spawned as unknown as (Pose & { alive: boolean })[]).filter((entity) => entity.alive);
+  const worlds: Mat4[] = [];
+  const local = (pose: Pose): Mat4 => fromRotationTranslationScale(pose.rotation, pose.position, pose.scale);
+  statics.forEach((pose, i) => {
+    const parent = PARENTS[i] ?? null;
+    worlds[i] = parent === null ? local(pose) : multiply(worlds[parent] as Mat4, local(pose));
+  });
+  const camera = (rig.ctx as unknown as { cam: { position: { x: number; y: number; z: number }; target: { x: number; y: number; z: number }; projection: { fov_y: number; near: number; far: number } } }).cam;
+  const viewProj = multiply(perspective(camera.projection.fov_y, TARGET.width / TARGET.height, camera.projection.near, camera.projection.far), viewMatrix(camera.position, { target: camera.target }));
+  const planes = extractFrustumPlanes(viewProj);
+  const out: string[] = [];
+  const consider = (pose: Pose, world: Mat4, half: readonly [number, number, number]): void => {
+    if (!pose.visible) return;
+    const sphere = worldBoundingSphere(world, Math.hypot(half[0], half[1], half[2]));
+    if (!sphereIntersectsFrustum(planes, sphere.x, sphere.y, sphere.z, sphere.radius)) return;
+    out.push(`${String(world[12])},${String(world[13])},${String(world[14])}`);
+  };
+  statics.forEach((pose, i) => {
+    consider(pose, worlds[i] as Mat4, i % 3 === 2 ? [1, 0.5, 0.5] : [0.5, 0.5, 0.5]);
+  });
+  for (const pose of spawned) consider(pose, local(pose), [0.5, 0.5, 0.5]);
+  return out.sort();
+}
+
+/** The world translations the last pass reads: the instance records of its instanced draws and the object blocks of the others. */
+function drawnTranslations(rig: Rig): string[] {
+  const out: string[] = [];
+  const instances = liveBuffers(rig.host).find((buffer) => buffer.label === "mtek instance matrices");
+  const objects = liveBuffers(rig.host).find((buffer) => buffer.label === "mtek:uniform-arena:builtin:object");
+  for (const draw of rig.host.device.renderPasses.at(-1)?.draws ?? []) {
+    const entry = (draw.pipeline.descriptor as { vertex: { entryPoint?: string } }).vertex.entryPoint;
+    if (entry === "mtek_vs_instanced") {
+      if (instances === undefined) throw new Error("no instance buffer");
+      const records = new Float32Array(instances.contents.buffer.slice(0, instances.contents.length));
+      for (let k = draw.firstInstance; k < draw.firstInstance + draw.instanceCount; k++) out.push(`${String(records[k * 32 + 12])},${String(records[k * 32 + 13])},${String(records[k * 32 + 14])}`);
+    } else {
+      if (objects === undefined) throw new Error("no object arena");
+      const at = draw.dynamicOffsets[2]?.[0] ?? 0;
+      const block = new Float32Array(objects.contents.buffer.slice(at, at + 64));
+      out.push(`${String(block[12])},${String(block[13])},${String(block[14])}`);
+    }
+  }
+  return out.sort();
+}
+
 // ---- the script ----
 
 function randomOps(random: () => number, spawned: number): Op[] {
@@ -298,10 +368,14 @@ function randomOps(random: () => number, spawned: number): Op[] {
     else if (roll < 0.66) ops.push({ kind: "param", i, a: [r(0, 1), r(0, 1), random() < 0.5 ? 0 : 0.5] });
     else if (roll < 0.78) ops.push({ kind: "cam", i: 0, a: [r(-9, 9), r(-4, 4), r(8, 16), r(-9, 9), r(-4, 4)] });
     else if (roll < 0.82) ops.push({ kind: "fov", i: 0, a: [r(0.3, 1.5)] });
-    else if (roll < 0.91) ops.push({ kind: "spawn", i: pick(30), a: [] });
+    else if (roll < 0.91) ops.push({ kind: "spawn", i: pick(6), a: [] });
     else if (spawned > 0) ops.push({ kind: "destroy", i: pick(8), a: [] });
   }
   return ops;
+}
+
+function checkOracle(rig: Rig, label: string): void {
+  expect(drawnTranslations(rig), `${label}: the entities on screen, from the records`).toEqual(expectedTranslations(rig));
 }
 
 describe("change tracking: a tracked frame equals a full recompute", () => {
@@ -314,13 +388,23 @@ describe("change tracking: a tracked frame equals a full recompute", () => {
     stepOnce(tracked, false);
     stepOnce(full, true);
     compare(tracked, full, `seed ${String(seed)} frame 0`);
+    checkOracle(tracked, `seed ${String(seed)} frame 0`);
     for (let frame = 1; frame <= 90; frame++) {
+      // Hot reload (replaceProgram) in the middle of the run: a new world and renderer from a candidate whose init differs.
+      if (frame === 30 || frame === 61) {
+        for (const rig of [tracked, full]) {
+          rig.variant = frame === 30 ? 1 : 2;
+          const result = await (rig.app as unknown as { replaceProgram(candidate: unknown): Promise<{ ok: boolean }> }).replaceProgram(rig.build());
+          expect(result.ok, "the candidate is accepted").toBe(true);
+        }
+      }
       const ops = randomOps(random, tracked.refs.length);
       tracked.ops = [...ops];
       full.ops = [...ops];
       stepOnce(tracked, false);
       stepOnce(full, true);
       compare(tracked, full, `seed ${String(seed)} frame ${String(frame)}`);
+      checkOracle(tracked, `seed ${String(seed)} frame ${String(frame)}`);
       const counters = tracked.debug.counters();
       seen.instanced += counters["instancedDraws"] ?? 0;
       seen.individual += (counters["drawCalls"] ?? 0) - (counters["instancedDraws"] ?? 0);

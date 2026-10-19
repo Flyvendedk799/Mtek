@@ -323,8 +323,7 @@ export class Renderer {
    */
   addEntity(entity: ResolvedEntity): void {
     this.ensureEntitySlots(entity.index + 1);
-    this.objectStale[entity.index] = 1;
-    this.recordOf[entity.index] = -1;
+    this.forgetEntity(entity.index);
     if (entity.mesh !== null) {
       this.objectSlots[entity.index] = this.objectArena.allocate();
       const centre = this.options.meshes.get(entity.mesh.id).boundingCenter;
@@ -340,8 +339,19 @@ export class Renderer {
     this.objectSlots[entity.index] = undefined;
     this.localCentres[entity.index] = undefined;
     this.sphereScales[entity.index] = 0;
-    this.recordOf[entity.index] = -1;
+    this.forgetEntity(entity.index);
     this.drawsVersion = -1;
+  }
+
+  /**
+   * Makes the render state of an entity slot that is being given up or taken (a spawned entity) differ from any pose a
+   * successor can have: the matrices are zero (a model matrix never is, so the first world change of the next entity
+   * in the slot is seen as a change), its object block is stale and it holds no instance record.
+   */
+  private forgetEntity(index: number): void {
+    this.entityMatrices.fill(0, index * INSTANCE_FLOATS, (index + 1) * INSTANCE_FLOATS);
+    this.objectStale[index] = 1;
+    this.recordOf[index] = -1;
   }
 
   /** Draw calls encoded by the last rendered frame. */
