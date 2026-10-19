@@ -76,7 +76,7 @@ const KNOWN_DIFFERENCES: [(&str, &str); 2] = [
 /// The fail fixtures whose only error is `E1040`, by verdict: a member in a
 /// body whose production does not have it is ungrammatical; `param` in an
 /// entity is grammatical (the restriction `param-only-in-prefab`).
-const E1040_UNGRAMMATICAL: [&str; 13] = [
+const E1040_UNGRAMMATICAL: [&str; 15] = [
     "recovery_misplaced_members_then_clean",
     "e1040_entity_at_top_level",
     "e1040_field_in_material",
@@ -85,6 +85,8 @@ const E1040_UNGRAMMATICAL: [&str; 13] = [
     "e1040_handler_in_material",
     "e1040_import_in_scene",
     "e1040_param_in_scene",
+    "e1040_prefab_and_fn_in_scene",
+    "e1040_prefab_in_scene",
     "e1040_scene_object_in_entity",
     "e1040_state_in_function",
     "e1040_state_in_material",
@@ -116,6 +118,27 @@ fn corpus_expectation(name: &str, text: &str) -> Result<Expected, String> {
             }
         }
     }
+}
+
+/// The name a corpus file is classified under: its stem, or for a project's `src/main.mtek` the
+/// name of the project directory (many fixtures are all called `main`).
+fn corpus_name(path: &Path) -> String {
+    let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+    let in_src = path
+        .parent()
+        .and_then(|p| p.file_name())
+        .is_some_and(|n| n == "src");
+    if stem == "main" && in_src {
+        if let Some(project) = path
+            .parent()
+            .and_then(|p| p.parent())
+            .and_then(|p| p.file_name())
+            .and_then(|n| n.to_str())
+        {
+            return project.to_owned();
+        }
+    }
+    stem.to_owned()
 }
 
 fn mtek_files(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -205,8 +228,8 @@ fn fixture_cases(cases: &mut Vec<Case>, problems: &mut Vec<String>) {
         let Ok(text) = std::fs::read_to_string(path) else {
             continue;
         };
-        let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
-        match corpus_expectation(stem, &text) {
+        let stem = corpus_name(path);
+        match corpus_expectation(&stem, &text) {
             Ok(expected) => cases.push(Case {
                 section: "other repository sources",
                 name,
