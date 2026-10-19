@@ -14,7 +14,8 @@
     "tests/codegen",
     "benchmarks",
     "benchmarks/baselines/m0-bridge",
-    "tools/ai-eval"
+    "tools/ai-eval",
+    "tools/coverage-matrix"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present && cargo build -p mtek-cli --locked",

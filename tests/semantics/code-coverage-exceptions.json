@@ -1,0 +1,246 @@
+{
+  "description": "The diagnostic codes that no compiler fixture produces, each with its reason (decisions 0027 item 11 and 0093). Read by crates/mtek-compiler/tests/fixtures.rs (every_catalogue_code_has_a_fixture_or_a_listed_reason) and by tools/coverage-matrix, which shows the lists in docs/coverage-matrix.md. A code that gains a fixture must leave its list. Paths are relative to the repository root; a named test file must contain the code.",
+  "notYetImplemented": [],
+  "reserved": [
+    {
+      "code": "E5901",
+      "reason": "No construct of v0.1 switches the active scene (spec/scenes.md section 1: one scene per application), so no program can produce it; the context export lists the feature as not supported."
+    },
+    {
+      "code": "E5902",
+      "reason": "No construct of v0.1 asks for transparency (spec/materials.md section 2: opaque materials only), so no program can produce it; the context export lists the feature as not supported."
+    },
+    {
+      "code": "E6003",
+      "reason": "v0.1 has at most 4 inter-stage variables (spec/materials.md section 3.3) and no custom vertex stage (E4901), so the limit of 16 cannot be reached; custom vertex stages are v0.2."
+    },
+    {
+      "code": "W0030",
+      "reason": "The naming lint of the formatter (spec/language.md section 3.3) is specified but not implemented in v0.1 (decision 0070 item 11); no program can produce it. The M7 gate decides whether to implement it or to amend the language reference."
+    }
+  ],
+  "unreachable": [
+    {
+      "code": "E6100",
+      "reason": "Only a compiler defect produces it (Naga rejecting generated WGSL).",
+      "test": "crates/mtek-compiler/src/emit_wgsl/validate.rs"
+    },
+    {
+      "code": "E9999",
+      "reason": "Only a compiler defect produces it.",
+      "test": "crates/mtek-compiler/src/check.rs"
+    }
+  ],
+  "coveredElsewhere": [
+    {
+      "code": "E0001",
+      "reason": "A file the source manager rejects before it has an id; the bytes would not survive .gitattributes in a fixture file.",
+      "test": "crates/mtek-compiler/src/project/load/tests.rs"
+    },
+    {
+      "code": "E0002",
+      "reason": "A misplaced byte-order mark; a fixture file would not keep it.",
+      "test": "crates/mtek-compiler/src/syntax/lexer_tests.rs"
+    },
+    {
+      "code": "E0003",
+      "reason": "A lone carriage return would not survive .gitattributes in a fixture file.",
+      "test": "crates/mtek-compiler/src/syntax/lexer_tests.rs"
+    },
+    {
+      "code": "E0004",
+      "reason": "A file over 4 MiB, generated in the test.",
+      "test": "crates/mtek-compiler/src/project/load/tests.rs"
+    },
+    {
+      "code": "E9004",
+      "reason": "A fixture is a project directory with mtek.toml; this code is about the missing project file.",
+      "test": "crates/mtek-compiler/src/project/load/tests.rs"
+    },
+    {
+      "code": "E9002",
+      "reason": "More than 1 024 modules, generated in the test.",
+      "test": "crates/mtek-compiler/src/project/modules/tests.rs"
+    },
+    {
+      "code": "E9030",
+      "reason": "A fixture always builds with the stub runtime; only a caller without a bundle gets it.",
+      "test": "crates/mtek-compiler/tests/build.rs"
+    },
+    {
+      "code": "E6001",
+      "reason": "An emit-phase limit of the resource plan (spec/gpu-layout.md section 8.3): build and inspect report it, check (which runs the fixtures) does not.",
+      "test": "crates/mtek-compiler/tests/build.rs"
+    },
+    {
+      "code": "E9031",
+      "reason": "An I/O failure of the command line tool while writing dist/.",
+      "test": "crates/mtek-cli/tests/cli.rs"
+    },
+    {
+      "code": "E9032",
+      "reason": "The compile time limit of mtek build --mode preview (decision 0075), a constant of the command line tool.",
+      "test": "crates/mtek-cli/src/limits.rs"
+    },
+    {
+      "code": "E8080",
+      "reason": "The loop budget of a preview build, enforced by the runtime (decision 0075).",
+      "test": "packages/runtime-web/src/host/budget.test.ts"
+    },
+    {
+      "code": "W9003",
+      "reason": "More than 200 diagnostics in one file: too large to review as a fixture, generated in the test.",
+      "test": "crates/mtek-compiler/src/diagnostics/sink.rs"
+    },
+    {
+      "code": "E5092",
+      "reason": "More than 16 384 entities, generated in the test.",
+      "test": "crates/mtek-compiler/tests/fixtures.rs"
+    },
+    {
+      "code": "E8001",
+      "reason": "A runtime code, produced by @mtek/runtime-web, whose unit tests are its fixtures (spec/testing.md section 2).",
+      "test": "packages/runtime-web/src/gpu/device.test.ts"
+    },
+    {
+      "code": "E8002",
+      "reason": "A runtime code (device below the target profile).",
+      "test": "packages/runtime-web/src/gpu/device.test.ts"
+    },
+    {
+      "code": "E8003",
+      "reason": "A runtime code (incompatible program).",
+      "test": "packages/runtime-web/src/abi/abi.test.ts"
+    },
+    {
+      "code": "E8004",
+      "reason": "A runtime code (WebGPU unavailable).",
+      "test": "packages/runtime-web/src/gpu/device.test.ts"
+    },
+    {
+      "code": "E8005",
+      "reason": "A runtime code (no suitable adapter).",
+      "test": "packages/runtime-web/src/gpu/device.test.ts"
+    },
+    {
+      "code": "E8006",
+      "reason": "A runtime code (manifest invalid).",
+      "test": "packages/runtime-web/src/abi/abi.test.ts"
+    },
+    {
+      "code": "E8011",
+      "reason": "A runtime code: an invalid camera value written at run time (decision 0031 item 4).",
+      "test": "packages/runtime-web/src/scene/world.test.ts"
+    },
+    {
+      "code": "W8030",
+      "reason": "A runtime warning: a run-time index clamped (decision 0037 item 8).",
+      "test": "packages/runtime-web/src/math/rt.test.ts"
+    },
+    {
+      "code": "E8030",
+      "reason": "A runtime code: destroying a named entity through an entity_ref (decision 0064).",
+      "test": "packages/runtime-web/src/host/spawn.test.ts"
+    },
+    {
+      "code": "W8031",
+      "reason": "A runtime warning: a body command for a pending entity is dropped (decision 0064).",
+      "test": "packages/runtime-web/src/scene/dynamic.test.ts"
+    },
+    {
+      "code": "W8032",
+      "reason": "A runtime warning: an entity that is already destroyed is destroyed again (decision 0064).",
+      "test": "packages/runtime-web/src/host/spawn.test.ts"
+    },
+    {
+      "code": "E8033",
+      "reason": "A runtime code: the entity limit is reached (decision 0064).",
+      "test": "packages/runtime-web/src/host/spawn.test.ts"
+    },
+    {
+      "code": "E8040",
+      "reason": "A runtime code: an unknown host input.",
+      "test": "packages/runtime-web/src/host/app.test.ts"
+    },
+    {
+      "code": "E8041",
+      "reason": "A runtime code: a host input of the wrong type (decision 0052).",
+      "test": "packages/runtime-web/src/host/codecs.test.ts"
+    },
+    {
+      "code": "E8050",
+      "reason": "A runtime code: an uncaptured GPU validation error.",
+      "test": "packages/runtime-web/src/host/app.test.ts"
+    },
+    {
+      "code": "E8051",
+      "reason": "A runtime code: shader or pipeline creation failed.",
+      "test": "packages/runtime-web/src/host/shaders.test.ts"
+    },
+    {
+      "code": "W8060",
+      "reason": "A runtime warning: the GPU device was lost.",
+      "test": "packages/runtime-web/src/host/recovery.test.ts"
+    },
+    {
+      "code": "W8061",
+      "reason": "A runtime warning: the GPU device was recovered.",
+      "test": "packages/runtime-web/src/host/recovery.test.ts"
+    },
+    {
+      "code": "E8062",
+      "reason": "A runtime code: the recovery of the GPU device failed.",
+      "test": "packages/runtime-web/src/host/recovery.test.ts"
+    },
+    {
+      "code": "E8063",
+      "reason": "A runtime code: a GPU allocation failed.",
+      "test": "packages/runtime-web/src/gpu/registry.test.ts"
+    },
+    {
+      "code": "W8070",
+      "reason": "A runtime warning: the scene restarted on a reload (decision 0067).",
+      "test": "packages/runtime-web/src/host/reload.test.ts"
+    },
+    {
+      "code": "E8090",
+      "reason": "A runtime code: an invalid scale written at run time, ignored.",
+      "test": "packages/runtime-web/src/scene/world.test.ts"
+    },
+    {
+      "code": "E8100",
+      "reason": "A runtime code: a non-opaque colour value rejected (decision 0052).",
+      "test": "packages/runtime-web/src/host/codecs.test.ts"
+    },
+    {
+      "code": "E7030",
+      "reason": "A runtime code: asset loading (spec/assets.md section 5, decision 0060).",
+      "test": "packages/runtime-web/src/assets/loader.test.ts"
+    },
+    {
+      "code": "E7031",
+      "reason": "A runtime code: asset loading (decision 0060).",
+      "test": "packages/runtime-web/src/assets/loader.test.ts"
+    },
+    {
+      "code": "E8101",
+      "reason": "A runtime code of the physics subsystem (decision 0066).",
+      "test": "packages/runtime-web/src/physics/system.test.ts"
+    },
+    {
+      "code": "E8102",
+      "reason": "A runtime code of the physics subsystem (decision 0066).",
+      "test": "packages/runtime-web/src/physics/load.test.ts"
+    },
+    {
+      "code": "E8103",
+      "reason": "A runtime code of the physics subsystem (decision 0066).",
+      "test": "packages/runtime-web/src/physics/system.test.ts"
+    },
+    {
+      "code": "E8104",
+      "reason": "A runtime code of the physics subsystem (decision 0066).",
+      "test": "packages/runtime-web/src/physics/system.test.ts"
+    }
+  ]
+}

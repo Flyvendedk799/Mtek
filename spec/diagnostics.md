@@ -127,7 +127,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e0023"></a>E0023 | invalid escape sequence | |
 | <a id="mtek-e0024"></a>E0024 | unterminated string | |
 | <a id="mtek-e0025"></a>E0025 | malformed color literal | not 6 or 8 hex digits |
-| <a id="mtek-w0030"></a>W0030 | naming convention | (lint) |
+| <a id="mtek-w0030"></a>W0030 | naming convention | **Not implemented:** the formatter's naming lint (`spec/language.md` §3.3) is specified but not built in v0.1 (decision 0070 item 11), so no program produces it |
 
 ### 5.1 Syntax (`1xxx`)
 | Code | Title | Trigger |
@@ -254,15 +254,15 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5121"></a>E5121 | body without collider | a `body` without a `collider`; the body would have no shape |
 | <a id="mtek-e5122"></a>E5122 | scaled dynamic or kinematic body | `scale` of a `Dynamic` or `Kinematic` body that is not the constant `vec3(1.0)` |
 | <a id="mtek-e5123"></a>E5123 | command not valid for this body kind | `Name.body.<command>(..)` or `Name.body.<velocity>` that the entity's body kind does not support, or on an entity without a body |
-| <a id="mtek-e5901"></a>E5901 | scene switching not supported | switching the active scene at run time |
-| <a id="mtek-e5902"></a>E5902 | transparency not supported | |
+| <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** switching the active scene at run time; v0.1 mounts one scene and has no construct that could switch it, so no program produces it |
+| <a id="mtek-e5902"></a>E5902 | transparency not supported | **Reserved:** v0.1 has only opaque materials and no construct that asks for transparency, so no program produces it |
 
 ### 5.6 GPU and target (`6xxx`)
 | Code | Title | Trigger |
 |---|---|---|
 | <a id="mtek-e6001"></a>E6001 | parameter block too large | > 65 536 bytes |
 | <a id="mtek-e6002"></a>E6002 | too many material resources | > 8 textures+samplers; reported by `check` at the ninth (decision 0054) |
-| <a id="mtek-e6003"></a>E6003 | too many interpolated inputs | > 16 inter-stage variables |
+| <a id="mtek-e6003"></a>E6003 | too many interpolated inputs | **Reserved:** > 16 inter-stage variables; v0.1 has no custom vertex stage and at most 4 (`spec/materials.md` §3.3), so the limit cannot be reached |
 | <a id="mtek-e6100"></a>E6100 | generated WGSL failed validation | compiler bug; Naga message in notes |
 
 ### 5.7 Assets (`7xxx`)

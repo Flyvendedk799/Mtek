@@ -1,0 +1,21 @@
+{
+  "name": "@mtek/coverage-matrix",
+  "version": "0.1.0-dev",
+  "private": true,
+  "type": "module",
+  "description": "The feature coverage matrix and fixture audit (decision 0093): the features each example uses, derived from the compiled IR and manifest; docs/coverage-matrix.md; the assertions of M7-02.",
+  "scripts": {
+    "lint": "eslint .",
+    "test:unit": "vitest run",
+    "coverage": "node src/cli.ts",
+    "generate": "node src/cli.ts --write"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.1",
+    "eslint": "10.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}

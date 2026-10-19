@@ -1491,154 +1491,58 @@ fn the_syntax_corpus_resolves_without_panicking() {
 // `tests/semantics/{pass,fail}/*/expected.diag.json`. A catalogue code that no
 // fixture produces must be listed below with its reason, and only then: the
 // lists are exact, so a code that gains a fixture fails the test until it
-// leaves its list. `NOT_YET_IMPLEMENTED` is the allow-list later milestones
-// shrink; M7 requires it to be empty.
+// leaves its list. `notYetImplemented` is the allow-list later milestones
+// shrank; M7 requires it to be empty.
 
-/// Codes this build does not report yet, with the milestone and work item
-/// that implement them.
-const NOT_YET_IMPLEMENTED: &[(&str, &str)] = &[
-    ("W0030", "M6: the formatter's naming lint (`mtek fmt`)"),
-    (
-        "E5901",
-        "no v0.1 construct switches scenes (`spec/scenes.md` section 1)",
-    ),
-    (
-        "E5902",
-        "no v0.1 construct requests transparency explicitly (`spec/materials.md` section 2)",
-    ),
-    (
-        "E6003",
-        "v0.1 has at most 4 inter-stage variables (`spec/materials.md` section 3.3); custom vertex stages are v0.2",
-    ),
-    ("E8011", "M3: run-time field writes"),
-    ("W8030", "M2: arrays (run-time index clamping)"),
-    (
-        "E8030",
-        "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)",
-    ),
-    (
-        "W8031",
-        "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)",
-    ),
-    (
-        "W8032",
-        "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)",
-    ),
-    (
-        "E8033",
-        "M5: spawn and destroy (run time; packages/runtime-web, decision 0064)",
-    ),
-    ("E8041", "M3: host inputs (decision 0018)"),
-    ("W8070", "M3: candidate-based hot reload"),
-    ("E8090", "M3: run-time field writes"),
-    ("E8100", "M3: run-time field writes and host inputs"),
-];
+/// The codes that no fixture produces, each with its reason: `tests/semantics/code-coverage-exceptions.json`
+/// (decisions 0027 item 11 and 0093), shared with `tools/coverage-matrix`, which shows the lists in
+/// `docs/coverage-matrix.md`.
+///
+/// * `notYetImplemented`: codes this build does not report yet; M7 requires the list to be empty.
+/// * `reserved`: codes no program of v0.1 can produce (no construct, or a limit that cannot be
+///   reached) or that are specified but not built; `spec/diagnostics.md` marks each in its catalogue.
+/// * `unreachable`: implemented, but only a compiler defect produces them; the named test covers them.
+/// * `coveredElsewhere`: codes a fixture cannot express (files the source manager rejects, a missing
+///   project file, generated sizes) and the runtime codes; the named test file must contain the code.
+const EXCEPTIONS: &str = "code-coverage-exceptions.json";
 
-/// Codes this build implements that no program checked by this build can
-/// produce, with the reason and the test file that covers them instead.
-const UNREACHABLE_IN_THIS_BUILD: &[(&str, &str, &str)] = &[
-    (
-        "E6100",
-        "only a compiler defect produces it (Naga rejecting generated WGSL)",
-        "src/emit_wgsl/validate.rs",
-    ),
-    (
-        "E9999",
-        "only a compiler defect produces it",
-        "src/check.rs",
-    ),
-];
+/// One list of [`EXCEPTIONS`]: `(code, reason, test file relative to the repository)`.
+type ExceptionList = Vec<(String, String, Option<String>)>;
 
-/// Codes a fixture cannot express (the bytes a fixture would need do not
-/// survive `.gitattributes`, or the code concerns the project directory
-/// itself), with the test file that covers them; that file must name the
-/// code.
-const COVERED_BY_OTHER_TESTS: &[(&str, &str)] = &[
-    // Files the source manager rejects before they have an id; a carriage
-    // return would not survive `.gitattributes` in a fixture file.
-    ("E0001", "src/project/load/tests.rs"),
-    ("E0002", "src/syntax/lexer_tests.rs"),
-    ("E0003", "src/syntax/lexer_tests.rs"),
-    ("E0004", "src/project/load/tests.rs"),
-    // A fixture is a project directory with `mtek.toml`.
-    ("E9004", "src/project/load/tests.rs"),
-    // More than 1 024 modules (generated in that file).
-    ("E9002", "src/project/modules/tests.rs"),
-    // A fixture always builds with the stub runtime; only a caller without a bundle gets it.
-    ("E9030", "tests/build.rs"),
-    // An emit-phase limit of the resource plan (`spec/gpu-layout.md` section 8.3): `build`
-    // and `inspect --bindings`/`--shaders` report it, `check` (which runs the fixtures) does not.
-    ("E6001", "tests/build.rs"),
-    // An I/O failure of the command line tool while writing `dist/`.
-    ("E9031", "../mtek-cli/tests/cli.rs"),
-    // The compile time limit of `mtek build --mode preview` (decision 0075).
-    ("E9032", "../mtek-cli/src/limits.rs"),
-    // The loop budget of a preview build, enforced by the runtime (decision 0075).
-    (
-        "E8080",
-        "../../packages/runtime-web/src/host/budget.test.ts",
-    ),
-    // Too large to review as fixtures: more than 200 diagnostics in one
-    // file, more than 16 384 entities (generated in this file).
-    ("W9003", "src/diagnostics/sink.rs"),
-    ("E5092", "tests/fixtures.rs"),
-    // Runtime diagnostics: produced by `@mtek/runtime-web`, whose unit tests
-    // are their fixtures (`spec/testing.md` section 2).
-    ("E8001", "../../packages/runtime-web/src/gpu/device.test.ts"),
-    ("E8002", "../../packages/runtime-web/src/gpu/device.test.ts"),
-    ("E8003", "../../packages/runtime-web/src/abi/abi.test.ts"),
-    ("E8004", "../../packages/runtime-web/src/gpu/device.test.ts"),
-    ("E8005", "../../packages/runtime-web/src/gpu/device.test.ts"),
-    ("E8006", "../../packages/runtime-web/src/abi/abi.test.ts"),
-    // Asset loading at run time (`spec/assets.md` section 5, decision 0060).
-    (
-        "E7030",
-        "../../packages/runtime-web/src/assets/loader.test.ts",
-    ),
-    (
-        "E7031",
-        "../../packages/runtime-web/src/assets/loader.test.ts",
-    ),
-    // The physics subsystem (`spec/physics.md`, decision 0066).
-    (
-        "E8101",
-        "../../packages/runtime-web/src/physics/system.test.ts",
-    ),
-    (
-        "E8102",
-        "../../packages/runtime-web/src/physics/load.test.ts",
-    ),
-    (
-        "E8103",
-        "../../packages/runtime-web/src/physics/system.test.ts",
-    ),
-    (
-        "E8104",
-        "../../packages/runtime-web/src/physics/system.test.ts",
-    ),
-    ("E8040", "../../packages/runtime-web/src/host/app.test.ts"),
-    ("E8050", "../../packages/runtime-web/src/host/app.test.ts"),
-    (
-        "E8051",
-        "../../packages/runtime-web/src/host/shaders.test.ts",
-    ),
-    (
-        "W8060",
-        "../../packages/runtime-web/src/host/recovery.test.ts",
-    ),
-    (
-        "W8061",
-        "../../packages/runtime-web/src/host/recovery.test.ts",
-    ),
-    (
-        "E8062",
-        "../../packages/runtime-web/src/host/recovery.test.ts",
-    ),
-    (
-        "E8063",
-        "../../packages/runtime-web/src/gpu/registry.test.ts",
-    ),
-];
+/// The four lists of [`EXCEPTIONS`], by name.
+fn exceptions() -> BTreeMap<String, ExceptionList> {
+    let path = semantics_dir().join(EXCEPTIONS);
+    let document: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap())
+        .unwrap_or_else(|e| panic!("{} is not valid JSON: {e}", path.display()));
+    let mut lists = BTreeMap::new();
+    for name in [
+        "notYetImplemented",
+        "reserved",
+        "unreachable",
+        "coveredElsewhere",
+    ] {
+        let entries = document[name]
+            .as_array()
+            .unwrap_or_else(|| panic!("{EXCEPTIONS}: `{name}` is not a list"));
+        let list: ExceptionList = entries
+            .iter()
+            .map(|entry| {
+                let text = |key: &str| entry[key].as_str().map(str::to_owned);
+                (
+                    text("code").unwrap_or_else(|| {
+                        panic!("{EXCEPTIONS}: an entry of `{name}` has no code")
+                    }),
+                    text("reason").unwrap_or_else(|| {
+                        panic!("{EXCEPTIONS}: an entry of `{name}` has no reason")
+                    }),
+                    text("test"),
+                )
+            })
+            .collect();
+        lists.insert(name.to_owned(), list);
+    }
+    lists
+}
 
 /// The JSON diagnostics files of the fixture suites, and the codes in them.
 fn fixture_codes() -> BTreeMap<String, BTreeSet<String>> {
@@ -1697,43 +1601,57 @@ fn fixture_codes() -> BTreeMap<String, BTreeSet<String>> {
 #[test]
 fn every_catalogue_code_has_a_fixture_or_a_listed_reason() {
     let produced = fixture_codes();
-    let crate_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let mut listed: BTreeMap<&str, &str> = BTreeMap::new();
+    let repository = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let lists = exceptions();
+    let mut listed: BTreeMap<String, String> = BTreeMap::new();
     let mut problems = Vec::new();
-    let lists = NOT_YET_IMPLEMENTED
-        .iter()
-        .map(|(code, _)| (*code, "NOT_YET_IMPLEMENTED"))
-        .chain(
-            UNREACHABLE_IN_THIS_BUILD
-                .iter()
-                .map(|(code, _, _)| (*code, "UNREACHABLE_IN_THIS_BUILD")),
-        )
-        .chain(
-            COVERED_BY_OTHER_TESTS
-                .iter()
-                .map(|(code, _)| (*code, "COVERED_BY_OTHER_TESTS")),
-        );
-    for (code, list) in lists {
-        if Code::parse_short(code).is_none() {
+    for (list, entries) in &lists {
+        for (code, _, test) in entries {
+            if Code::parse_short(code).is_none() {
+                problems.push(format!(
+                    "{list} lists {code}, which is not a catalogue code"
+                ));
+            }
+            if let Some(other) = listed.insert(code.clone(), list.clone()) {
+                problems.push(format!("{code} is listed in {other} and {list}"));
+            }
+            // Every list but `reserved` names the test that covers the code; the file must name it.
+            match (list.as_str(), test) {
+                ("unreachable" | "coveredElsewhere", None) => {
+                    problems.push(format!("{code}: {list} names no test file"));
+                }
+                (_, Some(file)) => match fs::read_to_string(repository.join(file)) {
+                    Ok(text) if text.contains(code.as_str()) => {}
+                    Ok(_) => problems.push(format!("{code}: {file} does not name it")),
+                    Err(e) => problems.push(format!("{code}: cannot read {file}: {e}")),
+                },
+                _ => {}
+            }
+        }
+    }
+    // A reserved code is marked as such in the catalogue itself (`spec/diagnostics.md` section 5):
+    // the registry says it, not only this list.
+    let catalogue = fs::read_to_string(repository.join("spec/diagnostics.md"))
+        .unwrap()
+        .replace("\r\n", "\n");
+    for (code, _, _) in lists.get("reserved").into_iter().flatten() {
+        let anchor = format!("<a id=\"mtek-{}\"></a>", code.to_ascii_lowercase());
+        let row = catalogue.lines().find(|line| line.contains(&anchor));
+        if !row.is_some_and(|row| {
+            row.contains("**Reserved:**") || row.contains("**Not implemented:**")
+        }) {
             problems.push(format!(
-                "{list} lists {code}, which is not a catalogue code"
+                "{code} is listed as reserved, but its row in spec/diagnostics.md is not marked \"**Reserved:**\" or \"**Not implemented:**\""
             ));
         }
-        if let Some(other) = listed.insert(code, list) {
-            problems.push(format!("{code} is listed in {other} and {list}"));
+    }
+    // M7: every code is covered, so nothing may still wait for an implementation.
+    if let Some(entries) = lists.get("notYetImplemented") {
+        for (code, reason, _) in entries {
+            problems.push(format!("{code} is listed as not yet implemented ({reason}); M7 requires the list to be empty"));
         }
     }
-    for (code, file) in UNREACHABLE_IN_THIS_BUILD
-        .iter()
-        .map(|(code, _, file)| (*code, *file))
-        .chain(COVERED_BY_OTHER_TESTS.iter().copied())
-    {
-        match fs::read_to_string(crate_dir.join(file)) {
-            Ok(text) if text.contains(code) => {}
-            Ok(_) => problems.push(format!("{code}: {file} does not name it")),
-            Err(e) => problems.push(format!("{code}: cannot read {file}: {e}")),
-        }
-    }
+
     for code in Code::ALL {
         let short = code.short();
         let by_fixture = produced.contains_key(code.as_str());

@@ -22,7 +22,7 @@ use crate::syntax::ast::{
     StructDecl, Type,
 };
 use crate::syntax::{Lexed, NodeInfo, lex, walk_module};
-use crate::types::Typeck;
+use crate::types::{CallKind, Typeck};
 
 /// A module of the project with everything the export reads from it.
 pub struct ModuleCtx<'a> {
@@ -83,6 +83,29 @@ impl<'a> ModuleCtx<'a> {
             spans,
             feature_nodes,
         }
+    }
+
+    /// The features of the calls the type checker recorded that no resolved name shows: the
+    /// accessors of a `glb_asset` (`CHAIR.node_position("Seat")`) and the body commands. They are
+    /// named as in `supported.features` and are not part of [`Program::used_features`], which the
+    /// selection of examples reads (decision 0093).
+    pub fn typed_features(&self) -> BTreeSet<String> {
+        let mut features = BTreeSet::new();
+        let Some(types) = self.types else {
+            return features;
+        };
+        for index in 0..self.module.node_count {
+            match types.call_kind(NodeId(index)) {
+                Some(CallKind::GlbAccessor { method }) => {
+                    features.insert(format!("method:glb_asset.{method}"));
+                }
+                Some(CallKind::BodyCommand { command, .. }) => {
+                    features.insert(format!("body-command:{command}"));
+                }
+                _ => {}
+            }
+        }
+        features
     }
 
     /// The source text of `span`, whitespace runs collapsed to one space.
