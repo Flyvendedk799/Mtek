@@ -16,7 +16,9 @@ registry: you build the tool from a checkout. **New here? Start with
 read the error and repair it. A feature counts as supported only when a test that would fail without
 it passes in a recorded environment (`spec/testing.md`).
 
-What the language is and what it is not: the [language guide](docs/language-guide.md), the
+**The documentation starts at [`docs/README.md`](docs/README.md)**: a learning path, a [tutorial](docs/tutorial.md) and a page for each concept (lighting and units, time and input, state and bindings, entities and references, prefabs, textures and assets, materials, physics, modules), each with the rule, the reason, a worked example and the common mistakes with the diagnostic code each raises. Every Mtek code block in them is compiled by a test.
+
+What the language is and what it is not: the [language guide](docs/language-guide.md) (the compact page for programs that write Mtek), the
 [language reference](docs/language-reference.md) and the [limitations](docs/limitations.md) (every
 unsupported feature, every gate, every reserved diagnostic, each with its reason) are generated from the
 specification, the registry and the compiler, and checked against the compiler, the runtime and this file
@@ -57,7 +59,7 @@ From a clean checkout:
 | `npm run check:assets` | fails if a generated GLB test asset on disk differs from what `tests/assets/tools/make-glb.mjs` writes (`spec/assets.md` section 7, decision 0058) |
 | `npm run check:tasks` | validates the benchmark tasks and the recorded holdout hash (`benchmarks/README.md`, decision 0021) |
 | `npm run check:coverage` | the feature coverage matrix (decision 0093): derives from the compiled examples and fixtures what each uses, fails when a v0.1 feature has no demonstration or positive fixture, a diagnostic code no negative test, or `docs/coverage-matrix.md` is stale (`npm run generate -w @mtek/coverage-matrix` rewrites it); needs `npm run build` first |
-| `npm run check:release` | the release documentation and the capability consistency check (decisions 0100, 0101 and 0104): regenerates `docs/language-guide.md`, `docs/language-reference.md` and `docs/limitations.md` and fails if they are stale; compares the compiler's supported features, the registry, the runtime's ABI and capabilities, the specification and the claims of this README, naming both sides of every mismatch; checks that every claim of `docs/release-notes-v0.1.md` links to evidence (`npm run generate -w @mtek/release-docs` rewrites the pages); needs `npm run build` first |
+| `npm run check:release` | the release documentation and the capability consistency check (decisions 0100, 0101, 0104 and 0116 to 0118): regenerates `docs/language-guide.md`, `docs/language-reference.md`, `docs/limitations.md` and the index, tutorial and concept pages (`tools/release-docs/templates/pages`) and fails if they are stale; compiles every Mtek code block of the concept pages, the tutorial and the guide, checks their links, anchors and cited diagnostic codes, and holds the guide to 16 384 bytes; compares the compiler's supported features, the registry, the runtime's ABI and capabilities, the specification and the claims of this README, naming both sides of every mismatch; checks that every claim of `docs/release-notes-v0.1.md` links to evidence (`npm run generate -w @mtek/release-docs` rewrites the pages); needs `npm run build` first |
 | `npm run test:benchmarks` | the `benchmarks` Playwright project: every benchmark task's fixtures against its three.js baseline reference (hardware configuration; `MTEK_BASELINE_SOURCE=starter` runs the starters instead) |
 | `npm run test:browser:hardware` | the `hardware` project only; with `MTEK_REQUIRE_GPU=1` it fails on any NOT-RUN test or software adapter |
 | `npm test` | `check`, then `cargo test --workspace --locked`, then `test:unit`, then `check:coverage`, then `check:release`, then `test:browser` (NOT-RUN tolerant unless `MTEK_REQUIRE_GPU=1`) |

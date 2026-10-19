@@ -217,7 +217,7 @@ describe("guide directives", () => {
 
   it("expands an excerpt directive whose end pattern contains a brace", () => {
     const ctx = { text: () => "x\nfn f() {\n}\ny", root } as never;
-    expect(renderGuide(ctx, "{{excerpt p.mtek :: ^fn f :: ^\\}$}}")).toBe("```mtek\nfn f() {\n}\n```");
+    expect(renderGuide(ctx, "{{excerpt p.mtek :: ^fn f :: ^\\}$}}")).toBe("```mtek from=p.mtek\nfn f() {\n}\n```");
   });
 });
 

@@ -1,0 +1,228 @@
+# Modules, projects and host inputs
+
+{{generated}}
+
+A Mtek program is a project: a directory with an `mtek.toml` and the `.mtek` files it names. Each file is a module that can export items to other files. This page covers the import rules, the settings of `mtek.toml` and how the page that embeds the program can set values of the scene.
+
+## Rules
+
+1. **The project.** `mtek.toml` is found by looking in the current directory and then upwards (`MTEK-E9004` if there is none). `[project]` needs a `name` (lowercase letters, digits and hyphens) and a `language` that equals the language version of the compiler ({{language-version}}; `MTEK-E9001` otherwise). `entry` is the first file (default `src/main.mtek`). `scene` names the scene to mount and is required only when the entry file declares more than one. Unknown keys, wrong types and values out of range are `MTEK-E9001`, with the key path.
+2. **Modules.** A file is a module. Items may appear in any order; a module does not depend on the order of its items. An item is private to its file until it is marked `export`: constants, functions, structs, materials, prefabs and scenes can be exported. The scene of the entry file does not need `export`.
+3. **Imports.** `import { Pillar, GOLD } from "./props/pillar.mtek";` names what it takes. The path starts with `./` or `../`, uses `/`, and ends in `.mtek` (`MTEK-E2030`). It is relative to the importing file, stays inside the project (`MTEK-E2031`), matches the case of the file on disk (`MTEK-E2032`) and names a file that exists (`MTEK-E2036`). What is imported must be exported by that file (`MTEK-E2033`). A bare specifier such as `"physics"` is `MTEK-E2034`.
+4. **What there is not.** No wildcard import, no alias (`import { A as B }` is a syntax error because `as` is reserved), no package imports, no re-exports. Import cycles are rejected once, at the import that closes the cycle, with every module listed (`MTEK-E2035`).
+5. **Names.** An imported name is declared in the module. Declaring it again is `MTEK-E2002`, and no item can reuse a name of the prelude (`Box`, `Key`, `color`, ...).
+6. **Settings in `mtek.toml`.** The tables, with their defaults, are listed below the rules. `[build]` chooses the output directory and the page title, `[runtime]` the clocks and limits of the scene (see [Time and input](time-and-input.md)), `[dev]` the port of `mtek dev`, and `[assets]` the limits on files (see [Textures, samplers and assets](textures-samplers-and-assets.md)).
+7. **Host inputs.** `[host.inputs]` publishes pieces of scene `state` to the web page that embeds the program. The page calls `app.setInput("tint", "#ff8800")`; the value is checked by a *codec* for the type, queued, and applied at the start of the next frame, like an input event. The state types that have a codec are {{codecs}}. A `color` takes a hex string; when the state feeds an opaque material parameter, an alpha other than `ff` is rejected at run time and the old value stays (`MTEK-E8100`). A state of another type (an array, a struct, an `entity_ref`) cannot be exposed (`MTEK-E9020`), and a name that is not a state of the scene is `MTEK-E9021`.
+8. **The commands.** The `mtek` executable has the commands {{commands}}. `mtek check` needs no GPU; `mtek fmt` has one canonical layout and no options; `mtek context` prints what this build supports, for programs that write Mtek.
+
+The tables of `mtek.toml`:
+
+| Table | Keys, with their defaults |
+|---|---|
+| `[project]` | `name`, `language`, `entry`, `scene` |
+| `[build]` | `target` (only `"web"`), `out_dir` (`dist`), `title` (the title of the page) |
+| `[host.inputs]` | `input_name = "Scene.state_name"` |
+| `[runtime]` | `fixed_step` ({{project-default FIXED_STEP}}), `max_catch_up_steps` ({{project-default MAX_CATCH_UP_STEPS}}), `max_frame_delta` ({{project-default MAX_FRAME_DELTA}}), `max_entities` ({{project-default MAX_ENTITIES}}), `pause_when_hidden` (true) |
+| `[dev]` | `port` ({{project-default DEV_PORT}}) |
+| `[assets]` | `max_file_bytes` ({{project-default MAX_ASSET_FILE_BYTES}}), `max_total_bytes` ({{project-default MAX_ASSET_TOTAL_BYTES}}), `max_texture_dimension` ({{project-default MAX_TEXTURE_DIMENSION}}), `max_vertices_per_primitive` ({{project-default MAX_VERTICES_PER_PRIMITIVE}}) |
+
+## Why
+
+- Explicit imports with a path and a file extension mean a reader can find a name with a text search, and a tool can know the set of modules without running anything. There are no search paths, no package registry and no wildcard, so there is nothing to resolve differently on two machines.
+- Case-exact paths are required on every operating system so that a project that builds on Windows builds on Linux.
+- The order of items does not matter, because references between items do not depend on it. The order of *scene members* matters for initialisation only, and then in a documented way (declaration order).
+- Host inputs are validated at the boundary: the page can pass anything, and the runtime accepts only a value that the type of the state can hold.
+
+## Examples
+
+A project of three files. The theme exports constants and a function, a prefab file imports them and exports a prefab, and the scene imports both.
+
+```mtek project=showroom file=src/theme.mtek
+export const STONE: color = #9aa3b5;
+
+export const GOLD: color = #e0a526;
+
+export fn half(h: f32) -> f32 {
+    return h * 0.5;
+}
+```
+
+```mtek project=showroom file=src/props/pillar.mtek
+import { STONE, half } from "../theme.mtek";
+
+export prefab Pillar {
+    param origin: vec3 = vec3(0.0, 0.0, 0.0);
+    param height: f32 = 2.0;
+    param tint: color = STONE;
+
+    position: origin + vec3(0.0, half(height), 0.0);
+    scale: vec3(0.8, height, 0.8);
+    mesh: Box {};
+    material: Unlit { color: tint };
+}
+```
+
+```mtek project=showroom file=src/main.mtek
+import { GOLD } from "./theme.mtek";
+import { Pillar } from "./props/pillar.mtek";
+
+scene Showroom {
+    camera Main {
+        position: vec3(0.0, 3.0, 9.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+
+    entity Left: Pillar {
+        origin: vec3(-2.0, 0.0, 0.0);
+    }
+
+    entity Right: Pillar {
+        origin: vec3(2.0, 0.0, 0.0);
+        height: 3.0;
+        tint: GOLD;
+    }
+}
+```
+
+A project file with the settings that matter most. The inputs `speed` and `tint` can be set by the page. (The tests check every `toml manifest` block on this page against a scene named `Demo` that has the states `tint: color`, `speed: f32` and `levels: array<f32, 2>`.)
+
+```toml manifest
+[project]
+name = "showroom"
+language = "{{language-version}}"
+entry = "src/main.mtek"
+scene = "Demo"
+
+[build]
+target = "web"
+out_dir = "build"
+title = "Showroom"
+
+[host.inputs]
+speed = "Demo.speed"
+tint = "Demo.tint"
+
+[runtime]
+max_entities = 2048
+```
+
+## Common mistakes
+
+### Importing something that is not exported
+
+```mtek project=bad_export file=src/lib.mtek
+const SECRET: f32 = 1.0;
+
+export const OPEN: f32 = 2.0;
+```
+
+```mtek wrong=MTEK-E2033 project=bad_export file=src/main.mtek
+import { SECRET } from "./lib.mtek";
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+```
+
+`SECRET` is private to `lib.mtek` (`MTEK-E2033`). Add `export`.
+
+### Import paths
+
+```mtek wrong=MTEK-E2034
+import { GOLD } from "theme.mtek";
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+```
+
+A path without `./` is a package name (`MTEK-E2034`), and packages do not exist in this version. A path without the extension is `MTEK-E2030`: write `"./theme.mtek"`.
+
+### Renaming on import
+
+```mtek project=alias file=src/theme.mtek
+export const GOLD: color = #e0a526;
+```
+
+```mtek wrong=MTEK-E1001 project=alias file=src/main.mtek
+import { GOLD as METAL } from "./theme.mtek";
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+```
+
+There are no aliases (`MTEK-E1001`: the parser expects `,` or `}` after the name). Import the name as it is.
+
+### A cycle
+
+```mtek project=cycle file=src/a.mtek
+import { B } from "./b.mtek";
+
+export const A: f32 = 1.0;
+```
+
+```mtek project=cycle file=src/b.mtek
+import { A } from "./a.mtek";
+
+export const B: f32 = 2.0;
+```
+
+```mtek wrong=MTEK-E2035 project=cycle file=src/main.mtek
+import { A } from "./a.mtek";
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+```
+
+`a.mtek` and `b.mtek` import each other (`MTEK-E2035`); the message lists the modules of the cycle. Move what both need into a third file.
+
+### A host input that cannot be exposed
+
+```toml manifest wrong=MTEK-E9020
+[project]
+name = "demo"
+language = "{{language-version}}"
+scene = "Demo"
+
+[host.inputs]
+tint = "Demo.tint"
+levels = "Demo.levels"
+```
+
+This manifest is checked against a scene whose state `levels` is an array, and an array has no codec (`MTEK-E9020`). Expose each number, or a `vec4`.
+
+### A language version the compiler does not have
+
+```toml manifest wrong=MTEK-E9001
+[project]
+name = "demo"
+language = "9.9"
+scene = "Demo"
+```
+
+`language` must equal the version of the compiler (`MTEK-E9001`; the same code is reported for an unknown key, a wrong type or a value out of range, with the path of the key).
+
+## See also
+
+- [Prefabs and scenes](prefabs-and-scenes.md): what the items are.
+- [State and bindings](state-and-bindings.md): the state that host inputs set.
+- [Getting started](../getting-started.md): creating, building and running a project.
+- [Tooling specification](../../spec/tooling.md): the commands and the full `mtek.toml`.
+
+## Diagnostics on this page
+
+{{cited-codes}}

@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { findMtek, repoRoot } from "../../coverage-matrix/src/tools.ts";
 import { loadCtx } from "./ctx.ts";
 import { generateDocs, writeDocs } from "./docs.ts";
-import { loadRuntime, runChecks } from "./run.ts";
+import { loadRuntime, runChecks, runDocCode } from "./run.ts";
 
 export interface Io {
   out: (text: string) => void;
@@ -38,6 +38,7 @@ export async function runCli(argv: readonly string[], io: Io, root: string = rep
   }
   const runtime = await loadRuntime(ctx);
   const found = runChecks(ctx, runtime, { written: flags.has("--write") });
+  found.push(...(await runDocCode(ctx, { written: flags.has("--write") })));
   io.out(
     `release-docs: ${String(ctx.compiler.features.length)} features, ${String(ctx.catalogue.length)} diagnostic codes, ` +
       `ABI ${ctx.compiler.versionAbi ?? "?"}, language ${ctx.compiler.contextLanguage}\n`,

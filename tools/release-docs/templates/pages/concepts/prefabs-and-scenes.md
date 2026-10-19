@@ -1,0 +1,249 @@
+# Prefabs and scenes
+
+{{generated}}
+
+A file is made of items: constants, functions, structs, materials, prefabs and scenes. Each kind of item can contain only certain members, and the compiler tells you at once when you put one in the wrong place. This page lists what may appear where, and explains the two things that confuse most people: a prefab is exactly one entity, and it does not know the scene.
+
+## Rules
+
+1. **What may appear where.**
+
+   | Place | May contain |
+   |---|---|
+   | A file (module) | `import`, `const`, `fn`, `cpu fn`, `struct`, `material`, `prefab`, `scene`; any item except `import` can be `export`ed. |
+   | A `scene` | scene fields (`clear_color`, `ambient_color`, `ambient_intensity`, `gravity`), `const`, `state`, `camera` objects, `entity` declarations, `update` and `fixed_update`, `on` handlers. |
+   | An `entity` | fields (`position`, `mesh`, `material`, `light`, `body`, `collider`, ...), `const`, `state`, nested `entity` declarations, `update` and `fixed_update`, `on` handlers. |
+   | A `prefab` | the same as an entity, plus `param`; no nested entities. |
+   | A `material` | `param` and exactly one `fragment`. |
+
+   Anything else is `MTEK-E1040`: a `fn`, a `prefab` or a `scene` inside a scene, a `camera` in an entity, a `state` in a material, an `entity` at the top level of a file.
+2. **One scene runs.** A program mounts one scene; there is no scene switching. If the entry file declares several scenes, `scene = "Name"` in `mtek.toml` chooses. The scene needs a camera (`MTEK-E5012`), and with several cameras exactly one has `active: true` (`MTEK-E5013`). A camera looks at a `target` or has a `rotation`, not both (`MTEK-E5010`), and its projection values are checked (`MTEK-E5011`).
+3. **Scene fields** are `clear_color`, `ambient_color`, `ambient_intensity` and `gravity`. They are constants, fixed at construction (`MTEK-E3090` otherwise).
+4. **A prefab is one entity.** It has the members of an entity, so a prefab can have a mesh, a material, a body, state and handlers, but it cannot contain another entity (`MTEK-E5040`) or a light (`MTEK-E5110`). To build something from several parts, make one prefab per part and spawn them together from a handler.
+5. **Parameters.** `param name: T = default;` is an input of the prefab, fixed when the instance is created. A parameter without a default must be given at every instance (`MTEK-E5041`). A default is a constant (`MTEK-E4031`). A parameter can be read in the prefab's field values, state initialisers, `bind` expressions and functions, and those values may call functions: they are computed when each instance is created.
+6. **A prefab does not know the scene.** It cannot read scene state or named entities (`MTEK-E2003`); it sees its own parameters, state, `self`, constants and functions. Everything it needs from the scene comes in as a parameter.
+7. **Two ways to make an instance.**
+   - *Static:* `entity Left: Pillar { height: 3.0; }` declares a named entity. The body may set parameters and nothing else (`MTEK-E5042`), and the values must be constants (`MTEK-E3090`).
+   - *Dynamic:* `spawn(Pillar { height: h })` in a handler. The parameters may be run-time values. See [Entities and references](entities-and-references.md).
+8. **Bodies in prefabs.** A prefab may declare a `body` and a `collider`. A static instance of such a prefab must be a root entity (`MTEK-E5091`); spawned instances are always roots.
+9. **Construction-only values** (`mesh`, `body`, `collider`, the instance of a `material`) are constants in a prefab as in an entity (`MTEK-E3090`). The values of other fields, such as `position` and the parameters of a material, may use the prefab's parameters.
+
+The fields of the scene itself:
+
+**`Scene`**
+
+{{fields Scene}}
+
+## Why
+
+- A prefab is one entity because everything that is drawn or simulated is then a named, inspectable object with its own transform and its own single writer for each field. A prefab with children would need rules for who owns the child transforms, for naming and for bodies; the language leaves those to a later version.
+- A prefab does not see the scene because it is a template and may be instantiated in any scene, or in none. If it could name `Boss`, the template and one particular scene would be tied together, and a mistake would appear only in the scene where the name is missing.
+- The member lists are short on purpose: a scene is where data lives and events arrive, an entity is a thing in the world, a material is a GPU program. Putting a handler in a material or a mesh in a scene is a category mistake that the language refuses at once.
+
+## Examples
+
+A prefab with parameters, used by a static instance and by `spawn`:
+
+```mtek
+prefab Pillar {
+    param base: vec3 = vec3(0.0, 0.0, 0.0);
+    param height: f32 = 2.0;
+    param tint: color = #9aa3b5;
+
+    position: base + vec3(0.0, height * 0.5, 0.0);
+    scale: vec3(0.8, height, 0.8);
+    mesh: Box {};
+    material: Pbr { base_color: tint; roughness: 0.8 };
+}
+
+scene Demo {
+    state placed: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 3.0, 9.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+
+    entity Sun {
+        light: DirectionalLight {};
+        rotation: quat.euler(-0.9, 0.4, 0.0);
+    }
+
+    entity Left: Pillar {
+        base: vec3(-3.0, 0.0, 0.0);
+        height: 3.0;
+    }
+
+    entity Right: Pillar {
+        base: vec3(3.0, 0.0, 0.0);
+        tint: #e0a526;
+    }
+
+    on key_down(Key.P) {
+        spawn(Pillar { base: vec3(f32(placed) - 1.0, 0.0, -3.0); height: 1.0 + f32(placed) });
+        placed += 1;
+    }
+}
+```
+
+A scene with two cameras: the second one is active, a top-down view.
+
+```mtek
+scene Demo {
+    clear_color: #101418;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    camera Top {
+        position: vec3(0.0, 9.0, 0.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.0 };
+        active: true;
+    }
+
+    entity Ground {
+        mesh: Plane { size: vec2(8.0, 8.0) };
+    }
+}
+```
+
+## Common mistakes
+
+### Children in a prefab
+
+```mtek wrong=MTEK-E5040
+prefab Car {
+    mesh: Box {};
+
+    entity Wheel {
+        mesh: Sphere { radius: 0.3 };
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+```
+
+A prefab describes exactly one entity (`MTEK-E5040`). Declare `Wheel` as its own prefab and spawn the parts together, or declare the car as a named entity with a nested `Wheel`.
+
+### Setting a field in a static instance
+
+```mtek wrong=MTEK-E5042
+prefab Car {
+    param tint: color = #ff0000;
+    mesh: Box {};
+    material: Unlit { color: tint };
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity A: Car {
+        position: vec3(1.0, 0.0, 0.0);
+    }
+}
+```
+
+The body of an instance sets parameters only (`MTEK-E5042`). Add `param at: vec3 = vec3(0.0, 0.0, 0.0);` to the prefab and write `position: at;` there.
+
+### A missing parameter
+
+```mtek wrong=MTEK-E5041
+prefab Car {
+    param at: vec3;
+    position: at;
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity A: Car {}
+}
+```
+
+A parameter without a default must be given at every instance (`MTEK-E5041`).
+
+### A run-time value in a static instance
+
+```mtek wrong=MTEK-E3090
+prefab Car {
+    param at: vec3 = vec3(0.0, 0.0, 0.0);
+    position: at;
+    mesh: Box {};
+}
+
+scene Demo {
+    state offset: f32 = 1.0;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity A: Car {
+        at: vec3(offset, 0.0, 0.0);
+    }
+}
+```
+
+The parameters of a static instance are constants (`MTEK-E3090`). A value that comes from state belongs to `spawn(Car { at: vec3(offset, 0.0, 0.0) })`.
+
+### Declaring a prefab inside the scene
+
+```mtek wrong=MTEK-E1040
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    prefab Car {
+        mesh: Box {};
+    }
+}
+```
+
+Prefabs, functions, materials and structs are module items (`MTEK-E1040`). Move `prefab Car` above or below the scene.
+
+### Two cameras and no active one
+
+```mtek wrong=MTEK-E5013
+scene Demo {
+    camera A {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    camera B {
+        position: vec3(0.0, 9.0, 0.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+```
+
+With more than one camera exactly one must say `active: true` (`MTEK-E5013`); with none at all the scene is `MTEK-E5012`, so that a black canvas is never unexplained.
+
+## See also
+
+- [Entities and references](entities-and-references.md): spawn, destroy and references.
+- [Modules and projects](modules-and-projects.md): putting prefabs in their own files.
+- [Physics](physics.md): bodies and colliders in prefabs.
+- [Scenes specification](../../spec/scenes.md): sections 2 to 5.
+
+## Diagnostics on this page
+
+{{cited-codes}}

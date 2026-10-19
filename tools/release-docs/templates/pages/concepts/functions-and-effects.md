@@ -1,0 +1,204 @@
+# Functions and effects
+
+{{generated}}
+
+Mtek compiles some code to JavaScript, some to WGSL and some to both. The language keeps the two apart with one idea, the *effect* of a function, so that you cannot write a shader that calls `random()` or a `bind` that reads the keyboard and find out at run time.
+
+## Rules
+
+1. **Three kinds of code.**
+
+   | Kind | Written as | May do |
+   |---|---|---|
+   | Pure function | `fn name(p: T) -> R { ... }` | compute from its parameters, locals and constants; call pure functions and the pure intrinsics. May run on the CPU and on the GPU. |
+   | CPU function | `cpu fn name(p: T) -> R { ... }` | everything a pure function may, and call the CPU-only intrinsics. Runs on the CPU only. |
+   | Handler or lifecycle function | `on key_down(...) { ... }`, `update(dt: f32) { ... }`, `fixed_update(dt: f32) { ... }` | everything a CPU function may, and read and write scene and entity state, call `spawn` and `destroy`, and issue body commands. |
+
+2. **The intrinsics have a domain.** Available on both sides: {{intrinsics both}}. CPU only: {{intrinsics cpu}}. GPU only: {{intrinsics gpu}}. Of the CPU-only ones, `spawn` and `destroy` may only be called directly in a handler or lifecycle function, not in a `cpu fn`.
+3. **A `fn` that needs the CPU is an error**, reported at the offending call together with the chain of calls that leads there (`MTEK-E4002`). The reverse is a warning: a `cpu fn` that uses nothing CPU-only could be a `fn` (`MTEK-W4003`).
+4. **A `cpu fn` sees no scene.** It has no access to scene state, named entities or `self`; it gets what it needs as parameters and returns a result. Only handlers and lifecycle functions touch the scene.
+5. **GPU-reachable code is stricter.** A pure function that a material's `fragment` calls, directly or through other functions, is compiled to WGSL and must not use `string` or handle types (`MTEK-E4011`), must have `for` bounds that are constants (`MTEK-E4010`) and must not call a CPU-only intrinsic (`MTEK-E4012`). Calling a GPU-only intrinsic (`sample`, `lighting.pbr`) from CPU code is `MTEK-E4013`. Only the stage function and its pure callees are ever compiled to WGSL; the compiler does not move code to the GPU because it looks mathematical.
+6. **No recursion**, direct or through other functions (`MTEK-E4001`), and no closures, function values, generics or nested functions. Functions are items of a module and are not declared inside a scene, an entity or another function (`MTEK-E1040`).
+7. **Signatures are explicit.** Every parameter has a type, a function without `->` returns nothing and its call is a statement, every path of a function with a result ends in `return` (`MTEK-E3080`), and a call passes every argument, in order, with exactly the declared types (`MTEK-E3002`, `MTEK-E3001`). Parameters are values and cannot be assigned (`MTEK-E3061`). Arrays and structs are copied when they are passed.
+8. **Constants are folded by the compiler.** A `const` initialiser is built from literals, other constants, operators, constructors and the pure intrinsics; a call to a function you wrote is not constant (`MTEK-E3090`).
+
+## Why
+
+- Shader code has to be portable between the CPU and the GPU. If a function can run in both places, it must mean the same thing in both, so everything that exists in only one place (random numbers, text, the keyboard, the scene) is excluded by the type of function that may touch it, and the check is made when the program is compiled, not when a frame is drawn.
+- Recursion and dynamic loops cannot be compiled to WGSL on every GPU, and the language has no way to say "only on the GPU", so the rule is the same in both domains.
+- A `cpu fn` without scene access is easy to test and cannot have a hidden dependency on the order in which the frame runs its handlers.
+
+## Examples
+
+A pure function used by a material (so it runs on the GPU) and by a handler (so it runs on the CPU), next to a CPU function that uses randomness:
+
+```mtek
+fn pulse(t: f32) -> f32 {
+    return 0.65 + 0.35 * sin(t);
+}
+
+cpu fn jitter(range: f32) -> f32 {
+    return (random() - 0.5) * range;
+}
+
+material Pulse {
+    param phase: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(pulse(phase)), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box {};
+        material: Pulse { phase: bind(frame.time) };
+
+        update(dt: f32) {
+            self.position.x = jitter(0.1) + pulse(frame.time);
+        }
+    }
+}
+```
+
+A function that returns nothing is called as a statement:
+
+```mtek
+cpu fn say(message: string) {
+    print(message);
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    on key_down(Key.Space) {
+        say("space was pressed");
+    }
+}
+```
+
+## Common mistakes
+
+### A pure function that calls a CPU-only intrinsic
+
+```mtek wrong=MTEK-E4002
+fn noisy(x: f32) -> f32 {
+    return x + random();
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+```
+
+`random` is CPU-only, so `noisy` must be a `cpu fn` (`MTEK-E4002`). The same code in a `bind` expression is `MTEK-E5005`: a binding must be pure (see [State and bindings](state-and-bindings.md)).
+
+### A `cpu fn` that wants the scene
+
+```mtek wrong=MTEK-E2003
+scene Demo {
+    state score: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+
+cpu fn bonus() -> i32 {
+    print("bonus");
+    return score + 10;
+}
+```
+
+The function has no access to `score` (`MTEK-E2003`, unknown name). Pass it as a parameter: `cpu fn bonus(score: i32) -> i32`.
+
+### Recursion
+
+```mtek wrong=MTEK-E4001
+fn factorial(n: i32) -> i32 {
+    if n <= 1 {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+```
+
+A function that calls itself, or two that call each other, is `MTEK-E4001`; the message lists the cycle. Use a `for` loop.
+
+### A loop that depends on a run-time number, in shader code
+
+```mtek wrong=MTEK-E4010
+fn total(n: i32) -> f32 {
+    var sum = 0.0;
+    for k in 0..n {
+        sum += f32(k);
+    }
+    return sum;
+}
+
+material Counting {
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(total(4) * 0.01), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+```
+
+`total` is called from a fragment stage, so its loop bounds have to be constants (`MTEK-E4010`); `n` is a parameter. Write `for k in 0..4` where the bound is known. The same function is fine when only CPU code calls it.
+
+### Spawning from a helper
+
+```mtek wrong=MTEK-E5080
+prefab Spark {
+    mesh: Sphere { radius: 0.1 };
+}
+
+cpu fn burst() {
+    spawn(Spark {});
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+}
+```
+
+`spawn` and `destroy` change the scene, so they may be called only in a handler or a lifecycle function (`MTEK-E5080`). Call `spawn` in the handler itself; a helper may compute the prefab's parameters and return them.
+
+## See also
+
+- [Materials and shaders](materials-and-shaders.md): the fragment stage and what it may read.
+- [State and bindings](state-and-bindings.md): the purity rule of `bind`.
+- [Entities and references](entities-and-references.md): `spawn` and `destroy`.
+- [Language reference](../language-reference.md#part-b-the-standard-library): every intrinsic with its signatures.
+
+## Diagnostics on this page
+
+{{cited-codes}}
