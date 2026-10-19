@@ -21,7 +21,11 @@ A material is the one place where Mtek code runs on the GPU. It is a list of typ
 
 The parameters of the built-in materials:
 
+**`Unlit`**
+
 {{fields Unlit}}
+
+**`Pbr`**
 
 {{fields Pbr}}
 

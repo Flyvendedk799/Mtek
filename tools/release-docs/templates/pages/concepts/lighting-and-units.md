@@ -19,18 +19,26 @@ Lights in Mtek use physical units, and the camera has an exposure, as a photogra
 
 The fields of the objects involved, as the compiler knows them:
 
+**`DirectionalLight`**
+
 {{fields DirectionalLight}}
+
+**`PointLight`**
 
 {{fields PointLight}}
 
+**`Camera`**
+
 {{fields Camera}}
+
+**`Scene`**
 
 {{fields Scene}}
 
 ## Why
 
 - Physical units make a number mean the same thing in every scene, in a model's material and in a book about lighting: 100 000 lux is a sunny day whether you are looking at a cube or a city. The cost is that the numbers are large, and the exposure is what brings them back to the range of a display.
-- The default exposure is chosen so that the first scene you write, one white cube under a sun of intensity 1.0, is white. When you raise the intensity to real values, lower the exposure scale with `exposure`, as you would turn down the aperture.
+- The default exposure is chosen so that the first scene you write, one white cube under a sun of intensity 1.0, is white. When you raise the intensity to real values, raise `exposure` to match, which lowers the exposure scale, as you would close the aperture of a camera.
 - Exposure is part of the camera because it describes the camera and not the world. It is a constant because there is no auto-exposure, no camera switching and no tone mapping in this version.
 - Linear light is the only space in which adding two lights gives the right answer, which is why `color` is linear and why the sRGB conversion is explicit.
 

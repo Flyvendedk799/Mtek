@@ -24,11 +24,15 @@ Physics in Mtek is a subsystem with one rule: the engine owns the pose of a body
 
 The descriptors:
 
+**`Dynamic`**
+
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `angular_damping` | `f32` | `0.05` | fixed at construction | ≥ 0, finite | Rate at which angular velocity decays. |
 | `linear_damping` | `f32` | `0.0` | fixed at construction | ≥ 0, finite | Rate at which linear velocity decays. |
 | `mass` | `f32` | `1.0` | fixed at construction | > 0, finite | Mass in kilograms. |
+
+**`BoxCollider`**
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
@@ -36,6 +40,8 @@ The descriptors:
 | `restitution` | `f32` | `0.0` | fixed at construction | 0…1 | Bounciness, 0 (none) to 1 (perfect). |
 | `sensor` | `bool` | `false` | fixed at construction |  | A sensor reports collisions but does not push other bodies. |
 | `size` | `vec3` | required | fixed at construction | every component > 0, finite | Full extents along X, Y and Z. |
+
+**`SphereCollider`**
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|

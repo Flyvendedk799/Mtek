@@ -95,6 +95,7 @@ scene = "Demo"
 
 [build]
 target = "web"
+out_dir = "build"
 title = "Showroom"
 
 [host.inputs]

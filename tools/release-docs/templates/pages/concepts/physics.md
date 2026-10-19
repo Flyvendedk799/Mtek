@@ -24,9 +24,15 @@ Physics in Mtek is a subsystem with one rule: the engine owns the pose of a body
 
 The descriptors:
 
+**`Dynamic`**
+
 {{fields Dynamic}}
 
+**`BoxCollider`**
+
 {{fields BoxCollider}}
+
+**`SphereCollider`**
 
 {{fields SphereCollider}}
 

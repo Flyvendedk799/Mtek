@@ -25,7 +25,7 @@ The guide of decision 0100 was safe because it copied whole files and excerpts o
 2. **The assets.** The files of `tests/assets/pass/assets_supported` (`models/chair.glb`, `textures/wood.png`, `textures/mask.png`) are copied into every project as `models/` and `textures/`, so that examples can declare assets with the paths a real project has (`"../textures/wood.png"` from `src/main.mtek`).
 3. **The compiler is the ground truth.** A rule is written into a page only after a snippet that shows it was compiled. When the compiler and `spec/` disagree, the page follows the compiler and the disagreement is reported in the completion report (see Consequences).
 4. **A wrong block names codes, not messages.** The wording of a diagnostic may change (task K-02 improves it); its code is stable.
-5. **Cost.** The blocks compile in parallel, six at a time; the whole documentation takes some tens of seconds.
+5. **Cost.** The blocks compile in parallel, six at a time; the whole documentation takes about ten seconds.
 
 ## Consequences
 

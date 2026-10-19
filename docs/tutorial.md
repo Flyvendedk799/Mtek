@@ -44,11 +44,11 @@ scene Demo {
 }
 ```
 
-You see a dark blue-grey floor, lit from above and to one side. What the file says:
+The room is a dark blue-grey floor under a light from above and to one side. What the file says:
 
 - The *scene* is the thing that runs. `clear_color` is the background, and `ambient_color` and `ambient_intensity` are the light that comes from everywhere. Scene fields are constants.
 - The *camera* is at `position`, looking at `target`. A scene needs exactly one active camera.
-- The *Sun* is an entity with a `DirectionalLight`. Its `intensity` is in lux, and with the default camera exposure 1 lux makes a white surface come out white, so 2.0 is a bright light and the dark floor is a mid-dark floor. The light shines along the entity's `-Z` axis; `quat.euler(-0.9, 0.4, 0.0)` tilts that axis down and turns it. See [Lighting, units and colour](concepts/lighting-and-units.md) for the units and for what to change when you want a sunny day (the intensity becomes 100 000 and the camera gets an `exposure`).
+- The *Sun* is an entity with a `DirectionalLight`. Its `intensity` is in lux, and with the default camera exposure 1 lux makes a white surface come out exactly white, so 2.0 is twice that, which suits the dark materials of this scene. The light shines along the entity's `-Z` axis; `quat.euler(-0.9, 0.4, 0.0)` tilts that axis down and turns it. See [Lighting, units and colour](concepts/lighting-and-units.md) for the units and for what to change when you want a sunny day (the intensity becomes 100 000 and the camera gets an `exposure`).
 - The *Floor* is an entity with a box-shaped mesh and a `Pbr` material, the lit material. Colours such as `#3a4150` are written in sRGB and stored as linear light.
 
 ## Step 2: something you can steer

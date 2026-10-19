@@ -300,6 +300,14 @@ scene Demo {
 - An import path starts with `./` or `../`, ends in `.mtek` and names exported items; no `as`, `*` or packages (`MTEK-E2030` to `MTEK-E2036`). `[host.inputs] name = "Scene.state"` exposes a state through these codecs: `f32`, `i32`, `u32`, `bool`, `vec2`, `vec3`, `vec4`, `color-hex`, `color-hex-opaque`, `string`.
 - Commands: `check`, `build`, `inspect`, `dev`, `new`, `fmt`, `test`, `context`, `grammar`, `lsp`. Run `mtek check` after every edit and fix the errors in report order; apply a suggested edit only when the diagnostic carries one.
 
-## 11. Pages
+## 11. Fixing errors
+
+- `MTEK-E1001`, `MTEK-E1003`: a missing `;`, a `,` between descriptor fields, a reserved word used as a name, a `state` without a type.
+- `MTEK-E2003`: unknown name. Scene state and named entities are not visible in a `cpu fn`, a material or a prefab; check the member of `Key`.
+- `MTEK-E3001`, `MTEK-E3014`: types do not match; convert with `f32(x)` (a literal adapts, a variable does not).
+- `MTEK-E5001`, `MTEK-E5003`: an unknown or missing field or parameter; the message lists the valid ones.
+- `MTEK-E4040`, `MTEK-E4002`, `MTEK-E5005`: code in a place that may not do that (section 3 to 5): pass the value in as a `param` or a function argument.
+
+## 12. Pages
 
 [Getting started](getting-started.md), [tutorial](tutorial.md), [concept pages](README.md#concepts), [language reference](language-reference.md), [limitations](limitations.md).

@@ -39,7 +39,7 @@ A language model that writes Mtek should be given the **[language guide](languag
 
 ## How the documentation is kept true
 
-- Every page except the getting-started page is written from a template in `tools/release-docs/templates`, and lists of names, field tables, defaults and signatures in it are read from the compiler's registry when the page is generated. They cannot drift from the compiler.
+- This index, the tutorial, the concept pages and the language guide are written from templates in `tools/release-docs/templates`, and the lists of names, field tables, defaults and signatures in them are read from the compiler's registry when the pages are generated. They cannot drift from the compiler. The reference and the limitations page are generated from the specification, the registry and the compiler as well.
 - Every Mtek code block of the concept pages, the tutorial and the language guide is compiled by a test (`npm run check:release`, `npm run test:unit`). A program must compile and be in the canonical layout of `mtek fmt`. A block that is wrong on purpose names the diagnostic it must produce, and the test fails if the compiler stops producing it. The steps of the tutorial are applied one after the other, and each result is compiled.
 - The getting-started page is executed against the real tool by `cargo test -p mtek-cli`.
 - Every link between pages, and every anchor, must resolve, and every diagnostic code that a page mentions must exist in the catalogue.

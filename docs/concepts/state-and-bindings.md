@@ -20,6 +20,8 @@ A Mtek program keeps its data in `state` and shows it on the screen with `bind`.
 
 The fields of an entity, a camera and a light, and whether a field can be bound or assigned:
 
+**`Entity`**
+
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `body` | `body` | none | fixed at construction |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
@@ -31,6 +33,8 @@ The fields of an entity, a camera and a light, and whether a field can be bound 
 | `rotation` | `quat` | `quat.identity()` | assignable, bindable |  | Rotation local to the parent. |
 | `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | assignable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body; that rule belongs to the checker, not to this field. |
 | `visible` | `bool` | `true` | assignable, bindable |  | Hides the mesh draw only; the entity's behaviour keeps running. |
+
+**`Camera`**
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|

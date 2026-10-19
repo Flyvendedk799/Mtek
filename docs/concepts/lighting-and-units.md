@@ -19,16 +19,22 @@ Lights in Mtek use physical units, and the camera has an exposure, as a photogra
 
 The fields of the objects involved, as the compiler knows them:
 
+**`DirectionalLight`**
+
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `color` | `color` | `#ffffff` | assignable, bindable |  | Light colour (linear RGB; alpha is ignored). |
 | `intensity` | `f32` | `1.0` | assignable, bindable |  | Illuminance in lux. |
+
+**`PointLight`**
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `color` | `color` | `#ffffff` | assignable, bindable |  | Light colour (linear RGB; alpha is ignored). |
 | `intensity` | `f32` | `1.0` | assignable, bindable |  | Luminous intensity in candela. |
 | `range` | `f32` | `0.0` | fixed at construction | ≥ 0 | Distance at which the light fades to nothing; 0 means unlimited. |
+
+**`Camera`**
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
@@ -38,6 +44,8 @@ The fields of the objects involved, as the compiler knows them:
 | `projection` | `projection` | `Perspective {}` | fixed at construction |  | `Perspective {..}` or `Orthographic {..}`. The projection kind is construction-only; the fields of the descriptor are writable and bindable. |
 | `rotation` | `quat` | `quat.identity()` | assignable, bindable |  | Orientation when no `target` is declared. |
 | `target` | `vec3` | none | assignable, bindable |  | Optional point to look at (up is +Y). When declared, `rotation` must not be. |
+
+**`Scene`**
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
@@ -49,7 +57,7 @@ The fields of the objects involved, as the compiler knows them:
 ## Why
 
 - Physical units make a number mean the same thing in every scene, in a model's material and in a book about lighting: 100 000 lux is a sunny day whether you are looking at a cube or a city. The cost is that the numbers are large, and the exposure is what brings them back to the range of a display.
-- The default exposure is chosen so that the first scene you write, one white cube under a sun of intensity 1.0, is white. When you raise the intensity to real values, lower the exposure scale with `exposure`, as you would turn down the aperture.
+- The default exposure is chosen so that the first scene you write, one white cube under a sun of intensity 1.0, is white. When you raise the intensity to real values, raise `exposure` to match, which lowers the exposure scale, as you would close the aperture of a camera.
 - Exposure is part of the camera because it describes the camera and not the world. It is a constant because there is no auto-exposure, no camera switching and no tone mapping in this version.
 - Linear light is the only space in which adding two lights gives the right answer, which is why `color` is linear and why the sRGB conversion is explicit.
 

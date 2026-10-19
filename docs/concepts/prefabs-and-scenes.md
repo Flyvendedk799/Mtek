@@ -30,6 +30,8 @@ A file is made of items: constants, functions, structs, materials, prefabs and s
 
 The fields of the scene itself:
 
+**`Scene`**
+
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `ambient_color` | `color` | `#ffffff` | fixed at construction |  | Colour of the ambient light term of lit materials. Only the RGB channels are used. |

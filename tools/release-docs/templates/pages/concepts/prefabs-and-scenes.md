@@ -30,6 +30,8 @@ A file is made of items: constants, functions, structs, materials, prefabs and s
 
 The fields of the scene itself:
 
+**`Scene`**
+
 {{fields Scene}}
 
 ## Why

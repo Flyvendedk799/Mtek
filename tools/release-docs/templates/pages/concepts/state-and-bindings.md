@@ -20,7 +20,11 @@ A Mtek program keeps its data in `state` and shows it on the screen with `bind`.
 
 The fields of an entity, a camera and a light, and whether a field can be bound or assigned:
 
+**`Entity`**
+
 {{fields Entity}}
+
+**`Camera`**
 
 {{fields Camera}}
 
