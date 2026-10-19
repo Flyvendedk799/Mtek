@@ -184,3 +184,36 @@ export function typeFields(registry: StdlibSchema, name: string): string {
   if (def.fields.length === 0) throw new Error(`{{type-fields ${name}}}: the type has no fields`);
   return def.fields.map((f) => code(`${f.name}: ${f.type}`)).join(", ");
 }
+
+/** `{{methods TYPE}}`: the methods of a registry type (`glb_asset`) with their signatures, as a table. */
+export function methodsTable(registry: StdlibSchema, name: string): string {
+  const def = registry.types.find((t) => t.name === name);
+  if (def === undefined || def.methods.length === 0) throw new Error(`{{methods ${name}}}: the registry has no type ${JSON.stringify(name)} with methods`);
+  return table(
+    ["Method", "Signature", "Meaning"],
+    def.methods.map((m) => [code(`.${m.name}`), (m.signatures ?? []).map((s) => code(`${m.name}${s}`)).join("<br>"), m.doc]),
+  );
+}
+
+/** `{{members NAMESPACE}}`: the members of a registry namespace (`sampler`, `texture`) with their signatures, as a table. */
+export function membersTable(registry: StdlibSchema, name: string): string {
+  const ns = registry.namespaces.find((n) => n.name === name);
+  if (ns === undefined) throw new Error(`{{members ${name}}}: the registry has no namespace ${JSON.stringify(name)}`);
+  return table(
+    ["Name", "Signature", "Meaning"],
+    ns.members.map((m) => [
+      code(`${name}.${m.name}`),
+      m.kind === "function" ? (m.signatures ?? []).map((s) => code(`${name}.${m.name}${s}`)).join("<br>") : code(m.type ?? ""),
+      m.doc,
+    ]),
+  );
+}
+
+/** `{{body-commands}}`: the body commands and the readable body properties of the registry, as a table. */
+export function bodyCommandsTable(registry: StdlibSchema): string {
+  const rows = [
+    ...registry.bodyCommands.map((c) => [code(`body.${c.name}(${c.params.map((p) => `${p.name}: ${p.type}`).join(", ")})`), c.appliesTo.join(", "), c.doc]),
+    ...registry.bodyProperties.map((p) => [code(`body.${p.name}: ${p.type}`), p.appliesTo.join(", "), p.doc]),
+  ];
+  return table(["Command or property", "Applies to", "Meaning"], rows);
+}

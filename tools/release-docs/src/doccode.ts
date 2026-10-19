@@ -14,7 +14,8 @@
 //   ```mtek project=ID file=PATH  a file of a project built up through the page. The project is compiled after every
 //                                 block that writes `src/main.mtek`. `diff project=ID [file=PATH]` edits the file the
 //                                 way the getting-started walkthrough does: the ` ` and `-` lines must occur exactly once.
-//   ```toml manifest              an `mtek.toml`: `mtek check` accepts it (with a scene `Demo`); `wrong=MTEK-E9001` says it must not.
+//   ```toml manifest              an `mtek.toml`: `mtek check` accepts it, with a scene `Demo` that has the states `tint: color`,
+//                                 `speed: f32` and `levels: array<f32, 2>`; `wrong=MTEK-E9001` says it must not.
 //   ```toml from=PATH             a part of a file of the repository.
 //
 // Any other language (`text`, `console`, `sh`, `json`) is not checked, but every fence needs one.
@@ -298,7 +299,7 @@ async function checkManifest(run_: CodeRun, fence: Fence): Promise<Mismatch[]> {
     writeFileSync(join(dir, "mtek.toml"), fence.body.replace(/\n+$/, "") + "\n");
     writeFileSync(
       join(dir, "src", "main.mtek"),
-      `scene Demo {\n    state tint: color = #6b5cff;\n    state speed: f32 = 1.0;\n    ${HIDDEN_CAMERA}\n}\n`,
+      `scene Demo {\n    state tint: color = #6b5cff;\n    state speed: f32 = 1.0;\n    state levels: array<f32, 2> = [0.0, 0.0];\n    ${HIDDEN_CAMERA}\n}\n`,
     );
     return await judge(run_, fence, dir, null);
   } finally {
