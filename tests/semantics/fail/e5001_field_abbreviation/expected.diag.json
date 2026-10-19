@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5001",
+    "file": "src/main.mtek",
+    "startByte": 126,
+    "endByte": 129,
+    "message": "Unknown field 'pos' on entity 'Floor'. Valid fields: position, rotation, scale, visible, mesh, material, light, body, collider.",
+    "notes": [
+      "help: did you mean 'position'?"
+    ]
+  }
+]

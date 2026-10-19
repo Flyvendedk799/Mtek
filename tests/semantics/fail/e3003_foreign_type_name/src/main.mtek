@@ -1,0 +1,6 @@
+// `float` is not a type of Mtek; the diagnostic gives the Mtek spelling and lists the types.
+const SPEED: float = 2.0;
+
+scene Demo {
+    camera Main {}
+}

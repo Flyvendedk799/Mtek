@@ -79,6 +79,66 @@ impl Place {
     }
 }
 
+/// Where statements belong when they stand in a body that has none (decision 0113).
+fn statement_where_instead(place: Place) -> Option<&'static str> {
+    match place {
+        Place::Material => Some(
+            "statements go inside the stage function `fragment(input: SurfaceInput) -> color { ... }`; a value that is the same for every pixel is a `param`",
+        ),
+        Place::TopLevel => Some(
+            "statements go inside a function body; a value shared by the file is a `const name: Type = value;`",
+        ),
+        Place::Scene | Place::Entity | Place::Prefab => Some(
+            "statements go inside a lifecycle function (`update(dt: f32) { ... }` or `fixed_update(dt: f32) { ... }`) or an event handler (`on key_down(Key.Space) { ... }`); a value kept between frames is a `state`, a fixed one a `const`",
+        ),
+        Place::Block => None,
+    }
+}
+
+/// Where a declaration of the kind that starts with `kind` (and `next`, the word after `export` or
+/// `cpu`) belongs when it stands in `place` (decision 0113).
+fn declaration_where_instead(kind: TokenKind, next: &str, place: Place) -> Option<&'static str> {
+    let kind = if matches!(kind, TokenKind::KwExport | TokenKind::KwCpu) && next == "fn" {
+        TokenKind::KwFn
+    } else {
+        kind
+    };
+    match kind {
+        TokenKind::KwPrefab => Some(
+            "declare the prefab at the top level of the file, outside the scene, then place it with `entity Name: PrefabName { ... }` in the scene or `spawn(PrefabName { ... })` in a handler",
+        ),
+        TokenKind::KwFn | TokenKind::KwCpu => Some(
+            "declare functions at the top level of the file, outside the scene, entity or block, and call them from there",
+        ),
+        TokenKind::KwStruct | TokenKind::KwMaterial => {
+            Some("declare structs and materials at the top level of the file, outside the scene")
+        }
+        TokenKind::KwImport | TokenKind::KwExport => {
+            Some("`import` and `export` belong at the top level of a file")
+        }
+        TokenKind::KwScene => {
+            Some("declare the scene at the top level of the file; a project mounts one scene")
+        }
+        TokenKind::KwEntity if place == Place::TopLevel => Some(
+            "entities are declared inside a scene: `scene Name { entity Thing { ... } }`; a reusable entity is a top-level `prefab`",
+        ),
+        TokenKind::KwState | TokenKind::KwOn if place == Place::TopLevel => Some(
+            "`state` and `on` handlers are declared inside a scene, entity or prefab; a value shared by the file is a `const`",
+        ),
+        TokenKind::KwEntity if place == Place::Block => Some(
+            "entities are declared in a scene; to create one at run time write `spawn(PrefabName { ... })` in a handler",
+        ),
+        TokenKind::KwState if place == Place::Block => Some(
+            "`state` is declared directly in a scene, entity or prefab; inside a function use `var name = value;`",
+        ),
+        TokenKind::KwOn if place == Place::Block => Some(
+            "an `on` handler is declared directly in a scene, entity or prefab, not inside a block",
+        ),
+        TokenKind::KwParam => Some("a `param` belongs to a `prefab` or a `material`"),
+        _ => None,
+    }
+}
+
 /// A member of a body, before it is known which body it is in.
 pub(super) enum Member {
     Field(FieldInit),
@@ -148,6 +208,25 @@ impl Member {
             Member::Handler(_) => "`on` handlers",
             Member::Stage(_) => "stage functions",
             Member::Error(_) => "errors",
+        }
+    }
+
+    /// Where this member belongs instead, as advice (decision 0113).
+    fn where_instead(&self, place: Place) -> Option<&'static str> {
+        match (self, place) {
+            (Member::Param(_), Place::Scene | Place::Entity) => Some(
+                "a `param` belongs to a `prefab` or a `material`; in a scene use `state name: Type = value;` for a value that changes and `const name: Type = value;` for one that does not",
+            ),
+            (Member::Stage(_), _) => Some(
+                "a stage function belongs to a `material`: `material Name { fragment(input: SurfaceInput) -> color { ... } }`",
+            ),
+            (Member::Object(_), _) => Some(
+                "scene objects such as `camera` are declared directly in a scene, not in an entity or prefab",
+            ),
+            (_, Place::Material) => Some(
+                "a material is a GPU program with params and one stage function, and has no state, entities or handlers: add a `param`, and set it from the entity that uses the material, with `bind(...)` for a value that changes",
+            ),
+            _ => None,
         }
     }
 
@@ -276,7 +355,7 @@ impl Parser<'_> {
     /// stands for it.
     #[inline(never)]
     fn rejected_member(&mut self, first: Span, place: Place, member: &Member) -> Member {
-        self.report_not_allowed(first, place, member.plural());
+        self.report_not_allowed(first, place, member.plural(), member.where_instead(place));
         Member::Error(ErrorNode {
             id: member.id(),
             span: member.span(),
@@ -411,7 +490,7 @@ impl Parser<'_> {
     #[inline(never)]
     fn misplaced_statement(&mut self, place: Place) -> Member {
         let first = self.span();
-        self.report_not_allowed(first, place, "statements");
+        self.report_not_allowed(first, place, "statements", statement_where_instead(place));
         drop(self.stmt());
         Member::Error(self.error_node(first.start))
     }
@@ -424,7 +503,12 @@ impl Parser<'_> {
     pub(super) fn drop_misplaced(&mut self, place: Place) {
         let first = self.span();
         let noun = self.construct_plural();
-        self.report_not_allowed(first, place, &noun);
+        let next = self
+            .tokens
+            .get(self.pos.saturating_add(1))
+            .map_or("", |token| token.text(self.text));
+        let instead = declaration_where_instead(self.kind(), next, place);
+        self.report_not_allowed(first, place, &noun, instead);
         match self.kind() {
             TokenKind::KwState => drop(self.state_decl()),
             TokenKind::KwParam => drop(self.param_decl()),
@@ -452,7 +536,13 @@ impl Parser<'_> {
     }
 
     #[inline(never)]
-    fn report_not_allowed(&mut self, first: Span, place: Place, what: &str) {
+    fn report_not_allowed(
+        &mut self,
+        first: Span,
+        place: Place,
+        what: &str,
+        instead: Option<&'static str>,
+    ) {
         // A complete sentence: the plural noun ("statements", "fields") starts it.
         let mut what = what.to_owned();
         if let Some(first) = what.get_mut(..1) {
@@ -464,7 +554,10 @@ impl Parser<'_> {
         )
         .at(first)
         .help(place.allowed());
-        self.report(diagnostic);
+        self.report(match instead {
+            Some(instead) => diagnostic.help(instead),
+            None => diagnostic,
+        });
     }
 
     // ----- fields, state, params -----------------------------------------------

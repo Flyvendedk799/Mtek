@@ -6,7 +6,10 @@
     "endByte": 180,
     "message": "The default of the param 'map' must have type texture, but it has type sampler.",
     "expected": "texture",
-    "actual": "sampler"
+    "actual": "sampler",
+    "notes": [
+      "help: a texture default is `texture.white()`, `texture.black()`, `asset.texture(\"file.png\")` or `asset.linear_texture(\"file.png\")`, or a constant of one of them"
+    ]
   },
   {
     "code": "MTEK-E3102",

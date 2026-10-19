@@ -10,6 +10,7 @@ use super::gate::{
 };
 use super::imports::ImportBindings;
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, SuggestedEdit};
+use crate::hints;
 use crate::project::edit_distance;
 use crate::source::Span;
 use crate::stdlib::{
@@ -25,6 +26,12 @@ use crate::syntax::ast::{
 
 /// The reserved identifier (`spec/language.md` 2.1, `E0012`).
 const UNDERSCORE: &str = "_";
+
+/// How many nearest members an unknown-member diagnostic names.
+const MAX_NEAREST: usize = 5;
+
+/// The words other languages use for "no value". Mtek has none (decision 0113).
+const NULL_WORDS: [&str; 5] = ["null", "nil", "None", "undefined", "NULL"];
 
 /// What a scope belongs to; used for wording only.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -422,6 +429,20 @@ impl<'a> Resolver<'a> {
         name: &str,
         candidates: &BTreeMap<String, Option<Span>>,
     ) {
+        let diagnostic = self.unknown_diagnostic(code, message, span, name, candidates);
+        self.sink.push(diagnostic);
+    }
+
+    /// The diagnostic of an unknown name, with the single close candidate as a related span or
+    /// a help, and the rename as a proposed edit (`E2003` only).
+    fn unknown_diagnostic(
+        &mut self,
+        code: Code,
+        message: String,
+        span: Span,
+        name: &str,
+        candidates: &BTreeMap<String, Option<Span>>,
+    ) -> Diagnostic {
         let mut diagnostic = Diagnostic::new(code, message).at(span);
         if let Some((candidate, at)) = single_candidate(name, candidates) {
             diagnostic = match at {
@@ -436,6 +457,71 @@ impl<'a> Resolver<'a> {
                         .replace(span, renamed),
                 );
             }
+        }
+        diagnostic
+    }
+
+    /// `E2003` for `owner.name` where `owner` is a built-in namespace or enum without that member
+    /// (decision 0113): the nearest members (names within edit distance 2, the same name in another
+    /// letter case, names that contain the written one, as `Up` for `ArrowUp`), and every member,
+    /// because the set is finite. A mechanical rename is proposed only when exactly one member is
+    /// nearest.
+    fn report_unknown_member(
+        &mut self,
+        owner_noun: &str,
+        owner_name: &str,
+        name: &Ident,
+        candidates: &[(&'static str, bool)],
+    ) {
+        let written = name.name.as_str();
+        let shown = |member: &str| {
+            let function = candidates.iter().any(|(m, f)| *m == member && *f);
+            if function {
+                format!("{owner_name}.{member}()")
+            } else {
+                format!("{owner_name}.{member}")
+            }
+        };
+        let mut diagnostic = Diagnostic::new(
+            Code::E2003,
+            format!("The built-in {owner_noun} `{owner_name}` has no member '{written}'."),
+        )
+        .at(name.span);
+        let names = || candidates.iter().map(|(m, _)| *m);
+        if let Some(only) = hints::unambiguous(written, names()) {
+            diagnostic =
+                diagnostic.help(format!("did you mean the built-in '{owner_name}.{only}'?"));
+            if name.span.len() as usize == written.len() {
+                diagnostic = diagnostic.candidate(
+                    SuggestedEdit::new(format!("rename '{written}' to '{only}'"))
+                        .replace(name.span, only),
+                );
+            }
+        } else {
+            let near = hints::nearest(written, names(), MAX_NEAREST);
+            if !near.is_empty() {
+                let near: Vec<String> = near.iter().map(|m| format!("`{}`", shown(m))).collect();
+                diagnostic = diagnostic.help(format!(
+                    "the nearest members of `{owner_name}` are {}",
+                    hints::and_list(&near)
+                ));
+            }
+        }
+        if !candidates.is_empty() {
+            let all: Vec<String> = candidates
+                .iter()
+                .map(|(m, function)| {
+                    if *function {
+                        format!("{m}()")
+                    } else {
+                        (*m).to_owned()
+                    }
+                })
+                .collect();
+            diagnostic = diagnostic.note(format!(
+                "the members of `{owner_name}` are: {}",
+                all.join(", ")
+            ));
         }
         self.sink.push(diagnostic);
     }
@@ -1259,13 +1345,27 @@ impl<'a> Resolver<'a> {
         for t in &self.registry.types {
             candidates.entry(t.name.to_owned()).or_insert(None);
         }
-        self.report_unknown(
+        let mut diagnostic = self.unknown_diagnostic(
             Code::E3003,
             format!("Unknown type '{}'.", name.name),
             name.span,
             &name.name,
             &candidates,
         );
+        if let Some(spelling) = foreign_type(&name.name) {
+            diagnostic = diagnostic.help(format!("Mtek spells it `{spelling}`"));
+        }
+        let types: Vec<&str> = self
+            .registry
+            .types
+            .iter()
+            .filter(|t| is_implemented(t.since))
+            .map(|t| t.name)
+            .collect();
+        self.sink.push(diagnostic.note(format!(
+            "the built-in types are: {}, and your own `struct`s",
+            types.join(", ")
+        )));
         Res::Error
     }
 
@@ -1371,6 +1471,30 @@ impl<'a> Resolver<'a> {
             self.report_capture(&format!("the {noun} '{name}'"), span);
             return Res::Error;
         }
+        // The parser reported the reserved word (`E0013`); an unknown name besides would repeat it.
+        if crate::syntax::is_reserved_word(name) {
+            return Res::Error;
+        }
+        if let Some(help) = foreign_name_help(name) {
+            self.sink.push(
+                Diagnostic::new(Code::E2003, format!("Unknown name '{name}'."))
+                    .at(span)
+                    .help(help),
+            );
+            return Res::Error;
+        }
+        if NULL_WORDS.contains(&name) {
+            self.sink.push(
+                Diagnostic::new(
+                    Code::E2003,
+                    format!("Unknown name '{name}': Mtek has no null value."),
+                )
+                .at(span)
+                .note("no type of v0.1 can be empty: a `state`, a param or a local always holds a value of its type")
+                .help("to say 'no entity', keep a `bool` state next to the `entity_ref` (`state has_target: bool = false;`), start the reference at a named entity of the scene (`state target: entity_ref = Floor;`) and set both when you `spawn`; `alive(target)` is false once the entity is destroyed"),
+            );
+            return Res::Error;
+        }
         let mut candidates = self.visible_names(|_| true);
         for (prelude, _) in self.registry.prelude_names() {
             candidates.entry(prelude.to_owned()).or_insert(None);
@@ -1444,10 +1568,16 @@ impl<'a> Resolver<'a> {
                     .registry
                     .namespace_member(namespace, &name.name)
                     .map(|m| m.name());
-                let candidates: Vec<&'static str> = self
+                let candidates: Vec<(&'static str, bool)> = self
                     .registry
                     .namespace(namespace)
-                    .map(|n| n.members.iter().map(|m| m.name()).collect())
+                    .map(|n| {
+                        n.members
+                            .iter()
+                            .filter(|m| is_implemented(m.since()))
+                            .map(|m| (m.name(), matches!(m, NamespaceMember::Function(_))))
+                            .collect()
+                    })
                     .unwrap_or_default();
                 let item = member.map(|member| PreludeItem::NamespaceMember { namespace, member });
                 self.member(PreludeItem::Namespace(namespace), item, name, &candidates);
@@ -1458,10 +1588,10 @@ impl<'a> Resolver<'a> {
                     .registry
                     .enum_member(enum_name, &name.name)
                     .map(|m| m.name);
-                let candidates: Vec<&'static str> = self
+                let candidates: Vec<(&'static str, bool)> = self
                     .registry
                     .enum_def(enum_name)
-                    .map(|e| e.members.iter().map(|m| m.name).collect())
+                    .map(|e| e.members.iter().map(|m| (m.name, false)).collect())
                     .unwrap_or_default();
                 let item = member.map(|member| PreludeItem::EnumMember { enum_name, member });
                 self.member(PreludeItem::Enum(enum_name), item, name, &candidates);
@@ -1522,7 +1652,7 @@ impl<'a> Resolver<'a> {
         owner: PreludeItem,
         item: Option<PreludeItem>,
         name: &Ident,
-        candidates: &[&'static str],
+        candidates: &[(&'static str, bool)],
     ) {
         let (owner_noun, owner_name) = match owner {
             PreludeItem::Namespace(n) => ("namespace", n),
@@ -1539,20 +1669,7 @@ impl<'a> Resolver<'a> {
                 self.set_res(name.id, Res::Prelude(item));
             }
             None => {
-                let candidates: BTreeMap<String, Option<Span>> = candidates
-                    .iter()
-                    .map(|c| (format!("{owner_name}.{c}"), None))
-                    .collect();
-                self.report_unknown(
-                    Code::E2003,
-                    format!(
-                        "The built-in {owner_noun} `{owner_name}` has no member '{}'.",
-                        name.name
-                    ),
-                    name.span,
-                    &format!("{owner_name}.{}", name.name),
-                    &candidates,
-                );
+                self.report_unknown_member(owner_noun, owner_name, name, candidates);
                 self.set_res(name.id, Res::Error);
             }
         }
@@ -1625,6 +1742,57 @@ impl<'a> Resolver<'a> {
         );
         Res::Error
     }
+}
+
+/// The Mtek spelling of a type name from another language, when it is unambiguous.
+fn foreign_type(name: &str) -> Option<&'static str> {
+    Some(match name {
+        "float" | "double" | "number" | "Number" | "Float" | "float32" => "f32",
+        "int" | "integer" | "Int" | "Integer" | "long" | "short" | "int32" => "i32",
+        "uint" | "unsigned" | "uint32" => "u32",
+        "boolean" | "Boolean" | "Bool" => "bool",
+        "str" | "String" | "text" => "string",
+        "float2" | "Vec2" | "Vector2" => "vec2",
+        "float3" | "Vec3" | "Vector3" => "vec3",
+        "float4" | "Vec4" | "Vector4" => "vec4",
+        "float4x4" | "Mat4" | "Matrix4" | "Matrix" => "mat4",
+        "Quat" | "Quaternion" => "quat",
+        "Color" | "Colour" | "colour" => "color",
+        "Texture" | "Texture2D" => "texture",
+        "Sampler" => "sampler",
+        "Entity" | "EntityRef" => "entity_ref",
+        "Mesh" => "mesh",
+        "Material" => "material",
+        _ => return None,
+    })
+}
+
+/// What to write instead of a global name from another language (`E2003`).
+fn foreign_name_help(name: &str) -> Option<&'static str> {
+    Some(match name {
+        "Math" => {
+            "math functions are global in Mtek: `sin(x)`, `sqrt(x)`, `pow(x, y)`, `min(a, b)`, `abs(x)`, `clamp(x, lo, hi)`; there is no `Math` object and no `PI` constant, so write the number or declare `const PI: f32 = 3.14159265;`"
+        }
+        "console" | "System" | "Debug" => {
+            "`print(message: string)` is the development console, in CPU code only"
+        }
+        "Vec2" | "Vec3" | "Vec4" | "Vector2" | "Vector3" | "Vector4" | "float2" | "float3"
+        | "float4" => {
+            "the vector types are lowercase and are called to build a value: `vec2(x, y)`, `vec3(x, y, z)`, `vec4(x, y, z, w)`"
+        }
+        "Color" | "Colour" | "colour" => {
+            "the type is `color`: write a literal `#rrggbb` or call `color.linear(rgb, a)`"
+        }
+        "Quaternion" | "Quat" => {
+            "the type is `quat`: build one with `quat.identity()`, `quat.euler(x, y, z)` or `quat.axis_angle(axis, angle)`"
+        }
+        "this" => "inside an entity or prefab the entity itself is `self`",
+        "dt" | "deltaTime" | "delta_time" => {
+            "the time since the last update is the parameter of `update(dt: f32)`; `frame.delta` is the same value"
+        }
+        "time" | "elapsed" => "the application time in seconds is `frame.time`",
+        _ => return None,
+    })
 }
 
 /// `noun` with its indefinite article.

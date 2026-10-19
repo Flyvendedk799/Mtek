@@ -6,7 +6,8 @@
     "endByte": 6,
     "message": "`entity` declarations cannot appear at the top level of a file.",
     "notes": [
-      "help: a file contains `import`, `const`, `fn`, `struct`, `material`, `prefab` and `scene` items"
+      "help: a file contains `import`, `const`, `fn`, `struct`, `material`, `prefab` and `scene` items",
+      "help: entities are declared inside a scene: `scene Name { entity Thing { ... } }`; a reusable entity is a top-level `prefab`"
     ]
   }
 ]

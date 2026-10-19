@@ -6,6 +6,9 @@
     "endByte": 17,
     "message": "'vec3' is a type, not a value.",
     "expected": "a value",
-    "actual": "type"
+    "actual": "type",
+    "notes": [
+      "help: call the type to build a value: `vec3(x, y, ...)` with one `f32` per component, or `vec3(s)` to repeat one `f32`"
+    ]
   }
 ]

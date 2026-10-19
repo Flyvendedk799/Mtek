@@ -1,0 +1,9 @@
+// Mtek has no null value (E2003 says so). "No entity yet" is a flag next to a reference that
+// starts at a named entity of the scene.
+scene Demo {
+    state target: entity_ref = null;
+    camera Main {}
+    entity Floor {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    }
+}

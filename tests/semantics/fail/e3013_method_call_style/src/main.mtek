@@ -1,0 +1,7 @@
+// Mtek has functions, not methods: `v.length()` is a swizzle error that names the function.
+const V: vec3 = vec3(1.0, 2.0, 2.0);
+const L: f32 = V.length();
+
+scene Demo {
+    camera Main {}
+}

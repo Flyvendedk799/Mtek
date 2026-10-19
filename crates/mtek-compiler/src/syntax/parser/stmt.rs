@@ -104,8 +104,39 @@ impl Parser<'_> {
                 self.misplaced_in_block()
             }
             kind if is_item_keyword(kind) => self.misplaced_in_block(),
+            TokenKind::Ident if self.at_reserved_loop() => self.reserved_loop(),
             kind if starts_expression(kind) => self.simple_stmt(),
             _ => self.not_a_statement(),
+        }
+    }
+
+    /// Whether the statement starts with the reserved word `while` or `loop`.
+    fn at_reserved_loop(&self) -> bool {
+        self.tok().is_reserved_word() && matches!(self.text_of(self.span()), "while" | "loop")
+    }
+
+    /// `while cond { ... }` and `loop { ... }`: `E0013` once, with the loop v0.1 has, and the
+    /// rest is read as an `if` or a block so that nothing in it is reported as a cascade
+    /// (decision 0113). The program is rejected anyway.
+    #[inline(never)]
+    fn reserved_loop(&mut self) -> Stmt {
+        let start = self.span().start;
+        let is_while = self.text_of(self.span()) == "while";
+        self.report_if_reserved(self.span());
+        self.bump();
+        let cond = is_while.then(|| self.expr(false));
+        self.loop_depth += 1;
+        let body = self.block();
+        self.loop_depth -= 1;
+        match cond {
+            Some(cond) => Stmt::If(IfStmt {
+                id: self.id(),
+                span: self.span_from(start),
+                cond,
+                then_block: body,
+                else_branch: None,
+            }),
+            None => Stmt::Block(body),
         }
     }
 

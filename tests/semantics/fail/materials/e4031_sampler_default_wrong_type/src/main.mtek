@@ -1,0 +1,11 @@
+// The default of a sampler param is one of the four sampler constructors.
+material Gloss {
+    param filter: sampler = texture.white();
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(sample(texture.white(), filter, input.uv).xyz, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

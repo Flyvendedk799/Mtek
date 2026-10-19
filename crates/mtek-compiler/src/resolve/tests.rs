@@ -421,10 +421,13 @@ fn enum_members_and_unknown_members_are_resolved() {
         r.res("ident", "key_down", 0),
         Some(Res::Prelude(PreludeItem::Event("key_down")))
     );
-    assert_eq!(
-        r.diagnostics[0].notes,
-        ["help: did you mean the built-in 'Key.Space'?"]
+    let notes = &r.diagnostics[0].notes;
+    assert_eq!(notes[0], "help: did you mean the built-in 'Key.Space'?");
+    assert!(
+        notes[1].starts_with("the members of `Key` are: A, B, C"),
+        "{notes:?}"
     );
+    assert_eq!(notes.len(), 2);
 }
 
 #[test]

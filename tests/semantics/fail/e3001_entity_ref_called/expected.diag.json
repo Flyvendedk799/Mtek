@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 268,
+    "endByte": 274,
+    "message": "Only functions and constructors can be called, but 'target' has type entity_ref.",
+    "expected": "a function or constructor",
+    "actual": "entity_ref",
+    "notes": [
+      "help: an `entity_ref` is a value, not a function: compare it with `==` or `!=`, test `alive(r)`, remove it with `destroy(r)`, or command its body with `r.body.apply_impulse(v)`; to create an entity write `spawn(Prefab { ... })`"
+    ]
+  }
+]

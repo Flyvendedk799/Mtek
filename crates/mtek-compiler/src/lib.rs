@@ -38,6 +38,7 @@ pub mod types;
 
 mod build;
 mod check;
+mod hints;
 mod inspect;
 pub use build::{
     BuildMode, BuildResult, CompileOptions, DEFAULT_LOOP_BUDGET, STUB_PHYSICS_BUNDLE,

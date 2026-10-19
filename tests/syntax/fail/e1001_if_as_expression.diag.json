@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_if_as_expression.mtek",
+    "startByte": 57,
+    "endByte": 59,
+    "message": "Expected an expression, found `if`.",
+    "notes": [
+      "`if` is a statement and gives no value: v0.1 has no `if` expression and no ternary operator",
+      "help: declare the variable first and assign it in the branches: `var x = a; if cond { x = b; }`; for numbers, `mix(a, b, t)` with `t` 0.0 or 1.0 also selects between two values"
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E3003",
+    "file": "src/main.mtek",
+    "startByte": 107,
+    "endByte": 112,
+    "message": "Unknown type 'float'.",
+    "notes": [
+      "help: Mtek spells it `f32`",
+      "the built-in types are: bool, i32, u32, f32, string, vec2, vec3, vec4, mat4, quat, color, array, mesh, material, texture, sampler, entity_ref, glb_asset, SurfaceInput, PointerEvent, and your own `struct`s"
+    ]
+  }
+]

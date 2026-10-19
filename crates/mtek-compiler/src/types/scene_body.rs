@@ -331,11 +331,16 @@ impl Checker<'_> {
         match event {
             None => {
                 let names: Vec<&str> = self.registry.events.iter().map(|e| e.name).collect();
-                self.sink.push(
+                let mut diagnostic =
                     Diagnostic::new(Code::E5060, format!("Unknown event '{event_name}'."))
-                        .at(handler.event.span)
-                        .help(format!("v0.1 events: {}", names.join(", "))),
-                );
+                        .at(handler.event.span);
+                let near = crate::hints::nearest(event_name, names.iter().copied(), 3);
+                if !near.is_empty() {
+                    let near: Vec<String> = near.iter().map(|n| format!("`{n}`")).collect();
+                    diagnostic = diagnostic.help(format!("did you mean {}?", near.join(" or ")));
+                }
+                self.sink
+                    .push(diagnostic.note(format!("the events of v0.1 are: {}", names.join(", "))));
             }
             Some(event) => {
                 self.handler_args(handler, event.form, event_name, &mut params);
@@ -389,13 +394,17 @@ impl Checker<'_> {
                             .expected(enum_name.to_owned())
                             .actual(self.display(ty)),
                         );
-                    } else if !self.is_constant_expr(filter) {
+                    } else if !self.out.interner.is_error(ty) && !self.is_constant_expr(filter) {
+                        // A filter that is already an error (`Key.Up` is `E2003`, with the nearest
+                        // members) is not reported a second time.
                         self.sink.push(
                             Diagnostic::new(
                                 Code::E5061,
-                                format!("The filter of `on {event}` must be a constant {enum_name} member."),
+                                format!("The filter of `on {event}` must be a constant {enum_name} member, written like `{enum_name}.Space`."),
                             )
-                            .at(filter.span),
+                            .at(filter.span)
+                            .note("a filter is fixed when the program is built, so it cannot be a state, a local or any other value that changes at run time")
+                            .help(format!("to react to a key that is only known at run time, test `is_key_down(...)` inside `update`, or handle each key in a handler of its own: `on {event}({enum_name}.Space) {{ ... }}`")),
                         );
                     }
                 }

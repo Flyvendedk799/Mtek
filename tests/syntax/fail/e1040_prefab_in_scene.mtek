@@ -1,0 +1,6 @@
+scene Demo {
+    camera Main {}
+    prefab Crate {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    }
+}

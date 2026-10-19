@@ -6,7 +6,8 @@
     "endByte": 20,
     "message": "Statements cannot appear in a scene.",
     "notes": [
-      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers",
+      "help: statements go inside a lifecycle function (`update(dt: f32) { ... }` or `fixed_update(dt: f32) { ... }`) or an event handler (`on key_down(Key.Space) { ... }`); a value kept between frames is a `state`, a fixed one a `const`"
     ]
   }
 ]

@@ -6,7 +6,7 @@
     "endByte": 8,
     "message": "`while` is reserved for a future version of Mtek and cannot be used as a name.",
     "notes": [
-      "help: choose another name"
+      "help: v0.1 has only the counted loop `for i in 0..n { ... }` (the bounds are integers, `break` leaves it early); there is no `while` or `loop`"
     ]
   }
 ]

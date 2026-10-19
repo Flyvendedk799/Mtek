@@ -1,0 +1,7 @@
+// `color.linear` takes the alpha as its second argument: the signature is in the message and the
+// help names the missing argument.
+const TINT: color = color.linear(vec3(1.0, 0.5, 0.0));
+
+scene Demo {
+    camera Main {}
+}

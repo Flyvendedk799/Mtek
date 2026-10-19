@@ -6,7 +6,8 @@
     "endByte": 19,
     "message": "`fn` declarations cannot appear in a function body or block.",
     "notes": [
-      "help: a block contains statements such as `let`, `if`, `for` and calls"
+      "help: a block contains statements such as `let`, `if`, `for` and calls",
+      "help: declare functions at the top level of the file, outside the scene, entity or block, and call them from there"
     ]
   }
 ]

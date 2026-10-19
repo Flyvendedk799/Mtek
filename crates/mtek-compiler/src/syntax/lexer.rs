@@ -349,13 +349,18 @@ impl<'a> Lexer<'a> {
             )
             .help("separate tokens with a space (U+0020), a tab or a line break")
         } else {
-            Diagnostic::new(
+            let diagnostic = Diagnostic::new(
                 Code::E0005,
                 format!(
                     "Character {} is not part of the Mtek syntax.",
                     describe_char(c)
                 ),
-            )
+            );
+            if c == '?' {
+                diagnostic.help("there is no ternary operator and no optional value in v0.1; assign in the branches of an `if` statement: `var x = a; if cond { x = b; }`")
+            } else {
+                diagnostic
+            }
         };
         self.report(diagnostic.at(span));
         self.pos += c.len_utf8();

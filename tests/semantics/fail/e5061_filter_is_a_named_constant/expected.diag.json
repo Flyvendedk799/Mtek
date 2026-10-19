@@ -1,0 +1,31 @@
+[
+  {
+    "code": "MTEK-E3090",
+    "file": "src/main.mtek",
+    "startByte": 191,
+    "endByte": 200,
+    "message": "The value of the constant 'WANTED' is not a constant expression: it is a member of a built-in enum, and enum values are not constants in v0.1.",
+    "related": [
+      {
+        "message": "the constant 'WANTED' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 182,
+        "endByte": 188
+      }
+    ],
+    "notes": [
+      "a constant may use only literals, other constants, operators, conversions, constructors and const-eligible built-in functions"
+    ]
+  },
+  {
+    "code": "MTEK-E5061",
+    "file": "src/main.mtek",
+    "startByte": 251,
+    "endByte": 257,
+    "message": "The filter of `on key_down` must be a constant Key member, written like `Key.Space`.",
+    "notes": [
+      "a filter is fixed when the program is built, so it cannot be a state, a local or any other value that changes at run time",
+      "help: to react to a key that is only known at run time, test `is_key_down(...)` inside `update`, or handle each key in a handler of its own: `on key_down(Key.Space) { ... }`"
+    ]
+  }
+]

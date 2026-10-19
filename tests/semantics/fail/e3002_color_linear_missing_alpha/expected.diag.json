@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E3002",
+    "file": "src/main.mtek",
+    "startByte": 154,
+    "endByte": 187,
+    "message": "`color.linear` takes 2 arguments (rgb: vec3, a: f32), but 1 was given.",
+    "notes": [
+      "signature: color.linear(rgb: vec3, a: f32) -> color",
+      "help: add the missing argument `a: f32`; `a` is the alpha, `1.0` for an opaque color"
+    ]
+  }
+]

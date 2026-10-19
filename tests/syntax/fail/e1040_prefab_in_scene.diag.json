@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E1040",
+    "file": "e1040_prefab_in_scene.mtek",
+    "startByte": 36,
+    "endByte": 42,
+    "message": "`prefab` declarations cannot appear in a scene.",
+    "notes": [
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers",
+      "help: declare the prefab at the top level of the file, outside the scene, then place it with `entity Name: PrefabName { ... }` in the scene or `spawn(PrefabName { ... })` in a handler"
+    ]
+  }
+]

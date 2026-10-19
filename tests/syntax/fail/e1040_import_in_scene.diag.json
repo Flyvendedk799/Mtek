@@ -6,7 +6,8 @@
     "endByte": 23,
     "message": "`import` declarations cannot appear in a scene.",
     "notes": [
-      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers",
+      "help: `import` and `export` belong at the top level of a file"
     ]
   }
 ]

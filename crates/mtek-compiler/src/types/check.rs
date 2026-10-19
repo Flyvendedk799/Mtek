@@ -1151,7 +1151,16 @@ impl<'a> Checker<'a> {
             return TyId::ERROR;
         }
         let (name, noun, help) = match item {
-            PreludeItem::Type(name) => (name, "type", self.constructor_help(name)),
+            PreludeItem::Type(name) => (
+                name,
+                "type",
+                self.constructor_help(name).or_else(|| match name {
+                    "vec2" | "vec3" | "vec4" => Some(format!(
+                        "call the type to build a value: `{name}(x, y, ...)` with one `f32` per component, or `{name}(s)` to repeat one `f32`"
+                    )),
+                    _ => None,
+                }),
+            ),
             PreludeItem::Schema(name) => (
                 name,
                 "schema",
@@ -1898,14 +1907,29 @@ impl<'a> Checker<'a> {
         self.synth_args(args);
         if !self.is_error(callee_ty) {
             let name = self.display(callee_ty);
+            let subject = match &callee.kind {
+                ExprKind::Name(n) => format!("'{n}'"),
+                _ => "this expression".to_owned(),
+            };
+            let help = match self.out.interner.get(callee_ty) {
+                Ty::EntityRef => "an `entity_ref` is a value, not a function: compare it with `==` or `!=`, test `alive(r)`, remove it with `destroy(r)`, or command its body with `r.body.apply_impulse(v)`; to create an entity write `spawn(Prefab { ... })`".to_owned(),
+                Ty::Mesh | Ty::Material | Ty::Texture | Ty::Sampler | Ty::GlbAsset => {
+                    format!("a {name} is an opaque handle: it is given as a field value (`mesh: ...`) or param, or as an argument of `sample`; it has no operations of its own")
+                }
+                Ty::Bool | Ty::I32 | Ty::U32 | Ty::F32 | Ty::Vec2 | Ty::Vec3 | Ty::Vec4 | Ty::Mat4 | Ty::Quat | Ty::Color => {
+                    format!("{subject} is a value; to combine two values write an operator between them (`a * b`), and to convert one write `f32(x)`, `i32(x)` or `u32(x)`")
+                }
+                _ => "only `fn` and `cpu fn` functions, built-in functions such as `length(v)` and constructors such as `vec3(...)` can be called".to_owned(),
+            };
             self.report(
                 Diagnostic::new(
                     Code::E3001,
-                    format!("Only functions and constructors can be called, but this expression has type {name}."),
+                    format!("Only functions and constructors can be called, but {subject} has type {name}."),
                 )
                 .at(callee.span)
                 .expected("a function or constructor")
-                .actual(name),
+                .actual(name)
+                .help(help),
             );
         }
         TyId::ERROR
@@ -2015,7 +2039,28 @@ impl<'a> Checker<'a> {
             let actual = self.check(arg, Some(*param));
             if !self.assignable(actual, *param) {
                 ok = false;
-                self.report_argument(arg.span, index, &text, *param, actual);
+                // Each arity has one form, so the argument count chose this one; the other forms
+                // are what the author may have meant.
+                let texts: Vec<String> = forms
+                    .iter()
+                    .map(|form| self.form_text(&name, form))
+                    .collect();
+                let note = format!(
+                    "the forms of `{name}` are {}; {} argument{} select{} {text}",
+                    texts.join(", "),
+                    args.len(),
+                    if args.len() == 1 { "" } else { "s" },
+                    if args.len() == 1 { "s" } else { "" }
+                );
+                self.report_argument_noted(
+                    arg.span,
+                    index,
+                    &text,
+                    *param,
+                    actual,
+                    None,
+                    Some(note),
+                );
             }
         }
         if ok {
@@ -2046,6 +2091,21 @@ impl<'a> Checker<'a> {
         actual: TyId,
         declared: Option<(Span, String)>,
     ) {
+        self.report_argument_noted(span, index, callee, expected, actual, declared, None);
+    }
+
+    /// [`Self::report_argument_of`] with a note, for a callee that has several forms.
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn report_argument_noted(
+        &mut self,
+        span: Span,
+        index: usize,
+        callee: &str,
+        expected: TyId,
+        actual: TyId,
+        declared: Option<(Span, String)>,
+        note: Option<String>,
+    ) {
         let (expected, actual) = (self.display(expected), self.display(actual));
         let mut diagnostic = Diagnostic::new(
             Code::E3001,
@@ -2059,6 +2119,9 @@ impl<'a> Checker<'a> {
         .actual(actual);
         if let Some((at, message)) = declared {
             diagnostic = diagnostic.related(at, message);
+        }
+        if let Some(note) = note {
+            diagnostic = diagnostic.note(note);
         }
         self.report(diagnostic);
     }
@@ -2202,20 +2265,49 @@ impl<'a> Checker<'a> {
                 .iter()
                 .map(|s| format!("{name}{}", s.text()))
                 .collect();
-            self.report(
-                Diagnostic::new(
-                    Code::E3002,
-                    format!(
-                        "`{name}` takes {} argument{}, but {} {} given.",
-                        or_list(&arities),
-                        if plural { "s" } else { "" },
-                        args.len(),
-                        if args.len() == 1 { "was" } else { "were" }
-                    ),
-                )
-                .at(expr.span)
-                .note(format!("signature: {}", signatures.join(" or "))),
-            );
+            // One signature: its parameters are in the message and the help names the missing or
+            // extra arguments (decision 0113). Several: the signatures are a note.
+            let only: Option<Vec<String>> = match function.signatures.as_slice() {
+                [signature] => Some(
+                    signature
+                        .params
+                        .iter()
+                        .map(|p| format!("{}: {}", p.name, p.ty.spelling()))
+                        .collect(),
+                ),
+                _ => None,
+            };
+            // The parameters go in the message when they are plain types; a class (`T`) needs
+            // the signature note to be understood.
+            let plain = function
+                .signatures
+                .iter()
+                .all(|s| s.params.iter().all(|p| matches!(p.ty, SigType::Exact(_))));
+            let listed = match &only {
+                Some(params) if plain && !params.is_empty() => format!(" ({})", params.join(", ")),
+                _ => String::new(),
+            };
+            let mut diagnostic = Diagnostic::new(
+                Code::E3002,
+                format!(
+                    "`{name}` takes {} argument{}{listed}, but {} {} given.",
+                    or_list(&arities),
+                    if plural { "s" } else { "" },
+                    args.len(),
+                    if args.len() == 1 { "was" } else { "were" }
+                ),
+            )
+            .at(expr.span)
+            .note(format!("signature: {}", signatures.join(" or ")));
+            if let Some(params) = &only {
+                let mut help = arity_help(name, params, args.len());
+                // The alpha of a color constructor is the argument that is left out most often.
+                if name.starts_with("color.") && args.len() + 1 == params.len() {
+                    help.push_str("; `a` is the alpha, `1.0` for an opaque color");
+                }
+                diagnostic = diagnostic.help(help);
+            }
+            self.report(diagnostic);
             // The result type is still known if every signature agrees on it.
             let first = function.signatures.first().map(|s| s.ret);
             let agree = function.signatures.iter().all(|s| Some(s.ret) == first);
@@ -2644,11 +2736,22 @@ impl<'a> Checker<'a> {
             ),
         };
         if let Some((message, note)) = problem {
-            self.report(
-                Diagnostic::new(Code::E3013, message)
-                    .at(name.span)
-                    .note(note),
-            );
+            let mut diagnostic = Diagnostic::new(Code::E3013, message)
+                .at(name.span)
+                .note(note);
+            // `v.length()`, `v.normalize()`, `x.abs()`: Mtek has functions, not methods.
+            if let Some(function) = self.registry.intrinsic(text) {
+                let signatures: Vec<String> = function
+                    .signatures
+                    .iter()
+                    .map(|s| format!("`{text}{}`", s.text()))
+                    .collect();
+                diagnostic = diagnostic.help(format!(
+                    "`{text}` is a built-in function, not a method: pass the value as an argument, {}; Mtek has no methods",
+                    signatures.join(" or ")
+                ));
+            }
+            self.report(diagnostic);
             return TyId::ERROR;
         }
         let Some(indices) = indices else {
@@ -2747,17 +2850,23 @@ impl Checker<'_> {
             } else {
                 format!(" -> {}", self.display(sig.ret))
             };
+            let listed = if params_text.is_empty() {
+                String::new()
+            } else {
+                format!(" ({})", params_text.join(", "))
+            };
             let mut diagnostic = Diagnostic::new(
                 Code::E3002,
                 format!(
-                    "`{name}` takes {count} argument{}, but {} {} given.",
+                    "`{name}` takes {count} argument{}{listed}, but {} {} given.",
                     if count == 1 { "" } else { "s" },
                     args.len(),
                     if args.len() == 1 { "was" } else { "were" }
                 ),
             )
             .at(expr.span)
-            .note(format!("signature: {text}{ret}"));
+            .note(format!("signature: {text}{ret}"))
+            .help(arity_help(&name, &params_text, args.len()));
             if let Some(def) = self.res.def(id) {
                 let how = if def.kind == DefKind::Import {
                     "imported"
@@ -2801,6 +2910,31 @@ fn list_components(letters: &str) -> String {
 }
 
 /// "1, 2 or 3".
+/// The help of an arity error (`E3002`) against the one signature whose parameters are `params`
+/// (`name: type`): the arguments that are missing, or the ones to remove.
+pub(super) fn arity_help(name: &str, params: &[String], given: usize) -> String {
+    if params.is_empty() {
+        return format!("`{name}` takes no arguments; write `{name}()`");
+    }
+    if given < params.len() {
+        let missing = &params[given..];
+        let noun = if missing.len() == 1 {
+            "argument"
+        } else {
+            "arguments"
+        };
+        format!("add the missing {noun} `{}`", missing.join(", "))
+    } else {
+        let extra = given - params.len();
+        let last = if extra == 1 {
+            "the last argument".to_owned()
+        } else {
+            format!("the last {extra} arguments")
+        };
+        format!("remove {last}; the parameters are `{}`", params.join(", "))
+    }
+}
+
 fn or_list(items: &[String]) -> String {
     match items.split_last() {
         Some((last, rest)) if !rest.is_empty() => format!("{} or {last}", rest.join(", ")),

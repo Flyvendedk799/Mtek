@@ -6,7 +6,8 @@
     "endByte": 45,
     "message": "Scene objects cannot appear in an entity.",
     "notes": [
-      "help: an entity contains fields (`name: value;`), `const`, `state`, nested `entity` declarations, lifecycle functions and `on` handlers"
+      "help: an entity contains fields (`name: value;`), `const`, `state`, nested `entity` declarations, lifecycle functions and `on` handlers",
+      "help: scene objects such as `camera` are declared directly in a scene, not in an entity or prefab"
     ]
   }
 ]

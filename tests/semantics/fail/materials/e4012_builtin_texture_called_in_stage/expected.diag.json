@@ -12,6 +12,9 @@
         "startByte": 239,
         "endByte": 247
       }
+    ],
+    "notes": [
+      "help: textures and samplers are made outside the stage: declare them as params of the material with their default (`param tex: texture = texture.white();`, `param smp: sampler = sampler.linear_repeat();`, or `asset.texture(\"file.png\")`) and write `sample(tex, smp, uv)` in the stage"
     ]
   }
 ]

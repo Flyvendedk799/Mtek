@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E3013",
+    "file": "src/main.mtek",
+    "startByte": 147,
+    "endByte": 153,
+    "message": "'.length' is not a valid swizzle: a swizzle has 2 to 4 components.",
+    "notes": [
+      "vec3 components are .x, .y and .z",
+      "help: `length` is a built-in function, not a method: pass the value as an argument, `length(x: T) -> f32`; Mtek has no methods"
+    ]
+  }
+]

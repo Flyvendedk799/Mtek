@@ -132,7 +132,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 ### 5.1 Syntax (`1xxx`)
 | Code | Title | Trigger |
 |---|---|---|
-| <a id="mtek-e1001"></a>E1001 | unexpected token | generic; message lists expected tokens |
+| <a id="mtek-e1001"></a>E1001 | unexpected token | generic; message lists expected tokens; a note says what to write instead where a construct of another language is the likely cause (an `if` used as a value; decision 0115) |
 | <a id="mtek-e1002"></a>E1002 | unclosed delimiter | missing `}`/`)`/`]`; related span at the opener |
 | <a id="mtek-e1003"></a>E1003 | missing semicolon | statement/field/member requires `;` (edit offered) |
 | <a id="mtek-e1004"></a>E1004 | unexpected end of file | |
@@ -140,7 +140,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e1011"></a>E1011 | descriptor literal in condition | parenthesise (edit offered) |
 | <a id="mtek-e1020"></a>E1020 | unused expression | non-call expression statement |
 | <a id="mtek-e1030"></a>E1030 | `break`/`continue` outside loop | |
-| <a id="mtek-e1040"></a>E1040 | member not allowed here | e.g. `fn` inside a scene |
+| <a id="mtek-e1040"></a>E1040 | member not allowed here | e.g. `fn` or `prefab` inside a scene; a `help:` names where the declaration belongs (decision 0115) |
 | <a id="mtek-e1050"></a>E1050 | nesting too deep | > 256 levels (decision 0022: also a chain of operators that makes an expression tree taller than that) |
 | <a id="mtek-e1901"></a>E1901 | bitwise operators not supported | v0.1 |
 
@@ -149,7 +149,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 |---|---|---|
 | <a id="mtek-e2001"></a>E2001 | shadowed name | declaration hides a visible name |
 | <a id="mtek-e2002"></a>E2002 | duplicate name | |
-| <a id="mtek-e2003"></a>E2003 | unknown name | related "did you mean" span when unambiguous; a rename edit when the renamed program checks (§6) |
+| <a id="mtek-e2003"></a>E2003 | unknown name | related "did you mean" span when unambiguous; a rename edit when the renamed program checks (§6). For a member of a built-in enum or namespace (`Key.Up`, `sampler.trilinear`) a help names the nearest members and a note lists every member, and a name from another language (`null`, `Math`, `time`) gets a help with the Mtek form (decisions 0113 and 0115) |
 | <a id="mtek-e2004"></a>E2004 | built-in hidden by local | calling a prelude function hidden by a local |
 | <a id="mtek-e2005"></a>E2005 | parameter name used as namespace | e.g. param `color` used as `color.linear` |
 | <a id="mtek-w2010"></a>W2010 | variable never reassigned | `var` could be `let` |
@@ -166,12 +166,12 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | Code | Title | Trigger |
 |---|---|---|
 | <a id="mtek-e3001"></a>E3001 | type mismatch (general) | expected/actual set |
-| <a id="mtek-e3002"></a>E3002 | wrong number of arguments | |
-| <a id="mtek-e3003"></a>E3003 | unknown type | |
+| <a id="mtek-e3002"></a>E3002 | wrong number of arguments | one signature of plain types: its parameters are in the message and a help names the missing or the extra arguments; several signatures: a note lists them (decision 0113) |
+| <a id="mtek-e3003"></a>E3003 | unknown type | a note lists the built-in types; a type name of another language (`float`, `Vector3`) gets the Mtek spelling (decision 0115) |
 | <a id="mtek-e3010"></a>E3010 | arithmetic on color | use `.rgb` |
 | <a id="mtek-e3011"></a>E3011 | negation of unsigned value | |
 | <a id="mtek-e3012"></a>E3012 | vector equality not supported | |
-| <a id="mtek-e3013"></a>E3013 | invalid component or swizzle | |
+| <a id="mtek-e3013"></a>E3013 | invalid component or swizzle | a method-style call (`v.length()`) gets a help with the function and its signature (decision 0115) |
 | <a id="mtek-e3014"></a>E3014 | operator not defined for operands | e.g. `string + string` |
 | <a id="mtek-e3020"></a>E3020 | recursive struct | |
 | <a id="mtek-e3021"></a>E3021 | missing struct field | |
@@ -206,7 +206,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e4030"></a>E4030 | parameter type not GPU-representable | |
 | <a id="mtek-e4031"></a>E4031 | invalid parameter default | |
 | <a id="mtek-e4032"></a>E4032 | too many material parameters | > 64 |
-| <a id="mtek-e4040"></a>E4040 | capture in GPU stage | scene state, `frame`, entity, `cpu fn` (help: add a param and `bind`) |
+| <a id="mtek-e4040"></a>E4040 | capture in GPU stage | scene state, `frame`, entity, `cpu fn` (help: add a param and `bind`); a texture or sampler constant (help: a param with the constant as its default) |
 | <a id="mtek-e4041"></a>E4041 | invalid use of texture or sampler | only as `sample` arguments (decision 0054) |
 | <a id="mtek-e4901"></a>E4901 | stage not supported | `vertex`/`compute` |
 
@@ -233,7 +233,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5051"></a>E5051 | duplicate lifecycle function | |
 | <a id="mtek-e5052"></a>E5052 | unknown lifecycle function | |
 | <a id="mtek-e5060"></a>E5060 | unknown event | |
-| <a id="mtek-e5061"></a>E5061 | invalid event arguments | |
+| <a id="mtek-e5061"></a>E5061 | invalid event arguments | not reported again for a filter that is already an error (`Key.Up` is only `E2003`; decision 0114) |
 | <a id="mtek-e5062"></a>E5062 | collision event without collider | `on collision_enter` or `on collision_exit` in an entity or prefab that declares no `collider` (decision 0065) |
 | <a id="mtek-e5070"></a>E5070 | write to bound field | related span at `bind` |
 | <a id="mtek-e5071"></a>E5071 | write to physics-owned field | an assignment to the `position` or `rotation` of an entity with any body, or to a body velocity; names the allowed operation (decision 0065) |
@@ -385,7 +385,7 @@ The codes that carry validated edits in v0.1, and what they offer:
 | `E0022` | write the malformed float literal with its missing digits: `1.` → `1.0`, `.5` → `0.5`, `1e3` → `1.0e3` |
 | `E1003` | insert the missing `;` |
 | `E1011` | parenthesise the descriptor literal that is the condition of `if` or the iterable of `for` |
-| `E2003` | replace the unknown name (for a member of a built-in namespace or enum, the member) by the single visible name within edit distance 2; none if two names are that close |
+| `E2003` | replace the unknown name (for a member of a built-in namespace or enum, the member) by the single visible name within edit distance 2; none if two names are that close. For a member of a built-in namespace or enum the closest tier decides: the same name in another letter case, then names within edit distance 2 that is less than half the length of the longer name (`U` is not a typo of `Up`), then the members that contain the written name (`Up` for `ArrowUp`, `Esc` for `Escape`); the edit is offered only when that tier has exactly one member (`Shift` is both `ShiftLeft` and `ShiftRight`: none) (decision 0113) |
 | `E7024` | replace the string literal naming a mesh, material or node of a glTF file by the single name of the file within edit distance 2 |
 
 No other code carries an edit. In particular `E3003`, `E5001`, `E3023`, `E5042` and the other "did you mean" hints are hints only (renaming a type or a field is as mechanical, but it is not wired yet); a conversion, a deleted declaration or a guessed value (`E3001`, `E3102`, `E3041`) is never an edit.
@@ -415,6 +415,8 @@ The comparison is conservative; it rejects an edit when it cannot prove it:
 - Never blame the user for compiler defects: `E6100`/`E9999` say "this is a compiler bug".
 - Every message has a negative fixture asserting code, primary span and message text (`spec/testing.md` §3.2).
 - A message is one complete sentence: it starts with a capital letter, a name in quotes or a code span (never a lowercase word), ends with a full stop, has no line break and no stray spaces, and is more specific than the catalogue `title`. A `help:` note continues in lowercase.
+- A diagnostic says what to write instead where a finite set or a usual idiom exists (decision 0113): the message carries the parameters of a single signature; an unknown member of a built-in enum or namespace gets the nearest members (help) and every member (note); a construct that Mtek does not have gets a help with the way to express the intent. The advice names only forms that check; each class has a fixture, and a mechanical advice is an edit only when §6 proves it.
+- A consequence of a reported error is not reported again (decision 0114): a filter, a local or a statement whose only fault is the error already reported on the same token or call carries no diagnostic of its own.
 - A diagnostic about a name or a type that comes from a declaration of the program points at that declaration with a related span: the first of two duplicates, the opener of an unclosed delimiter, the declaration of the param, struct, function or annotation the expectation comes from. Built-in declarations have no source text and no related span.
 
 `crates/mtek-compiler/tests/diagnostics_audit.rs` checks the mechanical part of these rules over every diagnostic of every golden file, and the wording of internal errors over the sources.

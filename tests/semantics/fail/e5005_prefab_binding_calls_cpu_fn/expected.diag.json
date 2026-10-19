@@ -7,7 +7,8 @@
     "message": "The binding of the field 'position' of prefab 'Shaker' must be pure, but it calls the `cpu fn` 'jitter'.",
     "notes": [
       "a binding is re-evaluated every frame; it may read state, entity fields and `frame`, and call pure functions",
-      "help: compute the value in `update` and assign it to a state, then bind the state"
+      "a `cpu fn` may only be called from `update`, `fixed_update` and `on` handlers, because it may change state or read the outside world; a binding may call only `fn` functions and pure built-ins (math, vector, quaternion and colour functions)",
+      "help: if the function uses no CPU-only operation, declare it with `fn`; otherwise call it in `update`, assign the result to a `state` and write `bind(that_state)`"
     ]
   }
 ]

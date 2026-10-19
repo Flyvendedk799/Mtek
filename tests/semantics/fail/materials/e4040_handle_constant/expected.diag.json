@@ -21,7 +21,8 @@
       }
     ],
     "notes": [
-      "GPU code uses only bool, i32, u32, f32, vectors, mat4, quat, color, and structs and arrays of them"
+      "GPU code uses only bool, i32, u32, f32, vectors, mat4, quat, color, and structs and arrays of them",
+      "help: handles exist only on the CPU; give the stage the number, vector or color it needs as a `param` of the material and set it from the entity, with `bind(...)` for a value that changes"
     ]
   },
   {

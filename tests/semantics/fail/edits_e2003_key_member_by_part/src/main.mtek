@@ -1,0 +1,7 @@
+// `Key.Up` is not a member; `ArrowUp` is the one member that contains `Up`, so the rename is offered,
+// and the filter is not reported a second time (E5061).
+scene Demo {
+    camera Main {}
+    on key_down(Key.Up) {
+    }
+}
