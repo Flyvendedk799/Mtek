@@ -3,8 +3,10 @@
 The documents in this directory are the authoritative design for Mtek v0.1. They supersede the
 original blueprint where the two differ (the blueprint remains the historical design baseline; its placeholder
 name is explained in decision 0017), and every such difference is recorded in
-`spec/decisions/`. Nothing described here is implemented yet; each document names the milestone in
-which its subject is delivered.
+`spec/decisions/`. The documents describe v0.1 as specified, which is not always what this build
+implements: [`docs/limitations.md`](../docs/limitations.md) lists everything that is specified but
+not built, everything that is refused on purpose and why, and each document names the milestone in
+which its subject was delivered.
 
 | File | Title | First needed |
 |---|---|---|
@@ -23,7 +25,7 @@ which its subject is delivered.
 | `physics.md` | Physics: Semantics, Adapter Contract and Rapier Mapping | M5 |
 | `tooling.md` | Developer Tooling: CLI, Project File, Dev Server, Formatter, LSP | M0 (`--version`), M1 onward |
 | `ai-and-benchmarks.md` | AI Workflow, Untrusted Previews and Benchmarks | M0 (initial benchmark tasks), M6 |
-| `decisions/` | Decision records 0001–0021, `README.md` and `sources.md` | M0 |
+| `decisions/` | Decision records 0001–0104 (indexed in `README.md`), the sources list `sources.md` | M0 |
 
 The "First needed" column is a planning aid taken from the milestone markers inside the documents;
 the documents themselves are authoritative.

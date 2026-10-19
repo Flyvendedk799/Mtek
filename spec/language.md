@@ -90,7 +90,7 @@ Any item except `import` may be preceded by `export`. Items may appear in any or
 
 3.2 **Terminators.** Statements and declaration fields end in `;`. Block-bodied forms (`fn`, `if`, `for`, `scene`, `entity`, …) do not take a trailing `;`. Within descriptor literals (§6.6) fields are separated by `;` and the final separator before `}` is optional. A descriptor literal used as a field value is itself followed by the field's `;`: `mesh: Box { size: vec3(1.0, 1.0, 1.0) };`.
 
-3.3 **Naming conventions.** Not enforced by the compiler in v0.1, but the formatter's lint (`W0030`) warns when: types, materials, prefabs, scenes and entities are not `PascalCase`; functions, fields, params, state and locals are not `snake_case`; constants are not `SCREAMING_SNAKE_CASE`. Generated code never depends on case.
+3.3 **Naming conventions.** Not enforced in v0.1. The conventions are: types, materials, prefabs, scenes and entities are `PascalCase`; functions, fields, params, state and locals are `snake_case`; constants are `SCREAMING_SNAKE_CASE`. A lint for them, `W0030` ("naming convention"), is **not part of v0.1**: neither the compiler nor `mtek fmt` implements it (`spec/tooling.md` §5 does not list it; decision 0070 item 11). The code stays in the catalogue, marked "Not implemented", so that the number is not reused; whether a later version adds the lint is undecided (decision 0102). Generated code never depends on case.
 
 ## 4. Names and scopes
 
@@ -283,6 +283,8 @@ The authoritative list with signatures, domains, const-eligibility and CPU seman
 
 CPU-only intrinsics in v0.1: `random() -> f32` in `[0, 1)` (seeded per application from the mount option `seed`, default derived from time; tests always pass a seed), `print(message: string)` (development console; a no-op in release builds), `spawn`, `destroy`, `alive` (`spec/scenes.md` §9), `is_key_down(key: Key) -> bool` (`spec/scenes.md` §7.3).
 
-## 11. What is not in v0.1 (each has a dedicated "unsupported" diagnostic)
+## 11. What is not in v0.1
+
+Each of these is rejected with a diagnostic; `docs/limitations.md` gives the code of each. Only the reserved words (`E0013`), the bitwise operators (`E1901`) and the vertex and compute stages (`E4901`) have an unsupported-feature code of their own; the others are rejected by the general rule that names the construct (an unknown type is `E3003`, a numeric suffix or a hexadecimal literal `E0021`, `+` on strings `E3014`, and so on; decision 0102).
 
 `while`/`loop`; bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enums (only the built-in `Key`-style registry enums exist); optional/result types in the language; string formatting/concatenation (`+` on `string` is `E3014`); recursion; compute and vertex stages; storage buffers; pattern matching. The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).

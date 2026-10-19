@@ -69,6 +69,13 @@ jobs:
       # or docs/coverage-matrix.md is stale.
       - name: Coverage matrix
         run: npm run check:coverage
+      # The release documentation and the capability consistency check (decisions 0100, 0101, 0104):
+      # the generated pages (language guide, language reference, limitations) are current; the
+      # compiler's supported features, the registry, the runtime's ABI and capabilities, the
+      # specification and the README claims agree, naming both sides of any mismatch; every claim
+      # of the release notes draft links to evidence.
+      - name: Release documentation and capability consistency
+        run: npm run check:release
 
   # Software-adapter browser tests (SwiftShader): correctness only, never hardware evidence. Without
   # a usable adapter the tests are reported NOT-RUN (the job does not fail for that; real test

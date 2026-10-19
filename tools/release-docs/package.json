@@ -1,0 +1,21 @@
+{
+  "name": "@mtek/release-docs",
+  "version": "0.1.0-dev",
+  "private": true,
+  "type": "module",
+  "description": "The release documentation (decision 0100): docs/language-guide.md, docs/language-reference.md and docs/limitations.md generated from spec/, the registry and the compiler; the capability consistency check (decision 0101); the link check of docs/release-notes-v0.1.md (decision 0104).",
+  "scripts": {
+    "lint": "eslint .",
+    "test:unit": "vitest run",
+    "check": "node src/cli.ts",
+    "generate": "node src/cli.ts --write"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.1",
+    "eslint": "10.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}
