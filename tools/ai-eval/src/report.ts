@@ -54,6 +54,10 @@ export interface TrialRow {
   message: string | null;
   /** True for an attempt recorded as a failure that the legacy rule of decision 0124 reads as not judged (`transport-error`). */
   legacyTransport?: boolean;
+  /** Set on an attempt that was not judged and whose cell a retry run supplied instead: the id of that retry run (decision 0125). */
+  supersededBy?: string;
+  /** Set on an attempt of a retry run: the id of the run whose not-judged attempt of the same cell it replaces (decision 0125). */
+  retryOf?: string;
   calls: number;
   repairsUsed: number;
   inputTokens: number | null;
@@ -74,6 +78,8 @@ export interface TrialRow {
   attribution: Attribution;
   /** The documentation (context export or reference) given to the model, in bytes. */
   documentationBytes: number | null;
+  /** SHA-256 of the documentation text given to the model (null when the record has none, as for a trial that gave the model no context). */
+  contextSha256?: string | null;
 }
 
 export const SOURCES = ["instructions", "task", "documentation", "project files", "diagnostics", "tool results", "repair context", "generated code", "other"] as const;
@@ -94,6 +100,8 @@ export interface RunInfo {
   status: string | null;
   startedAt: string | null;
   endedAt: string | null;
+  /** True for a retry run (decision 0125): its attempts replace not-judged attempts of the other runs. */
+  retry?: boolean;
 }
 
 const SECTION_SOURCE: Record<string, Source> = {
@@ -237,7 +245,7 @@ interface CallInfo {
 }
 
 /** Splits the records of one or more runs into trials (one row each, in the order they started) and the runs. */
-export function extractTrials(records: readonly Raw[], holdoutIds: ReadonlySet<string> = new Set()): { trials: TrialRow[]; runs: RunInfo[] } {
+function extractPlain(records: readonly Raw[], holdoutIds: ReadonlySet<string>): { trials: TrialRow[]; runs: RunInfo[] } {
   const runs = new Map<string, RunInfo>();
   const byTrial = new Map<string, { start: Raw | null; calls: CallInfo[]; validations: Raw[]; end: Raw | null; runId: string }>();
   const order: string[] = [];
@@ -371,9 +379,75 @@ export function extractTrials(records: readonly Raw[], holdoutIds: ReadonlySet<s
       holdout: holdoutIds.has(taskId),
       attribution: attribute(calls),
       documentationBytes: num(start["contextBytes"]),
+      contextSha256: typeof start["contextSha256"] === "string" ? start["contextSha256"] : null,
     });
   }
   return { trials, runs: [...runs.values()] };
+}
+
+/** True when the harness could judge the attempt: it ended by itself, as a success or a failure. */
+export const isJudged = (t: Pick<TrialRow, "outcome">): boolean => t.outcome === "success" || t.outcome === "failure";
+
+/** The cell an attempt occupies: side, trial kind, Mtek variant, task and trial index. A retry attempt replaces the attempt of its own cell. */
+export const cellOf = (t: TrialRow): string => `${t.side}\u0000${t.trialKind}\u0000${t.variant}\u0000${t.taskId}\u0000${String(t.trial)}`;
+
+const describeCell = (t: TrialRow): string => `${t.taskId}, trial ${String(t.trial)}, ${t.side}${t.variant === "" ? "" : ` ${t.variant}`}${t.trialKind === "unconstrained" ? "" : ` ${t.trialKind}`}`;
+
+export interface Extracted {
+  /** The attempts that count: every attempt of the runs, except that a not-judged attempt a retry run replaced is left out and the retry attempt is in. */
+  trials: TrialRow[];
+  runs: RunInfo[];
+  /** The not-judged attempts that a retry run replaced (each marked `supersededBy`); empty without retry runs. */
+  superseded: TrialRow[];
+  /** Every attempt of every run, replaced ones included: the superseded attempts in the place of the run they came from, the retry attempts after them. */
+  listing: TrialRow[];
+}
+
+/**
+ * Splits the records into trials. `retryRecords` are the records of RETRY runs (decision 0125): a retry run supplies attempts for cells
+ * (task, condition, trial index) whose attempt in `records` was NOT judged (error, unavailable, unfinished, not-run, or a failure read
+ * as `transport-error` by the legacy rule). In `trials` the retry attempt replaces the not-judged one; the replaced attempt stays in
+ * `listing` and `superseded`. A retry attempt for a cell that was judged, for a cell with no attempt in `records`, a second retry
+ * attempt for one cell, a retry whose model or condition differs from the attempt it replaces, and a retry run that repeats a run id of
+ * `records` are all errors: nothing is silently dropped or replaced.
+ */
+export function extractTrials(records: readonly Raw[], holdoutIds: ReadonlySet<string> = new Set(), retryRecords: readonly Raw[] = []): Extracted {
+  const base = extractPlain(records, holdoutIds);
+  if (retryRecords.length === 0) return { trials: base.trials, runs: base.runs, superseded: [], listing: base.trials };
+  const retry = extractPlain(retryRecords, holdoutIds);
+  const known = new Set(base.runs.map((r) => r.runId));
+  for (const run of retry.runs) if (known.has(run.runId)) throw new Error(`retry run '${run.runId}' has the same id as a run it is a retry of; give each run its own id`);
+  const byCell = new Map<string, TrialRow[]>();
+  for (const t of base.trials) byCell.set(cellOf(t), [...(byCell.get(cellOf(t)) ?? []), t]);
+  const replaced = new Map<TrialRow, TrialRow>();
+  const seen = new Set<string>();
+  const retried: TrialRow[] = [];
+  for (const r of retry.trials) {
+    const cell = cellOf(r);
+    const where = `retry run '${r.runId}', attempt ${r.trialId} (${describeCell(r)})`;
+    if (seen.has(cell)) throw new Error(`${where}: the retry runs hold more than one attempt for this cell`);
+    seen.add(cell);
+    const originals = byCell.get(cell) ?? [];
+    if (originals.length === 0) throw new Error(`${where}: no attempt of the other runs occupies this cell; a retry run supplies attempts only for cells whose attempt there was not judged`);
+    if (originals.length > 1) throw new Error(`${where}: more than one attempt of the other runs occupies this cell, so it is not clear which one the retry replaces`);
+    const original = originals[0] as TrialRow;
+    if (isJudged(original)) throw new Error(`${where}: the attempt ${original.trialId} of run '${original.runId}' for this cell WAS judged (${original.outcome}); a retry run may replace only an attempt that was not judged`);
+    if (original.model !== r.model || original.provider !== r.provider) throw new Error(`${where}: it was run with ${r.provider} / ${r.model}, the attempt it replaces with ${original.provider} / ${original.model}`);
+    if (original.conditionId !== r.conditionId) throw new Error(`${where}: its condition id differs from that of the attempt it replaces (${original.conditionId.slice(0, 12)} against ${r.conditionId.slice(0, 12)}): not the same condition`);
+    const was = original.contextSha256 ?? null;
+    const now = r.contextSha256 ?? null;
+    if (was !== null && now !== null && was !== now) throw new Error(`${where}: the documentation given to the model differs from that of the attempt it replaces (context hash ${now.slice(0, 12)} against ${was.slice(0, 12)}): not the same condition`);
+    replaced.set(original, { ...original, supersededBy: r.runId });
+    retried.push({ ...r, retryOf: original.runId });
+  }
+  const marked = (t: TrialRow): TrialRow => replaced.get(t) ?? t;
+  const superseded = base.trials.filter((t) => replaced.has(t)).map(marked);
+  return {
+    trials: [...base.trials.filter((t) => !replaced.has(t)), ...retried],
+    runs: [...base.runs, ...retry.runs.map((r) => ({ ...r, retry: true }))],
+    superseded,
+    listing: [...base.trials.map(marked), ...retried],
+  };
 }
 
 /** Input tokens per source by each part's share of the request's characters; output tokens are generated code. */
@@ -669,6 +743,8 @@ function sideLabel(side: SideName, kind: string): string {
 
 export interface ReportInput {
   records: readonly Raw[];
+  /** Records of retry runs (decision 0125): their attempts replace not-judged attempts of the same cells in `records`. */
+  retryRecords?: readonly Raw[];
   /** Task ids of the holdout set (names of the directories); attempts at these are reported apart, by outcome only. */
   holdoutIds?: ReadonlySet<string>;
   title?: string;
@@ -680,6 +756,10 @@ export interface ReportOutput {
   markdown: string;
   comparisons: { model: string; kind: string; scope: string; comparison: Comparison }[];
   trials: TrialRow[];
+  /** Not-judged attempts that a retry run replaced (empty without retry runs). */
+  superseded: TrialRow[];
+  /** Every attempt, replaced ones included. */
+  listing: TrialRow[];
 }
 
 function describeCondition(runs: readonly RunInfo[]): string {
@@ -688,7 +768,7 @@ function describeCondition(runs: readonly RunInfo[]): string {
     const s = run.settings;
     const spend = run.spend;
     rows.push([
-      run.runId,
+      run.retry === true ? `${run.runId} (retry run)` : run.runId,
       run.startedAt ?? "?",
       run.status ?? "no run-end record",
       s === null ? "?" : `${str(s["provider"], "?")} / ${str(s["model"], "?")}`,
@@ -701,9 +781,12 @@ function describeCondition(runs: readonly RunInfo[]): string {
 
 export function buildReport(input: ReportInput): ReportOutput {
   const holdoutIds = input.holdoutIds ?? new Set<string>();
-  const { trials, runs } = extractTrials(input.records, holdoutIds);
+  const { trials, runs, superseded, listing } = extractTrials(input.records, holdoutIds, input.retryRecords ?? []);
   const main = trials.filter((t) => !t.holdout);
   const holdout = trials.filter((t) => t.holdout);
+  const mainListing = listing.filter((t) => !t.holdout);
+  const holdoutListing = listing.filter((t) => t.holdout);
+  const mainSuperseded = superseded.filter((t) => !t.holdout);
   const comparisons: ReportOutput["comparisons"] = [];
   const out: string[] = [];
   out.push(`# ${input.title ?? "AI/token benchmark report"}`, "");
@@ -844,7 +927,7 @@ export function buildReport(input: ReportInput): ReportOutput {
   // ---- accounting of everything that is not a judged attempt
   const unjudged = main.filter((t) => t.outcome !== "success" && t.outcome !== "failure");
   out.push("## Attempts that could not be judged", "");
-  out.push(unjudged.length === 0 ? "None: every attempt ended in success or failure." : table(["attempt", "outcome", "reason"], unjudged.map((t) => [t.trialId, t.outcome, `${t.reason ?? ""}${t.message === null ? "" : `: ${t.message}`}`])), "");
+  out.push(unjudged.length === 0 ? (mainSuperseded.length > 0 ? "None: every attempt that counts ended in success or failure (the not-judged attempts that a retry run replaced are listed below)." : "None: every attempt ended in success or failure.") : table(["attempt", "outcome", "reason"], unjudged.map((t) => [t.trialId, t.outcome, `${t.reason ?? ""}${t.message === null ? "" : `: ${t.message}`}`])), "");
   const transport = main.filter((t) => t.reason === "transport-error");
   if (transport.length > 0) {
     const per = new Map<string, number>();
@@ -854,12 +937,20 @@ export function buildReport(input: ReportInput): ReportOutput {
       "",
     );
     const legacy = transport.filter((t) => t.legacyTransport === true).length;
-    if (legacy > 0) {
-      out.push(
-        `${String(legacy)} of them are read by a legacy rule (decision 0124): the records were made before the harness retried and marked such attempts, and say outcome \`failure\`, reason \`generation-error\`. An attempt is read as \`error\` / \`transport-error\` when it is recorded that way, its reason is \`generation-error\` and EVERY model call of it is \`backend-error\` with the error text \`Connection error.\` or \`Request timed out.\`, no response text, no tokens and no HTTP status. An attempt with any other call, or with another error text, stays a failure. The records are not changed.`,
-        "",
-      );
-    }
+    if (legacy > 0) out.push(legacyText(`${String(legacy)} of them are read`), "");
+  }
+  // ---- attempts that a retry run replaced (decision 0125)
+  if (mainSuperseded.length > 0) {
+    const per = new Map<string, number>();
+    for (const t of mainSuperseded) per.set(sideLabel(t.side, `${t.trialKind}${t.variant}`), (per.get(sideLabel(t.side, `${t.trialKind}${t.variant}`)) ?? 0) + 1);
+    const retryRuns = [...new Set(mainSuperseded.map((t) => t.supersededBy))].sort();
+    out.push(
+      `${String(mainSuperseded.length)} attempts that were not judged are superseded by the attempt of the same cell (task, condition, trial index) in the retry run${retryRuns.length === 1 ? "" : "s"} ${retryRuns.map((r) => `\`${String(r)}\``).join(", ")} (decision 0125): in every aggregate and in the verdict the retry attempt stands in the place of the lost one, which is listed below and in "All attempts" and is in no aggregate. By condition: ${[...per.entries()].sort().map(([label, count]) => `${label} ${String(count)}`).join(", ")}.`,
+      "",
+    );
+    out.push(table(["attempt", "outcome", "reason", "superseded by"], mainSuperseded.map((t) => [`${String(t.runId)}: ${t.trialId}`, t.outcome, `${t.reason ?? ""}${t.message === null ? "" : `: ${t.message}`}`, String(t.supersededBy)])), "");
+    const legacy = mainSuperseded.filter((t) => t.legacyTransport === true).length;
+    if (legacy > 0) out.push(legacyText(`${String(legacy)} of the superseded attempts are read`), "");
   }
 
   // ---- the holdout
@@ -871,11 +962,11 @@ export function buildReport(input: ReportInput): ReportOutput {
     out.push(
       table(
         ["attempt", "side", "outcome", "reason", "calls", "repairs", "tokens", "cost", "first attempt: parse/check/start/tests", "final verdict"],
-        holdout.map((t) => [
-          t.trialId,
+        holdoutListing.map((t) => [
+          attemptCell(t),
           t.side,
           t.outcome,
-          t.reason ?? "",
+          reasonCell(t),
           String(t.calls),
           String(t.repairsUsed),
           t.totalTokens === null ? "unknown" : n0(t.totalTokens),
@@ -895,15 +986,15 @@ export function buildReport(input: ReportInput): ReportOutput {
   out.push(
     table(
       ["attempt", "task", "category", "mode", "side", "kind", "outcome", "reason", "calls", "repairs", "input", "cache read", "cache write", "output", "cost", "seconds", "first attempt parse/check/build/start/tests"],
-      main.map((t) => [
-        t.trialId,
+      mainListing.map((t) => [
+        attemptCell(t),
         t.taskId,
         t.category,
         t.mode,
         t.side,
         t.trialKind,
         t.outcome,
-        t.reason ?? "",
+        reasonCell(t),
         String(t.calls),
         String(t.repairsUsed),
         t.inputTokens === null ? "unknown" : n0(t.inputTokens),
@@ -920,7 +1011,22 @@ export function buildReport(input: ReportInput): ReportOutput {
 
   out.push("## How the conclusion is reached", "");
   out.push(...RULE_TEXT, "");
-  return { markdown: `${out.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd()}\n`, comparisons, trials };
+  return { markdown: `${out.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd()}\n`, comparisons, trials, superseded, listing };
+}
+
+function legacyText(prefix: string): string {
+  return `${prefix} by a legacy rule (decision 0124): the records were made before the harness retried and marked such attempts, and say outcome \`failure\`, reason \`generation-error\`. An attempt is read as \`error\` / \`transport-error\` when it is recorded that way, its reason is \`generation-error\` and EVERY model call of it is \`backend-error\` with the error text \`Connection error.\` or \`Request timed out.\`, no response text, no tokens and no HTTP status. An attempt with any other call, or with another error text, stays a failure. The records are not changed.`;
+}
+
+/** The attempt id; an attempt that is linked to a retry run also names its run, because the lost attempt and its retry have the same id. */
+function attemptCell(t: TrialRow): string {
+  return t.supersededBy !== undefined || t.retryOf !== undefined ? `${t.runId}: ${t.trialId}` : t.trialId;
+}
+
+/** The reason of an attempt, with the note that links it to a retry run when it has one (decision 0125). */
+function reasonCell(t: TrialRow): string {
+  const note = t.supersededBy !== undefined ? `superseded by retry run ${t.supersededBy}` : t.retryOf !== undefined ? `retry of the attempt in run ${t.retryOf}` : "";
+  return note === "" ? (t.reason ?? "") : `${t.reason === null ? "" : `${t.reason}; `}${note}`;
 }
 
 export const RULE_TEXT: readonly string[] = [
@@ -934,7 +1040,7 @@ export const RULE_TEXT: readonly string[] = [
   "The research target (proposed, not a result): at matched success, at least 30 % fewer tokens per completed task than the baseline (ratio at most 0.70 and the verdict better). Missing it triggers the investigation of spec 6.4, not a cryptic syntax. A verdict is provisional when a task has fewer than 5 trials on a side, when more than 10 % of the attempts could not be judged, or when token counts are unknown.",
 ];
 
-function conclusion(label: string, c: Comparison): string[] {
+export function conclusion(label: string, c: Comparison): string[] {
   const lines: string[] = [];
   lines.push(`**${label}: ${c.verdict.toUpperCase()}${c.provisional ? " (provisional)" : ""}.** ${c.reason}.`, "");
   lines.push(
@@ -958,15 +1064,24 @@ function conclusion(label: string, c: Comparison): string[] {
   return lines;
 }
 
-/** The holdout attempts reduced to ids and layer outcomes: the only form of a holdout result that may enter the repository. */
+/**
+ * The holdout attempts reduced to ids and layer outcomes: the only form of a holdout result that may enter the repository. Pass the
+ * `listing` of `extractTrials` to keep the attempts that a retry run replaced (they carry `supersededBy`; the retry attempts carry
+ * `retryOf`). The summary of M7-05 (`holdout-summary.jsonl`) was written before `runId`, `variant`, `trial` and the two links existed.
+ */
 export function holdoutSummary(trials: readonly TrialRow[]): Record<string, unknown>[] {
   return trials
     .filter((t) => t.holdout)
     .map((t) => ({
+      runId: t.runId,
       trialId: t.trialId,
       taskId: t.taskId,
       side: t.side,
+      variant: t.variant,
       trialKind: t.trialKind,
+      trial: t.trial,
+      ...(t.supersededBy === undefined ? {} : { supersededBy: t.supersededBy }),
+      ...(t.retryOf === undefined ? {} : { retryOf: t.retryOf }),
       outcome: t.outcome,
       reason: t.reason,
       calls: t.calls,

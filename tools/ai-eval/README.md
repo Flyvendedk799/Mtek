@@ -183,8 +183,8 @@ node tools/ai-eval/src/benchmark-run.ts (--tasks id,id | --all) [--holdout] [--s
      --client anthropic --model claude-haiku-4-5-20251001 --spend-cap USD [--spend-ledger FILE]
      [--api-key-file FILE] [--temperature N|default] [--trials N] [--first-trial N] [--order trial-major|task-major]
      [--no-prompt-caching] [--gpu-lock DIR] [--run-id ID] [--out DIR]
-node tools/ai-eval/src/report-cli.ts --run DIR [--run DIR ...] [--baseline-run DIR ...] --out report.md [--projection FILE --budget USD] [--holdout-summary FILE]
-node tools/ai-eval/src/compare-cli.ts --before RUN[,RUN...] --after RUN[,RUN...] --out FILE [--title T] [--note N]
+node tools/ai-eval/src/report-cli.ts --run DIR [--run DIR ...] [--baseline-run DIR ...] [--retry-run DIR ...] --out report.md [--projection FILE --budget USD] [--holdout-summary FILE]
+node tools/ai-eval/src/compare-cli.ts --before RUN[,RUN...] --after RUN[,RUN...] [--after-retry RUN[,RUN...]] --out FILE [--title T] [--note N] [--holdout-before FILE[,FILE...] --holdout-after FILE[,FILE...]] [--baseline-json FILE]
 ```
 
 - `benchmark-run` makes the attempts tasks x sides x trial kinds x trials for one model into `<out>/<run-id>/` (default
@@ -216,5 +216,17 @@ node tools/ai-eval/src/compare-cli.ts --before RUN[,RUN...] --after RUN[,RUN...]
 - `compare-cli` writes a before/after comparison of the Mtek conditions of stored runs (`src/compare.ts`): per condition, for all
   attempts as published and for the matched cells (judged in both runs), attempts, completed tasks, completion rate and tokens per
   completed task, overall, per mode and per category, the baseline row of the runs before, and what was lost. It reads
-  `records.jsonl` only and gives no verdict.
+  `records.jsonl` only; it ends with the verdict of each condition after against the baseline of the runs before by the rule of
+  decision 0108 (the same as the report's).
+- **Retry runs** (decision 0125). `report-cli --retry-run DIR` and `compare-cli --after-retry RUN[,RUN]` name runs that supply attempts
+  for cells (task, condition, trial index) whose attempt in the other runs was NOT judged (error, unavailable, unfinished, not-run, or
+  a legacy transport failure). In aggregates and verdicts the retry attempt replaces the lost one; both stay listed in "All
+  attempts" (`superseded by retry run X`, `retry of the attempt in run Y`). A retry attempt for a cell that WAS judged, for an empty
+  cell, a second one for a cell, or with another model, condition or documentation text is an error (exit 3). The holdout summary
+  keeps the lost attempts with `supersededBy`.
+- `compare-cli --holdout-before FILE --holdout-after FILE` adds an exploratory holdout section computed from holdout SUMMARY files
+  only (`src/holdout-compare.ts`): completion, tokens per completed task (input plus output) and cost per condition, and the
+  decision-0108 verdict of each Mtek condition against the earlier holdout baseline. `--baseline-json FILE` writes the
+  machine-readable baseline (`src/baseline-json.ts`, `evidence/M7/ai-baseline.json`): model, temperature, prompt caching, price
+  table, harness version, the SHA-256 of every records file and summary used, the numbers, the verdicts and the targets.
 

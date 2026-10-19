@@ -1,6 +1,6 @@
-# AI/token benchmark report: the M7.1 re-run of the Mtek conditions (main set)
+# AI/token benchmark report: the M7.1 re-run of the Mtek conditions with its retry runs (main set, final)
 
-Mtek attempts: only the run `m7-1-rerun-main` (34 tasks, 5 trials, the compiler context alone and with `docs/language-guide.md` added, both as changed after the M7-05 run). Baseline attempts: only the 170 baseline attempts of the EARLIER run `m7-05-main`, read with `--baseline-run`; the baseline was NOT re-run, and no Mtek attempt of the earlier run is in this report (the row of `m7-05-main` in the first table shows the spend of that whole run, of which only the baseline attempts are used). 57 of the 340 Mtek attempts (28 + 29) were lost to connection errors and timeouts and are not judged (see 'Attempts that could not be judged'); that is more than 10 % of the attempts, so every verdict here is provisional. No holdout attempt is in this report, and no holdout result exists for the new documentation.
+Mtek attempts: the run `m7-1-rerun-main` (34 tasks, 5 trials, the compiler context alone and with `docs/language-guide.md` added, both as changed after the M7-05 run: 340 attempts) and the retry runs `m7-1-retry-ctx` and `m7-1-retry-guide` (decision 0125), whose 28 and 29 attempts stand in the place of the 57 attempts of trial index 4 that an API outage cost the first run (they are not judged by decision 0124, are listed under 'Attempts that could not be judged' and in 'All attempts', and are in no aggregate). Baseline attempts: only the 170 baseline attempts of the EARLIER run `m7-05-main`, read with `--baseline-run`; the baseline was NOT re-run, and no Mtek attempt of the earlier run is in this report (the row of `m7-05-main` in the first table shows the spend of that whole run, of which only the baseline attempts are used). After the retry runs every one of the 340 attempts that count ended in success or failure. The failures that the documentation changes address were diagnosed on this main set, so its gains are optimistic. No holdout attempt is in this report.
 
 Generated from the stored `records.jsonl` by `tools/ai-eval/src/report.ts` (decision 0108); the same records give the same text. Every attempt is listed in the last section, failures included. The original "about 80 % fewer tokens" claim is an unverified hypothesis and is not tested by the 30 % research target below.
 
@@ -10,41 +10,39 @@ Generated from the stored `records.jsonl` by `tools/ai-eval/src/report.ts` (deci
 | --- | --- | --- | --- | --- | --- |
 | m7-1-rerun-main | 2026-10-19T15:48:40.781Z | complete | anthropic / claude-haiku-4-5-20251001 | temperature 1, prompt caching true, test feedback messages, max repairs per task | cap $20.6, this run $8.1007, ledger after $19.9054, 693 calls, 0 refused |
 | m7-05-main | 2026-10-19T09:23:16.558Z | complete | anthropic / claude-haiku-4-5-20251001 | temperature 1, prompt caching true, test feedback messages, max repairs per task | cap $7.8, this run $6.1594, ledger after $6.6040, 731 calls, 0 refused |
+| m7-1-retry-ctx (retry run) | 2026-10-19T19:12:22.079Z | complete | anthropic / claude-haiku-4-5-20251001 | temperature 1, prompt caching true, test feedback messages, max repairs per task | cap $25.2, this run $0.5998, ledger after $22.5788, 68 calls, 0 refused |
+| m7-1-retry-guide (retry run) | 2026-10-19T19:21:17.783Z | complete | anthropic / claude-haiku-4-5-20251001 | temperature 1, prompt caching true, test feedback messages, max repairs per task | cap $25.2, this run $0.6152, ledger after $23.3596, 46 calls, 0 refused |
 
-Date of the runs: 2026-10-19T09:23:16.558Z to 2026-10-19T15:48:40.781Z. Models: claude-haiku-4-5-20251001.
+Date of the runs: 2026-10-19T09:23:16.558Z to 2026-10-19T19:21:17.783Z. Models: claude-haiku-4-5-20251001.
 
 ## Model claude-haiku-4-5-20251001
 
 ### Conclusion on H4 (agent-facing contract), decision 0001 by the rule of decision 0108
 
-**Mtek unconstrained against the baseline: WORSE (provisional).** completion lower and tokens per completed task significantly more.
+**Mtek unconstrained against the baseline: WORSE.** completion lower and tokens per completed task significantly more.
 
 |  | attempts | completed | completion rate | tokens per completed task | cost per completed task |
 | --- | --- | --- | --- | --- | --- |
-| Mtek | 170 | 97 | 68.3 % | 33,659 | $0.0386 |
+| Mtek | 170 | 116 | 68.2 % | 33,648 | $0.0304 |
 | baseline | 170 | 156 | 91.8 % | 9,388 | $0.0131 |
 
-Over 34 task(s): token ratio Mtek / baseline 3.585, 95 % interval [2.508, 5.192]; completion difference -23.5 points (success lower, tokens more). Research target of 30 % fewer tokens: not met.
+Over 34 task(s): token ratio Mtek / baseline 3.584, 95 % interval [2.505, 5.245]; completion difference -23.5 points (success lower, tokens more). Research target of 30 % fewer tokens: not met.
 
-Provisional because: more than 10 % of the attempts could not be judged (not-run, error, unavailable or unfinished).
-
-**Mtek unconstrained with the document guide added against the baseline: WORSE (provisional).** completion matched and tokens per completed task significantly more.
+**Mtek unconstrained with the document guide added against the baseline: WORSE.** completion matched and tokens per completed task significantly more.
 
 |  | attempts | completed | completion rate | tokens per completed task | cost per completed task |
 | --- | --- | --- | --- | --- | --- |
-| Mtek | 170 | 119 | 84.4 % | 31,166 | $0.0366 |
+| Mtek | 170 | 145 | 85.3 % | 29,872 | $0.0269 |
 | baseline | 170 | 156 | 91.8 % | 9,388 | $0.0131 |
 
-Over 34 task(s): token ratio Mtek / baseline 3.320, 95 % interval [2.686, 4.118]; completion difference -7.4 points (success matched, tokens more). Research target of 30 % fewer tokens: not met.
-
-Provisional because: more than 10 % of the attempts could not be judged (not-run, error, unavailable or unfinished).
+Over 34 task(s): token ratio Mtek / baseline 3.182, 95 % interval [2.565, 3.978]; completion difference -6.5 points (success matched, tokens more). Research target of 30 % fewer tokens: not met.
 
 ### Aggregates per condition
 
 | cell | attempts | completed / failed / not judged | completion rate | tokens per completed task | tokens per attempt, median [IQR] | tokens per completed attempt, median [IQR] | repairs per completed, median [IQR] | seconds per attempt, median [IQR] | cost |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| mtek unconstrained | 170 | 97 / 45 / 28 | 68.3 % | 33,659 | 12,180 [5,292, 33,493] | 11,164 [5,551, 19,516] | 1.0 [0.0, 1.0] | 10.8 [6.7, 24.6] | $3.7490 |
-| mtek unconstrained+guide | 170 | 119 / 22 / 29 | 84.4 % | 31,166 | 11,454 [10,594, 29,135] | 13,631 [10,738, 22,764] | 0.0 [0.0, 1.0] | 9.0 [6.8, 17.0] | $4.3517 |
+| mtek unconstrained | 170 | 116 / 54 / 0 | 68.2 % | 33,648 | 19,190 [6,651, 37,108] | 10,379 [5,562, 19,599] | 0.5 [0.0, 1.0] | 16.9 [8.8, 26.3] | $3.5230 |
+| mtek unconstrained+guide | 170 | 145 / 25 / 0 | 85.3 % | 29,872 | 13,974 [10,847, 37,242] | 13,623 [10,738, 22,600] | 0.0 [0.0, 1.0] | 9.6 [7.5, 20.9] | $3.9026 |
 | baseline unconstrained | 170 | 156 / 14 / 0 | 91.8 % | 9,388 | 5,052 [4,707, 9,819] | 5,008 [4,692, 5,472] | 0.0 [0.0, 0.0] | 11.1 [8.2, 15.3] | $2.0476 |
 
 Tokens are input plus output of every call of every attempt (cached reads and writes are input). "Not judged" counts not-run, error, unavailable and unfinished-by-budget attempts: they are in the token sums, not in the completion rate.
@@ -53,24 +51,24 @@ Tokens are input plus output of every call of every attempt (cached reads and wr
 
 | cell | input | of which cache reads | of which cache writes | of which uncached | output | total | attempts with unknown usage |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| mtek unconstrained | 3,040,099 | 1,739,778 | 1,299,238 | 1,083 | 224,821 | 3,264,920 | 0 |
-| mtek unconstrained+guide | 3,538,618 | 1,727,220 | 1,810,573 | 825 | 170,125 | 3,708,743 | 0 |
+| mtek unconstrained | 3,631,511 | 2,064,807 | 1,565,417 | 1,287 | 271,689 | 3,903,200 | 0 |
+| mtek unconstrained+guide | 4,133,727 | 1,959,342 | 2,173,422 | 963 | 197,780 | 4,331,507 | 0 |
 | baseline unconstrained | 1,272,681 | 384,464 | 646,397 | 241,820 | 191,871 | 1,464,552 | 0 |
 
 ### First-attempt success (the first candidate that was validated)
 
 | cell | candidates | parse | check | start | tests | everything |
 | --- | --- | --- | --- | --- | --- | --- |
-| mtek unconstrained | 142 | 87 / 142 (61.3 %) | 66 / 142 (46.5 %) | 66 / 142 (46.5 %) | 48 / 142 (33.8 %) | 48 / 142 (33.8 %) |
-| mtek unconstrained+guide | 141 | 111 / 141 (78.7 %) | 106 / 141 (75.2 %) | 106 / 141 (75.2 %) | 83 / 141 (58.9 %) | 83 / 141 (58.9 %) |
+| mtek unconstrained | 170 | 104 / 170 (61.2 %) | 80 / 170 (47.1 %) | 80 / 170 (47.1 %) | 58 / 170 (34.1 %) | 58 / 170 (34.1 %) |
+| mtek unconstrained+guide | 170 | 136 / 170 (80.0 %) | 130 / 170 (76.5 %) | 130 / 170 (76.5 %) | 104 / 170 (61.2 %) | 104 / 170 (61.2 %) |
 | baseline unconstrained | 170 | 152 / 170 (89.4 %) | 144 / 170 (84.7 %) | 144 / 170 (84.7 %) | 126 / 170 (74.1 %) | 126 / 170 (74.1 %) |
 
 ### Where the input tokens went (by each part's share of the request's characters)
 
 | cell | instructions | task | documentation | project files | diagnostics | tool results | repair context | generated code | other | output (generated code) | input in repair rounds | output in repair rounds |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| mtek unconstrained | 183,722 (6.0 %) | 157,694 (5.2 %) | 1,809,354 (59.5 %) | 65,318 (2.1 %) | 319,612 (10.5 %) | 65,560 (2.2 %) | 149,511 (4.9 %) | 289,328 (9.5 %) | 0 (0.0 %) | 224,821 | 2,200,603 | 117,298 |
-| mtek unconstrained+guide | 142,788 (4.0 %) | 130,281 (3.7 %) | 2,841,769 (80.3 %) | 51,645 (1.5 %) | 82,105 (2.3 %) | 39,078 (1.1 %) | 86,989 (2.5 %) | 163,963 (4.6 %) | 0 (0.0 %) | 170,125 | 1,950,497 | 76,037 |
+| mtek unconstrained | 217,816 (6.0 %) | 189,291 (5.2 %) | 2,178,177 (60.0 %) | 76,786 (2.1 %) | 373,770 (10.3 %) | 76,890 (2.1 %) | 172,836 (4.8 %) | 345,945 (9.5 %) | 0 (0.0 %) | 271,689 | 2,617,531 | 140,674 |
+| mtek unconstrained+guide | 166,209 (4.0 %) | 153,800 (3.7 %) | 3,333,195 (80.6 %) | 59,825 (1.4 %) | 89,668 (2.2 %) | 43,012 (1.0 %) | 99,082 (2.4 %) | 188,936 (4.6 %) | 0 (0.0 %) | 197,780 | 2,211,437 | 84,580 |
 | baseline unconstrained | 126,531 (9.9 %) | 110,077 (8.6 %) | 775,322 (60.9 %) | 51,601 (4.1 %) | 7,705 (0.6 %) | 16,616 (1.3 %) | 70,886 (5.6 %) | 113,943 (9.0 %) | 0 (0.0 %) | 191,871 | 567,766 | 47,067 |
 
 The provider counts tokens per request, not per part of a request: each request's input tokens are split by the share of its characters (system prompt, each message's sections, the model's earlier replies). "documentation" is the compiler context export on the Mtek side (its examples are inside it and are not counted apart) and the reference document on the baseline side. These are estimates of attribution, the totals are exact.
@@ -79,28 +77,28 @@ The provider counts tokens per request, not per part of a request: each request'
 
 | cell | attempts | completed / failed / not judged | completion rate | tokens per completed task | tokens per attempt, median [IQR] | tokens per completed attempt, median [IQR] | repairs per completed, median [IQR] | seconds per attempt, median [IQR] | cost |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| interaction: mtek unconstrained | 55 | 32 / 18 / 5 | 64.0 % | 44,813 | 28,292 [12,180, 39,698] | 18,837 [11,816, 37,488] | 1.5 [1.0, 3.0] | 24.3 [11.7, 32.8] | $1.4604 |
-| interaction: mtek unconstrained+guide | 55 | 42 / 7 / 6 | 85.7 % | 35,625 | 22,863 [10,703, 50,454] | 22,732 [11,027, 38,547] | 1.0 [0.0, 2.0] | 15.6 [9.6, 27.0] | $1.5066 |
+| interaction: mtek unconstrained | 55 | 34 / 21 / 0 | 61.8 % | 47,516 | 33,174 [17,300, 40,992] | 18,899 [12,051, 36,586] | 1.5 [1.0, 3.0] | 25.6 [19.8, 34.4] | $1.4940 |
+| interaction: mtek unconstrained+guide | 55 | 47 / 8 / 0 | 85.5 % | 35,112 | 24,270 [11,092, 51,221] | 22,600 [11,027, 38,250] | 1.0 [0.0, 2.0] | 16.3 [10.0, 27.9] | $1.4395 |
 | interaction: baseline unconstrained | 55 | 53 / 2 / 0 | 96.4 % | 7,540 | 5,170 [4,979, 5,615] | 5,156 [4,974, 5,505] | 0.0 [0.0, 0.0] | 13.6 [11.8, 17.5] | $0.6391 |
-| maintenance: mtek unconstrained | 30 | 24 / 0 / 6 | 100.0 % | 6,988 | 5,545 [4,870, 5,944] | 5,602 [5,455, 6,011] | 0.0 [0.0, 0.0] | 7.5 [5.2, 8.7] | $0.3800 |
-| maintenance: mtek unconstrained+guide | 30 | 23 / 1 / 6 | 95.8 % | 14,465 | 10,898 [10,208, 11,328] | 10,969 [10,691, 11,344] | 0.0 [0.0, 0.0] | 7.4 [5.2, 8.9] | $0.6001 |
+| maintenance: mtek unconstrained | 30 | 30 / 0 / 0 | 100.0 % | 6,910 | 5,673 [5,474, 6,008] | 5,673 [5,474, 6,008] | 0.0 [0.0, 0.0] | 8.3 [6.8, 8.9] | $0.2722 |
+| maintenance: mtek unconstrained+guide | 30 | 29 / 1 / 0 | 96.7 % | 13,708 | 10,968 [10,667, 11,347] | 10,966 [10,643, 11,339] | 0.0 [0.0, 0.0] | 7.6 [6.7, 9.0] | $0.4824 |
 | maintenance: baseline unconstrained | 30 | 30 / 0 / 0 | 100.0 % | 5,329 | 4,818 [4,464, 5,129] | 4,818 [4,464, 5,129] | 0.0 [0.0, 0.0] | 7.0 [6.5, 10.4] | $0.2468 |
-| scene-rendering: mtek unconstrained | 55 | 29 / 15 / 11 | 65.9 % | 38,269 | 9,019 [5,163, 41,544] | 8,833 [8,413, 17,741] | 0.0 [0.0, 1.0] | 10.2 [6.2, 23.6] | $1.2891 |
-| scene-rendering: mtek unconstrained+guide | 55 | 30 / 14 / 11 | 68.2 % | 48,671 | 14,166 [10,598, 62,353] | 14,065 [13,740, 14,302] | 0.0 [0.0, 0.0] | 8.9 [5.6, 24.8] | $1.5797 |
+| scene-rendering: mtek unconstrained | 55 | 37 / 18 / 0 | 67.3 % | 37,804 | 19,000 [8,701, 44,809] | 8,833 [8,413, 19,000] | 0.0 [0.0, 1.0] | 14.9 [8.4, 26.0] | $1.1902 |
+| scene-rendering: mtek unconstrained+guide | 55 | 39 / 16 / 0 | 70.9 % | 46,056 | 14,363 [13,946, 63,144] | 14,077 [13,742, 14,595] | 0.0 [0.0, 0.0] | 9.5 [7.4, 26.6] | $1.4298 |
 | scene-rendering: baseline unconstrained | 55 | 44 / 11 / 0 | 80.0 % | 15,160 | 5,220 [4,801, 13,548] | 5,032 [4,694, 5,705] | 0.0 [0.0, 0.0] | 10.0 [8.2, 26.2] | $0.8350 |
-| shader-bridge: mtek unconstrained | 30 | 12 / 12 / 6 | 50.0 % | 46,116 | 21,911 [5,340, 27,521] | 14,816 [5,351, 21,513] | 1.0 [0.0, 2.0] | 16.5 [5.8, 20.3] | $0.6195 |
-| shader-bridge: mtek unconstrained+guide | 30 | 24 / 0 / 6 | 100.0 % | 17,487 | 10,709 [10,470, 10,979] | 10,805 [10,693, 16,409] | 0.0 [0.0, 0.3] | 8.0 [6.8, 10.1] | $0.6652 |
+| shader-bridge: mtek unconstrained | 30 | 15 / 15 / 0 | 50.0 % | 45,440 | 24,574 [14,049, 28,152] | 13,005 [5,349, 21,141] | 1.0 [0.0, 1.5] | 17.2 [11.5, 21.7] | $0.5665 |
+| shader-bridge: mtek unconstrained+guide | 30 | 30 / 0 / 0 | 100.0 % | 16,251 | 10,769 [10,692, 13,399] | 10,769 [10,692, 13,399] | 0.0 [0.0, 0.0] | 8.5 [7.5, 10.8] | $0.5509 |
 | shader-bridge: baseline unconstrained | 30 | 29 / 1 / 0 | 96.7 % | 8,207 | 4,806 [4,610, 10,585] | 4,770 [4,609, 10,046] | 0.0 [0.0, 1.0] | 9.9 [8.7, 12.9] | $0.3267 |
 
 ### Per mode (cold authoring, edit)
 
 | cell | attempts | completed / failed / not judged | completion rate | tokens per completed task | tokens per attempt, median [IQR] | tokens per completed attempt, median [IQR] | repairs per completed, median [IQR] | seconds per attempt, median [IQR] | cost |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| cold: mtek unconstrained | 55 | 25 / 19 / 11 | 56.8 % | 55,042 | 19,847 [8,458, 45,825] | 9,594 [8,763, 20,613] | 0.0 [0.0, 1.0] | 16.5 [8.7, 25.6] | $1.4805 |
-| cold: mtek unconstrained+guide | 55 | 30 / 14 / 11 | 68.2 % | 51,678 | 14,276 [13,742, 62,766] | 14,124 [13,946, 14,314] | 0.0 [0.0, 0.0] | 8.9 [6.6, 25.9] | $1.6524 |
+| cold: mtek unconstrained | 55 | 32 / 23 / 0 | 58.2 % | 53,878 | 31,335 [9,443, 47,080] | 18,346 [8,763, 21,410] | 1.0 [0.0, 1.0] | 19.9 [11.1, 27.5] | $1.4105 |
+| cold: mtek unconstrained+guide | 55 | 39 / 16 / 0 | 70.9 % | 48,243 | 14,318 [13,992, 63,186] | 14,166 [13,941, 14,476] | 0.0 [0.0, 0.0] | 11.0 [7.8, 26.9] | $1.4964 |
 | cold: baseline unconstrained | 55 | 43 / 12 / 0 | 78.2 % | 16,243 | 5,317 [4,844, 18,891] | 5,066 [4,730, 6,449] | 0.0 [0.0, 0.0] | 11.6 [9.5, 29.4] | $0.8754 |
-| edit: mtek unconstrained | 115 | 72 / 26 / 17 | 73.5 % | 26,234 | 11,678 [5,253, 27,871] | 11,189 [5,351, 17,815] | 1.0 [0.0, 2.0] | 10.2 [6.2, 24.2] | $2.2685 |
-| edit: mtek unconstrained+guide | 115 | 89 / 8 / 18 | 91.8 % | 24,252 | 10,966 [10,528, 23,136] | 11,026 [10,679, 23,017] | 0.0 [0.0, 1.0] | 9.0 [6.8, 16.2] | $2.6992 |
+| edit: mtek unconstrained | 115 | 84 / 31 / 0 | 73.0 % | 25,942 | 13,694 [5,558, 28,727] | 6,057 [5,351, 17,654] | 0.0 [0.0, 1.3] | 12.6 [8.2, 25.3] | $2.1125 |
+| edit: mtek unconstrained+guide | 115 | 106 / 9 / 0 | 92.2 % | 23,114 | 11,038 [10,685, 24,441] | 10,976 [10,652, 22,794] | 0.0 [0.0, 1.0] | 9.2 [7.5, 16.8] | $2.4061 |
 | edit: baseline unconstrained | 115 | 113 / 2 / 0 | 98.3 % | 6,780 | 5,006 [4,689, 5,412] | 4,994 [4,688, 5,354] | 0.0 [0.0, 0.0] | 11.0 [7.5, 14.0] | $1.1722 |
 
 ### Per task
@@ -112,35 +110,35 @@ The provider counts tokens per request, not per part of a request: each request'
 | interaction-03 | interaction | edit | 5/5 done, 32,730 tok/done, $0.1691 | 4/5 done, 74,084 tok/done, $0.2210 | 5/5 done, 10,847 tok/done, $0.0686 |
 | interaction-04 | interaction | edit | 3/5 done, 45,560 tok/done, $0.1235 | 5/5 done, 34,273 tok/done, $0.1326 | 5/5 done, 7,325 tok/done, $0.0592 |
 | interaction-05 | interaction | edit | 0/5 done, UNDEFINED tok/done, $0.1524 | 5/5 done, 18,135 tok/done, $0.0993 | 4/5 done, 11,183 tok/done, $0.0621 |
-| interaction-06 | interaction | edit | 5/5 done, 5,237 tok/done, $0.0421 | 4/5 done, 10,609 tok/done, $0.0953 | 5/5 done, 9,234 tok/done, $0.0822 |
-| interaction-07 | interaction | edit | 2/5 done, 93,432 tok/done, $0.2007 | 2/5 done, 82,744 tok/done, $0.1518 | 5/5 done, 6,570 tok/done, $0.0574 |
-| interaction-08 | interaction | cold | 1/5 done, 198,075 tok/done, $0.1749 | 4/5 done, 13,967 tok/done, $0.1168 | 5/5 done, 4,943 tok/done, $0.0426 |
-| interaction-09 | interaction | edit | 1/5 done, 124,437 tok/done, $0.1327 | 3/5 done, 44,110 tok/done, $0.1566 | 5/5 done, 5,545 tok/done, $0.0575 |
-| interaction-10 | interaction | edit | 4/5 done, 20,909 tok/done, $0.1205 | 3/5 done, 47,040 tok/done, $0.1600 | 4/5 done, 13,332 tok/done, $0.0756 |
-| interaction-11 | interaction | edit | 1/5 done, 111,380 tok/done, $0.1436 | 3/5 done, 46,886 tok/done, $0.1469 | 5/5 done, 5,019 tok/done, $0.0458 |
-| maintenance-01 | maintenance | edit | 4/5 done, 4,866 tok/done, $0.0554 | 4/5 done, 10,209 tok/done, $0.0894 | 5/5 done, 4,309 tok/done, $0.0276 |
-| maintenance-02 | maintenance | edit | 4/5 done, 8,658 tok/done, $0.0646 | 4/5 done, 11,222 tok/done, $0.0998 | 5/5 done, 4,720 tok/done, $0.0384 |
-| maintenance-03 | maintenance | edit | 4/5 done, 11,250 tok/done, $0.0673 | 4/5 done, 16,191 tok/done, $0.0986 | 5/5 done, 4,464 tok/done, $0.0347 |
-| maintenance-04 | maintenance | edit | 4/5 done, 5,595 tok/done, $0.0646 | 4/5 done, 14,071 tok/done, $0.1056 | 5/5 done, 8,365 tok/done, $0.0540 |
-| maintenance-05 | maintenance | edit | 4/5 done, 5,534 tok/done, $0.0630 | 4/5 done, 10,839 tok/done, $0.0963 | 5/5 done, 4,971 tok/done, $0.0432 |
-| maintenance-06 | maintenance | edit | 4/5 done, 6,026 tok/done, $0.0652 | 3/5 done, 27,524 tok/done, $0.1104 | 5/5 done, 5,146 tok/done, $0.0490 |
-| scene-rendering-01 | scene-rendering | cold | 4/5 done, 8,433 tok/done, $0.0812 | 4/5 done, 13,685 tok/done, $0.1134 | 5/5 done, 4,261 tok/done, $0.0289 |
-| scene-rendering-02 | scene-rendering | cold | 4/5 done, 11,011 tok/done, $0.0891 | 4/5 done, 14,040 tok/done, $0.1190 | 5/5 done, 5,646 tok/done, $0.0431 |
-| scene-rendering-03 | scene-rendering | cold | 4/5 done, 26,870 tok/done, $0.1293 | 4/5 done, 14,458 tok/done, $0.1241 | 5/5 done, 5,101 tok/done, $0.0488 |
-| scene-rendering-04 | scene-rendering | cold | 4/5 done, 11,569 tok/done, $0.0912 | 4/5 done, 14,002 tok/done, $0.1171 | 5/5 done, 4,898 tok/done, $0.0411 |
-| scene-rendering-05 | scene-rendering | edit | 4/5 done, 8,594 tok/done, $0.0681 | 4/5 done, 19,846 tok/done, $0.1102 | 5/5 done, 6,200 tok/done, $0.0526 |
-| scene-rendering-06 | scene-rendering | cold | 0/5 done, UNDEFINED tok/done, $0.1695 | 0/5 done, UNDEFINED tok/done, $0.1835 | 4/5 done, 25,153 tok/done, $0.1255 |
-| scene-rendering-07 | scene-rendering | cold | 1/5 done, 143,440 tok/done, $0.1252 | 0/5 done, UNDEFINED tok/done, $0.1823 | 0/5 done, UNDEFINED tok/done, $0.1405 |
-| scene-rendering-08 | scene-rendering | edit | 4/5 done, 5,134 tok/done, $0.0577 | 4/5 done, 10,557 tok/done, $0.0933 | 5/5 done, 5,710 tok/done, $0.0401 |
-| scene-rendering-09 | scene-rendering | cold | 4/5 done, 14,798 tok/done, $0.1058 | 4/5 done, 14,300 tok/done, $0.1218 | 5/5 done, 5,190 tok/done, $0.0517 |
-| scene-rendering-10 | scene-rendering | cold | 0/5 done, UNDEFINED tok/done, $0.1541 | 1/5 done, 257,778 tok/done, $0.1861 | 2/5 done, 67,302 tok/done, $0.1381 |
-| scene-rendering-11 | scene-rendering | cold | 0/5 done, UNDEFINED tok/done, $0.2179 | 1/5 done, 287,645 tok/done, $0.2290 | 3/5 done, 30,578 tok/done, $0.1247 |
-| shader-bridge-01 | shader-bridge | edit | 0/5 done, UNDEFINED tok/done, $0.0969 | 4/5 done, 10,491 tok/done, $0.0956 | 5/5 done, 5,624 tok/done, $0.0444 |
-| shader-bridge-02 | shader-bridge | edit | 0/5 done, UNDEFINED tok/done, $0.1010 | 4/5 done, 10,967 tok/done, $0.1018 | 5/5 done, 9,076 tok/done, $0.0662 |
-| shader-bridge-03 | shader-bridge | cold | 3/5 done, 41,035 tok/done, $0.1423 | 4/5 done, 38,991 tok/done, $0.1594 | 4/5 done, 16,559 tok/done, $0.0904 |
-| shader-bridge-04 | shader-bridge | edit | 1/5 done, 138,634 tok/done, $0.1436 | 4/5 done, 23,018 tok/done, $0.1204 | 5/5 done, 4,768 tok/done, $0.0381 |
-| shader-bridge-05 | shader-bridge | edit | 4/5 done, 5,330 tok/done, $0.0586 | 4/5 done, 10,710 tok/done, $0.0934 | 5/5 done, 7,027 tok/done, $0.0468 |
-| shader-bridge-06 | shader-bridge | edit | 4/5 done, 14,782 tok/done, $0.0771 | 4/5 done, 10,745 tok/done, $0.0947 | 5/5 done, 7,858 tok/done, $0.0407 |
+| interaction-06 | interaction | edit | 5/5 done, 5,237 tok/done, $0.0421 | 5/5 done, 10,593 tok/done, $0.0758 | 5/5 done, 9,234 tok/done, $0.0822 |
+| interaction-07 | interaction | edit | 2/5 done, 116,627 tok/done, $0.2238 | 3/5 done, 58,870 tok/done, $0.1343 | 5/5 done, 6,570 tok/done, $0.0574 |
+| interaction-08 | interaction | cold | 1/5 done, 246,531 tok/done, $0.1750 | 5/5 done, 13,955 tok/done, $0.0957 | 5/5 done, 4,943 tok/done, $0.0426 |
+| interaction-09 | interaction | edit | 1/5 done, 158,738 tok/done, $0.1380 | 4/5 done, 42,826 tok/done, $0.1529 | 5/5 done, 5,545 tok/done, $0.0575 |
+| interaction-10 | interaction | edit | 5/5 done, 20,383 tok/done, $0.1194 | 4/5 done, 41,744 tok/done, $0.1531 | 4/5 done, 13,332 tok/done, $0.0756 |
+| interaction-11 | interaction | edit | 2/5 done, 72,737 tok/done, $0.1497 | 3/5 done, 64,763 tok/done, $0.1486 | 5/5 done, 5,019 tok/done, $0.0458 |
+| maintenance-01 | maintenance | edit | 5/5 done, 4,901 tok/done, $0.0366 | 5/5 done, 10,210 tok/done, $0.0691 | 5/5 done, 4,309 tok/done, $0.0276 |
+| maintenance-02 | maintenance | edit | 5/5 done, 8,103 tok/done, $0.0465 | 5/5 done, 11,189 tok/done, $0.0803 | 5/5 done, 4,720 tok/done, $0.0384 |
+| maintenance-03 | maintenance | edit | 5/5 done, 11,264 tok/done, $0.0507 | 5/5 done, 15,053 tok/done, $0.0784 | 5/5 done, 4,464 tok/done, $0.0347 |
+| maintenance-04 | maintenance | edit | 5/5 done, 5,615 tok/done, $0.0471 | 5/5 done, 13,435 tok/done, $0.0868 | 5/5 done, 8,365 tok/done, $0.0540 |
+| maintenance-05 | maintenance | edit | 5/5 done, 5,557 tok/done, $0.0451 | 5/5 done, 10,830 tok/done, $0.0767 | 5/5 done, 4,971 tok/done, $0.0432 |
+| maintenance-06 | maintenance | edit | 5/5 done, 6,023 tok/done, $0.0463 | 4/5 done, 23,487 tok/done, $0.0910 | 5/5 done, 5,146 tok/done, $0.0490 |
+| scene-rendering-01 | scene-rendering | cold | 5/5 done, 8,443 tok/done, $0.0612 | 5/5 done, 13,673 tok/done, $0.0918 | 5/5 done, 4,261 tok/done, $0.0289 |
+| scene-rendering-02 | scene-rendering | cold | 5/5 done, 10,544 tok/done, $0.0695 | 5/5 done, 14,015 tok/done, $0.0983 | 5/5 done, 5,646 tok/done, $0.0431 |
+| scene-rendering-03 | scene-rendering | cold | 5/5 done, 25,924 tok/done, $0.1201 | 5/5 done, 14,439 tok/done, $0.1044 | 5/5 done, 5,101 tok/done, $0.0488 |
+| scene-rendering-04 | scene-rendering | cold | 5/5 done, 13,055 tok/done, $0.0761 | 5/5 done, 13,991 tok/done, $0.0961 | 5/5 done, 4,898 tok/done, $0.0411 |
+| scene-rendering-05 | scene-rendering | edit | 5/5 done, 7,961 tok/done, $0.0496 | 5/5 done, 20,369 tok/done, $0.0948 | 5/5 done, 6,200 tok/done, $0.0526 |
+| scene-rendering-06 | scene-rendering | cold | 1/5 done, 242,808 tok/done, $0.1748 | 0/5 done, UNDEFINED tok/done, $0.1835 | 4/5 done, 25,153 tok/done, $0.1255 |
+| scene-rendering-07 | scene-rendering | cold | 1/5 done, 189,783 tok/done, $0.1208 | 1/5 done, 284,371 tok/done, $0.1664 | 0/5 done, UNDEFINED tok/done, $0.1405 |
+| scene-rendering-08 | scene-rendering | edit | 5/5 done, 5,127 tok/done, $0.0382 | 5/5 done, 10,560 tok/done, $0.0738 | 5/5 done, 5,710 tok/done, $0.0401 |
+| scene-rendering-09 | scene-rendering | cold | 5/5 done, 16,360 tok/done, $0.0981 | 5/5 done, 14,358 tok/done, $0.1034 | 5/5 done, 5,190 tok/done, $0.0517 |
+| scene-rendering-10 | scene-rendering | cold | 0/5 done, UNDEFINED tok/done, $0.1511 | 1/5 done, 323,692 tok/done, $0.1831 | 2/5 done, 67,302 tok/done, $0.1381 |
+| scene-rendering-11 | scene-rendering | cold | 0/5 done, UNDEFINED tok/done, $0.2308 | 2/5 done, 179,924 tok/done, $0.2343 | 3/5 done, 30,578 tok/done, $0.1247 |
+| shader-bridge-01 | shader-bridge | edit | 0/5 done, UNDEFINED tok/done, $0.0861 | 5/5 done, 10,497 tok/done, $0.0770 | 5/5 done, 5,624 tok/done, $0.0444 |
+| shader-bridge-02 | shader-bridge | edit | 0/5 done, UNDEFINED tok/done, $0.0955 | 5/5 done, 10,963 tok/done, $0.0842 | 5/5 done, 9,076 tok/done, $0.0662 |
+| shader-bridge-03 | shader-bridge | cold | 4/5 done, 36,068 tok/done, $0.1331 | 5/5 done, 34,033 tok/done, $0.1396 | 4/5 done, 16,559 tok/done, $0.0904 |
+| shader-bridge-04 | shader-bridge | edit | 1/5 done, 174,813 tok/done, $0.1479 | 5/5 done, 20,566 tok/done, $0.1019 | 5/5 done, 4,768 tok/done, $0.0381 |
+| shader-bridge-05 | shader-bridge | edit | 5/5 done, 5,328 tok/done, $0.0390 | 5/5 done, 10,723 tok/done, $0.0736 | 5/5 done, 7,027 tok/done, $0.0468 |
+| shader-bridge-06 | shader-bridge | edit | 5/5 done, 14,426 tok/done, $0.0650 | 5/5 done, 10,725 tok/done, $0.0746 | 5/5 done, 7,858 tok/done, $0.0407 |
 
 ## Documentation given to the model
 
@@ -152,69 +150,71 @@ The provider counts tokens per request, not per part of a request: each request'
 
 ## Attempts that could not be judged
 
-| attempt | outcome | reason |
-| --- | --- | --- |
-| interaction-06--mtek-guide-unconstrained--04 | error | transport-error: Request timed out. (no response from the model; record made before decision 0124, read as not judged) |
-| interaction-07--unconstrained--04 | error | transport-error: Request timed out. (no response from the model; record made before decision 0124, read as not judged) |
-| interaction-07--mtek-guide-unconstrained--04 | error | transport-error: Request timed out. (no response from the model; record made before decision 0124, read as not judged) |
-| interaction-08--unconstrained--04 | error | transport-error: Request timed out. (no response from the model; record made before decision 0124, read as not judged) |
-| interaction-08--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| interaction-09--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| interaction-09--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| interaction-10--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| interaction-10--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| interaction-11--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| interaction-11--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-01--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-01--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-02--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-02--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-03--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-03--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-04--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-04--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-05--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-05--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-06--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| maintenance-06--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-01--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-01--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-02--unconstrained--04 | error | transport-error: Request timed out. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-02--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-03--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-03--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-04--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-04--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-05--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-05--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-06--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-06--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-07--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-07--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-08--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-08--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-09--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-09--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-10--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-10--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-11--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| scene-rendering-11--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-01--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-01--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-02--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-02--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-03--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-03--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-04--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-04--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-05--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-05--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-06--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
-| shader-bridge-06--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) |
+None: every attempt that counts ended in success or failure (the not-judged attempts that a retry run replaced are listed below).
 
-57 of the 510 attempts ended with the reason `transport-error`: the model could not be reached (a connection error or a timeout, no response at all). That is a failure of the network or the service, not of the model: these attempts are not judged, are out of every completion rate and of tokens per completed task, and are listed here. By condition: mtek unconstrained+guide 29, mtek unconstrained 28.
+57 attempts that were not judged are superseded by the attempt of the same cell (task, condition, trial index) in the retry runs `m7-1-retry-ctx`, `m7-1-retry-guide` (decision 0125): in every aggregate and in the verdict the retry attempt stands in the place of the lost one, which is listed below and in "All attempts" and is in no aggregate. By condition: mtek unconstrained+guide 29, mtek unconstrained 28.
 
-57 of them are read by a legacy rule (decision 0124): the records were made before the harness retried and marked such attempts, and say outcome `failure`, reason `generation-error`. An attempt is read as `error` / `transport-error` when it is recorded that way, its reason is `generation-error` and EVERY model call of it is `backend-error` with the error text `Connection error.` or `Request timed out.`, no response text, no tokens and no HTTP status. An attempt with any other call, or with another error text, stays a failure. The records are not changed.
+| attempt | outcome | reason | superseded by |
+| --- | --- | --- | --- |
+| m7-1-rerun-main: interaction-06--mtek-guide-unconstrained--04 | error | transport-error: Request timed out. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: interaction-07--unconstrained--04 | error | transport-error: Request timed out. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: interaction-07--mtek-guide-unconstrained--04 | error | transport-error: Request timed out. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: interaction-08--unconstrained--04 | error | transport-error: Request timed out. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: interaction-08--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: interaction-09--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: interaction-09--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: interaction-10--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: interaction-10--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: interaction-11--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: interaction-11--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: maintenance-01--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: maintenance-01--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: maintenance-02--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: maintenance-02--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: maintenance-03--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: maintenance-03--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: maintenance-04--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: maintenance-04--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: maintenance-05--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: maintenance-05--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: maintenance-06--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: maintenance-06--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-01--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-01--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-02--unconstrained--04 | error | transport-error: Request timed out. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-02--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-03--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-03--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-04--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-04--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-05--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-05--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-06--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-06--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-07--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-07--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-08--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-08--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-09--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-09--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-10--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-10--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: scene-rendering-11--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: scene-rendering-11--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: shader-bridge-01--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: shader-bridge-01--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: shader-bridge-02--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: shader-bridge-02--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: shader-bridge-03--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: shader-bridge-03--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: shader-bridge-04--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: shader-bridge-04--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: shader-bridge-05--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: shader-bridge-05--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+| m7-1-rerun-main: shader-bridge-06--unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-ctx |
+| m7-1-rerun-main: shader-bridge-06--mtek-guide-unconstrained--04 | error | transport-error: Connection error. (no response from the model; record made before decision 0124, read as not judged) | m7-1-retry-guide |
+
+57 of the superseded attempts are read by a legacy rule (decision 0124): the records were made before the harness retried and marked such attempts, and say outcome `failure`, reason `generation-error`. An attempt is read as `error` / `transport-error` when it is recorded that way, its reason is `generation-error` and EVERY model call of it is `backend-error` with the error text `Connection error.` or `Request timed out.`, no response text, no tokens and no HTTP status. An attempt with any other call, or with another error text, stays a failure. The records are not changed.
 
 ## Holdout (reported apart, by ids and layer outcomes only)
 
@@ -507,63 +507,63 @@ No holdout attempt is in these records.
 | interaction-05--unconstrained--04 | interaction-05 | interaction | edit | mtek | unconstrained | failure | max-repairs | 4 | 3 | 27,222 | 18,697 | 8,513 | 1,309 | $0.0191 | 19.2 | pass/fail/not-run/not-run/not-run |
 | interaction-05--mtek-guide-unconstrained--04 | interaction-05 | interaction | edit | mtek | unconstrained | success |  | 2 | 1 | 21,626 | 10,087 | 11,533 | 974 | $0.0203 | 17.0 | pass/pass/pass/pass/fail |
 | interaction-06--unconstrained--04 | interaction-06 | interaction | edit | mtek | unconstrained | success |  | 1 | 0 | 4,738 | 0 | 4,735 | 437 | $0.0081 | 8.3 | pass/pass/pass/pass/pass |
-| interaction-06--mtek-guide-unconstrained--04 | interaction-06 | interaction | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0343 | 10.8 | - |
-| interaction-07--unconstrained--04 | interaction-07 | interaction | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0273 | 10.8 | - |
-| interaction-07--mtek-guide-unconstrained--04 | interaction-07 | interaction | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0346 | 10.8 | - |
-| interaction-08--unconstrained--04 | interaction-08 | interaction | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0328 | 10.8 | - |
-| interaction-08--mtek-guide-unconstrained--04 | interaction-08 | interaction | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0401 | 0.2 | - |
-| interaction-09--unconstrained--04 | interaction-09 | interaction | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0276 | 0.2 | - |
-| interaction-09--mtek-guide-unconstrained--04 | interaction-09 | interaction | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0349 | 0.2 | - |
-| interaction-10--unconstrained--04 | interaction-10 | interaction | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0273 | 0.2 | - |
-| interaction-10--mtek-guide-unconstrained--04 | interaction-10 | interaction | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0346 | 0.2 | - |
-| interaction-11--unconstrained--04 | interaction-11 | interaction | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0273 | 0.2 | - |
-| interaction-11--mtek-guide-unconstrained--04 | interaction-11 | interaction | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0346 | 0.2 | - |
-| maintenance-01--unconstrained--04 | maintenance-01 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0268 | 0.2 | - |
-| maintenance-01--mtek-guide-unconstrained--04 | maintenance-01 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0341 | 0.2 | - |
-| maintenance-02--unconstrained--04 | maintenance-02 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0276 | 0.2 | - |
-| maintenance-02--mtek-guide-unconstrained--04 | maintenance-02 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0349 | 0.2 | - |
-| maintenance-03--unconstrained--04 | maintenance-03 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0272 | 0.2 | - |
-| maintenance-03--mtek-guide-unconstrained--04 | maintenance-03 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0345 | 0.2 | - |
-| maintenance-04--unconstrained--04 | maintenance-04 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0274 | 0.2 | - |
-| maintenance-04--mtek-guide-unconstrained--04 | maintenance-04 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0346 | 0.2 | - |
-| maintenance-05--unconstrained--04 | maintenance-05 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0274 | 0.2 | - |
-| maintenance-05--mtek-guide-unconstrained--04 | maintenance-05 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0347 | 0.2 | - |
-| maintenance-06--unconstrained--04 | maintenance-06 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0281 | 0.2 | - |
-| maintenance-06--mtek-guide-unconstrained--04 | maintenance-06 | maintenance | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0354 | 0.2 | - |
-| scene-rendering-01--unconstrained--04 | scene-rendering-01 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0325 | 0.2 | - |
-| scene-rendering-01--mtek-guide-unconstrained--04 | scene-rendering-01 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0398 | 0.2 | - |
-| scene-rendering-02--unconstrained--04 | scene-rendering-02 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0326 | 10.3 | - |
-| scene-rendering-02--mtek-guide-unconstrained--04 | scene-rendering-02 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0399 | 0.2 | - |
-| scene-rendering-03--unconstrained--04 | scene-rendering-03 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0329 | 0.2 | - |
-| scene-rendering-03--mtek-guide-unconstrained--04 | scene-rendering-03 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0402 | 0.2 | - |
-| scene-rendering-04--unconstrained--04 | scene-rendering-04 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0327 | 0.2 | - |
-| scene-rendering-04--mtek-guide-unconstrained--04 | scene-rendering-04 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0400 | 0.2 | - |
-| scene-rendering-05--unconstrained--04 | scene-rendering-05 | scene-rendering | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0272 | 0.2 | - |
-| scene-rendering-05--mtek-guide-unconstrained--04 | scene-rendering-05 | scene-rendering | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0345 | 0.2 | - |
-| scene-rendering-06--unconstrained--04 | scene-rendering-06 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0330 | 0.2 | - |
-| scene-rendering-06--mtek-guide-unconstrained--04 | scene-rendering-06 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0403 | 0.2 | - |
-| scene-rendering-07--unconstrained--04 | scene-rendering-07 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0331 | 0.2 | - |
-| scene-rendering-07--mtek-guide-unconstrained--04 | scene-rendering-07 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0404 | 0.2 | - |
-| scene-rendering-08--unconstrained--04 | scene-rendering-08 | scene-rendering | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0271 | 0.2 | - |
-| scene-rendering-08--mtek-guide-unconstrained--04 | scene-rendering-08 | scene-rendering | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0343 | 0.2 | - |
-| scene-rendering-09--unconstrained--04 | scene-rendering-09 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0329 | 0.2 | - |
-| scene-rendering-09--mtek-guide-unconstrained--04 | scene-rendering-09 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0402 | 0.2 | - |
-| scene-rendering-10--unconstrained--04 | scene-rendering-10 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0333 | 0.2 | - |
-| scene-rendering-10--mtek-guide-unconstrained--04 | scene-rendering-10 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0406 | 0.2 | - |
-| scene-rendering-11--unconstrained--04 | scene-rendering-11 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0334 | 0.2 | - |
-| scene-rendering-11--mtek-guide-unconstrained--04 | scene-rendering-11 | scene-rendering | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0407 | 0.2 | - |
-| shader-bridge-01--unconstrained--04 | shader-bridge-01 | shader-bridge | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0268 | 0.2 | - |
-| shader-bridge-01--mtek-guide-unconstrained--04 | shader-bridge-01 | shader-bridge | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0341 | 0.2 | - |
-| shader-bridge-02--unconstrained--04 | shader-bridge-02 | shader-bridge | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0271 | 0.2 | - |
-| shader-bridge-02--mtek-guide-unconstrained--04 | shader-bridge-02 | shader-bridge | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0344 | 0.2 | - |
-| shader-bridge-03--unconstrained--04 | shader-bridge-03 | shader-bridge | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0328 | 0.2 | - |
-| shader-bridge-03--mtek-guide-unconstrained--04 | shader-bridge-03 | shader-bridge | cold | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0401 | 0.2 | - |
-| shader-bridge-04--unconstrained--04 | shader-bridge-04 | shader-bridge | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0271 | 0.2 | - |
-| shader-bridge-04--mtek-guide-unconstrained--04 | shader-bridge-04 | shader-bridge | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0344 | 0.2 | - |
-| shader-bridge-05--unconstrained--04 | shader-bridge-05 | shader-bridge | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0274 | 0.2 | - |
-| shader-bridge-05--mtek-guide-unconstrained--04 | shader-bridge-05 | shader-bridge | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0347 | 0.2 | - |
-| shader-bridge-06--unconstrained--04 | shader-bridge-06 | shader-bridge | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0274 | 0.2 | - |
-| shader-bridge-06--mtek-guide-unconstrained--04 | shader-bridge-06 | shader-bridge | edit | mtek | unconstrained | error | transport-error | 1 | 0 | 0 | 0 | - | 0 | $0.0347 | 0.2 | - |
+| m7-1-rerun-main: interaction-06--mtek-guide-unconstrained--04 | interaction-06 | interaction | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0343 | 10.8 | - |
+| m7-1-rerun-main: interaction-07--unconstrained--04 | interaction-07 | interaction | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0273 | 10.8 | - |
+| m7-1-rerun-main: interaction-07--mtek-guide-unconstrained--04 | interaction-07 | interaction | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0346 | 10.8 | - |
+| m7-1-rerun-main: interaction-08--unconstrained--04 | interaction-08 | interaction | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0328 | 10.8 | - |
+| m7-1-rerun-main: interaction-08--mtek-guide-unconstrained--04 | interaction-08 | interaction | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0401 | 0.2 | - |
+| m7-1-rerun-main: interaction-09--unconstrained--04 | interaction-09 | interaction | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0276 | 0.2 | - |
+| m7-1-rerun-main: interaction-09--mtek-guide-unconstrained--04 | interaction-09 | interaction | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0349 | 0.2 | - |
+| m7-1-rerun-main: interaction-10--unconstrained--04 | interaction-10 | interaction | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0273 | 0.2 | - |
+| m7-1-rerun-main: interaction-10--mtek-guide-unconstrained--04 | interaction-10 | interaction | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0346 | 0.2 | - |
+| m7-1-rerun-main: interaction-11--unconstrained--04 | interaction-11 | interaction | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0273 | 0.2 | - |
+| m7-1-rerun-main: interaction-11--mtek-guide-unconstrained--04 | interaction-11 | interaction | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0346 | 0.2 | - |
+| m7-1-rerun-main: maintenance-01--unconstrained--04 | maintenance-01 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0268 | 0.2 | - |
+| m7-1-rerun-main: maintenance-01--mtek-guide-unconstrained--04 | maintenance-01 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0341 | 0.2 | - |
+| m7-1-rerun-main: maintenance-02--unconstrained--04 | maintenance-02 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0276 | 0.2 | - |
+| m7-1-rerun-main: maintenance-02--mtek-guide-unconstrained--04 | maintenance-02 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0349 | 0.2 | - |
+| m7-1-rerun-main: maintenance-03--unconstrained--04 | maintenance-03 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0272 | 0.2 | - |
+| m7-1-rerun-main: maintenance-03--mtek-guide-unconstrained--04 | maintenance-03 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0345 | 0.2 | - |
+| m7-1-rerun-main: maintenance-04--unconstrained--04 | maintenance-04 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0274 | 0.2 | - |
+| m7-1-rerun-main: maintenance-04--mtek-guide-unconstrained--04 | maintenance-04 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0346 | 0.2 | - |
+| m7-1-rerun-main: maintenance-05--unconstrained--04 | maintenance-05 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0274 | 0.2 | - |
+| m7-1-rerun-main: maintenance-05--mtek-guide-unconstrained--04 | maintenance-05 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0347 | 0.2 | - |
+| m7-1-rerun-main: maintenance-06--unconstrained--04 | maintenance-06 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0281 | 0.2 | - |
+| m7-1-rerun-main: maintenance-06--mtek-guide-unconstrained--04 | maintenance-06 | maintenance | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0354 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-01--unconstrained--04 | scene-rendering-01 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0325 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-01--mtek-guide-unconstrained--04 | scene-rendering-01 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0398 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-02--unconstrained--04 | scene-rendering-02 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0326 | 10.3 | - |
+| m7-1-rerun-main: scene-rendering-02--mtek-guide-unconstrained--04 | scene-rendering-02 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0399 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-03--unconstrained--04 | scene-rendering-03 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0329 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-03--mtek-guide-unconstrained--04 | scene-rendering-03 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0402 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-04--unconstrained--04 | scene-rendering-04 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0327 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-04--mtek-guide-unconstrained--04 | scene-rendering-04 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0400 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-05--unconstrained--04 | scene-rendering-05 | scene-rendering | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0272 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-05--mtek-guide-unconstrained--04 | scene-rendering-05 | scene-rendering | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0345 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-06--unconstrained--04 | scene-rendering-06 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0330 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-06--mtek-guide-unconstrained--04 | scene-rendering-06 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0403 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-07--unconstrained--04 | scene-rendering-07 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0331 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-07--mtek-guide-unconstrained--04 | scene-rendering-07 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0404 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-08--unconstrained--04 | scene-rendering-08 | scene-rendering | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0271 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-08--mtek-guide-unconstrained--04 | scene-rendering-08 | scene-rendering | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0343 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-09--unconstrained--04 | scene-rendering-09 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0329 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-09--mtek-guide-unconstrained--04 | scene-rendering-09 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0402 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-10--unconstrained--04 | scene-rendering-10 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0333 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-10--mtek-guide-unconstrained--04 | scene-rendering-10 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0406 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-11--unconstrained--04 | scene-rendering-11 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0334 | 0.2 | - |
+| m7-1-rerun-main: scene-rendering-11--mtek-guide-unconstrained--04 | scene-rendering-11 | scene-rendering | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0407 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-01--unconstrained--04 | shader-bridge-01 | shader-bridge | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0268 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-01--mtek-guide-unconstrained--04 | shader-bridge-01 | shader-bridge | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0341 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-02--unconstrained--04 | shader-bridge-02 | shader-bridge | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0271 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-02--mtek-guide-unconstrained--04 | shader-bridge-02 | shader-bridge | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0344 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-03--unconstrained--04 | shader-bridge-03 | shader-bridge | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0328 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-03--mtek-guide-unconstrained--04 | shader-bridge-03 | shader-bridge | cold | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0401 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-04--unconstrained--04 | shader-bridge-04 | shader-bridge | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0271 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-04--mtek-guide-unconstrained--04 | shader-bridge-04 | shader-bridge | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0344 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-05--unconstrained--04 | shader-bridge-05 | shader-bridge | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0274 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-05--mtek-guide-unconstrained--04 | shader-bridge-05 | shader-bridge | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0347 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-06--unconstrained--04 | shader-bridge-06 | shader-bridge | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-ctx | 1 | 0 | 0 | 0 | - | 0 | $0.0274 | 0.2 | - |
+| m7-1-rerun-main: shader-bridge-06--mtek-guide-unconstrained--04 | shader-bridge-06 | shader-bridge | edit | mtek | unconstrained | error | transport-error; superseded by retry run m7-1-retry-guide | 1 | 0 | 0 | 0 | - | 0 | $0.0347 | 0.2 | - |
 | interaction-01--baseline-unconstrained--00 | interaction-01 | interaction | edit | baseline | unconstrained | success |  | 1 | 0 | 3,980 | 0 | 0 | 779 | $0.0079 | 9.9 | pass/pass/pass/pass/pass |
 | interaction-02--baseline-unconstrained--00 | interaction-02 | interaction | edit | baseline | unconstrained | success |  | 1 | 0 | 4,076 | 0 | 0 | 888 | $0.0085 | 11.5 | pass/pass/pass/pass/pass |
 | interaction-03--baseline-unconstrained--00 | interaction-03 | interaction | edit | baseline | unconstrained | success |  | 1 | 0 | 4,111 | 0 | 4,108 | 976 | $0.0100 | 14.4 | pass/pass/pass/pass/pass |
@@ -734,6 +734,63 @@ No holdout attempt is in these records.
 | shader-bridge-04--baseline-unconstrained--04 | shader-bridge-04 | shader-bridge | edit | baseline | unconstrained | success |  | 1 | 0 | 4,053 | 0 | 0 | 838 | $0.0082 | 10.1 | pass/pass/pass/pass/pass |
 | shader-bridge-05--baseline-unconstrained--04 | shader-bridge-05 | shader-bridge | edit | baseline | unconstrained | success |  | 1 | 0 | 4,186 | 0 | 4,183 | 455 | $0.0075 | 7.8 | pass/pass/pass/pass/pass |
 | shader-bridge-06--baseline-unconstrained--04 | shader-bridge-06 | shader-bridge | edit | baseline | unconstrained | success |  | 4 | 3 | 20,237 | 14,252 | 5,973 | 836 | $0.0131 | 10.9 | none/none/none/none/none |
+| m7-1-retry-ctx: interaction-07--unconstrained--04 | interaction-07 | interaction | edit | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 41,003 | 24,200 | 16,791 | 5,386 | $0.0504 | 41.1 | none/none/none/none/none |
+| m7-1-retry-ctx: interaction-08--unconstrained--04 | interaction-08 | interaction | cold | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 46,335 | 30,984 | 15,339 | 2,121 | $0.0329 | 20.4 | fail/fail/not-run/not-run/not-run |
+| m7-1-retry-ctx: interaction-09--unconstrained--04 | interaction-09 | interaction | edit | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 31,032 | 19,322 | 11,698 | 3,269 | $0.0329 | 27.4 | none/none/none/none/none |
+| m7-1-retry-ctx: interaction-10--unconstrained--04 | interaction-10 | interaction | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 2 | 1 | 15,900 | 4,831 | 11,063 | 2,381 | $0.0262 | 24.1 | fail/fail/not-run/not-run/not-run |
+| m7-1-retry-ctx: interaction-11--unconstrained--04 | interaction-11 | interaction | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 4 | 3 | 30,323 | 20,290 | 10,021 | 3,771 | $0.0334 | 46.6 | pass/fail/not-run/not-run/not-run |
+| m7-1-retry-ctx: maintenance-01--unconstrained--04 | maintenance-01 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 4,582 | 0 | 4,579 | 458 | $0.0080 | 6.6 | pass/pass/pass/pass/pass |
+| m7-1-retry-ctx: maintenance-02--unconstrained--04 | maintenance-02 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 5,291 | 0 | 5,288 | 593 | $0.0096 | 8.6 | pass/pass/pass/pass/pass |
+| m7-1-retry-ctx: maintenance-03--unconstrained--04 | maintenance-03 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 2 | 1 | 10,797 | 4,853 | 5,938 | 523 | $0.0105 | 9.2 | pass/fail/not-run/not-run/not-run |
+| m7-1-retry-ctx: maintenance-04--unconstrained--04 | maintenance-04 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 4,977 | 0 | 4,974 | 717 | $0.0098 | 10.6 | pass/pass/pass/pass/pass |
+| m7-1-retry-ctx: maintenance-05--unconstrained--04 | maintenance-05 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 5,004 | 0 | 5,001 | 647 | $0.0095 | 8.1 | pass/pass/pass/pass/pass |
+| m7-1-retry-ctx: maintenance-06--unconstrained--04 | maintenance-06 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 5,561 | 0 | 5,558 | 450 | $0.0092 | 8.3 | pass/pass/pass/pass/pass |
+| m7-1-retry-ctx: scene-rendering-01--unconstrained--04 | scene-rendering-01 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 7,994 | 0 | 7,991 | 491 | $0.0124 | 7.3 | pass/pass/pass/pass/pass |
+| m7-1-retry-ctx: scene-rendering-02--unconstrained--04 | scene-rendering-02 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 8,103 | 0 | 8,100 | 577 | $0.0130 | 8.5 | pass/pass/pass/pass/pass |
+| m7-1-retry-ctx: scene-rendering-03--unconstrained--04 | scene-rendering-03 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 2 | 1 | 20,641 | 8,340 | 12,295 | 1,497 | $0.0237 | 17.0 | fail/fail/not-run/not-run/not-run |
+| m7-1-retry-ctx: scene-rendering-04--unconstrained--04 | scene-rendering-04 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 2 | 1 | 18,135 | 8,185 | 9,944 | 865 | $0.0176 | 11.6 | fail/fail/not-run/not-run/not-run |
+| m7-1-retry-ctx: scene-rendering-05--unconstrained--04 | scene-rendering-05 | scene-rendering | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 4,903 | 0 | 4,900 | 529 | $0.0088 | 8.0 | pass/pass/pass/pass/pass |
+| m7-1-retry-ctx: scene-rendering-06--unconstrained--04 | scene-rendering-06 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 4 | 3 | 45,444 | 32,051 | 13,381 | 3,680 | $0.0383 | 46.3 | pass/pass/pass/pass/fail |
+| m7-1-retry-ctx: scene-rendering-07--unconstrained--04 | scene-rendering-07 | scene-rendering | cold | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 44,517 | 31,424 | 13,081 | 1,826 | $0.0286 | 25.7 | fail/fail/not-run/not-run/not-run |
+| m7-1-retry-ctx: scene-rendering-08--unconstrained--04 | scene-rendering-08 | scene-rendering | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 4,800 | 0 | 4,797 | 299 | $0.0075 | 5.2 | pass/pass/pass/pass/pass |
+| m7-1-retry-ctx: scene-rendering-09--unconstrained--04 | scene-rendering-09 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 2 | 1 | 20,905 | 8,282 | 12,617 | 1,706 | $0.0251 | 19.9 | fail/fail/not-run/not-run/not-run |
+| m7-1-retry-ctx: scene-rendering-10--unconstrained--04 | scene-rendering-10 | scene-rendering | cold | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 42,539 | 30,004 | 12,523 | 2,324 | $0.0303 | 33.5 | pass/pass/pass/pass/fail |
+| m7-1-retry-ctx: scene-rendering-11--unconstrained--04 | scene-rendering-11 | scene-rendering | cold | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 53,467 | 33,985 | 19,470 | 3,707 | $0.0463 | 35.0 | none/none/none/none/none |
+| m7-1-retry-ctx: shader-bridge-01--unconstrained--04 | shader-bridge-01 | shader-bridge | edit | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 23,303 | 16,134 | 7,157 | 1,082 | $0.0160 | 15.3 | pass/pass/pass/pass/fail |
+| m7-1-retry-ctx: shader-bridge-02--unconstrained--04 | shader-bridge-02 | shader-bridge | edit | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 26,353 | 17,640 | 8,701 | 1,801 | $0.0217 | 21.3 | pass/pass/pass/pass/fail |
+| m7-1-retry-ctx: shader-bridge-03--unconstrained--04 | shader-bridge-03 | shader-bridge | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 2 | 1 | 19,429 | 8,186 | 11,237 | 1,738 | $0.0236 | 18.0 | fail/fail/not-run/not-run/not-run |
+| m7-1-retry-ctx: shader-bridge-04--unconstrained--04 | shader-bridge-04 | shader-bridge | edit | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 33,324 | 21,342 | 11,970 | 2,855 | $0.0314 | 29.4 | pass/fail/not-run/not-run/not-run |
+| m7-1-retry-ctx: shader-bridge-05--unconstrained--04 | shader-bridge-05 | shader-bridge | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 5,026 | 0 | 5,023 | 294 | $0.0078 | 6.4 | pass/pass/pass/pass/pass |
+| m7-1-retry-ctx: shader-bridge-06--unconstrained--04 | shader-bridge-06 | shader-bridge | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 2 | 1 | 11,724 | 4,976 | 6,742 | 1,281 | $0.0153 | 15.6 | fail/fail/not-run/not-run/not-run |
+| m7-1-retry-guide: interaction-06--mtek-guide-unconstrained--04 | interaction-06 | interaction | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,081 | 0 | 10,078 | 451 | $0.0149 | 8.8 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: interaction-07--mtek-guide-unconstrained--04 | interaction-07 | interaction | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,279 | 0 | 10,276 | 843 | $0.0171 | 14.1 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: interaction-08--mtek-guide-unconstrained--04 | interaction-08 | interaction | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 13,504 | 0 | 13,501 | 404 | $0.0189 | 7.6 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: interaction-09--mtek-guide-unconstrained--04 | interaction-09 | interaction | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 3 | 2 | 36,680 | 22,774 | 13,897 | 2,294 | $0.0311 | 25.3 | fail/fail/not-run/not-run/not-run |
+| m7-1-retry-guide: interaction-10--mtek-guide-unconstrained--04 | interaction-10 | interaction | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 2 | 1 | 23,973 | 10,174 | 13,793 | 1,883 | $0.0277 | 21.1 | fail/fail/not-run/not-run/not-run |
+| m7-1-retry-guide: interaction-11--mtek-guide-unconstrained--04 | interaction-11 | interaction | edit | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 50,833 | 35,892 | 14,929 | 2,797 | $0.0362 | 41.2 | pass/pass/pass/pass/fail |
+| m7-1-retry-guide: maintenance-01--mtek-guide-unconstrained--04 | maintenance-01 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 9,925 | 0 | 9,922 | 288 | $0.0138 | 5.5 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: maintenance-02--mtek-guide-unconstrained--04 | maintenance-02 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,634 | 0 | 10,631 | 423 | $0.0154 | 7.2 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: maintenance-03--mtek-guide-unconstrained--04 | maintenance-03 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,199 | 0 | 10,196 | 303 | $0.0143 | 6.0 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: maintenance-04--mtek-guide-unconstrained--04 | maintenance-04 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,320 | 0 | 10,317 | 573 | $0.0158 | 9.2 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: maintenance-05--mtek-guide-unconstrained--04 | maintenance-05 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,347 | 0 | 10,344 | 451 | $0.0152 | 7.0 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: maintenance-06--mtek-guide-unconstrained--04 | maintenance-06 | maintenance | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,904 | 0 | 10,901 | 471 | $0.0160 | 8.5 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: scene-rendering-01--mtek-guide-unconstrained--04 | scene-rendering-01 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 13,337 | 0 | 13,334 | 291 | $0.0181 | 5.3 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: scene-rendering-02--mtek-guide-unconstrained--04 | scene-rendering-02 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 13,446 | 0 | 13,443 | 468 | $0.0191 | 7.3 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: scene-rendering-03--mtek-guide-unconstrained--04 | scene-rendering-03 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 13,686 | 0 | 13,683 | 677 | $0.0205 | 9.3 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: scene-rendering-04--mtek-guide-unconstrained--04 | scene-rendering-04 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 13,531 | 0 | 13,528 | 419 | $0.0190 | 6.8 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: scene-rendering-05--mtek-guide-unconstrained--04 | scene-rendering-05 | scene-rendering | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 2 | 1 | 21,715 | 10,243 | 11,466 | 746 | $0.0191 | 9.8 | pass/fail/not-run/not-run/not-run |
+| m7-1-retry-guide: scene-rendering-06--mtek-guide-unconstrained--04 | scene-rendering-06 | scene-rendering | cold | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 62,150 | 44,820 | 17,318 | 2,840 | $0.0403 | 35.9 | none/none/none/none/none |
+| m7-1-retry-guide: scene-rendering-07--mtek-guide-unconstrained--04 | scene-rendering-07 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 2 | 1 | 28,595 | 13,649 | 14,940 | 870 | $0.0244 | 14.8 | pass/pass/pass/pass/fail |
+| m7-1-retry-guide: scene-rendering-08--mtek-guide-unconstrained--04 | scene-rendering-08 | scene-rendering | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,143 | 0 | 10,140 | 433 | $0.0148 | 5.8 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: scene-rendering-09--mtek-guide-unconstrained--04 | scene-rendering-09 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 13,628 | 0 | 13,625 | 961 | $0.0218 | 12.1 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: scene-rendering-10--mtek-guide-unconstrained--04 | scene-rendering-10 | scene-rendering | cold | mtek | unconstrained | failure | max-repairs; retry of the attempt in run m7-1-rerun-main | 4 | 3 | 63,747 | 46,033 | 17,702 | 2,167 | $0.0376 | 25.0 | pass/pass/pass/pass/fail |
+| m7-1-retry-guide: scene-rendering-11--mtek-guide-unconstrained--04 | scene-rendering-11 | scene-rendering | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 4 | 3 | 69,117 | 48,537 | 20,568 | 3,085 | $0.0460 | 29.9 | none/none/none/none/none |
+| m7-1-retry-guide: shader-bridge-01--mtek-guide-unconstrained--04 | shader-bridge-01 | shader-bridge | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 9,887 | 0 | 9,884 | 635 | $0.0155 | 8.5 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: shader-bridge-02--mtek-guide-unconstrained--04 | shader-bridge-02 | shader-bridge | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,129 | 0 | 10,126 | 821 | $0.0168 | 8.3 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: shader-bridge-03--mtek-guide-unconstrained--04 | shader-bridge-03 | shader-bridge | cold | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 13,532 | 0 | 13,529 | 673 | $0.0203 | 11.2 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: shader-bridge-04--mtek-guide-unconstrained--04 | shader-bridge-04 | shader-bridge | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,096 | 0 | 10,093 | 659 | $0.0159 | 9.1 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: shader-bridge-05--mtek-guide-unconstrained--04 | shader-bridge-05 | shader-bridge | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,369 | 0 | 10,366 | 406 | $0.0150 | 7.4 | pass/pass/pass/pass/pass |
+| m7-1-retry-guide: shader-bridge-06--mtek-guide-unconstrained--04 | shader-bridge-06 | shader-bridge | edit | mtek | unconstrained | success | retry of the attempt in run m7-1-rerun-main | 1 | 0 | 10,322 | 0 | 10,319 | 323 | $0.0145 | 6.5 | pass/pass/pass/pass/pass |
 
 ## How the conclusion is reached
 

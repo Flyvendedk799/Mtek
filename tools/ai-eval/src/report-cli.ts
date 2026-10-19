@@ -2,7 +2,11 @@
 // directories below `benchmarks/holdout/`, to tell holdout attempts apart); it never runs a model and never opens a task.
 //
 //   node tools/ai-eval/src/report-cli.ts --run DIR [--run DIR ...] [--baseline-run DIR ...] [--out report.md] [--title T] [--note N]
-//                                        [--holdout-summary FILE]
+//                                        [--retry-run DIR ...] [--holdout-summary FILE]
+//
+// `--retry-run DIR` (repeatable, decision 0125): DIR is a retry run. Its attempts replace the NOT-JUDGED attempts of the same cells
+// (task, condition, trial index) in the `--run` directories, in every aggregate and in the verdict; both stay listed. A retry attempt for
+// a cell that was judged is an error (exit 3).
 //
 // `--baseline-run DIR` adds only the baseline attempts of that run (its Mtek attempts are not read): the baseline of an earlier
 // run against which the Mtek attempts of a re-run are judged by the rule of decision 0108.
@@ -16,7 +20,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { repoRoot } from "./commands.ts";
 import { canonicalJson, type Json } from "./canonical.ts";
-import { buildReport, extractTrials, holdoutSummary, parseRecords, selectSide } from "./report.ts";
+import { buildReport, holdoutSummary, parseRecords, selectSide } from "./report.ts";
 import { taskIdsIn } from "./benchmark-run.ts";
 import { RECORDS_FILE } from "./recorder.ts";
 import { conditionCosts, renderProjection } from "./projection.ts";
@@ -24,6 +28,7 @@ import { conditionCosts, renderProjection } from "./projection.ts";
 export function runReport(argv: readonly string[], io: { out(t: string): void; err(t: string): void } = { out: (t) => process.stdout.write(t), err: (t) => process.stderr.write(t) }, root: string = repoRoot()): number {
   const runs: string[] = [];
   const baselineRuns: string[] = [];
+  const retryRuns: string[] = [];
   let out: string | undefined;
   let title: string | undefined;
   let note: string | undefined;
@@ -35,6 +40,7 @@ export function runReport(argv: readonly string[], io: { out(t: string): void; e
     const value = argv[i + 1];
     if (arg === "--run" && value !== undefined) runs.push(resolve(value));
     else if (arg === "--baseline-run" && value !== undefined) baselineRuns.push(resolve(value));
+    else if (arg === "--retry-run" && value !== undefined) retryRuns.push(resolve(value));
     else if (arg === "--out" && value !== undefined) out = resolve(value);
     else if (arg === "--title" && value !== undefined) title = value;
     else if (arg === "--note" && value !== undefined) note = value;
@@ -42,7 +48,7 @@ export function runReport(argv: readonly string[], io: { out(t: string): void; e
     else if (arg === "--projection" && value !== undefined) projection = resolve(value);
     else if (arg === "--budget" && value !== undefined) budget = Number(value);
     else {
-      io.err(`error: unknown or incomplete option ${String(arg)}\nusage: report --run DIR [--run DIR ...] [--baseline-run DIR ...] [--out FILE] [--title T] [--note N] [--holdout-summary FILE] [--projection FILE [--budget USD]]\n`);
+      io.err(`error: unknown or incomplete option ${String(arg)}\nusage: report --run DIR [--run DIR ...] [--baseline-run DIR ...] [--retry-run DIR ...] [--out FILE] [--title T] [--note N] [--holdout-summary FILE] [--projection FILE [--budget USD]]\n`);
       return 2;
     }
     i += 1;
@@ -57,21 +63,26 @@ export function runReport(argv: readonly string[], io: { out(t: string): void; e
     ...runs.flatMap((dir) => parseRecords(readFileSync(join(dir, RECORDS_FILE), "utf8"))),
     ...baselineRuns.flatMap((dir) => selectSide(parseRecords(readFileSync(join(dir, RECORDS_FILE), "utf8")), "baseline")),
   ];
+  const retryRecords = retryRuns.flatMap((dir) => parseRecords(readFileSync(join(dir, RECORDS_FILE), "utf8")));
   const holdoutIds = new Set(taskIdsIn(join(root, "benchmarks", "holdout")));
-  const report = buildReport({ records, holdoutIds, ...(title === undefined ? {} : { title }), ...(note === undefined ? {} : { note }) });
-  const target = out ?? join(runs[0] as string, "report.md");
-  writeFileSync(target, report.markdown, "utf8");
-  io.out(`report: ${target}\n`);
-  if (summary !== undefined) {
-    const { trials } = extractTrials(records, holdoutIds);
-    const lines = holdoutSummary(trials).map((row) => canonicalJson(row as Json));
-    writeFileSync(summary, lines.length === 0 ? "" : `${lines.join("\n")}\n`, "utf8");
-    io.out(`holdout summary: ${summary} (${String(lines.length)} attempts)\n`);
-  }
-  if (projection !== undefined) {
-    const { trials } = extractTrials(records, holdoutIds);
-    writeFileSync(projection, renderProjection(conditionCosts(trials.filter((t) => !t.holdout)), budget), "utf8");
-    io.out(`projection: ${projection}\n`);
+  try {
+    const report = buildReport({ records, retryRecords, holdoutIds, ...(title === undefined ? {} : { title }), ...(note === undefined ? {} : { note }) });
+    const target = out ?? join(runs[0] as string, "report.md");
+    writeFileSync(target, report.markdown, "utf8");
+    io.out(`report: ${target}\n`);
+    if (summary !== undefined) {
+      // every attempt, the ones a retry run replaced included (they carry `supersededBy`)
+      const lines = holdoutSummary(report.listing).map((row) => canonicalJson(row as Json));
+      writeFileSync(summary, lines.length === 0 ? "" : `${lines.join("\n")}\n`, "utf8");
+      io.out(`holdout summary: ${summary} (${String(lines.length)} attempts)\n`);
+    }
+    if (projection !== undefined) {
+      writeFileSync(projection, renderProjection(conditionCosts(report.trials.filter((t) => !t.holdout)), budget), "utf8");
+      io.out(`projection: ${projection}\n`);
+    }
+  } catch (error) {
+    io.err(`error: ${error instanceof Error ? error.message : String(error)}\n`);
+    return 3;
   }
   return 0;
 }
