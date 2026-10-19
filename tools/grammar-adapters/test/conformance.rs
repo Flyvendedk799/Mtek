@@ -128,15 +128,15 @@ fn corpus_name(path: &Path) -> String {
         .parent()
         .and_then(|p| p.file_name())
         .is_some_and(|n| n == "src");
-    if stem == "main" && in_src {
-        if let Some(project) = path
+    if stem == "main"
+        && in_src
+        && let Some(project) = path
             .parent()
             .and_then(|p| p.parent())
             .and_then(|p| p.file_name())
             .and_then(|n| n.to_str())
-        {
-            return project.to_owned();
-        }
+    {
+        return project.to_owned();
     }
     stem.to_owned()
 }
