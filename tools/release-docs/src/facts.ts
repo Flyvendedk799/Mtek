@@ -176,3 +176,11 @@ export function defaultExposureHolds(registry: StdlibSchema): { text: string; ex
   const field = registry.schemas.find((s) => s.name === "Camera")?.fields.find((f) => f.name === "exposure");
   return { text: field?.default ?? "none", expected: Math.fround(-Math.log2(1.2 * Math.PI)) };
 }
+
+/** `{{type-fields NAME}}`: the fields of a registry type (`SurfaceInput`, `PointerEvent`) as `name: type` code, separated by commas. */
+export function typeFields(registry: StdlibSchema, name: string): string {
+  const def = registry.types.find((t) => t.name === name);
+  if (def === undefined) throw new Error(`{{type-fields ${name}}}: the registry has no type ${JSON.stringify(name)}`);
+  if (def.fields.length === 0) throw new Error(`{{type-fields ${name}}}: the type has no fields`);
+  return def.fields.map((f) => code(`${f.name}: ${f.type}`)).join(", ");
+}

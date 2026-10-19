@@ -20,6 +20,7 @@
 //   {{range SCHEMA.FIELD}}              the allowed range of a field
 //   {{enum NAME}} / {{enum NAME full}}  the members of a registry enum (runs folded unless `full`)
 //   {{signature NAME}}                  the signatures of an intrinsic, a namespace function or `body.COMMAND`
+//   {{type-fields NAME}}                the fields of a registry type (`SurfaceInput`, `PointerEvent`)
 //   {{events}}                          the events of the registry, as a table
 //   {{intrinsics DOMAIN}}               the functions that run in a domain: both, cpu or gpu
 //   {{exposure-for LUX}}                the camera exposure (EV100) at which LUX lux gives a white diffuse surface full brightness
@@ -29,7 +30,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Ctx } from "./ctx.ts";
-import { catalogueEntry, citedCodes, citedCodesTable, enumMembers, eventsTable, exposureForLux, fieldDefault, intrinsicsOf, fieldRange, fieldsTable, projectDefault, signatures } from "./facts.ts";
+import { catalogueEntry, citedCodes, citedCodesTable, enumMembers, eventsTable, exposureForLux, fieldDefault, intrinsicsOf, fieldRange, fieldsTable, projectDefault, signatures, typeFields } from "./facts.ts";
 import { GENERATED_NOTE, code, decisionLink } from "./md.ts";
 import { languageWordLists } from "./spectext.ts";
 
@@ -128,6 +129,8 @@ export function expandDirective(ctx: Ctx, directive: string, page: PageInfo = GU
       return signatures(ctx.registry, rest);
     case "events":
       return eventsTable(ctx.registry);
+    case "type-fields":
+      return typeFields(ctx.registry, rest);
     case "exposure-for":
       return exposureForLux(Number(rest));
     case "intrinsics":
