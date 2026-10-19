@@ -40,6 +40,8 @@ export interface Condition {
   side?: "mtek" | "baseline";
   /** Whether the client asked the provider to cache prompts. */
   promptCaching?: boolean;
+  /** What the model was given to learn the technology from (`Side.documentationId`). */
+  documentation?: string;
 }
 
 export interface RunStartRecord {

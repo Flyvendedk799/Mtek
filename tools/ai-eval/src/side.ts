@@ -6,7 +6,10 @@
 // repair loop, the same edit format and the same budgets; they differ only in what is specific to the
 // technology: the project's files, the documentation the model is given (whose tokens are counted), the wording
 // of the system prompt, and the validator. A side is chosen per trial and is part of the recorded condition.
-import type { CommandRunner } from "./commands.ts";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { sha256Hex } from "./canonical.ts";
+import { repoRoot, type CommandRunner } from "./commands.ts";
 import type { BuiltContext } from "./context-builder.ts";
 import { ContextBuilder } from "./context-builder.ts";
 import type { Clock } from "./clock.ts";
@@ -34,6 +37,13 @@ export interface SideDeps {
 
 export interface Side {
   readonly kind: SideKind;
+  /** The name of the condition's side in trial ids and reports: `mtek`, `baseline`, or `mtek-guide` for Mtek with a document added. */
+  readonly label: string;
+  /**
+   * What the model is given to learn the technology from, as part of the recorded condition: `context-export` (the compiler's
+   * context and nothing else), `context-export+docs/language-guide.md:<hash>` (a document added), `baseline-reference:<hash>`.
+   */
+  documentationId(): string;
   readonly promptVersion: string;
   /** False for a side that has no grammar-constrained mode (the baseline: spec 6.4 lists constrained for Mtek only). */
   readonly supportsConstrained: boolean;
@@ -51,6 +61,8 @@ export interface Side {
 /** The Mtek side: exactly what the harness did before there was a baseline (decision 0077). */
 export const mtekSide: Side = {
   kind: "mtek",
+  label: "mtek",
+  documentationId: () => "context-export",
   promptVersion: PROMPT_VERSION,
   supportsConstrained: true,
   createWorkspace: (task, scratchRoot, name) => Workspace.create(task, scratchRoot, name),
@@ -70,6 +82,8 @@ export const mtekSide: Side = {
 /** The baseline side: TypeScript + three.js r186 with the support module, version-correct documentation counted like the context export. */
 export const baselineSide: Side = {
   kind: "baseline",
+  label: "baseline",
+  documentationId: () => `baseline-reference:${baselineDocs(Number.MAX_SAFE_INTEGER).sha256.slice(0, 12)}`,
   promptVersion: BASELINE_PROMPT_VERSION,
   supportsConstrained: false,
   // The scratch root is shared by every process that runs a baseline trial on this checkout, so the directory name carries the process and a nonce.
@@ -82,9 +96,47 @@ export const baselineSide: Side = {
   createValidator: (task, deps) => new BaselineValidator(task, { clock: deps.clock, ...(deps.programRunner === undefined ? {} : { runner: deps.programRunner }) }),
 };
 
-export function sideByName(name: string): Side {
+/** The documents of `docs/` that a Mtek condition may add to the context (the files a user of the language reads). */
+export const MTEK_EXTRA_DOCS = ["docs/language-guide.md", "docs/getting-started.md", "docs/language-reference.md"] as const;
+
+/**
+ * The Mtek side with documents added after the compiler's context, as a second condition (decision 0108): the context export
+ * alone gives a cold-start task no schema and no example, so "what does Mtek cost when its own guide is in the prompt" is a
+ * different question from "what does the agent contract alone cost". The documents are repository files, read as checked in
+ * (LF line endings), counted in the documentation bytes and hashed into the condition.
+ */
+export function mtekSideWithDocs(paths: readonly string[], root: string = repoRoot()): Side {
+  if (paths.length === 0) return mtekSide;
+  const label = `mtek-${paths.map((path) => (path.split("/").pop() ?? path).replace(/\.md$/, "").replace(/^language-/, "")).join("+")}`;
+  const documents = paths.map((path) => {
+    if (!(MTEK_EXTRA_DOCS as readonly string[]).includes(path)) throw new Error(`'${path}' is not a document that can be added (${MTEK_EXTRA_DOCS.join(", ")})`);
+    const text = readFileSync(join(root, ...path.split("/")), "utf8").replaceAll("\r\n", "\n");
+    return { name: `Document: ${path}`, text, path };
+  });
+  const hash = sha256Hex(documents.map((d) => d.text).join("\u0000")).slice(0, 12);
+  return {
+    ...mtekSide,
+    label,
+    documentationId: () => `context-export+${paths.join("+")}:${hash}`,
+    buildContext: async (task, workspace, deps) => {
+      const context = await mtekSide.buildContext(task, workspace, deps);
+      const extra = documents.reduce((sum, d) => sum + Buffer.byteLength(d.text, "utf8"), 0);
+      return {
+        ...context,
+        bytes: context.bytes + extra,
+        sha256: sha256Hex(`${context.sha256}${hash}`),
+        appendix: documents.map(({ name, text }) => ({ name, text })),
+      };
+    },
+  };
+}
+
+/** `mtek`, `baseline`, or `mtek-guide`, `mtek-getting-started`, `mtek-reference`: Mtek with that document of `docs/` added to the context. */
+export function sideByName(name: string, root: string = repoRoot()): Side {
   if (name === "mtek") return mtekSide;
   if (name === "baseline") return baselineSide;
-  throw new Error(`unknown side '${name}' (mtek | baseline)`);
+  const extra = MTEK_EXTRA_DOCS.find((path) => `mtek-${(path.split("/").pop() ?? path).replace(/\.md$/, "").replace(/^language-/, "")}` === name);
+  if (extra !== undefined) return mtekSideWithDocs([extra], root);
+  throw new Error(`unknown side '${name}' (mtek | baseline | mtek-guide | mtek-getting-started | mtek-reference)`);
 }
 

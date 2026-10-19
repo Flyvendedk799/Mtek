@@ -79,6 +79,7 @@ function row(overrides: Partial<TrialRow> & { taskId: string; side: "mtek" | "ba
     trialId: `${overrides.taskId}--${overrides.side}--${String(counter)}`,
     category: "interaction",
     mode: "edit",
+    variant: "",
     trialKind: "unconstrained",
     trial: counter,
     model: "m",

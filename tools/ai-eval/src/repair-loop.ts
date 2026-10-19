@@ -99,9 +99,9 @@ export interface TrialResult {
   usage: Usage;
 }
 
-export function trialIdOf(task: TaskSpec, kind: TrialKind, index: number, side: "mtek" | "baseline" = "mtek"): string {
-  // The Mtek side keeps the id it always had; the baseline's trials say so, so the two never collide in one run.
-  return `${task.id}--${side === "mtek" ? "" : "baseline-"}${kind}--${String(index).padStart(2, "0")}`;
+export function trialIdOf(task: TaskSpec, kind: TrialKind, index: number, side = "mtek"): string {
+  // The Mtek side keeps the id it always had; the other sides say who they are, so they never collide in one run.
+  return `${task.id}--${side === "mtek" ? "" : `${side}-`}${kind}--${String(index).padStart(2, "0")}`;
 }
 
 /** The condition of a trial and its id: the hash of everything that identifies it (spec 4.2). */
@@ -124,6 +124,7 @@ export function conditionOf(config: TrialConfig, replyFormat: "edit-blocks" | "m
     replyFormat,
     side: (config.side ?? mtekSide).kind,
     promptCaching: config.client.promptCaching === true,
+    documentation: (config.side ?? mtekSide).documentationId(),
   };
   return { condition, id: sha256Hex(canonicalJson(condition as unknown as Json)) };
 }
@@ -164,7 +165,7 @@ export class RepairLoop {
       throw new ConfigError(`the client '${client.provider}' cannot apply a seed; run without one (a seed that is recorded but not applied would be a false record)`);
     }
     const side = config.side ?? mtekSide;
-    const trialId = trialIdOf(task, trialKind, config.trialIndex, side.kind);
+    const trialId = trialIdOf(task, trialKind, config.trialIndex, side.label);
     const policy = config.policy ?? side.policy(task);
     const started: Started = { iso: clock.iso(), ms: clock.nowMs() };
 

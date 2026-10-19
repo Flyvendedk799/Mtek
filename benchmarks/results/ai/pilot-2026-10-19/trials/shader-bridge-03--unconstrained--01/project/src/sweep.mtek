@@ -1,0 +1,36 @@
+fn srgb_to_linear(c: f32) -> f32 {
+  if c <= 0.04045 {
+    return c / 12.92;
+  } else {
+    return pow((c + 0.055) / 1.055, 2.4);
+  }
+}
+
+fn srgb_color_to_linear(srgb: color) -> vec3 {
+  return vec3(
+    srgb_to_linear(srgb.r),
+    srgb_to_linear(srgb.g),
+    srgb_to_linear(srgb.b)
+  );
+}
+
+export material Sweep {
+  param phase: f32 = bind(frame.time);
+  
+  fragment(input: SurfaceInput) -> color {
+    let x = input.local_position.x;
+    let t = phase;
+    
+    let w = 0.5 + 0.5 * sin(0.8 * x + t);
+    
+    let a_srgb = color.srgb(0.1, 0.137, 0.494, 1.0);
+    let b_srgb = color.srgb(1.0, 0.702, 0.0, 1.0);
+    
+    let a_linear = srgb_color_to_linear(a_srgb);
+    let b_linear = srgb_color_to_linear(b_srgb);
+    
+    let blended_linear = (1.0 - w) * a_linear + w * b_linear;
+    
+    return color.linear(blended_linear.x, blended_linear.y, blended_linear.z, 1.0);
+  }
+}

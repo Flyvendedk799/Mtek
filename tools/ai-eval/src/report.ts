@@ -42,6 +42,8 @@ export interface TrialRow {
   category: string;
   mode: string;
   side: SideName;
+  /** Which Mtek condition: empty for the compiler context alone, `+guide` when a document of `docs/` was added. */
+  variant: string;
   trialKind: string;
   trial: number;
   model: string;
@@ -143,6 +145,16 @@ export function parseRecords(jsonl: string): Raw[] {
 
 /** The first attempt of a trial whose first reply produced no candidate. */
 const NO_CANDIDATE: FirstAttempt = { verdict: "no-candidate", layers: { parse: "none", check: "none", build: "none", start: "none", tests: "none" }, symbols: "none" };
+
+/** `context-export+docs/language-guide.md:ab12` is the variant `+guide`; the context alone and the baseline have none. */
+export function variantOf(documentation: string): string {
+  const match = /^context-export\+([^:]+)/.exec(documentation);
+  if (match === null) return "";
+  return (match[1] as string)
+    .split("+")
+    .map((path) => `+${(path.split("/").pop() ?? path).replace(/\.md$/, "").replace(/^language-/, "")}`)
+    .join("");
+}
 
 function layersOf(value: unknown): Record<LayerName, string> {
   const layers = {} as Record<LayerName, string>;
@@ -265,6 +277,7 @@ export function extractTrials(records: readonly Raw[], holdoutIds: ReadonlySet<s
       category: str(start["category"]),
       mode: str(start["mode"]),
       side: condition["side"] === "baseline" ? "baseline" : "mtek",
+      variant: variantOf(str(condition["documentation"])),
       trialKind: str(start["trialKind"], "unconstrained"),
       trial: num(start["trial"]) ?? 0,
       model: str(condition["model"], "?"),
@@ -646,17 +659,21 @@ export function buildReport(input: ReportInput): ReportOutput {
     // ---- the conclusion
     const baselineRows = rows.filter((t) => t.side === "baseline" && t.trialKind === "unconstrained");
     out.push("### Conclusion on H4 (agent-facing contract), decision 0001 by the rule of decision 0108", "");
-    for (const kind of kinds) {
-      const mtekRows = rows.filter((t) => t.side === "mtek" && t.trialKind === kind);
-      if (mtekRows.length === 0) continue;
-      const comparison = compare(mtekRows, baselineRows);
-      comparisons.push({ model, kind, scope: "all", comparison });
-      out.push(...conclusion(`Mtek ${kind} against the baseline`, comparison), "");
-      for (const category of [...new Set(mtekRows.map((t) => t.category))].sort()) {
-        comparisons.push({ model, kind, scope: `category ${category}`, comparison: compare(mtekRows.filter((t) => t.category === category), baselineRows.filter((t) => t.category === category)) });
-      }
-      for (const mode of [...new Set(mtekRows.map((t) => t.mode))].sort()) {
-        comparisons.push({ model, kind, scope: `mode ${mode}`, comparison: compare(mtekRows.filter((t) => t.mode === mode), baselineRows.filter((t) => t.mode === mode)) });
+    const variants = [...new Set(rows.filter((t) => t.side === "mtek").map((t) => t.variant))].sort();
+    for (const variant of variants) {
+      for (const kind of kinds) {
+        const mtekRows = rows.filter((t) => t.side === "mtek" && t.trialKind === kind && t.variant === variant);
+        if (mtekRows.length === 0) continue;
+        const name = `${kind}${variant}`;
+        const comparison = compare(mtekRows, baselineRows);
+        comparisons.push({ model, kind: name, scope: "all", comparison });
+        out.push(...conclusion(`Mtek ${kind}${variant === "" ? "" : ` with the document${variant.includes("+", 1) ? "s" : ""} ${variant.slice(1).split("+").join(", ")} added`} against the baseline`, comparison), "");
+        for (const category of [...new Set(mtekRows.map((t) => t.category))].sort()) {
+          comparisons.push({ model, kind: name, scope: `category ${category}`, comparison: compare(mtekRows.filter((t) => t.category === category), baselineRows.filter((t) => t.category === category)) });
+        }
+        for (const mode of [...new Set(mtekRows.map((t) => t.mode))].sort()) {
+          comparisons.push({ model, kind: name, scope: `mode ${mode}`, comparison: compare(mtekRows.filter((t) => t.mode === mode), baselineRows.filter((t) => t.mode === mode)) });
+        }
       }
     }
 
@@ -664,9 +681,11 @@ export function buildReport(input: ReportInput): ReportOutput {
     out.push("### Aggregates per condition", "");
     const cells: [string, TrialRow[]][] = [];
     for (const side of ["mtek", "baseline"] as const) {
-      for (const kind of kinds) {
-        const cell = rows.filter((t) => t.side === side && t.trialKind === kind);
-        if (cell.length > 0) cells.push([sideLabel(side, kind), cell]);
+      for (const variant of side === "mtek" ? variants : [""]) {
+        for (const kind of kinds) {
+          const cell = rows.filter((t) => t.side === side && t.trialKind === kind && t.variant === variant);
+          if (cell.length > 0) cells.push([sideLabel(side, `${kind}${variant}`), cell]);
+        }
       }
     }
     out.push(table(CELL_HEADER, cells.map(([label, cell]) => cellRow(label, summarize(cell)))), "");
@@ -751,7 +770,7 @@ export function buildReport(input: ReportInput): ReportOutput {
 
   // ---- the documentation overhead
   const docs = new Map<string, number>();
-  for (const t of main) if (t.documentationBytes !== null) docs.set(t.side, Math.max(docs.get(t.side) ?? 0, t.documentationBytes));
+  for (const t of main) if (t.documentationBytes !== null) docs.set(`${t.side}${t.variant}`, Math.max(docs.get(`${t.side}${t.variant}`) ?? 0, t.documentationBytes));
   if (docs.size > 0) out.push("## Documentation given to the model", "", table(["side", "largest documentation in bytes"], [...docs.entries()].sort().map(([side, bytes]) => [side, n0(bytes)])), "");
 
   // ---- accounting of everything that is not a judged attempt

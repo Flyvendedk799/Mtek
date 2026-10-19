@@ -1,0 +1,22 @@
+export material Sweep {
+  param elapsed_time: f32;
+
+  fragment(input: SurfaceInput) -> color {
+    let x = input.local_position.x;
+    let t = elapsed_time;
+    let w = 0.5 + 0.5 * sin(0.8 * x + t);
+    
+    // Colors in sRGB (as vec3)
+    let a_srgb = vec3(0.1019607843, 0.1411764706, 0.4941176471); // #1a237e
+    let b_srgb = vec3(1.0, 0.7019607843, 0.0); // #ffb300
+    
+    // Convert to linear
+    let a_linear = color.linear(a_srgb, 1.0).rgb;
+    let b_linear = color.linear(b_srgb, 1.0).rgb;
+    
+    // Blend in linear light
+    let blended_rgb = (1.0 - w) * a_linear + w * b_linear;
+    
+    return color.linear(blended_rgb, 1.0);
+  }
+}

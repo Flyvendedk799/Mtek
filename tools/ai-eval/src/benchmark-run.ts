@@ -5,7 +5,7 @@
 //
 //   node tools/ai-eval/src/benchmark-run.ts --tasks id,id | --all [--holdout] [--sides mtek,baseline]
 //        [--trial-kinds unconstrained] [--trials N] [--first-trial N] --client anthropic --model ID
-//        --spend-cap USD [--spend-ledger FILE] [--no-prompt-caching] [--temperature N|default]
+//        --spend-cap USD [--spend-ledger FILE] [--no-prompt-caching] [--order trial-major|task-major] [--temperature N|default]
 //        [--max-total-tokens N] [--max-repairs N] [--run-id ID] [--out DIR] [--gpu-lock DIR]
 //
 // Order: trial index outermost, then task, then side, then trial kind: if the money or the time runs out, what
@@ -64,7 +64,7 @@ class UsageError extends Error {}
 
 const VALUE_FLAGS = new Set([
   "tasks", "sides", "trial-kinds", "trials", "first-trial", "client", "model", "base-url", "api-key-env", "transcript", "temperature", "max-total-tokens",
-  "max-repairs", "max-bytes", "test-feedback", "run-id", "out", "mtek", "scratch", "spend-cap", "spend-ledger", "gpu-lock", "grammar-adapter", "api-key-file",
+  "max-repairs", "max-bytes", "test-feedback", "run-id", "out", "mtek", "scratch", "spend-cap", "spend-ledger", "gpu-lock", "grammar-adapter", "api-key-file", "order",
 ]);
 const SWITCH_FLAGS = new Set(["all", "holdout", "no-prompt-caching", "keep-scratch", "help"]);
 
@@ -136,6 +136,30 @@ export function isInside(root: string, path: string): boolean {
   return rel === "" || (!rel.startsWith("..") && !rel.startsWith(sep) && !/^[A-Za-z]:/.test(rel));
 }
 
+export interface PlannedTrial {
+  task: TaskSpec;
+  side: Side;
+  kind: TrialKind;
+  trial: number;
+}
+
+/**
+ * The attempts of a run in the order they are made. `trial-major` (the default): trial index outermost, so what exists when the
+ * money or the time runs out is balanced across tasks and sides. `task-major`: all trials of a task and side one after another,
+ * so the identical first prompt of the trials is served from the provider's prompt cache (it lives five minutes), which is
+ * cheaper, but a run that is stopped early lacks whole tasks instead of whole trials.
+ */
+export function plan(tasks: readonly TaskSpec[], sides: readonly Side[], kinds: readonly TrialKind[], firstTrial: number, trials: number, order: "trial-major" | "task-major"): PlannedTrial[] {
+  const out: PlannedTrial[] = [];
+  const indices = Array.from({ length: trials }, (_, i) => firstTrial + i);
+  if (order === "trial-major") {
+    for (const trial of indices) for (const task of tasks) for (const side of sides) for (const kind of kinds) out.push({ task, side, kind, trial });
+  } else {
+    for (const task of tasks) for (const side of sides) for (const kind of kinds) for (const trial of indices) out.push({ task, side, kind, trial });
+  }
+  return out;
+}
+
 export async function runBenchmark(argv: readonly string[], deps: BenchmarkDeps = {}): Promise<number> {
   const io: BenchmarkIo = deps.io ?? { out: (t) => process.stdout.write(t), err: (t) => process.stderr.write(t) };
   const env = deps.env ?? process.env;
@@ -178,6 +202,8 @@ export async function runBenchmark(argv: readonly string[], deps: BenchmarkDeps 
     const temperatureText = one(parsed, "temperature") ?? "0";
     const temperature = temperatureText === "default" ? null : Number(temperatureText);
     if (temperature !== null && (!Number.isFinite(temperature) || temperature < 0)) throw new UsageError("--temperature must be a number or 'default'");
+    const order = one(parsed, "order") ?? "trial-major";
+    if (order !== "trial-major" && order !== "task-major") throw new UsageError("--order must be trial-major or task-major");
     const feedback = one(parsed, "test-feedback") ?? "messages";
     if (feedback !== "messages" && feedback !== "status-only") throw new UsageError("--test-feedback must be messages or status-only");
 
@@ -260,11 +286,13 @@ export async function runBenchmark(argv: readonly string[], deps: BenchmarkDeps 
       contextMaxBytes: maxBytes ?? DEFAULT_CONTEXT_MAX_BYTES,
       maxRepairs: maxRepairs ?? "per task",
       maxTotalTokens: maxTotalTokens ?? null,
-      sides: sides.map((side) => side.kind),
+      sides: sides.map((side) => side.label),
+      documentation: Object.fromEntries(sides.map((side) => [side.label, side.documentationId()])),
       promptVersions: { mtek: PROMPT_VERSION, baseline: BASELINE_PROMPT_VERSION },
       trialKinds: kinds,
       trials,
       firstTrial,
+      order,
       taskCount: tasks.length,
       holdout,
       spendCapUsd: guard === null ? null : guard.summary().capUsd,
@@ -287,30 +315,24 @@ export async function runBenchmark(argv: readonly string[], deps: BenchmarkDeps 
     let count = 0;
     let status: "complete" | "stopped-by-budget" | "aborted" = "complete";
     try {
-      for (let trial = firstTrial; trial < firstTrial + trials && !controller.signal.aborted; trial += 1) {
-        for (const task of tasks) {
-          for (const side of sides) {
-            for (const kind of kinds) {
-              if (controller.signal.aborted) break;
-              const result = await loop.run({
-                task,
-                side,
-                client,
-                trialKind: kind,
-                trialIndex: trial,
-                temperature,
-                ...(maxRepairs === undefined ? {} : { maxRepairs }),
-                ...(maxTotalTokens === undefined ? {} : { maxTotalTokens }),
-                ...(maxBytes === undefined ? {} : { contextMaxBytes: maxBytes }),
-                testFeedback: feedback,
-              });
-              count += 1;
-              if (result.outcome === "unfinished") status = "stopped-by-budget";
-              const cost = result.costUsd === undefined || result.costUsd === null ? "" : ` cost=$${result.costUsd.toFixed(4)}`;
-              io.out(`${result.trialId}: ${result.outcome}${result.reason === null ? "" : ` (${result.reason})`} calls=${String(result.calls)} repairs=${String(result.repairsUsed)}${cost}\n`);
-            }
-          }
-        }
+      for (const planned of plan(tasks, sides, kinds, firstTrial, trials, order)) {
+        if (controller.signal.aborted) break;
+        const result = await loop.run({
+          task: planned.task,
+          side: planned.side,
+          client,
+          trialKind: planned.kind,
+          trialIndex: planned.trial,
+          temperature,
+          ...(maxRepairs === undefined ? {} : { maxRepairs }),
+          ...(maxTotalTokens === undefined ? {} : { maxTotalTokens }),
+          ...(maxBytes === undefined ? {} : { contextMaxBytes: maxBytes }),
+          testFeedback: feedback,
+        });
+        count += 1;
+        if (result.outcome === "unfinished") status = "stopped-by-budget";
+        const cost = result.costUsd === undefined || result.costUsd === null ? "" : ` cost=$${result.costUsd.toFixed(4)}`;
+        io.out(`${result.trialId}: ${result.outcome}${result.reason === null ? "" : ` (${result.reason})`} calls=${String(result.calls)} repairs=${String(result.repairsUsed)}${cost}\n`);
       }
       if (controller.signal.aborted) status = "aborted";
     } catch (error) {

@@ -1,0 +1,57 @@
+// Custom material that sweeps color based on object-space x coordinate and time
+material Sweep {
+    param time: f32 = 0.0;
+
+    fragment(input: SurfaceInput) -> color {
+        // A = #1a237e in sRGB, B = #ffb300 in sRGB
+        // Create sRGB colors and convert to linear
+        let color_a_srgb = #1a237e;
+        let color_b_srgb = #ffb300;
+
+        // Convert from sRGB to linear
+        let color_a_linear = color.linear(color_a_srgb.rgb, color_a_srgb.a);
+        let color_b_linear = color.linear(color_b_srgb.rgb, color_b_srgb.a);
+
+        // Get x coordinate from surface input (object space, runs from -2 to 2)
+        let x = input.local_position.x;
+
+        // Compute weight: w = 0.5 + 0.5 * sin(0.8 * x + t)
+        let w = 0.5 + 0.5 * sin(0.8 * x + time);
+
+        // Blend in linear space: (1 - w) * A + w * B
+        let blended_rgb = (1.0 - w) * color_a_linear.rgb + w * color_b_linear.rgb;
+
+        // Return as linear color (keep in linear space)
+        return color.linear(blended_rgb, 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+    state elapsed_time: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.9;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Panel {
+        position: vec3(0.4, 0.0, 0.0);
+        scale: vec3(1.0, 1.0, 1.0);
+        mesh: Box {
+            size: vec3(4.0, 2.0, 0.2);
+        };
+        material: Sweep {
+            time: bind(elapsed_time);
+        };
+
+        update(dt: f32) {
+            elapsed_time += dt;
+        }
+    }
+}

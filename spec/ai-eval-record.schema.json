@@ -114,7 +114,8 @@
         "trialKind": { "$ref": "#/$defs/trialKind" },
         "replyFormat": { "$ref": "#/$defs/replyFormat" },
         "side": { "description": "Which project of the task the trial works on (decision 0108). Absent in records made before the baseline existed: those are `mtek`.", "enum": ["mtek", "baseline"] },
-        "promptCaching": { "description": "Whether the client asked the provider to cache prompts (it changes what is billed, not what is answered).", "type": "boolean" }
+        "promptCaching": { "description": "Whether the client asked the provider to cache prompts (it changes what is billed, not what is answered).", "type": "boolean" },
+        "documentation": { "description": "What the model was given to learn the technology from: `context-export` (the compiler context alone), `context-export+docs/language-guide.md:<hash>` (a document of docs/ added), or `baseline-reference:<hash>`.", "type": "string" }
       }
     },
     "runStart": {

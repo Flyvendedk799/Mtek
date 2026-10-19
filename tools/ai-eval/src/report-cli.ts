@@ -6,7 +6,8 @@
 //
 // A run directory of a holdout run lives outside the repository (its records hold prompts); pass it with `--run` and the
 // report holds ids and layer outcomes of those attempts only. `--holdout-summary` writes them as JSONL, the only form of a
-// holdout result that may be stored in the repository.
+// holdout result that may be stored in the repository. `--projection FILE` writes the cost projection of the full protocol from the
+// cost per attempt in these runs (`projection.ts`).
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +16,7 @@ import { canonicalJson, type Json } from "./canonical.ts";
 import { buildReport, extractTrials, holdoutSummary, parseRecords } from "./report.ts";
 import { taskIdsIn } from "./benchmark-run.ts";
 import { RECORDS_FILE } from "./recorder.ts";
+import { conditionCosts, renderProjection } from "./projection.ts";
 
 export function runReport(argv: readonly string[], io: { out(t: string): void; err(t: string): void } = { out: (t) => process.stdout.write(t), err: (t) => process.stderr.write(t) }, root: string = repoRoot()): number {
   const runs: string[] = [];
@@ -22,6 +24,8 @@ export function runReport(argv: readonly string[], io: { out(t: string): void; e
   let title: string | undefined;
   let note: string | undefined;
   let summary: string | undefined;
+  let projection: string | undefined;
+  let budget = 8;
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const value = argv[i + 1];
@@ -30,8 +34,10 @@ export function runReport(argv: readonly string[], io: { out(t: string): void; e
     else if (arg === "--title" && value !== undefined) title = value;
     else if (arg === "--note" && value !== undefined) note = value;
     else if (arg === "--holdout-summary" && value !== undefined) summary = resolve(value);
+    else if (arg === "--projection" && value !== undefined) projection = resolve(value);
+    else if (arg === "--budget" && value !== undefined) budget = Number(value);
     else {
-      io.err(`error: unknown or incomplete option ${String(arg)}\nusage: report --run DIR [--run DIR ...] [--out FILE] [--title T] [--note N] [--holdout-summary FILE]\n`);
+      io.err(`error: unknown or incomplete option ${String(arg)}\nusage: report --run DIR [--run DIR ...] [--out FILE] [--title T] [--note N] [--holdout-summary FILE] [--projection FILE [--budget USD]]\n`);
       return 2;
     }
     i += 1;
@@ -51,6 +57,11 @@ export function runReport(argv: readonly string[], io: { out(t: string): void; e
     const lines = holdoutSummary(trials).map((row) => canonicalJson(row as Json));
     writeFileSync(summary, lines.length === 0 ? "" : `${lines.join("\n")}\n`, "utf8");
     io.out(`holdout summary: ${summary} (${String(lines.length)} attempts)\n`);
+  }
+  if (projection !== undefined) {
+    const { trials } = extractTrials(records, holdoutIds);
+    writeFileSync(projection, renderProjection(conditionCosts(trials.filter((t) => !t.holdout)), budget), "utf8");
+    io.out(`projection: ${projection}\n`);
   }
   return 0;
 }

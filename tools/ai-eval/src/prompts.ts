@@ -77,6 +77,7 @@ export function initialPrompt(task: TaskSpec, context: BuiltContext, files: read
     ["task", `# Task: ${task.title}\n\n${task.prompt}\n\n`],
     ["requiredSymbols", `These declarations must exist when you are done: ${names}\n\n`],
     ["context", `# Compiler context (the output of \`mtek context\`)\n\n\`\`\`json\n${context.text.replace(/\n$/, "")}\n\`\`\`\n\n`],
+    ...(context.appendix ?? []).map((document): [string, string] => ["context", `# ${document.name}\n\n${document.text.replace(/\n$/, "")}\n\n`]),
     ["project", "# Project files\n\n"],
     ...files.map((file): [string, string] => ["project", `## ${file.path}\n\n\`\`\`\n${file.content.replace(/\n$/, "")}\n\`\`\`\n\n`]),
     ["instructions", "Reply with edit blocks."],
