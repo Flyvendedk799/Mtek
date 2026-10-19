@@ -1,0 +1,19 @@
+[package]
+name = "mtek-coverage-uses"
+description = "The features a project uses, as the compiler's resolver and type checker recorded them (mtek_compiler::context::used_features), for tools/coverage-matrix (decision 0093)."
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "coverage-uses"
+path = "src/main.rs"
+
+[dependencies]
+mtek-compiler = { path = "../../crates/mtek-compiler" }
+# Already in the workspace (decision 0007): the output document.
+serde_json = { version = "=1.0.151", features = ["preserve_order"] }
+
+[lints]
+workspace = true

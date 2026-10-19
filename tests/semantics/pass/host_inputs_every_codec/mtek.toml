@@ -1,0 +1,16 @@
+[project]
+name = "host-every-codec"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Demo"
+
+[host.inputs]
+count = "Demo.count"
+index = "Demo.index"
+enabled = "Demo.enabled"
+speed = "Demo.speed"
+offset = "Demo.offset"
+position = "Demo.position"
+rotation = "Demo.rotation"
+tint = "Demo.tint"
+label = "Demo.label"

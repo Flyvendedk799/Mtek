@@ -1,0 +1,20 @@
+// The three pointer events (spec/stdlib.md section 5): each takes one PointerEvent parameter.
+scene Demo {
+    state pressed: bool = false;
+    state x: f32 = 0.0;
+    state button: i32 = 0;
+    camera Main {
+        position: vec3(0.0, 1.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    on pointer_down(event: PointerEvent) {
+        pressed = true;
+        button = event.button;
+    }
+    on pointer_move(event: PointerEvent) {
+        x = event.position.x;
+    }
+    on pointer_up(event: PointerEvent) {
+        pressed = false;
+    }
+}

@@ -21,7 +21,7 @@ use mtek_compiler::context::examples::{LIBRARY, MAX_EXAMPLES, features_of};
 use mtek_compiler::context::syntax_info::{RULES, keywords, precedence};
 use mtek_compiler::context::{
     CONTEXT_FORMAT, ContextError, ContextOptions, ContextOutput, DEFAULT_MAX_BYTES,
-    DIAGNOSTICS_GUIDE, context,
+    DIAGNOSTICS_GUIDE, context, used_features,
 };
 use mtek_compiler::diagnostics::Code;
 use mtek_compiler::project::ProjectRoot;
@@ -481,6 +481,50 @@ fn the_names_of_used_library_items_are_the_names_of_features() {
         }
     }
     assert!(checked > 150, "{checked}");
+}
+
+#[test]
+fn used_features_are_the_features_a_project_uses_also_when_the_ir_folds_them_away() {
+    // `tools/coverage-matrix` (decision 0093): the standard-library names the resolver bound, the
+    // constructs of the declarations and the accessors and commands of the type checker, named as
+    // `supported.features` names them. `quat.identity()` and `CHAIR.node_position(..)` fold to
+    // constants, so the typed IR keeps neither.
+    let used = used_features(
+        &ProjectRoot::at_base(),
+        &load_dir(&repo("tests/assets/pass/assets_supported")),
+    )
+    .unwrap();
+    for name in [
+        "function:asset.glb",
+        "function:asset.texture",
+        "function:asset.linear_texture",
+        "method:glb_asset.mesh",
+        "method:glb_asset.node_position",
+        "method:glb_asset.material_base_color",
+        "materials",
+        "scenes",
+    ] {
+        assert!(used.contains(name), "{name} is not among {used:?}");
+    }
+    let program = project(
+        "scene Demo {\n    camera Main {}\n    update(dt: f32) {\n        let q = quat.identity();\n    }\n}\n",
+    );
+    let used = used_features(&ProjectRoot::at_base(), &program).unwrap();
+    assert!(used.contains("function:quat.identity"), "{used:?}");
+    assert!(used.contains("lifecycle-functions"), "{used:?}");
+    assert!(!used.contains("function:sin"), "{used:?}");
+    // Every name is a feature of the build (or a construct), so nothing the tool reads is invented.
+    let features = derive(registry()).features;
+    let features = set(&features);
+    for name in &used {
+        assert!(features.contains(name.as_str()), "{name} is not a feature");
+    }
+}
+
+#[test]
+fn a_project_that_cannot_be_loaded_has_no_used_features() {
+    let error = used_features(&ProjectRoot::at_base(), &MemFs::new()).unwrap_err();
+    assert!(matches!(error, ContextError::Project(_)), "{error}");
 }
 
 #[test]

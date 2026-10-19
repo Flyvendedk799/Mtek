@@ -1,0 +1,5 @@
+[project]
+name = "material-literal-value"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Demo"

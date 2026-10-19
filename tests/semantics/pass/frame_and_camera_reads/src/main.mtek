@@ -1,0 +1,16 @@
+// The members of `frame` that no other fixture reads (`delta`, `index`), and a camera field read from a
+// handler (spec/scenes.md sections 3 and 10).
+scene Demo {
+    state last_delta: f32 = 0.0;
+    state frames: u32 = 0;
+    state eye_height: f32 = 0.0;
+    camera Main {
+        position: vec3(0.0, 1.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    update(dt: f32) {
+        last_delta = frame.delta;
+        frames = frame.index;
+        eye_height = Main.position.y;
+    }
+}

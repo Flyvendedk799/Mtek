@@ -33,8 +33,8 @@ pub mod syntax_info;
 use std::collections::BTreeSet;
 use std::fmt;
 
-use crate::check::{CheckResult, analyze};
-use crate::project::{ProjectRoot, edit_distance};
+use crate::check::{Analysis, CheckResult, analyze};
+use crate::project::{Project, ProjectRoot, edit_distance};
 use crate::resolve::PreludeItem;
 use crate::resolve::gate::is_implemented;
 use crate::source::Fs;
@@ -156,41 +156,7 @@ pub fn context(
         });
     }
 
-    let mut modules: Vec<Option<ModuleCtx<'_>>> = Vec::new();
-    for module in project.modules.modules() {
-        let index = module.id().index();
-        let path = module.path().as_str();
-        let source = project.sources.get(module.file());
-        let parts = if index == 0 {
-            analysis
-                .module
-                .as_ref()
-                .zip(analysis.resolution.as_ref())
-                .map(|(ast, resolution)| (ast, resolution, analysis.types.as_ref()))
-        } else {
-            analysis
-                .dependencies
-                .iter()
-                .find(|unit| unit.id == module.id())
-                .map(|unit| (&unit.module, &unit.resolution, Some(&unit.types)))
-        };
-        let ctx = match (source, parts) {
-            // The embedded prelude is not the project's.
-            (Some(source), Some((ast, resolution, types)))
-                if path != crate::prelude::MATERIALS_PATH =>
-            {
-                Some(ModuleCtx::new(
-                    path.to_owned(),
-                    source,
-                    ast,
-                    resolution,
-                    types,
-                ))
-            }
-            _ => None,
-        };
-        modules.push(ctx);
-    }
+    let modules = module_contexts(&analysis, project);
     let paths: Vec<String> = modules
         .iter()
         .flatten()
@@ -266,6 +232,73 @@ pub fn context(
             minimum,
         }),
     }
+}
+
+/// The modules of the project with what the front end made of them, indexed by module id; `None`
+/// for a module that is not the project's own (the embedded prelude) or that did not parse.
+fn module_contexts<'a>(analysis: &'a Analysis, project: &'a Project) -> Vec<Option<ModuleCtx<'a>>> {
+    let mut modules: Vec<Option<ModuleCtx<'a>>> = Vec::new();
+    for module in project.modules.modules() {
+        let index = module.id().index();
+        let path = module.path().as_str();
+        let source = project.sources.get(module.file());
+        let parts = if index == 0 {
+            analysis
+                .module
+                .as_ref()
+                .zip(analysis.resolution.as_ref())
+                .map(|(ast, resolution)| (ast, resolution, analysis.types.as_ref()))
+        } else {
+            analysis
+                .dependencies
+                .iter()
+                .find(|unit| unit.id == module.id())
+                .map(|unit| (&unit.module, &unit.resolution, Some(&unit.types)))
+        };
+        let ctx = match (source, parts) {
+            // The embedded prelude is not the project's.
+            (Some(source), Some((ast, resolution, types)))
+                if path != crate::prelude::MATERIALS_PATH =>
+            {
+                Some(ModuleCtx::new(
+                    path.to_owned(),
+                    source,
+                    ast,
+                    resolution,
+                    types,
+                ))
+            }
+            _ => None,
+        };
+        modules.push(ctx);
+    }
+    modules
+}
+
+/// Every language and library feature the project at `root` uses, named as in
+/// `supported.features` (decision 0093): the constructs its declarations are instances of, the
+/// standard-library names its sources resolve to (also those whose use folds to a constant and
+/// leaves nothing in the typed IR, such as `quat.identity()`) and the glb accessors and body
+/// commands the type checker recorded. It is read from the same tables as the export's
+/// selection of examples; a project with errors yields what parsed and resolved.
+///
+/// # Errors
+///
+/// [`ContextError::Project`] when the project could not be loaded.
+pub fn used_features(root: &ProjectRoot, fs: &dyn Fs) -> Result<BTreeSet<String>, ContextError> {
+    let analysis = analyze(root, fs);
+    let Some(project) = analysis.project.as_ref() else {
+        return Err(ContextError::Project(Box::new(analysis.into())));
+    };
+    let modules = module_contexts(&analysis, project);
+    let mut features = BTreeSet::new();
+    for ctx in modules.iter().flatten() {
+        features.extend(ctx.typed_features());
+    }
+    let program = Program::new(modules);
+    let everything: BTreeSet<usize> = (0..program.decls.len()).collect();
+    features.extend(program.used_features(&everything));
+    Ok(features)
 }
 
 /// The declarations the context is about.
