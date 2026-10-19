@@ -63,10 +63,12 @@ export function qrotate(q: Quat, v: Vec3): Vec3 {
 export function qaxisAngle(axis: Vec3, angle: number): Quat {
   // The largest magnitude as Rust's f32::max folds it: a NaN component is ignored.
   let largest = 0;
-  for (const c of [axis.x, axis.y, axis.z]) {
-    const m = Math.abs(c);
-    if (m > largest) largest = m;
-  }
+  const ax = Math.abs(axis.x);
+  if (ax > largest) largest = ax;
+  const ay = Math.abs(axis.y);
+  if (ay > largest) largest = ay;
+  const az = Math.abs(axis.z);
+  if (az > largest) largest = az;
   if (largest === 0) return qidentity();
   const sx = fr(axis.x / largest);
   const sy = fr(axis.y / largest);

@@ -13,7 +13,7 @@ import {
   type Impl,
   type PairSummary,
 } from "./analyze.ts";
-import { collect, fmtBytes, fmtMs, fmtPercent, renderReport, reportPaths } from "./report.ts";
+import { MAIN_REPORT_RUN, afterReportPaths, collect, fmtBytes, fmtMs, fmtPercent, renderAfterReport, renderReport, reportPaths } from "./report.ts";
 import { stringifyCompact } from "./json.ts";
 import { RAW_DIR, RESULTS_DIR, WORKLOADS } from "./paths.ts";
 import { samplesWithP95, syntheticRun } from "./synthetic.ts";
@@ -143,28 +143,41 @@ describe("the published results", () => {
     expect(existsSync(reportPaths().summary)).toBe(true);
   });
 
-  it("report.md and summary.json are exactly what the generator prints from the newest raw run (reproducible from the stored data)", () => {
-    const id = runs[runs.length - 1] as string;
-    const run = loadRun(join(RAW_DIR, id));
+  it("report.md and summary.json are exactly what the generator prints from the first raw run (reproducible from the stored data; later runs have reports of their own)", () => {
+    const run = loadRun(join(RAW_DIR, MAIN_REPORT_RUN));
     const { markdown, summary } = renderReport(run);
     expect(readFileSync(reportPaths().report, "utf8")).toBe(markdown);
     expect(readFileSync(reportPaths().summary, "utf8")).toBe(stringifyCompact(summary));
   });
 
-  it("the newest run is a real result: complete, on hardware, with the frozen definitions, not a smoke run", () => {
-    const run = loadRun(join(RAW_DIR, runs[runs.length - 1] as string));
-    expect(run.meta.status).toBe("complete");
-    expect(run.meta.smoke).toBe(false);
-    expect(run.meta.frozen.matches).toBe(true);
-    expect(run.environment.gpu.adapter?.info.isFallbackAdapter).toBe(false);
-    expect(run.environment.gpu.navigatorGpu).toBe(true);
-    expect(run.meta.protocol.timingFrames).toBeGreaterThanOrEqual(600);
-    expect(run.meta.protocol.warmupFrames).toBeGreaterThanOrEqual(120);
+  it("every report-after-<label>.md is exactly what the generator prints from its raw run and the first run", () => {
+    const labels = existsSync(RESULTS_DIR) ? readdirSync(RESULTS_DIR).flatMap((name) => /^summary-after-(.+).json$/.exec(name)?.slice(1) ?? []) : [];
+    for (const label of labels) {
+      const stored = JSON.parse(readFileSync(afterReportPaths(label).summary, "utf8")) as { runId: string; comparedWith: string };
+      expect(stored.comparedWith).toBe(MAIN_REPORT_RUN);
+      const { markdown, summary } = renderAfterReport(loadRun(join(RAW_DIR, MAIN_REPORT_RUN)), loadRun(join(RAW_DIR, stored.runId)), label);
+      expect(readFileSync(afterReportPaths(label).report, "utf8"), label).toBe(markdown);
+      expect(readFileSync(afterReportPaths(label).summary, "utf8"), label).toBe(stringifyCompact(summary));
+    }
+  });
+
+  it("every published run is a real result: complete, on hardware, with the frozen definitions, not a smoke run", () => {
+    for (const id of runs) {
+      const run = loadRun(join(RAW_DIR, id));
+      expect(run.meta.status, id).toBe("complete");
+      expect(run.meta.smoke, id).toBe(false);
+      expect(run.meta.frozen.matches, id).toBe(true);
+      expect(run.environment.gpu.adapter?.info.isFallbackAdapter, id).toBe(false);
+      expect(run.environment.gpu.navigatorGpu, id).toBe(true);
+      expect(run.meta.protocol.timingFrames, id).toBeGreaterThanOrEqual(600);
+      expect(run.meta.protocol.warmupFrames, id).toBeGreaterThanOrEqual(120);
+    }
   });
 
   it("every workload has a raw result for every implementation and at least 600 measured frames after 120 warm-up frames in each timing run", () => {
-    const run = loadRun(join(RAW_DIR, runs[runs.length - 1] as string));
-    for (const workload of WORKLOADS) {
+    for (const id of runs) {
+      const run = loadRun(join(RAW_DIR, id));
+      for (const workload of WORKLOADS) {
       for (const impl of ["mtek", "direct", "three"]) {
         const file = run.pairs.get(`${workload}--${impl}`);
         expect(file, `${workload}--${impl}`).toBeDefined();
@@ -175,6 +188,7 @@ describe("the published results", () => {
           expect(result?.warmupFrames).toBeGreaterThanOrEqual(120);
           expect(result?.cpuMs.length).toBeGreaterThanOrEqual(600);
         }
+      }
       }
     }
   });

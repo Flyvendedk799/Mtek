@@ -34,10 +34,10 @@ export interface Batch {
 /**
  * Splits the draws into draw calls. `canInstance` says whether a draw has an instanced pipeline (and the
  * instance buffer exists); a draw without one is always individual. Returns the number of instanced draws.
- * `out` is cleared first.
+ * `out` is rewritten from its start and cut to the batches of this call.
  */
 export function batchDraws<D extends InstanceKey>(draws: readonly D[], canInstance: (draw: D) => boolean, out: Batch[]): number {
-  out.length = 0;
+  let used = 0;
   let instances = 0;
   let instanced = 0;
   let start = 0;
@@ -54,15 +54,32 @@ export function batchDraws<D extends InstanceKey>(draws: readonly D[], canInstan
     }
     const count = end - start;
     if (count >= 2) {
-      out.push({ start, count, firstInstance: instances });
+      putBatch(out, used, start, count, instances);
       instances += count;
       instanced += 1;
     } else {
-      out.push({ start, count: 1, firstInstance: -1 });
+      putBatch(out, used, start, 1, -1);
     }
+    used += 1;
     start = end;
   }
+  out.length = used;
   return instanced;
+}
+
+/**
+ * Sets batch `index` of `out`, rewriting the object that is there (decision 0121): the list is rebuilt whenever the
+ * culled draws change, which for a moving camera is every frame. Nobody keeps a batch across a call of `batchDraws`.
+ */
+function putBatch(out: Batch[], index: number, start: number, count: number, firstInstance: number): void {
+  const existing = out[index] as { start: number; count: number; firstInstance: number } | undefined;
+  if (existing === undefined) {
+    out.push({ start, count, firstInstance });
+  } else {
+    existing.start = start;
+    existing.count = count;
+    existing.firstInstance = firstInstance;
+  }
 }
 
 /** What the structure of a scene allows to be instanced at all. */

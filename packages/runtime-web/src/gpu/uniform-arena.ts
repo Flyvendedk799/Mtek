@@ -41,6 +41,9 @@ export interface ArenaViews {
 /** A generated writer call: write the block's fields at byte offset `base` (a multiple of 4) of `views`. */
 export type ArenaWriter = (views: ArenaViews, base: number) => void;
 
+/** A generated field writer: write `value` into the field at byte offset `base` of `views`. */
+type FieldWriter = (views: ArenaViews, base: number, value: unknown) => void;
+
 export interface BufferReplacedEvent {
   /** Still alive while listeners run; destroyed right after the last listener returned. */
   readonly oldBuffer: GPUBuffer;
@@ -52,6 +55,19 @@ export interface BufferReplacedEvent {
 const USAGE_COPY_DST = 0x08;
 const USAGE_UNIFORM = 0x40;
 const DEFAULT_INITIAL_CAPACITY = 16;
+
+/**
+ * Two dirty slots are uploaded by one `writeBuffer` when the bytes between their ranges (padding up to the slot
+ * stride) are at most the larger of this and the block size (`UniformArena.flush`, decision 0119): the upload then
+ * carries at most twice the bytes that changed. The measurement of decision 0119 found no difference in frame time
+ * between merging and not merging on the test machine, so the bound is chosen not to inflate the bytes uploaded
+ * (a 16-byte parameter block on a 256-byte stride is never merged with its neighbour).
+ */
+export const COALESCE_MIN_GAP_BYTES = 128;
+
+function ascending(a: number, b: number): number {
+  return a - b;
+}
 
 function makeViews(buffer: ArrayBuffer): ArenaViews {
   return { f32: new Float32Array(buffer), u32: new Uint32Array(buffer), i32: new Int32Array(buffer) };
@@ -91,7 +107,8 @@ export class UniformArena {
   private disposed = false;
 
   private readonly scratch: ArenaViews;
-  private readonly scratchBytes: Uint8Array;
+  /** Whether the last `stage` found the scratch block different from the mirror. */
+  private stagedChanged = false;
 
   private readonly staticGroups = new Map<GPUBindGroupLayout, Map<number, GPUBindGroup>>();
   private readonly dynamicGroups = new Map<GPUBindGroupLayout, GPUBindGroup>();
@@ -132,7 +149,6 @@ export class UniformArena {
 
     const scratchBuffer = new ArrayBuffer(size);
     this.scratch = makeViews(scratchBuffer);
-    this.scratchBytes = new Uint8Array(scratchBuffer);
   }
 
   /** Current capacity in slots. */
@@ -233,15 +249,34 @@ export class UniformArena {
    * `write` throws, the mirror is untouched.
    */
   writeIfChanged(slot: number, write: ArenaWriter): boolean {
-    if (!this.stage(slot, write)) return false;
-    new Uint8Array(this.mirror, slot * this.slotStride, this.size).set(this.scratchBytes);
+    this.stage(slot, write, undefined, undefined);
+    return this.commitStaged(slot);
+  }
+
+  /**
+   * {@link UniformArena.writeIfChanged} for a generated field writer and its value: `writer(views, base, value)`
+   * without a closure per call (the per-frame path of material params).
+   */
+  writeFieldIfChanged<V>(slot: number, writer: (views: ArenaViews, base: number, value: V) => void, value: V): boolean {
+    this.stage(slot, undefined, writer as FieldWriter, value);
+    return this.commitStaged(slot);
+  }
+
+  /** Copies the staged scratch block into the mirror and marks the slot dirty when `stage` found a difference. */
+  private commitStaged(slot: number): boolean {
+    if (!this.stagedChanged) return false;
+    const mirror = this.mirrorViews.u32;
+    const scratch = this.scratch.u32;
+    const base = (slot * this.slotStride) / 4;
+    for (let i = 0; i < scratch.length; i++) mirror[base + i] = scratch[i] as number;
     this.markDirty(slot);
     return true;
   }
 
   /** Whether `write` would change the slot's bytes: `writeIfChanged` without the write. */
   wouldChange(slot: number, write: ArenaWriter): boolean {
-    return this.stage(slot, write);
+    this.stage(slot, write, undefined, undefined);
+    return this.stagedChanged;
   }
 
   /**
@@ -253,35 +288,63 @@ export class UniformArena {
     return new Uint32Array(this.mirror, slot * this.slotStride, this.size >>> 2);
   }
 
-  /** Runs `write` on the scratch block holding the slot's bytes; true when the result differs from the mirror. */
-  private stage(slot: number, write: ArenaWriter): boolean {
+  /**
+   * Runs the writer (`write`, or `writer` with `value`) on the scratch block holding the slot's bytes and sets
+   * `stagedChanged` to whether the result differs from the mirror. Allocates nothing.
+   */
+  private stage(slot: number, write: ArenaWriter | undefined, writer: FieldWriter | undefined, value: unknown): void {
     this.checkLive();
     this.checkAllocated(slot);
-    const mirror = new Uint32Array(this.mirror, slot * this.slotStride, this.size >>> 2);
-    this.scratch.u32.set(mirror);
-    write(this.scratch, 0);
-    const scratchWords = this.scratch.u32;
-    for (let i = 0; i < scratchWords.length; i++) {
-      if (scratchWords[i] !== mirror[i]) return true;
+    const mirror = this.mirrorViews.u32;
+    const scratch = this.scratch.u32;
+    const base = (slot * this.slotStride) / 4;
+    const words = scratch.length;
+    this.stagedChanged = false;
+    for (let i = 0; i < words; i++) scratch[i] = mirror[base + i] as number;
+    if (write !== undefined) write(this.scratch, 0);
+    else if (writer !== undefined) writer(this.scratch, 0, value);
+    for (let i = 0; i < words; i++) {
+      if (scratch[i] !== mirror[base + i]) {
+        this.stagedChanged = true;
+        return;
+      }
     }
-    return false;
   }
 
   /**
-   * Uploads every dirty slot's `[slot x stride, + size)` range, one `writeBuffer` each in ascending slot
-   * order, and clears the dirty flags. Returns the number of uploads.
+   * Uploads the dirty slots and clears the dirty flags (decision 0119). Dirty slots are visited in ascending
+   * order; a slot whose `[slot x stride, + size)` range starts at most `max(COALESCE_MIN_GAP_BYTES, size)` bytes
+   * after the end of the previous dirty slot's range joins the previous `writeBuffer`, so a run of nearby dirty
+   * slots is one upload that also carries the padding between them. Those bytes come from the CPU mirror, which
+   * equals the GPU copy for every slot that is not dirty (a released slot's mirror is zero while its GPU copy
+   * is stale; nothing reads a free slot), so the GPU buffer holds what the mirror holds, as after uploading
+   * the slots one by one. Returns the number of dirty slots uploaded (not the number of `writeBuffer` calls: the
+   * registry's `uploads` counts those).
    */
   flush(queue: GPUQueue): number {
     this.checkLive();
-    if (this.dirtySlots.length === 0) return 0;
-    const slots = this.dirtySlots.sort((a, b) => a - b);
-    for (const slot of slots) {
-      const offset = slot * this.slotStride;
-      this.registry.writeBuffer(queue, this.gpuBuffer, offset, this.mirror, offset, this.size);
-      this.dirty[slot] = 0;
+    const slots = this.dirtySlots;
+    const count = slots.length;
+    if (count === 0) return 0;
+    if (count > 1) slots.sort(ascending);
+    const { slotStride, size, mirror, gpuBuffer, dirty } = this;
+    let start = (slots[0] as number) * slotStride;
+    let end = start + size;
+    const maxGap = size > COALESCE_MIN_GAP_BYTES ? size : COALESCE_MIN_GAP_BYTES;
+    dirty[slots[0] as number] = 0;
+    for (let i = 1; i < count; i++) {
+      const slot = slots[i] as number;
+      const offset = slot * slotStride;
+      dirty[slot] = 0;
+      if (offset - end > maxGap) {
+        this.registry.writeBuffer(queue, gpuBuffer, start, mirror, start, end - start);
+        start = offset;
+      }
+      end = offset + size;
     }
-    this.dirtySlots = [];
-    return slots.length;
+    this.registry.writeBuffer(queue, gpuBuffer, start, mirror, start, end - start);
+    slots.length = 0;
+    return count;
   }
 
   /**

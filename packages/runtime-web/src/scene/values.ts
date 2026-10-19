@@ -21,16 +21,23 @@ function hasNumbers(value: unknown, keys: readonly string[]): boolean {
   return keys.every((key) => typeof record[key] === "number");
 }
 
+// The three shape checks below run on every transform and param write, every frame (decision 0121): no key arrays or closures.
 export function isVec3(value: unknown): value is Vec3 {
-  return hasNumbers(value, ["x", "y", "z"]);
+  if (typeof value !== "object" || value === null) return false;
+  const record = value as Readonly<Record<string, unknown>>;
+  return typeof record["x"] === "number" && typeof record["y"] === "number" && typeof record["z"] === "number";
 }
 
 export function isQuat(value: unknown): value is Quat {
-  return hasNumbers(value, ["x", "y", "z", "w"]);
+  if (typeof value !== "object" || value === null) return false;
+  const record = value as Readonly<Record<string, unknown>>;
+  return typeof record["x"] === "number" && typeof record["y"] === "number" && typeof record["z"] === "number" && typeof record["w"] === "number";
 }
 
 export function isColor(value: unknown): value is Color {
-  return hasNumbers(value, ["r", "g", "b", "a"]);
+  if (typeof value !== "object" || value === null) return false;
+  const record = value as Readonly<Record<string, unknown>>;
+  return typeof record["r"] === "number" && typeof record["g"] === "number" && typeof record["b"] === "number" && typeof record["a"] === "number";
 }
 
 export function isFiniteVec3(value: Vec3): boolean {

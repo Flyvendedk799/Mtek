@@ -19,12 +19,12 @@ import {
   type MtekRuntimePhase,
 } from "../diagnostics/types.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
-import { fromRotationTranslationScale, multiply, type Mat4 } from "../math/mat4.js";
+import { fromRotationTranslationScaleInto, multiplyInto, type Mat4 } from "../math/mat4.js";
 import type { LoopBudget } from "./budget.js";
 import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic.js";
 import { RuntimeInternalError } from "./errors.js";
 import { makeRef, type EntityRef } from "./slots.js";
-import type { ResolvedEntity, SceneStructure } from "./structure.js";
+import type { ResolvedEntity, ResolvedInstance, SceneStructure } from "./structure.js";
 import {
   describeValue,
   isColor,
@@ -245,9 +245,12 @@ function stateObject(entries: readonly { readonly name: string; readonly type: s
 
 /** Wraps `members` so that reading or assigning any other member throws an internal error naming it. */
 function guarded<T extends object>(members: T, name: string): T {
+  // The members are fixed when the proxy is made; `ctx.frame` is read once per binding per frame, so the trap is kept short.
+  const known = new Set<string | symbol>(Reflect.ownKeys(members));
   return new Proxy(members, {
     get(target, property, receiver) {
-      if (typeof property === "symbol" || Object.hasOwn(target, property)) return Reflect.get(target, property, receiver) as unknown;
+      if (typeof property === "symbol") return Reflect.get(target, property, receiver) as unknown;
+      if (known.has(property)) return (target as Record<string, unknown>)[property];
       throw new RuntimeInternalError(
         `generated code read ${name}.${property}, which this runtime build does not provide (the context has ${CONTEXT_MEMBERS.join(", ")}).`,
       );
@@ -291,7 +294,16 @@ export class World {
   private readonly resolvedBySlot: (ResolvedEntity | undefined)[] = [];
   private worlds: (Mat4 | undefined)[];
   private transformDirty: Uint8Array;
+  /** Whether some entity's `transformDirty` flag is set: `propagate` does nothing otherwise (decision 0120). */
+  private transformsPending = true;
+  /** Slots whose world matrix was recomputed since `takeWorldChanges`; `worldChanged` is the membership flag, `changedList` the slots in order. */
   private worldChanged: Uint8Array;
+  private changedList: number[] = [];
+  private takenList: number[] = [];
+  /** Scratch of `propagate`: the named entities recomputed in this pass. */
+  private recomputed: Uint8Array;
+  private readonly rotationScratch = new Float32Array(16);
+  private readonly localScratch = new Float32Array(16);
   private frameValues: FrameValues = Object.freeze({ time: 0, delta: 0, index: 0 });
   private initialising = false;
   private visibility = 0;
@@ -337,6 +349,7 @@ export class World {
     this.worlds = Array.from({ length: count }, () => new Float32Array(16));
     this.transformDirty = new Uint8Array(count).fill(1);
     this.worldChanged = new Uint8Array(count);
+    this.recomputed = new Uint8Array(count);
     const host: DynamicHost = {
       get ctx(): object {
         if (holder.ctx === undefined) throw new RuntimeInternalError("the context was used before the world was built.");
@@ -487,7 +500,24 @@ export class World {
       }
     }
     // The spawned entities are rebuilt by `dynamic.rebuild` once the new stores exist.
-    this.worldChanged.fill(1);
+    for (let slot = 0; slot < this.worldChanged.length; slot++) this.markChanged(slot);
+  }
+
+  /**
+   * Forgets what the change tracking knows: every transform is marked dirty, so the next `propagate` recomputes every
+   * world matrix and lists it as changed. For the tests that compare a tracked frame with a full recompute; nothing
+   * in the runtime needs it, because every state it holds is rebuilt with the world.
+   */
+  markAllTransformsDirty(): void {
+    this.transformDirty.fill(1);
+    this.transformsPending = true;
+  }
+
+  /** Records that the world matrix of `slot` was recomputed (once per `takeWorldChanges` period). */
+  private markChanged(slot: number): void {
+    if (this.worldChanged[slot] === 1) return;
+    this.worldChanged[slot] = 1;
+    this.changedList.push(slot);
   }
 
   /** Sets `ctx.frame` for the frame about to run. */
@@ -501,7 +531,10 @@ export class World {
    * The named entities come first; a spawned entity is a root. Returns the number of world matrices recomputed.
    */
   propagate(): number {
-    const recomputed = new Uint8Array(this.entities.length);
+    // Nothing was written since the last pass: no flag is set, so there is nothing to recompute and no descendant to follow.
+    if (!this.transformsPending) return 0;
+    const recomputed = this.recomputed;
+    recomputed.fill(0);
     let count = 0;
     for (const entity of this.structure.entities) {
       const i = entity.index;
@@ -509,11 +542,17 @@ export class World {
       if (this.transformDirty[i] !== 1 && (parent === null || recomputed[parent] !== 1)) continue;
       const record = this.entities[i];
       if (record === undefined) continue;
-      const local = fromRotationTranslationScale(record.rotation, record.position, record.scale);
+      // The world matrix is rewritten in place: nothing keeps a reference past the frame (the renderer copies it).
+      const world = this.worlds[i] as Mat4;
       const parentWorld = parent === null ? undefined : this.worlds[parent];
-      this.worlds[i] = parentWorld === undefined ? local : multiply(parentWorld, local);
+      if (parentWorld === undefined) {
+        fromRotationTranslationScaleInto(world, this.rotationScratch, record.rotation, record.position, record.scale);
+      } else {
+        fromRotationTranslationScaleInto(this.localScratch, this.rotationScratch, record.rotation, record.position, record.scale);
+        multiplyInto(world, parentWorld, this.localScratch);
+      }
       this.transformDirty[i] = 0;
-      this.worldChanged[i] = 1;
+      this.markChanged(i);
       recomputed[i] = 1;
       count += 1;
     }
@@ -521,11 +560,12 @@ export class World {
       const i = entity.ref.slot;
       if (this.transformDirty[i] !== 1) continue;
       const record = entity.record;
-      this.worlds[i] = fromRotationTranslationScale(record.rotation, record.position, record.scale);
+      fromRotationTranslationScaleInto(this.worlds[i] as Mat4, this.rotationScratch, record.rotation, record.position, record.scale);
       this.transformDirty[i] = 0;
-      this.worldChanged[i] = 1;
+      this.markChanged(i);
       count += 1;
     }
+    this.transformsPending = false;
     return count;
   }
 
@@ -536,14 +576,28 @@ export class World {
     return matrix;
   }
 
-  /** Returns, by slot, the entities whose world matrix changed since the last call, and forgets them. */
-  takeWorldChanges(): number[] {
-    const changed: number[] = [];
-    this.worldChanged.forEach((flag, index) => {
-      if (flag === 1) changed.push(index);
-    });
-    this.worldChanged.fill(0);
-    return changed;
+  /**
+   * Returns the slots whose world matrix was recomputed since the last call, in the order `propagate` recomputed them
+   * (each once), and forgets them. The array is reused: it is valid until the next call.
+   */
+  takeWorldChanges(): readonly number[] {
+    const list = this.changedList;
+    const flags = this.worldChanged;
+    let kept = 0;
+    // Entries of slots that were unregistered since (flag cleared) or listed twice are dropped here.
+    for (let k = 0; k < list.length; k++) {
+      const slot = list[k] as number;
+      if (flags[slot] === 1) {
+        flags[slot] = 0;
+        list[kept] = slot;
+        kept += 1;
+      }
+    }
+    list.length = kept;
+    this.changedList = this.takenList;
+    this.changedList.length = 0;
+    this.takenList = list;
+    return list;
   }
 
   /** The record in slot `slot`: a named entity or a spawned one that exists. */
@@ -598,6 +652,7 @@ export class World {
     this.indexByRecord.set(record, slot);
     this.worlds[slot] = new Float32Array(16);
     this.transformDirty[slot] = 1;
+    this.transformsPending = true;
     this.worldChanged[slot] = 0;
   }
 
@@ -631,7 +686,29 @@ export class World {
     if (!TRANSFORM_FIELDS.includes(field as TransformField)) {
       throw new RuntimeInternalError(`ctx.setTransform got the field ${describeValue(field)}; expected position, rotation or scale.`);
     }
+    this.applyTransform(index, record, field as TransformField, value);
+  }
+
+  /**
+   * A function that does what `ctx.setTransform(entity, field, value)` does for `value`, with the entity and the field
+   * resolved once (the bindings call it every frame). An argument `setTransform` would reject gets a function that
+   * calls `setTransform`, so the error is the same and happens at the same time.
+   */
+  transformSetter(entity: unknown, field: string): (value: unknown) => void {
+    const index = typeof entity === "object" && entity !== null ? this.indexByRecord.get(entity) : undefined;
+    if (index === undefined || !TRANSFORM_FIELDS.includes(field as TransformField)) {
+      return (value) => {
+        this.setTransform(entity, field, value);
+      };
+    }
     const name = field as TransformField;
+    return (value) => {
+      const record = this.records[index];
+      if (record !== undefined) this.applyTransform(index, record, name, value);
+    };
+  }
+
+  private applyTransform(index: number, record: EntityRecord, name: TransformField, value: unknown): void {
     if (name === "rotation") {
       if (!isQuat(value)) throw new RuntimeInternalError(`ctx.setTransform(…, "rotation", ${describeValue(value)}) expects a quat.`);
       if (sameQuat(record.rotation, value)) return;
@@ -653,6 +730,7 @@ export class World {
       else record.scale = value;
     }
     this.transformDirty[index] = 1;
+    this.transformsPending = true;
   }
 
   private setVisible(entity: unknown, value: unknown): void {
@@ -707,6 +785,40 @@ export class World {
     if (param === undefined) {
       throw new RuntimeInternalError(`ctx.setParam got the param ${describeValue(name)}, which material '${instance.material.id}' does not declare.`);
     }
+    this.applyParam(index, record.mat, instance, param, value);
+  }
+
+  /**
+   * A function that does what `ctx.setParam(entity, name, value)` does for `value`, with the entity, its material
+   * instance and the param resolved once (the bindings call it every frame). An argument `setParam` would reject gets
+   * a function that calls `setParam`, so the error is the same and happens at the same time.
+   */
+  paramSetter(entity: unknown, name: string): (value: unknown) => void {
+    const index = typeof entity === "object" && entity !== null ? this.indexByRecord.get(entity) : undefined;
+    const instance = index === undefined ? undefined : this.resolvedBySlot[index]?.instance;
+    const param = instance?.material.params.find((candidate) => candidate.name === name);
+    if (index === undefined || instance === null || instance === undefined || param === undefined) {
+      return (value) => {
+        this.setParam(entity, name, value);
+      };
+    }
+    return (value) => {
+      const record = this.records[index];
+      if (record === undefined || record.mat === null) {
+        this.setParam(entity, name, value);
+        return;
+      }
+      this.applyParam(index, record.mat, instance, param, value);
+    };
+  }
+
+  private applyParam(
+    index: number,
+    mat: { readonly p: Record<string, unknown> },
+    instance: ResolvedInstance,
+    param: { readonly name: string; readonly type: string },
+    value: unknown,
+  ): void {
     if (param.type === "color") {
       if (!isColor(value)) throw new RuntimeInternalError(`ctx.setParam(…, "${param.name}", ${describeValue(value)}) expects a color.`);
       if (value.a !== 1) {
@@ -721,7 +833,7 @@ export class World {
       }
     }
     this.params.writeParam(instance.index, param.name, value);
-    record.mat.p[param.name] = value;
+    mat.p[param.name] = value;
   }
 
   /** `ctx.setLight(e, "color" | "intensity", value)`; `range` is construction-only and never written. */
