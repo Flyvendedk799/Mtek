@@ -205,6 +205,11 @@ fn no_project_is_needed_and_there_is_no_format_option() {
 /// refuse them. Every other Mtek source of the benchmarks is canonical.
 const BROKEN_ON_PURPOSE: [&str; 1] = ["benchmarks/tasks/maintenance-03/mtek"];
 
+/// The runtime benchmark programs are printed by `benchmarks/runtime/tools/gen-mtek.ts` and frozen
+/// by tree hash (decisions 0097 and 0105): canonical form would multiply them to some twenty
+/// thousand lines and change the frozen definitions, so they are not held to `mtek fmt`.
+const GENERATED_AND_FROZEN: &str = "benchmarks/runtime/";
+
 /// The directories named `mtek` below `dir` (starters and references of the benchmark tasks).
 fn mtek_dirs(dir: &Path, found: &mut Vec<PathBuf>) {
     for entry in fs::read_dir(dir).unwrap() {
@@ -234,7 +239,9 @@ fn the_repository_sources_that_ci_checks_are_canonical() {
             .unwrap()
             .to_string_lossy()
             .replace('\\', "/");
-        if !BROKEN_ON_PURPOSE.contains(&relative.as_str()) {
+        if !BROKEN_ON_PURPOSE.contains(&relative.as_str())
+            && !relative.starts_with(GENERATED_AND_FROZEN)
+        {
             paths.push(relative);
         }
     }
