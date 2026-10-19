@@ -12,6 +12,7 @@ import {
   IMPLEMENTATION_ORDER,
   PLATEAU_GROWTH_PERCENT,
   THRESHOLD_PERCENT,
+  hostOf,
   loadRun,
   summarizePair,
   verdictFor,
@@ -23,6 +24,8 @@ import {
   type SizeEntry,
   type Verdict,
 } from "./analyze.ts";
+import { MAX_ATTEMPTS } from "./attempts.ts";
+import { DISTURBED_DURING_PERCENT } from "./host-load.ts";
 import { MAX_DIFFERING_SHARE, CHANNEL_TOLERANCE } from "./parity.ts";
 import { RAW_DIR, RESULTS_DIR, WORKLOADS, type WorkloadName } from "./paths.ts";
 import { stringifyCompact } from "./json.ts";
@@ -184,6 +187,10 @@ function environmentSection(run: RawRun, floor: FloorSummary): string {
   const adapter = e.gpu.adapter;
   const m = run.meta;
   const all = [...run.pairs.values(), ...(run.floor === null ? [] : [run.floor])].flatMap((f) => f.jobs);
+  const hostSummaries = [...run.pairs.values(), ...(run.floor === null ? [] : [run.floor])].map((f) => hostOf(f));
+  const repeated = hostSummaries.reduce((s, h) => s + h.repeatedPasses, 0);
+  const disturbed = hostSummaries.reduce((s, h) => s + h.disturbedAttempts, 0);
+  const stillDisturbed = hostSummaries.reduce((s, h) => s + h.disturbedAfterRetry, 0);
   const busyBefore = all.map((j) => j.hostLoad.busyBeforePercent);
   const busyDuring = all.map((j) => j.hostLoad.busyDuringPercent);
   const timer = all.map((j) => (j.result as { page?: { timerGranularityMs?: number; crossOriginIsolated?: boolean } } | undefined)?.page).filter((p) => p !== undefined);
@@ -207,6 +214,7 @@ function environmentSection(run: RawRun, floor: FloorSummary): string {
     ["Frames", `${String(m.protocol.warmupFrames)} warm-up, then ${String(m.protocol.timingFrames)} measured per timing run, ${String(m.protocol.timingRuns)} timing runs per implementation (each in a fresh page); GPU time ${String(m.protocol.gpuTimeFrames)} frames; allocation ${String(m.protocol.allocationFrames)} frames; counters ${String(m.protocol.countFrames)} frames; startup ${String(m.protocol.startupRuns)} fresh page loads; ${String(m.protocol.cycles)} + ${String(m.protocol.longCycles)} cycles`],
     ["Pass order", `shuffled with seed ${String(m.seed)} (${String(m.order.length)} passes, listed in run.json)`],
     ["Machine load", `${String(all.length)} passes; busy share of all logical CPUs before a pass: median ${fmtNumber(medianOf(busyBefore), 0)} %, maximum ${fmtNumber(Math.max(...busyBefore), 0)} %; during a pass (includes the benchmark's own browser): mean ${fmtNumber(mean(busyDuring), 0)} %; passes that started above the ${String(m.quietLimitPercent)} % quiet limit after waiting: ${String(all.filter((j) => j.hostLoad.noisy).length)}`],
+    ["Disturbed passes", `${String(disturbed)} attempt(s) were disturbed by other load (busy above ${String(m.quietLimitPercent)} % before the pass, or above ${String(DISTURBED_DURING_PERCENT)} % during it); ${String(repeated)} pass(es) were repeated (up to ${String(MAX_ATTEMPTS)} attempts, every attempt kept in the raw results; the statistics use the first undisturbed attempt, chosen by load alone); ${String(stillDisturbed)} counted attempt(s) are still disturbed`],
     ["GPU lock", m.gpuLockConfigured ? "every pass ran while holding the machine's GPU lock (no other GPU user overlapped)" : "no GPU lock was configured"],
   ];
   const lines = [table(["Item", "Value"], rows), ""];

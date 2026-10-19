@@ -56,3 +56,10 @@ export async function waitForQuiet(limitPercent: number, maxWaitMs: number): Pro
   }
   return { busyBeforePercent: busy, waitedForQuietMs: Date.now() - start, noisy: busy > limitPercent };
 }
+
+/** A pass is disturbed when the machine was busier than the quiet limit before it, or busier than this while it ran (percent of all logical CPUs; the benchmark's own browser accounts for a few percent). */
+export const DISTURBED_DURING_PERCENT = 50;
+
+export function isDisturbed(load: Pick<HostLoad, "noisy" | "busyDuringPercent">): boolean {
+  return load.noisy || load.busyDuringPercent > DISTURBED_DURING_PERCENT;
+}

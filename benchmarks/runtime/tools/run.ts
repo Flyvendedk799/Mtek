@@ -20,7 +20,7 @@ import type { BenchContext, BenchGate, PassSpec } from "../harness/types.ts";
 import { assessAdapter } from "./adapter.ts";
 import { checkFrozen } from "./freeze.ts";
 import { readWorkload } from "./gen-mtek.ts";
-import { readCpuTimes, busyPercent, sampleBusy, waitForQuiet, type HostLoad } from "./host-load.ts";
+import { readCpuTimes, busyPercent, isDisturbed, sampleBusy, waitForQuiet, type HostLoad } from "./host-load.ts";
 import { withGpuLock } from "./gpu-lock.ts";
 import { roundTimings, stringifyCompact } from "./json.ts";
 import { OUT_DIR, RAW_DIR, REPO_ROOT, SITE_DIR, WORKLOADS, IMPLEMENTATIONS, isImplementation, isWorkload, type ImplementationName, type WorkloadName } from "./paths.ts";
@@ -212,8 +212,79 @@ async function runPass(browser: Browser, serverUrl: string, job: Job, spec: Pass
   }
 }
 
-function describeJob(job: Job): string {
+export function describeJob(job: Job): string {
   return `${job.workload}/${job.implementation}/${job.pass}#${String(job.run)}`;
+}
+
+export interface WorkloadInfo {
+  readonly name: string;
+  readonly kind: "frames" | "startup" | "cycles";
+  readonly parityFrames: number;
+}
+
+/** The contexts of a job: where its programs and assets are served. */
+export function contextFor(job: Job): BenchContext {
+  return {
+    workload: job.workload,
+    implementation: job.implementation as BenchContext["implementation"],
+    assetBase: `/assets/${job.workload}/`,
+    programUrl: `/mtek/${job.workload}/app.js`,
+    editedProgramUrl: job.workload === "mount-reload-dispose" ? `/mtek/${job.workload}-edited/app.js` : null,
+  };
+}
+
+/** Runs one pass (the caller holds the GPU lock) and returns its raw record; a parity picture is written to `outDir/parity/`. */
+export async function executeJob(
+  browser: Browser,
+  serverUrl: string,
+  job: Job,
+  protocol: Protocol,
+  workloads: readonly WorkloadInfo[],
+  outDir: string,
+  options: { readonly lockWaitedMs: number | null; readonly waitedForQuietMs: number; readonly attempt: number },
+): Promise<RawJob> {
+  const info = workloads.find((w) => w.name === job.workload) ?? { name: "floor", kind: "frames" as const, parityFrames: 5 };
+  const spec = specFor(job.pass, protocol, info);
+  const busyBefore = await sampleBusy(250);
+  const jobStarted = new Date();
+  const t0 = Date.now();
+  const cpuBefore = readCpuTimes();
+  const outcome = await runPass(browser, serverUrl, job, spec, contextFor(job));
+  const hostLoad: HostLoad = {
+    busyBeforePercent: busyBefore,
+    busyDuringPercent: busyPercent(cpuBefore, readCpuTimes()),
+    waitedForQuietMs: options.waitedForQuietMs,
+    noisy: busyBefore > QUIET_LIMIT_PERCENT,
+    logicalCpus: (await import("node:os")).cpus().length,
+  };
+  let result = outcome.result;
+  if (job.pass === "parity" && outcome.status === "ok") {
+    const parity = result as { rgba: string; width: number; height: number } & Record<string, unknown>;
+    const png = encodePng(parity.width, parity.height, Buffer.from(parity.rgba, "base64"));
+    writeFileSync(join(outDir, "parity", `${job.workload}--${job.implementation}.png`), png);
+    const { rgba: _dropped, ...rest } = parity;
+    void _dropped;
+    result = rest;
+  }
+  return {
+    pass: job.pass,
+    run: job.run,
+    attempt: options.attempt,
+    startedAt: jobStarted.toISOString(),
+    durationMs: Date.now() - t0,
+    hostLoad,
+    gpuLockWaitedMs: options.lockWaitedMs,
+    status: outcome.status,
+    ...(outcome.error === undefined ? {} : { error: outcome.error }),
+    pageErrors: outcome.pageErrors,
+    consoleWarnings: outcome.consoleWarnings,
+    ...(result === undefined ? {} : { result }),
+    ...(outcome.allocation === undefined ? {} : { allocation: outcome.allocation }),
+  };
+}
+
+export function logLine(index: number, total: number, job: Job, raw: RawJob): string {
+  return `[${String(index)}/${String(total)}] ${describeJob(job)}${raw.attempt !== undefined && raw.attempt > 1 ? ` (attempt ${String(raw.attempt)})` : ""}: ${raw.status}${raw.error === undefined ? "" : ` (${raw.error.slice(0, 160)})`} in ${String(raw.durationMs)} ms, busy ${raw.hostLoad.busyBeforePercent.toFixed(0)}% before, ${raw.hostLoad.busyDuringPercent.toFixed(0)}% during${isDisturbed(raw.hostLoad) ? " DISTURBED" : ""}\n`;
 }
 
 async function main(): Promise<number> {
@@ -339,59 +410,17 @@ async function main(): Promise<number> {
       await withGpuLock(async (lock) => {
         for (const job of group) {
           index += 1;
-          const label = describeJob(job);
-          const workloadInfoFor = workloadInfo.find((w) => w.name === job.workload) ?? { name: "floor", kind: "frames" as const, parityFrames: 5 };
-          const spec = specFor(job.pass, protocol, workloadInfoFor);
-          const context: BenchContext = {
-            workload: job.workload,
-            implementation: job.implementation as BenchContext["implementation"],
-            assetBase: `/assets/${job.workload}/`,
-            programUrl: `/mtek/${job.workload}/app.js`,
-            editedProgramUrl: job.workload === "mount-reload-dispose" ? `/mtek/${job.workload}-edited/app.js` : null,
-          };
-          const busyBefore = await sampleBusy(250);
-          const jobStarted = new Date();
-          const t0 = Date.now();
-          const cpuBefore = readCpuTimes();
-          const outcome = { ...(await runPass(browser, server.url, job, spec, context)), waited: lock.dir === null ? null : lock.waitedMs };
-          const hostLoad: HostLoad = {
-            busyBeforePercent: busyBefore,
-            busyDuringPercent: busyPercent(cpuBefore, readCpuTimes()),
+          const raw = await executeJob(browser, server.url, job, protocol, workloadInfo, outDir, {
+            lockWaitedMs: lock.dir === null ? null : lock.waitedMs,
             waitedForQuietMs: quiet.waitedForQuietMs,
-            noisy: busyBefore > QUIET_LIMIT_PERCENT,
-            logicalCpus: (await import("node:os")).cpus().length,
-          };
-          let result = outcome.result;
-          if (job.pass === "parity" && outcome.status === "ok") {
-            const parity = result as { rgba: string; width: number; height: number } & Record<string, unknown>;
-            const png = encodePng(parity.width, parity.height, Buffer.from(parity.rgba, "base64"));
-            writeFileSync(join(outDir, "parity", `${job.workload}--${job.implementation}.png`), png);
-            const { rgba: _dropped, ...rest } = parity;
-            void _dropped;
-            result = rest;
-          }
-          const raw: RawJob = {
-            pass: job.pass,
-            run: job.run,
-            startedAt: jobStarted.toISOString(),
-            durationMs: Date.now() - t0,
-            hostLoad,
-            gpuLockWaitedMs: outcome.waited,
-            status: outcome.status,
-            ...(outcome.error === undefined ? {} : { error: outcome.error }),
-            pageErrors: outcome.pageErrors,
-            consoleWarnings: outcome.consoleWarnings,
-            ...(result === undefined ? {} : { result }),
-            ...(outcome.allocation === undefined ? {} : { allocation: outcome.allocation }),
-          };
+            attempt: 1,
+          });
           const key = `${job.workload}--${job.implementation}`;
           const list = pairs.get(key) ?? [];
           list.push(raw);
           pairs.set(key, list);
-          done.push(label);
-          process.stdout.write(
-            `[${String(index)}/${String(order.length)}] ${label}: ${outcome.status}${outcome.error === undefined ? "" : ` (${outcome.error.slice(0, 160)})`} in ${String(raw.durationMs)} ms, busy ${hostLoad.busyBeforePercent.toFixed(0)}%${hostLoad.noisy ? " NOISY" : ""}\n`,
-          );
+          done.push(describeJob(job));
+          process.stdout.write(logLine(index, order.length, job, raw));
         }
       });
     }

@@ -12,6 +12,8 @@ import type { PassName, Protocol } from "./plan.ts";
 export interface RawJob {
   readonly pass: PassName;
   readonly run: number;
+  /** 1 for the first attempt; a pass the machine disturbed is repeated (tools/retry.ts) and every attempt is kept. */
+  readonly attempt?: number;
   readonly startedAt: string;
   readonly durationMs: number;
   readonly hostLoad: HostLoad;
@@ -64,4 +66,6 @@ export interface RawRunMeta {
   readonly quietLimitPercent: number;
   /** The command line of the run. */
   readonly arguments: readonly string[];
+  /** Passes repeated after the run because the machine was disturbed (`tools/retry.ts`), with the commit that repeated them. */
+  readonly retries?: ReadonlyArray<{ readonly at: string; readonly gitCommit: string; readonly passes: readonly string[] }>;
 }

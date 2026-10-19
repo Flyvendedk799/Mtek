@@ -4,6 +4,8 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { median, percentileSorted, summarize, type Summary } from "../harness/stats.ts";
 import type { EnvironmentRecord } from "../../../tests/browser/support/environment-types.ts";
+import { chooseAttempts, groupAttempts } from "./attempts.ts";
+import { isDisturbed } from "./host-load.ts";
 import { comparePictures, type PictureComparison } from "./parity.ts";
 import { decodePng } from "./png.ts";
 import type { RawJob, RawPairFile, RawRunMeta } from "./raw-types.ts";
@@ -144,7 +146,16 @@ export interface PairSummary {
   /** The supplementary long run (`longCycles` cycles) that shows whether a series that was still moving after 50 cycles settles. */
   readonly cyclesLong: CycleSeries | null;
   readonly parity: (PictureComparison & { readonly maxPositionDifference: number | null }) | null;
-  readonly host: { readonly passes: number; readonly maxBusyBeforePercent: number; readonly noisyPasses: number; readonly meanBusyDuringPercent: number };
+  readonly host: {
+    readonly passes: number;
+    readonly maxBusyBeforePercent: number;
+    readonly noisyPasses: number;
+    readonly meanBusyDuringPercent: number;
+    /** Attempts (passes counting repeats) that were disturbed by other load, how many passes were repeated, and how many counted attempts were still disturbed. */
+    readonly disturbedAttempts: number;
+    readonly repeatedPasses: number;
+    readonly disturbedAfterRetry: number;
+  };
   readonly physicsInfo: { readonly sleepingBodies: number | null } | null;
 }
 
@@ -189,8 +200,9 @@ export function loadRun(dir: string): RawRun {
   return { dir, meta, environment, pairs, floor, sizes, pictures };
 }
 
+/** The attempts that count for a pass, one per run, in run order (a disturbed pass that was repeated counts with its first undisturbed attempt). */
 function jobsOf(file: RawPairFile | undefined, pass: string): RawJob[] {
-  return (file?.jobs ?? []).filter((j) => j.pass === pass).sort((a, b) => a.run - b.run);
+  return chooseAttempts((file?.jobs ?? []).filter((j) => j.pass === pass)).sort((a, b) => a.run - b.run);
 }
 
 function numbers(value: unknown): number[] {
@@ -379,13 +391,17 @@ function summarizeCycles(job: RawJob | undefined): CycleSeries | null {
   };
 }
 
-function hostOf(file: RawPairFile | undefined): PairSummary["host"] {
+export function hostOf(file: RawPairFile | undefined): PairSummary["host"] {
   const jobs = file?.jobs ?? [];
+  const counted = chooseAttempts(jobs);
   return {
     passes: jobs.length,
     maxBusyBeforePercent: jobs.reduce((m, j) => Math.max(m, j.hostLoad.busyBeforePercent), 0),
     noisyPasses: jobs.filter((j) => j.hostLoad.noisy).length,
     meanBusyDuringPercent: jobs.length === 0 ? 0 : jobs.reduce((s, j) => s + j.hostLoad.busyDuringPercent, 0) / jobs.length,
+    disturbedAttempts: jobs.filter((j) => isDisturbed(j.hostLoad)).length,
+    repeatedPasses: groupAttempts(jobs).filter((g) => g.length > 1).length,
+    disturbedAfterRetry: counted.filter((j) => isDisturbed(j.hostLoad)).length,
   };
 }
 
