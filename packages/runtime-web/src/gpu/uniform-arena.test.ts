@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
 import { FakeBindGroup, FakeBuffer, FakeDevice, asGpu } from "../test-support/fake-gpu.js";
 import { ResourceRegistry, type RegistryDevice } from "./registry.js";
-import { UniformArena, roundUp, type BufferReplacedEvent } from "./uniform-arena.js";
+import { COALESCE_GAP_BYTES, UniformArena, roundUp, type BufferReplacedEvent } from "./uniform-arena.js";
 
 const USAGE_UNIFORM = 0x40;
 const USAGE_COPY_DST = 0x08;
@@ -184,35 +184,40 @@ describe("allocate and release", () => {
 });
 
 describe("flush", () => {
-  it("uploads each dirty slot once, covering only `size` bytes, ascending", () => {
+  it("uploads each dirty slot once, covering only `size` bytes, ascending; slots far apart are separate uploads", () => {
     const h = harness();
-    const arena = h.makeArena(64);
+    const arena = h.makeArena(64, { initialCapacity: 32 });
     const slots = [arena.allocate(), arena.allocate(), arena.allocate()];
     h.fake.queue.writes.length = 0;
-    // Allocation dirties the slot; flush everything first, then dirty slots 2 and 0 in that order.
+    // Allocation dirties the slot; flush everything first, then dirty slots 20 and 0 in that order.
     arena.flush(h.queue);
     h.fake.queue.writes.length = 0;
-    poke(arena, 2, 0, 0xdeadbeef);
-    poke(arena, 0, 3, 7);
-    poke(arena, 2, 1, 9); // same slot twice -> still one upload
+    for (let i = 3; i <= 20; i++) arena.allocate();
     arena.flush(h.queue);
+    h.fake.queue.writes.length = 0;
+    poke(arena, 20, 0, 0xdeadbeef);
+    poke(arena, 0, 3, 7);
+    poke(arena, 20, 1, 9); // same slot twice -> still one upload
+    expect(arena.flush(h.queue)).toBe(2);
     expect(slots).toEqual([0, 1, 2]);
     expect(h.fake.queue.writes.map((w) => [w.bufferOffset, w.size])).toEqual([
       [0, 64],
-      [2 * 256, 64],
+      [20 * 256, 64],
     ]);
     const gpu = bufferOf(arena.buffer).contents;
     const view = new DataView(gpu.buffer, gpu.byteOffset, gpu.byteLength);
-    expect(view.getUint32(2 * 256, true)).toBe(0xdeadbeef);
-    expect(view.getUint32(2 * 256 + 4, true)).toBe(9);
+    expect(view.getUint32(20 * 256, true)).toBe(0xdeadbeef);
+    expect(view.getUint32(20 * 256 + 4, true)).toBe(9);
     expect(view.getUint32(3 * 4, true)).toBe(7);
   });
 
   it("updates uploads and uploadBytes and clears the dirty flags", () => {
     const h = harness();
-    const arena = h.makeArena(288);
-    arena.allocate();
-    arena.allocate();
+    const arena = h.makeArena(288, { initialCapacity: 32 });
+    for (let i = 0; i < 12; i++) arena.allocate();
+    arena.flush(h.queue);
+    poke(arena, 0, 0, 1);
+    poke(arena, 11, 0, 1);
     const before = h.registry.snapshot();
     expect(arena.flush(h.queue)).toBe(2);
     const after = h.registry.snapshot();
@@ -221,6 +226,37 @@ describe("flush", () => {
     expect(arena.dirtySlotCount).toBe(0);
     expect(arena.flush(h.queue)).toBe(0);
     expect(h.registry.snapshot().uploads).toBe(after.uploads);
+  });
+
+  it("coalesces nearby dirty slots into one upload that leaves the GPU copy byte-identical to per-slot uploads", () => {
+    const h = harness();
+    const arena = h.makeArena(64, { initialCapacity: 16 });
+    for (let i = 0; i < 10; i++) arena.allocate();
+    arena.flush(h.queue);
+    h.fake.queue.writes.length = 0;
+    // Slots 2, 3, 4 and 6 are dirty (5 is not): one upload from slot 2 to the end of slot 6, covering slot 5's bytes too.
+    for (const slot of [6, 3, 2, 4]) poke(arena, slot, 0, 0x100 + slot);
+    expect(arena.flush(h.queue)).toBe(4);
+    expect(h.fake.queue.writes.map((w) => [w.bufferOffset, w.size])).toEqual([[2 * 256, 4 * 256 + 64]]);
+    const gpu = bufferOf(arena.buffer).contents;
+    const view = new DataView(gpu.buffer, gpu.byteOffset, gpu.byteLength);
+    for (const slot of [2, 3, 4, 6]) expect(view.getUint32(slot * 256, true)).toBe(0x100 + slot);
+    expect(view.getUint32(5 * 256, true)).toBe(0); // the clean slot in the middle still holds what the mirror held
+    // The mirror and the GPU copy agree everywhere.
+    expect(Array.from(gpu.subarray(0, 10 * 256))).toEqual(Array.from(new Uint8Array(arena.views.u32.buffer, 0, 10 * 256)));
+  });
+
+  it("does not coalesce slots whose ranges are more than COALESCE_GAP_BYTES apart", () => {
+    const h = harness();
+    const apart = Math.ceil(COALESCE_GAP_BYTES / 256) + 2;
+    const arena = h.makeArena(64, { initialCapacity: 64 });
+    for (let i = 0; i <= apart; i++) arena.allocate();
+    arena.flush(h.queue);
+    h.fake.queue.writes.length = 0;
+    poke(arena, 0, 0, 1);
+    poke(arena, apart, 0, 1);
+    arena.flush(h.queue);
+    expect(h.fake.queue.writes.map((w) => w.bufferOffset)).toEqual([0, apart * 256]);
   });
 
   it("only issues writeBuffer calls whose offsets and sizes are multiples of 4 (the fake enforces the real contract)", () => {

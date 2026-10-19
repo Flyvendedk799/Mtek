@@ -455,8 +455,8 @@ describe("transform writes from update reach the GPU object blocks (spec/scenes.
     });
     debug.step(1, 0.016); // frame 0: everything uploads once
     const afterFirst = uploads(debug);
-    debug.step(1, 0.016); // E1 and E2
-    expect(uploads(debug) - afterFirst).toBe(2);
+    debug.step(1, 0.016); // E1 and E2: neighbouring object blocks, one coalesced upload (decision 0119)
+    expect(uploads(debug) - afterFirst).toBe(1);
     const afterMove = uploads(debug);
     debug.step(1, 0.016); // same value: the world matrix is recomputed but byte-identical
     expect(uploads(debug) - afterMove).toBe(0);

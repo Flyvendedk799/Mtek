@@ -53,6 +53,16 @@ const USAGE_COPY_DST = 0x08;
 const USAGE_UNIFORM = 0x40;
 const DEFAULT_INITIAL_CAPACITY = 16;
 
+/**
+ * Two dirty slots whose byte ranges are at most this far apart are uploaded by one `writeBuffer`
+ * (`UniformArena.flush`, decision 0119): the extra bytes cost less than a second call into the browser.
+ */
+export const COALESCE_GAP_BYTES = 1024;
+
+function ascending(a: number, b: number): number {
+  return a - b;
+}
+
 function makeViews(buffer: ArrayBuffer): ArenaViews {
   return { f32: new Float32Array(buffer), u32: new Uint32Array(buffer), i32: new Int32Array(buffer) };
 }
@@ -268,20 +278,38 @@ export class UniformArena {
   }
 
   /**
-   * Uploads every dirty slot's `[slot x stride, + size)` range, one `writeBuffer` each in ascending slot
-   * order, and clears the dirty flags. Returns the number of uploads.
+   * Uploads the dirty slots and clears the dirty flags (decision 0119). Dirty slots are visited in ascending
+   * order; a slot whose `[slot x stride, + size)` range starts at most `COALESCE_GAP_BYTES` after the end of
+   * the previous dirty slot's range joins the previous `writeBuffer`, so a run of nearby dirty slots is one
+   * upload that also carries the (up to a few hundred) bytes between them. Those bytes come from the CPU
+   * mirror, which equals the GPU copy for every slot that is not dirty (a released slot's mirror is zero while
+   * its GPU copy is stale; nothing reads a free slot), so the buffer ends up byte-identical to uploading the
+   * slots one by one. Returns the number of dirty slots uploaded (not the number of `writeBuffer` calls: the
+   * registry's `uploads` counts those).
    */
   flush(queue: GPUQueue): number {
     this.checkLive();
-    if (this.dirtySlots.length === 0) return 0;
-    const slots = this.dirtySlots.sort((a, b) => a - b);
-    for (const slot of slots) {
-      const offset = slot * this.slotStride;
-      this.registry.writeBuffer(queue, this.gpuBuffer, offset, this.mirror, offset, this.size);
-      this.dirty[slot] = 0;
+    const slots = this.dirtySlots;
+    const count = slots.length;
+    if (count === 0) return 0;
+    if (count > 1) slots.sort(ascending);
+    const { slotStride, size, mirror, gpuBuffer, dirty } = this;
+    let start = (slots[0] as number) * slotStride;
+    let end = start + size;
+    dirty[slots[0] as number] = 0;
+    for (let i = 1; i < count; i++) {
+      const slot = slots[i] as number;
+      const offset = slot * slotStride;
+      dirty[slot] = 0;
+      if (offset - end > COALESCE_GAP_BYTES) {
+        this.registry.writeBuffer(queue, gpuBuffer, start, mirror, start, end - start);
+        start = offset;
+      }
+      end = offset + size;
     }
-    this.dirtySlots = [];
-    return slots.length;
+    this.registry.writeBuffer(queue, gpuBuffer, start, mirror, start, end - start);
+    slots.length = 0;
+    return count;
   }
 
   /**
