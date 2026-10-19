@@ -159,7 +159,7 @@ export function applyDiff(file: string, diff: string): string | null {
     const rest = line.slice(1);
     if (mark === "-") before.push(rest);
     else if (mark === "+") after.push(rest);
-    else if (mark === " ") {
+    else if (mark === " " || line === "") {
       before.push(rest);
       after.push(rest);
     } else return null;
