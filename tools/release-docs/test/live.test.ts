@@ -156,6 +156,12 @@ live("the generated documents against the compiler (docs/*, limitations/*)", () 
     expectNamesBoth(found, "limitations/catalogue-marks", "spec/diagnostics.md catalogue", "code-coverage-exceptions.json");
   });
 
+  it("a link of a release page that points at nothing fails docs/links", () => {
+    const pages = base.links.pages.map((p) => (p.path === "docs/language-guide.md" ? { ...p, text: `${p.text}\nSee [x](no-such-page.md).\n` } : p));
+    const found = checkInputs({ ...base, links: { ...base.links, pages } });
+    expectNamesBoth(found, "docs/links", "docs/language-guide.md line", "docs/no-such-page.md");
+  });
+
   it("a stale generated page fails docs/stale", () => {
     const docs = generateDocs(ctx);
     // A copy of the repository's docs directory with one word changed, judged against the generator.

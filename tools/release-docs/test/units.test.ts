@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { repoRoot } from "../../coverage-matrix/src/tools.ts";
 import { compareAll } from "../src/compare.ts";
 import { excerpt, expandDirective, renderGuide } from "../src/guide.ts";
+import { checkDocLinks } from "../src/links.ts";
 import { splitNotSupported, x9xxCodes } from "../src/limitations.ts";
 import { compareSets, compareValue, duplicates, mismatch } from "../src/model.ts";
 import { demoteHeadings } from "../src/md.ts";
@@ -216,6 +217,14 @@ describe("guide directives", () => {
   it("expands an excerpt directive whose end pattern contains a brace", () => {
     const ctx = { text: () => "x\nfn f() {\n}\ny", root } as never;
     expect(renderGuide(ctx, "{{excerpt p.mtek :: ^fn f :: ^\\}$}}")).toBe("```mtek\nfn f() {\n}\n```");
+  });
+});
+
+describe("links", () => {
+  it("resolves relative links against the page, skips URLs, anchors and code blocks", () => {
+    const text = "[a](../spec/a.md#x) [b](https://example.com) [c](#top) [d](missing.md)\n```\n[e](nope.md)\n```\n";
+    const found = checkDocLinks({ pages: [{ path: "docs/p.md", text }], exists: (p) => p === "spec/a.md" });
+    expect(found.map((m) => m.message)).toEqual(["docs/links: docs/p.md line 1 says links to missing.md, but docs/missing.md says no such file"]);
   });
 });
 

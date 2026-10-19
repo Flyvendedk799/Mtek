@@ -148,7 +148,7 @@ export function checkReleaseNotes(markdown: string, io: NotesIo): Mismatch[] {
       if (number.length < 2) continue;
       if (!haystack.has(number)) {
         found.push(
-          mismatch("release-notes/number", { where: at, value: `the number ${number} in "${shown}"` }, { where: files.map((f) => f.path).join(", "), value: `does not contain ${number}` }),
+          mismatch("release-notes/number", { where: at, value: `the number ${number} in "${shown}"` }, { where: files.map((f) => f.path).join(", "), value: `nothing about ${number}` }),
         );
       }
     }

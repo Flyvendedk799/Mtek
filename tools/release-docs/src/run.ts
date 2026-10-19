@@ -22,7 +22,8 @@ import {
 } from "./compare.ts";
 import type { Ctx } from "./ctx.ts";
 import { committedDoc, generateDocs, staleDocs } from "./docs.ts";
-import { manifestCodecIds } from "./guide.ts";
+import { GUIDE_DOC, manifestCodecIds } from "./guide.ts";
+import { checkDocLinks, type LinkInputs } from "./links.ts";
 import { LIMITATIONS_DOC, splitNotSupported, validateLimitationsData } from "./limitations.ts";
 import type { Mismatch } from "./model.ts";
 import { REFERENCE_DOC } from "./reference.ts";
@@ -56,6 +57,7 @@ export interface Inputs {
   stdlib: StdlibDocInputs;
   readme: ReadmeInputs;
   notes: { text: string | null; io: NotesIo; m6Report: string };
+  links: LinkInputs;
 }
 
 export function buildInputs(ctx: Ctx, runtime: RuntimeFacts, options: RunOptions = {}): Inputs {
@@ -123,6 +125,13 @@ export function buildInputs(ctx: Ctx, runtime: RuntimeFacts, options: RunOptions
       },
       m6Report: ctx.text("evidence/M6/report.md"),
     },
+    links: {
+      pages: [LIMITATIONS_DOC, REFERENCE_DOC, GUIDE_DOC, RELEASE_NOTES].flatMap((path) => {
+        const text = doc(path);
+        return text === null ? [] : [{ path, text }];
+      }),
+      exists: (path) => existsSync(join(root, path)),
+    },
   };
 }
 
@@ -136,6 +145,7 @@ export function checkInputs(i: Inputs): Mismatch[] {
   found.push(...checkRuntimeCapabilities(i.runtime));
   found.push(...checkStdlibDoc(i.stdlib));
   found.push(...checkReadmeClaims(i.readme));
+  found.push(...checkDocLinks(i.links));
   if (i.notes.text === null) {
     found.push(...checkReleaseNotes("", { exists: () => false, read: () => null }));
   } else {
