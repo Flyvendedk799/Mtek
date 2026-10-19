@@ -24,8 +24,9 @@
 //!   variable owns its storage, so a value stored into it is copied (`rt.copy`) unless it is
 //!   fresh, and an array or struct read out of it is copied before it is used elsewhere; every
 //!   other value is never changed once built and is shared freely;
-//! - a constant index reads directly (it is in range, `E3030`), a run-time index goes through
-//!   `rt.clampIndex(i, N, spanId, ctx)`, `spanId` being the index expression's entry in the
+//! - an in-range constant index reads directly; other indices, including prefab params
+//!   specialized after source-level `E3030` checks, go through `rt.clampIndex(i, N, spanId, ctx)`,
+//!   `spanId` being the index expression's entry in the
 //!   manifest `spans` table;
 //! - constants are the folded values, `f32` printed as the binary64 text of the binary32
 //!   value ([`super::ast::Number`]).
@@ -547,12 +548,9 @@ impl FnLowering<'_, '_> {
                         })?;
                     let position = match constant_index(index) {
                         Some(k) if k < length => Expr::Num(Number::U32(k)).spanned(index.span),
-                        Some(k) => {
-                            return Err(format!(
-                                "the constant index {k} into {path_ty} is out of range"
-                            ));
-                        }
-                        None => {
+                        // Prefab specialization may replace a run-time param with a
+                        // constant after the source-level E3030 check. It still clamps.
+                        _ => {
                             let clamped = self.clamped(index, length, *span)?;
                             if reads_place {
                                 let name = self.temp();
@@ -947,13 +945,9 @@ impl FnLowering<'_, '_> {
                             Expr::Subscript(Box::new(object), Box::new(position))
                         }
                     }
-                    Some(k) => {
-                        return Err(format!(
-                            "the constant index {k} into {} is out of range",
-                            base.ty
-                        ));
-                    }
-                    None => {
+                    // Only source constants were checked for E3030. A substituted
+                    // prefab param keeps its run-time clamp, including its signed value.
+                    _ => {
                         let clamped = self.clamped(index, length, expr.span)?;
                         if is_matrix {
                             rt("m4col", vec![object, clamped])
