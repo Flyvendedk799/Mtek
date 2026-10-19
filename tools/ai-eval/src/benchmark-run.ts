@@ -58,6 +58,9 @@ export interface BenchmarkDeps {
   client?: ModelClient;
   /** The repository root (tests use a stand-in); default the real one. */
   root?: string;
+  /** Replaces the wait before a retry of a call without a response, and its schedule (tests); default real timers, 2 s, 8 s, 30 s. */
+  sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
+  retryDelaysMs?: readonly number[];
 }
 
 class UsageError extends Error {}
@@ -311,8 +314,12 @@ export async function runBenchmark(argv: readonly string[], deps: BenchmarkDeps 
       grammar,
       keepScratch: parsed.flags.has("keep-scratch"),
       signal: controller.signal,
+      ...(deps.sleep === undefined ? {} : { sleep: deps.sleep }),
+      ...(deps.retryDelaysMs === undefined ? {} : { retryDelaysMs: deps.retryDelaysMs }),
     });
     let count = 0;
+    /** Attempts that never got a response from the model (decision 0124): not judged, and a reason to look at the network. */
+    let unreached = 0;
     let status: "complete" | "stopped-by-budget" | "aborted" = "complete";
     try {
       for (const planned of plan(tasks, sides, kinds, firstTrial, trials, order)) {
@@ -331,6 +338,7 @@ export async function runBenchmark(argv: readonly string[], deps: BenchmarkDeps 
         });
         count += 1;
         if (result.outcome === "unfinished") status = "stopped-by-budget";
+        if (result.reason === "transport-error") unreached += 1;
         const cost = result.costUsd === undefined || result.costUsd === null ? "" : ` cost=$${result.costUsd.toFixed(4)}`;
         io.out(`${result.trialId}: ${result.outcome}${result.reason === null ? "" : ` (${result.reason})`} calls=${String(result.calls)} repairs=${String(result.repairsUsed)}${cost}\n`);
       }
@@ -362,6 +370,7 @@ export async function runBenchmark(argv: readonly string[], deps: BenchmarkDeps 
     }
     const summary = guard?.summary() ?? null;
     io.out(`run ${runId}: ${status}, ${String(count)} trials${summary === null ? "" : `, spent $${summary.runSpendUsd.toFixed(4)} of the cap $${summary.capUsd.toFixed(2)} (ledger total $${summary.ledgerTotalNowUsd.toFixed(4)})`}\n`);
+    if (unreached > 0) io.out(`warning: ${String(unreached)} of ${String(count)} attempts got no response from the model after the retries (transport-error); they are not judged and are out of every completion rate\n`);
     io.out(`records: ${holdout ? "<outside the repository>" : join(runDir, "records.jsonl")}\n`);
     return status === "aborted" ? 3 : 0;
   } catch (error) {

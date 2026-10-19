@@ -470,7 +470,7 @@
           ]
         },
         "message": { "type": ["string", "null"] },
-        "calls": { "description": "Model calls made (the first generation and every repair, whatever its outcome).", "type": "integer", "minimum": 0 },
+        "calls": { "description": "Model calls made (the first generation, every repair and every retry of a call that got no response, whatever its outcome).", "type": "integer", "minimum": 0 },
         "repairsUsed": { "type": "integer", "minimum": 0 },
         "firstAttempt": {
           "description": "The first candidate that was validated (first-attempt parse, check, start and task-test success are metrics of their own, spec 6.4); null when none was.",

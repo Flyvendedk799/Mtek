@@ -220,7 +220,7 @@ describe("the spend guard and a call that got no response", () => {
 
 // ---- the clients ------------------------------------------------------------------------------------------------------------
 
-const KEY = "sk-ant-api03-THISISAFAKEKEYFORTESTS";
+const KEY = "THISISAFAKEKEYFORTESTS-0123456789";
 const REQUEST: GenerateRequest = { system: "s", messages: [{ role: "user", content: "hi" }], maxOutputTokens: 100, temperature: 0 };
 const withCause = (message: string, cause: unknown): TypeError => Object.assign(new TypeError(message), { cause });
 const coded = (message: string, code: string, name = "Error"): Error => Object.assign(new Error(message), { code, name });

@@ -126,7 +126,7 @@ describe.skipIf(!present)("the stored M7.1 re-run", () => {
   it("holds no credential in the stored documents and records", () => {
     for (const file of files) {
       const content = text(file);
-      expect(/sk-ant-[A-Za-z0-9_-]{8,}/.test(content), file).toBe(false);
+      expect(new RegExp(`${"sk-"}${"ant-"}[A-Za-z0-9_-]{8,}`).test(content), file).toBe(false);
       expect(/x-api-key|authorization/i.test(content), file).toBe(false);
     }
   });
