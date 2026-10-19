@@ -88,10 +88,25 @@ npx playwright install chromium
 | `MTEK_ACCEPT_SOFTWARE=1` | with `MTEK_REQUIRE_GPU=1`, accept a software adapter in the hardware project |
 | `MTEK_BROWSER_CHANNEL` | Playwright channel, default `chromium` (new headless mode); `chrome` uses installed Google Chrome |
 | `MTEK_HEADED=1` | run headed instead of headless |
+| `MTEK_EXPERIMENTAL_BROWSER=firefox` | adds the opt-in `firefox` project (headed Firefox with `dom.webgpu.enabled` and `gfx.webgpu.ignore-blocklist`; needs `npx playwright install firefox`); the default run does not include it (decision 0107) |
 | `MTEK_BROWSER_ARGS` | extra Chromium arguments, space separated (for example `--disable-gpu` to simulate a machine without a GPU) |
 | `MTEK_RESULTS_DIR` | results directory, default `tests/browser/results/<timestamp>` (JSON report and `environment-<project>.json`) |
 
 The working configuration on the development machine is recorded in decision 0012 (amendment) and `evidence/environments/`.
+
+#### Environments
+
+Which browsers, operating systems and adapters the suite has been run on, with the result of each and what was not run, is [`docs/supported-environments.md`](docs/supported-environments.md); every row links to a stored run under `evidence/M7/environments/` and `npm run check:release` fails when the page lists something that has no stored run, a number that the run does not contain, or leaves out a stored record (decision 0107). To add an environment, run the suite there and store it:
+
+```
+MTEK_REQUIRE_GPU=1 MTEK_BROWSER_CHANNEL=chrome npm run test:browser           # an installed Chrome (or msedge)
+node tests/browser/support/probe-browser.ts --browser firefox --name NAME --out DIR   # only ask a browser for an adapter
+node tests/browser/support/summarize-run.ts DIR                                 # DIR holds test-results.json and the environment records
+```
+
+#### Reproducible builds
+
+`node scripts/verify-reproducible-build.mjs --root <dir> --out <report.json> [--suite --gpu-lock <dir>]` makes two fresh clones of the current commit in two differently named directories, runs `npm ci` and `npm run build` in each, builds the four examples in all four modes and prepares the runtime benchmark programs, then compares every output file byte for byte and searches the outputs for the clone paths (decision 0106; the stored run is [`evidence/M7/reproducible-builds.md`](evidence/M7/reproducible-builds.md)). With `--suite` it then runs the full test suite from the clean install of the first clone. It proves that two clones on the same machine agree; it does not prove anything across machines or operating systems.
 
 #### `mtek test`
 

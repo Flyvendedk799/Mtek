@@ -1,6 +1,6 @@
 # Mtek v0.1 release notes (DRAFT)
 
-- Status: **draft, written from evidence only.** Nothing in it is a promise that no file backs. It will be finished when the pending results of section 6 exist.
+- Status: **draft, written from evidence only.** Nothing in it is a promise that no file backs. It will be finished when the pending results of section 7 exist.
 - Language version 0.1; compiler `mtek 0.1.0-dev`; runtime ABI 1.
 - Checked by `npm run check:release` (decision 0104): every claim links to a file that exists, every number in a claim occurs in a file it links to, every pending result is marked as such.
 
@@ -66,11 +66,17 @@ These are the items of "Unsupported / remaining" in the [M6 report](../evidence/
 - **Known gaps carried forward**: an undiagnosed colour-upload quirk on the three.js side, a point the specification leaves open (whether the fraction of a step survives a dropped surplus), and a built-in material parameter write on a spawned entity that is checked but not run at run time ([M6 report](../evidence/M6/report.md), [`spec/decisions/0088-benchmark-input-hook-tasks.md`](../spec/decisions/0088-benchmark-input-hook-tasks.md)).
 - All hardware evidence comes from one Windows 11 machine with an AMD Radeon RX 7900 XTX; software-adapter results (SwiftShader) are informational only ([M1 report](../evidence/M1/report.md), [`evidence/environments/2026-10-03-windows11-rx7900xtx.json`](../evidence/environments/2026-10-03-windows11-rx7900xtx.json)).
 
-## 6. Results that do not exist yet
+- The red CI job is not only the `dev-overlay` spec. The latest run on `main` that was stored (run 39185877322, commit `c588dd3`) failed `browser-software` with two failures, the `dev-overlay` spec and `m6/getting-started.spec.ts` ("the cube is on the page"), which the M6 report does not list; the job failed in seven of the ten latest runs on `main`. As reported by GitHub Actions, not reproduced locally ([environment matrix](../evidence/M7/environment-matrix.md), [`run.json`](../evidence/M7/environments/github-actions-ubuntu-swiftshader-run-39185877322/run.json)).
+
+## 6. Environments and reproducible builds
+
+- **Environment matrix (M7-03).** The browser suite ran on the Windows 11 machine with the AMD Radeon RX 7900 XTX in three Chromium-based browsers: Playwright's Chromium 153, installed Google Chrome 155 and installed Microsoft Edge 155. Each ran 606 tests with 591 passed, 0 failed, 0 not-run and 15 skipped by design. Firefox 155, headed and with two WebGPU preferences, ran 251 of the same specs: 230 passed, 6 failed, 15 skipped; headless Firefox returns no adapter and WebKit 26.6 has no `navigator.gpu`, so those two were not run. The only Linux result is the software-adapter job of GitHub Actions, as reported, not reproduced locally: 231 passed, 2 failed. No macOS machine and no Linux machine with a GPU was available ([environment matrix](../evidence/M7/environment-matrix.md), [supported environments](supported-environments.md), [`summary.md`](../evidence/M7/environments/windows11-rx7900xtx-chromium-153/summary.md), [decision 0107](../spec/decisions/0107-environment-matrix.md)).
+- **Reproducible builds (M7-07).** Two fresh clones of one commit, in two directories of different names and lengths, each built from `npm ci` and `npm run build` with the four examples built in four modes and the runtime benchmark programs prepared, produced 331 byte-identical output files (90 229 660 bytes), and no output file contains the path of either clone. A deliberate one-byte change and a planted path were detected by the same script. The compiled `mtek.exe` is not byte-identical: 24 bytes differ, the link timestamp and the PDB signature of the MSVC linker. This is one machine and one operating system: reproducibility across machines and operating systems was not measured ([report](../evidence/M7/reproducible-builds.md), [decision 0106](../spec/decisions/0106-reproducible-build-verification.md)).
+- **Clean install (M7-07).** From a fresh clone, `npm ci`, `npm run build`, `npm run check`, `cargo test --workspace --locked` (1594 passed, 0 failed, 1 ignored, with and without the grammar backend), `npm run test:unit`, `MTEK_REQUIRE_GPU=1 npm run test:browser` (591 passed, 0 failed, 0 not-run, 15 skipped) and the VS Code integration suite (10 passed) all passed, and the README's requirements list the tools that run needed ([report](../evidence/M7/reproducible-builds.md), [`evidence/M7/reproducible-builds/cargo-test-clean-install.txt`](../evidence/M7/reproducible-builds/cargo-test-clean-install.txt), [`README.md`](../README.md)).
+
+## 7. Results that do not exist yet
 
 Each item below is a measurement or a check of the M7 work plan that has not been made. It will be replaced by the result and the evidence file that holds it; until then it states nothing.
 
-- **Pending: not yet measured.** Environment matrix (M7-03): which browsers, operating systems and adapters run the release demonstrations, and with what result. Evidence that will replace this: `evidence/M7/environment-matrix.md`.
 - **Pending: not yet measured.** Runtime benchmark (M7-04): frame time, upload and allocation counters of the release demonstrations against the three.js baseline. Evidence that will replace this: `evidence/M7/runtime-benchmark.md`.
 - **Pending: not yet measured.** AI and token benchmark (M7-05): token counts, completion rates and repair counts of real models on the benchmark tasks. Evidence that will replace this: `evidence/M7/ai-benchmark.md`.
-- **Pending: not yet measured.** Reproducible builds (M7-07): whether two builds of the same source are byte-identical across machines and operating systems. Evidence that will replace this: `evidence/M7/reproducible-builds.md`.

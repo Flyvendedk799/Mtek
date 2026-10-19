@@ -75,13 +75,13 @@ Discovered by doing the run above on the development machine, and written into [
 
 - **Nothing had to be edited or installed by hand for `npm ci`, `npm run build`, the build of every example, `npm run check`, `cargo test`, `npm run test:unit`, `npm run check:coverage` and `npm run check:release`**, beyond the tools on `PATH`: Git, Rust 1.99.0 (rustup installs it from `rust-toolchain.toml`; the MSVC target uses the Visual Studio Build Tools' linker), Node 24 with its npm 11.16.0 (`.npmrc` has `engine-strict=true`), and network access (npm registry, crates.io).
 - **The browser** that Playwright drives. On this machine Playwright's Chromium 153 was already in the user's browser cache from earlier work, so this run did not exercise the download; the documented command is `npx playwright install chromium`. Its effect from an empty cache is recorded under "Playwright's browser from an empty cache" below.
-- **The GPU lock and a real GPU** for `MTEK_REQUIRE_GPU=1` (hardware and benchmarks projects).
+- **A real GPU with WebGPU** for the `hardware` and `benchmarks` projects (`MTEK_REQUIRE_GPU=1` fails the run without one). The GPU lock named in the script's `--gpu-lock` option is only a way to take turns on a shared machine, not a prerequisite.
 - **For the grammar backend**: CMake and a C++ toolchain (found through the Visual Studio installation on this machine) and network access; ~1.1 GB of downloads. `cargo test` passes without it.
 - **For the VS Code integration test**: network access to download the pinned VS Code and a display.
 
 ## Playwright's browser from an empty cache
 
-PLAYWRIGHT_RESULT_PLACEHOLDER
+Because the cache already held the browser during the suite run, the documented install was tried separately: `PLAYWRIGHT_BROWSERS_PATH=<an empty directory> npx playwright install chromium` exited 0 and downloaded Chromium 153.0.8010.12, its headless shell, FFmpeg and `winldd` (707 MB on disk in total), and with only that directory as the browser location `MTEK_REQUIRE_GPU=1 npm run test:browser -- --project=hardware specs/m1` ran the 9 tests of `specs/m1` on the hardware adapter: 9 passed, 0 failed, 0 not-run ([`playwright-empty-cache.txt`](reproducible-builds/playwright-empty-cache.txt)). That run was made from the working copy of the task branch after the clean-install run (same machine), not from one of the two clones. The Edge and Chrome runs of the environment matrix use the browsers installed on the machine (no download) with `MTEK_BROWSER_CHANNEL=chrome` or `msedge`.
 
 ## Reproduce
 

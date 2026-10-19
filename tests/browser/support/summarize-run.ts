@@ -152,7 +152,9 @@ export function renderMarkdown(summary: RunSummary, title: string): string {
   lines.push("| Project | Passed | Failed | NOT-RUN | Skipped | Total | Adapter |", "|---|---|---|---|---|---|---|");
   for (const p of summary.projects) {
     const e = p.environment;
-    const adapter = e === null ? "no environment record" : e.adapter === null ? `none (${e.navigatorGpu ? "navigator.gpu present" : "navigator.gpu absent"})` : `${e.adapter}${e.isFallbackAdapter === true ? " (software fallback adapter)" : " (hardware adapter)"}`;
+    const anonymous = e?.adapter === "";
+    const kind = e?.isFallbackAdapter === true ? " (software fallback adapter)" : anonymous ? " (isFallbackAdapter false; the browser does not expose which GPU)" : " (hardware adapter)";
+    const adapter = e === null ? "no environment record" : e.adapter === null ? `none (${e.navigatorGpu ? "navigator.gpu present" : "navigator.gpu absent"})` : `${anonymous ? "an adapter" : e.adapter}${kind}`;
     lines.push(`| ${p.project} | ${String(p.counts.passed)} | ${String(p.counts.failed)} | ${String(p.counts.notRun)} | ${String(p.counts.skipped)} | ${String(p.total)} | ${adapter} |`);
   }
   lines.push("", `Total: ${String(summary.total.passed)} passed, ${String(summary.total.failed)} failed, ${String(summary.total.notRun)} NOT-RUN, ${String(summary.total.skipped)} skipped, ${String(summary.total.tests)} tests.`, "");
