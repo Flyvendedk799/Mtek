@@ -1,0 +1,11 @@
+PLAYWRIGHT_BROWSERS_PATH=<an empty directory> npx playwright install chromium
+  exit 0; 707 MB in the directory afterwards:
+  Chrome for Testing 153.0.8010.12 (playwright chromium v1243) downloaded to <browsers>\chromium-1243
+  FFmpeg (playwright ffmpeg v1011) downloaded to <browsers>\ffmpeg-1011
+  Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) downloaded to <browsers>\chromium_headless_shell-1243
+  Winldd (playwright winldd v1007) downloaded to <browsers>\winldd-1007
+
+PLAYWRIGHT_BROWSERS_PATH=<that directory> MTEK_REQUIRE_GPU=1 npm run test:browser -- --project=hardware specs/m1
+  9 passed (14.5s)
+  Mtek browser tests: 9 passed / 0 failed / 0 not-run
+    hardware: 9 passed / 0 failed / 0 not-run  [hardware adapter]

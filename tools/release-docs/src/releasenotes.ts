@@ -14,7 +14,7 @@ import { mismatch, type Mismatch } from "./model.ts";
 export const RELEASE_NOTES = "docs/release-notes-v0.1.md";
 export const PENDING_MARK = "**Pending: not yet measured.**";
 /** The work items whose results do not exist yet; a placeholder must name each. */
-export const REQUIRED_PENDING = ["M7-03", "M7-04", "M7-05", "M7-07"] as const;
+export const REQUIRED_PENDING = ["M7-04", "M7-05"] as const;
 
 export interface NotesIo {
   exists: (path: string) => boolean;
@@ -30,7 +30,7 @@ export interface Claim {
 const EXEMPT_SECTIONS = [/^about this draft/i];
 
 /** The claims of the document: bullets and table rows outside the preface and exempt sections. */
-export function claimsOf(markdown: string): Claim[] {
+export function claimsOf(markdown: string, exempt: readonly RegExp[] = EXEMPT_SECTIONS): Claim[] {
   const claims: Claim[] = [];
   let section = "";
   let fenced = false;
@@ -44,7 +44,7 @@ export function claimsOf(markdown: string): Claim[] {
       section = heading[1] ?? "";
       continue;
     }
-    if (section === "" || EXEMPT_SECTIONS.some((re) => re.test(section))) continue;
+    if (section === "" || exempt.some((re) => re.test(section))) continue;
     const bullet = /^\s*(?:[-*]|\d+\.) (.*)$/.exec(line);
     if (bullet !== null) {
       claims.push({ line: n + 1, text: bullet[1] ?? "", section });
@@ -81,7 +81,7 @@ export function numbersOf(text: string): string[] {
 }
 
 /** The text of a claim without what is not a statement of a measurement: code spans, link labels and targets, task ids. */
-function prose(text: string): string {
+export function prose(text: string): string {
   return text
     .replace(/`[^`]*`/g, " ")
     .replace(/\[([^\]]*)\]\(([^)\s]+)\)/g, " ")

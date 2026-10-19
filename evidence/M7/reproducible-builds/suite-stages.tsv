@@ -1,0 +1,12 @@
+stage	command	exit code	seconds
+check	npm run check	0	99.1
+cargo-test-without-backend	cargo test --workspace --locked	0	221.6
+fetch-backend	node tools/grammar-adapters/fetch-backend.mjs --all	0	122.9
+build-grammar-adapter	cargo build -p mtek-grammar-adapters --locked	0	36.8
+grammar-capability	<clone-a>\target\debug\grammar-adapter.exe check --format json	0	27
+cargo-test-with-backend	cargo test --workspace --locked  [MTEK_REQUIRE_GBNF_VALIDATOR=1 MTEK_REQUIRE_GBNF_BACKEND=1]	0	557.2
+test-unit	npm run test:unit	0	209.5
+check-coverage	npm run check:coverage	0	7.6
+check-release	npm run check:release	0	2.1
+test-browser	npm run test:browser  [MTEK_REQUIRE_GPU=1 MTEK_RESULTS_DIR=<results>]	0	584.6
+vscode-integration	npm run test:integration -w mtek-vscode	0	46.7

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "startTime": "2026-10-19T07:44:00.600Z",
+  "durationSeconds": 259.9,
+  "projects": [
+    {
+      "project": "firefox",
+      "counts": {
+        "passed": 230,
+        "failed": 6,
+        "notRun": 0,
+        "skipped": 15
+      },
+      "total": 251,
+      "environment": {
+        "browser": "firefox",
+        "browserVersion": "155.0",
+        "channel": "firefox",
+        "headless": false,
+        "os": "win32 x64",
+        "osVersion": "Windows 11 Pro (10.0.26200)",
+        "navigatorGpu": true,
+        "adapter": "",
+        "isFallbackAdapter": false,
+        "reason": null,
+        "gitCommit": "8fbba0eff4c3308c00a7d83e09d98590ca4de250",
+        "recordedAt": "2026-10-19T07:46:53.872Z"
+      },
+      "failed": [
+        {
+          "file": "baselines/m0-bridge.spec.ts",
+          "title": "three.js baseline: update correctness, instance isolation and pipeline counts",
+          "error": "Error: no console errors or warnings"
+        },
+        {
+          "file": "baselines/m0-bridge.spec.ts",
+          "title": "three.js baseline: run-time behaviour of shader-graph type mismatches that tsc accepts",
+          "error": "Error: expect(received).toEqual(expected) // deep equality"
+        },
+        {
+          "file": "m4/assets.spec.ts",
+          "title": "an image that cannot be decoded is E7031 at its declaration",
+          "error": "Error: expect(received).toBe(expected) // Object.is equality"
+        },
+        {
+          "file": "m4/configurator.spec.ts",
+          "title": "a change of the pixel ratio resizes the backing store and the picture follows the oracle",
+          "error": "Error: browserContext.newCDPSession: CDP session is only available in Chromium"
+        },
+        {
+          "file": "m4/resilience-resize.spec.ts",
+          "title": "a change of the pixel ratio resizes the backing store and the picture follows",
+          "error": "Error: browserContext.newCDPSession: CDP session is only available in Chromium"
+        },
+        {
+          "file": "m4/resilience-resize.spec.ts",
+          "title": "a zero-sized canvas skips rendering without an error, the simulation goes on, and the same picture returns",
+          "error": "Error: expect(received).toEqual(expected) // deep equality"
+        }
+      ],
+      "skipReasons": [
+        {
+          "reason": "the pass criteria of mtek test are hardware evidence: run with --project=hardware",
+          "count": 15
+        }
+      ]
+    }
+  ],
+  "total": {
+    "passed": 230,
+    "failed": 6,
+    "notRun": 0,
+    "skipped": 15,
+    "tests": 251
+  }
+}

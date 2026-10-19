@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { repoRoot } from "../../coverage-matrix/src/tools.ts";
 import { compareAll } from "../src/compare.ts";
 import { excerpt, expandDirective, renderGuide } from "../src/guide.ts";
+import { checkSupportedEnvironments } from "../src/environments.ts";
 import { checkDocLinks } from "../src/links.ts";
 import { splitNotSupported, x9xxCodes } from "../src/limitations.ts";
 import { compareSets, compareValue, duplicates, mismatch } from "../src/model.ts";
@@ -286,9 +287,9 @@ describe("release notes", () => {
   });
 
   it("requires a placeholder for every unfinished M7 item", () => {
-    const only = `# T\n\n## 1. C\n\n- ${PENDING_MARK} x (M7-03). Evidence that will replace this: \`evidence/M7/x.md\`.\n`;
+    const only = `# T\n\n## 1. C\n\n- ${PENDING_MARK} x (M7-04). Evidence that will replace this: \`evidence/M7/x.md\`.\n`;
     const found = checkReleaseNotes(only, io).filter((m) => m.check === "release-notes/pending-required");
-    expect(found.map((m) => m.right.value)).toEqual(["no placeholder for M7-04", "no placeholder for M7-05", "no placeholder for M7-07"]);
+    expect(found.map((m) => m.right.value)).toEqual(["no placeholder for M7-05"]);
   });
 
   it("ignores the preface and the exempt section", () => {
@@ -319,5 +320,52 @@ describe("release notes", () => {
     expect(missing.map((m) => m.check)).toEqual(["release-notes/known-issues"]);
     expect(missing[0]?.message).toContain(leads[1] ?? "");
     expect(checkKnownIssues(leads.join("\n"), report).map((m) => m.message).join()).toContain("dev-overlay");
+  });
+});
+
+describe("supported environments", () => {
+  const files = new Map<string, string>([
+    ["evidence/M7/environments/a/summary.md", "| hardware | 251 | 0 |\nAMD Radeon RX 7900 XTX\n"],
+    ["evidence/M7/environments/a/environment-hardware.json", "{}"],
+    ["evidence/M7/environments/b/summary.md", "| software | 236 | 2 |\n"],
+    ["evidence/M7/environments/b/environment-software.json", "{}"],
+    ["docs/other.md", "docs only"],
+  ]);
+  const records = ["evidence/M7/environments/a/environment-hardware.json", "evidence/M7/environments/b/environment-software.json"];
+  const io = { exists: (p: string) => files.has(p), read: (p: string) => files.get(p) ?? null, records: () => records };
+  const rowA = "| Windows, hardware | 251 passed ([summary](../evidence/M7/environments/a/summary.md), [record](../evidence/M7/environments/a/environment-hardware.json)) |";
+  const rowB = "| Linux, software | 236 passed ([summary](../evidence/M7/environments/b/summary.md), [record](../evidence/M7/environments/b/environment-software.json)) |";
+  const page = (rows: string[]): string => `# T\n\n## How to read this page\n\n- an explanation with 99 numbers\n\n## Environments\n\n| Environment | Result |\n|---|---|\n${rows.join("\n")}\n`;
+
+  it("accepts rows that link to stored runs and use their numbers", () => {
+    expect(checkSupportedEnvironments(page([rowA, rowB]), io)).toEqual([]);
+  });
+
+  it("rejects a row without a link to a stored run, and a link to a page that is not one", () => {
+    const found = checkSupportedEnvironments(page([rowA, rowB, "| macOS | works |", "| Edge | 12 passed ([x](other.md)) |"]), io);
+    expect(found.map((m) => m.check)).toEqual(["environments/claim-without-evidence", "environments/claim-without-evidence"]);
+  });
+
+  it("rejects a link that does not resolve", () => {
+    const found = checkSupportedEnvironments(page([rowA, rowB, "| Edge | ([x](../evidence/M7/environments/c/summary.md)) |"]), io);
+    expect(found.map((m) => m.check)).toContain("environments/link");
+    expect(found.find((m) => m.check === "environments/link")?.message).toContain("evidence/M7/environments/c/summary.md");
+  });
+
+  it("rejects a number that the linked summary does not contain", () => {
+    const found = checkSupportedEnvironments(page([rowA.replace("251", "252"), rowB]), io);
+    expect(found.map((m) => m.check)).toEqual(["environments/number"]);
+    expect(found[0]?.message).toContain("252");
+  });
+
+  it("rejects a stored environment record that the page does not list", () => {
+    const found = checkSupportedEnvironments(page([rowA]), io);
+    expect(found.map((m) => m.check)).toEqual(["environments/unlisted"]);
+    expect(found[0]?.message).toContain("evidence/M7/environments/b/environment-software.json");
+  });
+
+  it("rejects a missing page and a page without claims", () => {
+    expect(checkSupportedEnvironments(null, io).map((m) => m.check)).toEqual(["environments/missing"]);
+    expect(checkSupportedEnvironments("# T\n\n## How to read this page\n\n- text\n", io).map((m) => m.check)).toContain("environments/claims");
   });
 });

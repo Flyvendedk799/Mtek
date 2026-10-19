@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "startTime": "2026-10-19T07:18:51.028Z",
+  "durationSeconds": 559.9,
+  "projects": [
+    {
+      "project": "benchmarks",
+      "counts": {
+        "passed": 104,
+        "failed": 0,
+        "notRun": 0,
+        "skipped": 0
+      },
+      "total": 104,
+      "environment": {
+        "browser": "chromium",
+        "browserVersion": "155.0.8059.80",
+        "channel": "chrome",
+        "headless": true,
+        "os": "win32 x64",
+        "osVersion": "Windows 11 Pro (10.0.26200)",
+        "navigatorGpu": true,
+        "adapter": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false,
+        "reason": null,
+        "gitCommit": "7cf7ce9029e0d0b13e4c1e3e483c3dd26b3a466e",
+        "recordedAt": "2026-10-19T07:25:14.188Z"
+      },
+      "failed": [],
+      "skipReasons": []
+    },
+    {
+      "project": "hardware",
+      "counts": {
+        "passed": 251,
+        "failed": 0,
+        "notRun": 0,
+        "skipped": 0
+      },
+      "total": 251,
+      "environment": {
+        "browser": "chromium",
+        "browserVersion": "155.0.8059.80",
+        "channel": "chrome",
+        "headless": true,
+        "os": "win32 x64",
+        "osVersion": "Windows 11 Pro (10.0.26200)",
+        "navigatorGpu": true,
+        "adapter": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false,
+        "reason": null,
+        "gitCommit": "7cf7ce9029e0d0b13e4c1e3e483c3dd26b3a466e",
+        "recordedAt": "2026-10-19T07:19:05.685Z"
+      },
+      "failed": [],
+      "skipReasons": []
+    },
+    {
+      "project": "software",
+      "counts": {
+        "passed": 236,
+        "failed": 0,
+        "notRun": 0,
+        "skipped": 15
+      },
+      "total": 251,
+      "environment": {
+        "browser": "chromium",
+        "browserVersion": "155.0.8059.80",
+        "channel": "chrome",
+        "headless": true,
+        "os": "win32 x64",
+        "osVersion": "Windows 11 Pro (10.0.26200)",
+        "navigatorGpu": true,
+        "adapter": "SwiftShader Device (Subzero)",
+        "isFallbackAdapter": true,
+        "reason": null,
+        "gitCommit": "7cf7ce9029e0d0b13e4c1e3e483c3dd26b3a466e",
+        "recordedAt": "2026-10-19T07:22:29.098Z"
+      },
+      "failed": [],
+      "skipReasons": [
+        {
+          "reason": "the pass criteria of mtek test are hardware evidence: run with --project=hardware",
+          "count": 15
+        }
+      ]
+    }
+  ],
+  "total": {
+    "passed": 591,
+    "failed": 0,
+    "notRun": 0,
+    "skipped": 15,
+    "tests": 606
+  }
+}

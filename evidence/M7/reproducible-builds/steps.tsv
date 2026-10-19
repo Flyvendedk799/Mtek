@@ -1,0 +1,43 @@
+step	command	exit code	seconds
+a-clone	git clone --quiet --no-hardlinks <source-repo> <clone-a>	0	2.5
+a-checkout	git -C <clone-a> checkout --quiet --detach 7cf7ce9029e0d0b13e4c1e3e483c3dd26b3a466e	0	10.3
+a-npm-ci	npm ci	0	17.8
+a-npm-run-build	npm run build	0	41.5
+a-build-material-configurator-release	<clone-a>\target\debug\mtek.exe build --mode release <clone-a>\examples\material-configurator	0	1.6
+a-build-material-configurator-dev	<clone-a>\target\debug\mtek.exe build --mode dev --out <clone-a>\.repro-out\material-configurator-dev <clone-a>\examples\material-configurator	0	0.2
+a-build-material-configurator-test	<clone-a>\target\debug\mtek.exe build --mode test --out <clone-a>\.repro-out\material-configurator-test <clone-a>\examples\material-configurator	0	0.2
+a-build-material-configurator-preview	<clone-a>\target\debug\mtek.exe build --mode preview --out <clone-a>\.repro-out\material-configurator-preview <clone-a>\examples\material-configurator	0	0.2
+a-build-modular-scene-release	<clone-a>\target\debug\mtek.exe build --mode release <clone-a>\examples\modular-scene	0	0.2
+a-build-modular-scene-dev	<clone-a>\target\debug\mtek.exe build --mode dev --out <clone-a>\.repro-out\modular-scene-dev <clone-a>\examples\modular-scene	0	0.2
+a-build-modular-scene-test	<clone-a>\target\debug\mtek.exe build --mode test --out <clone-a>\.repro-out\modular-scene-test <clone-a>\examples\modular-scene	0	0.2
+a-build-modular-scene-preview	<clone-a>\target\debug\mtek.exe build --mode preview --out <clone-a>\.repro-out\modular-scene-preview <clone-a>\examples\modular-scene	0	0.2
+a-build-physics-playground-release	<clone-a>\target\debug\mtek.exe build --mode release <clone-a>\examples\physics-playground	0	0.3
+a-build-physics-playground-dev	<clone-a>\target\debug\mtek.exe build --mode dev --out <clone-a>\.repro-out\physics-playground-dev <clone-a>\examples\physics-playground	0	0.2
+a-build-physics-playground-test	<clone-a>\target\debug\mtek.exe build --mode test --out <clone-a>\.repro-out\physics-playground-test <clone-a>\examples\physics-playground	0	0.2
+a-build-physics-playground-preview	<clone-a>\target\debug\mtek.exe build --mode preview --out <clone-a>\.repro-out\physics-playground-preview <clone-a>\examples\physics-playground	0	0.2
+a-build-pulse-cube-release	<clone-a>\target\debug\mtek.exe build --mode release <clone-a>\examples\pulse-cube	0	0.2
+a-build-pulse-cube-dev	<clone-a>\target\debug\mtek.exe build --mode dev --out <clone-a>\.repro-out\pulse-cube-dev <clone-a>\examples\pulse-cube	0	0.2
+a-build-pulse-cube-test	<clone-a>\target\debug\mtek.exe build --mode test --out <clone-a>\.repro-out\pulse-cube-test <clone-a>\examples\pulse-cube	0	0.2
+a-build-pulse-cube-preview	<clone-a>\target\debug\mtek.exe build --mode preview --out <clone-a>\.repro-out\pulse-cube-preview <clone-a>\examples\pulse-cube	0	0.2
+a-benchmark-prepare	node benchmarks/runtime/tools/prepare.ts	0	13.6
+b-clone	git clone --quiet --no-hardlinks <source-repo> <clone-b>	0	2.5
+b-checkout	git -C <clone-b> checkout --quiet --detach 7cf7ce9029e0d0b13e4c1e3e483c3dd26b3a466e	0	0.1
+b-npm-ci	npm ci	0	17.6
+b-npm-run-build	npm run build	0	41.6
+b-build-material-configurator-release	<clone-b>\target\debug\mtek.exe build --mode release <clone-b>\examples\material-configurator	0	1.6
+b-build-material-configurator-dev	<clone-b>\target\debug\mtek.exe build --mode dev --out <clone-b>\.repro-out\material-configurator-dev <clone-b>\examples\material-configurator	0	0.2
+b-build-material-configurator-test	<clone-b>\target\debug\mtek.exe build --mode test --out <clone-b>\.repro-out\material-configurator-test <clone-b>\examples\material-configurator	0	0.2
+b-build-material-configurator-preview	<clone-b>\target\debug\mtek.exe build --mode preview --out <clone-b>\.repro-out\material-configurator-preview <clone-b>\examples\material-configurator	0	0.2
+b-build-modular-scene-release	<clone-b>\target\debug\mtek.exe build --mode release <clone-b>\examples\modular-scene	0	0.2
+b-build-modular-scene-dev	<clone-b>\target\debug\mtek.exe build --mode dev --out <clone-b>\.repro-out\modular-scene-dev <clone-b>\examples\modular-scene	0	0.2
+b-build-modular-scene-test	<clone-b>\target\debug\mtek.exe build --mode test --out <clone-b>\.repro-out\modular-scene-test <clone-b>\examples\modular-scene	0	0.2
+b-build-modular-scene-preview	<clone-b>\target\debug\mtek.exe build --mode preview --out <clone-b>\.repro-out\modular-scene-preview <clone-b>\examples\modular-scene	0	0.2
+b-build-physics-playground-release	<clone-b>\target\debug\mtek.exe build --mode release <clone-b>\examples\physics-playground	0	0.2
+b-build-physics-playground-dev	<clone-b>\target\debug\mtek.exe build --mode dev --out <clone-b>\.repro-out\physics-playground-dev <clone-b>\examples\physics-playground	0	0.2
+b-build-physics-playground-test	<clone-b>\target\debug\mtek.exe build --mode test --out <clone-b>\.repro-out\physics-playground-test <clone-b>\examples\physics-playground	0	0.2
+b-build-physics-playground-preview	<clone-b>\target\debug\mtek.exe build --mode preview --out <clone-b>\.repro-out\physics-playground-preview <clone-b>\examples\physics-playground	0	0.2
+b-build-pulse-cube-release	<clone-b>\target\debug\mtek.exe build --mode release <clone-b>\examples\pulse-cube	0	0.2
+b-build-pulse-cube-dev	<clone-b>\target\debug\mtek.exe build --mode dev --out <clone-b>\.repro-out\pulse-cube-dev <clone-b>\examples\pulse-cube	0	0.2
+b-build-pulse-cube-test	<clone-b>\target\debug\mtek.exe build --mode test --out <clone-b>\.repro-out\pulse-cube-test <clone-b>\examples\pulse-cube	0	0.2
+b-build-pulse-cube-preview	<clone-b>\target\debug\mtek.exe build --mode preview --out <clone-b>\.repro-out\pulse-cube-preview <clone-b>\examples\pulse-cube	0	0.2
+b-benchmark-prepare	node benchmarks/runtime/tools/prepare.ts	0	13.7

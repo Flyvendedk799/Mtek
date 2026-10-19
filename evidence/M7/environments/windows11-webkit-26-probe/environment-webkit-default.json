@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "project": "webkit-default",
+  "recordedAt": "2026-10-19T07:39:03.535Z",
+  "os": {
+    "platform": "win32",
+    "release": "10.0.26200",
+    "version": "Windows 11 Pro",
+    "arch": "x64"
+  },
+  "browser": {
+    "name": "webkit",
+    "channel": "webkit",
+    "version": "26.6",
+    "headless": true,
+    "launchArgs": []
+  },
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Safari/605.1.15",
+  "devicePixelRatio": 1,
+  "renderTargetSize": {
+    "width": 128,
+    "height": 128
+  },
+  "gpu": {
+    "navigatorGpu": false,
+    "reason": "navigator.gpu is undefined",
+    "adapter": null,
+    "wgslLanguageFeatures": []
+  },
+  "source": {
+    "gitCommit": "7cf7ce9029e0d0b13e4c1e3e483c3dd26b3a466e",
+    "gitDirty": true
+  },
+  "toolchain": {
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "naga": "30.0.1",
+    "node": "v24.18.1",
+    "playwright": "1.63.0",
+    "runtimeWeb": "0.1.0-dev"
+  },
+  "settings": {
+    "requireGpu": false,
+    "acceptSoftware": false
+  }
+}

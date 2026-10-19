@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "project": "firefox",
+  "recordedAt": "2026-10-19T07:46:53.872Z",
+  "os": {
+    "platform": "win32",
+    "release": "10.0.26200",
+    "version": "Windows 11 Pro",
+    "arch": "x64"
+  },
+  "browser": {
+    "name": "firefox",
+    "channel": "firefox",
+    "version": "155.0",
+    "headless": false,
+    "launchArgs": [
+      "pref:dom.webgpu.enabled=true",
+      "pref:gfx.webgpu.ignore-blocklist=true"
+    ]
+  },
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:155.0) Gecko/20100101 Firefox/155.0",
+  "devicePixelRatio": 1,
+  "renderTargetSize": {
+    "width": 128,
+    "height": 128
+  },
+  "gpu": {
+    "navigatorGpu": true,
+    "reason": null,
+    "adapter": {
+      "info": {
+        "vendor": "",
+        "architecture": "",
+        "device": "",
+        "description": "",
+        "isFallbackAdapter": false
+      },
+      "adapterFeatures": [
+        "bgra8unorm-storage",
+        "core-features-and-limits",
+        "depth-clip-control",
+        "depth32float-stencil8",
+        "dual-source-blending",
+        "float32-filterable",
+        "indirect-first-instance",
+        "rg11b10ufloat-renderable",
+        "shader-f16",
+        "texture-compression-bc",
+        "texture-compression-bc-sliced-3d",
+        "timestamp-query"
+      ],
+      "deviceFeatures": [
+        "core-features-and-limits"
+      ],
+      "limits": {
+        "maxTextureDimension2D": 16384,
+        "maxBindGroups": 8,
+        "maxBindingsPerBindGroup": 4294967295,
+        "maxUniformBufferBindingSize": 65536,
+        "maxStorageBufferBindingSize": 2147483644,
+        "minUniformBufferOffsetAlignment": 256,
+        "minStorageBufferOffsetAlignment": 32,
+        "maxBufferSize": 2147483644,
+        "maxVertexBuffers": 16,
+        "maxVertexAttributes": 30,
+        "maxColorAttachments": 8,
+        "maxColorAttachmentBytesPerSample": 128,
+        "maxComputeInvocationsPerWorkgroup": 1024,
+        "maxComputeWorkgroupSizeX": 1024,
+        "maxComputeWorkgroupSizeY": 1024,
+        "maxComputeWorkgroupSizeZ": 64,
+        "maxComputeWorkgroupsPerDimension": 65535
+      }
+    },
+    "wgslLanguageFeatures": [
+      "packed_4x8_integer_dot_product",
+      "pointer_composite_access",
+      "readonly_and_readwrite_storage_textures"
+    ]
+  },
+  "source": {
+    "gitCommit": "8fbba0eff4c3308c00a7d83e09d98590ca4de250",
+    "gitDirty": true
+  },
+  "toolchain": {
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "naga": "30.0.1",
+    "node": "v24.18.1",
+    "playwright": "1.63.0",
+    "runtimeWeb": "0.1.0-dev"
+  },
+  "settings": {
+    "requireGpu": true,
+    "acceptSoftware": false
+  }
+}

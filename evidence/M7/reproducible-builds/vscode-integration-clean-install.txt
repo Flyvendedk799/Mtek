@@ -1,0 +1,23 @@
+npm run test:integration -w mtek-vscode, clean clone, real VS Code
+ok   activates on a .mtek file and starts `mtek lsp` with the capabilities of decision 0076
+ok   publishes the diagnostics of the open file with exact ranges (UTF-16, after an emoji)
+ok   hover shows the declaration and its documentation, from the other module
+ok   go to definition leaves the file for the module that declares the name
+ok   a name of the standard library goes to an mtek-prelude: document the server serves
+ok   completion works on unsaved text and diagnostics follow the typing
+ok   the quick fix of a diagnostic, applied, fixes the program
+ok   a change on disk to a module that is not open reaches the diagnostics (file watching)
+ok   `Mtek: Restart Language Server` ends the server with exit code 0 and starts a new one
+ok   a missing executable is an error message, not a silent failure, and fixing the setting recovers
+Exit code:   0
+ok   activates on a .mtek file and starts `mtek lsp` with the capabilities of decision 0076
+ok   publishes the diagnostics of the open file with exact ranges (UTF-16, after an emoji)
+ok   hover shows the declaration and its documentation, from the other module
+ok   go to definition leaves the file for the module that declares the name
+ok   a name of the standard library goes to an mtek-prelude: document the server serves
+ok   completion works on unsaved text and diagnostics follow the typing
+ok   the quick fix of a diagnostic, applied, fixes the program
+ok   a change on disk to a module that is not open reaches the diagnostics (file watching)
+ok   `Mtek: Restart Language Server` ends the server with exit code 0 and starts a new one
+ok   a missing executable is an error message, not a silent failure, and fixing the setting recovers
+10 passed, 0 failed, of 10 (VS Code exit code 0)

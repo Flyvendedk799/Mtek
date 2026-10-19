@@ -27,6 +27,7 @@ import { checkDocLinks, type LinkInputs } from "./links.ts";
 import { LIMITATIONS_DOC, splitNotSupported, validateLimitationsData } from "./limitations.ts";
 import type { Mismatch } from "./model.ts";
 import { REFERENCE_DOC } from "./reference.ts";
+import { checkSupportedEnvironments, ENVIRONMENTS_DIR, ENVIRONMENTS_DOC, type EnvironmentsIo } from "./environments.ts";
 import { checkKnownIssues, checkReleaseNotes, RELEASE_NOTES, type NotesIo } from "./releasenotes.ts";
 import { readRuntimeFacts, type RuntimeFacts } from "./runtimefacts.ts";
 import { languageWordLists, readText } from "./spectext.ts";
@@ -57,7 +58,23 @@ export interface Inputs {
   stdlib: StdlibDocInputs;
   readme: ReadmeInputs;
   notes: { text: string | null; io: NotesIo; m6Report: string };
+  environments: { text: string | null; io: EnvironmentsIo };
   links: LinkInputs;
+}
+
+/** Every `environment-*.json` below `evidence/M7/environments/`, as repository paths. */
+function storedEnvironmentRecords(root: string): string[] {
+  const out: string[] = [];
+  const walk = (dir: string): void => {
+    if (!existsSync(join(root, dir))) return;
+    for (const entry of readdirSync(join(root, dir), { withFileTypes: true })) {
+      const path = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) walk(path);
+      else if (/^environment-.+\.json$/.test(entry.name)) out.push(path);
+    }
+  };
+  walk(ENVIRONMENTS_DIR.replace(/\/$/, ""));
+  return out.sort();
 }
 
 export function buildInputs(ctx: Ctx, runtime: RuntimeFacts, options: RunOptions = {}): Inputs {
@@ -125,8 +142,22 @@ export function buildInputs(ctx: Ctx, runtime: RuntimeFacts, options: RunOptions
       },
       m6Report: ctx.text("evidence/M6/report.md"),
     },
+    environments: {
+      text: committedDoc(root, ENVIRONMENTS_DOC),
+      io: {
+        exists: (path) => existsSync(join(root, path)),
+        read: (path) => {
+          try {
+            return readText(root, path);
+          } catch {
+            return null;
+          }
+        },
+        records: () => storedEnvironmentRecords(root),
+      },
+    },
     links: {
-      pages: [LIMITATIONS_DOC, REFERENCE_DOC, GUIDE_DOC, RELEASE_NOTES].flatMap((path) => {
+      pages: [LIMITATIONS_DOC, REFERENCE_DOC, GUIDE_DOC, RELEASE_NOTES, ENVIRONMENTS_DOC].flatMap((path) => {
         const text = doc(path);
         return text === null ? [] : [{ path, text }];
       }),
@@ -152,6 +183,7 @@ export function checkInputs(i: Inputs): Mismatch[] {
     found.push(...checkReleaseNotes(i.notes.text, i.notes.io));
     found.push(...checkKnownIssues(i.notes.text, i.notes.m6Report));
   }
+  found.push(...checkSupportedEnvironments(i.environments.text, i.environments.io));
   return found;
 }
 

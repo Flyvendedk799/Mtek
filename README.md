@@ -25,8 +25,20 @@ claim and mark every result that does not exist yet as pending.
 
 ## Requirements
 
-- Rust **1.99.0** (installed automatically by `rustup` from `rust-toolchain.toml`)
-- Node.js **24** (`.nvmrc`) with the bundled npm
+What a clean checkout needs. The list comes from building and testing fresh clones on one Windows 11 machine ([`evidence/M7/reproducible-builds.md`](evidence/M7/reproducible-builds.md) says what that run did and did not exercise); no manual edit and no step beyond these was needed there.
+
+- Git, to clone.
+- Rust **1.99.0** (installed automatically by `rustup` from `rust-toolchain.toml`). On Windows `rustup`'s default toolchain targets MSVC (`x86_64-pc-windows-msvc`), which needs the Visual Studio Build Tools with the C++ workload for its linker.
+- Node.js **24** (`.nvmrc`) with the bundled npm (`packageManager` names npm 11.16.0, which Node 24.18 bundles). `.npmrc` sets `engine-strict=true` and `engines` says `>=24 <25`: `npm ci` refuses another major version.
+- Network access for `npm ci` (npm registry) and for the first `cargo` run (crates.io, locked by `Cargo.lock`).
+
+Only for running the browser tests, the editor tests or the grammar backend, none of which `npm ci` and `npm run build` need:
+
+- **Browser tests** (`npm run test:browser`): the browser that Playwright drives, once, with `npx playwright install chromium` (Linux CI uses `npx playwright install --with-deps chromium`). A GPU with WebGPU, for the `hardware` and `benchmarks` projects; without one those tests are NOT-RUN, and `MTEK_REQUIRE_GPU=1` turns NOT-RUN into a failure. The `software` project needs no GPU.
+- **VS Code integration tests** (`npm run test:integration -w mtek-vscode`): network access to download the pinned VS Code, and a display (`xvfb-run -a` on Linux without one).
+- **Grammar backend** (optional): `node tools/grammar-adapters/fetch-backend.mjs --all` downloads and verifies llama.cpp, builds its GBNF validator and downloads a 1.1 GB model. It needs CMake and a C++ compiler (on Windows the Visual Studio Build Tools; CMake is found on `PATH`, in `$CMAKE` or in the copy bundled with Visual Studio) and network access. Without it `cargo test --workspace --locked` still passes: the conformance suite and the smoke test print NOT-RUN and succeed, unless `MTEK_REQUIRE_GBNF_VALIDATOR=1` and `MTEK_REQUIRE_GBNF_BACKEND=1` are set, which make them fail instead (decision 0073).
+
+Reproducibility: [`scripts/verify-reproducible-build.mjs`](scripts/verify-reproducible-build.mjs) makes two fresh clones in two directories, builds the packages, the four examples and the runtime benchmark programs in both, and compares the output trees byte for byte (below).
 
 ## Commands
 
@@ -76,10 +88,25 @@ npx playwright install chromium
 | `MTEK_ACCEPT_SOFTWARE=1` | with `MTEK_REQUIRE_GPU=1`, accept a software adapter in the hardware project |
 | `MTEK_BROWSER_CHANNEL` | Playwright channel, default `chromium` (new headless mode); `chrome` uses installed Google Chrome |
 | `MTEK_HEADED=1` | run headed instead of headless |
+| `MTEK_EXPERIMENTAL_BROWSER=firefox` | adds the opt-in `firefox` project (headed Firefox with `dom.webgpu.enabled` and `gfx.webgpu.ignore-blocklist`; needs `npx playwright install firefox`); the default run does not include it (decision 0107) |
 | `MTEK_BROWSER_ARGS` | extra Chromium arguments, space separated (for example `--disable-gpu` to simulate a machine without a GPU) |
 | `MTEK_RESULTS_DIR` | results directory, default `tests/browser/results/<timestamp>` (JSON report and `environment-<project>.json`) |
 
 The working configuration on the development machine is recorded in decision 0012 (amendment) and `evidence/environments/`.
+
+#### Environments
+
+Which browsers, operating systems and adapters the suite has been run on, with the result of each and what was not run, is [`docs/supported-environments.md`](docs/supported-environments.md); every row links to a stored run under `evidence/M7/environments/` and `npm run check:release` fails when the page lists something that has no stored run, a number that the run does not contain, or leaves out a stored record (decision 0107). To add an environment, run the suite there and store it:
+
+```
+MTEK_REQUIRE_GPU=1 MTEK_BROWSER_CHANNEL=chrome npm run test:browser           # an installed Chrome (or msedge)
+node tests/browser/support/probe-browser.ts --browser firefox --name NAME --out DIR   # only ask a browser for an adapter
+node tests/browser/support/summarize-run.ts DIR                                 # DIR holds test-results.json and the environment records
+```
+
+#### Reproducible builds
+
+`node scripts/verify-reproducible-build.mjs --root <dir> --out <report.json> [--suite --gpu-lock <dir>]` makes two fresh clones of the current commit in two differently named directories, runs `npm ci` and `npm run build` in each, builds the four examples in all four modes and prepares the runtime benchmark programs, then compares every output file byte for byte and searches the outputs for the clone paths (decision 0106; the stored run is [`evidence/M7/reproducible-builds.md`](evidence/M7/reproducible-builds.md)). With `--suite` it then runs the full test suite from the clean install of the first clone. It proves that two clones on the same machine agree; it does not prove anything across machines or operating systems.
 
 #### `mtek test`
 

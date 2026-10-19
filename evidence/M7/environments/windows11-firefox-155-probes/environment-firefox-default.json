@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "project": "firefox-default",
+  "recordedAt": "2026-10-19T07:39:02.070Z",
+  "os": {
+    "platform": "win32",
+    "release": "10.0.26200",
+    "version": "Windows 11 Pro",
+    "arch": "x64"
+  },
+  "browser": {
+    "name": "firefox",
+    "channel": "firefox",
+    "version": "155.0",
+    "headless": true,
+    "launchArgs": []
+  },
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:155.0) Gecko/20100101 Firefox/155.0",
+  "devicePixelRatio": 1,
+  "renderTargetSize": {
+    "width": 128,
+    "height": 128
+  },
+  "gpu": {
+    "navigatorGpu": true,
+    "reason": "navigator.gpu.requestAdapter() resolved to null",
+    "adapter": null,
+    "wgslLanguageFeatures": [
+      "packed_4x8_integer_dot_product",
+      "pointer_composite_access",
+      "readonly_and_readwrite_storage_textures"
+    ]
+  },
+  "source": {
+    "gitCommit": "7cf7ce9029e0d0b13e4c1e3e483c3dd26b3a466e",
+    "gitDirty": true
+  },
+  "toolchain": {
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "naga": "30.0.1",
+    "node": "v24.18.1",
+    "playwright": "1.63.0",
+    "runtimeWeb": "0.1.0-dev"
+  },
+  "settings": {
+    "requireGpu": false,
+    "acceptSoftware": false
+  }
+}
