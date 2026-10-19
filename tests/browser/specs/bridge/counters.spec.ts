@@ -27,12 +27,19 @@ for (const name of fixtureNames()) {
     const before = await bridge.counters();
     testInfo.annotations.push({ type: "counters: after first run", description: summary(before) });
     // The counters are not vacuous: the first run created exactly one shader module and one
-    // pipeline, uploaded both slots, and made one bind group per slot plus the empty group 0.
+    // pipeline, uploaded both slots, and made one bind group per slot plus the empty group 0. The two slots are
+    // neighbours: two uploads of record.size bytes each, or, when the padding between them is within the bound of
+    // decision 0119 (max(128, record.size) bytes), one upload that carries the padding too.
     expect(before.shaderModulesCreated).toBe(1);
     expect(before.pipelinesCreated).toBe(1);
     expect(before.bindGroupsCreated).toBe(3);
-    expect(before.uploads).toBe(2);
-    expect(before.uploadBytes).toBe(2 * record.size);
+    if (before.uploads === 2) {
+      expect(before.uploadBytes).toBe(2 * record.size);
+    } else {
+      expect(before.uploads).toBe(1);
+      expect(before.uploadBytes).toBeGreaterThan(2 * record.size);
+      expect(before.uploadBytes).toBeLessThanOrEqual(2 * record.size + Math.max(128, record.size));
+    }
 
     const afterB = await bridge.updateAndRerun(name, probe.slots[1] ?? -1, toJson(b2));
     expect(afterB.changed).toBe(true);

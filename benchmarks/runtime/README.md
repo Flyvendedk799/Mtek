@@ -54,8 +54,10 @@ npm run test:unit -w @mtek/runtime-benchmarks       # statistics, instrument, fr
 node benchmarks/runtime/tools/prepare.ts            # build everything a run serves into .out/site/
 MTEK_GPU_LOCK_DIR=<dir> node benchmarks/runtime/tools/run.ts --smoke      # prove the machinery (never a result)
 MTEK_REQUIRE_GPU=1 node benchmarks/runtime/tools/run.ts --publish        # the real run: raw results into ../results/runtime/raw/<run-id>/
-node benchmarks/runtime/tools/report.ts             # regenerate report.md and summary.json from the newest raw run
+node benchmarks/runtime/tools/report.ts             # regenerate report.md and summary.json from the first published run (MAIN_REPORT_RUN in tools/report.ts)
 node benchmarks/runtime/tools/report.ts --check     # fail unless the committed report follows from the raw results
+node benchmarks/runtime/tools/report.ts --after=<run-id> --label=<label>          # report of a later run, compared with the first: report-after-<label>.md
+node benchmarks/runtime/tools/report.ts --after=<run-id> --label=<label> --check  # fail unless it follows from the two runs' raw results
 node benchmarks/runtime/tools/freeze.ts --check     # the definitions are the frozen ones
 ```
 

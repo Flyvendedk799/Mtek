@@ -7,18 +7,24 @@
  *     position, the lights (`lights`, `light_count`: `render/lights.ts`) and `ambient` = ambient colour RGB x
  *     intensity, and `exposure` = `exposureScale(camera.exposure)` = 1 / (1.2 x 2^EV100) of the active camera
  *     (decision 0081), which `lighting.pbr` multiplies its result by.
- *  2. For every entity whose world matrix changed (phase 6), `MtekObject` (model, normal matrix) is
- *     written through the generated `builtin:object` writers into its slot of the object arena.
- *  3. The frame, object and material arenas upload their dirty slots (`writeIfChanged` keeps unchanged
- *     blocks clean, so a static scene uploads nothing after its first frame).
+ *  2. For every entity whose world matrix changed (phase 6) and differs from the one held here, the bounding
+ *     sphere and the model and normal matrices (`entityMatrices`) are refreshed and the entity's object
+ *     block is marked stale (decision 0120). `MtekObject` is written through the generated `builtin:object`
+ *     writers only when a draw reads it (step 5): an individually drawn entity, in the frame it is drawn.
+ *  3. The frame and material arenas upload their dirty slots (`writeIfChanged` keeps unchanged blocks
+ *     clean, so a static scene uploads nothing after its first frame; dirty slots next to each other share
+ *     one `writeBuffer`, decision 0119).
  *  4. The draw list (visible entities with a mesh, sorted by (pipeline key, parameter block, mesh),
  *     ties by instance order) is frustum-culled: an entity whose world-space bounding sphere lies
  *     outside one of the six planes of `view_proj` is not drawn (section 8.4, decision 0055). Its
- *     object block is still written, so it is correct when it comes back into view.
+ *     object block stays stale until a draw reads it, so it is correct when it comes back into view.
+ *     The culling and the batching are skipped while nothing they read has changed.
  *  5. The remaining draws are grouped (`instancing.ts`, decision 0059): a run of two or more with the
  *     same pipeline key, parameter block and mesh becomes one instanced draw, whose per-instance model
- *     and normal matrices are copied into the instance buffer (only the bytes that changed are uploaded).
- *     Every other draw stays individual.
+ *     and normal matrices are copied into the instance buffer (only the bytes that changed are uploaded,
+ *     and only the records of entities that changed are visited when the draws are the same as last frame).
+ *     Every other draw stays individual; the object blocks of those that are stale are written and the
+ *     object arena uploads them.
  *  6. One render pass clears to the scene clear colour and issues the draw calls. Group 0 is bound once,
  *     group 1 when the parameter block changes, vertex and index buffers when the mesh changes, group 2
  *     per individual draw with the object's dynamic offset; an instanced draw uses the instanced pipeline

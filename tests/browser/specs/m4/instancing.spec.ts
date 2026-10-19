@@ -221,10 +221,11 @@ test.describe("compatible instancing (M4-08)", () => {
 
     // Still one instanced group: the move did not regroup anything (the mover stays visible and compatible).
     expect(moved.counters).toMatchObject({ drawCalls: 5, instancedDraws: 4 });
-    // What was uploaded for the move: the object block of the mover (MtekObject is 128 bytes) and, of its instance record, the
-    // one float that changed (model column 3, x): two uploads, 132 bytes, nothing else.
-    expect((moved.counters["uploads"] ?? 0) - (still.counters["uploads"] ?? 0)).toBe(2);
-    expect((moved.counters["uploadBytes"] ?? 0) - (still.counters["uploadBytes"] ?? 0)).toBe(128 + 4);
+    // What was uploaded for the move: of its instance record only the one float that changed (model column 3, x): one upload,
+    // 4 bytes, nothing else. Its object block (MtekObject, 128 bytes) is not written: an instanced draw does not read it
+    // (decision 0120).
+    expect((moved.counters["uploads"] ?? 0) - (still.counters["uploads"] ?? 0)).toBe(1);
+    expect((moved.counters["uploadBytes"] ?? 0) - (still.counters["uploadBytes"] ?? 0)).toBe(4);
     // With instancing disabled the same move uploads the object block alone.
     expect((movedOff.counters["uploads"] ?? 0) - (stillOff.counters["uploads"] ?? 0)).toBe(1);
     expect((movedOff.counters["uploadBytes"] ?? 0) - (stillOff.counters["uploadBytes"] ?? 0)).toBe(128);

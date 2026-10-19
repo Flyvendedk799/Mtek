@@ -1,6 +1,9 @@
 // Generates `benchmarks/results/runtime/report.md` and `summary.json` from the raw results of one run.
 //
 //   node tools/report.ts [--run=<run-id>] [--check]
+//   node tools/report.ts --after=<run-id> --label=<label> [--check]   (report-after-<label>.md: a later run against the first)
+//
+// Without arguments the report is that of the first published run (`MAIN_REPORT_RUN`), which later runs never replace.
 //
 // Every number in the report is computed by `analyze.ts` from the files under `raw/<run-id>/`; nothing is typed in by hand.
 // `--check` regenerates both files in memory and fails when the committed ones differ, which is how the reproducibility of
