@@ -82,12 +82,12 @@ export const create: Create = async (): Promise<BenchApp> => {
         sample: bodies.slice(0, 8).map((b, i) => ({ name: `C${String(i).padStart(3, "0")}`, position: b.translation() })),
       };
     },
-    dispose(): void {
+    async dispose(): Promise<void> {
       geometry.dispose();
       floorGeometry.dispose();
       floorMaterial.dispose();
       for (const material of materials) material.dispose();
-      disposeThree(context);
+      await disposeThree(context);
       world.free();
     },
   };

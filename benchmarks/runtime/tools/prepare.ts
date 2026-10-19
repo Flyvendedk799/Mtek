@@ -132,10 +132,13 @@ async function bundlePage(workload: string, implementation: string, entry: strin
   );
 }
 
-function npmFreeRuntimeBuild(): void {
+/** The runtime bundles and the physics bundle, which the mtek command line tool embeds when it is built. */
+function buildRuntimeBundles(): void {
   const dir = join(REPO_ROOT, "packages", "runtime-web");
   execFileSync(process.execPath, [join(REPO_ROOT, "scripts", "gen-manifest-validator.mjs")], { cwd: dir, stdio: "inherit" });
   execFileSync(process.execPath, [join(dir, "scripts", "build.mjs")], { cwd: dir, stdio: "inherit" });
+  const physics = join(REPO_ROOT, "packages", "physics-rapier");
+  execFileSync(process.execPath, [join(physics, "scripts", "build.mjs")], { cwd: physics, stdio: "inherit" });
 }
 
 function mtekBuild(cli: string, workload: string, projectDir: string, mode: "release" | "dev"): void {
@@ -165,7 +168,7 @@ export async function prepareSite(options: { skipCliBuild?: boolean; only?: read
   mkdirSync(SITE_DIR, { recursive: true });
   mkdirSync(WORK_DIR, { recursive: true });
 
-  npmFreeRuntimeBuild();
+  buildRuntimeBundles();
   const cli = options.skipCliBuild === true ? (process.env["MTEK_CLI"] ?? "") : buildCli();
   if (cli === "") throw new Error("--skip-cli-build needs MTEK_CLI to name the mtek executable");
 

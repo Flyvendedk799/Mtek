@@ -28,6 +28,6 @@ export function roundTimings(value: unknown): unknown {
 
 function roundMs(value: unknown): unknown {
   if (typeof value === "number") return roundTo(value, 3);
-  if (Array.isArray(value)) return value.map((v) => (typeof v === "number" ? roundTo(v, 3) : v));
+  if (Array.isArray(value)) return (value as unknown[]).map((v) => (typeof v === "number" ? roundTo(v, 3) : v));
   return roundTimings(value);
 }

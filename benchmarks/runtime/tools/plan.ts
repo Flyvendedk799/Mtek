@@ -24,6 +24,7 @@ export function passesFor(kind: WorkloadKind, p: Protocol): PassRepeat[] {
   if (kind === "cycles") {
     return [
       { pass: "cycles", repeats: 1 },
+      { pass: "cycles-long", repeats: 1 },
       { pass: "counts", repeats: 1 },
       { pass: "parity", repeats: 1 },
     ];
@@ -95,6 +96,8 @@ export function specFor(pass: PassName, p: Protocol, workload: { readonly parity
       return { pass, frameDeltaSeconds: dt };
     case "cycles":
       return { pass, cycles: p.cycles, framesPerPhase: p.cycleFramesPerPhase, frameDeltaSeconds: dt };
+    case "cycles-long":
+      return { pass, cycles: p.longCycles, framesPerPhase: p.cycleFramesPerPhase, frameDeltaSeconds: dt };
   }
 }
 
@@ -110,5 +113,6 @@ export function smokeProtocol(p: Protocol): Protocol {
     allocationFrames: 20,
     startupRuns: 2,
     cycles: 3,
+    longCycles: 5,
   };
 }

@@ -1,16 +1,11 @@
 // Mount, reload and dispose, three.js. Mount: renderer (`init()` acquires the adapter and device), render target, the scene's
 // meshes, geometry and materials. Reload (the edited program): the meshes are removed, their geometry and materials disposed
 // and the scene is built again from the edited definition with the same renderer. Dispose: geometry, materials, render
-// target and renderer are disposed; three.js leaves the GPU device alive (decision 0098), so the baseline destroys it too, as
-// Mtek's and the direct implementation's dispose do.
+// target and renderer are disposed (`renderer.dispose()` also destroys the GPU device three.js acquired).
 import { cycleScene, type CyclesDefinition } from "../../common/layout.ts";
 import { Mesh, boxGeometry, createThreeContext, disposeThree, readThree, renderThree, unlitMaterial, type ThreeContext } from "../../harness/kit/three.ts";
 import type { BenchApp, Create, FrameSplit } from "../../harness/types.ts";
 import workload from "../workload.json" with { type: "json" };
-
-interface BackendWithDevice {
-  readonly backend?: { readonly device?: GPUDevice };
-}
 
 export const create: Create = async (): Promise<BenchApp> => {
   const def = workload.definition as unknown as CyclesDefinition & { boxSize: number };
@@ -55,12 +50,9 @@ export const create: Create = async (): Promise<BenchApp> => {
       build(context, def.reloadPaletteShift);
       return Promise.resolve();
     },
-    dispose(): void {
+    async dispose(): Promise<void> {
       release(context);
-      // `renderer.dispose()` releases three.js's own resources but not the device it acquired.
-      const device = (context.renderer as unknown as BackendWithDevice).backend?.device;
-      disposeThree(context);
-      device?.destroy();
+      await disposeThree(context);
     },
   };
 };

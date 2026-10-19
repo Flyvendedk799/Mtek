@@ -58,7 +58,7 @@ export type PassSpec =
   | { readonly pass: "allocation"; readonly warmupFrames: number; readonly frames: number; readonly frameDeltaSeconds: number }
   | { readonly pass: "parity"; readonly frames: number; readonly frameDeltaSeconds: number }
   | { readonly pass: "startup"; readonly frameDeltaSeconds: number }
-  | { readonly pass: "cycles"; readonly cycles: number; readonly framesPerPhase: number; readonly frameDeltaSeconds: number };
+  | { readonly pass: "cycles" | "cycles-long"; readonly cycles: number; readonly framesPerPhase: number; readonly frameDeltaSeconds: number };
 
 /** The shape of `window.__bench`, which the runner drives with `page.evaluate`. */
 export interface BenchPageApi {

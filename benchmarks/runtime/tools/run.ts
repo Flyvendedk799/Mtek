@@ -30,8 +30,8 @@ import { prepareSite, type PreparedSite } from "./prepare.ts";
 import type { RawJob, RawPairFile, RawRunMeta } from "./raw-types.ts";
 
 /** A pass starts only when the machine is at most this busy (percent of all logical CPUs), measured over a quarter second. */
-export const QUIET_LIMIT_PERCENT = 25;
-const QUIET_MAX_WAIT_MS = 120_000;
+export const QUIET_LIMIT_PERCENT = 30;
+const QUIET_MAX_WAIT_MS = 45_000;
 const PASS_TIMEOUT_MS = 10 * 60_000;
 const BENCH_FLAGS = ["--disable-renderer-backgrounding", "--disable-background-timer-throttling", "--disable-backgrounding-occluded-windows"];
 
@@ -44,6 +44,8 @@ interface Options {
   readonly seed: number;
   readonly floor: boolean;
   readonly prepare: boolean;
+  /** Overrides of protocol numbers (`--set=cycles=50,timingFrames=300`); smoke runs only. */
+  readonly overrides: Readonly<Record<string, number>>;
 }
 
 function parseArgs(args: readonly string[]): Options {
@@ -65,6 +67,12 @@ function parseArgs(args: readonly string[]): Options {
     seed: Number(value("seed") ?? 20261019),
     floor: !args.includes("--no-floor"),
     prepare: args.includes("--prepare"),
+    overrides: Object.fromEntries(
+      (value("set")?.split(",") ?? []).map((pair) => {
+        const [key, number] = pair.split("=");
+        return [key ?? "", Number(number)];
+      }),
+    ),
   };
 }
 
@@ -136,15 +144,26 @@ async function runPass(browser: Browser, serverUrl: string, job: Job, spec: Pass
           const { profile } = await cdp.send("HeapProfiler.stopSampling");
           let total = 0;
           let nodes = 0;
+          const sites = new Map<string, number>();
           const stack = [profile.head];
           while (stack.length > 0) {
             const node = stack.pop();
             if (node === undefined) continue;
             total += node.selfSize;
             nodes += 1;
+            if (node.selfSize > 0) {
+              const frame = node.callFrame;
+              const file = frame.url.split("/").pop() ?? "";
+              const site = `${frame.functionName === "" ? "(anonymous)" : frame.functionName} ${file}:${String(frame.lineNumber + 1)}`;
+              sites.set(site, (sites.get(site) ?? 0) + node.selfSize);
+            }
             stack.push(...node.children);
           }
-          allocation = { sampledBytes: total, profileNodes: nodes, samplingIntervalBytes: samplingInterval };
+          const topSites = [...sites.entries()]
+            .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+            .slice(0, 8)
+            .map(([site, bytes]) => ({ site, sampledBytes: bytes }));
+          allocation = { sampledBytes: total, profileNodes: nodes, samplingIntervalBytes: samplingInterval, topSites };
         }
       };
       await page.exposeFunction("__benchGate", gate);
@@ -194,7 +213,8 @@ async function main(): Promise<number> {
   const options = parseArgs(process.argv.slice(2));
   const started = new Date();
   const id = (options.smoke ? "smoke-" : "") + runId(started);
-  const protocol: Protocol = options.smoke ? smokeProtocol(protocolFile) : protocolFile;
+  if (Object.keys(options.overrides).length > 0 && !options.smoke) throw new Error("--set changes the protocol and is allowed in smoke runs only");
+  const protocol: Protocol = options.smoke ? ({ ...smokeProtocol(protocolFile), ...options.overrides }) : protocolFile;
   const outDir = options.out !== null ? join(process.cwd(), options.out) : options.publish ? join(RAW_DIR, id) : join(OUT_DIR, "runs", id);
   if (options.publish && options.smoke) throw new Error("a smoke run is never published");
   mkdirSync(join(outDir, "parity"), { recursive: true });

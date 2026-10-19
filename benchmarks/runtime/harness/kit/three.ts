@@ -59,10 +59,10 @@ export async function readThree(context: ThreeContext): Promise<PixelsRgba> {
   return { width, height, data: Uint8Array.from(view) };
 }
 
-/** Releases the target and the renderer (and with it the WebGPU device three.js created, when it destroys it). */
-export function disposeThree(context: ThreeContext): void {
+/** Releases the target and the renderer; `WebGPURenderer.dispose()` is asynchronous and destroys the GPU device three.js acquired. */
+export async function disposeThree(context: ThreeContext): Promise<void> {
   context.target.dispose();
-  context.renderer.dispose();
+  await context.renderer.dispose();
 }
 
 /** A unit-extent box geometry of the given size, and a flat-colour material: the three.js equivalent of `Box` and `Unlit`. */

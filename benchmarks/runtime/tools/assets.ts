@@ -3,9 +3,10 @@
 // the GLB and the pixels of the textures are the same on every machine (`asset-heavy-startup/assets.sha256.json` records
 // their hashes; PNG compression is left to zlib, so the hash covers the decoded pixels, not the compressed file).
 import { createHash } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { AssetHeavyDefinition } from "../common/layout.ts";
+import { RUNTIME_ROOT } from "./paths.ts";
 import { encodePng } from "./png.ts";
 
 export interface MeshData {
@@ -215,4 +216,10 @@ export function writeAssets(def: AssetHeavyDefinition, directory: string, layout
     put(layout === "project" ? `textures/t${String(i)}.png` : `t${String(i)}.png`, encodePng(def.textureSize, def.textureSize, texturePixels(def, i)));
   }
   return written;
+}
+
+/** `node tools/assets.ts --record` writes the hashes the frozen definitions record (`asset-heavy-startup/assets.sha256.json`). */
+if (process.argv[1] !== undefined && import.meta.filename === process.argv[1] && process.argv.includes("--record")) {
+  const workload = JSON.parse(readFileSync(join(RUNTIME_ROOT, "asset-heavy-startup", "workload.json"), "utf8")) as { definition: AssetHeavyDefinition };
+  writeFileSync(join(RUNTIME_ROOT, "asset-heavy-startup", "assets.sha256.json"), `${JSON.stringify(assetHashes(workload.definition), null, 2)}\n`);
 }

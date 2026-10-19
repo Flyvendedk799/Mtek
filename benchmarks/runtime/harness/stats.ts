@@ -26,7 +26,7 @@ export interface Summary {
 export function summarize(samples: ArrayLike<number>): Summary {
   const n = samples.length;
   if (n === 0) throw new RangeError("summary of no samples");
-  const sorted = Float64Array.from(samples as ArrayLike<number>).sort();
+  const sorted = Float64Array.from(samples).sort();
   let sum = 0;
   for (let i = 0; i < n; i += 1) sum += sorted[i] as number;
   return {

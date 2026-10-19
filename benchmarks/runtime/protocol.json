@@ -12,6 +12,7 @@
   "parityFrames": 60,
   "startupRuns": 15,
   "cycles": 50,
+  "longCycles": 200,
   "cycleFramesPerPhase": 5,
   "thresholdPercent": 20,
   "minimumTimingFrames": 600,

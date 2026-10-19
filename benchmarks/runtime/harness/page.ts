@@ -18,6 +18,8 @@ import {
   installCounters,
   installDeviceCapture,
   installGpuTimer,
+  pruneDestroyedDevices,
+  retiredProblems,
   snapshotCounters,
   unknownTextureFormats,
   type DeviceRecord,
@@ -44,7 +46,7 @@ function toBase64(bytes: Uint8Array): string {
 
 /** Problems the instrument saw on any device: validation errors and losses that were not our own `destroy`. */
 function deviceProblems(records: readonly DeviceRecord[] = devices()): string[] {
-  const problems: string[] = [];
+  const problems: string[] = [...retiredProblems()];
   records.forEach((record, index) => {
     for (const error of record.errors.slice(0, 5)) problems.push(`device ${String(index)}: uncaptured error: ${error}`);
     if (record.lost !== null && record.lost.reason !== "destroyed") {
@@ -314,7 +316,7 @@ async function runStartup(spec: Extract<PassSpec, { pass: "startup" }>, context:
   };
 }
 
-async function runCycles(spec: Extract<PassSpec, { pass: "cycles" }>, context: BenchContext): Promise<unknown> {
+async function runCycles(spec: Extract<PassSpec, { pass: "cycles" | "cycles-long" }>, context: BenchContext): Promise<unknown> {
   installDeviceCapture({ timestampQuery: false });
   installCounters();
   const sample = window.__benchSample;
@@ -355,13 +357,15 @@ async function runCycles(spec: Extract<PassSpec, { pass: "cycles" }>, context: B
     await app.dispose();
     const disposeMs = performance.now() - tDispose;
     await settle();
+    pruneDestroyedDevices();
     const counters2 = snapshotCounters();
-    let runtimeAfterDispose: Readonly<Record<string, number>> | null = null;
-    try {
-      runtimeAfterDispose = app.runtimeCounters?.() ?? null;
-    } catch {
-      runtimeAfterDispose = null;
-    }
+    const runtimeAfterDispose = ((): Readonly<Record<string, number>> | null => {
+      try {
+        return app.runtimeCounters?.() ?? null;
+      } catch {
+        return null;
+      }
+    })();
     const heap = sample === undefined ? null : await sample();
     cycles.push({
       cycle,
@@ -397,7 +401,24 @@ async function runCycles(spec: Extract<PassSpec, { pass: "cycles" }>, context: B
   };
 }
 
+/** The smallest difference `performance.now()` can show: it bounds what a single frame timing can resolve. */
+function timerGranularityMs(): number {
+  let smallest = Infinity;
+  let last = performance.now();
+  for (let i = 0; i < 200_000 && smallest > 0.001; i += 1) {
+    const now = performance.now();
+    if (now > last) smallest = Math.min(smallest, now - last);
+    last = now;
+  }
+  return smallest === Infinity ? NaN : smallest;
+}
+
 async function run(spec: PassSpec, context: BenchContext): Promise<unknown> {
+  const result = (await runPass(spec, context)) as Record<string, unknown>;
+  return { ...result, page: { crossOriginIsolated: window.crossOriginIsolated, timerGranularityMs: timerGranularityMs() } };
+}
+
+async function runPass(spec: PassSpec, context: BenchContext): Promise<unknown> {
   switch (spec.pass) {
     case "timing":
       return runTiming(spec, context);
@@ -412,6 +433,7 @@ async function run(spec: PassSpec, context: BenchContext): Promise<unknown> {
     case "startup":
       return runStartup(spec, context);
     case "cycles":
+    case "cycles-long":
       return runCycles(spec, context);
   }
 }

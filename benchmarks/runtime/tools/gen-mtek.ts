@@ -229,9 +229,9 @@ function assetProgram(workload: WorkloadFile): string {
   const def = workload.definition as unknown as AssetHeavyDefinition;
   const placed = assetHeavy(def);
   const width = String(placed.length - 1).length;
-  const textures = Array.from({ length: def.textures }, (_, i) => `const T${i} = asset.texture("textures/t${i}.png");`).join("\n");
+  const textures = Array.from({ length: def.textures }, (_, i) => `const T${i} = asset.texture("../textures/t${i}.png");`).join("\n");
   return `${header(workload.name)}
-const ROCKS = asset.glb("models/rocks.glb");
+const ROCKS = asset.glb("../models/rocks.glb");
 ${textures}
 
 // Unlit, textured: the texel of the bound image at the interpolated uv.

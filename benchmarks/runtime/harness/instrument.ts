@@ -127,6 +127,8 @@ export interface DeviceRecord {
 
 interface Hooks {
   readonly devices: DeviceRecord[];
+  /** Problems of devices that were destroyed and dropped by `pruneDestroyedDevices`. */
+  readonly retiredProblems: string[];
   readonly counters: GpuCounters;
   readonly unknownTextureFormats: Set<string>;
   timer: GpuTimer | null;
@@ -137,6 +139,7 @@ interface Hooks {
 
 const hooks: Hooks = {
   devices: [],
+  retiredProblems: [],
   counters: emptyCounters(),
   unknownTextureFormats: new Set(),
   timer: null,
@@ -158,6 +161,24 @@ function patch(target: object, name: string, wrap: (original: AnyFunction) => An
 
 export function devices(): readonly DeviceRecord[] {
   return hooks.devices;
+}
+
+/**
+ * Drops the records of destroyed devices so the instrument does not keep every device of a long mount/dispose run alive (that would
+ * hide a leak in the application, or cause one). Their validation errors and losses are kept as text.
+ */
+export function pruneDestroyedDevices(): void {
+  for (let i = hooks.devices.length - 1; i >= 0; i -= 1) {
+    const record = hooks.devices[i];
+    if (record === undefined || !record.destroyed) continue;
+    for (const error of record.errors.slice(0, 5)) hooks.retiredProblems.push(`uncaptured error: ${error}`);
+    if (record.lost !== null && record.lost.reason !== "destroyed") hooks.retiredProblems.push(`lost (${record.lost.reason}): ${record.lost.message}`);
+    hooks.devices.splice(i, 1);
+  }
+}
+
+export function retiredProblems(): readonly string[] {
+  return hooks.retiredProblems;
 }
 
 /** The device of the application under test: the last one requested that is not destroyed. */
@@ -191,7 +212,7 @@ export function installDeviceCapture(options: { readonly timestampQuery: boolean
         if (info.reason === "destroyed") record.destroyed = true;
       });
       device.addEventListener("uncapturederror", (event) => {
-        record.errors.push((event as GPUUncapturedErrorEvent).error.message);
+        record.errors.push((event).error.message);
       });
       return device;
     },
@@ -225,7 +246,7 @@ function textureBytes(descriptor: GPUTextureDescriptor): number {
     height = size[1] ?? 1;
     layers = size[2] ?? 1;
   } else {
-    const s = size as GPUExtent3DDict;
+    const s = size;
     width = s.width;
     height = s.height ?? 1;
     layers = s.depthOrArrayLayers ?? 1;
@@ -325,7 +346,7 @@ export function installCounters(): void {
       const size = args[4] as number | undefined;
       const isView = ArrayBuffer.isView(data);
       const unit = isView && !(data instanceof DataView) ? (data as unknown as { BYTES_PER_ELEMENT: number }).BYTES_PER_ELEMENT : 1;
-      const total = isView ? (data.byteLength / unit) : (data as ArrayBuffer).byteLength;
+      const total = isView ? (data.byteLength / unit) : (data).byteLength;
       const elements = size ?? total - dataOffset;
       c.writeBufferCalls += 1;
       c.writeBufferBytes += elements * unit;
@@ -342,7 +363,7 @@ export function installCounters(): void {
         height = size[1] ?? 1;
         layers = size[2] ?? 1;
       } else {
-        const s = size as GPUExtent3DDict;
+        const s = size;
         height = s.height ?? 1;
         layers = s.depthOrArrayLayers ?? 1;
       }
@@ -360,7 +381,7 @@ export function installCounters(): void {
         width = size[0] ?? 1;
         height = size[1] ?? 1;
       } else {
-        const s = size as GPUExtent3DDict;
+        const s = size;
         width = s.width;
         height = s.height ?? 1;
       }

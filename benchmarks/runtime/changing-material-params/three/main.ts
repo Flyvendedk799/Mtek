@@ -36,10 +36,10 @@ export const create: Create = async (): Promise<BenchApp> => {
     },
     split: () => split,
     readPixels: () => readThree(context),
-    dispose(): void {
+    async dispose(): Promise<void> {
       geometry.dispose();
       for (const material of materials) material.dispose();
-      disposeThree(context);
+      await disposeThree(context);
     },
   };
 };

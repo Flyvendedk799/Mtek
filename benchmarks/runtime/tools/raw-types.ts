@@ -24,7 +24,13 @@ export interface RawJob {
   /** The page's answer, as returned by `__bench.run` (parity pictures are stripped and stored as PNG files). */
   readonly result?: unknown;
   /** The allocation pass only: the sampling heap profiler's total, taken by the runner. */
-  readonly allocation?: { readonly sampledBytes: number; readonly profileNodes: number; readonly samplingIntervalBytes: number };
+  readonly allocation?: {
+    readonly sampledBytes: number;
+    readonly profileNodes: number;
+    readonly samplingIntervalBytes: number;
+    /** The allocation sites (function, file:line) with the most sampled bytes, merged over the call tree. */
+    readonly topSites: ReadonlyArray<{ readonly site: string; readonly sampledBytes: number }>;
+  };
 }
 
 export interface RawPairFile {
