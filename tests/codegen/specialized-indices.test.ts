@@ -7,6 +7,7 @@ import { type ProgramVariant, loadProgram, record, spanText } from "./support/pr
 type Update = (ctx: unknown, self: unknown, dt: number) => void;
 const PARAMS = { low: -1, high: 4294967295, inside: 1 };
 const EXPECTED = {
+  run: true,
   read_low: 10,
   read_high: 20,
   read_inside: 20,
@@ -47,6 +48,13 @@ for (const variant of ["release", "preview"] as const satisfies readonly Program
         const update = (form === "static"
           ? (scene["entityUpdate"] as unknown[])[0]
           : prefab["update"]) as Update;
+        // Generic scene execution stays warning-free; this test explicitly enables its probes.
+        self.state["run"] = false;
+        update(ctx, self, 0.016);
+        expect(self.state).toEqual({ run: false });
+        expect(randomCalls).toBe(0);
+        expect(made.warnings).toEqual([]);
+        self.state["run"] = true;
         update(ctx, self, 0.016);
         expect(self.state).toEqual(EXPECTED);
         // One random() in the compound-assignment index, then one in its right operand.

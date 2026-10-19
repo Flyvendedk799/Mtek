@@ -104,21 +104,21 @@ function f_e2cab98b_field_writes(ctx, a_p, a_w) {
 // fn set_at(i: i32, v: f32) -> array<f32, 4> (src/main.mtek::set_at)
 function f_e2cab98b_set_at(ctx, a_i, a_v) {
   let l_xs = [1.0, 2.0, 3.0, 4.0];
-  l_xs[rt.clampIndex(a_i, 4, 34, ctx)] = a_v;
+  l_xs[rt.clampIndex(a_i, 4, 35, ctx)] = a_v;
   return l_xs;
 }
 
 // fn set_at_u(i: u32, v: f32) -> array<f32, 4> (src/main.mtek::set_at_u)
 function f_e2cab98b_set_at_u(ctx, a_i, a_v) {
   let l_xs = [1.0, 2.0, 3.0, 4.0];
-  l_xs[rt.clampIndex(a_i, 4, 35, ctx)] = a_v;
+  l_xs[rt.clampIndex(a_i, 4, 36, ctx)] = a_v;
   return l_xs;
 }
 
 // fn flags(i: i32) -> array<bool, 3> (src/main.mtek::flags)
 function f_e2cab98b_flags(ctx, a_i) {
   let l_f = [false, false, false];
-  l_f[rt.clampIndex(a_i, 3, 36, ctx)] = true;
+  l_f[rt.clampIndex(a_i, 3, 37, ctx)] = true;
   return l_f;
 }
 
@@ -126,13 +126,13 @@ function f_e2cab98b_flags(ctx, a_i) {
 function f_e2cab98b_nested(ctx, a_i, a_j) {
   let l_rig = { probes: [{ offset: { x: 1.0, y: 2.0, z: 3.0 }, weight: 0.5, enabled: true, samples: [0.0, 0.25, 0.5, 0.75] }, { offset: { x: -1.0, y: 0.0, z: 1.0 }, weight: 2.0, enabled: false, samples: [1.0, 2.0, 3.0, 4.0] }], grid: [[1, 2], [3, 4]] };
   {
-    const t_0 = rt.clampIndex(a_i, 2, 37, ctx);
+    const t_0 = rt.clampIndex(a_i, 2, 38, ctx);
     l_rig.probes[t_0].offset = rt.v3with(l_rig.probes[t_0].offset, "x", fr(l_rig.probes[t_0].offset.x + 1.0));
   }
-  l_rig.probes[1].samples[rt.clampIndex(a_j, 4, 38, ctx)] = 7.0;
+  l_rig.probes[1].samples[rt.clampIndex(a_j, 4, 39, ctx)] = 7.0;
   {
-    const t_1 = rt.clampIndex(a_i, 2, 39, ctx);
-    const t_2 = rt.clampIndex(a_j, 2, 40, ctx);
+    const t_1 = rt.clampIndex(a_i, 2, 40, ctx);
+    const t_2 = rt.clampIndex(a_j, 2, 41, ctx);
     l_rig.grid[t_1][t_2] = (l_rig.grid[t_1][t_2] + 10) | 0;
   }
   return l_rig;
@@ -142,11 +142,11 @@ function f_e2cab98b_nested(ctx, a_i, a_j) {
 function f_e2cab98b_compound(ctx, a_i) {
   let l_vs = [{ x: 1.0, y: 1.0, z: 1.0 }, { x: 2.0, y: 2.0, z: 2.0 }, { x: 3.0, y: 3.0, z: 3.0 }];
   {
-    const t_0 = rt.clampIndex(a_i, 3, 41, ctx);
+    const t_0 = rt.clampIndex(a_i, 3, 42, ctx);
     l_vs[t_0] = rt.v3with(l_vs[t_0], "z", fr(l_vs[t_0].z + 0.5));
   }
   {
-    const t_1 = rt.clampIndex(a_i, 3, 42, ctx);
+    const t_1 = rt.clampIndex(a_i, 3, 43, ctx);
     l_vs[t_1] = rt.v3scale(l_vs[t_1], 2.0);
   }
   l_vs[0] = rt.v3with(l_vs[0], "x", fr(l_vs[0].x - 1.0));
@@ -159,7 +159,7 @@ function f_e2cab98b_fill(ctx, a_n) {
   let l_out = [0, 0, 0, 0, 0];
   for (let l_k = 0, t_0 = a_n; l_k < t_0; l_k++) {
     {
-      const t_1 = rt.clampIndex(l_k, 5, 43, ctx);
+      const t_1 = rt.clampIndex(l_k, 5, 44, ctx);
       l_out[t_1] = (l_out[t_1] + Math.imul(l_k, l_k)) | 0;
     }
   }
@@ -187,8 +187,8 @@ function f_e2cab98b_alias_both(ctx) {
 function f_e2cab98b_alias_let(ctx, a_i) {
   let l_a = [1.0, 2.0, 3.0, 4.0];
   const l_snapshot = rt.copy(l_a);
-  l_a[rt.clampIndex(a_i, 4, 44, ctx)] = 0.0;
-  return fr(l_snapshot[rt.clampIndex(a_i, 4, 45, ctx)] + l_a[rt.clampIndex(a_i, 4, 46, ctx)]);
+  l_a[rt.clampIndex(a_i, 4, 45, ctx)] = 0.0;
+  return fr(l_snapshot[rt.clampIndex(a_i, 4, 46, ctx)] + l_a[rt.clampIndex(a_i, 4, 47, ctx)]);
 }
 
 // fn alias_nested() -> f32 (src/main.mtek::alias_nested)
@@ -213,10 +213,10 @@ function f_e2cab98b_alias_for(ctx, a_i) {
   let l_xs = [1.0, 2.0, 3.0, 4.0];
   let l_sum = 0.0;
   for (const l_x of rt.copy(l_xs)) {
-    l_xs[rt.clampIndex(a_i, 4, 47, ctx)] = 100.0;
+    l_xs[rt.clampIndex(a_i, 4, 48, ctx)] = 100.0;
     l_sum = fr(l_sum + l_x);
   }
-  return fr(l_sum + l_xs[rt.clampIndex(a_i, 4, 48, ctx)]);
+  return fr(l_sum + l_xs[rt.clampIndex(a_i, 4, 49, ctx)]);
 }
 
 // fn keep(xs: array<f32, 2>) -> array<f32, 2> (src/main.mtek::keep)
@@ -236,10 +236,10 @@ function f_e2cab98b_alias_through_call(ctx) {
 function f_e2cab98b_constant_across_calls(ctx, a_i) {
   let l_a = [1.0, 2.0, 3.0, 4.0];
   {
-    const t_0 = rt.clampIndex(a_i, 4, 49, ctx);
+    const t_0 = rt.clampIndex(a_i, 4, 50, ctx);
     l_a[t_0] = fr(l_a[t_0] + 10.0);
   }
-  return l_a[rt.clampIndex(a_i, 4, 50, ctx)];
+  return l_a[rt.clampIndex(a_i, 4, 51, ctx)];
 }
 
 // fn rig_weight(w: f32) -> f32 (src/main.mtek::rig_weight)
@@ -293,30 +293,33 @@ export const functions = {
 
 // update (src/main.mtek::Places.Indexed.update)
 function b_0_update(ctx, self, a_dt) {
+  if (!self.state.run) {
+    return;
+  }
   const l_values = [10.0, 20.0];
-  self.state.read_low = l_values[rt.clampIndex(-1, 2, 51, ctx)];
-  self.state.read_high = l_values[rt.clampIndex(4294967295, 2, 52, ctx)];
+  self.state.read_low = l_values[rt.clampIndex(-1, 2, 52, ctx)];
+  self.state.read_high = l_values[rt.clampIndex(4294967295, 2, 53, ctx)];
   self.state.read_inside = l_values[1];
   const l_matrix = new Float32Array([1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
-  self.state.matrix_low = rt.m4col(l_matrix, rt.clampIndex(-1, 4, 53, ctx)).x;
-  self.state.matrix_high = rt.m4col(l_matrix, rt.clampIndex(4294967295, 4, 54, ctx)).w;
+  self.state.matrix_low = rt.m4col(l_matrix, rt.clampIndex(-1, 4, 54, ctx)).x;
+  self.state.matrix_high = rt.m4col(l_matrix, rt.clampIndex(4294967295, 4, 55, ctx)).w;
   let l_writes = [1.0, 2.0];
-  l_writes[rt.clampIndex(-1, 2, 55, ctx)] = 7.0;
+  l_writes[rt.clampIndex(-1, 2, 56, ctx)] = 7.0;
   {
-    const t_0 = rt.clampIndex(4294967295, 2, 56, ctx);
+    const t_0 = rt.clampIndex(4294967295, 2, 57, ctx);
     l_writes[t_0] = fr(l_writes[t_0] + 9.0);
   }
   self.state.plain_write = l_writes[0];
   self.state.compound_write = l_writes[1];
   let l_nested_values = [[{ x: 1.0, y: 1.0, z: 1.0 }, { x: 2.0, y: 2.0, z: 2.0 }], [{ x: 3.0, y: 3.0, z: 3.0 }, { x: 4.0, y: 4.0, z: 4.0 }]];
   {
-    const t_1 = rt.clampIndex(-1, 2, 57, ctx);
-    const t_2 = rt.clampIndex(4294967295, 2, 58, ctx);
+    const t_1 = rt.clampIndex(-1, 2, 58, ctx);
+    const t_2 = rt.clampIndex(4294967295, 2, 59, ctx);
     l_nested_values[t_1][t_2] = rt.v3with(l_nested_values[t_1][t_2], "y", fr(l_nested_values[t_1][t_2].y + 10.0));
   }
   self.state.nested_write = l_nested_values[0][1].y;
   {
-    const t_3 = rt.clampIndex((-1 + rt.f2i(ctx.random())) | 0, 2, 59, ctx);
+    const t_3 = rt.clampIndex((-1 + rt.f2i(ctx.random())) | 0, 2, 60, ctx);
     l_writes[t_3] = fr(l_writes[t_3] + ctx.random());
   }
   self.state.counted_write = l_writes[0];
@@ -330,6 +333,7 @@ function s_Places_init(ctx) {
   ctx.setCamera("projection.fov_y", 0.8999999761581421);
   ctx.setCamera("projection.near", 0.10000000149011612);
   ctx.setCamera("projection.far", 1000.0);
+  ctx.e[0].state.run = false;
   ctx.e[0].state.read_low = 0.0;
   ctx.e[0].state.read_high = 0.0;
   ctx.e[0].state.read_inside = 0.0;
@@ -349,6 +353,7 @@ function s_Places_init(ctx) {
 
 // prefab IndexedPlaces (src/main.mtek::IndexedPlaces): init(ctx, self, params) sets the state and the fields of an instance
 function p_e2cab98b_IndexedPlaces_init(ctx, self, params) {
+  self.state.run = false;
   self.state.read_low = 0.0;
   self.state.read_high = 0.0;
   self.state.read_inside = 0.0;
@@ -366,30 +371,33 @@ function p_e2cab98b_IndexedPlaces_init(ctx, self, params) {
 
 // update (src/main.mtek::IndexedPlaces.update)
 function p_e2cab98b_IndexedPlaces_b0_update(ctx, self, a_dt) {
+  if (!self.state.run) {
+    return;
+  }
   const l_values = [10.0, 20.0];
-  self.state.read_low = l_values[rt.clampIndex(self.params.low, 2, 51, ctx)];
-  self.state.read_high = l_values[rt.clampIndex(self.params.high, 2, 52, ctx)];
-  self.state.read_inside = l_values[rt.clampIndex(self.params.inside, 2, 60, ctx)];
+  self.state.read_low = l_values[rt.clampIndex(self.params.low, 2, 52, ctx)];
+  self.state.read_high = l_values[rt.clampIndex(self.params.high, 2, 53, ctx)];
+  self.state.read_inside = l_values[rt.clampIndex(self.params.inside, 2, 61, ctx)];
   const l_matrix = new Float32Array([1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
-  self.state.matrix_low = rt.m4col(l_matrix, rt.clampIndex(self.params.low, 4, 53, ctx)).x;
-  self.state.matrix_high = rt.m4col(l_matrix, rt.clampIndex(self.params.high, 4, 54, ctx)).w;
+  self.state.matrix_low = rt.m4col(l_matrix, rt.clampIndex(self.params.low, 4, 54, ctx)).x;
+  self.state.matrix_high = rt.m4col(l_matrix, rt.clampIndex(self.params.high, 4, 55, ctx)).w;
   let l_writes = [1.0, 2.0];
-  l_writes[rt.clampIndex(self.params.low, 2, 55, ctx)] = 7.0;
+  l_writes[rt.clampIndex(self.params.low, 2, 56, ctx)] = 7.0;
   {
-    const t_0 = rt.clampIndex(self.params.high, 2, 56, ctx);
+    const t_0 = rt.clampIndex(self.params.high, 2, 57, ctx);
     l_writes[t_0] = fr(l_writes[t_0] + 9.0);
   }
   self.state.plain_write = l_writes[0];
   self.state.compound_write = l_writes[1];
   let l_nested_values = [[{ x: 1.0, y: 1.0, z: 1.0 }, { x: 2.0, y: 2.0, z: 2.0 }], [{ x: 3.0, y: 3.0, z: 3.0 }, { x: 4.0, y: 4.0, z: 4.0 }]];
   {
-    const t_1 = rt.clampIndex(self.params.low, 2, 57, ctx);
-    const t_2 = rt.clampIndex(self.params.high, 2, 58, ctx);
+    const t_1 = rt.clampIndex(self.params.low, 2, 58, ctx);
+    const t_2 = rt.clampIndex(self.params.high, 2, 59, ctx);
     l_nested_values[t_1][t_2] = rt.v3with(l_nested_values[t_1][t_2], "y", fr(l_nested_values[t_1][t_2].y + 10.0));
   }
   self.state.nested_write = l_nested_values[0][1].y;
   {
-    const t_3 = rt.clampIndex((self.params.low + rt.f2i(ctx.random())) | 0, 2, 59, ctx);
+    const t_3 = rt.clampIndex((self.params.low + rt.f2i(ctx.random())) | 0, 2, 60, ctx);
     l_writes[t_3] = fr(l_writes[t_3] + ctx.random());
   }
   self.state.counted_write = l_writes[0];

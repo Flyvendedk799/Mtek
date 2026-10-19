@@ -184,6 +184,7 @@ prefab IndexedPlaces {
     param low: i32 = -1;
     param high: u32 = 4294967295;
     param inside: i32 = 1;
+    state run: bool = false;
     state read_low: f32 = 0.0;
     state read_high: f32 = 0.0;
     state read_inside: f32 = 0.0;
@@ -194,6 +195,9 @@ prefab IndexedPlaces {
     state nested_write: f32 = 0.0;
     state counted_write: f32 = 0.0;
     update(dt: f32) {
+        if !self.run {
+            return;
+        }
         let values = [10.0, 20.0];
         self.read_low = values[low];
         self.read_high = values[high];
