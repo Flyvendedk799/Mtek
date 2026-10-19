@@ -195,7 +195,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | Code | Title | Trigger |
 |---|---|---|
 | <a id="mtek-e4001"></a>E4001 | recursion not supported | call cycle in related spans |
-| <a id="mtek-e4002"></a>E4002 | impure call from pure function | full call chain |
+| <a id="mtek-e4002"></a>E4002 | impure call from pure function | CPU calls or ambient frame/body reads, with the full call chain |
 | <a id="mtek-w4003"></a>W4003 | `cpu fn` could be `fn` | |
 | <a id="mtek-e4010"></a>E4010 | unbounded loop in GPU code | non-constant range bounds |
 | <a id="mtek-e4011"></a>E4011 | CPU-only type in GPU code | `string`, handles |
@@ -206,7 +206,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e4030"></a>E4030 | parameter type not GPU-representable | |
 | <a id="mtek-e4031"></a>E4031 | invalid parameter default | |
 | <a id="mtek-e4032"></a>E4032 | too many material parameters | > 64 |
-| <a id="mtek-e4040"></a>E4040 | capture in GPU stage | scene state, `frame`, entity, `cpu fn` (help: add a param and `bind`); a texture or sampler constant (help: a param with the constant as its default) |
+| <a id="mtek-e4040"></a>E4040 | capture in GPU stage | scene state, `frame`, entity, `cpu fn` (help: add a param and `bind`); ambient CPU reads through helper calls; a texture or sampler constant (help: a param with the constant as its default) |
 | <a id="mtek-e4041"></a>E4041 | invalid use of texture or sampler | only as `sample` arguments (decision 0054) |
 | <a id="mtek-e4901"></a>E4901 | stage not supported | `vertex`/`compute` |
 
@@ -242,7 +242,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5074"></a>E5074 | field access through entity_ref | not in v0.1; read or write of a field or state through a reference (decision 0064) |
 | <a id="mtek-e5075"></a>E5075 | binding cycle | full path |
 | <a id="mtek-e5080"></a>E5080 | lifecycle operation during initialisation | `spawn` or `destroy` in initialisers (decision 0064); a handler-only built-in function (`spawn`, `destroy`, a body command) called in a function (decision 0065) |
-| <a id="mtek-e5081"></a>E5081 | entity field read during initialisation | |
+| <a id="mtek-e5081"></a>E5081 | entity field read during initialisation | includes body-property reads reached through helper calls |
 | <a id="mtek-e5090"></a>E5090 | invalid scale | non-positive or non-finite constant |
 | <a id="mtek-e5091"></a>E5091 | body on non-root entity | a body on a nested entity, or a static instance of a prefab with a body nested in an entity (decision 0065) |
 | <a id="mtek-e5092"></a>E5092 | too many static entities | |

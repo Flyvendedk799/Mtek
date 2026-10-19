@@ -13,9 +13,8 @@ use crate::stdlib::Domain;
 /// handler when M2-04 and M3 check them with the same checker).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct BodyFacts {
-    /// Every call of a user function, and every call of a built-in function
-    /// whose domain is not `both` or that only handlers may call, in source
-    /// order.
+    /// Every call of a user function, every domain-restricted built-in call,
+    /// and every ambient CPU read, in source order.
     pub calls: Vec<CallFact>,
     /// The `a..b` of every range loop whose bounds are not both constant
     /// expressions (`E4010` in GPU code).
@@ -41,6 +40,19 @@ pub enum Callee {
     Function(DefId),
     /// A built-in function of the registry.
     Builtin(BuiltinCall),
+    /// A read of ambient CPU state (`frame.*` or a body property), which is
+    /// an effect even though it has no call syntax.
+    Read(AmbientRead),
+}
+
+/// An ambient CPU read tracked alongside calls so its effect travels over
+/// the same whole-program call graph.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AmbientRead {
+    pub name: String,
+    /// Body properties do not exist until after initialisation. Frame values
+    /// may be read in a CPU initialiser.
+    pub forbidden_in_initialiser: bool,
 }
 
 /// A call of a built-in function that matters to effects or domains.

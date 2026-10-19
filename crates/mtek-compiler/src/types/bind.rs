@@ -466,6 +466,10 @@ impl Checker<'_> {
             }
             Callee::Builtin(builtin) => (builtin.domain == Domain::Cpu || builtin.handlers_only)
                 .then(|| (format!("the CPU intrinsic `{}`", builtin.name), false)),
+            // Direct frame reads are allowed and become dependencies below.
+            // Direct body reads are rejected there; reads hidden in a `fn`
+            // are rejected by the program-wide effect pass.
+            Callee::Read(_) => None,
         }
     }
 

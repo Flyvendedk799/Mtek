@@ -32,7 +32,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::body::BodyState;
-use super::facts::{BuiltinCall, CallFact, Callee};
+use super::facts::{AmbientRead, BuiltinCall, CallFact, Callee};
 use super::ops::{
     arithmetic_result, comparison_result, literal_operand_type, logical_result, negation_result,
 };
@@ -2538,6 +2538,9 @@ impl<'a> Checker<'a> {
         }
         match self.registry.namespace_member(namespace, member) {
             Some(NamespaceMember::Value(value)) => {
+                if value.domain == Domain::Cpu {
+                    self.record_ambient_read(expr.span, format!("{namespace}.{member}"), false);
+                }
                 self.fields.insert(
                     expr.id,
                     FieldKind::NamespaceValue(format!("{namespace}.{member}")),
@@ -2779,6 +2782,25 @@ pub(super) fn fn_construct(decl: &crate::syntax::ast::FnDecl) -> Construct {
 }
 
 impl Checker<'_> {
+    /// Ambient reads need the same effect and reachability checks as CPU
+    /// calls; a helper must not hide one from a stage or an initialiser.
+    pub(super) fn record_ambient_read(
+        &mut self,
+        span: Span,
+        name: String,
+        forbidden_in_initialiser: bool,
+    ) {
+        if let Some(body) = &mut self.body {
+            body.facts.calls.push(CallFact {
+                span,
+                callee: Callee::Read(AmbientRead {
+                    name,
+                    forbidden_in_initialiser,
+                }),
+            });
+        }
+    }
+
     /// Whether `id` names a user function (of this module or imported).
     pub(super) fn names_function(&self, id: DefId) -> bool {
         match self.res.def(id).map(|d| d.kind) {
