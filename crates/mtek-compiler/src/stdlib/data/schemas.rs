@@ -76,7 +76,7 @@ fn objects() -> Vec<SchemaDef> {
                 "ambient_intensity",
                 TypeRef::F32,
                 C,
-                "Scale of the ambient light term of lit materials; 0 turns ambient light off.",
+                "Scale of the ambient light term of lit materials; 0 turns ambient light off. Like every lit result it is multiplied by the camera's exposure scale (about 3.14 at the default exposure), so 0.3 already gives nearly full brightness on white. Unlit materials ignore it.",
             )
             .default(ConstValue::F32(0.0))
             .range(ValueRange::non_negative()),
@@ -115,7 +115,7 @@ fn objects() -> Vec<SchemaDef> {
                 "scale",
                 TypeRef::Vec3,
                 writable_bindable(),
-                "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body; that rule belongs to the checker, not to this field.",
+                "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body.",
             )
             .default(ConstValue::splat3(1.0))
             .range(ValueRange::positive().and_finite())
@@ -226,7 +226,7 @@ fn objects() -> Vec<SchemaDef> {
                 "exposure",
                 TypeRef::F32,
                 C,
-                "Exposure value EV100 of the camera; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15.",
+                "Exposure value EV100; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15.",
             )
             .default(ConstValue::F32(CAMERA_DEFAULT_EV100)),
         ],
@@ -357,7 +357,7 @@ fn materials() -> Vec<SchemaDef> {
             "Unlit",
             SchemaCategory::Material,
             Milestone::M1,
-            "Flat colour, no lighting. Defined in the embedded prelude source `std/materials.mtek`.",
+            "Flat colour, no lighting.",
             vec![
                 field(
                     "color",
@@ -372,7 +372,7 @@ fn materials() -> Vec<SchemaDef> {
             "Pbr",
             SchemaCategory::Material,
             Milestone::M1,
-            "The documented PBR subset (metallic-roughness, no image-based lighting). Defined in the embedded prelude source `std/materials.mtek`.",
+            "The documented PBR subset (metallic-roughness, no image-based lighting).",
             vec![
                 field(
                     "base_color",

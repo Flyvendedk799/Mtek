@@ -1,7 +1,7 @@
 {
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "contextFormat": 1,
+  "contextFormat": 2,
   "supported": {
     "features": [
       "imports",
@@ -338,6 +338,7 @@
       "line": 12
     }
   ],
+  "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",
   "schemas": [],
   "examples": [
     {

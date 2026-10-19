@@ -1269,6 +1269,7 @@ fn the_text_is_deterministic_and_free_of_paths_and_clocks() {
             "syntax",
             "project",
             "symbols",
+            "schemaGuide",
             "schemas",
             "examples",
             "diagnosticsGuide"
@@ -1283,24 +1284,18 @@ fn schema_fields_are_the_registry_fields_this_build_implements() {
     for entry in &output.context.schemas {
         let schema = registry.schema(&entry.name).unwrap();
         let expected: Vec<&str> = schema.fields.iter().map(|f| f.name).collect();
-        let emitted: Vec<&str> = entry.fields.iter().map(|f| f.name.as_str()).collect();
+        let emitted: Vec<&str> = entry
+            .fields
+            .iter()
+            .map(|line| line.split(':').next().unwrap())
+            .collect();
         assert_eq!(emitted, expected, "{}", entry.name);
-        for (emitted, field) in entry.fields.iter().zip(&schema.fields) {
-            assert_eq!(emitted.ty, field.ty.spelling());
-            assert_eq!(emitted.default, field.default_text());
-            let flags = [
-                (field.flags.is_required(), 'R'),
-                (field.flags.is_writable(), 'W'),
-                (field.flags.is_bindable(), 'B'),
-                (field.flags.is_construction_only(), 'C'),
-            ];
-            let expected: String = flags
-                .iter()
-                .filter(|(on, _)| *on)
-                .map(|(_, c)| *c)
-                .collect();
-            assert_eq!(emitted.flags, expected);
+        for (line, field) in entry.fields.iter().zip(&schema.fields) {
+            // A project that has code gets the bare line: no range, no documentation.
+            assert_eq!(*line, expected_field_line(field), "{}", entry.name);
+            assert!(!line.contains(" // ") && !line.contains(" range "));
         }
+        assert!(entry.doc.is_none());
     }
     let box_schema = output
         .context
@@ -1309,10 +1304,32 @@ fn schema_fields_are_the_registry_fields_this_build_implements() {
         .find(|s| s.name == "Box")
         .unwrap();
     assert_eq!(
-        box_schema.fields[0].default.as_deref(),
-        Some("vec3(1.0, 1.0, 1.0)")
+        box_schema.fields,
+        ["size: vec3 = vec3(1.0, 1.0, 1.0) [C]".to_owned()]
     );
-    assert_eq!(box_schema.fields[0].flags, "C");
+}
+
+/// `name: type = default [flags]`, written out from the registry field independently of the
+/// exporter: flag letters in the order R W B C.
+fn expected_field_line(field: &mtek_compiler::stdlib::FieldDef) -> String {
+    let flags: String = [
+        (field.flags.is_required(), 'R'),
+        (field.flags.is_writable(), 'W'),
+        (field.flags.is_bindable(), 'B'),
+        (field.flags.is_construction_only(), 'C'),
+    ]
+    .iter()
+    .filter(|(on, _)| *on)
+    .map(|(_, c)| *c)
+    .collect();
+    let mut line = format!("{}: {}", field.name, field.ty.spelling());
+    if let Some(default) = field.default_text() {
+        line.push_str(&format!(" = {default}"));
+    }
+    if !flags.is_empty() {
+        line.push_str(&format!(" [{flags}]"));
+    }
+    line
 }
 
 #[test]
@@ -1321,7 +1338,7 @@ fn the_schema_accepts_what_is_emitted_and_rejects_what_is_not() {
     assert_valid(&output);
     let validator = validator();
     let mut value = json(&output);
-    value["contextFormat"] = Value::from(2);
+    value["contextFormat"] = Value::from(3);
     assert!(
         !validator.is_valid(&value),
         "a new format number needs a new schema"
@@ -1339,10 +1356,25 @@ fn the_schema_accepts_what_is_emitted_and_rejects_what_is_not() {
         "an empty truncated object is not emitted"
     );
     let mut value = json(&output);
-    value["schemas"][0]["fields"][0]["flags"] = Value::from("CW");
+    value["schemas"][0]["fields"][0] = Value::from("Size! vec3");
     assert!(
         !validator.is_valid(&value),
-        "flags are in the order R W B C"
+        "a field line starts with the field name and a colon"
+    );
+    let mut value = json(&output);
+    value["schemas"][0]["fields"][0] = serde_json::json!({ "name": "size" });
+    assert!(
+        !validator.is_valid(&value),
+        "a field is a line, not an object"
+    );
+    let mut value = json(&output);
+    value["reference"] = serde_json::json!({ "surprise": [] });
+    assert!(!validator.is_valid(&value), "reference has fixed keys");
+    let mut value = json(&output);
+    value["reference"] = serde_json::json!({});
+    assert!(
+        !validator.is_valid(&value),
+        "an empty reference is not emitted"
     );
 }
 
@@ -1436,6 +1468,9 @@ fn goldens() {
 fn goldens_are_all_used_and_the_example_projects_have_no_errors() {
     let mut used: BTreeSet<&str> = GOLDENS.iter().map(|g| g.name).collect();
     used.insert("examples.features.json");
+    // The goldens of the cold-start projects are pinned by `tests/context_cold_start.rs`.
+    used.insert("empty.default.json");
+    used.insert("scene-stub.default.json");
     let dir = repo("tests/context/golden");
     if dir.exists() {
         for entry in fs::read_dir(&dir).unwrap() {

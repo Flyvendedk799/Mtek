@@ -6,8 +6,10 @@
 //!
 //! 1. **examples**, the least relevant first (the list is most relevant first);
 //! 2. **neighbour symbols**, the last in file order first;
-//! 3. **schemas**, the last by name first;
-//! 4. **the requested symbols** (or the entry scene's declarations), the last first.
+//! 3. **sections of the built-in library** (`reference`, cold-start projects only), in the order of
+//!    [`REFERENCE_SECTIONS`](super::model::REFERENCE_SECTIONS);
+//! 4. **schemas**, the last by name first;
+//! 5. **the requested symbols** (or the entry scene's declarations), the last first.
 //!
 //! An item of a later phase is only dropped once every item of the phases before it is gone, and
 //! within a phase the fewest items are dropped that make the text fit. The version fields,
@@ -35,13 +37,15 @@ pub struct Draft {
 enum Phase {
     Examples,
     Neighbours,
+    Reference,
     Schemas,
     Symbols,
 }
 
-const PHASES: [Phase; 4] = [
+const PHASES: [Phase; 5] = [
     Phase::Examples,
     Phase::Neighbours,
+    Phase::Reference,
     Phase::Schemas,
     Phase::Symbols,
 ];
@@ -52,6 +56,7 @@ impl Draft {
         match phase {
             Phase::Examples => self.context.examples.len(),
             Phase::Neighbours => self.neighbour.iter().filter(|n| **n).count(),
+            Phase::Reference => self.context.reference.sections().len(),
             Phase::Schemas => self.context.schemas.len(),
             Phase::Symbols => self.neighbour.iter().filter(|n| !**n).count(),
         }
@@ -77,6 +82,12 @@ impl Draft {
                             Phase::Neighbours => dropped.neighbours.push(symbol.name),
                             _ => dropped.symbols.push(symbol.name),
                         }
+                    }
+                }
+                Phase::Reference => {
+                    if let Some(section) = draft.context.reference.sections().first().copied() {
+                        draft.context.reference.clear(section);
+                        dropped.reference.push(section.to_owned());
                     }
                 }
                 Phase::Schemas => {
@@ -129,8 +140,7 @@ pub fn fit(draft: Draft, max_bytes: usize) -> Result<(Context, String), usize> {
 mod tests {
     use super::*;
     use crate::context::model::{
-        ExampleEntry, FieldEntry, ProjectSection, SchemaEntry, Supported, SymbolEntry,
-        SyntaxSection,
+        ExampleEntry, ProjectSection, Reference, SchemaEntry, Supported, SymbolEntry, SyntaxSection,
     };
 
     fn symbol(name: &str) -> SymbolEntry {
@@ -148,12 +158,8 @@ mod tests {
     fn draft() -> Draft {
         let schemas = ["A", "B", "C"].map(|name| SchemaEntry {
             name: name.to_owned(),
-            fields: vec![FieldEntry {
-                name: "size".to_owned(),
-                ty: "vec3".to_owned(),
-                default: None,
-                flags: "C".to_owned(),
-            }],
+            doc: None,
+            fields: vec!["size: vec3 [C]".to_owned()],
         });
         let examples = ["one", "two", "three", "four"].map(|title| ExampleEntry {
             title: title.to_owned(),
@@ -163,7 +169,7 @@ mod tests {
             context: Context {
                 language_version: "0.1",
                 compiler_version: "0.1.0-dev",
-                context_format: 1,
+                context_format: 2,
                 supported: Supported {
                     features: vec!["scenes".to_owned()],
                     not_supported: vec!["while".to_owned()],
@@ -179,7 +185,9 @@ mod tests {
                     modules: vec!["src/main.mtek".to_owned()],
                 },
                 symbols: ["n0", "s0", "s1", "n1", "s2"].map(symbol).to_vec(),
+                schema_guide: "Read the lines.",
                 schemas: schemas.to_vec(),
+                reference: Reference::default(),
                 examples: examples.to_vec(),
                 diagnostics_guide: "Read the diagnostics.",
                 truncated: None,
@@ -248,6 +256,58 @@ mod tests {
         let t = dropped(none - 1);
         assert_eq!(t.neighbours.names, ["n1"]);
         assert!(t.schemas.is_empty() && t.symbols.is_empty());
+    }
+
+    #[test]
+    fn the_library_goes_after_the_neighbours_and_before_the_schemas() {
+        use crate::context::model::{ConventionEntry, EnumEntry};
+        let mut draft = draft();
+        draft.context.reference = Reference {
+            builtins: vec!["abs(x: T) -> T".to_owned()],
+            type_classes: vec!["T = f32".to_owned()],
+            conventions: vec![ConventionEntry {
+                topic: "time".to_owned(),
+                notes: vec!["frame: seconds".to_owned()],
+            }],
+            enums: vec![EnumEntry {
+                name: "Key".to_owned(),
+                doc: "A key.".to_owned(),
+                members: "A B".to_owned(),
+            }],
+            ..Reference::default()
+        };
+        // Bisection drops exactly what dropping one at a time drops, with the library in.
+        let full = render(&draft.context).len();
+        for max_bytes in 0..=full + 10 {
+            match (fit(draft.clone(), max_bytes), one_by_one(&draft, max_bytes)) {
+                (Ok(a), Ok(b)) => assert_eq!(a.1, b.1, "{max_bytes}"),
+                (Err(a), Err(b)) => assert_eq!(a, b, "{max_bytes}"),
+                (a, b) => panic!("{max_bytes}: {a:?} against {b:?}"),
+            }
+        }
+        let dropped = |max_bytes| {
+            fit(draft.clone(), max_bytes)
+                .unwrap()
+                .0
+                .truncated
+                .unwrap_or_default()
+        };
+        // Examples and neighbours go first; then the lowest-priority section of the library.
+        let base = draft
+            .dropping(Phase::Examples, 4)
+            .dropping(Phase::Neighbours, 2);
+        let t = dropped(render(&base.context).len() - 1);
+        assert_eq!(t.neighbours.count, 2);
+        assert_eq!(t.reference.names, ["builtins"]);
+        assert!(t.schemas.is_empty() && t.symbols.is_empty());
+        // `typeClasses` goes with `builtins`; the schemas only once every section is gone.
+        let bare = base.dropping(Phase::Reference, 3);
+        assert!(bare.context.reference.is_empty());
+        let t = dropped(render(&bare.context).len());
+        assert_eq!(t.reference.names, ["builtins", "conventions", "enums"]);
+        assert!(t.schemas.is_empty());
+        let t = dropped(render(&bare.context).len() - 1);
+        assert_eq!(t.schemas.names, ["C"]);
     }
 
     #[test]

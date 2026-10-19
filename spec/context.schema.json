@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Mtek context export",
-  "description": "The document `mtek context` prints (spec/ai-and-benchmarks.md section 2, decision 0072). contextFormat 1. Keys are never added without a new contextFormat, so unknown keys are errors.",
+  "description": "The document `mtek context` prints (spec/ai-and-benchmarks.md section 2, decisions 0072 and 0110). contextFormat 2 (decision 0110: field lines instead of field objects, schemaGuide, reference). Keys are never added without a new contextFormat, so unknown keys are errors.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,6 +12,7 @@
     "syntax",
     "project",
     "symbols",
+    "schemaGuide",
     "schemas",
     "examples",
     "diagnosticsGuide"
@@ -28,7 +29,7 @@
     },
     "contextFormat": {
       "description": "The version of this format.",
-      "const": 1
+      "const": 2
     },
     "supported": {
       "type": "object",
@@ -97,10 +98,65 @@
       "type": "array",
       "items": { "$ref": "#/$defs/symbol" }
     },
+    "schemaGuide": {
+      "description": "How to read the field lines of schemas.",
+      "type": "string",
+      "minLength": 1
+    },
     "schemas": {
-      "description": "The registry schemas the requested declarations use, sorted by name, with the fields this build implements.",
+      "description": "The registry schemas the requested declarations use, sorted by name, with the fields this build implements. For a cold-start project (no entity, prefab, material, function, constant or struct) every implemented schema that has fields, with the documentation and range of its fields.",
       "type": "array",
       "items": { "$ref": "#/$defs/schema" }
+    },
+    "reference": {
+      "description": "Present only for a cold-start project: the built-in library, generated from the registry. Each key is a section that --max-bytes can drop whole (lowest priority first: records, body, events, builtins with typeClasses, conventions, enums).",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "enums": {
+          "description": "Built-in enums with every member.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/enum" },
+          "minItems": 1
+        },
+        "typeClasses": {
+          "description": "What the type classes T, I and V stand for in builtins.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "builtins": {
+          "description": "Signatures of the built-in functions, namespace members and accessors; the registry's documentation follows ' // ' where a signature does not say enough.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "events": {
+          "description": "The events a handler can subscribe to.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "records": {
+          "description": "Built-in record types and their fields.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "body": {
+          "description": "Body commands and readable body properties.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "conventions": {
+          "description": "Cross-cutting rules (colour spaces, time), quoted from the registry's documentation.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/convention" },
+          "minItems": 1
+        }
+      }
     },
     "examples": {
       "description": "Complete programs that mtek check accepts, most relevant first.",
@@ -119,6 +175,7 @@
       "properties": {
         "examples": { "$ref": "#/$defs/dropped" },
         "neighbours": { "$ref": "#/$defs/dropped" },
+        "reference": { "$ref": "#/$defs/dropped" },
         "schemas": { "$ref": "#/$defs/dropped" },
         "symbols": { "$ref": "#/$defs/dropped" }
       }
@@ -177,24 +234,44 @@
       "required": ["name", "fields"],
       "properties": {
         "name": { "type": "string", "minLength": 1 },
+        "doc": {
+          "description": "The registry documentation of the schema; only for a cold-start project.",
+          "type": "string",
+          "minLength": 1
+        },
         "fields": { "type": "array", "items": { "$ref": "#/$defs/field" } }
       }
     },
     "field": {
+      "description": "One field: `name: type`, then ` = default` (canonical source text) when it has one, ` [flags]` when it has any (some of R required, W writable from handlers, B bindable, C construction-only, in that order), and for a cold-start project ` range R` when the range says more than 'greater than zero' and ` // meaning` (the registry documentation).",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*: [^ ]+( = [^ ].*?)?( \\[R?W?B?C?\\])?( range [^ ].*?)?( // .+)?$"
+    },
+    "enum": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "type", "default", "flags"],
+      "required": ["name", "doc", "members"],
       "properties": {
         "name": { "type": "string", "minLength": 1 },
-        "type": { "type": "string", "minLength": 1 },
-        "default": {
-          "description": "Canonical source text; null for a field without a default.",
-          "type": ["string", "null"]
-        },
-        "flags": {
-          "description": "Some of R (required), W (writable from handlers), B (bindable), C (construction-only), in that order.",
+        "doc": { "type": "string", "minLength": 1 },
+        "members": {
+          "description": "Every member this build implements, as written after the enum's name and a point, separated by one space.",
           "type": "string",
-          "pattern": "^R?W?B?C?$"
+          "minLength": 1
+        }
+      }
+    },
+    "convention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topic", "notes"],
+      "properties": {
+        "topic": { "type": "string", "minLength": 1 },
+        "notes": {
+          "description": "`item: documentation`, one per registry item the convention concerns.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
         }
       }
     },

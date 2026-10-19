@@ -1,7 +1,7 @@
 {
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "contextFormat": 1,
+  "contextFormat": 2,
   "supported": {
     "features": [
       "imports",
@@ -304,16 +304,12 @@
       "line": 23
     }
   ],
+  "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",
   "schemas": [
     {
       "name": "Box",
       "fields": [
-        {
-          "name": "size",
-          "type": "vec3",
-          "default": "vec3(1.0, 1.0, 1.0)",
-          "flags": "C"
-        }
+        "size: vec3 = vec3(1.0, 1.0, 1.0) [C]"
       ]
     }
   ],

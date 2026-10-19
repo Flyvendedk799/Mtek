@@ -30,12 +30,14 @@ mtek context --entry src/main.mtek [--symbol Demo.Cube …] [--max-bytes 24000] 
 Output (JSON, deterministic):
 ```json
 {
-  "languageVersion": "0.1", "compilerVersion": "0.1.0", "contextFormat": 1,
+  "languageVersion": "0.1", "compilerVersion": "0.1.0", "contextFormat": 2,
   "supported": { "features": ["scenes", "entities", "materials", "bind", "…"], "notSupported": ["while", "transparency", "…"] },
   "syntax": { "keywords": ["…"], "precedence": ["…"], "rules": ["Statements and fields end with ';'", "…"] },
   "project": { "entry": "src/main.mtek", "scene": "Demo", "modules": ["src/main.mtek"] },
   "symbols": [ { "name": "Demo.speed", "kind": "state", "type": "f32", "doc": "…", "file": "src/main.mtek", "line": 14 } ],
-  "schemas": [ { "name": "Box", "fields": [ { "name": "size", "type": "vec3", "default": "vec3(1.0, 1.0, 1.0)", "flags": "C" } ] } ],
+  "schemaGuide": "A field line reads `name: type = default [flags] range R // meaning`. Flags: R required, W writable from handlers, B bindable, C construction-only.",
+  "schemas": [ { "name": "Box", "fields": ["size: vec3 = vec3(1.0, 1.0, 1.0) [C]"] } ],
+  "reference": { "enums": [ { "name": "Key", "doc": "…", "members": "A B … ArrowUp …" } ], "typeClasses": ["T = f32 | vec2 | vec3 | vec4", "…"], "builtins": ["color.linear(rgb: vec3, a: f32) -> color // …", "…"], "events": ["…"], "records": ["…"], "body": ["…"], "conventions": [ { "topic": "time", "notes": ["frame: …"] } ] },
   "examples": [ { "title": "Bind a material parameter to scene state", "source": "material: Unlit { color: bind(tint) };" } ],
   "diagnosticsGuide": "Diagnostics are JSON objects with code, message, source span, expected/actual, suggestedEdits."
 }
@@ -45,9 +47,10 @@ Rules:
 - Built only from the registry and the resolved project. The `supported` list is derived from what **this compiler build implements** (registry `since` ≤ current milestone and not `E9010`); planned features appear only under `notSupported` with their planned version. Never advertise planned features as supported (blueprint §10).
 - **Neighbourhood, not the whole library** (blueprint §9.2): with `--symbol`, include those symbols, their types, the schemas of fields they use, symbols one reference away, and examples tagged with those features. Without `--symbol`, include the entry scene's symbols and the schemas it uses.
 - Examples are compiled by a test on every build (they must check without errors).
-- `--max-bytes` truncates the lowest-priority sections first (examples, then neighbour symbols, then schemas, then the requested symbols) and records what was dropped in a `truncated` field (per section: a count and the first names).
+- **A cold start gets the library** (decision 0110). A project that declares nothing but scenes, scene objects (cameras), state and params has no code to learn the library from, and a model that is not told the field names, the enum members and the argument lists invents them. For such a project `schemas` holds every implemented schema that has fields, each field with its range (when it says more than "greater than zero") and the registry's documentation of it (units, meaning), and `reference` holds, generated from the registry: every member of every built-in enum, the type classes and the signature of every global function and namespace member (documentation after `//` where the signature does not say enough), the events, the built-in record types, the body commands and properties, and the conventions (colour spaces, the frame delta against the fixed step), each the `doc` of a registry item named in `context::reference::CONVENTIONS`. Nothing in it is written in Rust: a rule that matters is added to the `doc` of the item it is about (decision 0111). `examples` is empty for a cold start; for a project that has code `schemas` are the bare lines of the schemas it uses and `reference` is absent. The byte budget and what was left out to fit it are decision 0112.
+- `--max-bytes` truncates the lowest-priority sections first (examples, then neighbour symbols, then the sections of `reference`, lowest priority first: records, body, events, builtins, conventions, enums; then schemas, then the requested symbols) and records what was dropped in a `truncated` field (per section: a count and the first names).
 
-Implemented by `crates/mtek-compiler/src/context/` and `crates/mtek-cli/src/context_cmd.rs`. The format is fixed by `spec/context.schema.json` (`contextFormat` 1; `truncated` is the only key beyond the sketch above and is absent when nothing was dropped). What the sketch leaves open — how `supported`/`notSupported` are derived, the neighbourhood algorithm, example selection, the truncation order and the failure modes — is decision 0072.
+Implemented by `crates/mtek-compiler/src/context/` and `crates/mtek-cli/src/context_cmd.rs`. The format is fixed by `spec/context.schema.json` (`contextFormat` 2: decision 0110 made a schema field a line of text, added `schemaGuide` and `reference`, and bumped the number because a key was added; `truncated` is absent when nothing was dropped). What the sketch leaves open — how `supported`/`notSupported` are derived, the neighbourhood algorithm, example selection, the truncation order and the failure modes — is decision 0072; the cold-start context is decisions 0110 to 0112.
 
 ## 3. Grammar export and the first constrained-decoding adapter (M6)
 

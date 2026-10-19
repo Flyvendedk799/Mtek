@@ -1,7 +1,7 @@
 {
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "contextFormat": 1,
+  "contextFormat": 2,
   "supported": {
     "features": [
       "imports",
@@ -320,162 +320,53 @@
       "line": 80
     }
   ],
+  "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",
   "schemas": [
     {
       "name": "Box",
       "fields": [
-        {
-          "name": "size",
-          "type": "vec3",
-          "default": "vec3(1.0, 1.0, 1.0)",
-          "flags": "C"
-        }
+        "size: vec3 = vec3(1.0, 1.0, 1.0) [C]"
       ]
     },
     {
       "name": "BoxCollider",
       "fields": [
-        {
-          "name": "size",
-          "type": "vec3",
-          "default": null,
-          "flags": "RC"
-        },
-        {
-          "name": "sensor",
-          "type": "bool",
-          "default": "false",
-          "flags": "C"
-        },
-        {
-          "name": "friction",
-          "type": "f32",
-          "default": "0.5",
-          "flags": "C"
-        },
-        {
-          "name": "restitution",
-          "type": "f32",
-          "default": "0.0",
-          "flags": "C"
-        }
+        "size: vec3 [RC]",
+        "sensor: bool = false [C]",
+        "friction: f32 = 0.5 [C]",
+        "restitution: f32 = 0.0 [C]"
       ]
     },
     {
       "name": "Dynamic",
       "fields": [
-        {
-          "name": "mass",
-          "type": "f32",
-          "default": "1.0",
-          "flags": "C"
-        },
-        {
-          "name": "linear_damping",
-          "type": "f32",
-          "default": "0.0",
-          "flags": "C"
-        },
-        {
-          "name": "angular_damping",
-          "type": "f32",
-          "default": "0.05",
-          "flags": "C"
-        }
+        "mass: f32 = 1.0 [C]",
+        "linear_damping: f32 = 0.0 [C]",
+        "angular_damping: f32 = 0.05 [C]"
       ]
     },
     {
       "name": "Entity",
       "fields": [
-        {
-          "name": "position",
-          "type": "vec3",
-          "default": "vec3(0.0, 0.0, 0.0)",
-          "flags": "WB"
-        },
-        {
-          "name": "rotation",
-          "type": "quat",
-          "default": "quat.identity()",
-          "flags": "WB"
-        },
-        {
-          "name": "scale",
-          "type": "vec3",
-          "default": "vec3(1.0, 1.0, 1.0)",
-          "flags": "WB"
-        },
-        {
-          "name": "visible",
-          "type": "bool",
-          "default": "true",
-          "flags": "WB"
-        },
-        {
-          "name": "mesh",
-          "type": "mesh",
-          "default": null,
-          "flags": "C"
-        },
-        {
-          "name": "material",
-          "type": "material",
-          "default": "Unlit {}",
-          "flags": "C"
-        },
-        {
-          "name": "light",
-          "type": "light",
-          "default": null,
-          "flags": "C"
-        },
-        {
-          "name": "body",
-          "type": "body",
-          "default": null,
-          "flags": "C"
-        },
-        {
-          "name": "collider",
-          "type": "collider",
-          "default": null,
-          "flags": "C"
-        }
+        "position: vec3 = vec3(0.0, 0.0, 0.0) [WB]",
+        "rotation: quat = quat.identity() [WB]",
+        "scale: vec3 = vec3(1.0, 1.0, 1.0) [WB]",
+        "visible: bool = true [WB]",
+        "mesh: mesh [C]",
+        "material: material = Unlit {} [C]",
+        "light: light [C]",
+        "body: body [C]",
+        "collider: collider [C]"
       ]
     },
     {
       "name": "Pbr",
       "fields": [
-        {
-          "name": "base_color",
-          "type": "color",
-          "default": "#ffffff",
-          "flags": "WB"
-        },
-        {
-          "name": "metallic",
-          "type": "f32",
-          "default": "0.0",
-          "flags": "WB"
-        },
-        {
-          "name": "roughness",
-          "type": "f32",
-          "default": "0.5",
-          "flags": "WB"
-        },
-        {
-          "name": "base_color_texture",
-          "type": "texture",
-          "default": "texture.white()",
-          "flags": "C"
-        },
-        {
-          "name": "base_color_sampler",
-          "type": "sampler",
-          "default": "sampler.linear_repeat()",
-          "flags": "C"
-        }
+        "base_color: color = #ffffff [WB]",
+        "metallic: f32 = 0.0 [WB]",
+        "roughness: f32 = 0.5 [WB]",
+        "base_color_texture: texture = texture.white() [C]",
+        "base_color_sampler: sampler = sampler.linear_repeat() [C]"
       ]
     }
   ],

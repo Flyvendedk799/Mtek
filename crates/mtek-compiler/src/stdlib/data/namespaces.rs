@@ -224,7 +224,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         namespace(
             "frame",
             Milestone::M1,
-            "Per-frame values. Readable in CPU code and in `bind` expressions, not in GPU stage code: route them through material parameters.",
+            "Per-frame values, readable in CPU code and in `bind` expressions, not in GPU stage code (route them through material parameters). `update(dt)` gets the frame delta, which varies from frame to frame; `fixed_update(dt)` runs zero or more times per frame and gets the constant fixed step, 1/60 s by default.",
             vec![
                 value(
                     "time",
@@ -453,7 +453,7 @@ pub(super) fn types() -> Vec<TypeDef> {
             TypeKind::Color,
             Milestone::M1,
             true,
-            "Linear-light RGBA with straight alpha; distinct from `vec4`.",
+            "Linear-light RGBA with straight alpha; distinct from `vec4`. A literal `#rrggbb` is sRGB-encoded and converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a` and `.rgb`; no arithmetic.",
         ),
         simple(
             "array",
@@ -521,7 +521,7 @@ pub(super) fn types() -> Vec<TypeDef> {
                 // Planned for M2; implemented by task M2-04 before the M2 gate (decision 0039).
                 Milestone::M1,
                 true,
-                "The interpolated inputs of a material fragment stage; the compiler records which fields a material reads.",
+                "The interpolated inputs of a material fragment stage.",
             )
         },
         TypeDef {

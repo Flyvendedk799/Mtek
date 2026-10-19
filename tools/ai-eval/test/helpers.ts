@@ -151,7 +151,7 @@ export class FakeMtek implements CommandRunner {
       const doc = {
         languageVersion: "0.1",
         compilerVersion: "0.1.0-fake",
-        contextFormat: 1,
+        contextFormat: 2,
         supported: { features: ["scenes"], notSupported: ["while"] },
         syntax: { keywords: ["scene"], precedence: [], rules: [] },
         project: { entry: "src/main.mtek", scene: "Demo", modules: ["src/main.mtek"] },
