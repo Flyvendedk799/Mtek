@@ -123,6 +123,9 @@ export interface ResourceSeries {
   /** `slope * (cycles in the last half) / mean value of the last half`, in percent: the growth the last half would add again. */
   readonly relativeGrowthPercent: number;
   readonly classification: "zero" | "plateau" | "growing";
+  /** The median change from one cycle to the next (a series that grows in steps has a median near zero) and the largest single-cycle increase. */
+  readonly medianChangePerCycle: number;
+  readonly largestIncrease: number;
 }
 
 export interface PairSummary {
@@ -306,6 +309,7 @@ export function resourceSeries(name: string, unit: string, values: readonly numb
     if (index <= values.length) at[`cycle ${String(index)}`] = values[index - 1] as number;
   }
   const allZero = values.every((v) => v === 0);
+  const deltas = values.slice(1).map((v, i) => v - (values[i] as number));
   return {
     name,
     unit,
@@ -314,6 +318,8 @@ export function resourceSeries(name: string, unit: string, values: readonly numb
     slopePerCycle: s,
     relativeGrowthPercent: growth,
     classification: allZero ? "zero" : growth <= PLATEAU_GROWTH_PERCENT ? "plateau" : "growing",
+    medianChangePerCycle: deltas.length === 0 ? 0 : median(deltas),
+    largestIncrease: deltas.length === 0 ? 0 : Math.max(0, ...deltas),
   };
 }
 

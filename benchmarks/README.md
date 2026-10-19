@@ -3,7 +3,7 @@
 This directory holds the benchmark infrastructure of Mtek: the task format of the AI/token benchmark
 (`spec/ai-and-benchmarks.md` section 6), its 34 tasks and 8 holdout tasks, the tools that keep the task set honest,
 and the three.js baselines. Task M0-10 created everything except `baselines/m0-bridge` (task M0-09).
-The runtime benchmark (`benchmarks/runtime/`, spec section 7) does not exist yet (M7).
+The runtime benchmark (`benchmarks/runtime/`, spec section 7, M7-04; decisions 0095 to 0099) is its own workspace package with its own README; its published results are in `benchmarks/results/runtime/`.
 
 **Nothing here is a model result.** The Mtek files of a task (starter, reference, expected diagnostics)
 were written by hand from the specification. Task M6-07 (`tools/ai-eval`, decision 0077) compiled and
@@ -25,7 +25,7 @@ evidence in `evidence/M6/ai-eval/`). The holdout task was not opened for this an
 | Mutation checks | wrong-but-plausible solutions were run against the fixtures of most new tasks; the few that pass are differences no pixel or required symbol can show, listed in the evidence and the decisions |
 | `mtek test` and the `set_input` step | implemented (M6-09, decision 0074) |
 | The harness | `tools/ai-eval` (M6-07, decision 0077): tested with the replay client only; no model has been run, so no difficulty is measured |
-| Known benchmark gaps | the extra tasks of decisions 0088 and 0089 (`interaction-09` to `-11`, `scene-rendering-11`) close the key-release, held-key, fixed-tick and texture gaps, so the set is **34 tasks**, four more than the blueprint's 30 (§12.2: 10/8/6/6); no `fixed_update` physics, lit-texture, mip-map or GLB-texture task; the three.js side has a manual-render-loop colour-upload quirk found by `interaction-09` (decision 0088); no model runs, token counts or runtime benchmark (M7) |
+| Known benchmark gaps | the extra tasks of decisions 0088 and 0089 (`interaction-09` to `-11`, `scene-rendering-11`) close the key-release, held-key, fixed-tick and texture gaps, so the set is **34 tasks**, four more than the blueprint's 30 (§12.2: 10/8/6/6); no `fixed_update` physics, lit-texture, mip-map or GLB-texture task; the three.js side has a manual-render-loop colour-upload quirk found by `interaction-09` (decision 0088); no model runs and no token counts (the runtime benchmark exists since M7-04, see `runtime/README.md`) |
 
 ## Layout
 

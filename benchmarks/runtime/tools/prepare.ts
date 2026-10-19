@@ -159,6 +159,15 @@ export interface PreparedSite {
   readonly runtimeVersion: string;
 }
 
+/** The version of the package Node would resolve for a file of this directory: the nearest node_modules on the way up (npm may nest a pinned version below benchmarks/). */
+export function resolvedPackageVersion(name: string): string {
+  for (const dir of [RUNTIME_ROOT, join(RUNTIME_ROOT, ".."), REPO_ROOT]) {
+    const candidate = join(dir, "node_modules", name, "package.json");
+    if (existsSync(candidate)) return packageVersion(candidate);
+  }
+  throw new Error("cannot resolve " + name + " from benchmarks/runtime");
+}
+
 function packageVersion(path: string): string {
   return (JSON.parse(readFileSync(path, "utf8")) as { version: string }).version;
 }
@@ -224,8 +233,8 @@ export async function prepareSite(options: { skipCliBuild?: boolean; only?: read
     builtAt: new Date().toISOString(),
     workloads: only,
     mtekVersion: execFileSync(cli, ["--version"], { encoding: "utf8" }).trim(),
-    threeVersion: packageVersion(join(REPO_ROOT, "node_modules", "three", "package.json")),
-    rapierVersion: packageVersion(join(REPO_ROOT, "node_modules", "@dimforge", "rapier3d-compat", "package.json")),
+    threeVersion: resolvedPackageVersion("three"),
+    rapierVersion: resolvedPackageVersion("@dimforge/rapier3d-compat"),
     runtimeVersion: packageVersion(join(REPO_ROOT, "packages", "runtime-web", "package.json")),
   };
   writeFileSync(join(SITE_DIR, "prepared.json"), `${JSON.stringify(prepared, null, 2)}\n`);

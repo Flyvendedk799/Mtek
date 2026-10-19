@@ -35,6 +35,8 @@ declare global {
     __bench: BenchPageApi;
     __benchGate?: BenchGate;
     __benchSample?: () => Promise<Record<string, number>>;
+    /** Hands one cycle record to the runner, so the page retains nothing that grows with the number of cycles. */
+    __benchEmit?: (record: unknown) => Promise<void>;
   }
 }
 
@@ -321,6 +323,7 @@ async function runCycles(spec: Extract<PassSpec, { pass: "cycles" | "cycles-long
   installCounters();
   const sample = window.__benchSample;
   const settle = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 50));
+  const emit = window.__benchEmit;
   const cycles: unknown[] = [];
   const baseline = sample === undefined ? null : await sample();
   for (let cycle = 0; cycle < spec.cycles; cycle += 1) {
@@ -367,7 +370,7 @@ async function runCycles(spec: Extract<PassSpec, { pass: "cycles" | "cycles-long
       }
     })();
     const heap = sample === undefined ? null : await sample();
-    cycles.push({
+    const entry = {
       cycle,
       mountMs,
       firstFrameMs,
@@ -388,7 +391,9 @@ async function runCycles(spec: Extract<PassSpec, { pass: "cycles" | "cycles-long
       runtimeBeforeDispose,
       runtimeAfterDispose,
       process: heap,
-    });
+    };
+    if (emit === undefined) cycles.push(entry);
+    else await emit(entry);
   }
   return {
     pass: "cycles",

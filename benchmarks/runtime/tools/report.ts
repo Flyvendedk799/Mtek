@@ -139,7 +139,7 @@ function summarySection(reports: readonly WorkloadReport[]): string {
     "",
     `The investigation threshold of spec/ai-and-benchmarks.md section 7 is a **proposal, not a speed guarantee**: a p95 more than ${String(THRESHOLD_PERCENT)} % above the direct-WebGPU reference on the same machine means the cause must be investigated before release copy says anything about performance. ` +
       `Of ${String(reports.length)} workloads, **${String(exceeding.length)} exceed it**${exceeding.length > 0 ? ` (${exceeding.map((r) => r.file.title).join("; ")})` : ""}, ${String(within.length)} are within it${within.length > 0 ? ` (${within.map((r) => r.file.title).join("; ")})` : ""}` +
-      `${unmeasured.length > 0 ? `, and ${String(unmeasured.length)} could not be measured (${unmeasured.map((r) => `${r.file.title}: ${r.verdict.reason}`).join("; ")})` : ""}. No workload was removed or relaxed after a failure.`,
+      `${unmeasured.length > 0 ? `, and ${String(unmeasured.length)} could not be measured (${unmeasured.map((r) => `${r.file.title}: ${r.verdict.reason}`).join("; ")})` : ""}. No workload was removed or relaxed after a failure. The spec's "controlled core-rendering workload" is the constant scene (decision 0096); the others are held to the same number so that none escapes.`,
   ];
   return lines.join("\n");
 }
@@ -211,7 +211,7 @@ function environmentSection(run: RawRun, floor: FloorSummary): string {
   ];
   const lines = [table(["Item", "Value"], rows), ""];
   lines.push(
-    "The machine is a shared workstation: other processes (other agents' builds and browser tests) ran on its CPU between passes, which no setting here can exclude. The load columns above are measured, not assumed. Wall-clock outliers are therefore reported as measured (p99 and the min/max of the p95 across runs), never trimmed.",
+    "The machine is a shared workstation: other processes (other agents' builds and browser tests) may have run on its CPU during a pass, which no setting here can exclude. The load columns above are measured, not assumed. Wall-clock outliers are therefore reported as measured (p99 and the min/max of the p95 across runs), never trimmed.",
   );
   lines.push("");
   lines.push(
@@ -306,7 +306,7 @@ function fmtPercentCell(mtek: number | null, direct: number | null): string {
 
 function workloadSection(r: WorkloadReport, floor: FloorSummary): string {
   const { pairs } = r;
-  const out: string[] = [`### ${r.file.title}`, "", `<a id="${r.name}"></a>`, r.file.description, ""];
+  const out: string[] = [`<a id="${r.name}"></a>`, "", `### ${r.file.title}`, "", r.file.description, ""];
   const rows: string[][] = [];
   const frame = (f: (p: PairSummary) => string): ((p: PairSummary) => string) => (p) => (p.frame === null ? "n/a" : f(p));
   if (r.file.kind !== "cycles") {
@@ -451,6 +451,10 @@ function cyclesSection(r: WorkloadReport | undefined): string {
     out.push(`${String(p.cycles.cycles)} cycles.`, "", resourceTable(p.cycles.resources));
     if (p.cyclesLong !== null) {
       out.push("", `The supplementary run of ${String(p.cyclesLong.cycles)} cycles (same page, same code), to see whether a series that is still moving after ${String(p.cycles.cycles)} cycles settles:`, "", resourceTable(p.cyclesLong.resources.filter((s) => s.classification !== "zero")));
+      const heap = p.cyclesLong.resources.find((s) => s.unit === "bytes" && s.name.startsWith("JavaScript heap"));
+      if (heap !== undefined) {
+        out.push("", `Heap in use, whole ${String(p.cyclesLong.cycles)}-cycle run: median change per cycle ${fmtBytes(heap.medianChangePerCycle)}, largest single-cycle increase ${fmtBytes(heap.largestIncrease)}, total change from the first to the last cycle ${fmtBytes((heap.values[heap.values.length - 1] ?? 0) - (heap.values[0] ?? 0))}.`);
+      }
     }
   }
   out.push("", cyclesReading(r));
@@ -480,10 +484,14 @@ function cyclesReading(r: WorkloadReport): string {
   return lines.join("\n");
 }
 
-const LIMITS = `
-- **One machine, one browser, one run.** All numbers come from one workstation (AMD Radeon RX 7900 XTX, Windows 11) and one Chromium build in headless mode, in one run with 3 timing runs per implementation. They say nothing about other GPUs, drivers, browsers or operating systems, and nothing about presented frame rates: the target is offscreen and the loop is not tied to the display.
-- **The machine was shared.** Other agent sessions used the CPU (and, under the lock, took turns on the GPU). Load before and during each pass is recorded in the raw results and summarised above; it was not zero.
-- **Frame time is CPU time.** The GPU is so fast for these scenes that GPU time is a tiny part of every frame (see each workload's GPU row), so a CPU-side comparison is what separates the implementations; a workload that is GPU-bound on slower hardware would need its GPU rows read with the same care.
+function limits(run: RawRun): string {
+  const adapter = run.environment.gpu.adapter;
+  const machine = `${adapter?.info.description ?? "no adapter"}, ${run.environment.os.version} ${run.environment.os.release}`;
+  const headless = run.environment.browser.headless ? "headless mode" : "headed mode";
+  return `
+- **One machine, one browser, one run.** All numbers come from one workstation (${machine}) and one Chromium build in ${headless}, in one run with ${String(run.meta.protocol.timingRuns)} timing runs per implementation. They say nothing about other GPUs, drivers, browsers or operating systems, and nothing about presented frame rates: the target is offscreen and the loop is not tied to the display.
+- **The machine was shared.** It is a workstation that other processes use (other agents' builds and browser tests): they may have used the CPU during any pass, and under the lock they took turns on the GPU. Load before and during each pass is recorded in the raw results and summarised above.
+- **Frame time is CPU time.** Each workload's GPU-time row shows how large the GPU part of a frame is next to the CPU part; where the GPU part is the larger one, a CPU-side comparison understates the difference, and where it is a tiny part the CPU time is what separates the implementations. A workload that is GPU-bound on slower hardware needs its GPU rows read first.
 - **GPU time resolution.** Timestamps are written at the beginning and end of the render passes; Chromium's timestamp quantisation is disabled by \`--enable-webgpu-developer-features\`. Per-frame values are small enough that their resolution matters; they are reported as measured.
 - **Allocation figures are estimates.** The sampling heap profiler samples every 4 KiB on average; small differences between implementations are not meaningful. The harness's own frame loop allocates (see the floor).
 - **Not observable.** Memory used on the GPU (Chromium exposes none to the page), the number of bodies asleep inside Mtek's physics world (the runtime does not report it), and pipeline or bind-group *destruction* (WebGPU has no such call) are not measured; where a table says "not observable" that is why.
@@ -492,6 +500,7 @@ const LIMITS = `
 - **Mount/reload/dispose reload is not like for like.** Mtek's reload re-validates a candidate program (development runtime flavour); the other two rebuild their scene objects. The numbers compare what a developer waits for, not equal work.
 - **No speed claim follows.** Nothing in this report is a performance guarantee or may be quoted as one; it records what was measured and what exceeds the investigation threshold.
 `.trim();
+}
 
 const REPRODUCE = (runId: string): string =>
   `
@@ -517,6 +526,8 @@ export function renderReport(run: RawRun): { markdown: string; summary: unknown 
     `> Generated by \`benchmarks/runtime/tools/report.ts\` from \`benchmarks/results/runtime/raw/${run.meta.runId}/\`. Do not edit by hand: \`node benchmarks/runtime/tools/report.ts --check\` fails when this file is not what the generator prints from the stored raw results. Method: decisions 0095 to 0099; workloads and frozen definitions: \`benchmarks/runtime/\`.`,
     "",
     run.meta.smoke ? "**THIS IS A SMOKE RUN. It is not a result.**\n" : "",
+    run.meta.frozen.matches ? "" : "**THESE RESULTS WERE PRODUCED UNDER DEFINITIONS THAT DIFFER FROM THE LAST RECORDED FREEZE (FROZEN.json). They are stale.**\n",
+    run.meta.gitDirty ? "**The working tree was dirty when this run was taken: the commit below does not fully describe the code that ran.**\n" : "",
     "## 1. Summary",
     "",
     summarySection(reports),
@@ -552,7 +563,7 @@ export function renderReport(run: RawRun): { markdown: string; summary: unknown 
     "",
     "## 7. Limitations and what was not measured",
     "",
-    LIMITS,
+    limits(run),
     "",
     "## 8. Reproducing this report",
     "",

@@ -71,7 +71,7 @@ describe("the 20 percent investigation threshold", () => {
     const v = verdictAt(2);
     // The median of three runs whose p95 are 0.4, 0.404 and 0.408.
     expect(v.mtek).toBeCloseTo(0.404, 12);
-    expect(v.direct).toBeCloseTo(0.2, 12);
+    expect(v.direct).toBeCloseTo(0.202, 12);
   });
 
   it("is not-measured, never within, when Mtek or the reference has no data", () => {

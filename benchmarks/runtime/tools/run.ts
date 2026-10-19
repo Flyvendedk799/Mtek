@@ -20,7 +20,7 @@ import type { BenchContext, BenchGate, PassSpec } from "../harness/types.ts";
 import { assessAdapter } from "./adapter.ts";
 import { checkFrozen } from "./freeze.ts";
 import { readWorkload } from "./gen-mtek.ts";
-import { sampleBusy, readCpuTimes, busyPercent, waitForQuiet, type HostLoad } from "./host-load.ts";
+import { readCpuTimes, busyPercent, waitForQuiet, type HostLoad } from "./host-load.ts";
 import { withGpuLock } from "./gpu-lock.ts";
 import { roundTimings, stringifyCompact } from "./json.ts";
 import { OUT_DIR, RAW_DIR, REPO_ROOT, SITE_DIR, WORKLOADS, IMPLEMENTATIONS, isImplementation, isWorkload, type ImplementationName, type WorkloadName } from "./paths.ts";
@@ -120,6 +120,7 @@ async function runPass(browser: Browser, serverUrl: string, job: Job, spec: Pass
   let consoleWarnings = 0;
   let cdp: CDPSession | undefined;
   let allocation: RawJob["allocation"] | undefined;
+  const emitted: unknown[] = [];
   try {
     const page = await browserContext.newPage();
     page.on("pageerror", (error) => {
@@ -168,10 +169,13 @@ async function runPass(browser: Browser, serverUrl: string, job: Job, spec: Pass
       };
       await page.exposeFunction("__benchGate", gate);
     }
-    if (job.pass === "cycles") {
+    if (job.pass === "cycles" || job.pass === "cycles-long") {
       cdp = await browserContext.newCDPSession(page);
       await cdp.send("Performance.enable");
       await cdp.send("HeapProfiler.enable");
+      await page.exposeFunction("__benchEmit", (record: unknown): void => {
+        emitted.push(record);
+      });
       await page.exposeFunction("__benchSample", async (): Promise<Record<string, number>> => {
         if (cdp === undefined) return {};
         await cdp.send("HeapProfiler.collectGarbage");
@@ -193,6 +197,7 @@ async function runPass(browser: Browser, serverUrl: string, job: Job, spec: Pass
       PASS_TIMEOUT_MS,
       `${job.workload}/${job.implementation}/${job.pass}`,
     );
+    if (emitted.length > 0) (result as { records: unknown[] }).records = emitted;
     const problems = (result as { problems?: string[] } | null)?.problems ?? [];
     if (problems.length > 0) {
       return { status: "error", error: `GPU device problems: ${problems.map(neutral).join(" | ")}`, pageErrors, consoleWarnings, result, ...(allocation === undefined ? {} : { allocation }) };
@@ -226,6 +231,16 @@ async function main(): Promise<number> {
     return 4;
   }
 
+  const gitCommit = git(["rev-parse", "HEAD"]) ?? "unknown";
+  // The results directory is not code: a run must not count the files it is about to write (or an earlier run's) as changes.
+  const gitDirty = (git(["status", "--porcelain", "--", ".", ":(exclude)benchmarks/results/runtime"]) ?? "x").length > 0;
+  if (options.publish && gitDirty) {
+    process.stderr.write(
+      "refusing to publish: the working tree has uncommitted changes, so the commit recorded in the results would not describe the code that ran; commit first\n",
+    );
+    return 5;
+  }
+
   let prepared: PreparedSite;
   if (options.prepare || !existsSync(join(SITE_DIR, "prepared.json"))) {
     prepared = await prepareSite({});
@@ -241,8 +256,6 @@ async function main(): Promise<number> {
   const channel = browserChannel();
   const headless = isHeadless();
   const browser = await chromium.launch({ channel, headless, args: launchArgs });
-  const gitCommit = git(["rev-parse", "HEAD"]) ?? "unknown";
-  const gitDirty = (git(["status", "--porcelain"]) ?? "x").length > 0;
   try {
     // ---- the environment record and the hardware-only rule ------------------------------------------------------
     const probeContext = await browser.newContext();
@@ -384,7 +397,6 @@ async function main(): Promise<number> {
   } finally {
     await browser.close();
     await server.close();
-    void sampleBusy;
   }
 }
 
