@@ -1,0 +1,46 @@
+// Entry module: declare the scene Demo here.
+
+// Custom material for the sweeping colour effect
+material Sweep {
+  param time: f32;
+  
+  fragment(surface: SurfaceInput) -> color {
+    let x = surface.local_position.x;
+    let w = 0.5 + 0.5 * sin(0.8 * x + time);
+    
+    // Define colours in sRGB and convert to linear
+    let a_srgb = vec3(26.0 / 255.0, 35.0 / 255.0, 126.0 / 255.0);
+    let b_srgb = vec3(255.0 / 255.0, 179.0 / 255.0, 0.0 / 255.0);
+    
+    // Convert from sRGB to linear using color.srgb
+    let a_linear = color.srgb(a_srgb, 1.0).rgb;
+    let b_linear = color.srgb(b_srgb, 1.0).rgb;
+    
+    // Blend in linear light
+    let blended = (1.0 - w) * a_linear + w * b_linear;
+    
+    // Return as linear color
+    return color.linear(blended, 1.0);
+  }
+}
+
+// Main scene
+export scene Demo {
+  clear_color: #202020;
+  
+  camera Main {
+    position: vec3(0.0, 0.0, 6.0);
+    rotation: quat.identity();
+    projection: Perspective {
+      fov_y: 0.9;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+  
+  entity Panel {
+    position: vec3(0.4, 0.0, 0.0);
+    mesh: Box { size: vec3(4.0, 2.0, 0.2); };
+    material: Sweep { time: bind(frame.time); };
+  }
+}

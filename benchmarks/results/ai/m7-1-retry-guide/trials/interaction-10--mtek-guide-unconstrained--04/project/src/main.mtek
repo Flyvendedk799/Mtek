@@ -1,0 +1,93 @@
+scene Demo {
+    clear_color: #202020;
+
+    state right_held: bool = false;
+    state left_held: bool = false;
+    state up_held: bool = false;
+    state down_held: bool = false;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Field {
+        position: vec3(0.0, 0.0, -1.0);
+        mesh: Box { size: vec3(10.0, 10.0, 0.2) };
+        material: Unlit { color: #303030 };
+    }
+
+    entity Ship {
+        position: vec3(0.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            let speed = 8.0;
+            var dx = 0.0;
+            var dy = 0.0;
+            
+            if right_held {
+                dx = speed * dt;
+            }
+            if left_held {
+                dx = dx - speed * dt;
+            }
+            if up_held {
+                dy = speed * dt;
+            }
+            if down_held {
+                dy = dy - speed * dt;
+            }
+            
+            self.position.x = self.position.x + dx;
+            self.position.y = self.position.y + dy;
+            
+            if self.position.x > 4.0 {
+                self.position.x = 4.0;
+            }
+            if self.position.x < -4.0 {
+                self.position.x = -4.0;
+            }
+            if self.position.y > 4.0 {
+                self.position.y = 4.0;
+            }
+            if self.position.y < -4.0 {
+                self.position.y = -4.0;
+            }
+        }
+    }
+
+    on key_down(Key.ArrowRight) {
+        right_held = true;
+    }
+
+    on key_up(Key.ArrowRight) {
+        right_held = false;
+    }
+
+    on key_down(Key.ArrowLeft) {
+        left_held = true;
+    }
+
+    on key_up(Key.ArrowLeft) {
+        left_held = false;
+    }
+
+    on key_down(Key.ArrowUp) {
+        up_held = true;
+    }
+
+    on key_up(Key.ArrowUp) {
+        up_held = false;
+    }
+
+    on key_down(Key.ArrowDown) {
+        down_held = true;
+    }
+
+    on key_up(Key.ArrowDown) {
+        down_held = false;
+    }
+}

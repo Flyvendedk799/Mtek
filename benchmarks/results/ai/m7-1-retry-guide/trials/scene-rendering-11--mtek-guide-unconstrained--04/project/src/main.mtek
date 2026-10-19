@@ -1,0 +1,66 @@
+const SWATCH = asset.texture("../assets/swatch.png");
+
+material PlainHardEdge {
+    param tex: texture = texture.white();
+    param smp: sampler = sampler.nearest_clamp();
+    
+    fragment(input: SurfaceInput) -> color {
+        let uv = input.uv;
+        let texel = sample(tex, smp, uv);
+        return color.linear(texel.xyz, 1.0);
+    }
+}
+
+material TiledHardEdge {
+    param tex: texture = texture.white();
+    param smp: sampler = sampler.nearest_clamp();
+    
+    fragment(input: SurfaceInput) -> color {
+        let uv = fract(input.uv * 2.0);
+        let texel = sample(tex, smp, uv);
+        return color.linear(texel.xyz, 1.0);
+    }
+}
+
+material SmoothMagnified {
+    param tex: texture = texture.white();
+    param smp: sampler = sampler.linear_clamp();
+    
+    fragment(input: SurfaceInput) -> color {
+        let uv = input.uv;
+        let texel = sample(tex, smp, uv);
+        return color.linear(texel.xyz, 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #1b2430;
+    
+    camera Main {
+        position: vec3(0.0, 11.0, 3.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.72;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+    
+    entity Plain {
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: PlainHardEdge { tex: SWATCH };
+        position: vec3(-2.0, 0.0, -2.0);
+    }
+    
+    entity Tiled {
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: TiledHardEdge { tex: SWATCH };
+        position: vec3(0.0, 0.0, 2.0);
+    }
+    
+    entity Smooth {
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: SmoothMagnified { tex: SWATCH };
+        position: vec3(2.0, 0.0, -2.0);
+    }
+}

@@ -1,0 +1,30 @@
+scene Demo {
+    clear_color: #1a1d23;
+
+    camera Main {
+        position: vec3(0.0, 6.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic {
+            height: 8.0;
+            near: 0.1;
+            far: 100.0;
+        };
+    }
+
+    entity Floor {
+        mesh: Plane { size: vec2(7.0, 7.0) };
+        material: Unlit { color: #3f4a5a };
+    }
+
+    entity Crate {
+        position: vec3(2.0, 0.75, -1.0);
+        mesh: Box { size: vec3(1.5, 1.5, 1.5) };
+        material: Unlit { color: #f97316 };
+    }
+
+    entity Dome {
+        position: vec3(-1.5, 0.0, 1.0);
+        mesh: Sphere { radius: 1.2 };
+        material: Unlit { color: #38bdf8 };
+    }
+}

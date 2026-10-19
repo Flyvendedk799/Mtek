@@ -9,7 +9,8 @@
 // task (all tokens of all attempts / completed tasks), overall, per mode and per category. The baseline row is copied from the
 // "before" runs for reference (the baseline is not re-run), and what was lost is stated plainly. It does not apply the rule of
 // decision 0108: that is the report's job; this document compares two states of the same condition.
-import { extractTrials, summarize, type CellSummary, type RunInfo, type TrialRow } from "./report.ts";
+import { compareHoldout, type HoldoutComparison, type HoldoutRow } from "./holdout-compare.ts";
+import { compare as h4Compare, conclusion, extractTrials, summarize, type CellSummary, type Comparison as H4Comparison, type RunInfo, type TrialRow } from "./report.ts";
 
 type Raw = Record<string, unknown>;
 
@@ -17,6 +18,16 @@ export interface CompareInput {
   /** The records of the runs before (their ids are listed), as the report reads them. */
   before: readonly Raw[];
   after: readonly Raw[];
+  /**
+   * The records of retry runs of the runs after (decision 0125): their attempts replace the NOT-JUDGED attempts of the same cells in
+   * `after`, in every table and in the verdict; both stay listed. A retry attempt for a cell that was judged is an error.
+   */
+  afterRetry?: readonly Raw[];
+  /**
+   * The holdout, from summary files only: the earlier summary (the Mtek condition of M7-05 and the baseline) and the new one.
+   * Exploratory numbers; the section is left out when this is not given.
+   */
+  holdout?: { earlier: readonly HoldoutRow[]; later: readonly HoldoutRow[] };
   /** Task ids of the holdout set: their attempts are never compared (a holdout run holds text that must stay out of the repository). */
   holdoutIds?: ReadonlySet<string>;
   title?: string;
@@ -42,12 +53,21 @@ export interface ConditionComparison {
   matchedCells: number;
   /** Cells judged in the after run that have no judged attempt before (left out of the matched comparison; none when the before runs are complete). */
   unmatchedAfter: number;
+  /** Not-judged attempts of this condition that a retry run replaced, and the retry attempts that stand in their place (empty without retry runs). */
+  replaced: TrialRow[];
+  retried: TrialRow[];
+  /** The rule of decision 0108 for this condition (after) against the baseline of the runs before; null when those hold no baseline. */
+  h4: H4Comparison | null;
 }
 
 export interface Comparison {
   markdown: string;
   conditions: ConditionComparison[];
   baseline: CellSummary | null;
+  /** The baseline attempts of the runs before (the main set). */
+  baselineRows: TrialRow[];
+  runs: { before: RunInfo[]; after: RunInfo[] };
+  holdout: HoldoutComparison | null;
 }
 
 const JUDGED = (t: TrialRow): boolean => t.outcome === "success" || t.outcome === "failure";
@@ -90,11 +110,12 @@ function runTable(runs: readonly RunInfo[]): string {
     ["run", "started", "status", "provider / model", "settings"],
     runs.map((run) => {
       const s = run.settings;
+      const id = run.retry === true ? `${run.runId} (retry run)` : run.runId;
       const text = (key: string): string => {
         const value = s?.[key];
         return typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? String(value) : "?";
       };
-      return [run.runId, run.startedAt ?? "?", run.status ?? "no run-end record", s === null ? "?" : `${text("provider")} / ${text("model")}`, s === null ? "?" : `temperature ${text("temperature")}, prompt caching ${text("promptCaching")}, test feedback ${text("testFeedback")}`];
+      return [id, run.startedAt ?? "?", run.status ?? "no run-end record", s === null ? "?" : `${text("provider")} / ${text("model")}`, s === null ? "?" : `temperature ${text("temperature")}, prompt caching ${text("promptCaching")}, test feedback ${text("testFeedback")}`];
     }),
   );
 }
@@ -141,9 +162,12 @@ function scopeRows(label: string, before: readonly TrialRow[], after: readonly T
 export function buildComparison(input: CompareInput): Comparison {
   const holdoutIds = input.holdoutIds ?? new Set<string>();
   const b = extractTrials(input.before, holdoutIds);
-  const a = extractTrials(input.after, holdoutIds);
+  const a = extractTrials(input.after, holdoutIds, input.afterRetry ?? []);
   const beforeAll = b.trials.filter((t) => !t.holdout);
   const afterAll = a.trials.filter((t) => !t.holdout);
+  const afterSuperseded = a.superseded.filter((t) => !t.holdout);
+  const retried = afterAll.filter((t) => t.retryOf !== undefined);
+  const hasRetry = (input.afterRetry ?? []).length > 0;
   const beforeMtek = beforeAll.filter((t) => t.side === "mtek");
   const afterMtek = afterAll.filter((t) => t.side === "mtek");
   duplicates(beforeMtek, "before");
@@ -152,6 +176,8 @@ export function buildComparison(input: CompareInput): Comparison {
 
   // The conditions: the Mtek variants of the trial kinds present in the after runs (what was re-run).
   const keys = [...new Set(afterMtek.map((t) => `${t.trialKind}\u0000${t.variant}`))].sort();
+  const baselineRows = beforeAll.filter((t) => t.side === "baseline" && t.trialKind === "unconstrained");
+  const baseline = baselineRows.length === 0 ? null : summarize(baselineRows);
   const conditions: ConditionComparison[] = keys.map((key) => {
     const [trialKind = "", variant = ""] = key.split("\u0000");
     const pick = (rows: readonly TrialRow[]): TrialRow[] => rows.filter((t) => t.trialKind === trialKind && t.variant === variant);
@@ -169,17 +195,18 @@ export function buildComparison(input: CompareInput): Comparison {
       afterJudgedCells: judgedAfter.size,
       matchedCells: matched.size,
       unmatchedAfter: judgedAfter.size - matched.size,
+      replaced: pick(afterSuperseded.filter((t) => t.side === "mtek")),
+      retried: pick(retried.filter((t) => t.side === "mtek")),
+      h4: baselineRows.length === 0 ? null : h4Compare(after, baselineRows),
     };
   });
-
-  const baselineRows = beforeAll.filter((t) => t.side === "baseline" && t.trialKind === "unconstrained");
-  const baseline = baselineRows.length === 0 ? null : summarize(baselineRows);
 
   const out: string[] = [];
   out.push(`# ${input.title ?? "Before and after: the Mtek conditions"}`, "");
   if (input.note !== undefined) out.push(input.note, "");
   out.push(
-    "Generated from the stored `records.jsonl` files by `tools/ai-eval/src/compare-cli.ts` (decision 0124); the same records give the same text. Nothing here is read from a running process, a ledger or a hand computation. The completion rate is completed / attempts that ended by themselves (completed or failed); an attempt the harness could not judge (not-run, error, unavailable, unfinished by budget) is counted as an attempt and as neither. Tokens per completed task is all tokens of all attempts / completed tasks. This document compares two states of the same conditions; the verdict against the baseline by the rule of decision 0108 is in the report.",
+    "Generated from the stored `records.jsonl` files by `tools/ai-eval/src/compare-cli.ts` (decisions 0124 and 0125); the same records give the same text. Nothing here is read from a running process, a ledger or a hand computation. The completion rate is completed / attempts that ended by themselves (completed or failed); an attempt the harness could not judge (not-run, error, unavailable, unfinished by budget) is counted as an attempt and as neither. Tokens per completed task is all tokens of all attempts / completed tasks. This document compares two states of the same conditions" +
+      (baseline === null ? "; the verdict against the baseline by the rule of decision 0108 is in the report." : ", and ends with the verdict of each condition after against the baseline of the runs before by the rule of decision 0108 (the report of the same runs gives the same verdict)."),
     "",
   );
 
@@ -217,7 +244,9 @@ export function buildComparison(input: CompareInput): Comparison {
   const lostAfter = conditions.reduce((sum, c) => sum + c.after.rows.filter((t) => !JUDGED(t)).length, 0);
   const attemptsAfter = conditions.reduce((sum, c) => sum + c.after.rows.length, 0);
   const transportAfter = conditions.reduce((sum, c) => sum + c.after.rows.filter((t) => t.reason === "transport-error").length, 0);
-  if (lostAfter === 0) {
+  if (lostAfter === 0 && hasRetry) {
+    out.push(`No attempt that counts after was lost: every one ended in success or failure. ${String(afterSuperseded.length)} attempts of the runs after were not judged and were replaced by the attempt of the same cell in the retry run${a.runs.filter((r) => r.retry === true).length === 1 ? "" : "s"} (below); the lost attempts are in no table of this document except the one below.`, "");
+  } else if (lostAfter === 0) {
     out.push("No attempt of the runs after was lost: every one ended in success or failure.", "");
   } else {
     out.push(
@@ -230,9 +259,41 @@ export function buildComparison(input: CompareInput): Comparison {
     out.push(`Trial index of the attempts not judged after (index: attempts): ${[...byTrial.entries()].sort((x, y) => x[0] - y[0]).map(([index, count]) => `${String(index)}: ${String(count)}`).join(", ")}.`, "");
   }
 
+  // ---- the retries (decision 0125)
+  if (hasRetry) {
+    out.push("## Retries of the lost attempts", "");
+    out.push(
+      "A retry run supplies an attempt for a cell (task, condition, trial index) whose attempt in the other runs was NOT judged. In every table of this document the retry attempt stands in the place of the lost one; the lost attempt stays in the records and is listed here. A retry attempt for a cell that was judged would have been refused.",
+      "",
+    );
+    const reasons = (rows: readonly TrialRow[]): string => {
+      const by = new Map<string, number>();
+      for (const t of rows) by.set(`${t.outcome}/${t.reason ?? "-"}`, (by.get(`${t.outcome}/${t.reason ?? "-"}`) ?? 0) + 1);
+      return by.size === 0 ? "none" : [...by.entries()].sort().map(([reason, count]) => `${String(count)} ${reason}`).join(", ");
+    };
+    const trialsOf = (rows: readonly TrialRow[]): string => [...new Set(rows.map((t) => t.trial))].sort((x, y) => x - y).join(", ") || "-";
+    out.push(
+      table(
+        ["condition", "retry run", "lost attempts replaced", "what they were", "trial index", "retry attempts", "completed", "failed", "not judged", "completed share of the retry attempts"],
+        conditions.map((c) => {
+          const s = summarize(c.retried);
+          return [c.label, [...new Set(c.retried.map((t) => t.runId))].join(", ") || "-", String(c.replaced.length), reasons(c.replaced), trialsOf(c.replaced), String(c.retried.length), String(s.success), String(s.failure), String(s.n - s.valid), pct(s.n === 0 ? null : s.success / s.n)];
+        }),
+      ),
+      "",
+    );
+    const unretried = conditions.reduce((sum, c) => sum + c.after.rows.filter((t) => !JUDGED(t)).length, 0);
+    out.push(unretried === 0 ? "Every lost cell has a judged retry attempt." : `${String(unretried)} attempts are still not judged after the retries.`, "");
+  }
+
   // ---- (a) all attempts as published
   out.push("## All attempts of each run, as published", "");
-  out.push("Every attempt of each run, including the attempts that were not judged (they count as attempts, not in the rate). The two sides do not cover the same cells when attempts were lost.", "");
+  out.push(
+    hasRetry
+      ? "Every attempt that counts, with the retry attempts in the place of the attempts they replaced (the lost attempts are not in these tables; they are listed above). Attempts that were not judged would count as attempts, not in the rate."
+      : "Every attempt of each run, including the attempts that were not judged (they count as attempts, not in the rate). The two sides do not cover the same cells when attempts were lost.",
+    "",
+  );
   out.push(
     table(
       ["condition", "side", "attempts", "completed", "failed", "not judged", "completion rate", "tokens per completed task"],
@@ -265,8 +326,77 @@ export function buildComparison(input: CompareInput): Comparison {
     ),
     "",
   );
+  if (conditions.length > 0 && conditions.every((c) => c.matchedCells === c.after.rows.length && c.matchedCells === c.before.rows.length)) {
+    out.push("Every cell of every condition is judged in both runs, so the matched cells are all the cells and the table below equals the table of all attempts above.", "");
+  }
   out.push(table(SCOPE_HEADER, conditions.flatMap((c) => scopeRows(c.label, c.before.matchedRows, c.after.matchedRows))), "");
   if (baseline !== null) out.push("The baseline row for reference: see the table of all attempts above; it covers every cell and is not restricted to the matched cells.", "");
 
-  return { markdown: `${out.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd()}\n`, conditions, baseline };
+  // ---- the verdict against the baseline (decision 0108)
+  if (baseline !== null) {
+    out.push("## The verdict against the baseline (rule of decision 0108)", "");
+    out.push(
+      `Each condition after, over all attempts that count (the retry attempts in the place of the lost ones), against the ${String(baselineRows.length)} baseline attempts of the runs before, which were not re-run. Success is matched when the completion rates differ by at most 10 points; tokens per completed task are \`fewer\` or \`more\` only when the 95 % bootstrap interval over tasks of the ratio Mtek / baseline excludes 1; the research target is a ratio of at most 0.70 with the verdict better. The rule, in full, is in the report of the same runs.`,
+      "",
+    );
+    for (const c of conditions) {
+      if (c.h4 === null) continue;
+      out.push(...conclusion(`Mtek ${c.label} against the baseline`, c.h4), "");
+    }
+    const provisional = conditions.flatMap((c) => (c.h4 === null || !c.h4.provisional ? [] : [`${c.label}: ${c.h4.provisionalReasons.join("; ")}`]));
+    const minTrials = Math.min(...conditions.map((c) => c.h4?.minTrialsPerTaskSide ?? Number.POSITIVE_INFINITY));
+    out.push(provisional.length === 0 ? `No verdict is provisional by the rule: every task has at least ${String(minTrials)} trials on each side, the largest share of attempts that could not be judged is ${pct(Math.max(...conditions.map((c) => c.h4?.mtek.excludedShare ?? 0), baseline.excludedShare))} (the limit is 10 %), and no token count is unknown.` : `Provisional by the rule: ${provisional.join(" | ")}.`, "");
+  }
+
+  // ---- the holdout (exploratory), from summary files only
+  const holdout = input.holdout === undefined ? null : compareHoldout(input.holdout.earlier, input.holdout.later);
+  if (holdout !== null) out.push(...holdoutSection(holdout), "");
+
+  return { markdown: `${out.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd()}\n`, conditions, baseline, baselineRows, runs: { before: b.runs, after: a.runs }, holdout };
+}
+
+function holdoutSection(h: HoldoutComparison): string[] {
+  const out: string[] = [];
+  out.push("## Holdout (exploratory, numbers only)", "");
+  out.push(
+    `Computed from the holdout summary files only (ids, outcomes, tokens and cost; \`holdout-summary.jsonl\` for the earlier run and \`holdout-summary-m7-1.jsonl\` for the new one). ${String(h.tasks)} holdout tasks, ${String(h.trialsPerTask)} trials per task and condition, one model, one run of each condition: **exploratory**, not a result of the benchmark protocol. The holdout was not used for design (the repository check forbids holdout ids in tools, spec and docs), but its tasks may be easier or harder than the main set, so these rates are not comparable with the main set's. The holdout baseline was not re-run: the earlier baseline stands for both Mtek rows. Tokens per completed task is input plus output of all attempts / completed tasks.`,
+    "",
+  );
+  out.push(
+    table(
+      ["set", "condition", "attempts", "completed", "failed", "not judged", "completion rate", "tokens per completed task", "cost"],
+      h.conditions.map((c) => {
+        const s = c.summary;
+        return [c.set === "earlier" ? "earlier (M7-05, old documentation)" : "new (M7.1 documentation)", c.label, String(s.n), String(s.success), String(s.failure), String(s.n - s.valid), pct(s.completionRate), tok(s.tokensPerCompleted), `$${s.costUsd.toFixed(4)}`];
+      }),
+    ),
+    "",
+  );
+  if (h.supersededRows.earlier + h.supersededRows.new > 0) {
+    out.push(`${String(h.supersededRows.new)} rows of the new summary file are attempts that were lost to the network or the spend cap (not judged) and are replaced by the attempt of the same cell in the retry run; they are in no row above.`, "");
+  }
+  const rows = h.conditions.filter((c) => c.h4 !== null);
+  if (rows.length > 0) {
+    out.push("Verdict by the rule of decision 0108 against the earlier holdout baseline (the holdout has at least 5 tasks, so a verdict is allowed; all of them are exploratory):", "");
+    out.push(
+      table(
+        ["set", "condition", "verdict", "completion difference", "token ratio Mtek / baseline", "95 % interval", "provisional by the rule", "reason"],
+        rows.map((c) => {
+          const v = c.h4 as H4Comparison;
+          return [
+            c.set === "earlier" ? "earlier" : "new",
+            c.label,
+            `${v.verdict.toUpperCase()} (exploratory)`,
+            v.completionDifference === null ? "undefined" : `${n1(v.completionDifference * 100)} points`,
+            v.interval.point === null ? "undefined" : v.interval.point.toFixed(3),
+            v.interval.low === null || v.interval.high === null ? "none" : `[${v.interval.low.toFixed(3)}, ${v.interval.high.toFixed(3)}]`,
+            v.provisional ? `yes: ${v.provisionalReasons.join("; ")}` : "no",
+            v.reason,
+          ];
+        }),
+      ),
+      "",
+    );
+  }
+  return out;
 }

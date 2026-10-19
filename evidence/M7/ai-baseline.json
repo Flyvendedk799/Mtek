@@ -1,0 +1,740 @@
+{
+  "generatedBy": "tools/ai-eval/src/compare-cli.ts --baseline-json (decision 0125); not edited by hand",
+  "holdout": {
+    "conditions": [
+      {
+        "attempts": 40,
+        "completed": 25,
+        "completionRate": 0.625,
+        "costPerCompletedTaskUsd": 0.03346145,
+        "costUsd": 0.83653625,
+        "failed": 15,
+        "label": "Mtek, context only",
+        "notJudged": 0,
+        "set": "earlier",
+        "side": "mtek",
+        "tokensPerCompletedTask": 38845.24,
+        "totalTokens": 971131,
+        "variant": "",
+        "verdictAgainstEarlierBaseline": {
+          "completionDifferencePoints": -35,
+          "minTrialsPerTaskSide": 5,
+          "provisional": false,
+          "provisionalReasons": [],
+          "reason": "completion lower and tokens per completed task significantly more",
+          "researchTargetMet": false,
+          "successAxis": "lower",
+          "tasks": 8,
+          "tokenRatio": {
+            "high": 12.073078748802356,
+            "low": 2.4787542976862733,
+            "point": 5.020977108445714
+          },
+          "tokensAxis": "more",
+          "verdict": "worse"
+        }
+      },
+      {
+        "attempts": 40,
+        "completed": 39,
+        "completionRate": 0.975,
+        "costPerCompletedTaskUsd": 0.010692996153846156,
+        "costUsd": 0.41702685000000006,
+        "failed": 1,
+        "label": "three.js baseline",
+        "notJudged": 0,
+        "set": "earlier",
+        "side": "baseline",
+        "tokensPerCompletedTask": 7736.589743589743,
+        "totalTokens": 301727,
+        "variant": "",
+        "verdictAgainstEarlierBaseline": null
+      },
+      {
+        "attempts": 40,
+        "completed": 34,
+        "completionRate": 0.85,
+        "costPerCompletedTaskUsd": 0.012623326470588237,
+        "costUsd": 0.42919310000000005,
+        "failed": 6,
+        "label": "Mtek, context only",
+        "notJudged": 0,
+        "set": "new",
+        "side": "mtek",
+        "tokensPerCompletedTask": 17628.58823529412,
+        "totalTokens": 599372,
+        "variant": "",
+        "verdictAgainstEarlierBaseline": {
+          "completionDifferencePoints": -12.5,
+          "minTrialsPerTaskSide": 5,
+          "provisional": false,
+          "provisionalReasons": [],
+          "reason": "completion lower and tokens per completed task significantly more",
+          "researchTargetMet": false,
+          "successAxis": "lower",
+          "tasks": 8,
+          "tokenRatio": {
+            "high": 4.866068708659385,
+            "low": 1.252543937290468,
+            "point": 2.278599333756908
+          },
+          "tokensAxis": "more",
+          "verdict": "worse"
+        }
+      },
+      {
+        "attempts": 40,
+        "completed": 39,
+        "completionRate": 0.975,
+        "costPerCompletedTaskUsd": 0.008529089743589744,
+        "costUsd": 0.3326345,
+        "failed": 1,
+        "label": "Mtek, context + guide",
+        "notJudged": 0,
+        "set": "new",
+        "side": "mtek",
+        "tokensPerCompletedTask": 16112.384615384615,
+        "totalTokens": 628383,
+        "variant": "+guide",
+        "verdictAgainstEarlierBaseline": {
+          "completionDifferencePoints": 0,
+          "minTrialsPerTaskSide": 5,
+          "provisional": false,
+          "provisionalReasons": [],
+          "reason": "completion matched and tokens per completed task significantly more",
+          "researchTargetMet": false,
+          "successAxis": "matched",
+          "tasks": 8,
+          "tokenRatio": {
+            "high": 3.005369735495565,
+            "low": 1.4444766200355714,
+            "point": 2.082621044851803
+          },
+          "tokensAxis": "more",
+          "verdict": "worse"
+        }
+      }
+    ],
+    "exploratory": true,
+    "lostAttemptRowsReplacedByRetry": {
+      "earlier": 0,
+      "new": 80
+    },
+    "note": "8 tasks x 5 trials, one model, one run of each condition; the holdout baseline was not re-run; summary files only",
+    "tasks": 8,
+    "trialsPerTaskAndCondition": 5
+  },
+  "kind": "mtek-ai-baseline",
+  "main": {
+    "baseline": {
+      "attempts": 170,
+      "byCategory": {
+        "interaction": {
+          "attempts": 55,
+          "completed": 53,
+          "completionRate": 0.9636363636363636,
+          "costPerCompletedTaskUsd": 0.012058713207547169,
+          "costUsd": 0.6391118,
+          "failed": 2,
+          "notJudged": 0,
+          "tokensPerCompletedTask": 7540.396226415094,
+          "totalTokens": 399641
+        },
+        "maintenance": {
+          "attempts": 30,
+          "completed": 30,
+          "completionRate": 1,
+          "costPerCompletedTaskUsd": 0.00822655,
+          "costUsd": 0.24679649999999997,
+          "failed": 0,
+          "notJudged": 0,
+          "tokensPerCompletedTask": 5329.1,
+          "totalTokens": 159873
+        },
+        "scene-rendering": {
+          "attempts": 55,
+          "completed": 44,
+          "completionRate": 0.8,
+          "costPerCompletedTaskUsd": 0.01897838977272727,
+          "costUsd": 0.8350491499999998,
+          "failed": 11,
+          "notJudged": 0,
+          "tokensPerCompletedTask": 15159.90909090909,
+          "totalTokens": 667036
+        },
+        "shader-bridge": {
+          "attempts": 30,
+          "completed": 29,
+          "completionRate": 0.9666666666666667,
+          "costPerCompletedTaskUsd": 0.011264144827586205,
+          "costUsd": 0.32666019999999996,
+          "failed": 1,
+          "notJudged": 0,
+          "tokensPerCompletedTask": 8206.965517241379,
+          "totalTokens": 238002
+        }
+      },
+      "byMode": {
+        "cold": {
+          "attempts": 55,
+          "completed": 43,
+          "completionRate": 0.7818181818181819,
+          "costPerCompletedTaskUsd": 0.02035748720930232,
+          "costUsd": 0.8753719499999998,
+          "failed": 12,
+          "notJudged": 0,
+          "tokensPerCompletedTask": 16242.697674418605,
+          "totalTokens": 698436
+        },
+        "edit": {
+          "attempts": 115,
+          "completed": 113,
+          "completionRate": 0.9826086956521739,
+          "costPerCompletedTaskUsd": 0.01037385575221239,
+          "costUsd": 1.1722457,
+          "failed": 2,
+          "notJudged": 0,
+          "tokensPerCompletedTask": 6779.787610619469,
+          "totalTokens": 766116
+        }
+      },
+      "completed": 156,
+      "completionRate": 0.9176470588235294,
+      "costPerCompletedTaskUsd": 0.013125754166666663,
+      "costUsd": 2.0476176499999994,
+      "description": "three.js baseline, M7-05 run m7-05-main, not re-run",
+      "failed": 14,
+      "notJudged": 0,
+      "tokensPerCompletedTask": 9388.153846153846,
+      "totalTokens": 1464552
+    },
+    "conditions": [
+      {
+        "after": {
+          "attempts": 170,
+          "byCategory": {
+            "interaction": {
+              "attempts": 55,
+              "completed": 34,
+              "completionRate": 0.6181818181818182,
+              "costPerCompletedTaskUsd": 0.04394226617647059,
+              "costUsd": 1.49403705,
+              "failed": 21,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 47516.23529411765,
+              "totalTokens": 1615552
+            },
+            "maintenance": {
+              "attempts": 30,
+              "completed": 30,
+              "completionRate": 1,
+              "costPerCompletedTaskUsd": 0.00907438,
+              "costUsd": 0.2722314,
+              "failed": 0,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 6910.4,
+              "totalTokens": 207312
+            },
+            "scene-rendering": {
+              "attempts": 55,
+              "completed": 37,
+              "completionRate": 0.6727272727272727,
+              "costPerCompletedTaskUsd": 0.03216697432432432,
+              "costUsd": 1.1901780499999999,
+              "failed": 18,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 37803.72972972973,
+              "totalTokens": 1398738
+            },
+            "shader-bridge": {
+              "attempts": 30,
+              "completed": 15,
+              "completionRate": 0.5,
+              "costPerCompletedTaskUsd": 0.037769163333333335,
+              "costUsd": 0.56653745,
+              "failed": 15,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 45439.86666666667,
+              "totalTokens": 681598
+            }
+          },
+          "byMode": {
+            "cold": {
+              "attempts": 55,
+              "completed": 32,
+              "completionRate": 0.5818181818181818,
+              "costPerCompletedTaskUsd": 0.04407711093750001,
+              "costUsd": 1.4104675500000003,
+              "failed": 23,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 53878.21875,
+              "totalTokens": 1724103
+            },
+            "edit": {
+              "attempts": 115,
+              "completed": 84,
+              "completionRate": 0.7304347826086957,
+              "costPerCompletedTaskUsd": 0.025149004761904764,
+              "costUsd": 2.1125164,
+              "failed": 31,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 25941.630952380954,
+              "totalTokens": 2179097
+            }
+          },
+          "completed": 116,
+          "completionRate": 0.6823529411764706,
+          "costPerCompletedTaskUsd": 0.030370551293103443,
+          "costUsd": 3.5229839499999995,
+          "failed": 54,
+          "notJudged": 0,
+          "tokensPerCompletedTask": 33648.275862068964,
+          "totalTokens": 3903200
+        },
+        "before": {
+          "attempts": 170,
+          "byCategory": {
+            "interaction": {
+              "attempts": 55,
+              "completed": 33,
+              "completionRate": 0.6,
+              "costPerCompletedTaskUsd": 0.047023231818181827,
+              "costUsd": 1.5517666500000002,
+              "failed": 22,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 49607.69696969697,
+              "totalTokens": 1637054
+            },
+            "maintenance": {
+              "attempts": 30,
+              "completed": 30,
+              "completionRate": 1,
+              "costPerCompletedTaskUsd": 0.009855975000000001,
+              "costUsd": 0.29567925000000006,
+              "failed": 0,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 7759.8,
+              "totalTokens": 232794
+            },
+            "scene-rendering": {
+              "attempts": 55,
+              "completed": 27,
+              "completionRate": 0.4909090909090909,
+              "costPerCompletedTaskUsd": 0.06086800185185187,
+              "costUsd": 1.6434360500000005,
+              "failed": 28,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 60016.555555555555,
+              "totalTokens": 1620447
+            },
+            "shader-bridge": {
+              "attempts": 30,
+              "completed": 13,
+              "completionRate": 0.43333333333333335,
+              "costPerCompletedTaskUsd": 0.04775974230769232,
+              "costUsd": 0.6208766500000001,
+              "failed": 17,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 52679.38461538462,
+              "totalTokens": 684832
+            }
+          },
+          "byMode": {
+            "cold": {
+              "attempts": 55,
+              "completed": 17,
+              "completionRate": 0.3090909090909091,
+              "costPerCompletedTaskUsd": 0.11356989705882357,
+              "costUsd": 1.9306882500000007,
+              "failed": 38,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 112710.76470588235,
+              "totalTokens": 1916083
+            },
+            "edit": {
+              "attempts": 115,
+              "completed": 86,
+              "completionRate": 0.7478260869565218,
+              "costPerCompletedTaskUsd": 0.02536128313953487,
+              "costUsd": 2.181070349999999,
+              "failed": 29,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 26267.95348837209,
+              "totalTokens": 2259044
+            }
+          },
+          "completed": 103,
+          "completionRate": 0.6058823529411764,
+          "costPerCompletedTaskUsd": 0.03991998640776697,
+          "costUsd": 4.111758599999998,
+          "failed": 67,
+          "notJudged": 0,
+          "tokensPerCompletedTask": 40535.21359223301,
+          "totalTokens": 4175127
+        },
+        "label": "context only",
+        "lostAttemptsReplacedByRetry": 28,
+        "matchedCells": 170,
+        "trialKind": "unconstrained",
+        "variant": "",
+        "verdictAgainstBaseline": {
+          "completionDifferencePoints": -23.529411764705877,
+          "minTrialsPerTaskSide": 5,
+          "provisional": false,
+          "provisionalReasons": [],
+          "reason": "completion lower and tokens per completed task significantly more",
+          "researchTargetMet": false,
+          "successAxis": "lower",
+          "tasks": 34,
+          "tokenRatio": {
+            "high": 5.24496915217136,
+            "low": 2.5045078511921717,
+            "point": 3.5841206283442024
+          },
+          "tokensAxis": "more",
+          "verdict": "worse"
+        }
+      },
+      {
+        "after": {
+          "attempts": 170,
+          "byCategory": {
+            "interaction": {
+              "attempts": 55,
+              "completed": 47,
+              "completionRate": 0.8545454545454545,
+              "costPerCompletedTaskUsd": 0.030628109574468095,
+              "costUsd": 1.4395211500000005,
+              "failed": 8,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 35112.02127659575,
+              "totalTokens": 1650265
+            },
+            "maintenance": {
+              "attempts": 30,
+              "completed": 29,
+              "completionRate": 0.9666666666666667,
+              "costPerCompletedTaskUsd": 0.016634005172413792,
+              "costUsd": 0.48238615,
+              "failed": 1,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 13708.068965517241,
+              "totalTokens": 397534
+            },
+            "scene-rendering": {
+              "attempts": 55,
+              "completed": 39,
+              "completionRate": 0.7090909090909091,
+              "costPerCompletedTaskUsd": 0.036661226923076905,
+              "costUsd": 1.4297878499999994,
+              "failed": 16,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 46055.769230769234,
+              "totalTokens": 1796175
+            },
+            "shader-bridge": {
+              "attempts": 30,
+              "completed": 30,
+              "completionRate": 1,
+              "costPerCompletedTaskUsd": 0.018362651666666667,
+              "costUsd": 0.55087955,
+              "failed": 0,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 16251.1,
+              "totalTokens": 487533
+            }
+          },
+          "byMode": {
+            "cold": {
+              "attempts": 55,
+              "completed": 39,
+              "completionRate": 0.7090909090909091,
+              "costPerCompletedTaskUsd": 0.038369865384615384,
+              "costUsd": 1.4964247499999999,
+              "failed": 16,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 48242.820512820515,
+              "totalTokens": 1881470
+            },
+            "edit": {
+              "attempts": 115,
+              "completed": 106,
+              "completionRate": 0.9217391304347826,
+              "costPerCompletedTaskUsd": 0.022699527830188675,
+              "costUsd": 2.4061499499999996,
+              "failed": 9,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 23113.556603773584,
+              "totalTokens": 2450037
+            }
+          },
+          "completed": 145,
+          "completionRate": 0.8529411764705882,
+          "costPerCompletedTaskUsd": 0.026914308275862067,
+          "costUsd": 3.9025746999999997,
+          "failed": 25,
+          "notJudged": 0,
+          "tokensPerCompletedTask": 29872.462068965517,
+          "totalTokens": 4331507
+        },
+        "before": {
+          "attempts": 170,
+          "byCategory": {
+            "interaction": {
+              "attempts": 55,
+              "completed": 44,
+              "completionRate": 0.8,
+              "costPerCompletedTaskUsd": 0.034732785227272724,
+              "costUsd": 1.5282425499999999,
+              "failed": 11,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 38852.568181818184,
+              "totalTokens": 1709513
+            },
+            "maintenance": {
+              "attempts": 30,
+              "completed": 30,
+              "completionRate": 1,
+              "costPerCompletedTaskUsd": 0.015167486666666665,
+              "costUsd": 0.45502459999999995,
+              "failed": 0,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 12369.266666666666,
+              "totalTokens": 371078
+            },
+            "scene-rendering": {
+              "attempts": 55,
+              "completed": 35,
+              "completionRate": 0.6363636363636364,
+              "costPerCompletedTaskUsd": 0.03979698857142857,
+              "costUsd": 1.3928946,
+              "failed": 20,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 50143.37142857143,
+              "totalTokens": 1755018
+            },
+            "shader-bridge": {
+              "attempts": 30,
+              "completed": 25,
+              "completionRate": 0.8333333333333334,
+              "costPerCompletedTaskUsd": 0.022842823999999994,
+              "costUsd": 0.5710705999999999,
+              "failed": 5,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 22610.44,
+              "totalTokens": 565261
+            }
+          },
+          "byMode": {
+            "cold": {
+              "attempts": 55,
+              "completed": 30,
+              "completionRate": 0.5454545454545454,
+              "costPerCompletedTaskUsd": 0.049410053333333336,
+              "costUsd": 1.4823016,
+              "failed": 25,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 64631.23333333333,
+              "totalTokens": 1938937
+            },
+            "edit": {
+              "attempts": 115,
+              "completed": 104,
+              "completionRate": 0.9043478260869565,
+              "costPerCompletedTaskUsd": 0.02370125721153845,
+              "costUsd": 2.464930749999999,
+              "failed": 11,
+              "notJudged": 0,
+              "tokensPerCompletedTask": 23672.43269230769,
+              "totalTokens": 2461933
+            }
+          },
+          "completed": 134,
+          "completionRate": 0.788235294117647,
+          "costPerCompletedTaskUsd": 0.029456957835820887,
+          "costUsd": 3.947232349999999,
+          "failed": 36,
+          "notJudged": 0,
+          "tokensPerCompletedTask": 32842.31343283582,
+          "totalTokens": 4400870
+        },
+        "label": "context + guide",
+        "lostAttemptsReplacedByRetry": 29,
+        "matchedCells": 170,
+        "trialKind": "unconstrained",
+        "variant": "+guide",
+        "verdictAgainstBaseline": {
+          "completionDifferencePoints": -6.470588235294117,
+          "minTrialsPerTaskSide": 5,
+          "provisional": false,
+          "provisionalReasons": [],
+          "reason": "completion matched and tokens per completed task significantly more",
+          "researchTargetMet": false,
+          "successAxis": "matched",
+          "tasks": 34,
+          "tokenRatio": {
+            "high": 3.9780766949786344,
+            "low": 2.564837581199578,
+            "point": 3.181931459421462
+          },
+          "tokensAxis": "more",
+          "verdict": "worse"
+        }
+      }
+    ],
+    "scope": "main set: every task of benchmarks/tasks, 5 trials per task and condition; the retry attempts stand in the place of the attempts that were not judged"
+  },
+  "measurement": {
+    "contextMaxBytes": 24000,
+    "harness": {
+      "decisions": [
+        "0077",
+        "0108",
+        "0109",
+        "0124",
+        "0125"
+      ],
+      "package": "@mtek/ai-eval",
+      "recordSchema": "spec/ai-eval-record.schema.json",
+      "version": "0.1.0-dev"
+    },
+    "maxRepairs": "per task",
+    "model": {
+      "ids": [
+        "claude-haiku-4-5-20251001"
+      ],
+      "provider": "anthropic"
+    },
+    "priceNote": "list prices from tools/ai-eval/src/spend.ts, applied to the usage the provider reported; not an invoice",
+    "priceTableUsdPerMillionTokens": {
+      "claude-haiku-4-5-20251001": {
+        "cacheReadPerMTok": 0.1,
+        "cacheWritePerMTok": 1.25,
+        "inputPerMTok": 1,
+        "outputPerMTok": 5
+      }
+    },
+    "promptCaching": true,
+    "promptVersions": {
+      "baseline": "b1",
+      "mtek": "1"
+    },
+    "runsSeen": [
+      {
+        "retry": false,
+        "runId": "m7-05-main",
+        "startedAt": "2026-10-19T09:23:16.558Z",
+        "status": "complete"
+      },
+      {
+        "retry": false,
+        "runId": "m7-05-guide",
+        "startedAt": "2026-10-19T11:44:58.777Z",
+        "status": "complete"
+      },
+      {
+        "retry": false,
+        "runId": "m7-1-rerun-main",
+        "startedAt": "2026-10-19T15:48:40.781Z",
+        "status": "complete"
+      },
+      {
+        "retry": true,
+        "runId": "m7-1-retry-ctx",
+        "startedAt": "2026-10-19T19:12:22.079Z",
+        "status": "complete"
+      },
+      {
+        "retry": true,
+        "runId": "m7-1-retry-guide",
+        "startedAt": "2026-10-19T19:21:17.783Z",
+        "status": "complete"
+      }
+    ],
+    "temperature": 1,
+    "testFeedback": "messages",
+    "trialsPerTask": 5
+  },
+  "rule": {
+    "decision": "0108",
+    "matchedSuccessPoints": 10,
+    "maxNotJudgedShare": 0.1,
+    "protocolTrials": 5
+  },
+  "sources": [
+    {
+      "path": "benchmarks/results/ai/m7-05-main/records.jsonl",
+      "role": "before",
+      "rows": 2829,
+      "runIds": [
+        "m7-05-main"
+      ],
+      "sha256": "d67e90aa56e3c300dba0d99bc0a3402c14d284f71f9066322fe3ce8bbe36437c"
+    },
+    {
+      "path": "benchmarks/results/ai/m7-05-guide/records.jsonl",
+      "role": "before",
+      "rows": 1484,
+      "runIds": [
+        "m7-05-guide"
+      ],
+      "sha256": "f33d6a955424ccf91295babf4283586a089aba08902d4561f651230d36660804"
+    },
+    {
+      "path": "benchmarks/results/ai/m7-1-rerun-main/records.jsonl",
+      "role": "after",
+      "rows": 2599,
+      "runIds": [
+        "m7-1-rerun-main"
+      ],
+      "sha256": "f438fffad51fbdb42d4858261ced4a50dd99de419a764ae66267c8a29927f5ba"
+    },
+    {
+      "path": "benchmarks/results/ai/m7-1-retry-ctx/records.jsonl",
+      "role": "retry",
+      "rows": 258,
+      "runIds": [
+        "m7-1-retry-ctx"
+      ],
+      "sha256": "492bc56c222dbf1e23bcc1203870c4ca6b046732273871dd376557006cabfb03"
+    },
+    {
+      "path": "benchmarks/results/ai/m7-1-retry-guide/records.jsonl",
+      "role": "retry",
+      "rows": 193,
+      "runIds": [
+        "m7-1-retry-guide"
+      ],
+      "sha256": "add04c62467cc812c2184a5f8d4bc790fc13ec731576aae71758386325a37d42"
+    },
+    {
+      "path": "benchmarks/results/ai/holdout-summary.jsonl",
+      "role": "holdout-summary-earlier",
+      "rows": 80,
+      "runIds": [],
+      "sha256": "090dd90899887f3b17a5b714852c68b5f882d3a96d1f7bbe63e9b404e56c6b06"
+    },
+    {
+      "path": "benchmarks/results/ai/holdout-summary-m7-1.jsonl",
+      "role": "holdout-summary-new",
+      "rows": 160,
+      "runIds": [],
+      "sha256": "99e30f37353c9245b0d4a0ae91e3fa39dc80eb47f47d30fb3bfdc2aaf9a7d55c"
+    }
+  ],
+  "targets": {
+    "holdout": {
+      "baselineCompletionRatePercent": 97.5,
+      "baselineTokensPerCompletedTask": 7737
+    },
+    "main": {
+      "baselineCompletionRatePercent": 91.8,
+      "baselineTokensPerCompletedTask": 9388
+    },
+    "research": {
+      "meaning": "at matched success, at least 30 % fewer tokens per completed task than the baseline, with the verdict better (spec 6.4); a target, not a result",
+      "tokenRatioMax": 0.7
+    }
+  },
+  "version": 1
+}
