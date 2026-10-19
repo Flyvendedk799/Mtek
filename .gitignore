@@ -20,3 +20,6 @@ tests/codegen/.out/
 benchmarks/runtime/.out/
 benchmarks/runtime/asset-heavy-startup/mtek/models/
 benchmarks/runtime/asset-heavy-startup/mtek/textures/
+
+# Scratch output of scripts/verify-reproducible-build.mjs
+.repro-out/
