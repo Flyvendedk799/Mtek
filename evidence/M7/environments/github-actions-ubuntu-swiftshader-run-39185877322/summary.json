@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "startTime": "2026-10-19T01:34:46.063Z",
+  "durationSeconds": 206.1,
+  "projects": [
+    {
+      "project": "software",
+      "counts": {
+        "passed": 231,
+        "failed": 2,
+        "notRun": 0,
+        "skipped": 13
+      },
+      "total": 246,
+      "environment": {
+        "browser": "chromium",
+        "browserVersion": "153.0.8010.12",
+        "channel": "chromium",
+        "headless": true,
+        "os": "linux x64",
+        "osVersion": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 (6.17.0-1022-azure)",
+        "navigatorGpu": true,
+        "adapter": "SwiftShader Device (Subzero)",
+        "isFallbackAdapter": true,
+        "reason": null,
+        "gitCommit": "c588dd314fbf27f7a8753b77cd45cf8168beddd0",
+        "recordedAt": "2026-10-19T01:37:43.152Z"
+      },
+      "failed": [
+        {
+          "file": "m4/dev-overlay.spec.ts",
+          "title": "a release page shows no overlay, even when mounted with devOverlay, and culling still works",
+          "error": "Error: page.evaluate: OperationError: A valid external Instance reference no longer exists."
+        },
+        {
+          "file": "m6/getting-started.spec.ts",
+          "title": "edit, break and fix of the document on a real page",
+          "error": "Error: the cube is on the page"
+        }
+      ],
+      "skipReasons": [
+        {
+          "reason": "the pass criteria of mtek test are hardware evidence: run with --project=hardware",
+          "count": 12
+        },
+        {
+          "reason": "this Chromium keeps a software WebGPU adapter under --disable-gpu, so there is no no-adapter run to observe here",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "total": {
+    "passed": 231,
+    "failed": 2,
+    "notRun": 0,
+    "skipped": 13,
+    "tests": 246
+  }
+}

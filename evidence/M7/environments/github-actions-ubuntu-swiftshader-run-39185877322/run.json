@@ -1,0 +1,186 @@
+{
+  "note": "As reported by GitHub Actions (gh run view), not reproduced locally. Job steps omitted except the failing step.",
+  "queriedAt": "2026-10-19T07:42:27.777Z",
+  "run": {
+    "id": 39185877322,
+    "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39185877322",
+    "workflow": "CI",
+    "event": "push",
+    "branch": "main",
+    "commit": "c588dd314fbf27f7a8753b77cd45cf8168beddd0",
+    "title": "M6-GATE: completion report and clean-clone gate evidence",
+    "status": "completed",
+    "conclusion": "failure",
+    "createdAt": "2026-10-19T01:33:15Z",
+    "updatedAt": "2026-10-19T01:40:38Z"
+  },
+  "jobs": [
+    {
+      "name": "rust (windows-latest)",
+      "id": 117848094003,
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39185877322/job/117848094003",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T01:33:19Z",
+      "completedAt": "2026-10-19T01:40:38Z",
+      "failedSteps": []
+    },
+    {
+      "name": "vscode-extension (ubuntu-latest)",
+      "id": 117848094148,
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39185877322/job/117848094148",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T01:33:19Z",
+      "completedAt": "2026-10-19T01:34:47Z",
+      "failedSteps": []
+    },
+    {
+      "name": "vscode-extension (windows-latest)",
+      "id": 117848094180,
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39185877322/job/117848094180",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T01:33:21Z",
+      "completedAt": "2026-10-19T01:36:34Z",
+      "failedSteps": []
+    },
+    {
+      "name": "browser-software (ubuntu-latest)",
+      "id": 117848094215,
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39185877322/job/117848094215",
+      "conclusion": "failure",
+      "startedAt": "2026-10-19T01:33:18Z",
+      "completedAt": "2026-10-19T01:38:16Z",
+      "failedSteps": [
+        "Browser tests (software project)"
+      ]
+    },
+    {
+      "name": "node (ubuntu-latest)",
+      "id": 117848094225,
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39185877322/job/117848094225",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T01:33:19Z",
+      "completedAt": "2026-10-19T01:38:29Z",
+      "failedSteps": []
+    },
+    {
+      "name": "rust (ubuntu-latest)",
+      "id": 117848094266,
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39185877322/job/117848094266",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T01:33:19Z",
+      "completedAt": "2026-10-19T01:37:46Z",
+      "failedSteps": []
+    }
+  ],
+  "recentRunsOnMain": [
+    {
+      "id": 39185877322,
+      "commit": "c588dd314fbf27f7a8753b77cd45cf8168beddd0",
+      "conclusion": "failure",
+      "title": "M6-GATE: completion report and clean-clone gate evidence",
+      "createdAt": "2026-10-19T01:33:15Z",
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39185877322",
+      "jobsNotSuccessful": [
+        "browser-software (ubuntu-latest): failure"
+      ]
+    },
+    {
+      "id": 39183781259,
+      "commit": "e5da5dd7a6df03a668bf2e4a44a4c6c7e2037326",
+      "conclusion": "failure",
+      "title": "ai-eval: the constrained cli test names no adapter, so it does not ru…",
+      "createdAt": "2026-10-19T01:06:14Z",
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39183781259",
+      "jobsNotSuccessful": [
+        "browser-software (ubuntu-latest): failure"
+      ]
+    },
+    {
+      "id": 39181804825,
+      "commit": "511039d9068cada6a7e33046464ce737d79ff904",
+      "conclusion": "failure",
+      "title": "editor-vscode: 60 s test timeout (vsce ls took 9.5 s under load and t…",
+      "createdAt": "2026-10-19T00:40:06Z",
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39181804825",
+      "jobsNotSuccessful": [
+        "browser-software (ubuntu-latest): failure"
+      ]
+    },
+    {
+      "id": 39179328590,
+      "commit": "c6e3cdf10f9eff66fca2b93e69e7f53c5dc5979e",
+      "conclusion": "failure",
+      "title": "editor-vscode: the integration script is run-vscode-tests.ts (the vsc…",
+      "createdAt": "2026-10-19T00:07:16Z",
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39179328590",
+      "jobsNotSuccessful": [
+        "browser-software (ubuntu-latest): failure"
+      ]
+    },
+    {
+      "id": 39178578159,
+      "commit": "7ce376480f78e2cab4b742359749b7d8095f779b",
+      "conclusion": "failure",
+      "title": "ai-eval: wire M6-06's grammar capability check into the harness (comm…",
+      "createdAt": "2026-10-18T23:56:35Z",
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39178578159",
+      "jobsNotSuccessful": [
+        "browser-software (ubuntu-latest): failure",
+        "vscode-extension (ubuntu-latest): failure",
+        "vscode-extension (windows-latest): failure"
+      ]
+    },
+    {
+      "id": 39173543769,
+      "commit": "caa5f369ec4a9a790ebb655cadc1c5d2a8374338",
+      "conclusion": "failure",
+      "title": "benchmarks/README.md and spec: 34 tasks, the closed gaps",
+      "createdAt": "2026-10-18T22:44:33Z",
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39173543769",
+      "jobsNotSuccessful": [
+        "browser-software (ubuntu-latest): failure"
+      ]
+    },
+    {
+      "id": 39162753555,
+      "commit": "30bad284f8d8380d65a8155e9d669476abccc738",
+      "conclusion": "failure",
+      "title": "Fix the findings of the benchmark work: honest E5001 and E9010 wordin…",
+      "createdAt": "2026-10-18T20:19:07Z",
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39162753555",
+      "jobsNotSuccessful": [
+        "browser-software (ubuntu-latest): failure"
+      ]
+    },
+    {
+      "id": 39158982301,
+      "commit": "4f0412f023262ad1880f53c459780ba6c29a6c90",
+      "conclusion": "success",
+      "title": "The repository fmt and parse tests know the starter that is broken on…",
+      "createdAt": "2026-10-18T19:29:17Z",
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39158982301",
+      "jobsNotSuccessful": []
+    },
+    {
+      "id": 39154947340,
+      "commit": "e17f71903821eae9d305cb21746661f7fa4c9980",
+      "conclusion": "success",
+      "title": "mtek help test: every M6 command is listed now",
+      "createdAt": "2026-10-18T18:36:46Z",
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39154947340",
+      "jobsNotSuccessful": []
+    },
+    {
+      "id": 39153913971,
+      "commit": "540c142d60735be321430e660d504183c1f37d4c",
+      "conclusion": "failure",
+      "title": "M6-09: CI fixes (no absolute runner path in a not-run reason; the no-…",
+      "createdAt": "2026-10-18T18:23:10Z",
+      "url": "https://github.com/Flyvendedk799/Mtek/actions/runs/39153913971",
+      "jobsNotSuccessful": [
+        "rust (ubuntu-latest): failure",
+        "rust (windows-latest): failure"
+      ]
+    }
+  ]
+}
