@@ -27,6 +27,7 @@ import { GUIDE_DOC, manifestCodecIds } from "./guide.ts";
 import type { PageText } from "./docpages.ts";
 import { checkDocLinks, type LinkInputs } from "./links.ts";
 import { checkDocPages, type DocPageInputs } from "./docpages.ts";
+import { defaultExposureHolds } from "./facts.ts";
 import { CONCEPTS_DIR, DOCS_INDEX, pageTemplates, TUTORIAL_DOC } from "./pages.ts";
 import { LIMITATIONS_DOC, splitNotSupported, validateLimitationsData } from "./limitations.ts";
 import type { Mismatch } from "./model.ts";
@@ -178,6 +179,7 @@ export function buildInputs(ctx: Ctx, runtime: RuntimeFacts, options: RunOptions
       indexPath: DOCS_INDEX,
       indexedPages: [GUIDE_DOC, TUTORIAL_DOC, "docs/getting-started.md", REFERENCE_DOC, LIMITATIONS_DOC, ...newPages.filter((p) => p.startsWith(`${CONCEPTS_DIR}/`))],
       guidePath: GUIDE_DOC,
+      exposure: defaultExposureHolds(ctx.registry),
     },
   };
 }

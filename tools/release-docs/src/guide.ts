@@ -16,6 +16,7 @@
 //   {{codecs}}                          the host input codec ids of spec/manifest.schema.json
 //   {{commands}}                        the commands `mtek --help` lists
 //   {{fields SCHEMA}}                   the fields of a registry schema, as a table
+//   {{field-list SCHEMA}}               a schema as one line: `Name { field: type = default; ... }` (`*` marks construction-only fields)
 //   {{default SCHEMA.FIELD}}            the default of a field, as code
 //   {{range SCHEMA.FIELD}}              the allowed range of a field
 //   {{enum NAME}} / {{enum NAME full}}  the members of a registry enum (runs folded unless `full`)
@@ -33,7 +34,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Ctx } from "./ctx.ts";
-import { bodyCommandsTable, catalogueEntry, citedCodes, citedCodesTable, enumMembers, eventsTable, exposureForLux, fieldDefault, intrinsicsOf, fieldRange, fieldsTable, membersTable, methodsTable, projectDefault, signatures, typeFields } from "./facts.ts";
+import { bodyCommandsTable, catalogueEntry, citedCodes, citedCodesTable, enumMembers, eventsTable, exposureForLux, fieldDefault, intrinsicsOf, fieldList, fieldRange, fieldsTable, membersTable, methodsTable, projectDefault, signatures, typeFields } from "./facts.ts";
 import { GENERATED_NOTE, code, decisionLink } from "./md.ts";
 import { languageWordLists } from "./spectext.ts";
 
@@ -120,6 +121,8 @@ export function expandDirective(ctx: Ctx, directive: string, page: PageInfo = GU
       return list(ctx.compiler.subcommands);
     case "fields":
       return fieldsTable(ctx.registry, rest);
+    case "field-list":
+      return fieldList(ctx.registry, rest);
     case "default":
       return fieldDefault(ctx.registry, rest);
     case "range":

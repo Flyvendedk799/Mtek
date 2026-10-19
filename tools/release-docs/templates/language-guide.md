@@ -2,110 +2,266 @@
 
 {{generated}}
 
-- Status: generated from `tools/release-docs/templates/language-guide.md`; `npm run check:release` fails when this file is stale (decision 0100).
-- Language version: {{language-version}}.
-- Compiler: {{compiler-version-line}}.
-- Every program below is a real file of this repository, copied by the generator. The compiler checks them in its own test suites, so the code on this page cannot drift from the language. The facts in the prose (counts, lists of names) are read from the compiler and the registry.
+- Generated from `tools/release-docs/templates/language-guide.md`; `npm run check:release` fails when this file is stale or larger than 16 384 bytes (decision 0118).
+- Language {{language-version}}. Compiler: {{compiler-version-line}}.
+- One rule, one correct pattern. The reasons, longer examples and the common mistakes with their diagnostic codes are on the [concept pages](README.md#concepts). Lists of names and defaults are read from the registry. Every code block is compiled by the tests; a block marked `wrap=` is the inside of a scene that has a camera.
 
-This guide is a tour. It teaches by showing programs; it does not repeat the rules. For the rules read the [language reference](language-reference.md); for what v0.1 does not do read [limitations](limitations.md); to run something first read [getting started](getting-started.md).
-
-## 1. What a Mtek program is
-
-A Mtek program describes one scene: its entities, its state, the shader stages of its materials and the resources they need, as one checked unit. `mtek build` turns it into JavaScript and WGSL for a runtime on browser WebGPU. The compiler has {{feature-count}} supported features, listed in Part C of the [reference](language-reference.md#part-c-features-of-this-build-{{feature-count}}).
-
-The language has no `while`, no closures, no generics and no user-defined types other than `struct`; the full list of what is refused is in [limitations](limitations.md). The reserved words ({{reserved-count}} of them) cannot be used as names even though v0.1 does not use them.
-
-## 2. A project
-
-A project is a directory with an `mtek.toml` and the sources it names:
+## 1. Program shape
 
 {{example examples/pulse-cube/mtek.toml}}
 
-`entry` is the first file; `scene` is the scene the application mounts (one scene per application in v0.1). `[host.inputs]` exposes a piece of scene `state` to the page that embeds the program (section 7).
-
-## 3. A scene
-
 {{excerpt examples/pulse-cube/src/main.mtek :: ^scene Demo :: ^\}$}}
 
-- `state` is mutable data of the scene.
-- `camera Main { ... }` declares a camera. A scene needs exactly one active camera.
-- `entity Cube { ... }` declares an entity: a mesh, a material and a transform. Fields are written `name: value;`. A descriptor such as `Box { size: ... }` builds a value of a registry schema.
-- `update(dt: f32) { ... }` runs every frame. `self` is the entity.
-- `on key_down(Key.Space) { ... }` is an event handler. The events of this build are {{features event:}}.
+- A file is a module of items: `import`, `const`, `fn`, `cpu fn`, `struct`, `material`, `prefab`, `scene`. A scene holds scene fields, `const`, `state`, `camera`, `entity`, `update`, `fixed_update` and `on` handlers; an entity the same plus fields and nested entities. Anything else is `MTEK-E1040`.
+- One scene runs (`scene = "Name"` in `mtek.toml` if the entry file has several), with exactly one active camera. Entity names are unique in the scene.
+- Fields and statements end in `;`. A descriptor separates its fields with `;` too (`Box { size: vec3(1.0, 1.0, 1.0) }`; a comma is `MTEK-E1001`). `state` and `param` need a type.
+- Metres, seconds, radians, kilograms; right-handed, `+Y` up, a camera or light looks along its `-Z`. An entity with a `mesh` and no `material` is `Unlit {}`; a `material` without a `mesh` is `MTEK-E5020`.
+- Not in the language: `while`, closures, generics, null, ternary, string joining, user enums. {{reserved-count}} words are reserved (`move`, `type`, `use`, `loop`, `static`, `mod`, ...): `MTEK-E0013`.
 
-Meshes are generated from descriptors; the schemas of the category `mesh` are {{schemas mesh}}.
+## 2. Values
 
-## 4. Types, values and functions
+```mtek wrap=update
+let n: i32 = 3;
+// No implicit i32, u32 or f32 mixing: convert.
+let seconds = f32(n) * dt;
+// vec op vec and vec * f32 work; vec + f32 and vec == vec are errors.
+let v = vec3(1.0, 0.0, 0.0) * seconds + vec3(0.0);
+// Swizzles use xyzw; .rgb is for color. One component can be assigned: v.y = 0.0.
+let flipped = v.zyx;
+// A color is linear and has no arithmetic; literals are sRGB.
+let dim = color.linear(#336699.rgb * 0.5, 1.0);
+// a * b applies b first; q * vec3 rotates.
+let turn = quat.axis_angle(vec3(0.0, 1.0, 0.0), 0.5) * quat.identity();
+// Arrays have a fixed length and no .length; a run-time index is clamped.
+let ring: array<f32, 3> = [1.0, 2.0, 3.0];
+let first = ring[n % 3];
+// There is no PI. Floats need digits on both sides: 1.0, not 1.
+let tau = 6.2831855;
+// Loops: for i in a..b (end excluded) and for x in array. `const` needs a constant value.
+const STEPS: i32 = 4;
+var total = 0.0;
+for i in 0..STEPS {
+    total += f32(i) * dt;
+}
+```
 
-The types of the prelude are {{features type:}}. There is no implicit conversion between them: `f32(x)`, `i32(x)` and `u32(x)` convert explicitly. Integer arithmetic wraps and out-of-range array indices are clamped, identically on the CPU and the GPU; the rules are in the reference (sections 5 and 6 of Part A).
+- `let` is never reassigned, `var` is. `if` needs a `bool`. A name cannot be declared where it is already visible (`MTEK-E2001`). `struct S { a: f32; }` is built `S { a: 1.0 }`. Strings are CPU-only.
 
-A function is a module item. `fn` is pure; `cpu fn` may also call the CPU-only intrinsics:
+## 3. Functions and effects
 
-{{excerpt examples/pulse-cube/src/main.mtek :: ^fn pulse :: ^\}$}}
+```mtek
+fn smooth(t: f32) -> f32 {
+    return t * t * (3.0 - 2.0 * t);
+}
 
-The intrinsic functions of this build are {{features function:}}.
+cpu fn jitter(range: f32) -> f32 {
+    return (random() - 0.5) * range;
+}
+```
 
-## 5. Materials and shader code
+- `fn` is pure and may run on the CPU and on the GPU. `cpu fn` and handlers may use the CPU-only intrinsics. A `cpu fn` sees no scene: pass values in. A `fn` that calls CPU code is `MTEK-E4002`; recursion is `MTEK-E4001`; a `const` cannot call your functions (`MTEK-E3090`).
+- Both domains: {{intrinsics both}}. CPU only: {{intrinsics cpu}}. GPU only: {{intrinsics gpu}}. `spawn` and `destroy` go directly in handlers and in `update` or `fixed_update` (`MTEK-E5080`).
 
-A material is a typed parameter list and exactly one `fragment` function. The compiler turns the function and every pure function it calls into WGSL; nothing else is compiled to the GPU.
+## 4. State and bind
 
-{{excerpt examples/pulse-cube/src/main.mtek :: ^material Pulse :: ^\}$}}
+```mtek wrap=scene
+// Scene state: bare name, always typed and initialised.
+state level: f32 = 0.5;
+entity Bar {
+    mesh: Box {};
+    // Entity state: self.hits inside, Bar.hits elsewhere.
+    state hits: i32 = 0;
+    // bind is live, pure and the whole value of a bindable field.
+    position: bind(vec3(0.0, level, 0.0));
+    scale: bind(vec3(0.4, max(level * 2.0, 0.01), 0.4));
+    material: Unlit { color: bind(color.linear(vec3(level), 1.0)) };
+}
+on key_down(Key.ArrowUp) {
+    // Write state in handlers; a bound field is never assigned.
+    level = min(level + 0.1, 1.0);
+}
+```
 
-A material instance sets the parameters in the entity: `material: Pulse { tint: bind(tint); phase: bind(frame.time) };`. The lit built-in materials are {{schemas material}}; `lighting.pbr` is available in stage functions:
+- The first value of an entity field, a camera field or a material parameter of the scene must be a constant (`MTEK-E9010`); to follow state, bind it. A bound field cannot be assigned (`MTEK-E5070`). A binding cannot call a `cpu fn`, `random`, `is_key_down` or read a camera (`MTEK-E5005`), must have exactly the field's type (`MTEK-E3102`), and is not allowed on `mesh`, `body` or `exposure` (`MTEK-E5004`).
+- `phase: bind(frame.time)` follows time; `phase: frame.time` is frozen at creation. A shader reads only its parameters (`MTEK-E4040`): add a `param` and bind it.
 
-{{excerpt examples/material-configurator/src/materials.mtek :: ^export material Striped :: ^\}$}}
+## 5. Entities, references, spawn
 
-## 6. Binding
+```mtek
+prefab Bullet {
+    param at: vec3 = vec3(0.0, 0.0, 0.0);
+    position: at;
+    mesh: Sphere { radius: 0.15 };
+}
 
-`bind(expression)` makes a field follow an expression every frame, without a handler. A value that changes at run time never creates a pipeline or a shader module: it is written into a uniform buffer (`spec/gpu-layout.md`).
+scene Demo {
+    // No null: start at an empty entity and keep a flag.
+    state has_bullet: bool = false;
+    state bullet: entity_ref = Nothing;
 
-{{excerpt examples/physics-playground/src/main.mtek :: ^    entity Meter :: ^    \}$}}
+    camera Main {
+        position: vec3(0.0, 2.0, 6.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
 
-## 7. Host inputs
+    entity Nothing {}
 
-`[host.inputs]` of `mtek.toml` maps names to scene `state`. The host page sets them with `app.setInput(name, value)`; the runtime validates each value with a codec. The codecs of this build are {{codecs}}.
+    on key_down(Key.Space) {
+        if has_bullet && alive(bullet) {
+            destroy(bullet);
+        }
+        // spawn: handlers only. alive() is false until the next flush.
+        bullet = spawn(Bullet { at: vec3(0.0, 1.0, 0.0) });
+        has_bullet = true;
+    }
+}
+```
 
-{{example examples/material-configurator/mtek.toml}}
+- An `entity_ref` is compared (`other == Floor`), tested with `alive`, passed to `destroy`, given body commands, and kept in state, arrays and prefab params. Reading or writing a field through it is `MTEK-E5074`. A declared entity cannot be destroyed (`MTEK-E5030`): set `visible = false`.
+- A prefab is one entity (`MTEK-E5040`), has no light (`MTEK-E5110`) and does not see the scene (`MTEK-E2003`): pass values in as `param`s. `entity E: Prefab { param: constant; }` sets params only (`MTEK-E5042`, `MTEK-E3090`).
 
-## 8. Modules and prefabs
+## 6. Time and input
 
-A file is a module. `export` makes an item importable; `import { A, B } from "./path.mtek";` imports by name. There are no wildcards, no aliases and no package imports.
+```mtek wrap=entity
+mesh: Box {};
+// Per frame. dt is in seconds, at most {{project-default MAX_FRAME_DELTA}}; multiply motion by dt.
+update(dt: f32) {
+    // Held key: CPU only, not in a fn or a bind.
+    if is_key_down(Key.ArrowLeft) {
+        self.position.x -= 4.0 * dt;
+    }
+}
+// Fixed {{project-default FIXED_STEP}} s step before update; body commands go here.
+fixed_update(dt: f32) { }
+// key_down and key_up fire once per press; the key must be a constant Key.
+on key_up(Key.Space) { }
+// position.x and .y are in -1..1, +y up.
+on pointer_move(event: PointerEvent) { }
+```
 
-{{example examples/modular-scene/src/theme.mtek}}
+- Keys: {{enum Key}}. `Key.Up`, `"w"` and `Key.Shift` do not exist (`MTEK-E2003`, `MTEK-E5061`). Events: {{features event:}}. `update` and `fixed_update` take one `f32` (`MTEK-E5050`); there is no `start` (`MTEK-E5052`).
 
-A `prefab` is a reusable entity with parameters and state. An entity can instantiate one (`entity Left: Pillar { ... }`) and a handler can create one at run time with `spawn`:
+## 7. Lighting and units
 
-{{example examples/modular-scene/src/props/pillar.mtek}}
+```mtek wrap=scene
+camera Sun {
+    position: vec3(0.0, 8.0, 12.0);
+    target: vec3(0.0, 0.0, 0.0);
+    // EV100, a constant. Lit results are multiplied by 1 / (1.2 * 2^exposure).
+    exposure: 15.0;
+    active: true;
+}
+entity Light {
+    // Lux. Shines along its -Z axis: aim by rotating.
+    light: DirectionalLight { intensity: 100000.0 };
+    rotation: quat.euler(-0.9, 0.4, 0.0);
+}
+entity Lamp {
+    // Candela, inverse square falloff; range 0 is unlimited.
+    light: PointLight { intensity: 60.0; range: 10.0 };
+    position: vec3(0.0, 2.0, 0.0);
+}
+```
 
-{{excerpt examples/modular-scene/src/main.mtek :: ^    on key_down\(Key.P\) :: ^    \}$}}
+- The default exposure {{default Camera.exposure}} turns 1 lux into a white diffuse surface. For `E` lux use `exposure: log2(E / 3.77)` ({{exposure-for 500}} for 500 lux, {{exposure-for 100000}} for the sun). Ambient light (`ambient_intensity`, default {{default Scene.ambient_intensity}}) is scaled by the exposure too, and `A` is as bright as `pi * A` lux. Nothing is tone mapped: above 1.0 clips. At most 4 lights, only on named entities (`MTEK-E5111`, `MTEK-E5110`). `Pbr` and `lighting.pbr` are lit; `Unlit` is not.
+- A camera has a `target` or a `rotation` (`MTEK-E5010`). Colour parameters are opaque (`MTEK-E5100`); a returned alpha is ignored.
+
+## 8. Materials, textures, assets
+
+```mtek
+// Path: a literal, relative to this file, exact case. Use linear_texture for data.
+const WOOD = asset.texture("../textures/wood.png");
+
+material Textured {
+    param base: texture = texture.white();
+    // Presets: linear or nearest, repeat or clamp. Fixed at construction.
+    param smp: sampler = sampler.nearest_repeat();
+    param tint: color = #ffffff;
+
+    // One stage: returns color and reads only the parameters and the input.
+    fragment(input: SurfaceInput) -> color {
+        // sample gives a vec4: use .xyz. Textures and samplers appear only as its arguments.
+        let texel = sample(base, smp, input.uv);
+        return lighting.pbr(input, color.linear(texel.xyz * tint.rgb, 1.0), 0.0, 0.6);
+    }
+}
+
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Crate {
+        mesh: Box {};
+        material: Textured { base: WOOD; tint: #ffd9a0 };
+
+        // A material parameter is written like a field, unless it is bound.
+        on key_down(Key.Space) {
+            self.material.tint = #ff0000;
+        }
+    }
+}
+```
+
+- `*` marks fields fixed at construction. {{field-list Pbr}} {{field-list Unlit}} Meshes: {{schemas mesh}}. A model: `const M = asset.glb("../m.glb");`, then `M.mesh("Name")`, `M.material("Name")`, `M.node_position("Name")`; the names are checked (`MTEK-E7024`).
+- Shader code: constant loop bounds, no strings, no CPU intrinsics (`MTEK-E4010` to `MTEK-E4012`); `sample` is GPU-only (`MTEK-E4013`).
 
 ## 9. Physics
 
-Entities with a `body` and a `collider` are simulated. Body kinds and collider shapes are registry schemas ({{schemas body}}; {{schemas collider}}); handlers command bodies with {{features body-command:}} and read {{features body-property:}}.
+```mtek wrap=scene
+entity Floor {
+    mesh: Box { size: vec3(10.0, 1.0, 10.0) };
+    position: vec3(0.0, -0.5, 0.0);
+    body: Static {};
+    // Sizes are full extents.
+    collider: BoxCollider { size: vec3(10.0, 1.0, 10.0) };
+}
+entity Ball {
+    mesh: Sphere { radius: 0.5 };
+    position: vec3(0.0, 3.0, 0.0);
+    body: Dynamic { mass: 2.0 };
+    collider: SphereCollider { radius: 0.5; restitution: 0.6 };
+    // Entities and prefabs with a collider receive collision events.
+    on collision_enter(other: entity_ref) {
+        if other == Floor {
+            print("landed");
+        }
+    }
+}
+on key_down(Key.Space) {
+    // Move bodies with commands; assigning their position is MTEK-E5071.
+    Ball.body.apply_impulse(vec3(0.0, 8.0, 0.0));
+}
+```
 
-{{excerpt examples/physics-playground/src/main.mtek :: ^    entity Zone :: ^    \}$}}
+- A body and a collider come together (`MTEK-E5120`, `MTEK-E5121`), on root entities (`MTEK-E5091`), with scale 1 when dynamic or kinematic (`MTEK-E5122`). Commands: {{features body-command:}}; readable: {{features body-property:}}.
 
-The physics engine is a separate module that a program loads only if it uses a body. Its known limitations (no continuous collision detection) are on [limitations](limitations.md).
+## 10. Modules and host inputs
 
-## 10. Assets
+```mtek project=guide file=src/theme.mtek
+export const GOLD: color = #e0a526;
+```
 
-An asset is a compile-time dependency. `asset.glb("path")` opens a binary glTF file while the program is checked; its meshes, materials and node transforms are then read through name-checked accessors, so a misspelled name is a compile error and not a black canvas.
+```mtek project=guide file=src/main.mtek
+import { GOLD } from "./theme.mtek";
 
-{{excerpt examples/material-configurator/src/model.mtek :: ^export const CHAIR :: ^export const FABRIC_ROUGHNESS}}
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 2.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
 
-The glTF profile of v0.1 is strict (decision 0015): no extensions, no skinning, no animation, one material model. [Limitations](limitations.md) lists each restriction with its diagnostic.
+    entity Cube {
+        mesh: Box {};
+        material: Unlit { color: GOLD };
+    }
+}
+```
 
-## 11. The tools
+- An import path starts with `./` or `../`, ends in `.mtek` and names exported items; no `as`, `*` or packages (`MTEK-E2030` to `MTEK-E2036`). `[host.inputs] name = "Scene.state"` exposes a state through these codecs: {{codecs}}.
+- Commands: {{commands}}. Run `mtek check` after every edit and fix the errors in report order; apply a suggested edit only when the diagnostic carries one.
 
-The commands of the `mtek` executable are {{commands}}. `mtek check` needs no GPU; `mtek fmt` has one canonical layout and no options; `mtek context` prints this build's supported features for AI agents.
+## 11. Pages
 
-Every diagnostic has a stable code, a message, a span and, when the compiler can prove it, a suggested edit that is re-checked before it is offered. The ranges are in Part D of the reference.
-
-## 12. Where to go next
-
-- [Language reference](language-reference.md): the rules and the standard library.
-- [Limitations](limitations.md): what v0.1 refuses, what it specifies but does not build, and why.
-- [Coverage matrix](coverage-matrix.md): which program or fixture exercises each feature.
-- [Getting started](getting-started.md): install, run, break, repair.
-- [Preview hosting](preview-hosting.md): serving untrusted programs.
-- [Release notes (draft)](release-notes-v0.1.md).
+[Getting started](getting-started.md), [tutorial](tutorial.md), [concept pages](README.md#concepts), [language reference](language-reference.md), [limitations](limitations.md).

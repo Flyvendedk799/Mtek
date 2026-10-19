@@ -26,6 +26,8 @@ export interface DocPageInputs {
   indexPath: string;
   indexedPages: readonly string[];
   guidePath: string;
+  /** The registry's default `Camera.exposure` as text and `-log2(1.2 pi)` rounded to binary32: the formula of `{{exposure-for}}`. */
+  exposure: { text: string; expected: number };
 }
 
 /** The anchor GitHub gives a heading. */
@@ -127,6 +129,17 @@ export function checkDocPages(i: DocPageInputs): Mismatch[] {
         found.push(mismatch("docs/structure", { where: page.path, value: 'a wrong= example under "Common mistakes"' }, { where: page.path, value: "none" }, "decision 0116"));
       }
     }
+  }
+
+  // The formula behind {{exposure-for}} is the one that produces the registry's default exposure.
+  if (Math.fround(Number(i.exposure.text)) !== i.exposure.expected) {
+    found.push(
+      mismatch(
+        "docs/exposure-formula",
+        { where: "spec/stdlib-schema.json (Camera.exposure default)", value: i.exposure.text },
+        { where: "-log2(1.2 * pi) as binary32 (the formula of {{exposure-for}})", value: String(i.exposure.expected) },
+      ),
+    );
   }
 
   // The index lists every page.

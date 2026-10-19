@@ -217,3 +217,10 @@ export function bodyCommandsTable(registry: StdlibSchema): string {
   ];
   return table(["Command or property", "Applies to", "Meaning"], rows);
 }
+
+/** `{{field-list SCHEMA}}`: a schema as one line of code, `Name { field: type = default; ... }`; construction-only fields are marked `*`. */
+export function fieldList(registry: StdlibSchema, name: string): string {
+  const schema = schemaOf(registry, name, `{{field-list ${name}}}`);
+  const fields = schema.fields.map((f) => `${f.name}${f.constructionOnly ? "*" : ""}: ${f.type}${f.required ? "" : f.default === null ? "" : ` = ${f.default}`}`);
+  return code(`${schema.name} { ${fields.join("; ")} }`);
+}
