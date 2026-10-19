@@ -7,7 +7,9 @@
 //   - success is every layer passing AND the required declarations existing; syntax validity, a clean
 //     build or a mounted program alone is never success;
 //   - a truncated, refused, cancelled or failed generation ends the trial as a failure; it is never
-//     silently repaired or retried;
+//     silently repaired or retried. The one exception is a call that got no response at all (a connection
+//     error or a timeout): it is retried at most three times with a growing pause, every try is recorded,
+//     and if there is still none the attempt ends `error` / `transport-error`, never `failure` (decision 0124);
 //   - an edit that does not apply under the exact-match rule is rejected, recorded, and counts as a
 //     repair round;
 //   - a layer that could not run on this machine (no GPU) ends the trial `not-run`, never `success`;
@@ -22,6 +24,7 @@ import { applyEdits, parseModuleReply, parseReply, type EditPolicy, type ParsedR
 import { ConfigError, ToolError } from "./errors.ts";
 import { defaultGrammarCapability, GRAMMAR_UNAVAILABLE_MESSAGE, type GrammarCapability, type TrialKind } from "./grammar.ts";
 import {
+  isTransportFailure,
   requestHash,
   ZERO_USAGE,
   type ChatMessage,
@@ -40,6 +43,26 @@ import { scrubPaths, type ValidationResult } from "./validator.ts";
 import type { Workspace } from "./workspace.ts";
 
 export const DEFAULT_CONTEXT_MAX_BYTES = 24_000;
+
+/** The pauses before the retries of a call that got no response at all: at most three retries, 2 s, 8 s and 30 s (decision 0124). */
+export const TRANSPORT_RETRY_DELAYS_MS: readonly number[] = [2_000, 8_000, 30_000];
+
+/** Waits `ms`, or less when `signal` aborts (a Ctrl-C of the CLI ends the pause at once). */
+export function sleepFor(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal?.aborted === true) {
+      resolve();
+      return;
+    }
+    const done = (): void => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", done);
+      resolve();
+    };
+    const timer = setTimeout(done, ms);
+    signal?.addEventListener("abort", done, { once: true });
+  });
+}
 
 interface Started {
   iso: string;
@@ -83,6 +106,10 @@ export interface LoopDeps {
   signal?: AbortSignal;
   /** Replaces the validator of every side (tests). */
   validator?: CandidateValidator;
+  /** The pause before each retry of a call without a response (tests pass short ones); default `TRANSPORT_RETRY_DELAYS_MS`. At most that many retries are made. */
+  retryDelaysMs?: readonly number[];
+  /** Waits before a retry; default a real timer that `signal` can cut short (tests pass a recorder that does not wait). */
+  sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
 }
 
 export interface TrialResult {
@@ -331,61 +358,88 @@ export class RepairLoop {
         ...(config.seed === undefined ? {} : { seed: config.seed }),
         ...(grammar === null ? {} : { grammar: grammar.grammar }),
       };
-      const callStarted = clock.nowMs();
-      const callIso = clock.iso();
-      const timeout = AbortSignal.timeout(Math.max(1, Math.ceil(budget.remainingMs())));
-      const signal = this.deps.signal === undefined ? timeout : AbortSignal.any([timeout, this.deps.signal]);
+      // A call that gets no response at all (a connection error, a timeout, DNS) is retried with a growing pause, at most
+      // `retryDelaysMs.length` times; every try is a model-call record of its own with its own charge (decision 0124). A
+      // response with an HTTP status, a refusal, a truncation or any other failure is never retried.
+      const retryDelaysMs = this.deps.retryDelaysMs ?? TRANSPORT_RETRY_DELAYS_MS;
+      let retry = 0;
       let generated: GenerateResult;
-      try {
-        generated = await client.generate(request, { signal });
-      } catch (error) {
-        generated = {
-          text: "",
-          usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 },
-          finish: "error",
-          error: error instanceof Error ? error.message : String(error),
-        };
+      for (;;) {
+        const callStarted = clock.nowMs();
+        const callIso = clock.iso();
+        const timeout = AbortSignal.timeout(Math.max(1, Math.ceil(budget.remainingMs())));
+        const signal = this.deps.signal === undefined ? timeout : AbortSignal.any([timeout, this.deps.signal]);
+        try {
+          generated = await client.generate(request, { signal });
+        } catch (error) {
+          generated = {
+            text: "",
+            usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 },
+            finish: "error",
+            error: error instanceof Error ? error.message : String(error),
+          };
+        }
+        // The spend guard refused the call: the provider was not reached. The call is recorded as prevented by a
+        // budget and the trial is unfinished by budget, never a success and never dropped (decision 0108).
+        if (generated.budgetStop === "spend") {
+          this.recordBudgetStop(trialId, round, "spend", generated.error ?? null, generated.ledgerTotalUsd ?? null);
+          return result({ outcome: "unfinished", reason: "budget-spend", message: generated.error ?? "the spend cap was reached" });
+        }
+        const generation = generationOf(generated);
+        budget.record(generated.usage);
+        if (generated.costUsd !== undefined) spent = (spent ?? 0) + generated.costUsd;
+        const errorKind = generated.finish !== "error" ? null : generated.httpStatus !== undefined ? "http" : (generated.transport ?? null);
+        recorder.record({
+          type: "model-call",
+          trialId,
+          round,
+          promptHash: requestHash(request),
+          request: {
+            system,
+            messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
+            maxOutputTokens: request.maxOutputTokens,
+            temperature: request.temperature,
+            stop: request.stop === undefined ? null : [...request.stop],
+            seed: request.seed ?? null,
+            grammarSha256: request.grammar === undefined ? null : sha256Hex(request.grammar),
+          },
+          promptSections: { system: system.length, ...prompt.sections },
+          response: { text: generated.text },
+          usage: generated.usage,
+          finish: generated.finish,
+          generation,
+          error: generated.error ?? null,
+          ...(errorKind === null ? {} : { errorKind }),
+          ...(generated.httpStatus === undefined ? {} : { httpStatus: generated.httpStatus }),
+          ...(retry === 0 ? {} : { retry }),
+          budget: null,
+          costUsd: generated.costUsd ?? null,
+          ledgerTotalUsd: generated.ledgerTotalUsd ?? null,
+          startedAt: callIso,
+          durationMs: Math.max(0, Math.round(clock.nowMs() - callStarted)),
+        });
+        const delay = retryDelaysMs[retry];
+        const stopped = (): boolean => this.deps.signal?.aborted === true || budget.exhausted() !== null;
+        if (!isTransportFailure(generated) || delay === undefined || stopped()) break;
+        await (this.deps.sleep ?? sleepFor)(delay, this.deps.signal);
+        if (stopped()) break;
+        retry += 1;
       }
-      // The spend guard refused the call: the provider was not reached. The call is recorded as prevented by a
-      // budget and the trial is unfinished by budget, never a success and never dropped (decision 0108).
-      if (generated.budgetStop === "spend") {
-        this.recordBudgetStop(trialId, round, "spend", generated.error ?? null, generated.ledgerTotalUsd ?? null);
-        return result({ outcome: "unfinished", reason: "budget-spend", message: generated.error ?? "the spend cap was reached" });
-      }
-      const generation = generationOf(generated);
-      budget.record(generated.usage);
-      if (generated.costUsd !== undefined) spent = (spent ?? 0) + generated.costUsd;
-      recorder.record({
-        type: "model-call",
-        trialId,
-        round,
-        promptHash: requestHash(request),
-        request: {
-          system,
-          messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
-          maxOutputTokens: request.maxOutputTokens,
-          temperature: request.temperature,
-          stop: request.stop === undefined ? null : [...request.stop],
-          seed: request.seed ?? null,
-          grammarSha256: request.grammar === undefined ? null : sha256Hex(request.grammar),
-        },
-        promptSections: { system: system.length, ...prompt.sections },
-        response: { text: generated.text },
-        usage: generated.usage,
-        finish: generated.finish,
-        generation,
-        error: generated.error ?? null,
-        budget: null,
-        costUsd: generated.costUsd ?? null,
-        ledgerTotalUsd: generated.ledgerTotalUsd ?? null,
-        startedAt: callIso,
-        durationMs: Math.max(0, Math.round(clock.nowMs() - callStarted)),
-      });
       if (budget.tokenBudgetUnenforceable()) {
         return result({
           outcome: "error",
           reason: "tool-error",
           message: "a token budget is set but the provider did not report token usage, so the budget cannot be enforced",
+        });
+      }
+      const generation = generationOf(generated);
+
+      // 3a. Still no response after the retries: the attempt could not be judged. It is an error of the transport, never a failure of the model.
+      if (isTransportFailure(generated)) {
+        return result({
+          outcome: "error",
+          reason: "transport-error",
+          message: `${generated.error ?? "no response"} (no response from the model; ${String(retry)} ${retry === 1 ? "retry" : "retries"})`,
         });
       }
 

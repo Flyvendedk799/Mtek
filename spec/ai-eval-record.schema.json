@@ -266,6 +266,9 @@
         "finish": { "enum": ["stop", "length", "refusal", "cancelled", "error", null] },
         "generation": { "description": "`completed` only for finish `stop`; a truncated generation (finish `length`) is a failure even when its partial output parses (spec 1).", "enum": ["completed", "truncated", "refused", "cancelled", "backend-error", "budget-exceeded"] },
         "error": { "type": ["string", "null"] },
+        "errorKind": { "description": "How the call failed without a usable response (decision 0124): `connection` = no HTTP exchange completed and the request most likely never reached the service (refused, DNS, no route, connect timeout); `timeout` = the request was or may have been sent and no answer came (reset, socket error, timeout); `http` = the service answered with an error status. Absent for a call that did not fail that way and in records made before decision 0124.", "enum": ["connection", "timeout", "http", null] },
+        "httpStatus": { "description": "The HTTP status of an error response (decision 0124). Absent when there was none.", "type": ["integer", "null"] },
+        "retry": { "description": "Absent or 0 for the first try of a round; n for the n-th retry of a call that got no response at all (decision 0124: at most 3). Each try is a record of its own, with its own error and charge.", "type": "integer", "minimum": 0 },
         "budget": { "description": "For generation `budget-exceeded`: which budget ran out (`spend`: the money cap of the spend guard).", "enum": ["wall-clock", "total-tokens", "spend", null] },
         "costUsd": { "description": "What the spend guard charged for this call, USD; null without a guard or when the call was not made.", "type": ["number", "null"] },
         "ledgerTotalUsd": { "description": "The ledger total after the call, USD.", "type": ["number", "null"] },
@@ -459,15 +462,15 @@
         "seq": true,
         "type": { "const": "trial-end" },
         "trialId": { "type": "string", "minLength": 1 },
-        "outcome": { "description": "success only when the final candidate passed every layer and every required symbol exists. not-run: nothing failed but a layer could not run here (never a success). error: the tool chain failed. unavailable: a constrained trial was asked for and the capability is absent (never run unconstrained instead). unfinished: the spend cap stopped the trial (reason budget-spend); neither a success nor a failure of the model.", "enum": ["success", "failure", "not-run", "error", "unavailable", "unfinished"] },
+        "outcome": { "description": "success only when the final candidate passed every layer and every required symbol exists. not-run: nothing failed but a layer could not run here (never a success). error: the tool chain failed (reason tool-error), or the model could not be reached at all, a connection error or a timeout with no response after the retries of decision 0124 (reason transport-error); it says nothing about the model. unavailable: a constrained trial was asked for and the capability is absent (never run unconstrained instead). unfinished: the spend cap stopped the trial (reason budget-spend); neither a success nor a failure of the model.", "enum": ["success", "failure", "not-run", "error", "unavailable", "unfinished"] },
         "reason": {
           "enum": [
             "max-repairs", "budget-wall-clock", "budget-total-tokens", "generation-truncated", "generation-refused", "generation-cancelled",
-            "generation-error", "validation-not-run", "tool-error", "grammar-unavailable", "budget-spend", null
+            "generation-error", "validation-not-run", "tool-error", "grammar-unavailable", "budget-spend", "transport-error", null
           ]
         },
         "message": { "type": ["string", "null"] },
-        "calls": { "description": "Model calls made (the first generation and every repair, whatever its outcome).", "type": "integer", "minimum": 0 },
+        "calls": { "description": "Model calls made (the first generation, every repair and every retry of a call that got no response, whatever its outcome).", "type": "integer", "minimum": 0 },
         "repairsUsed": { "type": "integer", "minimum": 0 },
         "firstAttempt": {
           "description": "The first candidate that was validated (first-attempt parse, check, start and task-test success are metrics of their own, spec 6.4); null when none was.",
@@ -494,7 +497,8 @@
         { "if": { "properties": { "outcome": { "const": "success" } } }, "then": { "properties": { "reason": { "type": "null" }, "final": { "type": "object", "properties": { "verdict": { "const": "pass" } } } } } },
         { "if": { "properties": { "outcome": { "const": "unavailable" } } }, "then": { "properties": { "reason": { "const": "grammar-unavailable" }, "calls": { "const": 0 } } } },
         { "if": { "properties": { "outcome": { "enum": ["failure", "not-run", "error", "unavailable", "unfinished"] } } }, "then": { "properties": { "reason": { "type": "string" } } } },
-        { "if": { "properties": { "outcome": { "const": "unfinished" } } }, "then": { "properties": { "reason": { "const": "budget-spend" } } } }
+        { "if": { "properties": { "outcome": { "const": "unfinished" } } }, "then": { "properties": { "reason": { "const": "budget-spend" } } } },
+        { "if": { "properties": { "reason": { "const": "transport-error" } } }, "then": { "properties": { "outcome": { "const": "error" } } } }
       ]
     },
     "attempt": {

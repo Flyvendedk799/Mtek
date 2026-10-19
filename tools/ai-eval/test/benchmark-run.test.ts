@@ -8,7 +8,7 @@ import { createReplayClient, type ReplayEntry } from "../src/adapters/replay.ts"
 import { runBenchmark, taskIdsIn, isInside } from "../src/benchmark-run.ts";
 import { steppingClock } from "../src/clock.ts";
 import type { FetchLike, GenerateResult, ModelClient } from "../src/model-client.ts";
-import { parseRecords, extractTrials } from "../src/report.ts";
+import { parseRecords, extractTrials, summarize } from "../src/report.ts";
 import { FakeBaseline } from "./baseline-helpers.ts";
 import { FIXTURE_TASKS, fakeMtek, tempDir, validateRecord } from "./helpers.ts";
 
@@ -286,5 +286,42 @@ describe("a replayed transcript", () => {
     writeFileSync(file, entries.map((e) => JSON.stringify(e)).join("\n"));
     const { deps: d } = deps(root, createReplayClient(entries, { model: "claude-haiku-4-5-20251001" }));
     expect(await runBenchmark(["--tasks", "demo-01", "--sides", "mtek", "--client", "replay", "--transcript", file, "--run-id", "r", "--out", tempDir()], { ...d, client: undefined as never })).toBe(0);
+  });
+});
+
+describe("a run that cannot reach the model (decision 0124)", () => {
+  const unreachable = (): ModelClient => ({
+    provider: "replay",
+    model: "claude-haiku-4-5-20251001",
+    capabilities: { grammar: false, seed: false },
+    generate: (): Promise<GenerateResult> => Promise.resolve({ text: "", usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 }, finish: "error", error: "Connection error.", transport: "connection" }),
+  });
+
+  it("retries, ends every attempt error / transport-error, says so, and is not a failure of the model or of the run", async () => {
+    const root = fakeRoot();
+    const out = join(tempDir("ai-bench-out-"), "ai");
+    const waited: number[] = [];
+    const { deps: d, stdio } = deps(root, unreachable());
+    const code = await runBenchmark(["--tasks", "demo-01", "--sides", "mtek", "--trials", "2", "--client", "replay", "--run-id", "down", "--out", out], {
+      ...d,
+      retryDelaysMs: [3, 4],
+      sleep: (ms) => {
+        waited.push(ms);
+        return Promise.resolve();
+      },
+    });
+    expect(code).toBe(0);
+    expect(waited).toEqual([3, 4, 3, 4]);
+    const recs = records(join(out, "down"));
+    for (const record of recs) expect(validateRecord(record), JSON.stringify(record).slice(0, 200)).toEqual([]);
+    const ends = recs.filter((r) => r["type"] === "trial-end");
+    expect(ends.map((r) => [r["outcome"], r["reason"], r["calls"]])).toEqual([
+      ["error", "transport-error", 3],
+      ["error", "transport-error", 3],
+    ]);
+    expect(recs[recs.length - 1]).toMatchObject({ type: "run-end", status: "complete", trials: 2 });
+    expect(stdio.out.join("")).toContain("warning: 2 of 2 attempts got no response from the model after the retries (transport-error)");
+    const { trials } = extractTrials(recs);
+    expect(summarize(trials)).toMatchObject({ n: 2, error: 2, valid: 0, completionRate: null, tokensPerCompleted: null });
   });
 });

@@ -113,7 +113,12 @@ The wall-clock budget is the task's `max_wall_seconds`; the per-reply token cap 
    (`unavailable`).
 5. A generation that is truncated (`finish: length`), refused, cancelled or failed ends the trial as
    a failure at once: it is recorded and never silently repaired or retried, even when the partial
-   output would have applied and passed.
+   output would have applied and passed. The one exception is a call that gets **no response at all**
+   (a connection error, a timeout, DNS: `GenerateResult.transport`): it is retried at most three times
+   after 2 s, 8 s and 30 s, every try is a `model-call` record of its own (`retry`, `errorKind`), and an
+   attempt that still gets none ends outcome `error`, reason `transport-error` (not judged), never
+   `failure` ([decision 0124](../../spec/decisions/0124-attempts-the-harness-could-not-judge.md)). A
+   response with an HTTP status is not retried.
 
 ## Records
 
@@ -145,7 +150,7 @@ item 10, wired by the orchestrator after M6-06 merged).
 | Adapter | Transport | Notes |
 |---|---|---|
 | `replay` | none | recorded responses, in order; the only adapter the unit tests and CI use |
-| `anthropic` | the official `@anthropic-ai/sdk` (optional dependency) | no default model, no seed, no grammar, no retries; `inputTokens` is the whole input, `cachedInputTokens` the cache reads, `cacheWriteInputTokens` the cache writes; `promptCaching` puts one cache breakpoint on the newest message (Haiku 4.5 caches prefixes of at least 4 096 tokens); run against the real service for the first time on 2026-10-19 (decision 0108 item 5) |
+| `anthropic` | the official `@anthropic-ai/sdk` (optional dependency) | no default model, no seed, no grammar, no retries inside the SDK (the loop retries a call that got no response, decision 0124); `inputTokens` is the whole input, `cachedInputTokens` the cache reads, `cacheWriteInputTokens` the cache writes; `promptCaching` puts one cache breakpoint on the newest message (Haiku 4.5 caches prefixes of at least 4 096 tokens); run against the real service for the first time on 2026-10-19 (decision 0108 item 5) |
 | `openai-compatible` | `POST {base-url}/chat/completions` | hosted or local servers; seed forwarded, no grammar |
 | `llama-cpp` | `llama-server`'s `/v1/chat/completions` | forwards `grammar` and `seed`; tested against a fake transport only |
 
@@ -178,7 +183,8 @@ node tools/ai-eval/src/benchmark-run.ts (--tasks id,id | --all) [--holdout] [--s
      --client anthropic --model claude-haiku-4-5-20251001 --spend-cap USD [--spend-ledger FILE]
      [--api-key-file FILE] [--temperature N|default] [--trials N] [--first-trial N] [--order trial-major|task-major]
      [--no-prompt-caching] [--gpu-lock DIR] [--run-id ID] [--out DIR]
-node tools/ai-eval/src/report-cli.ts --run DIR [--run DIR ...] --out report.md [--projection FILE --budget USD] [--holdout-summary FILE]
+node tools/ai-eval/src/report-cli.ts --run DIR [--run DIR ...] [--baseline-run DIR ...] --out report.md [--projection FILE --budget USD] [--holdout-summary FILE]
+node tools/ai-eval/src/compare-cli.ts --before RUN[,RUN...] --after RUN[,RUN...] --out FILE [--title T] [--note N]
 ```
 
 - `benchmark-run` makes the attempts tasks x sides x trial kinds x trials for one model into `<out>/<run-id>/` (default
@@ -203,4 +209,12 @@ node tools/ai-eval/src/report-cli.ts --run DIR [--run DIR ...] --out report.md [
   the attribution of input tokens to parts of the prompt, per category and per mode, every attempt, and the conclusion on H4 by
   the rule of decision 0108 item 11 (better, equivalent, worse or inconclusive, and whether it is provisional). `--projection`
   writes the cost of six scopes of the full protocol from the cost per attempt in the runs (`src/projection.ts`).
+  `--baseline-run DIR` adds only the baseline attempts of an earlier run (so a re-run of Mtek is judged against a baseline that
+  was not re-run, without the earlier Mtek cells joining the re-run's). An attempt that never got a response from the model is
+  reported as not judged (`error` / `transport-error`), also when an older record says `failure` / `generation-error` with calls
+  that are all connection errors or timeouts with no response (the legacy rule, decision 0124).
+- `compare-cli` writes a before/after comparison of the Mtek conditions of stored runs (`src/compare.ts`): per condition, for all
+  attempts as published and for the matched cells (judged in both runs), attempts, completed tasks, completion rate and tokens per
+  completed task, overall, per mode and per category, the baseline row of the runs before, and what was lost. It reads
+  `records.jsonl` only and gives no verdict.
 

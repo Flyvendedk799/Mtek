@@ -14,6 +14,7 @@ import {
   type GenerateRequest,
   type GenerateResult,
   type ModelClient,
+  type TransportFailure,
   type Usage,
 } from "../model-client.ts";
 
@@ -22,6 +23,10 @@ export interface ReplayEntry {
   finish: FinishReason;
   usage: Usage;
   error?: string;
+  /** A call that got no response at all (decision 0124); the harness retries it. A recorded call's `errorKind` of `connection` or `timeout` is read as this. */
+  transport?: TransportFailure;
+  /** A call the service answered with an error status. */
+  httpStatus?: number;
   /** When present the request must hash to it (`requestHash`). */
   promptHash?: string;
 }
@@ -76,6 +81,9 @@ export function parseTranscript(jsonl: string): ReplayEntry[] {
     }
     const entry: ReplayEntry = { text, finish: finish as FinishReason, usage: parseUsage(value["usage"]) };
     if (typeof value["error"] === "string") entry.error = value["error"];
+    const kind = recorded ? value["errorKind"] : value["transport"];
+    if (kind === "connection" || kind === "timeout") entry.transport = kind;
+    if (typeof value["httpStatus"] === "number") entry.httpStatus = value["httpStatus"];
     if (typeof value["promptHash"] === "string") entry.promptHash = value["promptHash"];
     entries.push(entry);
   }
@@ -131,6 +139,8 @@ export function createReplayClient(entries: readonly ReplayEntry[], options: Rep
       }
       const result: GenerateResult = { text: entry.text, usage: entry.usage, finish: entry.finish };
       if (entry.error !== undefined) result.error = entry.error;
+      if (entry.transport !== undefined) result.transport = entry.transport;
+      if (entry.httpStatus !== undefined) result.httpStatus = entry.httpStatus;
       return Promise.resolve(result);
     },
   };

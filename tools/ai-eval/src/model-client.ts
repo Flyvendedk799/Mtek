@@ -45,6 +45,9 @@ export interface Usage {
   cacheWriteInputTokens?: number | null;
 }
 
+/** How a call failed without any response (decision 0124). */
+export type TransportFailure = "connection" | "timeout";
+
 export interface GenerateResult {
   text: string;
   usage: Usage;
@@ -53,6 +56,13 @@ export interface GenerateResult {
   error?: string;
   /** For a failure the provider answered with an HTTP status (an error response is not billed). */
   httpStatus?: number;
+  /**
+   * For `finish: "error"` when no response came back at all (decision 0124): `connection` = no HTTP exchange completed (refused,
+   * reset, DNS, TLS, no route, or a connect timeout: the request most likely never reached the service); `timeout` = the
+   * request was sent and no answer came in time (it may have been processed and billed). Absent for an error response with a
+   * status and for every other failure.
+   */
+  transport?: TransportFailure;
   /** Set by the spend guard when it refused the call: the provider was not reached. */
   budgetStop?: "spend";
   /** Set by the spend guard: what the call was charged, USD (decision 0108). */
@@ -85,6 +95,11 @@ export interface ModelClient {
   /** True when the client asks the provider to cache prompts (part of the condition: it changes what is billed, not what is answered). */
   readonly promptCaching?: boolean;
   generate(request: GenerateRequest, options?: GenerateOptions): Promise<GenerateResult>;
+}
+
+/** True for a call that failed with a transport error before any response: the only failure the repair loop retries (decision 0124). */
+export function isTransportFailure(result: Pick<GenerateResult, "finish" | "transport" | "httpStatus" | "budgetStop">): boolean {
+  return result.finish === "error" && result.transport !== undefined && result.httpStatus === undefined && result.budgetStop === undefined;
 }
 
 /**

@@ -14,9 +14,10 @@
 // Prices are USD per million tokens and deliberately conservative: when the provider does not say
 // how much of the input was cached, all of it is charged at the uncached price; a cache write is
 // charged at the 5-minute write price; a call that failed without a usable answer (an abort, a
-// timeout, a dropped connection) is charged its worst case because it may have been billed. A call
-// that the provider answered with an HTTP error status is billed nothing by the provider and charged
-// nothing here.
+// timeout after the request was sent) is charged its worst case because it may have been billed.
+// A call that the provider answered with an HTTP error status is billed nothing by the provider and
+// charged nothing here; nor is a call that failed with a connection error and no response at all
+// (`transport: "connection"`, decision 0124: the ledger notes it 'no response: not charged').
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, rmdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -335,6 +336,10 @@ export function guardClient(inner: ModelClient, options: SpendGuardOptions): Spe
       if (result.httpStatus !== undefined && result.httpStatus >= 400) {
         usd = 0;
         note = `HTTP ${String(result.httpStatus)}: not billed`;
+      } else if (result.finish === "error" && result.transport === "connection") {
+        // Nothing was sent or nothing came back (refused, DNS, no route, connect timeout): the service cannot have billed it (decision 0124).
+        usd = 0;
+        note = "no response: not charged";
       } else {
         usd = costUsd(inner.model, result.usage, { cachingRequested: options.cachingRequested === true });
         const unreported = result.usage.inputTokens === null || result.usage.outputTokens === null;

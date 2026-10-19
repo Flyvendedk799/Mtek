@@ -96,6 +96,12 @@ export interface ModelCallRecord {
   generation: GenerationOutcome;
   error: string | null;
   budget: BudgetStop | null;
+  /** How the call failed when it did without a response of the service (decision 0124): `connection` or `timeout`; `http` when the service answered with a status; null otherwise. */
+  errorKind?: "connection" | "timeout" | "http" | null;
+  /** The HTTP status of an error response; null when there was none. */
+  httpStatus?: number | null;
+  /** 0 for the first try of a round; n for the n-th retry of a call that got no response (decision 0124). Each try is a record of its own. */
+  retry?: number;
   /** What the spend guard charged for this call, USD; null without a guard or when the call was not made. */
   costUsd?: number | null;
   /** The ledger total after the call, USD. */

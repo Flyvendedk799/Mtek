@@ -77,6 +77,7 @@ Implemented by `tools/ai-eval` (usage: `tools/ai-eval/README.md`). The benchmark
 ### 4.2 Integrity rules
 - A repair must satisfy the **original task tests**, not merely compile. The harness also checks a task-declared list of required symbols and behaviours still exists — a "repair" that deletes the feature under test fails (blueprint §9.2).
 - Prompts, model ids, provider, temperature, max tokens, stop sequences and seeds are recorded exactly; changing any of them creates a new condition.
+- A model call that gets **no response at all** (a connection error, a timeout, DNS) is a failure of the transport, not of the model: it is retried at most three times (after 2, 8 and 30 s), every try is a record of its own, and an attempt that still gets none ends `error` with the reason `transport-error`, is reported apart as an attempt the harness could not judge and stays out of the completion rate and of tokens per completed task. A response with an HTTP status is not retried. A call that failed with a connection error and returned nothing is not charged by the spend guard. Records made before this rule are read by a stated legacy rule in the report (decision 0124).
 
 ### 4.3 Edit format
 The model replies with one or more blocks:

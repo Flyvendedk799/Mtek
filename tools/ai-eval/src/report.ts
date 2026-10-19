@@ -52,6 +52,8 @@ export interface TrialRow {
   outcome: Outcome;
   reason: string | null;
   message: string | null;
+  /** True for an attempt recorded as a failure that the legacy rule of decision 0124 reads as not judged (`transport-error`). */
+  legacyTransport?: boolean;
   calls: number;
   repairsUsed: number;
   inputTokens: number | null;
@@ -143,6 +145,25 @@ export function parseRecords(jsonl: string): Raw[] {
   return out;
 }
 
+/**
+ * The records of the attempts of one side only (plus the run-start and run-end records), for a report that borrows the other
+ * side of an earlier run (a re-run of Mtek compared with the baseline attempts of the earlier run, decision 0124). The attempts
+ * of the side that is left out are not read at all.
+ */
+export function selectSide(records: readonly Raw[], side: SideName): Raw[] {
+  const keep = new Set<string>();
+  for (const record of records) {
+    if (record["type"] !== "trial-start") continue;
+    const condition = isRecord(record["condition"]) ? record["condition"] : {};
+    if ((condition["side"] === "baseline" ? "baseline" : "mtek") === side) keep.add(`${str(record["runId"], "?")}\u0000${str(record["trialId"])}`);
+  }
+  return records.filter((record) => {
+    const type = str(record["type"]);
+    if (type === "run-start" || type === "run-end") return true;
+    return keep.has(`${str(record["runId"], "?")}\u0000${str(record["trialId"])}`);
+  });
+}
+
 /** The first attempt of a trial whose first reply produced no candidate. */
 const NO_CANDIDATE: FirstAttempt = { verdict: "no-candidate", layers: { parse: "none", check: "none", build: "none", start: "none", tests: "none" }, symbols: "none" };
 
@@ -171,8 +192,41 @@ function attemptOf(value: unknown): FirstAttempt | null {
   return { verdict: str(value["verdict"], "unknown"), layers: layersOf(value["layers"]), symbols: isRecord(symbols) ? str(symbols["outcome"], "unknown") : "unknown" };
 }
 
+/**
+ * The error texts of the Anthropic SDK for a call that got no response at all: a refused or dropped connection and a timeout.
+ * Records made before decision 0124 have no `errorKind`, so this text is what the legacy rule reads.
+ */
+const LEGACY_TRANSPORT_ERRORS: ReadonlySet<string> = new Set(["Connection error.", "Request timed out."]);
+
+/**
+ * The legacy rule (decision 0124): a trial recorded as a `failure` with the reason `generation-error`, of which every model call
+ * is `backend-error` with one of the transport texts above, no response text, no tokens and no HTTP status, never reached a
+ * model: it is read as `error` / `transport-error` (not judged). A trial with any other call is not touched.
+ */
+function legacyTransportTrial(calls: readonly CallInfo[], outcome: string, reason: string | null): boolean {
+  return (
+    outcome === "failure" &&
+    reason === "generation-error" &&
+    calls.length > 0 &&
+    calls.every(
+      (c) =>
+        c.generation === "backend-error" &&
+        c.error !== null &&
+        LEGACY_TRANSPORT_ERRORS.has(c.error.trim()) &&
+        c.responseChars === 0 &&
+        c.httpStatus === null &&
+        c.usage !== null &&
+        num(c.usage["inputTokens"]) === 0 &&
+        num(c.usage["outputTokens"]) === 0,
+    )
+  );
+}
+
 interface CallInfo {
   round: number;
+  generation: string;
+  error: string | null;
+  httpStatus: number | null;
   usage: Raw | null;
   costUsd: number | null;
   durationMs: number;
@@ -224,6 +278,9 @@ export function extractTrials(records: readonly Raw[], holdoutIds: ReadonlySet<s
       const response = isRecord(record["response"]) ? record["response"] : null;
       entry.calls.push({
         round: num(record["round"]) ?? 0,
+        generation: str(record["generation"]),
+        error: typeof record["error"] === "string" ? record["error"] : null,
+        httpStatus: num(record["httpStatus"]),
         usage: isRecord(record["usage"]) ? record["usage"] : null,
         costUsd: num(record["costUsd"]),
         durationMs: num(record["durationMs"]) ?? 0,
@@ -269,7 +326,17 @@ export function extractTrials(records: readonly Raw[], holdoutIds: ReadonlySet<s
     const first = validations.find((v) => (num(v["round"]) ?? 0) === 0);
     const firstCalled = calls.some((c) => c.round === 0 && c.usage !== null);
     const endOutcome = end === null ? "unfinished" : str(end["outcome"]);
-    const outcome = (["success", "failure", "not-run", "error", "unavailable", "unfinished"] as const).includes(endOutcome as Outcome) ? (endOutcome as Outcome) : "error";
+    const recordedOutcome = (["success", "failure", "not-run", "error", "unavailable", "unfinished"] as const).includes(endOutcome as Outcome) ? (endOutcome as Outcome) : "error";
+    const recordedReason = end === null || end["reason"] === null ? null : str(end["reason"]);
+    // Records made before the harness retried and marked transport failures (decision 0124) say `failure` for an attempt that never
+    // reached the model; they are read as not judged. The records themselves are not changed.
+    const legacyTransport = end !== null && legacyTransportTrial(calls, recordedOutcome, recordedReason);
+    const outcome: Outcome = legacyTransport ? "error" : recordedOutcome;
+    const reason = end === null ? "no trial-end record (the run was interrupted)" : legacyTransport ? "transport-error" : recordedReason;
+    const recordedMessage = end === null || end["message"] === null ? null : str(end["message"]);
+    const message = legacyTransport ? `${recordedMessage ?? "no response"} (no response from the model; record made before decision 0124, read as not judged)` : recordedMessage;
+    // An attempt that never reached the model has no first attempt; a failed first reply that did reach it is a failed first attempt.
+    const noModel = reason === "transport-error";
     trials.push({
       runId: entry.runId,
       trialId: str(start["trialId"]),
@@ -284,8 +351,9 @@ export function extractTrials(records: readonly Raw[], holdoutIds: ReadonlySet<s
       provider: str(condition["provider"], "?"),
       conditionId: str(start["conditionId"]),
       outcome,
-      reason: end === null ? "no trial-end record (the run was interrupted)" : (end["reason"] === null ? null : str(end["reason"])),
-      message: end === null ? null : (end["message"] === null ? null : str(end["message"])),
+      reason,
+      message,
+      ...(legacyTransport ? { legacyTransport: true } : {}),
       calls: end === null ? calls.length : (num(end["calls"]) ?? calls.length),
       repairsUsed: end === null ? Math.max(0, calls.length - 1) : (num(end["repairsUsed"]) ?? 0),
       inputTokens,
@@ -298,7 +366,7 @@ export function extractTrials(records: readonly Raw[], holdoutIds: ReadonlySet<s
       durationMs: end === null ? 0 : (num(end["durationMs"]) ?? 0),
       modelMs: sum(calls.map((c) => c.durationMs)),
       validationMs: sum(validations.map((v) => num(v["durationMs"]) ?? 0)),
-      firstAttempt: first !== undefined ? attemptOf(first) : firstCalled ? NO_CANDIDATE : null,
+      firstAttempt: first !== undefined ? attemptOf(first) : firstCalled && !noModel ? NO_CANDIDATE : null,
       final: end === null ? null : attemptOf(end["final"]),
       holdout: holdoutIds.has(taskId),
       attribution: attribute(calls),
@@ -777,6 +845,22 @@ export function buildReport(input: ReportInput): ReportOutput {
   const unjudged = main.filter((t) => t.outcome !== "success" && t.outcome !== "failure");
   out.push("## Attempts that could not be judged", "");
   out.push(unjudged.length === 0 ? "None: every attempt ended in success or failure." : table(["attempt", "outcome", "reason"], unjudged.map((t) => [t.trialId, t.outcome, `${t.reason ?? ""}${t.message === null ? "" : `: ${t.message}`}`])), "");
+  const transport = main.filter((t) => t.reason === "transport-error");
+  if (transport.length > 0) {
+    const per = new Map<string, number>();
+    for (const t of transport) per.set(sideLabel(t.side, `${t.trialKind}${t.variant}`), (per.get(sideLabel(t.side, `${t.trialKind}${t.variant}`)) ?? 0) + 1);
+    out.push(
+      `${String(transport.length)} of the ${String(main.length)} attempts ended with the reason \`transport-error\`: the model could not be reached (a connection error or a timeout, no response at all). That is a failure of the network or the service, not of the model: these attempts are not judged, are out of every completion rate and of tokens per completed task, and are listed here. By condition: ${[...per.entries()].sort().map(([label, count]) => `${label} ${String(count)}`).join(", ")}.`,
+      "",
+    );
+    const legacy = transport.filter((t) => t.legacyTransport === true).length;
+    if (legacy > 0) {
+      out.push(
+        `${String(legacy)} of them are read by a legacy rule (decision 0124): the records were made before the harness retried and marked such attempts, and say outcome \`failure\`, reason \`generation-error\`. An attempt is read as \`error\` / \`transport-error\` when it is recorded that way, its reason is \`generation-error\` and EVERY model call of it is \`backend-error\` with the error text \`Connection error.\` or \`Request timed out.\`, no response text, no tokens and no HTTP status. An attempt with any other call, or with another error text, stays a failure. The records are not changed.`,
+        "",
+      );
+    }
+  }
 
   // ---- the holdout
   out.push("## Holdout (reported apart, by ids and layer outcomes only)", "");
