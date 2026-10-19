@@ -33,6 +33,6 @@ export function parseJson(text: string, what: string): Json {
   try {
     return JSON.parse(text) as Json;
   } catch (error) {
-    throw new Error(`${what} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`${what} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
   }
 }

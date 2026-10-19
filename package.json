@@ -25,12 +25,13 @@
     "evidence:sanitize": "node tests/browser/support/sanitize-report.ts",
     "check:tasks": "node benchmarks/tools/validate-tasks.mjs",
     "check:assets": "node tests/assets/tools/make-glb.mjs --check",
+    "check:coverage": "npm run coverage -w @mtek/coverage-matrix",
     "lint": "npm run lint --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
     "test:browser": "npm run build && npm run test -w @mtek/browser-tests --",
     "test:benchmarks": "npm run test:benchmarks -w @mtek/browser-tests --",
     "test:browser:hardware": "npm run build && npm run test:hardware -w @mtek/browser-tests --",
-    "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run test:browser"
+    "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run check:coverage && npm run test:browser"
   },
   "allowScripts": {
     "esbuild": false,

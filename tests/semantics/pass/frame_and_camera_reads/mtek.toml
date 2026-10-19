@@ -1,0 +1,5 @@
+[project]
+name = "frame-and-camera-reads"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Demo"

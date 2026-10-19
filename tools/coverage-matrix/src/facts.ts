@@ -66,6 +66,18 @@ function valueFact(ctx: Context, value: unknown): void {
       case "string":
         add(ctx, "strings", "type:string");
         break;
+      case "image": {
+        // `asset.texture(path)` (sRGB), `asset.linear_texture(path)`, or a texture of a GLB material.
+        const source = obj(inner, "source");
+        const space = str(inner, "space");
+        add(ctx, "namespace:asset", "type:texture");
+        if (source !== undefined && obj(source, "embedded") !== undefined) {
+          add(ctx, "method:glb_asset.material_texture", "type:glb_asset");
+        } else {
+          add(ctx, space === "linear" ? "function:asset.linear_texture" : "function:asset.texture");
+        }
+        break;
+      }
       case "array":
         add(ctx, "arrays");
         for (const element of asArray(inner)) valueFact(ctx, element);
@@ -77,6 +89,11 @@ function valueFact(ctx: Context, value: unknown): void {
         break;
     }
   }
+}
+
+/** `self` is the entity with index 0 in the body of a prefab (a prefab is the template of one entity). */
+function selfFact(ctx: Context, entity: unknown): void {
+  if (ctx.item === "prefab" && entity === 0) add(ctx, "self");
 }
 
 function exprFact(ctx: Context, node: JsonObject): void {
@@ -144,24 +161,29 @@ function exprFact(ctx: Context, node: JsonObject): void {
     case "state": {
       const owner = str(obj(node, "owner"), "kind") ?? "scene";
       add(ctx, "expr/state-read", `expr/state-read:${owner}`);
+      selfFact(ctx, obj(node, "owner")?.["index"]);
       break;
     }
     case "entityField":
       add(ctx, "expr/entity-field-read");
+      selfFact(ctx, node["entity"]);
       break;
     case "cameraField":
       add(ctx, "expr/camera-field-read");
       break;
     case "instanceParam":
       add(ctx, "expr/instance-param-read");
+      selfFact(ctx, node["entity"]);
       break;
     case "lightField":
       add(ctx, "expr/light-field-read");
+      selfFact(ctx, node["entity"]);
       break;
     case "bodyCommand": {
       const command = str(node, "command");
       if (command !== undefined) add(ctx, `body-command:${command}`);
       add(ctx, `expr/body-target:${str(obj(node, "target"), "kind") ?? "entity"}`);
+      selfFact(ctx, obj(node, "target")?.["entity"]);
       break;
     }
     case "bodyProperty": {
@@ -195,6 +217,7 @@ function exprFact(ctx: Context, node: JsonObject): void {
     }
     case "entityRef":
       add(ctx, "expr/entity-ref");
+      selfFact(ctx, node["entity"]);
       break;
     default:
       break;
@@ -204,7 +227,12 @@ function exprFact(ctx: Context, node: JsonObject): void {
 function placeRootFact(ctx: Context, root: JsonObject): void {
   const kind = str(root, "kind") ?? "?";
   add(ctx, `place/root:${kind}`);
-  if (kind === "state") add(ctx, `place/root:state:${str(obj(root, "owner"), "kind") ?? "scene"}`);
+  if (kind === "state") {
+    add(ctx, `place/root:state:${str(obj(root, "owner"), "kind") ?? "scene"}`);
+    selfFact(ctx, obj(root, "owner")?.["index"]);
+  } else {
+    selfFact(ctx, root["entity"]);
+  }
   typeFact(ctx, root["type"]);
 }
 
@@ -265,8 +293,10 @@ function materialInstanceFact(ctx: Context, material: JsonObject): void {
   for (const param of arr(material, "params")) {
     const update = str(param, "update");
     if (update !== undefined) add(ctx, `param-update/${update}`);
-    typeFact(ctx, obj(param, "type") ?? (isObject(param) ? param["type"] : undefined));
-    if (isObject(param)) valueFact(ctx, obj(param, "source")?.["const"]);
+    if (isObject(param)) {
+      typeFact(ctx, param["type"]);
+      valueFact(ctx, obj(param, "source")?.["const"]);
+    }
   }
 }
 
@@ -354,6 +384,7 @@ function visit(ctx: Context, node: Json, slot: string): void {
         case "const":
           add(ctx, "constants");
           typeFact(ctx, node["type"]);
+          valueFact(ctx, node["value"]);
           break;
         case "scene":
           add(ctx, "scenes");
@@ -423,7 +454,7 @@ function visit(ctx: Context, node: Json, slot: string): void {
       if (isObject(node)) {
         for (const field of Object.values(node)) {
           if (str(field, "origin") === "written") {
-            add(ctx, "scene-fields");
+            add(ctx, "scene-fields", "schema:Scene");
             break;
           }
         }
@@ -431,6 +462,7 @@ function visit(ctx: Context, node: Json, slot: string): void {
       break;
     case "params":
       typeFact(ctx, node["type"]);
+      valueFact(ctx, node["default"]);
       break;
     default:
       break;

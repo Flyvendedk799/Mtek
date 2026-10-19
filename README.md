@@ -36,9 +36,10 @@ From a clean checkout:
 | `npm run test:unit` | Vitest unit tests |
 | `npm run test:browser` | builds, then runs the Playwright browser tests (`hardware`, `software` and `benchmarks` projects; add `--project=<name>` to select one); tests without a WebGPU adapter are reported NOT-RUN, never passed |
 | `npm run check:tasks` | validates the benchmark tasks and the recorded holdout hash (`benchmarks/README.md`, decision 0021) |
+| `npm run check:coverage` | the feature coverage matrix (decision 0093): derives from the compiled examples and fixtures what each uses, fails when a v0.1 feature has no demonstration or positive fixture, a diagnostic code no negative test, or `docs/coverage-matrix.md` is stale (`npm run generate -w @mtek/coverage-matrix` rewrites it); needs `npm run build` first |
 | `npm run test:benchmarks` | the `benchmarks` Playwright project: every benchmark task's fixtures against its three.js baseline reference (hardware configuration; `MTEK_BASELINE_SOURCE=starter` runs the starters instead) |
 | `npm run test:browser:hardware` | the `hardware` project only; with `MTEK_REQUIRE_GPU=1` it fails on any NOT-RUN test or software adapter |
-| `npm test` | `check`, then `cargo test --workspace --locked`, then `test:unit`, then `test:browser` (NOT-RUN tolerant unless `MTEK_REQUIRE_GPU=1`) |
+| `npm test` | `check`, then `cargo test --workspace --locked`, then `test:unit`, then `check:coverage`, then `test:browser` (NOT-RUN tolerant unless `MTEK_REQUIRE_GPU=1`) |
 | `cargo run -p mtek-cli -- --version` | prints `mtek 0.1.0-dev (language 0.1, runtime ABI 1)` |
 
 ### Examples

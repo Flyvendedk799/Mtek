@@ -64,6 +64,11 @@ jobs:
         run: npm run check:tasks
       - name: Unit tests
         run: npm run test:unit
+      # The feature coverage matrix (decision 0093): derived from the programs the build above compiled;
+      # fails when a feature has no demonstration or positive fixture, a diagnostic code no negative test,
+      # or docs/coverage-matrix.md is stale.
+      - name: Coverage matrix
+        run: npm run check:coverage
 
   # Software-adapter browser tests (SwiftShader): correctness only, never hardware evidence. Without
   # a usable adapter the tests are reported NOT-RUN (the job does not fail for that; real test
