@@ -1,10 +1,7 @@
 # Reference: three.js r186 (WebGPU, TSL) and the project's support module
 
-This is the documentation given to the model on the three.js side of the AI/token benchmark
-(`spec/ai-and-benchmarks.md` section 6.3, decision 0108). It is the counterpart of the compiler context
-(`mtek context`) that the Mtek side receives; its tokens are counted like the context's. It is the same text
-for every task. Everything in it is checked by `benchmarks/baselines/docs/docs.test.ts` against the installed
-packages (three 0.186.1).
+This document is the same for every task. It lists the API a project can rely on; every name in it was checked
+against the installed packages (three 0.186.1).
 
 ## How a project works
 

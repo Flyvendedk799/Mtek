@@ -8,7 +8,9 @@
     "lint": "eslint . && node src/check-boundary.ts",
     "test:unit": "vitest run",
     "boundary": "node src/check-boundary.ts",
-    "eval": "node src/cli.ts"
+    "eval": "node src/cli.ts",
+    "benchmark": "node src/benchmark-run.ts",
+    "report": "node src/report-cli.ts"
   },
   "dependencies": {
     "@mtek/benchmarks": "0.1.0-dev"

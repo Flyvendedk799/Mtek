@@ -17,6 +17,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import type { BrowserType } from "@playwright/test";
 import ts from "typescript";
 import { startStaticServer } from "../../../../tests/browser/support/serve.ts";
 import { browserChannel, hardwareLaunchArgs, isHeadless } from "../../../../tests/browser/support/launch-args.ts";
@@ -97,7 +98,7 @@ export function typeCheck(projectDir: string): CandidateDiagnostic[] {
   });
   if (config === undefined) throw new Error(`cannot read ${configPath}`);
   const program = ts.createProgram({ rootNames: config.fileNames, options: config.options });
-  const syntactic = new Set(program.getSyntacticDiagnostics());
+  const syntactic = new Set<ts.Diagnostic>(program.getSyntacticDiagnostics());
   const all = ts.getPreEmitDiagnostics(program);
   const result: CandidateDiagnostic[] = [];
   const seen = new Set<string>();
@@ -241,7 +242,7 @@ async function runStep(
       await page.evaluate((c) => (window.mtekTask as TaskHooks).releaseKey(c), step.code);
       return;
     case "set_input": {
-      const outcome = await page.evaluate(([n, v]) => (window.mtekTask as TaskHooks).setInput(n, v), [step.name, step.value] as const);
+      const outcome = await page.evaluate(([n, v]) => (window.mtekTask as TaskHooks).setInput(n, v), [step.name, step.value as unknown] as const);
       if (!outcome.ok) throw new StepFailure("set-input", stepNumber, `${where}: setInput('${step.name}') was rejected: ${outcome.error.code}: ${outcome.error.message}`);
       return;
     }
@@ -288,9 +289,9 @@ async function runTests(
   entries: readonly { file: string; fixture: Fixture }[],
   deps: RunDeps,
 ): Promise<NonNullable<CandidateReport["tests"]>> {
-  let playwright: typeof import("@playwright/test");
+  let chromium: BrowserType;
   try {
-    playwright = await import("@playwright/test");
+    ({ chromium } = await import("@playwright/test"));
   } catch (error) {
     return allNotRun(entries, `Playwright is not installed: ${String(error).split("\n")[0] ?? ""}`, null);
   }
@@ -298,7 +299,7 @@ async function runTests(
   const args = hardwareLaunchArgs(deps.env);
   let browser: import("@playwright/test").Browser;
   try {
-    browser = await playwright.chromium.launch({ channel, headless: isHeadless(deps.env), args });
+    browser = await chromium.launch({ channel, headless: isHeadless(deps.env), args });
   } catch (error) {
     return allNotRun(entries, scrub(`Chromium could not be launched (${String(error).split("\n")[0] ?? ""})`, []), null);
   }
@@ -328,7 +329,7 @@ async function runTests(
       await probeContext.close();
     }
     const environment: Record<string, unknown> = {
-      browser: { name: playwright.chromium.name(), channel, version: browser.version(), launchArgs: args },
+      browser: { name: chromium.name(), channel, version: browser.version(), launchArgs: args },
       gpu: { adapter },
     };
     if (adapter === null) return allNotRun(entries, reason, environment);

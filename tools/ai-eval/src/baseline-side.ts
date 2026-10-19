@@ -11,7 +11,7 @@
 // The fixtures are the task's own `mtek-tests/*.test.toml`: one definition of success for both sides
 // (decision 0021 section 8). All layers but the required names run in ONE fresh process,
 // `benchmarks/baselines/support/test/run-candidate.ts`, which prints a JSON report; this module only reads it.
-import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { sha256Hex } from "./canonical.ts";
 import { systemClock, type Clock } from "./clock.ts";
@@ -72,7 +72,7 @@ export function baselineRequiredNames(task: TaskSpec): string[] {
 export function baselineDocs(maxBytes: number): BuiltContext {
   const root = repoRoot();
   const file = join(root, "benchmarks", "baselines", "docs", "reference.md");
-  const text = readFileSync(file, "utf8");
+  const text = readFileSync(file, "utf8").replaceAll("\r\n", "\n"); // a checkout is LF (.gitattributes); the document and its hash must not depend on the platform
   const bytes = Buffer.byteLength(text, "utf8");
   if (bytes > maxBytes) throw new ToolError(`the baseline documentation is ${String(bytes)} bytes, over the budget of ${String(maxBytes)}: it is never truncated silently`);
   let three = "unknown";

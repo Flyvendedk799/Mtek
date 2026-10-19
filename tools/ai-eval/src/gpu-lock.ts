@@ -53,7 +53,7 @@ export async function acquireGpuLock(dir: string, options: Partial<GpuLockOption
       break;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-      if (Date.now() > deadline) throw new Error(`the GPU lock ${dir} could not be taken within ${String(Math.round(timeoutMs / 1000))} s`);
+      if (Date.now() > deadline) throw new Error(`the GPU lock ${dir} could not be taken within ${String(Math.round(timeoutMs / 1000))} s`, { cause: error });
       await sleep(pollMs);
     }
   }

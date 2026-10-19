@@ -330,7 +330,7 @@ export function guardClient(inner: ModelClient, options: SpendGuardOptions): Spe
         const total = charge(reservation.id, worst, null, "the call threw; charged its worst case");
         throw Object.assign(error instanceof Error ? error : new Error(String(error)), { ledgerTotalUsd: total });
       }
-      let usd: number | null = null;
+      let usd: number | null;
       let note: string | null = null;
       if (result.httpStatus !== undefined && result.httpStatus >= 400) {
         usd = 0;

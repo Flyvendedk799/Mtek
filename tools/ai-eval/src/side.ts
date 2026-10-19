@@ -72,7 +72,8 @@ export const baselineSide: Side = {
   kind: "baseline",
   promptVersion: BASELINE_PROMPT_VERSION,
   supportsConstrained: false,
-  createWorkspace: (task, _scratchRoot, name) => Workspace.create(task, baselineScratchRoot(), name, { kind: "baseline" }),
+  // The scratch root is shared by every process that runs a baseline trial on this checkout, so the directory name carries the process and a nonce.
+  createWorkspace: (task, _scratchRoot, name) => Workspace.create(task, baselineScratchRoot(), `${name}-${String(process.pid)}-${Math.random().toString(36).slice(2, 8)}`, { kind: "baseline" }),
   policy: (task) => baselineEditPolicy(task.mode),
   requiredSymbols: (task) => baselineRequiredNames(task),
   buildContext: (_task, _workspace, deps) => Promise.resolve(baselineDocs(deps.maxBytes)),

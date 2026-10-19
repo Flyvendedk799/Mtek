@@ -27,6 +27,7 @@ import { defaultGrammarCapability, type GrammarCapability, type TrialKind } from
 import type { FetchLike, ModelClient } from "./model-client.ts";
 import { JsonlRecorder } from "./recorder.ts";
 import { RepairLoop } from "./repair-loop.ts";
+import { sideByName } from "./side.ts";
 import { loadTask } from "./task.ts";
 import { Validator } from "./validator.ts";
 import { Workspace } from "./workspace.ts";
@@ -57,7 +58,7 @@ interface Parsed {
 const VALUE_FLAGS = new Set([
   "task", "client", "model", "base-url", "api-key-env", "transcript", "trial-kind", "trials", "temperature", "stop", "seed",
   "max-repairs", "max-total-tokens", "max-bytes", "test-feedback", "run-id", "out", "mtek", "scratch", "project", "first-trial",
-  "grammar-adapter",
+  "grammar-adapter", "side",
 ]);
 const SWITCH_FLAGS = new Set(["keep-scratch", "accept-grammar", "help"]);
 
@@ -103,7 +104,7 @@ const USAGE = `usage:
               [--api-key-env VAR] [--transcript FILE] [--trial-kind unconstrained|constrained] [--trials N]
               [--temperature N|default] [--stop S]... [--seed N] [--max-repairs N] [--max-total-tokens N]
               [--max-bytes N] [--test-feedback messages|status-only] [--run-id ID] [--out DIR]
-              [--mtek PATH] [--grammar-adapter PATH] [--scratch DIR] [--keep-scratch]
+              [--mtek PATH] [--grammar-adapter PATH] [--scratch DIR] [--keep-scratch] [--side mtek|baseline]
   ai-eval validate --task DIR [--project DIR] [--mtek PATH]
 `;
 
@@ -242,9 +243,16 @@ async function runCommand(
     keepScratch: parsed.flags.has("keep-scratch"),
   });
   const stop = parsed.flags.get("stop");
+  let side;
+  try {
+    side = sideByName(one(parsed, "side") ?? "mtek");
+  } catch (error) {
+    throw new UsageError((error as Error).message);
+  }
   for (let i = 0; i < trials; i += 1) {
     const result = await loop.run({
       task,
+      side,
       client,
       trialKind,
       trialIndex: firstTrial + i,
