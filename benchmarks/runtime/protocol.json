@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "comment": "The measurement protocol of the runtime benchmark (spec/ai-and-benchmarks.md section 7, decisions 0095 and 0096). Part of the frozen definitions: changing a number here changes the tree hash recorded in FROZEN.json.",
+  "target": { "width": 640, "height": 360, "colorFormat": "rgba8unorm-srgb", "depthFormat": "depth24plus" },
+  "frameDeltaSeconds": 0.016666668,
+  "warmupFrames": 120,
+  "timingFrames": 1200,
+  "timingRuns": 3,
+  "countFrames": 120,
+  "gpuTimeFrames": 600,
+  "allocationFrames": 300,
+  "startupRuns": 15,
+  "cycles": 50,
+  "longCycles": 800,
+  "cycleFramesPerPhase": 5,
+  "thresholdPercent": 20,
+  "minimumTimingFrames": 600,
+  "minimumWarmupFrames": 120,
+  "clearColorSrgb": "#101820",
+  "camera": { "fovY": 0.9, "near": 0.1, "far": 200.0 }
+}

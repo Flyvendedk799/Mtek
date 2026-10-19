@@ -8,6 +8,7 @@
     { "path": "tests/codegen" },
     { "path": "benchmarks" },
     { "path": "benchmarks/baselines/m0-bridge" },
+    { "path": "benchmarks/runtime" },
     { "path": "tools/ai-eval" },
     { "path": "tools/coverage-matrix" }
   ]

@@ -1,0 +1,32 @@
+{
+  "name": "@mtek/runtime-benchmarks",
+  "version": "0.1.0-dev",
+  "private": true,
+  "type": "module",
+  "description": "Runtime benchmark (spec/ai-and-benchmarks.md section 7, decisions 0095 to 0099): seven workloads, each as an Mtek program, a direct-WebGPU reference and a three.js baseline, their measurement harness and the report generator.",
+  "scripts": {
+    "prepare:bench": "node tools/prepare.ts",
+    "bench": "node tools/run.ts",
+    "report": "node tools/report.ts",
+    "freeze": "node tools/freeze.ts",
+    "lint": "eslint .",
+    "check:types": "tsc --noEmit -p tsconfig.json",
+    "test:unit": "vitest run"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "0.21.0",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.19.1",
+    "@types/three": "0.186.0",
+    "@webgpu/types": "0.1.74",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}

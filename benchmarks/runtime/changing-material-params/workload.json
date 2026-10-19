@@ -1,0 +1,16 @@
+{
+  "name": "changing-material-params",
+  "title": "500 changing material params",
+  "kind": "frames",
+  "description": "500 unlit boxes on a 25 x 20 grid that never move; every frame every box's colour parameter changes (three phase-shifted sines).",
+  "camera": { "position": [0, 26, 28], "target": [0, 0, 0] },
+  "parityFrames": 60,
+  "definition": {
+    "columns": 25,
+    "rows": 20,
+    "spacing": 1.4,
+    "boxSize": 0.9,
+    "colorFrequency": 2.0,
+    "colorOffsets": [0.0, 2.1, 4.2]
+  }
+}

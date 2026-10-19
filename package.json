@@ -14,6 +14,7 @@
     "tests/codegen",
     "benchmarks",
     "benchmarks/baselines/m0-bridge",
+    "benchmarks/runtime",
     "tools/ai-eval",
     "tools/coverage-matrix"
   ],

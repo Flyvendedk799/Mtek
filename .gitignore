@@ -15,3 +15,8 @@ tests/codegen/.out/
 # The extension package (packages/editor-vscode); the VS Code its integration tests download is cached
 # in target/vscode-test/
 *.vsix
+
+# The runtime benchmark (benchmarks/runtime): generated programs, bundles and smoke runs
+benchmarks/runtime/.out/
+benchmarks/runtime/asset-heavy-startup/mtek/models/
+benchmarks/runtime/asset-heavy-startup/mtek/textures/

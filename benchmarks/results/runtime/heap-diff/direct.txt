@@ -1,0 +1,7 @@
+direct: heap growth between cycle 100 and cycle 400 (300 cycles), after a forced collection; self size in bytes, change in object count, node type:name (nodes that grew by more than 2000 bytes)
+   105600      22 code:system / InstructionStream
+    26400     300 native:blink::ConsoleMessage
+    25424      50 code:system / TrustedByteArray
+    16800     300 native:blink::SourceLocation
+     9128      22 code:system / ProtectedFixedArray
+     5320     100 native:system / WeakArrayList

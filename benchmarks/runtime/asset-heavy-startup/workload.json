@@ -1,0 +1,19 @@
+{
+  "name": "asset-heavy-startup",
+  "title": "Asset-heavy startup",
+  "kind": "startup",
+  "description": "A scene of 12 textured spheres drawn from 4 generated GLB meshes of about 21,600 triangles each and 8 generated 512 x 512 PNG textures, all fetched, decoded and uploaded before the first frame.",
+  "camera": { "position": [0, 7, 9], "target": [0, 0, 0] },
+  "parityFrames": 5,
+  "definition": {
+    "meshes": 4,
+    "textures": 8,
+    "textureSize": 512,
+    "sphereSegments": 120,
+    "sphereRings": 90,
+    "columns": 4,
+    "rows": 3,
+    "spacing": 2.6,
+    "radius": 1.0
+  }
+}

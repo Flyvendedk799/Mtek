@@ -1,0 +1,17 @@
+{
+  "name": "repeated-meshes",
+  "title": "2,000 repeated meshes",
+  "kind": "frames",
+  "description": "2,000 boxes of one mesh and one material on a 20 x 10 x 10 lattice, each with its own turn and scale: the instancing path. Nothing changes after startup.",
+  "camera": { "position": [0, 14, 46], "target": [0, 0, 0] },
+  "parityFrames": 60,
+  "definition": {
+    "lattice": [20, 10, 10],
+    "spacing": 1.7,
+    "boxSize": 1.0,
+    "scaleMin": 0.5,
+    "scaleSpan": 0.4,
+    "yawStepRad": 0.37,
+    "color": "#ffb347"
+  }
+}

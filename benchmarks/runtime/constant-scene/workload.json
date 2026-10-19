@@ -1,0 +1,18 @@
+{
+  "name": "constant-scene",
+  "title": "Constant scene",
+  "kind": "frames",
+  "description": "400 unlit boxes on a 20 x 20 grid in 8 colours, nothing ever changes: the cost of drawing an unchanged scene every frame.",
+  "camera": { "position": [0, 24, 26], "target": [0, 0, 0] },
+  "parityFrames": 60,
+  "definition": {
+    "columns": 20,
+    "rows": 20,
+    "spacing": 1.5,
+    "boxSize": 1.0,
+    "yawStepRad": 0.2,
+    "yawCycle": 7,
+    "palette": ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6"],
+    "paletteStride": [3, 1]
+  }
+}
