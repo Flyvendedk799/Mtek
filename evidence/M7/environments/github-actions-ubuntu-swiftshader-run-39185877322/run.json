@@ -1,5 +1,5 @@
 {
-  "note": "As reported by GitHub Actions (gh run view), not reproduced locally. Job steps omitted except the failing step.",
+  "note": "As reported by GitHub Actions (gh run view), not reproduced locally. Job steps are omitted; the failed steps are listed. test-results.json and environment-software.json are the artifact `browser-software-results` of the run, with paths made machine-neutral and the commit author's e-mail address (which the Playwright report carries as metadata) replaced by <redacted>.",
   "queriedAt": "2026-10-19T07:42:27.777Z",
   "run": {
     "id": 39185877322,
