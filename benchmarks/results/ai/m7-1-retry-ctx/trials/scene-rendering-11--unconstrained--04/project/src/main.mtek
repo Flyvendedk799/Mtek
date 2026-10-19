@@ -1,0 +1,63 @@
+const swatch_tex: texture = asset.texture("assets/swatch.png");
+
+prefab PlainSquare {
+  entity Root {
+    position: vec3(-2.0, 0.0, -2.0);
+    mesh: Plane { size: vec2(3.6, 3.6); };
+    material: Pbr {
+      base_color: #ffffff;
+      base_color_texture: swatch_tex;
+      base_color_sampler: sampler.nearest_clamp();
+    };
+  }
+}
+
+prefab TiledSquare {
+  entity Root {
+    position: vec3(0.0, 0.0, 2.0);
+    mesh: Plane { size: vec2(3.6, 3.6); };
+    material: Pbr {
+      base_color: #ffffff;
+      base_color_texture: swatch_tex;
+      base_color_sampler: sampler.nearest_repeat();
+    };
+  }
+}
+
+prefab SmoothSquare {
+  entity Root {
+    position: vec3(2.0, 0.0, -2.0);
+    mesh: Plane { size: vec2(3.6, 3.6); };
+    material: Pbr {
+      base_color: #ffffff;
+      base_color_texture: swatch_tex;
+      base_color_sampler: sampler.linear_clamp();
+    };
+  }
+}
+
+scene Demo {
+  clear_color: #1b2430;
+  ambient_intensity: 0.0;
+
+  camera Main {
+    position: vec3(0.0, 11.0, 3.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.72;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  entity Plain: PlainSquare {
+  }
+
+  entity Tiled: TiledSquare {
+  }
+
+  entity Smooth: SmoothSquare {
+  }
+}
+
+export { Demo };

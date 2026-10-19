@@ -1,0 +1,49 @@
+scene Demo {
+    clear_color: #202020;
+
+    state accumulator: f32 = 0.0;
+    state ticks_this_frame: i32 = 0;
+    const TICK_TIME: f32 = 0.016666667;
+    const MAX_TICKS_PER_FRAME: i32 = 4;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    update(dt: f32) {
+        let capped_dt = min(dt, 0.1);
+        accumulator += capped_dt;
+        ticks_this_frame = 0;
+        var temp_accumulator = accumulator;
+        for i in 0..MAX_TICKS_PER_FRAME {
+            if temp_accumulator >= TICK_TIME {
+                ticks_this_frame += 1;
+                temp_accumulator -= TICK_TIME;
+            }
+        }
+        accumulator = temp_accumulator;
+    }
+
+    entity Ticker {
+        position: vec3(-5.5, 3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #ef4444 };
+
+        update(dt: f32) {
+            self.position.x += f32(ticks_this_frame) * 0.1;
+        }
+    }
+
+    entity Glider {
+        position: vec3(-5.5, -3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            let capped_dt = min(dt, 0.1);
+            self.position.x += 6.0 * capped_dt;
+        }
+    }
+}

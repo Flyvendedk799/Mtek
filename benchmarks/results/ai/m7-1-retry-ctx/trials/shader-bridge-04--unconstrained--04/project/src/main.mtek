@@ -1,0 +1,40 @@
+fn charge_to_level(c: i32) -> f32 {
+    return c * 1.0 / 4.0;
+}
+
+cpu fn handle_key_down(key: Key, charge_ref: i32) -> i32 {
+    if key == Key.Space {
+        return min(charge_ref + 1, 4);
+    } else if key == Key.Backspace {
+        return max(charge_ref - 1, 0);
+    }
+    return charge_ref;
+}
+
+material Gauge {
+    param level: f32 = 0.0;
+
+    fragment(surface: SurfaceInput) -> color {
+        return color.linear(vec3(level), 1.0);
+    }
+}
+
+scene Demo {
+    state charge: i32 = 0;
+
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Meter {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Gauge { level: bind(charge_to_level(charge)); };
+    }
+
+    on key_down(key_event) {
+        charge = handle_key_down(key_event, charge);
+    }
+}
