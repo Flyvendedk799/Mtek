@@ -1600,7 +1600,7 @@ pub fn emit_state_init(
     scope: InitScope,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<Expr, String> {
-    emit_init_expr(&state.init, scope, span_id)
+    emit_initializer(&state.init, scope, span_id, true)
         .map_err(|e| format!("the initialiser of '{}': {e}", state.symbol))
 }
 
@@ -1614,6 +1614,18 @@ pub fn emit_init_expr(
     scope: InitScope,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<Expr, String> {
+    emit_initializer(expr, scope, span_id, false)
+}
+
+/// State owns its mutable aggregate storage, including when its initializer borrows a
+/// prefab param (directly, inside a literal, or through a function result). Apply the same
+/// fresh-value and copy rules as an owned local; field setters keep their existing policy.
+fn emit_initializer(
+    expr: &ir::Expr,
+    scope: InitScope,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
+    owns_storage: bool,
+) -> Result<Expr, String> {
     let mut lowering = FnLowering {
         locals: &[],
         owner: scope.owner,
@@ -1624,7 +1636,11 @@ pub fn emit_init_expr(
         owned: BTreeSet::new(),
         params: scope.params,
     };
-    lowering.expr(expr)
+    if owns_storage {
+        lowering.stored(expr)
+    } else {
+        lowering.expr(expr)
+    }
 }
 
 /// The function that implements `behavior`, with the comment that names it.
