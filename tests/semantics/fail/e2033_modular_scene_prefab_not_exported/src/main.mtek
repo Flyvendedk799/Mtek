@@ -1,0 +1,24 @@
+// The shape of examples/modular-scene in three files: a scene that places instances of a prefab declared in another file, which
+// uses a material declared in a third. The prefab's file forgot `export` on the prefab, so the import in this file is E2033, at
+// the name in the import, with the declaration in the other file as related span. The instances below it are not reported again:
+// a name whose import failed still declares the name, and its uses resolve to the error (decision 0036 item 7).
+import { Matte } from "./materials.mtek";
+import { Pillar } from "./props/pillar.mtek";
+
+scene Showroom {
+    camera Main {}
+    entity Floor {
+        mesh: Box { size: vec3(16.0, 0.1, 8.0) };
+        material: Matte { tint: #3a4150 };
+    }
+    entity Left: Pillar {
+        origin: vec3(-3.6, 0.0, 0.0);
+    }
+    entity Middle: Pillar {
+        origin: vec3(-1.2, 0.0, 0.0);
+        height: 3.0;
+    }
+    on key_down(Key.P) {
+        spawn(Pillar { origin: vec3(2.4, 0.0, -3.0) });
+    }
+}

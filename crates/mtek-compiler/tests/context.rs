@@ -1356,6 +1356,18 @@ const GOLDENS: &[Golden] = &[
         symbols: &["Striped"],
         max_bytes: DEFAULT_MAX_BYTES,
     },
+    Golden {
+        name: "modular-scene.default.json",
+        project: "examples/modular-scene",
+        symbols: &[],
+        max_bytes: DEFAULT_MAX_BYTES,
+    },
+    Golden {
+        name: "modular-scene.symbol-pillar.json",
+        project: "examples/modular-scene",
+        symbols: &["Pillar"],
+        max_bytes: DEFAULT_MAX_BYTES,
+    },
 ];
 
 #[test]
@@ -1387,7 +1399,12 @@ fn goldens_are_all_used_and_the_example_projects_have_no_errors() {
             assert!(used.contains(name.as_str()), "stale golden {name}");
         }
     }
-    for project in ["pulse-cube", "physics-playground", "material-configurator"] {
+    for project in [
+        "pulse-cube",
+        "physics-playground",
+        "material-configurator",
+        "modular-scene",
+    ] {
         let checked = check_fs(&load_dir(&repo(&format!("examples/{project}"))));
         assert_eq!(checked.errors, 0, "{project}: {:?}", checked.codes);
     }

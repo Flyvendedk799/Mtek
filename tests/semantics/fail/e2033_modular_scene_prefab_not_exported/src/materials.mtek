@@ -1,0 +1,8 @@
+export material Matte {
+    param tint: color = #9aa3b5;
+    param dim: f32 = 1.0;
+
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * dim, tint.a);
+    }
+}
