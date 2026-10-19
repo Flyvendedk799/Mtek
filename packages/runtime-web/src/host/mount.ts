@@ -177,21 +177,21 @@ function deviceCapabilities(acquired: AcquiredDevice, gpu: GPU): DeviceCapabilit
 }
 
 /** Mounts `program` on `canvas` using the real browser environment. */
-export function mountMtek<I = Record<string, unknown>>(
+export function mountMtek<I = Record<string, unknown>, O = Record<string, unknown>>(
   canvas: HTMLCanvasElement,
-  program: MtekMountProgram<I>,
+  program: MtekMountProgram<I, O>,
   options?: MtekMountOptions<I>,
-): Promise<MtekApp<I>> {
+): Promise<MtekApp<I, O>> {
   return mountMtekWith(defaultEnvironment(), canvas, program, options);
 }
 
 /** `mountMtek` with an injected environment: the test seam (not part of the public API). */
-export async function mountMtekWith<I = Record<string, unknown>>(
+export async function mountMtekWith<I = Record<string, unknown>, O = Record<string, unknown>>(
   environment: HostEnvironment,
   canvas: HTMLCanvasElement,
-  program: MtekMountProgram<I>,
+  program: MtekMountProgram<I, O>,
   options: MtekMountOptions<I> = {},
-): Promise<MtekApp<I>> {
+): Promise<MtekApp<I, O>> {
   validateOptions(options as MtekMountOptions<never>);
   FailureOverlay.removeFor(canvas);
   const sink = new DiagnosticSink(options.onDiagnostic);
@@ -201,7 +201,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
   let acquired: AcquiredDevice | undefined;
   let registry: ResourceRegistry | undefined;
   let surface: Surface | undefined;
-  let app: MountedApp<I> | undefined;
+  let app: MountedApp<I, O> | undefined;
   // Decoded images wait here until the scene has uploaded them; closed in every case (idempotent).
   let images: DecodedImages | undefined;
   // The physics world, freed on every failure after it exists.
@@ -461,7 +461,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
           })
         : null;
 
-    app = new MountedApp<I>({
+    app = new MountedApp<I, O>({
       devTools,
       manifest,
       device,

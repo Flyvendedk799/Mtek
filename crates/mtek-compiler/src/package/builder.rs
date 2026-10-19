@@ -37,7 +37,9 @@ use crate::lowering::shader::lower_material;
 use crate::plan::{
     ParamClass, PlannedInstance, PlannedMaterial, ResourcePlan, check_limits, plan_program,
 };
-use crate::project::{Project, ResolvedHostInput, validate_host_inputs};
+use crate::project::{
+    Project, ResolvedHostInput, ResolvedHostOutput, validate_host_inputs, validate_host_outputs,
+};
 use crate::source::Span;
 use crate::{
     BuildMode, COMPILER_VERSION, DEFAULT_LOOP_BUDGET, LANGUAGE_VERSION, RUNTIME_ABI, TargetProfile,
@@ -136,7 +138,7 @@ pub fn package(
         ))
     })?;
     let plan = checked_plan(program, input.profile)?;
-    let host_inputs = resolve_host_inputs(project, scene);
+    let (host_inputs, host_outputs) = resolve_host_ports(project, scene);
     // `subsystems.physics` is true when any body exists (decision 0065); the library-only option
     // of decision 0063 forces it for the packaging tests and never turns it off.
     let uses_physics = input.force_physics_subsystem || program_uses_physics(program, scene);
@@ -243,8 +245,15 @@ pub fn package(
     let packed = pack_assets(input.assets, &plan, &mut spans)?;
 
     // The binding spans come before app.js too, for the same reason.
-    let manifest_scene =
-        manifest_scene(scene, &plan, &packed, &mut spans, &host_inputs).map_err(defect)?;
+    let manifest_scene = manifest_scene(
+        scene,
+        &plan,
+        &packed,
+        &mut spans,
+        &host_inputs,
+        &host_outputs,
+    )
+    .map_err(defect)?;
     let manifest_prefabs = manifest_prefabs(program, &plan, &packed, &mut spans).map_err(defect)?;
 
     // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
@@ -347,7 +356,10 @@ pub fn package(
     }
     files.insert(APP_JS.to_owned(), app.text.into_bytes());
     files.insert(APP_JS_MAP.to_owned(), app_map.to_json().into_bytes());
-    files.insert(APP_DTS.to_owned(), emit_app_dts(&host_inputs).into_bytes());
+    files.insert(
+        APP_DTS.to_owned(),
+        emit_app_dts(&host_inputs, &host_outputs).into_bytes(),
+    );
     files.insert(RUNTIME_DTS.to_owned(), input.runtime_declarations.to_vec());
     files.insert(runtime_file, input.runtime_bundle.to_vec());
     if let (Some(bundle), Some(module)) = (physics_bundle, &manifest.subsystems.physics_module) {
@@ -648,7 +660,10 @@ fn meshes(plan: &ResourcePlan, packed: &Packed) -> Result<Vec<Mesh>, String> {
 }
 
 /// The manifest's `scene`.
-fn resolve_host_inputs(project: &Project, scene: &ir::Scene) -> Vec<ResolvedHostInput> {
+fn resolve_host_ports(
+    project: &Project,
+    scene: &ir::Scene,
+) -> (Vec<ResolvedHostInput>, Vec<ResolvedHostOutput>) {
     let mut sink = crate::diagnostics::Diagnostics::new();
     let checked = crate::types::CheckedScene {
         def: None,
@@ -671,12 +686,14 @@ fn resolve_host_inputs(project: &Project, scene: &ir::Scene) -> Vec<ResolvedHost
         objects: Vec::new(),
         entities: Vec::new(),
     };
-    validate_host_inputs(
+    let inputs = validate_host_inputs(
         &project.config.host_inputs,
         &checked,
         &states_feeding_material_colors(scene),
         &mut sink,
-    )
+    );
+    let outputs = validate_host_outputs(&project.config.host_outputs, &checked, &mut sink);
+    (inputs, outputs)
 }
 
 /// The scene `state` that some `bind(..)` reads to set a `color` param of a material instance. A host input of such a state gets
@@ -703,6 +720,7 @@ fn manifest_scene(
     packed: &Packed,
     spans: &mut SpanTable,
     host_inputs: &[ResolvedHostInput],
+    host_outputs: &[ResolvedHostOutput],
 ) -> Result<Scene, String> {
     let clear_color = match scene.fields.clear_color.source.as_const() {
         Some(ir::Value::Color(rgba)) => nums(rgba)?,
@@ -846,6 +864,10 @@ fn manifest_scene(
         host_inputs: host_inputs
             .iter()
             .map(ResolvedHostInput::to_manifest)
+            .collect(),
+        host_outputs: host_outputs
+            .iter()
+            .map(ResolvedHostOutput::to_manifest)
             .collect(),
         lights,
     })

@@ -508,6 +508,7 @@
         "materialInstances": { "type": "array", "items": { "$ref": "#/$defs/materialInstance" } },
         "bindings": { "type": "array", "items": { "$ref": "#/$defs/binding" } },
         "hostInputs": { "type": "array", "items": { "$ref": "#/$defs/hostInput" } },
+        "hostOutputs": { "type": "array", "items": { "$ref": "#/$defs/hostOutput" } },
         "lights": { "type": "array", "items": { "$ref": "#/$defs/light" } }
       }
     },
@@ -941,6 +942,21 @@
       }
     },
 
+    "hostOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "source", "type"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "name"],
+          "properties": { "kind": { "const": "state" }, "name": { "$ref": "#/$defs/name" } }
+        },
+        "type": { "type": "string", "enum": ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] }
+      }
+    },
     "hostInput": {
       "type": "object",
       "additionalProperties": false,

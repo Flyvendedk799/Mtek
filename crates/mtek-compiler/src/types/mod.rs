@@ -244,6 +244,8 @@ pub struct PrefabInfo {
     pub name_span: Span,
     /// The whole declaration.
     pub span: Span,
+    /// Root plus all static descendants. Assemblies cannot be spawned.
+    pub entity_count: usize,
     /// The `param`s in declaration order.
     pub params: Vec<PrefabParam>,
     /// The `state` in declaration order: an instance's state is read as `Name.state`.

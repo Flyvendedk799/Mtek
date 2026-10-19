@@ -108,7 +108,7 @@ SceneMember     ::= FieldInit | ConstDecl | StateDecl | SceneObject | EntityDecl
                   | LifecycleFn | Handler
 
 PrefabDecl      ::= 'prefab' Ident '{' EntityMember* '}'
-                    /* [S: prefab-no-nested-entity: nested EntityDecl is E5040] */
+                    /* [S: prefab-static-assembly-limits: spawning a prefab with children or nesting a prefab instance inside a prefab is E5040] */
 
 EntityDecl      ::= 'entity' Ident ( ':' Ident )? '{' EntityMember* '}'
                     /* ': Ident' instantiates a prefab. [S: prefab-instance-params: then only FieldInit

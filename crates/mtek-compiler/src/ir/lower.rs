@@ -585,7 +585,7 @@ impl Lowering<'_> {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn entity_bodies(
+    pub(super) fn entity_bodies(
         &self,
         entity: &ast::EntityDecl,
         owner: &Symbol,
@@ -648,7 +648,7 @@ impl Lowering<'_> {
         Ok(())
     }
 
-    fn entity_constants(
+    pub(super) fn entity_constants(
         &self,
         entity: &ast::EntityDecl,
         symbol: &Symbol,

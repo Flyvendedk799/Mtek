@@ -95,7 +95,7 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 
 | Restriction | Why | Diagnostics | Records and source |
 |---|---|---|---|
-| One scene per application; no scene switching, no camera switching, no run-time re-parenting, no prefabs with children, no user-defined components, queries or systems, no render interpolation, no text or UI, no audio. | Not in v0.1 (spec/scenes.md section 14). Scene switching is E5901 (reserved); `component`, `query` and `system` are reserved words (E0013). | `E5901`, `E0013` | [spec/scenes.md](../spec/scenes.md): "## 14. Not in v0.1" |
+| One scene per application; no scene switching, no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text or UI, no audio. | Not in v0.1 (spec/scenes.md section 14). Scene switching is E5901 (reserved); `component`, `query` and `system` are reserved words (E0013). | `E5901`, `E0013` | [spec/scenes.md](../spec/scenes.md): "## 14. Not in v0.1" |
 | An `entity_ref` (the result of `spawn`, the argument of a collision handler) can be passed to `destroy`, `alive` and body commands, but its fields and state cannot be read or written. | Decision 0064: not in v0.1. | `E5074` | decisions [0064](../spec/decisions/0064-spawn-destroy-entity-ref.md); [spec/diagnostics.md](../spec/diagnostics.md): "field access through entity_ref" |
 
 ### Physics

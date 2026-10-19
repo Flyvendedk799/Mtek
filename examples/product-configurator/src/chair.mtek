@@ -1,0 +1,53 @@
+// One reusable assembly. Child poses are local to the root; params are construction-time,
+// while root state is independent per instance and drives every matching material binding.
+export prefab Chair {
+    param origin: vec3 = vec3(0.0, 0.0, 0.0);
+    param size: f32 = 1.0;
+    param upholstery: color = #4b7777;
+    param timber: color = #b68b60;
+
+    state seat_color: color = upholstery;
+    state frame_color: color = timber;
+    state angle: f32 = 0.0;
+
+    position: origin;
+    scale: vec3(size, size, size);
+    rotation: bind(quat.euler(0.0, angle, 0.0));
+
+    entity Seat {
+        position: vec3(0.0, 0.61, 0.0);
+        mesh: Box { size: vec3(0.88, 0.18, 0.84) };
+        material: Pbr { base_color: bind(seat_color); roughness: 0.92 };
+    }
+    entity Back {
+        position: vec3(0.0, 1.02, -0.36);
+        rotation: quat.euler(-0.12, 0.0, 0.0);
+        mesh: Box { size: vec3(0.88, 0.72, 0.16) };
+        material: Pbr { base_color: bind(seat_color); roughness: 0.92 };
+    }
+    entity Rail {
+        position: vec3(0.0, 0.48, 0.0);
+        mesh: Box { size: vec3(0.93, 0.10, 0.87) };
+        material: Pbr { base_color: bind(frame_color); roughness: 0.6 };
+    }
+    entity FrontLeft {
+        position: vec3(-0.37, 0.24, 0.32);
+        mesh: Box { size: vec3(0.10, 0.48, 0.10) };
+        material: Pbr { base_color: bind(frame_color); roughness: 0.6 };
+    }
+    entity FrontRight {
+        position: vec3(0.37, 0.24, 0.32);
+        mesh: Box { size: vec3(0.10, 0.48, 0.10) };
+        material: Pbr { base_color: bind(frame_color); roughness: 0.6 };
+    }
+    entity BackLeft {
+        position: vec3(-0.37, 0.24, -0.32);
+        mesh: Box { size: vec3(0.10, 0.48, 0.10) };
+        material: Pbr { base_color: bind(frame_color); roughness: 0.6 };
+    }
+    entity BackRight {
+        position: vec3(0.37, 0.24, -0.32);
+        mesh: Box { size: vec3(0.10, 0.48, 0.10) };
+        material: Pbr { base_color: bind(frame_color); roughness: 0.6 };
+    }
+}

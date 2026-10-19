@@ -2,7 +2,7 @@
 
 {{generated}}
 
-A file is made of items: constants, functions, structs, materials, prefabs and scenes. Each kind of item can contain only certain members, and the compiler tells you at once when you put one in the wrong place. This page lists what may appear where, and explains the two things that confuse most people: a prefab is exactly one entity, and it does not know the scene.
+A file is made of items: constants, functions, structs, materials, prefabs and scenes. Each kind of item can contain only certain members, and the compiler tells you at once when you put one in the wrong place. This page lists what may appear where, and explains the two things that confuse most people: a prefab can be a reusable static assembly, and it does not know the scene.
 
 ## Rules
 
@@ -13,18 +13,18 @@ A file is made of items: constants, functions, structs, materials, prefabs and s
    | A file (module) | `import`, `const`, `fn`, `cpu fn`, `struct`, `material`, `prefab`, `scene`; any item except `import` can be `export`ed. |
    | A `scene` | scene fields (`clear_color`, `ambient_color`, `ambient_intensity`, `gravity`), `const`, `state`, `camera` objects, `entity` declarations, `update` and `fixed_update`, `on` handlers. |
    | An `entity` | fields (`position`, `mesh`, `material`, `light`, `body`, `collider`, ...), `const`, `state`, nested `entity` declarations, `update` and `fixed_update`, `on` handlers. |
-   | A `prefab` | the same as an entity, plus `param`; no nested entities. |
+   | A `prefab` | the same as an entity, plus root `param`; ordinary child entities are allowed in static assemblies. |
    | A `material` | `param` and exactly one `fragment`. |
 
    Anything else is `MTEK-E1040`: a `fn`, a `prefab` or a `scene` inside a scene, a `camera` in an entity, a `state` in a material, an `entity` at the top level of a file.
 2. **One scene runs.** A program mounts one scene; there is no scene switching. If the entry file declares several scenes, `scene = "Name"` in `mtek.toml` chooses. The scene needs a camera (`MTEK-E5012`), and with several cameras exactly one has `active: true` (`MTEK-E5013`). A camera looks at a `target` or has a `rotation`, not both (`MTEK-E5010`), and its projection values are checked (`MTEK-E5011`).
 3. **Scene fields** are `clear_color`, `ambient_color`, `ambient_intensity` and `gravity`. They are constants, fixed at construction (`MTEK-E3090` otherwise).
-4. **A prefab is one entity.** It has the members of an entity, so a prefab can have a mesh, a material, a body, state and handlers, but it cannot contain another entity (`MTEK-E5040`) or a light (`MTEK-E5110`). To build something from several parts, make one prefab per part and spawn them together from a handler.
+4. **A prefab is a root and optional static children.** Ordinary child entities make a reusable assembly. Each instance has its own root and descendants, state, materials, handlers and bindings. Root transforms move the whole assembly. `self` means the current part; children can read bare root parameters and state in bindings. The scene reads and writes the instance’s root state, for example `Left.seat_color`. Child names stay inside the prefab. A prefab cannot contain another prefab instance or be spawned when it has children (`MTEK-E5040`); lights remain unsupported (`MTEK-E5110`).
 5. **Parameters.** `param name: T = default;` is an input of the prefab, fixed when the instance is created. A parameter without a default must be given at every instance (`MTEK-E5041`). A default is a constant (`MTEK-E4031`). A parameter can be read in the prefab's field values, state initialisers, `bind` expressions and functions, and those values may call functions: they are computed when each instance is created.
 6. **A prefab does not know the scene.** It cannot read scene state or named entities (`MTEK-E2003`); it sees its own parameters, state, `self`, constants and functions. Everything it needs from the scene comes in as a parameter.
 7. **Two ways to make an instance.**
    - *Static:* `entity Left: Pillar { height: 3.0; }` declares a named entity. The body may set parameters and nothing else (`MTEK-E5042`), and the values must be constants (`MTEK-E3090`).
-   - *Dynamic:* `spawn(Pillar { height: h })` in a handler. The parameters may be run-time values. See [Entities and references](entities-and-references.md).
+   - *Dynamic:* `spawn(Pillar { height: h })` in a handler. Only single-entity prefabs can be spawned; their parameters may be run-time values. See [Entities and references](entities-and-references.md).
 8. **Bodies in prefabs.** A prefab may declare a `body` and a `collider`. A static instance of such a prefab must be a root entity (`MTEK-E5091`); spawned instances are always roots.
 9. **Construction-only values** (`mesh`, `body`, `collider`, the instance of a `material`) are constants in a prefab as in an entity (`MTEK-E3090`). The values of other fields, such as `position` and the parameters of a material, may use the prefab's parameters.
 
@@ -36,7 +36,7 @@ The fields of the scene itself:
 
 ## Why
 
-- A prefab is one entity because everything that is drawn or simulated is then a named, inspectable object with its own transform and its own single writer for each field. A prefab with children would need rules for who owns the child transforms, for naming and for bodies; the language leaves those to a later version.
+- A static assembly expands to ordinary named entities. Each part keeps its own transform, material and single-writer checks. A root update runs before its children, and all parts use the ordinary scene lifetime. Dynamic assembly spawning and recursively nested prefab instances need separate lifetime rules and are deliberately rejected.
 - A prefab does not see the scene because it is a template and may be instantiated in any scene, or in none. If it could name `Boss`, the template and one particular scene would be tied together, and a mistake would appear only in the scene where the name is missing.
 - The member lists are short on purpose: a scene is where data lives and events arrive, an entity is a thing in the world, a material is a GPU program. Putting a handler in a material or a mesh in a scene is a category mistake that the language refuses at once.
 
@@ -112,7 +112,7 @@ scene Demo {
 
 ## Common mistakes
 
-### Children in a prefab
+### Spawning an assembly
 
 ```mtek wrong=MTEK-E5040
 prefab Car {
@@ -128,10 +128,11 @@ scene Demo {
         position: vec3(0.0, 2.0, 5.0);
         target: vec3(0.0, 0.0, 0.0);
     }
+    on key_down(Key.Space) { spawn(Car {}); }
 }
 ```
 
-A prefab describes exactly one entity (`MTEK-E5040`). Declare `Wheel` as its own prefab and spawn the parts together, or declare the car as a named entity with a nested `Wheel`.
+An assembly is static-only (`MTEK-E5040`). Use `entity Parked: Car {}` in the scene. Its `Wheel` is copied beneath the root and moves with it.
 
 ### Setting a field in a static instance
 

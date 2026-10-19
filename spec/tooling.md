@@ -57,6 +57,9 @@ title = "Pulse Cube"         # <title> of index.html; default = project name
 [host.inputs]                # optional; name = "Scene.state_name"
 tint = "Demo.tint"
 
+[host.outputs]               # optional; name = "Scene.state_name", read-only
+tint = "Demo.tint"
+
 [runtime]                    # optional; defaults shown
 fixed_step = 0.016666668
 max_catch_up_steps = 4
@@ -74,7 +77,7 @@ max_texture_dimension = 8192         # per image side, at most 8192
 max_vertices_per_primitive = 4194304
 ```
 
-Unknown tables or keys, wrong types and out-of-range values are `E9001` with the exact key path. `host.inputs` targets must name scene state of an exposable type (`E9020`/`E9021`, `spec/runtime-abi.md` §6.3). There is no dependency table in v0.1 (no packages, blueprint §2.3).
+Unknown tables or keys, wrong types and out-of-range values are `E9001` with the exact key path. `host.inputs` targets and `host.outputs` sources must name scene state of an exposable type (`E9020`/`E9021`, `spec/runtime-abi.md` §6.3 and §6.6). There is no dependency table in v0.1 (no packages, blueprint §2.3).
 
 ## 4. `mtek dev`
 

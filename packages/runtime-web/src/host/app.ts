@@ -28,6 +28,7 @@ import { resolveStructure } from "../scene/structure.js";
 import type { CpuServices } from "../scene/world.js";
 import type { FetchResponseLike, HostEnvironment, ResizeObserverLike } from "./environment.js";
 import { resolveSpan, type DiagnosticSink } from "./failures.js";
+import { HostOutputs } from "./outputs.js";
 import { HostInputs, unknownInputResult } from "./inputs.js";
 import type { FailureOverlay } from "./overlay.js";
 import {
@@ -117,7 +118,7 @@ function attemptFailureText(error: unknown): string {
   return errorText(error);
 }
 
-export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
+export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>> implements MtekApp<I, O> {
   readonly debug?: MtekDebug;
   readonly seed: number;
 
@@ -135,6 +136,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private cpuUpdateMs = 0;
   private renderPrepMs = 0;
   private hostInputs: HostInputs;
+  private readonly hostOutputs: HostOutputs;
   /** Validated candidate waiting to become the live scene at the next frame start. */
   private pendingSwap:
     | {
@@ -173,6 +175,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     this.input = deps.input;
     this.behaviors = new Behaviors(deps.sceneFunctions, deps.scene.world);
     this.hostInputs = new HostInputs(manifest);
+    this.hostOutputs = new HostOutputs(manifest);
     registry.phase = "runtime:render";
     if (test?.disableCulling === true) deps.scene.renderer.setFrustumCulling(false);
 
@@ -242,13 +245,17 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     return this.hostInputs.setInput(name, value);
   }
 
+  onOutput<K extends keyof O & string>(name: K, listener: (value: O[K]) => void): () => void {
+    return this.hostOutputs.subscribe(name, listener as (value: unknown) => void);
+  }
+
   /**
    * Candidate-based hot reload (`spec/runtime-abi.md` section 11): validate the candidate fully;
    * on failure discard it and keep the running program; on success queue an atomic swap for the
    * next frame start.
    */
   async replaceProgram(
-    candidate: MtekMountProgram<I>,
+    candidate: MtekMountProgram<I, O>,
   ): Promise<{ ok: true } | { ok: false; diagnostics: readonly MtekDiagnostic[] }> {
     if (this.current === "disposed" || this.current === "failed" || this.current === "recovering") {
       const diagnostic = makeRuntimeDiagnostic("E8050", {
@@ -494,6 +501,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   dispose(): void {
     if (this.current === "disposed") return;
     this.current = "disposed";
+    this.hostOutputs.dispose();
     if (this.pendingSwap !== undefined) {
       this.pendingSwap.scene.materials.dispose();
       this.pendingSwap.scene.meshes.dispose();
@@ -584,6 +592,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private fail(cause: MtekDiagnostic): void {
     if (this.current === "disposed" || this.current === "failed") return;
     this.current = "failed";
+    this.hostOutputs.dispose();
     this.scheduler.stop();
     this.clearRecoveryTimer();
     this.deps.sink.report(cause);
@@ -936,6 +945,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         this.renderPrepMs = end - this.renderStartMs;
         this.frameTimeMs = end - this.frameStartMs;
         if (__MTEK_DEV__) this.deps.devTools?.afterFrame(this.frameTimeMs, () => this.counters());
+        this.hostOutputs.publish(this.deps.scene.world.sceneState);
       },
     };
   }
@@ -1005,6 +1015,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     this.deps.sceneFunctions = pending.sceneFunctions;
     this.behaviors = new Behaviors(pending.sceneFunctions, pending.scene.world);
     this.hostInputs = new HostInputs(pending.manifest);
+    this.hostOutputs.replace(pending.manifest);
 
     previous.materials.dispose();
     previous.renderer.dispose();

@@ -59,7 +59,7 @@ impl Checker<'_> {
         }
     }
 
-    fn declare_entity_states(&mut self, entity: &EntityDecl) {
+    pub(super) fn declare_entity_states(&mut self, entity: &EntityDecl) {
         // An instance has the state of its prefab, not state of its own.
         if entity.prefab.is_some() {
             return;
@@ -186,7 +186,7 @@ impl Checker<'_> {
             .owner
             .and_then(|o| self.res.def(o))
             .is_some_and(|d| d.kind == DefKind::Scene);
-        owner_is_entity && read_is_scene
+        owner_is_entity && (read_is_scene || read.owner == self.current_prefab)
     }
 
     // ----- lifecycle functions and handlers --------------------------------------------------
@@ -208,7 +208,7 @@ impl Checker<'_> {
         }
     }
 
-    fn entity_bodies(&mut self, entity: &EntityDecl) {
+    pub(super) fn entity_bodies(&mut self, entity: &EntityDecl) {
         if entity.prefab.is_some() {
             return;
         }

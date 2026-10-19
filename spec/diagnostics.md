@@ -226,7 +226,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5014"></a>E5014 | unknown scene object kind | `lamp Main { … }`; v0.1 kinds: `camera` |
 | <a id="mtek-e5020"></a>E5020 | material without mesh | |
 | <a id="mtek-e5030"></a>E5030 | named entity cannot be destroyed | `destroy(Cube)`, or `self` of a named entity (decision 0064) |
-| <a id="mtek-e5040"></a>E5040 | prefab cannot contain entities | a nested `entity` in a `prefab` (at the nested entity's name; decision 0062) |
+| <a id="mtek-e5040"></a>E5040 | unsupported prefab assembly operation | spawning a prefab with children, or a prefab instance nested inside another prefab (decision 0128) |
 | <a id="mtek-e5041"></a>E5041 | missing prefab parameter | an instance leaves out a param without a default; one diagnostic per param, with the param's declaration as related span |
 | <a id="mtek-e5042"></a>E5042 | prefab instance sets non-parameter | a name that is no param, or a member other than `name: value;`; a note lists the params |
 | <a id="mtek-e5050"></a>E5050 | invalid lifecycle signature | |
@@ -343,8 +343,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e9005"></a>E9005 | entry file not found | |
 | <a id="mtek-e9006"></a>E9006 | entry scene not found or ambiguous | |
 | <a id="mtek-e9010"></a>E9010 | not implemented by this compiler build | specified, not yet built |
-| <a id="mtek-e9020"></a>E9020 | host input target not exposable | not scene state, or unsupported type |
-| <a id="mtek-e9021"></a>E9021 | unknown host input target | |
+| <a id="mtek-e9020"></a>E9020 | host input target not exposable | input target or output source: not scene state, or unsupported type |
+| <a id="mtek-e9021"></a>E9021 | unknown host input target | also an unknown host output source |
 | <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built without `packages/runtime-web/dist`; also a program that uses physics built without `packages/physics-rapier/dist/physics.js` (decision 0063) |
 | <a id="mtek-e9031"></a>E9031 | build output not written | `mtek build` could not write the output directory (I/O failure; exit code 3, the previous output stays in place; decision 0032) |
 | <a id="mtek-e9032"></a>E9032 | compilation timed out | `mtek build --mode preview` did not finish within the compile time limit (10 s, a constant of the command line tool); no files are written (decision 0075) |

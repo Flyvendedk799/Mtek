@@ -89,7 +89,7 @@ export const prefabs = {
 export default { abi, baseUrl, manifestUrl, writers, functions, scenes, prefabs };
 ```
 
-**Prefabs** (decision 0062). `prefabs` has an entry for every prefab of the program, used or not, keyed by symbol. `init` sets the instance's `state` in declaration order and then its fields through the setters (a field a `bind` supplies is left to the runtime's evaluation of `bindings`, indexed by the prefab's own binding ids); it reads the params from its `params` argument. The runtime creates the record of an instance with `self.params` set to that same object (§4.2), which handlers, lifecycle functions and bindings read. A **static** instance (`entity First: Crate { .. }`) has no entry of its own in the program: the compiler turns it into an ordinary entity of the scene, with the prefab's code copied for it and the params substituted, so `scenes.X.init`, `entityUpdate`, `events`, `bindings` and the manifest describe it like any entity.
+**Prefabs** (decision 0062). `prefabs` has an entry for every single-entity prefab of the program, used or not, keyed by symbol. Static assemblies (prefabs with children, decision 0128) are omitted from this dynamic table; their parts expand into ordinary static scene entities. `init` sets the instance's `state` in declaration order and then its fields through the setters (a field a `bind` supplies is left to the runtime's evaluation of `bindings`, indexed by the prefab's own binding ids); it reads the params from its `params` argument. The runtime creates the record of an instance with `self.params` set to that same object (§4.2), which handlers, lifecycle functions and bindings read. A **static** instance (`entity First: Crate { .. }`) has no entry of its own in the program: the compiler turns it into an ordinary entity of the scene, with the prefab's code copied for it and the params substituted, so `scenes.X.init`, `entityUpdate`, `events`, `bindings` and the manifest describe it like any entity.
 
 Generated code imports only `rt` math/value helpers and receives everything else through the `ctx` argument (§4.2). It never touches WebGPU, the DOM, `globalThis`, `fetch`, timers, or `Math.random` directly. A lint test (`spec/testing.md` §7.3) greps emitted code for forbidden identifiers.
 
@@ -272,11 +272,11 @@ One entry per emitted WGSL statement/expression that originates in Mtek source; 
 ### 6.1 Mounting
 
 ```ts
-export function mountMtek<I = Record<string, unknown>>(
+export function mountMtek<I = Record<string, unknown>, O = Record<string, unknown>>(
   canvas: HTMLCanvasElement,
-  program: MtekProgram<I>,
+  program: MtekProgram<I, O>,
   options?: MtekMountOptions<I>,
-): Promise<MtekApp<I>>;
+): Promise<MtekApp<I, O>>;
 
 export interface MtekMountOptions<I = Record<string, unknown>> {
   inputs?: Partial<I>;                        // initial host inputs (validated like setInput)
@@ -311,14 +311,15 @@ With `failureDisplay: "overlay"` the runtime also renders a readable error panel
 ### 6.2 The application handle
 
 ```ts
-export interface MtekApp<I = Record<string, unknown>> {
+export interface MtekApp<I = Record<string, unknown>, O = Record<string, unknown>> {
   setInput<K extends keyof I & string>(name: K, value: I[K]): MtekInputResult; // queued; applied at the next frame start
+  onOutput<K extends keyof O & string>(name: K, listener: (value: O[K]) => void): () => void; // §6.6
   pause(): void;
   resume(): void;
   dispose(): void;                                          // synchronous release (§9.3)
   readonly state: "running" | "paused" | "recovering" | "failed" | "disposed";
   readonly debug?: MtekDebug;                               // present only when options.test is set (§10.2)
-  replaceProgram?(candidate: MtekProgram<I>): Promise<{ ok: true } | { ok: false; diagnostics: readonly MtekDiagnostic[] }>;
+  replaceProgram?(candidate: MtekProgram<I, O>): Promise<{ ok: true } | { ok: false; diagnostics: readonly MtekDiagnostic[] }>;
                                                             // present only in dev builds (§11.2)
 }
 export type MtekInputResult =
@@ -326,12 +327,13 @@ export type MtekInputResult =
   | { ok: false; error: { code: string; message: string } };  // code in envelope form: "MTEK-E8040" unknown input,
                                                               // "MTEK-E8041" wrong type, "MTEK-E8100" non-opaque colour
 
-// MtekProgram<I> is the type of the default export of app.js (§3). The type parameter only carries the
-// Inputs interface for typing setInput; at run time inputs are always validated by the generated codecs.
-export interface MtekProgram<I = Record<string, unknown>> {
+// MtekProgram<I, O> is the type of the default export of app.js (§3). Its type parameters carry
+// Inputs for setInput and Outputs for onOutput; both default for source compatibility.
+export interface MtekProgram<I = Record<string, unknown>, O = Record<string, unknown>> {
   readonly abi: 1; readonly baseUrl: URL; readonly manifestUrl: URL;
   readonly writers: unknown; readonly functions: unknown; readonly scenes: unknown; readonly prefabs: unknown;
   readonly __inputs?: I;   // phantom, never present at run time
+  readonly __outputs?: O;  // phantom, never present at run time
 }
 ```
 
@@ -359,12 +361,13 @@ The compiler chooses `color-hex-opaque` when the state reaches any material `col
 ```ts
 import type { MtekProgram } from "./runtime.js";   // resolves to runtime.d.ts in dist/
 export interface Inputs { tint: `#${string}` }
-declare const program: MtekProgram<Inputs>;
+export interface Outputs { total: number; tint: readonly [number, number, number, number] }
+declare const program: MtekProgram<Inputs, Outputs>;
 export default program;
 export { mountMtek } from "./runtime.js";
 ```
 
-`runtime.d.ts` (emitted by the runtime build and copied into every `dist/`) declares `mountMtek`, `MtekProgram<I>`, `MtekApp<I>`, `MtekMountOptions<I>`, `MtekMountError`, `MtekDiagnostic` and `MtekInputResult` exactly as in this section; `app.js` re-exports `mountMtek` from the hashed runtime file, and the `.d.ts` files describe that re-export. A test compiles a TypeScript host snippet against `app.d.ts` with `tsc --strict` (correct usage compiles, wrong usage fails) and asserts the runtime decoder accepts exactly what the declaration allows.
+`runtime.d.ts` (emitted by the runtime build and copied into every `dist/`) declares `mountMtek`, `MtekProgram<I, O>`, `MtekApp<I, O>`, `MtekMountOptions<I>`, `MtekMountError`, `MtekDiagnostic` and `MtekInputResult` exactly as in this section; `app.js` re-exports `mountMtek` from the hashed runtime file, and the `.d.ts` files describe that re-export. A test compiles a TypeScript host snippet against `app.d.ts` with `tsc --strict` (correct usage compiles, wrong usage fails) and asserts the runtime decoder accepts exactly what the declaration allows.
 
 ### 6.5 `index.html` bootstrap
 
@@ -379,6 +382,29 @@ export { mountMtek } from "./runtime.js";
 ```
 
 In `--mode test` builds the bootstrap does **not** mount automatically; it defines `window.__mtekMount = (options: MtekMountOptions) => Promise<MtekApp>`, which mounts `program` on `#mtek` with the given options (Playwright calls it with `test` options). In `--mode preview` builds the bootstrap lives in an external `bootstrap.js` (no inline script, for the Content-Security-Policy of `spec/ai-and-benchmarks.md` §5) with the same one-line mount as `release`; the manifest has the `preview` object (`{ "loopBudget": N }`), which makes the runtime enforce the budget and refuse every request (`fetch`, asset bytes, the physics module `import()`) whose URL is not below `baseUrl` (same origin, path under `baseUrl`, no credentials, no encoded dot or separator below it): the refusal is a rejected request that each loader reports with its own code (`E8006`, `E8051`, `E7030`, `E8102`) and the message `refused <url>`. Decision 0075.
+
+### 6.6 Scene-to-host outputs
+
+`mtek.toml` declares read-only exports independently of inputs:
+
+```toml
+[host.outputs]
+total = "Demo.total"
+tint = "Demo.tint"
+```
+
+Each name maps only to state of the entry scene. The exposable types are `f32`, `i32`, `u32`, `bool`, `string`, `vec2`, `vec3`, `vec4`, and `color`; unknown sources are `E9021` and unsupported types or entity sources are `E9020`. The manifest's optional `scene.hostOutputs` array contains `{ "name", "source": { "kind": "state", "name" }, "type" }`; absent means no outputs. The compiler omits an empty array. Mount rejects duplicate names, missing scene state and mismatched types as `E8006` before allocating GPU resources.
+
+`app.onOutput("total", value => { ... })` returns an idempotent unsubscribe function. The generated `Outputs` interface determines both the permitted names and each listener's value type, inferred through `mountMtek`. An empty interface forbids subscriptions at compile time. At run time, an undeclared name throws `RangeError`, a non-function listener throws `TypeError`, and a failed or disposed app throws `Error`.
+
+- Each subscription receives its first snapshot at the end of the next successfully settled frame, after handlers, fixed ticks, update, command flushing, bindings, transforms and render submission. Subscription itself is synchronous and does not call the listener. A paused or recovering app waits until a frame can run.
+- Later frames notify only when the value changes from that subscription's previous snapshot. Multiple writes in a frame coalesce. Equality is `Object.is` for scalars and component-wise `Object.is` for vectors/colors; no write events are exposed.
+- Numbers, booleans and strings retain their CPU value. Vectors become frozen, copied readonly tuples of two, three or four numbers. Colors become frozen readonly `[r, g, b, a]` tuples in **linear light**, with no sRGB conversion or 8-bit rounding. These differ intentionally from input hex codecs. The host receives no mutable scene references.
+- All values and the listener list are captured before callbacks. A listener registered during delivery begins next frame. Unsubscription or disposal suppresses callbacks that have not run yet. Registering the same callback twice creates two independent subscriptions. `setInput` inside a callback still applies at the next frame start.
+- Listener exceptions are reported with the platform's `reportError` (or `console.error` fallback), without failing the app or skipping other listeners. This follows `onDiagnostic` callback isolation.
+- `dispose()` and terminal failure clear all subscriptions. GPU recovery preserves them and their last snapshots, so unchanged state is not emitted again. A successful hot replacement retains subscriptions whose output name and type still match, with a fresh snapshot after the replacement's first frame; removed or retyped outputs are detached. A rejected replacement leaves subscriptions untouched.
+
+Outputs are a production API: no `options.test`, debug reads, GPU readback, or additional shader/binding path is involved. They observe settled CPU state and do not alter CPU/GPU restrictions or bind ownership. See decision 0127.
 
 ## 7. The scheduler (implementation contract for `spec/scenes.md` §10)
 
@@ -395,7 +421,7 @@ onAnimationFrame(nowMs):
       phase2_tick(fixedStep); accumulator -= fixedStep; steps += 1
   if accumulator >= fixedStep:
       counters.discardedSteps += floor(accumulator / fixedStep); accumulator = accumulator % fixedStep
-  phase3_update(delta); phase4_flush(); phase5_bindings(); phase6_transforms(); phase7_render()
+  phase3_update(delta); phase4_flush(); phase5_bindings(); phase6_transforms(); phase7_render() // ends with host-output publication (§6.6)
   requestNext()
 ```
 

@@ -186,6 +186,16 @@ function inSlotOrder(attributes: readonly MtekVertexAttribute[]): boolean {
 /** Resolves every reference of the scene structure, or returns every problem found. */
 export function resolveStructure(manifest: MtekManifest): StructureResult {
   const diagnostics: MtekDiagnostic[] = [];
+  const outputNames = new Set<string>();
+  for (const [index, output] of (manifest.scene.hostOutputs ?? []).entries()) {
+    const field = `scene.hostOutputs[${String(index)}]`;
+    if (outputNames.has(output.name)) diagnostics.push(broken(`${field}.name`, `host output '${output.name}' is listed twice.`));
+    outputNames.add(output.name);
+    const state = manifest.scene.state.find((entry) => entry.name === output.source.name);
+    if (state === undefined || state.type !== output.type) {
+      diagnostics.push(broken(`${field}.source`, `host output '${output.name}' must name scene state of type '${output.type}'.`));
+    }
+  }
   const { scene } = manifest;
 
   if (manifest.entryScene !== scene.name) {

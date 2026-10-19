@@ -1,13 +1,10 @@
-// A prefab describes one entity: a nested entity is E5040.
+// Static assemblies permit ordinary children, but not nested prefab instances.
+prefab Part { mesh: Box {}; }
 prefab Crate {
-    mesh: Box {};
-    entity Lid {
-        mesh: Box {};
-    }
+    entity Lid: Part {}
 }
-
 scene Demo {
     camera Main {}
     entity First: Crate {}
 }
-// covers: [S: prefab-no-nested-entity]
+// covers: [S: prefab-static-assembly-limits]

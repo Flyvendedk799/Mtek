@@ -160,7 +160,7 @@ catalogue! {
     E5014 Error "unknown scene object kind",
     E5020 Error "material without mesh",
     E5030 Error "named entity cannot be destroyed",
-    E5040 Error "prefab cannot contain entities",
+    E5040 Error "unsupported prefab assembly operation",
     E5041 Error "missing prefab parameter",
     E5042 Error "prefab instance sets non-parameter",
     E5050 Error "invalid lifecycle signature",

@@ -109,6 +109,27 @@ describe("runtime.d.ts with tsc --strict", () => {
     expect(problems).toEqual([]);
   });
 
+  it("infers typed outputs from a generated program without explicit mount type arguments", () => {
+    const problems = compile(`
+      import { mountMtek } from "./runtime.js";
+      import type { MtekProgram } from "./runtime.js";
+      interface Inputs { quantity: number }
+      interface Outputs { total: number; selected: string; available: boolean; position: readonly [number, number, number] }
+      declare const program: MtekProgram<Inputs, Outputs>;
+      declare const canvas: HTMLCanvasElement;
+      export async function run(): Promise<void> {
+        const app = await mountMtek(canvas, program);
+        const stop: () => void = app.onOutput("total", (value) => { const total: number = value; console.log(total); });
+        app.onOutput("selected", (value) => { const selected: string = value; console.log(selected); });
+        app.onOutput("available", (value) => { const available: boolean = value; console.log(available); });
+        app.onOutput("position", (value) => { const position: readonly [number, number, number] = value; console.log(position); });
+        app.setInput("quantity", 2);
+        stop();
+      }
+    `, { skipLibCheck: false });
+    expect(problems).toEqual([]);
+  });
+
   // The app.d.ts the compiler emits (M1-17 golden; no host inputs before M3).
   const compiledAppDts = readFileSync(
     path.resolve(PACKAGE_DIR, "../../tests/codegen/scene_a_target_camera_box/expected/app.d.ts"),
@@ -144,6 +165,27 @@ describe("runtime.d.ts with tsc --strict", () => {
   });
 
   const wrong: Array<[string, string, RegExp]> = [
+    [
+      "an unknown output name",
+      `import type { MtekApp } from "./runtime.js";
+       declare const app: MtekApp<{}, { total: number }>;
+       app.onOutput("missing", () => undefined);`,
+      /TS2345/,
+    ],
+    [
+      "an incorrectly typed output listener",
+      `import type { MtekApp } from "./runtime.js";
+       declare const app: MtekApp<{}, { total: number }>;
+       app.onOutput("total", (value: string) => { console.log(value); });`,
+      /TS2345/,
+    ],
+    [
+      "writing to an exported vector snapshot",
+      `import type { MtekApp } from "./runtime.js";
+       declare const app: MtekApp<{}, { position: readonly [number, number, number] }>;
+       app.onOutput("position", (value) => { value[0] = 5; });`,
+      /TS2540/,
+    ],
     [
       "a wrongly typed input value",
       `import type { MtekApp } from "./runtime.js";
@@ -234,12 +276,16 @@ describe("runtime.d.ts agrees with the implementation", () => {
 
       type Mutual<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
       type Inputs = { tint: string; speed: number };
+      type Outputs = { total: number; position: readonly [number, number, number] };
 
       export const mountOptions: Mutual<D.MtekMountOptions<Inputs>, H.MtekMountOptions<Inputs>> = true;
       export const testOptions: Mutual<D.MtekTestOptions, H.MtekTestOptions> = true;
       export const debug: Mutual<D.MtekDebug, H.MtekDebug> = true;
       export const inputResult: Mutual<D.MtekInputResult, H.MtekInputResult> = true;
       export const app: Mutual<D.MtekApp<Inputs>, H.MtekApp<Inputs>> = true;
+      export const outputApp: Mutual<D.MtekApp<Inputs, Outputs>, H.MtekApp<Inputs, Outputs>> = true;
+      export const outputProgram: Mutual<D.MtekProgram<Inputs, Outputs>, H.MtekMountProgram<Inputs, Outputs>> = true;
+      export const outputMount: Mutual<typeof D.mountMtek<Inputs, Outputs>, typeof implMount<Inputs, Outputs>> = true;
       export const program: Mutual<D.MtekProgram<Inputs>, H.MtekMountProgram<Inputs>> = true;
       export const diagnostic: Mutual<D.MtekDiagnostic, G.MtekDiagnostic> = true;
       export const source: Mutual<D.MtekSourceSpan, G.MtekSourceSpan> = true;

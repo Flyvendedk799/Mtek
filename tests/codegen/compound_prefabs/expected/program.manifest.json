@@ -1,0 +1,1660 @@
+{
+  "manifestSchema": 1,
+  "runtimeAbi": 1,
+  "languageVersion": "0.1",
+  "compilerVersion": "0.1.0-dev",
+  "buildId": "9ca9987177db6bcc7cad4b3242b0113a7bfff81abd190385ed76706d63cf2654",
+  "targetProfile": "webgpu-core-2026",
+  "requiredCapabilities": {
+    "features": [],
+    "limits": {},
+    "wgslLanguageFeatures": []
+  },
+  "subsystems": {
+    "physics": false
+  },
+  "runtimeConfig": {
+    "fixedStep": 0.016666668,
+    "maxCatchUpSteps": 4,
+    "maxFrameDelta": 0.1,
+    "maxEntities": 16384,
+    "pauseWhenHidden": true
+  },
+  "entryScene": "Demo",
+  "sources": [
+    {
+      "id": 0,
+      "path": "src/main.mtek",
+      "sha256": "e62e94f60d77f91e95cd7b635742e0992ed1695fe1cb06c28035526612236de9"
+    },
+    {
+      "id": 1,
+      "path": "src/chair.mtek",
+      "sha256": "121daaff287d9260d0bdeb5271a02e525858209319aa109fc2da6eb1c5f3b861"
+    },
+    {
+      "id": 2,
+      "path": "std/materials.mtek",
+      "sha256": "cbc8cdb3b47bc2ce2aec3f0fe45a5c6ed0e2009f81307d9770b56b4181622a53"
+    }
+  ],
+  "spans": [
+    {
+      "file": 0,
+      "start": 38,
+      "end": 487,
+      "startLine": 2,
+      "startColumn": 1,
+      "endLine": 12,
+      "endColumn": 2
+    },
+    {
+      "file": 1,
+      "start": 113,
+      "end": 144,
+      "startLine": 6,
+      "startColumn": 5,
+      "endLine": 6,
+      "endColumn": 36
+    },
+    {
+      "file": 1,
+      "start": 149,
+      "end": 172,
+      "startLine": 7,
+      "startColumn": 5,
+      "endLine": 7,
+      "endColumn": 28
+    },
+    {
+      "file": 1,
+      "start": 286,
+      "end": 307,
+      "startLine": 11,
+      "startColumn": 9,
+      "endLine": 11,
+      "endColumn": 30
+    },
+    {
+      "file": 1,
+      "start": 316,
+      "end": 351,
+      "startLine": 12,
+      "startColumn": 9,
+      "endLine": 12,
+      "endColumn": 44
+    },
+    {
+      "file": 0,
+      "start": 140,
+      "end": 236,
+      "startLine": 4,
+      "startColumn": 5,
+      "endLine": 7,
+      "endColumn": 6
+    },
+    {
+      "file": 0,
+      "start": 241,
+      "end": 293,
+      "startLine": 8,
+      "startColumn": 5,
+      "endLine": 8,
+      "endColumn": 57
+    },
+    {
+      "file": 1,
+      "start": 264,
+      "end": 785,
+      "startLine": 10,
+      "startColumn": 5,
+      "endLine": 24,
+      "endColumn": 6
+    },
+    {
+      "file": 1,
+      "start": 619,
+      "end": 779,
+      "startLine": 19,
+      "startColumn": 9,
+      "endLine": 23,
+      "endColumn": 10
+    },
+    {
+      "file": 1,
+      "start": 790,
+      "end": 928,
+      "startLine": 25,
+      "startColumn": 5,
+      "endLine": 29,
+      "endColumn": 6
+    },
+    {
+      "file": 0,
+      "start": 298,
+      "end": 361,
+      "startLine": 9,
+      "startColumn": 5,
+      "endLine": 9,
+      "endColumn": 68
+    },
+    {
+      "file": 0,
+      "start": 366,
+      "end": 433,
+      "startLine": 10,
+      "startColumn": 5,
+      "endLine": 10,
+      "endColumn": 72
+    },
+    {
+      "file": 2,
+      "start": 379,
+      "end": 887,
+      "startLine": 10,
+      "startColumn": 8,
+      "endLine": 21,
+      "endColumn": 2
+    },
+    {
+      "file": 2,
+      "start": 398,
+      "end": 432,
+      "startLine": 11,
+      "startColumn": 5,
+      "endLine": 11,
+      "endColumn": 39
+    },
+    {
+      "file": 2,
+      "start": 437,
+      "end": 463,
+      "startLine": 12,
+      "startColumn": 5,
+      "endLine": 12,
+      "endColumn": 31
+    },
+    {
+      "file": 2,
+      "start": 468,
+      "end": 495,
+      "startLine": 13,
+      "startColumn": 5,
+      "endLine": 13,
+      "endColumn": 32
+    },
+    {
+      "file": 2,
+      "start": 500,
+      "end": 552,
+      "startLine": 14,
+      "startColumn": 5,
+      "endLine": 14,
+      "endColumn": 57
+    },
+    {
+      "file": 2,
+      "start": 557,
+      "end": 617,
+      "startLine": 15,
+      "startColumn": 5,
+      "endLine": 15,
+      "endColumn": 65
+    },
+    {
+      "file": 2,
+      "start": 255,
+      "end": 370,
+      "startLine": 5,
+      "startColumn": 8,
+      "endLine": 8,
+      "endColumn": 2
+    },
+    {
+      "file": 2,
+      "start": 276,
+      "end": 305,
+      "startLine": 6,
+      "startColumn": 5,
+      "endLine": 6,
+      "endColumn": 34
+    },
+    {
+      "file": 1,
+      "start": 8,
+      "end": 972,
+      "startLine": 2,
+      "startColumn": 8,
+      "endLine": 31,
+      "endColumn": 2
+    },
+    {
+      "file": 1,
+      "start": 27,
+      "end": 46,
+      "startLine": 3,
+      "startColumn": 5,
+      "endLine": 3,
+      "endColumn": 24
+    },
+    {
+      "file": 1,
+      "start": 51,
+      "end": 79,
+      "startLine": 4,
+      "startColumn": 5,
+      "endLine": 4,
+      "endColumn": 33
+    },
+    {
+      "file": 1,
+      "start": 84,
+      "end": 108,
+      "startLine": 5,
+      "startColumn": 5,
+      "endLine": 5,
+      "endColumn": 29
+    },
+    {
+      "file": 2,
+      "start": 622,
+      "end": 885,
+      "startLine": 16,
+      "startColumn": 5,
+      "endLine": 20,
+      "endColumn": 6
+    },
+    {
+      "file": 2,
+      "start": 673,
+      "end": 744,
+      "startLine": 17,
+      "startColumn": 9,
+      "endLine": 17,
+      "endColumn": 80
+    },
+    {
+      "file": 2,
+      "start": 685,
+      "end": 743,
+      "startLine": 17,
+      "startColumn": 21,
+      "endLine": 17,
+      "endColumn": 79
+    },
+    {
+      "file": 2,
+      "start": 692,
+      "end": 710,
+      "startLine": 17,
+      "startColumn": 28,
+      "endLine": 17,
+      "endColumn": 46
+    },
+    {
+      "file": 2,
+      "start": 712,
+      "end": 730,
+      "startLine": 17,
+      "startColumn": 48,
+      "endLine": 17,
+      "endColumn": 66
+    },
+    {
+      "file": 2,
+      "start": 732,
+      "end": 742,
+      "startLine": 17,
+      "startColumn": 68,
+      "endLine": 17,
+      "endColumn": 78
+    },
+    {
+      "file": 2,
+      "start": 732,
+      "end": 739,
+      "startLine": 17,
+      "startColumn": 68,
+      "endLine": 17,
+      "endColumn": 75
+    },
+    {
+      "file": 2,
+      "start": 753,
+      "end": 812,
+      "startLine": 18,
+      "startColumn": 9,
+      "endLine": 18,
+      "endColumn": 68
+    },
+    {
+      "file": 2,
+      "start": 766,
+      "end": 811,
+      "startLine": 18,
+      "startColumn": 22,
+      "endLine": 18,
+      "endColumn": 67
+    },
+    {
+      "file": 2,
+      "start": 779,
+      "end": 805,
+      "startLine": 18,
+      "startColumn": 35,
+      "endLine": 18,
+      "endColumn": 61
+    },
+    {
+      "file": 2,
+      "start": 779,
+      "end": 793,
+      "startLine": 18,
+      "startColumn": 35,
+      "endLine": 18,
+      "endColumn": 49
+    },
+    {
+      "file": 2,
+      "start": 779,
+      "end": 789,
+      "startLine": 18,
+      "startColumn": 35,
+      "endLine": 18,
+      "endColumn": 45
+    },
+    {
+      "file": 2,
+      "start": 796,
+      "end": 805,
+      "startLine": 18,
+      "startColumn": 52,
+      "endLine": 18,
+      "endColumn": 61
+    },
+    {
+      "file": 2,
+      "start": 796,
+      "end": 801,
+      "startLine": 18,
+      "startColumn": 52,
+      "endLine": 18,
+      "endColumn": 57
+    },
+    {
+      "file": 2,
+      "start": 807,
+      "end": 810,
+      "startLine": 18,
+      "startColumn": 63,
+      "endLine": 18,
+      "endColumn": 66
+    },
+    {
+      "file": 2,
+      "start": 821,
+      "end": 879,
+      "startLine": 19,
+      "startColumn": 9,
+      "endLine": 19,
+      "endColumn": 67
+    },
+    {
+      "file": 2,
+      "start": 828,
+      "end": 878,
+      "startLine": 19,
+      "startColumn": 16,
+      "endLine": 19,
+      "endColumn": 66
+    },
+    {
+      "file": 2,
+      "start": 841,
+      "end": 848,
+      "startLine": 19,
+      "startColumn": 29,
+      "endLine": 19,
+      "endColumn": 36
+    },
+    {
+      "file": 2,
+      "start": 850,
+      "end": 856,
+      "startLine": 19,
+      "startColumn": 38,
+      "endLine": 19,
+      "endColumn": 44
+    },
+    {
+      "file": 2,
+      "start": 858,
+      "end": 866,
+      "startLine": 19,
+      "startColumn": 46,
+      "endLine": 19,
+      "endColumn": 54
+    },
+    {
+      "file": 2,
+      "start": 868,
+      "end": 877,
+      "startLine": 19,
+      "startColumn": 56,
+      "endLine": 19,
+      "endColumn": 65
+    },
+    {
+      "file": 2,
+      "start": 310,
+      "end": 368,
+      "startLine": 7,
+      "startColumn": 5,
+      "endLine": 7,
+      "endColumn": 63
+    },
+    {
+      "file": 2,
+      "start": 353,
+      "end": 366,
+      "startLine": 7,
+      "startColumn": 48,
+      "endLine": 7,
+      "endColumn": 61
+    },
+    {
+      "file": 2,
+      "start": 360,
+      "end": 365,
+      "startLine": 7,
+      "startColumn": 55,
+      "endLine": 7,
+      "endColumn": 60
+    },
+    {
+      "file": 0,
+      "start": 338,
+      "end": 358,
+      "startLine": 9,
+      "startColumn": 45,
+      "endLine": 9,
+      "endColumn": 65
+    },
+    {
+      "file": 1,
+      "start": 209,
+      "end": 258,
+      "startLine": 9,
+      "startColumn": 15,
+      "endLine": 9,
+      "endColumn": 64
+    },
+    {
+      "file": 1,
+      "start": 488,
+      "end": 504,
+      "startLine": 16,
+      "startColumn": 37,
+      "endLine": 16,
+      "endColumn": 53
+    },
+    {
+      "file": 1,
+      "start": 656,
+      "end": 693,
+      "startLine": 20,
+      "startColumn": 23,
+      "endLine": 20,
+      "endColumn": 60
+    },
+    {
+      "file": 1,
+      "start": 862,
+      "end": 878,
+      "startLine": 27,
+      "startColumn": 37,
+      "endLine": 27,
+      "endColumn": 53
+    }
+  ],
+  "symbols": [
+    {
+      "id": "src/main.mtek::Demo",
+      "kind": "scene",
+      "span": 0
+    },
+    {
+      "id": "src/main.mtek::Demo.Left.seat_color",
+      "kind": "state",
+      "span": 1
+    },
+    {
+      "id": "src/main.mtek::Demo.Left.angle",
+      "kind": "state",
+      "span": 2
+    },
+    {
+      "id": "src/main.mtek::Demo.Left.Seat.ticks",
+      "kind": "state",
+      "span": 3
+    },
+    {
+      "id": "src/main.mtek::Demo.Left.Seat.captured",
+      "kind": "state",
+      "span": 4
+    },
+    {
+      "id": "src/main.mtek::Demo.Right.seat_color",
+      "kind": "state",
+      "span": 1
+    },
+    {
+      "id": "src/main.mtek::Demo.Right.angle",
+      "kind": "state",
+      "span": 2
+    },
+    {
+      "id": "src/main.mtek::Demo.Right.Seat.ticks",
+      "kind": "state",
+      "span": 3
+    },
+    {
+      "id": "src/main.mtek::Demo.Right.Seat.captured",
+      "kind": "state",
+      "span": 4
+    },
+    {
+      "id": "src/main.mtek::Demo.Main",
+      "kind": "camera",
+      "span": 5
+    },
+    {
+      "id": "src/main.mtek::Demo.Left",
+      "kind": "entity",
+      "span": 6
+    },
+    {
+      "id": "src/main.mtek::Demo.Left.Seat",
+      "kind": "entity",
+      "span": 7
+    },
+    {
+      "id": "src/main.mtek::Demo.Left.Seat.Badge",
+      "kind": "entity",
+      "span": 8
+    },
+    {
+      "id": "src/main.mtek::Demo.Left.Back",
+      "kind": "entity",
+      "span": 9
+    },
+    {
+      "id": "src/main.mtek::Demo.Marker",
+      "kind": "entity",
+      "span": 10
+    },
+    {
+      "id": "src/main.mtek::Demo.Right",
+      "kind": "entity",
+      "span": 11
+    },
+    {
+      "id": "src/main.mtek::Demo.Right.Seat",
+      "kind": "entity",
+      "span": 7
+    },
+    {
+      "id": "src/main.mtek::Demo.Right.Seat.Badge",
+      "kind": "entity",
+      "span": 8
+    },
+    {
+      "id": "src/main.mtek::Demo.Right.Back",
+      "kind": "entity",
+      "span": 9
+    },
+    {
+      "id": "std/materials.mtek::Pbr",
+      "kind": "material",
+      "span": 12
+    },
+    {
+      "id": "std/materials.mtek::Pbr.base_color",
+      "kind": "param",
+      "span": 13
+    },
+    {
+      "id": "std/materials.mtek::Pbr.metallic",
+      "kind": "param",
+      "span": 14
+    },
+    {
+      "id": "std/materials.mtek::Pbr.roughness",
+      "kind": "param",
+      "span": 15
+    },
+    {
+      "id": "std/materials.mtek::Pbr.base_color_texture",
+      "kind": "param",
+      "span": 16
+    },
+    {
+      "id": "std/materials.mtek::Pbr.base_color_sampler",
+      "kind": "param",
+      "span": 17
+    },
+    {
+      "id": "std/materials.mtek::Unlit",
+      "kind": "material",
+      "span": 18
+    },
+    {
+      "id": "std/materials.mtek::Unlit.color",
+      "kind": "param",
+      "span": 19
+    },
+    {
+      "id": "src/chair.mtek::Chair",
+      "kind": "prefab",
+      "span": 20
+    },
+    {
+      "id": "src/chair.mtek::Chair.origin",
+      "kind": "param",
+      "span": 21
+    },
+    {
+      "id": "src/chair.mtek::Chair.tint",
+      "kind": "param",
+      "span": 22
+    },
+    {
+      "id": "src/chair.mtek::Chair.height",
+      "kind": "param",
+      "span": 23
+    },
+    {
+      "id": "src/chair.mtek::Chair.seat_color",
+      "kind": "state",
+      "span": 1
+    },
+    {
+      "id": "src/chair.mtek::Chair.angle",
+      "kind": "state",
+      "span": 2
+    },
+    {
+      "id": "src/chair.mtek::Chair.Seat.ticks",
+      "kind": "state",
+      "span": 3
+    },
+    {
+      "id": "src/chair.mtek::Chair.Seat.captured",
+      "kind": "state",
+      "span": 4
+    }
+  ],
+  "layouts": [
+    {
+      "id": "builtin:frame",
+      "wgslStruct": "MtekFrame",
+      "size": 288,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 288,
+        "align": 16,
+        "members": [
+          {
+            "name": "view_proj",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "camera_position",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 64,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "light_count",
+            "mtekType": "u32",
+            "node": {
+              "kind": "scalar",
+              "offset": 76,
+              "size": 4,
+              "align": 4,
+              "scalar": "u32"
+            }
+          },
+          {
+            "name": "ambient",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 80,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "exposure",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 92,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "lights",
+            "mtekType": "array<MtekLight, 4>",
+            "node": {
+              "kind": "array",
+              "offset": 96,
+              "size": 192,
+              "align": 16,
+              "length": 4,
+              "stride": 48,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "MtekLight",
+                "offset": 0,
+                "size": 48,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "color",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 0,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "kind",
+                    "mtekType": "u32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 12,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "u32"
+                    }
+                  },
+                  {
+                    "name": "position",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 16,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "range",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 28,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  },
+                  {
+                    "name": "direction",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 32,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "reserved",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 44,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin:object",
+      "wgslStruct": "MtekObject",
+      "size": 128,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 128,
+        "align": 16,
+        "members": [
+          {
+            "name": "model",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "normal_matrix",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 64,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "material:std/materials.mtek::Pbr",
+      "wgslStruct": "MtekParams_2b212d15_Pbr",
+      "size": 32,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 32,
+        "align": 16,
+        "members": [
+          {
+            "name": "base_color",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          },
+          {
+            "name": "metallic",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 16,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "roughness",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 20,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "material:std/materials.mtek::Unlit",
+      "wgslStruct": "MtekParams_2b212d15_Unlit",
+      "size": 16,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 16,
+        "align": 16,
+        "members": [
+          {
+            "name": "color",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "shaders": [
+    {
+      "hash": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd",
+      "url": "shaders/1594a8ef1d1b39e6.wgsl",
+      "map": "shaders/1594a8ef1d1b39e6.mtek-map.json",
+      "material": "std/materials.mtek::Pbr",
+      "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
+      "fragmentEntry": "mtek_fs",
+      "vertexAttributes": [
+        "position",
+        "normal",
+        "uv"
+      ],
+      "surfaceInputs": [
+        "world_position",
+        "world_normal",
+        "uv"
+      ]
+    },
+    {
+      "hash": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
+      "url": "shaders/385b28531dc27b69.wgsl",
+      "map": "shaders/385b28531dc27b69.mtek-map.json",
+      "material": "std/materials.mtek::Unlit",
+      "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
+      "fragmentEntry": "mtek_fs",
+      "vertexAttributes": [
+        "position"
+      ],
+      "surfaceInputs": []
+    }
+  ],
+  "materials": [
+    {
+      "id": "std/materials.mtek::Pbr",
+      "layout": "material:std/materials.mtek::Pbr",
+      "shader": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd",
+      "resources": [
+        {
+          "name": "base_color_texture",
+          "kind": "texture",
+          "binding": 1
+        },
+        {
+          "name": "base_color_sampler",
+          "kind": "sampler",
+          "binding": 2
+        }
+      ],
+      "params": [
+        {
+          "name": "base_color",
+          "type": "color",
+          "span": 13
+        },
+        {
+          "name": "metallic",
+          "type": "f32",
+          "span": 14
+        },
+        {
+          "name": "roughness",
+          "type": "f32",
+          "span": 15
+        },
+        {
+          "name": "base_color_texture",
+          "type": "texture",
+          "span": 16
+        },
+        {
+          "name": "base_color_sampler",
+          "type": "sampler",
+          "span": 17
+        }
+      ]
+    },
+    {
+      "id": "std/materials.mtek::Unlit",
+      "layout": "material:std/materials.mtek::Unlit",
+      "shader": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
+      "resources": [],
+      "params": [
+        {
+          "name": "color",
+          "type": "color",
+          "span": 19
+        }
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "id": "mesh:0",
+      "kind": "box",
+      "size": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "id": "mesh:1",
+      "kind": "sphere",
+      "radius": 0.5,
+      "segments": 32,
+      "rings": 16
+    }
+  ],
+  "assets": [],
+  "scene": {
+    "name": "Demo",
+    "symbol": "src/main.mtek::Demo",
+    "fields": {
+      "clearColor": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "ambientColor": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "ambientIntensity": 0.0,
+      "gravity": [
+        0.0,
+        -9.81,
+        0.0
+      ]
+    },
+    "state": [],
+    "cameras": [
+      {
+        "name": "Main",
+        "symbol": "src/main.mtek::Demo.Main",
+        "projection": "perspective",
+        "hasTarget": true,
+        "active": true,
+        "exposure": -1.9145305
+      }
+    ],
+    "entities": [
+      {
+        "index": 0,
+        "name": "Left",
+        "symbol": "src/main.mtek::Demo.Left",
+        "parent": null,
+        "mesh": null,
+        "material": null,
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [
+          {
+            "name": "seat_color",
+            "type": "color",
+            "symbol": "src/main.mtek::Demo.Left.seat_color"
+          },
+          {
+            "name": "angle",
+            "type": "f32",
+            "symbol": "src/main.mtek::Demo.Left.angle"
+          }
+        ],
+        "update": true,
+        "fixedUpdate": false
+      },
+      {
+        "index": 1,
+        "name": "Left.Seat",
+        "symbol": "src/main.mtek::Demo.Left.Seat",
+        "parent": 0,
+        "mesh": "mesh:0",
+        "material": {
+          "id": "std/materials.mtek::Pbr",
+          "instance": 0
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [
+          {
+            "name": "ticks",
+            "type": "i32",
+            "symbol": "src/main.mtek::Demo.Left.Seat.ticks"
+          },
+          {
+            "name": "captured",
+            "type": "color",
+            "symbol": "src/main.mtek::Demo.Left.Seat.captured"
+          }
+        ],
+        "update": true,
+        "fixedUpdate": false
+      },
+      {
+        "index": 2,
+        "name": "Left.Seat.Badge",
+        "symbol": "src/main.mtek::Demo.Left.Seat.Badge",
+        "parent": 1,
+        "mesh": "mesh:1",
+        "material": {
+          "id": "std/materials.mtek::Unlit",
+          "instance": 1
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 3,
+        "name": "Left.Back",
+        "symbol": "src/main.mtek::Demo.Left.Back",
+        "parent": 0,
+        "mesh": "mesh:0",
+        "material": {
+          "id": "std/materials.mtek::Pbr",
+          "instance": 2
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 4,
+        "name": "Marker",
+        "symbol": "src/main.mtek::Demo.Marker",
+        "parent": null,
+        "mesh": "mesh:0",
+        "material": {
+          "id": "std/materials.mtek::Unlit",
+          "instance": 3
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 5,
+        "name": "Right",
+        "symbol": "src/main.mtek::Demo.Right",
+        "parent": null,
+        "mesh": null,
+        "material": null,
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [
+          {
+            "name": "seat_color",
+            "type": "color",
+            "symbol": "src/main.mtek::Demo.Right.seat_color"
+          },
+          {
+            "name": "angle",
+            "type": "f32",
+            "symbol": "src/main.mtek::Demo.Right.angle"
+          }
+        ],
+        "update": true,
+        "fixedUpdate": false
+      },
+      {
+        "index": 6,
+        "name": "Right.Seat",
+        "symbol": "src/main.mtek::Demo.Right.Seat",
+        "parent": 5,
+        "mesh": "mesh:0",
+        "material": {
+          "id": "std/materials.mtek::Pbr",
+          "instance": 4
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [
+          {
+            "name": "ticks",
+            "type": "i32",
+            "symbol": "src/main.mtek::Demo.Right.Seat.ticks"
+          },
+          {
+            "name": "captured",
+            "type": "color",
+            "symbol": "src/main.mtek::Demo.Right.Seat.captured"
+          }
+        ],
+        "update": true,
+        "fixedUpdate": false
+      },
+      {
+        "index": 7,
+        "name": "Right.Seat.Badge",
+        "symbol": "src/main.mtek::Demo.Right.Seat.Badge",
+        "parent": 6,
+        "mesh": "mesh:1",
+        "material": {
+          "id": "std/materials.mtek::Unlit",
+          "instance": 5
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 8,
+        "name": "Right.Back",
+        "symbol": "src/main.mtek::Demo.Right.Back",
+        "parent": 5,
+        "mesh": "mesh:0",
+        "material": {
+          "id": "std/materials.mtek::Pbr",
+          "instance": 6
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      }
+    ],
+    "materialInstances": [
+      {
+        "index": 0,
+        "material": "std/materials.mtek::Pbr",
+        "entity": 1,
+        "params": [
+          {
+            "name": "base_color",
+            "class": "bound",
+            "binding": 2
+          },
+          {
+            "name": "metallic",
+            "class": "initial"
+          },
+          {
+            "name": "roughness",
+            "class": "initial"
+          },
+          {
+            "name": "base_color_texture",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "texture.white"
+            }
+          },
+          {
+            "name": "base_color_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_repeat"
+            }
+          }
+        ],
+        "shareable": false
+      },
+      {
+        "index": 1,
+        "material": "std/materials.mtek::Unlit",
+        "entity": 2,
+        "params": [
+          {
+            "name": "color",
+            "class": "initial"
+          }
+        ],
+        "shareable": true
+      },
+      {
+        "index": 2,
+        "material": "std/materials.mtek::Pbr",
+        "entity": 3,
+        "params": [
+          {
+            "name": "base_color",
+            "class": "bound",
+            "binding": 4
+          },
+          {
+            "name": "metallic",
+            "class": "initial"
+          },
+          {
+            "name": "roughness",
+            "class": "initial"
+          },
+          {
+            "name": "base_color_texture",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "texture.white"
+            }
+          },
+          {
+            "name": "base_color_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_repeat"
+            }
+          }
+        ],
+        "shareable": false
+      },
+      {
+        "index": 3,
+        "material": "std/materials.mtek::Unlit",
+        "entity": 4,
+        "params": [
+          {
+            "name": "color",
+            "class": "initial"
+          }
+        ],
+        "shareable": true
+      },
+      {
+        "index": 4,
+        "material": "std/materials.mtek::Pbr",
+        "entity": 6,
+        "params": [
+          {
+            "name": "base_color",
+            "class": "bound",
+            "binding": 6
+          },
+          {
+            "name": "metallic",
+            "class": "initial"
+          },
+          {
+            "name": "roughness",
+            "class": "initial"
+          },
+          {
+            "name": "base_color_texture",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "texture.white"
+            }
+          },
+          {
+            "name": "base_color_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_repeat"
+            }
+          }
+        ],
+        "shareable": false
+      },
+      {
+        "index": 5,
+        "material": "std/materials.mtek::Unlit",
+        "entity": 7,
+        "params": [
+          {
+            "name": "color",
+            "class": "initial"
+          }
+        ],
+        "shareable": true
+      },
+      {
+        "index": 6,
+        "material": "std/materials.mtek::Pbr",
+        "entity": 8,
+        "params": [
+          {
+            "name": "base_color",
+            "class": "bound",
+            "binding": 8
+          },
+          {
+            "name": "metallic",
+            "class": "initial"
+          },
+          {
+            "name": "roughness",
+            "class": "initial"
+          },
+          {
+            "name": "base_color_texture",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "texture.white"
+            }
+          },
+          {
+            "name": "base_color_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_repeat"
+            }
+          }
+        ],
+        "shareable": false
+      }
+    ],
+    "bindings": [
+      {
+        "id": 0,
+        "target": {
+          "kind": "transform",
+          "entity": 4,
+          "field": "position"
+        },
+        "deps": [
+          {
+            "kind": "entityField",
+            "entity": 5,
+            "field": "position"
+          }
+        ],
+        "order": 8,
+        "span": 48
+      },
+      {
+        "id": 1,
+        "target": {
+          "kind": "transform",
+          "entity": 0,
+          "field": "rotation"
+        },
+        "deps": [
+          {
+            "kind": "entityState",
+            "entity": 0,
+            "name": "angle"
+          }
+        ],
+        "order": 0,
+        "span": 49
+      },
+      {
+        "id": 2,
+        "target": {
+          "kind": "param",
+          "instance": 0,
+          "name": "base_color"
+        },
+        "deps": [
+          {
+            "kind": "entityState",
+            "entity": 0,
+            "name": "seat_color"
+          }
+        ],
+        "order": 1,
+        "span": 50
+      },
+      {
+        "id": 3,
+        "target": {
+          "kind": "transform",
+          "entity": 2,
+          "field": "position"
+        },
+        "deps": [
+          {
+            "kind": "entityState",
+            "entity": 1,
+            "name": "ticks"
+          }
+        ],
+        "order": 2,
+        "span": 51
+      },
+      {
+        "id": 4,
+        "target": {
+          "kind": "param",
+          "instance": 2,
+          "name": "base_color"
+        },
+        "deps": [
+          {
+            "kind": "entityState",
+            "entity": 0,
+            "name": "seat_color"
+          }
+        ],
+        "order": 3,
+        "span": 52
+      },
+      {
+        "id": 5,
+        "target": {
+          "kind": "transform",
+          "entity": 5,
+          "field": "rotation"
+        },
+        "deps": [
+          {
+            "kind": "entityState",
+            "entity": 5,
+            "name": "angle"
+          }
+        ],
+        "order": 4,
+        "span": 49
+      },
+      {
+        "id": 6,
+        "target": {
+          "kind": "param",
+          "instance": 4,
+          "name": "base_color"
+        },
+        "deps": [
+          {
+            "kind": "entityState",
+            "entity": 5,
+            "name": "seat_color"
+          }
+        ],
+        "order": 5,
+        "span": 50
+      },
+      {
+        "id": 7,
+        "target": {
+          "kind": "transform",
+          "entity": 7,
+          "field": "position"
+        },
+        "deps": [
+          {
+            "kind": "entityState",
+            "entity": 6,
+            "name": "ticks"
+          }
+        ],
+        "order": 6,
+        "span": 51
+      },
+      {
+        "id": 8,
+        "target": {
+          "kind": "param",
+          "instance": 6,
+          "name": "base_color"
+        },
+        "deps": [
+          {
+            "kind": "entityState",
+            "entity": 5,
+            "name": "seat_color"
+          }
+        ],
+        "order": 7,
+        "span": 52
+      }
+    ],
+    "hostInputs": [],
+    "lights": []
+  }
+}

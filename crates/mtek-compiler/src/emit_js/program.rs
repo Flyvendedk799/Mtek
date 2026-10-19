@@ -326,7 +326,10 @@ fn emit_prefabs(
 ) -> Result<PrefabParts, String> {
     let mut stmts = Vec::new();
     let mut table = Vec::new();
-    for prefab in program.prefabs() {
+    for prefab in program
+        .prefabs()
+        .filter(|prefab| prefab.children.is_empty())
+    {
         let prefix = prefab_prefix(&prefab.symbol)?;
         let init = format!("{prefix}_init");
         let behaviors = emit_prefab_behaviors(prefab, &prefix, flags, span_id)?;
@@ -410,15 +413,6 @@ enum Declaration<'a> {
     Entity(&'a Entity),
 }
 
-impl Declaration<'_> {
-    fn start(&self) -> u32 {
-        match self {
-            Declaration::Camera(camera) => camera.span.start,
-            Declaration::Entity(entity) => entity.span.start,
-        }
-    }
-}
-
 /// `target = initialiser;` for `state`: `ctx.s.name` or `ctx.e[i].state.name`
 /// (`self.state.name` in the `init` of a prefab, where entity 0 is `self`).
 fn state_statement(
@@ -450,14 +444,25 @@ fn init_body(
     plan: &ResourcePlan,
     span_id: &mut dyn FnMut(crate::source::Span) -> Result<u32, String>,
 ) -> Result<Vec<Stmt>, String> {
-    // The active camera and the entities, in declaration order. Entities are already in
-    // pre-order (increasing start); a stable sort places the camera among them.
+    // The active camera and entity roots follow scene declaration order. Keep each root
+    // with its pre-order descendants: imported prefab spans are from a different file
+    // and cannot be sorted against the scene (or against their own instance root).
     let mut declarations: Vec<Declaration<'_>> = Vec::with_capacity(scene.entities.len() + 1);
-    if let Some(camera) = scene.active_camera() {
+    let mut camera = scene.active_camera();
+    for entity in &scene.entities {
+        if entity.parent.is_none()
+            && camera.is_some_and(|c| {
+                c.span.file == entity.span.file && c.span.start < entity.span.start
+            })
+            && let Some(c) = camera.take()
+        {
+            declarations.push(Declaration::Camera(c));
+        }
+        declarations.push(Declaration::Entity(entity));
+    }
+    if let Some(camera) = camera {
         declarations.push(Declaration::Camera(camera));
     }
-    declarations.extend(scene.entities.iter().map(Declaration::Entity));
-    declarations.sort_by_key(Declaration::start);
 
     let mut body = Vec::new();
     // Scene state first, in declaration order (`spec/scenes.md` section 11, step 2).

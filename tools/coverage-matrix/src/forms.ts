@@ -156,6 +156,7 @@ export const FORMS: readonly Form[] = [
   ]),
   ...forms("project", "spec/runtime-abi.md sections 3 and 6.3, spec/tooling.md section 3", [
     ["project/host-inputs", "host inputs (`[host.inputs]`)"],
+    ["project/host-outputs", "read-only scene outputs (`[host.outputs]`)"],
     ["project/host-input-codec:f32", "host input codec `f32`"],
     ["project/host-input-codec:i32", "host input codec `i32`"],
     ["project/host-input-codec:u32", "host input codec `u32`"],

@@ -241,3 +241,240 @@ fn a_program_without_prefabs_has_no_prefab_items_and_no_instances() {
     let json = serde_json::to_string(&program).unwrap();
     assert!(!json.contains("\"prefab\""), "{json}");
 }
+
+const ASSEMBLY: &str = r#"
+export prefab Chair {
+    param origin: vec3;
+    param tint: color = #123456;
+    param height: f32 = 1.0;
+    state seat_color: color = tint;
+    state angle: f32 = 0.0;
+    position: origin;
+    rotation: bind(quat.axis_angle(vec3(0.0, 1.0, 0.0), angle));
+    entity Seat {
+        state ticks: i32 = 0;
+        state captured: color = seat_color;
+        position: vec3(0.0, height, 0.0);
+        scale: vec3(2.0, 0.2, 2.0);
+        mesh: Box {};
+        material: Pbr { base_color: bind(seat_color); };
+        update(dt: f32) { self.ticks += 1; }
+        on key_down(Key.Space) { self.visible = false; }
+        entity Badge {
+            position: bind(vec3(f32(Seat.ticks), 0.0, 0.0));
+            mesh: Sphere {};
+            material: Unlit { color: tint; };
+        }
+    }
+    entity Back {
+        mesh: Box {};
+        material: Pbr { base_color: bind(seat_color); };
+        position: vec3(0.0, 2.0, -1.0);
+    }
+    update(dt: f32) { self.angle += dt; }
+}
+"#;
+
+fn assembly_program() -> Program {
+    let mut fs = project(
+        r#"
+import { Chair } from "./chair.mtek";
+scene Demo {
+    camera Main {}
+    entity Left: Chair { origin: vec3(-3.0, 0.0, 0.0); }
+    entity Marker { mesh: Box {}; position: bind(Right.position); }
+    entity Right: Chair { origin: vec3(3.0, 0.0, 0.0); tint: #abcdef; }
+    update(dt: f32) { Right.seat_color = #ff0000; }
+}
+"#,
+    );
+    fs.insert(ProjectPath::new("src/chair.mtek").unwrap(), ASSEMBLY);
+    let analysis = crate::analyze(&ProjectRoot::at_base(), &fs);
+    assert!(!analysis.has_errors(), "{:#?}", analysis.report.diagnostics);
+    lower_to_ir(&analysis).expect("assembly lowered")
+}
+
+#[test]
+fn imported_assemblies_expand_in_preorder_with_remapped_scene_and_child_references() {
+    let program = assembly_program();
+    let scene = demo(&program);
+    assert_eq!(
+        scene
+            .entities
+            .iter()
+            .map(|e| (e.name.as_str(), e.parent))
+            .collect::<Vec<_>>(),
+        [
+            ("Left", None),
+            ("Left.Seat", Some(0)),
+            ("Left.Seat.Badge", Some(1)),
+            ("Left.Back", Some(0)),
+            ("Marker", None),
+            ("Right", None),
+            ("Right.Seat", Some(5)),
+            ("Right.Seat.Badge", Some(6)),
+            ("Right.Back", Some(5))
+        ]
+    );
+    assert_eq!(
+        scene.entities[7].symbol.as_str(),
+        "src/main.mtek::Demo.Right.Seat.Badge"
+    );
+    assert_eq!(
+        scene.entities[0].position.source,
+        Source::Const(Value::Vec3([-3.0, 0.0, 0.0]))
+    );
+    assert_eq!(
+        scene.entities[5].position.source,
+        Source::Const(Value::Vec3([3.0, 0.0, 0.0]))
+    );
+    let marker = &scene.bindings[0];
+    assert_eq!(
+        marker.target,
+        BindingTarget::Transform {
+            entity: 4,
+            field: "position".into()
+        }
+    );
+    assert!(matches!(
+        &marker.expr.kind,
+        ExprKind::EntityField { entity: 5, .. }
+    ));
+    let colors: Vec<_> = scene
+        .bindings
+        .iter()
+        .filter_map(|b| match &b.target {
+            BindingTarget::Param { entity, name } if name == "base_color" => {
+                Some((*entity, b.deps.clone()))
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        colors,
+        vec![
+            (
+                1,
+                vec![BindingDep::EntityState {
+                    entity: 0,
+                    name: "seat_color".into()
+                }]
+            ),
+            (
+                3,
+                vec![BindingDep::EntityState {
+                    entity: 0,
+                    name: "seat_color".into()
+                }]
+            ),
+            (
+                6,
+                vec![BindingDep::EntityState {
+                    entity: 5,
+                    name: "seat_color".into()
+                }]
+            ),
+            (
+                8,
+                vec![BindingDep::EntityState {
+                    entity: 5,
+                    name: "seat_color".into()
+                }]
+            ),
+        ]
+    );
+    let child_states: Vec<_> = scene
+        .state
+        .iter()
+        .filter(|s| s.name == "ticks")
+        .map(|s| (s.symbol.as_str(), s.owner))
+        .collect();
+    assert_eq!(
+        child_states,
+        [
+            (
+                "src/main.mtek::Demo.Left.Seat.ticks",
+                Owner::Entity { index: 1 }
+            ),
+            (
+                "src/main.mtek::Demo.Right.Seat.ticks",
+                Owner::Entity { index: 6 }
+            )
+        ]
+    );
+    assert_eq!(
+        scene.behaviors.iter().map(|b| b.owner).collect::<Vec<_>>(),
+        [
+            Owner::Scene,
+            Owner::Entity { index: 0 },
+            Owner::Entity { index: 1 },
+            Owner::Entity { index: 1 },
+            Owner::Entity { index: 5 },
+            Owner::Entity { index: 6 },
+            Owner::Entity { index: 6 }
+        ]
+    );
+    let Stmt::Assign { target, .. } = &scene.behaviors[0].body.stmts[0] else {
+        panic!("assignment")
+    };
+    assert!(matches!(
+        target.root,
+        PlaceRoot::State {
+            owner: Owner::Entity { index: 5 },
+            ..
+        }
+    ));
+}
+
+#[test]
+fn assembly_spawn_is_rejected_even_when_its_declaration_follows_the_caller() {
+    let source = format!(
+        "scene Demo {{ camera Main {{}} on key_down(Key.Space) {{ let x = spawn(Chair {{ origin: vec3(0.0) }}); }} }}\n{ASSEMBLY}"
+    );
+    let analysis = crate::analyze(&ProjectRoot::at_base(), &project(&source));
+    assert!(
+        analysis
+            .report
+            .diagnostics
+            .iter()
+            .any(|d| d.code.short() == "E5040")
+    );
+}
+
+#[test]
+fn an_imported_static_assembly_cannot_be_spawned() {
+    let mut fs = project(
+        r#"import { Chair } from "./chair.mtek";
+scene Demo { camera Main {} on key_down(Key.Space) { spawn(Chair { origin: vec3(0.0) }); } }"#,
+    );
+    fs.insert(ProjectPath::new("src/chair.mtek").unwrap(), ASSEMBLY);
+    let analysis = crate::analyze(&ProjectRoot::at_base(), &fs);
+    assert_eq!(
+        analysis
+            .report
+            .diagnostics
+            .iter()
+            .map(|d| d.code.short())
+            .collect::<Vec<_>>(),
+        ["E5040"]
+    );
+}
+
+#[test]
+fn expanded_parts_count_toward_the_static_entity_limit() {
+    let mut source = String::from("prefab Pair { entity Part {} } scene Demo { camera Main {} ");
+    for index in 0..=crate::types::scene::MAX_STATIC_ENTITIES / 2 {
+        source.push_str(&format!("entity P{index}: Pair {{}}\n"));
+    }
+    source.push('}');
+    let analysis = crate::analyze(&ProjectRoot::at_base(), &project(&source));
+    assert_eq!(
+        analysis
+            .report
+            .diagnostics
+            .iter()
+            .map(|d| d.code.short())
+            .collect::<Vec<_>>(),
+        ["E5092"]
+    );
+}

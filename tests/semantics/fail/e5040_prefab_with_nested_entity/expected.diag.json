@@ -2,20 +2,19 @@
   {
     "code": "MTEK-E5040",
     "file": "src/main.mtek",
-    "startByte": 104,
-    "endByte": 107,
-    "message": "The prefab 'Crate' declares the entity 'Lid', but a prefab describes exactly one entity.",
+    "startByte": 136,
+    "endByte": 139,
+    "message": "The prefab 'Crate' contains the prefab instance 'Lid'; nested prefab instances are not supported in static assemblies.",
     "related": [
       {
         "message": "the prefab is declared here",
         "file": "src/main.mtek",
-        "startByte": 67,
-        "endByte": 72
+        "startByte": 117,
+        "endByte": 122
       }
     ],
     "notes": [
-      "a prefab is a template for one entity, so its fields (`mesh`, `material`, `position`, ...) are written directly in the prefab; prefabs with children are not part of v0.1",
-      "help: declare the structure in the scene, where an `entity` inside another `entity` is its child and moves with it, or declare one prefab for each part and place each with `entity Name: PrefabName { ... }`"
+      "help: declare ordinary child entities inside the prefab, or instantiate both prefabs in the scene"
     ]
   }
 ]

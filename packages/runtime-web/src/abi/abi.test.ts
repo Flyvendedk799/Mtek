@@ -87,6 +87,7 @@ describe("compiled manifests (tests/codegen/*/expected)", () => {
       "bindings",
       "builtin_params",
       "builtin_params_edited",
+      "compound_prefabs",
       "cpu_functions",
       "light_bindings",
       "light_bindings_edited",

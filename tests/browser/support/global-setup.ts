@@ -22,6 +22,7 @@ import { buildCli, buildM1Fixtures } from "./m1-fixtures.ts";
 import { buildM2Fixtures } from "./m2-fixtures.ts";
 import { buildPulseCube, buildPulseCubeVariants } from "./m3-fixtures.ts";
 import { buildConfigurator } from "./m4-configurator.ts";
+import { buildProductConfigurator } from "./product-configurator.ts";
 import { buildM4Fixtures } from "./m4-fixtures.ts";
 import { buildM5Fixtures } from "./m5-fixtures.ts";
 import { buildM6Fixtures } from "./m6-fixtures.ts";
@@ -113,6 +114,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   buildTextureSamplingFixture(cli);
   // M4-10: the material configurator example, its host page and the repeated-object variant, in `.out/m4-configurator/`.
   buildConfigurator(cli);
+  buildProductConfigurator(cli);
   // M5-01: static instances of prefabs, in `.out/m5/`.
   buildM5Fixtures(cli);
   // M5-07: the physics playground example, in `.out/m5-playground/`.

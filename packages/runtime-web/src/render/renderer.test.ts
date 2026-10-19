@@ -5,8 +5,9 @@ import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types
 import type { MountedApp } from "../host/app.js";
 import { mountMtekWith } from "../host/mount.js";
 import type { MtekApp, MtekDebug, MtekMountOptions } from "../host/types.js";
-import { lookAt, multiply, normalMatrix, perspective, translation } from "../math/mat4.js";
-import { RuntimeInternalError } from "../scene/world.js";
+import { fromRotationTranslationScale, lookAt, multiply, normalMatrix, perspective, translation, type Mat4 } from "../math/mat4.js";
+import { checkProgram } from "../scene/program.js";
+import { RuntimeInternalError, type EntityRecord } from "../scene/world.js";
 import { FakePhysicsBackend } from "../test-support/fake-physics.js";
 import {
   BASE_URL,
@@ -657,7 +658,20 @@ describe("the golden programs end to end on the fake GPU", () => {
     const physicsModule = golden.manifest.subsystems.physicsModule;
     if (physicsModule !== undefined) host.modules.set(new URL(physicsModule, golden.program.baseUrl).href, physics.module);
     const reported: MtekDiagnostic[] = [];
-    const app = await mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), golden.program, {
+    const checked = checkProgram(golden.program, golden.manifest);
+    if (!checked.ok) throw new Error("invalid golden program");
+    // Observe the same local TRS records generated code receives, without exposing world matrices to the oracle.
+    // The public debug snapshot omits named entities' scale, which matters for nested assemblies.
+    let records: readonly EntityRecord[] = [];
+    const scene = checked.program.scene;
+    const program = { ...golden.program, scenes: { [golden.manifest.entryScene]: {
+      ...scene,
+      init: (ctx: object): void => {
+        records = (ctx as { e: readonly EntityRecord[] }).e;
+        scene.init(ctx);
+      },
+    } } };
+    const app = await mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), program, {
       test: { manualClock: true, renderTarget: TARGET },
       onDiagnostic: (d) => reported.push(d),
     });
@@ -673,18 +687,26 @@ describe("the golden programs end to end on the fake GPU", () => {
       ...blockCounters(name, golden.manifest.scene.materialInstances.length),
       liveEntities: golden.manifest.scene.entities.length,
     });
-    // Every object block holds its entity's world translation (read at the layout's offset).
+    // Every object block holds the complete world matrix: W = W_parent * T * R * S at every depth.
+    // Translation addition alone misses rotated/scaled descendants and nested ancestors.
     const object = bufferLabelled(host, "mtek:uniform-arena:builtin:object");
     const modelOffset = memberOffset(golden.manifest, "builtin:object", "model");
-    const positions = debug.scene().entities.map((entity) => entity.position as { x: number; y: number; z: number });
+    const worlds: Mat4[] = [];
+    let objectSlot = 0;
     golden.manifest.scene.entities.forEach((entity, index) => {
-      const model = floats(object, index * 256 + modelOffset, 16);
-      let expected = positions[index] ?? { x: 0, y: 0, z: 0 };
-      if (entity.parent !== null) {
-        const parent = positions[entity.parent] ?? { x: 0, y: 0, z: 0 };
-        expected = { x: parent.x + expected.x, y: parent.y + expected.y, z: parent.z + expected.z };
+      const record = records[index];
+      if (record === undefined) throw new Error(`missing local transform for ${entity.name}`);
+      const local = fromRotationTranslationScale(record.rotation, record.position, record.scale);
+      const parent = entity.parent === null ? undefined : worlds[entity.parent];
+      if (entity.parent !== null && parent === undefined) throw new Error(`missing parent of ${entity.name}`);
+      const expected = parent === undefined ? local : multiply(parent, local);
+      worlds.push(expected);
+      // Meshless assembly roots propagate transforms but own no renderer object slot.
+      if (entity.mesh !== null) {
+        const model = floats(object, objectSlot * 256 + modelOffset, 16);
+        expect(model, entity.name).toEqual(expected);
+        objectSlot += 1;
       }
-      expect([model[12], model[13], model[14]], entity.name).toEqual([expected.x, expected.y, expected.z].map(Math.fround));
     });
     expect(reported).toEqual([]);
     // The physics module is requested exactly when the manifest asks for it, and the bodies of the scene exist.

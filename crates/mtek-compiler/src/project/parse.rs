@@ -31,7 +31,7 @@ use crate::source::{LineIndex, ProjectPath};
 const SCHEMA: [(&str, &[&str]); 6] = [
     ("project", &["name", "language", "entry", "scene"]),
     ("build", &["target", "out_dir", "title"]),
-    ("host", &["inputs"]),
+    ("host", &["inputs", "outputs"]),
     (
         "runtime",
         &[
@@ -388,7 +388,12 @@ impl Validator {
             Section::Invalid => None,
         };
         let host_inputs = match host_table {
-            Section::Present(table, _) => self.host(table),
+            Section::Present(table, _) => self.host(table, "inputs"),
+            Section::Absent => Some(BTreeMap::new()),
+            Section::Invalid => None,
+        };
+        let host_outputs = match host_table {
+            Section::Present(table, _) => self.host(table, "outputs"),
             Section::Absent => Some(BTreeMap::new()),
             Section::Invalid => None,
         };
@@ -410,12 +415,14 @@ impl Validator {
 
         let (project, build) = (project?, build?);
         let host_inputs = host_inputs?;
+        let host_outputs = host_outputs?;
         let (runtime, dev, assets) = (runtime?, dev?, assets?);
         let build = self.finish_build(build, &project, root)?;
         Some(ProjectConfig {
             project,
             build,
             host_inputs,
+            host_outputs,
             runtime,
             dev,
             assets,
@@ -625,16 +632,26 @@ impl Validator {
         })
     }
 
-    fn host(&mut self, table: &DeTable<'_>) -> Option<BTreeMap<String, String>> {
-        let Some(inputs) = table.get("inputs") else {
+    fn host(&mut self, table: &DeTable<'_>, direction: &str) -> Option<BTreeMap<String, String>> {
+        let Some(inputs) = table.get(direction) else {
             return Some(BTreeMap::new());
         };
-        let inputs_table = self.table("host.inputs", inputs)?;
+        let path = format!("host.{direction}");
+        let inputs_table = self.table(&path, inputs)?;
         let mut parsed = BTreeMap::new();
         let mut valid = true;
         for (key, value) in inputs_table.iter() {
             let name: &str = key.get_ref().as_ref();
-            match self.string(&child_path("host.inputs", name), value) {
+            if direction == "outputs" && name.is_empty() {
+                self.invalid(
+                    key.span().start,
+                    "Invalid project configuration: host.outputs names must not be empty."
+                        .to_owned(),
+                );
+                valid = false;
+                continue;
+            }
+            match self.string(&child_path(&path, name), value) {
                 Some(target) => {
                     parsed.insert(name.to_owned(), target.to_owned());
                 }

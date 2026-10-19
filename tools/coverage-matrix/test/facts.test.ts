@@ -224,3 +224,12 @@ describe("manifestFacts", () => {
     expect(manifestFacts({ subsystems: { physics: false }, assets: [], materials: [], scene: { hostInputs: [], lights: [] } }).size).toBe(0);
   });
 });
+
+
+describe("host output manifest facts", () => {
+  it("counts declared outputs and preserves old manifests", () => {
+    expect(manifestFacts({ scene: {} }).has("project/host-outputs")).toBe(false);
+    expect(manifestFacts({ scene: { hostOutputs: [] } }).has("project/host-outputs")).toBe(false);
+    expect(manifestFacts({ scene: { hostOutputs: [{ name: "total", source: { kind: "state", name: "total" }, type: "f32" }] } }).has("project/host-outputs")).toBe(true);
+  });
+});

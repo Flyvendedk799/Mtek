@@ -1,0 +1,5 @@
+prefab Chair {
+    entity Seat { position: bind(Back.position); }
+    entity Back { position: bind(Seat.position); }
+}
+scene Demo { camera Main {} entity Left: Chair {} }

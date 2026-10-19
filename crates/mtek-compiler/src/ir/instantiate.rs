@@ -3,7 +3,7 @@
 //! everything downstream of the IR — the resource plan, the manifest, `init`, the events and
 //! bindings tables — sees an ordinary entity.
 //!
-//! The pass copies the prefab's template (entity 0 of its one-entity IR) into the instance:
+//! The pass copies the prefab's root and descendants into each static instance:
 //!
 //! * the fields, the mesh and the material instance, with the params of the instance
 //!   substituted for the reads of the params in [`Source::Expr`] values;
@@ -67,6 +67,7 @@ fn instantiate_scene(
             continue;
         };
         let symbol = entity.symbol.clone();
+        let instance_name = entity.name.clone();
         let template = prefabs.get(&instance.prefab).ok_or_else(|| {
             format!(
                 "the prefab '{}' of the entity '{symbol}' is not a prefab of the program",
@@ -87,8 +88,14 @@ fn instantiate_scene(
             bindings.insert(binding.id, next_id);
             next_id += 1;
         }
+        let mut entity_indices = vec![static_index];
+        for offset in 0..template.children.len() {
+            entity_indices.push(
+                u32::try_from(scene.entities.len() + offset).map_err(|_| "too many entities")?,
+            );
+        }
         let sub = Substitution {
-            entity: static_index,
+            entities: &entity_indices,
             params: &instance.params,
             bindings: &bindings,
         };
@@ -108,10 +115,21 @@ fn instantiate_scene(
             entity.body = template_entity.body.clone();
             entity.collider = template_entity.collider.clone();
         }
+        for child in &template.children {
+            let mut copy = sub.entity(child)?;
+            copy.symbol = instance_symbol(&child.symbol, &template.symbol, &symbol)?;
+            let path = child
+                .symbol
+                .as_str()
+                .strip_prefix(template.symbol.as_str())
+                .ok_or("a prefab child has an invalid symbol")?;
+            copy.name = format!("{instance_name}{path}");
+            scene.entities.push(copy);
+        }
         for state in &template.state {
             scene.state.push(State {
                 name: state.name.clone(),
-                symbol: symbol.child(&state.name),
+                symbol: instance_symbol(&state.symbol, &template.symbol, &symbol)?,
                 ty: state.ty.clone(),
                 owner: sub.owner(state.owner),
                 init: sub.expr(&state.init)?,
@@ -150,13 +168,8 @@ fn instantiate_scene(
         binding.order += shift;
     }
     scene.bindings.extend(instance_bindings);
-    // Stable instance order (`spec/scenes.md` section 10.1): the scene's, then each entity's.
-    let key = |owner: Owner| match owner {
-        Owner::Scene => 0,
-        Owner::Entity { index } => index.saturating_add(1),
-    };
-    scene.state.sort_by_key(|state| key(state.owner));
-    scene.behaviors.sort_by_key(|behavior| key(behavior.owner));
+    // Remap appended assembly parts into depth-first pre-order, including all references in
+    // existing scene code. Apply the scene's material writes before indices change.
     for mark in marks.iter().filter(|mark| mark.scene == scene.symbol) {
         let params = scene
             .entities
@@ -167,6 +180,74 @@ fn instantiate_scene(
             slot.update = UpdateClass::Imperative;
         }
     }
+    reorder_entities(scene)?;
+    // Stable instance order (`spec/scenes.md` section 10.1): the scene's, then each entity's.
+    let key = |owner: Owner| match owner {
+        Owner::Scene => 0,
+        Owner::Entity { index } => index.saturating_add(1),
+    };
+    scene.state.sort_by_key(|state| key(state.owner));
+    scene.behaviors.sort_by_key(|behavior| key(behavior.owner));
+    Ok(())
+}
+
+/// A copied member keeps its path beneath the instance, including child entity names.
+fn instance_symbol(symbol: &Symbol, prefab: &Symbol, instance: &Symbol) -> Result<Symbol> {
+    let suffix = symbol
+        .as_str()
+        .strip_prefix(prefab.as_str())
+        .and_then(|rest| rest.strip_prefix('.'))
+        .ok_or_else(|| format!("'{symbol}' is not a member of '{prefab}'"))?;
+    Ok(instance.child(suffix))
+}
+
+fn reorder_entities(scene: &mut Scene) -> Result<()> {
+    let mut children = vec![Vec::new(); scene.entities.len()];
+    let mut roots = Vec::new();
+    for entity in &scene.entities {
+        if let Some(parent) = entity.parent {
+            children
+                .get_mut(parent as usize)
+                .ok_or("invalid entity parent")?
+                .push(entity.index);
+        } else {
+            roots.push(entity.index);
+        }
+    }
+    let mut order = Vec::with_capacity(scene.entities.len());
+    let mut stack: Vec<_> = roots.into_iter().rev().collect();
+    while let Some(index) = stack.pop() {
+        order.push(index);
+        stack.extend(children[index as usize].iter().rev().copied());
+    }
+    let mut indices = vec![0; order.len()];
+    for (new, &old) in order.iter().enumerate() {
+        indices[old as usize] = u32::try_from(new).map_err(|_| "too many entities")?;
+    }
+    let bindings = scene.bindings.iter().map(|b| (b.id, b.id)).collect();
+    let sub = Substitution {
+        entities: &indices,
+        params: &[],
+        bindings: &bindings,
+    };
+    scene.entities = order
+        .iter()
+        .map(|&old| sub.entity(&scene.entities[old as usize]))
+        .collect::<Result<_>>()?;
+    for state in &mut scene.state {
+        state.owner = sub.owner(state.owner);
+        state.init = sub.expr(&state.init)?;
+    }
+    scene.behaviors = scene
+        .behaviors
+        .iter()
+        .map(|b| sub.behavior(b, &scene.symbol, &scene.symbol))
+        .collect::<Result<_>>()?;
+    scene.bindings = scene
+        .bindings
+        .iter()
+        .map(|b| sub.binding(b, &scene.symbol))
+        .collect::<Result<_>>()?;
     Ok(())
 }
 
@@ -205,10 +286,10 @@ fn vector_constant(ty: &str, args: &[Expr]) -> Option<Value> {
     }
 }
 
-/// The copy of a prefab's template for the instance whose static index is `entity`.
+/// The index and parameter substitution for a copied prefab or a scene reordered after expansion.
 struct Substitution<'a> {
-    /// The static index of the instance: entity 0 of the prefab's IR.
-    entity: u32,
+    /// Template-local index to scene index, including every assembly part.
+    entities: &'a [u32],
     /// The instance's param values, in the prefab's order.
     params: &'a [NamedValue],
     /// The prefab's binding ids and the scene's ids of the instance's copies.
@@ -220,14 +301,35 @@ type Result<T, E = String> = std::result::Result<T, E>;
 impl Substitution<'_> {
     fn owner(&self, owner: Owner) -> Owner {
         match owner {
-            Owner::Entity { index: 0 } => Owner::Entity { index: self.entity },
+            Owner::Entity { index } => Owner::Entity {
+                index: self.index(index),
+            },
             other => other,
         }
     }
 
     /// `entity` of the prefab's IR (0 is `self`) as a static index of the scene.
     fn index(&self, entity: u32) -> u32 {
-        if entity == 0 { self.entity } else { entity }
+        self.entities
+            .get(entity as usize)
+            .copied()
+            .unwrap_or(entity)
+    }
+
+    fn entity(&self, entity: &super::model::Entity) -> Result<super::model::Entity> {
+        let mut copy = entity.clone();
+        copy.index = self.index(entity.index);
+        copy.parent = entity.parent.map(|parent| self.index(parent));
+        copy.position = self.field(&entity.position)?;
+        copy.rotation = self.field(&entity.rotation)?;
+        copy.scale = self.field(&entity.scale)?;
+        copy.visible = self.field(&entity.visible)?;
+        copy.material = entity
+            .material
+            .as_ref()
+            .map(|m| self.material(m))
+            .transpose()?;
+        Ok(copy)
     }
 
     fn binding_id(&self, id: u32) -> Result<u32> {
@@ -288,21 +390,10 @@ impl Substitution<'_> {
         prefab: &Symbol,
         instance: &Symbol,
     ) -> Result<Behavior> {
-        let suffix = behavior
-            .symbol
-            .as_str()
-            .strip_prefix(prefab.as_str())
-            .and_then(|rest| rest.strip_prefix('.'))
-            .ok_or_else(|| {
-                format!(
-                    "the behaviour '{}' is not named after its prefab '{prefab}'",
-                    behavior.symbol
-                )
-            })?;
         Ok(Behavior {
             kind: behavior.kind.clone(),
             owner: self.owner(behavior.owner),
-            symbol: instance.child(suffix),
+            symbol: instance_symbol(&behavior.symbol, prefab, instance)?,
             locals: behavior.locals.clone(),
             body: self.block(&behavior.body)?,
             span: behavior.span,

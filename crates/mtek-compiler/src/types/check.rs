@@ -257,7 +257,7 @@ pub(super) struct Checker<'a> {
     /// [`super::check_module_with_imports`], decision 0062).
     pub(super) imported_prefabs: BTreeMap<DefId, super::PrefabInfo>,
     /// The prefab whose declaration is being checked: its fields, state, bindings, lifecycle
-    /// functions and handlers are those of the one entity it describes.
+    /// functions and handlers belong to its root or ordinary descendants.
     pub(super) current_prefab: Option<DefId>,
     /// The descriptor literals of the `material` of a prefab: a param of one whose value is not
     /// constant is computed by the prefab's `init` (see [`Self::fold_descriptor`]).
@@ -268,6 +268,8 @@ pub(super) struct Checker<'a> {
     /// The params of every prefab the module declares, by its declaration: checked before any
     /// prefab body, so that a `spawn` finds its prefab wherever it is declared (decision 0064).
     pub(super) prefab_params: BTreeMap<DefId, Vec<super::PrefabParam>>,
+    /// Root plus descendants, known before bodies so forward spawn references are checked.
+    pub(super) prefab_entity_counts: BTreeMap<DefId, usize>,
     /// The prefab literal that is the argument of the `spawn` being checked (decision 0064).
     pub(super) spawn_argument: Option<NodeId>,
 }
@@ -332,6 +334,7 @@ impl<'a> Checker<'a> {
             dynamic_descriptors: BTreeSet::new(),
             instances: BTreeMap::new(),
             prefab_params: BTreeMap::new(),
+            prefab_entity_counts: BTreeMap::new(),
             spawn_argument: None,
         }
     }
@@ -463,7 +466,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    fn collect_entity_constants(&mut self, entity: &'a EntityDecl) {
+    pub(super) fn collect_entity_constants(&mut self, entity: &'a EntityDecl) {
         if entity.prefab.is_some() {
             // Prefab instances are gated in this build.
             return;
@@ -523,7 +526,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    fn entity(&mut self, entity: &EntityDecl) {
+    pub(super) fn entity(&mut self, entity: &EntityDecl) {
         if !construct_implemented(Construct::Entity) {
             return;
         }

@@ -21,6 +21,7 @@
 mod config;
 mod graph;
 mod host_inputs;
+mod host_outputs;
 mod load;
 mod modules;
 mod parse;
@@ -40,6 +41,7 @@ pub use config::{
 };
 pub use graph::{GraphError, Import, ImportCycle, MAX_MODULES, Module, ModuleGraph, ModuleId};
 pub use host_inputs::{ResolvedHostInput, states_feeding_opaque_color, validate_host_inputs};
+pub use host_outputs::{ResolvedHostOutput, validate_host_outputs};
 pub use load::Project;
 pub(crate) use load::path_differing_in_case;
 pub use modules::{ImportLink, LoadedModule, load_modules, report_cycles};

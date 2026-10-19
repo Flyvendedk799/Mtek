@@ -1185,9 +1185,14 @@ impl Lowering<'_> {
         ctx: &SceneCtx,
     ) -> Result<Vec<Binding>, Defect> {
         let mut sources: BTreeMap<ast::NodeId, &ast::Bind> = BTreeMap::new();
-        for member in &decl.members {
-            if let ast::EntityMember::Field(field) = member {
-                field_binds(field, &mut sources);
+        let mut pending = vec![decl.members.as_slice()];
+        while let Some(members) = pending.pop() {
+            for member in members {
+                match member {
+                    ast::EntityMember::Field(field) => field_binds(field, &mut sources),
+                    ast::EntityMember::Entity(child) => pending.push(&child.members),
+                    _ => {}
+                }
             }
         }
         self.owner_bindings(Some(def), &sources, prefab, ctx)

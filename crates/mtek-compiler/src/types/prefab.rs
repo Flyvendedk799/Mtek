@@ -3,7 +3,8 @@
 //! * **The declaration.** A prefab body has the members of an entity body and `param`s. It is
 //!   checked once, in its own module, before any scene (so that an instance finds it): its params
 //!   (type, default), its fields, constants, `state`, lifecycle functions, handlers and `bind`s,
-//!   all against `self`, the one entity it describes. A nested `entity` is `E5040`. A field value
+//!   with `self` for each part. Ordinary descendants form static assemblies; nested prefab instances
+//!   and spawning an assembly are `E5040`. A field value
 //!   may read the prefab's params, constants and state ([`Checker::prefab_field_value`]): the
 //!   prefab's `init` computes it for each instance. A scene name is not in scope (`E2003`, the
 //!   resolver's), and a `light` is `E5110` (`types/scene.rs`).
@@ -41,6 +42,7 @@ use crate::syntax::ast::{
 #[derive(Clone, Debug)]
 pub(super) struct InstanceFacts {
     pub(super) prefab_name: String,
+    pub(super) entity_count: usize,
     /// The prefab's `state`.
     pub(super) states: Vec<(String, TyId)>,
     /// The params of the prefab's user material instance.
@@ -89,8 +91,10 @@ impl<'a> Checker<'a> {
     /// needs.
     pub(super) fn collect_prefab_constants(&mut self, decl: &'a PrefabDecl) {
         for member in &decl.members {
-            if let EntityMember::Const(constant) = member {
-                self.collect_constant(constant);
+            match member {
+                EntityMember::Const(constant) => self.collect_constant(constant),
+                EntityMember::Entity(child) => self.collect_entity_constants(child),
+                _ => {}
             }
         }
     }
@@ -108,9 +112,20 @@ impl<'a> Checker<'a> {
         let params = self.prefab_params(decl);
         self.current_prefab = previous;
         self.prefab_params.insert(def, params);
+        let mut count = 1;
+        let mut members = vec![decl.members.as_slice()];
+        while let Some(body) = members.pop() {
+            for member in body {
+                if let EntityMember::Entity(child) = member {
+                    count += 1;
+                    members.push(&child.members);
+                }
+            }
+        }
+        self.prefab_entity_counts.insert(def, count);
     }
 
-    /// Check the prefab `decl`: nested entities (`E5040`), params, fields, constants, state,
+    /// Check the prefab `decl`: assembly restrictions, params, fields, constants, state,
     /// bindings, lifecycle functions and handlers, then record its [`PrefabInfo`].
     pub(super) fn prefab(&mut self, decl: &PrefabDecl) {
         let (Some(def), true) = (
@@ -144,7 +159,8 @@ impl<'a> Checker<'a> {
                 EntityMember::State(state) if construct_implemented(Construct::State) => {
                     self.state_init(state, Some(def));
                 }
-                // Params are checked above; nested entities were reported; lifecycle functions
+                EntityMember::Entity(child) if child.prefab.is_none() => self.entity(child),
+                // Params are checked above; lifecycle functions
                 // and handlers come after the bindings.
                 _ => {}
             }
@@ -176,13 +192,13 @@ impl<'a> Checker<'a> {
         let mut bound_params = Vec::new();
         for binding in self.out.bindings.iter().filter(|b| b.scene == Some(def)) {
             match &binding.target {
-                super::BindTarget::Field { field, .. } => {
+                super::BindTarget::Field { object, field } if *object == def => {
                     bound_fields.push((field.clone(), binding.span));
                 }
-                super::BindTarget::MaterialParam { param, .. } => {
+                super::BindTarget::MaterialParam { entity, param } if *entity == def => {
                     bound_params.push((param.clone(), binding.span));
                 }
-                super::BindTarget::LightField { .. } => {}
+                _ => {}
             }
         }
         self.out.prefabs.insert(
@@ -193,6 +209,7 @@ impl<'a> Checker<'a> {
                 name_span: decl.name.span,
                 span: decl.span,
                 params,
+                entity_count: self.prefab_entity_counts.get(&def).copied().unwrap_or(1),
                 states,
                 material_params,
                 physics: self.physics_of(def),
@@ -202,25 +219,22 @@ impl<'a> Checker<'a> {
         );
     }
 
-    /// `E5040`: a prefab describes one entity, so it contains no `entity`.
+    /// Static assemblies support ordinary descendants, not recursively nested prefab instances.
     fn nested_entities(&mut self, decl: &PrefabDecl) {
-        for member in &decl.members {
-            let EntityMember::Entity(child) = member else {
-                continue;
-            };
-            self.report(
-                Diagnostic::new(
-                    Code::E5040,
-                    format!(
-                        "The prefab '{}' declares the entity '{}', but a prefab describes exactly one entity.",
-                        decl.name.name, child.name.name
-                    ),
-                )
-                .at(child.name.span)
-                .related(decl.name.span, "the prefab is declared here")
-                .note("a prefab is a template for one entity, so its fields (`mesh`, `material`, `position`, ...) are written directly in the prefab; prefabs with children are not part of v0.1")
-                .help("declare the structure in the scene, where an `entity` inside another `entity` is its child and moves with it, or declare one prefab for each part and place each with `entity Name: PrefabName { ... }`"),
-            );
+        let mut members = vec![decl.members.as_slice()];
+        while let Some(body) = members.pop() {
+            for member in body {
+                let EntityMember::Entity(child) = member else {
+                    continue;
+                };
+                if child.prefab.is_some() {
+                    self.report(Diagnostic::new(Code::E5040,
+                        format!("The prefab '{}' contains the prefab instance '{}'; nested prefab instances are not supported in static assemblies.", decl.name.name, child.name.name))
+                        .at(child.name.span).related(decl.name.span, "the prefab is declared here")
+                        .help("declare ordinary child entities inside the prefab, or instantiate both prefabs in the scene"));
+                }
+                members.push(&child.members);
+            }
         }
     }
 
@@ -323,6 +337,8 @@ impl<'a> Checker<'a> {
             if let EntityMember::State(state) = member {
                 self.declare_state(state, Some(def), index);
                 index += 1;
+            } else if let EntityMember::Entity(child) = member {
+                self.declare_entity_states(child);
             }
         }
     }
@@ -339,6 +355,7 @@ impl<'a> Checker<'a> {
                 EntityMember::Handler(handler) => {
                     self.handler_body(handler, Some(def), Some(def), &label);
                 }
+                EntityMember::Entity(child) => self.entity_bodies(child),
                 _ => {}
             }
         }
@@ -432,6 +449,20 @@ impl<'a> Checker<'a> {
                 .actual("a prefab literal")
                 .help(format!("create the instance with `spawn({prefab} {{ .. }})` in a lifecycle function or an event handler, or declare a static instance: `entity Name: {prefab} {{ param: value; }}`")),
             );
+            return TyId::ERROR;
+        }
+        let entity_count = self
+            .imported_prefabs
+            .get(&id)
+            .map(|info| info.entity_count)
+            .or_else(|| self.prefab_entity_counts.get(&id).copied())
+            .unwrap_or(1);
+        if entity_count > 1 {
+            self.literal_values(fields);
+            self.report(Diagnostic::new(Code::E5040,
+                format!("The prefab '{prefab}' contains child entities and cannot be spawned."))
+                .at(name.span).related(declared, "the static assembly is declared here")
+                .help(format!("declare a static instance with `entity Name: {prefab} {{ ... }}`; spawn supports single-entity prefabs")));
             return TyId::ERROR;
         }
         let mut given: Vec<(String, Span, NodeId)> = Vec::new();
@@ -788,6 +819,7 @@ impl<'a> Checker<'a> {
             def,
             InstanceFacts {
                 prefab_name: info.name.clone(),
+                entity_count: info.entity_count,
                 states: info.states.clone(),
                 material_params: info.material_params.clone(),
                 bound_fields: info.bound_fields.clone(),

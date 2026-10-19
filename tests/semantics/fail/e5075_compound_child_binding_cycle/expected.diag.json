@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E5075",
+    "file": "src/main.mtek",
+    "startByte": 43,
+    "endByte": 62,
+    "message": "The bindings of Seat.position, Back.position depend on each other.",
+    "related": [
+      {
+        "message": "binds Seat.position, which reads Back.position",
+        "file": "src/main.mtek",
+        "startByte": 43,
+        "endByte": 62
+      },
+      {
+        "message": "binds Back.position, which reads Seat.position",
+        "file": "src/main.mtek",
+        "startByte": 94,
+        "endByte": 113
+      }
+    ],
+    "notes": [
+      "help: break the cycle: bind one of them to something else, or update it from `update`"
+    ]
+  }
+]

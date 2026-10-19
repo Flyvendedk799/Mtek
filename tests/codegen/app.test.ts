@@ -46,6 +46,7 @@ interface IrField {
 }
 
 interface IrSpan {
+  readonly file: number;
   readonly start: number;
 }
 
@@ -60,6 +61,7 @@ interface IrCamera {
 
 interface IrEntity {
   readonly index: number;
+  readonly parent: number | null;
   readonly span: IrSpan;
   readonly position: IrField;
   readonly rotation: IrField;
@@ -86,6 +88,7 @@ interface IrBehavior {
 interface IrItem {
   readonly kind: string;
   readonly behaviors?: readonly IrBehavior[];
+  readonly children?: readonly IrEntity[];
   readonly symbol: string;
   readonly cpuReachable?: boolean;
   readonly cameras: readonly IrCamera[];
@@ -156,13 +159,16 @@ function expectedCalls(ir: IrProgram): SetterCall[] {
     .find((item) => item.kind === "scene" && item.symbol === ir.entryScene);
   if (scene === undefined) throw new Error("the IR has no entry scene");
   const calls: SetterCall[] = [];
-  const declarations: ({ camera: IrCamera } | { entity: IrEntity })[] = [
-    ...scene.cameras.filter((c) => c.active).map((camera) => ({ camera })),
-    ...scene.entities.map((entity) => ({ entity })),
-  ];
-  const start = (d: { camera: IrCamera } | { entity: IrEntity }): number =>
-    "camera" in d ? d.camera.span.start : d.entity.span.start;
-  declarations.sort((a, b) => start(a) - start(b));
+  const declarations: ({ camera: IrCamera } | { entity: IrEntity })[] = [];
+  let camera = scene.cameras.find((c) => c.active);
+  for (const entity of scene.entities) {
+    if (entity.parent === null && camera !== undefined && camera.span.file === entity.span.file && camera.span.start < entity.span.start) {
+      declarations.push({ camera });
+      camera = undefined;
+    }
+    declarations.push({ entity });
+  }
+  if (camera !== undefined) declarations.push({ camera });
   for (const declaration of declarations) {
     if ("camera" in declaration) {
       const camera = declaration.camera;
@@ -228,6 +234,7 @@ describe("the generated program module", () => {
       "bindings",
       "builtin_params",
       "builtin_params_edited",
+      "compound_prefabs",
       "cpu_functions",
       "light_bindings",
       "light_bindings_edited",
@@ -289,7 +296,8 @@ describe("the generated program module", () => {
         for (const key of Object.keys(program)) expect(program[key]).toBe(module[key]);
         // One entry per prefab of the program, keyed by symbol (decision 0062).
         expect(Object.keys(record(module["prefabs"], "prefabs"))).toEqual(
-          manifest.symbols.filter((symbol) => symbol.kind === "prefab").map((symbol) => symbol.id),
+          irOf(await loadProgram(name)).modules.flatMap((m) => m.items)
+            .filter((item) => item.kind === "prefab" && (item.children?.length ?? 0) === 0).map((item) => item.symbol).sort(),
         );
 
         const scenes = record(module["scenes"], "scenes");

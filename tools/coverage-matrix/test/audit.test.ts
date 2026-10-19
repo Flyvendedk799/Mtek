@@ -58,7 +58,7 @@ describe.skipIf(!available && !required)("the audit of the repository", () => {
     it("loses the only positive fixture of a feature", () => {
       const without = inputs.projects.filter((p) => p.id !== "tests/semantics/pass/host_inputs_every_codec");
       const worse = assemble(REPO_ROOT, { ...inputs, projects: without });
-      expect(worse.matrix.problems).toContain("no demonstration and no positive fixture exercises the feature project/host-input-codec:i32");
+      expect(worse.matrix.problems).toContain("no demonstration and no positive fixture exercises the feature project/host-input-codec:u32");
       expect(worse.matrix.problems).toContain("no demonstration and no positive fixture exercises the feature project/host-input-codec:string");
     });
 

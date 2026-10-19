@@ -196,6 +196,9 @@ impl Checker<'_> {
         let schema = self.registry.declaration_schemas.entity;
         let mut found: Vec<BindInfo> = Vec::new();
         for member in &decl.members {
+            if let EntityMember::Entity(child) = member {
+                self.entity_binds(child, &mut found);
+            }
             let EntityMember::Field(field) = member else {
                 continue;
             };
