@@ -1,0 +1,13 @@
+// The one material of the showroom, imported by three other modules (both prefabs and the scene).
+import { STONE } from "./theme.mtek";
+
+/// A flat colour: `tint` scaled by `dim` in linear light. `dim` is 1 for the colour itself and below 1 for a
+/// darker one, which is what the beacons use to pulse.
+export material Matte {
+    param tint: color = STONE;
+    param dim: f32 = 1.0;
+
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(tint.rgb * dim, tint.a);
+    }
+}

@@ -1,0 +1,9 @@
+[project]
+name = "modular-scene"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Showroom"
+
+[build]
+target = "web"
+title = "Modular Scene"

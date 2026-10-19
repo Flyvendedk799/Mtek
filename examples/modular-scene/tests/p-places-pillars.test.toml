@@ -1,0 +1,75 @@
+# P spawns a Pillar, a prefab of src/props/pillar.mtek, from src/main.mtek with run-time params:
+#     spawn(Pillar { origin: vec3(PLACE_X0 + PLACE_STEP * f32(placed), 0.0, PLACE_Z); height: PLACE_BASE_HEIGHT + PLACE_RISE *
+#     f32(placed); tint: tint; })       tint = TEAL for an even `placed`, ROSE for an odd one
+# with PLACE_X0 = -2.4, PLACE_STEP = 2.4, PLACE_Z = -3, PLACE_BASE_HEIGHT = 1 and PLACE_RISE = 0.5 (src/theme.mtek), and at most
+# MAX_PLACED = 4 of them. So press n (counting from 0) places
+#     n   origin          height   centre y   tint
+#     0   (-2.4, 0, -3)   1.0      0.5        TEAL #2f9e8f
+#     1   ( 0.0, 0, -3)   1.5      0.75       ROSE #e0527a
+#     2   ( 2.4, 0, -3)   2.0      1.0        TEAL
+#     3   ( 4.8, 0, -3)   2.5      1.25       ROSE
+# and the fifth press places nothing: `placed` stays 4 and the spawn counter stays 4. A spawn is created at the end of the frame
+# of the press, so one frame after the press shows it. Named entities of the scene: Floor, Left, Middle, Right, Lantern, Lamp and
+# Gauge, 7; each pillar placed adds one live entity. Spawned entities cannot be addressed by name, so they are checked by
+# their pixels.
+#
+# Draw calls (decision 0059): pillars of one mesh and equal params share a parameter block and are drawn by one instanced draw.
+# Before any press there are 6 draws (Left and Gauge are the one instanced pair, see instances-and-defaults). A spawned pillar
+# has the same unit box and the same tint as other entities of its colour: TEAL as Right, ROSE as nothing yet.
+#     placed   new entity   groups of the box meshes                       drawCalls  instancedDraws
+#     1        TEAL         Right+Placed0                                  6          2
+#     2        ROSE         Right+Placed0, Placed1 alone                   7          2
+#     3        TEAL         Right+Placed0+Placed2, Placed1 alone           7          2
+#     4        ROSE         Right+Placed0+Placed2, Placed1+Placed3         7          3
+#
+# Pixels. The back row is 3 m behind the front one and between its pillars. On the 128 x 128 target the pillars' centres project
+# to (45.6, 65.6), (64.0, 63.7), (82.5, 61.8) and (101.1, 59.9); the pixels below are ones whose neighbourhood sees
+# only that pillar, or, before it is placed, only the sky (the clear colour #14181f). Time does not pass (dt = 0), so the
+# beacons rest where they start.
+name = "P places pillars of an imported prefab with run-time params, and stops at four"
+steps = [
+  { step = 1, dt = 0.0 },
+  { expect_state = { placed = 0 } },
+  { expect_counter = { liveEntities = 7, entitiesSpawned = 0 } },
+  { expect_pixel = { x = 45, y = 64, color = "#14181f", tolerance = 2 } },
+
+  { press = "KeyP" },
+  { step = 1, dt = 0.0 },
+  { release = "KeyP" },
+  { expect_state = { placed = 1 } },
+  { expect_counter = { liveEntities = 8, entitiesSpawned = 1, drawCalls = 6, instancedDraws = 2 } },
+  { expect_pixel = { x = 45, y = 64, color = "#2f9e8f", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 63, color = "#14181f", tolerance = 2 } },
+
+  { press = "KeyP" },
+  { step = 1, dt = 0.0 },
+  { release = "KeyP" },
+  { expect_state = { placed = 2 } },
+  { expect_counter = { liveEntities = 9, entitiesSpawned = 2, drawCalls = 7, instancedDraws = 2 } },
+  { expect_pixel = { x = 63, y = 63, color = "#e0527a", tolerance = 2 } },
+
+  { press = "KeyP" },
+  { step = 1, dt = 0.0 },
+  { release = "KeyP" },
+  { expect_state = { placed = 3 } },
+  { expect_counter = { liveEntities = 10, entitiesSpawned = 3, drawCalls = 7, instancedDraws = 2 } },
+  { expect_pixel = { x = 82, y = 61, color = "#2f9e8f", tolerance = 2 } },
+
+  { press = "KeyP" },
+  { step = 1, dt = 0.0 },
+  { release = "KeyP" },
+  { expect_state = { placed = 4 } },
+  { expect_counter = { liveEntities = 11, entitiesSpawned = 4, drawCalls = 7, instancedDraws = 3 } },
+  { expect_pixel = { x = 101, y = 59, color = "#e0527a", tolerance = 2 } },
+
+  # The fifth press: the slot row is full, nothing more is placed.
+  { press = "KeyP" },
+  { step = 5, dt = 0.0 },
+  { release = "KeyP" },
+  { expect_state = { placed = 4 } },
+  { expect_counter = { liveEntities = 11, entitiesSpawned = 4, drawCalls = 7, instancedDraws = 3 } },
+  { expect_pixel = { x = 45, y = 64, color = "#2f9e8f", tolerance = 2 } },
+  { expect_pixel = { x = 63, y = 63, color = "#e0527a", tolerance = 2 } },
+  { expect_pixel = { x = 82, y = 61, color = "#2f9e8f", tolerance = 2 } },
+  { expect_pixel = { x = 101, y = 59, color = "#e0527a", tolerance = 2 } },
+]

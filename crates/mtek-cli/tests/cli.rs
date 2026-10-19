@@ -858,6 +858,10 @@ fn every_example_checks_without_diagnostics() {
         checked.contains(&"physics-playground".to_owned()),
         "the physics playground was not found among {checked:?}"
     );
+    assert!(
+        checked.contains(&"modular-scene".to_owned()),
+        "the modular scene was not found among {checked:?}"
+    );
 }
 
 /// The ownership rule on the real physics playground (decision 0069): put the two mistakes its
@@ -916,6 +920,123 @@ fn writing_the_pose_of_a_dynamic_body_in_the_physics_playground_is_e5071() {
         "{messages:?}"
     );
     assert!(messages[1].contains("`First.position`"), "{messages:?}");
+}
+
+/// A copy of `examples/<name>` under `scratch`, without build output; returns the project directory.
+fn copy_example(scratch: &Scratch, name: &str) -> PathBuf {
+    let example = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples")
+        .join(name);
+    let project = scratch.path(name);
+    for (rel, bytes) in tree(&example) {
+        if rel.starts_with("dist/") {
+            continue;
+        }
+        let to = project.join(&rel);
+        fs::create_dir_all(to.parent().unwrap()).unwrap();
+        fs::write(to, bytes).unwrap();
+    }
+    project
+}
+
+/// `(file of the diagnostic, message, file of its first related span)` of every diagnostic of a report.
+fn located(report: &Value) -> Vec<(String, String, String)> {
+    report["diagnostics"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|d| {
+            (
+                d["source"]["file"].as_str().unwrap().to_owned(),
+                d["message"].as_str().unwrap().to_owned(),
+                d["related"][0]["source"]["file"]
+                    .as_str()
+                    .unwrap_or("")
+                    .to_owned(),
+            )
+        })
+        .collect()
+}
+
+/// The cross-file rule on the real modular scene (M7-01, decision 0002): the prefab `Pillar` is
+/// declared in `src/props/pillar.mtek` and instantiated and spawned in `src/main.mtek`. Take the
+/// `export` off the declaration and `mtek check` rejects the one import with `E2033`, at the name
+/// in the importing file, with the declaration in the other file as related span; the instances
+/// and the `spawn` that use the name are not reported again. The edit is asserted to apply, so
+/// the test cannot pass on an example that was reworded.
+#[test]
+fn importing_a_prefab_that_is_not_exported_from_the_modular_scene_is_e2033() {
+    let scratch = Scratch::new("modular-scene-e2033-prefab");
+    let project = copy_example(&scratch, "modular-scene");
+    let pillar = project.join("src/props/pillar.mtek");
+    let source = fs::read_to_string(&pillar).unwrap();
+    assert_eq!(
+        source.matches("export prefab Pillar {").count(),
+        1,
+        "the example's Pillar declaration changed"
+    );
+    fs::write(
+        &pillar,
+        source.replace("export prefab Pillar {", "prefab Pillar {"),
+    )
+    .unwrap();
+
+    let out = run_in(&scratch.0, &["check", "--format", "json", "modular-scene"]);
+    assert_eq!(out.status.code(), Some(1), "{}", stdout(&out));
+    let report = report_of(&out, &scratch);
+    assert_eq!(codes(&report), ["MTEK-E2033"]);
+    assert_eq!(
+        located(&report),
+        [(
+            "src/main.mtek".to_owned(),
+            "'Pillar' is not exported by 'src/props/pillar.mtek'.".to_owned(),
+            "src/props/pillar.mtek".to_owned()
+        )]
+    );
+    assert_eq!(
+        report["diagnostics"][0]["related"][0]["message"],
+        "the prefab 'Pillar' is declared here without `export`"
+    );
+}
+
+/// The same rule for the material that three modules import: without `export` on `Matte`, each of
+/// the three importing files (the two prefabs and the scene) gets its own `E2033`, in load order,
+/// every one pointing at the declaration in `src/materials.mtek`.
+#[test]
+fn a_material_that_is_not_exported_is_e2033_in_each_module_that_imports_it() {
+    let scratch = Scratch::new("modular-scene-e2033-material");
+    let project = copy_example(&scratch, "modular-scene");
+    let materials = project.join("src/materials.mtek");
+    let source = fs::read_to_string(&materials).unwrap();
+    assert_eq!(
+        source.matches("export material Matte {").count(),
+        1,
+        "the example's Matte declaration changed"
+    );
+    fs::write(
+        &materials,
+        source.replace("export material Matte {", "material Matte {"),
+    )
+    .unwrap();
+
+    let out = run_in(&scratch.0, &["check", "--format", "json", "modular-scene"]);
+    assert_eq!(out.status.code(), Some(1), "{}", stdout(&out));
+    let report = report_of(&out, &scratch);
+    assert_eq!(codes(&report), ["MTEK-E2033", "MTEK-E2033", "MTEK-E2033"]);
+    let message = "'Matte' is not exported by 'src/materials.mtek'.".to_owned();
+    let related = "src/materials.mtek".to_owned();
+    assert_eq!(
+        located(&report),
+        [
+            ("src/main.mtek".to_owned(), message.clone(), related.clone()),
+            (
+                "src/props/pillar.mtek".to_owned(),
+                message.clone(),
+                related.clone()
+            ),
+            ("src/props/beacon.mtek".to_owned(), message, related),
+        ]
+    );
 }
 
 // ---------------------------------------------------------------------------

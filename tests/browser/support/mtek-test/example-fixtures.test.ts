@@ -2,7 +2,7 @@
 // numbers read back from a run. This test recomputes what each fixture expects from the models the rest of the suite already
 // trusts, without a browser and without the runtime: the CPU ray tracer and PBR oracle for the configurator
 // (configurator-scene.ts), the closed-form motion and colour of the Pulse material for pulse-cube, and the seed, geometry and
-// physics model of the playground (m5-playground.ts). A fixture whose number does not follow from its comments fails here, in CI
+// physics model of the playground (m5-playground.ts), and the sources and the CPU reference for the modular scene (m7-modular-scene.ts). A fixture whose number does not follow from its comments fails here, in CI
 // without a GPU; the GPU run (`specs/m6/mtek-test.spec.ts`) then shows that the program agrees with the same numbers.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -17,6 +17,8 @@ import {
 } from "../configurator-scene.ts";
 import { REPO_ROOT } from "../environment.ts";
 import { assertSeparated, fallDistance, fate, liftHeight, meterColumns, spawnPositions, STEP } from "../m5-playground.ts";
+import { expectedColour, expectPixel } from "../m1-reference.ts";
+import { beacon, drawStats, REST, showroom, themeColour, themeNumber, type ShowroomState } from "../m7-modular-scene.ts";
 
 type Table = Record<string, unknown>;
 type Step = Table;
@@ -295,5 +297,130 @@ describe("examples/physics-playground fixtures follow from the seed, the geometr
     expect(total).toBe(210);
     const counters = lift.steps.filter((s) => "expect_counter" in s).map((s) => s["expect_counter"] as Table).at(-1);
     expect(counters).toMatchObject({ physicsSteps: total });
+  });
+});
+
+// ---- modular-scene: the sources and the CPU reference ---------------------------------------------------------------------
+
+describe("examples/modular-scene fixtures follow from the sources and the CPU reference", () => {
+  const TARGET = { width: 128, height: 128 };
+  const KEY_P = "KeyP";
+
+  /** What each named instance's material says, from the params of its instance (src/main.mtek) and the defaults of its prefab. */
+  const tintOf = (name: string): string => {
+    const tints: Record<string, string> = {
+      Left: themeColour("STONE"),
+      Middle: themeColour("GOLD"),
+      Right: themeColour("TEAL"),
+      Lantern: themeColour("GOLD"),
+      Lamp: themeColour("ROSE"),
+    };
+    const tint = tints[name];
+    if (tint === undefined) throw new Error(`no model for the material of ${name}`);
+    return tint;
+  };
+
+  interface Replay {
+    checks: { pixels: number; states: number; counters: number };
+    end: ShowroomState;
+    spawned: number;
+  }
+
+  /** Replays a fixture on the model: a press is applied at the start of the next frame, P places a pillar until MAX_PLACED. */
+  function replay(fixture: FixtureFile): Replay {
+    let state: ShowroomState = REST;
+    let spawned = 0;
+    let pendingSpace = false;
+    let pendingP = false;
+    const checks = { pixels: 0, states: 0, counters: 0 };
+    const near = (actual: number, expected: unknown, tolerance: number, what: string): void => {
+      expect(Math.abs(actual - Number(expected)), `${fixture.file}: ${what}`).toBeLessThanOrEqual(tolerance);
+      checks.states += 1;
+    };
+    for (const step of fixture.steps) {
+      const [kind, value] = only(step);
+      if (kind === "step") {
+        const dt = Number(step["dt"]);
+        for (let frame = 0; frame < Number(value); frame += 1) {
+          if (pendingSpace) state = { ...state, presses: state.presses + 1 };
+          if (pendingP && state.placed < themeNumber("MAX_PLACED")) {
+            state = { ...state, placed: state.placed + 1 };
+            spawned += 1;
+          }
+          pendingSpace = false;
+          pendingP = false;
+          state = { ...state, time: state.time + dt };
+        }
+      } else if (kind === "press") {
+        if (value === "Space") pendingSpace = true;
+        else if (value === KEY_P) pendingP = true;
+        else throw new Error(`${fixture.file}: no model for the key ${String(value)}`);
+      } else if (kind === "release") {
+        // A release changes nothing in this program.
+      } else if (kind === "expect_pixel") {
+        const pixel = value as Table;
+        const scene = showroom(state, TARGET);
+        const expectation = expectPixel(scene, Number(pixel["x"]), Number(pixel["y"]));
+        const where = `${fixture.file}: pixel ${String(pixel["x"])},${String(pixel["y"])}`;
+        expect(expectation.kind, `${where} is not at an edge`).not.toBe("ambiguous");
+        expect(hexBytes(String(pixel["color"])), where).toEqual(expectedColour(scene, expectation));
+        checks.pixels += 1;
+      } else if (kind === "expect_state") {
+        const scene = showroom(state, TARGET);
+        for (const [key, entry] of Object.entries(value as Table)) {
+          const wrapped = typeof entry === "object" && entry !== null && !Array.isArray(entry) ? (entry as Table) : null;
+          const expected = wrapped === null ? entry : wrapped["value"];
+          const tolerance = wrapped === null ? 1e-5 : Number(wrapped["tolerance"] ?? 1e-5);
+          const [entity, member, param] = key.split(".");
+          if (key === "placed") near(state.placed, expected, 0, "placed");
+          else if (member === "position" && entity !== undefined) {
+            const position = scene.entities.find((e) => e.name === entity)?.position;
+            expect(position, `${fixture.file}: the model has ${entity}`).toBeDefined();
+            (expected as number[]).forEach((c, i) => near(position?.[i] ?? NaN, c, Math.max(tolerance, 1e-5), `${key}[${String(i)}]`));
+          } else if (member === "material" && param === "tint" && entity !== undefined) {
+            expect(expected, `${fixture.file}: ${key}`).toBe(tintOf(entity));
+            checks.states += 1;
+          } else if (member === "material" && param === "dim" && entity === "Lantern") {
+            near(beacon([-3.6, 3.4, 0], 1, state.time).dim, expected, Math.max(tolerance, 1e-5), key);
+          } else if (member === "material" && param === "dim" && entity === "Lamp") {
+            near(beacon([3.6, 3.0, 0], 2, state.time).dim, expected, Math.max(tolerance, 1e-5), key);
+          } else throw new Error(`${fixture.file}: no model for ${key}`);
+        }
+      } else if (kind === "expect_counter") {
+        for (const [name, expected] of Object.entries(value as Table)) {
+          if (name === "liveEntities") expect(expected, `${fixture.file}: liveEntities`).toBe(7 + state.placed);
+          else if (name === "entitiesSpawned") expect(expected, `${fixture.file}: entitiesSpawned`).toBe(spawned);
+          else if (name === "drawCalls") expect(expected, `${fixture.file}: drawCalls`).toBe(drawStats(state).drawCalls);
+          else if (name === "instancedDraws") expect(expected, `${fixture.file}: instancedDraws`).toBe(drawStats(state).instancedDraws);
+          else throw new Error(`${fixture.file}: no model for the counter ${name}`);
+          checks.counters += 1;
+        }
+      } else throw new Error(`${fixture.file}: no model for the step ${kind}`);
+    }
+    return { checks, end: state, spawned };
+  }
+
+  it("every expectation is what the sources and the reference derive, at pixels that see one surface", async () => {
+    const fixtures = await fixturesOf("modular-scene");
+    expect(fixtures.map((f) => f.file)).toEqual([
+      "beacons-bob-and-pulse.test.toml",
+      "instances-and-defaults.test.toml",
+      "p-places-pillars.test.toml",
+      "space-grows-gauge.test.toml",
+    ]);
+    const results = new Map(fixtures.map((fixture) => [fixture.file, replay(fixture)]));
+    for (const [file, result] of results) {
+      expect(result.checks.pixels, `${file}: pixels checked`).toBeGreaterThanOrEqual(5);
+      expect(result.checks.states + result.checks.counters, `${file}: states and counters checked`).toBeGreaterThanOrEqual(4);
+    }
+    // The ends of the runs the comments describe: four pillars placed by five presses of P, three presses of Space.
+    expect(results.get("p-places-pillars.test.toml")).toMatchObject({ end: { placed: 4 }, spawned: 4 });
+    expect(results.get("space-grows-gauge.test.toml")?.end.presses).toBe(3);
+    expect(results.get("beacons-bob-and-pulse.test.toml")?.end.time).toBeCloseTo((3 * Math.PI) / 2, 5);
+  });
+
+  it("no fixture of this program sets a seed: it has no random()", async () => {
+    const fixtures = await fixturesOf("modular-scene");
+    for (const fixture of fixtures) expect(fixture.seed, `${fixture.file}: no random() in this program`).toBe(0);
   });
 });

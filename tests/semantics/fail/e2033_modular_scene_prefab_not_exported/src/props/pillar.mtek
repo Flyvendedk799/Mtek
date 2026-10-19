@@ -1,0 +1,11 @@
+import { Matte } from "../materials.mtek";
+
+// Declared, but not exported: the other files cannot import it.
+prefab Pillar {
+    param origin: vec3 = vec3(0.0, 0.0, 0.0);
+    param height: f32 = 2.0;
+    position: origin + vec3(0.0, height * 0.5, 0.0);
+    scale: vec3(0.8, height, 0.8);
+    mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    material: Matte { tint: #e0a526 };
+}

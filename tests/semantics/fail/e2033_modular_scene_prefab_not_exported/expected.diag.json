@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E2033",
+    "file": "src/main.mtek",
+    "startByte": 552,
+    "endByte": 558,
+    "message": "'Pillar' is not exported by 'src/props/pillar.mtek'.",
+    "related": [
+      {
+        "message": "the prefab 'Pillar' is declared here without `export`",
+        "file": "src/props/pillar.mtek",
+        "startByte": 116,
+        "endByte": 122
+      }
+    ],
+    "notes": [
+      "help: write `export` in front of the declaration in 'src/props/pillar.mtek' to make it importable"
+    ]
+  }
+]

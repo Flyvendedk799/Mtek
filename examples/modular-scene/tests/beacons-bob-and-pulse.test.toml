@@ -1,0 +1,47 @@
+# The two instances of the Beacon prefab differ only in their params (src/main.mtek): Lantern has `rate: 1.0` and the default
+# GOLD, Lamp has the default rate 2.0 and `tint: ROSE`. Each bobs and pulses with the clock (src/props/beacon.mtek):
+#     position.y = origin.y + 0.25 * sin(rate * t)        dim = 0.75 + 0.25 * sin(rate * t)
+# with origins (-3.6, 3.4, 0) for Lantern and (3.6, 3.0, 0) for Lamp.
+#
+# Time. Every frame is one degree, dt = pi/180 s (under the runtime's max_frame_delta of 0.1), so 45 frames are t = pi/4,
+# 135 frames t = 3 pi/4, 180 frames t = pi and 270 frames t = 3 pi/2.
+#     t          Lantern: sin(t)   y        dim        Lamp: sin(2 t)   y      dim
+#     pi/4       0.7071068         3.57678  0.9267767  1.0              3.25   1.0
+#     3 pi/4     0.7071068         3.57678  0.9267767  -1.0             2.75   0.5
+#     pi         0.0               3.4      0.75       0.0              3.0    0.75
+#     3 pi/2     -1.0              3.15     0.5        0.0              3.0    0.75
+# (the sines of pi and 2 pi are zero up to the f32 rounding of the argument, about 1e-7).
+#
+# Colour. Matte shows `tint.rgb * dim` in linear light, sRGB-encoded: GOLD #e0a526 at 0.9267767 is #d99f24, at 0.75 #c59120 and
+# at 0.5 #a47819; ROSE #e0527a at 1.0 is #e0527a, at 0.75 #c5476b and at 0.5 #a43a58. The chosen pixels are the ones nearest the
+# projected centre whose neighbourhood sees only the sphere: Lantern (29, 41) at y 3.57678, (29, 43) at 3.4, (29, 45) at 3.15
+# and Lamp (98, 44) at 3.25, (98, 47) at 3.0, (98, 49) at 2.75 (on the 128 x 128 target; 9.5 pixels per metre at this depth).
+name = "the beacons bob and pulse with frame.time, each at its own rate"
+steps = [
+  { step = 45, dt = 0.017453292519943295 },
+  { expect_state = { "Lantern.position" = { value = [-3.6, 3.5767767, 0], tolerance = 1e-4 }, "Lantern.material.dim" = { value = 0.9267767, tolerance = 1e-4 } } },
+  { expect_state = { "Lamp.position" = { value = [3.6, 3.25, 0], tolerance = 1e-4 }, "Lamp.material.dim" = { value = 1.0, tolerance = 1e-4 } } },
+  { expect_pixel = { x = 29, y = 41, color = "#d99f24", tolerance = 2 } },
+  { expect_pixel = { x = 98, y = 44, color = "#e0527a", tolerance = 2 } },
+
+  # t = 3 pi/4
+  { step = 90, dt = 0.017453292519943295 },
+  { expect_state = { "Lantern.position" = { value = [-3.6, 3.5767767, 0], tolerance = 1e-4 }, "Lantern.material.dim" = { value = 0.9267767, tolerance = 1e-4 } } },
+  { expect_state = { "Lamp.position" = { value = [3.6, 2.75, 0], tolerance = 1e-4 }, "Lamp.material.dim" = { value = 0.5, tolerance = 1e-4 } } },
+  { expect_pixel = { x = 29, y = 41, color = "#d99f24", tolerance = 2 } },
+  { expect_pixel = { x = 98, y = 49, color = "#a43a58", tolerance = 2 } },
+
+  # t = pi
+  { step = 45, dt = 0.017453292519943295 },
+  { expect_state = { "Lantern.position" = { value = [-3.6, 3.4, 0], tolerance = 1e-4 }, "Lantern.material.dim" = { value = 0.75, tolerance = 1e-4 } } },
+  { expect_state = { "Lamp.position" = { value = [3.6, 3.0, 0], tolerance = 1e-4 }, "Lamp.material.dim" = { value = 0.75, tolerance = 1e-4 } } },
+  { expect_pixel = { x = 29, y = 43, color = "#c59120", tolerance = 2 } },
+  { expect_pixel = { x = 98, y = 47, color = "#c5476b", tolerance = 2 } },
+
+  # t = 3 pi/2
+  { step = 90, dt = 0.017453292519943295 },
+  { expect_state = { "Lantern.position" = { value = [-3.6, 3.15, 0], tolerance = 1e-4 }, "Lantern.material.dim" = { value = 0.5, tolerance = 1e-4 } } },
+  { expect_state = { "Lamp.position" = { value = [3.6, 3.0, 0], tolerance = 1e-4 }, "Lamp.material.dim" = { value = 0.75, tolerance = 1e-4 } } },
+  { expect_pixel = { x = 29, y = 45, color = "#a47819", tolerance = 2 } },
+  { expect_pixel = { x = 98, y = 47, color = "#c5476b", tolerance = 2 } },
+]

@@ -1,0 +1,22 @@
+// The Beacon prefab: a lamp that bobs around `origin` and pulses its colour, both from the clock, and counts the
+// times Space was pressed. It uses the same Matte material as the Pillar, from the same module.
+import { GOLD } from "../theme.mtek";
+import { Matte } from "../materials.mtek";
+
+export prefab Beacon {
+    param origin: vec3 = vec3(0.0, 3.0, 0.0);
+    param tint: color = GOLD;
+    // Radians per second of both the bob and the pulse.
+    param rate: f32 = 2.0;
+
+    // Per-instance state: the scene reads it as `Lamp.flashes`, from another file.
+    state flashes: i32 = 0;
+
+    position: bind(origin + vec3(0.0, 0.25 * sin(rate * frame.time), 0.0));
+    mesh: Sphere { radius: 0.4; segments: 32; rings: 16 };
+    material: Matte { tint: tint; dim: bind(0.75 + 0.25 * sin(rate * frame.time)) };
+
+    on key_down(Key.Space) {
+        self.flashes += 1;
+    }
+}

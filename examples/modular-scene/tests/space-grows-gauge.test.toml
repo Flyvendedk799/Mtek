@@ -1,0 +1,44 @@
+# Space is handled in the Beacon prefab, once per instance (`on key_down(Key.Space) { self.flashes += 1; }` in
+# src/props/beacon.mtek), and the scene reads that state from another file: the Gauge of src/main.mtek is bound to
+# `Lantern.flashes + Lamp.flashes`,
+#     scale    = (0.6, 0.2 + 0.5 * flashes, 0.6)
+#     position = (5.4, (0.2 + 0.5 * flashes) * 0.5, 1.5)        (it stands on the floor: the centre is half its length up)
+# Both beacons count one flash per press, so n presses make flashes = 2 n and a length of 0.2 + n metres: 0.2, 1.2, 2.2, 3.2,
+# and a centre height of half of that: 0.1, 0.6, 1.1, 1.6. (A scale cannot be addressed by `expect_state`; the length is checked
+# through the centre and through the pixels.)
+#
+# Time does not pass here (every frame has dt = 0, so frame.time stays 0). A press is applied at the start of the next frame and
+# bindings are evaluated after the handlers of that frame, so the gauge has the new length after the frame that follows the press.
+#
+# Pixels. On the 128 x 128 target (about 10 pixels per metre at the depth of the gauge) the gauge is 0.6 m wide, about 5 pixels,
+# around column 120, and stands on the floor at row 77 with its top moving up by about 10 rows per press: about row 67 after one
+# press, 57 after two and 48 after three. The pixels below are ones whose neighbourhood sees one surface: (120, 72) is the floor
+# (SLATE #3a4150) until the first press and the gauge (STONE #9aa3b5) from then on; (120, 62) is the clear colour (#14181f) until
+# the second press and the gauge after it; (120, 50) is the clear colour until the third press and (120, 54) is the gauge from then on.
+name = "Space makes both beacons count a flash and the gauge that reads their state grows by a metre"
+steps = [
+  { step = 1, dt = 0.0 },
+  { expect_state = { "Gauge.position" = [5.4, 0.1, 1.5] } },
+  { expect_pixel = { x = 120, y = 72, color = "#3a4150", tolerance = 2 } },
+
+  { press = "Space" },
+  { step = 1, dt = 0.0 },
+  { release = "Space" },
+  { expect_state = { "Gauge.position" = [5.4, 0.6, 1.5] } },
+  { expect_pixel = { x = 120, y = 72, color = "#9aa3b5", tolerance = 2 } },
+  { expect_pixel = { x = 120, y = 62, color = "#14181f", tolerance = 2 } },
+
+  { press = "Space" },
+  { step = 1, dt = 0.0 },
+  { release = "Space" },
+  { expect_state = { "Gauge.position" = [5.4, 1.1, 1.5] } },
+  { expect_pixel = { x = 120, y = 62, color = "#9aa3b5", tolerance = 2 } },
+  { expect_pixel = { x = 120, y = 50, color = "#14181f", tolerance = 2 } },
+
+  { press = "Space" },
+  { step = 1, dt = 0.0 },
+  { release = "Space" },
+  { expect_state = { "Gauge.position" = [5.4, 1.6, 1.5] } },
+  { expect_pixel = { x = 120, y = 54, color = "#9aa3b5", tolerance = 2 } },
+  { expect_counter = { liveEntities = 7, entitiesSpawned = 0 } },
+]
