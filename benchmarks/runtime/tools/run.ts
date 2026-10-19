@@ -20,7 +20,7 @@ import type { BenchContext, BenchGate, PassSpec } from "../harness/types.ts";
 import { assessAdapter } from "./adapter.ts";
 import { checkFrozen } from "./freeze.ts";
 import { readWorkload } from "./gen-mtek.ts";
-import { readCpuTimes, busyPercent, waitForQuiet, type HostLoad } from "./host-load.ts";
+import { readCpuTimes, busyPercent, sampleBusy, waitForQuiet, type HostLoad } from "./host-load.ts";
 import { withGpuLock } from "./gpu-lock.ts";
 import { roundTimings, stringifyCompact } from "./json.ts";
 import { OUT_DIR, RAW_DIR, REPO_ROOT, SITE_DIR, WORKLOADS, IMPLEMENTATIONS, isImplementation, isWorkload, type ImplementationName, type WorkloadName } from "./paths.ts";
@@ -32,6 +32,8 @@ import type { RawJob, RawPairFile, RawRunMeta } from "./raw-types.ts";
 /** A pass starts only when the machine is at most this busy (percent of all logical CPUs), measured over a quarter second. */
 export const QUIET_LIMIT_PERCENT = 30;
 const QUIET_MAX_WAIT_MS = 45_000;
+/** Passes per lock acquisition (see the comment at the loop). */
+const GROUP_SIZE = 10;
 const PASS_TIMEOUT_MS = 10 * 60_000;
 const BENCH_FLAGS = ["--disable-renderer-backgrounding", "--disable-background-timer-throttling", "--disable-backgrounding-occluded-windows"];
 
@@ -321,64 +323,77 @@ async function main(): Promise<number> {
     const pairs = new Map<string, RawJob[]>();
     const done: string[] = [];
     let index = 0;
+    // The GPU lock is taken once per group of passes (about a minute of GPU use), not once per pass: on a machine shared
+    // with other GPU users a pass-by-pass lock was lost to them for minutes at a time. A pass that takes long (the cycle
+    // runs) is a group of its own. Within a group the passes keep the pseudo-random order, and each pass samples the
+    // machine's load itself before it starts.
+    const groups: Job[][] = [];
     for (const job of order) {
-      index += 1;
-      const label = describeJob(job);
-      const workloadInfoFor = workloadInfo.find((w) => w.name === job.workload) ?? { name: "floor", kind: "frames" as const, parityFrames: 5 };
-      const spec = specFor(job.pass, protocol, workloadInfoFor);
-      const context: BenchContext = {
-        workload: job.workload,
-        implementation: job.implementation as BenchContext["implementation"],
-        assetBase: `/assets/${job.workload}/`,
-        programUrl: `/mtek/${job.workload}/app.js`,
-        editedProgramUrl: job.workload === "mount-reload-dispose" ? `/mtek/${job.workload}-edited/app.js` : null,
-      };
+      const last = groups[groups.length - 1];
+      const long = job.pass === "cycles-long" || job.pass === "cycles";
+      if (last === undefined || long || last.length >= GROUP_SIZE || last.some((j) => j.pass === "cycles" || j.pass === "cycles-long")) groups.push([job]);
+      else last.push(job);
+    }
+    for (const group of groups) {
       const quiet = await waitForQuiet(QUIET_LIMIT_PERCENT, QUIET_MAX_WAIT_MS);
-      const jobStarted = new Date();
-      const t0 = Date.now();
-      const cpuBefore = readCpuTimes();
-      const outcome = await withGpuLock((lock) => {
-        const waited = lock.dir === null ? null : lock.waitedMs;
-        return runPass(browser, server.url, job, spec, context).then((o) => ({ ...o, waited }));
+      await withGpuLock(async (lock) => {
+        for (const job of group) {
+          index += 1;
+          const label = describeJob(job);
+          const workloadInfoFor = workloadInfo.find((w) => w.name === job.workload) ?? { name: "floor", kind: "frames" as const, parityFrames: 5 };
+          const spec = specFor(job.pass, protocol, workloadInfoFor);
+          const context: BenchContext = {
+            workload: job.workload,
+            implementation: job.implementation as BenchContext["implementation"],
+            assetBase: `/assets/${job.workload}/`,
+            programUrl: `/mtek/${job.workload}/app.js`,
+            editedProgramUrl: job.workload === "mount-reload-dispose" ? `/mtek/${job.workload}-edited/app.js` : null,
+          };
+          const busyBefore = await sampleBusy(250);
+          const jobStarted = new Date();
+          const t0 = Date.now();
+          const cpuBefore = readCpuTimes();
+          const outcome = { ...(await runPass(browser, server.url, job, spec, context)), waited: lock.dir === null ? null : lock.waitedMs };
+          const hostLoad: HostLoad = {
+            busyBeforePercent: busyBefore,
+            busyDuringPercent: busyPercent(cpuBefore, readCpuTimes()),
+            waitedForQuietMs: quiet.waitedForQuietMs,
+            noisy: busyBefore > QUIET_LIMIT_PERCENT,
+            logicalCpus: (await import("node:os")).cpus().length,
+          };
+          let result = outcome.result;
+          if (job.pass === "parity" && outcome.status === "ok") {
+            const parity = result as { rgba: string; width: number; height: number } & Record<string, unknown>;
+            const png = encodePng(parity.width, parity.height, Buffer.from(parity.rgba, "base64"));
+            writeFileSync(join(outDir, "parity", `${job.workload}--${job.implementation}.png`), png);
+            const { rgba: _dropped, ...rest } = parity;
+            void _dropped;
+            result = rest;
+          }
+          const raw: RawJob = {
+            pass: job.pass,
+            run: job.run,
+            startedAt: jobStarted.toISOString(),
+            durationMs: Date.now() - t0,
+            hostLoad,
+            gpuLockWaitedMs: outcome.waited,
+            status: outcome.status,
+            ...(outcome.error === undefined ? {} : { error: outcome.error }),
+            pageErrors: outcome.pageErrors,
+            consoleWarnings: outcome.consoleWarnings,
+            ...(result === undefined ? {} : { result }),
+            ...(outcome.allocation === undefined ? {} : { allocation: outcome.allocation }),
+          };
+          const key = `${job.workload}--${job.implementation}`;
+          const list = pairs.get(key) ?? [];
+          list.push(raw);
+          pairs.set(key, list);
+          done.push(label);
+          process.stdout.write(
+            `[${String(index)}/${String(order.length)}] ${label}: ${outcome.status}${outcome.error === undefined ? "" : ` (${outcome.error.slice(0, 160)})`} in ${String(raw.durationMs)} ms, busy ${hostLoad.busyBeforePercent.toFixed(0)}%${hostLoad.noisy ? " NOISY" : ""}\n`,
+          );
+        }
       });
-      const hostLoad: HostLoad = {
-        busyBeforePercent: quiet.busyBeforePercent,
-        busyDuringPercent: busyPercent(cpuBefore, readCpuTimes()),
-        waitedForQuietMs: quiet.waitedForQuietMs,
-        noisy: quiet.noisy,
-        logicalCpus: (await import("node:os")).cpus().length,
-      };
-      let result = outcome.result;
-      if (job.pass === "parity" && outcome.status === "ok") {
-        const parity = result as { rgba: string; width: number; height: number } & Record<string, unknown>;
-        const png = encodePng(parity.width, parity.height, Buffer.from(parity.rgba, "base64"));
-        writeFileSync(join(outDir, "parity", `${job.workload}--${job.implementation}.png`), png);
-        const { rgba: _dropped, ...rest } = parity;
-        void _dropped;
-        result = rest;
-      }
-      const raw: RawJob = {
-        pass: job.pass,
-        run: job.run,
-        startedAt: jobStarted.toISOString(),
-        durationMs: Date.now() - t0,
-        hostLoad,
-        gpuLockWaitedMs: outcome.waited,
-        status: outcome.status,
-        ...(outcome.error === undefined ? {} : { error: outcome.error }),
-        pageErrors: outcome.pageErrors,
-        consoleWarnings: outcome.consoleWarnings,
-        ...(result === undefined ? {} : { result }),
-        ...(outcome.allocation === undefined ? {} : { allocation: outcome.allocation }),
-      };
-      const key = `${job.workload}--${job.implementation}`;
-      const list = pairs.get(key) ?? [];
-      list.push(raw);
-      pairs.set(key, list);
-      done.push(label);
-      process.stdout.write(
-        `[${String(index)}/${String(order.length)}] ${label}: ${outcome.status}${outcome.error === undefined ? "" : ` (${outcome.error.slice(0, 160)})`} in ${String(raw.durationMs)} ms, busy ${raw.hostLoad.busyBeforePercent.toFixed(0)}%${quiet.noisy ? " NOISY" : ""}\n`,
-      );
     }
 
     // ---- write ------------------------------------------------------------------------------------------------------
