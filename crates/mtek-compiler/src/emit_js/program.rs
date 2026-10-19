@@ -58,8 +58,8 @@ pub struct ProgramParts<'a> {
     /// The layout records whose writers the module carries, in `writers` table order
     /// (`builtin:frame`, `builtin:object`, then the material blocks by id).
     pub layouts: &'a [LayoutRecord],
-    /// What the build mode changes: `print` is compiled out of lifecycle functions and handlers
-    /// in a release or preview build, and a preview build checks the loop budget in every loop.
+    /// What the build mode changes: `print` is compiled out of every CPU body in a release
+    /// or preview build, and a preview build checks the loop budget in every loop.
     pub flags: CpuFlags,
 }
 
@@ -139,7 +139,7 @@ pub fn emit_program(
         name: "writers".to_owned(),
         value: Expr::object_lines(table),
     });
-    let functions = emit_functions(program, parts.flags.loop_budget, span_id)?;
+    let functions = emit_functions(program, parts.flags, span_id)?;
     items.extend(functions.stmts.into_iter().map(Item::Stmt));
     items.push(Item::Stmt(Stmt::Blank));
     items.push(Item::ExportConst {

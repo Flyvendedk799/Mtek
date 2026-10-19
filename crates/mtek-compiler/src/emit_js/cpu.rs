@@ -46,8 +46,7 @@ use super::rt_ops;
 /// What the build mode changes in the CPU code (`spec/tooling.md` section 2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct CpuFlags {
-    /// A release build (`release` and `preview`): `print` is compiled out of lifecycle
-    /// functions and handlers.
+    /// A release build (`release` and `preview`): `print` is compiled out of every CPU body.
     pub release: bool,
     /// A preview build: every loop checks the frame's budget before each iteration
     /// (decision 0075).
@@ -80,15 +79,16 @@ pub fn function_name(symbol: &Symbol) -> Result<String, String> {
     Ok(format!("f_{}_{}", hash8(path), identifier_part(name)))
 }
 
-/// Lowers every `cpuReachable` function of `program`. `loop_budget` instruments every loop
-/// with the budget check of a preview build. `span_id` gives the manifest span id of a source
-/// span (index clamping and the budget check report their call site by span id).
+/// Lowers every `cpuReachable` function of `program`. `flags` compile `print` out of
+/// release builds and instrument every loop with the budget check of a preview build.
+/// `span_id` gives the manifest span id of a source span (index clamping and the budget
+/// check report their call site by span id).
 ///
 /// # Errors
 /// A text describing a compiler defect: an IR node the CPU emitter does not know.
 pub fn emit_functions(
     program: &Program,
-    loop_budget: bool,
+    flags: CpuFlags,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<EmittedFunctions, String> {
     let mut emitted = EmittedFunctions::default();
@@ -104,10 +104,7 @@ pub fn emit_functions(
             let mut lowering = FnLowering {
                 locals: &function.locals,
                 owner: None,
-                flags: CpuFlags {
-                    release: false,
-                    loop_budget,
-                },
+                flags,
                 uses_budget: false,
                 temps: 0,
                 span_id: &mut *span_id,
@@ -1333,7 +1330,8 @@ mod tests {
         ];
         let mut checked = 0;
         for program in &programs {
-            let emitted = emit_functions(program, false, &mut |_| Ok(0)).expect("emitted");
+            let emitted =
+                emit_functions(program, CpuFlags::default(), &mut |_| Ok(0)).expect("emitted");
             let module = super::super::ast::Module {
                 items: emitted
                     .stmts
@@ -1398,10 +1396,17 @@ mod tests {
         ]);
         let mut interned = Vec::new();
         // Every span id is 0, so the text of two builds differs only by the budget checks.
-        let emitted = emit_functions(&program, loop_budget, &mut |span| {
-            interned.push(span);
-            Ok(0)
-        })
+        let emitted = emit_functions(
+            &program,
+            CpuFlags {
+                loop_budget,
+                ..CpuFlags::default()
+            },
+            &mut |span| {
+                interned.push(span);
+                Ok(0)
+            },
+        )
         .expect("emitted");
         let module = super::super::ast::Module {
             items: emitted
