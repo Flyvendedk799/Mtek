@@ -503,6 +503,16 @@ export class World {
     for (let slot = 0; slot < this.worldChanged.length; slot++) this.markChanged(slot);
   }
 
+  /**
+   * Forgets what the change tracking knows: every transform is marked dirty, so the next `propagate` recomputes every
+   * world matrix and lists it as changed. For the tests that compare a tracked frame with a full recompute; nothing
+   * in the runtime needs it, because every state it holds is rebuilt with the world.
+   */
+  markAllTransformsDirty(): void {
+    this.transformDirty.fill(1);
+    this.transformsPending = true;
+  }
+
   /** Records that the world matrix of `slot` was recomputed (once per `takeWorldChanges` period). */
   private markChanged(slot: number): void {
     if (this.worldChanged[slot] === 1) return;

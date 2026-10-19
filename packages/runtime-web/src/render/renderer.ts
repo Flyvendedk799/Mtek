@@ -390,6 +390,23 @@ export class Renderer {
    * `diagnostic` and stops drawing every entity that uses it. The rest of the scene keeps running; the
    * entities stay in the world and their params stay writable. Idempotent.
    */
+  /**
+   * Forgets everything the change tracking has cached, so the next frame recomputes the culling, the batching, the
+   * instance records and the object blocks from the world's matrices as a first frame would (the GPU copies are kept
+   * and compared, so a recompute that finds the same bytes uploads nothing). For the tests that compare a tracked
+   * frame with a full recompute (`render/change-tracking.test.ts`); nothing in the runtime calls it.
+   */
+  invalidate(): void {
+    this.entityMatrices.fill(0);
+    this.objectStale.fill(1);
+    this.recordOf.fill(-1);
+    this.batchedDraws = undefined;
+    this.cullListed = undefined;
+    this.cullViewProj = undefined;
+    this.cullDirty = true;
+    this.viewKeyValid = false;
+  }
+
   /** Releases frame and object arenas (hot reload: discard a retired scene). */
   dispose(): void {
     this.frameArena.dispose();
