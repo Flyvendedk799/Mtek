@@ -1,0 +1,6 @@
+// `Key.Shift` could be either shift key: the nearest members are listed and no edit is offered.
+scene Demo {
+    camera Main {}
+    on key_down(Key.Shift) {
+    }
+}

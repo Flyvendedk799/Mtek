@@ -1,0 +1,40 @@
+[
+  {
+    "code": "MTEK-E4040",
+    "file": "src/main.mtek",
+    "startByte": 287,
+    "endByte": 292,
+    "message": "The fragment stage of material 'Gloss' cannot capture the constant 'PLAIN': its type texture exists only on the CPU.",
+    "related": [
+      {
+        "message": "the constant 'PLAIN' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 91,
+        "endByte": 96
+      }
+    ],
+    "notes": [
+      "stage code may read only its input, the material's params, and constants and `fn`s that exist on the GPU",
+      "help: declare a param of the material with the constant as its default, `param my_texture: texture = PLAIN;`, and use that param here: a texture param can be used only as an argument of `sample`"
+    ]
+  },
+  {
+    "code": "MTEK-E4040",
+    "file": "src/main.mtek",
+    "startByte": 294,
+    "endByte": 300,
+    "message": "The fragment stage of material 'Gloss' cannot capture the constant 'FILTER': its type sampler exists only on the CPU.",
+    "related": [
+      {
+        "message": "the constant 'FILTER' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 122,
+        "endByte": 128
+      }
+    ],
+    "notes": [
+      "stage code may read only its input, the material's params, and constants and `fn`s that exist on the GPU",
+      "help: declare a param of the material with the constant as its default, `param my_sampler: sampler = FILTER;`, and use that param here: a sampler param can be used only as an argument of `sample`"
+    ]
+  }
+]

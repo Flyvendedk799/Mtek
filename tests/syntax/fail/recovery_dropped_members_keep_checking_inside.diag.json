@@ -6,7 +6,8 @@
     "endByte": 19,
     "message": "`fn` declarations cannot appear in a scene.",
     "notes": [
-      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers",
+      "help: declare functions at the top level of the file, outside the scene, entity or block, and call them from there"
     ]
   },
   {
@@ -23,7 +24,8 @@
     "endByte": 95,
     "message": "`struct` declarations cannot appear in a scene.",
     "notes": [
-      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers",
+      "help: declare structs and materials at the top level of the file, outside the scene"
     ]
   },
   {
@@ -55,7 +57,8 @@
     "endByte": 151,
     "message": "`param` declarations cannot appear in an entity.",
     "notes": [
-      "help: an entity contains fields (`name: value;`), `const`, `state`, nested `entity` declarations, lifecycle functions and `on` handlers"
+      "help: an entity contains fields (`name: value;`), `const`, `state`, nested `entity` declarations, lifecycle functions and `on` handlers",
+      "help: a `param` belongs to a `prefab` or a `material`; in a scene use `state name: Type = value;` for a value that changes and `const name: Type = value;` for one that does not"
     ]
   },
   {

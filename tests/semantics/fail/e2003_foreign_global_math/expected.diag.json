@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 109,
+    "endByte": 113,
+    "message": "Unknown name 'Math'.",
+    "notes": [
+      "help: math functions are global in Mtek: `sin(x)`, `sqrt(x)`, `pow(x, y)`, `min(a, b)`, `abs(x)`, `clamp(x, lo, hi)`; there is no `Math` object and no `PI` constant, so write the number or declare `const PI: f32 = 3.14159265;`"
+    ]
+  }
+]

@@ -6,7 +6,7 @@
     "endByte": 10,
     "message": "`match` is reserved for a future version of Mtek and cannot be used as a name.",
     "notes": [
-      "help: choose another name"
+      "help: v0.1 has no pattern matching; compare with `==` in an `if ... else if ... else` chain"
     ]
   }
 ]

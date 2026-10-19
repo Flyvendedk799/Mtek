@@ -6,8 +6,8 @@
     "endByte": 253,
     "message": "The texture param of material 'Gloss' can only be used as an argument of `sample`.",
     "notes": [
-      "textures and samplers are bound as resources, not values: they cannot be copied, stored in a local or passed to a function",
-      "help: write `sample(texture_param, sampler_param, uv)`"
+      "textures and samplers are bound as resources, not values: they cannot be copied, stored in a local, returned or passed to a function",
+      "help: use the param directly: `sample(texture_param, sampler_param, uv)`; a helper function takes the `uv` (a `vec2`) or the `vec4` result of `sample`, never the texture or the sampler"
     ]
   }
 ]

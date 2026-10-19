@@ -6,6 +6,9 @@
     "endByte": 77,
     "message": "Argument 1 of `vec3(x: f32, y: f32, z: f32)` expects f32, but received bool.",
     "expected": "f32",
-    "actual": "bool"
+    "actual": "bool",
+    "notes": [
+      "the forms of `vec3` are vec3(s: f32), vec3(xy: vec2, z: f32), vec3(x: f32, y: f32, z: f32); 3 arguments select vec3(x: f32, y: f32, z: f32)"
+    ]
   }
 ]

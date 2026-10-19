@@ -503,7 +503,7 @@ impl Parser<'_> {
                 match kind {
                     TokenKind::KwIf => diagnostic
                         .note("`if` is a statement and gives no value: v0.1 has no `if` expression and no ternary operator")
-                        .help("declare the variable first and assign it in the branches: `var x = a; if cond { x = b; }`; for a number, `mix(a, b, t)` or `clamp` often replaces the branch"),
+                        .help("declare the variable first and assign it in the branches: `var x = a; if cond { x = b; }`; for numbers, `mix(a, b, t)` with `t` 0.0 or 1.0 also selects between two values"),
                     TokenKind::KwFor | TokenKind::KwReturn | TokenKind::KwLet | TokenKind::KwVar => {
                         diagnostic
                             .note(format!("{} starts a statement and gives no value, so it cannot be part of an expression", kind.describe()))
@@ -513,8 +513,14 @@ impl Parser<'_> {
                 }
             }
         };
+        let is_if = self.kind() == TokenKind::KwIf;
         self.error(diagnostic.at(at));
         let hole = self.placeholder_span();
+        if is_if {
+            // The whole `if ... else ...` is the one mistake: its blocks would otherwise be read as
+            // statements and be reported for a missing `;` (decision 0113).
+            self.skip_nested(true);
+        }
         self.error_leaf(hole)
     }
 
@@ -646,7 +652,7 @@ impl Parser<'_> {
     }
 
     /// `E0013` if the current identifier token is a reserved word.
-    fn report_if_reserved(&mut self, span: Span) {
+    pub(super) fn report_if_reserved(&mut self, span: Span) {
         if !self.tok().is_reserved_word() {
             return;
         }
@@ -774,10 +780,18 @@ fn reserved_help(word: &str) -> &'static str {
         "while" | "loop" => {
             "v0.1 has only the counted loop `for i in 0..n { ... }` (the bounds are integers, `break` leaves it early); there is no `while` or `loop`"
         }
-        "match" => "v0.1 has no pattern matching; compare with `==` in an `if ... else if ... else` chain",
-        "enum" => "v0.1 has no user-defined enums; use `i32` constants, or the built-in `Key` for keys",
-        "mut" => "variables are declared with `var` (assignable) or `let` (fixed); there is no `mut`",
-        "impl" => "v0.1 has no methods or `impl` blocks; write a function and pass the value as an argument",
+        "match" => {
+            "v0.1 has no pattern matching; compare with `==` in an `if ... else if ... else` chain"
+        }
+        "enum" => {
+            "v0.1 has no user-defined enums; use `i32` constants, or the built-in `Key` for keys"
+        }
+        "mut" => {
+            "variables are declared with `var` (assignable) or `let` (fixed); there is no `mut`"
+        }
+        "impl" => {
+            "v0.1 has no methods or `impl` blocks; write a function and pass the value as an argument"
+        }
         _ => "choose another name",
     }
 }

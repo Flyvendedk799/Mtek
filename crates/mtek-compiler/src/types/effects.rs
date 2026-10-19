@@ -1213,7 +1213,9 @@ fn cpu_type_help(ty: &str) -> Option<&'static str> {
         "texture" | "sampler" => Some(
             "declare the texture or sampler as a param of the material (`param tex: texture = texture.white();`, `param smp: sampler = sampler.linear_repeat();`) and write `sample(tex, smp, uv)` where it is read; a function that needs a texel takes the `vec4` that `sample` returns, never the texture or the sampler",
         ),
-        "string" => Some("strings exist only on the CPU; GPU code works with numbers, vectors and colors"),
+        "string" => {
+            Some("strings exist only on the CPU; GPU code works with numbers, vectors and colors")
+        }
         "entity_ref" | "mesh" | "material" => Some(
             "handles exist only on the CPU; give the stage the number, vector or color it needs as a `param` of the material and set it from the entity, with `bind(...)` for a value that changes",
         ),

@@ -337,12 +337,10 @@ impl Checker<'_> {
                 let near = crate::hints::nearest(event_name, names.iter().copied(), 3);
                 if !near.is_empty() {
                     let near: Vec<String> = near.iter().map(|n| format!("`{n}`")).collect();
-                    diagnostic = diagnostic.help(format!(
-                        "did you mean {}?",
-                        near.join(" or ")
-                    ));
+                    diagnostic = diagnostic.help(format!("did you mean {}?", near.join(" or ")));
                 }
-                self.sink.push(diagnostic.note(format!("the events of v0.1 are: {}", names.join(", "))));
+                self.sink
+                    .push(diagnostic.note(format!("the events of v0.1 are: {}", names.join(", "))));
             }
             Some(event) => {
                 self.handler_args(handler, event.form, event_name, &mut params);
@@ -396,9 +394,9 @@ impl Checker<'_> {
                             .expected(enum_name.to_owned())
                             .actual(self.display(ty)),
                         );
-                    } else if !self.is_constant_expr(filter) && !self.filter_already_reported(filter) {
-                        // A member the resolver did not find (`Key.Up`) is already `E2003`, with the
-                        // nearest members: reporting the filter again would only repeat it.
+                    } else if !self.out.interner.is_error(ty) && !self.is_constant_expr(filter) {
+                        // A filter that is already an error (`Key.Up` is `E2003`, with the nearest
+                        // members) is not reported a second time.
                         self.sink.push(
                             Diagnostic::new(
                                 Code::E5061,
@@ -453,20 +451,6 @@ impl Checker<'_> {
             )
             .at(handler.event.span),
         );
-    }
-
-    /// Whether the resolver already reported the filter `expr` (an enum member that does not
-    /// exist, `E2003`): a second error on the same token only repeats the first.
-    fn filter_already_reported(&self, expr: &Expr) -> bool {
-        let mut inner = expr;
-        while let ExprKind::Paren(next) = &inner.kind {
-            inner = next;
-        }
-        match &inner.kind {
-            ExprKind::Field { name, .. } => matches!(self.res.res(name.id), Some(Res::Error)),
-            ExprKind::Name(_) => matches!(self.res.res(inner.id), Some(Res::Error)),
-            _ => false,
-        }
     }
 
     /// Whether the handler filter `expr` is constant: a member of a registry enum (`Key.Space`)

@@ -6,7 +6,8 @@
     "endByte": 25,
     "message": "`state` declarations cannot appear in a material.",
     "notes": [
-      "help: a material contains `param` declarations and a stage function such as `fragment(input: SurfaceInput) -> color { ... }`"
+      "help: a material contains `param` declarations and a stage function such as `fragment(input: SurfaceInput) -> color { ... }`",
+      "help: a material is a GPU program with params and one stage function, and has no state, entities or handlers: add a `param`, and set it from the entity that uses the material, with `bind(...)` for a value that changes"
     ]
   }
 ]

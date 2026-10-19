@@ -1,0 +1,10 @@
+// A prefab and a function belong at the top level of the file, outside the scene.
+scene Demo {
+    camera Main {}
+    prefab Crate {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    }
+    fn twice(x: f32) -> f32 {
+        return x * 2.0;
+    }
+}

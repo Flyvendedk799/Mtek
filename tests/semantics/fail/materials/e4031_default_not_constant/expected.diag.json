@@ -6,7 +6,8 @@
     "endByte": 95,
     "message": "The default of the param 'level' is not a constant expression: it calls the function 'half', and calls of user functions are not constant in v0.1.",
     "notes": [
-      "a default may use only literals, constants, operators, conversions, constructors and const-eligible built-in functions"
+      "a default may use only literals, constants, operators, conversions, constructors and const-eligible built-in functions",
+      "help: a default is fixed when the material is declared; give a value that changes to the instance instead, where an entity uses the material (`material: Name { param: bind(some_state) }`)"
     ]
   },
   {
@@ -16,7 +17,8 @@
     "endByte": 125,
     "message": "The default of the param 'other' is not a constant expression: it refers to the param 'level'.",
     "notes": [
-      "a default may use only literals, constants, operators, conversions, constructors and const-eligible built-in functions"
+      "a default may use only literals, constants, operators, conversions, constructors and const-eligible built-in functions",
+      "help: a default is fixed when the material is declared; give a value that changes to the instance instead, where an entity uses the material (`material: Name { param: bind(some_state) }`)"
     ]
   }
 ]

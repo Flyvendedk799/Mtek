@@ -1,0 +1,14 @@
+// A texture and a sampler made inside the stage: one error per call (E4012), and no second
+// error (E4011) for the locals that hold their results.
+material Gloss {
+    param tint: color = #ffffff;
+    fragment(input: SurfaceInput) -> color {
+        let t = texture.white();
+        let s = sampler.linear_clamp();
+        return color.linear(sample(t, s, input.uv).xyz * tint.rgb, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

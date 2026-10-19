@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 116,
+    "endByte": 125,
+    "message": "The built-in namespace `sampler` has no member 'trilinear'.",
+    "notes": [
+      "the members of `sampler` are: linear_repeat(), linear_clamp(), nearest_repeat(), nearest_clamp()"
+    ]
+  }
+]

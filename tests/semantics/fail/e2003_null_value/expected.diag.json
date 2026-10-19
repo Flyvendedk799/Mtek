@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 180,
+    "endByte": 184,
+    "message": "Unknown name 'null': Mtek has no null value.",
+    "notes": [
+      "no type of v0.1 can be empty: a `state`, a param or a local always holds a value of its type",
+      "help: to say 'no entity', keep a `bool` state next to the `entity_ref` (`state has_target: bool = false;`), start the reference at a named entity of the scene (`state target: entity_ref = Floor;`) and set both when you `spawn`; `alive(target)` is false once the entity is destroyed"
+    ]
+  }
+]

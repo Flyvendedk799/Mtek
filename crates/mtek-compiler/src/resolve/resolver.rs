@@ -484,14 +484,13 @@ impl<'a> Resolver<'a> {
         };
         let mut diagnostic = Diagnostic::new(
             Code::E2003,
-            format!(
-                "The built-in {owner_noun} `{owner_name}` has no member '{written}'."
-            ),
+            format!("The built-in {owner_noun} `{owner_name}` has no member '{written}'."),
         )
         .at(name.span);
         let names = || candidates.iter().map(|(m, _)| *m);
         if let Some(only) = hints::unambiguous(written, names()) {
-            diagnostic = diagnostic.help(format!("did you mean the built-in '{owner_name}.{only}'?"));
+            diagnostic =
+                diagnostic.help(format!("did you mean the built-in '{owner_name}.{only}'?"));
             if name.span.len() as usize == written.len() {
                 diagnostic = diagnostic.candidate(
                     SuggestedEdit::new(format!("rename '{written}' to '{only}'"))
@@ -1771,13 +1770,26 @@ fn foreign_type(name: &str) -> Option<&'static str> {
 /// What to write instead of a global name from another language (`E2003`).
 fn foreign_name_help(name: &str) -> Option<&'static str> {
     Some(match name {
-        "Math" => "math functions are global in Mtek: `sin(x)`, `sqrt(x)`, `pow(x, y)`, `min(a, b)`, `abs(x)`, `clamp(x, lo, hi)`; there is no `Math` object and no `PI` constant, so write the number or declare `const PI: f32 = 3.14159265;`",
-        "console" | "System" | "Debug" => "`print(message: string)` is the development console, in CPU code only",
-        "Vec2" | "Vec3" | "Vec4" | "Vector2" | "Vector3" | "Vector4" | "float2" | "float3" | "float4" => "the vector types are lowercase and are called to build a value: `vec2(x, y)`, `vec3(x, y, z)`, `vec4(x, y, z, w)`",
-        "Color" | "Colour" | "colour" => "the type is `color`: write a literal `#rrggbb` or call `color.linear(rgb, a)`",
-        "Quaternion" | "Quat" => "the type is `quat`: build one with `quat.identity()`, `quat.euler(x, y, z)` or `quat.axis_angle(axis, angle)`",
+        "Math" => {
+            "math functions are global in Mtek: `sin(x)`, `sqrt(x)`, `pow(x, y)`, `min(a, b)`, `abs(x)`, `clamp(x, lo, hi)`; there is no `Math` object and no `PI` constant, so write the number or declare `const PI: f32 = 3.14159265;`"
+        }
+        "console" | "System" | "Debug" => {
+            "`print(message: string)` is the development console, in CPU code only"
+        }
+        "Vec2" | "Vec3" | "Vec4" | "Vector2" | "Vector3" | "Vector4" | "float2" | "float3"
+        | "float4" => {
+            "the vector types are lowercase and are called to build a value: `vec2(x, y)`, `vec3(x, y, z)`, `vec4(x, y, z, w)`"
+        }
+        "Color" | "Colour" | "colour" => {
+            "the type is `color`: write a literal `#rrggbb` or call `color.linear(rgb, a)`"
+        }
+        "Quaternion" | "Quat" => {
+            "the type is `quat`: build one with `quat.identity()`, `quat.euler(x, y, z)` or `quat.axis_angle(axis, angle)`"
+        }
         "this" => "inside an entity or prefab the entity itself is `self`",
-        "dt" | "deltaTime" | "delta_time" => "the time since the last update is the parameter of `update(dt: f32)`; `frame.delta` is the same value",
+        "dt" | "deltaTime" | "delta_time" => {
+            "the time since the last update is the parameter of `update(dt: f32)`; `frame.delta` is the same value"
+        }
         "time" | "elapsed" => "the application time in seconds is `frame.time`",
         _ => return None,
     })

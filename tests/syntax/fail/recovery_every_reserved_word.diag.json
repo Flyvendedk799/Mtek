@@ -36,7 +36,7 @@
     "endByte": 210,
     "message": "`enum` is reserved for a future version of Mtek and cannot be used as a name.",
     "notes": [
-      "help: choose another name"
+      "help: v0.1 has no user-defined enums; use `i32` constants, or the built-in `Key` for keys"
     ]
   },
   {
@@ -56,7 +56,7 @@
     "endByte": 242,
     "message": "`impl` is reserved for a future version of Mtek and cannot be used as a name.",
     "notes": [
-      "help: choose another name"
+      "help: v0.1 has no methods or `impl` blocks; write a function and pass the value as an argument"
     ]
   },
   {
@@ -66,7 +66,7 @@
     "endByte": 257,
     "message": "`loop` is reserved for a future version of Mtek and cannot be used as a name.",
     "notes": [
-      "help: choose another name"
+      "help: v0.1 has only the counted loop `for i in 0..n { ... }` (the bounds are integers, `break` leaves it early); there is no `while` or `loop`"
     ]
   },
   {
@@ -76,7 +76,7 @@
     "endByte": 273,
     "message": "`match` is reserved for a future version of Mtek and cannot be used as a name.",
     "notes": [
-      "help: choose another name"
+      "help: v0.1 has no pattern matching; compare with `==` in an `if ... else if ... else` chain"
     ]
   },
   {
@@ -106,7 +106,7 @@
     "endByte": 316,
     "message": "`mut` is reserved for a future version of Mtek and cannot be used as a name.",
     "notes": [
-      "help: choose another name"
+      "help: variables are declared with `var` (assignable) or `let` (fixed); there is no `mut`"
     ]
   },
   {
@@ -206,7 +206,7 @@
     "endByte": 472,
     "message": "`while` is reserved for a future version of Mtek and cannot be used as a name.",
     "notes": [
-      "help: choose another name"
+      "help: v0.1 has only the counted loop `for i in 0..n { ... }` (the bounds are integers, `break` leaves it early); there is no `while` or `loop`"
     ]
   },
   {

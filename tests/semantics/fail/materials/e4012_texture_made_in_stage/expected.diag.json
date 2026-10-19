@@ -1,0 +1,38 @@
+[
+  {
+    "code": "MTEK-E4012",
+    "file": "src/main.mtek",
+    "startByte": 260,
+    "endByte": 275,
+    "message": "`texture.white` is a CPU-only built-in function, but the fragment stage of material 'Gloss' runs on the GPU.",
+    "related": [
+      {
+        "message": "the fragment stage of material 'Gloss' runs on the GPU",
+        "file": "src/main.mtek",
+        "startByte": 203,
+        "endByte": 211
+      }
+    ],
+    "notes": [
+      "help: textures and samplers are made outside the stage: declare them as params of the material with their default (`param tex: texture = texture.white();`, `param smp: sampler = sampler.linear_repeat();`, or `asset.texture(\"file.png\")`) and write `sample(tex, smp, uv)` in the stage"
+    ]
+  },
+  {
+    "code": "MTEK-E4012",
+    "file": "src/main.mtek",
+    "startByte": 293,
+    "endByte": 315,
+    "message": "`sampler.linear_clamp` is a CPU-only built-in function, but the fragment stage of material 'Gloss' runs on the GPU.",
+    "related": [
+      {
+        "message": "the fragment stage of material 'Gloss' runs on the GPU",
+        "file": "src/main.mtek",
+        "startByte": 203,
+        "endByte": 211
+      }
+    ],
+    "notes": [
+      "help: textures and samplers are made outside the stage: declare them as params of the material with their default (`param tex: texture = texture.white();`, `param smp: sampler = sampler.linear_repeat();`, or `asset.texture(\"file.png\")`) and write `sample(tex, smp, uv)` in the stage"
+    ]
+  }
+]

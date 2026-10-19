@@ -686,7 +686,7 @@ fn names_that_are_not_values_are_e3001() {
         ),
         (
             "const H = 1.0;\nconst A = H(2.0);",
-            "Only functions and constructors can be called, but this expression has type f32.",
+            "Only functions and constructors can be called, but 'H' has type f32.",
         ),
     ] {
         let c = checked(&format!("{source}\nscene Demo {{ camera Main {{}} }}\n"));

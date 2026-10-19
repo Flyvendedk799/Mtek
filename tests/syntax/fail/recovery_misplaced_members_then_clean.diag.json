@@ -6,7 +6,8 @@
     "endByte": 19,
     "message": "`fn` declarations cannot appear in a scene.",
     "notes": [
-      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers",
+      "help: declare functions at the top level of the file, outside the scene, entity or block, and call them from there"
     ]
   },
   {
@@ -16,7 +17,8 @@
     "endByte": 41,
     "message": "`param` declarations cannot appear in a scene.",
     "notes": [
-      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers",
+      "help: a `param` belongs to a `prefab` or a `material`; in a scene use `state name: Type = value;` for a value that changes and `const name: Type = value;` for one that does not"
     ]
   },
   {
@@ -26,7 +28,8 @@
     "endByte": 85,
     "message": "Statements cannot appear in a scene.",
     "notes": [
-      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers",
+      "help: statements go inside a lifecycle function (`update(dt: f32) { ... }` or `fixed_update(dt: f32) { ... }`) or an event handler (`on key_down(Key.Space) { ... }`); a value kept between frames is a `state`, a fixed one a `const`"
     ]
   },
   {
@@ -36,7 +39,8 @@
     "endByte": 124,
     "message": "`param` declarations cannot appear in an entity.",
     "notes": [
-      "help: an entity contains fields (`name: value;`), `const`, `state`, nested `entity` declarations, lifecycle functions and `on` handlers"
+      "help: an entity contains fields (`name: value;`), `const`, `state`, nested `entity` declarations, lifecycle functions and `on` handlers",
+      "help: a `param` belongs to a `prefab` or a `material`; in a scene use `state name: Type = value;` for a value that changes and `const name: Type = value;` for one that does not"
     ]
   }
 ]

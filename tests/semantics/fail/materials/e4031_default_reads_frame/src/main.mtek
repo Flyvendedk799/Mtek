@@ -1,0 +1,11 @@
+// A param default is fixed when the material is declared: `frame.time` changes at run time.
+material Pulse {
+    param phase: f32 = frame.time;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(vec3(phase), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

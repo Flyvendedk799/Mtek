@@ -1,0 +1,9 @@
+// The filter of `on key_down` is written as the member itself: a constant that holds a key is not
+// allowed (E3090), and using it as a filter is not constant either (E5061).
+const WANTED = Key.Space;
+
+scene Demo {
+    camera Main {}
+    on key_down(WANTED) {
+    }
+}

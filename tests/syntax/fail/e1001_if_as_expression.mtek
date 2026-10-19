@@ -1,0 +1,4 @@
+fn pick(a: f32, b: f32, flag: bool) -> f32 {
+    let x = if flag { a } else { b };
+    return x;
+}

@@ -18,7 +18,10 @@
     "file": "fail_characters.mtek",
     "startByte": 40,
     "endByte": 41,
-    "message": "Character `?` (U+003F) is not part of the Mtek syntax."
+    "message": "Character `?` (U+003F) is not part of the Mtek syntax.",
+    "notes": [
+      "help: there is no ternary operator and no optional value in v0.1; assign in the branches of an `if` statement: `var x = a; if cond { x = b; }`"
+    ]
   },
   {
     "code": "MTEK-E0005",

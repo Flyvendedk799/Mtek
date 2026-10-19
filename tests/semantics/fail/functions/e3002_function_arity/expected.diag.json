@@ -4,7 +4,7 @@
     "file": "src/main.mtek",
     "startByte": 122,
     "endByte": 132,
-    "message": "`mix3` takes 3 arguments, but 2 were given.",
+    "message": "`mix3` takes 3 arguments (a: f32, b: f32, t: f32), but 2 were given.",
     "related": [
       {
         "message": "the function 'mix3' is declared here",
@@ -14,7 +14,8 @@
       }
     ],
     "notes": [
-      "signature: mix3(a: f32, b: f32, t: f32) -> f32"
+      "signature: mix3(a: f32, b: f32, t: f32) -> f32",
+      "help: add the missing argument `t: f32`"
     ]
   }
 ]

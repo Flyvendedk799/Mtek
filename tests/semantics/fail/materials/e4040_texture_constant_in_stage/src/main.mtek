@@ -1,0 +1,14 @@
+// A texture constant cannot be read by a stage; a param can take it as its default.
+const PLAIN = texture.white();
+const FILTER = sampler.linear_repeat();
+
+material Gloss {
+    param tint: color = #ffffff;
+    fragment(input: SurfaceInput) -> color {
+        return color.linear(sample(PLAIN, FILTER, input.uv).xyz * tint.rgb, 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

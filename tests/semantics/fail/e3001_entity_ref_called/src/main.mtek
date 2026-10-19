@@ -1,0 +1,11 @@
+// An `entity_ref` is a value: the diagnostic lists what can be done with one.
+scene Demo {
+    state target: entity_ref = Floor;
+    camera Main {}
+    entity Floor {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    }
+    on key_down(Key.Space) {
+        let r = target(1.0);
+    }
+}

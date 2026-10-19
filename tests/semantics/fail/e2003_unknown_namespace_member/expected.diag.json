@@ -6,7 +6,8 @@
     "endByte": 53,
     "message": "The built-in namespace `quat` has no member 'identty'.",
     "notes": [
-      "help: did you mean the built-in 'quat.identity'?"
+      "help: did you mean the built-in 'quat.identity'?",
+      "the members of `quat` are: identity(), axis_angle(), euler()"
     ],
     "suggestedEdits": [
       {

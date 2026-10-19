@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E0013",
+    "file": "src/main.mtek",
+    "startByte": 143,
+    "endByte": 148,
+    "message": "`while` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: v0.1 has only the counted loop `for i in 0..n { ... }` (the bounds are integers, `break` leaves it early); there is no `while` or `loop`"
+    ]
+  }
+]

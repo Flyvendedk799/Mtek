@@ -1,0 +1,6 @@
+// `Math` is not a Mtek name: the functions are global and there is no `PI` constant.
+const HALF_TURN: f32 = Math.PI;
+
+scene Demo {
+    camera Main {}
+}

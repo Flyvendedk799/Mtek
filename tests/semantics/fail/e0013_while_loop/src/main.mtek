@@ -1,0 +1,12 @@
+// `while` is reserved: one error that says which loop exists, and no second error for an unknown name.
+fn count() -> i32 {
+    var i = 0;
+    while i < 3 {
+        i += 1;
+    }
+    return i;
+}
+
+scene Demo {
+    camera Main {}
+}

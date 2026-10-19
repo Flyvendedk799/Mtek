@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 212,
+    "endByte": 214,
+    "message": "The built-in enum `Key` has no member 'Up'.",
+    "notes": [
+      "help: did you mean the built-in 'Key.ArrowUp'?",
+      "the members of `Key` are: A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, Digit0, Digit1, Digit2, Digit3, Digit4, Digit5, Digit6, Digit7, Digit8, Digit9, Space, Enter, Escape, Tab, Backspace, ShiftLeft, ShiftRight, ControlLeft, ControlRight, AltLeft, AltRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight"
+    ],
+    "suggestedEdits": [
+      {
+        "description": "rename 'Up' to 'ArrowUp'",
+        "edits": [
+          {
+            "file": "src/main.mtek",
+            "startByte": 212,
+            "endByte": 214,
+            "replacement": "ArrowUp"
+          }
+        ]
+      }
+    ]
+  }
+]

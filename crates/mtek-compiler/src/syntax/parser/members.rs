@@ -110,15 +110,15 @@ fn declaration_where_instead(kind: TokenKind, next: &str, place: Place) -> Optio
         TokenKind::KwFn | TokenKind::KwCpu => Some(
             "declare functions at the top level of the file, outside the scene, entity or block, and call them from there",
         ),
-        TokenKind::KwStruct | TokenKind::KwMaterial => Some(
-            "declare structs and materials at the top level of the file, outside the scene",
-        ),
+        TokenKind::KwStruct | TokenKind::KwMaterial => {
+            Some("declare structs and materials at the top level of the file, outside the scene")
+        }
         TokenKind::KwImport | TokenKind::KwExport => {
             Some("`import` and `export` belong at the top level of a file")
         }
-        TokenKind::KwScene => Some(
-            "declare the scene at the top level of the file; a project mounts one scene",
-        ),
+        TokenKind::KwScene => {
+            Some("declare the scene at the top level of the file; a project mounts one scene")
+        }
         TokenKind::KwEntity if place == Place::TopLevel => Some(
             "entities are declared inside a scene: `scene Name { entity Thing { ... } }`; a reusable entity is a top-level `prefab`",
         ),

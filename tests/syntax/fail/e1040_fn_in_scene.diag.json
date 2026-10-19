@@ -6,7 +6,8 @@
     "endByte": 19,
     "message": "`fn` declarations cannot appear in a scene.",
     "notes": [
-      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers"
+      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers",
+      "help: declare functions at the top level of the file, outside the scene, entity or block, and call them from there"
     ]
   }
 ]

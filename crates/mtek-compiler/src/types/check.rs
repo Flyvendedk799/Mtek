@@ -2052,7 +2052,15 @@ impl<'a> Checker<'a> {
                     if args.len() == 1 { "" } else { "s" },
                     if args.len() == 1 { "s" } else { "" }
                 );
-                self.report_argument_noted(arg.span, index, &text, *param, actual, None, Some(note));
+                self.report_argument_noted(
+                    arg.span,
+                    index,
+                    &text,
+                    *param,
+                    actual,
+                    None,
+                    Some(note),
+                );
             }
         }
         if ok {
@@ -2269,8 +2277,14 @@ impl<'a> Checker<'a> {
                 ),
                 _ => None,
             };
+            // The parameters go in the message when they are plain types; a class (`T`) needs
+            // the signature note to be understood.
+            let plain = function
+                .signatures
+                .iter()
+                .all(|s| s.params.iter().all(|p| matches!(p.ty, SigType::Exact(_))));
             let listed = match &only {
-                Some(params) if !params.is_empty() => format!(" ({})", params.join(", ")),
+                Some(params) if plain && !params.is_empty() => format!(" ({})", params.join(", ")),
                 _ => String::new(),
             };
             let mut diagnostic = Diagnostic::new(

@@ -1,0 +1,6 @@
+// `sampler.trilinear` is no member; nothing is near, so every member of the namespace is listed.
+const S = sampler.trilinear();
+
+scene Demo {
+    camera Main {}
+}
