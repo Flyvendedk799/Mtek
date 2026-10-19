@@ -19,7 +19,7 @@ describe("launch arguments", () => {
     expect(hardwareLaunchArgs({}, "darwin")).not.toContain("--use-angle=vulkan");
   });
 
-  it("presents SwiftShader canvases through the headless Linux Vulkan path only on Linux", () => {
+  it("selects the SwiftShader Vulkan presentation path only on Linux", () => {
     const windows = ["--enable-unsafe-webgpu", "--use-webgpu-adapter=swiftshader", "--enable-webgpu-developer-features"];
     expect(softwareLaunchArgs({}, "win32")).toEqual(windows);
     expect(softwareLaunchArgs({}, "darwin")).toEqual(windows);

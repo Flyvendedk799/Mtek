@@ -310,7 +310,13 @@ fn empty_host_port_names_fail_check_and_build_before_emission() {
                 stderr(&out)
             );
             let report = report_of(&out, &scratch);
-            assert_eq!(codes(&report), ["MTEK-E9001"]);
+            // Rust-only builds also report the missing runtime; checking never needs it.
+            let expected_codes = if command == "build" && !cfg!(mtek_runtime_embedded) {
+                vec!["MTEK-E9001", "MTEK-E9030"]
+            } else {
+                vec!["MTEK-E9001"]
+            };
+            assert_eq!(codes(&report), expected_codes);
             assert_eq!(
                 report["diagnostics"][0]["message"],
                 format!("Invalid project configuration: host.{direction} names must not be empty.")

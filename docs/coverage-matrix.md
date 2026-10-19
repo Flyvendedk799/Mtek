@@ -239,7 +239,7 @@ Every fact that only this demonstration exercises (21):
 | `function:mat4.columns` | 0 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_columns` (+2) |
 | `function:mat4.identity` † | 0 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_identity` (+3) |
 | `function:mat4.rotation` | 3 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_rotation` (+2) |
-| `function:mat4.scale` | 10 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_scale` (+3) |
+| `function:mat4.scale` | 9 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_scale` (+3) |
 | `function:mat4.translation` | 0 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_translation` (+6) |
 | `function:max` | 1 |  |  |  |  | `tests/semantics/pass/types/intrinsics_integer_overloads` (+4) |
 | `function:min` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_integer_overloads` (+3) |

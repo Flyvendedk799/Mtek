@@ -44,7 +44,8 @@ export function hardwareLaunchArgs(
 /**
  * SwiftShader correctness runs must present the canvas as well as render offscreen textures.
  * Linux uses the same ANGLE/Vulkan presentation path as the hardware project. Chromium's
- * disable-vulkan-surface switch presents via bitblt instead of an unavailable headless swapchain.
+ * disable-vulkan-surface switch presents via bitblt. Canvas screenshot tests also need a real
+ * display on Linux (CI uses headed Chromium under Xvfb); these flags alone are insufficient.
  */
 export function softwareLaunchArgs(
   env: Environment = process.env,
