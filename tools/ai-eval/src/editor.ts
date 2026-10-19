@@ -86,6 +86,20 @@ export function isProjectSource(path: string): boolean {
   return path === "mtek.toml" || /^src\/(?:[^/]+\/)*[^/]+\.mtek$/.test(path);
 }
 
+/** The files of a baseline (TypeScript + three.js) project that a model may change: the `.ts` files under `src/`. Never `tsconfig.json`, assets or anything else. */
+export function isBaselineSource(path: string): boolean {
+  return /^src\/(?:[^/]+\/)*[^/]+\.ts$/.test(path);
+}
+
+/** The policy of a baseline project: the same rules as `defaultEditPolicy`, over the `.ts` files. */
+export function baselineEditPolicy(mode: "cold" | "edit"): EditPolicy {
+  return {
+    isWritable: isBaselineSource,
+    wholeFile: mode === "cold" ? "any" : "create-only",
+    writableDescription: "the .ts files under src/",
+  };
+}
+
 /** Cold tasks are authored from nothing, so whole files are fine; edit tasks change existing files by search and replace only. */
 export function defaultEditPolicy(mode: "cold" | "edit"): EditPolicy {
   return {

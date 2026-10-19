@@ -21,6 +21,10 @@ imports the harness, an adapter or a provider library (`src/check-boundary.ts`).
   (what `mtek test` needs, decision 0074). Without them those layers are **NOT-RUN**, and a candidate
   with a layer that did not run is never a success.
 
+The benchmark runs of M7-05 (the three.js baseline side, the spend guard, the report) are described under
+[Benchmark runs](#benchmark-runs) below and in [decision 0108](../../spec/decisions/0108-ai-benchmark-run-and-report.md);
+the pilot and the scopes of the full run are [decision 0109](../../spec/decisions/0109-ai-benchmark-pilot-and-scopes.md).
+
 ## Commands
 
 ```
@@ -54,6 +58,7 @@ It never overwrites an existing run. Options:
 | `--max-bytes N` | the `mtek context` budget (default 24000) |
 | `--test-feedback messages\|status-only` | whether the model sees the failure messages of the task's tests (default `messages`, what `mtek test` prints) |
 | `--trial-kind unconstrained\|constrained` | see below |
+| `--side mtek\|baseline\|mtek-guide` | which project of the task is worked on (see [Sides](#sides)) |
 | `--trials N`, `--first-trial N` | repetitions and the index of the first |
 | `--scratch DIR`, `--keep-scratch` | where candidates are made, and keeping them |
 
@@ -140,7 +145,7 @@ item 10, wired by the orchestrator after M6-06 merged).
 | Adapter | Transport | Notes |
 |---|---|---|
 | `replay` | none | recorded responses, in order; the only adapter the unit tests and CI use |
-| `anthropic` | the official `@anthropic-ai/sdk` (optional dependency) | no default model, no seed, no grammar; `inputTokens` is the whole input, `cachedInputTokens` the cache reads |
+| `anthropic` | the official `@anthropic-ai/sdk` (optional dependency) | no default model, no seed, no grammar, no retries; `inputTokens` is the whole input, `cachedInputTokens` the cache reads, `cacheWriteInputTokens` the cache writes; `promptCaching` puts one cache breakpoint on the newest message (Haiku 4.5 caches prefixes of at least 4 096 tokens); run against the real service for the first time on 2026-10-19 (decision 0108 item 5) |
 | `openai-compatible` | `POST {base-url}/chat/completions` | hosted or local servers; seed forwarded, no grammar |
 | `llama-cpp` | `llama-server`'s `/v1/chat/completions` | forwards `grammar` and `seed`; tested against a fake transport only |
 
@@ -154,3 +159,48 @@ fake `fetch`: no test opens a network connection.
 tested with the replay client and a scripted stand-in for `mtek`; `test/integration.test.ts` runs the
 real compiler on the benchmark tasks (it needs a built `mtek` and is reported as skipped without one;
 it makes `mtek test` NOT-RUN on purpose with an unusable Node, so it needs no GPU).
+
+## Sides
+
+A trial works on one side of the comparison (decision 0108 items 1 to 4): `mtek` (the task's Mtek project, validated
+by `mtek check`, `mtek build` and `mtek test`), `baseline` (the task's TypeScript + three.js r186 project, validated by
+the TypeScript compiler, the bundler and the task's own fixtures in a browser: `benchmarks/baselines/support/test/run-candidate.ts`)
+and `mtek-guide` / `mtek-getting-started` / `mtek-reference` (the Mtek side with that document of `docs/` added after the
+compiler context). The loop, the edit format, the budgets, the feedback wording and the token accounting are the same; the
+documentation is what differs (`mtek context`, or `benchmarks/baselines/docs/reference.md`, whose tokens are counted the same way).
+The side is part of the condition and of the trial id (`<task>--baseline-unconstrained--00`). A baseline candidate is made in
+`node_modules/.cache/mtek-ai-eval/` of the checkout so that `three` resolves.
+
+## Benchmark runs
+
+```
+node tools/ai-eval/src/benchmark-run.ts (--tasks id,id | --all) [--holdout] [--sides mtek,baseline,mtek-guide]
+     --client anthropic --model claude-haiku-4-5-20251001 --spend-cap USD [--spend-ledger FILE]
+     [--api-key-file FILE] [--temperature N|default] [--trials N] [--first-trial N] [--order trial-major|task-major]
+     [--no-prompt-caching] [--gpu-lock DIR] [--run-id ID] [--out DIR]
+node tools/ai-eval/src/report-cli.ts --run DIR [--run DIR ...] --out report.md [--projection FILE --budget USD] [--holdout-summary FILE]
+```
+
+- `benchmark-run` makes the attempts tasks x sides x trial kinds x trials for one model into `<out>/<run-id>/` (default
+  `benchmarks/results/ai/`): `records.jsonl` (the settings of the run, every call, edit and validation, the spend, a `run-end`
+  record) and the final candidate of every trial. Trial index is outermost (`--order task-major` puts the trials of a task and
+  side together so their first prompt is served from the provider's cache). It never overwrites a run.
+- **Money.** A provider is refused without `--spend-cap`. The cap is a ceiling on the total of the ledger, a file OUTSIDE the
+  repository (default `<home>/gate-m7/ai-spend.json`) that persists across runs. Before each call the worst case of the call
+  (the estimated input at the dearest input price plus the task's `max_output_tokens` at the output price) must fit under the
+  cap; after it the cost computed from the provider's usage is charged. A refused call is recorded as `budget-exceeded`
+  (budget `spend`) and the attempt ends **unfinished** (reason `budget-spend`); so does every attempt planned after it.
+  Prices are in `src/spend.ts` (`PRICING`); a model without a price cannot be run.
+- **Credentials.** The key is read from `--api-key-file FILE` (into the client only; never `process.env`, never a command line)
+  or from the variable named by `--api-key-env` (default `ANTHROPIC_API_KEY`). It is in no record, no output line and no error
+  text (`scrubSecrets`); the repository holds no key.
+- `--gpu-lock DIR` takes a lock directory around the commands that open the browser (`mtek test`, the baseline runner) so that the
+  GPU is never shared with another run; it is released also on an error or an interrupt.
+- `--holdout` takes the tasks from `benchmarks/holdout/` and refuses a run directory inside the repository (a record holds
+  the prompt and the candidate; decisions 0021 and 0085). `report-cli` turns such a run into ids and layer outcomes only.
+- `report-cli` computes, from the stored records only: outcomes, completion rate, tokens per completed task (UNDEFINED, never 0,
+  when nothing completes), medians and interquartile ranges, input/output and cached/uncached tokens apart, first-attempt success,
+  the attribution of input tokens to parts of the prompt, per category and per mode, every attempt, and the conclusion on H4 by
+  the rule of decision 0108 item 11 (better, equivalent, worse or inconclusive, and whether it is provisional). `--projection`
+  writes the cost of six scopes of the full protocol from the cost per attempt in the runs (`src/projection.ts`).
+

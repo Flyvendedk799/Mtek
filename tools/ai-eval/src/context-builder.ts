@@ -17,6 +17,8 @@ export interface BuiltContext {
   contextFormat: number;
   /** Sections the compiler dropped to fit `--max-bytes`, as it reports them; null when nothing was dropped. */
   truncated: Record<string, unknown> | null;
+  /** Documents given to the model after the context (a condition that adds the language guide, decision 0108); `bytes` and `sha256` then cover them too. */
+  appendix?: { name: string; text: string }[];
 }
 
 /** The entry module of a project: `project.entry` of its `mtek.toml`, default `src/main.mtek` (spec/tooling.md section 3). */

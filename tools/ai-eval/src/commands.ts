@@ -102,3 +102,6 @@ export function createMtekRunner(mtekPath: string, baseEnv: Readonly<Record<stri
     },
   };
 }
+
+/** A runner for any program (the baseline's candidate runner is `node`): the same process handling as `createMtekRunner`, named for what it is. */
+export const createProgramRunner = createMtekRunner;

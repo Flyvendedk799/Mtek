@@ -15,10 +15,10 @@
 import { join } from "node:path";
 import { sha256Hex, canonicalJson, type Json } from "./canonical.ts";
 import { BudgetTracker, type BudgetStop } from "./budget.ts";
-import { ContextBuilder, type BuiltContext } from "./context-builder.ts";
+import type { BuiltContext } from "./context-builder.ts";
 import type { Clock } from "./clock.ts";
 import type { CommandRunner } from "./commands.ts";
-import { applyEdits, defaultEditPolicy, parseModuleReply, parseReply, type EditPolicy, type ParsedReply } from "./editor.ts";
+import { applyEdits, parseModuleReply, parseReply, type EditPolicy, type ParsedReply } from "./editor.ts";
 import { ConfigError, ToolError } from "./errors.ts";
 import { defaultGrammarCapability, GRAMMAR_UNAVAILABLE_MESSAGE, type GrammarCapability, type TrialKind } from "./grammar.ts";
 import {
@@ -31,12 +31,13 @@ import {
   type Usage,
 } from "./model-client.ts";
 import type { GenerationOutcome, TrialOutcome, TrialReason, Verdict } from "./outcomes.ts";
-import { initialPrompt, PROMPT_VERSION, rejectionPrompt, systemPrompt, validationPrompt, type PromptText, type TestFeedback } from "./prompts.ts";
+import { rejectionPrompt, validationPrompt, type PromptText, type TestFeedback } from "./prompts.ts";
 import type { Condition, Recorder, TrialEndRecord } from "./recorder.ts";
 import { projectEntry } from "./context-builder.ts";
 import type { TaskSpec } from "./task.ts";
-import { scrubPaths, Validator, type ValidationResult } from "./validator.ts";
-import { Workspace } from "./workspace.ts";
+import { mtekSide, type CandidateValidator, type Side } from "./side.ts";
+import { scrubPaths, type ValidationResult } from "./validator.ts";
+import type { Workspace } from "./workspace.ts";
 
 export const DEFAULT_CONTEXT_MAX_BYTES = 24_000;
 
@@ -47,6 +48,8 @@ interface Started {
 
 export interface TrialConfig {
   task: TaskSpec;
+  /** Which project of the task is worked on: `mtek` (default) or the three.js `baseline` (decision 0108). */
+  side?: Side;
   client: ModelClient;
   trialKind: TrialKind;
   /** The index among the repetitions of this condition. */
@@ -73,14 +76,19 @@ export interface LoopDeps {
   /** The run directory. When given, the final candidate of every trial is preserved below it. */
   runDir?: string | null;
   grammar?: GrammarCapability;
+  /** Runs `node` for the baseline's candidate runner; default the real one. */
+  programRunner?: CommandRunner;
   keepScratch?: boolean;
   /** Aborts the trial's model calls (a Ctrl-C of the CLI). */
   signal?: AbortSignal;
-  validator?: Validator;
+  /** Replaces the validator of every side (tests). */
+  validator?: CandidateValidator;
 }
 
 export interface TrialResult {
   trialId: string;
+  /** What the trial's calls were charged by the spend guard, USD; null when no guard was in use. */
+  costUsd?: number | null;
   outcome: TrialOutcome;
   reason: TrialReason | null;
   message: string | null;
@@ -91,8 +99,9 @@ export interface TrialResult {
   usage: Usage;
 }
 
-export function trialIdOf(task: TaskSpec, kind: TrialKind, index: number): string {
-  return `${task.id}--${kind}--${String(index).padStart(2, "0")}`;
+export function trialIdOf(task: TaskSpec, kind: TrialKind, index: number, side = "mtek"): string {
+  // The Mtek side keeps the id it always had; the other sides say who they are, so they never collide in one run.
+  return `${task.id}--${side === "mtek" ? "" : `${side}-`}${kind}--${String(index).padStart(2, "0")}`;
 }
 
 /** The condition of a trial and its id: the hash of everything that identifies it (spec 4.2). */
@@ -105,7 +114,7 @@ export function conditionOf(config: TrialConfig, replyFormat: "edit-blocks" | "m
     maxOutputTokens: task.budgets.maxOutputTokens,
     stop: config.stop === undefined ? null : [...config.stop],
     seed: config.seed ?? null,
-    promptVersion: PROMPT_VERSION,
+    promptVersion: (config.side ?? mtekSide).promptVersion,
     testFeedback: config.testFeedback ?? "messages",
     contextMaxBytes: config.contextMaxBytes ?? DEFAULT_CONTEXT_MAX_BYTES,
     maxRepairs: config.maxRepairs ?? task.budgets.maxRepairs,
@@ -113,6 +122,9 @@ export function conditionOf(config: TrialConfig, replyFormat: "edit-blocks" | "m
     maxTotalTokens: config.maxTotalTokens ?? null,
     trialKind: config.trialKind,
     replyFormat,
+    side: (config.side ?? mtekSide).kind,
+    promptCaching: config.client.promptCaching === true,
+    documentation: (config.side ?? mtekSide).documentationId(),
   };
   return { condition, id: sha256Hex(canonicalJson(condition as unknown as Json)) };
 }
@@ -141,13 +153,9 @@ const GENERATION_REASONS: Record<Exclude<GenerationOutcome, "completed" | "budge
 
 export class RepairLoop {
   private readonly deps: LoopDeps;
-  private readonly validator: Validator;
-  private readonly contextBuilder: ContextBuilder;
 
   constructor(deps: LoopDeps) {
     this.deps = deps;
-    this.validator = deps.validator ?? new Validator(deps.runner, { clock: deps.clock });
-    this.contextBuilder = new ContextBuilder(deps.runner);
   }
 
   async run(config: TrialConfig): Promise<TrialResult> {
@@ -156,14 +164,17 @@ export class RepairLoop {
     if (config.seed !== undefined && !client.capabilities.seed) {
       throw new ConfigError(`the client '${client.provider}' cannot apply a seed; run without one (a seed that is recorded but not applied would be a false record)`);
     }
-    const trialId = trialIdOf(task, trialKind, config.trialIndex);
-    const policy = config.policy ?? defaultEditPolicy(task.mode);
+    const side = config.side ?? mtekSide;
+    const trialId = trialIdOf(task, trialKind, config.trialIndex, side.label);
+    const policy = config.policy ?? side.policy(task);
     const started: Started = { iso: clock.iso(), ms: clock.nowMs() };
 
     // Constrained trials: ask for the capability first, and never fall back to unconstrained.
     let grammar: { grammar: string; backend: string; replyFormat: "edit-blocks" | "module" } | null = null;
     let unavailable: string | null = null;
-    if (trialKind === "constrained") {
+    if (trialKind === "constrained" && !side.supportsConstrained) {
+      unavailable = `the ${side.kind} side has no grammar-constrained mode (spec 6.4 lists constrained for Mtek only)`;
+    } else if (trialKind === "constrained") {
       const check = await (this.deps.grammar ?? defaultGrammarCapability).check(client);
       if (!check.available) unavailable = check.reason;
       else if (!client.capabilities.grammar) unavailable = `the client '${client.provider}' does not forward grammars`;
@@ -203,9 +214,9 @@ export class RepairLoop {
       });
     }
 
-    const workspace = Workspace.create(task, this.deps.scratchRoot, trialId);
+    const workspace = side.createWorkspace(task, this.deps.scratchRoot, trialId);
     try {
-      return await this.trial(config, trialId, policy, condition, conditionId, replyFormat, grammar, workspace, started);
+      return await this.trial(config, side, trialId, policy, condition, conditionId, replyFormat, grammar, workspace, started);
     } finally {
       if (this.deps.keepScratch !== true) workspace.dispose();
     }
@@ -213,6 +224,7 @@ export class RepairLoop {
 
   private async trial(
     config: TrialConfig,
+    side: Side,
     trialId: string,
     policy: EditPolicy,
     condition: Condition,
@@ -229,11 +241,7 @@ export class RepairLoop {
     let context: BuiltContext | null = null;
     let contextError: string | null = null;
     try {
-      context = await this.contextBuilder.build({
-        projectDir: workspace.projectDir,
-        symbols: task.mode === "edit" ? task.requiredSymbols : [],
-        maxBytes: condition.contextMaxBytes,
-      });
+      context = await side.buildContext(task, workspace, { runner: this.deps.runner, maxBytes: condition.contextMaxBytes });
     } catch (error) {
       if (!(error instanceof ToolError)) throw error;
       contextError = scrubPaths(error.message, [[workspace.projectDir, "<project>"]]);
@@ -279,14 +287,16 @@ export class RepairLoop {
     );
     budget.start();
 
-    const system = systemPrompt(task, policy);
+    const system = side.systemPrompt(task, policy);
     const files = workspace.sourceFiles().map((path) => ({ path, content: workspace.read(path) ?? "" }));
-    let prompt: PromptText = initialPrompt(task, context, files);
+    let prompt: PromptText = side.initialPrompt(task, context, files);
+    const validator = this.deps.validator ?? side.createValidator(task, { runner: this.deps.runner, clock, ...(this.deps.programRunner === undefined ? {} : { programRunner: this.deps.programRunner }) });
     const messages: ChatMessage[] = [{ role: "user", content: prompt.text }];
     const changed = new Set<string>();
     let firstAttempt: ValidationResult | null = null;
     let final: ValidationResult | null = null;
     let repairsUsed = 0;
+    let spent: number | null = null;
 
     for (let round = 0; round <= condition.maxRepairs; round += 1) {
       const result = (partial: Omit<TrialResult, "trialId" | "calls" | "repairsUsed" | "firstAttempt" | "final" | "usage">): Promise<TrialResult> =>
@@ -297,6 +307,7 @@ export class RepairLoop {
           firstAttempt,
           final,
           usage: budget.usage,
+          costUsd: spent,
         });
 
       // 1. Budgets are checked before every call.
@@ -335,8 +346,15 @@ export class RepairLoop {
           error: error instanceof Error ? error.message : String(error),
         };
       }
+      // The spend guard refused the call: the provider was not reached. The call is recorded as prevented by a
+      // budget and the trial is unfinished by budget, never a success and never dropped (decision 0108).
+      if (generated.budgetStop === "spend") {
+        this.recordBudgetStop(trialId, round, "spend", generated.error ?? null, generated.ledgerTotalUsd ?? null);
+        return result({ outcome: "unfinished", reason: "budget-spend", message: generated.error ?? "the spend cap was reached" });
+      }
       const generation = generationOf(generated);
       budget.record(generated.usage);
+      if (generated.costUsd !== undefined) spent = (spent ?? 0) + generated.costUsd;
       recorder.record({
         type: "model-call",
         trialId,
@@ -358,6 +376,8 @@ export class RepairLoop {
         generation,
         error: generated.error ?? null,
         budget: null,
+        costUsd: generated.costUsd ?? null,
+        ledgerTotalUsd: generated.ledgerTotalUsd ?? null,
         startedAt: callIso,
         durationMs: Math.max(0, Math.round(clock.nowMs() - callStarted)),
       });
@@ -414,10 +434,10 @@ export class RepairLoop {
       let validation: ValidationResult | null = null;
       if (applied.rejected.length === 0) {
         const validationStarted = clock.iso();
-        validation = await this.validator.validate({
+        validation = await validator.validate({
           projectDir: workspace.projectDir,
           outDir: join(workspace.root, "out"),
-          requiredSymbols: task.requiredSymbols,
+          requiredSymbols: side.requiredSymbols(task),
         });
         firstAttempt ??= validation;
         final = validation;
@@ -470,7 +490,7 @@ export class RepairLoop {
     throw new Error("unreachable: the last round returns");
   }
 
-  private recordBudgetStop(trialId: string, round: number, stop: BudgetStop): void {
+  private recordBudgetStop(trialId: string, round: number, stop: BudgetStop, error: string | null = null, ledgerTotalUsd: number | null = null): void {
     this.deps.recorder.record({
       type: "model-call",
       trialId,
@@ -482,8 +502,10 @@ export class RepairLoop {
       usage: null,
       finish: null,
       generation: "budget-exceeded",
-      error: null,
+      error,
       budget: stop,
+      costUsd: null,
+      ledgerTotalUsd,
       startedAt: this.deps.clock.iso(),
       durationMs: 0,
     });
@@ -517,8 +539,10 @@ export class RepairLoop {
         inputTokens: result.usage.inputTokens,
         outputTokens: result.usage.outputTokens,
         cachedInputTokens: result.usage.cachedInputTokens ?? null,
+        ...(result.usage.cacheWriteInputTokens === undefined ? {} : { cacheWriteInputTokens: result.usage.cacheWriteInputTokens }),
       },
       durationMs: Math.max(0, Math.round(clock.nowMs() - started.ms)),
+      costUsd: result.costUsd ?? null,
       finalProject,
     });
     return Promise.resolve({ trialId, ...result });

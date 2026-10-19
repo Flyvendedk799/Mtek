@@ -118,7 +118,7 @@ export function renderDiagnostics(
   const errors = report.filter((d) => d.severity === "error");
   const shown = errors.slice(0, options.maxDiagnostics);
   const parts = shown.map((d, i) => {
-    const lines = [`diagnostic ${String(i + 1)} of ${String(errors.length)}:`, canonicalJson(d as unknown as Json)];
+    const lines = [`diagnostic ${String(i + 1)} of ${String(errors.length)}:`, typeof d["rendered"] === "string" ? d["rendered"] : canonicalJson(d as unknown as Json)];
     if (d.source !== null) {
       const text = readFile(d.source.file);
       if (text !== undefined) lines.push(`${d.source.file} around line ${String(d.source.startLine)}:`, excerpt(text, d.source.startLine, d.source.endLine, options.context));

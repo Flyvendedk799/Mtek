@@ -1,0 +1,23 @@
+import { Sweep } from "./sweep.mtek";
+
+scene Demo {
+  clear_color: #202020;
+  
+  camera Main {
+    position: vec3(0.0, 0.0, 6.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.9;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+  
+  entity Panel {
+    position: vec3(0.4, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(4.0, 2.0, 0.2);
+    };
+    material: Sweep;
+  }
+}

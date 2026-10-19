@@ -7,10 +7,13 @@
 // The fixtures are copied in as `tests/*.test.toml` (decision 0021 item 3, the way `mtek test` finds
 // them). They are not writable by the Editor and are never shown to the model.
 import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { sha256Hex } from "./canonical.ts";
-import { isProjectSource } from "./editor.ts";
+import { isBaselineSource, isProjectSource } from "./editor.ts";
 import type { TaskSpec } from "./task.ts";
+
+/** Which side of the comparison a workspace holds: a Mtek project, or the TypeScript + three.js baseline project of the same task. */
+export type WorkspaceKind = "mtek" | "baseline";
 
 const SKIPPED_DIRECTORIES = new Set(["dist", "node_modules", "tests", ".git"]);
 
@@ -35,20 +38,24 @@ export function listFiles(directory: string, skip: ReadonlySet<string> = new Set
 export class Workspace {
   readonly root: string;
   readonly projectDir: string;
+  readonly kind: WorkspaceKind;
 
-  private constructor(root: string) {
+  private constructor(root: string, kind: WorkspaceKind) {
     this.root = root;
     this.projectDir = join(root, "project");
+    this.kind = kind;
   }
 
   /**
    * Copies a project and the task's fixtures into `<scratchRoot>/<name>/project`. The project is the
    * task's starter unless `from` names another (a reference solution, to validate it).
    */
-  static create(task: TaskSpec, scratchRoot: string, name: string, options: { from?: string } = {}): Workspace {
-    const workspace = new Workspace(join(scratchRoot, name));
+  static create(task: TaskSpec, scratchRoot: string, name: string, options: { from?: string; kind?: WorkspaceKind } = {}): Workspace {
+    const kind = options.kind ?? "mtek";
+    const workspace = new Workspace(join(scratchRoot, name), kind);
     if (existsSync(workspace.root)) throw new Error(`${workspace.root}: already exists`);
-    const source = options.from ?? task.projectDir;
+    const source = options.from ?? (kind === "mtek" ? task.projectDir : task.baselineDir);
+    if (!existsSync(source)) throw new Error(`${source}: the task has no ${kind} project`);
     mkdirSync(workspace.projectDir, { recursive: true });
     cpSync(source, workspace.projectDir, {
       recursive: true,
@@ -59,8 +66,17 @@ export class Workspace {
     });
     const fixtures = readdirSync(task.testsDir).filter((name) => name.endsWith(".test.toml"));
     if (fixtures.length === 0) throw new Error(`${task.testsDir}: no *.test.toml fixture (a task without tests cannot succeed)`);
-    mkdirSync(join(workspace.projectDir, "tests"));
-    for (const fixture of fixtures) cpSync(join(task.testsDir, fixture), join(workspace.projectDir, "tests", fixture));
+    if (kind === "mtek") {
+      mkdirSync(join(workspace.projectDir, "tests"));
+      for (const fixture of fixtures) cpSync(join(task.testsDir, fixture), join(workspace.projectDir, "tests", fixture));
+    } else {
+      // The baseline's fixtures are the task's own and are read from there by the runner; the candidate never holds them.
+      // Its tsconfig extends the shared base by a path that is valid from the scratch location.
+      const base = join(task.dir, "..", "..", "baselines", "support", "tsconfig.base.json");
+      const extendsPath = relative(workspace.projectDir, base).replaceAll("\\", "/");
+      const config = JSON.stringify({ extends: extendsPath, include: ["src"] }, null, 2);
+      writeFileSync(join(workspace.projectDir, "tsconfig.json"), `${config}\n`, "utf8");
+    }
     return workspace;
   }
 
@@ -77,9 +93,9 @@ export class Workspace {
     writeFileSync(file, content, "utf8");
   }
 
-  /** The files a model may change (`mtek.toml` and the sources), sorted. */
+  /** The files a model may change (`mtek.toml` and the `.mtek` sources; for a baseline the `.ts` files under `src/`), sorted. */
   sourceFiles(): string[] {
-    return listFiles(this.projectDir, SKIPPED_DIRECTORIES).filter(isProjectSource);
+    return listFiles(this.projectDir, SKIPPED_DIRECTORIES).filter(this.kind === "mtek" ? isProjectSource : isBaselineSource);
   }
 
   /** A hash of those files and their paths: equal hashes mean the same candidate. */

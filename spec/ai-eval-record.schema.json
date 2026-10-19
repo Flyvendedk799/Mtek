@@ -8,7 +8,8 @@
     { "$ref": "#/$defs/modelCall" },
     { "$ref": "#/$defs/edit" },
     { "$ref": "#/$defs/validation" },
-    { "$ref": "#/$defs/trialEnd" }
+    { "$ref": "#/$defs/trialEnd" },
+    { "$ref": "#/$defs/runEnd" }
   ],
   "$defs": {
     "envelope": {
@@ -29,7 +30,8 @@
       "properties": {
         "inputTokens": { "$ref": "#/$defs/count" },
         "outputTokens": { "$ref": "#/$defs/count" },
-        "cachedInputTokens": { "$ref": "#/$defs/count" }
+        "cachedInputTokens": { "$ref": "#/$defs/count" },
+        "cacheWriteInputTokens": { "description": "The part of inputTokens that was written to the provider's prompt cache (billed dearer than plain input); absent when the provider does not report it.", "$ref": "#/$defs/count" }
       }
     },
     "layerOutcome": { "enum": ["pass", "fail", "not-run"] },
@@ -81,7 +83,7 @@
       "type": "object",
       "required": ["code", "severity", "message", "phase", "source"],
       "properties": {
-        "code": { "type": "string", "pattern": "^MTEK-[EWN][0-9]{4}$" },
+        "code": { "description": "A Mtek diagnostic code, or on the baseline side the TypeScript compiler's code (TS2322) or BASELINE-BUILD for a bundler error.", "type": "string", "pattern": "^(MTEK-[EWN][0-9]{4}|TS[0-9]{3,5}|BASELINE-[A-Z]+)$" },
         "severity": { "enum": ["error", "warning", "note"] },
         "message": { "type": "string" },
         "phase": { "type": "string" },
@@ -110,7 +112,10 @@
         "maxWallSeconds": { "type": "integer", "minimum": 1 },
         "maxTotalTokens": { "type": ["integer", "null"], "minimum": 1 },
         "trialKind": { "$ref": "#/$defs/trialKind" },
-        "replyFormat": { "$ref": "#/$defs/replyFormat" }
+        "replyFormat": { "$ref": "#/$defs/replyFormat" },
+        "side": { "description": "Which project of the task the trial works on (decision 0108). Absent in records made before the baseline existed: those are `mtek`.", "enum": ["mtek", "baseline"] },
+        "promptCaching": { "description": "Whether the client asked the provider to cache prompts (it changes what is billed, not what is answered).", "type": "boolean" },
+        "documentation": { "description": "What the model was given to learn the technology from: `context-export` (the compiler context alone), `context-export+docs/language-guide.md:<hash>` (a document of docs/ added), or `baseline-reference:<hash>`.", "type": "string" }
       }
     },
     "runStart": {
@@ -124,7 +129,41 @@
         "seq": true,
         "type": { "const": "run-start" },
         "harnessVersion": { "type": "string" },
-        "startedAt": { "type": "string" }
+        "startedAt": { "type": "string" },
+        "settings": { "description": "What the benchmark runner records about the run: model, temperature, token caps, budgets, the date, the spend cap (decision 0108).", "type": "object" }
+      }
+    },
+    "runEnd": {
+      "allOf": [{ "$ref": "#/$defs/envelope" }],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runId", "seq", "type", "endedAt", "status", "trials", "spend"],
+      "properties": {
+        "schemaVersion": true,
+        "runId": true,
+        "seq": true,
+        "type": { "const": "run-end" },
+        "endedAt": { "type": "string" },
+        "status": { "enum": ["complete", "stopped-by-budget", "aborted"] },
+        "trials": { "type": "integer", "minimum": 0 },
+        "spend": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["capUsd", "ledgerTotalAtStartUsd", "ledgerTotalEndUsd", "runSpendUsd", "calls", "refusedCalls"],
+              "properties": {
+                "capUsd": { "type": "number" },
+                "ledgerTotalAtStartUsd": { "type": "number" },
+                "ledgerTotalEndUsd": { "type": "number" },
+                "runSpendUsd": { "type": "number" },
+                "calls": { "type": "integer", "minimum": 0 },
+                "refusedCalls": { "type": "integer", "minimum": 0 }
+              }
+            }
+          ]
+        }
       }
     },
     "trialStart": {
@@ -227,7 +266,9 @@
         "finish": { "enum": ["stop", "length", "refusal", "cancelled", "error", null] },
         "generation": { "description": "`completed` only for finish `stop`; a truncated generation (finish `length`) is a failure even when its partial output parses (spec 1).", "enum": ["completed", "truncated", "refused", "cancelled", "backend-error", "budget-exceeded"] },
         "error": { "type": ["string", "null"] },
-        "budget": { "description": "For generation `budget-exceeded`: which budget ran out.", "enum": ["wall-clock", "total-tokens", null] },
+        "budget": { "description": "For generation `budget-exceeded`: which budget ran out (`spend`: the money cap of the spend guard).", "enum": ["wall-clock", "total-tokens", "spend", null] },
+        "costUsd": { "description": "What the spend guard charged for this call, USD; null without a guard or when the call was not made.", "type": ["number", "null"] },
+        "ledgerTotalUsd": { "description": "The ledger total after the call, USD.", "type": ["number", "null"] },
         "startedAt": { "type": "string" },
         "durationMs": { "type": "integer", "minimum": 0 }
       },
@@ -418,11 +459,11 @@
         "seq": true,
         "type": { "const": "trial-end" },
         "trialId": { "type": "string", "minLength": 1 },
-        "outcome": { "description": "success only when the final candidate passed every layer and every required symbol exists. not-run: nothing failed but a layer could not run here (never a success). error: the tool chain failed. unavailable: a constrained trial was asked for and the capability is absent (never run unconstrained instead).", "enum": ["success", "failure", "not-run", "error", "unavailable"] },
+        "outcome": { "description": "success only when the final candidate passed every layer and every required symbol exists. not-run: nothing failed but a layer could not run here (never a success). error: the tool chain failed. unavailable: a constrained trial was asked for and the capability is absent (never run unconstrained instead). unfinished: the spend cap stopped the trial (reason budget-spend); neither a success nor a failure of the model.", "enum": ["success", "failure", "not-run", "error", "unavailable", "unfinished"] },
         "reason": {
           "enum": [
             "max-repairs", "budget-wall-clock", "budget-total-tokens", "generation-truncated", "generation-refused", "generation-cancelled",
-            "generation-error", "validation-not-run", "tool-error", "grammar-unavailable", null
+            "generation-error", "validation-not-run", "tool-error", "grammar-unavailable", "budget-spend", null
           ]
         },
         "message": { "type": ["string", "null"] },
@@ -441,16 +482,19 @@
           "properties": {
             "inputTokens": { "$ref": "#/$defs/count" },
             "outputTokens": { "$ref": "#/$defs/count" },
-            "cachedInputTokens": { "$ref": "#/$defs/count" }
+            "cachedInputTokens": { "$ref": "#/$defs/count" },
+            "cacheWriteInputTokens": { "$ref": "#/$defs/count" }
           }
         },
         "durationMs": { "type": "integer", "minimum": 0 },
+        "costUsd": { "description": "What the trial's calls were charged by the spend guard, USD; null without a guard.", "type": ["number", "null"] },
         "finalProject": { "description": "Where the final candidate was preserved, relative to the run directory; null when none was.", "type": ["string", "null"] }
       },
       "allOf": [
         { "if": { "properties": { "outcome": { "const": "success" } } }, "then": { "properties": { "reason": { "type": "null" }, "final": { "type": "object", "properties": { "verdict": { "const": "pass" } } } } } },
         { "if": { "properties": { "outcome": { "const": "unavailable" } } }, "then": { "properties": { "reason": { "const": "grammar-unavailable" }, "calls": { "const": 0 } } } },
-        { "if": { "properties": { "outcome": { "enum": ["failure", "not-run", "error", "unavailable"] } } }, "then": { "properties": { "reason": { "type": "string" } } } }
+        { "if": { "properties": { "outcome": { "enum": ["failure", "not-run", "error", "unavailable", "unfinished"] } } }, "then": { "properties": { "reason": { "type": "string" } } } },
+        { "if": { "properties": { "outcome": { "const": "unfinished" } } }, "then": { "properties": { "reason": { "const": "budget-spend" } } } }
       ]
     },
     "attempt": {

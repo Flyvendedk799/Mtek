@@ -11,6 +11,8 @@ export default tseslint.config(
       // Starter that contains compile errors on purpose (the task is to repair them).
       "tasks/maintenance-01/baseline/**",
       "tasks/maintenance-03/baseline/**",
+      // Published results: the candidates that models wrote are kept as they were (M7-05), they are not code of this repository.
+      "results/**",
       "**/dist/**",
     ],
   },
