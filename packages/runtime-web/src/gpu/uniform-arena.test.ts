@@ -308,6 +308,47 @@ describe("flush", () => {
   });
 });
 
+describe("writeFieldIfChanged", () => {
+  it("does what writeIfChanged does for a field writer and its value, without a closure, on any slot of a grown arena", () => {
+    const h = harness();
+    const arena = h.makeArena(32, { initialCapacity: 2 });
+    const slots = Array.from({ length: 5 }, () => arena.allocate()); // grows twice
+    arena.flush(h.queue);
+    const writer = (m: { f32: Float32Array }, base: number, value: number): void => {
+      m.f32[(base >>> 2) + 1] = value;
+    };
+    for (const slot of slots) {
+      expect(arena.writeFieldIfChanged(slot, writer, 2.5 + slot)).toBe(true);
+      expect(arena.isDirty(slot)).toBe(true);
+      expect(arena.views.f32[(arena.slotOffset(slot) >>> 2) + 1]).toBe(2.5 + slot);
+    }
+    arena.flush(h.queue);
+    const uploads = h.registry.snapshot().uploads;
+    for (const slot of slots) expect(arena.writeFieldIfChanged(slot, writer, 2.5 + slot)).toBe(false);
+    expect(slots.some((slot) => arena.isDirty(slot))).toBe(false);
+    arena.flush(h.queue);
+    expect(h.registry.snapshot().uploads).toBe(uploads);
+    // A write to one slot leaves the others alone, bit for bit.
+    arena.writeFieldIfChanged(3, writer, -1);
+    expect(slots.map((slot) => arena.views.f32[(arena.slotOffset(slot) >>> 2) + 1])).toEqual([2.5, 3.5, 4.5, -1, 6.5]);
+  });
+
+  it("leaves the mirror untouched when the writer throws", () => {
+    const arena = harness().makeArena(32);
+    const s = arena.allocate();
+    arena.writeFieldIfChanged(s, (m: { f32: Float32Array }, base: number) => {
+      m.f32[base >>> 2] = 1;
+    }, undefined);
+    expect(() =>
+      arena.writeFieldIfChanged(s, (m: { f32: Float32Array }, base: number) => {
+        m.f32[base >>> 2] = 9;
+        throw new Error("boom");
+      }, undefined),
+    ).toThrow("boom");
+    expect(arena.views.f32[arena.slotOffset(s) >>> 2]).toBe(1);
+  });
+});
+
 describe("writeIfChanged", () => {
   it("copies and marks dirty when the bytes differ", () => {
     const h = harness();

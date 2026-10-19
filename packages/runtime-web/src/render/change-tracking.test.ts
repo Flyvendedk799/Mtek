@@ -184,14 +184,14 @@ async function mountRig(): Promise<Rig> {
       const c = ctx as Ctx;
       const n = Number(params["n"]);
       // Every third n leaves the position at the default: the first world matrix then comes from the spawn alone.
-      if (n % 3 !== 0) c.setTransform(self as object, "position", { x: f((n % 9) - 4), y: f((n % 5) - 2), z: 1 });
-      c.setParam(self as object, "color", { r: 0.5, g: 0.25, b: f((n % 3) / 2), a: 1 });
+      if (n % 3 !== 0) c.setTransform(self, "position", { x: f((n % 9) - 4), y: f((n % 5) - 2), z: 1 });
+      c.setParam(self, "color", { r: 0.5, g: 0.25, b: f((n % 3) / 2), a: 1 });
     },
     update: (ctx, self) => {
       // A spark moves every third frame (a function of its n and the frame only, the same in both applications).
       const record = self as { params: { n: number } };
       const n = record.params.n;
-      if (n % 3 !== 0 && (rig.frame + n) % 3 === 0) (ctx as Ctx).setTransform(self as object, "position", { x: f(((n + rig.frame) % 9) - 4), y: f((n % 5) - 2), z: 1 });
+      if (n % 3 !== 0 && (rig.frame + n) % 3 === 0) (ctx as Ctx).setTransform(self, "position", { x: f(((n + rig.frame) % 9) - 4), y: f((n % 5) - 2), z: 1 });
     },
     fixedUpdate: () => undefined,
     events: {},
@@ -204,7 +204,7 @@ async function mountRig(): Promise<Rig> {
       rig.ops = [];
     },
   } as unknown as MtekProgramScene;
-  return { ...base, scenes: { [parsed.manifest.entryScene]: next }, prefabs: { [SPARK]: spark } } as ReturnType<typeof fakeProgram>;
+  return { ...base, scenes: { [parsed.manifest.entryScene]: next }, prefabs: { [SPARK]: spark } };
   };
   rig.build = build;
   const program = build();
@@ -213,10 +213,27 @@ async function mountRig(): Promise<Rig> {
   return Object.assign(rig, { app, debug: app.debug });
 }
 
+/** The device is lost the way the GPU process dying would; the first recovery attempt rebuilds the scene (decision 0056). */
+async function loseAndRecover(rig: Rig): Promise<void> {
+  const until = async (condition: () => boolean, what: string): Promise<void> => {
+    for (let i = 0; i < 500; i += 1) {
+      if (condition()) return;
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    }
+    throw new Error(`timed out waiting for ${what}`);
+  };
+  rig.host.latestDevice.loseDevice("unknown", "the GPU process crashed");
+  await until(() => rig.app.state === "recovering", "state recovering");
+  if (!rig.host.timers.runNext()) throw new Error("no recovery timer is waiting");
+  await until(() => rig.app.state === "running", "the end of the recovery");
+}
+
 // ---- the reference: the same frame with the change tracking forgotten ----
 
 let reference = false;
+// eslint-disable-next-line @typescript-eslint/unbound-method -- called back with the receiver below
 const realPropagate = World.prototype.propagate;
+// eslint-disable-next-line @typescript-eslint/unbound-method -- called back with the receiver below
 const realFrame = Renderer.prototype.frame;
 
 beforeAll(() => {
@@ -259,7 +276,7 @@ function describeDraw(draw: FakeDrawRecord): unknown {
 }
 
 function liveBuffers(host: FakeHost): FakeBuffer[] {
-  return host.device.buffers.filter((buffer) => !buffer.destroyed);
+  return host.latestDevice.buffers.filter((buffer) => !buffer.destroyed);
 }
 
 function compare(tracked: Rig, full: Rig, label: string): void {
@@ -272,7 +289,7 @@ function compare(tracked: Rig, full: Rig, label: string): void {
     return pick;
   };
   expect(counters(tracked), `${label}: counters`).toEqual(counters(full));
-  const passes = (rig: Rig): unknown[] => (rig.host.device.renderPasses.at(-1)?.draws ?? []).map(describeDraw);
+  const passes = (rig: Rig): unknown[] => (rig.host.latestDevice.renderPasses.at(-1)?.draws ?? []).map(describeDraw);
   expect(passes(tracked), `${label}: draw calls`).toEqual(passes(full));
   const a = liveBuffers(tracked.host);
   const b = liveBuffers(full.host);
@@ -332,7 +349,7 @@ function drawnTranslations(rig: Rig): string[] {
   const out: string[] = [];
   const instances = liveBuffers(rig.host).find((buffer) => buffer.label === "mtek instance matrices");
   const objects = liveBuffers(rig.host).find((buffer) => buffer.label === "mtek:uniform-arena:builtin:object");
-  for (const draw of rig.host.device.renderPasses.at(-1)?.draws ?? []) {
+  for (const draw of rig.host.latestDevice.renderPasses.at(-1)?.draws ?? []) {
     const entry = (draw.pipeline.descriptor as { vertex: { entryPoint?: string } }).vertex.entryPoint;
     if (entry === "mtek_vs_instanced") {
       if (instances === undefined) throw new Error("no instance buffer");
@@ -398,6 +415,10 @@ describe("change tracking: a tracked frame equals a full recompute", () => {
           expect(result.ok, "the candidate is accepted").toBe(true);
         }
       }
+      // Device loss and recovery: the retained world is pointed at a rebuilt renderer and stores.
+      if (frame === 45) {
+        for (const rig of [tracked, full]) await loseAndRecover(rig);
+      }
       const ops = randomOps(random, tracked.refs.length);
       tracked.ops = [...ops];
       full.ops = [...ops];
@@ -432,12 +453,12 @@ describe("change tracking: a tracked frame equals a full recompute", () => {
     const rig = await mountRig();
     rig.debug.step(2, 0.016);
     const before = rig.debug.counters();
-    const draws = (rig.host.device.renderPasses.at(-1)?.draws ?? []).map(describeDraw);
+    const draws = (rig.host.latestDevice.renderPasses.at(-1)?.draws ?? []).map(describeDraw);
     rig.debug.step(5, 0.016);
     const after = rig.debug.counters();
     expect(after["uploads"]).toBe(before["uploads"]);
     expect(after["uploadBytes"]).toBe(before["uploadBytes"]);
-    expect((rig.host.device.renderPasses.at(-1)?.draws ?? []).map(describeDraw)).toEqual(draws);
+    expect((rig.host.latestDevice.renderPasses.at(-1)?.draws ?? []).map(describeDraw)).toEqual(draws);
     rig.app.dispose();
   });
 
@@ -448,6 +469,7 @@ describe("change tracking: a tracked frame equals a full recompute", () => {
     stepOnce(tracked, false);
     stepOnce(full, true);
     const propagated: number[] = [];
+    // eslint-disable-next-line @typescript-eslint/unbound-method -- called back with the receiver below
     const spy = World.prototype.propagate;
     World.prototype.propagate = function (this: World): number {
       const n = spy.call(this);

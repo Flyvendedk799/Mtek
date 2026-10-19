@@ -392,6 +392,34 @@ describe("compatible instancing in the renderer", () => {
     app.dispose();
   });
 
+  it("an entity that moved while it was part of an instanced draw has the current object block once it is drawn on its own (decision 0120)", async () => {
+    const { host, debug, app, ctx } = await mount(ROW5.slice(0, 2));
+    debug.step(2, 0.016);
+    expect(shape(host)).toEqual([[2, 0]]);
+    const objects = liveBuffer(host, "mtek:uniform-arena:builtin:object");
+    if (objects === undefined) throw new Error("no object arena");
+    const translationX = (slot: number): number => new Float32Array(objects.contents.buffer.slice(slot * 256, slot * 256 + 64))[12] ?? Number.NaN;
+    // An instanced draw reads the instance records, not the object blocks: moving E0 writes no block ...
+    ctx.setTransform(ctx.e[0], "position", { x: -3, y: 0, z: 0 });
+    debug.step(1, 0.016);
+    expect(recordXs(host, 2)).toEqual([-3, -2]);
+    expect(translationX(0)).toBe(0);
+    // ... and when E1 is hidden, E0 is a run of one: drawn individually, its block holds where it is now.
+    ctx.setVisible(ctx.e[1], false);
+    debug.step(1, 0.016);
+    expect(shape(host)).toEqual([[1, 0]]);
+    expect(lastDraws(host)[0]?.dynamicOffsets[2]).toEqual([0]);
+    expect(translationX(0)).toBe(-3);
+    // Shown again, E1 joins; E0 moves on as a record only, the block keeps the last value it was written with.
+    ctx.setVisible(ctx.e[1], true);
+    ctx.setTransform(ctx.e[0], "position", { x: -1, y: 0, z: 0 });
+    debug.step(1, 0.016);
+    expect(shape(host)).toEqual([[2, 0]]);
+    expect(recordXs(host, 2)).toEqual([-1, -2]);
+    expect(translationX(0)).toBe(-3);
+    app.dispose();
+  });
+
   it("uploads nothing for a static scene, and only the changed record when one instance moves", async () => {
     const { host, debug, app, ctx } = await mount(ROW5);
     debug.step(2, 0.016);

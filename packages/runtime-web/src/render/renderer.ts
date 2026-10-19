@@ -726,7 +726,7 @@ export class Renderer {
     const { world } = this.options;
     const changed = world.takeWorldChanges();
     if (this.changedEntities.length < changed.length) this.changedEntities = new Int32Array(Math.max(changed.length, this.changedEntities.length * 2));
-    const { objectSlots, entityMatrices, entityWords, objectStale, changedEntities } = this;
+    const { objectSlots, entityMatrices, objectStale, changedEntities } = this;
     let count = 0;
     for (let c = 0; c < changed.length; c++) {
       const index = changed[c] as number;
