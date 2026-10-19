@@ -1,0 +1,18 @@
+{
+  "name": "changing-transforms",
+  "title": "1,000 changing transforms",
+  "kind": "frames",
+  "description": "1,000 identical unlit boxes on a 40 x 25 grid; every frame every box's position and rotation change (bobbing along y, turning about +Y).",
+  "camera": { "position": [0, 30, 34], "target": [0, 0, 0] },
+  "parityFrames": 60,
+  "definition": {
+    "columns": 40,
+    "rows": 25,
+    "spacing": 1.2,
+    "boxSize": 0.7,
+    "amplitude": 0.5,
+    "frequency": 1.5,
+    "spin": 0.8,
+    "color": "#6bb5ff"
+  }
+}

@@ -6,6 +6,8 @@ export default tseslint.config(
     ignores: [
       // Its own workspace package with its own configuration (M0-09).
       "baselines/m0-bridge/**",
+      // Its own workspace package (M7-04).
+      "runtime/**",
       // Starter that contains compile errors on purpose (the task is to repair them).
       "tasks/maintenance-01/baseline/**",
       "tasks/maintenance-03/baseline/**",

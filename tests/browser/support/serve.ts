@@ -55,14 +55,18 @@ function closeServer(server: Server): Promise<void> {
   });
 }
 
-/** Serves `root` on 127.0.0.1. `port` 0 picks a free port. */
-export async function startStaticServer(root: string, port = 0): Promise<StaticServer> {
+/**
+ * Serves `root` on 127.0.0.1. `port` 0 picks a free port. `extraHeaders` are added to every response (the runtime benchmark
+ * sends the cross-origin isolation headers, which give `performance.now()` its finer resolution).
+ */
+export async function startStaticServer(root: string, port = 0, extraHeaders: Readonly<Record<string, string>> = {}): Promise<StaticServer> {
   const server = createServer((request, response) => {
     void (async () => {
       const send = (status: number, message: string): void => {
         response.writeHead(status, {
           "Content-Type": "text/plain; charset=utf-8",
           "Cache-Control": "no-store",
+          ...extraHeaders,
         });
         response.end(message);
       };
@@ -86,6 +90,7 @@ export async function startStaticServer(root: string, port = 0): Promise<StaticS
           "Content-Type": mimeTypeFor(file),
           "Content-Length": info.size,
           "Cache-Control": "no-store",
+          ...extraHeaders,
         });
         if (request.method === "HEAD") {
           response.end();

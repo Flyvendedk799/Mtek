@@ -1,0 +1,16 @@
+{
+  "name": "mount-reload-dispose",
+  "title": "50 mount/reload/dispose cycles",
+  "kind": "cycles",
+  "description": "A scene of 100 unlit boxes in 4 colours is mounted, drawn for 5 frames, reloaded with an edited program (the colour palette shifted by one), drawn for 5 more frames and disposed; 50 times in one page.",
+  "camera": { "position": [0, 12, 14], "target": [0, 0, 0] },
+  "parityFrames": 5,
+  "definition": {
+    "columns": 10,
+    "rows": 10,
+    "spacing": 1.5,
+    "boxSize": 1.0,
+    "palette": ["#e6194b", "#3cb44b", "#ffe119", "#4363d8"],
+    "reloadPaletteShift": 1
+  }
+}

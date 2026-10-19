@@ -1,0 +1,9 @@
+[project]
+name = "runtime-bench"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Bench"
+
+[build]
+target = "web"
+title = "300 physics bodies"

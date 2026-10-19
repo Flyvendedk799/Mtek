@@ -1,0 +1,24 @@
+{
+  "name": "physics-bodies",
+  "title": "300 physics bodies",
+  "kind": "frames",
+  "description": "300 dynamic unit boxes (10 x 10 x 3) dropped on a static floor and pushed every tick by a small periodic horizontal force so that no body ever sleeps; Rapier 0.21.0 at the fixed step 1/60 s in all three implementations.",
+  "camera": { "position": [0, 16, 26], "target": [0, 1, 0] },
+  "parityFrames": 10,
+  "definition": {
+    "columns": 10,
+    "rows": 10,
+    "layers": 3,
+    "spacing": 1.3,
+    "jitter": 0.1,
+    "baseHeight": 3.0,
+    "layerHeight": 1.5,
+    "boxSize": 1.0,
+    "mass": 1.0,
+    "friction": 0.5,
+    "floorSize": [40.0, 1.0, 40.0],
+    "forceAmplitude": 2.0,
+    "forceFrequency": [3.0, 2.0],
+    "layerColors": ["#e6194b", "#3cb44b", "#4363d8"]
+  }
+}
