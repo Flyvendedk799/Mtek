@@ -1,0 +1,20 @@
+{
+  "status": "available",
+  "mode": "constrained",
+  "backend": "llama.cpp",
+  "release": "b11719",
+  "commit": "5aeac37a35b44fde4bdffaec9159f2fcb253b622",
+  "generator": "<repo>\\tools\\grammar-adapters\\.cache\\llama.cpp-b11719/bin/llama-completion.exe",
+  "generatorVersion": "version: 0.7.0-dev (build 11719, commit 5aeac37a3)",
+  "validator": "<repo>\\tools\\grammar-adapters\\.cache\\llama.cpp-b11719/validator/test-gbnf-validator.exe",
+  "model": {
+    "id": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+    "revision": "f86cb2c1fa58255f8052cc32aeede1b7482d4361",
+    "path": "<repo>\\tools\\grammar-adapters\\.cache\\models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+    "sha256": "cc324af070c2ecbfd324a30884d2f951a7ff756aba85cb811a6ec436933bb046"
+  },
+  "grammar": {
+    "root": "root",
+    "sha256": "6b2679379ccf42055bbdad365d08bab592160cf11def891df2b134027491a046"
+  }
+}

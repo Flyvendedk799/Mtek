@@ -35,6 +35,21 @@ const softwareArgs = [
   ...extraArgs,
 ];
 
+// Firefox is not part of the default run (decision 0107): it exposes `navigator.gpu` but no adapter when
+// headless, and with the two preferences below only when headed (measured, evidence/M7/environments). The
+// project exists only when asked for, `MTEK_EXPERIMENTAL_BROWSER=firefox npm run test:browser -- --project=firefox`,
+// so that a default run is unchanged. The preferences are recorded in the environment record.
+const FIREFOX_PREFERENCES = { "dom.webgpu.enabled": true, "gfx.webgpu.ignore-blocklist": true } as const;
+const experimentalProjects =
+  process.env["MTEK_EXPERIMENTAL_BROWSER"] === "firefox"
+    ? [
+        {
+          name: "firefox",
+          use: { browserName: "firefox" as const, headless: false, launchOptions: { firefoxUserPrefs: { ...FIREFOX_PREFERENCES } } },
+        },
+      ]
+    : [];
+
 export default defineConfig({
   testDir: "specs",
   testMatch: "**/*.spec.ts",
@@ -69,5 +84,6 @@ export default defineConfig({
       testMatch: ["tasks/*/baseline-tests/*.spec.ts", "holdout/*/baseline-tests/*.spec.ts"],
       use: { channel, headless, launchOptions: { args: hardwareArgs } },
     },
+    ...experimentalProjects,
   ],
 });

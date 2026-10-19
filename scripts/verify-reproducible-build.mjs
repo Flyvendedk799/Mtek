@@ -15,7 +15,7 @@
 //    and compares them byte for byte; scans every output file for the clone paths, the shared root
 //    and the home directory, which must not occur in any output.
 // 4. Writes a machine-readable report (`--out`, default `<root>/reproducible-builds.json`) in which
-//    no absolute path occurs (`<clone-a>`, `<clone-b>`, `<root>`, `<home>` stand for them).
+//    no absolute path occurs (`<clone-a>`, `<clone-b>`, `<root>`, `<source-repo>`, `<home>` stand for them).
 // 5. With `--suite`: runs the full test suite from clone A (the clean install of step 2).
 //
 // What it proves: two clones of one commit, on this machine and this operating system, with this
@@ -335,6 +335,8 @@ function writeReport(extra) {
       ...pathForms(cloneDirs.a).map((form) => [form, "<clone-a>"]),
       ...pathForms(cloneDirs.b).map((form) => [form, "<clone-b>"]),
       ...pathForms(root).map((form) => [form, "<root>"]),
+      ...pathForms(process.execPath).map((form) => [form, "node"]),
+      ...pathForms(REPO).map((form) => [form, "<source-repo>"]),
       ...pathForms(homedir()).map((form) => [form, "<home>"]),
     ]) result = result.split(needle).join(placeholder);
     return result;

@@ -1,0 +1,2078 @@
+{
+  "schemaVersion": 1,
+  "commit": "7cf7ce9029e0d0b13e4c1e3e483c3dd26b3a466e",
+  "workingTreeClean": true,
+  "machine": {
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "tool": {
+    "node": "v24.18.1",
+    "npm": "11.16.0",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "git": "git version 2.55.0.windows.3"
+  },
+  "clones": {
+    "a": "<clone-a>",
+    "b": "<clone-b>",
+    "note": "two directories with different names and different lengths, under one root"
+  },
+  "trees": [
+    "packages/runtime-web/dist",
+    "packages/physics-rapier/dist",
+    "packages/editor-vscode/dist",
+    ".repro-out",
+    "examples/material-configurator/dist",
+    "examples/modular-scene/dist",
+    "examples/physics-playground/dist",
+    "examples/pulse-cube/dist",
+    "benchmarks/runtime/.out/site",
+    "benchmarks/runtime/asset-heavy-startup/mtek/models",
+    "benchmarks/runtime/asset-heavy-startup/mtek/textures"
+  ],
+  "normalised": [
+    {
+      "path": "benchmarks/runtime/.out/site/prepared.json",
+      "droppedField": "builtAt"
+    }
+  ],
+  "steps": [
+    {
+      "step": "a-clone",
+      "command": "git clone --quiet --no-hardlinks <source-repo> <clone-a>",
+      "exitCode": 0,
+      "seconds": 2.5
+    },
+    {
+      "step": "a-checkout",
+      "command": "git -C <clone-a> checkout --quiet --detach 7cf7ce9029e0d0b13e4c1e3e483c3dd26b3a466e",
+      "exitCode": 0,
+      "seconds": 10.3
+    },
+    {
+      "step": "a-npm-ci",
+      "command": "npm ci",
+      "exitCode": 0,
+      "seconds": 17.8
+    },
+    {
+      "step": "a-npm-run-build",
+      "command": "npm run build",
+      "exitCode": 0,
+      "seconds": 41.5
+    },
+    {
+      "step": "a-build-material-configurator-release",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode release <clone-a>\\examples\\material-configurator",
+      "exitCode": 0,
+      "seconds": 1.6
+    },
+    {
+      "step": "a-build-material-configurator-dev",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode dev --out <clone-a>\\.repro-out\\material-configurator-dev <clone-a>\\examples\\material-configurator",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-material-configurator-test",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode test --out <clone-a>\\.repro-out\\material-configurator-test <clone-a>\\examples\\material-configurator",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-material-configurator-preview",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode preview --out <clone-a>\\.repro-out\\material-configurator-preview <clone-a>\\examples\\material-configurator",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-modular-scene-release",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode release <clone-a>\\examples\\modular-scene",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-modular-scene-dev",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode dev --out <clone-a>\\.repro-out\\modular-scene-dev <clone-a>\\examples\\modular-scene",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-modular-scene-test",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode test --out <clone-a>\\.repro-out\\modular-scene-test <clone-a>\\examples\\modular-scene",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-modular-scene-preview",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode preview --out <clone-a>\\.repro-out\\modular-scene-preview <clone-a>\\examples\\modular-scene",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-physics-playground-release",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode release <clone-a>\\examples\\physics-playground",
+      "exitCode": 0,
+      "seconds": 0.3
+    },
+    {
+      "step": "a-build-physics-playground-dev",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode dev --out <clone-a>\\.repro-out\\physics-playground-dev <clone-a>\\examples\\physics-playground",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-physics-playground-test",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode test --out <clone-a>\\.repro-out\\physics-playground-test <clone-a>\\examples\\physics-playground",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-physics-playground-preview",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode preview --out <clone-a>\\.repro-out\\physics-playground-preview <clone-a>\\examples\\physics-playground",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-pulse-cube-release",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode release <clone-a>\\examples\\pulse-cube",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-pulse-cube-dev",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode dev --out <clone-a>\\.repro-out\\pulse-cube-dev <clone-a>\\examples\\pulse-cube",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-pulse-cube-test",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode test --out <clone-a>\\.repro-out\\pulse-cube-test <clone-a>\\examples\\pulse-cube",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-build-pulse-cube-preview",
+      "command": "<clone-a>\\target\\debug\\mtek.exe build --mode preview --out <clone-a>\\.repro-out\\pulse-cube-preview <clone-a>\\examples\\pulse-cube",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "a-benchmark-prepare",
+      "command": "node benchmarks/runtime/tools/prepare.ts",
+      "exitCode": 0,
+      "seconds": 13.6
+    },
+    {
+      "step": "b-clone",
+      "command": "git clone --quiet --no-hardlinks <source-repo> <clone-b>",
+      "exitCode": 0,
+      "seconds": 2.5
+    },
+    {
+      "step": "b-checkout",
+      "command": "git -C <clone-b> checkout --quiet --detach 7cf7ce9029e0d0b13e4c1e3e483c3dd26b3a466e",
+      "exitCode": 0,
+      "seconds": 0.1
+    },
+    {
+      "step": "b-npm-ci",
+      "command": "npm ci",
+      "exitCode": 0,
+      "seconds": 17.6
+    },
+    {
+      "step": "b-npm-run-build",
+      "command": "npm run build",
+      "exitCode": 0,
+      "seconds": 41.6
+    },
+    {
+      "step": "b-build-material-configurator-release",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode release <clone-b>\\examples\\material-configurator",
+      "exitCode": 0,
+      "seconds": 1.6
+    },
+    {
+      "step": "b-build-material-configurator-dev",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode dev --out <clone-b>\\.repro-out\\material-configurator-dev <clone-b>\\examples\\material-configurator",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-material-configurator-test",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode test --out <clone-b>\\.repro-out\\material-configurator-test <clone-b>\\examples\\material-configurator",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-material-configurator-preview",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode preview --out <clone-b>\\.repro-out\\material-configurator-preview <clone-b>\\examples\\material-configurator",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-modular-scene-release",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode release <clone-b>\\examples\\modular-scene",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-modular-scene-dev",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode dev --out <clone-b>\\.repro-out\\modular-scene-dev <clone-b>\\examples\\modular-scene",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-modular-scene-test",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode test --out <clone-b>\\.repro-out\\modular-scene-test <clone-b>\\examples\\modular-scene",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-modular-scene-preview",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode preview --out <clone-b>\\.repro-out\\modular-scene-preview <clone-b>\\examples\\modular-scene",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-physics-playground-release",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode release <clone-b>\\examples\\physics-playground",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-physics-playground-dev",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode dev --out <clone-b>\\.repro-out\\physics-playground-dev <clone-b>\\examples\\physics-playground",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-physics-playground-test",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode test --out <clone-b>\\.repro-out\\physics-playground-test <clone-b>\\examples\\physics-playground",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-physics-playground-preview",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode preview --out <clone-b>\\.repro-out\\physics-playground-preview <clone-b>\\examples\\physics-playground",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-pulse-cube-release",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode release <clone-b>\\examples\\pulse-cube",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-pulse-cube-dev",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode dev --out <clone-b>\\.repro-out\\pulse-cube-dev <clone-b>\\examples\\pulse-cube",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-pulse-cube-test",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode test --out <clone-b>\\.repro-out\\pulse-cube-test <clone-b>\\examples\\pulse-cube",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-build-pulse-cube-preview",
+      "command": "<clone-b>\\target\\debug\\mtek.exe build --mode preview --out <clone-b>\\.repro-out\\pulse-cube-preview <clone-b>\\examples\\pulse-cube",
+      "exitCode": 0,
+      "seconds": 0.2
+    },
+    {
+      "step": "b-benchmark-prepare",
+      "command": "node benchmarks/runtime/tools/prepare.ts",
+      "exitCode": 0,
+      "seconds": 13.7
+    }
+  ],
+  "result": {
+    "identical": true,
+    "filesA": 331,
+    "filesB": 331,
+    "bytesA": 90229660,
+    "onlyInA": [],
+    "onlyInB": [],
+    "differing": [],
+    "missingTrees": {
+      "a": [],
+      "b": []
+    },
+    "pathLeaks": [],
+    "noPathLeaks": true
+  },
+  "executables": {
+    "path": "target/debug/mtek.exe",
+    "note": "information only: a Rust debug executable is not a distribution artefact and does not decide the result",
+    "a": {
+      "size": 29852160,
+      "sha256": "b80ac19b97c2623de37a5f0eb4fd27e9fa9ac23ffb319edcd6d57ed07df4a44e"
+    },
+    "b": {
+      "size": 29852160,
+      "sha256": "9339106d68e2e3b74ec1f571ff4dffc82d7c6a12ddcdab311625f0e52de2fbf1"
+    },
+    "identical": false,
+    "pathsFound": [
+      {
+        "clone": "a",
+        "found": [
+          "home"
+        ]
+      },
+      {
+        "clone": "b",
+        "found": [
+          "home"
+        ]
+      }
+    ]
+  },
+  "files": [
+    {
+      "path": ".repro-out/material-configurator-dev/app.d.ts",
+      "size": 513,
+      "sha256": "3c6f72a9cc7958cf03c329e2fba3a8ba5b590d66e31b574323bea443589bb0af"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/app.js",
+      "size": 16557,
+      "sha256": "57693fc779ae89786d17d651bb4adfd0595c79d729100d57642d75eb4cb66825"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/app.js.map",
+      "size": 1051,
+      "sha256": "320a56c582605196daa1c11ab8306b5666f8eb75dabec6942029b2faf09548d0"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/assets/fc3a4e36cb070777.bin",
+      "size": 5180,
+      "sha256": "5c72cda8d43d026208592c55b23a85e37e84d5bde11ad9f909a18355f7efde7c"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/index.html",
+      "size": 2519,
+      "sha256": "db044b6061148a1ce3c9e68eb881de13dac1332bcb5c591fdb47c241ab3f6403"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/program.manifest.json",
+      "size": 59660,
+      "sha256": "bfd34523a018bfb2b8b2526cfb674a74c9f5cdf2253d4b986711f7e108416196"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/runtime.f0c4751eae4352c5.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/shaders/1594a8ef1d1b39e6.mtek-map.json",
+      "size": 74960,
+      "sha256": "48953404d10e645a48520390374a31e69bb775e64bbfa6f7fd8fb19550018c41"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/shaders/1594a8ef1d1b39e6.wgsl",
+      "size": 6168,
+      "sha256": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/shaders/beec11da79884320.mtek-map.json",
+      "size": 80821,
+      "sha256": "d15d4fdf4c316332f9a7bb496bd2e27aff97fd20bd27cb100ad003655c3505c7"
+    },
+    {
+      "path": ".repro-out/material-configurator-dev/shaders/beec11da79884320.wgsl",
+      "size": 6292,
+      "sha256": "beec11da79884320de9f9512dd5b6b8e4373c55396739d38f4cf5651bbb053bd"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/app.d.ts",
+      "size": 513,
+      "sha256": "3c6f72a9cc7958cf03c329e2fba3a8ba5b590d66e31b574323bea443589bb0af"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/app.js",
+      "size": 16557,
+      "sha256": "530067b38e91b8c5819df4164e9b4894301a1ea82e5a1b2eb8d03cbdf391dca0"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/app.js.map",
+      "size": 1051,
+      "sha256": "320a56c582605196daa1c11ab8306b5666f8eb75dabec6942029b2faf09548d0"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/assets/fc3a4e36cb070777.bin",
+      "size": 5180,
+      "sha256": "5c72cda8d43d026208592c55b23a85e37e84d5bde11ad9f909a18355f7efde7c"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/bootstrap.js",
+      "size": 153,
+      "sha256": "0c8a9469565b47e3a8e9691146d80589a50af2c63ae43788ddf508da2dd866cf"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/index.html",
+      "size": 434,
+      "sha256": "e44c7511854317e6f15b9a1fca60ae9f1b499fb27825c66815d56b5b2f0d3671"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/program.manifest.json",
+      "size": 59707,
+      "sha256": "951dd7a52e99060ffa808bf23372c31a8f2066a3a485fc73e1aa0a04e76b7cf8"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/shaders/1594a8ef1d1b39e6.mtek-map.json",
+      "size": 74960,
+      "sha256": "48953404d10e645a48520390374a31e69bb775e64bbfa6f7fd8fb19550018c41"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/shaders/1594a8ef1d1b39e6.wgsl",
+      "size": 6168,
+      "sha256": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/shaders/beec11da79884320.mtek-map.json",
+      "size": 80821,
+      "sha256": "d15d4fdf4c316332f9a7bb496bd2e27aff97fd20bd27cb100ad003655c3505c7"
+    },
+    {
+      "path": ".repro-out/material-configurator-preview/shaders/beec11da79884320.wgsl",
+      "size": 6292,
+      "sha256": "beec11da79884320de9f9512dd5b6b8e4373c55396739d38f4cf5651bbb053bd"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/app.d.ts",
+      "size": 513,
+      "sha256": "3c6f72a9cc7958cf03c329e2fba3a8ba5b590d66e31b574323bea443589bb0af"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/app.js",
+      "size": 16557,
+      "sha256": "57693fc779ae89786d17d651bb4adfd0595c79d729100d57642d75eb4cb66825"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/app.js.map",
+      "size": 1051,
+      "sha256": "320a56c582605196daa1c11ab8306b5666f8eb75dabec6942029b2faf09548d0"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/assets/fc3a4e36cb070777.bin",
+      "size": 5180,
+      "sha256": "5c72cda8d43d026208592c55b23a85e37e84d5bde11ad9f909a18355f7efde7c"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/index.html",
+      "size": 373,
+      "sha256": "e97c9b64000ccb064fe4cd79255dda4632986483dde22f002a160936e4f24c54"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/program.manifest.json",
+      "size": 59660,
+      "sha256": "bfd34523a018bfb2b8b2526cfb674a74c9f5cdf2253d4b986711f7e108416196"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/runtime.f0c4751eae4352c5.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/shaders/1594a8ef1d1b39e6.mtek-map.json",
+      "size": 74960,
+      "sha256": "48953404d10e645a48520390374a31e69bb775e64bbfa6f7fd8fb19550018c41"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/shaders/1594a8ef1d1b39e6.wgsl",
+      "size": 6168,
+      "sha256": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/shaders/beec11da79884320.mtek-map.json",
+      "size": 80821,
+      "sha256": "d15d4fdf4c316332f9a7bb496bd2e27aff97fd20bd27cb100ad003655c3505c7"
+    },
+    {
+      "path": ".repro-out/material-configurator-test/shaders/beec11da79884320.wgsl",
+      "size": 6292,
+      "sha256": "beec11da79884320de9f9512dd5b6b8e4373c55396739d38f4cf5651bbb053bd"
+    },
+    {
+      "path": ".repro-out/modular-scene-dev/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": ".repro-out/modular-scene-dev/app.js",
+      "size": 14655,
+      "sha256": "e4ec18a4a2b34aaa3a35d22254e05f7f2c92aa1897d7404a3a123c75f0a7ebb6"
+    },
+    {
+      "path": ".repro-out/modular-scene-dev/app.js.map",
+      "size": 1689,
+      "sha256": "7bf3f4cde2214c4c6663f7331a52dd147df7fd80b1eef36f9f4e1b5bba481d26"
+    },
+    {
+      "path": ".repro-out/modular-scene-dev/index.html",
+      "size": 2511,
+      "sha256": "b0854ff87f02f5c4ca3d642db67c75e1a52f2815197348e7b486a342854ef7d4"
+    },
+    {
+      "path": ".repro-out/modular-scene-dev/program.manifest.json",
+      "size": 26957,
+      "sha256": "530ffb407253ef90f1d517c707601c19c8e3ec0f3133f841c0c35c46836ff727"
+    },
+    {
+      "path": ".repro-out/modular-scene-dev/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/modular-scene-dev/runtime.f0c4751eae4352c5.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": ".repro-out/modular-scene-dev/shaders/481b740ecd47c242.mtek-map.json",
+      "size": 14869,
+      "sha256": "3d4749992816069f61afeb407efc4e0a2fb12927804d184b6fddf5ff952f17e4"
+    },
+    {
+      "path": ".repro-out/modular-scene-dev/shaders/481b740ecd47c242.wgsl",
+      "size": 1842,
+      "sha256": "481b740ecd47c242e4aee37146bf0d2ad3b6f841636e456df891e6d8c218a0d9"
+    },
+    {
+      "path": ".repro-out/modular-scene-preview/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": ".repro-out/modular-scene-preview/app.js",
+      "size": 14655,
+      "sha256": "11070f172fb4835b63e7d3c0177becff153e72463ac9bc3815d83b1c716ab00a"
+    },
+    {
+      "path": ".repro-out/modular-scene-preview/app.js.map",
+      "size": 1689,
+      "sha256": "7bf3f4cde2214c4c6663f7331a52dd147df7fd80b1eef36f9f4e1b5bba481d26"
+    },
+    {
+      "path": ".repro-out/modular-scene-preview/bootstrap.js",
+      "size": 153,
+      "sha256": "0c8a9469565b47e3a8e9691146d80589a50af2c63ae43788ddf508da2dd866cf"
+    },
+    {
+      "path": ".repro-out/modular-scene-preview/index.html",
+      "size": 426,
+      "sha256": "75769b92fe110914e7d5d7a7484aa52376470beaee1b35e706a5df8143147faa"
+    },
+    {
+      "path": ".repro-out/modular-scene-preview/program.manifest.json",
+      "size": 27004,
+      "sha256": "321e57bf319c4eac7bd6fbf0e7f1a989121772d737176c560b59e48bbc60fe96"
+    },
+    {
+      "path": ".repro-out/modular-scene-preview/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": ".repro-out/modular-scene-preview/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/modular-scene-preview/shaders/481b740ecd47c242.mtek-map.json",
+      "size": 14869,
+      "sha256": "3d4749992816069f61afeb407efc4e0a2fb12927804d184b6fddf5ff952f17e4"
+    },
+    {
+      "path": ".repro-out/modular-scene-preview/shaders/481b740ecd47c242.wgsl",
+      "size": 1842,
+      "sha256": "481b740ecd47c242e4aee37146bf0d2ad3b6f841636e456df891e6d8c218a0d9"
+    },
+    {
+      "path": ".repro-out/modular-scene-test/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": ".repro-out/modular-scene-test/app.js",
+      "size": 14655,
+      "sha256": "e4ec18a4a2b34aaa3a35d22254e05f7f2c92aa1897d7404a3a123c75f0a7ebb6"
+    },
+    {
+      "path": ".repro-out/modular-scene-test/app.js.map",
+      "size": 1689,
+      "sha256": "7bf3f4cde2214c4c6663f7331a52dd147df7fd80b1eef36f9f4e1b5bba481d26"
+    },
+    {
+      "path": ".repro-out/modular-scene-test/index.html",
+      "size": 365,
+      "sha256": "0abd6cd7e6c4e59e558114941ddb4bb0c59285fd83f6d04e290da498c337bdde"
+    },
+    {
+      "path": ".repro-out/modular-scene-test/program.manifest.json",
+      "size": 26957,
+      "sha256": "530ffb407253ef90f1d517c707601c19c8e3ec0f3133f841c0c35c46836ff727"
+    },
+    {
+      "path": ".repro-out/modular-scene-test/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/modular-scene-test/runtime.f0c4751eae4352c5.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": ".repro-out/modular-scene-test/shaders/481b740ecd47c242.mtek-map.json",
+      "size": 14869,
+      "sha256": "3d4749992816069f61afeb407efc4e0a2fb12927804d184b6fddf5ff952f17e4"
+    },
+    {
+      "path": ".repro-out/modular-scene-test/shaders/481b740ecd47c242.wgsl",
+      "size": 1842,
+      "sha256": "481b740ecd47c242e4aee37146bf0d2ad3b6f841636e456df891e6d8c218a0d9"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/app.js",
+      "size": 12511,
+      "sha256": "a91be9d3993df92a02a3f00a24334ba39a82209d304a1e4334eded086c27fd4e"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/app.js.map",
+      "size": 1038,
+      "sha256": "74566d380f7767ae149ea76de3a3988f999f1f6aefe78924a7741e53bc8ab6a0"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/index.html",
+      "size": 2516,
+      "sha256": "a3849c13a3eb4b1cf7e23b16fb6a6d5ce2e30f0fd331b1801d1f226e4855114c"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/physics/03781735475a88ad.js",
+      "size": 4410320,
+      "sha256": "03781735475a88adc45f51385e4755204aa73c83e5b491c96e0ff9efdb3e6df8"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/program.manifest.json",
+      "size": 29941,
+      "sha256": "eab1e1caf19b7b897a79f555bb2429e873dd4fa55d512c34b990e12e6c647ece"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/runtime.f0c4751eae4352c5.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/shaders/1594a8ef1d1b39e6.mtek-map.json",
+      "size": 74960,
+      "sha256": "21f7695b51bbacca5541d1131f5ae44c5485a59acd49474478404741e165363b"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/shaders/1594a8ef1d1b39e6.wgsl",
+      "size": 6168,
+      "sha256": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13313,
+      "sha256": "191b6f76969f0424c0dffdba64fc0d81707c31b3450a558903531895d41d1a26"
+    },
+    {
+      "path": ".repro-out/physics-playground-dev/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/app.js",
+      "size": 12511,
+      "sha256": "324a07973db613adb148988866f2d33b8f48376c0bba4aab6c1e671ad3434cbe"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/app.js.map",
+      "size": 1038,
+      "sha256": "74566d380f7767ae149ea76de3a3988f999f1f6aefe78924a7741e53bc8ab6a0"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/bootstrap.js",
+      "size": 153,
+      "sha256": "0c8a9469565b47e3a8e9691146d80589a50af2c63ae43788ddf508da2dd866cf"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/index.html",
+      "size": 431,
+      "sha256": "440b2dc1492d0dd2f9fdc663da6a4afba397e9cd1b12c061cb9db90762ba0f08"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/physics/03781735475a88ad.js",
+      "size": 4410320,
+      "sha256": "03781735475a88adc45f51385e4755204aa73c83e5b491c96e0ff9efdb3e6df8"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/program.manifest.json",
+      "size": 29988,
+      "sha256": "10f480080e484a4b363fe503b8943e4983af005ecf0508a667fe83edea50f379"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/shaders/1594a8ef1d1b39e6.mtek-map.json",
+      "size": 74960,
+      "sha256": "21f7695b51bbacca5541d1131f5ae44c5485a59acd49474478404741e165363b"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/shaders/1594a8ef1d1b39e6.wgsl",
+      "size": 6168,
+      "sha256": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13313,
+      "sha256": "191b6f76969f0424c0dffdba64fc0d81707c31b3450a558903531895d41d1a26"
+    },
+    {
+      "path": ".repro-out/physics-playground-preview/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/app.js",
+      "size": 12511,
+      "sha256": "a91be9d3993df92a02a3f00a24334ba39a82209d304a1e4334eded086c27fd4e"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/app.js.map",
+      "size": 1038,
+      "sha256": "74566d380f7767ae149ea76de3a3988f999f1f6aefe78924a7741e53bc8ab6a0"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/index.html",
+      "size": 370,
+      "sha256": "34057a13499b5d951ad4725665023758553139f62962748e310ee375369a034e"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/physics/03781735475a88ad.js",
+      "size": 4410320,
+      "sha256": "03781735475a88adc45f51385e4755204aa73c83e5b491c96e0ff9efdb3e6df8"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/program.manifest.json",
+      "size": 29941,
+      "sha256": "eab1e1caf19b7b897a79f555bb2429e873dd4fa55d512c34b990e12e6c647ece"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/runtime.f0c4751eae4352c5.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/shaders/1594a8ef1d1b39e6.mtek-map.json",
+      "size": 74960,
+      "sha256": "21f7695b51bbacca5541d1131f5ae44c5485a59acd49474478404741e165363b"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/shaders/1594a8ef1d1b39e6.wgsl",
+      "size": 6168,
+      "sha256": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13313,
+      "sha256": "191b6f76969f0424c0dffdba64fc0d81707c31b3450a558903531895d41d1a26"
+    },
+    {
+      "path": ".repro-out/physics-playground-test/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": ".repro-out/pulse-cube-dev/app.d.ts",
+      "size": 271,
+      "sha256": "9d5b79d025526b4aae8d56685b43f9c09843c869fcb4ff78d24dd6a69c812e55"
+    },
+    {
+      "path": ".repro-out/pulse-cube-dev/app.js",
+      "size": 7428,
+      "sha256": "7764eb62ef83a90bcef8124fa53cf47af2b5b70ac471b9f527e491085bad024b"
+    },
+    {
+      "path": ".repro-out/pulse-cube-dev/app.js.map",
+      "size": 387,
+      "sha256": "245a2051c17b9c25d69adefd06ea7f24875288aed6d7ab8bb02e3be3b01565e5"
+    },
+    {
+      "path": ".repro-out/pulse-cube-dev/index.html",
+      "size": 2508,
+      "sha256": "9c3b02f980d117150d390e22dc9c1e9dfaa5e2453bed7fa9c1958f1b547d3c6c"
+    },
+    {
+      "path": ".repro-out/pulse-cube-dev/program.manifest.json",
+      "size": 15887,
+      "sha256": "a06a1b6d81024f067b93f774a97269527f5782c12e285a56cf6b9fd9bc502bd3"
+    },
+    {
+      "path": ".repro-out/pulse-cube-dev/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/pulse-cube-dev/runtime.f0c4751eae4352c5.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": ".repro-out/pulse-cube-dev/shaders/131089bf80118bdf.mtek-map.json",
+      "size": 15957,
+      "sha256": "008b84e6c02e357cbc78971bdd9eeec2dbd750b345ccfd8c83dcb75317c5b244"
+    },
+    {
+      "path": ".repro-out/pulse-cube-dev/shaders/131089bf80118bdf.wgsl",
+      "size": 1953,
+      "sha256": "131089bf80118bdf5d1e666e186abfefcb763bce6d7270984735b7695b862ff4"
+    },
+    {
+      "path": ".repro-out/pulse-cube-preview/app.d.ts",
+      "size": 271,
+      "sha256": "9d5b79d025526b4aae8d56685b43f9c09843c869fcb4ff78d24dd6a69c812e55"
+    },
+    {
+      "path": ".repro-out/pulse-cube-preview/app.js",
+      "size": 7428,
+      "sha256": "818ac2870cf37272467922e7fec2dbe1da1da3dbde7eda3e258f477eb937c61f"
+    },
+    {
+      "path": ".repro-out/pulse-cube-preview/app.js.map",
+      "size": 387,
+      "sha256": "245a2051c17b9c25d69adefd06ea7f24875288aed6d7ab8bb02e3be3b01565e5"
+    },
+    {
+      "path": ".repro-out/pulse-cube-preview/bootstrap.js",
+      "size": 153,
+      "sha256": "0c8a9469565b47e3a8e9691146d80589a50af2c63ae43788ddf508da2dd866cf"
+    },
+    {
+      "path": ".repro-out/pulse-cube-preview/index.html",
+      "size": 423,
+      "sha256": "8ae1a5e1d4fe14c05e81f3082c434ae268eb4b162806f69ec63373f6492b9f83"
+    },
+    {
+      "path": ".repro-out/pulse-cube-preview/program.manifest.json",
+      "size": 15934,
+      "sha256": "d993c51481dcba1acc6cde9c9b382e20ca46d40d55c13a08e5c059240358fa84"
+    },
+    {
+      "path": ".repro-out/pulse-cube-preview/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": ".repro-out/pulse-cube-preview/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/pulse-cube-preview/shaders/131089bf80118bdf.mtek-map.json",
+      "size": 15957,
+      "sha256": "008b84e6c02e357cbc78971bdd9eeec2dbd750b345ccfd8c83dcb75317c5b244"
+    },
+    {
+      "path": ".repro-out/pulse-cube-preview/shaders/131089bf80118bdf.wgsl",
+      "size": 1953,
+      "sha256": "131089bf80118bdf5d1e666e186abfefcb763bce6d7270984735b7695b862ff4"
+    },
+    {
+      "path": ".repro-out/pulse-cube-test/app.d.ts",
+      "size": 271,
+      "sha256": "9d5b79d025526b4aae8d56685b43f9c09843c869fcb4ff78d24dd6a69c812e55"
+    },
+    {
+      "path": ".repro-out/pulse-cube-test/app.js",
+      "size": 7428,
+      "sha256": "7764eb62ef83a90bcef8124fa53cf47af2b5b70ac471b9f527e491085bad024b"
+    },
+    {
+      "path": ".repro-out/pulse-cube-test/app.js.map",
+      "size": 387,
+      "sha256": "245a2051c17b9c25d69adefd06ea7f24875288aed6d7ab8bb02e3be3b01565e5"
+    },
+    {
+      "path": ".repro-out/pulse-cube-test/index.html",
+      "size": 362,
+      "sha256": "2754cc57e31bc0fda6d1eb39c0c93a318a45a6d2acea9f272b717033453bfb6c"
+    },
+    {
+      "path": ".repro-out/pulse-cube-test/program.manifest.json",
+      "size": 15887,
+      "sha256": "a06a1b6d81024f067b93f774a97269527f5782c12e285a56cf6b9fd9bc502bd3"
+    },
+    {
+      "path": ".repro-out/pulse-cube-test/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": ".repro-out/pulse-cube-test/runtime.f0c4751eae4352c5.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": ".repro-out/pulse-cube-test/shaders/131089bf80118bdf.mtek-map.json",
+      "size": 15957,
+      "sha256": "008b84e6c02e357cbc78971bdd9eeec2dbd750b345ccfd8c83dcb75317c5b244"
+    },
+    {
+      "path": ".repro-out/pulse-cube-test/shaders/131089bf80118bdf.wgsl",
+      "size": 1953,
+      "sha256": "131089bf80118bdf5d1e666e186abfefcb763bce6d7270984735b7695b862ff4"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/assets/asset-heavy-startup/hashes.json",
+      "size": 681,
+      "sha256": "7bf2e307d2ab096f9212272981e2a321e1e63da30dbfa72103ad3e54b59639de"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/assets/asset-heavy-startup/rocks.glb",
+      "size": 1931236,
+      "sha256": "97936984a641a0cbfcb461e38bf35a4a9a646baf6dacac50fb399b77ec0cde2c"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/assets/asset-heavy-startup/t0.png",
+      "size": 225697,
+      "sha256": "6866c2706dda6fbb504d7db66f8402ffb18a82cad942b19a93ae4949fa5fa8e7"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/assets/asset-heavy-startup/t1.png",
+      "size": 304497,
+      "sha256": "f07e61975e9e7a246901a2e24cced6991581c5ec9ab908b5adcf4d619bb67428"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/assets/asset-heavy-startup/t2.png",
+      "size": 326111,
+      "sha256": "15dc065292728a6723c12e51b53b641312efce1cd40c6b102313e48622bd3689"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/assets/asset-heavy-startup/t3.png",
+      "size": 247369,
+      "sha256": "51a4f820a59b23f504b988535611f190d6b903538c18c98372bb7e8a143ffaf0"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/assets/asset-heavy-startup/t4.png",
+      "size": 289333,
+      "sha256": "1baa49ddb3ba25e09c6b894ae0bc3c5aba12a1c2104261127fe83f217343799c"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/assets/asset-heavy-startup/t5.png",
+      "size": 159332,
+      "sha256": "5c82f689c9931378a07eae288e1adc10ffa207dddcc7e6d4a77e27b99e59280d"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/assets/asset-heavy-startup/t6.png",
+      "size": 286762,
+      "sha256": "c5a226e30386b164c41b241212fa70938e7ea9872ed8997140369e4c6b5f201a"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/assets/asset-heavy-startup/t7.png",
+      "size": 211883,
+      "sha256": "e88e44e0c789d486a2e31eb0693689e7c4142545709b9e71fea34274df66d94f"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/env-probe.js",
+      "size": 2630,
+      "sha256": "95aecee38fef7259269ec868170e7dd28d9ea54109dcc456bfb2d5285de915e8"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/env.html",
+      "size": 219,
+      "sha256": "214cf9bbcee26c4d9281c1c251ac4bba645faa1637263d755eea1b6784e9ef44"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/app.js",
+      "size": 9739,
+      "sha256": "9b6c401101dd4c24cf50a7fd2329f572de25d0720c0119df839aa0c279e736f0"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/app.js.map",
+      "size": 521,
+      "sha256": "e60cb9b653e833cb3b097005355282b60dbd28260cdf94b2f1f327be3e792471"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/assets/01f92a4f1cf39f5a.png",
+      "size": 286762,
+      "sha256": "c5a226e30386b164c41b241212fa70938e7ea9872ed8997140369e4c6b5f201a"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/assets/0376262ea193e45e.bin",
+      "size": 1927808,
+      "sha256": "1c921f2a4cff77e212badde971e1b5f95d3ea544851b614e2ec285c740b4869c"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/assets/1056760d8a124311.png",
+      "size": 304497,
+      "sha256": "f07e61975e9e7a246901a2e24cced6991581c5ec9ab908b5adcf4d619bb67428"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/assets/236b9c38218e9bfb.png",
+      "size": 326111,
+      "sha256": "15dc065292728a6723c12e51b53b641312efce1cd40c6b102313e48622bd3689"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/assets/3a2ac8336639847a.png",
+      "size": 211883,
+      "sha256": "e88e44e0c789d486a2e31eb0693689e7c4142545709b9e71fea34274df66d94f"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/assets/4d8bddfabd9d7e14.png",
+      "size": 289333,
+      "sha256": "1baa49ddb3ba25e09c6b894ae0bc3c5aba12a1c2104261127fe83f217343799c"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/assets/5b8ecfb2df840a74.png",
+      "size": 225697,
+      "sha256": "6866c2706dda6fbb504d7db66f8402ffb18a82cad942b19a93ae4949fa5fa8e7"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/assets/665a26dfb6d878c3.png",
+      "size": 159332,
+      "sha256": "5c82f689c9931378a07eae288e1adc10ffa207dddcc7e6d4a77e27b99e59280d"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/assets/a91d33bba1861254.png",
+      "size": 247369,
+      "sha256": "51a4f820a59b23f504b988535611f190d6b903538c18c98372bb7e8a143ffaf0"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/index.html",
+      "size": 381,
+      "sha256": "973aae22d1465eaad638bb174b719ecec62152aee0630e64a3d5bc394bfa0cb7"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/program.manifest.json",
+      "size": 33138,
+      "sha256": "b297359a35c5387a8eabd93c51513d68b2725f08438608ba56ee27b6c1dfc090"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/shaders/3ef84f88eb3d726c.mtek-map.json",
+      "size": 16419,
+      "sha256": "d07362b09cd26063b2d46a567860d39e92fd891b2eb6e165ded3b0ea573182ae"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/asset-heavy-startup/shaders/3ef84f88eb3d726c.wgsl",
+      "size": 2138,
+      "sha256": "3ef84f88eb3d726cc0ff0e4bcb6d550b3f21f68ccb7cd9a6ce98d750df4712bb"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-material-params/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-material-params/app.js",
+      "size": 418831,
+      "sha256": "8e5ed7f9480d1a760d5ce5b13d9e554fb9abaa323297a097ebeb32d35e331682"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-material-params/app.js.map",
+      "size": 117957,
+      "sha256": "ccbf402d84359d8267a600cb09090d1f1026f4f8143c9360a32d8134a2ebe6ed"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-material-params/index.html",
+      "size": 390,
+      "sha256": "740cc28d57dbd232e416f45d568ab9d02386ee7cdac65411d0b781280719274f"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-material-params/program.manifest.json",
+      "size": 633160,
+      "sha256": "89f27b3d38a460b3253d73bdfd0e67535764ce1c0ac6e16adf60db56b79dd067"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-material-params/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-material-params/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-material-params/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13393,
+      "sha256": "4e1ec879ddb8630cd970c11958f785266f758d50f8a64201ee3a7a7f33be15ae"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-material-params/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-transforms/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-transforms/app.js",
+      "size": 949127,
+      "sha256": "113d94215da5cdf530b8e19fcfa10951fb061a2551f231eeb2458e89488a0b7b"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-transforms/app.js.map",
+      "size": 161375,
+      "sha256": "12e90db4a061ed31150599f9333a2e5fa0440eef8c9d300b8b428a36a595ab1a"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-transforms/index.html",
+      "size": 387,
+      "sha256": "df5f7fec8facb6fd5fd9e9d5e23bd28caf486d89e976f35556d517fcde1a2be2"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-transforms/program.manifest.json",
+      "size": 1543874,
+      "sha256": "64afb4c95d1303a68d2e1c0b6742160b80c425cfc585b999f54d7fb8334f1a61"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-transforms/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-transforms/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-transforms/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13473,
+      "sha256": "34bacb2b64411d855d31917366dcd762437dbdcb4af36fc163e59d784e07dad5"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/changing-transforms/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/constant-scene/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/constant-scene/app.js",
+      "size": 204849,
+      "sha256": "e4a45e6c5826fbfb49b3b2003d8e94e779443b19f87b930f76e858db87cf1e46"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/constant-scene/app.js.map",
+      "size": 21479,
+      "sha256": "6ea0682038ac3cdb3498c2559dd4ac8d17112d0676a7a76dea0e7de4ddce41d9"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/constant-scene/index.html",
+      "size": 376,
+      "sha256": "2d77192a53413aca24ee6de2a8efd19c88f03dd620ed9901809a579b3330836b"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/constant-scene/program.manifest.json",
+      "size": 379018,
+      "sha256": "d018d11f53e958696502bfaa36a61d75ff38dfa39631b84629cb0615ad2672cc"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/constant-scene/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/constant-scene/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/constant-scene/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13393,
+      "sha256": "7cd2822b753cf49b12ed5fd5dc44aa601aefda3981d9725edf0123cfb2fe5807"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/constant-scene/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose-edited/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose-edited/app.js",
+      "size": 55333,
+      "sha256": "26ea92a5c1dd1c4f12e8381e185de2a58d31b9027cd3d1449f61596af34c2db0"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose-edited/app.js.map",
+      "size": 5579,
+      "sha256": "32304ea1cf46de9f5768b66a160816086a736e19cf03b53bb34c2372f4c7d0df"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose-edited/index.html",
+      "size": 2528,
+      "sha256": "a1579131c76d1ac1c377051f91ff1eb72e8be4e2c0d2c8b2a58dca40260265a1"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose-edited/program.manifest.json",
+      "size": 102144,
+      "sha256": "6f2320108c5ea5e8d5938b151e4267b50c95b9d38af52b13cdd516f1de55721e"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose-edited/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose-edited/runtime.f0c4751eae4352c5.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose-edited/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13393,
+      "sha256": "bd6e888070f9ddf1743e84f670da72f4d9234b4984573ed556dccfeef9b9fe4a"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose-edited/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose/app.js",
+      "size": 55346,
+      "sha256": "ea047da0377a668da546e15bca71b78676a053cdb357e15feb5e2a09984e7efc"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose/app.js.map",
+      "size": 5579,
+      "sha256": "c2c1c151393a14b7300478e3e70f8dd37564b027b97c9f78d12cf3d1f35ad58d"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose/index.html",
+      "size": 2528,
+      "sha256": "a1579131c76d1ac1c377051f91ff1eb72e8be4e2c0d2c8b2a58dca40260265a1"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose/program.manifest.json",
+      "size": 102140,
+      "sha256": "787acdd78d87a78929d90b5e34599d0e606f80ecc49a8c26252194d2cf38a049"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose/runtime.f0c4751eae4352c5.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13393,
+      "sha256": "bd6e888070f9ddf1743e84f670da72f4d9234b4984573ed556dccfeef9b9fe4a"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/mount-reload-dispose/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/physics-bodies/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/physics-bodies/app.js",
+      "size": 251423,
+      "sha256": "e8e37f3024d6637fffde1e5f22ca399989bbaa299009dc13e5b8ab1a3f68fc5e"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/physics-bodies/app.js.map",
+      "size": 46614,
+      "sha256": "3a5aca008ebb088124cc02a1234115a0f336aec30c199b54d290205a9a7f9fce"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/physics-bodies/index.html",
+      "size": 380,
+      "sha256": "a7233bc7ddd5e152520351de3f4a23e0095e42601cacdf8957d3915c565e2195"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/physics-bodies/physics/03781735475a88ad.js",
+      "size": 4410320,
+      "sha256": "03781735475a88adc45f51385e4755204aa73c83e5b491c96e0ff9efdb3e6df8"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/physics-bodies/program.manifest.json",
+      "size": 384697,
+      "sha256": "022b2ccad351dd1b41f3920587a058b6471540a41a40e2bfa3ae411fead21d1c"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/physics-bodies/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/physics-bodies/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/physics-bodies/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13393,
+      "sha256": "b01c100c849eea6b230fe9faf9180d6303431cd1a7a2e7bbbbd7a6ab1dd6ba86"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/physics-bodies/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/repeated-meshes/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/repeated-meshes/app.js",
+      "size": 1138506,
+      "sha256": "8ca55b34ad842857f990e95c0d2ef2145ac95ab46276528c6dc8acddb72ee190"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/repeated-meshes/app.js.map",
+      "size": 109300,
+      "sha256": "9267446bd80d1481ef9c54195d3508b19c849e22b1171afcfb4fba13851bea16"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/repeated-meshes/index.html",
+      "size": 383,
+      "sha256": "d30ab02fdf17a9548c40c99e9a4ac12d29f3aa995d5c936ed329c42d9b434b05"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/repeated-meshes/program.manifest.json",
+      "size": 1868885,
+      "sha256": "7726855a7a737d6aed799342e35dbb0a640d3ddf9ac8dba73647a4e366a42b9d"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/repeated-meshes/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/repeated-meshes/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/repeated-meshes/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13473,
+      "sha256": "77fa71f6c3b0ab0ad502c3771f855e5b0abd9e0176090d0f29cf93de6e8d6470"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/mtek/repeated-meshes/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/asset-heavy-startup/direct.html",
+      "size": 147,
+      "sha256": "178d425ef7450f4ca2dd26d7e3965d6bd5b8254fa8c0e44457d18a3baf14ea45"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/asset-heavy-startup/direct.js",
+      "size": 23770,
+      "sha256": "c2b9d6831cadcb45b871e6b31b97828d783f7e21f87f9a7ddc1acbc1dd188a1a"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/asset-heavy-startup/mtek.html",
+      "size": 143,
+      "sha256": "b9a8a299abd051d7e011af9f1226fbdfc1f4a4754637b0300bcbc0d7316008d2"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/asset-heavy-startup/mtek.js",
+      "size": 17736,
+      "sha256": "c59c42ecd2f2d7ffb1d35217ca455ff0c417a54524dd9d1571fc0ae5ced92cfc"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/asset-heavy-startup/three.html",
+      "size": 145,
+      "sha256": "9ef420b684c44cce4f81820d29f8b3d3edd08f371c888841d81ebd23a3858794"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/asset-heavy-startup/three.js",
+      "size": 1036409,
+      "sha256": "36201c02182e7e539e7fd3e6046ca56c208970e608b33aa8c06d01c5cceabcd4"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-material-params/direct.html",
+      "size": 152,
+      "sha256": "6faa93ad57a4e787467713f5154cd16e7902e6b253c925462b42cbc2ed023b0d"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-material-params/direct.js",
+      "size": 23993,
+      "sha256": "4eee2328a8290ccc403bd05d3372c1ba25686c03e373e23511cf06687e562a6b"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-material-params/mtek.html",
+      "size": 148,
+      "sha256": "4b677aba82da48490803956dc6841f4e9d6ab7ede5df536c031d78e44264b2f1"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-material-params/mtek.js",
+      "size": 17736,
+      "sha256": "c59c42ecd2f2d7ffb1d35217ca455ff0c417a54524dd9d1571fc0ae5ced92cfc"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-material-params/three.html",
+      "size": 150,
+      "sha256": "276a6d773cc1207dfadc859da33ff80d6a69ea42de8e6e4908ec2ce0f9bc650d"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-material-params/three.js",
+      "size": 806393,
+      "sha256": "a3b59adb58ceb258a18c3f2f61b7456ceca0da92dab3dda9da503df180d0bb23"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-transforms/direct.html",
+      "size": 147,
+      "sha256": "b74c8754ddb3dff5a977e0cc4de420f9691c314acce74f1ab56542e2e15c5216"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-transforms/direct.js",
+      "size": 24016,
+      "sha256": "dad180a1f785befdb1993816bc8bf0709429a913aa4d96b1e518eae8399bea88"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-transforms/mtek.html",
+      "size": 143,
+      "sha256": "587aa98ccdecd6dfba97bc4436b9f39d86a12d154cdbc94625b2eb369f164d00"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-transforms/mtek.js",
+      "size": 17736,
+      "sha256": "c59c42ecd2f2d7ffb1d35217ca455ff0c417a54524dd9d1571fc0ae5ced92cfc"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-transforms/three.html",
+      "size": 145,
+      "sha256": "f82e79c9f17c93c50f0aceb3fa071b8977594b000717ffdd0d7a3b683997a81f"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/changing-transforms/three.js",
+      "size": 806374,
+      "sha256": "c6b7fe404fd5f4756f71067d1bf40169ba31afb825a4bff451478c506781d095"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/constant-scene/direct.html",
+      "size": 142,
+      "sha256": "7b323e5cda15d96a8cdbec416bfa2e692ae24a5f07c67d3583bc141bfdefac6d"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/constant-scene/direct.js",
+      "size": 23916,
+      "sha256": "260fccc5758a51e440dd6142fd522054a8bfb3b1197223c49fe6f712f256427a"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/constant-scene/mtek.html",
+      "size": 138,
+      "sha256": "1fa382e0f5ee742a9ac42d45ebfbe2232dd4c564f9073db073606096eb9c0bd2"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/constant-scene/mtek.js",
+      "size": 17736,
+      "sha256": "c59c42ecd2f2d7ffb1d35217ca455ff0c417a54524dd9d1571fc0ae5ced92cfc"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/constant-scene/three.html",
+      "size": 140,
+      "sha256": "f4120ef52161e090c8072fdef2626d4d92ed2f2dce98b2227bb38bffba80e181"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/constant-scene/three.js",
+      "size": 806298,
+      "sha256": "d3d8ed248eb1beffac372012ede13c37ee088027771108e539e290ec385902b9"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/floor/floor.html",
+      "size": 131,
+      "sha256": "ee027fa9441643fd7c69703326d4a8d1e882cc4e79294f85054662caab4109fb"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/floor/floor.js",
+      "size": 18153,
+      "sha256": "996b4353a065f6583e6f9c4c16bc978a7750eb2f8fb372b88671b292fb4163bf"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/mount-reload-dispose/direct.html",
+      "size": 148,
+      "sha256": "52235962853f74298350fc038c32140be880d51dfe66b613a6f7b6a304d63df7"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/mount-reload-dispose/direct.js",
+      "size": 24042,
+      "sha256": "f6596fde82fa15d9ee0189b9e80415044b77a3c5af457f27f5fd64fa543a8155"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/mount-reload-dispose/mtek.html",
+      "size": 144,
+      "sha256": "6676515a6b5e7ce3506517518ae741830ad7f9557ef39312e80103ee78e08bfc"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/mount-reload-dispose/mtek.js",
+      "size": 17736,
+      "sha256": "c59c42ecd2f2d7ffb1d35217ca455ff0c417a54524dd9d1571fc0ae5ced92cfc"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/mount-reload-dispose/three.html",
+      "size": 146,
+      "sha256": "22392f765ecd0f58b7c2a8a29fd1eafa7addde4028fb91c5f5ade72606685ef7"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/mount-reload-dispose/three.js",
+      "size": 806511,
+      "sha256": "eeb0b4ebcbdf9f5b19b10be5a65421cebcde5f2d99111da96b337f3ee7d806c9"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/physics-bodies/direct.html",
+      "size": 142,
+      "sha256": "4ed0fbad5578bfc5e8de3f10646242f622acce8e24d9ef846fddeaf59e74587b"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/physics-bodies/direct.js",
+      "size": 4360570,
+      "sha256": "b19d0f8b8abeb6a77917e2e975bf3595f2651f883a833786fc707acdbe1155d1"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/physics-bodies/mtek.html",
+      "size": 138,
+      "sha256": "3629c8e5ff112cdfa457fc0a4304d50f2020e60f83a48be818a126be9a554ec5"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/physics-bodies/mtek.js",
+      "size": 17736,
+      "sha256": "c59c42ecd2f2d7ffb1d35217ca455ff0c417a54524dd9d1571fc0ae5ced92cfc"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/physics-bodies/three.html",
+      "size": 140,
+      "sha256": "af5706f2abd739173cce828f6b7377b398afcabda89aa34117adb4eab7da34df"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/physics-bodies/three.js",
+      "size": 5143578,
+      "sha256": "49301aa53a6d2d37043ad7d648b8063eb99a841fe2e8b092a1e81c0c22a42586"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/repeated-meshes/direct.html",
+      "size": 143,
+      "sha256": "477b562e387d5848d589ab4f472a46f9adf3e32bec1758051ec1f6e08000ec5b"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/repeated-meshes/direct.js",
+      "size": 23844,
+      "sha256": "704608e9c897ee6e42cab40d334268aeaeb25ce2aa072678bba0f87f785eac58"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/repeated-meshes/mtek.html",
+      "size": 139,
+      "sha256": "d94175b459cf3f4816a32ce36741ff5fea6334f2c02822065c2f89df7d4e63b1"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/repeated-meshes/mtek.js",
+      "size": 17736,
+      "sha256": "c59c42ecd2f2d7ffb1d35217ca455ff0c417a54524dd9d1571fc0ae5ced92cfc"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/repeated-meshes/three.html",
+      "size": 141,
+      "sha256": "2006adeafa0def90534a5ec79cb1c688281ccfdeb857e39515fc1c4d9b7b957a"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/pages/repeated-meshes/three.js",
+      "size": 809166,
+      "sha256": "ca897b14ec460b73b896ae637f646aa2c766950699616212bc5d21b0ecf839b5"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/prepared.json",
+      "size": 361,
+      "sha256": "415772b1ba080e99d4ccc5addcf591b7d912bc5a46174ea8d73587dcc15efa4d"
+    },
+    {
+      "path": "benchmarks/runtime/.out/site/sizes.json",
+      "size": 17853,
+      "sha256": "2561d43e4a820f06d26adfedaa624e003fc22d05c3beafc7c5ac8cb7f7b77331"
+    },
+    {
+      "path": "benchmarks/runtime/asset-heavy-startup/mtek/models/rocks.glb",
+      "size": 1931236,
+      "sha256": "97936984a641a0cbfcb461e38bf35a4a9a646baf6dacac50fb399b77ec0cde2c"
+    },
+    {
+      "path": "benchmarks/runtime/asset-heavy-startup/mtek/textures/t0.png",
+      "size": 225697,
+      "sha256": "6866c2706dda6fbb504d7db66f8402ffb18a82cad942b19a93ae4949fa5fa8e7"
+    },
+    {
+      "path": "benchmarks/runtime/asset-heavy-startup/mtek/textures/t1.png",
+      "size": 304497,
+      "sha256": "f07e61975e9e7a246901a2e24cced6991581c5ec9ab908b5adcf4d619bb67428"
+    },
+    {
+      "path": "benchmarks/runtime/asset-heavy-startup/mtek/textures/t2.png",
+      "size": 326111,
+      "sha256": "15dc065292728a6723c12e51b53b641312efce1cd40c6b102313e48622bd3689"
+    },
+    {
+      "path": "benchmarks/runtime/asset-heavy-startup/mtek/textures/t3.png",
+      "size": 247369,
+      "sha256": "51a4f820a59b23f504b988535611f190d6b903538c18c98372bb7e8a143ffaf0"
+    },
+    {
+      "path": "benchmarks/runtime/asset-heavy-startup/mtek/textures/t4.png",
+      "size": 289333,
+      "sha256": "1baa49ddb3ba25e09c6b894ae0bc3c5aba12a1c2104261127fe83f217343799c"
+    },
+    {
+      "path": "benchmarks/runtime/asset-heavy-startup/mtek/textures/t5.png",
+      "size": 159332,
+      "sha256": "5c82f689c9931378a07eae288e1adc10ffa207dddcc7e6d4a77e27b99e59280d"
+    },
+    {
+      "path": "benchmarks/runtime/asset-heavy-startup/mtek/textures/t6.png",
+      "size": 286762,
+      "sha256": "c5a226e30386b164c41b241212fa70938e7ea9872ed8997140369e4c6b5f201a"
+    },
+    {
+      "path": "benchmarks/runtime/asset-heavy-startup/mtek/textures/t7.png",
+      "size": 211883,
+      "sha256": "e88e44e0c789d486a2e31eb0693689e7c4142545709b9e71fea34274df66d94f"
+    },
+    {
+      "path": "examples/material-configurator/dist/app.d.ts",
+      "size": 513,
+      "sha256": "3c6f72a9cc7958cf03c329e2fba3a8ba5b590d66e31b574323bea443589bb0af"
+    },
+    {
+      "path": "examples/material-configurator/dist/app.js",
+      "size": 16557,
+      "sha256": "530067b38e91b8c5819df4164e9b4894301a1ea82e5a1b2eb8d03cbdf391dca0"
+    },
+    {
+      "path": "examples/material-configurator/dist/app.js.map",
+      "size": 1051,
+      "sha256": "320a56c582605196daa1c11ab8306b5666f8eb75dabec6942029b2faf09548d0"
+    },
+    {
+      "path": "examples/material-configurator/dist/assets/fc3a4e36cb070777.bin",
+      "size": 5180,
+      "sha256": "5c72cda8d43d026208592c55b23a85e37e84d5bde11ad9f909a18355f7efde7c"
+    },
+    {
+      "path": "examples/material-configurator/dist/index.html",
+      "size": 383,
+      "sha256": "a093cc574a49d26249e43196765dc38913a6f0e340cdc030ace5c369fb415f7a"
+    },
+    {
+      "path": "examples/material-configurator/dist/program.manifest.json",
+      "size": 59660,
+      "sha256": "bfd34523a018bfb2b8b2526cfb674a74c9f5cdf2253d4b986711f7e108416196"
+    },
+    {
+      "path": "examples/material-configurator/dist/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "examples/material-configurator/dist/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "examples/material-configurator/dist/shaders/1594a8ef1d1b39e6.mtek-map.json",
+      "size": 74960,
+      "sha256": "48953404d10e645a48520390374a31e69bb775e64bbfa6f7fd8fb19550018c41"
+    },
+    {
+      "path": "examples/material-configurator/dist/shaders/1594a8ef1d1b39e6.wgsl",
+      "size": 6168,
+      "sha256": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd"
+    },
+    {
+      "path": "examples/material-configurator/dist/shaders/beec11da79884320.mtek-map.json",
+      "size": 80821,
+      "sha256": "d15d4fdf4c316332f9a7bb496bd2e27aff97fd20bd27cb100ad003655c3505c7"
+    },
+    {
+      "path": "examples/material-configurator/dist/shaders/beec11da79884320.wgsl",
+      "size": 6292,
+      "sha256": "beec11da79884320de9f9512dd5b6b8e4373c55396739d38f4cf5651bbb053bd"
+    },
+    {
+      "path": "examples/modular-scene/dist/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": "examples/modular-scene/dist/app.js",
+      "size": 14655,
+      "sha256": "11070f172fb4835b63e7d3c0177becff153e72463ac9bc3815d83b1c716ab00a"
+    },
+    {
+      "path": "examples/modular-scene/dist/app.js.map",
+      "size": 1689,
+      "sha256": "7bf3f4cde2214c4c6663f7331a52dd147df7fd80b1eef36f9f4e1b5bba481d26"
+    },
+    {
+      "path": "examples/modular-scene/dist/index.html",
+      "size": 375,
+      "sha256": "f9ad1e5acc789e0f6e1fe653b42389623e5a295bf38309afbf8f83e5ff29b4eb"
+    },
+    {
+      "path": "examples/modular-scene/dist/program.manifest.json",
+      "size": 26957,
+      "sha256": "530ffb407253ef90f1d517c707601c19c8e3ec0f3133f841c0c35c46836ff727"
+    },
+    {
+      "path": "examples/modular-scene/dist/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "examples/modular-scene/dist/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "examples/modular-scene/dist/shaders/481b740ecd47c242.mtek-map.json",
+      "size": 14869,
+      "sha256": "3d4749992816069f61afeb407efc4e0a2fb12927804d184b6fddf5ff952f17e4"
+    },
+    {
+      "path": "examples/modular-scene/dist/shaders/481b740ecd47c242.wgsl",
+      "size": 1842,
+      "sha256": "481b740ecd47c242e4aee37146bf0d2ad3b6f841636e456df891e6d8c218a0d9"
+    },
+    {
+      "path": "examples/physics-playground/dist/app.d.ts",
+      "size": 248,
+      "sha256": "9ed4027f3bd2637be14a26ef31f27dbbed1950c7dcc2620465127baa39d6a780"
+    },
+    {
+      "path": "examples/physics-playground/dist/app.js",
+      "size": 12511,
+      "sha256": "324a07973db613adb148988866f2d33b8f48376c0bba4aab6c1e671ad3434cbe"
+    },
+    {
+      "path": "examples/physics-playground/dist/app.js.map",
+      "size": 1038,
+      "sha256": "74566d380f7767ae149ea76de3a3988f999f1f6aefe78924a7741e53bc8ab6a0"
+    },
+    {
+      "path": "examples/physics-playground/dist/index.html",
+      "size": 380,
+      "sha256": "263e5fd781a04debbf86d66083249dd5cd933f6741288d247d99e96bc0755e6b"
+    },
+    {
+      "path": "examples/physics-playground/dist/physics/03781735475a88ad.js",
+      "size": 4410320,
+      "sha256": "03781735475a88adc45f51385e4755204aa73c83e5b491c96e0ff9efdb3e6df8"
+    },
+    {
+      "path": "examples/physics-playground/dist/program.manifest.json",
+      "size": 29941,
+      "sha256": "eab1e1caf19b7b897a79f555bb2429e873dd4fa55d512c34b990e12e6c647ece"
+    },
+    {
+      "path": "examples/physics-playground/dist/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "examples/physics-playground/dist/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "examples/physics-playground/dist/shaders/1594a8ef1d1b39e6.mtek-map.json",
+      "size": 74960,
+      "sha256": "21f7695b51bbacca5541d1131f5ae44c5485a59acd49474478404741e165363b"
+    },
+    {
+      "path": "examples/physics-playground/dist/shaders/1594a8ef1d1b39e6.wgsl",
+      "size": 6168,
+      "sha256": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd"
+    },
+    {
+      "path": "examples/physics-playground/dist/shaders/385b28531dc27b69.mtek-map.json",
+      "size": 13313,
+      "sha256": "191b6f76969f0424c0dffdba64fc0d81707c31b3450a558903531895d41d1a26"
+    },
+    {
+      "path": "examples/physics-playground/dist/shaders/385b28531dc27b69.wgsl",
+      "size": 1771,
+      "sha256": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584"
+    },
+    {
+      "path": "examples/pulse-cube/dist/app.d.ts",
+      "size": 271,
+      "sha256": "9d5b79d025526b4aae8d56685b43f9c09843c869fcb4ff78d24dd6a69c812e55"
+    },
+    {
+      "path": "examples/pulse-cube/dist/app.js",
+      "size": 7428,
+      "sha256": "818ac2870cf37272467922e7fec2dbe1da1da3dbde7eda3e258f477eb937c61f"
+    },
+    {
+      "path": "examples/pulse-cube/dist/app.js.map",
+      "size": 387,
+      "sha256": "245a2051c17b9c25d69adefd06ea7f24875288aed6d7ab8bb02e3be3b01565e5"
+    },
+    {
+      "path": "examples/pulse-cube/dist/index.html",
+      "size": 372,
+      "sha256": "a5f5d679da8c30fc47034c3d8ae27ffc2a4bd10949295433b93747597e602dc2"
+    },
+    {
+      "path": "examples/pulse-cube/dist/program.manifest.json",
+      "size": 15887,
+      "sha256": "a06a1b6d81024f067b93f774a97269527f5782c12e285a56cf6b9fd9bc502bd3"
+    },
+    {
+      "path": "examples/pulse-cube/dist/runtime.c0a0e4631c640c28.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "examples/pulse-cube/dist/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "examples/pulse-cube/dist/shaders/131089bf80118bdf.mtek-map.json",
+      "size": 15957,
+      "sha256": "008b84e6c02e357cbc78971bdd9eeec2dbd750b345ccfd8c83dcb75317c5b244"
+    },
+    {
+      "path": "examples/pulse-cube/dist/shaders/131089bf80118bdf.wgsl",
+      "size": 1953,
+      "sha256": "131089bf80118bdf5d1e666e186abfefcb763bce6d7270984735b7695b862ff4"
+    },
+    {
+      "path": "packages/editor-vscode/dist/extension.cjs",
+      "size": 981917,
+      "sha256": "e38ef34ae5351454f5a56b8c7c4546c7127000802d8d07f62052063363bd6887"
+    },
+    {
+      "path": "packages/editor-vscode/dist/extension.cjs.map",
+      "size": 1724270,
+      "sha256": "9db61b88491739385a45751a134cd8b2d855f24b940dcdcc491eef0ce7f3688a"
+    },
+    {
+      "path": "packages/editor-vscode/dist/test/suite.cjs",
+      "size": 15611,
+      "sha256": "72b10186059ea8df729784556356fe60925bd4a67016c50e3a9667dd19d847da"
+    },
+    {
+      "path": "packages/editor-vscode/dist/test/suite.cjs.map",
+      "size": 26710,
+      "sha256": "099f3456d71d3463212846232e9773532db2608b0b915ff7c074a8092b70d09b"
+    },
+    {
+      "path": "packages/physics-rapier/dist/physics.js",
+      "size": 4410320,
+      "sha256": "03781735475a88adc45f51385e4755204aa73c83e5b491c96e0ff9efdb3e6df8"
+    },
+    {
+      "path": "packages/runtime-web/dist/runtime.d.ts",
+      "size": 8548,
+      "sha256": "f9d1fc9ca89bce2f422b6e2b035a03f9589f67798fe0c240873a1345eb062207"
+    },
+    {
+      "path": "packages/runtime-web/dist/runtime.dev.js",
+      "size": 784910,
+      "sha256": "f0c4751eae4352c5e77d621b50272217d9693fe57459325c3c7cf3b4d34447ce"
+    },
+    {
+      "path": "packages/runtime-web/dist/runtime.dev.js.map",
+      "size": 1528488,
+      "sha256": "c911accf85c17eab853d04d8be6d6f4fa7ec296316f26d80ed928bbfbbc08e31"
+    },
+    {
+      "path": "packages/runtime-web/dist/runtime.js",
+      "size": 772785,
+      "sha256": "c0a0e4631c640c2868ad7a3669b73618507911026b90d46120f46124ccdeff85"
+    },
+    {
+      "path": "packages/runtime-web/dist/runtime.js.map",
+      "size": 1500402,
+      "sha256": "31fdd284693a76b651c27b4bcdfac40b66a8a86afb95f28015c301e123771861"
+    }
+  ],
+  "suite": [
+    {
+      "stage": "check",
+      "command": "npm run check",
+      "env": {},
+      "exitCode": 0,
+      "seconds": 99.1
+    },
+    {
+      "stage": "cargo-test-without-backend",
+      "command": "cargo test --workspace --locked",
+      "env": {},
+      "exitCode": 0,
+      "seconds": 221.6
+    },
+    {
+      "stage": "fetch-backend",
+      "command": "node tools/grammar-adapters/fetch-backend.mjs --all",
+      "env": {},
+      "exitCode": 0,
+      "seconds": 122.9
+    },
+    {
+      "stage": "build-grammar-adapter",
+      "command": "cargo build -p mtek-grammar-adapters --locked",
+      "env": {},
+      "exitCode": 0,
+      "seconds": 36.8
+    },
+    {
+      "stage": "grammar-capability",
+      "command": "<clone-a>\\target\\debug\\grammar-adapter.exe check --format json",
+      "env": {},
+      "exitCode": 0,
+      "seconds": 27
+    },
+    {
+      "stage": "cargo-test-with-backend",
+      "command": "cargo test --workspace --locked",
+      "env": {
+        "MTEK_REQUIRE_GBNF_VALIDATOR": "1",
+        "MTEK_REQUIRE_GBNF_BACKEND": "1"
+      },
+      "exitCode": 0,
+      "seconds": 557.2
+    },
+    {
+      "stage": "test-unit",
+      "command": "npm run test:unit",
+      "env": {},
+      "exitCode": 0,
+      "seconds": 209.5
+    },
+    {
+      "stage": "check-coverage",
+      "command": "npm run check:coverage",
+      "env": {},
+      "exitCode": 0,
+      "seconds": 7.6
+    },
+    {
+      "stage": "check-release",
+      "command": "npm run check:release",
+      "env": {},
+      "exitCode": 0,
+      "seconds": 2.1
+    },
+    {
+      "stage": "test-browser",
+      "command": "npm run test:browser",
+      "env": {
+        "MTEK_REQUIRE_GPU": "1",
+        "MTEK_RESULTS_DIR": "<root>\\results\\browser-full"
+      },
+      "exitCode": 0,
+      "seconds": 584.6
+    },
+    {
+      "stage": "vscode-integration",
+      "command": "npm run test:integration -w mtek-vscode",
+      "env": {},
+      "exitCode": 0,
+      "seconds": 46.7
+    }
+  ]
+}

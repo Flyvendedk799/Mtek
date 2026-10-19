@@ -25,8 +25,20 @@ claim and mark every result that does not exist yet as pending.
 
 ## Requirements
 
-- Rust **1.99.0** (installed automatically by `rustup` from `rust-toolchain.toml`)
-- Node.js **24** (`.nvmrc`) with the bundled npm
+What a clean checkout needs. The list comes from building and testing fresh clones on one Windows 11 machine ([`evidence/M7/reproducible-builds.md`](evidence/M7/reproducible-builds.md) says what that run did and did not exercise); no manual edit and no step beyond these was needed there.
+
+- Git, to clone.
+- Rust **1.99.0** (installed automatically by `rustup` from `rust-toolchain.toml`). On Windows `rustup`'s default toolchain targets MSVC (`x86_64-pc-windows-msvc`), which needs the Visual Studio Build Tools with the C++ workload for its linker.
+- Node.js **24** (`.nvmrc`) with the bundled npm (`packageManager` names npm 11.16.0, which Node 24.18 bundles). `.npmrc` sets `engine-strict=true` and `engines` says `>=24 <25`: `npm ci` refuses another major version.
+- Network access for `npm ci` (npm registry) and for the first `cargo` run (crates.io, locked by `Cargo.lock`).
+
+Only for running the browser tests, the editor tests or the grammar backend, none of which `npm ci` and `npm run build` need:
+
+- **Browser tests** (`npm run test:browser`): the browser that Playwright drives, once, with `npx playwright install chromium` (Linux CI uses `npx playwright install --with-deps chromium`). A GPU with WebGPU, for the `hardware` and `benchmarks` projects; without one those tests are NOT-RUN, and `MTEK_REQUIRE_GPU=1` turns NOT-RUN into a failure. The `software` project needs no GPU.
+- **VS Code integration tests** (`npm run test:integration -w mtek-vscode`): network access to download the pinned VS Code, and a display (`xvfb-run -a` on Linux without one).
+- **Grammar backend** (optional): `node tools/grammar-adapters/fetch-backend.mjs --all` downloads and verifies llama.cpp, builds its GBNF validator and downloads a 1.1 GB model. It needs CMake and a C++ compiler (on Windows the Visual Studio Build Tools; CMake is found on `PATH`, in `$CMAKE` or in the copy bundled with Visual Studio) and network access. Without it `cargo test --workspace --locked` still passes: the conformance suite and the smoke test print NOT-RUN and succeed, unless `MTEK_REQUIRE_GBNF_VALIDATOR=1` and `MTEK_REQUIRE_GBNF_BACKEND=1` are set, which make them fail instead (decision 0073).
+
+Reproducibility: [`scripts/verify-reproducible-build.mjs`](scripts/verify-reproducible-build.mjs) makes two fresh clones in two directories, builds the packages, the four examples and the runtime benchmark programs in both, and compares the output trees byte for byte (below).
 
 ## Commands
 

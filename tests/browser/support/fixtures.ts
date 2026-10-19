@@ -60,12 +60,13 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
         await context.close();
       }
       const launchArgs = project.use.launchOptions?.args ?? [];
+      const preferences = Object.entries(project.use.launchOptions?.firefoxUserPrefs ?? {}).map(([name, value]) => `pref:${name}=${String(value)}`);
       const record = buildEnvironmentRecord(project.name, pageEnvironment, {
         name: browser.browserType().name(),
-        channel: project.use.channel ?? "chromium",
+        channel: project.use.channel ?? browser.browserType().name(),
         version: browser.version(),
         headless: project.use.headless ?? true,
-        launchArgs: [...launchArgs],
+        launchArgs: [...launchArgs, ...preferences],
       });
       const problems = validateEnvironment(record);
       if (problems.length > 0) {
