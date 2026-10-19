@@ -200,6 +200,9 @@ function environmentSection(run: RawRun, floor: FloorSummary): string {
     ["Run id", `\`${m.runId}\`${m.smoke ? " (SMOKE: not a result)" : ""}`],
     ["Started / finished (UTC)", `${m.startedAt} / ${m.finishedAt}`],
     ["Source commit", `\`${m.gitCommit}\` (working tree ${m.gitDirty ? "dirty" : "clean"})`],
+    ...((m.retries ?? []).length === 0
+      ? []
+      : [["Repeated passes taken at", (m.retries ?? []).map((r) => `${String(r.passes.length)} pass(es) at ${r.at} by commit \`${r.gitCommit}\``).join("; ")]]),
     ["Frozen definitions (tree hash)", `\`${m.frozen.treeHash}\` (${m.frozen.matches ? "equals the last entry of FROZEN.json" : "DOES NOT equal FROZEN.json"})`],
     ["Operating system", `${e.os.version} ${e.os.release}, ${e.os.arch}`],
     ["Browser", `${e.browser.name} ${e.browser.version} (${e.browser.channel} channel, ${e.browser.headless ? "headless" : "headed"})`],
@@ -487,7 +490,7 @@ function cyclesReading(r: WorkloadReport): string {
   }
   lines.push(
     "",
-    "A plateau of the JavaScript heap does not by itself prove the absence of a leak smaller than the V8 heap's own noise, and a heap that is still growing after 50 cycles may be a one-time warm-up (code caches, inline caches, lazily created tables) rather than a leak; the long run is there to tell the two apart. Hypotheses about causes are in the analysis notes of decision 0098, not here.",
+    "A plateau of the JavaScript heap does not by itself prove the absence of a leak smaller than the V8 heap's own noise, and a heap that is still growing after 50 cycles may be a one-time warm-up (code caches, inline caches, lazily created tables) rather than a leak; the long run is there to tell the two apart. What the heap growth consists of (a heap-snapshot comparison, stored in `heap-diff/`) is in decision 0099.",
   );
   return lines.join("\n");
 }

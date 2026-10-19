@@ -1,0 +1,11 @@
+mtek: heap growth between cycle 100 and cycle 400 (300 cycles), after a forced collection; self size in bytes, change in object count, node type:name (nodes that grew by more than 2000 bytes)
+   345600    1200 native:blink::NetworkResourcesData::ResourceData
+   295424      89 code:system / InstructionStream
+    93648     210 code:system / TrustedByteArray
+    36604      89 code:system / ProtectedFixedArray
+    31856     269 native:system / WeakArrayList
+    26400     300 native:blink::ConsoleMessage
+    16800     300 native:blink::SourceLocation
+     6408      89 code:system / Code
+     4120      89 code:system / TrustedWeakFixedArray
+     2400      80 code:system / WeakArrayList

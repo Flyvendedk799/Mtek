@@ -1,0 +1,7 @@
+three: heap growth between cycle 100 and cycle 400 (300 cycles), after a forced collection; self size in bytes, change in object count, node type:name (nodes that grew by more than 2000 bytes)
+   176704     108 code:system / InstructionStream
+    44580     242 code:system / TrustedByteArray
+    38744     345 native:system / WeakArrayList
+    21456     108 code:system / ProtectedFixedArray
+     7776     108 code:system / Code
+     3448     108 code:system / TrustedWeakFixedArray
