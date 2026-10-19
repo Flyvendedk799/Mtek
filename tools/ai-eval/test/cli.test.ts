@@ -49,7 +49,9 @@ describe("ai-eval run", () => {
     const sink = io();
     const code = await runCli(
       ["run", "--task", task, "--client", "replay", "--transcript", transcript(GOOD_EDIT), "--trial-kind", "constrained", "--out", out, "--run-id", "c"],
-      { io: sink, runner: fakeMtek(), clock: steppingClock() },
+      // No adapter binary named: the honest default, whatever this machine has built or installed (the real check is
+      // command-grammar.test.ts, and runs the pinned backend when it is present).
+      { io: sink, runner: fakeMtek(), clock: steppingClock(), env: { MTEK_GRAMMAR_ADAPTER: join(out, "no-such-adapter") } },
     );
     expect(code).toBe(0);
     expect(sink.stdout.join("")).toContain("demo-01--constrained--00: unavailable (grammar-unavailable) - grammar-constrained mode unavailable: ");
