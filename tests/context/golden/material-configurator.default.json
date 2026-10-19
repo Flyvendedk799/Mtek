@@ -1,7 +1,7 @@
 {
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "contextFormat": 1,
+  "contextFormat": 2,
   "supported": {
     "features": [
       "imports",
@@ -530,232 +530,73 @@
       "line": 7
     }
   ],
+  "schemaGuide": "A field line reads `name: type = default [flags] range R // meaning`. Flags: R required, W writable from handlers, B bindable with bind(..), C construction-only (a constant expression). A field that is not listed does not exist.",
   "schemas": [
     {
       "name": "Camera",
       "fields": [
-        {
-          "name": "position",
-          "type": "vec3",
-          "default": "vec3(0.0, 0.0, 5.0)",
-          "flags": "WB"
-        },
-        {
-          "name": "target",
-          "type": "vec3",
-          "default": null,
-          "flags": "WB"
-        },
-        {
-          "name": "rotation",
-          "type": "quat",
-          "default": "quat.identity()",
-          "flags": "WB"
-        },
-        {
-          "name": "projection",
-          "type": "projection",
-          "default": "Perspective {}",
-          "flags": "C"
-        },
-        {
-          "name": "active",
-          "type": "bool",
-          "default": null,
-          "flags": "C"
-        },
-        {
-          "name": "exposure",
-          "type": "f32",
-          "default": "-1.9145305",
-          "flags": "C"
-        }
+        "position: vec3 = vec3(0.0, 0.0, 5.0) [WB]",
+        "target: vec3 [WB]",
+        "rotation: quat = quat.identity() [WB]",
+        "projection: projection = Perspective {} [C]",
+        "active: bool [C]",
+        "exposure: f32 = -1.9145305 [C]"
       ]
     },
     {
       "name": "DirectionalLight",
       "fields": [
-        {
-          "name": "color",
-          "type": "color",
-          "default": "#ffffff",
-          "flags": "WB"
-        },
-        {
-          "name": "intensity",
-          "type": "f32",
-          "default": "1.0",
-          "flags": "WB"
-        }
+        "color: color = #ffffff [WB]",
+        "intensity: f32 = 1.0 [WB]"
       ]
     },
     {
       "name": "Entity",
       "fields": [
-        {
-          "name": "position",
-          "type": "vec3",
-          "default": "vec3(0.0, 0.0, 0.0)",
-          "flags": "WB"
-        },
-        {
-          "name": "rotation",
-          "type": "quat",
-          "default": "quat.identity()",
-          "flags": "WB"
-        },
-        {
-          "name": "scale",
-          "type": "vec3",
-          "default": "vec3(1.0, 1.0, 1.0)",
-          "flags": "WB"
-        },
-        {
-          "name": "visible",
-          "type": "bool",
-          "default": "true",
-          "flags": "WB"
-        },
-        {
-          "name": "mesh",
-          "type": "mesh",
-          "default": null,
-          "flags": "C"
-        },
-        {
-          "name": "material",
-          "type": "material",
-          "default": "Unlit {}",
-          "flags": "C"
-        },
-        {
-          "name": "light",
-          "type": "light",
-          "default": null,
-          "flags": "C"
-        },
-        {
-          "name": "body",
-          "type": "body",
-          "default": null,
-          "flags": "C"
-        },
-        {
-          "name": "collider",
-          "type": "collider",
-          "default": null,
-          "flags": "C"
-        }
+        "position: vec3 = vec3(0.0, 0.0, 0.0) [WB]",
+        "rotation: quat = quat.identity() [WB]",
+        "scale: vec3 = vec3(1.0, 1.0, 1.0) [WB]",
+        "visible: bool = true [WB]",
+        "mesh: mesh [C]",
+        "material: material = Unlit {} [C]",
+        "light: light [C]",
+        "body: body [C]",
+        "collider: collider [C]"
       ]
     },
     {
       "name": "Pbr",
       "fields": [
-        {
-          "name": "base_color",
-          "type": "color",
-          "default": "#ffffff",
-          "flags": "WB"
-        },
-        {
-          "name": "metallic",
-          "type": "f32",
-          "default": "0.0",
-          "flags": "WB"
-        },
-        {
-          "name": "roughness",
-          "type": "f32",
-          "default": "0.5",
-          "flags": "WB"
-        },
-        {
-          "name": "base_color_texture",
-          "type": "texture",
-          "default": "texture.white()",
-          "flags": "C"
-        },
-        {
-          "name": "base_color_sampler",
-          "type": "sampler",
-          "default": "sampler.linear_repeat()",
-          "flags": "C"
-        }
+        "base_color: color = #ffffff [WB]",
+        "metallic: f32 = 0.0 [WB]",
+        "roughness: f32 = 0.5 [WB]",
+        "base_color_texture: texture = texture.white() [C]",
+        "base_color_sampler: sampler = sampler.linear_repeat() [C]"
       ]
     },
     {
       "name": "Perspective",
       "fields": [
-        {
-          "name": "fov_y",
-          "type": "f32",
-          "default": "0.9",
-          "flags": "WB"
-        },
-        {
-          "name": "near",
-          "type": "f32",
-          "default": "0.1",
-          "flags": "WB"
-        },
-        {
-          "name": "far",
-          "type": "f32",
-          "default": "1000.0",
-          "flags": "WB"
-        }
+        "fov_y: f32 = 0.9 [WB]",
+        "near: f32 = 0.1 [WB]",
+        "far: f32 = 1000.0 [WB]"
       ]
     },
     {
       "name": "PointLight",
       "fields": [
-        {
-          "name": "color",
-          "type": "color",
-          "default": "#ffffff",
-          "flags": "WB"
-        },
-        {
-          "name": "intensity",
-          "type": "f32",
-          "default": "1.0",
-          "flags": "WB"
-        },
-        {
-          "name": "range",
-          "type": "f32",
-          "default": "0.0",
-          "flags": "C"
-        }
+        "color: color = #ffffff [WB]",
+        "intensity: f32 = 1.0 [WB]",
+        "range: f32 = 0.0 [C]"
       ]
     },
     {
       "name": "Scene",
       "fields": [
-        {
-          "name": "clear_color",
-          "type": "color",
-          "default": "#000000",
-          "flags": "C"
-        },
-        {
-          "name": "ambient_color",
-          "type": "color",
-          "default": "#ffffff",
-          "flags": "C"
-        },
-        {
-          "name": "ambient_intensity",
-          "type": "f32",
-          "default": "0.0",
-          "flags": "C"
-        },
-        {
-          "name": "gravity",
-          "type": "vec3",
-          "default": "vec3(0.0, -9.81, 0.0)",
-          "flags": "C"
-        }
+        "clear_color: color = #000000 [C]",
+        "ambient_color: color = #ffffff [C]",
+        "ambient_intensity: f32 = 0.0 [C]",
+        "gravity: vec3 = vec3(0.0, -9.81, 0.0) [C]"
       ]
     }
   ],

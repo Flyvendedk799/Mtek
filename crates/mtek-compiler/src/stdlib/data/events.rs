@@ -129,6 +129,6 @@ pub(super) fn enums() -> Vec<EnumDef> {
             })
             .collect(),
         since: Milestone::M1,
-        doc: "A physical keyboard key, independent of the keyboard layout. Maps from the DOM `KeyboardEvent.code`; events with any other code are ignored by the runtime.",
+        doc: "A physical keyboard key, independent of the layout. Written `Key.<Member>` with exactly the members listed (`Key.Space`, `Key.ArrowUp`, `Key.A`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`. Maps from the DOM `KeyboardEvent.code`.",
     }]
 }

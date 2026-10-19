@@ -1,7 +1,7 @@
 {
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "contextFormat": 1,
+  "contextFormat": 2,
   "supported": {
     "features": [
       "imports",
@@ -380,75 +380,26 @@
       "line": 10
     }
   ],
+  "schemaGuide": "A field line reads `name: type = default [flags] range R // meaning`. Flags: R required, W writable from handlers, B bindable with bind(..), C construction-only (a constant expression). A field that is not listed does not exist.",
   "schemas": [
     {
       "name": "Box",
       "fields": [
-        {
-          "name": "size",
-          "type": "vec3",
-          "default": "vec3(1.0, 1.0, 1.0)",
-          "flags": "C"
-        }
+        "size: vec3 = vec3(1.0, 1.0, 1.0) [C]"
       ]
     },
     {
       "name": "Entity",
       "fields": [
-        {
-          "name": "position",
-          "type": "vec3",
-          "default": "vec3(0.0, 0.0, 0.0)",
-          "flags": "WB"
-        },
-        {
-          "name": "rotation",
-          "type": "quat",
-          "default": "quat.identity()",
-          "flags": "WB"
-        },
-        {
-          "name": "scale",
-          "type": "vec3",
-          "default": "vec3(1.0, 1.0, 1.0)",
-          "flags": "WB"
-        },
-        {
-          "name": "visible",
-          "type": "bool",
-          "default": "true",
-          "flags": "WB"
-        },
-        {
-          "name": "mesh",
-          "type": "mesh",
-          "default": null,
-          "flags": "C"
-        },
-        {
-          "name": "material",
-          "type": "material",
-          "default": "Unlit {}",
-          "flags": "C"
-        },
-        {
-          "name": "light",
-          "type": "light",
-          "default": null,
-          "flags": "C"
-        },
-        {
-          "name": "body",
-          "type": "body",
-          "default": null,
-          "flags": "C"
-        },
-        {
-          "name": "collider",
-          "type": "collider",
-          "default": null,
-          "flags": "C"
-        }
+        "position: vec3 = vec3(0.0, 0.0, 0.0) [WB]",
+        "rotation: quat = quat.identity() [WB]",
+        "scale: vec3 = vec3(1.0, 1.0, 1.0) [WB]",
+        "visible: bool = true [WB]",
+        "mesh: mesh [C]",
+        "material: material = Unlit {} [C]",
+        "light: light [C]",
+        "body: body [C]",
+        "collider: collider [C]"
       ]
     }
   ],

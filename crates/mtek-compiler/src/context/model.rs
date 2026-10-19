@@ -9,7 +9,11 @@ use serde::Serialize;
 
 /// The version of the context format: bumped when a key is removed, renamed or changes meaning
 /// (adding a key is also a bump while `spec/context.schema.json` forbids unknown keys).
-pub const CONTEXT_FORMAT: u32 = 1;
+pub const CONTEXT_FORMAT: u32 = 2;
+
+/// The `schemaGuide` text: how to read a line of `schemas[].fields`. A test checks that the
+/// flag letters are the ones [`FieldFlags`](crate::stdlib::FieldFlags) has.
+pub const SCHEMA_GUIDE: &str = "A field line reads `name: type = default [flags] range R // meaning`. Flags: R required, W writable from handlers, B bindable with bind(..), C construction-only (a constant expression). A field that is not listed does not exist.";
 
 /// One context document.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -22,7 +26,13 @@ pub struct Context {
     pub syntax: SyntaxSection,
     pub project: ProjectSection,
     pub symbols: Vec<SymbolEntry>,
+    /// How to read the lines of `schemas`.
+    pub schema_guide: &'static str,
     pub schemas: Vec<SchemaEntry>,
+    /// What a project with (almost) no code needs to know about the built-in library, generated
+    /// from the registry (decision 0110); absent for a project that has code.
+    #[serde(skip_serializing_if = "Reference::is_empty")]
+    pub reference: Reference,
     pub examples: Vec<ExampleEntry>,
     pub diagnostics_guide: &'static str,
     /// What `--max-bytes` made the export leave out; absent when nothing was left out.
@@ -80,20 +90,106 @@ pub struct SymbolEntry {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SchemaEntry {
     pub name: String,
-    pub fields: Vec<FieldEntry>,
+    /// The registry documentation of the schema; only in the context of a cold-start project.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub doc: Option<String>,
+    /// One line per field, `name: type = default [flags]`; in the context of a cold-start project
+    /// also `range R` and `// meaning` (see [`SCHEMA_GUIDE`]).
+    pub fields: Vec<String>,
 }
 
-/// One field of a schema.
+/// The built-in library for a project that has no code to learn it from (decision 0110), every
+/// word of it from the registry. Each list is a section that `--max-bytes` can drop whole.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Reference {
+    /// Built-in enums with every member.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub enums: Vec<EnumEntry>,
+    /// What `T`, `I` and `V` stand for in `builtins`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub type_classes: Vec<String>,
+    /// Built-in functions, namespace members and accessors, each with its signature.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub builtins: Vec<String>,
+    /// Events a handler can subscribe to.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub events: Vec<String>,
+    /// Built-in record types.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub records: Vec<String>,
+    /// Body commands and readable body properties.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub body: Vec<String>,
+    /// Cross-cutting rules (units, colour spaces, time), quoted from the registry's docs.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub conventions: Vec<ConventionEntry>,
+}
+
+/// The sections of a [`Reference`], lowest priority first: the order `--max-bytes` drops them in.
+pub const REFERENCE_SECTIONS: [&str; 6] = [
+    "records",
+    "body",
+    "events",
+    "builtins",
+    "conventions",
+    "enums",
+];
+
+impl Reference {
+    /// Whether no section has an item.
+    pub fn is_empty(&self) -> bool {
+        self.sections().is_empty()
+    }
+
+    /// The names of the sections that have items, lowest priority first.
+    pub fn sections(&self) -> Vec<&'static str> {
+        REFERENCE_SECTIONS
+            .into_iter()
+            .filter(|name| match *name {
+                "records" => !self.records.is_empty(),
+                "body" => !self.body.is_empty(),
+                "events" => !self.events.is_empty(),
+                "builtins" => !self.builtins.is_empty(),
+                "conventions" => !self.conventions.is_empty(),
+                "enums" => !self.enums.is_empty(),
+                _ => false,
+            })
+            .collect()
+    }
+
+    /// Empty the section `name` (and `typeClasses` with `builtins`).
+    pub fn clear(&mut self, name: &str) {
+        match name {
+            "records" => self.records.clear(),
+            "body" => self.body.clear(),
+            "events" => self.events.clear(),
+            "builtins" => {
+                self.builtins.clear();
+                self.type_classes.clear();
+            }
+            "conventions" => self.conventions.clear(),
+            "enums" => self.enums.clear(),
+            _ => {}
+        }
+    }
+}
+
+/// One built-in enum.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-pub struct FieldEntry {
+pub struct EnumEntry {
     pub name: String,
-    #[serde(rename = "type")]
-    pub ty: String,
-    /// The default as canonical source text; `null` for a field without one.
-    pub default: Option<String>,
-    /// Some of `R` (required), `W` (writable from handlers), `B` (bindable), `C`
-    /// (construction-only), in that order; `""` for none.
-    pub flags: String,
+    pub doc: String,
+    /// Every member this build implements, as written after `Name.`, separated by one space.
+    pub members: String,
+}
+
+/// One topic of the conventions: the documentation of the registry items it concerns.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ConventionEntry {
+    pub topic: String,
+    /// `item: documentation`, one per registry item.
+    pub notes: Vec<String>,
 }
 
 /// A complete program that `mtek check` accepts.
@@ -139,6 +235,9 @@ pub struct Truncated {
     /// Symbols one reference away from the requested ones, by name.
     #[serde(skip_serializing_if = "Dropped::is_empty")]
     pub neighbours: Dropped,
+    /// Sections of the built-in library (`reference`), by name.
+    #[serde(skip_serializing_if = "Dropped::is_empty")]
+    pub reference: Dropped,
     /// Schemas, by name.
     #[serde(skip_serializing_if = "Dropped::is_empty")]
     pub schemas: Dropped,
@@ -152,6 +251,7 @@ impl Truncated {
     pub fn is_empty(&self) -> bool {
         self.examples.is_empty()
             && self.neighbours.is_empty()
+            && self.reference.is_empty()
             && self.schemas.is_empty()
             && self.symbols.is_empty()
     }

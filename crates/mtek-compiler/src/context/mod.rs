@@ -28,24 +28,25 @@ pub mod examples;
 mod fit;
 pub mod model;
 mod program;
+pub mod reference;
 pub mod syntax_info;
 
 use std::collections::BTreeSet;
-use std::fmt;
+use std::fmt::{self, Write as _};
 
 use crate::check::{Analysis, CheckResult, analyze};
 use crate::project::{Project, ProjectRoot, edit_distance};
 use crate::resolve::PreludeItem;
 use crate::resolve::gate::is_implemented;
 use crate::source::Fs;
-use crate::stdlib::{FieldDef, Registry, SchemaDef, registry};
+use crate::stdlib::{FieldDef, Limit, Registry, SchemaDef, registry};
 use crate::{COMPILER_VERSION, LANGUAGE_VERSION};
 
-pub use model::{CONTEXT_FORMAT, Context};
+pub use model::{CONTEXT_FORMAT, Context, SCHEMA_GUIDE};
 
 use fit::{Draft, fit};
 use model::{
-    ExampleEntry, FieldEntry, ProjectSection, SchemaEntry, Supported, SymbolEntry, SyntaxSection,
+    ExampleEntry, ProjectSection, Reference, SchemaEntry, Supported, SymbolEntry, SyntaxSection,
 };
 use program::{ModuleCtx, Program};
 
@@ -192,6 +193,19 @@ pub fn context(
 
     let capabilities = capabilities::derive(registry);
     let used = program.used_features(&inside);
+    // A project with no code to learn the library from gets the library itself (decision 0110).
+    let cold = reference::is_cold(&program, registry);
+    let (schemas, reference) = if cold {
+        (
+            reference::detailed_schemas(registry),
+            reference::reference(registry),
+        )
+    } else {
+        (
+            schemas_used(&program, &inside, registry),
+            Reference::default(),
+        )
+    };
     let context = Context {
         language_version: LANGUAGE_VERSION,
         compiler_version: COMPILER_VERSION,
@@ -214,14 +228,23 @@ pub fn context(
             modules: paths,
         },
         symbols,
-        schemas: schemas_used(&program, &inside, registry),
-        examples: examples::select(&used)
-            .into_iter()
-            .map(|example| ExampleEntry {
-                title: example.title.to_owned(),
-                source: example.source.to_owned(),
-            })
-            .collect(),
+        schema_guide: SCHEMA_GUIDE,
+        schemas,
+        reference,
+        // The library of a cold-start project takes the room the examples would (decision 0110):
+        // four examples do not fit beside it, and a context that drops what it selected says
+        // `truncated` for a project that asked for nothing.
+        examples: if cold {
+            Vec::new()
+        } else {
+            examples::select(&used)
+                .into_iter()
+                .map(|example| ExampleEntry {
+                    title: example.title.to_owned(),
+                    source: example.source.to_owned(),
+                })
+                .collect()
+        },
         diagnostics_guide: DIAGNOSTICS_GUIDE,
         truncated: None,
     };
@@ -385,37 +408,69 @@ fn schemas_used(
         .into_iter()
         .filter_map(|name| registry.schema(name))
         .filter(|schema| is_implemented(schema.since))
-        .map(schema_entry)
+        .map(|schema| schema_entry(schema, false))
         .collect()
 }
 
-fn schema_entry(schema: &SchemaDef) -> SchemaEntry {
+/// A schema with the fields this build implements; `detailed` adds the documentation and ranges
+/// (cold-start projects, decision 0110).
+fn schema_entry(schema: &SchemaDef, detailed: bool) -> SchemaEntry {
     SchemaEntry {
         name: schema.name.to_owned(),
+        doc: Some(schema.doc.to_owned()).filter(|doc| detailed && !doc.is_empty()),
         fields: schema
             .fields
             .iter()
             .filter(|field| is_implemented(field.since))
-            .map(field_entry)
+            .map(|field| field_line(field, detailed))
             .collect(),
     }
 }
 
-fn field_entry(field: &FieldDef) -> FieldEntry {
-    let flags = [
+/// The range of `field` when it says something the quantity does not: a bound above or at a
+/// value other than zero, or a relation to another field. A mere "greater than zero", "not
+/// negative" or "finite" is left out (the compiler reports a constant outside it), because a
+/// cold-start context has a byte budget and a radius or a mass is not negative anyway.
+fn shown_range(field: &FieldDef) -> Option<String> {
+    let range = field.range?;
+    let mere_sign = range.upper.is_none()
+        && range.greater_than_field.is_none()
+        && range.lower.is_none_or(|bound| bound.limit == Limit::Int(0));
+    if mere_sign {
+        None
+    } else {
+        field.range_text()
+    }
+}
+
+/// `name: type = default [flags]`, and with `detailed` also ` range R` and ` // meaning`. The flag
+/// letters, in this order: `R` required, `W` writable, `B` bindable, `C` construction-only.
+fn field_line(field: &FieldDef, detailed: bool) -> String {
+    let flags: String = [
         (field.flags.is_required(), 'R'),
         (field.flags.is_writable(), 'W'),
         (field.flags.is_bindable(), 'B'),
         (field.flags.is_construction_only(), 'C'),
-    ];
-    FieldEntry {
-        name: field.name.to_owned(),
-        ty: field.ty.spelling().to_owned(),
-        default: field.default_text(),
-        flags: flags
-            .iter()
-            .filter(|(set, _)| *set)
-            .map(|(_, letter)| *letter)
-            .collect(),
+    ]
+    .iter()
+    .filter(|(set, _)| *set)
+    .map(|(_, letter)| *letter)
+    .collect();
+    let mut line = format!("{}: {}", field.name, field.ty.spelling());
+    if let Some(default) = field.default_text() {
+        let _ = write!(line, " = {default}");
     }
+    if !flags.is_empty() {
+        let _ = write!(line, " [{flags}]");
+    }
+    if detailed {
+        if let Some(range) = shown_range(field) {
+            let _ = write!(line, " range {range}");
+        }
+        if !field.doc.is_empty() {
+            let _ = write!(line, " // {}", field.doc);
+        }
+    }
+    line
 }
+

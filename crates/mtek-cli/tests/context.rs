@@ -108,7 +108,7 @@ fn prints_the_context_of_the_project_as_one_json_document() {
     let project = scratch.project("proj", MAIN);
     let out = mtek(&project, &["context", "--entry", "src/main.mtek"]);
     let context = context_of(&out);
-    assert_eq!(context["contextFormat"], 1);
+    assert_eq!(context["contextFormat"], 2);
     assert_eq!(context["languageVersion"], "0.1");
     assert_eq!(context["project"]["scene"], "Demo");
     assert_eq!(context["project"]["entry"], "src/main.mtek");

@@ -1,7 +1,7 @@
 {
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "contextFormat": 1,
+  "contextFormat": 2,
   "supported": {
     "features": [
       "imports",
@@ -304,19 +304,8 @@
       "line": 23
     }
   ],
-  "schemas": [
-    {
-      "name": "Box",
-      "fields": [
-        {
-          "name": "size",
-          "type": "vec3",
-          "default": "vec3(1.0, 1.0, 1.0)",
-          "flags": "C"
-        }
-      ]
-    }
-  ],
+  "schemaGuide": "A field line reads `name: type = default [flags] range R // meaning`. Flags: R required, W writable from handlers, B bindable with bind(..), C construction-only (a constant expression). A field that is not listed does not exist.",
+  "schemas": [],
   "examples": [],
   "diagnosticsGuide": "`mtek check --format json` prints one JSON report; each diagnostic has code, severity, title, message, source (file, startByte, endByte, startLine, startColumn, endLine, endColumn), expected and actual (when relevant), related, notes, suggestedEdits and phase. Fix errors in report order, apply a suggestedEdit only when it is present (they are validated), and never delete the feature a diagnostic is about.",
   "truncated": {
@@ -338,9 +327,10 @@
       ]
     },
     "schemas": {
-      "count": 1,
+      "count": 2,
       "names": [
-        "Entity"
+        "Entity",
+        "Box"
       ]
     }
   }

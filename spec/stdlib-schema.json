@@ -106,7 +106,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Exposure value EV100 of the camera; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15."
+          "doc": "Exposure value EV100; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15."
         },
         {
           "name": "position",
@@ -335,7 +335,7 @@
           "constructionOnly": false,
           "range": "every component > 0, finite",
           "since": "M1",
-          "doc": "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body; that rule belongs to the checker, not to this field."
+          "doc": "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body."
         },
         {
           "name": "visible",
@@ -406,7 +406,7 @@
       "name": "Pbr",
       "category": "material",
       "since": "M1",
-      "doc": "The documented PBR subset (metallic-roughness, no image-based lighting). Defined in the embedded prelude source `std/materials.mtek`.",
+      "doc": "The documented PBR subset (metallic-roughness, no image-based lighting).",
       "fields": [
         {
           "name": "base_color",
@@ -606,7 +606,7 @@
           "constructionOnly": true,
           "range": "≥ 0",
           "since": "M1",
-          "doc": "Scale of the ambient light term of lit materials; 0 turns ambient light off."
+          "doc": "Scale of the ambient light term of lit materials; 0 turns ambient light off. Like every lit result it is multiplied by the camera's exposure scale (about 3.14 at the default exposure), so 0.3 already gives nearly full brightness on white. Unlit materials ignore it."
         },
         {
           "name": "clear_color",
@@ -745,7 +745,7 @@
       "name": "Unlit",
       "category": "material",
       "since": "M1",
-      "doc": "Flat colour, no lighting. Defined in the embedded prelude source `std/materials.mtek`.",
+      "doc": "Flat colour, no lighting.",
       "fields": [
         {
           "name": "color",
@@ -857,7 +857,7 @@
     {
       "name": "Key",
       "since": "M1",
-      "doc": "A physical keyboard key, independent of the keyboard layout. Maps from the DOM `KeyboardEvent.code`; events with any other code are ignored by the runtime.",
+      "doc": "A physical keyboard key, independent of the layout. Written `Key.<Member>` with exactly the members listed (`Key.Space`, `Key.ArrowUp`, `Key.A`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`. Maps from the DOM `KeyboardEvent.code`.",
       "members": [
         {
           "name": "A",
@@ -1735,7 +1735,7 @@
     {
       "name": "frame",
       "since": "M1",
-      "doc": "Per-frame values. Readable in CPU code and in `bind` expressions, not in GPU stage code: route them through material parameters.",
+      "doc": "Per-frame values, readable in CPU code and in `bind` expressions, not in GPU stage code (route them through material parameters). `update(dt)` gets the frame delta, which varies from frame to frame; `fixed_update(dt)` runs zero or more times per frame and gets the constant fixed step, 1/60 s by default.",
       "members": [
         {
           "name": "delta",
@@ -2018,7 +2018,7 @@
       "kind": "record",
       "gpu": true,
       "since": "M1",
-      "doc": "The interpolated inputs of a material fragment stage; the compiler records which fields a material reads.",
+      "doc": "The interpolated inputs of a material fragment stage.",
       "fields": [
         {
           "name": "local_position",
@@ -2062,7 +2062,7 @@
       "kind": "color",
       "gpu": true,
       "since": "M1",
-      "doc": "Linear-light RGBA with straight alpha; distinct from `vec4`.",
+      "doc": "Linear-light RGBA with straight alpha; distinct from `vec4`. A literal `#rrggbb` is sRGB-encoded and converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a` and `.rgb`; no arithmetic.",
       "fields": [],
       "methods": []
     },
