@@ -54,4 +54,6 @@ export type TrialReason =
   | "validation-not-run"
   | "tool-error"
   | "grammar-unavailable"
-  | "budget-spend";
+  | "budget-spend"
+  /** Outcome `error`: the model could not be reached (connection error or timeout, no response at all) after the retries of decision 0124; not a judgement of the model. */
+  | "transport-error";

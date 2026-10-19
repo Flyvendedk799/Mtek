@@ -9,6 +9,7 @@ import type {
   GenerateRequest,
   GenerateResult,
   ModelClient,
+  TransportFailure,
   Usage,
 } from "./model-client.ts";
 
@@ -35,8 +36,8 @@ function count(value: unknown): number | null {
 
 const MAX_ERROR_BODY = 500;
 
-export function failureResult(error: string, finish: FinishReason = "error"): GenerateResult {
-  return { text: "", usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 }, finish, error };
+export function failureResult(error: string, finish: FinishReason = "error", extra: { httpStatus?: number; transport?: TransportFailure } = {}): GenerateResult {
+  return { text: "", usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 }, finish, error, ...extra };
 }
 
 /** Parses a successful response body; anything that is not a complete completion is an `error` result. */
@@ -115,12 +116,14 @@ export function createChatCompletionsClient(config: ChatCompletionsConfig): Mode
         const response = await config.fetch(url, init);
         const text = await response.text();
         if (!response.ok) {
-          return failureResult(`HTTP ${String(response.status)}: ${text.slice(0, MAX_ERROR_BODY)}`);
+          return failureResult(`HTTP ${String(response.status)}: ${text.slice(0, MAX_ERROR_BODY)}`, "error", { httpStatus: response.status });
         }
         return parseChatCompletion(text);
       } catch (error) {
         if (options.signal?.aborted === true) return failureResult("the request was aborted", "cancelled");
-        return failureResult(error instanceof Error ? error.message : String(error));
+        // A rejected fetch is a call that got no response (decision 0124): a timeout is told apart from a refused or unreachable server.
+        const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+        return failureResult(error instanceof Error ? error.message : String(error), "error", { transport: timedOut ? "timeout" : "connection" });
       }
     },
   };

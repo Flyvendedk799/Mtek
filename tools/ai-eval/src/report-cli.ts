@@ -1,8 +1,11 @@
 // `report`: turns stored run directories into `report.md` (decision 0108). It reads `records.jsonl` only (and the NAMES of the
 // directories below `benchmarks/holdout/`, to tell holdout attempts apart); it never runs a model and never opens a task.
 //
-//   node tools/ai-eval/src/report-cli.ts --run DIR [--run DIR ...] [--out report.md] [--title T] [--note N]
+//   node tools/ai-eval/src/report-cli.ts --run DIR [--run DIR ...] [--baseline-run DIR ...] [--out report.md] [--title T] [--note N]
 //                                        [--holdout-summary FILE]
+//
+// `--baseline-run DIR` adds only the baseline attempts of that run (its Mtek attempts are not read): the baseline of an earlier
+// run against which the Mtek attempts of a re-run are judged by the rule of decision 0108.
 //
 // A run directory of a holdout run lives outside the repository (its records hold prompts); pass it with `--run` and the
 // report holds ids and layer outcomes of those attempts only. `--holdout-summary` writes them as JSONL, the only form of a
@@ -13,13 +16,14 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { repoRoot } from "./commands.ts";
 import { canonicalJson, type Json } from "./canonical.ts";
-import { buildReport, extractTrials, holdoutSummary, parseRecords } from "./report.ts";
+import { buildReport, extractTrials, holdoutSummary, parseRecords, selectSide } from "./report.ts";
 import { taskIdsIn } from "./benchmark-run.ts";
 import { RECORDS_FILE } from "./recorder.ts";
 import { conditionCosts, renderProjection } from "./projection.ts";
 
 export function runReport(argv: readonly string[], io: { out(t: string): void; err(t: string): void } = { out: (t) => process.stdout.write(t), err: (t) => process.stderr.write(t) }, root: string = repoRoot()): number {
   const runs: string[] = [];
+  const baselineRuns: string[] = [];
   let out: string | undefined;
   let title: string | undefined;
   let note: string | undefined;
@@ -30,6 +34,7 @@ export function runReport(argv: readonly string[], io: { out(t: string): void; e
     const arg = argv[i];
     const value = argv[i + 1];
     if (arg === "--run" && value !== undefined) runs.push(resolve(value));
+    else if (arg === "--baseline-run" && value !== undefined) baselineRuns.push(resolve(value));
     else if (arg === "--out" && value !== undefined) out = resolve(value);
     else if (arg === "--title" && value !== undefined) title = value;
     else if (arg === "--note" && value !== undefined) note = value;
@@ -37,7 +42,7 @@ export function runReport(argv: readonly string[], io: { out(t: string): void; e
     else if (arg === "--projection" && value !== undefined) projection = resolve(value);
     else if (arg === "--budget" && value !== undefined) budget = Number(value);
     else {
-      io.err(`error: unknown or incomplete option ${String(arg)}\nusage: report --run DIR [--run DIR ...] [--out FILE] [--title T] [--note N] [--holdout-summary FILE] [--projection FILE [--budget USD]]\n`);
+      io.err(`error: unknown or incomplete option ${String(arg)}\nusage: report --run DIR [--run DIR ...] [--baseline-run DIR ...] [--out FILE] [--title T] [--note N] [--holdout-summary FILE] [--projection FILE [--budget USD]]\n`);
       return 2;
     }
     i += 1;
@@ -46,7 +51,12 @@ export function runReport(argv: readonly string[], io: { out(t: string): void; e
     io.err("error: --run DIR is required\n");
     return 2;
   }
-  const records = runs.flatMap((dir) => parseRecords(readFileSync(join(dir, RECORDS_FILE), "utf8")));
+  // `--baseline-run`: only the baseline attempts of that run are read, so a re-run of Mtek is compared with the baseline of an earlier
+  // run without its Mtek cells joining the re-run's (the condition id of the context-only condition is the same in both).
+  const records = [
+    ...runs.flatMap((dir) => parseRecords(readFileSync(join(dir, RECORDS_FILE), "utf8"))),
+    ...baselineRuns.flatMap((dir) => selectSide(parseRecords(readFileSync(join(dir, RECORDS_FILE), "utf8")), "baseline")),
+  ];
   const holdoutIds = new Set(taskIdsIn(join(root, "benchmarks", "holdout")));
   const report = buildReport({ records, holdoutIds, ...(title === undefined ? {} : { title }), ...(note === undefined ? {} : { note }) });
   const target = out ?? join(runs[0] as string, "report.md");
