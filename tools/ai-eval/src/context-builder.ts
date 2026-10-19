@@ -67,8 +67,8 @@ export class ContextBuilder {
       throw new ToolError("mtek context did not print JSON");
     }
     const record = typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
-    if (record === null || record["contextFormat"] !== 1 || typeof record["compilerVersion"] !== "string") {
-      throw new ToolError("mtek context printed a document that is not contextFormat 1 (spec/context.schema.json)");
+    if (record === null || record["contextFormat"] !== 2 || typeof record["compilerVersion"] !== "string") {
+      throw new ToolError("mtek context printed a document that is not contextFormat 2 (spec/context.schema.json)");
     }
     const truncated = record["truncated"];
     return {
@@ -76,7 +76,7 @@ export class ContextBuilder {
       sha256: sha256Hex(result.stdout),
       bytes: Buffer.byteLength(result.stdout, "utf8"),
       compilerVersion: record["compilerVersion"],
-      contextFormat: 1,
+      contextFormat: 2,
       truncated: typeof truncated === "object" && truncated !== null && !Array.isArray(truncated) ? (truncated as Record<string, unknown>) : null,
     };
   }

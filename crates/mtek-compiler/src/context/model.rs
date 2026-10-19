@@ -13,7 +13,11 @@ pub const CONTEXT_FORMAT: u32 = 2;
 
 /// The `schemaGuide` text: how to read a line of `schemas[].fields`. A test checks that the
 /// flag letters are the ones [`FieldFlags`](crate::stdlib::FieldFlags) has.
-pub const SCHEMA_GUIDE: &str = "A field line reads `name: type = default [flags] range R // meaning`. Flags: R required, W writable from handlers, B bindable with bind(..), C construction-only (a constant expression). A field that is not listed does not exist.";
+pub const SCHEMA_GUIDE: &str = "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.";
+
+/// The `schemaGuide` text of a cold-start project, whose lines also have a range and the registry's
+/// documentation (decision 0110).
+pub const SCHEMA_GUIDE_DETAILED: &str = "A field line reads `name: type = default [flags] range R // meaning`. Flags: R required, W writable from handlers, B bindable with bind(..), C construction-only (a constant expression). A field that is not listed does not exist.";
 
 /// One context document.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

@@ -1363,7 +1363,10 @@ fn the_schema_accepts_what_is_emitted_and_rejects_what_is_not() {
     );
     let mut value = json(&output);
     value["schemas"][0]["fields"][0] = serde_json::json!({ "name": "size" });
-    assert!(!validator.is_valid(&value), "a field is a line, not an object");
+    assert!(
+        !validator.is_valid(&value),
+        "a field is a line, not an object"
+    );
     let mut value = json(&output);
     value["reference"] = serde_json::json!({ "surprise": [] });
     assert!(!validator.is_valid(&value), "reference has fixed keys");

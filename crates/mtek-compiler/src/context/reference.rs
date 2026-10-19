@@ -25,8 +25,8 @@ use super::model::{ConventionEntry, EnumEntry, Reference, SchemaEntry};
 use super::program::Program;
 use crate::resolve::gate::is_implemented;
 use crate::stdlib::{
-    BodyKind, Domain, EventForm, EventHost, IntrinsicDef, NamespaceMember, ParamDef,
-    Registry, SchemaDef, TypeClass, TypeKind, TypeRef, ValueDef,
+    BodyKind, Domain, EventForm, EventHost, IntrinsicDef, NamespaceMember, ParamDef, Registry,
+    SchemaDef, TypeClass, TypeKind, TypeRef, ValueDef,
 };
 
 /// Whether the project is a cold start: it declares nothing but scenes, scene objects (cameras),
@@ -100,7 +100,10 @@ pub fn detailed_schemas(registry: &Registry) -> Vec<SchemaEntry> {
         .iter()
         .filter(|schema| {
             is_implemented(schema.since)
-                && schema.fields.iter().any(|field| is_implemented(field.since))
+                && schema
+                    .fields
+                    .iter()
+                    .any(|field| is_implemented(field.since))
         })
         .collect();
     schemas.sort_by_key(|schema| schema.name);
@@ -291,9 +294,7 @@ fn grouped_lines(defs: &[&IntrinsicDef]) -> Vec<String> {
                 .map(|def| def.name)
                 .collect::<Vec<_>>()
                 .join("|");
-            members
-                .first()
-                .map(|def| function_line(&names, def, false))
+            members.first().map(|def| function_line(&names, def, false))
         })
         .collect()
 }

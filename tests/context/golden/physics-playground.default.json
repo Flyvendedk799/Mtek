@@ -400,7 +400,7 @@
       "line": 115
     }
   ],
-  "schemaGuide": "A field line reads `name: type = default [flags] range R // meaning`. Flags: R required, W writable from handlers, B bindable with bind(..), C construction-only (a constant expression). A field that is not listed does not exist.",
+  "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",
   "schemas": [
     {
       "name": "Box",

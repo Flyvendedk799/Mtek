@@ -12,6 +12,9 @@
 //!   rules, each paired with the program that breaks it and the code the compiler reports;
 //! * [`program`]: the declarations of the project, the references between them and the library
 //!   names used in them;
+//! * [`reference`]: for a project with no code, every schema with the documentation of its fields
+//!   and the built-in library (enum members, signatures, events, conventions), all from the
+//!   registry (decision 0110);
 //! * [`examples`]: complete programs the tests check, selected by shared features;
 //! * [`fit`]: dropping the lowest-priority items to fit `--max-bytes`;
 //! * [`model`]: the serialised shape.
@@ -22,6 +25,9 @@
 //! every declaration of the entry module when no scene is selected). The context holds the seeds
 //! and everything nested in them, the declarations one reference away in either direction, the
 //! schemas the seeds use and the examples that share the seeds' features.
+//!
+//! A *cold-start* project (decision 0110) gets the whole library instead of only what it uses; see
+//! [`reference`].
 
 pub mod capabilities;
 pub mod examples;
@@ -42,7 +48,7 @@ use crate::source::Fs;
 use crate::stdlib::{FieldDef, Limit, Registry, SchemaDef, registry};
 use crate::{COMPILER_VERSION, LANGUAGE_VERSION};
 
-pub use model::{CONTEXT_FORMAT, Context, SCHEMA_GUIDE};
+pub use model::{CONTEXT_FORMAT, Context, SCHEMA_GUIDE, SCHEMA_GUIDE_DETAILED};
 
 use fit::{Draft, fit};
 use model::{
@@ -228,7 +234,11 @@ pub fn context(
             modules: paths,
         },
         symbols,
-        schema_guide: SCHEMA_GUIDE,
+        schema_guide: if cold {
+            SCHEMA_GUIDE_DETAILED
+        } else {
+            SCHEMA_GUIDE
+        },
         schemas,
         reference,
         // The library of a cold-start project takes the room the examples would (decision 0110):
@@ -427,20 +437,16 @@ fn schema_entry(schema: &SchemaDef, detailed: bool) -> SchemaEntry {
     }
 }
 
-/// The range of `field` when it says something the quantity does not: a bound above or at a
-/// value other than zero, or a relation to another field. A mere "greater than zero", "not
-/// negative" or "finite" is left out (the compiler reports a constant outside it), because a
-/// cold-start context has a byte budget and a radius or a mass is not negative anyway.
+/// The range of `field` when it says something the quantity does not: an upper bound, a lower
+/// bound other than zero, or a relation to another field (`far > near`). A mere "greater than
+/// zero", "not negative" or "finite" is left out (the compiler reports a constant outside it)
+/// because a cold-start context has a byte budget and a radius or a mass is not negative anyway.
 fn shown_range(field: &FieldDef) -> Option<String> {
     let range = field.range?;
     let mere_sign = range.upper.is_none()
         && range.greater_than_field.is_none()
         && range.lower.is_none_or(|bound| bound.limit == Limit::Int(0));
-    if mere_sign {
-        None
-    } else {
-        field.range_text()
-    }
+    if mere_sign { None } else { field.range_text() }
 }
 
 /// `name: type = default [flags]`, and with `detailed` also ` range R` and ` // meaning`. The flag
@@ -473,4 +479,3 @@ fn field_line(field: &FieldDef, detailed: bool) -> String {
     }
     line
 }
-

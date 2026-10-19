@@ -140,8 +140,7 @@ pub fn fit(draft: Draft, max_bytes: usize) -> Result<(Context, String), usize> {
 mod tests {
     use super::*;
     use crate::context::model::{
-        ExampleEntry, ProjectSection, Reference, SchemaEntry, Supported, SymbolEntry,
-        SyntaxSection,
+        ExampleEntry, ProjectSection, Reference, SchemaEntry, Supported, SymbolEntry, SyntaxSection,
     };
 
     fn symbol(name: &str) -> SymbolEntry {
@@ -257,6 +256,58 @@ mod tests {
         let t = dropped(none - 1);
         assert_eq!(t.neighbours.names, ["n1"]);
         assert!(t.schemas.is_empty() && t.symbols.is_empty());
+    }
+
+    #[test]
+    fn the_library_goes_after_the_neighbours_and_before_the_schemas() {
+        use crate::context::model::{ConventionEntry, EnumEntry};
+        let mut draft = draft();
+        draft.context.reference = Reference {
+            builtins: vec!["abs(x: T) -> T".to_owned()],
+            type_classes: vec!["T = f32".to_owned()],
+            conventions: vec![ConventionEntry {
+                topic: "time".to_owned(),
+                notes: vec!["frame: seconds".to_owned()],
+            }],
+            enums: vec![EnumEntry {
+                name: "Key".to_owned(),
+                doc: "A key.".to_owned(),
+                members: "A B".to_owned(),
+            }],
+            ..Reference::default()
+        };
+        // Bisection drops exactly what dropping one at a time drops, with the library in.
+        let full = render(&draft.context).len();
+        for max_bytes in 0..=full + 10 {
+            match (fit(draft.clone(), max_bytes), one_by_one(&draft, max_bytes)) {
+                (Ok(a), Ok(b)) => assert_eq!(a.1, b.1, "{max_bytes}"),
+                (Err(a), Err(b)) => assert_eq!(a, b, "{max_bytes}"),
+                (a, b) => panic!("{max_bytes}: {a:?} against {b:?}"),
+            }
+        }
+        let dropped = |max_bytes| {
+            fit(draft.clone(), max_bytes)
+                .unwrap()
+                .0
+                .truncated
+                .unwrap_or_default()
+        };
+        // Examples and neighbours go first; then the lowest-priority section of the library.
+        let base = draft
+            .dropping(Phase::Examples, 4)
+            .dropping(Phase::Neighbours, 2);
+        let t = dropped(render(&base.context).len() - 1);
+        assert_eq!(t.neighbours.count, 2);
+        assert_eq!(t.reference.names, ["builtins"]);
+        assert!(t.schemas.is_empty() && t.symbols.is_empty());
+        // `typeClasses` goes with `builtins`; the schemas only once every section is gone.
+        let bare = base.dropping(Phase::Reference, 3);
+        assert!(bare.context.reference.is_empty());
+        let t = dropped(render(&bare.context).len());
+        assert_eq!(t.reference.names, ["builtins", "conventions", "enums"]);
+        assert!(t.schemas.is_empty());
+        let t = dropped(render(&bare.context).len() - 1);
+        assert_eq!(t.schemas.names, ["C"]);
     }
 
     #[test]

@@ -15,14 +15,13 @@ use jsonschema::Validator;
 use mtek_compiler::context::model::REFERENCE_SECTIONS;
 use mtek_compiler::context::reference::CONVENTIONS;
 use mtek_compiler::context::{
-    ContextError, ContextOptions, ContextOutput, DEFAULT_MAX_BYTES, SCHEMA_GUIDE, context,
+    ContextError, ContextOptions, ContextOutput, DEFAULT_MAX_BYTES, SCHEMA_GUIDE,
+    SCHEMA_GUIDE_DETAILED, context,
 };
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::resolve::IMPLEMENTED_MILESTONE;
 use mtek_compiler::source::{MemFs, ProjectPath};
-use mtek_compiler::stdlib::{
-    FieldDef, FieldRule, Milestone, NamespaceMember, TypeKind, registry,
-};
+use mtek_compiler::stdlib::{FieldDef, FieldRule, Milestone, NamespaceMember, TypeKind, registry};
 use serde_json::Value;
 
 const TOML: &str = "[project]\nname = \"demo\"\nlanguage = \"0.1\"\n";
@@ -40,7 +39,10 @@ fn repo(path: &str) -> PathBuf {
 /// A project whose only module is `main`.
 fn project(main: &str) -> MemFs {
     let mut fs = MemFs::new();
-    fs.insert(ProjectPath::new("mtek.toml").unwrap(), TOML.as_bytes().to_vec());
+    fs.insert(
+        ProjectPath::new("mtek.toml").unwrap(),
+        TOML.as_bytes().to_vec(),
+    );
     fs.insert(
         ProjectPath::new("src/main.mtek").unwrap(),
         main.as_bytes().to_vec(),
@@ -139,7 +141,12 @@ fn expected_field_line(field: &FieldDef) -> String {
 
 /// A `builtins` line that starts with `prefix`, has `name` among the `|`-separated alternatives
 /// before the first `(` or `:`, and contains `needle`.
-fn builtin_line<'a>(lines: &'a [String], prefix: &str, name: &str, needle: &str) -> Option<&'a str> {
+fn builtin_line<'a>(
+    lines: &'a [String],
+    prefix: &str,
+    name: &str,
+    needle: &str,
+) -> Option<&'a str> {
     lines.iter().map(String::as_str).find(|line| {
         line.strip_prefix(prefix).is_some_and(|rest| {
             let head = rest.split(['(', ':']).next().unwrap_or("");
@@ -157,14 +164,22 @@ fn an_empty_project_lists_every_schema_field_and_every_enum_member() {
     let output = ok("");
     assert_valid(&output);
     assert!(output.context.truncated.is_none());
-    assert!(output.text.len() <= DEFAULT_MAX_BYTES, "{}", output.text.len());
+    assert!(
+        output.text.len() <= DEFAULT_MAX_BYTES,
+        "{}",
+        output.text.len()
+    );
     let registry = registry();
 
     // Every field of every implemented schema, in registry order, with its documentation.
     let mut listed = 0;
     for schema in registry.schemas.iter().filter(|s| reached(s.since)) {
         let fields: Vec<_> = schema.fields.iter().filter(|f| reached(f.since)).collect();
-        let entry = output.context.schemas.iter().find(|s| s.name == schema.name);
+        let entry = output
+            .context
+            .schemas
+            .iter()
+            .find(|s| s.name == schema.name);
         if fields.is_empty() {
             // A schema without fields (`Static`) is named by the field that takes it.
             assert!(entry.is_none(), "{}", schema.name);
@@ -206,9 +221,17 @@ fn an_empty_project_lists_every_schema_field_and_every_enum_member() {
         "Unlit",
         "Pbr",
     ] {
-        assert!(output.context.schemas.iter().any(|s| s.name == name), "{name}");
+        assert!(
+            output.context.schemas.iter().any(|s| s.name == name),
+            "{name}"
+        );
     }
-    let listed_names: Vec<&str> = output.context.schemas.iter().map(|s| s.name.as_str()).collect();
+    let listed_names: Vec<&str> = output
+        .context
+        .schemas
+        .iter()
+        .map(|s| s.name.as_str())
+        .collect();
     let mut sorted = listed_names.clone();
     sorted.sort_unstable();
     assert_eq!(listed_names, sorted, "sorted by name");
@@ -233,10 +256,20 @@ fn an_empty_project_lists_every_schema_field_and_every_enum_member() {
         assert_eq!(entry.doc, def.doc);
     }
     let key = &output.context.reference.enums[0];
-    for member in ["ArrowUp", "ArrowDown", "Space", "Digit0", "A", "Z", "ShiftLeft"] {
+    for member in [
+        "ArrowUp",
+        "ArrowDown",
+        "Space",
+        "Digit0",
+        "A",
+        "Z",
+        "ShiftLeft",
+    ] {
         assert!(key.members.split(' ').any(|m| m == member), "{member}");
     }
-    for invented in ["Up", "Down", "Left", "Right", "Shift", "KeyA", "Control", "Alt"] {
+    for invented in [
+        "Up", "Down", "Left", "Right", "Shift", "KeyA", "Control", "Alt",
+    ] {
         assert!(!key.members.split(' ').any(|m| m == invented), "{invented}");
     }
 }
@@ -247,7 +280,11 @@ fn an_empty_project_lists_the_signature_of_every_built_in() {
     let reference = &output.context.reference;
     let registry = registry();
 
-    for class in ["T = f32 | vec2 | vec3 | vec4", "I = i32 | u32", "V = vec2 | vec3 | vec4"] {
+    for class in [
+        "T = f32 | vec2 | vec3 | vec4",
+        "I = i32 | u32",
+        "V = vec2 | vec3 | vec4",
+    ] {
         assert!(reference.type_classes.iter().any(|c| c == class), "{class}");
     }
 
@@ -290,9 +327,15 @@ fn an_empty_project_lists_the_signature_of_every_built_in() {
     for ty in registry.types.iter().filter(|t| reached(t.since)) {
         for method in &ty.methods {
             let feature = format!("method:{}.{}", ty.name, method.name);
-            assert!(output.context.supported.features.contains(&feature), "{feature}");
             assert!(
-                reference.builtins.iter().all(|l| !l.contains(&format!("<{}>", ty.name))),
+                output.context.supported.features.contains(&feature),
+                "{feature}"
+            );
+            assert!(
+                reference
+                    .builtins
+                    .iter()
+                    .all(|l| !l.contains(&format!("<{}>", ty.name))),
                 "{}",
                 ty.name
             );
@@ -303,7 +346,9 @@ fn an_empty_project_lists_the_signature_of_every_built_in() {
     assert!(has("color.linear(rgb: vec3, a: f32) -> color"));
     assert!(has("color.srgb(rgb: vec3, a: f32) -> color"));
     assert!(has("quat.euler(x: f32, y: f32, z: f32) -> quat"));
-    assert!(has("sample(t: texture, s: sampler, uv: vec2) -> vec4 [gpu only]"));
+    assert!(has(
+        "sample(t: texture, s: sampler, uv: vec2) -> vec4 [gpu only]"
+    ));
     assert!(has("asset.texture(path: string) -> texture"));
     assert!(has(
         "spawn(prefab: prefab descriptor) -> entity_ref [handlers and lifecycle functions only]"
@@ -313,10 +358,19 @@ fn an_empty_project_lists_the_signature_of_every_built_in() {
     // Events, records and body commands.
     for event in registry.events.iter().filter(|e| reached(e.since)) {
         let wanted = format!("on {}(", event.name);
-        let line = reference.events.iter().find(|l| l.starts_with(&wanted)).unwrap();
+        let line = reference
+            .events
+            .iter()
+            .find(|l| l.starts_with(&wanted))
+            .unwrap();
         assert!(line.ends_with(&format!(" // {}", event.doc)), "{line}");
     }
-    assert!(reference.events.iter().any(|l| l.starts_with("on key_down(Key.<member>)")));
+    assert!(
+        reference
+            .events
+            .iter()
+            .any(|l| l.starts_with("on key_down(Key.<member>)"))
+    );
     assert!(
         reference
             .events
@@ -352,7 +406,10 @@ fn an_empty_project_lists_the_signature_of_every_built_in() {
     }
     for property in registry.body_properties.iter().filter(|p| reached(p.since)) {
         let wanted = format!(".body.{}: {}", property.name, property.ty.spelling());
-        assert!(reference.body.iter().any(|l| l.contains(&wanted)), "{wanted}");
+        assert!(
+            reference.body.iter().any(|l| l.contains(&wanted)),
+            "{wanted}"
+        );
     }
 }
 
@@ -411,22 +468,39 @@ fn the_units_and_scales_a_model_needs_are_in_the_registry_documentation() {
     assert!(key.doc.contains("Key.ArrowUp") && key.doc.contains("no `Key.Up`"));
     // And they reach the context.
     let output = ok("");
-    let scene = output.context.schemas.iter().find(|s| s.name == "Scene").unwrap();
-    assert!(scene.fields.iter().any(|l| l.starts_with("ambient_intensity") && l.contains("exposure")));
-    let camera = output.context.schemas.iter().find(|s| s.name == "Camera").unwrap();
-    assert!(camera.fields.iter().any(|l| l.starts_with("exposure") && l.contains("EV100")));
+    let scene = output
+        .context
+        .schemas
+        .iter()
+        .find(|s| s.name == "Scene")
+        .unwrap();
+    assert!(
+        scene
+            .fields
+            .iter()
+            .any(|l| l.starts_with("ambient_intensity") && l.contains("exposure"))
+    );
+    let camera = output
+        .context
+        .schemas
+        .iter()
+        .find(|s| s.name == "Camera")
+        .unwrap();
+    assert!(
+        camera
+            .fields
+            .iter()
+            .any(|l| l.starts_with("exposure") && l.contains("EV100"))
+    );
     let perspective = output
         .context
         .schemas
         .iter()
         .find(|s| s.name == "Perspective")
         .unwrap();
-    assert!(
-        perspective
-            .fields
-            .iter()
-            .any(|l| l.starts_with("fov_y: f32 = 0.9 [WB] range (0, \u{3c0}) //") && l.contains("radians"))
-    );
+    assert!(perspective.fields.iter().any(|l| {
+        l.starts_with("fov_y: f32 = 0.9 [WB] range (0, \u{3c0}) //") && l.contains("radians")
+    }));
 }
 
 #[test]
@@ -436,8 +510,12 @@ fn every_rule_between_fields_is_stated_in_the_documentation_of_the_field() {
     for schema in &registry().schemas {
         for rule in &schema.rules {
             let (field, other) = match rule {
-                FieldRule::Requires { field, requires, .. } => (field, requires),
-                FieldRule::ExcludedBy { field, excluded_by, .. } => (field, excluded_by),
+                FieldRule::Requires {
+                    field, requires, ..
+                } => (field, requires),
+                FieldRule::ExcludedBy {
+                    field, excluded_by, ..
+                } => (field, excluded_by),
             };
             let text = schema.field(field).unwrap().doc;
             assert!(
@@ -468,7 +546,12 @@ fn a_range_is_shown_when_it_says_more_than_greater_than_zero() {
     assert!(line("Sphere", "segments").contains(" range 3\u{2026}256 "));
     assert!(line("Perspective", "far").contains(" range > near "));
     assert!(line("BoxCollider", "restitution").contains(" range 0\u{2026}1 "));
-    for (schema, field) in [("Sphere", "radius"), ("Box", "size"), ("Dynamic", "mass"), ("Scene", "gravity")] {
+    for (schema, field) in [
+        ("Sphere", "radius"),
+        ("Box", "size"),
+        ("Dynamic", "mass"),
+        ("Scene", "gravity"),
+    ] {
         assert!(!line(schema, field).contains(" range "), "{schema}.{field}");
     }
 }
@@ -488,27 +571,54 @@ fn a_cold_start_is_a_project_without_entities_materials_functions_constants_or_s
     ));
     assert!(is_cold("scene {{{ not a program"));
     // Warm: the project has code of its own.
-    assert!(!is_cold("scene Demo { camera Main {} entity Cube { mesh: Box {}; } }\n"));
-    assert!(!is_cold("const A: f32 = 1.0;\nscene Demo { camera Main {} }\n"));
-    assert!(!is_cold("struct P { a: f32; }\nscene Demo { camera Main {} }\n"));
-    assert!(!is_cold("fn f(x: f32) -> f32 { return x; }\nscene Demo { camera Main {} }\n"));
-    assert!(!is_cold("prefab P { mesh: Box {}; }\nscene Demo { camera Main {} }\n"));
+    assert!(!is_cold(
+        "scene Demo { camera Main {} entity Cube { mesh: Box {}; } }\n"
+    ));
+    assert!(!is_cold(
+        "const A: f32 = 1.0;\nscene Demo { camera Main {} }\n"
+    ));
+    assert!(!is_cold(
+        "struct P { a: f32; }\nscene Demo { camera Main {} }\n"
+    ));
+    assert!(!is_cold(
+        "fn f(x: f32) -> f32 { return x; }\nscene Demo { camera Main {} }\n"
+    ));
+    assert!(!is_cold(
+        "prefab P { mesh: Box {}; }\nscene Demo { camera Main {} }\n"
+    ));
     // A warm context has neither the library nor the documentation of the fields.
     let warm = ok("scene Demo { camera Main {} entity Cube { mesh: Box {}; } }\n");
     assert!(warm.context.reference.is_empty());
     assert!(!warm.text.contains("\"reference\""));
     assert!(warm.context.schemas.iter().all(|s| s.doc.is_none()));
-    assert!(warm.context.schemas.iter().all(|s| s.fields.iter().all(|l| !l.contains(" // "))));
+    assert!(
+        warm.context
+            .schemas
+            .iter()
+            .all(|s| s.fields.iter().all(|l| !l.contains(" // ")))
+    );
     assert!(warm.context.schemas.len() < 8);
-    assert!(warm.text.len() < ok("").text.len() - 5_000, "{}", warm.text.len());
+    assert!(
+        warm.text.len() < ok("").text.len() - 5_000,
+        "{}",
+        warm.text.len()
+    );
 }
 
 #[test]
 fn a_stub_scene_gets_the_library_and_its_own_symbols_within_the_budget() {
     let stub = "// Build the scene here.\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n    }\n}\n";
     let output = ok(stub);
-    assert!(output.context.truncated.is_none(), "{:?}", output.context.truncated);
-    assert!(output.text.len() <= DEFAULT_MAX_BYTES, "{}", output.text.len());
+    assert!(
+        output.context.truncated.is_none(),
+        "{:?}",
+        output.context.truncated
+    );
+    assert!(
+        output.text.len() <= DEFAULT_MAX_BYTES,
+        "{}",
+        output.text.len()
+    );
     assert!(!output.context.reference.is_empty());
     assert_eq!(names(&output), ["Demo", "Demo.Main"]);
     assert_valid(&output);
@@ -615,11 +725,25 @@ fn the_schema_guide_names_the_flag_letters_of_the_registry() {
         ('B', "bindable"),
         ('C', "construction-only"),
     ] {
-        assert!(
-            SCHEMA_GUIDE.contains(&format!("{letter} {meaning}")),
-            "{letter} {meaning}"
-        );
+        for guide in [SCHEMA_GUIDE, SCHEMA_GUIDE_DETAILED] {
+            assert!(
+                guide.contains(&format!("{letter} {meaning}")),
+                "{letter} {meaning}"
+            );
+        }
     }
+    // The cold-start guide explains the range and the meaning; the other does not need to.
+    assert!(
+        SCHEMA_GUIDE_DETAILED.contains("range R") && SCHEMA_GUIDE_DETAILED.contains("// meaning")
+    );
+    assert!(!SCHEMA_GUIDE.contains("range") && !SCHEMA_GUIDE.contains("meaning"));
+    assert_eq!(ok("").context.schema_guide, SCHEMA_GUIDE_DETAILED);
+    assert_eq!(
+        ok("scene Demo { camera Main {} entity Cube { mesh: Box {}; } }")
+            .context
+            .schema_guide,
+        SCHEMA_GUIDE
+    );
     // The letters of the lines in a context are only these.
     let output = ok("");
     for schema in &output.context.schemas {

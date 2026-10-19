@@ -88,13 +88,13 @@ describe.skipIf(mtek === null)("against the real compiler", () => {
   it("the ContextBuilder returns the compiler's own document for a task's project and symbols", async () => {
     const task = loadTask(join(tasksDir, "interaction-01"));
     const context = await new ContextBuilder(runner).build({ projectDir: task.projectDir, symbols: task.requiredSymbols, maxBytes: 24000 });
-    expect(context.contextFormat).toBe(1);
+    expect(context.contextFormat).toBe(2);
     expect(context.bytes).toBeLessThanOrEqual(24000);
     const document = JSON.parse(context.text) as { symbols: { name: string }[] };
     expect(document.symbols.map((s) => s.name)).toEqual(expect.arrayContaining(task.requiredSymbols));
     // a cold task's stub has no symbols to ask for, and the context is still produced
     const cold = loadTask(join(tasksDir, "scene-rendering-01"));
-    expect((await new ContextBuilder(runner).build({ projectDir: cold.projectDir, symbols: [], maxBytes: 24000 })).contextFormat).toBe(1);
+    expect((await new ContextBuilder(runner).build({ projectDir: cold.projectDir, symbols: [], maxBytes: 24000 })).contextFormat).toBe(2);
   }, 60_000);
 
   it("runs a whole trial with the real compiler and ends NOT-RUN, not success, when the tests cannot run", async () => {

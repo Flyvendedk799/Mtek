@@ -310,10 +310,10 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | Type | Kind | GPU | Fields | Methods | Description |
 |---|---|---|---|---|---|
 | `PointerEvent` | record | no | position: vec2; button: i32 |  | A pointer event: `position` in normalised canvas coordinates (x right, y up, both in -1..1) and the `button` (0 primary, 1 middle, 2 secondary). |
-| `SurfaceInput` | record | yes | local_position: vec3; world_position: vec3; world_normal: vec3; uv: vec2 |  | The interpolated inputs of a material fragment stage; the compiler records which fields a material reads. |
+| `SurfaceInput` | record | yes | local_position: vec3; world_position: vec3; world_normal: vec3; uv: vec2 |  | The interpolated inputs of a material fragment stage. |
 | `array` | array | yes |  |  | The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`. |
 | `bool` | scalar | yes |  |  | Truth value. |
-| `color` | color | yes |  |  | Linear-light RGBA with straight alpha; distinct from `vec4`. |
+| `color` | color | yes |  |  | Linear-light RGBA with straight alpha; distinct from `vec4`. A literal `#rrggbb` is sRGB-encoded and converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a` and `.rgb`; no arithmetic. |
 | `entity_ref` | handle | no |  |  | A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only. |
 | `f32` | scalar | yes |  |  | IEEE-754 binary32 floating-point number. |
 | `glb_asset` | handle | no |  | material, material_base_color, material_metallic, material_roughness, material_texture, mesh, node_position, node_rotation, node_scale, primitive | The compile-time handle of `asset.glb(..)`; may be stored only in a `const` and used through its accessors. |
@@ -397,7 +397,7 @@ The fields of a `camera` scene object. Looks along its local -Z axis, or at `tar
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `active` | `bool` | none | no | construction only |  | Marks the active camera. Optional when the scene has exactly one camera; with several cameras exactly one must declare `active: true`. |
-| `exposure` | `f32` | `-1.9145305` | no | construction only |  | Exposure value EV100 of the camera; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15. |
+| `exposure` | `f32` | `-1.9145305` | no | construction only |  | Exposure value EV100; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 5.0)` | no | writable, bindable |  | Camera position in world space, in metres. |
 | `projection` | `projection` | `Perspective {}` | no | construction only |  | `Perspective {..}` or `Orthographic {..}`. The projection kind is construction-only; the fields of the descriptor are writable and bindable. |
 | `rotation` | `quat` | `quat.identity()` | no | writable, bindable |  | Orientation when no `target` is declared. |
@@ -416,7 +416,7 @@ The fields of an entity or prefab body: a named node with a transform and option
 | `mesh` | `mesh` | none | no | construction only |  | The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | no | writable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | no | writable, bindable |  | Rotation local to the parent. |
-| `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | writable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body; that rule belongs to the checker, not to this field. |
+| `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | writable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body. |
 | `visible` | `bool` | `true` | no | writable, bindable |  | Hides the mesh draw only; the entity's behaviour keeps running. |
 
 ##### `Scene`
@@ -426,7 +426,7 @@ The fields of a scene declaration. All are construction-only and must be constan
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `ambient_color` | `color` | `#ffffff` | no | construction only |  | Colour of the ambient light term of lit materials. Only the RGB channels are used. |
-| `ambient_intensity` | `f32` | `0.0` | no | construction only | ≥ 0 | Scale of the ambient light term of lit materials; 0 turns ambient light off. |
+| `ambient_intensity` | `f32` | `0.0` | no | construction only | ≥ 0 | Scale of the ambient light term of lit materials; 0 turns ambient light off. Like every lit result it is multiplied by the camera's exposure scale (about 3.14 at the default exposure), so 0.3 already gives nearly full brightness on white. Unlit materials ignore it. |
 | `clear_color` | `color` | `#000000` | no | construction only |  | Colour the canvas is cleared to. Only the RGB channels are used. |
 | `gravity` | `vec3` | `vec3(0.0, -9.81, 0.0)` | no | construction only | finite | Gravitational acceleration in metres per second squared. Used only when the scene has physics bodies. |
 
@@ -501,7 +501,7 @@ A perspective projection (right-handed, clip depth 0 to 1).
 
 ##### `Pbr`
 
-The documented PBR subset (metallic-roughness, no image-based lighting). Defined in the embedded prelude source `std/materials.mtek`.
+The documented PBR subset (metallic-roughness, no image-based lighting).
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
@@ -513,7 +513,7 @@ The documented PBR subset (metallic-roughness, no image-based lighting). Defined
 
 ##### `Unlit`
 
-Flat colour, no lighting. Defined in the embedded prelude source `std/materials.mtek`.
+Flat colour, no lighting.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
@@ -541,7 +541,7 @@ Flat colour, no lighting. Defined in the embedded prelude source `std/materials.
 
 #### `Key`
 
-A physical keyboard key, independent of the keyboard layout. Maps from the DOM `KeyboardEvent.code`; events with any other code are ignored by the runtime.
+A physical keyboard key, independent of the layout. Written `Key.<Member>` with exactly the members listed (`Key.Space`, `Key.ArrowUp`, `Key.A`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`. Maps from the DOM `KeyboardEvent.code`.
 
 | Member | DOM `KeyboardEvent.code` |
 |---|---|
@@ -620,7 +620,7 @@ Colour constructors.
 
 #### `frame`
 
-Per-frame values. Readable in CPU code and in `bind` expressions, not in GPU stage code: route them through material parameters.
+Per-frame values, readable in CPU code and in `bind` expressions, not in GPU stage code (route them through material parameters). `update(dt)` gets the frame delta, which varies from frame to frame; `fixed_update(dt)` runs zero or more times per frame and gets the constant fixed step, 1/60 s by default.
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
