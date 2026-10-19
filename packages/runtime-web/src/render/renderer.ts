@@ -110,6 +110,9 @@ export interface RendererOptions {
 const BUFFER_USAGE_COPY_DST = 0x08;
 const BUFFER_USAGE_VERTEX = 0x20;
 
+/** The numbers the view-projection matrix is a function of (`Renderer.viewProjection`). */
+const VIEW_KEY_LENGTH = 13;
+
 function fieldWriter(writers: LayoutWriters, name: string, layoutId: string): BlockWriter {
   const writer = writers.fields.get(name);
   if (writer === undefined) throw new Error(`internal error: the layout '${layoutId}' has no writer for '${name}'`);
@@ -138,6 +141,11 @@ export class Renderer {
   private readonly writeNormalMatrix: BlockWriter;
   private readonly ambient: { readonly x: number; readonly y: number; readonly z: number };
   private lastView: Mat4 = identity();
+  /** `P * V` of the last frame, and the camera numbers it was computed from (`viewKey`): reused while they are equal. */
+  private lastViewProj: Mat4 = identity();
+  private readonly viewKey = new Float64Array(VIEW_KEY_LENGTH);
+  private readonly nextViewKey = new Float64Array(VIEW_KEY_LENGTH);
+  private viewKeyValid = false;
   private draws: readonly DrawItem[] = [];
   private drawsVersion = -1;
   private drawsBlockVersion = -1;
@@ -164,13 +172,37 @@ export class Renderer {
   private instanceRecords = 0;
   /** Whether draws can be instanced at all: instancing is on and some entity or prefab has a material with an instanced entry point. */
   private readonly instancingPossible: boolean;
-  /** Per entity slot: its model matrix, then its normal matrix (`INSTANCE_FLOATS` f32), refreshed with its object block. */
+  /**
+   * Per entity slot: its model matrix, then its normal matrix (`INSTANCE_FLOATS` f32), as of the last frame in which its
+   * world matrix changed. The object block and the instance record of the entity are copies of these 32 words; the
+   * object block only when a draw reads it (`objectStale`).
+   */
   private entityMatrices: Float32Array;
-  /** The records of the instanced draws of this frame, and what the GPU buffer holds (to upload only what changed). */
-  private instanceStaging: Float32Array;
+  private entityWords: Uint32Array;
+  /** Per entity slot, 1 when the entity's object block does not hold `entityMatrices` (it is written when the entity is drawn individually). */
+  private objectStale: Uint8Array;
+  /** The entity slots whose world matrix changed in this frame's `applyWorldChanges` and that have a drawable slot. */
+  private changedEntities: Int32Array = new Int32Array(0);
+  private changedCount = 0;
+  /** What the GPU instance buffer holds, by record (to upload only what changed), and the words of it that changed this frame. */
   private instanceMirror: Float32Array;
-  /** The draw calls of this frame (reused between frames). */
+  private instanceMirrorWords: Uint32Array;
+  private instanceLow = 0;
+  private instanceHigh = -1;
+  /** Per entity slot: the record it occupies in the instance buffer in the current batching, or -1. */
+  private recordOf: Int32Array;
+  /** The draw calls of this frame (reused between frames); valid for `batchedDraws`. */
   private readonly batches: Batch[] = [];
+  private batchedDraws: readonly DrawItem[] | undefined;
+  private instancedBatches = 0;
+  /** What the cull and the batching of the last frame were computed for. */
+  private cullListed: readonly DrawItem[] | undefined;
+  private cullViewProj: Mat4 | undefined;
+  private cullDirty = true;
+  /** Whether the last `cull` produced the same draws as the frame before. */
+  private drawnUnchanged = false;
+  private readonly modelScratch = new Float32Array(16);
+  private readonly normalScratch = new Float32Array(16);
   /** Materials that failed after mount (`failMaterial`): never drawn. */
   private readonly failedMaterials = new Set<string>();
 
@@ -213,6 +245,11 @@ export class Renderer {
     }
     this.sphereCentres = new Float64Array(structure.entities.length * 3);
     this.sphereScales = new Float64Array(structure.entities.length);
+    this.entityMatrices = new Float32Array(structure.entities.length * INSTANCE_FLOATS);
+    this.entityWords = new Uint32Array(this.entityMatrices.buffer);
+    // Every object block starts stale: its first draw as an individual writes it, whatever the matrices compare equal to.
+    this.objectStale = new Uint8Array(structure.entities.length).fill(1);
+    this.recordOf = new Int32Array(structure.entities.length).fill(-1);
 
     // The instance buffer is created here, with the other GPU objects of the scene (so device recovery
     // rebuilds it): as large as the entities of the scene that could ever be instanced. Spawned entities
@@ -227,9 +264,8 @@ export class Renderer {
           );
     const capacity = candidates?.capacity ?? 0;
     this.instancingPossible = candidates !== undefined && (capacity > 0 || candidates.materials.size > 0);
-    this.instanceStaging = new Float32Array(0);
     this.instanceMirror = new Float32Array(0);
-    this.entityMatrices = new Float32Array(this.instancingPossible ? structure.entities.length * INSTANCE_FLOATS : 0);
+    this.instanceMirrorWords = new Uint32Array(0);
     if (capacity > 0) this.allocateInstances(capacity);
     // Spawned entities that exist already (device recovery) are added by `DynamicEntities.rebuild`.
   }
@@ -240,8 +276,10 @@ export class Renderer {
     const old = this.instanceBuffer;
     this.instanceBuffer = registry.createBuffer({ label: "mtek instance matrices", size: records * INSTANCE_STRIDE, usage: BUFFER_USAGE_VERTEX | BUFFER_USAGE_COPY_DST });
     this.instanceRecords = records;
-    this.instanceStaging = new Float32Array(records * INSTANCE_FLOATS);
     this.instanceMirror = new Float32Array(records * INSTANCE_FLOATS);
+    this.instanceMirrorWords = new Uint32Array(this.instanceMirror.buffer);
+    // A new buffer and mirror are zero: the next batching writes every record again.
+    this.batchedDraws = undefined;
     if (old !== undefined) registry.release(old);
   }
 
@@ -262,10 +300,18 @@ export class Renderer {
       this.sphereCentres = centres;
       this.sphereScales = scales;
     }
-    if (this.instancingPossible && slots * INSTANCE_FLOATS > this.entityMatrices.length) {
-      const matrices = new Float32Array(Math.max(slots, (this.entityMatrices.length / INSTANCE_FLOATS) * 2) * INSTANCE_FLOATS);
+    if (slots * INSTANCE_FLOATS > this.entityMatrices.length) {
+      const capacity = Math.max(slots, (this.entityMatrices.length / INSTANCE_FLOATS) * 2);
+      const matrices = new Float32Array(capacity * INSTANCE_FLOATS);
       matrices.set(this.entityMatrices);
       this.entityMatrices = matrices;
+      this.entityWords = new Uint32Array(matrices.buffer);
+      const stale = new Uint8Array(capacity).fill(1);
+      stale.set(this.objectStale);
+      this.objectStale = stale;
+      const records = new Int32Array(capacity).fill(-1);
+      records.set(this.recordOf);
+      this.recordOf = records;
     }
   }
 
@@ -275,6 +321,8 @@ export class Renderer {
    */
   addEntity(entity: ResolvedEntity): void {
     this.ensureEntitySlots(entity.index + 1);
+    this.objectStale[entity.index] = 1;
+    this.recordOf[entity.index] = -1;
     if (entity.mesh !== null) {
       this.objectSlots[entity.index] = this.objectArena.allocate();
       const centre = this.options.meshes.get(entity.mesh.id).boundingCenter;
@@ -290,6 +338,7 @@ export class Renderer {
     this.objectSlots[entity.index] = undefined;
     this.localCentres[entity.index] = undefined;
     this.sphereScales[entity.index] = 0;
+    this.recordOf[entity.index] = -1;
     this.drawsVersion = -1;
   }
 
@@ -325,6 +374,7 @@ export class Renderer {
 
   /** Turns frustum culling on (the default) or off. Off exists for tests that compare culled and unculled frames. */
   setFrustumCulling(enabled: boolean): void {
+    if (enabled !== this.cullingEnabled) this.cullDirty = true;
     this.cullingEnabled = enabled;
   }
 
@@ -406,14 +456,15 @@ export class Renderer {
     }
 
     const viewProj = this.writeFrameBlock();
-    this.writeObjectBlocks();
+    this.applyWorldChanges();
     this.frameArena.flush(device.queue);
-    this.objectArena.flush(device.queue);
     materials.flush(device.queue);
 
     const listed = this.drawList();
     const draws = this.cull(listed, viewProj);
     const instanced = this.groupDraws(draws);
+    this.writeIndividualObjectBlocks(draws);
+    this.objectArena.flush(device.queue);
     const rendered = surface.render(clearColor, (pass) => {
       this.encode(pass, draws);
     });
@@ -426,72 +477,184 @@ export class Renderer {
     return rendered;
   }
 
-  /** The draws whose world-space bounding sphere is not entirely outside one of the six planes of `viewProj`, in draw-list order. */
+  /**
+   * The draws whose world-space bounding sphere is not entirely outside one of the six planes of `viewProj`, in
+   * draw-list order. The result is `this.drawn`, updated in place; `this.drawnUnchanged` says whether it holds the
+   * same draws as after the previous frame, in which case the loop is skipped altogether when nothing it reads
+   * changed: the draw list, the view-projection matrix (the same object while the camera is unchanged), the
+   * spheres (only `applyWorldChanges` writes them) and whether culling is on.
+   */
   private cull(draws: readonly DrawItem[], viewProj: Mat4): readonly DrawItem[] {
-    if (!this.cullingEnabled) return draws;
+    if (!this.cullingEnabled) {
+      this.drawnUnchanged = !this.cullDirty && this.cullListed === draws;
+      this.cullListed = draws;
+      this.cullViewProj = undefined;
+      this.cullDirty = false;
+      return draws;
+    }
     const { planes, drawn, sphereCentres, sphereScales } = this;
+    if (!this.cullDirty && this.cullListed === draws && this.cullViewProj === viewProj && this.changedCount === 0) {
+      this.drawnUnchanged = true;
+      return drawn;
+    }
     extractFrustumPlanes(viewProj, planes);
-    drawn.length = 0;
-    for (const draw of draws) {
+    let unchanged = !this.cullDirty && this.cullListed === draws;
+    let count = 0;
+    for (let i = 0; i < draws.length; i++) {
+      const draw = draws[i] as DrawItem;
       const e = draw.entity;
       const radius = draw.gpuMesh.boundingRadius * (sphereScales[e] ?? 0);
-      if (sphereIntersectsFrustum(planes, sphereCentres[e * 3] ?? 0, sphereCentres[e * 3 + 1] ?? 0, sphereCentres[e * 3 + 2] ?? 0, radius)) drawn.push(draw);
+      if (sphereIntersectsFrustum(planes, sphereCentres[e * 3] ?? 0, sphereCentres[e * 3 + 1] ?? 0, sphereCentres[e * 3 + 2] ?? 0, radius)) {
+        if (drawn[count] !== draw) {
+          unchanged = false;
+          drawn[count] = draw;
+        }
+        count += 1;
+      }
     }
+    if (drawn.length !== count) {
+      unchanged = false;
+      drawn.length = count;
+    }
+    this.drawnUnchanged = unchanged;
+    this.cullListed = draws;
+    this.cullViewProj = viewProj;
+    this.cullDirty = false;
     return drawn;
   }
 
   /**
-   * Splits the culled draws into this frame's draw calls (`this.batches`) and, for the instanced ones, copies the
-   * matrices of their entities into the instance buffer in draw order. Returns the number of instanced draws.
+   * Splits the culled draws into this frame's draw calls (`this.batches`) and, for the instanced ones, brings the
+   * instance records up to date with the matrices of their entities (`entityMatrices`), uploading only the words
+   * that differ from what the GPU buffer holds. When the culled draw list is the one the batches were made for, only
+   * the records of the entities whose world matrix changed this frame are visited; otherwise every record is.
+   * Returns the number of instanced draws.
    */
   private groupDraws(draws: readonly DrawItem[]): number {
     const possible = this.instancingPossible;
+    if (this.batchedDraws === draws && this.drawnUnchanged) {
+      if (this.instancedBatches === 0 || this.changedCount === 0) return this.instancedBatches;
+      const { instanceBuffer, recordOf, changedEntities } = this;
+      if (instanceBuffer === undefined) return 0;
+      this.instanceLow = Number.MAX_SAFE_INTEGER;
+      this.instanceHigh = -1;
+      for (let i = 0; i < this.changedCount; i++) {
+        const entity = changedEntities[i] as number;
+        const record = recordOf[entity] as number;
+        if (record >= 0) this.updateRecord(record, entity);
+      }
+      this.uploadInstances(instanceBuffer);
+      return this.instancedBatches;
+    }
     const instanced = batchDraws(draws, (draw) => possible && draw.instancedPipeline !== undefined, this.batches);
-    if (instanced === 0) return 0;
+    this.instancedBatches = instanced;
+    this.recordOf.fill(-1);
     let records = 0;
-    for (const batch of this.batches) if (batch.firstInstance >= 0) records = batch.firstInstance + batch.count;
+    for (let b = 0; b < this.batches.length; b++) {
+      const batch = this.batches[b] as Batch;
+      if (batch.firstInstance >= 0) records = batch.firstInstance + batch.count;
+    }
+    if (instanced === 0) {
+      this.batchedDraws = draws;
+      return 0;
+    }
     this.ensureInstances(records);
-    const { instanceBuffer, entityMatrices, instanceStaging } = this;
+    const { instanceBuffer } = this;
     if (instanceBuffer === undefined) return 0;
-    for (const batch of this.batches) {
+    this.instanceLow = Number.MAX_SAFE_INTEGER;
+    this.instanceHigh = -1;
+    for (let b = 0; b < this.batches.length; b++) {
+      const batch = this.batches[b] as Batch;
       if (batch.firstInstance < 0) continue;
       for (let k = 0; k < batch.count; k++) {
-        const entity = draws[batch.start + k]?.entity ?? 0;
-        instanceStaging.set(entityMatrices.subarray(entity * INSTANCE_FLOATS, (entity + 1) * INSTANCE_FLOATS), (batch.firstInstance + k) * INSTANCE_FLOATS);
+        const entity = (draws[batch.start + k] as DrawItem).entity;
+        this.recordOf[entity] = batch.firstInstance + k;
+        this.updateRecord(batch.firstInstance + k, entity);
       }
     }
-    this.uploadInstances(instanceBuffer, records * INSTANCE_FLOATS);
+    this.uploadInstances(instanceBuffer);
+    this.batchedDraws = draws;
     return instanced;
   }
 
-  /** Uploads the changed part of the first `floats` staged values: from the first to the last word that differs from the GPU copy. */
-  private uploadInstances(buffer: GPUBuffer, floats: number): void {
-    const staged = new Uint32Array(this.instanceStaging.buffer, 0, floats);
-    const held = new Uint32Array(this.instanceMirror.buffer, 0, floats);
-    let first = 0;
-    while (first < floats && staged[first] === held[first]) first += 1;
-    if (first === floats) return;
-    let last = floats - 1;
-    while (staged[last] === held[last]) last -= 1;
-    held.set(staged.subarray(first, last + 1), first);
-    this.options.registry.writeBuffer(this.options.device.queue, buffer, first * 4, this.instanceMirror.buffer as ArrayBuffer, first * 4, (last + 1 - first) * 4);
+  /** Copies the 32 words of `entity`'s matrices into instance record `record` where they differ, widening the changed word range. */
+  private updateRecord(record: number, entity: number): void {
+    const source = entity * INSTANCE_FLOATS;
+    const target = record * INSTANCE_FLOATS;
+    const { entityWords, instanceMirrorWords } = this;
+    for (let k = 0; k < INSTANCE_FLOATS; k++) {
+      const word = entityWords[source + k] as number;
+      if (word !== instanceMirrorWords[target + k]) {
+        instanceMirrorWords[target + k] = word;
+        if (target + k < this.instanceLow) this.instanceLow = target + k;
+        if (target + k > this.instanceHigh) this.instanceHigh = target + k;
+      }
+    }
   }
 
-  /** `P * V` of the active camera for the target's aspect ratio. */
+  /** Uploads the words that `updateRecord` changed, from the first to the last of them, in one `writeBuffer`. */
+  private uploadInstances(buffer: GPUBuffer): void {
+    if (this.instanceHigh < this.instanceLow) return;
+    const first = this.instanceLow;
+    this.options.registry.writeBuffer(this.options.device.queue, buffer, first * 4, this.instanceMirror.buffer as ArrayBuffer, first * 4, (this.instanceHigh + 1 - first) * 4);
+  }
+
+  /**
+   * `P * V` of the active camera for the target's aspect ratio. The matrix is a function of the camera's position,
+   * target or rotation, its projection and the aspect ratio; when those numbers equal the previous frame's the
+   * previous matrix (the same object) is returned.
+   */
   private viewProjection(aspect: number): Mat4 {
     const { camera } = this.options.world;
+    const key = this.nextViewKey;
+    const projection = camera.projection;
+    const { position, target, rotation } = camera;
+    key[0] = aspect;
+    key[1] = projection.kind === "perspective" ? 0 : 1;
+    key[2] = projection.kind === "perspective" ? projection.fov_y : projection.height;
+    key[3] = projection.near;
+    key[4] = projection.far;
+    key[5] = position.x;
+    key[6] = position.y;
+    key[7] = position.z;
+    if (target !== null) {
+      key[8] = 1;
+      key[9] = target.x;
+      key[10] = target.y;
+      key[11] = target.z;
+      key[12] = 0;
+    } else {
+      key[8] = 0;
+      key[9] = rotation.x;
+      key[10] = rotation.y;
+      key[11] = rotation.z;
+      key[12] = rotation.w;
+    }
+    if (this.viewKeyValid) {
+      let same = true;
+      for (let i = 0; i < VIEW_KEY_LENGTH; i++) {
+        if (key[i] !== this.viewKey[i]) {
+          same = false;
+          break;
+        }
+      }
+      if (same) return this.lastViewProj;
+    }
+    this.viewKeyValid = false;
     try {
-      this.lastView = viewMatrix(camera.position, camera.target !== null ? { target: camera.target } : { rotation: camera.rotation });
+      this.lastView = viewMatrix(position, target !== null ? { target } : { rotation });
+      this.viewKeyValid = true;
     } catch (error) {
       // Unreachable for checked programs (position = target is rejected on write, E8011); keep the last view.
       this.reportCamera(error instanceof Error ? error.message : String(error));
     }
-    const projection = camera.projection;
     const p =
       projection.kind === "perspective"
         ? perspective(projection.fov_y, aspect, projection.near, projection.far)
         : orthographic(projection.height, aspect, projection.near, projection.far);
-    return multiply(p, this.lastView);
+    this.lastViewProj = multiply(p, this.lastView);
+    if (this.viewKeyValid) this.viewKey.set(key);
+    return this.lastViewProj;
   }
 
   private reportCamera(message: string): void {
@@ -523,12 +686,33 @@ export class Renderer {
     return viewProj;
   }
 
-  private writeObjectBlocks(): void {
+  /**
+   * Brings the per-entity render state up to date with the world: for every entity whose world matrix was recomputed
+   * since the last frame (and that has an object block) whose model matrix differs from the one held here, the bounding
+   * sphere and the model and normal matrices (`entityMatrices`) are refreshed and the entity's object block is marked
+   * stale. The block itself is written only when a draw reads it (`writeIndividualObjectBlocks`). Entities whose
+   * world matrix was recomputed to the same bytes cost one comparison.
+   */
+  private applyWorldChanges(): void {
     const { world } = this.options;
-    for (const index of world.takeWorldChanges()) {
-      const slot = this.objectSlots[index];
-      if (slot === undefined) continue;
+    const changed = world.takeWorldChanges();
+    if (this.changedEntities.length < changed.length) this.changedEntities = new Int32Array(Math.max(changed.length, this.changedEntities.length * 2));
+    const { objectSlots, entityMatrices, entityWords, objectStale, changedEntities } = this;
+    let count = 0;
+    for (let c = 0; c < changed.length; c++) {
+      const index = changed[c] as number;
+      if (objectSlots[index] === undefined) continue;
       const model = world.worldMatrix(index);
+      const base = index * INSTANCE_FLOATS;
+      // Bytes decide, as `writeIfChanged` did: `Object.is` tells +0 from -0 (and treats NaN as equal to itself).
+      let same = true;
+      for (let k = 0; k < 16; k++) {
+        if (!Object.is(entityMatrices[base + k], model[k])) {
+          same = false;
+          break;
+        }
+      }
+      if (same) continue;
       // The mesh-independent part of the bounding sphere: the centre (the model matrix applied to the mesh's local
       // centre, which is the origin for the primitive shapes), and the largest scale (radius of a unit-radius mesh).
       worldBoundingSphere(model, 1, this.sphere, this.localCentres[index]);
@@ -537,15 +721,39 @@ export class Renderer {
       this.sphereCentres[index * 3 + 2] = this.sphere.z;
       this.sphereScales[index] = this.sphere.radius;
       const normal = normalMatrix(model);
-      if (this.instancingPossible) {
-        this.entityMatrices.set(model, index * INSTANCE_FLOATS);
-        this.entityMatrices.set(normal, index * INSTANCE_FLOATS + 16);
-      }
-      this.objectArena.writeIfChanged(slot, (memory, base) => {
-        this.writeModel(memory, base, model);
-        this.writeNormalMatrix(memory, base, normal);
-      });
+      entityMatrices.set(model, base);
+      entityMatrices.set(normal, base + 16);
+      objectStale[index] = 1;
+      changedEntities[count] = index;
+      count += 1;
     }
+    this.changedCount = count;
+  }
+
+  /** Writes the object block of every individually drawn entity whose block is stale (`applyWorldChanges`). */
+  private writeIndividualObjectBlocks(draws: readonly DrawItem[]): void {
+    const { batches, objectStale } = this;
+    for (let b = 0; b < batches.length; b++) {
+      const batch = batches[b] as Batch;
+      if (batch.firstInstance >= 0) continue;
+      const draw = draws[batch.start] as DrawItem;
+      if (objectStale[draw.entity] === 1) this.writeObjectBlock(draw.entity, draw.objectSlot);
+    }
+  }
+
+  /** `MtekObject` (model, normal matrix) of `entity` into its slot, through the `builtin:object` writers. */
+  private writeObjectBlock(entity: number, slot: number): void {
+    const { entityMatrices, modelScratch, normalScratch } = this;
+    const base = entity * INSTANCE_FLOATS;
+    for (let k = 0; k < 16; k++) {
+      modelScratch[k] = entityMatrices[base + k] as number;
+      normalScratch[k] = entityMatrices[base + 16 + k] as number;
+    }
+    this.objectArena.writeIfChanged(slot, (memory, offset) => {
+      this.writeModel(memory, offset, modelScratch);
+      this.writeNormalMatrix(memory, offset, normalScratch);
+    });
+    this.objectStale[entity] = 0;
   }
 
   private encode(pass: GPURenderPassEncoder, draws: readonly DrawItem[]): void {

@@ -400,16 +400,17 @@ describe("compatible instancing in the renderer", () => {
     expect(debug.counters()["uploads"]).toBe(before["uploads"]);
     expect(debug.counters()["uploadBytes"]).toBe(before["uploadBytes"]);
 
-    // E2 moves along x: its object block (128 bytes: two matrices) uploads, and of its instance record only
-    // the one float that changed (model column 3, x: 4 bytes, the range from the first to the last changed word).
+    // E2 moves along x: of its instance record only the one float that changed uploads (model column 3, x: 4 bytes,
+    // the range from the first to the last changed word). Its object block is not read by an instanced draw, so it
+    // is not written (decision 0120).
     const buffer = liveBuffer(host, INSTANCE_BUFFER);
     if (buffer === undefined) throw new Error("no instance buffer");
     const bytesBefore = Uint8Array.from(buffer.contents);
     ctx.setTransform(ctx.e[2], "position", { x: 1, y: 0, z: 0 });
     debug.step(1, 0.016);
     const after = debug.counters();
-    expect((after["uploads"] ?? 0) - (before["uploads"] ?? 0)).toBe(2);
-    expect((after["uploadBytes"] ?? 0) - (before["uploadBytes"] ?? 0)).toBe(128 + 4);
+    expect((after["uploads"] ?? 0) - (before["uploads"] ?? 0)).toBe(1);
+    expect((after["uploadBytes"] ?? 0) - (before["uploadBytes"] ?? 0)).toBe(4);
     const changed = Array.from(buffer.contents).flatMap((byte, i) => (byte === bytesBefore[i] ? [] : [Math.floor(i / INSTANCE_STRIDE)]));
     expect([...new Set(changed)]).toEqual([2]);
     expect(recordXs(host, 5)).toEqual([-4, -2, 1, 2, 4]);

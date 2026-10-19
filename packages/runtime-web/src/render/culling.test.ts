@@ -223,16 +223,21 @@ describe("frustum culling in the renderer", () => {
     app.dispose();
   });
 
-  it("still writes the object block of a culled entity, so it is right when it returns", async () => {
-    const { host, debug, app, manifest } = await mountEntities(ROW, { camera: [{ x: 100, y: 0, z: 10 }, { x: 100, y: 0, z: 0 }] });
+  it("an entity that was culled has the right object block when it returns (the block is written when a draw reads it, decision 0120)", async () => {
+    const { host, debug, app, manifest, moveCamera } = await mountEntities(ROW, { camera: [{ x: 100, y: 0, z: 10 }, { x: 100, y: 0, z: 0 }] });
     debug.step(1, 0.016);
     expect(debug.counters()).toMatchObject({ drawCalls: 0, culledObjects: 5 });
     const model = manifest.layouts.find((layout) => layout.id === "builtin:object")?.root.members.find((m) => m.name === "model")?.node.offset;
     if (model === undefined) throw new Error("no model member");
     const object = bufferLabelled(host, "mtek:uniform-arena:builtin:object");
     // Translation of entity 3 (x = 2): elements 12..14 of its column-major model matrix, in its 256-byte slot.
-    const translation = new Float32Array(object.contents.buffer.slice(3 * 256 + model + 12 * 4, 3 * 256 + model + 15 * 4));
-    expect(Array.from(translation)).toEqual([2, 0, 0]);
+    const translation = (): number[] => Array.from(new Float32Array(object.contents.buffer.slice(3 * 256 + model + 12 * 4, 3 * 256 + model + 15 * 4)));
+    // Nothing reads the block while the entity is culled, so nothing is uploaded for it.
+    expect(translation()).toEqual([0, 0, 0]);
+    moveCamera({ x: 0, y: 0, z: 10 }, { x: 0, y: 0, z: 0 });
+    debug.step(1, 0.016);
+    expect(drawnEntities(host)).toEqual([0, 1, 2, 3, 4]);
+    expect(translation()).toEqual([2, 0, 0]);
     app.dispose();
   });
 

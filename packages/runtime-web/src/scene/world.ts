@@ -291,7 +291,14 @@ export class World {
   private readonly resolvedBySlot: (ResolvedEntity | undefined)[] = [];
   private worlds: (Mat4 | undefined)[];
   private transformDirty: Uint8Array;
+  /** Whether some entity's `transformDirty` flag is set: `propagate` does nothing otherwise (decision 0120). */
+  private transformsPending = true;
+  /** Slots whose world matrix was recomputed since `takeWorldChanges`; `worldChanged` is the membership flag, `changedList` the slots in order. */
   private worldChanged: Uint8Array;
+  private changedList: number[] = [];
+  private takenList: number[] = [];
+  /** Scratch of `propagate`: the named entities recomputed in this pass. */
+  private recomputed: Uint8Array;
   private frameValues: FrameValues = Object.freeze({ time: 0, delta: 0, index: 0 });
   private initialising = false;
   private visibility = 0;
@@ -337,6 +344,7 @@ export class World {
     this.worlds = Array.from({ length: count }, () => new Float32Array(16));
     this.transformDirty = new Uint8Array(count).fill(1);
     this.worldChanged = new Uint8Array(count);
+    this.recomputed = new Uint8Array(count);
     const host: DynamicHost = {
       get ctx(): object {
         if (holder.ctx === undefined) throw new RuntimeInternalError("the context was used before the world was built.");
@@ -487,7 +495,14 @@ export class World {
       }
     }
     // The spawned entities are rebuilt by `dynamic.rebuild` once the new stores exist.
-    this.worldChanged.fill(1);
+    for (let slot = 0; slot < this.worldChanged.length; slot++) this.markChanged(slot);
+  }
+
+  /** Records that the world matrix of `slot` was recomputed (once per `takeWorldChanges` period). */
+  private markChanged(slot: number): void {
+    if (this.worldChanged[slot] === 1) return;
+    this.worldChanged[slot] = 1;
+    this.changedList.push(slot);
   }
 
   /** Sets `ctx.frame` for the frame about to run. */
@@ -501,7 +516,10 @@ export class World {
    * The named entities come first; a spawned entity is a root. Returns the number of world matrices recomputed.
    */
   propagate(): number {
-    const recomputed = new Uint8Array(this.entities.length);
+    // Nothing was written since the last pass: no flag is set, so there is nothing to recompute and no descendant to follow.
+    if (!this.transformsPending) return 0;
+    const recomputed = this.recomputed;
+    recomputed.fill(0);
     let count = 0;
     for (const entity of this.structure.entities) {
       const i = entity.index;
@@ -513,7 +531,7 @@ export class World {
       const parentWorld = parent === null ? undefined : this.worlds[parent];
       this.worlds[i] = parentWorld === undefined ? local : multiply(parentWorld, local);
       this.transformDirty[i] = 0;
-      this.worldChanged[i] = 1;
+      this.markChanged(i);
       recomputed[i] = 1;
       count += 1;
     }
@@ -523,9 +541,10 @@ export class World {
       const record = entity.record;
       this.worlds[i] = fromRotationTranslationScale(record.rotation, record.position, record.scale);
       this.transformDirty[i] = 0;
-      this.worldChanged[i] = 1;
+      this.markChanged(i);
       count += 1;
     }
+    this.transformsPending = false;
     return count;
   }
 
@@ -536,14 +555,28 @@ export class World {
     return matrix;
   }
 
-  /** Returns, by slot, the entities whose world matrix changed since the last call, and forgets them. */
-  takeWorldChanges(): number[] {
-    const changed: number[] = [];
-    this.worldChanged.forEach((flag, index) => {
-      if (flag === 1) changed.push(index);
-    });
-    this.worldChanged.fill(0);
-    return changed;
+  /**
+   * Returns the slots whose world matrix was recomputed since the last call, in the order `propagate` recomputed them
+   * (each once), and forgets them. The array is reused: it is valid until the next call.
+   */
+  takeWorldChanges(): readonly number[] {
+    const list = this.changedList;
+    const flags = this.worldChanged;
+    let kept = 0;
+    // Entries of slots that were unregistered since (flag cleared) or listed twice are dropped here.
+    for (let k = 0; k < list.length; k++) {
+      const slot = list[k] as number;
+      if (flags[slot] === 1) {
+        flags[slot] = 0;
+        list[kept] = slot;
+        kept += 1;
+      }
+    }
+    list.length = kept;
+    this.changedList = this.takenList;
+    this.changedList.length = 0;
+    this.takenList = list;
+    return list;
   }
 
   /** The record in slot `slot`: a named entity or a spawned one that exists. */
@@ -598,6 +631,7 @@ export class World {
     this.indexByRecord.set(record, slot);
     this.worlds[slot] = new Float32Array(16);
     this.transformDirty[slot] = 1;
+    this.transformsPending = true;
     this.worldChanged[slot] = 0;
   }
 
@@ -653,6 +687,7 @@ export class World {
       else record.scale = value;
     }
     this.transformDirty[index] = 1;
+    this.transformsPending = true;
   }
 
   private setVisible(entity: unknown, value: unknown): void {
