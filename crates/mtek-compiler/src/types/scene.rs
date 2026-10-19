@@ -41,7 +41,6 @@ use super::value::{ConstValue, from_registry};
 use super::{NonConstant, NonConstantKind};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::layout::builtin::MAX_LIGHTS;
-use crate::project::edit_distance;
 use crate::resolve::gate::{
     NON_CONSTANT_INITIAL_VALUES, gate_note, hard_gate_message, is_implemented,
 };
@@ -940,13 +939,16 @@ impl Checker<'_> {
             ),
         )
         .at(name.span);
-        let close: Vec<&str> = valid
-            .iter()
-            .copied()
-            .filter(|candidate| (1..=2).contains(&edit_distance(&name.name, candidate)))
-            .collect();
-        if let [single] = close.as_slice() {
-            diagnostic = diagnostic.help(format!("did you mean '{single}'?"));
+        // The nearest fields (decision 0113): a typo, the same name in another letter case, or a
+        // field that contains the written name (`pos` for `position`).
+        let near = crate::hints::nearest(&name.name, valid.iter().copied(), 3);
+        match near.as_slice() {
+            [] => {}
+            [single] => diagnostic = diagnostic.help(format!("did you mean '{single}'?")),
+            several => {
+                let several: Vec<String> = several.iter().map(|f| format!("'{f}'")).collect();
+                diagnostic = diagnostic.help(format!("did you mean {}?", several.join(" or ")));
+            }
         }
         self.sink.push(diagnostic);
     }

@@ -136,7 +136,7 @@ Every fact that only this demonstration exercises (21):
 | `type:material` | 9 | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+98) |
 | `type:mesh` | 6 | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+98) |
 | `type:quat` | 2 |  |  |  | x | `tests/semantics/pass/types/ctor_quat_euler` (+17) |
-| `type:sampler` | 0 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
+| `type:sampler` | 1 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
 | `type:string` | 0 | x |  |  |  | `tests/semantics/pass/types/string_constant` (+5) |
 | `type:texture` | 0 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
 | `type:u32` | 1 |  |  |  |  | `tests/semantics/pass/types/conv_to_f32` (+23) |
@@ -188,7 +188,7 @@ Every fact that only this demonstration exercises (21):
 
 | Feature | Neg | CFG | PHY | MOD | PUL | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
-| `enum:Key` | 4 |  | x | x | x | `tests/semantics/pass/handler_key_down` (+29) |
+| `enum:Key` | 6 |  | x | x | x | `tests/semantics/pass/handler_key_down` (+29) |
 
 ### Namespaces (8)
 
@@ -200,7 +200,7 @@ Every fact that only this demonstration exercises (21):
 | `namespace:lighting` | 0 | x | x |  |  | `tests/semantics/pass/configured_entry_scene` (+75) |
 | `namespace:mat4` | 1 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_identity` (+13) |
 | `namespace:quat` | 2 | x | x |  | x | `tests/semantics/pass/types/ctor_quat_euler` (+38) |
-| `namespace:sampler` | 0 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
+| `namespace:sampler` | 1 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
 | `namespace:texture` | 0 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
 
 ### Functions (64)
@@ -218,7 +218,7 @@ Every fact that only this demonstration exercises (21):
 | `function:atan2` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
 | `function:ceil` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:clamp` | 1 |  |  |  |  | `tests/semantics/pass/types/intrinsics_integer_overloads` (+4) |
-| `function:color.linear` | 0 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+104) |
+| `function:color.linear` | 1 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+104) |
 | `function:color.srgb` | 0 |  |  |  |  | `tests/semantics/pass/types/ctor_color_srgb` (+4) |
 | `function:cos` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:cross` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_geometry` (+1) |
@@ -255,7 +255,7 @@ Every fact that only this demonstration exercises (21):
 | `function:reflect` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_geometry` (+2) |
 | `function:round` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
 | `function:sample` | 4 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
-| `function:sampler.linear_clamp` | 0 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+2) |
+| `function:sampler.linear_clamp` | 1 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+2) |
 | `function:sampler.linear_repeat` | 0 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+79) |
 | `function:sampler.nearest_clamp` | 0 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+7) |
 | `function:sampler.nearest_repeat` | 0 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+2) |
@@ -268,7 +268,7 @@ Every fact that only this demonstration exercises (21):
 | `function:step` | 0 | x |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
 | `function:tan` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:texture.black` | 0 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+3) |
-| `function:texture.white` | 1 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
+| `function:texture.white` | 3 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
 | `function:transpose` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_geometry` (+2) |
 | `function:trunc` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 
@@ -278,7 +278,7 @@ Every fact that only this demonstration exercises (21):
 |---|:-:|:-:|:-:|:-:|:-:|---|
 | `value:frame.delta` | 0 |  |  |  |  | `tests/semantics/pass/frame_and_camera_reads` |
 | `value:frame.index` | 0 |  |  |  |  | `tests/semantics/pass/frame_and_camera_reads` |
-| `value:frame.time` | 2 |  |  | x | x | `tests/browser/fixtures/m5/prefab_instances` (+11) |
+| `value:frame.time` | 3 |  |  | x | x | `tests/browser/fixtures/m5/prefab_instances` (+11) |
 
 ### Methods (10)
 
