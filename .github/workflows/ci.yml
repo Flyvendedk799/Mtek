@@ -104,8 +104,6 @@ jobs:
       # Offscreen readback alone passes even when headless Chromium composites a blank canvas.
       - name: Browser tests (software project, virtual display)
         run: xvfb-run -a npm run test:browser -- --project=software
-        env:
-          MTEK_HEADED: "1"
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v7

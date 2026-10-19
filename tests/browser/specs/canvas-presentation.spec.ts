@@ -55,7 +55,7 @@ test("raw WebGPU presents an opaque red canvas through base and sRGB views", asy
         context.configure({ device, format: preferredFormat, alphaMode: "opaque", ...(id === "srgb" ? { viewFormats: [srgbFormat] } : {}) });
       }
       const draw = (): void => {
-        if (disposed) return;
+        if (disposed || probe.errors.length > 0) return;
         for (const [index, context] of contexts.entries()) {
           // Keep the command buffers separate so one invalid view cannot invalidate both clear passes.
           const encoder = device.createCommandEncoder();
@@ -82,7 +82,11 @@ test("raw WebGPU presents an opaque red canvas through base and sRGB views", asy
       };
       draw(); // Submit once synchronously, then keep presenting across browser frames.
     });
-    await page.waitForFunction(() => ((window as ProbeWindow).presentationProbe?.framesCompleted ?? 0) > 0, undefined, { timeout: 10_000 });
+    await page.waitForFunction(() => {
+      const probe = (window as ProbeWindow).presentationProbe;
+      return (probe?.framesCompleted ?? 0) > 0 || (probe?.errors.length ?? 0) > 0;
+    }, undefined, { timeout: 10_000 });
+    expect(await page.evaluate(() => (window as ProbeWindow).presentationProbe?.errors), "raw WebGPU queue must complete without device loss or validation errors").toEqual([]);
     await expect.poll(async () => {
       const fractions: number[] = [];
       for (const id of ["base", "srgb"]) {

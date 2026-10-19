@@ -45,6 +45,6 @@ npm run test:unit -w @mtek/codegen-tests -- product-configurator.test.ts
 npm run test:browser -- --project=software specs/product/configurator.spec.ts
 ```
 
-On Linux CI or a machine without a display, run the browser command with `MTEK_HEADED=1 xvfb-run -a npm run test:browser -- --project=software specs/product/configurator.spec.ts`. The virtual display is needed for the canvas screenshot assertion, not just GPU readback; see [the testing setup](../../spec/testing.md).
+On Linux CI or a machine without a display, run the browser command with `xvfb-run -a npm run test:browser -- --project=software specs/product/configurator.spec.ts`. The virtual display is needed for the canvas screenshot assertion, not just GPU readback; see [the testing setup](../../spec/testing.md).
 
 The codegen suite compiles this actual example in release mode, type-checks its actual host against generated declarations, and executes the generated scene to check independent assembly state, bindings, scene-originated interactions, quote arithmetic, and domain constraints. Browser global setup builds a separate test-mode copy and type-checks that host too. Its browser specs cover real rendering, inputs and outputs, keyboard isolation, reset, disposal, and repeated remounting. These browser tests require a usable WebGPU adapter; NOT-RUN is not a pass.

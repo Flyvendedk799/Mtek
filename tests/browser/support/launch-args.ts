@@ -42,10 +42,9 @@ export function hardwareLaunchArgs(
 }
 
 /**
- * SwiftShader correctness runs must present the canvas as well as render offscreen textures.
- * Linux uses the same ANGLE/Vulkan presentation path as the hardware project. Chromium's
- * disable-vulkan-surface switch presents via bitblt. Canvas screenshot tests also need a real
- * display on Linux (CI uses headed Chromium under Xvfb); these flags alone are insufficient.
+ * SwiftShader correctness runs exercise the compositor as well as offscreen textures.
+ * Linux headless Chromium needs GPU compositing plus a virtual X display (CI uses Xvfb).
+ * Keep ANGLE on SwiftShader while Dawn and the compositor use software Vulkan.
  */
 export function softwareLaunchArgs(
   env: Environment = process.env,
@@ -56,7 +55,7 @@ export function softwareLaunchArgs(
     "--use-webgpu-adapter=swiftshader",
     "--enable-webgpu-developer-features",
     ...(platform === "linux"
-      ? ["--use-angle=vulkan", "--enable-features=Vulkan", "--use-vulkan=swiftshader", "--disable-vulkan-surface"]
+      ? ["--enable-gpu", "--ignore-gpu-blocklist", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-features=Vulkan", "--use-vulkan=swiftshader"]
       : []),
     ...extraBrowserArgs(env),
   ];

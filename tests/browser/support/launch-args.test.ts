@@ -19,12 +19,12 @@ describe("launch arguments", () => {
     expect(hardwareLaunchArgs({}, "darwin")).not.toContain("--use-angle=vulkan");
   });
 
-  it("selects the SwiftShader Vulkan presentation path only on Linux", () => {
+  it("enables the SwiftShader GPU compositor path only on Linux", () => {
     const windows = ["--enable-unsafe-webgpu", "--use-webgpu-adapter=swiftshader", "--enable-webgpu-developer-features"];
     expect(softwareLaunchArgs({}, "win32")).toEqual(windows);
     expect(softwareLaunchArgs({}, "darwin")).toEqual(windows);
     expect(softwareLaunchArgs({}, "linux")).toEqual([
-      ...windows, "--use-angle=vulkan", "--enable-features=Vulkan", "--use-vulkan=swiftshader", "--disable-vulkan-surface",
+      ...windows, "--enable-gpu", "--ignore-gpu-blocklist", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-features=Vulkan", "--use-vulkan=swiftshader",
     ]);
     expect(softwareLaunchArgs({ MTEK_BROWSER_ARGS: "--disable-gpu" }, "linux").at(-1)).toBe("--disable-gpu");
   });
