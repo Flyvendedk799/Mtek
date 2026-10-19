@@ -492,14 +492,25 @@ impl Parser<'_> {
                 Code::E1001,
                 "`bind(...)` is only allowed as the value of a field.",
             ),
-            _ => {
+            kind => {
                 let found = self.found();
-                Diagnostic::new(
+                let diagnostic = Diagnostic::new(
                     Code::E1001,
                     format!("Expected an expression, found {found}."),
                 )
                 .expected("an expression")
-                .actual(found)
+                .actual(found);
+                match kind {
+                    TokenKind::KwIf => diagnostic
+                        .note("`if` is a statement and gives no value: v0.1 has no `if` expression and no ternary operator")
+                        .help("declare the variable first and assign it in the branches: `var x = a; if cond { x = b; }`; for a number, `mix(a, b, t)` or `clamp` often replaces the branch"),
+                    TokenKind::KwFor | TokenKind::KwReturn | TokenKind::KwLet | TokenKind::KwVar => {
+                        diagnostic
+                            .note(format!("{} starts a statement and gives no value, so it cannot be part of an expression", kind.describe()))
+                            .help("write the statement on a line of its own, before the expression that needs its result")
+                    }
+                    _ => diagnostic,
+                }
             }
         };
         self.error(diagnostic.at(at));
@@ -647,7 +658,7 @@ impl Parser<'_> {
             ),
         )
         .at(span)
-        .help("choose another name");
+        .help(reserved_help(word));
         self.report(diagnostic);
     }
 
@@ -754,5 +765,19 @@ impl Parser<'_> {
             }
             self.bump();
         }
+    }
+}
+
+/// What to write instead of a reserved word that stands where a name is expected (`E0013`).
+fn reserved_help(word: &str) -> &'static str {
+    match word {
+        "while" | "loop" => {
+            "v0.1 has only the counted loop `for i in 0..n { ... }` (the bounds are integers, `break` leaves it early); there is no `while` or `loop`"
+        }
+        "match" => "v0.1 has no pattern matching; compare with `==` in an `if ... else if ... else` chain",
+        "enum" => "v0.1 has no user-defined enums; use `i32` constants, or the built-in `Key` for keys",
+        "mut" => "variables are declared with `var` (assignable) or `let` (fixed); there is no `mut`",
+        "impl" => "v0.1 has no methods or `impl` blocks; write a function and pass the value as an argument",
+        _ => "choose another name",
     }
 }

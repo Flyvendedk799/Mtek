@@ -382,7 +382,17 @@ impl Checker<'_> {
             sound = false;
         }
         for call in &facts.calls {
-            if let Some(what) = self.impure_call(call) {
+            if let Some((what, user_cpu_fn)) = self.impure_call(call) {
+                let reason = if user_cpu_fn {
+                    "a `cpu fn` may only be called from `update`, `fixed_update` and `on` handlers, because it may change state or read the outside world; a binding may call only `fn` functions and pure built-ins (math, vector, quaternion and colour functions)"
+                } else {
+                    "a CPU intrinsic (`random`, `print`, `spawn`, `destroy`, a body command) may only be called from `update`, `fixed_update` and `on` handlers; a binding may call only `fn` functions and pure built-ins (math, vector, quaternion and colour functions)"
+                };
+                let help = if user_cpu_fn {
+                    "if the function uses no CPU-only operation, declare it with `fn`; otherwise call it in `update`, assign the result to a `state` and write `bind(that_state)`"
+                } else {
+                    "call it in `update`, assign the result to a `state` and write `bind(that_state)`; the binding then follows the state every frame"
+                };
                 self.report(
                     Diagnostic::new(
                         Code::E5005,
@@ -390,7 +400,8 @@ impl Checker<'_> {
                     )
                     .at(call.span)
                     .note("a binding is re-evaluated every frame; it may read state, entity fields and `frame`, and call pure functions")
-                    .help("compute the value in `update` and assign it to a state, then bind the state"),
+                    .note(reason)
+                    .help(help),
                 );
                 sound = false;
             }
@@ -436,7 +447,7 @@ impl Checker<'_> {
     }
 
     /// What makes `call` impure, if it does: a `cpu fn` or a CPU-only built-in.
-    fn impure_call(&self, call: &CallFact) -> Option<String> {
+    fn impure_call(&self, call: &CallFact) -> Option<(String, bool)> {
         match &call.callee {
             Callee::Function(def) => {
                 let cpu = match self.res.def(*def).map(|d| d.kind) {
@@ -448,10 +459,10 @@ impl Checker<'_> {
                     .def(*def)
                     .map(|d| d.name.clone())
                     .unwrap_or_default();
-                cpu.then(|| format!("the `cpu fn` '{name}'"))
+                cpu.then(|| (format!("the `cpu fn` '{name}'"), true))
             }
             Callee::Builtin(builtin) => (builtin.domain == Domain::Cpu || builtin.handlers_only)
-                .then(|| format!("the CPU intrinsic `{}`", builtin.name)),
+                .then(|| (format!("the CPU intrinsic `{}`", builtin.name), false)),
         }
     }
 

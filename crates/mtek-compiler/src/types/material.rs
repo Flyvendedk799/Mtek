@@ -71,6 +71,19 @@ const ALPHA_PARAM: &str = "a";
 /// The help of `E4030`.
 const PARAM_TYPES: &str = "material params are bool, i32, u32, f32, vec2, vec3, vec4, mat4, quat, color, structs and arrays of those, and texture and sampler (as params of their own)";
 
+/// What a default of a `texture` or `sampler` param can be (`E4031`).
+fn resource_default_help(ty: &Ty) -> Option<&'static str> {
+    match ty {
+        Ty::Texture => Some(
+            "a texture default is `texture.white()`, `texture.black()`, `asset.texture(\"file.png\")` or `asset.linear_texture(\"file.png\")`, or a constant of one of them",
+        ),
+        Ty::Sampler => Some(
+            "a sampler default is `sampler.linear_repeat()`, `sampler.linear_clamp()`, `sampler.nearest_repeat()` or `sampler.nearest_clamp()`",
+        ),
+        _ => None,
+    }
+}
+
 fn strip_parens(expr: &Expr) -> &Expr {
     let mut expr = expr;
     while let ExprKind::Paren(inner) = &expr.kind {
@@ -312,7 +325,8 @@ impl<'a> Checker<'a> {
                     ),
                 )
                 .at(reason.span)
-                .note("a default may use only literals, constants, operators, conversions, constructors and const-eligible built-in functions"),
+                .note("a default may use only literals, constants, operators, conversions, constructors and const-eligible built-in functions")
+                .help("a default is fixed when the material is declared; give a value that changes to the instance instead, where an entity uses the material (`material: Name { param: bind(some_state) }`)"),
             );
             return None;
         }
@@ -321,18 +335,20 @@ impl<'a> Checker<'a> {
         }
         if !self.out.interner.assignable(actual, ty) {
             let (expected, got) = (self.display(ty), self.display(actual));
-            self.sink.push(
-                Diagnostic::new(
-                    Code::E4031,
-                    format!(
-                        "The default of the param '{}' must have type {expected}, but it has type {got}.",
-                        name.name
-                    ),
-                )
-                .at(default.span)
-                .expected(expected)
-                .actual(got),
-            );
+            let mut diagnostic = Diagnostic::new(
+                Code::E4031,
+                format!(
+                    "The default of the param '{}' must have type {expected}, but it has type {got}.",
+                    name.name
+                ),
+            )
+            .at(default.span)
+            .expected(expected)
+            .actual(got);
+            if let Some(help) = resource_default_help(&self.out.interner.get(ty)) {
+                diagnostic = diagnostic.help(help);
+            }
+            self.sink.push(diagnostic);
             return None;
         }
         match folded {
@@ -726,8 +742,8 @@ impl<'a> Checker<'a> {
                 ),
             )
             .at(expr.span)
-            .note("textures and samplers are bound as resources, not values: they cannot be copied, stored in a local or passed to a function")
-            .help("write `sample(texture_param, sampler_param, uv)`"),
+            .note("textures and samplers are bound as resources, not values: they cannot be copied, stored in a local, returned or passed to a function")
+            .help("use the param directly: `sample(texture_param, sampler_param, uv)`; a helper function takes the `uv` (a `vec2`) or the `vec4` result of `sample`, never the texture or the sampler"),
         );
         true
     }
@@ -750,18 +766,24 @@ impl<'a> Checker<'a> {
             return;
         };
         let (name, span, shown) = (def.name.clone(), def.span, self.display(ty));
-        self.sink.push(
-            Diagnostic::new(
-                Code::E4040,
-                format!(
-                    "The fragment stage of material '{material}' cannot capture the constant '{name}': its type {shown} exists only on the CPU."
-                ),
-            )
-            .at(expr.span)
-            .related(span, format!("the constant '{name}' is declared here"))
-            .note("stage code may read only its input, the material's params, and constants and `fn`s that exist on the GPU")
-            .note(STAGE_CAPTURE_NOTE),
-        );
+        let diagnostic = Diagnostic::new(
+            Code::E4040,
+            format!(
+                "The fragment stage of material '{material}' cannot capture the constant '{name}': its type {shown} exists only on the CPU."
+            ),
+        )
+        .at(expr.span)
+        .related(span, format!("the constant '{name}' is declared here"))
+        .note("stage code may read only its input, the material's params, and constants and `fn`s that exist on the GPU");
+        // A texture or a sampler reaches a stage as a param; its default may be the constant.
+        let diagnostic = if matches!(self.out.interner.get(ty), Ty::Texture | Ty::Sampler) {
+            diagnostic.help(format!(
+                "declare a param of the material with the constant as its default, `param my_{shown}: {shown} = {name};`, and use that param here: a {shown} param can be used only as an argument of `sample`"
+            ))
+        } else {
+            diagnostic.note(STAGE_CAPTURE_NOTE)
+        };
+        self.sink.push(diagnostic);
     }
 
     /// `E4040` for a call of the `cpu fn` `id` in a stage.

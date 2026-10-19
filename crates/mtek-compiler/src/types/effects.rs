@@ -723,6 +723,23 @@ impl<'a> Graph<'a> {
                 ));
             }
             for (i, site) in node.facts.cpu_only.iter().enumerate() {
+                // `let t = texture.white();`: the call is `E4012` and the local only repeats it.
+                let from_cpu_call = site.value.is_some_and(|value| {
+                    node.facts.calls.iter().enumerate().any(|(call, fact)| {
+                        fact.span == value
+                            && matches!(
+                                self.reached(index, call),
+                                Reached::Builtin {
+                                    domain: Domain::Cpu,
+                                    handlers_only: false,
+                                    ..
+                                }
+                            )
+                    })
+                });
+                if from_cpu_call {
+                    continue;
+                }
                 pending.push((
                     site.span,
                     Code::E4011,
@@ -893,6 +910,10 @@ impl<'a> Graph<'a> {
                 .at(site.span)
                 .actual(site.ty.clone())
                 .note("GPU code uses only bool, i32, u32, f32, vectors, mat4, quat, color, and structs and arrays of them");
+                let diagnostic = match cpu_type_help(&site.ty) {
+                    Some(help) => diagnostic.help(help),
+                    None => diagnostic,
+                };
                 self.with_gpu_chain(diagnostic, gpu, node)
             }
             Pending::CpuOnlyBuiltin { node, call } => {
@@ -909,7 +930,8 @@ impl<'a> Graph<'a> {
                         n.subject()
                     ),
                 )
-                .at(fact.span);
+                .at(fact.span)
+                .help(cpu_builtin_help(&builtin.name));
                 self.with_gpu_chain(diagnostic, gpu, node)
             }
             Pending::GpuOnlyBuiltin { node, call } => {
@@ -1185,6 +1207,32 @@ fn path_text(names: &[&str]) -> String {
 }
 
 /// The text with its first letter in upper case.
+/// What to write instead of a value of the CPU-only type `ty` in GPU code (`E4011`).
+fn cpu_type_help(ty: &str) -> Option<&'static str> {
+    match ty {
+        "texture" | "sampler" => Some(
+            "declare the texture or sampler as a param of the material (`param tex: texture = texture.white();`, `param smp: sampler = sampler.linear_repeat();`) and write `sample(tex, smp, uv)` where it is read; a function that needs a texel takes the `vec4` that `sample` returns, never the texture or the sampler",
+        ),
+        "string" => Some("strings exist only on the CPU; GPU code works with numbers, vectors and colors"),
+        "entity_ref" | "mesh" | "material" => Some(
+            "handles exist only on the CPU; give the stage the number, vector or color it needs as a `param` of the material and set it from the entity, with `bind(...)` for a value that changes",
+        ),
+        _ => None,
+    }
+}
+
+/// What to write instead of the CPU-only built-in function `name` in GPU code (`E4012`).
+fn cpu_builtin_help(name: &str) -> String {
+    if name.starts_with("texture.") || name.starts_with("sampler.") || name.starts_with("asset.") {
+        return "textures and samplers are made outside the stage: declare them as params of the material with their default (`param tex: texture = texture.white();`, `param smp: sampler = sampler.linear_repeat();`, or `asset.texture(\"file.png\")`) and write `sample(tex, smp, uv)` in the stage".to_owned();
+    }
+    match name {
+        "random" => "a stage cannot draw random numbers; compute the value on the CPU (`random()` in `update`), keep it in a `state` and give it to the material as a param with `bind(that_state)`, or derive a per-pixel pattern from `surface.uv` and math functions".to_owned(),
+        "print" => "a stage cannot print; remove the call, or compute the value on the CPU where `print` is available".to_owned(),
+        _ => format!("`{name}` can be called only from CPU code (`update`, `fixed_update`, handlers and `cpu fn`s); compute its result there and give it to the stage as a `param`"),
+    }
+}
+
 fn capitalise(text: &str) -> String {
     let mut chars = text.chars();
     match chars.next() {

@@ -331,11 +331,18 @@ impl Checker<'_> {
         match event {
             None => {
                 let names: Vec<&str> = self.registry.events.iter().map(|e| e.name).collect();
-                self.sink.push(
+                let mut diagnostic =
                     Diagnostic::new(Code::E5060, format!("Unknown event '{event_name}'."))
-                        .at(handler.event.span)
-                        .help(format!("v0.1 events: {}", names.join(", "))),
-                );
+                        .at(handler.event.span);
+                let near = crate::hints::nearest(event_name, names.iter().copied(), 3);
+                if !near.is_empty() {
+                    let near: Vec<String> = near.iter().map(|n| format!("`{n}`")).collect();
+                    diagnostic = diagnostic.help(format!(
+                        "did you mean {}?",
+                        near.join(" or ")
+                    ));
+                }
+                self.sink.push(diagnostic.note(format!("the events of v0.1 are: {}", names.join(", "))));
             }
             Some(event) => {
                 self.handler_args(handler, event.form, event_name, &mut params);
@@ -389,13 +396,17 @@ impl Checker<'_> {
                             .expected(enum_name.to_owned())
                             .actual(self.display(ty)),
                         );
-                    } else if !self.is_constant_expr(filter) {
+                    } else if !self.is_constant_expr(filter) && !self.filter_already_reported(filter) {
+                        // A member the resolver did not find (`Key.Up`) is already `E2003`, with the
+                        // nearest members: reporting the filter again would only repeat it.
                         self.sink.push(
                             Diagnostic::new(
                                 Code::E5061,
-                                format!("The filter of `on {event}` must be a constant {enum_name} member."),
+                                format!("The filter of `on {event}` must be a constant {enum_name} member, written like `{enum_name}.Space`."),
                             )
-                            .at(filter.span),
+                            .at(filter.span)
+                            .note("a filter is fixed when the program is built, so it cannot be a state, a local or any other value that changes at run time")
+                            .help(format!("to react to a key that is only known at run time, test `is_key_down(...)` inside `update`, or handle each key in a handler of its own: `on {event}({enum_name}.Space) {{ ... }}`")),
                         );
                     }
                 }
@@ -442,6 +453,20 @@ impl Checker<'_> {
             )
             .at(handler.event.span),
         );
+    }
+
+    /// Whether the resolver already reported the filter `expr` (an enum member that does not
+    /// exist, `E2003`): a second error on the same token only repeats the first.
+    fn filter_already_reported(&self, expr: &Expr) -> bool {
+        let mut inner = expr;
+        while let ExprKind::Paren(next) = &inner.kind {
+            inner = next;
+        }
+        match &inner.kind {
+            ExprKind::Field { name, .. } => matches!(self.res.res(name.id), Some(Res::Error)),
+            ExprKind::Name(_) => matches!(self.res.res(inner.id), Some(Res::Error)),
+            _ => false,
+        }
     }
 
     /// Whether the handler filter `expr` is constant: a member of a registry enum (`Key.Space`)

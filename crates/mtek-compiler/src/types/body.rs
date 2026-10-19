@@ -189,11 +189,11 @@ impl<'a> Checker<'a> {
             if let Some(param_def) = self.res.def_of(param.id) {
                 self.out.locals.insert(param_def, *ty);
             }
-            self.cpu_only_site(param.ty.span, format!("the parameter '{name}'"), *ty);
+            self.cpu_only_site(param.ty.span, format!("the parameter '{name}'"), *ty, None);
         }
         if let Some(ret) = &decl.ret {
             let what = format!("the result of '{}'", decl.name.name);
-            self.cpu_only_site(ret.span, what, sig.ret);
+            self.cpu_only_site(ret.span, what, sig.ret, None);
         }
         let Some(state) = self.end_body(&decl.body, decl.ret.as_ref()) else {
             return;
@@ -279,13 +279,18 @@ impl<'a> Checker<'a> {
     }
 
     /// Record a declaration of a type that has no GPU representation.
-    fn cpu_only_site(&mut self, span: Span, what: String, ty: TyId) {
+    fn cpu_only_site(&mut self, span: Span, what: String, ty: TyId, value: Option<Span>) {
         if self.gpu_representable(ty) {
             return;
         }
         let ty = self.display(ty);
         if let Some(body) = &mut self.body {
-            body.facts.cpu_only.push(CpuOnlySite { span, what, ty });
+            body.facts.cpu_only.push(CpuOnlySite {
+                span,
+                what,
+                ty,
+                value,
+            });
         }
     }
 
@@ -389,7 +394,7 @@ impl<'a> Checker<'a> {
                     let ty = self.const_info(def, None);
                     let what = format!("the constant '{}'", decl.name.name);
                     let span = decl.ty.as_ref().map_or(decl.name.span, |t| t.span);
-                    self.cpu_only_site(span, what, ty);
+                    self.cpu_only_site(span, what, ty, None);
                 }
                 None
             }
@@ -496,7 +501,12 @@ impl<'a> Checker<'a> {
         };
         self.out.locals.insert(def, ty);
         let span = decl.ty.as_ref().map_or(decl.name.span, |t| t.span);
-        self.cpu_only_site(span, format!("the {noun} '{}'", decl.name.name), ty);
+        self.cpu_only_site(
+            span,
+            format!("the {noun} '{}'", decl.name.name),
+            ty,
+            Some(decl.value.span),
+        );
         if mutable && let Some(body) = &mut self.body {
             body.vars
                 .push((def, decl.name.name.clone(), decl.name.span));
@@ -623,7 +633,7 @@ impl<'a> Checker<'a> {
         if let Some(def) = self.res.def_of(stmt.id) {
             self.out.locals.insert(def, var_ty);
             let what = format!("the loop variable '{}'", stmt.var.name);
-            self.cpu_only_site(stmt.var.span, what, var_ty);
+            self.cpu_only_site(stmt.var.span, what, var_ty, None);
         }
         // How the body leaves concerns the loop only.
         self.block(&stmt.body);

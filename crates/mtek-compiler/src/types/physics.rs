@@ -629,11 +629,16 @@ impl Checker<'_> {
         if args.len() != command.params.len() {
             self.synth_args(args);
             let count = command.params.len();
+            let listed = if params.is_empty() {
+                String::new()
+            } else {
+                format!(" ({})", params.join(", "))
+            };
             self.report(
                 Diagnostic::new(
                     Code::E3002,
                     format!(
-                        "`{}` takes {count} argument{}, but {} {} given.",
+                        "`{}` takes {count} argument{}{listed}, but {} {} given.",
                         command.name,
                         if count == 1 { "" } else { "s" },
                         args.len(),
@@ -641,7 +646,8 @@ impl Checker<'_> {
                     ),
                 )
                 .at(expr.span)
-                .note(format!("signature: body.{text}")),
+                .note(format!("signature: body.{text}"))
+                .help(super::check::arity_help(command.name, &params, args.len())),
             );
             return false;
         }

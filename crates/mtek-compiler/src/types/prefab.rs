@@ -218,8 +218,8 @@ impl<'a> Checker<'a> {
                 )
                 .at(child.name.span)
                 .related(decl.name.span, "the prefab is declared here")
-                .note("prefabs with children are not part of v0.1")
-                .help("make the child a prefab of its own and declare both as entities of the scene, or declare the child in the scene"),
+                .note("a prefab is a template for one entity, so its fields (`mesh`, `material`, `position`, ...) are written directly in the prefab; prefabs with children are not part of v0.1")
+                .help("declare the structure in the scene, where an `entity` inside another `entity` is its child and moves with it, or declare one prefab for each part and place each with `entity Name: PrefabName { ... }`"),
             );
         }
     }
@@ -286,7 +286,8 @@ impl<'a> Checker<'a> {
                     ),
                 )
                 .at(reason.span)
-                .note("a default may use only literals, constants, operators, conversions, constructors and const-eligible built-in functions"),
+                .note("a default may use only literals, constants, operators, conversions, constructors and const-eligible built-in functions")
+                .help("a default is fixed when the program is built; pass a value that is computed, or that changes, where the prefab is used (`entity Name: Prefab { param: value }` or `spawn(Prefab { param: value })`)"),
             );
             return None;
         }

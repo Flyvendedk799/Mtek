@@ -63,4 +63,7 @@ pub struct CpuOnlySite {
     pub what: String,
     /// The type, as Mtek spells it.
     pub ty: String,
+    /// The initialiser of a local, when the declaration has one: a call of a CPU-only built-in
+    /// function there is reported as `E4012`, and the local's type is only its consequence.
+    pub value: Option<Span>,
 }
