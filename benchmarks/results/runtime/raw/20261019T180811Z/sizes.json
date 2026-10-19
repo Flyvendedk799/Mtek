@@ -1,0 +1,822 @@
+[
+  {
+    "workload": "constant-scene",
+    "implementation": "mtek",
+    "javascript": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 204849,
+          "gzipBytes": 15675
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 789309,
+          "gzipBytes": 126664
+        }
+      ],
+      "rawBytes": 994158,
+      "gzipBytes": 142339
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 123974,
+          "gzipBytes": 11255
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 479720,
+          "gzipBytes": 84283
+        }
+      ],
+      "rawBytes": 603694,
+      "gzipBytes": 95538
+    },
+    "programData": {
+      "files": [
+        {
+          "path": "program.manifest.json",
+          "rawBytes": 379018,
+          "gzipBytes": 18692
+        },
+        {
+          "path": "shaders/385b28531dc27b69.wgsl",
+          "rawBytes": 1771,
+          "gzipBytes": 548
+        }
+      ],
+      "rawBytes": 380789,
+      "gzipBytes": 19240
+    },
+    "lazy": []
+  },
+  {
+    "workload": "constant-scene",
+    "implementation": "direct",
+    "javascript": {
+      "files": [
+        {
+          "path": "constant-scene/direct/main.js",
+          "rawBytes": 13814,
+          "gzipBytes": 4727
+        }
+      ],
+      "rawBytes": 13814,
+      "gzipBytes": 4727
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "constant-scene/direct/main.js",
+          "rawBytes": 8213,
+          "gzipBytes": 3639
+        }
+      ],
+      "rawBytes": 8213,
+      "gzipBytes": 3639
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "constant-scene",
+    "implementation": "three",
+    "javascript": {
+      "files": [
+        {
+          "path": "constant-scene/three/main.js",
+          "rawBytes": 2167294,
+          "gzipBytes": 402013
+        }
+      ],
+      "rawBytes": 2167294,
+      "gzipBytes": 402013
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "constant-scene/three/main.js",
+          "rawBytes": 790520,
+          "gzipBytes": 216907
+        }
+      ],
+      "rawBytes": 790520,
+      "gzipBytes": 216907
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "changing-transforms",
+    "implementation": "mtek",
+    "javascript": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 949127,
+          "gzipBytes": 70520
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 789309,
+          "gzipBytes": 126664
+        }
+      ],
+      "rawBytes": 1738436,
+      "gzipBytes": 197184
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 397300,
+          "gzipBytes": 43022
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 479720,
+          "gzipBytes": 84283
+        }
+      ],
+      "rawBytes": 877020,
+      "gzipBytes": 127305
+    },
+    "programData": {
+      "files": [
+        {
+          "path": "program.manifest.json",
+          "rawBytes": 1543874,
+          "gzipBytes": 60241
+        },
+        {
+          "path": "shaders/385b28531dc27b69.wgsl",
+          "rawBytes": 1771,
+          "gzipBytes": 548
+        }
+      ],
+      "rawBytes": 1545645,
+      "gzipBytes": 60789
+    },
+    "lazy": []
+  },
+  {
+    "workload": "changing-transforms",
+    "implementation": "direct",
+    "javascript": {
+      "files": [
+        {
+          "path": "changing-transforms/direct/main.js",
+          "rawBytes": 14101,
+          "gzipBytes": 4799
+        }
+      ],
+      "rawBytes": 14101,
+      "gzipBytes": 4799
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "changing-transforms/direct/main.js",
+          "rawBytes": 8308,
+          "gzipBytes": 3676
+        }
+      ],
+      "rawBytes": 8308,
+      "gzipBytes": 3676
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "changing-transforms",
+    "implementation": "three",
+    "javascript": {
+      "files": [
+        {
+          "path": "changing-transforms/three/main.js",
+          "rawBytes": 2167581,
+          "gzipBytes": 402087
+        }
+      ],
+      "rawBytes": 2167581,
+      "gzipBytes": 402087
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "changing-transforms/three/main.js",
+          "rawBytes": 790596,
+          "gzipBytes": 216930
+        }
+      ],
+      "rawBytes": 790596,
+      "gzipBytes": 216930
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "changing-material-params",
+    "implementation": "mtek",
+    "javascript": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 418831,
+          "gzipBytes": 31059
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 789309,
+          "gzipBytes": 126664
+        }
+      ],
+      "rawBytes": 1208140,
+      "gzipBytes": 157723
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 239132,
+          "gzipBytes": 24447
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 479720,
+          "gzipBytes": 84283
+        }
+      ],
+      "rawBytes": 718852,
+      "gzipBytes": 108730
+    },
+    "programData": {
+      "files": [
+        {
+          "path": "program.manifest.json",
+          "rawBytes": 633160,
+          "gzipBytes": 29480
+        },
+        {
+          "path": "shaders/385b28531dc27b69.wgsl",
+          "rawBytes": 1771,
+          "gzipBytes": 548
+        }
+      ],
+      "rawBytes": 634931,
+      "gzipBytes": 30028
+    },
+    "lazy": []
+  },
+  {
+    "workload": "changing-material-params",
+    "implementation": "direct",
+    "javascript": {
+      "files": [
+        {
+          "path": "changing-material-params/direct/main.js",
+          "rawBytes": 14029,
+          "gzipBytes": 4763
+        }
+      ],
+      "rawBytes": 14029,
+      "gzipBytes": 4763
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "changing-material-params/direct/main.js",
+          "rawBytes": 8285,
+          "gzipBytes": 3659
+        }
+      ],
+      "rawBytes": 8285,
+      "gzipBytes": 3659
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "changing-material-params",
+    "implementation": "three",
+    "javascript": {
+      "files": [
+        {
+          "path": "changing-material-params/three/main.js",
+          "rawBytes": 2167577,
+          "gzipBytes": 402079
+        }
+      ],
+      "rawBytes": 2167577,
+      "gzipBytes": 402079
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "changing-material-params/three/main.js",
+          "rawBytes": 790615,
+          "gzipBytes": 216937
+        }
+      ],
+      "rawBytes": 790615,
+      "gzipBytes": 216937
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "repeated-meshes",
+    "implementation": "mtek",
+    "javascript": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 1138506,
+          "gzipBytes": 87143
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 789309,
+          "gzipBytes": 126664
+        }
+      ],
+      "rawBytes": 1927815,
+      "gzipBytes": 213807
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 741880,
+          "gzipBytes": 70887
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 479720,
+          "gzipBytes": 84283
+        }
+      ],
+      "rawBytes": 1221600,
+      "gzipBytes": 155170
+    },
+    "programData": {
+      "files": [
+        {
+          "path": "program.manifest.json",
+          "rawBytes": 1868885,
+          "gzipBytes": 79514
+        },
+        {
+          "path": "shaders/385b28531dc27b69.wgsl",
+          "rawBytes": 1771,
+          "gzipBytes": 548
+        }
+      ],
+      "rawBytes": 1870656,
+      "gzipBytes": 80062
+    },
+    "lazy": []
+  },
+  {
+    "workload": "repeated-meshes",
+    "implementation": "direct",
+    "javascript": {
+      "files": [
+        {
+          "path": "repeated-meshes/direct/main.js",
+          "rawBytes": 13774,
+          "gzipBytes": 4710
+        }
+      ],
+      "rawBytes": 13774,
+      "gzipBytes": 4710
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "repeated-meshes/direct/main.js",
+          "rawBytes": 8140,
+          "gzipBytes": 3613
+        }
+      ],
+      "rawBytes": 8140,
+      "gzipBytes": 3613
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "repeated-meshes",
+    "implementation": "three",
+    "javascript": {
+      "files": [
+        {
+          "path": "repeated-meshes/three/main.js",
+          "rawBytes": 2175936,
+          "gzipBytes": 403795
+        }
+      ],
+      "rawBytes": 2175936,
+      "gzipBytes": 403795
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "repeated-meshes/three/main.js",
+          "rawBytes": 793388,
+          "gzipBytes": 217615
+        }
+      ],
+      "rawBytes": 793388,
+      "gzipBytes": 217615
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "asset-heavy-startup",
+    "implementation": "mtek",
+    "javascript": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 9739,
+          "gzipBytes": 1884
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 789309,
+          "gzipBytes": 126664
+        }
+      ],
+      "rawBytes": 799048,
+      "gzipBytes": 128548
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 5938,
+          "gzipBytes": 1382
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 479720,
+          "gzipBytes": 84283
+        }
+      ],
+      "rawBytes": 485658,
+      "gzipBytes": 85665
+    },
+    "programData": {
+      "files": [
+        {
+          "path": "assets/01f92a4f1cf39f5a.png",
+          "rawBytes": 286762,
+          "gzipBytes": 286870
+        },
+        {
+          "path": "assets/0376262ea193e45e.bin",
+          "rawBytes": 1927808,
+          "gzipBytes": 917381
+        },
+        {
+          "path": "assets/1056760d8a124311.png",
+          "rawBytes": 304497,
+          "gzipBytes": 304610
+        },
+        {
+          "path": "assets/236b9c38218e9bfb.png",
+          "rawBytes": 326111,
+          "gzipBytes": 326229
+        },
+        {
+          "path": "assets/3a2ac8336639847a.png",
+          "rawBytes": 211883,
+          "gzipBytes": 211966
+        },
+        {
+          "path": "assets/4d8bddfabd9d7e14.png",
+          "rawBytes": 289333,
+          "gzipBytes": 289441
+        },
+        {
+          "path": "assets/5b8ecfb2df840a74.png",
+          "rawBytes": 225697,
+          "gzipBytes": 225603
+        },
+        {
+          "path": "assets/665a26dfb6d878c3.png",
+          "rawBytes": 159332,
+          "gzipBytes": 159128
+        },
+        {
+          "path": "assets/a91d33bba1861254.png",
+          "rawBytes": 247369,
+          "gzipBytes": 247467
+        },
+        {
+          "path": "program.manifest.json",
+          "rawBytes": 33138,
+          "gzipBytes": 3902
+        },
+        {
+          "path": "shaders/3ef84f88eb3d726c.wgsl",
+          "rawBytes": 2138,
+          "gzipBytes": 647
+        }
+      ],
+      "rawBytes": 4014068,
+      "gzipBytes": 2973244
+    },
+    "lazy": []
+  },
+  {
+    "workload": "asset-heavy-startup",
+    "implementation": "direct",
+    "javascript": {
+      "files": [
+        {
+          "path": "asset-heavy-startup/direct/main.js",
+          "rawBytes": 13774,
+          "gzipBytes": 4810
+        }
+      ],
+      "rawBytes": 13774,
+      "gzipBytes": 4810
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "asset-heavy-startup/direct/main.js",
+          "rawBytes": 8072,
+          "gzipBytes": 3809
+        }
+      ],
+      "rawBytes": 8072,
+      "gzipBytes": 3809
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "asset-heavy-startup",
+    "implementation": "three",
+    "javascript": {
+      "files": [
+        {
+          "path": "asset-heavy-startup/three/main.js",
+          "rawBytes": 2513819,
+          "gzipBytes": 467457
+        }
+      ],
+      "rawBytes": 2513819,
+      "gzipBytes": 467457
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "asset-heavy-startup/three/main.js",
+          "rawBytes": 1020629,
+          "gzipBytes": 267419
+        }
+      ],
+      "rawBytes": 1020629,
+      "gzipBytes": 267419
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "physics-bodies",
+    "implementation": "mtek",
+    "javascript": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 251423,
+          "gzipBytes": 25044
+        },
+        {
+          "path": "physics/03781735475a88ad.js",
+          "rawBytes": 4410320,
+          "gzipBytes": 1648821
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 789309,
+          "gzipBytes": 126664
+        }
+      ],
+      "rawBytes": 5451052,
+      "gzipBytes": 1800529
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 143395,
+          "gzipBytes": 20951
+        },
+        {
+          "path": "physics/03781735475a88ad.js",
+          "rawBytes": 4339808,
+          "gzipBytes": 1645355
+        },
+        {
+          "path": "runtime.c99b29294b88307d.js",
+          "rawBytes": 479720,
+          "gzipBytes": 84283
+        }
+      ],
+      "rawBytes": 4962923,
+      "gzipBytes": 1750589
+    },
+    "programData": {
+      "files": [
+        {
+          "path": "program.manifest.json",
+          "rawBytes": 384697,
+          "gzipBytes": 15467
+        },
+        {
+          "path": "shaders/385b28531dc27b69.wgsl",
+          "rawBytes": 1771,
+          "gzipBytes": 548
+        }
+      ],
+      "rawBytes": 386468,
+      "gzipBytes": 16015
+    },
+    "lazy": [
+      "physics/03781735475a88ad.js"
+    ]
+  },
+  {
+    "workload": "physics-bodies",
+    "implementation": "direct",
+    "javascript": {
+      "files": [
+        {
+          "path": "physics-bodies/direct/main.js",
+          "rawBytes": 4420862,
+          "gzipBytes": 1652748
+        }
+      ],
+      "rawBytes": 4420862,
+      "gzipBytes": 1652748
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "physics-bodies/direct/main.js",
+          "rawBytes": 4344778,
+          "gzipBytes": 1647818
+        }
+      ],
+      "rawBytes": 4344778,
+      "gzipBytes": 1647818
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "physics-bodies",
+    "implementation": "three",
+    "javascript": {
+      "files": [
+        {
+          "path": "physics-bodies/three/main.js",
+          "rawBytes": 6578721,
+          "gzipBytes": 2051344
+        }
+      ],
+      "rawBytes": 6578721,
+      "gzipBytes": 2051344
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "physics-bodies/three/main.js",
+          "rawBytes": 5127798,
+          "gzipBytes": 1862633
+        }
+      ],
+      "rawBytes": 5127798,
+      "gzipBytes": 1862633
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "mount-reload-dispose",
+    "implementation": "mtek",
+    "javascript": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 55346,
+          "gzipBytes": 5374
+        },
+        {
+          "path": "runtime.0439d38c3d9babe9.js",
+          "rawBytes": 801453,
+          "gzipBytes": 130485
+        }
+      ],
+      "rawBytes": 856799,
+      "gzipBytes": 135859
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "app.js",
+          "rawBytes": 33595,
+          "gzipBytes": 3927
+        },
+        {
+          "path": "runtime.0439d38c3d9babe9.js",
+          "rawBytes": 486740,
+          "gzipBytes": 86489
+        }
+      ],
+      "rawBytes": 520335,
+      "gzipBytes": 90416
+    },
+    "programData": {
+      "files": [
+        {
+          "path": "program.manifest.json",
+          "rawBytes": 102140,
+          "gzipBytes": 6194
+        },
+        {
+          "path": "shaders/385b28531dc27b69.wgsl",
+          "rawBytes": 1771,
+          "gzipBytes": 548
+        }
+      ],
+      "rawBytes": 103911,
+      "gzipBytes": 6742
+    },
+    "lazy": []
+  },
+  {
+    "workload": "mount-reload-dispose",
+    "implementation": "direct",
+    "javascript": {
+      "files": [
+        {
+          "path": "mount-reload-dispose/direct/main.js",
+          "rawBytes": 14168,
+          "gzipBytes": 4809
+        }
+      ],
+      "rawBytes": 14168,
+      "gzipBytes": 4809
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "mount-reload-dispose/direct/main.js",
+          "rawBytes": 8339,
+          "gzipBytes": 3695
+        }
+      ],
+      "rawBytes": 8339,
+      "gzipBytes": 3695
+    },
+    "programData": null,
+    "lazy": []
+  },
+  {
+    "workload": "mount-reload-dispose",
+    "implementation": "three",
+    "javascript": {
+      "files": [
+        {
+          "path": "mount-reload-dispose/three/main.js",
+          "rawBytes": 2167767,
+          "gzipBytes": 402128
+        }
+      ],
+      "rawBytes": 2167767,
+      "gzipBytes": 402128
+    },
+    "javascriptMinified": {
+      "files": [
+        {
+          "path": "mount-reload-dispose/three/main.js",
+          "rawBytes": 790733,
+          "gzipBytes": 216993
+        }
+      ],
+      "rawBytes": 790733,
+      "gzipBytes": 216993
+    },
+    "programData": null,
+    "lazy": []
+  }
+]
