@@ -53,7 +53,7 @@ export function parseHoldoutSummary(text: string, what = "holdout summary"): Hol
     const outcome = optString(value["outcome"]);
     const side = value["side"];
     if (trialId === null || taskId === null || outcome === null || !OUTCOMES.includes(outcome) || (side !== "mtek" && side !== "baseline")) throw new Error(`${where}: not a holdout summary row (needs trialId, taskId, side and a known outcome)`);
-    // `holdout-01--mtek-guide-unconstrained--00`: task, condition (side, document, kind), trial index
+    // `<task>--mtek-guide-unconstrained--00`: task, condition (side, document, kind), trial index
     const parts = trialId.split("--");
     const condition = parts[1] ?? "";
     const variant = optString(value["variant"]) ?? (side === "mtek" && condition.includes("guide") ? "+guide" : "");

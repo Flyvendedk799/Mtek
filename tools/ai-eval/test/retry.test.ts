@@ -24,6 +24,8 @@ interface Cell {
   /** Recorded the old way: failure / generation-error with one call that is a connection error (the legacy rule reads it as not judged). */
   legacy?: boolean;
   model?: string;
+  /** SHA-256 of the documentation text, when the test sets it. */
+  ctx?: string;
 }
 
 /** A run whose condition ids do not depend on the run id (as in the real runs, where the id covers settings and the kind of documentation). */
@@ -35,7 +37,7 @@ function run(runId: string, cells: Cell[]): Rec[] {
     const documentation = side === "baseline" ? "baseline-reference:abc" : c.guide === true ? "context-export+docs/language-guide.md:def" : "context-export";
     const trialId = `${c.task}--${side}${c.guide === true ? "-guide" : ""}--${String(c.trial)}`;
     const conditionId = `${side}${c.guide === true ? "G" : ""}-${model}-id-padding`;
-    out.push({ type: "trial-start", runId, trialId, taskId: c.task, category: c.task.startsWith("a") ? "interaction" : "maintenance", mode: c.mode ?? (c.task.startsWith("a") ? "cold" : "edit"), trialKind: "unconstrained", trial: c.trial, condition: { side, model, provider: "anthropic", documentation }, conditionId, contextBytes: 1000 });
+    out.push({ type: "trial-start", runId, trialId, taskId: c.task, category: c.task.startsWith("a") ? "interaction" : "maintenance", mode: c.mode ?? (c.task.startsWith("a") ? "cold" : "edit"), trialKind: "unconstrained", trial: c.trial, condition: { side, model, provider: "anthropic", documentation }, conditionId, contextBytes: 1000, ...(c.ctx === undefined ? {} : { contextSha256: c.ctx }) });
     const legacy = c.legacy === true;
     out.push(
       legacy
@@ -115,6 +117,14 @@ describe("extracting trials with a retry run", () => {
     expect(() => extractTrials(MAIN, new Set(), run("r", [c("a1", 1, "success", 5, { model: "m-2" })]))).toThrow(/m-2/);
     // the guide condition is another cell: a retry for the context-only cell a1/1 does not touch it, and a guide retry needs a guide cell
     expect(() => extractTrials(MAIN, new Set(), run("r", [c("a1", 1, "success", 5, { guide: true })]))).toThrow(/no attempt of the other runs occupies this cell/);
+  });
+
+  it("refuses a retry attempt that was given other documentation text than the attempt it replaces, and accepts the same text", () => {
+    const lost = run("first", [c("a1", 1, "error", 0, { ctx: "aaaa1111aaaa1111" })]);
+    expect(() => extractTrials(lost, new Set(), run("again", [c("a1", 1, "success", 5, { ctx: "bbbb2222bbbb2222" })]))).toThrow(/documentation given to the model differs/);
+    expect(extractTrials(lost, new Set(), run("again", [c("a1", 1, "success", 5, { ctx: "aaaa1111aaaa1111" })])).superseded).toHaveLength(1);
+    // a record without a context hash (nothing to compare) is not refused
+    expect(extractTrials(lost, new Set(), run("again", [c("a1", 1, "success", 5)])).superseded).toHaveLength(1);
   });
 
   it("accepts a retry attempt that is itself not judged (the cell stays not judged, with the later attempt)", () => {

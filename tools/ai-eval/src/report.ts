@@ -78,6 +78,8 @@ export interface TrialRow {
   attribution: Attribution;
   /** The documentation (context export or reference) given to the model, in bytes. */
   documentationBytes: number | null;
+  /** SHA-256 of the documentation text given to the model (null when the record has none, as for a trial that gave the model no context). */
+  contextSha256?: string | null;
 }
 
 export const SOURCES = ["instructions", "task", "documentation", "project files", "diagnostics", "tool results", "repair context", "generated code", "other"] as const;
@@ -377,6 +379,7 @@ function extractPlain(records: readonly Raw[], holdoutIds: ReadonlySet<string>):
       holdout: holdoutIds.has(taskId),
       attribution: attribute(calls),
       documentationBytes: num(start["contextBytes"]),
+      contextSha256: typeof start["contextSha256"] === "string" ? start["contextSha256"] : null,
     });
   }
   return { trials, runs: [...runs.values()] };
@@ -431,6 +434,9 @@ export function extractTrials(records: readonly Raw[], holdoutIds: ReadonlySet<s
     if (isJudged(original)) throw new Error(`${where}: the attempt ${original.trialId} of run '${original.runId}' for this cell WAS judged (${original.outcome}); a retry run may replace only an attempt that was not judged`);
     if (original.model !== r.model || original.provider !== r.provider) throw new Error(`${where}: it was run with ${r.provider} / ${r.model}, the attempt it replaces with ${original.provider} / ${original.model}`);
     if (original.conditionId !== r.conditionId) throw new Error(`${where}: its condition id differs from that of the attempt it replaces (${original.conditionId.slice(0, 12)} against ${r.conditionId.slice(0, 12)}): not the same condition`);
+    const was = original.contextSha256 ?? null;
+    const now = r.contextSha256 ?? null;
+    if (was !== null && now !== null && was !== now) throw new Error(`${where}: the documentation given to the model differs from that of the attempt it replaces (context hash ${now.slice(0, 12)} against ${was.slice(0, 12)}): not the same condition`);
     replaced.set(original, { ...original, supersededBy: r.runId });
     retried.push({ ...r, retryOf: original.runId });
   }

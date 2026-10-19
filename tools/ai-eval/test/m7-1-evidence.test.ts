@@ -81,6 +81,13 @@ describe.skipIf(!present)("the stored M7.1 re-run and its retry runs", () => {
     expect(merged.trials.filter((t) => t.retryOf === "m7-1-rerun-main")).toHaveLength(57);
     // the retry attempts were made with the same model, settings and condition as the attempts they replace
     expect(trials.every((t) => t.model === "claude-haiku-4-5-20251001" && t.provider === "anthropic")).toBe(true);
+    // ... and with the same documentation text: the hash of the context given to the model is the same in the lost and the retry attempt
+    const originals = new Map(merged.superseded.map((t) => [`${t.side}${t.variant}${t.taskId}${String(t.trial)}`, t]));
+    for (const t of merged.trials.filter((x) => x.retryOf !== undefined)) {
+      const lostAttempt = originals.get(`${t.side}${t.variant}${t.taskId}${String(t.trial)}`);
+      expect(lostAttempt?.contextSha256, t.trialId).toMatch(/^[0-9a-f]{64}$/);
+      expect(t.contextSha256, t.trialId).toBe(lostAttempt?.contextSha256);
+    }
     // the harness behind the retry runs did not hit the outage again: no call without a response
     expect(retry.some((r) => r["type"] === "model-call" && r["generation"] === "backend-error")).toBe(false);
   });
