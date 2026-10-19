@@ -123,6 +123,8 @@ Every fact that only this demonstration exercises (21):
 
 | Feature | Neg | CFG | PHY | MOD | PUL | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
+| `type:PointerEvent` | 0 |  |  |  |  | `tests/semantics/pass/handler_pointer_events` (+3) |
+| `type:SurfaceInput` | 0 | x | x | x | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+100) |
 | `type:array` | 0 |  |  |  |  | `tests/semantics/pass/functions/w3081_unreachable_code` (+15) |
 | `type:bool` | 0 |  | x | x |  | `tests/semantics/pass/functions/every_path_returns` (+43) |
 | `type:color` | 7 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+105) |
@@ -133,11 +135,9 @@ Every fact that only this demonstration exercises (21):
 | `type:mat4` | 1 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_identity` (+13) |
 | `type:material` | 9 | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+98) |
 | `type:mesh` | 6 | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+98) |
-| `type:PointerEvent` | 0 |  |  |  |  | `tests/semantics/pass/handler_pointer_events` (+3) |
 | `type:quat` | 2 |  |  |  | x | `tests/semantics/pass/types/ctor_quat_euler` (+17) |
 | `type:sampler` | 0 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
 | `type:string` | 0 | x |  |  |  | `tests/semantics/pass/types/string_constant` (+5) |
-| `type:SurfaceInput` | 0 | x | x | x | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+100) |
 | `type:texture` | 0 | x | x |  |  | `tests/browser/fixtures/m4/texture_sampling` (+80) |
 | `type:u32` | 1 |  |  |  |  | `tests/semantics/pass/types/conv_to_f32` (+23) |
 | `type:vec2` | 0 | x | x |  |  | `tests/semantics/pass/types/ctor_vec2_components` (+102) |

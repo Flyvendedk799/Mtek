@@ -125,7 +125,7 @@ export function render(matrix: Matrix): string {
 
   w(`## 4. Features of the registry (${registry.length})`, "", "`supported.features` of `mtek context`, by kind.", "");
   for (const group of REGISTRY_GROUPS) {
-    const rows = registry.filter((f) => f.group === group).sort((a, b) => a.id.localeCompare(b.id, "en"));
+    const rows = registry.filter((f) => f.group === group).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     if (rows.length === 0) continue;
     w(`### ${GROUP_TITLES[group] ?? group} (${rows.length})`, "", ...featureTable(rows, false), "");
   }
