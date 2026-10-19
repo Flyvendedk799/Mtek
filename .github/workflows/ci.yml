@@ -76,6 +76,10 @@ jobs:
       # of the release notes draft links to evidence.
       - name: Release documentation and capability consistency
         run: npm run check:release
+      # The M7 baseline (decision 0126): evidence/M7/baseline.json and the number tables of
+      # evidence/M7/report.md follow from the stored benchmark results.
+      - name: M7 baseline
+        run: npm run check:baseline
 
   # Software-adapter browser tests (SwiftShader): correctness only, never hardware evidence. Without
   # a usable adapter the tests are reported NOT-RUN (the job does not fail for that; real test

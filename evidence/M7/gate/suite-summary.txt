@@ -1,0 +1,46 @@
+cargo test --workspace --locked (without grammar backend): {"passed":1613,"failed":0,"ignored":1,"suites":64}
+cargo test --workspace --locked (backend required): {"passed":1613,"failed":0,"ignored":1,"suites":64}
+grammar adapter conformance: llama.cpp b11719 (5aeac37a), validator <repo>/tools/grammar-adapters/.cache/llama.cpp-b11719/validator/test-gbnf-validator.exe
+grammar adapter conformance: PASS (38410 inputs)
+grammar adapter smoke: capability available: {"status":"available","mode":"constrained","backend":"llama.cpp","release":"b11719","commit":"5aeac37a35b44fde4bdffaec9159f2fcb253b622"} (paths omitted)
+grammar adapter smoke: generation completed after 61 decode runs (limit 400); compiler lex+parse errors: []
+grammar adapter smoke: PASS
+--- test:unit (vitest per workspace)
+Test Files  68 passed (68)
+Tests  1274 passed (1274)
+Test Files  3 passed (3)
+Tests  78 passed (78)
+Test Files  6 passed (6)
+Tests  78 passed (78)
+Test Files  25 passed (25)
+Tests  296 passed (296)
+Test Files  10 passed (10)
+Tests  1932 passed (1932)
+Test Files  11 passed (11)
+Tests  248 passed | 1 skipped (249)
+Test Files  2 passed (2)
+Tests  8 passed (8)
+Test Files  12 passed (12)
+Tests  113 passed (113)
+Test Files  23 passed (23)
+Tests  386 passed | 1 skipped (387)
+Test Files  6 passed (6)
+Tests  50 passed (50)
+Test Files  3 passed (3)
+Tests  127 passed (127)
+--- check:coverage
+coverage-matrix: 303 features, 154 positive fixture programs, 201 diagnostic codes (0 without a negative test)
+coverage-matrix: every assertion holds
+--- check:release
+release-docs: 168 features, 201 diagnostic codes, ABI 1, language 0.1
+release-docs: every comparison holds
+--- browser
+Mtek browser tests: 591 passed / 0 failed / 0 not-run / 15 skipped
+benchmarks: 104 passed / 0 failed / 0 not-run  [hardware adapter]
+hardware: 251 passed / 0 failed / 0 not-run  [hardware adapter]
+software: 236 passed / 0 failed / 0 not-run / 15 skipped  [software (fallback) adapter]
+--- vscode integration
+ok   `Mtek: Restart Language Server` ends the server with exit code 0 and starts a new one
+Exit code:   0
+ok   `Mtek: Restart Language Server` ends the server with exit code 0 and starts a new one
+10 passed, 0 failed, of 10 (VS Code exit code 0)

@@ -34,7 +34,8 @@
     "test:browser": "npm run build && npm run test -w @mtek/browser-tests --",
     "test:benchmarks": "npm run test:benchmarks -w @mtek/browser-tests --",
     "test:browser:hardware": "npm run build && npm run test:hardware -w @mtek/browser-tests --",
-    "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run check:coverage && npm run check:release && npm run test:browser"
+    "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run check:coverage && npm run check:release && npm run check:baseline && npm run test:browser",
+    "check:baseline": "node scripts/gen-m7-baseline.mjs --check"
   },
   "allowScripts": {
     "esbuild": false,

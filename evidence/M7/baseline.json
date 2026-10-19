@@ -1,0 +1,510 @@
+{
+  "schemaVersion": 1,
+  "kind": "mtek-m7-baseline",
+  "generatedBy": "scripts/gen-m7-baseline.mjs (decision 0126); not edited by hand",
+  "purpose": "The reference point for later changes: what v0.1 measured at the end of M7 and M7.1, on what, and how to measure again.",
+  "language": {
+    "version": "0.1",
+    "runtimeAbi": 1,
+    "compiler": "0.1.0-dev"
+  },
+  "commits": {
+    "v01MeasuredFirst": "47643dd (M7 results; AI runs m7-05-*, first runtime run 20261019T052132Z)",
+    "m71Verified": "see tests.verifiedCommit (clean-clone full suite)",
+    "runtimeQuietRun": "b43a3ec1976a999eba59722ff08d84f03e2f9f92 (run 20261019T180811Z)"
+  },
+  "tests": {
+    "verifiedCommit": "76bec07515ecc4d706148b8763630063514bdc22",
+    "from": "evidence/M7/gate/suite-summary.txt and evidence/M7/gate/reproducible-builds-final.json (a clean clone of the commit)",
+    "cargo": [
+      {
+        "mode": "without grammar backend",
+        "passed": 1613,
+        "failed": 0,
+        "ignored": 1,
+        "suites": 64
+      },
+      {
+        "mode": "backend required",
+        "passed": 1613,
+        "failed": 0,
+        "ignored": 1,
+        "suites": 64
+      }
+    ],
+    "unit": {
+      "workspaces": 11,
+      "passed": 4590,
+      "skipped": 2
+    },
+    "browser": {
+      "passed": 591,
+      "failed": 0,
+      "notRun": 0,
+      "skipped": 15
+    },
+    "vscodeIntegration": {
+      "passed": 10,
+      "failed": 0,
+      "of": 10
+    },
+    "grammarConformanceInputs": 38410,
+    "coverage": [
+      303,
+      154,
+      201,
+      0
+    ],
+    "reproducibleBuilds": {
+      "result": {
+        "identical": true,
+        "filesA": 331,
+        "filesB": 331,
+        "bytesA": 90725564,
+        "onlyInA": [],
+        "onlyInB": [],
+        "differing": [],
+        "missingTrees": {
+          "a": [],
+          "b": []
+        },
+        "pathLeaks": [],
+        "noPathLeaks": true
+      },
+      "scope": "two clean clones of one commit, one machine, one operating system"
+    }
+  },
+  "runtime": {
+    "frozenTreeHash": "eb4cc9428208b5eaa47656305d55721d19ebb8b9cc672a98a422a7f546c086e1",
+    "thresholdPercent": 20,
+    "unit": "ms (startup and cycle rows: ms per the metric named)",
+    "environment": {
+      "operatingSystem": "Windows 11 Pro 10.0.26200, x64",
+      "browser": "chromium 153.0.8010.12 (chromium channel, headless)",
+      "adapter": "AMD Radeon RX 7900 XTX (vendor amd, architecture rdna-3, device 0x744c)",
+      "isFallbackAdapter": "false",
+      "toolchain": "Node v24.18.1, Playwright 1.63.0, rustc 1.99.0 (b940084d7 2026-09-28); mtek mtek 0.1.0-dev (language 0.1, runtime ABI 1), runtime-web 0.1.0-dev, three.js 0.186.1, Rapier 0.21.0",
+      "frames": "120 warm-up, then 1200 measured per timing run, 3 timing runs per implementation (each in a fresh page); GPU time 600 frames; allocation 300 frames; counters 120 frames; startup 15 fresh page loads; 50 + 800 cycles"
+    },
+    "runs": [
+      {
+        "label": "first run",
+        "runId": "20261019T052132Z",
+        "summary": "benchmarks/results/runtime/summary.json",
+        "report": "benchmarks/results/runtime/report.md",
+        "machineLoad": "427 passes; busy share of all logical CPUs before a pass: median 6 %, maximum 100 %; during a pass (includes the benchmark's own browser): mean 20 %; passes that started above the 30 % quiet limit after waiting: 12",
+        "workloads": [
+          {
+            "workload": "constant-scene",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 0.115,
+            "direct": 0.035,
+            "three": 0.43,
+            "mtekOverDirectPercent": 228.57142857142856,
+            "threeOverDirectPercent": 1128.5714285714284,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "changing-transforms",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 1.36,
+            "direct": 0.145,
+            "three": 2.41,
+            "mtekOverDirectPercent": 837.9310344827587,
+            "threeOverDirectPercent": 1562.0689655172416,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "changing-material-params",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 0.67,
+            "direct": 0.15,
+            "three": 1.235,
+            "mtekOverDirectPercent": 346.6666666666667,
+            "threeOverDirectPercent": 723.3333333333335,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "repeated-meshes",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 0.245,
+            "direct": 0.065,
+            "three": 0.13,
+            "mtekOverDirectPercent": 276.9230769230769,
+            "threeOverDirectPercent": 100,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "asset-heavy-startup",
+            "metric": "p95 startup latency (navigation start to first frame complete)",
+            "mtek": 223.915,
+            "direct": 204.38,
+            "three": 328.89,
+            "mtekOverDirectPercent": 9.558175946765823,
+            "threeOverDirectPercent": 60.92083374107056,
+            "outcome": "within"
+          },
+          {
+            "workload": "physics-bodies",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 1.83,
+            "direct": 1.32,
+            "three": 2.105,
+            "mtekOverDirectPercent": 38.636363636363626,
+            "threeOverDirectPercent": 59.46969696969695,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "mount-reload-dispose",
+            "metric": "p95 of mount + reload + dispose time per cycle",
+            "mtek": 23.445,
+            "direct": 10.65,
+            "three": 12.23,
+            "mtekOverDirectPercent": 120.14084507042253,
+            "threeOverDirectPercent": 14.835680751173719,
+            "outcome": "exceeds"
+          }
+        ]
+      },
+      {
+        "label": "after K-04, disturbed machine",
+        "runId": "20261019T150753Z",
+        "summary": "benchmarks/results/runtime/summary-after-k04.json",
+        "report": "benchmarks/results/runtime/report-after-k04.md",
+        "machineLoad": "484 passes; busy share of all logical CPUs before a pass: median 19 %, maximum 100 %; during a pass (includes the benchmark's own browser): mean 32 %; passes that started above the 30 % quiet limit after waiting: 67",
+        "workloads": [
+          {
+            "workload": "constant-scene",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 0.08,
+            "direct": 0.045,
+            "three": 0.955,
+            "mtekOverDirectPercent": 77.77777777777779,
+            "threeOverDirectPercent": 2022.2222222222222,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "changing-transforms",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 1.21,
+            "direct": 0.15,
+            "three": 2.8,
+            "mtekOverDirectPercent": 706.6666666666666,
+            "threeOverDirectPercent": 1766.6666666666667,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "changing-material-params",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 0.57,
+            "direct": 0.08,
+            "three": 1.275,
+            "mtekOverDirectPercent": 612.4999999999999,
+            "threeOverDirectPercent": 1493.7499999999998,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "repeated-meshes",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 0.09,
+            "direct": 0.05,
+            "three": 0.125,
+            "mtekOverDirectPercent": 79.99999999999999,
+            "threeOverDirectPercent": 150,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "asset-heavy-startup",
+            "metric": "p95 startup latency (navigation start to first frame complete)",
+            "mtek": 297.675,
+            "direct": 242.96,
+            "three": 357.14,
+            "mtekOverDirectPercent": 22.52016792887719,
+            "threeOverDirectPercent": 46.99539018768522,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "physics-bodies",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 2.175,
+            "direct": 1.445,
+            "three": 2.16,
+            "mtekOverDirectPercent": 50.51903114186849,
+            "threeOverDirectPercent": 49.48096885813149,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "mount-reload-dispose",
+            "metric": "p95 of mount + reload + dispose time per cycle",
+            "mtek": 25.83,
+            "direct": 9.355,
+            "three": 11.56,
+            "mtekOverDirectPercent": 176.10903260288612,
+            "threeOverDirectPercent": 23.570283270978077,
+            "outcome": "exceeds"
+          }
+        ]
+      },
+      {
+        "label": "after K-04, quiet machine",
+        "runId": "20261019T180811Z",
+        "summary": "benchmarks/results/runtime/summary-after-quiet.json",
+        "report": "benchmarks/results/runtime/report-after-quiet.md",
+        "machineLoad": "413 passes; busy share of all logical CPUs before a pass: median 10 %, maximum 44 %; during a pass (includes the benchmark's own browser): mean 24 %; passes that started above the 30 % quiet limit after waiting: 7",
+        "workloads": [
+          {
+            "workload": "constant-scene",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 0.085,
+            "direct": 0.04,
+            "three": 0.53,
+            "mtekOverDirectPercent": 112.5,
+            "threeOverDirectPercent": 1225,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "changing-transforms",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 0.855,
+            "direct": 0.155,
+            "three": 2.735,
+            "mtekOverDirectPercent": 451.6129032258064,
+            "threeOverDirectPercent": 1664.516129032258,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "changing-material-params",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 0.61,
+            "direct": 0.11,
+            "three": 1.475,
+            "mtekOverDirectPercent": 454.5454545454545,
+            "threeOverDirectPercent": 1240.909090909091,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "repeated-meshes",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 0.085,
+            "direct": 0.05,
+            "three": 0.16,
+            "mtekOverDirectPercent": 70,
+            "threeOverDirectPercent": 219.99999999999997,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "asset-heavy-startup",
+            "metric": "p95 startup latency (navigation start to first frame complete)",
+            "mtek": 225.66,
+            "direct": 174.94,
+            "three": 239.765,
+            "mtekOverDirectPercent": 28.992797530581903,
+            "threeOverDirectPercent": 37.05556190693953,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "physics-bodies",
+            "metric": "p95 frame time (CPU: update + render preparation + submit)",
+            "mtek": 1.85,
+            "direct": 1.495,
+            "three": 2.365,
+            "mtekOverDirectPercent": 23.745819397993316,
+            "threeOverDirectPercent": 58.19397993311037,
+            "outcome": "exceeds"
+          },
+          {
+            "workload": "mount-reload-dispose",
+            "metric": "p95 of mount + reload + dispose time per cycle",
+            "mtek": 23.560000000000002,
+            "direct": 8.475,
+            "three": 9.860000000000001,
+            "mtekOverDirectPercent": 177.9941002949853,
+            "threeOverDirectPercent": 16.342182890855472,
+            "outcome": "exceeds"
+          }
+        ]
+      }
+    ]
+  },
+  "ai": {
+    "file": "evidence/M7/ai-baseline.json",
+    "sha256": "559de5982421a31c2d24b89c972ee8c3e710d5096ae3c879fdb6e4d04e055112",
+    "model": {
+      "ids": [
+        "claude-haiku-4-5-20251001"
+      ],
+      "provider": "anthropic"
+    },
+    "temperature": 1,
+    "trialsPerTask": 5,
+    "main": {
+      "baseline": {
+        "attempts": 170,
+        "completed": 156,
+        "completionRate": 0.9176470588235294,
+        "tokensPerCompletedTask": 9388.153846153846,
+        "costUsd": 2.0476176499999994,
+        "notJudged": 0
+      },
+      "conditions": [
+        {
+          "label": "context only",
+          "before": {
+            "attempts": 170,
+            "completed": 103,
+            "completionRate": 0.6058823529411764,
+            "tokensPerCompletedTask": 40535.21359223301,
+            "costUsd": 4.111758599999998,
+            "notJudged": 0
+          },
+          "after": {
+            "attempts": 170,
+            "completed": 116,
+            "completionRate": 0.6823529411764706,
+            "tokensPerCompletedTask": 33648.275862068964,
+            "costUsd": 3.5229839499999995,
+            "notJudged": 0
+          },
+          "verdictAfter": {
+            "verdict": "worse",
+            "reason": "completion lower and tokens per completed task significantly more",
+            "tokenRatio": {
+              "high": 5.24496915217136,
+              "low": 2.5045078511921717,
+              "point": 3.5841206283442024
+            },
+            "completionDifferencePoints": -23.529411764705877,
+            "provisional": false
+          }
+        },
+        {
+          "label": "context + guide",
+          "before": {
+            "attempts": 170,
+            "completed": 134,
+            "completionRate": 0.788235294117647,
+            "tokensPerCompletedTask": 32842.31343283582,
+            "costUsd": 3.947232349999999,
+            "notJudged": 0
+          },
+          "after": {
+            "attempts": 170,
+            "completed": 145,
+            "completionRate": 0.8529411764705882,
+            "tokensPerCompletedTask": 29872.462068965517,
+            "costUsd": 3.9025746999999997,
+            "notJudged": 0
+          },
+          "verdictAfter": {
+            "verdict": "worse",
+            "reason": "completion matched and tokens per completed task significantly more",
+            "tokenRatio": {
+              "high": 3.9780766949786344,
+              "low": 2.564837581199578,
+              "point": 3.181931459421462
+            },
+            "completionDifferencePoints": -6.470588235294117,
+            "provisional": false
+          }
+        }
+      ]
+    },
+    "holdout": [
+      {
+        "set": "earlier",
+        "label": "Mtek, context only",
+        "attempts": 40,
+        "completed": 25,
+        "completionRate": 0.625,
+        "tokensPerCompletedTask": 38845.24,
+        "costUsd": 0.83653625,
+        "notJudged": 0,
+        "verdict": "worse"
+      },
+      {
+        "set": "earlier",
+        "label": "three.js baseline",
+        "attempts": 40,
+        "completed": 39,
+        "completionRate": 0.975,
+        "tokensPerCompletedTask": 7736.589743589743,
+        "costUsd": 0.41702685000000006,
+        "notJudged": 0,
+        "verdict": null
+      },
+      {
+        "set": "new",
+        "label": "Mtek, context only",
+        "attempts": 40,
+        "completed": 34,
+        "completionRate": 0.85,
+        "tokensPerCompletedTask": 17628.58823529412,
+        "costUsd": 0.42919310000000005,
+        "notJudged": 0,
+        "verdict": "worse"
+      },
+      {
+        "set": "new",
+        "label": "Mtek, context + guide",
+        "attempts": 40,
+        "completed": 39,
+        "completionRate": 0.975,
+        "tokensPerCompletedTask": 16112.384615384615,
+        "costUsd": 0.3326345,
+        "notJudged": 0,
+        "verdict": "worse"
+      }
+    ],
+    "targets": {
+      "holdout": {
+        "baselineCompletionRatePercent": 97.5,
+        "baselineTokensPerCompletedTask": 7737
+      },
+      "main": {
+        "baselineCompletionRatePercent": 91.8,
+        "baselineTokensPerCompletedTask": 9388
+      },
+      "research": {
+        "meaning": "at matched success, at least 30 % fewer tokens per completed task than the baseline, with the verdict better (spec 6.4); a target, not a result",
+        "tokenRatioMax": 0.7
+      }
+    },
+    "holdoutTreeHash": "5a1481b01cd1a294cee41f244a5b9a4b42ce20e302fa33d37c0160ace195eb1b"
+  },
+  "supportedEnvironments": "docs/supported-environments.md (evidence/M7/environment-matrix.md)",
+  "rerun": {
+    "everything": "git clone <repo> <dir> && cd <dir> && npm ci && npm run build",
+    "cleanInstallAndSuite": "node scripts/verify-reproducible-build.mjs --root <dir> --out <file> --suite --gpu-lock <dir>",
+    "runtime": [
+      "node benchmarks/runtime/tools/freeze.ts --check",
+      "node benchmarks/runtime/tools/prepare.ts",
+      "MTEK_REQUIRE_GPU=1 MTEK_GPU_LOCK_DIR=<dir> node benchmarks/runtime/tools/run.ts --publish",
+      "node benchmarks/runtime/tools/report.ts --after=<run-id> --label=<label>"
+    ],
+    "ai": [
+      "node tools/ai-eval/src/benchmark-run.ts --all --sides mtek,mtek-guide --client anthropic --model claude-haiku-4-5-20251001 --temperature 1 --trials 5 --spend-cap <usd> --api-key-file <file> --gpu-lock <dir> --run-id <id> --out benchmarks/results/ai",
+      "node tools/ai-eval/src/benchmark-run.ts --all --holdout --sides mtek,mtek-guide ... --out <a directory outside the repository>",
+      "node tools/ai-eval/src/report-cli.ts --run <dir> [--retry-run <dir>] --out <file>",
+      "node tools/ai-eval/src/compare-cli.ts --before <runs> --after <run> [--after-retry <runs>] --out <file> --baseline-json <file>"
+    ]
+  },
+  "mustStayConstant": [
+    "benchmarks/tasks/** and benchmarks/holdout/** (task prompts, budgets, fixtures; the holdout tree hash is in benchmarks/holdout.sha256)",
+    "benchmarks/runtime workload definitions (FROZEN.json tree hash); a change needs a recorded rationale and starts a new baseline",
+    "the model id, temperature, repair and token budgets, the order and number of trials, the price table (tools/ai-eval/src/spend.ts)",
+    "the three.js baseline: its documentation (benchmarks/baselines/docs/reference.md) and task starters; it was not re-run after M7.1, so a changed baseline must be re-measured",
+    "the machine: the numbers are one Windows 11 workstation with one adapter; a different machine is a different baseline"
+  ],
+  "knownIssues": [
+    "CI job browser-software (Ubuntu, software renderer): specs/m4/dev-overlay.spec.ts:239 and specs/m6/getting-started.spec.ts:128 fail on most runs; both pass locally on the software project. Cause not found.",
+    "Firefox 155 (headed, WebGPU preferences): 6 failures of 251 specs (evidence/M7/environment-matrix.md); WebKit and headless Firefox expose no usable adapter.",
+    "Runtime: all seven workloads exceed the 20 % investigation threshold against direct WebGPU (benchmarks/results/runtime/report-after-quiet.md); physics, mount/reload/dispose and startup did not move with K-04.",
+    "AI: the three.js baseline is ahead on tokens per completed task in every comparison; the compiler context for cold-start tasks fills 22.6 kB of a 24 kB budget (decision 0112).",
+    "Spec versus compiler: seven places recorded by K-03 (decision 0116) and W0030 / E9010 (decisions 0102, 0103) are documented, not changed."
+  ],
+  "reading": [
+    "A runtime row improves when its p95 falls on a quiet machine (median CPU load before a pass about 10 %) and the direct reference does not move with it; the direct reference moved by up to 25 % between runs (startup), so differences below that are noise.",
+    "An AI row improves when completion rises or tokens per completed task fall on the same tasks and trials; one run of 5 trials per task is the unit, and no repeat of an unchanged setup was run, so the noise floor of these rates is not measured (a rate over 170 attempts has a standard error of roughly 3.5 points, over 40 attempts about 7).",
+    "The holdout (8 tasks) was not used for design; its tasks may be easier than the main set. Do not tune against it."
+  ]
+}
