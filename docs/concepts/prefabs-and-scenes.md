@@ -35,7 +35,7 @@ The fields of the scene itself:
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `ambient_color` | `color` | `#ffffff` | fixed at construction |  | Colour of the ambient light term of lit materials. Only the RGB channels are used. |
-| `ambient_intensity` | `f32` | `0.0` | fixed at construction | ≥ 0 | Scale of the ambient light term of lit materials; 0 turns ambient light off. |
+| `ambient_intensity` | `f32` | `0.0` | fixed at construction | ≥ 0 | Scale of the ambient light term of lit materials; 0 turns ambient light off. Like every lit result it is multiplied by the camera's exposure scale (about 3.14 at the default exposure), so 0.3 already gives nearly full brightness on white. Unlit materials ignore it. |
 | `clear_color` | `color` | `#000000` | fixed at construction |  | Colour the canvas is cleared to. Only the RGB channels are used. |
 | `gravity` | `vec3` | `vec3(0.0, -9.81, 0.0)` | fixed at construction | finite | Gravitational acceleration in metres per second squared. Used only when the scene has physics bodies. |
 

@@ -142,13 +142,13 @@ scene Demo {
 
 ### A key name that does not exist
 
-```mtek wrong=MTEK-E2003,MTEK-E5061 wrap=scene
+```mtek wrong=MTEK-E2003 wrap=scene
 on key_down(Key.Up) {
     print("up");
 }
 ```
 
-The built-in enum `Key` has no member `Up` (`MTEK-E2003`), and since the filter is then not a `Key` constant the compiler adds `MTEK-E5061`; the arrows are `Key.ArrowUp`, `Key.ArrowDown`, `Key.ArrowLeft` and `Key.ArrowRight`.
+The built-in enum `Key` has no member `Up` (`MTEK-E2003`); the diagnostic lists the members and suggests the nearest one. The arrows are `Key.ArrowUp`, `Key.ArrowDown`, `Key.ArrowLeft` and `Key.ArrowRight`.
 
 ### A key given as text or as a variable
 

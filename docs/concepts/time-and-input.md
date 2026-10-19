@@ -150,13 +150,13 @@ scene Demo {
 
 ### A key name that does not exist
 
-```mtek wrong=MTEK-E2003,MTEK-E5061 wrap=scene
+```mtek wrong=MTEK-E2003 wrap=scene
 on key_down(Key.Up) {
     print("up");
 }
 ```
 
-The built-in enum `Key` has no member `Up` (`MTEK-E2003`), and since the filter is then not a `Key` constant the compiler adds `MTEK-E5061`; the arrows are `Key.ArrowUp`, `Key.ArrowDown`, `Key.ArrowLeft` and `Key.ArrowRight`.
+The built-in enum `Key` has no member `Up` (`MTEK-E2003`); the diagnostic lists the members and suggests the nearest one. The arrows are `Key.ArrowUp`, `Key.ArrowDown`, `Key.ArrowLeft` and `Key.ArrowRight`.
 
 ### A key given as text or as a variable
 
@@ -257,5 +257,5 @@ Collision events are delivered to entities and prefabs that have a collider (`MT
 | [`MTEK-E5051`](../../spec/diagnostics.md#mtek-e5051) | duplicate lifecycle function \| |
 | [`MTEK-E5052`](../../spec/diagnostics.md#mtek-e5052) | unknown lifecycle function \| |
 | [`MTEK-E5060`](../../spec/diagnostics.md#mtek-e5060) | unknown event \| |
-| [`MTEK-E5061`](../../spec/diagnostics.md#mtek-e5061) | invalid event arguments \| |
+| [`MTEK-E5061`](../../spec/diagnostics.md#mtek-e5061) | invalid event arguments |
 | [`MTEK-E5062`](../../spec/diagnostics.md#mtek-e5062) | collision event without collider |

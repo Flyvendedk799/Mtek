@@ -200,6 +200,6 @@ update(dt: f32) {
 | [`MTEK-E2004`](../../spec/diagnostics.md#mtek-e2004) | built-in hidden by local |
 | [`MTEK-E3010`](../../spec/diagnostics.md#mtek-e3010) | arithmetic on color |
 | [`MTEK-E3012`](../../spec/diagnostics.md#mtek-e3012) | vector equality not supported \| |
-| [`MTEK-E3013`](../../spec/diagnostics.md#mtek-e3013) | invalid component or swizzle \| |
+| [`MTEK-E3013`](../../spec/diagnostics.md#mtek-e3013) | invalid component or swizzle |
 | [`MTEK-E3014`](../../spec/diagnostics.md#mtek-e3014) | operator not defined for operands |
 | [`MTEK-E3070`](../../spec/diagnostics.md#mtek-e3070) | condition is not bool \| |

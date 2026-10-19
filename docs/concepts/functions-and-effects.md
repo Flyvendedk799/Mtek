@@ -206,7 +206,7 @@ scene Demo {
 | [`MTEK-E1040`](../../spec/diagnostics.md#mtek-e1040) | member not allowed here |
 | [`MTEK-E2003`](../../spec/diagnostics.md#mtek-e2003) | unknown name |
 | [`MTEK-E3001`](../../spec/diagnostics.md#mtek-e3001) | type mismatch (general) |
-| [`MTEK-E3002`](../../spec/diagnostics.md#mtek-e3002) | wrong number of arguments \| |
+| [`MTEK-E3002`](../../spec/diagnostics.md#mtek-e3002) | wrong number of arguments |
 | [`MTEK-E3061`](../../spec/diagnostics.md#mtek-e3061) | assignment to immutable place \| |
 | [`MTEK-E3080`](../../spec/diagnostics.md#mtek-e3080) | missing return \| |
 | [`MTEK-E3090`](../../spec/diagnostics.md#mtek-e3090) | not a constant expression \| |

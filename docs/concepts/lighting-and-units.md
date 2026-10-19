@@ -39,7 +39,7 @@ The fields of the objects involved, as the compiler knows them:
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `active` | `bool` | none | fixed at construction |  | Marks the active camera. Optional when the scene has exactly one camera; with several cameras exactly one must declare `active: true`. |
-| `exposure` | `f32` | `-1.9145305` | fixed at construction |  | Exposure value EV100 of the camera; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15. |
+| `exposure` | `f32` | `-1.9145305` | fixed at construction |  | Exposure value EV100; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 5.0)` | assignable, bindable |  | Camera position in world space, in metres. |
 | `projection` | `projection` | `Perspective {}` | fixed at construction |  | `Perspective {..}` or `Orthographic {..}`. The projection kind is construction-only; the fields of the descriptor are writable and bindable. |
 | `rotation` | `quat` | `quat.identity()` | assignable, bindable |  | Orientation when no `target` is declared. |
@@ -50,7 +50,7 @@ The fields of the objects involved, as the compiler knows them:
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `ambient_color` | `color` | `#ffffff` | fixed at construction |  | Colour of the ambient light term of lit materials. Only the RGB channels are used. |
-| `ambient_intensity` | `f32` | `0.0` | fixed at construction | ≥ 0 | Scale of the ambient light term of lit materials; 0 turns ambient light off. |
+| `ambient_intensity` | `f32` | `0.0` | fixed at construction | ≥ 0 | Scale of the ambient light term of lit materials; 0 turns ambient light off. Like every lit result it is multiplied by the camera's exposure scale (about 3.14 at the default exposure), so 0.3 already gives nearly full brightness on white. Unlit materials ignore it. |
 | `clear_color` | `color` | `#000000` | fixed at construction |  | Colour the canvas is cleared to. Only the RGB channels are used. |
 | `gravity` | `vec3` | `vec3(0.0, -9.81, 0.0)` | fixed at construction | finite | Gravitational acceleration in metres per second squared. Used only when the scene has physics bodies. |
 

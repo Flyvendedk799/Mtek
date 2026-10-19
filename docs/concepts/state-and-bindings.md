@@ -31,7 +31,7 @@ The fields of an entity, a camera and a light, and whether a field can be bound 
 | `mesh` | `mesh` | none | fixed at construction |  | The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | assignable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | assignable, bindable |  | Rotation local to the parent. |
-| `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | assignable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body; that rule belongs to the checker, not to this field. |
+| `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | assignable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body. |
 | `visible` | `bool` | `true` | assignable, bindable |  | Hides the mesh draw only; the entity's behaviour keeps running. |
 
 **`Camera`**
@@ -39,7 +39,7 @@ The fields of an entity, a camera and a light, and whether a field can be bound 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `active` | `bool` | none | fixed at construction |  | Marks the active camera. Optional when the scene has exactly one camera; with several cameras exactly one must declare `active: true`. |
-| `exposure` | `f32` | `-1.9145305` | fixed at construction |  | Exposure value EV100 of the camera; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15. |
+| `exposure` | `f32` | `-1.9145305` | fixed at construction |  | Exposure value EV100; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 5.0)` | assignable, bindable |  | Camera position in world space, in metres. |
 | `projection` | `projection` | `Perspective {}` | fixed at construction |  | `Perspective {..}` or `Orthographic {..}`. The projection kind is construction-only; the fields of the descriptor are writable and bindable. |
 | `rotation` | `quat` | `quat.identity()` | assignable, bindable |  | Orientation when no `target` is declared. |

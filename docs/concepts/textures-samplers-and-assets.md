@@ -353,7 +353,7 @@ The file has no mesh `Quadd` (`MTEK-E7024`); the diagnostic lists the names the 
 
 | Code | Title in the catalogue |
 |---|---|
-| [`MTEK-E3013`](../../spec/diagnostics.md#mtek-e3013) | invalid component or swizzle \| |
+| [`MTEK-E3013`](../../spec/diagnostics.md#mtek-e3013) | invalid component or swizzle |
 | [`MTEK-E4011`](../../spec/diagnostics.md#mtek-e4011) | CPU-only type in GPU code |
 | [`MTEK-E4012`](../../spec/diagnostics.md#mtek-e4012) | CPU-only intrinsic in GPU code \| |
 | [`MTEK-E4013`](../../spec/diagnostics.md#mtek-e4013) | GPU-only intrinsic in CPU code |
