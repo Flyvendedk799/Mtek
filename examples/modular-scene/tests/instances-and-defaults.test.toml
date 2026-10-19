@@ -15,6 +15,12 @@
 # that sees an entity head on is its tint in linear light scaled by dim and sRGB-encoded: the pillars and the floor (SLATE =
 # #3a4150, dim 1) show their tints; the beacons show #e0a526 and #e0527a scaled by 0.75: #c59120 and #c5476b.
 #
+# Draw calls (spec/runtime-abi.md section 8.4, decision 0059). Entities with the same mesh and the same parameter block are drawn
+# by one instanced draw, and a block is shared by material instances whose params are all `initial` and equal. Seven entities
+# are drawn: Left and Gauge are both a unit box of STONE with dim 1, so they are one instanced draw (Gauge moves and scales
+# through its bound transform, which is per instance); Floor has a mesh of its own, Middle and Right other tints, and the
+# beacons' material has a bound `dim`, which is never shared. That is 6 draw calls, one of them instanced.
+#
 # Pixels. The camera (0, 3.5, 14) looks at (0, 1.2, 0), fov_y 0.9, on the 128 x 128 target. The projection (CPU, in
 # tests/browser/support/m7-modular-scene.ts) puts the centres at (30.5, 65.8) for Left, (52.8, 61.2) for Middle, (75.1, 69.5) for
 # Right, (29.5, 43.2) for Lantern and (98.3, 47.1) for Lamp, and the floor (a SLATE slab, y = 0 at its top) fills the middle of
@@ -28,7 +34,7 @@ steps = [
   { expect_state = { "Right.position" = [1.2, 0.6, 0], "Right.material.tint" = "#2f9e8f" } },
   { expect_state = { "Lantern.position" = [-3.6, 3.4, 0], "Lantern.material.dim" = 0.75, "Lantern.material.tint" = "#e0a526" } },
   { expect_state = { "Lamp.position" = [3.6, 3.0, 0], "Lamp.material.dim" = 0.75, "Lamp.material.tint" = "#e0527a" } },
-  { expect_counter = { liveEntities = 7, entitiesSpawned = 0 } },
+  { expect_counter = { liveEntities = 7, entitiesSpawned = 0, drawCalls = 6, instancedDraws = 1 } },
 
   { expect_pixel = { x = 62, y = 72, color = "#3a4150", tolerance = 2 } },
   { expect_pixel = { x = 30, y = 65, color = "#9aa3b5", tolerance = 2 } },

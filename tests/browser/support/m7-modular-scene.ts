@@ -140,6 +140,20 @@ export function placedPillar(n: number): { origin: Vec3; height: number; tint: s
   };
 }
 
+/**
+ * The draw calls of a frame in which nothing is culled (spec/runtime-abi.md section 8.4, decision 0059): entities with the same
+ * mesh and the same parameter block are drawn by one instanced draw. A block is shared by material instances whose params are
+ * all `initial` and byte-identical, so here two entities share one when they have the same box mesh and the same tint; the
+ * beacons' material has a bound param (`dim`), which is never shared, and the floor has a mesh of its own.
+ */
+export function drawStats(state: ShowroomState): { drawCalls: number; instancedDraws: number } {
+  const keys = ["floor", "box|stone", "box|gold", "box|teal", "sphere|Lantern", "sphere|Lamp", "box|stone"];
+  for (let n = 0; n < state.placed; n += 1) keys.push(`box|${placedPillar(n).tint === themeColour("ROSE") ? "rose" : "teal"}`);
+  const sizes = new Map<string, number>();
+  for (const key of keys) sizes.set(key, (sizes.get(key) ?? 0) + 1);
+  return { drawCalls: sizes.size, instancedDraws: [...sizes.values()].filter((size) => size >= 2).length };
+}
+
 /** The showroom as the CPU reference sees it, for a target of the given size. */
 export function showroom(state: ShowroomState, renderTarget: { width: number; height: number }): SceneSpec {
   const stone = themeColour("STONE");

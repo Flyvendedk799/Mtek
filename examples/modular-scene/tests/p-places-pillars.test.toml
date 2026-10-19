@@ -13,6 +13,15 @@
 # Gauge, 7; each pillar placed adds one live entity. Spawned entities cannot be addressed by name, so they are checked by
 # their pixels.
 #
+# Draw calls (decision 0059): pillars of one mesh and equal params share a parameter block and are drawn by one instanced draw.
+# Before any press there are 6 draws (Left and Gauge are the one instanced pair, see instances-and-defaults). A spawned pillar
+# has the same unit box and the same tint as other entities of its colour: TEAL as Right, ROSE as nothing yet.
+#     placed   new entity   groups of the box meshes                       drawCalls  instancedDraws
+#     1        TEAL         Right+Placed0                                  6          2
+#     2        ROSE         Right+Placed0, Placed1 alone                   7          2
+#     3        TEAL         Right+Placed0+Placed2, Placed1 alone           7          2
+#     4        ROSE         Right+Placed0+Placed2, Placed1+Placed3         7          3
+#
 # Pixels. The back row is 3 m behind the front one and between its pillars. On the 128 x 128 target the pillars' centres project
 # to (45.6, 65.6), (64.0, 63.7), (82.5, 61.8) and (101.1, 59.9); the pixels below are ones whose neighbourhood sees
 # only that pillar, or, before it is placed, only the sky (the clear colour #14181f). Time does not pass (dt = 0), so the
@@ -28,7 +37,7 @@ steps = [
   { step = 1, dt = 0.0 },
   { release = "KeyP" },
   { expect_state = { placed = 1 } },
-  { expect_counter = { liveEntities = 8, entitiesSpawned = 1 } },
+  { expect_counter = { liveEntities = 8, entitiesSpawned = 1, drawCalls = 6, instancedDraws = 2 } },
   { expect_pixel = { x = 45, y = 64, color = "#2f9e8f", tolerance = 2 } },
   { expect_pixel = { x = 63, y = 63, color = "#14181f", tolerance = 2 } },
 
@@ -36,21 +45,21 @@ steps = [
   { step = 1, dt = 0.0 },
   { release = "KeyP" },
   { expect_state = { placed = 2 } },
-  { expect_counter = { liveEntities = 9, entitiesSpawned = 2 } },
+  { expect_counter = { liveEntities = 9, entitiesSpawned = 2, drawCalls = 7, instancedDraws = 2 } },
   { expect_pixel = { x = 63, y = 63, color = "#e0527a", tolerance = 2 } },
 
   { press = "KeyP" },
   { step = 1, dt = 0.0 },
   { release = "KeyP" },
   { expect_state = { placed = 3 } },
-  { expect_counter = { liveEntities = 10, entitiesSpawned = 3 } },
+  { expect_counter = { liveEntities = 10, entitiesSpawned = 3, drawCalls = 7, instancedDraws = 2 } },
   { expect_pixel = { x = 82, y = 61, color = "#2f9e8f", tolerance = 2 } },
 
   { press = "KeyP" },
   { step = 1, dt = 0.0 },
   { release = "KeyP" },
   { expect_state = { placed = 4 } },
-  { expect_counter = { liveEntities = 11, entitiesSpawned = 4 } },
+  { expect_counter = { liveEntities = 11, entitiesSpawned = 4, drawCalls = 7, instancedDraws = 3 } },
   { expect_pixel = { x = 101, y = 59, color = "#e0527a", tolerance = 2 } },
 
   # The fifth press: the slot row is full, nothing more is placed.
@@ -58,7 +67,7 @@ steps = [
   { step = 5, dt = 0.0 },
   { release = "KeyP" },
   { expect_state = { placed = 4 } },
-  { expect_counter = { liveEntities = 11, entitiesSpawned = 4 } },
+  { expect_counter = { liveEntities = 11, entitiesSpawned = 4, drawCalls = 7, instancedDraws = 3 } },
   { expect_pixel = { x = 45, y = 64, color = "#2f9e8f", tolerance = 2 } },
   { expect_pixel = { x = 63, y = 63, color = "#e0527a", tolerance = 2 } },
   { expect_pixel = { x = 82, y = 61, color = "#2f9e8f", tolerance = 2 } },

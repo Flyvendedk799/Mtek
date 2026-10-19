@@ -18,7 +18,7 @@ import {
 import { REPO_ROOT } from "../environment.ts";
 import { assertSeparated, fallDistance, fate, liftHeight, meterColumns, spawnPositions, STEP } from "../m5-playground.ts";
 import { expectedColour, expectPixel } from "../m1-reference.ts";
-import { beacon, REST, showroom, themeColour, themeNumber, type ShowroomState } from "../m7-modular-scene.ts";
+import { beacon, drawStats, REST, showroom, themeColour, themeNumber, type ShowroomState } from "../m7-modular-scene.ts";
 
 type Table = Record<string, unknown>;
 type Step = Table;
@@ -390,6 +390,8 @@ describe("examples/modular-scene fixtures follow from the sources and the CPU re
         for (const [name, expected] of Object.entries(value as Table)) {
           if (name === "liveEntities") expect(expected, `${fixture.file}: liveEntities`).toBe(7 + state.placed);
           else if (name === "entitiesSpawned") expect(expected, `${fixture.file}: entitiesSpawned`).toBe(spawned);
+          else if (name === "drawCalls") expect(expected, `${fixture.file}: drawCalls`).toBe(drawStats(state).drawCalls);
+          else if (name === "instancedDraws") expect(expected, `${fixture.file}: instancedDraws`).toBe(drawStats(state).instancedDraws);
           else throw new Error(`${fixture.file}: no model for the counter ${name}`);
           checks.counters += 1;
         }

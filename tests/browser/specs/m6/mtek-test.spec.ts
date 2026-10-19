@@ -1,7 +1,7 @@
 /**
  * M6-09: `mtek test` (spec/tooling.md section 6, decision 0074) on the real CLI, the real runner and a real browser.
  *
- * - the declarative fixtures of the three examples (`examples/<name>/tests/*.test.toml`) pass on the hardware adapter;
+ * - the declarative fixtures of the four examples (`examples/<name>/tests/*.test.toml`) pass on the hardware adapter;
  * - each of them is a test that would fail without the behaviour it checks: copies of the examples with one expectation made
  *   wrong fail, at the step and the line of that expectation, with the kind of failure the report documents;
  * - a machine without a GPU, without Playwright or without Node reports NOT-RUN with the reason, exits 1 and exits 0 only
@@ -21,7 +21,7 @@ import { REPO_ROOT } from "../../support/environment.ts";
 import { expect, test } from "../../support/fixtures.ts";
 import { cliPath } from "../../support/m1-fixtures.ts";
 
-const EXAMPLES = ["pulse-cube", "physics-playground", "material-configurator"] as const;
+const EXAMPLES = ["pulse-cube", "physics-playground", "material-configurator", "modular-scene"] as const;
 type Example = (typeof EXAMPLES)[number];
 
 interface FixtureReport {
@@ -200,6 +200,24 @@ test.describe("mtek test on the examples (hardware)", () => {
       to: 'color = "#c36256"',
       kind: "expect_pixel",
       mention: "expected #c36256",
+    },
+    {
+      label: "a gauge that grew too far",
+      example: "modular-scene",
+      file: "tests/space-grows-gauge.test.toml",
+      from: "[5.4, 0.6, 1.5]",
+      to: "[5.4, 0.7, 1.5]",
+      kind: "expect_state",
+      mention: "'Gauge.position'",
+    },
+    {
+      label: "a wrong instanced draw count",
+      example: "modular-scene",
+      file: "tests/p-places-pillars.test.toml",
+      from: "drawCalls = 6, instancedDraws = 2",
+      to: "drawCalls = 6, instancedDraws = 3",
+      kind: "expect_counter",
+      mention: "counter 'instancedDraws' is 2, expected 3",
     },
   ];
 
