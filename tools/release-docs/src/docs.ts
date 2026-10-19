@@ -6,16 +6,18 @@ import type { Ctx } from "./ctx.ts";
 import { GUIDE_DOC, renderGuide } from "./guide.ts";
 import { LIMITATIONS_DOC, renderLimitations } from "./limitations.ts";
 import { mismatch, type Mismatch } from "./model.ts";
+import { renderPages } from "./pages.ts";
 import { REFERENCE_DOC, renderReference } from "./reference.ts";
 
 export const GENERATED_DOCS = [GUIDE_DOC, REFERENCE_DOC, LIMITATIONS_DOC] as const;
 
-/** Every generated document, by path. */
+/** Every generated document, by path: the three named above and every page written from `templates/pages` (decision 0116). */
 export function generateDocs(ctx: Ctx): Map<string, string> {
   const docs = new Map<string, string>();
   docs.set(GUIDE_DOC, renderGuide(ctx));
   docs.set(REFERENCE_DOC, renderReference(ctx));
   docs.set(LIMITATIONS_DOC, renderLimitations(ctx));
+  for (const [path, text] of renderPages(ctx)) docs.set(path, text);
   return docs;
 }
 

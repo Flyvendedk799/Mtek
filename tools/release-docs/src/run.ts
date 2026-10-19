@@ -21,9 +21,13 @@ import {
   type StdlibDocInputs,
 } from "./compare.ts";
 import type { Ctx } from "./ctx.ts";
+import { checkDocCode } from "./doccode.ts";
 import { committedDoc, generateDocs, staleDocs } from "./docs.ts";
 import { GUIDE_DOC, manifestCodecIds } from "./guide.ts";
+import type { PageText } from "./docpages.ts";
 import { checkDocLinks, type LinkInputs } from "./links.ts";
+import { checkDocPages, type DocPageInputs } from "./docpages.ts";
+import { CONCEPTS_DIR, DOCS_INDEX, pageTemplates, TUTORIAL_DOC } from "./pages.ts";
 import { LIMITATIONS_DOC, splitNotSupported, validateLimitationsData } from "./limitations.ts";
 import type { Mismatch } from "./model.ts";
 import { REFERENCE_DOC } from "./reference.ts";
@@ -60,6 +64,7 @@ export interface Inputs {
   notes: { text: string | null; io: NotesIo; m6Report: string };
   environments: { text: string | null; io: EnvironmentsIo };
   links: LinkInputs;
+  docPages: DocPageInputs;
 }
 
 /** Every `environment-*.json` below `evidence/M7/environments/`, as repository paths. */
@@ -80,12 +85,18 @@ function storedEnvironmentRecords(root: string): string[] {
 export function buildInputs(ctx: Ctx, runtime: RuntimeFacts, options: RunOptions = {}): Inputs {
   const root = ctx.root;
   const generated = generateDocs(ctx);
-  const doc = (path: string): string | null => (options.written === true ? (generated.get(path) ?? null) : committedDoc(root, path));
+  const doc = (path: string): string | null => (options.written === true ? (generated.get(path) ?? committedDoc(root, path)) : committedDoc(root, path));
   const languageMd = ctx.text("spec/language.md");
   const reservedWords = languageWordLists(languageMd).reserved;
   const split = splitNotSupported(ctx.compiler.notSupported, reservedWords);
   const pkg = JSON.parse(ctx.text("package.json")) as { scripts: Record<string, string> };
   const limitations = doc(LIMITATIONS_DOC);
+  const newPages = pageTemplates(root).map((p) => p.doc);
+  const textOf = (path: string): PageText[] => {
+    const text = doc(path);
+    return text === null ? [] : [{ path, text }];
+  };
+  const withDocs = [GUIDE_DOC, ...newPages];
   return {
     features: { compiler: ctx.compiler, registry: ctx.registry, milestone: ctx.milestone, languageMd, catalogue: ctx.catalogue },
     docs: {
@@ -157,11 +168,16 @@ export function buildInputs(ctx: Ctx, runtime: RuntimeFacts, options: RunOptions
       },
     },
     links: {
-      pages: [LIMITATIONS_DOC, REFERENCE_DOC, GUIDE_DOC, RELEASE_NOTES, ENVIRONMENTS_DOC].flatMap((path) => {
-        const text = doc(path);
-        return text === null ? [] : [{ path, text }];
-      }),
+      pages: [LIMITATIONS_DOC, REFERENCE_DOC, RELEASE_NOTES, ENVIRONMENTS_DOC, ...withDocs].flatMap(textOf),
       exists: (path) => existsSync(join(root, path)),
+    },
+    docPages: {
+      pages: withDocs.flatMap(textOf),
+      linkable: [LIMITATIONS_DOC, REFERENCE_DOC, RELEASE_NOTES, ENVIRONMENTS_DOC, "docs/getting-started.md", "docs/coverage-matrix.md", "docs/preview-hosting.md"].flatMap(textOf),
+      catalogue: ctx.catalogue,
+      indexPath: DOCS_INDEX,
+      indexedPages: [GUIDE_DOC, TUTORIAL_DOC, "docs/getting-started.md", REFERENCE_DOC, LIMITATIONS_DOC, ...newPages.filter((p) => p.startsWith(`${CONCEPTS_DIR}/`))],
+      guidePath: GUIDE_DOC,
     },
   };
 }
@@ -177,6 +193,7 @@ export function checkInputs(i: Inputs): Mismatch[] {
   found.push(...checkStdlibDoc(i.stdlib));
   found.push(...checkReadmeClaims(i.readme));
   found.push(...checkDocLinks(i.links));
+  found.push(...checkDocPages(i.docPages));
   if (i.notes.text === null) {
     found.push(...checkReleaseNotes("", { exists: () => false, read: () => null }));
   } else {
@@ -193,4 +210,18 @@ export function runChecks(ctx: Ctx, runtime: RuntimeFacts, options: RunOptions =
   found.push(...validateLimitationsData(ctx));
   found.push(...checkInputs(buildInputs(ctx, runtime, options)));
   return found;
+}
+
+/** The pages whose Mtek code blocks are compiled: the compact guide and every page written from a template. */
+export function codePages(ctx: Ctx, options: RunOptions = {}): PageText[] {
+  const generated = options.written === true ? generateDocs(ctx) : null;
+  return [GUIDE_DOC, ...pageTemplates(ctx.root).map((p) => p.doc)].flatMap((path) => {
+    const text = generated?.get(path) ?? committedDoc(ctx.root, path);
+    return text === null ? [] : [{ path, text }];
+  });
+}
+
+/** Compile every code block of the documentation with the built compiler (decision 0117). */
+export async function runDocCode(ctx: Ctx, options: RunOptions = {}): Promise<Mismatch[]> {
+  return checkDocCode({ root: ctx.root, mtek: ctx.mtek, language: ctx.compiler.contextLanguage }, codePages(ctx, options));
 }

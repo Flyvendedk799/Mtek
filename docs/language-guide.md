@@ -19,7 +19,7 @@ The language has no `while`, no closures, no generics and no user-defined types 
 
 A project is a directory with an `mtek.toml` and the sources it names:
 
-```toml
+```toml from=examples/pulse-cube/mtek.toml
 [project]
 name = "pulse-cube"
 language = "0.1"
@@ -38,7 +38,7 @@ tint = "Demo.tint"
 
 ## 3. A scene
 
-```mtek
+```mtek from=examples/pulse-cube/src/main.mtek
 scene Demo {
     state speed: f32 = 0.7;
     state tint: color = #6b5cff;
@@ -79,7 +79,7 @@ The types of the prelude are `PointerEvent`, `SurfaceInput`, `array`, `bool`, `c
 
 A function is a module item. `fn` is pure; `cpu fn` may also call the CPU-only intrinsics:
 
-```mtek
+```mtek from=examples/pulse-cube/src/main.mtek
 fn pulse(t: f32) -> f32 {
     return 0.65 + 0.35 * sin(t);
 }
@@ -91,7 +91,7 @@ The intrinsic functions of this build are `abs`, `acos`, `alive`, `asin`, `asset
 
 A material is a typed parameter list and exactly one `fragment` function. The compiler turns the function and every pure function it calls into WGSL; nothing else is compiled to the GPU.
 
-```mtek
+```mtek from=examples/pulse-cube/src/main.mtek
 material Pulse {
     param tint: color = #6b5cff;
     param phase: f32 = 0.0;
@@ -104,7 +104,7 @@ material Pulse {
 
 A material instance sets the parameters in the entity: `material: Pulse { tint: bind(tint); phase: bind(frame.time) };`. The lit built-in materials are `Pbr`, `Unlit`; `lighting.pbr` is available in stage functions:
 
-```mtek
+```mtek from=examples/material-configurator/src/materials.mtek
 export material Striped {
     param stripe_a: color = #e8e2d0;
     param stripe_b: color = #2a3f5f;
@@ -123,7 +123,7 @@ export material Striped {
 
 `bind(expression)` makes a field follow an expression every frame, without a handler. A value that changes at run time never creates a pipeline or a shader module: it is written into a uniform buffer (`spec/gpu-layout.md`).
 
-```mtek
+```mtek from=examples/physics-playground/src/main.mtek
     entity Meter {
         position: bind(vec3(-8.0 + (0.4 + 0.5 * f32(entered)) * 0.5, 6.0, -3.0));
         scale: bind(vec3(0.4 + 0.5 * f32(entered), 0.4, 0.4));
@@ -136,7 +136,7 @@ export material Striped {
 
 `[host.inputs]` of `mtek.toml` maps names to scene `state`. The host page sets them with `app.setInput(name, value)`; the runtime validates each value with a codec. The codecs of this build are `f32`, `i32`, `u32`, `bool`, `vec2`, `vec3`, `vec4`, `color-hex`, `color-hex-opaque`, `string`.
 
-```toml
+```toml from=examples/material-configurator/mtek.toml
 [project]
 name = "material-configurator"
 language = "0.1"
@@ -164,7 +164,7 @@ sun_intensity = "Configurator.sun_intensity"
 
 A file is a module. `export` makes an item importable; `import { A, B } from "./path.mtek";` imports by name. There are no wildcards, no aliases and no package imports.
 
-```mtek
+```mtek from=examples/modular-scene/src/theme.mtek
 // The constants every other module of the showroom shares: the palette, the sizes of a pillar and the row that
 // spawned pillars are placed in. Nothing here is a scene or a prefab; it is only imported.
 
@@ -207,7 +207,7 @@ export fn half(h: f32) -> f32 {
 
 A `prefab` is a reusable entity with parameters and state. An entity can instantiate one (`entity Left: Pillar { ... }`) and a handler can create one at run time with `spawn`:
 
-```mtek
+```mtek from=examples/modular-scene/src/props/pillar.mtek
 // The Pillar prefab: a box of the given height standing on the floor at `origin`. Its params all have defaults, so
 // an instance only says what differs; every default comes from another module.
 import { PILLAR_WIDTH, STONE, half } from "../theme.mtek";
@@ -228,7 +228,7 @@ export prefab Pillar {
 }
 ```
 
-```mtek
+```mtek from=examples/modular-scene/src/main.mtek
     on key_down(Key.P) {
         if placed < MAX_PLACED {
             var tint: color = TEAL;
@@ -251,7 +251,7 @@ export prefab Pillar {
 
 Entities with a `body` and a `collider` are simulated. Body kinds and collider shapes are registry schemas (`Dynamic`, `Kinematic`, `Static`; `BoxCollider`, `SphereCollider`); handlers command bodies with `apply_force`, `apply_impulse`, `set_kinematic_target`, `set_linear_velocity`, `teleport` and read `angular_velocity`, `linear_velocity`.
 
-```mtek
+```mtek from=examples/physics-playground/src/main.mtek
     entity Zone {
         position: vec3(4.0, 1.5, 0.0);
         body: Static {};
@@ -278,7 +278,7 @@ The physics engine is a separate module that a program loads only if it uses a b
 
 An asset is a compile-time dependency. `asset.glb("path")` opens a binary glTF file while the program is checked; its meshes, materials and node transforms are then read through name-checked accessors, so a misspelled name is a compile error and not a black canvas.
 
-```mtek
+```mtek from=examples/material-configurator/src/model.mtek
 export const CHAIR = asset.glb("../models/chair.glb");
 
 // The factors of the model's own materials: the starting values of the configurable inputs.

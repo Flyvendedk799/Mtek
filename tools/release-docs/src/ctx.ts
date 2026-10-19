@@ -44,6 +44,8 @@ export function readLimitationsData(root: string): LimitationsData {
 
 export interface Ctx {
   root: string;
+  /** The `mtek` executable the facts were read from; the documentation tests compile the code blocks with it. */
+  mtek: string;
   compiler: CompilerFacts;
   registry: StdlibSchema;
   milestone: string | null;
@@ -60,6 +62,7 @@ export interface Ctx {
 export async function loadCtx(root: string, mtek: string): Promise<Ctx> {
   return {
     root,
+    mtek,
     compiler: await readCompilerFacts(root, mtek),
     registry: readRegistry(root),
     milestone: readCurrentMilestone(root),
