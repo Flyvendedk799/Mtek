@@ -1,0 +1,46 @@
+# 0101. The capability consistency check: the compiler, the registry, the runtime's ABI and the documents agree, and a test says where they do not
+
+- Status: Accepted
+- Date: 2026-10-19
+- Blueprint origin: M7 (blueprint §11), task M7-06 ("the docs, manifest, runtime ABI and compiler agree on what v0.1 supports, checked automatically"); blueprint §15 (a feature is supported only when a test proves it); decisions 0072 (`supported.features`), 0093 (the coverage matrix), 0094 (the audit findings), 0100.
+- Supersedes: nothing.
+
+## Context
+
+"What v0.1 supports" is stated in six places that different people and different tasks edit: the compiler's own table (`mtek context`), the registry data it is built from (`spec/stdlib-schema.json`), the specification prose (`spec/*.md`), the constants and tables of the web runtime (`packages/runtime-web`), the manifest the compiler writes and its schema, and the documents a reader meets first (`README.md`, `docs/`). Before this record only pairs of them were compared, each by a test written for another purpose. Decision 0094 showed what that leaves: a naming lint promised by one document and absent from the build, and a status line that said nothing was implemented.
+
+## Decision
+
+`tools/release-docs` compares the places below, in both directions, and fails on any mismatch with a message of the form `CHECK: WHERE-A says X, but WHERE-B says Y` (`src/model.ts`). Each comparison is a pure function over plain facts (`src/compare.ts`); the facts are read in `src/compilerfacts.ts`, `src/runtimefacts.ts`, `src/spectext.ts` and `src/registry.ts`.
+
+1. **The compiler against the registry and the specification** (`features/*`). The registry-derived part of `supported.features` equals the features derived again, independently, from `spec/stdlib-schema.json` and the milestone constant `CURRENT_MILESTONE`; the planned rows equal the rows after that milestone; the language version of the context equals the registry's; the reserved words of `notSupported` equal the list of `spec/language.md` 2.3; the number of unsupported-feature phrases equals the number of `x9xx` codes of the catalogue (`E9999` apart).
+2. **The generated documents against the compiler** (`docs/*`, `limitations/*`). The features and their count in Part C of the reference equal `supported.features`; the `x9xx` codes of the limitations page equal the catalogue's; every code named on the page exists; the page's list of `notSupported` equals the context's; its gates, reserved words and never-produced codes equal the context's, the language reference's and `tests/semantics/code-coverage-exceptions.json`; the catalogue marks equal the exceptions file.
+3. **`W0030`** (`naming-lint/w0030`, decision 0102). Four statements about the one code, compared: the catalogue mark, the exceptions file, `spec/language.md` 3.3, the limitations page.
+4. **The ABI constants** (`abi/*`). The runtime ABI is compared across ten places (`mtek --version`, the manifest of a real build, the generated `app.js`, `SUPPORTED_RUNTIME_ABI`, `RUNTIME_ABI` of the package entry, `runtime.d.ts`, the status line, the example and the sentence of `spec/runtime-abi.md`, the title of `spec/manifest.schema.json`); the manifest schema version across seven; the language version across seven; the version line printed by `mtek --version` against the README and `spec/tooling.md`; the target profile across four; `requiredCapabilities` of the built manifest against the example of the specification.
+5. **The runtime's capabilities** (`runtime/*`, `stdlib/*`). The key codes of the registry's `Key` enum equal the runtime's `MAPPED_KEY_CODES` (imported) and the table of `spec/stdlib.md` 5.2; the events of the registry equal those the runtime delivers (`INPUT_EVENTS`, `COLLISION_EVENTS`, read from the source) and the table of 5.1; the host input codecs of `spec/manifest.schema.json` are each *probed* in the runtime (`decodeHostInput` answers with a result for it; a codec missing from its `switch` answers `undefined`), equal the table of `spec/runtime-abi.md` 6.3, and every codec in the manifests of the four examples is decodable; the body commands and properties of the registry equal the members of the body handle (`BodyHandleImpl`) and the `ctx.body` row of the ABI; the intrinsics and namespace members of the registry equal the tables of `spec/stdlib.md` 6 and 2.
+6. **The claims of the README and the other hand-written pages** (`readme/*`). The commands of the README table equal those of `mtek --help`; the examples of its table equal the directories of `examples/` that have an `mtek.toml`; "N examples" in prose equals their number; every `npm run X` it names is a script of the root `package.json` and every root script is named; the rows of `npm run check` and `npm test` name every step of those scripts; the Rust and Node versions of the README and of `docs/getting-started.md` equal `rust-toolchain.toml` and `.nvmrc`; `spec/README.md` does not say that nothing is implemented, and the range of decision numbers it states equals the directory.
+7. **The release notes** (decision 0104) are checked by the same command.
+8. **Where it runs.** `npm run check:release` (exit 0, 1 on a mismatch, 3 without a built `mtek`), the `Release documentation` step of the `node` job of `.github/workflows/ci.yml` (after the build and the coverage matrix), the root `npm test`, and the unit tests of the package (`npm run test:unit`, which skip the live block without a built compiler and run it after `npm run build`). `README.md` documents the command.
+9. **Each comparison is proved to fail.** `tools/release-docs/test/live.test.ts` corrupts one side of every comparison in memory (a feature removed from the compiler's list, a registry event removed, a reserved word dropped from the specification, a row of the limitations page deleted, a runtime ABI of 2, a key the runtime does not map, a codec it cannot decode, a body command it lacks, a table row removed from `spec/stdlib.md`, a README that miscounts) and expects a finding that names both places. The corruptions of the files on disk that were run by hand for the completion report are listed under Verification.
+
+## Findings of the first run
+
+The first run compared the repository at the merge of M7-02 and found the following; each was fixed on the documents' side because the code was right, except where marked.
+
+- `README.md` said "three examples" twice (and "the three examples have theirs") while `examples/` has four. Fixed.
+- `README.md` did not name `npm run check:assets`, a step of `npm run check` and of the CI, in either the table of commands or the `npm run check` row. Fixed.
+- `spec/README.md` said "Nothing described here is implemented yet" and "Decision records 0001-0021". Fixed (it now points to `docs/limitations.md`).
+- `spec/language.md` 3.3 promised `W0030` and the heading of 11 promised a dedicated diagnostic for every item. Decision 0102.
+- Defects of the tool itself, found and fixed while writing it: the first reader of the host input codec table missed `vecN`, and the first reader of the `ctx.body` row missed the two velocity properties. Both showed up as false mismatches on the first run, which is how the comparisons were debugged against a repository that was in fact consistent there.
+
+No mismatch was found between the compiler, the registry file, the runtime and the manifest: the compiler's registry-derived features equal the features derived from `spec/stdlib-schema.json`, the ABI constants agree in all places, and the runtime implements every key, event, codec and body command the registry lists.
+
+## Consequences
+
+- A change to one of the six places that is not made in the others fails `npm run check:release` in the same pull request, naming both places.
+- The comparison reads the runtime's source text for the event names and the body handle because those modules cannot be loaded by a plain `node`. A restructuring of those two definitions fails the readers loudly (they throw, naming the file) instead of comparing nothing.
+- The check covers capability *names*. It is not a proof that a capability behaves correctly; that is the job of the browser suites, the fixtures and the coverage matrix.
+
+## Verification
+
+`npm run check:release`; `npm run test:unit -w @mtek/release-docs`; the by-hand corruptions of the completion report of M7-06 (below).

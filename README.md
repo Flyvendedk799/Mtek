@@ -9,12 +9,19 @@ runtime on browser WebGPU, and the toolchain works fully offline, without any AI
 ## Status: pre-alpha
 
 The specification is in [`spec/`](spec/README.md). The repository contains the compiler and the `mtek`
-command line tool (the commands are listed [below](#the-mtek-command)), the web runtime, three
+command line tool (the commands are listed [below](#the-mtek-command)), the web runtime, four
 examples and the test and benchmark infrastructure. There is no release, no installer and no package
 registry: you build the tool from a checkout. **New here? Start with
 [`docs/getting-started.md`](docs/getting-started.md)**: install, create a project, run it, break it,
 read the error and repair it. A feature counts as supported only when a test that would fail without
 it passes in a recorded environment (`spec/testing.md`).
+
+What the language is and what it is not: the [language guide](docs/language-guide.md), the
+[language reference](docs/language-reference.md) and the [limitations](docs/limitations.md) (every
+unsupported feature, every gate, every reserved diagnostic, each with its reason) are generated from the
+specification, the registry and the compiler, and checked against the compiler, the runtime and this file
+by `npm run check:release`. The [draft release notes](docs/release-notes-v0.1.md) cite evidence for every
+claim and mark every result that does not exist yet as pending.
 
 ## Requirements
 
@@ -29,17 +36,19 @@ From a clean checkout:
 |---|---|
 | `npm ci` | install the exact locked npm dependencies |
 | `npm run build` | bundle `@mtek/runtime-web` to `packages/runtime-web/dist/runtime.js`, the Rapier adapter to `packages/physics-rapier/dist/physics.js` and the VS Code extension to `packages/editor-vscode/dist/extension.cjs`, then `cargo build -p mtek-cli --locked` |
-| `npm run check` | `cargo fmt --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `npm run check:ts`, `npm run lint`, `npm run check:naming`, `npm run check:tasks` |
+| `npm run check` | `cargo fmt --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `npm run check:ts`, `npm run lint`, `npm run check:naming`, `npm run check:tasks`, `npm run check:assets` |
 | `npm run check:ts` | `tsc -b` over all TypeScript projects |
 | `npm run lint` | ESLint (`recommended-type-checked`, no `any`) |
 | `npm run check:naming` | fails if the retired placeholder name appears outside the two decision records that explain the rename (decision 0017) |
 | `npm run test:unit` | Vitest unit tests |
 | `npm run test:browser` | builds, then runs the Playwright browser tests (`hardware`, `software` and `benchmarks` projects; add `--project=<name>` to select one); tests without a WebGPU adapter are reported NOT-RUN, never passed |
+| `npm run check:assets` | fails if a generated GLB test asset on disk differs from what `tests/assets/tools/make-glb.mjs` writes (`spec/assets.md` section 7, decision 0058) |
 | `npm run check:tasks` | validates the benchmark tasks and the recorded holdout hash (`benchmarks/README.md`, decision 0021) |
 | `npm run check:coverage` | the feature coverage matrix (decision 0093): derives from the compiled examples and fixtures what each uses, fails when a v0.1 feature has no demonstration or positive fixture, a diagnostic code no negative test, or `docs/coverage-matrix.md` is stale (`npm run generate -w @mtek/coverage-matrix` rewrites it); needs `npm run build` first |
+| `npm run check:release` | the release documentation and the capability consistency check (decisions 0100, 0101 and 0104): regenerates `docs/language-guide.md`, `docs/language-reference.md` and `docs/limitations.md` and fails if they are stale; compares the compiler's supported features, the registry, the runtime's ABI and capabilities, the specification and the claims of this README, naming both sides of every mismatch; checks that every claim of `docs/release-notes-v0.1.md` links to evidence (`npm run generate -w @mtek/release-docs` rewrites the pages); needs `npm run build` first |
 | `npm run test:benchmarks` | the `benchmarks` Playwright project: every benchmark task's fixtures against its three.js baseline reference (hardware configuration; `MTEK_BASELINE_SOURCE=starter` runs the starters instead) |
 | `npm run test:browser:hardware` | the `hardware` project only; with `MTEK_REQUIRE_GPU=1` it fails on any NOT-RUN test or software adapter |
-| `npm test` | `check`, then `cargo test --workspace --locked`, then `test:unit`, then `check:coverage`, then `test:browser` (NOT-RUN tolerant unless `MTEK_REQUIRE_GPU=1`) |
+| `npm test` | `check`, then `cargo test --workspace --locked`, then `test:unit`, then `check:coverage`, then `check:release`, then `test:browser` (NOT-RUN tolerant unless `MTEK_REQUIRE_GPU=1`) |
 | `cargo run -p mtek-cli -- --version` | prints `mtek 0.1.0-dev (language 0.1, runtime ABI 1)` |
 
 ### Examples
@@ -74,7 +83,7 @@ The working configuration on the development machine is recorded in decision 001
 
 #### `mtek test`
 
-`mtek test [--allow-not-run] [--format human|json] [PATH]` runs the declarative fixtures `tests/*.test.toml` of a project (the three examples have theirs) in Chromium with the launch configuration of the hardware project (`spec/tooling.md` section 6, decision 0074, report schema `spec/test-report.schema.json`). A fixture that cannot run (no WebGPU adapter, no Playwright, no Node) is reported **NOT-RUN**, never as a pass; that exits 1 unless `--allow-not-run`. It uses the browser variables above and these:
+`mtek test [--allow-not-run] [--format human|json] [PATH]` runs the declarative fixtures `tests/*.test.toml` of a project (the four examples have theirs) in Chromium with the launch configuration of the hardware project (`spec/tooling.md` section 6, decision 0074, report schema `spec/test-report.schema.json`). A fixture that cannot run (no WebGPU adapter, no Playwright, no Node) is reported **NOT-RUN**, never as a pass; that exits 1 unless `--allow-not-run`. It uses the browser variables above and these:
 
 | Variable | Effect |
 |---|---|

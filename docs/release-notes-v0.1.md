@@ -1,0 +1,76 @@
+# Mtek v0.1 release notes (DRAFT)
+
+- Status: **draft, written from evidence only.** Nothing in it is a promise that no file backs. It will be finished when the pending results of section 6 exist.
+- Language version 0.1; compiler `mtek 0.1.0-dev`; runtime ABI 1.
+- Checked by `npm run check:release` (decision 0104): every claim links to a file that exists, every number in a claim occurs in a file it links to, every pending result is marked as such.
+
+## About this draft
+
+How to read it.
+
+- A **claim** is a bullet or a table row in sections 1 to 6. Each claim cites at least one file under `evidence/`, `spec/` or `tests/` (or a test file), as a link; a number in a claim is a number that the cited file contains.
+- A **pending** item starts with the words "Pending: not yet measured." It names, in code, the evidence files that will replace it. It carries no number: a number there would be invented. When one of the named files exists, `npm run check:release` fails until the placeholder is replaced by the result.
+- The release is **pre-alpha**: there is no installer and no package registry; you build the tool from a checkout ([`README.md`](../README.md)).
+- What v0.1 does not do is on [limitations](limitations.md), which is generated from the compiler and the diagnostics catalogue, not written for these notes.
+
+## 1. What v0.1 is
+
+- A typed language whose programs describe a scene, its state and its shader stages as one checked unit, compiled to JavaScript and WGSL for a runtime on browser WebGPU; the specification is [`spec/`](../spec/README.md) and its language version is 0.1 ([`spec/runtime-abi.md`](../spec/runtime-abi.md), manifest schema 1, runtime ABI 1).
+- The compiler lists its own supported features through `mtek context`; the list is derived from the compiler's construct table and the registry, and the Rust suite [`crates/mtek-compiler/tests/context.rs`](../crates/mtek-compiler/tests/context.rs) tests the derivation ([M6 report](../evidence/M6/report.md), work item M6-05, [`spec/decisions/0072-context-export.md`](../spec/decisions/0072-context-export.md)).
+- Every advertised language feature is exercised by one of the four example programs or by a named positive fixture, and every diagnostic code has a negative test or a stated reason why none can exist: 303 features and 201 diagnostic codes, audited by [`tools/coverage-matrix`](../tools/coverage-matrix/test/audit.test.ts) and shown in [`docs/coverage-matrix.md`](coverage-matrix.md) ([`spec/decisions/0093-feature-coverage-matrix.md`](../spec/decisions/0093-feature-coverage-matrix.md)).
+- Four example programs ship in `examples/`: `pulse-cube`, `material-configurator`, `physics-playground` and `modular-scene`, each with declarative `mtek test` fixtures ([`pulse-cube`](../examples/pulse-cube/tests), [`material-configurator`](../examples/material-configurator/tests), [`physics-playground`](../examples/physics-playground/tests), [`modular-scene`](../examples/modular-scene/tests), [`spec/decisions/0092-modular-scene-example.md`](../spec/decisions/0092-modular-scene-example.md)).
+
+## 2. What each gate proved
+
+Each row is a milestone gate run from a clean clone, with every rendering criterion proved on a hardware WebGPU adapter and none resting on a NOT-RUN or software-adapter result. The hardware was one machine and one operating system (see section 5).
+
+| Milestone | Result | Evidence |
+|---|---|---|
+| M0 | The risky boundary holds: values uploaded by generated writers are read bit-exactly by generated WGSL (42 of 42 probes), a changed value creates no pipeline, and a baseline exists in three.js. 422 Rust tests passed, 0 failed | [M0 report](../evidence/M0/report.md), [`evidence/M0/test-results-gate.json`](../evidence/M0/test-results-gate.json) |
+| M1 | A source file compiles to a rendered browser scene; failures show before launch. 949 Rust tests passed; 98 hardware browser tests passed, 0 failed, 0 not-run | [M1 report](../evidence/M1/report.md), [`evidence/M1/cargo-test-gate.txt`](../evidence/M1/cargo-test-gate.txt) |
+| M2 | The typed CPU/GPU contract: numeric conformance of 330 bit-exact rows and 220 tolerance rows on hardware, 0 failures. 1116 Rust tests passed; 117 hardware browser tests passed | [M2 report](../evidence/M2/report.md), [`evidence/M2/numeric-conformance-gate-hardware.json`](../evidence/M2/numeric-conformance-gate-hardware.json) |
+| M3 | The program is interactive: state, handlers, `bind`, host inputs, candidate-based hot reload. 1129 Rust tests passed; 265 browser tests passed across all projects, 0 failed | [M3 report](../evidence/M3/report.md), [`evidence/M3/test-results-gate-full.json`](../evidence/M3/test-results-gate-full.json) |
+| M4 | The usable rendering and asset subset: PBR materials, lights, strict glTF assets, the material configurator. 1204 Rust tests passed; 391 browser tests passed, 0 failed, 0 not-run | [M4 report](../evidence/M4/report.md), [`evidence/M4/test-results-gate-full.json`](../evidence/M4/test-results-gate-full.json) |
+| M5 | Physics and the reusable entity lifecycle on the real Rapier engine: prefabs, spawn and destroy, collision events. 1231 Rust tests passed; 441 browser tests passed, 0 failed | [M5 report](../evidence/M5/report.md), [`evidence/M5/test-results-gate-full.json`](../evidence/M5/test-results-gate-full.json) |
+| M6 | Authoring and repair: the formatter, validated suggested edits, the language server, the VS Code extension, the context export, the grammar adapter, the repair harness, `mtek test`, preview mode, the getting-started walkthrough. 1590 Rust tests passed, 0 failed; 584 browser tests passed, 0 failed, 0 not-run | [M6 report](../evidence/M6/report.md), [`evidence/M6/cargo-test-gate.txt`](../evidence/M6/cargo-test-gate.txt), [`evidence/M6/test-results-gate-full.json`](../evidence/M6/test-results-gate-full.json) |
+
+## 3. Tooling that shipped with v0.1
+
+- `mtek fmt` formats every `.mtek` file canonically and idempotently: 856 files of the repository corpus, 728 of which parse and satisfy the formatter's properties; the 128 that do not parse are refused ([M6 report](../evidence/M6/report.md), [`spec/decisions/0070-canonical-formatter.md`](../spec/decisions/0070-canonical-formatter.md)).
+- Diagnostics carry suggested edits only when a validator has re-checked the edit on an in-memory copy; the Rust test applies every attached edit by plain splice ([`crates/mtek-compiler/tests/suggested_edits.rs`](../crates/mtek-compiler/tests/suggested_edits.rs), [M6 report](../evidence/M6/report.md)).
+- `mtek lsp` and the VS Code extension: 10 integration tests passed in a real VS Code ([`evidence/M6/vscode-integration-gate.txt`](../evidence/M6/vscode-integration-gate.txt), [M6 report](../evidence/M6/report.md)).
+- The getting-started page is executed by a test: its commands, expected output and diffs run against the real `mtek`; no human tester was available ([`crates/mtek-cli/tests/getting_started.rs`](../crates/mtek-cli/tests/getting_started.rs), [M6 report](../evidence/M6/report.md)).
+- `--mode preview` builds for untrusted programs: loop budgets, fetches restricted to a base URL, a compile time limit ([`spec/decisions/0075-untrusted-preview-mode.md`](../spec/decisions/0075-untrusted-preview-mode.md), [M6 report](../evidence/M6/report.md)).
+- The benchmark set has 34 tasks and 8 holdout tasks; every Mtek reference passes parse, check, build, start, tests and required symbols through the harness, 42 of 42 ([`evidence/M6/gate-mtek-references.json`](../evidence/M6/gate-mtek-references.json), [M6 report](../evidence/M6/report.md)).
+
+## 4. Not supported, specified-but-not-built, and corrected promises
+
+- The specification refuses six features by name, each with its own `x9xx` diagnostic: bitwise operators, vertex and compute stages, switching scenes, transparency, remote assets and instancing a whole glTF node hierarchy. [`docs/limitations.md`](limitations.md) lists all six with the reason, and the catalogue is [`spec/diagnostics.md`](../spec/diagnostics.md).
+- Four diagnostics are in the catalogue but no program of v0.1 can produce them: `E5901`, `E5902`, `E6003` and `W0030` ([`tests/semantics/code-coverage-exceptions.json`](../tests/semantics/code-coverage-exceptions.json), [`spec/decisions/0094-coverage-audit-findings.md`](../spec/decisions/0094-coverage-audit-findings.md)).
+- The naming lint `W0030` that the language reference once promised is **not part of v0.1**. `mtek fmt` does not implement it; `spec/language.md` section 3.3 was amended to say so ([`spec/decisions/0102-naming-lint-w0030-and-the-language-reference.md`](../spec/decisions/0102-naming-lint-w0030-and-the-language-reference.md), [`spec/language.md`](../spec/language.md)).
+- The initial value of an entity or camera field, a material instance parameter or a projection field that is not a constant expression is rejected with `E9010`, although `spec/scenes.md` section 11 specifies it. It is the one hard gate of this build, listed by `mtek context` as `non-constant-initial-values` ([`tests/semantics/fail/gate_non_constant_initial_value`](../tests/semantics/fail/gate_non_constant_initial_value), [`spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md`](../spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md)).
+- The glTF profile is strict: no extensions, no skinning, morphs or animations, no sparse accessors, no vertex colours, tangents or second UV set, only opaque single-sided materials with a base colour texture ([`spec/decisions/0015-asset-strictness.md`](../spec/decisions/0015-asset-strictness.md), [`spec/assets.md`](../spec/assets.md)).
+- Physics has no continuous collision detection: a body faster than the measured window can pass through a thin moving obstacle ([`spec/physics.md`](../spec/physics.md) section 7.1, [M5 report](../evidence/M5/report.md)).
+- Four narrowings of the blueprint are recorded rather than approximated: collider dimensions and texture parameters are fixed at construction, recursion is refused on the CPU as on the GPU, and key auto-repeat cannot be requested ([`spec/decisions/0016-v0.1-restrictions.md`](../spec/decisions/0016-v0.1-restrictions.md)).
+
+## 5. Known issues
+
+These are the items of "Unsupported / remaining" in the [M6 report](../evidence/M6/report.md), each by its own words, and the red CI job. None is hidden or softened.
+
+- **A CI job is red on GitHub**: the `dev-overlay` spec (`specs/m4/dev-overlay.spec.ts`, line 239) fails intermittently in the Ubuntu `browser-software` job, on the Linux software renderer only. The cause has not been found; the failure is left as it is on the owner's instruction ([M6 report](../evidence/M6/report.md), [`tests/browser/specs/m4/dev-overlay.spec.ts`](../tests/browser/specs/m4/dev-overlay.spec.ts)).
+- **No model has been run**: the repair harness is tested with replay transcripts and fake transports, and no token count, completion rate or difficulty measurement exists yet ([M6 report](../evidence/M6/report.md), [`spec/decisions/0077-repair-harness.md`](../spec/decisions/0077-repair-harness.md)).
+- **One machine and one OS for the grammar backend**: the conformance suite and the smoke ran on Windows only; the Linux path was verified by checksum only ([M6 report](../evidence/M6/report.md), [`spec/decisions/0073-grammar-model-gbnf-and-the-llama-cpp-adapter.md`](../spec/decisions/0073-grammar-model-gbnf-and-the-llama-cpp-adapter.md)).
+- **No human tester** has tried the getting-started walkthrough; two findings of the new user's path are documented, not changed: the validated suggested edit is shown only in JSON output and by the language server, and `mtek` has no command to serve a release build ([M6 report](../evidence/M6/report.md), [`spec/decisions/0091-getting-started-walkthrough.md`](../spec/decisions/0091-getting-started-walkthrough.md)).
+- **The formatter's exhaustive single-comment run** did not finish and is not claimed ([M6 report](../evidence/M6/report.md), [`spec/decisions/0070-canonical-formatter.md`](../spec/decisions/0070-canonical-formatter.md)).
+- **The benchmark set is 34 tasks**, four above the blueprint's 30; the holdout of 8 tasks is not blind to its author, and its difficulty is a design intention, not a measurement ([M6 report](../evidence/M6/report.md)).
+- **Known gaps carried forward**: an undiagnosed colour-upload quirk on the three.js side, a point the specification leaves open (whether the fraction of a step survives a dropped surplus), and a built-in material parameter write on a spawned entity that is checked but not run at run time ([M6 report](../evidence/M6/report.md), [`spec/decisions/0088-benchmark-input-hook-tasks.md`](../spec/decisions/0088-benchmark-input-hook-tasks.md)).
+- All hardware evidence comes from one Windows 11 machine with an AMD Radeon RX 7900 XTX; software-adapter results (SwiftShader) are informational only ([M1 report](../evidence/M1/report.md), [`evidence/environments/2026-10-03-windows11-rx7900xtx.json`](../evidence/environments/2026-10-03-windows11-rx7900xtx.json)).
+
+## 6. Results that do not exist yet
+
+Each item below is a measurement or a check of the M7 work plan that has not been made. It will be replaced by the result and the evidence file that holds it; until then it states nothing.
+
+- **Pending: not yet measured.** Environment matrix (M7-03): which browsers, operating systems and adapters run the release demonstrations, and with what result. Evidence that will replace this: `evidence/M7/environment-matrix.md`.
+- **Pending: not yet measured.** Runtime benchmark (M7-04): frame time, upload and allocation counters of the release demonstrations against the three.js baseline. Evidence that will replace this: `evidence/M7/runtime-benchmark.md`.
+- **Pending: not yet measured.** AI and token benchmark (M7-05): token counts, completion rates and repair counts of real models on the benchmark tasks. Evidence that will replace this: `evidence/M7/ai-benchmark.md`.
+- **Pending: not yet measured.** Reproducible builds (M7-07): whether two builds of the same source are byte-identical across machines and operating systems. Evidence that will replace this: `evidence/M7/reproducible-builds.md`.

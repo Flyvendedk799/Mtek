@@ -9,6 +9,7 @@
     { "path": "benchmarks" },
     { "path": "benchmarks/baselines/m0-bridge" },
     { "path": "tools/ai-eval" },
-    { "path": "tools/coverage-matrix" }
+    { "path": "tools/coverage-matrix" },
+    { "path": "tools/release-docs" }
   ]
 }

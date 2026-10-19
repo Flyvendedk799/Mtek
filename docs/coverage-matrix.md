@@ -749,7 +749,7 @@ None.
 
 | Code | Title | Reason |
 |---|---|---|
-| W0030 | naming convention | The naming lint of the formatter (spec/language.md section 3.3) is specified but not implemented in v0.1 (decision 0070 item 11); no program can produce it. The M7 gate decides whether to implement it or to amend the language reference. |
+| W0030 | naming convention | The naming lint is not part of v0.1 (spec/language.md section 3.3 as amended by decision 0102; decision 0070 item 11): neither the compiler nor mtek fmt implements it, the catalogue keeps the code so that the number is not reused, and no program can produce it. |
 | E5901 | scene switching not supported | No construct of v0.1 switches the active scene (spec/scenes.md section 1: one scene per application), so no program can produce it; the context export lists the feature as not supported. |
 | E5902 | transparency not supported | No construct of v0.1 asks for transparency (spec/materials.md section 2: opaque materials only), so no program can produce it; the context export lists the feature as not supported. |
 | E6003 | too many interpolated inputs | v0.1 has at most 4 inter-stage variables (spec/materials.md section 3.3) and no custom vertex stage (E4901), so the limit of 16 cannot be reached; custom vertex stages are v0.2. |

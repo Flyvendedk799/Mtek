@@ -16,7 +16,7 @@
     },
     {
       "code": "W0030",
-      "reason": "The naming lint of the formatter (spec/language.md section 3.3) is specified but not implemented in v0.1 (decision 0070 item 11); no program can produce it. The M7 gate decides whether to implement it or to amend the language reference."
+      "reason": "The naming lint is not part of v0.1 (spec/language.md section 3.3 as amended by decision 0102; decision 0070 item 11): neither the compiler nor mtek fmt implements it, the catalogue keeps the code so that the number is not reused, and no program can produce it."
     }
   ],
   "unreachable": [

@@ -127,7 +127,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e0023"></a>E0023 | invalid escape sequence | |
 | <a id="mtek-e0024"></a>E0024 | unterminated string | |
 | <a id="mtek-e0025"></a>E0025 | malformed color literal | not 6 or 8 hex digits |
-| <a id="mtek-w0030"></a>W0030 | naming convention | **Not implemented:** the formatter's naming lint (`spec/language.md` §3.3) is specified but not built in v0.1 (decision 0070 item 11), so no program produces it |
+| <a id="mtek-w0030"></a>W0030 | naming convention | **Not implemented:** the naming lint is not part of v0.1 (`spec/language.md` §3.3, decisions 0070 item 11 and 0102); the code is kept so that the number is not reused, and no program produces it |
 
 ### 5.1 Syntax (`1xxx`)
 | Code | Title | Trigger |
