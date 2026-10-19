@@ -26,6 +26,32 @@ test.describe("a production-style embedded product configurator", () => {
     await page.goto(PRODUCT_RELEASE_URL);
     await expect(page.locator("#preview-status")).toHaveText("Live 3D preview");
     expect(await page.evaluate(() => (window as Host).mtekApp?.debug)).toBeUndefined();
+    // Offscreen readPixels can succeed while the browser compositor presents a blank canvas.
+    // Verify the production path through an actual screenshot, without enabling test/debug mode.
+    let presented: Buffer | undefined;
+    try {
+      await expect.poll(async () => {
+        presented = await page.locator("#mtek").screenshot();
+        return await page.evaluate(async png => {
+          const image = new Image();
+          image.src = `data:image/png;base64,${png}`;
+          await image.decode();
+          const canvas = document.createElement("canvas");
+          canvas.width = image.width; canvas.height = image.height;
+          const context = canvas.getContext("2d");
+          if (!context) throw new Error("no 2d context for screenshot assertion");
+          context.drawImage(image, 0, 0);
+          const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+          const colors = new Set<number>();
+          for (let i = 0; i < pixels.length; i += 4) {
+            colors.add(((pixels[i] ?? 0) << 16) | ((pixels[i + 1] ?? 0) << 8) | (pixels[i + 2] ?? 0));
+          }
+          return colors.size;
+        }, presented.toString("base64"));
+      }, { message: "the release canvas presents the rendered product, not only its CSS background", timeout: 10_000 }).toBeGreaterThan(20);
+    } finally {
+      if (presented) await testInfo.attach("product-presented-canvas", { body: presented, contentType: "image/png" });
+    }
     await page.getByRole("button", { name: "Warm clay", exact: true }).click();
     await expect(page.locator("#total-price")).toHaveText("$380");
     await page.locator("#mtek").focus();
@@ -167,12 +193,20 @@ test.describe("a production-style embedded product configurator", () => {
     await expect(page.locator("#status")).toBeEmpty();
   });
 
-  test("a terminal runtime failure disables controls and permits an explicit restart", async ({ page, gpu }) => {
+  test("a terminal runtime failure disables controls even if a diagnostic hook throws, and permits a restart", async ({ page, gpu }) => {
     void gpu;
     await open(page);
-    await page.evaluate(() => (window as Host).mtekApp?.debug?.failAllocation());
+    const callbackError = page.waitForEvent("pageerror", { predicate: error => error.message === "diagnostic hook failed" });
+    await page.evaluate(() => {
+      const host = window as Host;
+      host.mtekHostOptions ??= {};
+      host.mtekHostOptions.onDiagnostic = () => { throw new Error("diagnostic hook failed"); };
+      host.mtekApp?.debug?.failAllocation();
+    });
+    expect((await callbackError).message).toBe("diagnostic hook failed");
     await expect(page.locator("#preview-status")).toHaveText("Preview unavailable");
     expect(await page.locator("#controls").evaluate(form => (form as HTMLFormElement).inert)).toBe(true);
+    await expect(page.locator("#status")).not.toBeEmpty();
     await page.locator("#preview-toggle").click();
     await page.locator("#open-preview").click();
     await page.waitForFunction(() => (window as Host).mtekApp?.state === "running");

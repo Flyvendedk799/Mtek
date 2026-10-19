@@ -37,6 +37,14 @@ function setup() {
 
 const manual: MtekMountOptions = { test: { manualClock: true, renderTarget: { width: 8, height: 8 } } };
 
+async function until(condition: () => boolean): Promise<void> {
+  for (let i = 0; i < 100; i += 1) {
+    if (condition()) return;
+    await new Promise<void>((resolve) => { setTimeout(resolve, 0); });
+  }
+  throw new Error("recovery did not settle");
+}
+
 describe("mounted host outputs", () => {
   it("works in production without debug and emits only after input, update and render", async () => {
     const { host, mount } = setup();
@@ -63,6 +71,32 @@ describe("mounted host outputs", () => {
     expect(app.debug!.scene().state["quantity"]).toBe(2);
     app.debug!.step(1, 0);
     expect(observed).toEqual([20, 50]);
+    app.dispose();
+  });
+
+  it("publishes settled CPU state when a zero-sized canvas skips rendering, while pause still defers it", async () => {
+    const { host, mount } = setup();
+    host.canvas.clientWidth = 0;
+    host.canvas.clientHeight = 0;
+    const app = await mount({ test: { manualClock: true } });
+    const observed: unknown[] = [];
+    app.onOutput("total", value => {
+      observed.push([value, app.debug!.scene().state["quantity"], host.device.queue.submits]);
+    });
+    app.setInput("quantity", 3);
+    app.debug!.step(1, 0);
+    expect(observed).toEqual([[30, 3, 0]]);
+    expect(app.debug!.counters()["framesSkipped"]).toBe(1);
+    app.pause(); app.setInput("quantity", 4); app.debug!.step(1, 0);
+    expect(observed).toEqual([[30, 3, 0]]);
+    app.resume(); app.debug!.step(1, 0);
+    expect(observed).toEqual([[30, 3, 0], [40, 4, 0]]);
+    host.canvas.clientWidth = 100;
+    host.canvas.clientHeight = 100;
+    host.resizeObservers[0]?.trigger();
+    app.debug!.step(1, 0);
+    expect(host.device.queue.submits).toBe(1);
+    expect(observed).toHaveLength(2);
     app.dispose();
   });
 
@@ -122,13 +156,6 @@ describe("mounted host outputs", () => {
     const app = await mount(manual);
     const listener = vi.fn(); app.onOutput("total", listener);
     app.setInput("quantity", 3); app.debug!.step(1, 0);
-    const until = async (condition: () => boolean): Promise<void> => {
-      for (let i = 0; i < 100; i += 1) {
-        if (condition()) return;
-        await new Promise<void>((resolve) => { setTimeout(resolve, 0); });
-      }
-      throw new Error("recovery did not settle");
-    };
     host.latestDevice.loseDevice("unknown", "test loss");
     await until(() => app.state === "recovering");
     app.debug!.step(1, 0);
@@ -139,6 +166,54 @@ describe("mounted host outputs", () => {
     expect(listener.mock.calls).toEqual([[30]]);
     app.setInput("quantity", 4); app.debug!.step(1, 0);
     expect(listener.mock.calls).toEqual([[30], [40]]);
+    app.dispose();
+  });
+
+  it("commits output source changes and removals only when a paused replacement runs its first frame", async () => {
+    const { host, manifest, program, mount } = setup();
+    const app = await mount(manual);
+    const total = vi.fn(); const quantity = vi.fn();
+    app.onOutput("total", total); app.onOutput("quantity", quantity);
+    app.setInput("quantity", 2); app.debug!.step(1, 0);
+    app.pause();
+    const candidate = { ...manifest, scene: { ...manifest.scene,
+      hostOutputs: [{ name: "total", type: "f32", source: { kind: "state", name: "quantity" } }],
+    } };
+    host.files.set(MANIFEST_URL, JSON.stringify(candidate));
+    expect(await app.replaceProgram!(program)).toEqual({ ok: true });
+    const lateQuantity = vi.fn(); app.onOutput("quantity", lateQuantity);
+    app.debug!.step(2, 0);
+    expect(total.mock.calls).toEqual([[20]]);
+    expect(lateQuantity).not.toHaveBeenCalled();
+    app.resume(); app.debug!.step(1, 0);
+    expect(total.mock.calls).toEqual([[20], [2]]);
+    expect(quantity.mock.calls).toEqual([[2]]);
+    expect(lateQuantity).not.toHaveBeenCalled();
+    expect(() => app.onOutput("quantity", vi.fn())).toThrow(RangeError);
+    app.dispose();
+  });
+
+  it("preserves output declarations and first snapshots when device loss discards a pending replacement", async () => {
+    const { host, manifest, program, mount } = setup();
+    const app = await mount(manual);
+    const beforeLoss = vi.fn(); app.onOutput("total", beforeLoss);
+    // The candidate removes the export, but the device is lost before its first frame can commit it.
+    host.files.set(MANIFEST_URL, JSON.stringify({ ...manifest, scene: { ...manifest.scene, hostOutputs: [] } }));
+    expect(await app.replaceProgram!(program)).toEqual({ ok: true });
+    host.latestDevice.loseDevice("unknown", "loss before replacement commit");
+    await until(() => app.state === "recovering");
+    const duringLoss = vi.fn(); app.onOutput("total", duringLoss);
+    app.debug!.step(1, 0);
+    expect(beforeLoss).not.toHaveBeenCalled();
+    expect(duringLoss).not.toHaveBeenCalled();
+    expect(host.timers.runNext()).toBe(true);
+    await until(() => app.state === "running");
+    app.debug!.step(1, 0);
+    expect(beforeLoss).toHaveBeenCalledExactlyOnceWith(10);
+    expect(duringLoss).toHaveBeenCalledExactlyOnceWith(10);
+    app.debug!.step(1, 0);
+    expect(beforeLoss).toHaveBeenCalledTimes(1);
+    expect(duringLoss).toHaveBeenCalledTimes(1);
     app.dispose();
   });
 

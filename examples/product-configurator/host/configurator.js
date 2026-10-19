@@ -92,12 +92,13 @@ async function mountAttempt(ticket) {
       inputs: { ...selection },
       onDiagnostic(diagnostic) {
         if (ticket !== generation) return;
-        host.mtekHostOptions?.onDiagnostic?.(diagnostic);
         if (diagnostic.severity === "error") status.textContent = diagnostic.message;
         if (app?.state === "failed") {
           controls.inert = true;
           previewStatus.textContent = "Preview unavailable";
         }
+        // The runtime isolates hook exceptions; finish our own failure UI before calling host code.
+        host.mtekHostOptions?.onDiagnostic?.(diagnostic);
       },
     });
     // A slower mount must not resurrect a preview the visitor has already closed or replaced.

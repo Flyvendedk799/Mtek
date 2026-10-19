@@ -478,3 +478,30 @@ fn expanded_parts_count_toward_the_static_entity_limit() {
         ["E5092"]
     );
 }
+
+#[test]
+fn imported_assembly_initialisers_cannot_hide_child_reads_behind_params() {
+    let mut fs = project(
+        "import { Assembly } from \"./assembly.mtek\";
+        scene Demo { camera Main {} entity Instance: Assembly {} }",
+    );
+    fs.insert(
+        ProjectPath::new("src/assembly.mtek").unwrap(),
+        "export prefab Assembly {
+            param input: f32 = 5.0;
+            position: vec3(input + Part.value, 0.0, 0.0);
+            entity Part { state value: f32 = 7.0; }
+        }",
+    );
+    let analysis = crate::analyze(&ProjectRoot::at_base(), &fs);
+    assert_eq!(
+        analysis
+            .report
+            .diagnostics
+            .iter()
+            .map(|d| d.code.short())
+            .collect::<Vec<_>>(),
+        ["E5081"]
+    );
+    assert!(matches!(lower_to_ir(&analysis), Err(LowerError::HasErrors)));
+}

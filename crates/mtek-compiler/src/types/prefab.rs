@@ -381,7 +381,13 @@ impl<'a> Checker<'a> {
         if self.is_material_field(&name) {
             self.dynamic_descriptors.insert(strip_parens(value).id);
         }
+        // Check every read, not just the constant evaluator's first non-constant
+        // subexpression: a valid param/state prefix must not hide an entity read.
+        let previous_scope = self.scope.replace(super::scene_body::ScopeCtx {
+            initialiser: Some(super::scene_body::Initialiser::Field),
+        });
         self.check(value, expected);
+        self.scope = previous_scope;
         self.fold_root(value);
         let facts = self.body.take().map(|b| b.facts).unwrap_or_default();
         self.out.cpu_bodies.push(CpuBody {

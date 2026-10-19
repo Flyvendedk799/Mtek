@@ -119,7 +119,11 @@ describe("runtime.d.ts with tsc --strict", () => {
       declare const canvas: HTMLCanvasElement;
       export async function run(): Promise<void> {
         const app = await mountMtek(canvas, program);
-        const stop: () => void = app.onOutput("total", (value) => { const total: number = value; console.log(total); });
+        const stop: () => void = app.onOutput("total", (value) => {
+          const total: number = value;
+          const valueIsAny: 0 extends (1 & typeof value) ? true : false = false;
+          console.log(total, valueIsAny);
+        });
         app.onOutput("selected", (value) => { const selected: string = value; console.log(selected); });
         app.onOutput("available", (value) => { const available: boolean = value; console.log(available); });
         app.onOutput("position", (value) => { const position: readonly [number, number, number] = value; console.log(position); });
@@ -128,6 +132,42 @@ describe("runtime.d.ts with tsc --strict", () => {
       }
     `, { skipLibCheck: false });
     expect(problems).toEqual([]);
+  });
+
+  it("keeps one-generic host programs, handles and mount calls compatible with generated Outputs interfaces", () => {
+    // An interface (including an empty one) is not implicitly assignable to Record<string, unknown>.
+    // This must exercise the compiler's interface shape, rather than hiding the regression with a type alias.
+    for (const fields of ["", "total: number; position: readonly [number, number, number]"]) {
+      const problems = compile(`
+        import { mountMtek } from "./runtime.js";
+        import type { MtekApp, MtekProgram } from "./runtime.js";
+        import { mountMtek as implMount } from "./host/mount.js";
+        import type { MtekApp as ImplApp, MtekMountProgram } from "./host/types.js";
+        import type { MtekProgram as ImplProgram } from "./abi/program.js";
+        interface Inputs { quantity: number }
+        interface Outputs { ${fields} }
+        declare const program: MtekProgram<Inputs, Outputs>;
+        declare const generated: ImplProgram<Inputs, Outputs>;
+        declare const canvas: HTMLCanvasElement;
+        declare const app: MtekApp<Inputs, Outputs>;
+        declare const implApp: ImplApp<Inputs, Outputs>;
+        export const legacyProgram: MtekProgram<Inputs> = program;
+        export const legacyGenerated: ImplProgram<Inputs> = generated;
+        export const legacyMountProgram: MtekMountProgram<Inputs> = generated;
+        export const legacyApp: MtekApp<Inputs> = app;
+        export const legacyImplApp: ImplApp<Inputs> = implApp;
+        export const explicit: Promise<MtekApp<Inputs>> = mountMtek<Inputs>(canvas, program);
+        export const explicitImpl: Promise<ImplApp<Inputs>> = implMount<Inputs>(canvas, generated);
+        export const inferred: Promise<MtekApp<Inputs>> = mountMtek(canvas, program);
+        export const inferredImpl: Promise<ImplApp<Inputs>> = implMount(canvas, generated);
+        legacyApp.onOutput("an-untyped-name", value => {
+          const valueIsAny: 0 extends (1 & typeof value) ? true : false = false;
+          const output: unknown = value;
+          console.log(valueIsAny, output);
+        });
+      `, { types: ["@webgpu/types"] });
+      expect(problems).toEqual([]);
+    }
   });
 
   // The app.d.ts the compiler emits (M1-17 golden; no host inputs before M3).
@@ -165,6 +205,33 @@ describe("runtime.d.ts with tsc --strict", () => {
   });
 
   const wrong: Array<[string, string, RegExp]> = [
+    [
+      "an unknown inferred output name",
+      `import { mountMtek, type MtekProgram } from "./runtime.js";
+       interface Outputs { total: number }
+       declare const program: MtekProgram<{}, Outputs>;
+       declare const canvas: HTMLCanvasElement;
+       (await mountMtek(canvas, program)).onOutput("missing", () => undefined);`,
+      /TS2345/,
+    ],
+    [
+      "an incorrectly typed inferred output listener",
+      `import { mountMtek, type MtekProgram } from "./runtime.js";
+       interface Outputs { total: number }
+       declare const program: MtekProgram<{}, Outputs>;
+       declare const canvas: HTMLCanvasElement;
+       (await mountMtek(canvas, program)).onOutput("total", (value: string) => { console.log(value); });`,
+      /TS2345/,
+    ],
+    [
+      "subscribing to an inferred empty Outputs interface",
+      `import { mountMtek, type MtekProgram } from "./runtime.js";
+       interface Outputs {}
+       declare const program: MtekProgram<{}, Outputs>;
+       declare const canvas: HTMLCanvasElement;
+       (await mountMtek(canvas, program)).onOutput("missing", () => undefined);`,
+      /TS2345/,
+    ],
     [
       "an unknown output name",
       `import type { MtekApp } from "./runtime.js";

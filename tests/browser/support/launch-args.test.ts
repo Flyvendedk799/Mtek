@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { browserChannel, extraBrowserArgs, hardwareLaunchArgs, isHeadless } from "./launch-args.ts";
+import { browserChannel, extraBrowserArgs, hardwareLaunchArgs, isHeadless, softwareLaunchArgs } from "./launch-args.ts";
 
 describe("launch arguments", () => {
   it("are headless Chromium with the WebGPU switches by default", () => {
@@ -17,6 +17,16 @@ describe("launch arguments", () => {
   it("add the Vulkan switches on Linux only", () => {
     expect(hardwareLaunchArgs({}, "linux")).toContain("--use-angle=vulkan");
     expect(hardwareLaunchArgs({}, "darwin")).not.toContain("--use-angle=vulkan");
+  });
+
+  it("presents SwiftShader canvases through the headless Linux Vulkan path only on Linux", () => {
+    const windows = ["--enable-unsafe-webgpu", "--use-webgpu-adapter=swiftshader", "--enable-webgpu-developer-features"];
+    expect(softwareLaunchArgs({}, "win32")).toEqual(windows);
+    expect(softwareLaunchArgs({}, "darwin")).toEqual(windows);
+    expect(softwareLaunchArgs({}, "linux")).toEqual([
+      ...windows, "--use-angle=vulkan", "--enable-features=Vulkan", "--use-vulkan=swiftshader", "--disable-vulkan-surface",
+    ]);
+    expect(softwareLaunchArgs({ MTEK_BROWSER_ARGS: "--disable-gpu" }, "linux").at(-1)).toBe("--disable-gpu");
   });
 
   it("append MTEK_BROWSER_ARGS, split on white space", () => {

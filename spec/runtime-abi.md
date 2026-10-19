@@ -333,7 +333,7 @@ export interface MtekProgram<I = Record<string, unknown>, O = Record<string, unk
   readonly abi: 1; readonly baseUrl: URL; readonly manifestUrl: URL;
   readonly writers: unknown; readonly functions: unknown; readonly scenes: unknown; readonly prefabs: unknown;
   readonly __inputs?: I;   // phantom, never present at run time
-  readonly __outputs?: O;  // phantom, never present at run time
+  readonly __outputs?: { readonly [K in keyof O]: O[K] }; // phantom; mapped for single-generic compatibility
 }
 ```
 
@@ -397,7 +397,7 @@ Each name maps only to state of the entry scene. The exposable types are `f32`, 
 
 `app.onOutput("total", value => { ... })` returns an idempotent unsubscribe function. The generated `Outputs` interface determines both the permitted names and each listener's value type, inferred through `mountMtek`. An empty interface forbids subscriptions at compile time. At run time, an undeclared name throws `RangeError`, a non-function listener throws `TypeError`, and a failed or disposed app throws `Error`.
 
-- Each subscription receives its first snapshot at the end of the next successfully settled frame, after handlers, fixed ticks, update, command flushing, bindings, transforms and render submission. Subscription itself is synchronous and does not call the listener. A paused or recovering app waits until a frame can run.
+- Each subscription receives its first snapshot at the end of the next successfully settled simulation frame, after handlers, fixed ticks, update, command flushing, bindings, transforms and render submission when the canvas has pixels. A zero-sized canvas skips rendering but still publishes settled CPU state because simulation continues (§8.2). Subscription itself is synchronous and does not call the listener. A paused or recovering app waits until a frame can run.
 - Later frames notify only when the value changes from that subscription's previous snapshot. Multiple writes in a frame coalesce. Equality is `Object.is` for scalars and component-wise `Object.is` for vectors/colors; no write events are exposed.
 - Numbers, booleans and strings retain their CPU value. Vectors become frozen, copied readonly tuples of two, three or four numbers. Colors become frozen readonly `[r, g, b, a]` tuples in **linear light**, with no sRGB conversion or 8-bit rounding. These differ intentionally from input hex codecs. The host receives no mutable scene references.
 - All values and the listener list are captured before callbacks. A listener registered during delivery begins next frame. Unsubscription or disposal suppresses callbacks that have not run yet. Registering the same callback twice creates two independent subscriptions. `setInput` inside a callback still applies at the next frame start.

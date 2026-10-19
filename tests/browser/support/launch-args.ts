@@ -40,3 +40,23 @@ export function hardwareLaunchArgs(
     ...extraBrowserArgs(env),
   ];
 }
+
+/**
+ * SwiftShader correctness runs must present the canvas as well as render offscreen textures.
+ * Linux uses the same ANGLE/Vulkan presentation path as the hardware project. Chromium's
+ * disable-vulkan-surface switch presents via bitblt instead of an unavailable headless swapchain.
+ */
+export function softwareLaunchArgs(
+  env: Environment = process.env,
+  platform: string = process.platform,
+): string[] {
+  return [
+    "--enable-unsafe-webgpu",
+    "--use-webgpu-adapter=swiftshader",
+    "--enable-webgpu-developer-features",
+    ...(platform === "linux"
+      ? ["--use-angle=vulkan", "--enable-features=Vulkan", "--use-vulkan=swiftshader", "--disable-vulkan-surface"]
+      : []),
+    ...extraBrowserArgs(env),
+  ];
+}

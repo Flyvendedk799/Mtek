@@ -151,20 +151,37 @@ pub(super) fn validate_host_ports(
         }
         let Some(ty) = state_by_name.get(state_part).copied() else {
             // State name unknown, or not scene state (entity state is not exposable).
-            if entry_scene
+            let entity_name = if direction == "output" {
+                state_part.split('.').next().unwrap_or(state_part)
+            } else {
+                state_part
+            };
+            if let Some(entity) = entry_scene
                 .entities_in_order()
-                .iter()
-                .any(|e| e.name == state_part)
+                .into_iter()
+                .find(|e| e.name == entity_name)
             {
-                sink.push(
+                let diagnostic = if direction == "output" {
+                    Diagnostic::new(
+                        Code::E9020,
+                        format!(
+                            "Host output source '{target}' is not exposable: only scene state can be a host output, not an entity or its state or fields."
+                        ),
+                    )
+                    .related(entity.name_span, "the entity is declared here")
+                    .help(format!(
+                        "copy the needed value into scene state in an update or handler, then export '{}.state_name'",
+                        entry_scene.name
+                    ))
+                } else {
                     Diagnostic::new(
                         Code::E9020,
                         format!(
                             "Host {direction} target '{target}' is not exposable: only scene state can be a host {direction}, not an entity."
                         ),
                     )
-                    .note(format!("host.{direction}s.{name}")),
-                );
+                };
+                sink.push(diagnostic.note(format!("host.{direction}s.{name}")));
             } else {
                 sink.push(
                     Diagnostic::new(

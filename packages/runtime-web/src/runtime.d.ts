@@ -91,8 +91,8 @@ export interface MtekProgram<I = Record<string, unknown>, O = Record<string, unk
   readonly prefabs: unknown;
   /** Phantom, never present at run time. */
   readonly __inputs?: I;
-  /** Phantom, never present at run time. */
-  readonly __outputs?: O;
+  /** Phantom, never present at run time. Map interface keys so single-generic hosts accept generated Outputs. */
+  readonly __outputs?: { readonly [K in keyof O]: O[K] };
 }
 
 export type MtekInputResult =

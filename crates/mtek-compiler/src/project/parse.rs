@@ -642,11 +642,12 @@ impl Validator {
         let mut valid = true;
         for (key, value) in inputs_table.iter() {
             let name: &str = key.get_ref().as_ref();
-            if direction == "outputs" && name.is_empty() {
+            if name.is_empty() {
                 self.invalid(
                     key.span().start,
-                    "Invalid project configuration: host.outputs names must not be empty."
-                        .to_owned(),
+                    format!(
+                        "Invalid project configuration: host.{direction} names must not be empty."
+                    ),
                 );
                 valid = false;
                 continue;

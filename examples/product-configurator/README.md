@@ -6,7 +6,7 @@ This is a demonstration, not a store. Prices are illustrative and there is no ch
 
 ## Run
 
-From the repository root with its pinned Rust and Node toolchains:
+From the repository root with its pinned Rust and Node toolchains. The static-server command below also needs Python 3; an equivalent static HTTP server can serve the same project directory:
 
 ```sh
 npm ci
@@ -16,7 +16,7 @@ node node_modules/typescript/bin/tsc -p examples/product-configurator/host
 python3 -m http.server 8000 --directory examples/product-configurator
 ```
 
-Open http://localhost:8000/host/index.html in a WebGPU-capable browser. The host imports the generated `../dist/app.js`; serve the whole project so its generated relative resources resolve. `mtek dev` opens the generated scene-only page, not this storefront.
+Open http://localhost:8000/host/index.html in a WebGPU-capable browser. The host imports the generated `../dist/app.js`; serve the whole project so its generated relative resources resolve. `mtek dev` opens the generated scene-only page, not this storefront. After changing `.mtek` files, rerun the build command and reload the host page. HTML/CSS/host-JavaScript changes need only a reload; this static-server workflow does not hot-reload the storefront.
 
 ## Try it
 
@@ -34,7 +34,7 @@ Open http://localhost:8000/host/index.html in a WebGPU-capable browser. The host
 - `host/configurator.js`: checked JavaScript using the generated `Inputs` and `Outputs` declarations. It uses the production `setInput`/`onOutput` API and never reads debug scene state.
 - `host/index.html` and `style.css`: a responsive, keyboard-accessible host page. The controls are disabled while the preview is unavailable.
 
-An output subscription receives its initial snapshot after the next settled rendered frame, then changed values once per frame. Input changes queued by callbacks take effect on the following frame. `onOutput` returns an idempotent unsubscribe function. The preview does not need `options.test` or `app.debug` in normal use.
+An output subscription receives its initial snapshot after the next settled simulation frame (after rendering when the canvas has pixels), then changed values once per frame. Input changes queued by callbacks take effect on the following frame. `onOutput` returns an idempotent unsubscribe function. The preview does not need `options.test` or `app.debug` in normal use.
 
 Assembly support is deliberately bounded: child entities work in statically declared prefab instances. Spawning a compound prefab and putting another prefab instance inside its assembly remain compile errors. Single-entity dynamic prefabs retain their existing behavior. The restriction on spawn/destroy inside helper functions is unchanged.
 

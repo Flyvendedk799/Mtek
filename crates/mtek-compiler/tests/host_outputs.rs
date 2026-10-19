@@ -94,13 +94,19 @@ fn invalid_output_sources_are_rejected_during_check() {
         ("Demo.missing", Code::E9021),
         ("Demo.Item", Code::E9020),
         ("Demo.q", Code::E9020),
-        ("Demo.Item.value", Code::E9021),
+        ("Demo.Item.value", Code::E9020),
     ] {
         let fs = project(
             &format!("value = \"{target}\""),
-            "scene Demo { state value: f32 = 1.0; state q: quat = quat.identity; camera Main {} entity Item {} }",
+            "scene Demo { state value: f32 = 1.0; state q: quat = quat.identity(); camera Main {} entity Item {} }",
         );
         let result = check(&ProjectRoot::at_base(), &fs);
+        assert_eq!(
+            result.report.diagnostics.len(),
+            1,
+            "{target}: {:#?}",
+            result.report.diagnostics
+        );
         assert!(
             result
                 .report
@@ -110,6 +116,43 @@ fn invalid_output_sources_are_rejected_during_check() {
             "{target}: {:#?}",
             result.report.diagnostics
         );
+    }
+}
+
+#[test]
+fn entity_output_sources_explain_the_scene_state_boundary() {
+    let source = "prefab Chair { state tint: color = #ffffff; entity Seat { state value: f32 = 1.0; } }\n\
+        scene Demo { camera Main {} entity Item { state value: f32 = 1.0; } entity Product: Chair {} }";
+    for target in [
+        "Demo.Item",
+        "Demo.Item.value",
+        "Demo.Product.tint",
+        "Demo.Product.Seat.value",
+    ] {
+        let fs = project(&format!("value = \"{target}\""), source);
+        let result = check(&ProjectRoot::at_base(), &fs);
+        assert_eq!(
+            result.report.diagnostics.len(),
+            1,
+            "{target}: {:#?}",
+            result.report.diagnostics
+        );
+        let diagnostic = &result.report.diagnostics[0];
+        assert_eq!(diagnostic.code, Code::E9020);
+        assert!(diagnostic.message.contains("only scene state"));
+        assert!(
+            diagnostic
+                .notes
+                .iter()
+                .any(|note| note == "host.outputs.value")
+        );
+        assert!(
+            diagnostic
+                .notes
+                .iter()
+                .any(|note| note.contains("copy the needed value into scene state"))
+        );
+        assert_eq!(diagnostic.related.len(), 1);
     }
 }
 

@@ -2,9 +2,9 @@ import { join, resolve } from "node:path";
 import { defineConfig } from "@playwright/test";
 import {
   browserChannel,
-  extraBrowserArgs,
   hardwareLaunchArgs,
   isHeadless,
+  softwareLaunchArgs,
 } from "./support/launch-args.ts";
 
 const root = import.meta.dirname;
@@ -23,17 +23,9 @@ const resultsDir = resolve(process.env["MTEK_RESULTS_DIR"]);
 // without a GPU (`MTEK_BROWSER_ARGS=--disable-gpu`).
 const headless = isHeadless();
 const channel = browserChannel();
-const linux = process.platform === "linux";
-const extraArgs = extraBrowserArgs();
 const hardwareArgs = hardwareLaunchArgs();
 
-const softwareArgs = [
-  "--enable-unsafe-webgpu",
-  "--use-webgpu-adapter=swiftshader",
-  "--enable-webgpu-developer-features",
-  ...(linux ? ["--enable-features=Vulkan", "--use-vulkan=swiftshader"] : []),
-  ...extraArgs,
-];
+const softwareArgs = softwareLaunchArgs();
 
 // Firefox is not part of the default run (decision 0107): it exposes `navigator.gpu` but no adapter when
 // headless, and with the two preferences below only when headed (measured, evidence/M7/environments). The

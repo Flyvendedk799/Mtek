@@ -277,3 +277,75 @@ fn checked_declarations_carry_their_whole_spans() {
     assert_eq!(slice(b.span), "entity B {}");
     assert!(scene.span.contains_span(scene.name_span) && b.span.contains_span(b.name_span));
 }
+
+#[test]
+fn prefab_field_initialisers_check_every_entity_read_regardless_of_operand_order() {
+    for prefix in ["input", "root"] {
+        for read in [
+            "Part.value",
+            "Part.position.x",
+            "self.position.x",
+            "Part.material.roughness",
+        ] {
+            for expression in [format!("{prefix} + {read}"), format!("{read} + {prefix}")] {
+                for field in [
+                    format!("position: vec3({expression}, 0.0, 0.0);"),
+                    format!("mesh: Box {{}}; material: Pbr {{ roughness: {expression}; }};"),
+                ] {
+                    let source = format!(
+                        "prefab Assembly {{
+                            param input: f32 = 1.0;
+                            state root: f32 = 2.0;
+                            {field}
+                            entity Part {{
+                                state value: f32 = 7.0;
+                                mesh: Box {{}};
+                                material: Pbr {{}};
+                            }}
+                        }}
+                        scene Demo {{ camera Main {{}} entity Instance: Assembly {{}} }}"
+                    );
+                    let result = checked(&source);
+                    assert_eq!(
+                        result.codes(),
+                        ["E5081"],
+                        "{source}\n{:#?}",
+                        result.diagnostics
+                    );
+                    let span = result.diagnostics[0].primary.as_ref().unwrap().span;
+                    // The prohibited read is diagnosed, independently of which operand the
+                    // constant evaluator would encounter first.
+                    assert!(
+                        read.starts_with(&source[span.range()]),
+                        "{source}\n{span:?}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn child_field_initialisers_reject_sibling_reads_without_restricting_lexical_root_state() {
+    let source = "prefab Assembly {
+        param input: f32 = 3.0;
+        entity Part {
+            state captured: f32 = root;
+            state next: f32 = captured + input;
+            position: vec3(root, next, input);
+            entity Badge { position: vec3(root, input, 0.0); }
+        }
+        state root: f32 = input;
+        entity Sibling { state value: f32 = 7.0; }
+    }
+    scene Demo { camera Main {} entity Instance: Assembly {} }";
+    let result = checked(source);
+    assert!(result.diagnostics.is_empty(), "{:#?}", result.diagnostics);
+
+    let invalid = source.replace(
+        "vec3(root, next, input)",
+        "vec3(root + Sibling.value, next, input)",
+    );
+    let result = checked(&invalid);
+    assert_eq!(result.codes(), ["E5081"], "{:#?}", result.diagnostics);
+}
