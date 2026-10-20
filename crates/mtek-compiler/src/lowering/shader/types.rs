@@ -15,7 +15,9 @@ use crate::emit_wgsl::{padded_element_name, wgsl_struct_name};
 use crate::ir::{Program, StructItem};
 use crate::layout::{LayoutNode, LayoutType, compute};
 use crate::lowering::shader_ir::{ShaderType, StructDecl, VectorSize, struct_decls_from_layout};
-use crate::lowering::standard_stage::SURFACE_INPUT_STRUCT;
+use crate::lowering::standard_stage::{
+    SURFACE_INPUT_STRUCT, SurfaceField, surface_input_layout, surface_input_struct,
+};
 use crate::source::Span;
 
 use super::Defect;
@@ -218,7 +220,13 @@ impl<'p> TypeMapper<'p> {
             .ok_or_else(|| format!("the layout of '{ty}' has no member"))?;
         for decl in struct_decls_from_layout(&record, self.span) {
             if decl.name != PROBE && !self.decls.iter().any(|d| d.name == decl.name) {
-                self.decls.push(decl);
+                // Keep exactly the stage wrapper's declaration, including its member
+                // names. Its natural 64-byte layout already satisfies aggregate layout.
+                self.decls.push(if decl.name == SURFACE_INPUT_STRUCT {
+                    surface_input_struct(&SurfaceField::ALL, self.span)
+                } else {
+                    decl
+                });
             }
         }
         let wgsl = ShaderType::from_layout_node(&node);
@@ -253,7 +261,7 @@ impl<'p> TypeMapper<'p> {
                 }
                 LayoutType::new_struct(symbol.clone(), members)
             }
-            MtekType::SurfaceInput => return Err(no_gpu_form(SURFACE_INPUT)),
+            MtekType::SurfaceInput => surface_input_layout(),
         })
     }
 }
