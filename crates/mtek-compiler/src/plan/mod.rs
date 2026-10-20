@@ -19,6 +19,8 @@
 //! `maxUniformBufferBindingSize` is `E6001`. The plan depends only on the IR, never on
 //! traversal of unordered structures.
 
+use std::collections::BTreeMap;
+
 use crate::diagnostics::{Code, Diagnostic};
 use crate::ir::{self, MaterialItem, MeshDesc, Program, Scene, Symbol, Value};
 use crate::layout::{LayoutNode, LayoutRecord};
@@ -207,11 +209,15 @@ impl ResourcePlan {
 
 /// Bitwise equality of mesh descriptors (an `f32` compares by its bits, so the plan never
 /// depends on how `NaN` or `-0.0` compare).
+#[cfg(test)]
 fn same_mesh(a: &MeshDesc, b: &MeshDesc) -> bool {
-    let bits = |values: &[f32]| values.iter().map(|v| v.to_bits()).collect::<Vec<_>>();
     match (a, b) {
-        (MeshDesc::Box { size: x }, MeshDesc::Box { size: y }) => bits(x) == bits(y),
-        (MeshDesc::Plane { size: x }, MeshDesc::Plane { size: y }) => bits(x) == bits(y),
+        (MeshDesc::Box { size: x }, MeshDesc::Box { size: y }) => {
+            x.map(f32::to_bits) == y.map(f32::to_bits)
+        }
+        (MeshDesc::Plane { size: x }, MeshDesc::Plane { size: y }) => {
+            x.map(f32::to_bits) == y.map(f32::to_bits)
+        }
         (
             MeshDesc::Sphere {
                 radius: r1,
@@ -226,6 +232,35 @@ fn same_mesh(a: &MeshDesc, b: &MeshDesc) -> bool {
         ) => r1.to_bits() == r2.to_bits() && s1 == s2 && g1 == g2,
         (a @ MeshDesc::Asset { .. }, b @ MeshDesc::Asset { .. }) => a == b,
         _ => false,
+    }
+}
+
+/// Lookup identity only: the ordered descriptor vector still owns manifest IDs.
+/// Float bits preserve signed zero and NaN payloads. Asset names borrow the IR.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum MeshKey<'a> {
+    Box([u32; 3]),
+    Plane([u32; 2]),
+    Sphere(u32, u32, u32),
+    Asset(&'a str, &'a str, u32),
+}
+
+impl<'a> MeshKey<'a> {
+    fn new(desc: &'a MeshDesc) -> Self {
+        match desc {
+            MeshDesc::Box { size } => Self::Box(size.map(f32::to_bits)),
+            MeshDesc::Plane { size } => Self::Plane(size.map(f32::to_bits)),
+            MeshDesc::Sphere {
+                radius,
+                segments,
+                rings,
+            } => Self::Sphere(radius.to_bits(), *segments, *rings),
+            MeshDesc::Asset {
+                file,
+                mesh,
+                primitive,
+            } => Self::Asset(file, mesh, *primitive),
+        }
     }
 }
 
@@ -312,12 +347,17 @@ pub fn plan_program(program: &Program) -> Result<ResourcePlan, String> {
 /// As [`plan_program`].
 pub fn plan_scene(program: &Program, scene: &Scene) -> Result<ResourcePlan, String> {
     let mut meshes: Vec<MeshDesc> = Vec::new();
+    let mut mesh_indices = BTreeMap::new();
     let mut entity_meshes = Vec::with_capacity(scene.entities.len());
     let mut instances: Vec<PlannedInstance> = Vec::new();
     let mut entity_instances = Vec::with_capacity(scene.entities.len());
     let mut materials: Vec<PlannedMaterial> = Vec::new();
     for entity in &scene.entities {
-        entity_meshes.push(plan_mesh(&mut meshes, entity.mesh.as_ref())?);
+        entity_meshes.push(plan_mesh(
+            &mut meshes,
+            &mut mesh_indices,
+            entity.mesh.as_ref(),
+        )?);
         let instance = match &entity.material {
             Some(material) => {
                 let index = index_u32(instances.len())?;
@@ -355,7 +395,7 @@ pub fn plan_scene(program: &Program, scene: &Scene) -> Result<ResourcePlan, Stri
                     ty: written_type(&p.ty),
                 })
                 .collect(),
-            mesh: plan_mesh(&mut meshes, prefab.entity.mesh.as_ref())?,
+            mesh: plan_mesh(&mut meshes, &mut mesh_indices, prefab.entity.mesh.as_ref())?,
             instance: prefab
                 .entity
                 .material
@@ -395,17 +435,18 @@ struct Owned<'a> {
 }
 
 /// The position of `mesh`'s descriptor in `meshes`, which it joins if it is new.
-fn plan_mesh(meshes: &mut Vec<MeshDesc>, mesh: Option<&ir::Mesh>) -> Result<Option<u32>, String> {
+fn plan_mesh<'a>(
+    meshes: &mut Vec<MeshDesc>,
+    indices: &mut BTreeMap<MeshKey<'a>, usize>,
+    mesh: Option<&'a ir::Mesh>,
+) -> Result<Option<u32>, String> {
     let Some(mesh) = mesh else {
         return Ok(None);
     };
-    let index = match meshes.iter().position(|m| same_mesh(m, &mesh.desc)) {
-        Some(index) => index,
-        None => {
-            meshes.push(mesh.desc.clone());
-            meshes.len() - 1
-        }
-    };
+    let index = *indices.entry(MeshKey::new(&mesh.desc)).or_insert_with(|| {
+        meshes.push(mesh.desc.clone());
+        meshes.len() - 1
+    });
     index_u32(index).map(Some)
 }
 
