@@ -151,6 +151,43 @@ it("retains WGSL by hash when a reused shader moves builds, but loads that build
   app.dispose();
 });
 
+it("retains historical shader sources through A to B to moved A reloads", async () => {
+  const host = healthyHost();
+  const original = installProgram(host);
+  const app = await mountOn(host, manual());
+  const hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const changed = installProgram(host, (json) => {
+    Object.assign((json["shaders"] as object[])[0]!, { hash, url: "shaders/aaaaaaaaaaaaaaaa.wgsl", map: "shaders/aaaaaaaaaaaaaaaa.mtek-map.json" });
+    (json["materials"] as Record<string, unknown>[])[0]!["shader"] = hash;
+  });
+  host.files.set(`${BASE_URL}shaders/aaaaaaaaaaaaaaaa.wgsl`, VALID_WGSL);
+  host.files.set(`${BASE_URL}shaders/aaaaaaaaaaaaaaaa.mtek-map.json`, spanMapJson(hash));
+  const checkedB = checkManifest(changed);
+  const checkedA = checkManifest(original);
+  if (!checkedB.ok || !checkedA.ok) throw new Error("invalid candidate manifests");
+  expect(await app.replaceProgram?.(fakeProgram(minimalSceneInit, checkedB.manifest))).toEqual({ ok: true });
+  debugOf(app).step(1, 0.016);
+  const candidateBase = "https://example.test/historical-build/";
+  host.files.set(`${candidateBase}program.manifest.json`, JSON.stringify(original));
+  host.files.set(`${candidateBase}shaders/${SHADER_HASH.slice(0, 16)}.mtek-map.json`, spanMapJson());
+  const candidate = { ...fakeProgram(minimalSceneInit, checkedA.manifest), baseUrl: new URL(candidateBase), manifestUrl: new URL("program.manifest.json", candidateBase) };
+  const modules = debugOf(app).counters()["shaderModulesCreated"];
+  expect(await app.replaceProgram?.(candidate)).toEqual({ ok: true });
+  expect(debugOf(app).counters()["shaderModulesCreated"]).toBe(modules);
+  expect(host.fetched).not.toContain(`${candidateBase}shaders/${SHADER_HASH.slice(0, 16)}.wgsl`);
+  debugOf(app).step(1, 0.016);
+  const fetched = [...host.fetched];
+  host.files.clear();
+  await lose(host, app);
+  await runAttempt(host, app);
+  expect(app.state).toBe("running");
+  expect(host.fetched).toEqual(fetched);
+  debugOf(app).step(1, 0.016);
+  expect(debugOf(app).counters()["failedMaterials"]).toBe(0);
+  expect(host.latestDevice.renderPasses.at(-1)?.draws).toHaveLength(1);
+  app.dispose();
+});
+
 describe("device loss starts a recovery", () => {
   it("pauses, reports W8060 and waits 250 ms before the first attempt", async () => {
     const host = healthyHost();

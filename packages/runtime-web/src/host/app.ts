@@ -137,6 +137,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
   private renderPrepMs = 0;
   private hostInputs: HostInputs;
   private readonly hostOutputs: HostOutputs;
+  /** Retained modules can outlive the current manifest; recovery needs their cached WGSL provenance. */
+  private readonly shaderSources = new Map<string, string>();
   /** Validated candidate waiting to become the live scene at the next frame start. */
   private pendingSwap:
     | {
@@ -176,6 +178,9 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     this.behaviors = new Behaviors(deps.sceneFunctions, deps.scene.world);
     this.hostInputs = new HostInputs(manifest);
     this.hostOutputs = new HostOutputs(manifest);
+    for (const shader of manifest.shaders) {
+      if (!this.shaderSources.has(shader.hash)) this.shaderSources.set(shader.hash, new URL(shader.url, deps.program.baseUrl).href);
+    }
     registry.phase = "runtime:render";
     if (test?.disableCulling === true) deps.scene.renderer.setFrustumCulling(false);
 
@@ -351,14 +356,9 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
 
       // Reused modules need their retained source at the candidate's URL for recovery, even when
       // the build moved. Only WGSL is interchangeable by hash; span maps belong to their build.
-      const previousShaders = new Map<string, MtekManifest["shaders"][number]>();
-      for (const shader of this.deps.manifest.shaders) {
-        if (!previousShaders.has(shader.hash)) previousShaders.set(shader.hash, shader);
-      }
       for (const shader of manifest.shaders) {
-        const previous = previousShaders.get(shader.hash);
-        if (previous === undefined) continue;
-        const source = new URL(previous.url, this.deps.program.baseUrl).href;
+        const source = this.shaderSources.get(shader.hash);
+        if (source === undefined) continue;
         const target = new URL(shader.url, candidate.baseUrl).href;
         if (source !== target) {
           await this.deps.fetchShaderFile(target, source);
@@ -389,6 +389,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         for (const diagnostic of shaders.diagnostics) this.report(diagnostic);
         return { ok: false, diagnostics: shaders.diagnostics };
       }
+      for (const shader of manifest.shaders) this.shaderSources.set(shader.hash, new URL(shader.url, candidate.baseUrl).href);
 
       const restart = findStructuralChange(
         this.deps.manifest.scene,
