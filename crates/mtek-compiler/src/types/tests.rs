@@ -913,6 +913,35 @@ fn strings_are_values_without_operators() {
 }
 
 #[test]
+fn arrays_reject_unit_values_in_cpu_and_gpu_bodies() {
+    for declaration in [
+        "let invalid = [nothing()];",
+        "let invalid = [[nothing()]];",
+        "let invalid = [nothing(), nothing()];",
+        "let invalid = [1, nothing()];",
+        "let invalid = [nothing(), 1];",
+        "let invalid: array<i32, 1> = [nothing()];",
+    ] {
+        for source in [
+            format!(
+                "fn nothing() {{}} scene Demo {{ camera Main {{}} update(dt: f32) {{ {declaration} }} }}"
+            ),
+            format!(
+                "fn nothing() {{}} material M {{ fragment(input: SurfaceInput) -> color {{ {declaration} return #ffffff; }} }} scene Demo {{ camera Main {{}} }}"
+            ),
+        ] {
+            let c = checked(&source);
+            assert!(
+                c.codes().contains(&"E3001"),
+                "{source}: {:#?}",
+                c.diagnostics
+            );
+        }
+    }
+    clean("fn nothing() {} fn valid() { nothing(); let values = [[1, 2], [3, 4]]; }");
+}
+
+#[test]
 fn arrays_literals_lengths_and_indexing() {
     let c = clean(
         "const N: u32 = 3;\nconst A = [1, 2, 3];\nconst B = [1, 2.5];\nconst C: array<f32, N> = [1, 2, 3];\nconst D = [vec2(1.0), vec2(0, 1)];\nconst E = A[2];\nconst F = D[1].y;\nconst G = [[1, 2], [3, 4]][1][0];\nconst M = mat4.translation(vec3(1, 2, 3))[3];\nconst H: array<u32, 2> = [7, 8];\nconst I = H[N - 2];",

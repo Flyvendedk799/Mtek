@@ -1427,6 +1427,23 @@ impl<'a> Checker<'a> {
                 }
             }
         };
+        if element == TyId::UNIT {
+            let span = items
+                .iter()
+                .find(|item| self.ty_of(item.id) == Some(TyId::UNIT))
+                .map_or(expr.span, |item| item.span);
+            self.report(
+                Diagnostic::new(
+                    Code::E3001,
+                    "An array element must give a value, but this call has no result type.",
+                )
+                .at(span)
+                .expected("a value")
+                .actual("()"),
+            );
+            self.synth_unchecked(items);
+            return TyId::ERROR;
+        }
         if self.is_error(element) {
             self.synth_unchecked(items);
             return TyId::ERROR;
