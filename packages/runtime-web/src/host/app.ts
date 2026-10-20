@@ -385,26 +385,26 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
 
       // A candidate with bodies needs the physics module: the one already loaded when it is the same file,
       // otherwise it is imported now, so a candidate whose physics cannot load is discarded like any other.
-      let physicsModule = this.deps.physicsModule;
-      if (!manifest.subsystems.physics) {
-        physicsModule = undefined;
-      } else if (physicsModule === undefined || physicsModule.url !== physicsModuleUrl(manifest, candidate.baseUrl)) {
-        const loadedPhysics = await loadPhysicsBackend({
-          manifest,
-          baseUrl: candidate.baseUrl,
-          importModule: (url) => environment.importModule(url),
-          phase: "runtime:reload",
-        });
-        if (!loadedPhysics.ok) {
-          for (const module of shaders.created) registry.release(module);
-          for (const diagnostic of loadedPhysics.diagnostics) this.report(diagnostic);
-          return { ok: false, diagnostics: loadedPhysics.diagnostics };
-        }
-        physicsModule = { url: loadedPhysics.url, backend: loadedPhysics.backend };
-      }
-
       let started: Awaited<ReturnType<typeof startScene>>;
+      let physicsModule = this.deps.physicsModule;
       try {
+        if (!manifest.subsystems.physics) {
+          physicsModule = undefined;
+        } else if (physicsModule === undefined || physicsModule.url !== physicsModuleUrl(manifest, candidate.baseUrl)) {
+          const loadedPhysics = await loadPhysicsBackend({
+            manifest,
+            baseUrl: candidate.baseUrl,
+            importModule: (url) => environment.importModule(url),
+            phase: "runtime:reload",
+          });
+          if (!loadedPhysics.ok) {
+            for (const module of shaders.created) registry.release(module);
+            for (const diagnostic of loadedPhysics.diagnostics) this.report(diagnostic);
+            return { ok: false, diagnostics: loadedPhysics.diagnostics };
+          }
+          physicsModule = { url: loadedPhysics.url, backend: loadedPhysics.backend };
+        }
+
         started = await startScene({
           manifest,
           structure: structure.structure,
