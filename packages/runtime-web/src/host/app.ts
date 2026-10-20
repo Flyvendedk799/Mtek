@@ -347,7 +347,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
           baseUrl: candidate.baseUrl,
           device,
           registry,
-          fetch: (url) => environment.fetch(url),
+          fetch: this.deps.fetchShaderFile,
           phase: "runtime:reload",
         },
         this.deps.modules,

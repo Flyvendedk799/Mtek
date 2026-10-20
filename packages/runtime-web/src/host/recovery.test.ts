@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 import type { MtekProgramScene } from "../abi/program.js";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
 import { checkManifest } from "../abi/validate.js";
-import { FakeHost, FakeHostDevice, asDom, fakeProgram, minimalSceneInit, type InitContext } from "../test-support/fake-host.js";
-import { healthyHost, installProgram, mountOn } from "../test-support/mount-fixture.js";
+import { BASE_URL, FakeHost, FakeHostDevice, asDom, fakeProgram, minimalSceneInit, type InitContext } from "../test-support/fake-host.js";
+import { VALID_WGSL, healthyHost, installProgram, mountOn, spanMapJson } from "../test-support/mount-fixture.js";
 import { DEFAULT_RECOVERY_DELAYS_MS, RECOVERY_ATTEMPTS } from "./app.js";
 import { mountMtekWith } from "./mount.js";
 import type { MtekApp, MtekDebug, MtekMountOptions } from "./types.js";
@@ -89,6 +89,37 @@ describe("the contract constants", () => {
     expect(RECOVERY_ATTEMPTS).toBe(3);
     expect(DEFAULT_RECOVERY_DELAYS_MS).toEqual([250, 1000, 4000]);
   });
+});
+
+it.each([BASE_URL, "https://example.test/other-build/"])("recovers a reloaded shader from %s without fetching it again", async (candidateBase) => {
+  const host = healthyHost();
+  const app = await mountOn(host, manual());
+  const hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const manifest = installProgram(host, (json) => {
+    const shader = (json["shaders"] as Record<string, unknown>[])[0]!;
+    shader["hash"] = hash;
+    shader["url"] = "shaders/aaaaaaaaaaaaaaaa.wgsl";
+    shader["map"] = "shaders/aaaaaaaaaaaaaaaa.mtek-map.json";
+    (json["materials"] as Record<string, unknown>[])[0]!["shader"] = hash;
+  });
+  host.files.set(`${candidateBase}shaders/aaaaaaaaaaaaaaaa.wgsl`, VALID_WGSL);
+  host.files.set(`${candidateBase}shaders/aaaaaaaaaaaaaaaa.mtek-map.json`, spanMapJson(hash));
+  host.files.set(new URL("program.manifest.json", candidateBase).href, JSON.stringify(manifest));
+  const checked = checkManifest(manifest);
+  if (!checked.ok) throw new Error("invalid candidate manifest");
+  const candidate = { ...fakeProgram(minimalSceneInit, checked.manifest), baseUrl: new URL(candidateBase), manifestUrl: new URL("program.manifest.json", candidateBase) };
+  expect(await app.replaceProgram?.(candidate)).toEqual({ ok: true });
+  debugOf(app).step(1, 0.016);
+  const fetched = [...host.fetched];
+  host.files.clear();
+  await lose(host, app);
+  await runAttempt(host, app);
+  expect(app.state).toBe("running");
+  expect(host.fetched).toEqual(fetched);
+  debugOf(app).step(1, 0.016);
+  expect(debugOf(app).counters()["failedMaterials"]).toBe(0);
+  expect(host.latestDevice.renderPasses.at(-1)?.draws).toHaveLength(1);
+  app.dispose();
 });
 
 describe("device loss starts a recovery", () => {
