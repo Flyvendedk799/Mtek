@@ -1,0 +1,89 @@
+{
+  "platform": "Windows",
+  "rust": {
+    "revision": "53cd3678261a7ccd2f0bb0d2dc54fe56ab5ca7cf",
+    "passed": 1650,
+    "failed": 0,
+    "ignored": 1
+  },
+  "embeddedCli": {
+    "revision": "0af8f5b27cf350ab8410831bfb8d5ac4f702cf8a",
+    "passed": 312,
+    "failed": 0,
+    "ignored": 0
+  },
+  "javascript": {
+    "revision": "0af8f5b27cf350ab8410831bfb8d5ac4f702cf8a",
+    "passed": 4694,
+    "failed": 0,
+    "skipped": 2,
+    "workspaces": [
+      {
+        "workspace": "@mtek/runtime-web",
+        "passed": 1323,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "workspace": "@mtek/physics-rapier",
+        "passed": 78,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "workspace": "mtek-vscode",
+        "passed": 78,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "workspace": "@mtek/browser-tests",
+        "passed": 297,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "workspace": "@mtek/codegen-tests",
+        "passed": 1951,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "workspace": "@mtek/benchmarks",
+        "passed": 248,
+        "failed": 0,
+        "skipped": 1
+      },
+      {
+        "workspace": "@mtek/baseline-m0-bridge",
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "workspace": "@mtek/runtime-benchmarks",
+        "passed": 113,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "workspace": "@mtek/ai-eval",
+        "passed": 420,
+        "failed": 0,
+        "skipped": 1
+      },
+      {
+        "workspace": "@mtek/coverage-matrix",
+        "passed": 51,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "workspace": "@mtek/release-docs",
+        "passed": 127,
+        "failed": 0,
+        "skipped": 0
+      }
+    ]
+  }
+}

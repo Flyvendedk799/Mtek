@@ -1,0 +1,113 @@
+{
+  "revision": "0af8f5b27cf350ab8410831bfb8d5ac4f702cf8a",
+  "execution": "approved native Windows execution",
+  "priorFullWorkspaceRust": {
+    "revision": "53cd3678261a7ccd2f0bb0d2dc54fe56ab5ca7cf",
+    "evidence": "checks-attempt-1.json",
+    "reason": "Only host/app.ts and host/recovery.test.ts changed after the passing full aggregate run. Rust sources are identical. Embedded CLI tests are rerun with the rebuilt runtime; final exact-head CI reruns the full Rust suite."
+  },
+  "records": [
+    {
+      "name": "build",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "build"
+      ],
+      "status": 0,
+      "seconds": 10.578
+    },
+    {
+      "name": "check",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "check"
+      ],
+      "status": 0,
+      "seconds": 170.581
+    },
+    {
+      "name": "embedded-cli-test",
+      "command": "cargo",
+      "args": [
+        "test",
+        "-p",
+        "mtek-cli",
+        "--locked"
+      ],
+      "status": 0,
+      "seconds": 56.52
+    },
+    {
+      "name": "js-test",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "test:unit",
+        "--workspaces",
+        "--if-present",
+        "--",
+        "--maxWorkers=2"
+      ],
+      "status": 0,
+      "seconds": 299.897
+    },
+    {
+      "name": "coverage",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "check:coverage"
+      ],
+      "status": 0,
+      "seconds": 10.414
+    },
+    {
+      "name": "release",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "check:release"
+      ],
+      "status": 0,
+      "seconds": 34.063
+    },
+    {
+      "name": "baseline",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "check:baseline"
+      ],
+      "status": 0,
+      "seconds": 0.317
+    },
+    {
+      "name": "freeze",
+      "command": "node",
+      "args": [
+        "benchmarks/runtime/tools/freeze.ts",
+        "--check"
+      ],
+      "status": 0,
+      "seconds": 0.14
+    },
+    {
+      "name": "diff",
+      "command": "git",
+      "args": [
+        "diff",
+        "--check"
+      ],
+      "status": 0,
+      "seconds": 0.153
+    }
+  ]
+}

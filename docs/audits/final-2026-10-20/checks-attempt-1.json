@@ -1,0 +1,107 @@
+{
+  "revision": "53cd3678261a7ccd2f0bb0d2dc54fe56ab5ca7cf",
+  "execution": "approved native Windows execution",
+  "records": [
+    {
+      "name": "build",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "build"
+      ],
+      "status": 0,
+      "seconds": 39.307
+    },
+    {
+      "name": "check",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "check"
+      ],
+      "status": 0,
+      "seconds": 219.876
+    },
+    {
+      "name": "rust-test",
+      "command": "cargo",
+      "args": [
+        "test",
+        "--workspace",
+        "--locked"
+      ],
+      "status": 0,
+      "seconds": 421.344
+    },
+    {
+      "name": "js-test",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "test:unit",
+        "--workspaces",
+        "--if-present",
+        "--",
+        "--maxWorkers=2"
+      ],
+      "status": 0,
+      "seconds": 372.106
+    },
+    {
+      "name": "coverage",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "check:coverage"
+      ],
+      "status": 0,
+      "seconds": 10.33
+    },
+    {
+      "name": "release",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "check:release"
+      ],
+      "status": 0,
+      "seconds": 35.354
+    },
+    {
+      "name": "baseline",
+      "command": "node",
+      "args": [
+        "npm-cli.js",
+        "run",
+        "check:baseline"
+      ],
+      "status": 0,
+      "seconds": 0.338
+    },
+    {
+      "name": "freeze",
+      "command": "node",
+      "args": [
+        "benchmarks/runtime/tools/freeze.ts",
+        "--check"
+      ],
+      "status": 0,
+      "seconds": 0.118
+    },
+    {
+      "name": "diff",
+      "command": "git",
+      "args": [
+        "diff",
+        "--check"
+      ],
+      "status": 0,
+      "seconds": 0.184
+    }
+  ]
+}
