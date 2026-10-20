@@ -124,11 +124,14 @@ function validateOptions(options: MtekMountOptions<never>): void {
  * loss does not depend on the network (decision 0056). Shader URLs are named by content hash, so a cached
  * body never goes stale.
  */
-function rememberingFetch(environment: HostEnvironment): (url: string) => Promise<FetchResponseLike> {
+function rememberingFetch(environment: HostEnvironment): (url: string, reuseFrom?: string) => Promise<FetchResponseLike> {
   const bodies = new Map<string, string>();
-  return async (url) => {
-    const known = bodies.get(url);
-    if (known !== undefined) return { ok: true, status: 200, text: () => Promise.resolve(known) };
+  return async (url, reuseFrom) => {
+    const known = bodies.get(url) ?? (reuseFrom === undefined ? undefined : bodies.get(reuseFrom));
+    if (known !== undefined) {
+      bodies.set(url, known);
+      return { ok: true, status: 200, text: () => Promise.resolve(known) };
+    }
     const response = await environment.fetch(url);
     if (!response.ok) return response;
     const text = await response.text();

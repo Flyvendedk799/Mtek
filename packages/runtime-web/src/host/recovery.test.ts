@@ -6,7 +6,7 @@ import type { MtekProgramScene } from "../abi/program.js";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
 import { checkManifest } from "../abi/validate.js";
 import { BASE_URL, FakeHost, FakeHostDevice, asDom, fakeProgram, minimalSceneInit, type InitContext } from "../test-support/fake-host.js";
-import { VALID_WGSL, healthyHost, installProgram, mountOn, spanMapJson } from "../test-support/mount-fixture.js";
+import { SHADER_HASH, VALID_WGSL, healthyHost, installProgram, mountOn, spanMapJson } from "../test-support/mount-fixture.js";
 import { DEFAULT_RECOVERY_DELAYS_MS, RECOVERY_ATTEMPTS } from "./app.js";
 import { mountMtekWith } from "./mount.js";
 import type { MtekApp, MtekDebug, MtekMountOptions } from "./types.js";
@@ -119,6 +119,35 @@ it.each([BASE_URL, "https://example.test/other-build/"])("recovers a reloaded sh
   debugOf(app).step(1, 0.016);
   expect(debugOf(app).counters()["failedMaterials"]).toBe(0);
   expect(host.latestDevice.renderPasses.at(-1)?.draws).toHaveLength(1);
+  app.dispose();
+});
+
+it("retains WGSL by hash when a reused shader moves builds, but loads that build's own map", async () => {
+  const host = healthyHost();
+  const app = await mountOn(host, manual());
+  const manifest = installProgram(host);
+  const candidateBase = "https://example.test/moved/";
+  host.files.set(`${candidateBase}program.manifest.json`, JSON.stringify(manifest));
+  const mapUrl = `${candidateBase}shaders/${SHADER_HASH.slice(0, 16)}.mtek-map.json`;
+  host.files.set(mapUrl, spanMapJson());
+  const checked = checkManifest(manifest);
+  if (!checked.ok) throw new Error("invalid manifest");
+  const candidate = { ...fakeProgram(minimalSceneInit, checked.manifest), baseUrl: new URL(candidateBase), manifestUrl: new URL("program.manifest.json", candidateBase) };
+  const modules = debugOf(app).counters()["shaderModulesCreated"];
+  expect(await app.replaceProgram?.(candidate)).toEqual({ ok: true });
+  expect(host.fetched).toContain(mapUrl);
+  expect(host.fetched).not.toContain(`${candidateBase}shaders/${SHADER_HASH.slice(0, 16)}.wgsl`);
+  expect(debugOf(app).counters()["shaderModulesCreated"]).toBe(modules);
+  debugOf(app).step(1, 0.016);
+  const fetched = [...host.fetched];
+  host.files.clear();
+  await lose(host, app);
+  await runAttempt(host, app);
+  expect(app.state).toBe("running");
+  expect(host.fetched).toEqual(fetched);
+  debugOf(app).step(1, 0.016);
+  expect(host.latestDevice.renderPasses.at(-1)?.draws).toHaveLength(1);
+  expect(debugOf(app).counters()["failedMaterials"]).toBe(0);
   app.dispose();
 });
 

@@ -67,7 +67,7 @@ export interface AppDependencies {
   /** Requests a new adapter and device with the manifest's required capabilities (device recovery). */
   readonly acquireDevice: (handlers: DeviceHandlers) => Promise<AcquiredDevice>;
   /** Fetches shader files; remembers earlier responses so the rebuild after a device loss needs no network. */
-  readonly fetchShaderFile: (url: string) => Promise<FetchResponseLike>;
+  readonly fetchShaderFile: (url: string, reuseFrom?: string) => Promise<FetchResponseLike>;
   /**
    * The verified bytes of the program's asset files. The meshes and textures made from them are rebuilt from
    * these after a device loss, without the network (decision 0060). Mutable: a hot-reload swap replaces it.
@@ -347,6 +347,27 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       if (!checked.ok) {
         for (const diagnostic of checked.diagnostics) this.report(diagnostic);
         return { ok: false, diagnostics: checked.diagnostics };
+      }
+
+      // Reused modules need their retained source at the candidate's URL for recovery, even when
+      // the build moved. Only WGSL is interchangeable by hash; span maps belong to their build.
+      const previousShaders = new Map<string, MtekManifest["shaders"][number]>();
+      for (const shader of this.deps.manifest.shaders) {
+        if (!previousShaders.has(shader.hash)) previousShaders.set(shader.hash, shader);
+      }
+      for (const shader of manifest.shaders) {
+        const previous = previousShaders.get(shader.hash);
+        if (previous === undefined) continue;
+        const source = new URL(previous.url, this.deps.program.baseUrl).href;
+        const target = new URL(shader.url, candidate.baseUrl).href;
+        if (source !== target) {
+          await this.deps.fetchShaderFile(target, source);
+          assertActive();
+          const mapUrl = new URL(shader.map, candidate.baseUrl).href;
+          // Maps are optional. Retain this build's map when available; never alias the old one.
+          try { await this.deps.fetchShaderFile(mapUrl); } catch { /* Recovery falls back to the material declaration. */ }
+          assertActive();
+        }
       }
 
       const shaders = await loadCandidateShaders(
