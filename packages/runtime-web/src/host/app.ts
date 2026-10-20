@@ -268,7 +268,14 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
 
     const { environment, device, registry, surface, services } = this.deps;
     const epoch = this.deviceEpoch;
+    const generation = registry.generation;
+    const assertActive = (): void => {
+      if (this.deviceEpoch !== epoch || registry.generation !== generation || (this.current !== "running" && this.current !== "paused")) {
+        throw new Error(`The candidate was discarded because its application or GPU device is no longer current (application ${this.current}).`);
+      }
+    };
     const createdModules: GPUShaderModule[] = [];
+    let preparedScene: Scene | undefined;
     try {
       if ((candidate.abi as number) !== 1) {
         const diagnostic = makeRuntimeDiagnostic("E8003", {
@@ -302,6 +309,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         this.report(diagnostic);
         return { ok: false, diagnostics: [diagnostic] };
       }
+      assertActive();
 
       let json: unknown;
       try {
@@ -349,10 +357,12 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
           registry,
           fetch: this.deps.fetchShaderFile,
           phase: "runtime:reload",
+          assertActive,
         },
         this.deps.modules,
       );
       createdModules.push(...shaders.created);
+      assertActive();
       if (shaders.diagnostics.length > 0) {
         for (const module of shaders.created) registry.release(module);
         for (const diagnostic of shaders.diagnostics) this.report(diagnostic);
@@ -388,6 +398,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       let started: Awaited<ReturnType<typeof startScene>>;
       let physicsModule = this.deps.physicsModule;
       try {
+        assertActive();
         if (!manifest.subsystems.physics) {
           physicsModule = undefined;
         } else if (physicsModule === undefined || physicsModule.url !== physicsModuleUrl(manifest, candidate.baseUrl)) {
@@ -404,8 +415,10 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
           }
           physicsModule = { url: loadedPhysics.url, backend: loadedPhysics.backend };
         }
+        assertActive();
 
         started = await startScene({
+          assertActive,
           manifest,
           structure: structure.structure,
           program: checked.program,
@@ -431,18 +444,11 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         for (const diagnostic of started.diagnostics) this.report(diagnostic);
         return { ok: false, diagnostics: started.diagnostics };
       }
+      preparedScene = started.scene;
 
       // A device loss during the preparation: the candidate's resources belong to the lost device (the
       // registry already dropped them), so it cannot become the live scene.
-      const now = this.stateNow();
-      if (this.deviceEpoch !== epoch || now === "recovering" || now === "disposed" || now === "failed") {
-        const diagnostic = makeRuntimeDiagnostic("E8050", {
-          phase: "runtime:reload",
-          message: `The candidate was discarded: the GPU device was lost while it was prepared (application ${now}).`,
-        });
-        this.report(diagnostic);
-        return { ok: false, diagnostics: [diagnostic] };
-      }
+      assertActive();
 
       if (this.pendingSwap !== undefined) {
         this.pendingSwap.scene.materials.dispose();
@@ -459,13 +465,19 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         restart,
         physicsModule,
       };
+      preparedScene = undefined;
       return { ok: true };
     } catch (error) {
-      for (const module of createdModules) {
-        try {
-          registry.release(module);
-        } catch {
-          // Already released or never registered.
+      if (registry.generation === generation) {
+        preparedScene?.materials.dispose();
+        preparedScene?.meshes.dispose();
+        preparedScene?.renderer.dispose();
+        for (const module of createdModules) {
+          try {
+            registry.release(module);
+          } catch {
+            // Already released or never registered.
+          }
         }
       }
       const diagnostic = makeRuntimeDiagnostic("E8050", {

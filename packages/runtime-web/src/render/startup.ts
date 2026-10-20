@@ -30,6 +30,8 @@ import type { TextureOverrides } from "./resources.js";
 import { Renderer, type MaterialPipeline, type RenderSurface } from "./renderer.js";
 
 export interface SceneStartupOptions {
+  /** Reject stale asynchronous candidate work before allocating or publishing scene resources. */
+  readonly assertActive?: () => void;
   readonly manifest: MtekManifest;
   readonly structure: SceneStructure;
   readonly program: CheckedProgram;
@@ -97,6 +99,8 @@ function missingModule(material: ResolvedMaterial, phase: MtekRuntimePhase | und
 /** Builds and initialises the scene. Errors thrown by generated code (internal errors) propagate. */
 export async function startScene(options: SceneStartupOptions): Promise<SceneStartupResult> {
   const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
+  options.assertActive?.();
+  const generation = registry.generation;
 
   const plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
   const materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures, options.assets?.images);
@@ -126,6 +130,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
       ({ world, bindings } = recover);
       world.rebindParams(materials);
     }
+    options.assertActive?.();
     // Every instance holds its initial values: identical immutable ones now share a parameter block.
     materials.shareIdentical();
 
@@ -157,6 +162,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
       }),
     );
     const diagnostics: MtekDiagnostic[] = [];
+    options.assertActive?.();
     const failed: { readonly id: string; readonly diagnostic: MtekDiagnostic }[] = [];
     const byMaterial = new Map<string, MaterialPipeline>();
     results.forEach((result, index) => {
@@ -194,7 +200,8 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     committed = true;
     return { ok: true, scene: { world, bindings, materials, meshes, plan, pipelines, renderer } };
   } finally {
-    if (!committed) {
+    // A retired generation has already released these resources; never release a rebuilt scene's objects.
+    if (!committed && registry.generation === generation) {
       renderer?.dispose();
       meshes?.dispose();
       materials.dispose();

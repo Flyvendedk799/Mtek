@@ -41,6 +41,28 @@ describe("counter names (spec/runtime-abi.md section 10.1)", () => {
 });
 
 describe("creation wrappers", () => {
+  it.each(["dispose", "recycle"] as const)("does not register a late pipeline after %s retires its generation", async (ending) => {
+    const { registry, fake } = setup();
+    let finish!: () => void;
+    const gate = new Promise<void>((resolve) => { finish = resolve; });
+    const original = fake.createRenderPipelineAsync.bind(fake);
+    vi.spyOn(fake, "createRenderPipelineAsync").mockImplementation(async (descriptor) => {
+      const pipeline = await original(descriptor);
+      await gate;
+      return pipeline;
+    });
+    const pending = registry.createRenderPipelineAsync({} as GPURenderPipelineDescriptor);
+    if (ending === "dispose") registry.destroyAll();
+    else registry.recycle(asGpu<RegistryDevice>(new FakeDevice()));
+    buffer(registry);
+    registry.createRenderPipeline({} as GPURenderPipelineDescriptor);
+    const before = registry.snapshot();
+    finish();
+    await expect(pending).rejects.toThrow(/retired/);
+    expect(registry.snapshot()).toEqual(before);
+    registry.destroyAll();
+  });
+
   it("count cumulative and live objects per kind and pass descriptors through", () => {
     const { registry, fake } = setup();
     const b = buffer(registry, 128, "uniforms");
