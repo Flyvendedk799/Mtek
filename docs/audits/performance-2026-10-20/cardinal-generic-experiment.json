@@ -1,0 +1,114 @@
+{
+  "checks": 352,
+  "iterations": 200000,
+  "rows": [
+    {
+      "revision": "before",
+      "round": 0,
+      "milliseconds": 9.360500000000002,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "after",
+      "round": 0,
+      "milliseconds": 9.42689999999999,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "after",
+      "round": 1,
+      "milliseconds": 9.172500000000014,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "before",
+      "round": 1,
+      "milliseconds": 9.1216,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "before",
+      "round": 2,
+      "milliseconds": 9.128899999999987,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "after",
+      "round": 2,
+      "milliseconds": 9.281800000000032,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "after",
+      "round": 3,
+      "milliseconds": 9.20490000000001,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "before",
+      "round": 3,
+      "milliseconds": 9.187199999999962,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "before",
+      "round": 4,
+      "milliseconds": 9.361899999999991,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "after",
+      "round": 4,
+      "milliseconds": 10.646999999999991,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "after",
+      "round": 5,
+      "milliseconds": 10.060699999999997,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "before",
+      "round": 5,
+      "milliseconds": 9.177300000000002,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "before",
+      "round": 6,
+      "milliseconds": 9.089399999999955,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "after",
+      "round": 6,
+      "milliseconds": 9.15179999999998,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "after",
+      "round": 7,
+      "milliseconds": 10.480400000000031,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "before",
+      "round": 7,
+      "milliseconds": 9.948399999999992,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "before",
+      "round": 8,
+      "milliseconds": 9.045299999999997,
+      "checksum": 44800.79687597363
+    },
+    {
+      "revision": "after",
+      "round": 8,
+      "milliseconds": 9.243299999999977,
+      "checksum": 44800.79687597363
+    }
+  ]
+}

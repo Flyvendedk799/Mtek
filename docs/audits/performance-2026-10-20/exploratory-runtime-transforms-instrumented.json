@@ -1,0 +1,46 @@
+{
+  "node": "v24.18.1",
+  "workload": "runtime-bench",
+  "bindings": 2000,
+  "warmupFrames": 1200,
+  "framesPerSample": 1200,
+  "profileEnabled": true,
+  "samples": [
+    {
+      "milliseconds": 687.3446999999999,
+      "checksum": -718.7982539674267
+    },
+    {
+      "milliseconds": 677.9170999999999,
+      "checksum": -718.7982539674267
+    },
+    {
+      "milliseconds": 743.4312,
+      "checksum": -718.7982539674267
+    },
+    {
+      "milliseconds": 750.1578,
+      "checksum": -718.7982539674267
+    },
+    {
+      "milliseconds": 712.2890000000002,
+      "checksum": -718.7982539674267
+    },
+    {
+      "milliseconds": 726.6722,
+      "checksum": -718.7982539674267
+    },
+    {
+      "milliseconds": 740.1296999999995,
+      "checksum": -718.7982539674267
+    },
+    {
+      "milliseconds": 774.7839999999997,
+      "checksum": -718.7982539674267
+    },
+    {
+      "milliseconds": 519.1538999999993,
+      "checksum": -718.7982539674267
+    }
+  ]
+}

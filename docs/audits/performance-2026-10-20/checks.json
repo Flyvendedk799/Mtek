@@ -1,0 +1,103 @@
+[
+  {
+    "name": "build",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "build"
+    ],
+    "status": 0,
+    "seconds": 91.189
+  },
+  {
+    "name": "check",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "check"
+    ],
+    "status": 0,
+    "seconds": 200.733
+  },
+  {
+    "name": "rust-test",
+    "command": "cargo",
+    "args": [
+      "test",
+      "--workspace",
+      "--locked"
+    ],
+    "status": 0,
+    "execution": "approved outside sandbox after existing directory-swap tests returned Access Denied inside sandbox"
+  },
+  {
+    "name": "js-test",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "test:unit",
+      "--workspaces",
+      "--if-present",
+      "--",
+      "--maxWorkers=2"
+    ],
+    "status": 0,
+    "execution": "approved outside sandbox after temporary-module and process-execution errors inside sandbox"
+  },
+  {
+    "name": "coverage",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "check:coverage"
+    ],
+    "status": 0,
+    "seconds": 8.569
+  },
+  {
+    "name": "release",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "check:release"
+    ],
+    "status": 0,
+    "seconds": 11.49
+  },
+  {
+    "name": "baseline",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "check:baseline"
+    ],
+    "status": 0,
+    "seconds": 0.345
+  },
+  {
+    "name": "freeze",
+    "command": "node",
+    "args": [
+      "benchmarks/runtime/tools/freeze.ts",
+      "--check"
+    ],
+    "status": 0,
+    "seconds": 0.111
+  },
+  {
+    "name": "diff",
+    "command": "git",
+    "args": [
+      "diff",
+      "--check"
+    ],
+    "status": 0,
+    "seconds": 0.122
+  }
+]

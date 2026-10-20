@@ -1,0 +1,58 @@
+[
+  {
+    "shape": "project:examples/pulse-cube",
+    "count": 0,
+    "files": 9,
+    "bytes": 42357,
+    "sha256": "a2aac8d50c17abbb0bcfe2c9f12ce149158d8dce6bde7fed5c650d2138272a8f"
+  },
+  {
+    "shape": "project:examples/modular-scene",
+    "count": 0,
+    "files": 9,
+    "bytes": 60737,
+    "sha256": "31ce29a3dd7b4d67bd72cf70febfc0106133c8eeee9b012b9cdca8d537dca26b"
+  },
+  {
+    "shape": "project:examples/material-configurator",
+    "count": 0,
+    "files": 12,
+    "bytes": 251687,
+    "sha256": "2f13b03ba8cd22d1f7753e649e6fa4dfca4413943adb97c81317feb9b315f57f"
+  },
+  {
+    "shape": "project:examples/physics-playground",
+    "count": 0,
+    "files": 12,
+    "bytes": 140458,
+    "sha256": "8435994404bfde679b02d557df50dff809295a127283021036feceb446112eb8"
+  },
+  {
+    "shape": "project:examples/product-configurator",
+    "count": 0,
+    "files": 9,
+    "bytes": 161015,
+    "sha256": "ae3d1bf44ad53084028403f3c8be0f2a6e9ef5c2c1cd57f2aef269124d51d282"
+  },
+  {
+    "shape": "project:benchmarks/runtime/changing-transforms/mtek",
+    "count": 0,
+    "files": 9,
+    "bytes": 2670357,
+    "sha256": "22332f77066fed48e4b2eb6ddc2a55916c053ceb203df271067b199fdbd4cb4d"
+  },
+  {
+    "shape": "project:benchmarks/runtime/changing-material-params/mtek",
+    "count": 0,
+    "files": 9,
+    "bytes": 1185852,
+    "sha256": "c93c40e287cf57e48d11f7915c4e2207bda9e5999097e008f9d56607c64aa602"
+  },
+  {
+    "shape": "project:benchmarks/runtime/repeated-meshes/mtek",
+    "count": 0,
+    "files": 9,
+    "bytes": 3132668,
+    "sha256": "aaca79c979437deb669ba8e95525e0985b8699b15e36d368e0a37b0a1e856e2d"
+  }
+]

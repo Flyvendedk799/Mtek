@@ -1,0 +1,102 @@
+[
+  {
+    "workload": "transforms",
+    "bindings": 2000,
+    "warmupFrames": 12000,
+    "minMsPerFrame": 0.2576012499999994,
+    "medianMsPerFrame": 0.2930993333333337,
+    "maxMsPerFrame": 0.327649083333334,
+    "checksum": -718.7982539674267,
+    "profileSamples": 1797,
+    "profileSelfSamples": [
+      [
+        "generated binding functions",
+        826
+      ],
+      [
+        "qaxisAngle",
+        586
+      ],
+      [
+        "sin",
+        203
+      ],
+      [
+        "anonymous / harness",
+        139
+      ],
+      [
+        "(garbage collector)",
+        32
+      ],
+      [
+        "checksum",
+        5
+      ],
+      [
+        "v3",
+        3
+      ],
+      [
+        "post",
+        1
+      ],
+      [
+        "(program)",
+        1
+      ],
+      [
+        "dispatch",
+        1
+      ]
+    ]
+  },
+  {
+    "workload": "materials",
+    "bindings": 500,
+    "warmupFrames": 12000,
+    "minMsPerFrame": 0.06680475000000001,
+    "medianMsPerFrame": 0.06737600000000005,
+    "maxMsPerFrame": 0.09949599999999995,
+    "checksum": 1249.999829262495,
+    "profileSamples": 497,
+    "profileSelfSamples": [
+      [
+        "sin",
+        257
+      ],
+      [
+        "generated binding functions",
+        206
+      ],
+      [
+        "frames",
+        15
+      ],
+      [
+        "anonymous / harness",
+        9
+      ],
+      [
+        "(garbage collector)",
+        5
+      ],
+      [
+        "clinear",
+        2
+      ],
+      [
+        "post",
+        1
+      ],
+      [
+        "(program)",
+        1
+      ],
+      [
+        "dispatch",
+        1
+      ]
+    ]
+  }
+]
