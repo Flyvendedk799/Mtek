@@ -18,7 +18,7 @@
 //! * **Writers.** An assignment to a bound field or param is `E5070` at the assignment, with the
 //!   `bind` as the related span.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::check::{Checker, FieldKind};
 use super::facts::{CallFact, Callee};
@@ -577,13 +577,13 @@ impl Checker<'_> {
         }
         let count = found.len();
         // `reads[i]`: the bindings whose target binding `i` reads.
-        let reads: Vec<Vec<usize>> = (0..count)
-            .map(|i| {
-                (0..count)
-                    .filter(|&j| found[i].deps.iter().any(|dep| dep.reads(&found[j].target)))
-                    .collect()
-            })
-            .collect();
+        let reads = binding_reads(&found);
+        let mut readers = vec![Vec::new(); count];
+        for (reader, dependencies) in reads.iter().enumerate() {
+            for &dependency in dependencies {
+                readers[dependency].push(reader);
+            }
+        }
         let mut waiting: Vec<usize> = reads.iter().map(Vec::len).collect();
         let mut ready: BTreeSet<usize> = (0..count).filter(|&i| waiting[i] == 0).collect();
         let mut order = vec![None; count];
@@ -591,12 +591,10 @@ impl Checker<'_> {
         while let Some(index) = ready.pop_first() {
             order[index] = Some(next);
             next += 1;
-            for other in 0..count {
-                if reads[other].contains(&index) {
-                    waiting[other] -= 1;
-                    if waiting[other] == 0 {
-                        ready.insert(other);
-                    }
+            for &other in &readers[index] {
+                waiting[other] -= 1;
+                if waiting[other] == 0 {
+                    ready.insert(other);
                 }
             }
         }
@@ -844,6 +842,61 @@ impl Checker<'_> {
     }
 }
 
+/// Borrowed keys encode exactly the three matching cases of `BindDep::reads`.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum TargetKey<'a> {
+    Field(DefId, &'a str),
+    MaterialParam(DefId, &'a str),
+    LightField(DefId, &'a str),
+}
+
+impl<'a> TargetKey<'a> {
+    fn target(target: &'a BindTarget) -> Self {
+        match target {
+            BindTarget::Field { object, field } => Self::Field(*object, field),
+            BindTarget::MaterialParam { entity, param } => Self::MaterialParam(*entity, param),
+            BindTarget::LightField { entity, field } => Self::LightField(*entity, field),
+        }
+    }
+
+    fn dependency(dep: &'a BindDep) -> Option<Self> {
+        match dep {
+            BindDep::Field { object, field } => Some(Self::Field(*object, field)),
+            BindDep::MaterialParam { entity, param } => Some(Self::MaterialParam(*entity, param)),
+            BindDep::LightField { entity, field } => Some(Self::LightField(*entity, field)),
+            BindDep::State(_) | BindDep::Frame(_) | BindDep::EntityState { .. } => None,
+        }
+    }
+}
+
+fn binding_reads(found: &[BindInfo]) -> Vec<Vec<usize>> {
+    let mut targets: BTreeMap<TargetKey<'_>, Vec<usize>> = BTreeMap::new();
+    for (index, binding) in found.iter().enumerate() {
+        // Retain every writer even for malformed input with duplicate targets.
+        targets
+            .entry(TargetKey::target(&binding.target))
+            .or_default()
+            .push(index);
+    }
+    found
+        .iter()
+        .map(|binding| {
+            let mut reads = Vec::new();
+            for dep in &binding.deps {
+                if let Some(key) = TargetKey::dependency(dep)
+                    && let Some(indices) = targets.get(&key)
+                {
+                    reads.extend_from_slice(indices);
+                }
+            }
+            // Match the old source-index scan, including cycle traversal and recovery order.
+            reads.sort_unstable();
+            reads.dedup();
+            reads
+        })
+        .collect()
+}
+
 /// A stand-in constant for a registry field a binding supplies at run time.
 pub(super) fn placeholder(ty: crate::stdlib::TypeRef) -> Option<super::value::ConstValue> {
     use super::value::ConstValue;
@@ -860,4 +913,98 @@ pub(super) fn placeholder(ty: crate::stdlib::TypeRef) -> Option<super::value::Co
         TypeRef::Color => ConstValue::Color([0.0, 0.0, 0.0, 1.0]),
         _ => return None,
     })
+}
+
+#[cfg(test)]
+mod graph_tests {
+    use super::*;
+    use crate::source::FileId;
+    use crate::syntax::ast::NodeId;
+
+    #[test]
+    fn indexed_edges_match_reads_for_every_dependency_kind_and_duplicate_writer() {
+        let mut found = Vec::new();
+        let mut deps = vec![
+            BindDep::State(DefId(0)),
+            BindDep::Frame("position".into()),
+            BindDep::EntityState {
+                entity: DefId(0),
+                name: "position".into(),
+            },
+        ];
+        for owner in 0..3 {
+            for name in ["position", "color", "other"] {
+                for target in [
+                    BindTarget::Field {
+                        object: DefId(owner),
+                        field: name.into(),
+                    },
+                    BindTarget::MaterialParam {
+                        entity: DefId(owner),
+                        param: name.into(),
+                    },
+                    BindTarget::LightField {
+                        entity: DefId(owner),
+                        field: name.into(),
+                    },
+                ] {
+                    let dep = match &target {
+                        BindTarget::Field { object, field } => BindDep::Field {
+                            object: *object,
+                            field: field.clone(),
+                        },
+                        BindTarget::MaterialParam { entity, param } => BindDep::MaterialParam {
+                            entity: *entity,
+                            param: param.clone(),
+                        },
+                        BindTarget::LightField { entity, field } => BindDep::LightField {
+                            entity: *entity,
+                            field: field.clone(),
+                        },
+                    };
+                    deps.push(dep);
+                    found.push(BindInfo {
+                        scene: None,
+                        node: NodeId(0),
+                        span: Span::at(FileId(0), 0),
+                        source: NodeId(0),
+                        ty: TyId::VEC3,
+                        target,
+                        deps: Vec::new(),
+                        id: 0,
+                        order: 0,
+                    });
+                }
+            }
+        }
+        // Duplicate targets must produce distinct edges; duplicate reads must not.
+        found.extend(found.clone());
+        deps.extend(deps.clone());
+        for (index, binding) in found.iter_mut().enumerate() {
+            binding.deps = deps
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| (i + index) % 3 != 0)
+                .map(|(_, dep)| dep.clone())
+                .rev()
+                .collect();
+        }
+        let expected: Vec<Vec<usize>> = found
+            .iter()
+            .map(|binding| {
+                found
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(index, target)| {
+                        binding
+                            .deps
+                            .iter()
+                            .any(|dep| dep.reads(&target.target))
+                            .then_some(index)
+                    })
+                    .collect()
+            })
+            .collect();
+        assert_eq!(binding_reads(&found), expected);
+    }
 }
