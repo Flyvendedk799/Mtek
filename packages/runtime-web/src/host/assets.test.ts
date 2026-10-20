@@ -352,6 +352,42 @@ describe("asset meshes group and instance like any other mesh (decision 0059)", 
 });
 
 describe("hot reload with assets (replaceProgram)", () => {
+  it("closes decoded candidate images when its physics module cannot load", async () => {
+    const { host, manifest } = assetHost();
+    const app = await mount(host, manifest);
+    const candidate = structuredClone(manifest);
+    candidate["subsystems"] = { ...(candidate["subsystems"] as object), physics: true, physicsModule: "physics/0123456789abcdef.js" };
+    host.files.set(`${BASE_URL}program.manifest.json`, JSON.stringify(candidate));
+    const result = await app.replaceProgram?.(assetProgram(candidate));
+    expect(result?.ok).toBe(false);
+    if (result?.ok === false) expect(result.diagnostics[0]?.code).toBe("MTEK-E8102");
+    expect(host.bitmaps).toHaveLength(2);
+    expect(host.bitmaps.every((bitmap) => bitmap.closed)).toBe(true);
+    app.debug?.step(1, 1 / 60);
+    expect(host.device.renderPasses.at(-1)?.draws).toHaveLength(1);
+    app.dispose();
+  });
+
+  it("releases partial candidate GPU resources after repeated initializer failures", async () => {
+    const { host, manifest } = assetHost();
+    const app = await mount(host, manifest);
+    const live = (): number[] => [
+      host.device.buffers.filter((buffer) => !buffer.destroyed).length,
+      host.device.textures.filter((texture) => !texture.destroyed).length,
+    ];
+    const before = live();
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const result = await app.replaceProgram?.(assetProgram(manifest, () => { throw new Error("candidate init failed"); }));
+      expect(result?.ok).toBe(false);
+      expect(live()).toEqual(before);
+    }
+    expect(host.bitmaps.every((bitmap) => bitmap.closed)).toBe(true);
+    app.debug?.step(1, 1 / 60);
+    expect(app.state).toBe("running");
+    expect(host.device.renderPasses.at(-1)?.draws).toHaveLength(1);
+    app.dispose();
+  });
+
   it("does not fetch unchanged files again, and swaps in a scene with its own asset buffers", async () => {
     const { host, manifest } = assetHost();
     const app = await mount(host, manifest);

@@ -30,6 +30,8 @@ import type { TextureOverrides } from "./resources.js";
 import { Renderer, type MaterialPipeline, type RenderSurface } from "./renderer.js";
 
 export interface SceneStartupOptions {
+  /** Reject stale asynchronous candidate work before allocating or publishing scene resources. */
+  readonly assertActive?: () => void;
   readonly manifest: MtekManifest;
   readonly structure: SceneStructure;
   readonly program: CheckedProgram;
@@ -97,97 +99,112 @@ function missingModule(material: ResolvedMaterial, phase: MtekRuntimePhase | und
 /** Builds and initialises the scene. Errors thrown by generated code (internal errors) propagate. */
 export async function startScene(options: SceneStartupOptions): Promise<SceneStartupResult> {
   const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
+  options.assertActive?.();
+  const generation = registry.generation;
 
   const plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
   const materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures, options.assets?.images);
-  const { recover } = options;
-  let world: World;
-  let bindings: Bindings;
-  if (recover === undefined) {
-    const fresh = new World({
+  let meshes: MeshStore | undefined;
+  let renderer: Renderer | undefined;
+  let committed = false;
+  try {
+    const { recover } = options;
+    let world: World;
+    let bindings: Bindings;
+    if (recover === undefined) {
+      const fresh = new World({
+        manifest,
+        structure,
+        params: materials,
+        report,
+        prefabs: buildPrefabRuntimes(structure.prefabs, program.prefabs),
+        ...(services === undefined ? {} : { services }),
+      });
+      const freshBindings = new Bindings(manifest, program.scene.bindings, fresh);
+      fresh.initialise(program.scene.init, () => {
+        freshBindings.evaluate();
+      });
+      world = fresh;
+      bindings = freshBindings;
+    } else {
+      ({ world, bindings } = recover);
+      world.rebindParams(materials);
+    }
+    options.assertActive?.();
+    // Every instance holds its initial values: identical immutable ones now share a parameter block.
+    materials.shareIdentical();
+
+    meshes = new MeshStore(registry, device.queue, undefined, device.limits.maxBufferSize);
+    meshes.upload(structure.meshes, options.assets?.files);
+
+    const pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest);
+    const phase: MtekRuntimePhase | undefined = recover === undefined ? undefined : "runtime:device";
+    // The materials with entities that can share an instanced draw also get the instanced variant of their pipeline.
+    const instanced =
+      options.instancing === false
+        ? new Set<string>()
+        : instancingCandidates(
+            structure,
+            (instance) => materials.blockOf(instance),
+            (material) => materialPipelineKey(material, surface.colorFormat),
+          ).materials;
+    const results = await Promise.all(
+      structure.materials.map(async (material): Promise<PipelineResult & { readonly instancedPipeline?: GPURenderPipeline }> => {
+        const module = modules.get(material.shader.hash);
+        if (module === undefined) {
+          if (recover !== undefined) return missingModule(material, phase);
+          throw new Error(`internal error: no shader module for '${material.id}'`);
+        }
+        const request = { material, module, colorFormat: surface.colorFormat, ...(phase === undefined ? {} : { phase }) };
+        const [plain, variant] = await Promise.all([pipelines.obtain(request), instanced.has(material.id) ? pipelines.obtain({ ...request, instanced: true }) : undefined]);
+        if (!plain.ok || variant === undefined) return plain;
+        return variant.ok ? { ...plain, instancedPipeline: variant.pipeline } : variant;
+      }),
+    );
+    const diagnostics: MtekDiagnostic[] = [];
+    options.assertActive?.();
+    const failed: { readonly id: string; readonly diagnostic: MtekDiagnostic }[] = [];
+    const byMaterial = new Map<string, MaterialPipeline>();
+    results.forEach((result, index) => {
+      const material = structure.materials[index];
+      if (material === undefined) return;
+      if (result.ok) byMaterial.set(material.id, { key: result.key, pipeline: result.pipeline, ...(result.instancedPipeline === undefined ? {} : { instanced: result.instancedPipeline }) });
+      else if (recover === undefined) diagnostics.push(result.diagnostic);
+      else failed.push({ id: material.id, diagnostic: result.diagnostic });
+    });
+    if (diagnostics.length > 0) {
+      return { ok: false, diagnostics };
+    }
+
+    world.phase = "runtime:update";
+    renderer = new Renderer({
+      device,
+      registry,
+      surface,
       manifest,
       structure,
-      params: materials,
+      world,
+      writers: program.writers,
+      plan,
+      materials,
+      meshes,
+      pipelines: byMaterial,
       report,
-      prefabs: buildPrefabRuntimes(structure.prefabs, program.prefabs),
-      ...(services === undefined ? {} : { services }),
+      ...(options.instancing === undefined ? {} : { instancing: options.instancing }),
     });
-    const freshBindings = new Bindings(manifest, program.scene.bindings, fresh);
-    fresh.initialise(program.scene.init, () => {
-      freshBindings.evaluate();
-    });
-    world = fresh;
-    bindings = freshBindings;
-  } else {
-    ({ world, bindings } = recover);
-    world.rebindParams(materials);
+    for (const { id, diagnostic } of failed) renderer.failMaterial(id, diagnostic);
+    // Spawned entities are created through these stores (decision 0064). After a device loss the entities that
+    // exist get their material instance and object block again in the rebuilt ones.
+    if (recover === undefined) world.dynamic.attach(renderer, materials);
+    else world.dynamic.rebuild(renderer, materials);
+    committed = true;
+    return { ok: true, scene: { world, bindings, materials, meshes, plan, pipelines, renderer } };
+  } finally {
+    // A retired generation has already released these resources; never release a rebuilt scene's objects.
+    if (!committed && registry.generation === generation) {
+      renderer?.dispose();
+      meshes?.dispose();
+      materials.dispose();
+    }
   }
-  // Every instance holds its initial values: identical immutable ones now share a parameter block.
-  materials.shareIdentical();
-
-  const meshes = new MeshStore(registry, device.queue, undefined, device.limits.maxBufferSize);
-  meshes.upload(structure.meshes, options.assets?.files);
-
-  const pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest);
-  const phase: MtekRuntimePhase | undefined = recover === undefined ? undefined : "runtime:device";
-  // The materials with entities that can share an instanced draw also get the instanced variant of their pipeline.
-  const instanced =
-    options.instancing === false
-      ? new Set<string>()
-      : instancingCandidates(
-          structure,
-          (instance) => materials.blockOf(instance),
-          (material) => materialPipelineKey(material, surface.colorFormat),
-        ).materials;
-  const results = await Promise.all(
-    structure.materials.map(async (material): Promise<PipelineResult & { readonly instancedPipeline?: GPURenderPipeline }> => {
-      const module = modules.get(material.shader.hash);
-      if (module === undefined) {
-        if (recover !== undefined) return missingModule(material, phase);
-        throw new Error(`internal error: no shader module for '${material.id}'`);
-      }
-      const request = { material, module, colorFormat: surface.colorFormat, ...(phase === undefined ? {} : { phase }) };
-      const [plain, variant] = await Promise.all([pipelines.obtain(request), instanced.has(material.id) ? pipelines.obtain({ ...request, instanced: true }) : undefined]);
-      if (!plain.ok || variant === undefined) return plain;
-      return variant.ok ? { ...plain, instancedPipeline: variant.pipeline } : variant;
-    }),
-  );
-  const diagnostics: MtekDiagnostic[] = [];
-  const failed: { readonly id: string; readonly diagnostic: MtekDiagnostic }[] = [];
-  const byMaterial = new Map<string, MaterialPipeline>();
-  results.forEach((result, index) => {
-    const material = structure.materials[index];
-    if (material === undefined) return;
-    if (result.ok) byMaterial.set(material.id, { key: result.key, pipeline: result.pipeline, ...(result.instancedPipeline === undefined ? {} : { instanced: result.instancedPipeline }) });
-    else if (recover === undefined) diagnostics.push(result.diagnostic);
-    else failed.push({ id: material.id, diagnostic: result.diagnostic });
-  });
-  if (diagnostics.length > 0) {
-    materials.dispose();
-    meshes.dispose();
-    return { ok: false, diagnostics };
-  }
-
-  world.phase = "runtime:update";
-  const renderer = new Renderer({
-    device,
-    registry,
-    surface,
-    manifest,
-    structure,
-    world,
-    writers: program.writers,
-    plan,
-    materials,
-    meshes,
-    pipelines: byMaterial,
-    report,
-    ...(options.instancing === undefined ? {} : { instancing: options.instancing }),
-  });
-  for (const { id, diagnostic } of failed) renderer.failMaterial(id, diagnostic);
-  // Spawned entities are created through these stores (decision 0064). After a device loss the entities that
-  // exist get their material instance and object block again in the rebuilt ones.
-  if (recover === undefined) world.dynamic.attach(renderer, materials);
-  else world.dynamic.rebuild(renderer, materials);
-  return { ok: true, scene: { world, bindings, materials, meshes, plan, pipelines, renderer } };
 }

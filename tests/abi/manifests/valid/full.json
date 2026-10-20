@@ -1573,6 +1573,16 @@
         "codec": "bool"
       }
     ],
+    "hostOutputs": [
+      {
+        "name": "tint",
+        "source": {
+          "kind": "state",
+          "name": "tint"
+        },
+        "type": "color"
+      }
+    ],
     "lights": [
       {
         "index": 0,

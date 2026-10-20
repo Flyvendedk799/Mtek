@@ -28,6 +28,7 @@ import { resolveStructure } from "../scene/structure.js";
 import type { CpuServices } from "../scene/world.js";
 import type { FetchResponseLike, HostEnvironment, ResizeObserverLike } from "./environment.js";
 import { resolveSpan, type DiagnosticSink } from "./failures.js";
+import { HostOutputs } from "./outputs.js";
 import { HostInputs, unknownInputResult } from "./inputs.js";
 import type { FailureOverlay } from "./overlay.js";
 import {
@@ -66,7 +67,7 @@ export interface AppDependencies {
   /** Requests a new adapter and device with the manifest's required capabilities (device recovery). */
   readonly acquireDevice: (handlers: DeviceHandlers) => Promise<AcquiredDevice>;
   /** Fetches shader files; remembers earlier responses so the rebuild after a device loss needs no network. */
-  readonly fetchShaderFile: (url: string) => Promise<FetchResponseLike>;
+  readonly fetchShaderFile: (url: string, reuseFrom?: string) => Promise<FetchResponseLike>;
   /**
    * The verified bytes of the program's asset files. The meshes and textures made from them are rebuilt from
    * these after a device loss, without the network (decision 0060). Mutable: a hot-reload swap replaces it.
@@ -117,7 +118,7 @@ function attemptFailureText(error: unknown): string {
   return errorText(error);
 }
 
-export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
+export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>> implements MtekApp<I, O> {
   readonly debug?: MtekDebug;
   readonly seed: number;
 
@@ -135,6 +136,9 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private cpuUpdateMs = 0;
   private renderPrepMs = 0;
   private hostInputs: HostInputs;
+  private readonly hostOutputs: HostOutputs;
+  /** Retained modules can outlive the current manifest; recovery needs their cached WGSL provenance. */
+  private readonly shaderSources = new Map<string, string>();
   /** Validated candidate waiting to become the live scene at the next frame start. */
   private pendingSwap:
     | {
@@ -173,6 +177,10 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     this.input = deps.input;
     this.behaviors = new Behaviors(deps.sceneFunctions, deps.scene.world);
     this.hostInputs = new HostInputs(manifest);
+    this.hostOutputs = new HostOutputs(manifest);
+    for (const shader of manifest.shaders) {
+      if (!this.shaderSources.has(shader.hash)) this.shaderSources.set(shader.hash, new URL(shader.url, deps.program.baseUrl).href);
+    }
     registry.phase = "runtime:render";
     if (test?.disableCulling === true) deps.scene.renderer.setFrustumCulling(false);
 
@@ -242,13 +250,17 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     return this.hostInputs.setInput(name, value);
   }
 
+  onOutput<K extends keyof O & string>(name: K, listener: (value: O[K]) => void): () => void {
+    return this.hostOutputs.subscribe(name, listener as (value: unknown) => void);
+  }
+
   /**
    * Candidate-based hot reload (`spec/runtime-abi.md` section 11): validate the candidate fully;
    * on failure discard it and keep the running program; on success queue an atomic swap for the
    * next frame start.
    */
   async replaceProgram(
-    candidate: MtekMountProgram<I>,
+    candidate: MtekMountProgram<I, O>,
   ): Promise<{ ok: true } | { ok: false; diagnostics: readonly MtekDiagnostic[] }> {
     if (this.current === "disposed" || this.current === "failed" || this.current === "recovering") {
       const diagnostic = makeRuntimeDiagnostic("E8050", {
@@ -261,7 +273,14 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
 
     const { environment, device, registry, surface, services } = this.deps;
     const epoch = this.deviceEpoch;
+    const generation = registry.generation;
+    const assertActive = (): void => {
+      if (this.deviceEpoch !== epoch || registry.generation !== generation || (this.current !== "running" && this.current !== "paused")) {
+        throw new Error(`The candidate was discarded because its application or GPU device is no longer current (application ${this.current}).`);
+      }
+    };
     const createdModules: GPUShaderModule[] = [];
+    let preparedScene: Scene | undefined;
     try {
       if ((candidate.abi as number) !== 1) {
         const diagnostic = makeRuntimeDiagnostic("E8003", {
@@ -295,6 +314,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         this.report(diagnostic);
         return { ok: false, diagnostics: [diagnostic] };
       }
+      assertActive();
 
       let json: unknown;
       try {
@@ -334,23 +354,42 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         return { ok: false, diagnostics: checked.diagnostics };
       }
 
+      // Reused modules need their retained source at the candidate's URL for recovery, even when
+      // the build moved. Only WGSL is interchangeable by hash; span maps belong to their build.
+      for (const shader of manifest.shaders) {
+        const source = this.shaderSources.get(shader.hash);
+        if (source === undefined) continue;
+        const target = new URL(shader.url, candidate.baseUrl).href;
+        if (source !== target) {
+          await this.deps.fetchShaderFile(target, source);
+          assertActive();
+          const mapUrl = new URL(shader.map, candidate.baseUrl).href;
+          // Maps are optional. Retain this build's map when available; never alias the old one.
+          try { await this.deps.fetchShaderFile(mapUrl); } catch { /* Recovery falls back to the material declaration. */ }
+          assertActive();
+        }
+      }
+
       const shaders = await loadCandidateShaders(
         {
           manifest,
           baseUrl: candidate.baseUrl,
           device,
           registry,
-          fetch: (url) => environment.fetch(url),
+          fetch: this.deps.fetchShaderFile,
           phase: "runtime:reload",
+          assertActive,
         },
         this.deps.modules,
       );
       createdModules.push(...shaders.created);
+      assertActive();
       if (shaders.diagnostics.length > 0) {
         for (const module of shaders.created) registry.release(module);
         for (const diagnostic of shaders.diagnostics) this.report(diagnostic);
         return { ok: false, diagnostics: shaders.diagnostics };
       }
+      for (const shader of manifest.shaders) this.shaderSources.set(shader.hash, new URL(shader.url, candidate.baseUrl).href);
 
       const restart = findStructuralChange(
         this.deps.manifest.scene,
@@ -378,27 +417,30 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
 
       // A candidate with bodies needs the physics module: the one already loaded when it is the same file,
       // otherwise it is imported now, so a candidate whose physics cannot load is discarded like any other.
-      let physicsModule = this.deps.physicsModule;
-      if (!manifest.subsystems.physics) {
-        physicsModule = undefined;
-      } else if (physicsModule === undefined || physicsModule.url !== physicsModuleUrl(manifest, candidate.baseUrl)) {
-        const loadedPhysics = await loadPhysicsBackend({
-          manifest,
-          baseUrl: candidate.baseUrl,
-          importModule: (url) => environment.importModule(url),
-          phase: "runtime:reload",
-        });
-        if (!loadedPhysics.ok) {
-          for (const module of shaders.created) registry.release(module);
-          for (const diagnostic of loadedPhysics.diagnostics) this.report(diagnostic);
-          return { ok: false, diagnostics: loadedPhysics.diagnostics };
-        }
-        physicsModule = { url: loadedPhysics.url, backend: loadedPhysics.backend };
-      }
-
       let started: Awaited<ReturnType<typeof startScene>>;
+      let physicsModule = this.deps.physicsModule;
       try {
+        assertActive();
+        if (!manifest.subsystems.physics) {
+          physicsModule = undefined;
+        } else if (physicsModule === undefined || physicsModule.url !== physicsModuleUrl(manifest, candidate.baseUrl)) {
+          const loadedPhysics = await loadPhysicsBackend({
+            manifest,
+            baseUrl: candidate.baseUrl,
+            importModule: (url) => environment.importModule(url),
+            phase: "runtime:reload",
+          });
+          if (!loadedPhysics.ok) {
+            for (const module of shaders.created) registry.release(module);
+            for (const diagnostic of loadedPhysics.diagnostics) this.report(diagnostic);
+            return { ok: false, diagnostics: loadedPhysics.diagnostics };
+          }
+          physicsModule = { url: loadedPhysics.url, backend: loadedPhysics.backend };
+        }
+        assertActive();
+
         started = await startScene({
+          assertActive,
           manifest,
           structure: structure.structure,
           program: checked.program,
@@ -424,18 +466,11 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         for (const diagnostic of started.diagnostics) this.report(diagnostic);
         return { ok: false, diagnostics: started.diagnostics };
       }
+      preparedScene = started.scene;
 
       // A device loss during the preparation: the candidate's resources belong to the lost device (the
       // registry already dropped them), so it cannot become the live scene.
-      const now = this.stateNow();
-      if (this.deviceEpoch !== epoch || now === "recovering" || now === "disposed" || now === "failed") {
-        const diagnostic = makeRuntimeDiagnostic("E8050", {
-          phase: "runtime:reload",
-          message: `The candidate was discarded: the GPU device was lost while it was prepared (application ${now}).`,
-        });
-        this.report(diagnostic);
-        return { ok: false, diagnostics: [diagnostic] };
-      }
+      assertActive();
 
       if (this.pendingSwap !== undefined) {
         this.pendingSwap.scene.materials.dispose();
@@ -452,13 +487,19 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         restart,
         physicsModule,
       };
+      preparedScene = undefined;
       return { ok: true };
     } catch (error) {
-      for (const module of createdModules) {
-        try {
-          registry.release(module);
-        } catch {
-          // Already released or never registered.
+      if (registry.generation === generation) {
+        preparedScene?.materials.dispose();
+        preparedScene?.meshes.dispose();
+        preparedScene?.renderer.dispose();
+        for (const module of createdModules) {
+          try {
+            registry.release(module);
+          } catch {
+            // Already released or never registered.
+          }
         }
       }
       const diagnostic = makeRuntimeDiagnostic("E8050", {
@@ -494,6 +535,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   dispose(): void {
     if (this.current === "disposed") return;
     this.current = "disposed";
+    this.hostOutputs.dispose();
     if (this.pendingSwap !== undefined) {
       this.pendingSwap.scene.materials.dispose();
       this.pendingSwap.scene.meshes.dispose();
@@ -584,6 +626,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
   private fail(cause: MtekDiagnostic): void {
     if (this.current === "disposed" || this.current === "failed") return;
     this.current = "failed";
+    this.hostOutputs.dispose();
     this.scheduler.stop();
     this.clearRecoveryTimer();
     this.deps.sink.report(cause);
@@ -936,6 +979,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
         this.renderPrepMs = end - this.renderStartMs;
         this.frameTimeMs = end - this.frameStartMs;
         if (__MTEK_DEV__) this.deps.devTools?.afterFrame(this.frameTimeMs, () => this.counters());
+        this.hostOutputs.publish(this.deps.scene.world.sceneState);
       },
     };
   }
@@ -1005,6 +1049,7 @@ export class MountedApp<I = Record<string, unknown>> implements MtekApp<I> {
     this.deps.sceneFunctions = pending.sceneFunctions;
     this.behaviors = new Behaviors(pending.sceneFunctions, pending.scene.world);
     this.hostInputs = new HostInputs(pending.manifest);
+    this.hostOutputs.replace(pending.manifest);
 
     previous.materials.dispose();
     previous.renderer.dispose();

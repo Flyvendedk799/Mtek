@@ -124,11 +124,14 @@ function validateOptions(options: MtekMountOptions<never>): void {
  * loss does not depend on the network (decision 0056). Shader URLs are named by content hash, so a cached
  * body never goes stale.
  */
-function rememberingFetch(environment: HostEnvironment): (url: string) => Promise<FetchResponseLike> {
+function rememberingFetch(environment: HostEnvironment): (url: string, reuseFrom?: string) => Promise<FetchResponseLike> {
   const bodies = new Map<string, string>();
-  return async (url) => {
-    const known = bodies.get(url);
-    if (known !== undefined) return { ok: true, status: 200, text: () => Promise.resolve(known) };
+  return async (url, reuseFrom) => {
+    const known = bodies.get(url) ?? (reuseFrom === undefined ? undefined : bodies.get(reuseFrom));
+    if (known !== undefined) {
+      bodies.set(url, known);
+      return { ok: true, status: 200, text: () => Promise.resolve(known) };
+    }
     const response = await environment.fetch(url);
     if (!response.ok) return response;
     const text = await response.text();
@@ -177,21 +180,21 @@ function deviceCapabilities(acquired: AcquiredDevice, gpu: GPU): DeviceCapabilit
 }
 
 /** Mounts `program` on `canvas` using the real browser environment. */
-export function mountMtek<I = Record<string, unknown>>(
+export function mountMtek<I = Record<string, unknown>, O = Record<string, unknown>>(
   canvas: HTMLCanvasElement,
-  program: MtekMountProgram<I>,
+  program: MtekMountProgram<I, O>,
   options?: MtekMountOptions<I>,
-): Promise<MtekApp<I>> {
+): Promise<MtekApp<I, O>> {
   return mountMtekWith(defaultEnvironment(), canvas, program, options);
 }
 
 /** `mountMtek` with an injected environment: the test seam (not part of the public API). */
-export async function mountMtekWith<I = Record<string, unknown>>(
+export async function mountMtekWith<I = Record<string, unknown>, O = Record<string, unknown>>(
   environment: HostEnvironment,
   canvas: HTMLCanvasElement,
-  program: MtekMountProgram<I>,
+  program: MtekMountProgram<I, O>,
   options: MtekMountOptions<I> = {},
-): Promise<MtekApp<I>> {
+): Promise<MtekApp<I, O>> {
   validateOptions(options as MtekMountOptions<never>);
   FailureOverlay.removeFor(canvas);
   const sink = new DiagnosticSink(options.onDiagnostic);
@@ -201,7 +204,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
   let acquired: AcquiredDevice | undefined;
   let registry: ResourceRegistry | undefined;
   let surface: Surface | undefined;
-  let app: MountedApp<I> | undefined;
+  let app: MountedApp<I, O> | undefined;
   // Decoded images wait here until the scene has uploaded them; closed in every case (idempotent).
   let images: DecodedImages | undefined;
   // The physics world, freed on every failure after it exists.
@@ -461,7 +464,7 @@ export async function mountMtekWith<I = Record<string, unknown>>(
           })
         : null;
 
-    app = new MountedApp<I>({
+    app = new MountedApp<I, O>({
       devTools,
       manifest,
       device,

@@ -186,6 +186,8 @@ pub struct ProjectConfig {
     /// name. Only the TOML type is checked here; the targets are validated
     /// against the entry scene after type-checking (`E9020`, `E9021`).
     pub host_inputs: BTreeMap<String, String>,
+    /// `[host.outputs]`: output name to entry-scene state, validated like inputs.
+    pub host_outputs: BTreeMap<String, String>,
     pub runtime: RuntimeSection,
     pub dev: DevSection,
     pub assets: AssetsSection,

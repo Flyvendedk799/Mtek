@@ -1,0 +1,2 @@
+prefab Chair { entity Lamp { light: PointLight {}; } }
+scene Demo { camera Main {} entity Left: Chair {} }

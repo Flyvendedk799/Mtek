@@ -9,7 +9,7 @@ runtime on browser WebGPU, and the toolchain works fully offline, without any AI
 ## Status: pre-alpha
 
 The specification is in [`spec/`](spec/README.md). The repository contains the compiler and the `mtek`
-command line tool (the commands are listed [below](#the-mtek-command)), the web runtime, four
+command line tool (the commands are listed [below](#the-mtek-command)), the web runtime, five
 examples and the test and benchmark infrastructure. There is no release, no installer and no package
 registry: you build the tool from a checkout. **New here? Start with
 [`docs/getting-started.md`](docs/getting-started.md)**: install, create a project, run it, break it,
@@ -40,7 +40,7 @@ Only for running the browser tests, the editor tests or the grammar backend, non
 - **VS Code integration tests** (`npm run test:integration -w mtek-vscode`): network access to download the pinned VS Code, and a display (`xvfb-run -a` on Linux without one).
 - **Grammar backend** (optional): `node tools/grammar-adapters/fetch-backend.mjs --all` downloads and verifies llama.cpp, builds its GBNF validator and downloads a 1.1 GB model. It needs CMake and a C++ compiler (on Windows the Visual Studio Build Tools; CMake is found on `PATH`, in `$CMAKE` or in the copy bundled with Visual Studio) and network access. Without it `cargo test --workspace --locked` still passes: the conformance suite and the smoke test print NOT-RUN and succeed, unless `MTEK_REQUIRE_GBNF_VALIDATOR=1` and `MTEK_REQUIRE_GBNF_BACKEND=1` are set, which make them fail instead (decision 0073).
 
-Reproducibility: [`scripts/verify-reproducible-build.mjs`](scripts/verify-reproducible-build.mjs) makes two fresh clones in two directories, builds the packages, the four examples and the runtime benchmark programs in both, and compares the output trees byte for byte (below).
+Reproducibility: [`scripts/verify-reproducible-build.mjs`](scripts/verify-reproducible-build.mjs) makes two fresh clones in two directories, builds the packages, all examples and the runtime benchmark programs in both, and compares the output trees byte for byte (below).
 
 ## Commands
 
@@ -72,10 +72,11 @@ From a clean checkout:
 |---|---|
 | [`examples/pulse-cube`](examples/pulse-cube) | the `mtek new` scaffold: a rotating cube, one material, one host input (M3) |
 | [`examples/material-configurator`](examples/material-configurator) | a multi-file configurator: a generated chair (GLB), PBR materials bound to host inputs, a custom fragment material, lights, a host page, and instanced legs (M4); its browser specs are the evidence for the M4 exit gate |
+| [`examples/product-configurator`](examples/product-configurator) | an embedded sample storefront: one seven-part chair prefab instantiated twice, typed host inputs and scene outputs, keyboard-driven selection, a live quote, and disposal/remounting |
 | [`examples/physics-playground`](examples/physics-playground) | a floor, a prefab crate, an impulse on Space, seeded crates on C, a sensor zone that counts them, crates destroyed below a height, and a bar bound to the count (M5); its browser spec is part of the M5 evidence |
 | [`examples/modular-scene`](examples/modular-scene) | a five-file showroom: constants and one function, one material imported by three modules, two prefabs declared in other files and instantiated with different params, prefab state read by the scene, and a prefab of another file spawned on P (M7); its browser spec and `mtek test` fixtures are the M7 evidence |
 
-Global setup of the browser tests builds all four with the CLI (`tests/browser/support/m3-fixtures.ts`, `m4-configurator.ts`, `m5-playground.ts`, `m7-modular-scene.ts`).
+Global setup of the browser tests builds all five with the CLI (`tests/browser/support/m3-fixtures.ts`, `m4-configurator.ts`, `product-configurator.ts`, `m5-playground.ts`, `m7-modular-scene.ts`).
 
 ### Browser tests
 
@@ -109,11 +110,11 @@ node tests/browser/support/summarize-run.ts DIR                                 
 
 #### Reproducible builds
 
-`node scripts/verify-reproducible-build.mjs --root <dir> --out <report.json> [--suite --gpu-lock <dir>]` makes two fresh clones of the current commit in two differently named directories, runs `npm ci` and `npm run build` in each, builds the four examples in all four modes and prepares the runtime benchmark programs, then compares every output file byte for byte and searches the outputs for the clone paths (decision 0106; the stored run is [`evidence/M7/reproducible-builds.md`](evidence/M7/reproducible-builds.md)). With `--suite` it then runs the full test suite from the clean install of the first clone. It proves that two clones on the same machine agree; it does not prove anything across machines or operating systems.
+`node scripts/verify-reproducible-build.mjs --root <dir> --out <report.json> [--suite --gpu-lock <dir>]` makes two fresh clones of the current commit in two differently named directories, runs `npm ci` and `npm run build` in each, builds all examples in all four modes and prepares the runtime benchmark programs, then compares every output file byte for byte and searches the outputs for the clone paths (decision 0106; the stored run is [`evidence/M7/reproducible-builds.md`](evidence/M7/reproducible-builds.md)). With `--suite` it then runs the full test suite from the clean install of the first clone. It proves that two clones on the same machine agree; it does not prove anything across machines or operating systems.
 
 #### `mtek test`
 
-`mtek test [--allow-not-run] [--format human|json] [PATH]` runs the declarative fixtures `tests/*.test.toml` of a project (the four examples have theirs) in Chromium with the launch configuration of the hardware project (`spec/tooling.md` section 6, decision 0074, report schema `spec/test-report.schema.json`). A fixture that cannot run (no WebGPU adapter, no Playwright, no Node) is reported **NOT-RUN**, never as a pass; that exits 1 unless `--allow-not-run`. It uses the browser variables above and these:
+`mtek test [--allow-not-run] [--format human|json] [PATH]` runs the declarative fixtures `tests/*.test.toml` of a project (the five examples have theirs) in Chromium with the launch configuration of the hardware project (`spec/tooling.md` section 6, decision 0074, report schema `spec/test-report.schema.json`). A fixture that cannot run (no WebGPU adapter, no Playwright, no Node) is reported **NOT-RUN**, never as a pass; that exits 1 unless `--allow-not-run`. It uses the browser variables above and these:
 
 | Variable | Effect |
 |---|---|

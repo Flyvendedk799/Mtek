@@ -1,0 +1,50 @@
+[
+  {
+    "name": "build",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "build"
+    ],
+    "status": 0,
+    "seconds": 91.189
+  },
+  {
+    "name": "check",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "check"
+    ],
+    "status": 0,
+    "seconds": 200.733
+  },
+  {
+    "name": "rust-test",
+    "command": "cargo",
+    "args": [
+      "test",
+      "--workspace",
+      "--locked"
+    ],
+    "status": 0,
+    "execution": "approved outside sandbox after existing directory-swap tests returned Access Denied inside sandbox"
+  },
+  {
+    "name": "js-test",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "test:unit",
+      "--workspaces",
+      "--if-present",
+      "--",
+      "--maxWorkers=2"
+    ],
+    "status": 1,
+    "seconds": 181.967
+  }
+]

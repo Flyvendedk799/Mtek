@@ -38,7 +38,7 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use super::Typeck;
-use super::facts::{BodyFacts, Callee};
+use super::facts::{AmbientRead, BodyFacts, Callee};
 use crate::diagnostics::{Code, Diagnostic, Diagnostics, MAX_DIAGNOSTICS_PER_FILE};
 use crate::project::ModuleId;
 use crate::resolve::{DefId, DefKind, Resolution};
@@ -203,6 +203,8 @@ enum Reached<'n> {
         domain: Domain,
         handlers_only: bool,
     },
+    /// A read of ambient CPU state, rather than a function call.
+    Read(&'n AmbientRead),
     /// A function the program does not have (reported elsewhere).
     Nothing,
 }
@@ -217,6 +219,8 @@ enum Pending {
     CpuOnlyType { node: usize, index: usize },
     CpuOnlyBuiltin { node: usize, call: usize },
     GpuOnlyBuiltin { node: usize, call: usize },
+    CpuOnlyRead { node: usize, call: usize },
+    InitialiserRead { node: usize, call: usize },
 }
 
 /// One call of a chain: `from` calls `to` at `span`.
@@ -241,10 +245,12 @@ pub fn check_program(
     let dist = graph.cpu_distances();
     let gpu = graph.reach(&graph.gpu_roots(roots), false);
     let cpu = graph.reach(&graph.cpu_roots(), true);
+    let initialisers = graph.reach(&graph.initialiser_roots(), true);
     graph.effects(&dist, &gpu, &mut pending);
     graph.gpu_rules(&gpu, &mut pending);
     graph.cpu_rules(&cpu, &mut pending);
-    graph.report(pending, &dist, &gpu, &cpu, sink);
+    graph.initialiser_rules(&initialisers, &mut pending);
+    graph.report(pending, &dist, &gpu, &cpu, &initialisers, sink);
 
     let mut functions = BTreeMap::new();
     for (index, node) in graph.nodes.iter().enumerate() {
@@ -349,6 +355,7 @@ impl<'a> Graph<'a> {
             return Reached::Nothing;
         };
         match &fact.callee {
+            Callee::Read(read) => Reached::Read(read),
             Callee::Builtin(builtin) => Reached::Builtin {
                 name: &builtin.name,
                 domain: builtin.domain,
@@ -543,6 +550,7 @@ impl<'a> Graph<'a> {
             for call in 0..node.facts.calls.len() {
                 match self.reached(index, call) {
                     Reached::CpuFn(_)
+                    | Reached::Read(_)
                     | Reached::Builtin {
                         domain: Domain::Cpu,
                         ..
@@ -612,6 +620,7 @@ impl<'a> Graph<'a> {
                         domain: Domain::Cpu,
                         ..
                     } => (true, true),
+                    Reached::Read(_) => (true, true),
                     Reached::CpuFn(_) => (true, false),
                     Reached::PureFn(target) => {
                         (dist.get(target).copied().flatten().is_some(), false)
@@ -665,6 +674,15 @@ impl<'a> Graph<'a> {
             .enumerate()
             .filter(|(_, n)| n.is_cpu_fn() || n.kind == Kind::CpuRoot)
             .map(|(i, _)| i)
+            .collect()
+    }
+
+    fn initialiser_roots(&self) -> Vec<usize> {
+        self.nodes
+            .iter()
+            .enumerate()
+            .filter(|(_, node)| node.initialiser)
+            .map(|(index, _)| index)
             .collect()
     }
 
@@ -750,6 +768,13 @@ impl<'a> Graph<'a> {
                 ));
             }
             for (call, fact) in node.facts.calls.iter().enumerate() {
+                if matches!(self.reached(index, call), Reached::Read(_)) {
+                    pending.push((
+                        fact.span,
+                        Code::E4040,
+                        Pending::CpuOnlyRead { node: index, call },
+                    ));
+                }
                 if let Reached::Builtin {
                     domain: Domain::Cpu,
                     handlers_only: false,
@@ -788,6 +813,26 @@ impl<'a> Graph<'a> {
         }
     }
 
+    /// Body properties remain unavailable during initialisation even when
+    /// one or more CPU helpers hide the read from the local scene checker.
+    fn initialiser_rules(&self, initialisers: &[Reach], pending: &mut Vec<(Span, Code, Pending)>) {
+        for (index, node) in self.nodes.iter().enumerate() {
+            if initialisers.get(index).is_none_or(Option::is_none) {
+                continue;
+            }
+            for (call, fact) in node.facts.calls.iter().enumerate() {
+                if matches!(self.reached(index, call), Reached::Read(read) if read.forbidden_in_initialiser)
+                {
+                    pending.push((
+                        fact.span,
+                        Code::E5081,
+                        Pending::InitialiserRead { node: index, call },
+                    ));
+                }
+            }
+        }
+    }
+
     /// The chain of calls by which a traversal reached `node`, from its root
     /// down (at most [`MAX_CHAIN_STEPS`] steps, the ones nearest the root
     /// first), the root, and how many steps were left out.
@@ -819,6 +864,7 @@ impl<'a> Graph<'a> {
         dist: &[Option<(usize, usize)>],
         gpu: &[Reach],
         cpu: &[Reach],
+        initialisers: &[Reach],
         sink: &mut Diagnostics,
     ) {
         pending.sort_by_key(|(span, code, _)| (span.file, span.start, span.end, *code));
@@ -833,7 +879,7 @@ impl<'a> Graph<'a> {
                 continue;
             }
             entry.0 += 1;
-            if let Some(diagnostic) = self.build(item, dist, gpu, cpu) {
+            if let Some(diagnostic) = self.build(item, dist, gpu, cpu, initialisers) {
                 sink.push(diagnostic);
             }
         }
@@ -848,8 +894,37 @@ impl<'a> Graph<'a> {
         dist: &[Option<(usize, usize)>],
         gpu: &[Reach],
         cpu: &[Reach],
+        initialisers: &[Reach],
     ) -> Option<Diagnostic> {
         Some(match item {
+            Pending::CpuOnlyRead { node, call } => {
+                let n = self.node(node)?;
+                let Reached::Read(read) = self.reached(node, call) else {
+                    return None;
+                };
+                let diagnostic = Diagnostic::new(
+                    Code::E4040,
+                    format!("{} cannot read `{}` because it runs on the GPU.", capitalise(&n.subject()), read.name),
+                )
+                .at(self.call_span(node, call)?)
+                .help("read the value on the CPU and pass it explicitly; a material receives it through a param set with `bind(...)`");
+                self.with_gpu_chain(diagnostic, gpu, node)
+            }
+            Pending::InitialiserRead { node, call } => {
+                let Reached::Read(read) = self.reached(node, call) else {
+                    return None;
+                };
+                let diagnostic = Diagnostic::new(
+                    Code::E5081,
+                    format!("`{}` cannot be read during initialisation, including through a function call.", read.name),
+                )
+                .at(self.call_span(node, call)?)
+                .note("physics bodies are created after state and field initialisation and the first binding evaluation")
+                .help("read the body property in `update`, `fixed_update` or an event handler instead");
+                let (steps, root, omitted) = self.chain_to(initialisers, node);
+                let root_text = format!("{} runs during initialisation", self.name(root));
+                self.with_chain(diagnostic, root, root_text, &steps, omitted)
+            }
             Pending::Recursion { start, steps } => self.recursion_diagnostic(start, &steps)?,
             Pending::Impure { node, call } => self.impure_diagnostic(node, call, dist)?,
             Pending::HandlerOnly { node, call } => {
@@ -1002,9 +1077,19 @@ impl<'a> Graph<'a> {
             n.name
         );
         let message;
+        let mut ambient_read = false;
         let mut related: Vec<(Span, String)> = Vec::new();
         let mut notes: Vec<String> = Vec::new();
         match self.reached(node, call) {
+            Reached::Read(read) => {
+                return Some(Diagnostic::new(
+                    Code::E4002,
+                    format!("The pure function '{}' reads `{}`, which is ambient CPU state.", n.name, read.name),
+                )
+                .at(span)
+                .note("a pure function computes only on its parameters, locals and constants")
+                .help("pass the value as a parameter; use `cpu fn` only when the helper needs to read CPU state"));
+            }
             Reached::CpuFn(target) => {
                 let t = self.node(target)?;
                 message = format!(
@@ -1074,6 +1159,17 @@ impl<'a> Graph<'a> {
                             notes.push(format!("`{name}` is a CPU-only built-in function"));
                             break;
                         }
+                        Reached::Read(read) => {
+                            ambient_read = true;
+                            push(
+                                &mut related,
+                                next_span,
+                                format!("'{from}' reads `{}` here", read.name),
+                            );
+                            names.push(format!("`{}`", read.name));
+                            notes.push(format!("`{}` is ambient CPU state", read.name));
+                            break;
+                        }
                         Reached::Nothing => break,
                     }
                     if steps > self.nodes.len() + 1 {
@@ -1103,7 +1199,11 @@ impl<'a> Graph<'a> {
         for note in notes {
             diagnostic = diagnostic.note(note);
         }
-        Some(diagnostic.help(help))
+        Some(diagnostic.help(if ambient_read {
+            "read the CPU value at the caller and pass it explicitly through the pure helpers; a material receives it through a param set with `bind(...)`".to_owned()
+        } else {
+            help
+        }))
     }
 
     /// Add the chain from a GPU root to `node` as related spans.

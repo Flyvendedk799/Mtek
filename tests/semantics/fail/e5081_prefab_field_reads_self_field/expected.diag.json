@@ -4,9 +4,9 @@
     "file": "src/main.mtek",
     "startByte": 156,
     "endByte": 169,
-    "message": "The value of field 'scale' of prefab 'Crate' cannot be computed during initialisation: it reads the field 'position' of the prefab 'Crate'.",
+    "message": "This initialiser reads 'position' of the prefab 'Crate', but entity and camera fields cannot be read during initialisation.",
     "notes": [
-      "initialisers of a prefab may read constants, params and state, but not the fields of the entity"
+      "initialisers of a prefab may read constants, params and earlier state, but not the fields of the entity"
     ]
   },
   {

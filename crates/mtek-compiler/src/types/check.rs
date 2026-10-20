@@ -32,7 +32,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::body::BodyState;
-use super::facts::{BuiltinCall, CallFact, Callee};
+use super::facts::{AmbientRead, BuiltinCall, CallFact, Callee};
 use super::ops::{
     arithmetic_result, comparison_result, literal_operand_type, logical_result, negation_result,
 };
@@ -257,7 +257,7 @@ pub(super) struct Checker<'a> {
     /// [`super::check_module_with_imports`], decision 0062).
     pub(super) imported_prefabs: BTreeMap<DefId, super::PrefabInfo>,
     /// The prefab whose declaration is being checked: its fields, state, bindings, lifecycle
-    /// functions and handlers are those of the one entity it describes.
+    /// functions and handlers belong to its root or ordinary descendants.
     pub(super) current_prefab: Option<DefId>,
     /// The descriptor literals of the `material` of a prefab: a param of one whose value is not
     /// constant is computed by the prefab's `init` (see [`Self::fold_descriptor`]).
@@ -268,6 +268,8 @@ pub(super) struct Checker<'a> {
     /// The params of every prefab the module declares, by its declaration: checked before any
     /// prefab body, so that a `spawn` finds its prefab wherever it is declared (decision 0064).
     pub(super) prefab_params: BTreeMap<DefId, Vec<super::PrefabParam>>,
+    /// Root plus descendants, known before bodies so forward spawn references are checked.
+    pub(super) prefab_entity_counts: BTreeMap<DefId, usize>,
     /// The prefab literal that is the argument of the `spawn` being checked (decision 0064).
     pub(super) spawn_argument: Option<NodeId>,
 }
@@ -332,6 +334,7 @@ impl<'a> Checker<'a> {
             dynamic_descriptors: BTreeSet::new(),
             instances: BTreeMap::new(),
             prefab_params: BTreeMap::new(),
+            prefab_entity_counts: BTreeMap::new(),
             spawn_argument: None,
         }
     }
@@ -448,6 +451,12 @@ impl<'a> Checker<'a> {
                         match member {
                             SceneMember::Const(decl) => self.collect_constant(decl),
                             SceneMember::Entity(entity) => self.collect_entity_constants(entity),
+                            SceneMember::Lifecycle(function) => {
+                                self.collect_block_constants(&function.body);
+                            }
+                            SceneMember::Handler(handler) => {
+                                self.collect_block_constants(&handler.body);
+                            }
                             _ => {}
                         }
                     }
@@ -463,7 +472,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    fn collect_entity_constants(&mut self, entity: &'a EntityDecl) {
+    pub(super) fn collect_entity_constants(&mut self, entity: &'a EntityDecl) {
         if entity.prefab.is_some() {
             // Prefab instances are gated in this build.
             return;
@@ -472,6 +481,10 @@ impl<'a> Checker<'a> {
             match member {
                 EntityMember::Const(decl) => self.collect_constant(decl),
                 EntityMember::Entity(child) => self.collect_entity_constants(child),
+                EntityMember::Lifecycle(function) => {
+                    self.collect_block_constants(&function.body);
+                }
+                EntityMember::Handler(handler) => self.collect_block_constants(&handler.body),
                 _ => {}
             }
         }
@@ -523,7 +536,7 @@ impl<'a> Checker<'a> {
         }
     }
 
-    fn entity(&mut self, entity: &EntityDecl) {
+    pub(super) fn entity(&mut self, entity: &EntityDecl) {
         if !construct_implemented(Construct::Entity) {
             return;
         }
@@ -1424,6 +1437,23 @@ impl<'a> Checker<'a> {
                 }
             }
         };
+        if element == TyId::UNIT {
+            let span = items
+                .iter()
+                .find(|item| self.ty_of(item.id) == Some(TyId::UNIT))
+                .map_or(expr.span, |item| item.span);
+            self.report(
+                Diagnostic::new(
+                    Code::E3001,
+                    "An array element must give a value, but this call has no result type.",
+                )
+                .at(span)
+                .expected("a value")
+                .actual("()"),
+            );
+            self.synth_unchecked(items);
+            return TyId::ERROR;
+        }
         if self.is_error(element) {
             self.synth_unchecked(items);
             return TyId::ERROR;
@@ -2535,6 +2565,9 @@ impl<'a> Checker<'a> {
         }
         match self.registry.namespace_member(namespace, member) {
             Some(NamespaceMember::Value(value)) => {
+                if value.domain == Domain::Cpu {
+                    self.record_ambient_read(expr.span, format!("{namespace}.{member}"), false);
+                }
                 self.fields.insert(
                     expr.id,
                     FieldKind::NamespaceValue(format!("{namespace}.{member}")),
@@ -2776,6 +2809,25 @@ pub(super) fn fn_construct(decl: &crate::syntax::ast::FnDecl) -> Construct {
 }
 
 impl Checker<'_> {
+    /// Ambient reads need the same effect and reachability checks as CPU
+    /// calls; a helper must not hide one from a stage or an initialiser.
+    pub(super) fn record_ambient_read(
+        &mut self,
+        span: Span,
+        name: String,
+        forbidden_in_initialiser: bool,
+    ) {
+        if let Some(body) = &mut self.body {
+            body.facts.calls.push(CallFact {
+                span,
+                callee: Callee::Read(AmbientRead {
+                    name,
+                    forbidden_in_initialiser,
+                }),
+            });
+        }
+    }
+
     /// Whether `id` names a user function (of this module or imported).
     pub(super) fn names_function(&self, id: DefId) -> bool {
         match self.res.def(id).map(|d| d.kind) {

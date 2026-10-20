@@ -272,5 +272,5 @@ state position: f32 = 0.0;
 | [`MTEK-E5074`](../../spec/diagnostics.md#mtek-e5074) | field access through entity_ref |
 | [`MTEK-E5075`](../../spec/diagnostics.md#mtek-e5075) | binding cycle |
 | [`MTEK-E5080`](../../spec/diagnostics.md#mtek-e5080) | lifecycle operation during initialisation |
-| [`MTEK-E5081`](../../spec/diagnostics.md#mtek-e5081) | entity field read during initialisation \| |
+| [`MTEK-E5081`](../../spec/diagnostics.md#mtek-e5081) | entity field read during initialisation |
 | [`MTEK-E9010`](../../spec/diagnostics.md#mtek-e9010) | not implemented by this compiler build |

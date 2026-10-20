@@ -73,6 +73,8 @@ export function findSpanMapEntry(entries: readonly SpanMapEntry[], line: number,
 }
 
 export interface ShaderLoadOptions {
+  /** A reload's device and application must still be current after asynchronous work. */
+  readonly assertActive?: () => void;
   readonly manifest: MtekManifest;
   readonly baseUrl: URL;
   readonly device: Pick<GPUDevice, "pushErrorScope" | "popErrorScope">;
@@ -216,85 +218,92 @@ export async function loadCandidateShaders(
   const modules = new Map<string, GPUShaderModule>(existing);
   const created: GPUShaderModule[] = [];
   const diagnostics: MtekDiagnostic[] = [];
+  const generation = registry.generation;
+  try {
+    const needed = list.filter((shader) => !modules.has(shader.hash));
+    const fetched = await Promise.all(
+      needed.map(async (shader) => ({
+        shader,
+        wgsl: await fetchText(options, shader.url),
+        map: await fetchText(options, shader.map),
+      })),
+    );
 
-  const needed = list.filter((shader) => !modules.has(shader.hash));
-  const fetched = await Promise.all(
-    needed.map(async (shader) => ({
-      shader,
-      wgsl: await fetchText(options, shader.url),
-      map: await fetchText(options, shader.map),
-    })),
-  );
+    for (const files of fetched) {
+      options.assertActive?.();
+      const shader = files.shader;
+      if (!files.wgsl.ok) {
+        diagnostics.push(describeFailure(manifest, phase, shader, `the WGSL file could not be loaded (${files.wgsl.reason}).`, []));
+        continue;
+      }
 
-  for (const files of fetched) {
-    const shader = files.shader;
-    if (!files.wgsl.ok) {
-      diagnostics.push(describeFailure(manifest, phase, shader, `the WGSL file could not be loaded (${files.wgsl.reason}).`, []));
-      continue;
-    }
+      let mapEntries: readonly SpanMapEntry[] | undefined;
+      let mapProblem: string | undefined;
+      if (files.map.ok) {
+        const parsed = parseSpanMap(files.map.text, shader.hash);
+        if (typeof parsed === "string") mapProblem = `the span map ${shader.map} is unusable: ${parsed}`;
+        else mapEntries = parsed.entries;
+      } else {
+        mapProblem = `the span map could not be loaded (${files.map.reason})`;
+      }
 
-    let mapEntries: readonly SpanMapEntry[] | undefined;
-    let mapProblem: string | undefined;
-    if (files.map.ok) {
-      const parsed = parseSpanMap(files.map.text, shader.hash);
-      if (typeof parsed === "string") mapProblem = `the span map ${shader.map} is unusable: ${parsed}`;
-      else mapEntries = parsed.entries;
-    } else {
-      mapProblem = `the span map could not be loaded (${files.map.reason})`;
-    }
+      device.pushErrorScope("validation");
+      let module: GPUShaderModule | undefined;
+      let compileErrors: readonly GPUCompilationMessage[] = [];
+      let thrown: string | undefined;
+      try {
+        module = registry.createShaderModule({ label: `mtek shader ${shader.hash.slice(0, 16)}`, code: files.wgsl.text });
+        const info = await module.getCompilationInfo();
+        compileErrors = info.messages.filter((message) => message.type === "error");
+      } catch (error) {
+        thrown = error instanceof Error ? error.message : String(error);
+      }
+      let scopeError: string | undefined;
+      try {
+        const error = await device.popErrorScope();
+        if (error !== null) scopeError = error.message;
+      } catch {
+        // popErrorScope rejects when the device is lost; the loss is reported through device.lost.
+      }
+      if (module !== undefined) {
+        modules.set(shader.hash, module);
+        created.push(module);
+      }
+      options.assertActive?.();
 
-    device.pushErrorScope("validation");
-    let module: GPUShaderModule | undefined;
-    let compileErrors: readonly GPUCompilationMessage[] = [];
-    let thrown: string | undefined;
-    try {
-      module = registry.createShaderModule({ label: `mtek shader ${shader.hash.slice(0, 16)}`, code: files.wgsl.text });
-      const info = await module.getCompilationInfo();
-      compileErrors = info.messages.filter((message) => message.type === "error");
-    } catch (error) {
-      thrown = error instanceof Error ? error.message : String(error);
-    }
-    let scopeError: string | undefined;
-    try {
-      const error = await device.popErrorScope();
-      if (error !== null) scopeError = error.message;
-    } catch {
-      // popErrorScope rejects when the device is lost; the loss is reported through device.lost.
-    }
-    if (module !== undefined) {
-      modules.set(shader.hash, module);
-      created.push(module);
-    }
-
-    for (const message of compileErrors) {
-      const notes: string[] = [];
-      let spanId = spanOfSymbol(manifest, shader.material);
-      if (message.lineNum > 0) {
-        notes.push(`WGSL location: ${shader.url}:${String(message.lineNum)}:${String(message.linePos)}`);
-        if (mapEntries !== undefined) {
-          const entry = findSpanMapEntry(mapEntries, message.lineNum, message.linePos);
-          if (entry === undefined) {
-            notes.push("no Mtek source span maps to this WGSL location; showing the material declaration");
-          } else {
-            spanId = entry.span;
-            if (entry.symbol !== undefined) notes.push(`generated from ${entry.symbol}`);
+      for (const message of compileErrors) {
+        const notes: string[] = [];
+        let spanId = spanOfSymbol(manifest, shader.material);
+        if (message.lineNum > 0) {
+          notes.push(`WGSL location: ${shader.url}:${String(message.lineNum)}:${String(message.linePos)}`);
+          if (mapEntries !== undefined) {
+            const entry = findSpanMapEntry(mapEntries, message.lineNum, message.linePos);
+            if (entry === undefined) {
+              notes.push("no Mtek source span maps to this WGSL location; showing the material declaration");
+            } else {
+              spanId = entry.span;
+              if (entry.symbol !== undefined) notes.push(`generated from ${entry.symbol}`);
+            }
           }
         }
+        if (mapProblem !== undefined) notes.push(`${mapProblem}; showing the material declaration`);
+        diagnostics.push(
+          makeRuntimeDiagnostic("E8051", {
+            phase,
+            message: `Shader for material '${shader.material}' failed to compile: ${message.message}`,
+            source: spanId === undefined ? null : resolveSpan(manifest, spanId),
+            notes,
+          }),
+        );
       }
-      if (mapProblem !== undefined) notes.push(`${mapProblem}; showing the material declaration`);
-      diagnostics.push(
-        makeRuntimeDiagnostic("E8051", {
-          phase,
-          message: `Shader for material '${shader.material}' failed to compile: ${message.message}`,
-          source: spanId === undefined ? null : resolveSpan(manifest, spanId),
-          notes,
-        }),
-      );
+      if (compileErrors.length === 0 && (thrown !== undefined || scopeError !== undefined)) {
+        diagnostics.push(describeFailure(manifest, phase, shader, thrown ?? scopeError ?? "validation error", []));
+      }
     }
-    if (compileErrors.length === 0 && (thrown !== undefined || scopeError !== undefined)) {
-      diagnostics.push(describeFailure(manifest, phase, shader, thrown ?? scopeError ?? "validation error", []));
-    }
-  }
 
-  return { modules, diagnostics, created };
+    return { modules, diagnostics, created };
+  } catch (error) {
+    if (registry.generation === generation) for (const module of created) registry.release(module);
+    throw error;
+  }
 }

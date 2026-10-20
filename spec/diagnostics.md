@@ -195,7 +195,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | Code | Title | Trigger |
 |---|---|---|
 | <a id="mtek-e4001"></a>E4001 | recursion not supported | call cycle in related spans |
-| <a id="mtek-e4002"></a>E4002 | impure call from pure function | full call chain |
+| <a id="mtek-e4002"></a>E4002 | impure call from pure function | CPU calls or ambient frame/body reads, with the full call chain |
 | <a id="mtek-w4003"></a>W4003 | `cpu fn` could be `fn` | |
 | <a id="mtek-e4010"></a>E4010 | unbounded loop in GPU code | non-constant range bounds |
 | <a id="mtek-e4011"></a>E4011 | CPU-only type in GPU code | `string`, handles |
@@ -206,7 +206,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e4030"></a>E4030 | parameter type not GPU-representable | |
 | <a id="mtek-e4031"></a>E4031 | invalid parameter default | |
 | <a id="mtek-e4032"></a>E4032 | too many material parameters | > 64 |
-| <a id="mtek-e4040"></a>E4040 | capture in GPU stage | scene state, `frame`, entity, `cpu fn` (help: add a param and `bind`); a texture or sampler constant (help: a param with the constant as its default) |
+| <a id="mtek-e4040"></a>E4040 | capture in GPU stage | scene state, `frame`, entity, `cpu fn` (help: add a param and `bind`); ambient CPU reads through helper calls; a texture or sampler constant (help: a param with the constant as its default) |
 | <a id="mtek-e4041"></a>E4041 | invalid use of texture or sampler | only as `sample` arguments (decision 0054) |
 | <a id="mtek-e4901"></a>E4901 | stage not supported | `vertex`/`compute` |
 
@@ -226,7 +226,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5014"></a>E5014 | unknown scene object kind | `lamp Main { … }`; v0.1 kinds: `camera` |
 | <a id="mtek-e5020"></a>E5020 | material without mesh | |
 | <a id="mtek-e5030"></a>E5030 | named entity cannot be destroyed | `destroy(Cube)`, or `self` of a named entity (decision 0064) |
-| <a id="mtek-e5040"></a>E5040 | prefab cannot contain entities | a nested `entity` in a `prefab` (at the nested entity's name; decision 0062) |
+| <a id="mtek-e5040"></a>E5040 | unsupported prefab assembly operation | spawning a prefab with children, or a prefab instance nested inside another prefab (decision 0128) |
 | <a id="mtek-e5041"></a>E5041 | missing prefab parameter | an instance leaves out a param without a default; one diagnostic per param, with the param's declaration as related span |
 | <a id="mtek-e5042"></a>E5042 | prefab instance sets non-parameter | a name that is no param, or a member other than `name: value;`; a note lists the params |
 | <a id="mtek-e5050"></a>E5050 | invalid lifecycle signature | |
@@ -242,7 +242,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5074"></a>E5074 | field access through entity_ref | not in v0.1; read or write of a field or state through a reference (decision 0064) |
 | <a id="mtek-e5075"></a>E5075 | binding cycle | full path |
 | <a id="mtek-e5080"></a>E5080 | lifecycle operation during initialisation | `spawn` or `destroy` in initialisers (decision 0064); a handler-only built-in function (`spawn`, `destroy`, a body command) called in a function (decision 0065) |
-| <a id="mtek-e5081"></a>E5081 | entity field read during initialisation | |
+| <a id="mtek-e5081"></a>E5081 | entity field read during initialisation | includes body-property reads reached through helper calls |
 | <a id="mtek-e5090"></a>E5090 | invalid scale | non-positive or non-finite constant |
 | <a id="mtek-e5091"></a>E5091 | body on non-root entity | a body on a nested entity, or a static instance of a prefab with a body nested in an entity (decision 0065) |
 | <a id="mtek-e5092"></a>E5092 | too many static entities | |
@@ -343,8 +343,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e9005"></a>E9005 | entry file not found | |
 | <a id="mtek-e9006"></a>E9006 | entry scene not found or ambiguous | |
 | <a id="mtek-e9010"></a>E9010 | not implemented by this compiler build | specified, not yet built |
-| <a id="mtek-e9020"></a>E9020 | host input target not exposable | not scene state, or unsupported type |
-| <a id="mtek-e9021"></a>E9021 | unknown host input target | |
+| <a id="mtek-e9020"></a>E9020 | host input target not exposable | input target or output source: not scene state, or unsupported type |
+| <a id="mtek-e9021"></a>E9021 | unknown host input target | also an unknown host output source |
 | <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built without `packages/runtime-web/dist`; also a program that uses physics built without `packages/physics-rapier/dist/physics.js` (decision 0063) |
 | <a id="mtek-e9031"></a>E9031 | build output not written | `mtek build` could not write the output directory (I/O failure; exit code 3, the previous output stays in place; decision 0032) |
 | <a id="mtek-e9032"></a>E9032 | compilation timed out | `mtek build --mode preview` did not finish within the compile time limit (10 s, a constant of the command line tool); no files are written (decision 0075) |

@@ -30,13 +30,14 @@ const PAD_PREFIX: &str = "MtekPad16_";
 /// A user struct of a module is named by its symbol (`src/a.mtek::Shape`) and becomes
 /// `S_<hash8>_<Name>` ([`user_struct_name`], decision 0036), so same-named structs of two
 /// modules never collide. A plain name (the layout fixtures, which have no module) becomes
-/// `S_<Name>`. Names that already carry the reserved `Mtek` prefix are compiler-owned
-/// built-in structs (`MtekLight`) and keep their name.
+/// `S_<Name>`. Unqualified names that carry the reserved `Mtek` prefix are compiler-owned
+/// built-in structs (`MtekLight`) and keep their name. A qualified user symbol stays
+/// a user symbol even when its module path begins with `Mtek`.
 pub fn wgsl_struct_name(mtek_name: &str) -> String {
-    if mtek_name.starts_with("Mtek") {
-        mtek_name.to_owned()
-    } else if let Some((module_path, name)) = mtek_name.rsplit_once("::") {
+    if let Some((module_path, name)) = mtek_name.rsplit_once("::") {
         user_struct_name(module_path, name)
+    } else if mtek_name.starts_with("Mtek") {
+        mtek_name.to_owned()
     } else {
         format!("S_{mtek_name}")
     }
@@ -47,10 +48,10 @@ pub fn wgsl_struct_name(mtek_name: &str) -> String {
 /// Every Mtek-declared struct and parameter-block member is emitted as `u_<name>`, because
 /// Mtek field names such as `target`, `filter`, `layout` or `type` are WGSL reserved words
 /// (`spec/gpu-layout.md` section 3). Built-in blocks (`MtekFrame`, `MtekLight`,
-/// `MtekObject`, recognised by the reserved `Mtek` prefix) keep their fixed member names.
+/// `MtekObject`, recognised by their unqualified reserved `Mtek` prefix) keep their fixed member names.
 /// The layout record and `Leaf::path` keep the Mtek names.
 pub fn member_wgsl_name(struct_name: &str, member_name: &str) -> String {
-    if struct_name.starts_with("Mtek") {
+    if struct_name.starts_with("Mtek") && !struct_name.contains("::") {
         member_name.to_owned()
     } else {
         format!("u_{member_name}")
@@ -626,6 +627,21 @@ mod tests {
             wgsl_struct_name("src/a.mtek::Shape"),
             wgsl_struct_name("src/b.mtek::Shape")
         );
+        for path in ["Mtek.mtek", "Mtek/inner.mtek"] {
+            let symbol = format!("{path}::Shape");
+            assert_eq!(wgsl_struct_name(&symbol), user_struct_name(path, "Shape"));
+            assert_eq!(member_wgsl_name(&symbol, "target"), "u_target");
+        }
+        for name in [
+            "MtekFrame",
+            "MtekLight",
+            "MtekObject",
+            "MtekSurfaceInput",
+            "MtekParams_12345678_Plain",
+        ] {
+            assert_eq!(wgsl_struct_name(name), name);
+            assert_eq!(member_wgsl_name(name, "value"), "value");
+        }
     }
 
     #[test]

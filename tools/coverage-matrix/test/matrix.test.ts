@@ -3,7 +3,7 @@ import { FORMS } from "../src/forms.ts";
 import { AREAS, areasOf } from "../src/guards.ts";
 import { auditCodes, type CatalogueEntry, type DiagnosticFixture } from "../src/diagnostics.ts";
 import { buildMatrix, PRESSURES, type MatrixInput } from "../src/matrix.ts";
-import { DEMONSTRATIONS } from "../src/projects.ts";
+import { DEMONSTRATIONS, OTHER_EXAMPLES } from "../src/projects.ts";
 import { render } from "../src/render.ts";
 import { program } from "./helpers.ts";
 
@@ -21,6 +21,7 @@ function input(overrides: { demos?: Record<string, string[]>; features?: string[
     program(MOD, "demonstration", [...(PRESSURES[MOD] ?? []), "only-mod", ...(demos[MOD] ?? [])]),
     // The M3 example covers every form here, so that only what a test removes is missing.
     program("examples/pulse-cube", "example", ["functions", ...FORMS.map((form) => form.id)]),
+    ...OTHER_EXAMPLES.filter((id) => id !== "examples/pulse-cube").map((id) => program(id, "example", [])),
     ...(overrides.fixtures ?? []),
   ];
   const fixtureCodes = new Map<string, DiagnosticFixture[]>([

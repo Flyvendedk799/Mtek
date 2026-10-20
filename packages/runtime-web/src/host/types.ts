@@ -122,8 +122,14 @@ export type MtekInputResult = { ok: true } | { ok: false; error: { code: string;
 
 export type MtekAppState = "running" | "paused" | "recovering" | "failed" | "disposed";
 
-export interface MtekApp<I = Record<string, unknown>> {
+export interface MtekApp<I = Record<string, unknown>, O = Record<string, unknown>> {
   setInput<K extends keyof I & string>(name: K, value: I[K]): MtekInputResult;
+  /**
+   * Initial snapshot after the next settled frame, then only value changes. Returns an idempotent
+   * unsubscribe. Vector/color values are frozen copies; color components are linear RGBA.
+   * Throws for an undeclared name, a non-function listener, or a failed/disposed app.
+   */
+  onOutput<K extends keyof O & string>(name: K, listener: (value: O[K]) => void): () => void;
   pause(): void;
   resume(): void;
   /** Synchronous release (`spec/runtime-abi.md` section 9.3). */
@@ -131,7 +137,7 @@ export interface MtekApp<I = Record<string, unknown>> {
   readonly state: MtekAppState;
   readonly debug?: MtekDebug;
   replaceProgram?(
-    candidate: MtekMountProgram<I>,
+    candidate: MtekMountProgram<I, O>,
   ): Promise<{ ok: true } | { ok: false; diagnostics: readonly MtekDiagnostic[] }>;
 }
 
@@ -156,7 +162,7 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
  * (`spec/runtime-abi.md` section 3). M1 reads only `abi`, `baseUrl` and `manifestUrl`; the members
  * that carry generated code are opaque until M3.
  */
-export interface MtekMountProgram<I = Record<string, unknown>> {
+export interface MtekMountProgram<I = Record<string, unknown>, O = Record<string, unknown>> {
   readonly abi: 1;
   readonly baseUrl: URL;
   readonly manifestUrl: URL;
@@ -166,4 +172,6 @@ export interface MtekMountProgram<I = Record<string, unknown>> {
   readonly prefabs: unknown;
   /** Phantom, never present at run time. */
   readonly __inputs?: I;
+  /** Phantom, never present at run time. Map interface keys so single-generic hosts accept generated Outputs. */
+  readonly __outputs?: { readonly [K in keyof O]: O[K] };
 }

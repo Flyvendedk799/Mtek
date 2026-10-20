@@ -1,0 +1,21 @@
+// Every value type supported by the production scene-to-host output interface.
+scene Demo {
+    state count: i32 = 3;
+    state index: u32 = 7;
+    state enabled: bool = true;
+    state speed: f32 = 1.0;
+    state offset: vec2 = vec2(0.0, 0.5);
+    state position: vec3 = vec3(0.0, 0.5, 0.0);
+    state rotation: vec4 = vec4(0.0, 0.0, 0.0, 1.0);
+    state tint: color = #6b5cff;
+    state label: string = "cube";
+    camera Main {
+        position: vec3(0.0, 1.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    entity Cube {
+        position: bind(position);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: bind(tint) };
+    }
+}

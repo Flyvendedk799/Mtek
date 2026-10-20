@@ -1,0 +1,170 @@
+[
+  {
+    "shape": "independent",
+    "count": 128,
+    "files": 7,
+    "bytes": 193081,
+    "sha256": "07f7925d3197842a35de221573176b6e9381c6fb7fc5fbc8d08022ba95c6b891"
+  },
+  {
+    "shape": "independent",
+    "count": 512,
+    "files": 7,
+    "bytes": 738732,
+    "sha256": "ad13ea7039b5379260d9d17813b6bbc5c5591c2b361c0ea41589b1d35b0fae34"
+  },
+  {
+    "shape": "independent",
+    "count": 8192,
+    "files": 7,
+    "bytes": 11863251,
+    "sha256": "0707c64bb393ea9faac0c47a0e91f422c586f23ceac6a58625bd140d9766ecb2"
+  },
+  {
+    "shape": "chain",
+    "count": 128,
+    "files": 7,
+    "bytes": 208105,
+    "sha256": "c8c9293b056bc49f99dd58049551200aaf0b1c38a81b5b84202076b2e2394cbc"
+  },
+  {
+    "shape": "chain",
+    "count": 512,
+    "files": 7,
+    "bytes": 799906,
+    "sha256": "6fa6be94a618b7e494219807e98e9e3b6749690c79a0258806235f4a6de28029"
+  },
+  {
+    "shape": "chain",
+    "count": 8192,
+    "files": 7,
+    "bytes": 12861254,
+    "sha256": "5a2bbf29f0b69e1f454d40bce183c5840ae8a88629b2ff78839d0832f81a7d39"
+  },
+  {
+    "shape": "fanout",
+    "count": 128,
+    "files": 7,
+    "bytes": 207817,
+    "sha256": "fced7d98e0c699bcb32ab2d6758d562d0da29992df21312d2c2c260f44923b57"
+  },
+  {
+    "shape": "fanout",
+    "count": 512,
+    "files": 7,
+    "bytes": 798052,
+    "sha256": "f8bd1cd2f7a4e8bf3d1b3de95b0feb0493fea026816eb29a1dd4a446e43e1b30"
+  },
+  {
+    "shape": "fanout",
+    "count": 8192,
+    "files": 7,
+    "bytes": 12813851,
+    "sha256": "90a7c62cb0ed09cf99dd9d7f2822566645374e8737333cd5ec41bf8432dd9aab"
+  },
+  {
+    "shape": "diamond",
+    "count": 128,
+    "files": 7,
+    "bytes": 228342,
+    "sha256": "ef84686d92a507d943ca8a9e0f82e17ac5080f409314d04f35bbacb5c5e2afc9"
+  },
+  {
+    "shape": "diamond",
+    "count": 512,
+    "files": 7,
+    "bytes": 882945,
+    "sha256": "6d7577a83935f27a8f9fff90c8439e4a94c690f2793c026031635963ff7e2b5d"
+  },
+  {
+    "shape": "diamond",
+    "count": 8192,
+    "files": 7,
+    "bytes": 14212593,
+    "sha256": "9860853a5a9ecb2d0db23ddf8492af17413fd016c00dfb76f310ee4074c7a1c8"
+  },
+  {
+    "shape": "dense",
+    "count": 128,
+    "files": 7,
+    "bytes": 493223,
+    "sha256": "342050dd90b1fc7a81db09762271a68a599bf7f3e818a136acbd8656dd0788a5"
+  },
+  {
+    "shape": "dense",
+    "count": 512,
+    "files": 7,
+    "bytes": 2020249,
+    "sha256": "6e8f9652c398566b10d6bf35bc16dc2f372a936a84db8b143481742533bb80cc"
+  },
+  {
+    "shape": "dense",
+    "count": 8192,
+    "files": 7,
+    "bytes": 33008152,
+    "sha256": "c071d7cc422d4555e9a81b2c24f62beb8d9db974e8c317adc02f205df66d2932"
+  },
+  {
+    "shape": "mesh-identical",
+    "count": 128,
+    "files": 9,
+    "bytes": 201313,
+    "sha256": "ff5bf6bb78effe29de77e4bb390e5c99558122a287091573e76559f60a0c30d5"
+  },
+  {
+    "shape": "mesh-identical",
+    "count": 512,
+    "files": 9,
+    "bytes": 715317,
+    "sha256": "98c24a23d84cb2ba70cc6ce3bbd3eaeec43bd18d3ca9d9f6ea9c41667d1e1f53"
+  },
+  {
+    "shape": "mesh-identical",
+    "count": 8192,
+    "files": 9,
+    "bytes": 11154941,
+    "sha256": "9c66dab998c537cdb18f45d4996c72b3aa0ec3ed92754e4b1dfdce2d5dfdbc91"
+  },
+  {
+    "shape": "mesh-reuse",
+    "count": 128,
+    "files": 9,
+    "bytes": 203158,
+    "sha256": "8e64584a2aed16857597eb5129a79564868300b331f62c4ffe9a06087fcf9c4e"
+  },
+  {
+    "shape": "mesh-reuse",
+    "count": 512,
+    "files": 9,
+    "bytes": 717310,
+    "sha256": "92d6ec1da1efcde7bd1c10f820d7503fa433b5025d299a86ef633f50fb1747d4"
+  },
+  {
+    "shape": "mesh-reuse",
+    "count": 8192,
+    "files": 9,
+    "bytes": 11159852,
+    "sha256": "8cd08a1cf74c14fcd15d9634081a752b5d602cd395243d747b6229876cd54215"
+  },
+  {
+    "shape": "mesh-unique",
+    "count": 128,
+    "files": 9,
+    "bytes": 217035,
+    "sha256": "bab2293ccd882e361251be0acdc27b00a0c93a7c77a22595391e73a480fb5dba"
+  },
+  {
+    "shape": "mesh-unique",
+    "count": 512,
+    "files": 9,
+    "bytes": 780205,
+    "sha256": "476ad8b1c2f4b7c7581da3611fcc325104c48ed906a04bbbc50a6b9fa744d7fa"
+  },
+  {
+    "shape": "mesh-unique",
+    "count": 8192,
+    "files": 9,
+    "bytes": 12239036,
+    "sha256": "3792fbced5d960ab6b6bd757718268e791da3b087e979aef8b0101eb898cee0f"
+  }
+]

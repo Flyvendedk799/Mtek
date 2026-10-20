@@ -241,6 +241,9 @@ impl Tree<'_> {
             }
         }
         self.entity(depth + 1, &prefab.entity);
+        for child in &prefab.children {
+            self.entity(depth + 1, child);
+        }
         for state in &prefab.state {
             self.state(depth + 1, state);
         }

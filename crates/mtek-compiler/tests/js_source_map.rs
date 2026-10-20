@@ -6,7 +6,8 @@
 //!   listed source, and points at a position inside that source;
 //! * inside the emitted functions, every segment points at the start of the function, of one of
 //!   its statements or of one of its expressions, and every line holding code has a segment;
-//! * every emitted function and statement of the typed IR is mapped (some segment points at the
+//! * every emitted function and statement of the typed IR is mapped (release/preview omit
+//!   whole `print` statements, including their arguments; some segment points at the
 //!   position where it starts), and at least nine in ten of its expressions are; an expression is
 //!   unmapped only where an enclosing one starts at the same generated position, which the unit
 //!   test `emit_js::cpu::tests::every_function_statement_and_expression_is_mapped` checks node by
@@ -153,8 +154,19 @@ fn decode(mappings: &str) -> Vec<Segment> {
 /// expressions.
 #[derive(Default)]
 struct Expected {
+    /// Release and preview remove whole print statements, including argument evaluation.
+    release: bool,
     statements: Vec<Span>,
     expressions: Vec<Span>,
+}
+
+impl Expected {
+    fn for_mode(mode: BuildMode) -> Self {
+        Self {
+            release: matches!(mode, BuildMode::Release | BuildMode::Preview),
+            ..Self::default()
+        }
+    }
 }
 
 fn expr(e: &Expr, out: &mut Expected) {
@@ -277,6 +289,12 @@ fn stmt(s: &Stmt, out: &mut Expected) {
         }
         Stmt::Break { span } | Stmt::Continue { span } => out.statements.push(*span),
         Stmt::Block { body } => block(body, out),
+        // These statements have no generated code in release/preview, so neither their
+        // call nor any argument subtree can have a source-map position in those modes.
+        Stmt::Expr { expr: e, .. }
+            if out.release
+                && matches!(&e.kind, ExprKind::Builtin { function, .. } if function == "print") => {
+        }
         Stmt::Expr { expr: e, span } => {
             out.statements.push(*span);
             expr(e, out);
@@ -315,13 +333,14 @@ fn app_js_maps_every_emitted_statement_and_expression() {
     let mut statements_seen = 0;
     let mut mapped_seen = 0;
     let mut segments_seen = 0;
+    let mode = BuildMode::Release;
     for root in every_project() {
         let label = root.display().to_string();
         let memory = project(&root);
         let result = build(
             &ProjectRoot::at_base(),
             &memory,
-            &CompileOptions::with_stub_runtime(BuildMode::Release),
+            &CompileOptions::with_stub_runtime(mode),
         );
         assert!(!result.has_errors(), "{label}: {:#?}", result.report);
         let app = std::str::from_utf8(&result.files["app.js"]).unwrap();
@@ -382,7 +401,7 @@ fn app_js_maps_every_emitted_statement_and_expression() {
         // The emitted functions of the IR.
         let analysis = analyze(&ProjectRoot::at_base(), &memory);
         let program = ir::lower_to_ir(&analysis).unwrap();
-        let mut expected = Expected::default();
+        let mut expected = Expected::for_mode(mode);
         for module in &program.modules {
             for item in &module.items {
                 if let Item::Function(function) = item
@@ -466,6 +485,107 @@ fn app_js_maps_every_emitted_statement_and_expression() {
         expressions_seen > 1000,
         "{expressions_seen} expressions checked"
     );
+}
+
+/// Changing build mode removes only print statements and their argument subtrees. The
+/// surviving nodes keep their mappings, and eliminated source has no phantom mappings.
+#[test]
+fn helper_print_source_maps_follow_build_mode() {
+    let source = r#"cpu fn message() -> string {
+    random();
+    return "message";
+}
+cpu fn helper(flag: bool) -> f32 {
+    if flag {
+        print(message());
+    }
+    for i in 0..1 {
+        print("loop");
+    }
+    {
+        print("block");
+    }
+    return random();
+}
+scene Demo { camera Main {} }
+"#;
+    let mut memory = MemFs::new();
+    memory
+        .insert(
+            ProjectPath::new("mtek.toml").unwrap(),
+            "[project]\nname = \"print-maps\"\nlanguage = \"0.1\"\n",
+        )
+        .insert(ProjectPath::new("src/main.mtek").unwrap(), source);
+    let analysis = analyze(&ProjectRoot::at_base(), &memory);
+    let program = ir::lower_to_ir(&analysis).unwrap();
+    for mode in [
+        BuildMode::Dev,
+        BuildMode::Test,
+        BuildMode::Release,
+        BuildMode::Preview,
+    ] {
+        let result = build(
+            &ProjectRoot::at_base(),
+            &memory,
+            &CompileOptions::with_stub_runtime(mode),
+        );
+        assert!(!result.has_errors(), "{mode:?}: {:#?}", result.report);
+        let app = std::str::from_utf8(&result.files["app.js"]).unwrap();
+        let map: Value = serde_json::from_slice(&result.files["app.js.map"]).unwrap();
+        assert_eq!(map["sources"], serde_json::json!(["src/main.mtek"]));
+        let file = result
+            .sources
+            .files()
+            .find(|file| file.path().as_str() == "src/main.mtek")
+            .unwrap();
+        let segments = decode(map["mappings"].as_str().unwrap());
+        let mapped: BTreeSet<(u32, u32, u32)> = segments
+            .iter()
+            .map(|segment| {
+                assert_eq!(segment.source, 0);
+                (file.id().0, segment.original_line, segment.original_column)
+            })
+            .collect();
+        let mut expected = Expected::for_mode(mode);
+        for module in &program.modules {
+            for item in &module.items {
+                if let Item::Function(function) = item
+                    && function.cpu_reachable
+                {
+                    expected.statements.push(function.span);
+                    block(&function.body, &mut expected);
+                }
+            }
+        }
+        // This focused program has no deduplicated expression starts. Require every
+        // surviving node, rather than weakening the corpus's existing 90% threshold.
+        for span in expected.statements.iter().chain(&expected.expressions) {
+            assert!(
+                mapped.contains(&start(&result.sources, *span)),
+                "{mode:?}: emitted node {span:?} has no mapping"
+            );
+        }
+        assert_eq!(
+            app.matches("ctx.print(").count(),
+            if expected.release { 0 } else { 3 }
+        );
+        for text in ["print(message());", "print(\"loop\");", "print(\"block\");"] {
+            let offset = source.find(text).unwrap() as u32;
+            let begin = file.lsp_position(offset);
+            let end = file.lsp_position(offset + text.len() as u32);
+            let inside = |segment: &&Segment| {
+                let position = (segment.original_line, segment.original_column);
+                position >= (begin.line, begin.character) && position < (end.line, end.character)
+            };
+            let print_segments = segments.iter().filter(inside).count();
+            if expected.release {
+                assert_eq!(print_segments, 0, "{mode:?}: phantom mapping inside {text}");
+            } else {
+                // The call/statement share a start; its argument has its own mapping.
+                assert_eq!(print_segments, 2, "{mode:?}: {text}");
+            }
+        }
+    }
 }
 
 #[test]

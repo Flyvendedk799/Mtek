@@ -3,7 +3,7 @@
   "runtimeAbi": 1,
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "buildId": "c68e4cb5308e52fba45bd73a6a0db847325ea2f1950eedc41bf36556b44bf560",
+  "buildId": "c2722407c36bf0801197a8ed8ce751d574a1077580109d7ff970c7c7ca54442c",
   "targetProfile": "webgpu-core-2026",
   "requiredCapabilities": {
     "features": [],
@@ -25,27 +25,162 @@
     {
       "id": 0,
       "path": "src/main.mtek",
-      "sha256": "83da66671a2ddf58a181b194e81715d72e72eedab0f9d2902b802622972f0038"
+      "sha256": "00f063bc5ae1a91f5b531beed373fca6af3aaa8fb11c6cda5c9a826ff4b06bb2"
     }
   ],
   "spans": [
     {
       "file": 0,
-      "start": 4061,
-      "end": 4096,
-      "startLine": 182,
+      "start": 5367,
+      "end": 5439,
+      "startLine": 221,
       "startColumn": 1,
-      "endLine": 184,
+      "endLine": 224,
       "endColumn": 2
     },
     {
       "file": 0,
-      "start": 4080,
-      "end": 4094,
-      "startLine": 183,
+      "start": 4246,
+      "end": 4270,
+      "startLine": 187,
       "startColumn": 5,
-      "endLine": 183,
+      "endLine": 187,
+      "endColumn": 29
+    },
+    {
+      "file": 0,
+      "start": 4275,
+      "end": 4301,
+      "startLine": 188,
+      "startColumn": 5,
+      "endLine": 188,
+      "endColumn": 31
+    },
+    {
+      "file": 0,
+      "start": 4306,
+      "end": 4333,
+      "startLine": 189,
+      "startColumn": 5,
+      "endLine": 189,
+      "endColumn": 32
+    },
+    {
+      "file": 0,
+      "start": 4338,
+      "end": 4367,
+      "startLine": 190,
+      "startColumn": 5,
+      "endLine": 190,
+      "endColumn": 34
+    },
+    {
+      "file": 0,
+      "start": 4372,
+      "end": 4400,
+      "startLine": 191,
+      "startColumn": 5,
+      "endLine": 191,
+      "endColumn": 33
+    },
+    {
+      "file": 0,
+      "start": 4405,
+      "end": 4434,
+      "startLine": 192,
+      "startColumn": 5,
+      "endLine": 192,
+      "endColumn": 34
+    },
+    {
+      "file": 0,
+      "start": 4439,
+      "end": 4468,
+      "startLine": 193,
+      "startColumn": 5,
+      "endLine": 193,
+      "endColumn": 34
+    },
+    {
+      "file": 0,
+      "start": 4473,
+      "end": 4505,
+      "startLine": 194,
+      "startColumn": 5,
+      "endLine": 194,
+      "endColumn": 37
+    },
+    {
+      "file": 0,
+      "start": 4510,
+      "end": 4540,
+      "startLine": 195,
+      "startColumn": 5,
+      "endLine": 195,
+      "endColumn": 35
+    },
+    {
+      "file": 0,
+      "start": 4545,
+      "end": 4576,
+      "startLine": 196,
+      "startColumn": 5,
+      "endLine": 196,
+      "endColumn": 36
+    },
+    {
+      "file": 0,
+      "start": 5386,
+      "end": 5400,
+      "startLine": 222,
+      "startColumn": 5,
+      "endLine": 222,
       "endColumn": 19
+    },
+    {
+      "file": 0,
+      "start": 5405,
+      "end": 5437,
+      "startLine": 223,
+      "startColumn": 5,
+      "endLine": 223,
+      "endColumn": 37
+    },
+    {
+      "file": 0,
+      "start": 4133,
+      "end": 5365,
+      "startLine": 183,
+      "startColumn": 1,
+      "endLine": 219,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 4160,
+      "end": 4180,
+      "startLine": 184,
+      "startColumn": 5,
+      "endLine": 184,
+      "endColumn": 25
+    },
+    {
+      "file": 0,
+      "start": 4185,
+      "end": 4214,
+      "startLine": 185,
+      "startColumn": 5,
+      "endLine": 185,
+      "endColumn": 34
+    },
+    {
+      "file": 0,
+      "start": 4219,
+      "end": 4241,
+      "startLine": 186,
+      "startColumn": 5,
+      "endLine": 186,
+      "endColumn": 27
     },
     {
       "file": 0,
@@ -361,6 +496,96 @@
       "startColumn": 12,
       "endLine": 153,
       "endColumn": 16
+    },
+    {
+      "file": 0,
+      "start": 4711,
+      "end": 4722,
+      "startLine": 202,
+      "startColumn": 25,
+      "endLine": 202,
+      "endColumn": 36
+    },
+    {
+      "file": 0,
+      "start": 4749,
+      "end": 4761,
+      "startLine": 203,
+      "startColumn": 26,
+      "endLine": 203,
+      "endColumn": 38
+    },
+    {
+      "file": 0,
+      "start": 4870,
+      "end": 4881,
+      "startLine": 206,
+      "startColumn": 27,
+      "endLine": 206,
+      "endColumn": 38
+    },
+    {
+      "file": 0,
+      "start": 4912,
+      "end": 4924,
+      "startLine": 207,
+      "startColumn": 28,
+      "endLine": 207,
+      "endColumn": 40
+    },
+    {
+      "file": 0,
+      "start": 4969,
+      "end": 4980,
+      "startLine": 209,
+      "startColumn": 9,
+      "endLine": 209,
+      "endColumn": 20
+    },
+    {
+      "file": 0,
+      "start": 4996,
+      "end": 5008,
+      "startLine": 210,
+      "startColumn": 9,
+      "endLine": 210,
+      "endColumn": 21
+    },
+    {
+      "file": 0,
+      "start": 5182,
+      "end": 5200,
+      "startLine": 214,
+      "startColumn": 9,
+      "endLine": 214,
+      "endColumn": 27
+    },
+    {
+      "file": 0,
+      "start": 5182,
+      "end": 5206,
+      "startLine": 214,
+      "startColumn": 9,
+      "endLine": 214,
+      "endColumn": 33
+    },
+    {
+      "file": 0,
+      "start": 5277,
+      "end": 5304,
+      "startLine": 216,
+      "startColumn": 9,
+      "endLine": 216,
+      "endColumn": 36
+    },
+    {
+      "file": 0,
+      "start": 4790,
+      "end": 4804,
+      "startLine": 204,
+      "startColumn": 28,
+      "endLine": 204,
+      "endColumn": 42
     }
   ],
   "symbols": [
@@ -370,99 +595,224 @@
       "span": 0
     },
     {
+      "id": "src/main.mtek::Places.Indexed.run",
+      "kind": "state",
+      "span": 1
+    },
+    {
+      "id": "src/main.mtek::Places.Indexed.read_low",
+      "kind": "state",
+      "span": 2
+    },
+    {
+      "id": "src/main.mtek::Places.Indexed.read_high",
+      "kind": "state",
+      "span": 3
+    },
+    {
+      "id": "src/main.mtek::Places.Indexed.read_inside",
+      "kind": "state",
+      "span": 4
+    },
+    {
+      "id": "src/main.mtek::Places.Indexed.matrix_low",
+      "kind": "state",
+      "span": 5
+    },
+    {
+      "id": "src/main.mtek::Places.Indexed.matrix_high",
+      "kind": "state",
+      "span": 6
+    },
+    {
+      "id": "src/main.mtek::Places.Indexed.plain_write",
+      "kind": "state",
+      "span": 7
+    },
+    {
+      "id": "src/main.mtek::Places.Indexed.compound_write",
+      "kind": "state",
+      "span": 8
+    },
+    {
+      "id": "src/main.mtek::Places.Indexed.nested_write",
+      "kind": "state",
+      "span": 9
+    },
+    {
+      "id": "src/main.mtek::Places.Indexed.counted_write",
+      "kind": "state",
+      "span": 10
+    },
+    {
       "id": "src/main.mtek::Places.Main",
       "kind": "camera",
+      "span": 11
+    },
+    {
+      "id": "src/main.mtek::Places.Indexed",
+      "kind": "entity",
+      "span": 12
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces",
+      "kind": "prefab",
+      "span": 13
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.low",
+      "kind": "param",
+      "span": 14
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.high",
+      "kind": "param",
+      "span": 15
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.inside",
+      "kind": "param",
+      "span": 16
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.run",
+      "kind": "state",
       "span": 1
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.read_low",
+      "kind": "state",
+      "span": 2
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.read_high",
+      "kind": "state",
+      "span": 3
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.read_inside",
+      "kind": "state",
+      "span": 4
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.matrix_low",
+      "kind": "state",
+      "span": 5
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.matrix_high",
+      "kind": "state",
+      "span": 6
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.plain_write",
+      "kind": "state",
+      "span": 7
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.compound_write",
+      "kind": "state",
+      "span": 8
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.nested_write",
+      "kind": "state",
+      "span": 9
+    },
+    {
+      "id": "src/main.mtek::IndexedPlaces.counted_write",
+      "kind": "state",
+      "span": 10
     },
     {
       "id": "src/main.mtek::field_writes",
       "kind": "function",
-      "span": 2
+      "span": 17
     },
     {
       "id": "src/main.mtek::set_at",
       "kind": "function",
-      "span": 3
+      "span": 18
     },
     {
       "id": "src/main.mtek::set_at_u",
       "kind": "function",
-      "span": 4
+      "span": 19
     },
     {
       "id": "src/main.mtek::flags",
       "kind": "function",
-      "span": 5
+      "span": 20
     },
     {
       "id": "src/main.mtek::nested",
       "kind": "function",
-      "span": 6
+      "span": 21
     },
     {
       "id": "src/main.mtek::compound",
       "kind": "function",
-      "span": 7
+      "span": 22
     },
     {
       "id": "src/main.mtek::fill",
       "kind": "function",
-      "span": 8
+      "span": 23
     },
     {
       "id": "src/main.mtek::alias_var",
       "kind": "function",
-      "span": 9
+      "span": 24
     },
     {
       "id": "src/main.mtek::alias_both",
       "kind": "function",
-      "span": 10
+      "span": 25
     },
     {
       "id": "src/main.mtek::alias_let",
       "kind": "function",
-      "span": 11
+      "span": 26
     },
     {
       "id": "src/main.mtek::alias_nested",
       "kind": "function",
-      "span": 12
+      "span": 27
     },
     {
       "id": "src/main.mtek::alias_param",
       "kind": "function",
-      "span": 13
+      "span": 28
     },
     {
       "id": "src/main.mtek::alias_for",
       "kind": "function",
-      "span": 14
+      "span": 29
     },
     {
       "id": "src/main.mtek::keep",
       "kind": "function",
-      "span": 15
+      "span": 30
     },
     {
       "id": "src/main.mtek::alias_through_call",
       "kind": "function",
-      "span": 16
+      "span": 31
     },
     {
       "id": "src/main.mtek::constant_across_calls",
       "kind": "function",
-      "span": 17
+      "span": 32
     },
     {
       "id": "src/main.mtek::rig_weight",
       "kind": "function",
-      "span": 18
+      "span": 33
     },
     {
       "id": "src/main.mtek::reach_all",
       "kind": "function",
-      "span": 19
+      "span": 34
     }
   ],
   "layouts": [
@@ -709,7 +1059,73 @@
         "exposure": -1.9145305
       }
     ],
-    "entities": [],
+    "entities": [
+      {
+        "index": 0,
+        "name": "Indexed",
+        "symbol": "src/main.mtek::Places.Indexed",
+        "parent": null,
+        "mesh": null,
+        "material": null,
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [
+          {
+            "name": "run",
+            "type": "bool",
+            "symbol": "src/main.mtek::Places.Indexed.run"
+          },
+          {
+            "name": "read_low",
+            "type": "f32",
+            "symbol": "src/main.mtek::Places.Indexed.read_low"
+          },
+          {
+            "name": "read_high",
+            "type": "f32",
+            "symbol": "src/main.mtek::Places.Indexed.read_high"
+          },
+          {
+            "name": "read_inside",
+            "type": "f32",
+            "symbol": "src/main.mtek::Places.Indexed.read_inside"
+          },
+          {
+            "name": "matrix_low",
+            "type": "f32",
+            "symbol": "src/main.mtek::Places.Indexed.matrix_low"
+          },
+          {
+            "name": "matrix_high",
+            "type": "f32",
+            "symbol": "src/main.mtek::Places.Indexed.matrix_high"
+          },
+          {
+            "name": "plain_write",
+            "type": "f32",
+            "symbol": "src/main.mtek::Places.Indexed.plain_write"
+          },
+          {
+            "name": "compound_write",
+            "type": "f32",
+            "symbol": "src/main.mtek::Places.Indexed.compound_write"
+          },
+          {
+            "name": "nested_write",
+            "type": "f32",
+            "symbol": "src/main.mtek::Places.Indexed.nested_write"
+          },
+          {
+            "name": "counted_write",
+            "type": "f32",
+            "symbol": "src/main.mtek::Places.Indexed.counted_write"
+          }
+        ],
+        "update": true,
+        "fixedUpdate": false
+      }
+    ],
     "materialInstances": [],
     "bindings": [],
     "hostInputs": [],

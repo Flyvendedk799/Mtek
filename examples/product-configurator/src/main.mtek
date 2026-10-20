@@ -1,0 +1,92 @@
+import { Chair } from "./chair.mtek";
+
+scene Showroom {
+    clear_color: #edeae4;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.35;
+
+    state finish: i32 = 0;
+    state frame_finish: i32 = 0;
+    state quantity: i32 = 1;
+    state auto_rotate: bool = false;
+    state angle: f32 = -0.25;
+    state unit_price: i32 = 340;
+    state total_price: i32 = 340;
+
+    camera Main {
+        position: vec3(2.5, 2.2, 4.7);
+        target: vec3(0.05, 0.65, 0.0);
+        projection: Perspective { fov_y: 0.62; near: 0.1; far: 30.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.65, -0.5, 0.0);
+        light: DirectionalLight { color: #fff6e6; intensity: 2.4 };
+    }
+    entity Fill {
+        position: vec3(-2.0, 3.0, 2.0);
+        light: PointLight { color: #ffffff; intensity: 8.0; range: 10.0 };
+    }
+    entity Floor {
+        position: vec3(0.0, -0.06, 0.0);
+        mesh: Box { size: vec3(7.0, 0.10, 7.0) };
+        material: Pbr { base_color: #e1ddd4; roughness: 1.0 };
+    }
+    entity YourChair: Chair {
+        origin: vec3(-0.60, 0.0, 0.35);
+    }
+    entity Reference: Chair {
+        origin: vec3(0.75, 0.0, -0.60);
+        size: 0.86;
+        upholstery: #c9b99a;
+        timber: #704a34;
+    }
+
+    // These are scene interactions, not browser callbacks pretending to be scene events.
+    on key_down(Key.ArrowRight) {
+        finish = (finish + 1) % 3;
+    }
+    on key_down(Key.ArrowLeft) {
+        finish = (finish + 2) % 3;
+    }
+    on key_down(Key.Space) {
+        auto_rotate = !auto_rotate;
+    }
+
+    update(dt: f32) {
+        // The boundary validates types; the product owns its domain constraints.
+        if finish < 0 || finish > 2 {
+            finish = 0;
+        }
+        if frame_finish < 0 || frame_finish > 1 {
+            frame_finish = 0;
+        }
+        if quantity < 1 {
+            quantity = 1;
+        }
+        if quantity > 6 {
+            quantity = 6;
+        }
+        unit_price = 340;
+        YourChair.seat_color = #4b7777;
+        if finish == 1 {
+            YourChair.seat_color = #b57259;
+            unit_price += 40;
+        }
+        if finish == 2 {
+            YourChair.seat_color = #344654;
+            unit_price += 60;
+        }
+        YourChair.frame_color = #b68b60;
+        if frame_finish == 1 {
+            YourChair.frame_color = #704a34;
+            unit_price += 35;
+        }
+        total_price = unit_price * quantity;
+        if auto_rotate {
+            angle += dt * 0.35;
+        }
+        YourChair.angle = angle;
+        Reference.angle = -0.35;
+    }
+}

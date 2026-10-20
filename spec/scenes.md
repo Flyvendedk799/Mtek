@@ -102,10 +102,11 @@ prefab Crate {
 }
 ```
 
-- A prefab is a module item describing **one entity** (no nested entities in v0.1: `E5040`). It has the same members as an entity body plus `param` declarations.
+- A prefab is a module item describing a root entity and optional ordinary child entities. It has the same members as an entity body plus root `param` declarations. Prefabs with children are **static assemblies**: `spawn` and nested prefab instances inside them are rejected with `E5040` (decision 0128).
 - `param name: T [= default];` — immutable construction input. A param without default is required at every instantiation (`E5041`). Params are readable in the prefab's field initialisers, state initialisers, `bind` expressions and functions.
 - **Static instance:** `entity First: Crate { origin: vec3(0.0, 3.0, 0.0); }` — the body may set **only params** (`E5042` for anything else, with a note listing the prefab's params). Static instances are named entities (§4.5).
-- **Dynamic instance:** `spawn(Crate { origin: p })` (§9).
+- **Dynamic instance:** `spawn(Crate { origin: p })` (§9), for single-entity prefabs only.
+- **Static assembly:** every child is copied beneath each instance, in depth-first declaration order. `self` refers to the current part; bare root params, constants and state remain visible in descendants. Child names are unique within the prefab and private to it; instance-qualified symbols such as `Demo.Left.Seat` distinguish copies. The scene accesses the root state as `Left.seat_color`; bindings on children can read that state. Root transforms move all descendants. Each part has independent state, bindings, lifecycle functions and material parameters. Visibility still hides only that entity’s mesh. Static parts live until scene disposal and cannot be destroyed. Lights remain disallowed throughout a prefab, and bodies remain root-only.
 - A prefab has no access to scene state (it is not inside a scene); its handlers use `self`, its params, its state, constants and functions. Referencing a scene name from a prefab is `E2003`.
 - A field value, a state initialiser or a material param of a prefab may read its params, constants and state (§11) and call functions; it is computed when an instance is created. Construction-only values (`mesh`, `body`, `collider`) are constants (`E3090`). A prefab's `bind` follows §8.4 with `self` for the entity. An instance's fields, state and material params are read and written from the scene like those of any named entity (§4.4, §8), except that what the prefab binds cannot be assigned (`E5070`).
 - The params of a **static** instance are constant expressions (`E3090`); a run-time value is what `spawn` passes (§9). A prefab may declare a `body`, a `collider` and collision handlers (the entity it describes is checked like a scene entity, `spec/physics.md` section 2; a static instance of a prefab with a body must be a root entity, `E5091`); `light` in a prefab is `E5110`. Decisions `spec/decisions/0062-prefabs.md` and `0065-physics-schemas-and-ownership.md` record the details this section leaves open.
@@ -229,4 +230,4 @@ The mounted application owns the scene; the scene owns entity instances; entitie
 
 ## 14. Not in v0.1
 
-Multiple or switchable scenes; run-time re-parenting; prefabs with children; reading/writing fields through `entity_ref`; user-defined components, queries and systems (v0.2); render interpolation; camera switching; text and UI; audio.
+Multiple or switchable scenes; run-time re-parenting; spawned prefabs with children; prefab instances nested within prefabs; reading/writing fields through `entity_ref`; user-defined components, queries and systems (v0.2); render interpolation; camera switching; text and UI; audio.

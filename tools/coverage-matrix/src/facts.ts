@@ -530,6 +530,7 @@ export function manifestFacts(manifest: Json): FactSet {
   const facts: FactSet = new Set();
   const ctx: Context = { facts, module: "", item: "" };
   const scene = obj(manifest, "scene");
+  if (arr(scene, "hostOutputs").length > 0) add(ctx, "project/host-outputs");
   const inputs = arr(scene, "hostInputs");
   if (inputs.length > 0) {
     add(ctx, "project/host-inputs");

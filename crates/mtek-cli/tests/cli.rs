@@ -290,6 +290,43 @@ fn warnings_do_not_fail_a_check() {
 }
 
 #[test]
+fn empty_host_port_names_fail_check_and_build_before_emission() {
+    let scratch = Scratch::new("empty-host-port-names");
+    for direction in ["inputs", "outputs"] {
+        let project = scratch.project(
+            direction,
+            "scene Demo { state value: f32 = 1.0; camera Main {} }",
+        );
+        scratch.write(
+            &format!("{direction}/mtek.toml"),
+            &format!("{TOML}[host.{direction}]\n\"\" = \"Demo.value\"\n"),
+        );
+        for command in ["check", "build"] {
+            let out = run_in(&project, &[command, "--format", "json"]);
+            assert_eq!(
+                out.status.code(),
+                Some(1),
+                "{direction} {command}: {}",
+                stderr(&out)
+            );
+            let report = report_of(&out, &scratch);
+            // Rust-only builds also report the missing runtime; checking never needs it.
+            let expected_codes = if command == "build" && !cfg!(mtek_runtime_embedded) {
+                vec!["MTEK-E9001", "MTEK-E9030"]
+            } else {
+                vec!["MTEK-E9001"]
+            };
+            assert_eq!(codes(&report), expected_codes);
+            assert_eq!(
+                report["diagnostics"][0]["message"],
+                format!("Invalid project configuration: host.{direction} names must not be empty.")
+            );
+            assert!(!project.join("dist").exists());
+        }
+    }
+}
+
+#[test]
 fn the_project_is_the_nearest_ancestor_with_mtek_toml() {
     let scratch = Scratch::new("discovery");
     let project = scratch.project("app", VALID);

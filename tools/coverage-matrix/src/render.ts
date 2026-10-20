@@ -53,7 +53,7 @@ function fixtureCell(row: FeatureRow): string {
 }
 
 function featureTable(rows: readonly FeatureRow[], withTitle: boolean): string[] {
-  const head = ["Feature", ...(withTitle ? ["Form"] : ["Neg"]), ...DEMONSTRATIONS.map((id) => SHORT[id] ?? id), "PUL", "Positive fixture"];
+  const head = ["Feature", ...(withTitle ? ["Form"] : ["Neg"]), ...DEMONSTRATIONS.map((id) => SHORT[id] ?? id), "EX", "Positive fixture"];
   const lines = [`| ${head.join(" | ")} |`, `|${head.map((_, i) => (i === 0 || (withTitle && i === 1) || i === head.length - 1 ? "---" : ":-:")).join("|")}|`];
   for (const row of rows) {
     const id = `\`${cell(row.id)}\`${row.resolverOnly ? " †" : ""}`;
@@ -97,7 +97,7 @@ export function render(matrix: Matrix): string {
     "",
     "Columns: " +
       DEMONSTRATIONS.map((id) => `**${SHORT[id] ?? id}** \`${id}\``).join(", ") +
-      `; **PUL** ${OTHER_EXAMPLES.map((id) => `\`${id}\``).join(", ")}, the program of M0 to M3, which is not a release demonstration (decision 0002) but is a named positive program; **Neg** the number of negative fixtures whose expected messages quote the feature by name (registry features that have a name; the codes of section 7 guard the rest); **Positive fixture** the most focused positive fixture that uses the feature (the one that uses the fewest features altogether; the roots searched are listed in \`tools/coverage-matrix/src/projects.ts\`), and how many more there are.`,
+      `; **EX** ${OTHER_EXAMPLES.map((id) => `\`${id}\``).join(", ")}, the other examples, which are named positive programs outside the three release demonstrations (decision 0002); **Neg** the number of negative fixtures whose expected messages quote the feature by name (registry features that have a name; the codes of section 7 guard the rest); **Positive fixture** the most focused positive fixture that uses the feature (the one that uses the fewest features altogether; the roots searched are listed in \`tools/coverage-matrix/src/projects.ts\`), and how many more there are.`,
     "",
     "## 2. Result",
     "",
@@ -105,7 +105,7 @@ export function render(matrix: Matrix): string {
     "|---|---|",
     `| Each demonstration exercises a feature no other demonstration does | ${matrix.distinct.every((d) => d.unique.length > 0) ? "holds" : "FAILS"} (${matrix.distinct.map((d) => `${SHORT[d.demonstration] ?? d.demonstration} ${d.unique.length}`).join(", ")}) |`,
     `| Each demonstration exercises its pressure of decision 0002, and no other demonstration does | ${matrix.distinct.every((d) => d.pressures.every((p) => p.own && p.others.length === 0)) ? "holds" : "FAILS"} |`,
-    `| Every v0.1 feature is exercised by a demonstration or a named positive program | ${uncovered.length === 0 ? "holds" : "FAILS"} (${matrix.features.length} features: ${matrix.features.filter(demoCovered).length} by a demonstration, ${exampleOnly} by the M3 example only, ${fixtureOnly} by a fixture only) |`,
+    `| Every v0.1 feature is exercised by a demonstration or a named positive program | ${uncovered.length === 0 ? "holds" : "FAILS"} (${matrix.features.length} features: ${matrix.features.filter(demoCovered).length} by a demonstration, ${exampleOnly} by other examples only, ${fixtureOnly} by a fixture only) |`,
     `| Every feature belongs to a negative-test area whose codes are all tested | ${matrix.areas.every((a) => a.codes.every((c) => c.evidence !== "none" && c.evidence !== "unknown code")) && matrix.features.every((f) => f.areas.length > 0) ? "holds" : "FAILS"} (${matrix.areas.length} areas) |`,
     `| Every nearest unsupported neighbour is rejected by a fixture or a registry reservation | ${matrix.notSupported.every((n) => n.evidence !== "none") ? "holds" : "FAILS"} (${matrix.notSupported.length} entries) |`,
     `| Diagnostic codes without a fail fixture, a named negative test or a registry mark | ${matrix.codes.uncovered.length === 0 ? "none" : matrix.codes.uncovered.join(", ")} |`,

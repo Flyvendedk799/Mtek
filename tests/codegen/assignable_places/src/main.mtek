@@ -179,6 +179,46 @@ cpu fn reach_all() {
     rig_weight(0.0);
 }
 
+// Parameter specialization must preserve clamping on reads and writes.
+prefab IndexedPlaces {
+    param low: i32 = -1;
+    param high: u32 = 4294967295;
+    param inside: i32 = 1;
+    state run: bool = false;
+    state read_low: f32 = 0.0;
+    state read_high: f32 = 0.0;
+    state read_inside: f32 = 0.0;
+    state matrix_low: f32 = 0.0;
+    state matrix_high: f32 = 0.0;
+    state plain_write: f32 = 0.0;
+    state compound_write: f32 = 0.0;
+    state nested_write: f32 = 0.0;
+    state counted_write: f32 = 0.0;
+    update(dt: f32) {
+        if !self.run {
+            return;
+        }
+        let values = [10.0, 20.0];
+        self.read_low = values[low];
+        self.read_high = values[high];
+        self.read_inside = values[inside];
+        let matrix = mat4.identity();
+        self.matrix_low = matrix[low].x;
+        self.matrix_high = matrix[high].w;
+        var writes = [1.0, 2.0];
+        writes[low] = 7.0;
+        writes[high] += 9.0;
+        self.plain_write = writes[0];
+        self.compound_write = writes[1];
+        var nested_values = [[vec3(1.0), vec3(2.0)], [vec3(3.0), vec3(4.0)]];
+        nested_values[low][high].y += 10.0;
+        self.nested_write = nested_values[0][1].y;
+        writes[low + i32(random())] += random();
+        self.counted_write = writes[0];
+    }
+}
+
 scene Places {
     camera Main {}
+    entity Indexed: IndexedPlaces {}
 }

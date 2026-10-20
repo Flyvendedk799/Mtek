@@ -6,6 +6,88 @@ use crate::project::ProjectRoot;
 use crate::source::{MemFs, ProjectPath};
 use crate::{analyze, ir::UpdateClass};
 
+#[test]
+fn indexed_mesh_identity_matches_bitwise_equality_and_first_use() {
+    let mut descriptors = Vec::new();
+    for bits in [0, 0x8000_0000, 0x3f80_0000, 0x7fc0_0001, 0x7fc0_0002] {
+        let v = f32::from_bits(bits);
+        descriptors.extend([
+            MeshDesc::Box {
+                size: [v, 1.0, 2.0],
+            },
+            MeshDesc::Plane { size: [v, 1.0] },
+            MeshDesc::Sphere {
+                radius: v,
+                segments: 8,
+                rings: 4,
+            },
+            MeshDesc::Sphere {
+                radius: v,
+                segments: 9,
+                rings: 4,
+            },
+            MeshDesc::Sphere {
+                radius: v,
+                segments: 8,
+                rings: 5,
+            },
+        ]);
+    }
+    for (file, mesh, primitive) in [
+        ("a.glb", "x", 0),
+        ("b.glb", "x", 0),
+        ("a.glb", "y", 0),
+        ("a.glb", "x", 1),
+    ] {
+        descriptors.push(MeshDesc::Asset {
+            file: file.into(),
+            mesh: mesh.into(),
+            primitive,
+        });
+    }
+    for a in &descriptors {
+        for b in &descriptors {
+            assert_eq!(
+                MeshKey::new(a) == MeshKey::new(b),
+                same_mesh(a, b),
+                "{a:?} {b:?}"
+            );
+        }
+    }
+    // Reuse in a different order must find the first entry without sorting the output.
+    let sequence: Vec<_> = descriptors
+        .iter()
+        .chain(descriptors.iter().rev())
+        .chain(descriptors.iter())
+        .map(|desc| ir::Mesh {
+            desc: desc.clone(),
+            origin: ir::Origin::Written,
+            span: Span::at(crate::source::FileId(0), 0),
+        })
+        .collect();
+    let mut meshes = Vec::new();
+    let mut indices = BTreeMap::new();
+    let mut expected = Vec::new();
+    for mesh in &sequence {
+        let index = expected
+            .iter()
+            .position(|desc| same_mesh(desc, &mesh.desc))
+            .unwrap_or_else(|| {
+                expected.push(mesh.desc.clone());
+                expected.len() - 1
+            });
+        assert_eq!(
+            plan_mesh(&mut meshes, &mut indices, Some(mesh)).unwrap(),
+            Some(index as u32)
+        );
+    }
+    assert_eq!(meshes.len(), expected.len());
+    for (a, b) in meshes.iter().zip(&expected) {
+        assert!(same_mesh(a, b));
+    }
+    assert_eq!(plan_mesh(&mut meshes, &mut indices, None).unwrap(), None);
+}
+
 fn program(source: &str) -> Program {
     let mut fs = MemFs::new();
     fs.insert(

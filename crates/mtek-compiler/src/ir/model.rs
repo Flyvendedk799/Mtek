@@ -172,9 +172,9 @@ pub enum Item {
 /// belongs to it, as the program module's `prefabs` table (`spec/runtime-abi.md` section 3)
 /// and the instantiation of static instances need it.
 ///
-/// The template is the IR of a one-entity scene: the entity is [`PrefabItem::entity`], its
-/// static index is 0, and in every body of the prefab (initialisers, handlers, bindings) the
-/// entity index 0 is `self`, the instance. A prefab body reads its params as
+/// The template has a root [`PrefabItem::entity`] and optional static descendants; the root
+/// static index is 0. References use template-local indices in initialisers, handlers and bindings;
+/// `self` is the owner part. A prefab body reads its params as
 /// [`ExprKind::Param`] (a prefab has no material stage, so the node is unambiguous).
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -189,12 +189,15 @@ pub struct PrefabItem {
     /// value reads a param or the prefab's state is [`Source::Expr`]. `index` is 0 and `symbol`
     /// is the prefab's.
     pub entity: Entity,
-    /// The prefab's `state` with its initialisers, owned by entity 0, in declaration order.
+    /// Static descendants in depth-first pre-order, with template-local indices starting at 1.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub children: Vec<Entity>,
+    /// The parts' `state` with initialisers, in depth-first instance order.
     pub state: Vec<State>,
-    /// Lifecycle functions and event handlers, owned by entity 0, in declaration order.
+    /// Lifecycle functions and handlers, owned by their template-local entity index.
     pub behaviors: Vec<Behavior>,
     /// The `bind(..)` of the prefab, by id (declaration order); targets and dependencies name
-    /// entity 0.
+    /// template-local entity indices.
     pub bindings: Vec<Binding>,
     /// The whole declaration, `prefab Name { … }`.
     #[serde(serialize_with = "span")]

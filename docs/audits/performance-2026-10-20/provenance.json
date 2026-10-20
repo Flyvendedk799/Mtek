@@ -1,0 +1,12 @@
+{
+  "baseline": "b8b0255cafcb03f6a0f47d8de85ae91dc0d45f17",
+  "rust": "1.99.0 MSVC",
+  "flags": "--release --locked",
+  "binarySha256": {
+    "before": "3b12b8fb46a9f5c645ceda9510cb677a4107d7548931126bb606006590eae316",
+    "after": "92e64c4d27973ff6e34fe8d4ee53c0835247f0e381cccb16f71bbec7006daa9a",
+    "before-projects": "7cae63a665687363ad7ecf3c1557ed62a2b69636d4fc9ecd9ba969841dd0b9fc",
+    "after-projects": "42de09c7cc10adfbb8e1dd519edb884c63b81cd6048e11d9db293535faa8898b"
+  },
+  "note": "Project probes add only untimed filesystem loading to the shared example. Synthetic before/after binaries predate that harness addition; library optimizations are identical."
+}

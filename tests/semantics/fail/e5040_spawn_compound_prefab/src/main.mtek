@@ -1,0 +1,3 @@
+prefab Chair { entity Seat { mesh: Box {}; } }
+scene Demo { camera Main {} on key_down(Key.Space) { spawn(Chair {}); } }
+// covers: [S: prefab-static-assembly-limits]

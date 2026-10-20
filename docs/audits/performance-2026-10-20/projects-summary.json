@@ -1,0 +1,242 @@
+[
+  {
+    "shape": "project:examples/pulse-cube",
+    "count": 0,
+    "operation": "analyze",
+    "before": {
+      "minMs": 0.13,
+      "medianMs": 0.1688,
+      "maxMs": 0.2695
+    },
+    "after": {
+      "minMs": 0.1437,
+      "medianMs": 0.1547,
+      "maxMs": 0.4165
+    }
+  },
+  {
+    "shape": "project:examples/pulse-cube",
+    "count": 0,
+    "operation": "build",
+    "before": {
+      "minMs": 1.0027,
+      "medianMs": 1.0467,
+      "maxMs": 1.2548
+    },
+    "after": {
+      "minMs": 0.9553,
+      "medianMs": 1.0851,
+      "maxMs": 1.3206
+    }
+  },
+  {
+    "shape": "project:examples/modular-scene",
+    "count": 0,
+    "operation": "analyze",
+    "before": {
+      "minMs": 0.5002,
+      "medianMs": 0.578,
+      "maxMs": 0.912
+    },
+    "after": {
+      "minMs": 0.5074,
+      "medianMs": 0.6615,
+      "maxMs": 0.7251
+    }
+  },
+  {
+    "shape": "project:examples/modular-scene",
+    "count": 0,
+    "operation": "build",
+    "before": {
+      "minMs": 1.9198,
+      "medianMs": 2.1491,
+      "maxMs": 2.6071
+    },
+    "after": {
+      "minMs": 1.9322,
+      "medianMs": 2.206,
+      "maxMs": 2.4964
+    }
+  },
+  {
+    "shape": "project:examples/material-configurator",
+    "count": 0,
+    "operation": "analyze",
+    "before": {
+      "minMs": 1.1034,
+      "medianMs": 1.1862,
+      "maxMs": 1.2938
+    },
+    "after": {
+      "minMs": 1.1225,
+      "medianMs": 1.1975,
+      "maxMs": 1.7049
+    }
+  },
+  {
+    "shape": "project:examples/material-configurator",
+    "count": 0,
+    "operation": "build",
+    "before": {
+      "minMs": 4.3512,
+      "medianMs": 4.4947,
+      "maxMs": 4.695
+    },
+    "after": {
+      "minMs": 4.2393,
+      "medianMs": 4.4907,
+      "maxMs": 5.3808
+    }
+  },
+  {
+    "shape": "project:examples/physics-playground",
+    "count": 0,
+    "operation": "analyze",
+    "before": {
+      "minMs": 0.5091,
+      "medianMs": 0.5618,
+      "maxMs": 0.8396
+    },
+    "after": {
+      "minMs": 0.4735,
+      "medianMs": 0.5327,
+      "maxMs": 0.7444
+    }
+  },
+  {
+    "shape": "project:examples/physics-playground",
+    "count": 0,
+    "operation": "build",
+    "before": {
+      "minMs": 2.854,
+      "medianMs": 3.0762,
+      "maxMs": 3.3311
+    },
+    "after": {
+      "minMs": 2.8224,
+      "medianMs": 2.9733,
+      "maxMs": 3.3978
+    }
+  },
+  {
+    "shape": "project:examples/product-configurator",
+    "count": 0,
+    "operation": "analyze",
+    "before": {
+      "minMs": 0.6302,
+      "medianMs": 0.7175,
+      "maxMs": 1.1371
+    },
+    "after": {
+      "minMs": 0.6535,
+      "medianMs": 0.764,
+      "maxMs": 0.9934
+    }
+  },
+  {
+    "shape": "project:examples/product-configurator",
+    "count": 0,
+    "operation": "build",
+    "before": {
+      "minMs": 3.1317,
+      "medianMs": 3.4796,
+      "maxMs": 4.0188
+    },
+    "after": {
+      "minMs": 3.3512,
+      "medianMs": 3.3905,
+      "maxMs": 4.1211
+    }
+  },
+  {
+    "shape": "project:benchmarks/runtime/changing-transforms/mtek",
+    "count": 0,
+    "operation": "analyze",
+    "before": {
+      "minMs": 8.6375,
+      "medianMs": 9.0536,
+      "maxMs": 9.2458
+    },
+    "after": {
+      "minMs": 8.2142,
+      "medianMs": 8.8537,
+      "maxMs": 9.3518
+    }
+  },
+  {
+    "shape": "project:benchmarks/runtime/changing-transforms/mtek",
+    "count": 0,
+    "operation": "build",
+    "before": {
+      "minMs": 64.5755,
+      "medianMs": 67.3552,
+      "maxMs": 69.6783
+    },
+    "after": {
+      "minMs": 64.8918,
+      "medianMs": 67.8699,
+      "maxMs": 70.0376
+    }
+  },
+  {
+    "shape": "project:benchmarks/runtime/changing-material-params/mtek",
+    "count": 0,
+    "operation": "analyze",
+    "before": {
+      "minMs": 4.512,
+      "medianMs": 4.5954,
+      "maxMs": 5.1104
+    },
+    "after": {
+      "minMs": 4.3817,
+      "medianMs": 4.5642,
+      "maxMs": 5.1069
+    }
+  },
+  {
+    "shape": "project:benchmarks/runtime/changing-material-params/mtek",
+    "count": 0,
+    "operation": "build",
+    "before": {
+      "minMs": 40.3819,
+      "medianMs": 41.0415,
+      "maxMs": 43.6875
+    },
+    "after": {
+      "minMs": 39.7357,
+      "medianMs": 41.4829,
+      "maxMs": 44.0386
+    }
+  },
+  {
+    "shape": "project:benchmarks/runtime/repeated-meshes/mtek",
+    "count": 0,
+    "operation": "analyze",
+    "before": {
+      "minMs": 19.6493,
+      "medianMs": 21.279,
+      "maxMs": 25.0303
+    },
+    "after": {
+      "minMs": 19.9076,
+      "medianMs": 20.6522,
+      "maxMs": 22.3565
+    }
+  },
+  {
+    "shape": "project:benchmarks/runtime/repeated-meshes/mtek",
+    "count": 0,
+    "operation": "build",
+    "before": {
+      "minMs": 66.6945,
+      "medianMs": 70.2459,
+      "maxMs": 71.8326
+    },
+    "after": {
+      "minMs": 66.8458,
+      "medianMs": 67.3622,
+      "maxMs": 70.6195
+    }
+  }
+]

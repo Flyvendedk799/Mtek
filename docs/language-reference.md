@@ -269,6 +269,8 @@ The loop variable is immutable. In GPU-reachable code (§8.4) the range bounds m
 
 A `fn` whose body (transitively) requires `cpu` is error `E4002`, reported at the offending call with the full call chain as related spans. A `cpu fn` that is in fact pure gets lint `W4003` ("could be `fn`"). `cpu fn`s have no access to scene state (there is no ambient scene); they receive what they need as parameters.
 
+Reading `frame.*`, or reading a body property through an `entity_ref` parameter, is also a CPU effect: a pure `fn` cannot hide these reads (`E4002` at the read or a transitive call; `E4040` when reached from GPU code). A `cpu fn` may read them, but the caller's phase restrictions still apply: body properties cannot be read during state or field initialisation, including through any chain of helper calls (`E5081`). Direct frame reads in bindings remain allowed and are explicit dependencies. To use a pure helper there, pass the frame value as an argument.
+
 8.4 **GPU reachability.** A pure function is *GPU-reachable* if a material stage function calls it, directly or transitively. GPU-reachable functions must additionally satisfy: no `string` or handle types anywhere (`E4011`); loops have constant bounds (`E4010`); no intrinsic marked CPU-only (`E4012`). Conversely, a GPU-only intrinsic (`sample`, `lighting.pbr`) reached from CPU code is `E4013`. The same function may also be called from CPU code; it is then compiled into both domains from the same typed IR. The compiler never moves code to the GPU because it "looks mathematical": only stage functions and their pure callees are compiled to WGSL (blueprint §4.4).
 
 ### 9. Modules

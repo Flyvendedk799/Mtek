@@ -74,6 +74,12 @@ function describeLabel(label: string | undefined): string {
  * (`spec/runtime-abi.md` section 9.1), so tests can assert that nothing leaks (section 9.3).
  */
 export class ResourceRegistry {
+  /** Changes whenever all resources are retired, including on disposal. */
+  private currentGeneration = 0;
+
+  get generation(): number {
+    return this.currentGeneration;
+  }
   /** Phase recorded in allocation diagnostics. */
   phase: MtekRuntimePhase;
 
@@ -203,7 +209,9 @@ export class ResourceRegistry {
 
   /** Counted when the pipeline is ready; a rejected creation is not counted. */
   async createRenderPipelineAsync(descriptor: GPURenderPipelineDescriptor): Promise<GPURenderPipeline> {
+    const generation = this.currentGeneration;
     const pipeline = await this.device.createRenderPipelineAsync(descriptor);
+    if (generation !== this.currentGeneration) throw new Error("The pipeline's device resources were retired while it was being created.");
     this.pipelines.add(pipeline);
     this.pipelinesCreated += 1;
     return pipeline;
@@ -306,6 +314,7 @@ export class ResourceRegistry {
    * rebuilt scene and the totals describe the whole session.
    */
   recycle(device: RegistryDevice): void {
+    this.currentGeneration += 1;
     for (const buffer of this.buffers) buffer.destroy();
     this.buffers.clear();
     for (const texture of this.textures) texture.destroy();
@@ -319,6 +328,7 @@ export class ResourceRegistry {
 
   /** Destroys every buffer and texture, drops everything else and removes every listener. Cumulative counters are kept. */
   destroyAll(): void {
+    this.currentGeneration += 1;
     for (const record of this.listeners) record.target.removeEventListener(record.type, record.listener, record.options);
     this.listeners.clear();
     for (const buffer of this.buffers) buffer.destroy();

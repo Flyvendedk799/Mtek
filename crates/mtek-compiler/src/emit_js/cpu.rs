@@ -24,8 +24,9 @@
 //!   variable owns its storage, so a value stored into it is copied (`rt.copy`) unless it is
 //!   fresh, and an array or struct read out of it is copied before it is used elsewhere; every
 //!   other value is never changed once built and is shared freely;
-//! - a constant index reads directly (it is in range, `E3030`), a run-time index goes through
-//!   `rt.clampIndex(i, N, spanId, ctx)`, `spanId` being the index expression's entry in the
+//! - an in-range constant index reads directly; other indices, including prefab params
+//!   specialized after source-level `E3030` checks, go through `rt.clampIndex(i, N, spanId, ctx)`,
+//!   `spanId` being the index expression's entry in the
 //!   manifest `spans` table;
 //! - constants are the folded values, `f32` printed as the binary64 text of the binary32
 //!   value ([`super::ast::Number`]).
@@ -46,8 +47,7 @@ use super::rt_ops;
 /// What the build mode changes in the CPU code (`spec/tooling.md` section 2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct CpuFlags {
-    /// A release build (`release` and `preview`): `print` is compiled out of lifecycle
-    /// functions and handlers.
+    /// A release build (`release` and `preview`): `print` is compiled out of every CPU body.
     pub release: bool,
     /// A preview build: every loop checks the frame's budget before each iteration
     /// (decision 0075).
@@ -80,15 +80,16 @@ pub fn function_name(symbol: &Symbol) -> Result<String, String> {
     Ok(format!("f_{}_{}", hash8(path), identifier_part(name)))
 }
 
-/// Lowers every `cpuReachable` function of `program`. `loop_budget` instruments every loop
-/// with the budget check of a preview build. `span_id` gives the manifest span id of a source
-/// span (index clamping and the budget check report their call site by span id).
+/// Lowers every `cpuReachable` function of `program`. `flags` compile `print` out of
+/// release builds and instrument every loop with the budget check of a preview build.
+/// `span_id` gives the manifest span id of a source span (index clamping and the budget
+/// check report their call site by span id).
 ///
 /// # Errors
 /// A text describing a compiler defect: an IR node the CPU emitter does not know.
 pub fn emit_functions(
     program: &Program,
-    loop_budget: bool,
+    flags: CpuFlags,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<EmittedFunctions, String> {
     let mut emitted = EmittedFunctions::default();
@@ -104,10 +105,7 @@ pub fn emit_functions(
             let mut lowering = FnLowering {
                 locals: &function.locals,
                 owner: None,
-                flags: CpuFlags {
-                    release: false,
-                    loop_budget,
-                },
+                flags,
                 uses_budget: false,
                 temps: 0,
                 span_id: &mut *span_id,
@@ -550,12 +548,9 @@ impl FnLowering<'_, '_> {
                         })?;
                     let position = match constant_index(index) {
                         Some(k) if k < length => Expr::Num(Number::U32(k)).spanned(index.span),
-                        Some(k) => {
-                            return Err(format!(
-                                "the constant index {k} into {path_ty} is out of range"
-                            ));
-                        }
-                        None => {
+                        // Prefab specialization may replace a run-time param with a
+                        // constant after the source-level E3030 check. It still clamps.
+                        _ => {
                             let clamped = self.clamped(index, length, *span)?;
                             if reads_place {
                                 let name = self.temp();
@@ -950,13 +945,9 @@ impl FnLowering<'_, '_> {
                             Expr::Subscript(Box::new(object), Box::new(position))
                         }
                     }
-                    Some(k) => {
-                        return Err(format!(
-                            "the constant index {k} into {} is out of range",
-                            base.ty
-                        ));
-                    }
-                    None => {
+                    // Only source constants were checked for E3030. A substituted
+                    // prefab param keeps its run-time clamp, including its signed value.
+                    _ => {
                         let clamped = self.clamped(index, length, expr.span)?;
                         if is_matrix {
                             rt("m4col", vec![object, clamped])
@@ -1333,7 +1324,8 @@ mod tests {
         ];
         let mut checked = 0;
         for program in &programs {
-            let emitted = emit_functions(program, false, &mut |_| Ok(0)).expect("emitted");
+            let emitted =
+                emit_functions(program, CpuFlags::default(), &mut |_| Ok(0)).expect("emitted");
             let module = super::super::ast::Module {
                 items: emitted
                     .stmts
@@ -1398,10 +1390,17 @@ mod tests {
         ]);
         let mut interned = Vec::new();
         // Every span id is 0, so the text of two builds differs only by the budget checks.
-        let emitted = emit_functions(&program, loop_budget, &mut |span| {
-            interned.push(span);
-            Ok(0)
-        })
+        let emitted = emit_functions(
+            &program,
+            CpuFlags {
+                loop_budget,
+                ..CpuFlags::default()
+            },
+            &mut |span| {
+                interned.push(span);
+                Ok(0)
+            },
+        )
         .expect("emitted");
         let module = super::super::ast::Module {
             items: emitted
@@ -1595,7 +1594,7 @@ pub fn emit_state_init(
     scope: InitScope,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<Expr, String> {
-    emit_init_expr(&state.init, scope, span_id)
+    emit_initializer(&state.init, scope, span_id, true)
         .map_err(|e| format!("the initialiser of '{}': {e}", state.symbol))
 }
 
@@ -1609,6 +1608,18 @@ pub fn emit_init_expr(
     scope: InitScope,
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<Expr, String> {
+    emit_initializer(expr, scope, span_id, false)
+}
+
+/// State owns its mutable aggregate storage, including when its initializer borrows a
+/// prefab param (directly, inside a literal, or through a function result). Apply the same
+/// fresh-value and copy rules as an owned local; field setters keep their existing policy.
+fn emit_initializer(
+    expr: &ir::Expr,
+    scope: InitScope,
+    span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
+    owns_storage: bool,
+) -> Result<Expr, String> {
     let mut lowering = FnLowering {
         locals: &[],
         owner: scope.owner,
@@ -1619,7 +1630,11 @@ pub fn emit_init_expr(
         owned: BTreeSet::new(),
         params: scope.params,
     };
-    lowering.expr(expr)
+    if owns_storage {
+        lowering.stored(expr)
+    } else {
+        lowering.expr(expr)
+    }
 }
 
 /// The function that implements `behavior`, with the comment that names it.

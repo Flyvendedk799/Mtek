@@ -520,6 +520,8 @@ pub struct Scene {
     pub material_instances: Vec<MaterialInstance>,
     pub bindings: Vec<Binding>,
     pub host_inputs: Vec<HostInput>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub host_outputs: Vec<HostOutput>,
     pub lights: Vec<Light>,
 }
 
@@ -755,6 +757,15 @@ pub struct HostInput {
     #[serde(rename = "type")]
     pub ty: String,
     pub codec: String,
+}
+
+/// A read-only scene-state export. Host values preserve CPU precision, with vector/linear RGBA tuples.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct HostOutput {
+    pub name: String,
+    pub source: HostInputTarget,
+    #[serde(rename = "type")]
+    pub ty: String,
 }
 
 /// Only scene state can be a host input target: `kind` is always `state`.

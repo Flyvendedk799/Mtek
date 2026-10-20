@@ -1,0 +1,4 @@
+prefab Chair {
+    entity Seat { position: bind(vec3(0.0)); update(dt: f32) { self.position = vec3(dt); } }
+}
+scene Demo { camera Main {} entity Left: Chair {} }

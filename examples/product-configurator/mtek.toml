@@ -1,0 +1,25 @@
+[project]
+name = "product-configurator"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Showroom"
+
+[build]
+target = "web"
+title = "Forma | Chair configurator"
+
+[host.inputs]
+finish = "Showroom.finish"
+frame_finish = "Showroom.frame_finish"
+quantity = "Showroom.quantity"
+auto_rotate = "Showroom.auto_rotate"
+angle = "Showroom.angle"
+
+[host.outputs]
+finish = "Showroom.finish"
+frame_finish = "Showroom.frame_finish"
+quantity = "Showroom.quantity"
+auto_rotate = "Showroom.auto_rotate"
+angle = "Showroom.angle"
+unit_price = "Showroom.unit_price"
+total_price = "Showroom.total_price"

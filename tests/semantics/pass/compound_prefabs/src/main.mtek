@@ -1,0 +1,12 @@
+import { Chair } from "./chair.mtek";
+scene Demo {
+    // Keep both animated badges in view while the renderer exercises the hierarchy.
+    camera Main {
+        position: vec3(0.0, 3.0, 20.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Left: Chair { origin: vec3(-3.0, 0.0, 0.0); }
+    entity Marker { mesh: Box {}; position: bind(Right.position); }
+    entity Right: Chair { origin: vec3(3.0, 0.0, 0.0); tint: #abcdef; }
+    update(dt: f32) { Right.seat_color = #ff0000; }
+}

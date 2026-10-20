@@ -902,7 +902,9 @@ pub fn grammar() -> GrammarModel {
                     lit("}"),
                 ]),
             ),
-            &["                    /* [S: prefab-no-nested-entity: nested EntityDecl is E5040] */"],
+            &[
+                "                    /* [S: prefab-static-assembly-limits: spawning a prefab with children or nesting a prefab instance inside a prefab is E5040] */",
+            ],
         ),
         Blank,
         noted(

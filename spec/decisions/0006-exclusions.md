@@ -6,4 +6,4 @@
 
 ## Decision
 
-Not in v0.1: package registry, multiplayer, full game editor, native desktop engine, proprietary AI service, arbitrary JavaScript (or raw WGSL) embedded in Mtek, an untested WebGL fallback. Missing features stay **visible limitations** with diagnostics, never undocumented escape hatches; the host API exposes only declared `host.inputs`. Development tooling (formatter, `mtek dev`, overlay) is in scope; a visual editor product is not.
+Not in v0.1: package registry, multiplayer, full game editor, native desktop engine, proprietary AI service, arbitrary JavaScript (or raw WGSL) embedded in Mtek, an untested WebGL fallback. Missing features stay **visible limitations** with diagnostics, never undocumented escape hatches; the host state interface exposes only declared `host.inputs` and read-only `host.outputs` (decision 0127). Development tooling (formatter, `mtek dev`, overlay) is in scope; a visual editor product is not.

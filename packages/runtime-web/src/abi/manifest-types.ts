@@ -429,6 +429,13 @@ export type MtekHostInputCodec =
   | "color-hex-opaque"
   | "string";
 
+/** Read-only scene-state export; colors are linear RGBA tuples at the host boundary. */
+export interface MtekHostOutput {
+  readonly name: string;
+  readonly source: { readonly kind: "state"; readonly name: string };
+  readonly type: MtekHostInputType;
+}
+
 export interface MtekHostInput {
   readonly name: string;
   readonly target: { readonly kind: "state"; readonly name: string };
@@ -461,6 +468,8 @@ export interface MtekScene {
   readonly materialInstances: readonly MtekMaterialInstance[];
   readonly bindings: readonly MtekBinding[];
   readonly hostInputs: readonly MtekHostInput[];
+  /** Absent in programs compiled before host outputs were supported. */
+  readonly hostOutputs?: readonly MtekHostOutput[];
   readonly lights: readonly MtekLight[];
 }
 

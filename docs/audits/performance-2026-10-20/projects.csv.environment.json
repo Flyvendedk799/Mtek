@@ -1,0 +1,19 @@
+{
+  "recordedAt": "2026-10-20T00:15:45.623Z",
+  "node": "v24.18.1",
+  "platform": "win32",
+  "arch": "x64",
+  "os": "10.0.26200",
+  "cpu": "13th Gen Intel(R) Core(TM) i5-13600K",
+  "logicalProcessors": 20,
+  "protocol": {
+    "warmups": 1,
+    "samplesPerProcess": 3,
+    "rounds": 3,
+    "orders": [
+      "before,after",
+      "after,before",
+      "before,after"
+    ]
+  }
+}

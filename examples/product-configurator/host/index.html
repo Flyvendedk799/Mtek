@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A real Mtek embed: configure a reusable chair assembly and see the scene update your quote.">
+  <title>Forma | Make room for your own</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header><a class="wordmark" href="./index.html" aria-label="Forma home">forma<span>®</span></a><span class="edition">OBJECTS FOR EVERY DAY</span><span class="demo">MTEK LIVE DEMO</span></header>
+  <main>
+    <section class="visual" aria-label="Interactive product preview">
+      <div class="visual-top"><span>01 / THE EVERYDAY COLLECTION</span><button id="preview-toggle" type="button" aria-controls="canvas-wrap" aria-expanded="true">Close preview ↗</button></div>
+      <div id="canvas-wrap"><canvas id="mtek" tabindex="0" aria-label="Chair preview. Left and right arrows change upholstery; Space toggles rotation."></canvas></div>
+      <div id="preview-placeholder" hidden><span class="placeholder-mark">f.</span><p>Take a closer look.</p><button id="open-preview" type="button">Open 3D preview ↗</button></div>
+      <div class="visual-bottom"><div><span class="dot"></span><span id="preview-status" role="status">Loading your chair…</span></div><span>YOUR CHAIR + ORIGINAL REFERENCE</span></div>
+      <p class="keyboard-hint">In the preview: ← → change fabric · Space to rotate</p>
+    </section>
+    <section class="details" aria-labelledby="product-name">
+      <p class="eyebrow">DESIGNED TO BELONG</p>
+      <h1 id="product-name">The everyday<br><em>chair.</em></h1>
+      <p class="description">A simple frame. A little softness. An entirely new perspective on your favourite corner.</p>
+      <form id="controls" autocomplete="off">
+        <fieldset><legend><span>01</span> Upholstery <output id="finish-name">Sea glass</output></legend>
+          <div class="swatches" role="group" aria-label="Upholstery">
+            <button type="button" data-finish="0" class="swatch sea" aria-label="Sea glass" aria-pressed="true"><span></span></button>
+            <button type="button" data-finish="1" class="swatch clay" aria-label="Warm clay" aria-pressed="false"><span></span></button>
+            <button type="button" data-finish="2" class="swatch night" aria-label="Midnight" aria-pressed="false"><span></span></button>
+          </div>
+        </fieldset>
+        <fieldset><legend><span>02</span> Frame <output id="frame-name">Natural oak</output></legend>
+          <div class="frame-options"><button type="button" data-frame="0" aria-pressed="true">Natural oak</button><button type="button" data-frame="1" aria-pressed="false">Walnut <small>+$35</small></button></div>
+        </fieldset>
+        <fieldset class="view-controls"><legend><span>03</span> Make it yours</legend>
+          <label for="quantity">Quantity <input id="quantity" type="number" required min="1" max="6" step="1" value="1"></label>
+          <label for="angle">Turn your chair <input id="angle" type="range" min="-3.14" max="3.14" step="0.01" value="-0.25"></label>
+          <div class="view-actions"><button id="rotate" type="button" aria-pressed="false">↻ Auto-rotate</button><button id="reset" type="button">Reset</button></div>
+        </fieldset>
+      </form>
+      <div class="quote"><div><p>YOUR CONFIGURATION</p><output id="total-price" aria-live="polite">$340</output><span id="unit-price">$340 per chair</span></div><span class="quote-arrow" aria-hidden="true">↗</span></div>
+      <p class="configuration" id="configuration" aria-live="polite">1 × Sea glass / Natural oak</p>
+      <p id="status" role="status"></p>
+      <p class="disclaimer">An interactive sample, not a shop. Prices are illustrative. No checkout, tracking, or external assets.</p>
+    </section>
+  </main>
+  <footer><span>BUILT FROM THE SAME PARTS. MADE DIFFERENT BY YOU.</span><span>7 parts · 2 instances · 1 Mtek prefab</span></footer>
+  <script type="module" src="./configurator.js"></script>
+</body>
+</html>

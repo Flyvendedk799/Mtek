@@ -1,0 +1,65 @@
+// Exploratory protocol: the invoked profile-generated-bindings.mjs used 1,200 warm-up frames.
+// The final maintained probe uses 12,000; restore the exploratory warm-up when reproducing these observations.
+// Copy the three sections below to their indicated scratch paths and run from the repository root.
+// .perf/cardinal-experiment.mjs
+import { build } from 'esbuild';
+import { readFileSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { bundleOptions } from '../packages/runtime-web/scripts/flavours.mjs';
+const guard = `  // Exact +/-Y unit axes already have the normalized components, including signed zeros.
+  if (axis.x === 0 && axis.z === 0 && (axis.y === 1 || axis.y === -1)) {
+    const half = fr(angle * 0.5);
+    const s = fr(Math.sin(half));
+    return { x: fr(axis.x * s), y: fr(axis.y * s), z: fr(axis.z * s), w: fr(Math.cos(half)) };
+  }
+`;
+await build(bundleOptions('release', {
+  absWorkingDir: resolve('packages/runtime-web'), outfile: resolve('.perf/runtime-candidate.js'), sourcemap: false,
+  plugins: [{name:'candidate',setup(b){b.onLoad({filter:/math[\\/]quat\.ts$/},args=>({contents:readFileSync(args.path,'utf8').replace('  // The largest magnitude', guard+'  // The largest magnitude'),loader:'ts'}));}}],
+}));
+cpSync('.perf/runtime-transforms','.perf/runtime-transforms-candidate',{recursive:true});
+const runtime = readdirSync('.perf/runtime-transforms-candidate').find(name=>/^runtime\..*\.js$/.test(name));
+writeFileSync('.perf/runtime-transforms-candidate/'+runtime,readFileSync('.perf/runtime-candidate.js'));
+writeFileSync('.perf/cardinal-guard.txt',guard);
+
+// .perf/run-cardinal.mjs
+import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+const rows=[];
+for(let round=0;round<3;round++){
+  for(const revision of round%2?['candidate','before']:['before','candidate']){
+    const directory=revision==='before'?'.perf/runtime-transforms':'.perf/runtime-transforms-candidate';
+    const result=JSON.parse(execFileSync(process.execPath,['scripts/profile-generated-bindings.mjs',directory],{encoding:'utf8'}));
+    rows.push({revision,round,...result});
+    console.log(revision,round,result.samples.map(s=>s.milliseconds/1200));
+    writeFileSync('docs/audits/performance-2026-10-20/cardinal-experiment.json',JSON.stringify(rows,null,2)+'\n');
+  }
+}
+if(rows.some(r=>r.samples.some(s=>s.checksum!==rows[0].samples[0].checksum)))throw Error('checksum mismatch');
+
+// .perf/generic-cardinal.mjs
+import { readdirSync, writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+import { resolve } from 'node:path';
+import { performance } from 'node:perf_hooks';
+const runtime=readdirSync('.perf/runtime-transforms').find(n=>/^runtime\..*\.js$/.test(n));
+const before=(await import(pathToFileURL(resolve('.perf/runtime-transforms',runtime)))).qaxisAngle;
+const after=(await import(pathToFileURL(resolve('.perf/runtime-candidate.js')))).qaxisAngle;
+let checks=0;
+for(const x of [0,-0])for(const y of [1,-1])for(const z of [0,-0]){
+  for(const angle of [0,-0,1,-1,Math.PI,-Math.PI,1e-40,3.4e38,Infinity,-Infinity,NaN]){
+    const a=before({x,y,z},angle), b=after({x,y,z},angle);
+    for(const k of ['x','y','z','w']){if(!Object.is(a[k],b[k]))throw Error('mismatch');checks++;}
+  }
+}
+const axes=Array.from({length:1024},(_,i)=>({x:Math.fround(.1+i%17),y:Math.fround(.2+i%23),z:Math.fround(.3+i%31)}));
+function run(fn){let sum=0;for(let i=0;i<200000;i++){const q=fn(axes[i%axes.length],Math.fround(i*.0001));sum+=q.x+q.y+q.z+q.w;}return sum;}
+for(let i=0;i<10;i++){run(before);run(after);}
+const rows=[];
+for(let round=0;round<9;round++)for(const revision of round%2?['after','before']:['before','after']){
+  const start=performance.now();const checksum=run(revision==='before'?before:after);
+  rows.push({revision,round,milliseconds:performance.now()-start,checksum});
+}
+if(rows.some(r=>r.checksum!==rows[0].checksum))throw Error('generic mismatch');
+writeFileSync('docs/audits/performance-2026-10-20/cardinal-generic-experiment.json',JSON.stringify({checks,iterations:200000,rows},null,2)+'\n');
+console.log(JSON.stringify({checks,rows}));

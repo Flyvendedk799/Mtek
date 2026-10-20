@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5110",
+    "file": "src/main.mtek",
+    "startByte": 29,
+    "endByte": 34,
+    "message": "The prefab 'Chair' declares a light, but lights are allowed only on the named entities of a scene.",
+    "notes": [
+      "a prefab can be spawned any number of times, so the number of lights would not be static",
+      "help: declare the light on a named entity of the scene"
+    ]
+  }
+]

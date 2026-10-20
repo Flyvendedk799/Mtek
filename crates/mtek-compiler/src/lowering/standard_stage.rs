@@ -29,7 +29,7 @@ use std::collections::BTreeSet;
 use serde::Serialize;
 
 use crate::layout::builtin::{mtek_frame, mtek_object};
-use crate::layout::{LayoutError, LayoutRecord, compute};
+use crate::layout::{LayoutError, LayoutRecord, LayoutType, compute};
 use crate::plan::PlannedResource;
 use crate::source::Span;
 
@@ -105,6 +105,28 @@ impl SurfaceField {
             _ => ShaderType::VEC3,
         }
     }
+}
+
+/// Canonical aggregate representation of the stage input. A whole-record use makes
+/// the checker retain every field, so nested values and the stage wrapper have the
+/// same member order and types. Direct field-only uses still prune the varyings.
+pub(super) fn surface_input_layout() -> LayoutType {
+    LayoutType::new_struct(
+        SURFACE_INPUT_STRUCT,
+        SurfaceField::ALL
+            .iter()
+            .map(|field| {
+                let ty = match field.ty() {
+                    ShaderType::Vector {
+                        size: super::shader_ir::VectorSize::Two,
+                        ..
+                    } => LayoutType::Vec2,
+                    _ => LayoutType::Vec3,
+                };
+                (field.name().to_owned(), ty)
+            })
+            .collect(),
+    )
 }
 
 /// A vertex attribute of the fixed interface (`spec/materials.md` section 3.3), ordered as
@@ -308,7 +330,12 @@ pub fn build_standard_stage(material: &MaterialDescription) -> Result<MaterialSh
     }
     module.declare_block(&object_record, span);
     module.structs.push(vertex_output_struct(&inputs, span));
-    if !inputs.is_empty() {
+    if !inputs.is_empty()
+        && !module
+            .structs
+            .iter()
+            .any(|s| s.name == SURFACE_INPUT_STRUCT)
+    {
         module.structs.push(surface_input_struct(&inputs, span));
     }
 
@@ -381,7 +408,7 @@ fn vertex_output_struct(inputs: &[SurfaceField], span: Span) -> StructDecl {
 }
 
 /// `struct MtekSurfaceInput { <field>: <type>, ... }` for the fields read.
-fn surface_input_struct(inputs: &[SurfaceField], span: Span) -> StructDecl {
+pub(super) fn surface_input_struct(inputs: &[SurfaceField], span: Span) -> StructDecl {
     StructDecl {
         name: SURFACE_INPUT_STRUCT.to_owned(),
         members: inputs

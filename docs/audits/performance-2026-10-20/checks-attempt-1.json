@@ -1,0 +1,24 @@
+[
+  {
+    "name": "build",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "build"
+    ],
+    "status": 0,
+    "seconds": 91.189
+  },
+  {
+    "name": "check",
+    "command": "node",
+    "args": [
+      "npm-cli.js",
+      "run",
+      "check"
+    ],
+    "status": 101,
+    "seconds": 72.622
+  }
+]

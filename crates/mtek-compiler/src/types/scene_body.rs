@@ -32,9 +32,16 @@ use crate::syntax::ast::{
 /// What the checker is inside while it checks a scene body or a state initialiser.
 #[derive(Clone, Copy, Debug)]
 pub(super) struct ScopeCtx {
-    /// The `state` whose initialiser is being checked. Entity and camera fields are not readable
-    /// there (`E5081`), and only state declared earlier is.
-    pub(super) initialiser: Option<DefId>,
+    /// Entity and camera fields are not readable in any initialiser (`E5081`). State
+    /// initialisers additionally restrict which bare state names are already initialised.
+    pub(super) initialiser: Option<Initialiser>,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub(super) enum Initialiser {
+    State(DefId),
+    /// All state of the current part is initialised before its fields.
+    Field,
 }
 
 /// The lifecycle functions of v0.1 (`spec/scenes.md` section 6).
@@ -59,7 +66,7 @@ impl Checker<'_> {
         }
     }
 
-    fn declare_entity_states(&mut self, entity: &EntityDecl) {
+    pub(super) fn declare_entity_states(&mut self, entity: &EntityDecl) {
         // An instance has the state of its prefab, not state of its own.
         if entity.prefab.is_some() {
             return;
@@ -115,7 +122,7 @@ impl Checker<'_> {
             None,
         );
         self.scope = Some(ScopeCtx {
-            initialiser: Some(def),
+            initialiser: Some(Initialiser::State(def)),
         });
         let actual = self.check(&state.value, Some(declared));
         if actual == TyId::UNIT {
@@ -163,7 +170,7 @@ impl Checker<'_> {
     /// declared earlier in the same owner, or scene state declared before the entity's.
     pub(super) fn state_readable_here(&self, state: DefId) -> bool {
         let Some(ScopeCtx {
-            initialiser: Some(current),
+            initialiser: Some(Initialiser::State(current)),
             ..
         }) = self.scope
         else {
@@ -186,7 +193,7 @@ impl Checker<'_> {
             .owner
             .and_then(|o| self.res.def(o))
             .is_some_and(|d| d.kind == DefKind::Scene);
-        owner_is_entity && read_is_scene
+        owner_is_entity && (read_is_scene || read.owner == self.current_prefab)
     }
 
     // ----- lifecycle functions and handlers --------------------------------------------------
@@ -208,7 +215,7 @@ impl Checker<'_> {
         }
     }
 
-    fn entity_bodies(&mut self, entity: &EntityDecl) {
+    pub(super) fn entity_bodies(&mut self, entity: &EntityDecl) {
         if entity.prefab.is_some() {
             return;
         }

@@ -710,6 +710,7 @@ impl Checker<'_> {
         {
             return Some(TyId::ERROR);
         }
+        self.record_ambient_read(expr.span, format!("body.{}", property.name), true);
         self.fields.insert(
             expr.id,
             FieldKind::BodyProperty {

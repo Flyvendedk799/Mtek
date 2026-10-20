@@ -207,7 +207,7 @@ pub struct CheckedParam {
     pub origin: FieldOrigin,
 }
 
-/// A prefab after the scene checks: the fields of the one entity it describes, each with its
+/// A prefab after the scene checks: root fields and ordinary descendants, each with its
 /// folded value or, for a value the prefab's `init` computes from its params, a stand-in.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CheckedPrefab {
@@ -218,6 +218,8 @@ pub struct CheckedPrefab {
     pub span: Span,
     /// The fields of the registry's entity schema, as for an entity.
     pub fields: Vec<CheckedField>,
+    /// Ordinary child entities, expanded for each static instance.
+    pub children: Vec<CheckedEntity>,
 }
 
 impl CheckedPrefab {
@@ -466,11 +468,16 @@ impl Checker<'_> {
     /// that the light count is static (`spec/materials.md` section 7).
     fn prefab_lights(&mut self, decl: &PrefabDecl) {
         let light_fields = self.light_fields();
-        for member in &decl.members {
-            if let EntityMember::Field(field) = member
-                && light_fields.contains(&field.name.name.as_str())
-            {
-                self.sink.push(
+        let mut members = vec![decl.members.as_slice()];
+        while let Some(body) = members.pop() {
+            for member in body {
+                if let EntityMember::Entity(child) = member {
+                    members.push(&child.members);
+                }
+                if let EntityMember::Field(field) = member
+                    && light_fields.contains(&field.name.name.as_str())
+                {
+                    self.sink.push(
                     Diagnostic::new(
                         Code::E5110,
                         format!(
@@ -482,6 +489,7 @@ impl Checker<'_> {
                     .note("a prefab can be spawned any number of times, so the number of lights would not be static")
                     .help("declare the light on a named entity of the scene"),
                 );
+                }
             }
         }
     }
@@ -646,8 +654,14 @@ impl Checker<'_> {
         count: &mut EntityCount,
         parent: Option<&Ident>,
     ) -> Option<CheckedEntity> {
-        count.count += 1;
-        if count.count == MAX_STATIC_ENTITIES + 1 {
+        let size = self
+            .res
+            .def_of(entity.id)
+            .and_then(|def| self.instances.get(&def))
+            .map_or(1, |instance| instance.entity_count);
+        let before = count.count;
+        count.count += size;
+        if before <= MAX_STATIC_ENTITIES && count.count > MAX_STATIC_ENTITIES {
             count.first_over = Some(entity.name.span);
         }
         if entity.prefab.is_some() {
@@ -741,7 +755,7 @@ impl Checker<'_> {
                     self.descriptors_in(&constant.value);
                 }
                 // Params, state, lifecycle functions and handlers are the typing pass's; nested
-                // entities were reported (`E5040`).
+                // entities are checked below.
                 _ => {}
             }
         }
@@ -751,6 +765,17 @@ impl Checker<'_> {
         };
         self.current_prefab = self.res.def_of(decl.id);
         let fields = self.body(schema, holder, &decl.name, &inits);
+        let mut count = EntityCount::default();
+        let children = decl
+            .members
+            .iter()
+            .filter_map(|member| match member {
+                EntityMember::Entity(child) if child.prefab.is_none() => {
+                    self.entity_decl(child, &mut count, Some(&decl.name))
+                }
+                _ => None,
+            })
+            .collect();
         self.current_prefab = None;
         self.physics_declaration(
             self.res.def_of(decl.id),
@@ -765,6 +790,7 @@ impl Checker<'_> {
             name_span: decl.name.span,
             span: decl.span,
             fields,
+            children,
         });
     }
 

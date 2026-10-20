@@ -19,7 +19,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Page } from "@playwright/test";
+import type { Page, TestInfo } from "@playwright/test";
 import { REPO_ROOT } from "../../support/environment.ts";
 import { expect, test } from "../../support/fixtures.ts";
 import { cliPath } from "../../support/m1-fixtures.ts";
@@ -124,8 +124,53 @@ async function widths(page: Page, count: number, gapMs: number): Promise<number[
 const overlayText = (page: Page): Promise<string | null> =>
   page.evaluate(() => document.getElementById("mtek-dev-overlay")?.textContent ?? null);
 
+/** Preserve presentation and runtime evidence without replacing the original test failure if the page has closed. */
+async function attachFailureDiagnostics(page: Page, testInfo: TestInfo, browserMessages: readonly string[], devOutput: string): Promise<void> {
+  const [screenshot, state] = await Promise.allSettled([
+    page.screenshot({ timeout: 5000 }),
+    page.evaluate(() => {
+      const canvas = document.querySelector("canvas");
+      const panel = document.querySelector("[data-mtek-dev-overlay]");
+      const bounds = canvas?.getBoundingClientRect();
+      return {
+        readyState: document.readyState,
+        visibilityState: document.visibilityState,
+        devicePixelRatio: window.devicePixelRatio,
+        navigatorGpu: navigator.gpu !== undefined,
+        canvas: canvas === null ? null : {
+          width: canvas.width,
+          height: canvas.height,
+          clientWidth: canvas.clientWidth,
+          clientHeight: canvas.clientHeight,
+          bounds: bounds?.toJSON() as unknown,
+          display: getComputedStyle(canvas).display,
+          visibility: getComputedStyle(canvas).visibility,
+        },
+        buildOverlay: document.getElementById("mtek-dev-overlay")?.textContent ?? null,
+        runtimeOverlay: document.querySelector("[data-mtek-overlay]")?.textContent ?? null,
+        devPanel: panel?.textContent ?? null,
+        devPanelDisplay: panel === null ? null : getComputedStyle(panel).display,
+      };
+    }),
+  ]);
+  if (screenshot.status === "fulfilled") {
+    await testInfo.attach("getting-started-page", { body: screenshot.value, contentType: "image/png" });
+  }
+  await testInfo.attach("getting-started-diagnostics", {
+    body: JSON.stringify({
+      url: page.url(),
+      browserVersion: page.context().browser()?.version() ?? null,
+      browserMessages,
+      devOutput,
+      page: state.status === "fulfilled" ? state.value : { captureError: String(state.reason) },
+      screenshotError: screenshot.status === "rejected" ? String(screenshot.reason) : null,
+    }, null, 2),
+    contentType: "application/json",
+  });
+}
+
 test.describe("getting started (docs/getting-started.md), in a browser", () => {
-  test("edit, break and fix of the document on a real page", async ({ page, gpu }) => {
+  test("edit, break and fix of the document on a real page", async ({ page, gpu }, testInfo) => {
     void gpu;
     test.setTimeout(240_000);
     const doc = fences(readFileSync(join(REPO_ROOT, "docs", "getting-started.md"), "utf8"));
@@ -140,6 +185,14 @@ test.describe("getting started (docs/getting-started.md), in a browser", () => {
 
     const work = mkdtempSync(join(tmpdir(), "mtek-getting-started-"));
     let dev: ChildProcess | undefined;
+    let printed = "";
+    const browserMessages: string[] = [];
+    page.on("console", (message) => {
+      browserMessages.push(`${message.type()}: ${message.text()}`);
+    });
+    page.on("pageerror", (error) => {
+      browserMessages.push(`pageerror: ${error.message}`);
+    });
     try {
       const cli = cliPath();
       execFileSync(cli, ["new", "hello-mtek"], { cwd: work, stdio: "pipe", windowsHide: true });
@@ -148,7 +201,6 @@ test.describe("getting started (docs/getting-started.md), in a browser", () => {
       const original = readFileSync(source, "utf8");
       const port = await freePort();
       dev = spawn(cli, ["dev", "--port", String(port)], { cwd: project, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
-      let printed = "";
       dev.stdout?.on("data", (chunk: Buffer) => {
         printed += chunk.toString();
       });
@@ -220,6 +272,13 @@ test.describe("getting started (docs/getting-started.md), in a browser", () => {
       expect(navigations, "the fix did not reload the page").toBe(0);
       const after = await widths(page, 8, 150);
       expect(Math.max(...after), "the wide cube is still on the page").toBeGreaterThan(Math.max(...before) * 1.25);
+    } catch (error) {
+      try {
+        await attachFailureDiagnostics(page, testInfo, browserMessages, printed);
+      } catch {
+        // A closed page or failed attachment must not hide the assertion that failed.
+      }
+      throw error;
     } finally {
       if (dev !== undefined) {
         dev.kill();

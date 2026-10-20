@@ -27,6 +27,7 @@ use crate::prelude::{compile_materials, uses_builtin_material};
 use crate::project::{
     LoadedModule, ModuleId, Project, ProjectRoot, SceneSelection, edit_distance, load_modules,
     report_cycles, select_scene, states_feeding_opaque_color, validate_host_inputs,
+    validate_host_outputs,
 };
 use crate::resolve::{DefId, DefKind, Resolution, bind_imports, resolve_module_with_imports};
 use crate::source::{Fs, SourceMap};
@@ -358,6 +359,7 @@ pub(crate) fn front_end_with(
         let _resolved = validate_host_inputs(&project.config.host_inputs, scene, &opaque, sink);
         // Resolved inputs are re-derived at package time from the same sources.
         let _ = _resolved;
+        validate_host_outputs(&project.config.host_outputs, scene, sink);
     }
 
     let mut units = loaded

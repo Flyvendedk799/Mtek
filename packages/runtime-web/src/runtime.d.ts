@@ -78,10 +78,10 @@ export declare class MtekMountError extends Error {
 }
 
 /**
- * The type of the default export of app.js. The type parameter only carries the Inputs interface for
- * typing setInput; at run time inputs are always validated by the generated codecs.
+ * The type of the default export of app.js. The type parameters carry Inputs for setInput and
+ * Outputs for onOutput; at run time inputs are always validated by the generated codecs.
  */
-export interface MtekProgram<I = Record<string, unknown>> {
+export interface MtekProgram<I = Record<string, unknown>, O = Record<string, unknown>> {
   readonly abi: 1;
   readonly baseUrl: URL;
   readonly manifestUrl: URL;
@@ -91,6 +91,8 @@ export interface MtekProgram<I = Record<string, unknown>> {
   readonly prefabs: unknown;
   /** Phantom, never present at run time. */
   readonly __inputs?: I;
+  /** Phantom, never present at run time. Map interface keys so single-generic hosts accept generated Outputs. */
+  readonly __outputs?: { readonly [K in keyof O]: O[K] };
 }
 
 export type MtekInputResult =
@@ -180,9 +182,15 @@ export interface MtekDebug {
   };
 }
 
-export interface MtekApp<I = Record<string, unknown>> {
+export interface MtekApp<I = Record<string, unknown>, O = Record<string, unknown>> {
   /** Never throws; the value is queued and applied at the next frame start. */
   setInput<K extends keyof I & string>(name: K, value: I[K]): MtekInputResult;
+  /**
+   * Initial snapshot after the next settled frame, then only value changes. Returns an idempotent
+   * unsubscribe. Vector/color values are frozen copies; color components are linear RGBA.
+   * Throws for an undeclared name, a non-function listener, or a failed/disposed app.
+   */
+  onOutput<K extends keyof O & string>(name: K, listener: (value: O[K]) => void): () => void;
   pause(): void;
   resume(): void;
   /** Synchronous release. */
@@ -191,7 +199,7 @@ export interface MtekApp<I = Record<string, unknown>> {
   /** Present only when options.test is set. */
   readonly debug?: MtekDebug;
   /** Present only in dev builds. */
-  replaceProgram?(candidate: MtekProgram<I>): Promise<{ ok: true } | { ok: false; diagnostics: readonly MtekDiagnostic[] }>;
+  replaceProgram?(candidate: MtekProgram<I, O>): Promise<{ ok: true } | { ok: false; diagnostics: readonly MtekDiagnostic[] }>;
 }
 
 export interface MtekMountOptions<I = Record<string, unknown>> {
@@ -213,8 +221,8 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
   test?: MtekTestOptions;
 }
 
-export declare function mountMtek<I = Record<string, unknown>>(
+export declare function mountMtek<I = Record<string, unknown>, O = Record<string, unknown>>(
   canvas: HTMLCanvasElement,
-  program: MtekProgram<I>,
+  program: MtekProgram<I, O>,
   options?: MtekMountOptions<I>,
-): Promise<MtekApp<I>>;
+): Promise<MtekApp<I, O>>;

@@ -40,3 +40,23 @@ export function hardwareLaunchArgs(
     ...extraBrowserArgs(env),
   ];
 }
+
+/**
+ * SwiftShader correctness runs exercise the compositor as well as offscreen textures.
+ * Linux headless Chromium needs GPU compositing plus a virtual X display (CI uses Xvfb).
+ * Keep ANGLE on SwiftShader while Dawn and the compositor use software Vulkan.
+ */
+export function softwareLaunchArgs(
+  env: Environment = process.env,
+  platform: string = process.platform,
+): string[] {
+  return [
+    "--enable-unsafe-webgpu",
+    "--use-webgpu-adapter=swiftshader",
+    "--enable-webgpu-developer-features",
+    ...(platform === "linux"
+      ? ["--enable-gpu", "--ignore-gpu-blocklist", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-features=Vulkan", "--use-vulkan=swiftshader"]
+      : []),
+    ...extraBrowserArgs(env),
+  ];
+}

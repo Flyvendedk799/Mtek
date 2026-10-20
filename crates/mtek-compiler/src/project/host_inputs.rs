@@ -101,20 +101,33 @@ pub fn validate_host_inputs(
     opaque_feeds: &BTreeSet<String>,
     sink: &mut Diagnostics,
 ) -> Vec<ResolvedHostInput> {
+    validate_host_ports(host_inputs, entry_scene, opaque_feeds, "input", sink)
+}
+
+/// Shared scene-state validation for the two directions of the host interface.
+pub(super) fn validate_host_ports(
+    ports: &BTreeMap<String, String>,
+    entry_scene: &CheckedScene,
+    opaque_feeds: &BTreeSet<String>,
+    direction: &str,
+    sink: &mut Diagnostics,
+) -> Vec<ResolvedHostInput> {
     let state_by_name: BTreeMap<&str, &str> = entry_scene
         .state
         .iter()
         .map(|s| (s.name.as_str(), s.ty.as_str()))
         .collect();
     let mut resolved = Vec::new();
-    for (name, target) in host_inputs {
+    for (name, target) in ports {
         let Some((scene_part, state_part)) = target.split_once('.') else {
             sink.push(
                 Diagnostic::new(
                     Code::E9021,
-                    format!("Unknown host input target '{target}': expected 'Scene.state_name'."),
+                    format!(
+                        "Unknown host {direction} target '{target}': expected 'Scene.state_name'."
+                    ),
                 )
-                .note(format!("host.inputs.{name}"))
+                .note(format!("host.{direction}s.{name}"))
                 .help("use the form SceneName.stateName, naming scene state of the entry scene"),
             );
             continue;
@@ -124,11 +137,11 @@ pub fn validate_host_inputs(
                 Diagnostic::new(
                     Code::E9021,
                     format!(
-                        "Unknown host input target '{target}': the entry scene is '{}'.",
+                        "Unknown host {direction} target '{target}': the entry scene is '{}'.",
                         entry_scene.name
                     ),
                 )
-                .note(format!("host.inputs.{name}"))
+                .note(format!("host.{direction}s.{name}"))
                 .help(format!(
                     "write '{}.{}' to expose state of the entry scene",
                     entry_scene.name, state_part
@@ -138,30 +151,47 @@ pub fn validate_host_inputs(
         }
         let Some(ty) = state_by_name.get(state_part).copied() else {
             // State name unknown, or not scene state (entity state is not exposable).
-            if entry_scene
+            let entity_name = if direction == "output" {
+                state_part.split('.').next().unwrap_or(state_part)
+            } else {
+                state_part
+            };
+            if let Some(entity) = entry_scene
                 .entities_in_order()
-                .iter()
-                .any(|e| e.name == state_part)
+                .into_iter()
+                .find(|e| e.name == entity_name)
             {
-                sink.push(
+                let diagnostic = if direction == "output" {
                     Diagnostic::new(
                         Code::E9020,
                         format!(
-                            "Host input target '{target}' is not exposable: only scene state can be a host input, not an entity."
+                            "Host output source '{target}' is not exposable: only scene state can be a host output, not an entity or its state or fields."
                         ),
                     )
-                    .note(format!("host.inputs.{name}")),
-                );
+                    .related(entity.name_span, "the entity is declared here")
+                    .help(format!(
+                        "copy the needed value into scene state in an update or handler, then export '{}.state_name'",
+                        entry_scene.name
+                    ))
+                } else {
+                    Diagnostic::new(
+                        Code::E9020,
+                        format!(
+                            "Host {direction} target '{target}' is not exposable: only scene state can be a host {direction}, not an entity."
+                        ),
+                    )
+                };
+                sink.push(diagnostic.note(format!("host.{direction}s.{name}")));
             } else {
                 sink.push(
                     Diagnostic::new(
                         Code::E9021,
                         format!(
-                            "Unknown host input target '{target}': scene '{}' has no state '{state_part}'.",
+                            "Unknown host {direction} target '{target}': scene '{}' has no state '{state_part}'.",
                             entry_scene.name
                         ),
                     )
-                    .note(format!("host.inputs.{name}")),
+                    .note(format!("host.{direction}s.{name}")),
                 );
             }
             continue;
@@ -172,10 +202,10 @@ pub fn validate_host_inputs(
                 Diagnostic::new(
                     Code::E9020,
                     format!(
-                        "Host input target '{target}' is not exposable: type '{ty}' cannot be a host input."
+                        "Host {direction} target '{target}' is not exposable: type '{ty}' cannot be a host {direction}."
                     ),
                 )
-                .note(format!("host.inputs.{name}"))
+                .note(format!("host.{direction}s.{name}"))
                 .note("exposable types: f32, i32, u32, bool, vec2, vec3, vec4, color, string"),
             );
             continue;

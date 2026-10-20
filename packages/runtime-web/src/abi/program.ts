@@ -96,10 +96,10 @@ export interface MtekProgramPrefab {
 }
 
 /**
- * The type of the default export of `app.js`. The type parameter only carries the `Inputs` interface for
- * typing `setInput`; at run time inputs are always validated by the generated codecs.
+ * The type of the default export of `app.js`. The type parameters carry `Inputs` for `setInput` and
+ * `Outputs` for `onOutput`; at run time inputs are always validated by the generated codecs.
  */
-export interface MtekProgram<I = Record<string, unknown>> {
+export interface MtekProgram<I = Record<string, unknown>, O = Record<string, unknown>> {
   readonly abi: 1;
   readonly baseUrl: URL;
   readonly manifestUrl: URL;
@@ -109,4 +109,6 @@ export interface MtekProgram<I = Record<string, unknown>> {
   readonly prefabs: Readonly<Record<string, MtekProgramPrefab>>;
   /** Phantom, never present at run time. */
   readonly __inputs?: I;
+  /** Phantom, never present at run time. Map interface keys so single-generic hosts accept generated Outputs. */
+  readonly __outputs?: { readonly [K in keyof O]: O[K] };
 }
