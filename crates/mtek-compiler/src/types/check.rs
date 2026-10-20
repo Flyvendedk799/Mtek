@@ -451,6 +451,12 @@ impl<'a> Checker<'a> {
                         match member {
                             SceneMember::Const(decl) => self.collect_constant(decl),
                             SceneMember::Entity(entity) => self.collect_entity_constants(entity),
+                            SceneMember::Lifecycle(function) => {
+                                self.collect_block_constants(&function.body);
+                            }
+                            SceneMember::Handler(handler) => {
+                                self.collect_block_constants(&handler.body);
+                            }
                             _ => {}
                         }
                     }
@@ -475,6 +481,10 @@ impl<'a> Checker<'a> {
             match member {
                 EntityMember::Const(decl) => self.collect_constant(decl),
                 EntityMember::Entity(child) => self.collect_entity_constants(child),
+                EntityMember::Lifecycle(function) => {
+                    self.collect_block_constants(&function.body);
+                }
+                EntityMember::Handler(handler) => self.collect_block_constants(&handler.body),
                 _ => {}
             }
         }

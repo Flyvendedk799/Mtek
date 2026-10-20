@@ -94,6 +94,10 @@ impl<'a> Checker<'a> {
             match member {
                 EntityMember::Const(constant) => self.collect_constant(constant),
                 EntityMember::Entity(child) => self.collect_entity_constants(child),
+                EntityMember::Lifecycle(function) => {
+                    self.collect_block_constants(&function.body);
+                }
+                EntityMember::Handler(handler) => self.collect_block_constants(&handler.body),
                 _ => {}
             }
         }
