@@ -482,8 +482,12 @@ describe("change tracking: a tracked frame equals a full recompute", () => {
     } finally {
       World.prototype.propagate = spy;
     }
-    expect(propagated[0]).toBe(0);
-    expect(propagated[1]).toBeGreaterThanOrEqual(STATIC);
+    // Phase 3 samples particle origins and propagates, then phase 6 propagates again (decision 0155).
+    // A quiet tracked frame recomputes nothing on either call. The reference frame dirties every
+    // transform first, so one of its calls recomputes the static entities.
+    const half = propagated.length / 2;
+    expect(propagated.slice(0, half).every((n) => n === 0)).toBe(true);
+    expect(Math.max(...propagated.slice(half))).toBeGreaterThanOrEqual(STATIC);
     tracked.app.dispose();
     full.app.dispose();
   });

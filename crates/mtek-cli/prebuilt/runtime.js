@@ -11571,6 +11571,11 @@ function instancingCandidates(structure, blockOf, pipelineKeyOf) {
   let materials = /* @__PURE__ */ new Set(), capacity = 0;
   for (let group of groups.values())
     group.count < 2 || (materials.add(group.material), capacity += group.count);
+  for (let entity of structure.entities) {
+    if (entity.particles === void 0 || entity.mesh === null || entity.instance === null) continue;
+    let { material } = entity.instance;
+    material.shader.instancedVertexEntry !== void 0 && materials.add(material.id);
+  }
   for (let prefab of structure.prefabs) {
     let material = prefab.material?.material;
     prefab.mesh === null || material === void 0 || material.shader.instancedVertexEntry === void 0 || materials.add(material.id);
@@ -12508,7 +12513,7 @@ var Renderer = class {
       for (let point2 of draw.points) {
         if (written >= count) break;
         let base = written * INSTANCE_FLOATS, size = point2.size;
-        writeBasis(mirror, base, right, size), writeBasis(mirror, base + 4, toward, size), writeBasis(mirror, base + 8, up, size), mirror[base + 12] = point2.x, mirror[base + 13] = point2.y, mirror[base + 14] = point2.z, mirror[base + 15] = 1, normalMatrixInto(normal, 0, mirror.subarray(base, base + 16)), mirror.set(normal, base + 16), written += 1;
+        writeBasis(mirror, base, right, size), writeBasis(mirror, base + 4, toward, size), writeBasis(mirror, base + 8, up, -size), mirror[base + 12] = point2.x, mirror[base + 13] = point2.y, mirror[base + 14] = point2.z, mirror[base + 15] = 1, normalMatrixInto(normal, 0, mirror.subarray(base, base + 16)), mirror.set(normal, base + 16), written += 1;
       }
       let batchCount = written - start;
       batchCount > 0 && batches.push({ pipeline, mesh, attributes, instance: draw.instanceIndex, start, count: batchCount });

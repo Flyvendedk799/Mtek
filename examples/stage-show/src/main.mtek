@@ -33,13 +33,7 @@ scene Stage {
         visible: false;
         mesh: Plane { size: vec2(1.0, 1.0) };
         material: Unlit { color: #ffcc33 };
-        particles: Emitter {
-            rate: 24.0;
-            lifetime: 0.8;
-            speed: 1.6;
-            size: 0.12;
-            gravity: 3.0;
-        };
+        particles: Emitter { rate: 24.0; lifetime: 0.8; speed: 1.6; size: 0.12; gravity: 3.0 };
     }
 
     on key_down(Key.Digit1) {

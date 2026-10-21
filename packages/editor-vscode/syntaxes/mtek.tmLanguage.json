@@ -299,7 +299,7 @@
       "patterns": [
         {
           "name": "constant.character.escape.mtek",
-          "match": "\\\\(?:[\"\\\\ntr0]|u\\{[0-9A-Fa-f]{1,6}\\})"
+          "match": "\\\\(?:[\"\\\\ntr0$]|u\\{[0-9A-Fa-f]{1,6}\\})"
         },
         {
           "name": "invalid.illegal.escape.mtek",

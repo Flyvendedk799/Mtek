@@ -231,7 +231,8 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
     patterns: [
       {
         name: `constant.character.escape.${LANG}`,
-        match: '\\\\(?:["\\\\ntr0]|u\\{[0-9A-Fa-f]{1,6}\\})',
+        // `$` is the escaped dollar of an interpolated string (decision 0133): `\${not}`.
+        match: '\\\\(?:["\\\\ntr0$]|u\\{[0-9A-Fa-f]{1,6}\\})',
       },
       { name: `invalid.illegal.escape.${LANG}`, match: "\\\\." },
     ],

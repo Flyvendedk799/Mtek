@@ -122,6 +122,15 @@ export function instancingCandidates(
     materials.add(group.material);
     capacity += group.count;
   }
+  // An emitter draws each particle as an instance of its material (decision 0155). That pipeline has to
+  // exist even when the emitter is the only entity using the material, and the particles have their own
+  // buffer, so they do not add to `capacity`.
+  for (const entity of structure.entities) {
+    if (entity.particles === undefined || entity.mesh === null || entity.instance === null) continue;
+    const { material } = entity.instance;
+    if (material.shader.instancedVertexEntry === undefined) continue;
+    materials.add(material.id);
+  }
   // Spawned entities (decision 0064): how many of a prefab exist is not known before they are spawned, so
   // its material always gets the instanced variant of its pipeline; the instance buffer grows when needed.
   for (const prefab of structure.prefabs) {

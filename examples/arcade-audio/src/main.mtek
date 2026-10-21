@@ -11,11 +11,14 @@
 // The sounds are written by scripts/gen-sounds.mjs.
 
 const HIT = asset.sound("../sounds/hit.wav");
+
 const SCORE = asset.sound("../sounds/score.wav");
+
 const MUSIC = asset.sound("../sounds/music.wav");
 
 // The volume changes in steps of a tenth, between silent and twice the recorded level.
 const VOLUME_STEP: f32 = 0.1;
+
 const MAX_VOLUME: f32 = 2.0;
 
 scene Arcade {

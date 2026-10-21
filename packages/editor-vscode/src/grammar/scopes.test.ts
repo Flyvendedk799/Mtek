@@ -176,9 +176,9 @@ describe("literals", () => {
   });
 
   it("scopes a string and its escapes", () => {
-    const lines = tokenizeText(grammar, 'let s = "a\\n\\t\\"\\\\\\0\\u{1F600}\\u{41}b";');
+    const lines = tokenizeText(grammar, 'let s = "a\\n\\t\\"\\\\\\0\\$\\u{1F600}\\u{41}b";');
     expect(lines[0]?.tokens.some((t) => has(t.scopes, "string.quoted.double"))).toBe(true);
-    for (const escape of ["\\n", "\\t", '\\"', "\\\\", "\\0", "\\u{1F600}", "\\u{41}"]) {
+    for (const escape of ["\\n", "\\t", '\\"', "\\\\", "\\0", "\\$", "\\u{1F600}", "\\u{41}"]) {
       expect(has(scopesOf(lines, escape), "constant.character.escape"), escape).toBe(true);
     }
     expect(has(scopesOf(lines, "a"), "constant.character.escape")).toBe(false);

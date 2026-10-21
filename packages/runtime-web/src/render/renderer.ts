@@ -939,9 +939,12 @@ export class Renderer {
         if (written >= count) break;
         const base = written * INSTANCE_FLOATS;
         const size = point.size;
+        // A plane lies in local XZ and faces local +Y. local +Y points at the camera. local +Z is
+        // -up so the basis stays right-handed: a positive determinant keeps the front face toward
+        // the camera (back-face culling would drop the other orientation).
         writeBasis(mirror, base, right, size);
         writeBasis(mirror, base + 4, toward, size);
-        writeBasis(mirror, base + 8, up, size);
+        writeBasis(mirror, base + 8, up, -size);
         mirror[base + 12] = point.x;
         mirror[base + 13] = point.y;
         mirror[base + 14] = point.z;
