@@ -53,7 +53,11 @@ impl<'a> Checker<'a> {
                 self.out.structs.insert(id, ty);
                 Some(ty)
             }
-            DefKind::Import => self.imported_structs.get(&id).copied(),
+            DefKind::Import => self
+                .imported_structs
+                .get(&id)
+                .copied()
+                .filter(|ty| self.out.interner.struct_def(*ty).is_some()),
             _ => None,
         }
     }

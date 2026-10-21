@@ -128,7 +128,7 @@ impl Parser<'_> {
     /// of nesting, counted against [`MAX_NESTING_DEPTH`](super::MAX_NESTING_DEPTH): the operand of a
     /// parenthesis, bracket, argument or field value is parsed by a call of
     /// its own, and so is the right operand of a binary operator.
-    fn expr_bp(&mut self, min_bp: u8, allow_descriptor: bool) -> Sub {
+    pub(super) fn expr_bp(&mut self, min_bp: u8, allow_descriptor: bool) -> Sub {
         if !self.enter() {
             return self.too_deep(allow_descriptor);
         }
@@ -264,7 +264,7 @@ impl Parser<'_> {
 
     // ----- primary expressions ----------------------------------------------
 
-    fn primary(&mut self, allow_descriptor: bool) -> Sub {
+    pub(super) fn primary(&mut self, allow_descriptor: bool) -> Sub {
         match self.kind() {
             TokenKind::Int
             | TokenKind::Float
@@ -280,6 +280,7 @@ impl Parser<'_> {
             TokenKind::Ident | TokenKind::Underscore => self.name_or_descriptor(allow_descriptor),
             TokenKind::LParen => self.paren(),
             TokenKind::LBracket => self.array(),
+            TokenKind::KwMatch => self.match_expr(),
             _ => self.unexpected_expression(),
         }
     }
@@ -526,7 +527,7 @@ impl Parser<'_> {
 
     // ----- postfix operators --------------------------------------------------
 
-    fn postfix(&mut self, mut lhs: Sub) -> Sub {
+    pub(super) fn postfix(&mut self, mut lhs: Sub) -> Sub {
         loop {
             lhs = match self.kind() {
                 TokenKind::LParen => self.call(lhs),
@@ -689,7 +690,7 @@ impl Parser<'_> {
     /// the last consumed token, whose children are at most `child_height`
     /// tall. A node that would make the tree too tall is `E1050` and an
     /// `Error` node takes its place (the children are dropped).
-    fn mk(&mut self, start: u32, kind: ExprKind, child_height: u32) -> Sub {
+    pub(super) fn mk(&mut self, start: u32, kind: ExprKind, child_height: u32) -> Sub {
         let span = self.span_from(start);
         let height = child_height.saturating_add(1);
         if height > MAX_TREE_HEIGHT {
@@ -779,12 +780,6 @@ fn reserved_help(word: &str) -> &'static str {
     match word {
         "while" | "loop" => {
             "v0.1 has only the counted loop `for i in 0..n { ... }` (the bounds are integers, `break` leaves it early); there is no `while` or `loop`"
-        }
-        "match" => {
-            "v0.1 has no pattern matching; compare with `==` in an `if ... else if ... else` chain"
-        }
-        "enum" => {
-            "v0.1 has no user-defined enums; use `i32` constants, or the built-in `Key` for keys"
         }
         "mut" => {
             "variables are declared with `var` (assignable) or `let` (fixed); there is no `mut`"

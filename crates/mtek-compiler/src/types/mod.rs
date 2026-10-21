@@ -60,6 +60,7 @@ mod consteval;
 pub mod effects;
 #[cfg(test)]
 mod effects_tests;
+mod enums;
 pub mod facts;
 mod intrinsics;
 mod material;
@@ -88,7 +89,7 @@ pub use scene::{
     CheckedEntity, CheckedField, CheckedInstance, CheckedObject, CheckedParam, CheckedPrefab,
     CheckedScene, CheckedState, FieldOrigin,
 };
-pub use ty::{MaterialKey, StructDef, StructKey, Ty, TyId, TyInterner};
+pub use ty::{EnumDef, EnumKey, MaterialKey, StructDef, StructKey, Ty, TyId, TyInterner};
 pub use value::{ArithOp, ConstValue, EvalError, EvalResult, Scalar};
 
 use crate::diagnostics::Diagnostics;
@@ -492,6 +493,8 @@ pub struct Typeck {
     consts: BTreeMap<DefId, ConstInfo>,
     /// The type of every struct the module declares, by its `DefId`.
     structs: BTreeMap<DefId, TyId>,
+    /// The type of every enum the module declares, by its `DefId`.
+    enums: BTreeMap<DefId, TyId>,
     scenes: Vec<CheckedScene>,
     /// Every function the module declares, by its `DefId`.
     functions: BTreeMap<DefId, FnInfo>,
@@ -544,6 +547,7 @@ impl Typeck {
             non_constant: BTreeMap::new(),
             consts: BTreeMap::new(),
             structs: BTreeMap::new(),
+            enums: BTreeMap::new(),
             scenes: Vec::new(),
             functions: BTreeMap::new(),
             locals: BTreeMap::new(),
@@ -718,6 +722,13 @@ impl Typeck {
     #[must_use]
     pub fn struct_ty(&self, def: DefId) -> Option<TyId> {
         self.structs.get(&def).copied()
+    }
+
+    /// The type of the enum declared as `def` (its variants:
+    /// [`TyInterner::enum_def`]).
+    #[must_use]
+    pub fn enum_ty(&self, def: DefId) -> Option<TyId> {
+        self.enums.get(&def).copied()
     }
 
     /// The Mtek spelling of `ty`.

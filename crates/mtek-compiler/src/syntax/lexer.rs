@@ -910,6 +910,7 @@ impl<'a> Lexer<'a> {
             (b'!', Some(b'=')) => (K::BangEq, 2),
             (b'!', _) => (K::Bang, 1),
             (b'=', Some(b'=')) => (K::EqEq, 2),
+            (b'=', Some(b'>')) => (K::FatArrow, 2),
             (b'=', _) => (K::Eq, 1),
             (b'&', Some(b'&')) => (K::AndAnd, 2),
             (b'&', _) => (K::Amp, 1),

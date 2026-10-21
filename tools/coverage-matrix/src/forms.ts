@@ -241,6 +241,7 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "ExprKind.Material": "expr/material-literal",
   "ExprKind.PrefabLiteral": "expr/prefab-literal",
   "ExprKind.EntityRef": "expr/entity-ref",
+  "ExprKind.Match": "match",
   "BodyTarget.Entity": "expr/body-target:entity",
   "BodyTarget.Ref": "expr/body-target:ref",
   "BehaviorKind.Update": "behavior/update",

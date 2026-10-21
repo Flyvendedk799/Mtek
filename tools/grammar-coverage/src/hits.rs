@@ -33,9 +33,9 @@ use std::collections::BTreeSet;
 use mtek_compiler::diagnostics::Diagnostics;
 use mtek_compiler::source::FileId;
 use mtek_compiler::syntax::ast::{
-    ArrayLengthKind, AssignOp, BinaryOp, Block, ConstDecl, ElseBranch, EntityDecl, EntityMember,
-    Expr, ExprKind, FieldInit, FieldValue, ForIter, HandlerArg, IfStmt, ItemKind, MaterialMember,
-    Module, Param, SceneMember, Stmt, Type, TypeKind,
+    ArmBody, ArrayLengthKind, AssignOp, BinaryOp, Block, ConstDecl, ElseBranch, EntityDecl,
+    EntityMember, Expr, ExprKind, FieldInit, FieldValue, ForIter, HandlerArg, IfStmt, ItemKind,
+    MaterialMember, Module, Param, Pattern, PatternKind, SceneMember, Stmt, Type, TypeKind,
 };
 use mtek_compiler::syntax::{Token, TokenKind, TriviaKind, lex_str, parse_module};
 
@@ -75,8 +75,9 @@ impl std::fmt::Display for Point {
 }
 
 // The alternatives the tree distinguishes, as `spec/grammar.ebnf` writes them.
-const ITEM_DECLARATION: &str =
-    "'export'? ( ConstDecl | FnDecl | StructDecl | MaterialDecl | PrefabDecl | SceneDecl )";
+const ITEM_DECLARATION: &str = "'export'? ( ConstDecl | FnDecl | StructDecl | EnumDecl | MaterialDecl | PrefabDecl | SceneDecl )";
+const PATTERN_WILDCARD: &str = "'_'";
+const PATTERN_VARIANT: &str = "Ident '.' Ident";
 const UNARY_OPERATOR: &str = "( '-' | '!' ) UnaryExpr";
 const POSTFIX_CALL: &str = "'(' ArgList? ')'";
 const POSTFIX_FIELD: &str = "'.' Ident";
@@ -205,6 +206,11 @@ impl Hits<'_> {
                         self.hit("StructField");
                         self.ty(&field.ty);
                     }
+                }
+                // The variant names are tokens only.
+                ItemKind::Enum(_) => {
+                    self.alt("Item", ITEM_DECLARATION);
+                    self.hit("EnumDecl");
                 }
                 ItemKind::Material(decl) => {
                     self.alt("Item", ITEM_DECLARATION);
@@ -455,6 +461,19 @@ impl Hits<'_> {
                 self.alt(P, "IfStmt");
                 self.if_stmt(stmt);
             }
+            Stmt::Match(stmt) => {
+                self.alt(P, "MatchStmt");
+                self.hit("MatchStmt");
+                self.expr_no_desc(&stmt.scrutinee);
+                for arm in &stmt.arms {
+                    self.hit("MatchStmtArm");
+                    self.patterns(&arm.patterns);
+                    match &arm.body {
+                        ArmBody::Block(block) => self.block(block),
+                        ArmBody::Expr(value) => self.expr(value),
+                    }
+                }
+            }
             Stmt::For(stmt) => {
                 self.alt(P, "ForStmt");
                 self.hit("ForStmt");
@@ -596,7 +615,38 @@ impl Hits<'_> {
                 self.expr(base);
                 self.expr(index);
             }
+            ExprKind::Match { scrutinee, arms } => {
+                primary(self, "MatchExpr");
+                self.hit("MatchExpr");
+                self.expr_no_desc(scrutinee);
+                for arm in arms {
+                    self.hit("MatchExprArm");
+                    self.patterns(&arm.patterns);
+                    match &arm.body {
+                        ArmBody::Expr(value) => self.expr(value),
+                        ArmBody::Block(block) => self.block(block),
+                    }
+                }
+            }
             ExprKind::Error => {}
+        }
+    }
+
+    /// The patterns of a `match` arm: `_` or `Enum.Variant` (anything else is
+    /// a checker error, `E3204`, and exercises no production).
+    fn patterns(&mut self, patterns: &[Pattern]) {
+        self.hit("Patterns");
+        for pattern in patterns {
+            match &pattern.kind {
+                PatternKind::Wildcard => self.alt("Pattern", PATTERN_WILDCARD),
+                PatternKind::Value(value) => {
+                    if let ExprKind::Field { base, .. } = &value.kind
+                        && let ExprKind::Name(_) = &base.kind
+                    {
+                        self.alt("Pattern", PATTERN_VARIANT);
+                    }
+                }
+            }
         }
     }
 

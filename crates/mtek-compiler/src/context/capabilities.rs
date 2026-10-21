@@ -70,6 +70,7 @@ pub const fn feature_name(construct: Construct) -> &'static str {
         Construct::Fn => "functions",
         Construct::CpuFn => "cpu-functions",
         Construct::Struct => "structs",
+        Construct::Enum => "enums",
         Construct::Material => "materials",
         Construct::Prefab => "prefabs",
         Construct::Scene => "scenes",
@@ -93,6 +94,7 @@ pub const fn feature_name(construct: Construct) -> &'static str {
         Construct::Comparison => "comparison",
         Construct::Equality => "equality",
         Construct::Logical => "logical",
+        Construct::Match => "match",
     }
 }
 

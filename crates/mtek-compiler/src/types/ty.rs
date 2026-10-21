@@ -92,6 +92,10 @@ pub enum Ty {
     /// A user `struct`: nominal, identified by its declaration (in any
     /// module, decision 0035 item 5).
     Struct(StructKey),
+    /// A user `enum` (decision 0129): nominal, identified by its declaration
+    /// in any module, like a struct. CPU only; erased to a `u32` (the index of
+    /// the variant) at the IR boundary.
+    UserEnum(EnumKey),
     Mesh,
     Material,
     Texture,
@@ -187,6 +191,37 @@ pub struct MaterialKey {
     pub def: DefId,
 }
 
+/// The identity of a user enum: its declaration, by the file that declares
+/// it and its `DefId` there, like [`StructKey`] (decision 0129).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct EnumKey {
+    /// The file of the declaring module.
+    pub file: FileId,
+    /// The declaration in that module's resolution.
+    pub def: DefId,
+}
+
+/// The variants of a user enum type, in declaration order: a variant's index
+/// is its discriminant (decision 0129).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EnumDef {
+    /// The enum's name, as diagnostics print it.
+    pub name: String,
+    /// The variant names, in declaration order, without duplicates.
+    pub variants: Vec<String>,
+}
+
+impl EnumDef {
+    /// The index (discriminant) of the variant `name`.
+    #[must_use]
+    pub fn variant(&self, name: &str) -> Option<u32> {
+        self.variants
+            .iter()
+            .position(|v| v == name)
+            .and_then(|i| u32::try_from(i).ok())
+    }
+}
+
 /// The fields of a user struct type, in declaration order, with their types
 /// in the interner that holds the definition.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -225,6 +260,8 @@ pub struct TyInterner {
     structs: BTreeMap<StructKey, StructDef>,
     /// The names of user material types.
     materials: BTreeMap<MaterialKey, String>,
+    /// The names and variants of user enum types.
+    enums: BTreeMap<EnumKey, EnumDef>,
 }
 
 impl Default for TyInterner {
@@ -242,6 +279,7 @@ impl TyInterner {
             ids: BTreeMap::new(),
             structs: BTreeMap::new(),
             materials: BTreeMap::new(),
+            enums: BTreeMap::new(),
         };
         for ty in PRIMITIVES {
             interner.intern(ty);
@@ -275,6 +313,25 @@ impl TyInterner {
             broken: false,
         });
         self.intern(Ty::Struct(key))
+    }
+
+    /// The enum type declared as `key`, named `name`, with `variants` in
+    /// declaration order (the first registration wins).
+    pub fn intern_enum(&mut self, key: EnumKey, name: &str, variants: Vec<String>) -> TyId {
+        self.enums.entry(key).or_insert_with(|| EnumDef {
+            name: name.to_owned(),
+            variants,
+        });
+        self.intern(Ty::UserEnum(key))
+    }
+
+    /// The definition of the user enum type `id`.
+    #[must_use]
+    pub fn enum_def(&self, id: TyId) -> Option<&EnumDef> {
+        match self.get(id) {
+            Ty::UserEnum(key) => self.enums.get(&key),
+            _ => None,
+        }
     }
 
     /// The instance type of the user material declared as `key`, named
@@ -403,6 +460,13 @@ impl TyInterner {
                 }
                 self.intern(Ty::Struct(key))
             }
+            Ty::UserEnum(key) => {
+                let (name, variants) = other.enums.get(&key).map_or_else(
+                    || ("enum".to_owned(), Vec::new()),
+                    |d| (d.name.clone(), d.variants.clone()),
+                );
+                self.intern_enum(key, &name, variants)
+            }
             Ty::MaterialInstance(key) => {
                 let name = other
                     .materials
@@ -499,6 +563,7 @@ impl TyInterner {
             Ty::Error
             | Ty::Array { .. }
             | Ty::Struct(_)
+            | Ty::UserEnum(_)
             | Ty::Schema(_)
             | Ty::MaterialInstance(_) => return None,
         })
@@ -583,6 +648,10 @@ impl TyInterner {
                 .structs
                 .get(&key)
                 .map_or_else(|| "struct".to_owned(), |def| def.name.clone()),
+            Ty::UserEnum(key) => self
+                .enums
+                .get(&key)
+                .map_or_else(|| "enum".to_owned(), |def| def.name.clone()),
             Ty::Schema(name) => name.to_owned(),
             Ty::MaterialInstance(key) => self
                 .materials

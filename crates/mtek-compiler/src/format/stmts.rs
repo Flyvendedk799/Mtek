@@ -1,12 +1,15 @@
 //! Blocks and statements (`spec/grammar.ebnf` section 6).
 
 use crate::syntax::ast::{
-    AssignStmt, Block, ElseBranch, ForIter, ForStmt, IfStmt, LocalDecl, ReturnStmt, Stmt,
+    ArmBody, AssignStmt, Block, ElseBranch, ForIter, ForStmt, IfStmt, LocalDecl, MatchArm,
+    MatchStmt, Pattern, PatternKind, ReturnStmt, Stmt,
 };
 
 use super::decls::closing;
 use super::doc::Doc;
 use super::printer::Printer;
+use crate::syntax::TokenKind;
+use crate::syntax::ast::Expr;
 
 impl Printer<'_> {
     /// `{`, the statements one per line indented, `}`.
@@ -36,6 +39,7 @@ impl Printer<'_> {
                 Doc::concat(vec![Doc::text("continue"), semicolon])
             }
             Stmt::Block(block) => self.block(block),
+            Stmt::Match(stmt) => self.match_stmt(stmt),
             Stmt::Assign(stmt) => self.assign(stmt),
             Stmt::Expr(stmt) => {
                 let expr = self.expr(&stmt.expr);
@@ -130,5 +134,46 @@ impl Printer<'_> {
             value,
             semicolon,
         ])
+    }
+
+    fn match_stmt(&mut self, stmt: &MatchStmt) -> Doc {
+        self.match_doc(&stmt.scrutinee, &stmt.arms, stmt.span.end)
+    }
+
+    /// `match value {`, one arm per line, `}`: the canonical form of both the
+    /// statement and the expression. Expression arms end with `,`; statement
+    /// arms, whose bodies are blocks, with nothing.
+    pub(super) fn match_doc(&mut self, scrutinee: &Expr, arms: &[MatchArm], end: u32) -> Doc {
+        let value = self.expr(scrutinee);
+        let open = self.token_start(TokenKind::LBrace, scrutinee.span.end, scrutinee.span.end);
+        let close = end.saturating_sub(1);
+        let body = self.braced(open, close, arms, &mut |p, arm| p.match_arm(arm));
+        Doc::concat(vec![Doc::text("match "), value, Doc::Space, body])
+    }
+
+    fn match_arm(&mut self, arm: &MatchArm) -> Doc {
+        let mut parts = Vec::new();
+        for (index, pattern) in arm.patterns.iter().enumerate() {
+            if index > 0 {
+                parts.push(Doc::text(" | "));
+            }
+            parts.push(self.pattern(pattern));
+        }
+        parts.push(Doc::text(" => "));
+        match &arm.body {
+            ArmBody::Block(block) => parts.push(self.block(block)),
+            ArmBody::Expr(value) => {
+                parts.push(self.expr(value));
+                parts.push(Doc::text(","));
+            }
+        }
+        Doc::concat(parts)
+    }
+
+    fn pattern(&mut self, pattern: &Pattern) -> Doc {
+        match &pattern.kind {
+            PatternKind::Wildcard => Doc::text("_"),
+            PatternKind::Value(value) => self.expr(value),
+        }
     }
 }

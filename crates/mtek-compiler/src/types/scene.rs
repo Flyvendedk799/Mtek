@@ -1465,6 +1465,14 @@ impl Checker<'_> {
                     self.descriptors_in(item);
                 }
             }
+            ExprKind::Match { scrutinee, arms } => {
+                self.descriptors_in(scrutinee);
+                for arm in arms {
+                    if let crate::syntax::ast::ArmBody::Expr(value) = &arm.body {
+                        self.descriptors_in(value);
+                    }
+                }
+            }
             ExprKind::Int { .. }
             | ExprKind::Float { .. }
             | ExprKind::Str { .. }

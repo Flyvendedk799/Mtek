@@ -761,6 +761,42 @@ impl FnLowering<'_, '_> {
         }
     }
 
+    /// A `match` expression (decision 0129): the scrutinee, a `u32` variant index, is evaluated
+    /// once as the argument of an arrow function whose body tests it arm by arm,
+    /// `(($match) => $match === 0 ? a : $match === 1 || $match === 2 ? b : c)(scrutinee)`. Only
+    /// the selected arm is evaluated. Without a `_` arm the arms cover every variant, so the
+    /// last arm needs no test.
+    fn match_expr(
+        &mut self,
+        scrutinee: &ir::Expr,
+        arms: &[ir::MatchArm],
+        otherwise: Option<&ir::Expr>,
+    ) -> Result<Expr, String> {
+        const PARAM: &str = "$match";
+        let argument = self.expr(scrutinee)?;
+        let mut tested: Vec<(Expr, Expr)> = Vec::with_capacity(arms.len());
+        for arm in arms {
+            let mut test: Option<Expr> = None;
+            for value in &arm.values {
+                let equal = Expr::binary("===", Expr::ident(PARAM), Expr::Num(Number::U32(*value)));
+                test = Some(match test {
+                    None => equal,
+                    Some(before) => Expr::binary("||", before, equal),
+                });
+            }
+            let test = test.ok_or("a `match` arm without values")?;
+            tested.push((test, self.expr(&arm.value)?));
+        }
+        let mut body = match otherwise {
+            Some(otherwise) => self.expr(otherwise)?,
+            None => tested.pop().ok_or("a `match` without arms")?.1,
+        };
+        while let Some((test, value)) = tested.pop() {
+            body = Expr::Cond(Box::new(test), Box::new(value), Box::new(body));
+        }
+        Ok(Expr::Arrow(vec![PARAM.to_owned()], Box::new(body)).call(vec![argument]))
+    }
+
     /// Whether the value of `expr` is an array or struct that shares storage with an owned
     /// `var`, so that it must be copied before it is used anywhere else (decision 0045).
     fn escapes_owned(&self, expr: &ir::Expr) -> bool {
@@ -888,6 +924,11 @@ impl FnLowering<'_, '_> {
             }
             ir::ExprKind::State { owner, name } => self.state_path(*owner, name),
             ir::ExprKind::EntityRef { entity } => self.entity(*entity).member("ref"),
+            ir::ExprKind::Match {
+                scrutinee,
+                arms,
+                otherwise,
+            } => self.match_expr(scrutinee, arms, otherwise.as_deref())?,
             ir::ExprKind::PrefabLiteral { prefab, .. } => {
                 return Err(format!(
                     "a literal of the prefab '{prefab}' outside the argument of spawn"
@@ -1162,6 +1203,17 @@ mod tests {
                 ir::ExprKind::Binary { lhs, rhs, .. } => {
                     expr(lhs, out);
                     expr(rhs, out);
+                }
+                ir::ExprKind::Match {
+                    scrutinee,
+                    arms,
+                    otherwise,
+                } => {
+                    expr(scrutinee, out);
+                    arms.iter().for_each(|arm| expr(&arm.value, out));
+                    if let Some(otherwise) = otherwise {
+                        expr(otherwise, out);
+                    }
                 }
                 ir::ExprKind::Call { args, .. }
                 | ir::ExprKind::Builtin { args, .. }

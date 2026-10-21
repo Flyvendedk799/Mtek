@@ -7,11 +7,12 @@
 //! look inside nodes match on the typed AST instead.
 
 use super::ast::{
-    ArrayLength, Bind, Block, ConstDecl, DescField, ElseBranch, EntityDecl, EntityMember, Expr,
-    ExprKind, FieldInit, FieldValue, FnDecl, ForIter, ForStmt, Handler, HandlerArg, Ident, IfStmt,
-    ImportDecl, Item, ItemKind, LifecycleFn, LocalDecl, MaterialDecl, MaterialMember, Module, Node,
-    NodeId, Param, ParamDecl, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl,
-    Stmt, StructDecl, StructField, Type, TypeKind,
+    ArmBody, ArrayLength, Bind, Block, ConstDecl, DescField, ElseBranch, EntityDecl, EntityMember,
+    EnumDecl, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter, ForStmt, Handler, HandlerArg,
+    Ident, IfStmt, ImportDecl, Item, ItemKind, LifecycleFn, LocalDecl, MatchArm, MaterialDecl,
+    MaterialMember, Module, Node, NodeId, Param, ParamDecl, Pattern, PatternKind, PrefabDecl,
+    SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt, StructDecl, StructField, Type,
+    TypeKind,
 };
 use crate::source::Span;
 
@@ -79,6 +80,7 @@ impl Walker<'_> {
             ItemKind::Const(decl) => w.const_decl(decl),
             ItemKind::Fn(decl) => w.fn_decl(decl),
             ItemKind::Struct(decl) => w.struct_decl(decl),
+            ItemKind::Enum(decl) => w.enum_decl(decl),
             ItemKind::Material(decl) => w.material(decl),
             ItemKind::Prefab(decl) => w.prefab(decl),
             ItemKind::Scene(decl) => w.scene(decl),
@@ -126,6 +128,36 @@ impl Walker<'_> {
                 w.ty(ret);
             }
             w.block(&decl.body);
+        });
+    }
+
+    fn enum_decl(&mut self, decl: &EnumDecl) {
+        self.node(decl.id, decl.span, "enum", |w| {
+            w.ident(&decl.name);
+            for variant in &decl.variants {
+                w.ident(variant);
+            }
+        });
+    }
+
+    fn match_arm(&mut self, arm: &MatchArm) {
+        self.node(arm.id, arm.span, "arm", |w| {
+            for pattern in &arm.patterns {
+                w.pattern(pattern);
+            }
+            match &arm.body {
+                ArmBody::Block(block) => w.block(block),
+                ArmBody::Expr(value) => w.expr(value),
+            }
+        });
+    }
+
+    fn pattern(&mut self, pattern: &Pattern) {
+        self.node(pattern.id, pattern.span, "pattern", |w| {
+            match &pattern.kind {
+                PatternKind::Wildcard => {}
+                PatternKind::Value(value) => w.expr(value),
+            }
         });
     }
 
@@ -345,6 +377,12 @@ impl Walker<'_> {
             Stmt::Break(stmt) => self.leaf(stmt, "break"),
             Stmt::Continue(stmt) => self.leaf(stmt, "continue"),
             Stmt::Block(block) => self.block(block),
+            Stmt::Match(stmt) => self.node(stmt.id, stmt.span, "match", |w| {
+                w.expr(&stmt.scrutinee);
+                for arm in &stmt.arms {
+                    w.match_arm(arm);
+                }
+            }),
             Stmt::Assign(stmt) => self.node(stmt.id, stmt.span, "assign", |w| {
                 w.expr(&stmt.target);
                 w.expr(&stmt.value);
@@ -422,6 +460,12 @@ impl Walker<'_> {
                 w.expr(base);
                 w.expr(index);
             }
+            ExprKind::Match { scrutinee, arms } => {
+                w.expr(scrutinee);
+                for arm in arms {
+                    w.match_arm(arm);
+                }
+            }
         });
     }
 
@@ -451,6 +495,7 @@ fn expr_label(kind: &ExprKind) -> &'static str {
         ExprKind::Call { .. } => "call",
         ExprKind::Field { .. } => "field-access",
         ExprKind::Index { .. } => "index",
+        ExprKind::Match { .. } => "match",
         ExprKind::Error => "error",
     }
 }

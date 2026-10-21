@@ -561,6 +561,11 @@ impl<'p> ShaderLowering<'p> {
         let span = expr.span;
         let ty = expr.ty.as_str();
         Ok(match &expr.kind {
+            // Enums are CPU only (decision 0129): the checker reports a `match` that GPU code
+            // reaches (`E4011`), so none gets here.
+            ir::ExprKind::Match { .. } => {
+                return Err("a `match` expression in GPU code".to_owned());
+            }
             ir::ExprKind::Const { value } => self.value(value, ty, span)?,
             ir::ExprKind::Local { local, .. } => {
                 let item = local_item(body, *local)?;

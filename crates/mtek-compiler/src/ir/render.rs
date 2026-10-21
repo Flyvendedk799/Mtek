@@ -881,6 +881,23 @@ fn expr_text(expr: &Expr) -> String {
             format!("{prefab} {{ {} }}", named(params))
         }
         ExprKind::EntityRef { entity } => return format!("ref entity#{entity}"),
+        ExprKind::Match {
+            scrutinee,
+            arms,
+            otherwise,
+        } => {
+            let mut parts: Vec<String> = arms
+                .iter()
+                .map(|arm| {
+                    let values: Vec<String> = arm.values.iter().map(u32::to_string).collect();
+                    format!("{} => {}", values.join(" | "), expr_text(&arm.value))
+                })
+                .collect();
+            if let Some(otherwise) = otherwise {
+                parts.push(format!("_ => {}", expr_text(otherwise)));
+            }
+            format!("match {} {{ {} }}", expr_text(scrutinee), parts.join(", "))
+        }
     };
     format!("({text}): {}", expr.ty)
 }

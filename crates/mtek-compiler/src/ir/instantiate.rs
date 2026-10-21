@@ -23,8 +23,8 @@ use std::collections::BTreeMap;
 use super::lower::ImperativeMark;
 use super::model::{
     Behavior, Binding, BindingDep, BindingTarget, Block, BodyTarget, Branch, Expr, ExprKind, Field,
-    Item, MaterialInstanceDesc, Module, NamedExpr, NamedValue, Owner, Param, Place, PlaceRoot,
-    PlaceStep, PrefabItem, Scene, Source, State, Stmt, Symbol, UpdateClass, Value,
+    Item, MatchArm, MaterialInstanceDesc, Module, NamedExpr, NamedValue, Owner, Param, Place,
+    PlaceRoot, PlaceStep, PrefabItem, Scene, Source, State, Stmt, Symbol, UpdateClass, Value,
 };
 
 /// Instantiate the prefabs of every static instance of `modules`, then apply `marks`.
@@ -783,6 +783,23 @@ impl Substitution<'_> {
             },
             ExprKind::EntityRef { entity } => ExprKind::EntityRef {
                 entity: self.index(*entity),
+            },
+            ExprKind::Match {
+                scrutinee,
+                arms,
+                otherwise,
+            } => ExprKind::Match {
+                scrutinee: self.boxed(scrutinee)?,
+                arms: arms
+                    .iter()
+                    .map(|arm| {
+                        Ok(MatchArm {
+                            values: arm.values.clone(),
+                            value: self.expr(&arm.value)?,
+                        })
+                    })
+                    .collect::<Result<Vec<_>>>()?,
+                otherwise: otherwise.as_ref().map(|e| self.boxed(e)).transpose()?,
             },
             ExprKind::State { owner, name } => ExprKind::State {
                 owner: self.owner(*owner),

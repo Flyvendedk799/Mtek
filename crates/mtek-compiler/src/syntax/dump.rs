@@ -25,11 +25,12 @@ mod tests;
 use std::fmt::Write as _;
 
 use super::ast::{
-    ArrayLength, ArrayLengthKind, Bind, Block, ConstDecl, DescField, ElseBranch, EntityDecl,
-    EntityMember, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter, ForStmt, Handler,
-    HandlerArg, IfStmt, ImportDecl, Item, ItemKind, LifecycleFn, LocalDecl, MaterialDecl,
-    MaterialMember, Module, Param, ParamDecl, PrefabDecl, SceneDecl, SceneMember, SceneObject,
-    StageFn, StateDecl, Stmt, StructDecl, StructField, Type, TypeKind,
+    ArmBody, ArrayLength, ArrayLengthKind, Bind, Block, ConstDecl, DescField, ElseBranch,
+    EntityDecl, EntityMember, EnumDecl, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter,
+    ForStmt, Handler, HandlerArg, IfStmt, ImportDecl, Item, ItemKind, LifecycleFn, LocalDecl,
+    MatchArm, MaterialDecl, MaterialMember, Module, Param, ParamDecl, Pattern, PatternKind,
+    PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt, StructDecl,
+    StructField, Type, TypeKind,
 };
 
 /// Lists are kept on one line when they fit in this many columns.
@@ -247,7 +248,34 @@ fn expr_sexp(expr: &Expr) -> Sexp {
             .child(expr_sexp(base))
             .child(expr_sexp(index))
             .done(),
+        ExprKind::Match { scrutinee, arms } => List::new("match")
+            .child(expr_sexp(scrutinee))
+            .children(arms.iter().map(arm_sexp))
+            .done(),
         ExprKind::Error => bare("error"),
+    }
+}
+
+/// `(arm (patterns ...) body)`: one arm of a `match`.
+fn arm_sexp(arm: &MatchArm) -> Sexp {
+    let body = match &arm.body {
+        ArmBody::Block(block) => block_sexp(block),
+        ArmBody::Expr(value) => expr_sexp(value),
+    };
+    List::new("arm")
+        .child(
+            List::new("patterns")
+                .children(arm.patterns.iter().map(pattern_sexp))
+                .done(),
+        )
+        .child(body)
+        .done()
+}
+
+fn pattern_sexp(pattern: &Pattern) -> Sexp {
+    match &pattern.kind {
+        PatternKind::Wildcard => bare("_"),
+        PatternKind::Value(value) => expr_sexp(value),
     }
 }
 
@@ -315,6 +343,7 @@ fn item_sexp(item: &Item) -> Sexp {
         ItemKind::Const(decl) => const_sexp(decl),
         ItemKind::Fn(decl) => fn_sexp(decl),
         ItemKind::Struct(decl) => struct_sexp(decl),
+        ItemKind::Enum(decl) => enum_sexp(decl),
         ItemKind::Material(decl) => material_sexp(decl),
         ItemKind::Prefab(decl) => prefab_sexp(decl),
         ItemKind::Scene(decl) => scene_sexp(decl),
@@ -376,6 +405,17 @@ fn struct_sexp(decl: &StructDecl) -> Sexp {
     List::new("struct")
         .atom(decl.name.name.as_str())
         .children(decl.fields.iter().map(struct_field_sexp))
+        .done()
+}
+
+fn enum_sexp(decl: &EnumDecl) -> Sexp {
+    List::new("enum")
+        .atom(decl.name.name.as_str())
+        .children(
+            decl.variants
+                .iter()
+                .map(|variant| List::new("variant").atom(variant.name.as_str()).done()),
+        )
         .done()
 }
 
@@ -535,6 +575,10 @@ fn stmt_sexp(stmt: &Stmt) -> Sexp {
         Stmt::Break(_) => bare("break"),
         Stmt::Continue(_) => bare("continue"),
         Stmt::Block(block) => block_sexp(block),
+        Stmt::Match(stmt) => List::new("match")
+            .child(expr_sexp(&stmt.scrutinee))
+            .children(stmt.arms.iter().map(arm_sexp))
+            .done(),
         Stmt::Assign(stmt) => List::new("assign")
             .atom(stmt.op.symbol())
             .child(expr_sexp(&stmt.target))

@@ -9,16 +9,19 @@ use std::collections::BTreeMap;
 use super::lower::{Defect, Lowering};
 use super::model::{
     Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, BodyTarget as IrBodyTarget,
-    Branch, Expr, ExprKind, Function, LocalItem, LocalKind, MaterialItem, MaterialParamItem,
-    NamedExpr, Owner, Place, PlaceRoot, PlaceStep, StageItem, State, Stmt, Symbol, Value,
+    Branch, Expr, ExprKind, Function, LocalItem, LocalKind, MatchArm, MaterialItem,
+    MaterialParamItem, NamedExpr, Owner, Place, PlaceRoot, PlaceStep, StageItem, State, Stmt,
+    Symbol, Value,
 };
 use crate::layout::{
     LayoutType, compute, material_layout_id, material_params_struct, qualified_name,
 };
 use crate::resolve::{DefId, DefKind, Res};
 use crate::stdlib::{EventForm, registry};
-use crate::syntax::ast::{self, ElseBranch, ExprKind as AstExpr, FieldValue, ForIter, HandlerArg};
-use crate::types::{BodyTarget, CallKind, EffectLevel, FieldKind, FnRef, Ty, TyId};
+use crate::syntax::ast::{
+    self, ArmBody, ElseBranch, ExprKind as AstExpr, FieldValue, ForIter, HandlerArg, PatternKind,
+};
+use crate::types::{BodyTarget, CallKind, ConstValue, EffectLevel, FieldKind, FnRef, Ty, TyId};
 
 /// What the lowering of a scene body needs to name entities and cameras: the static index of
 /// every entity declaration and the name of every camera. For a prefab body (decision 0062) the
@@ -662,8 +665,143 @@ impl FnLowering<'_, '_> {
                 expr: self.expr(&stmt.expr)?,
                 span: stmt.span,
             },
+            ast::Stmt::Match(stmt) => self.match_stmt(stmt)?,
             ast::Stmt::Error(_) => return Err(self.defect("a statement with a syntax error")),
         })
+    }
+
+    /// A `match` statement (decision 0129), as a block: a local holding the scrutinee (the
+    /// `u32` index of its variant, evaluated once), then an `if` chain comparing it with the
+    /// variants of each arm; the `_` arm is the `else`. The local is named `match`, a keyword,
+    /// so it never meets a name of the program.
+    fn match_stmt(&mut self, stmt: &ast::MatchStmt) -> Result<Stmt, Defect> {
+        let types = self.lowering.types;
+        let scrutinee = self.expr(&stmt.scrutinee)?;
+        let ty = types
+            .ty(stmt.scrutinee.id)
+            .filter(|t| !types.interner().is_error(*t))
+            .ok_or_else(|| self.defect("a `match` scrutinee without a type"))?;
+        let index = u32::try_from(self.locals.len()).map_err(|_| self.defect("too many locals"))?;
+        let local_ty = self.display(ty);
+        self.locals.push(LocalItem {
+            index,
+            name: "match".to_owned(),
+            ty: local_ty.clone(),
+            kind: LocalKind::Let,
+            span: stmt.scrutinee.span,
+        });
+        let read = Expr {
+            kind: ExprKind::Local {
+                local: index,
+                name: "match".to_owned(),
+            },
+            ty: local_ty,
+            span: stmt.scrutinee.span,
+        };
+        let mut branches = Vec::with_capacity(stmt.arms.len());
+        let mut otherwise = None;
+        for arm in &stmt.arms {
+            let ArmBody::Block(block) = &arm.body else {
+                return Err(self.defect("a `match` statement arm without a block"));
+            };
+            match self.arm_values(arm)? {
+                None => {
+                    otherwise = Some(self.block(block)?);
+                    // Arms after `_` are unreachable (`E3202`).
+                    break;
+                }
+                Some(values) => {
+                    let cond = self.arm_condition(&read, &values, arm.span)?;
+                    branches.push(Branch {
+                        cond,
+                        body: self.block(block)?,
+                    });
+                }
+            }
+        }
+        // Without `_` the arms cover every variant (`E3201` otherwise): the
+        // last arm needs no test, so every path through the `if` runs an arm.
+        if otherwise.is_none() && branches.len() > 1 {
+            otherwise = branches.pop().map(|branch| branch.body);
+        }
+        let mut stmts = vec![Stmt::Let {
+            local: index,
+            value: scrutinee,
+            span: stmt.scrutinee.span,
+        }];
+        match (branches.is_empty(), otherwise) {
+            // Only a `_` arm: its block runs.
+            (true, Some(body)) => stmts.push(Stmt::Block { body }),
+            (true, None) => return Err(self.defect("a `match` without arms")),
+            (false, otherwise) => stmts.push(Stmt::If {
+                branches,
+                otherwise,
+                span: stmt.span,
+            }),
+        }
+        Ok(Stmt::Block {
+            body: Block {
+                stmts,
+                span: stmt.span,
+            },
+        })
+    }
+
+    /// The variant indices an arm matches; `None` for an arm with `_`.
+    fn arm_values(&self, arm: &ast::MatchArm) -> Result<Option<Vec<u32>>, Defect> {
+        let mut values = Vec::with_capacity(arm.patterns.len());
+        for pattern in &arm.patterns {
+            match &pattern.kind {
+                PatternKind::Wildcard => return Ok(None),
+                PatternKind::Value(value) => match self.lowering.types.field_kind(value.id) {
+                    Some(FieldKind::EnumVariant { index, .. }) => values.push(*index),
+                    _ => return Err(self.defect("a `match` pattern that is not a variant")),
+                },
+            }
+        }
+        Ok(Some(values))
+    }
+
+    /// `read == v0 || read == v1 || …` for the variant indices of an arm.
+    fn arm_condition(
+        &self,
+        read: &Expr,
+        values: &[u32],
+        span: crate::source::Span,
+    ) -> Result<Expr, Defect> {
+        let bool_ty = self.display(TyId::BOOL);
+        let mut cond: Option<Expr> = None;
+        for value in values {
+            let constant = Expr {
+                kind: ExprKind::Const {
+                    value: (&ConstValue::U32(*value)).into(),
+                },
+                ty: read.ty.clone(),
+                span,
+            };
+            let test = Expr {
+                kind: ExprKind::Binary {
+                    op: "==",
+                    lhs: Box::new(read.clone()),
+                    rhs: Box::new(constant),
+                },
+                ty: bool_ty.clone(),
+                span,
+            };
+            cond = Some(match cond {
+                None => test,
+                Some(before) => Expr {
+                    kind: ExprKind::Binary {
+                        op: "||",
+                        lhs: Box::new(before),
+                        rhs: Box::new(test),
+                    },
+                    ty: bool_ty.clone(),
+                    span,
+                },
+            });
+        }
+        cond.ok_or_else(|| self.defect("a `match` arm without patterns"))
     }
 
     /// An assignment target (decision 0045): a `var` local followed by struct fields,
@@ -931,6 +1069,33 @@ impl FnLowering<'_, '_> {
                 },
                 None => return Err(self.defect("a call that was not resolved")),
             },
+            AstExpr::Match { scrutinee, arms } => {
+                let mut lowered = Vec::with_capacity(arms.len());
+                let mut otherwise = None;
+                for arm in arms {
+                    let ArmBody::Expr(value) = &arm.body else {
+                        return Err(self.defect("a `match` expression arm without a value"));
+                    };
+                    match self.arm_values(arm)? {
+                        None => {
+                            otherwise = Some(boxed(value)?);
+                            break;
+                        }
+                        Some(values) => lowered.push(MatchArm {
+                            values,
+                            value: self.expr(value)?,
+                        }),
+                    }
+                }
+                if lowered.is_empty() && otherwise.is_none() {
+                    return Err(self.defect("a `match` without arms"));
+                }
+                make(ExprKind::Match {
+                    scrutinee: boxed(scrutinee)?,
+                    arms: lowered,
+                    otherwise,
+                })
+            }
             AstExpr::Field { .. } if self.enum_member(expr).is_some() => {
                 let (enumeration, member, code) = self
                     .enum_member(expr)

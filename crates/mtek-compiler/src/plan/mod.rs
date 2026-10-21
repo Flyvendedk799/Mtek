@@ -547,6 +547,17 @@ fn spawned_prefabs(program: &Program, scene: &Scene) -> Vec<Symbol> {
                     expr(lhs, out);
                     expr(rhs, out);
                 }
+                K::Match {
+                    scrutinee,
+                    arms,
+                    otherwise,
+                } => {
+                    expr(scrutinee, out);
+                    arms.iter().for_each(|arm| expr(&arm.value, out));
+                    if let Some(otherwise) = otherwise {
+                        expr(otherwise, out);
+                    }
+                }
                 K::Call { args, .. } | K::Builtin { args, .. } | K::Construct { args } => {
                     args.iter().for_each(|a| expr(a, out));
                 }

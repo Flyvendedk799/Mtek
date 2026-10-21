@@ -840,8 +840,8 @@ fn e0013_reserved_words_as_names() {
         [d(Code::E0013, "type"), d(Code::E0013, "async")]
     );
     assert_eq!(
-        diags("fn f(match: f32) { let enum = 1; }"),
-        [d(Code::E0013, "match"), d(Code::E0013, "enum")]
+        diags("fn f(mod: f32) { let extern = 1; }"),
+        [d(Code::E0013, "mod"), d(Code::E0013, "extern")]
     );
     assert_eq!(
         diags("struct impl { loop: f32; }"),

@@ -572,9 +572,9 @@ fn imported_consts<'a>(
         .collect()
 }
 
-/// The structs `resolution`'s module imports, with their types in the
-/// exporting modules (decision 0035 item 5); a struct of a module not checked
-/// yet (across the closing import of a cycle) is left out.
+/// The structs and enums `resolution`'s module imports, with their types in
+/// the exporting modules (decision 0035 item 5, decision 0129); one of a
+/// module not checked yet (across the closing import of a cycle) is left out.
 fn imported_structs<'a>(
     resolution: &Resolution,
     resolutions: &[Resolution],
@@ -582,13 +582,17 @@ fn imported_structs<'a>(
 ) -> BTreeMap<DefId, ImportedStruct<'a>> {
     resolution
         .imports()
-        .filter(|(_, target)| target.kind == DefKind::Struct)
+        .filter(|(_, target)| matches!(target.kind, DefKind::Struct | DefKind::Enum))
         .filter_map(|(def, target)| {
             let exporter = types.get(target.module.index())?.as_ref()?;
             let exported = resolutions
                 .get(target.module.index())?
                 .def_of(target.node)?;
-            let ty = exporter.struct_ty(exported)?;
+            let ty = if target.kind == DefKind::Enum {
+                exporter.enum_ty(exported)?
+            } else {
+                exporter.struct_ty(exported)?
+            };
             Some((
                 def,
                 ImportedStruct {

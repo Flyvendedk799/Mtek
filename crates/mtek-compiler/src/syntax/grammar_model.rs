@@ -433,22 +433,20 @@ fn words(list: &[&'static str], breaks: &[usize]) -> Expr {
 }
 
 /// The keywords (`Keyword`), in grammar order.
-pub const KEYWORD_WORDS: [&str; 26] = [
-    "bind", "break", "const", "continue", "cpu", "else", "entity", "export", "false", "fn", "for",
-    "if", "import", "in", "let", "material", "on", "param", "prefab", "return", "scene", "self",
-    "state", "struct", "true", "var",
+pub const KEYWORD_WORDS: [&str; 28] = [
+    "bind", "break", "const", "continue", "cpu", "else", "entity", "enum", "export", "false", "fn",
+    "for", "if", "import", "in", "let", "match", "material", "on", "param", "prefab", "return",
+    "scene", "self", "state", "struct", "true", "var",
 ];
 
 /// The words reserved for future use (`Reserved`), in grammar order.
-pub const RESERVED_WORDS_MODEL: [&str; 30] = [
+pub const RESERVED_WORDS_MODEL: [&str; 28] = [
     "as",
     "async",
     "await",
-    "enum",
     "extern",
     "impl",
     "loop",
-    "match",
     "mod",
     "move",
     "mut",
@@ -506,10 +504,11 @@ const CONTEXTUAL_WORDS: &str = "\
 
 const PUNCTUATION: &str = "\
 /* Punctuation and operators */
-/*  {  }  (  )  [  ]  <  >  ,  ;  :  .  ..  ->
+/*  {  }  (  )  [  ]  <  >  ,  ;  :  .  ..  ->  =>
     +  -  *  /  %  !  =  ==  !=  <=  >=  &&  ||  +=  -=  *=  /=
     The lexer also recognises  &  |  ^  ~  <<  >>  so they can be rejected
-    with E1901 (bitwise operators are not in v0.1).                       */";
+    with E1901 (bitwise operators are not in v0.1); '|' also separates the
+    patterns of a match arm (Patterns).                                   */";
 
 const SECTION_2: &str = "\
 /* ---------------------------------------------------------------------
@@ -642,10 +641,10 @@ pub fn grammar() -> GrammarModel {
             ],
         ),
         Blank,
-        lexical("Keyword", words(&KEYWORD_WORDS, &[7, 15, 22])),
+        lexical("Keyword", words(&KEYWORD_WORDS, &[8, 16, 24])),
         Blank,
         commented(
-            lexical("Reserved", words(&RESERVED_WORDS_MODEL, &[8, 16, 23, 29])),
+            lexical("Reserved", words(&RESERVED_WORDS_MODEL, &[6, 14, 21, 27])),
             4,
             33,
             "/* E0013 when used as a name */",
@@ -746,11 +745,12 @@ pub fn grammar() -> GrammarModel {
                                 r("ConstDecl"),
                                 r("FnDecl"),
                                 r("StructDecl"),
+                                r("EnumDecl"),
                                 r("MaterialDecl"),
                                 r("PrefabDecl"),
                                 r("SceneDecl"),
                             ],
-                            &[4],
+                            &[5],
                         )),
                     ]),
                 ],
@@ -821,6 +821,25 @@ pub fn grammar() -> GrammarModel {
         syntax(
             "StructField",
             seq(vec![r("Ident"), lit(":"), r("Type"), lit(";")]),
+        ),
+        Blank,
+        noted(
+            syntax(
+                "EnumDecl",
+                seq(vec![
+                    lit("enum"),
+                    r("Ident"),
+                    lit("{"),
+                    r("Ident"),
+                    star(group(seq(vec![lit(","), r("Ident")]))),
+                    opt(lit(",")),
+                    lit("}"),
+                ]),
+            ),
+            &[
+                "                    /* The Idents in braces are the variants, numbered from 0 in order (decision 0129).",
+                "                       [S: enum-variants: variant names are distinct (E2002)] */",
+            ],
         ),
         Blank,
         Comment(SECTION_3),
@@ -1078,6 +1097,7 @@ pub fn grammar() -> GrammarModel {
                     r("ConstDecl"),
                     r("IfStmt"),
                     r("ForStmt"),
+                    r("MatchStmt"),
                     r("ReturnStmt"),
                     r("BreakStmt"),
                     r("ContinueStmt"),
@@ -1158,6 +1178,40 @@ pub fn grammar() -> GrammarModel {
         ),
         syntax("BreakStmt", seq(vec![lit("break"), lit(";")])),
         syntax("ContinueStmt", seq(vec![lit("continue"), lit(";")])),
+        Blank,
+        syntax(
+            "MatchStmt",
+            seq(vec![
+                lit("match"),
+                r("ExprNoDesc"),
+                lit("{"),
+                plus(r("MatchStmtArm")),
+                lit("}"),
+            ]),
+        ),
+        syntax(
+            "MatchStmtArm",
+            seq(vec![r("Patterns"), lit("=>"), r("Block"), opt(lit(","))]),
+        ),
+        syntax(
+            "Patterns",
+            seq(vec![
+                r("Pattern"),
+                star(group(seq(vec![lit("|"), r("Pattern")]))),
+            ]),
+        ),
+        noted(
+            syntax(
+                "Pattern",
+                alt(vec![lit("_"), seq(vec![r("Ident"), lit("."), r("Ident")])]),
+            ),
+            &[
+                "                    /* Ident '.' Ident names a variant: Enum.Variant (decision 0129).",
+                "                       [S: match-patterns: the value matched is of an enum type (E3203); each Pattern",
+                "                       is a variant of that enum (E3204); every arm can match (E3202); the arms cover",
+                "                       every variant or one is '_' (E3201)] */",
+            ],
+        ),
         Blank,
         Comment(SECTION_7),
         Blank,
@@ -1255,8 +1309,9 @@ pub fn grammar() -> GrammarModel {
                     seq(vec![lit("("), r("Expr"), lit(")")]),
                     r("ArrayLiteral"),
                     r("DescriptorLiteral"),
+                    r("MatchExpr"),
                 ],
-                &[5, 6, 7, 8, 9],
+                &[5, 6, 7, 8, 9, 10],
             ),
         ),
         Blank,
@@ -1286,6 +1341,28 @@ pub fn grammar() -> GrammarModel {
         syntax(
             "DescField",
             seq(vec![r("Ident"), lit(":"), r("FieldValue")]),
+        ),
+        noted(
+            syntax(
+                "MatchExpr",
+                seq(vec![
+                    lit("match"),
+                    r("ExprNoDesc"),
+                    lit("{"),
+                    r("MatchExprArm"),
+                    star(group(seq(vec![lit(","), r("MatchExprArm")]))),
+                    opt(lit(",")),
+                    lit("}"),
+                ]),
+            ),
+            &[
+                "                    /* A 'match' that starts a statement is a MatchStmt. [S: match-arm-types: the",
+                "                       arm values have one type (E3206)] */",
+            ],
+        ),
+        syntax(
+            "MatchExprArm",
+            seq(vec![r("Patterns"), lit("=>"), r("Expr")]),
         ),
         Blank,
         Comment(NO_DESC),
@@ -1351,7 +1428,7 @@ mod tests {
                 );
             }
         }
-        assert_eq!(model.productions().count(), 73);
+        assert_eq!(model.productions().count(), 80);
     }
 
     #[test]

@@ -13,8 +13,8 @@ use super::Parser;
 use super::members::{Member, Place};
 use super::recover::Sync;
 use crate::syntax::ast::{
-    ConstDecl, FnDecl, ImportDecl, Item, ItemKind, MaterialDecl, Module, PrefabDecl, SceneDecl,
-    StrLit, StructDecl, StructField,
+    ConstDecl, EnumDecl, FnDecl, Ident, ImportDecl, Item, ItemKind, MaterialDecl, Module,
+    PrefabDecl, SceneDecl, StrLit, StructDecl, StructField,
 };
 use crate::syntax::token::{TokenKind, TokenValue};
 
@@ -73,6 +73,10 @@ impl Parser<'_> {
             },
             TokenKind::KwStruct => match self.struct_decl() {
                 Some(decl) => ItemKind::Struct(decl),
+                None => ItemKind::Error,
+            },
+            TokenKind::KwEnum => match self.enum_decl() {
+                Some(decl) => ItemKind::Enum(decl),
                 None => ItemKind::Error,
             },
             TokenKind::KwMaterial => match self.material_decl() {
@@ -363,6 +367,67 @@ impl Parser<'_> {
             name,
             ty,
         })
+    }
+
+    // ----- enum --------------------------------------------------------------
+
+    /// `enum Name { Variant, ... }` (decision 0129). A broken header still has
+    /// its variant list read, for its own mistakes, and is then dropped.
+    fn enum_decl(&mut self) -> Option<EnumDecl> {
+        let start = self.span().start;
+        self.bump();
+        let Some(name) = self.ident() else {
+            self.expected("an enum name after `enum`");
+            if self.skip_to_block() {
+                drop(self.enum_variants());
+            }
+            return None;
+        };
+        let variants = self.enum_variants();
+        Some(EnumDecl {
+            id: self.id(),
+            span: self.span_from(start),
+            name,
+            variants,
+        })
+    }
+
+    /// `{ Variant ( ',' Variant )* ','? }`. Without the `{` this reports it
+    /// and answers no variants.
+    fn enum_variants(&mut self) -> Vec<Ident> {
+        let mut variants = Vec::new();
+        if self.kind() != TokenKind::LBrace {
+            self.expected("`{` and the variants of the enum");
+            return variants;
+        }
+        let open = self.span();
+        self.bump();
+        let empty = self.kind() == TokenKind::RBrace;
+        while self.list_has_item(TokenKind::RBrace) {
+            let parsed = if let Some(variant) = self.ident() {
+                variants.push(variant);
+                true
+            } else {
+                self.expected("a variant name or `}`");
+                false
+            };
+            if !self.list_continues(TokenKind::Comma, TokenKind::RBrace, parsed) {
+                break;
+            }
+        }
+        self.expect_close(open, TokenKind::RBrace);
+        if empty {
+            self.report_empty_enum(open);
+        }
+        variants
+    }
+
+    #[inline(never)]
+    fn report_empty_enum(&mut self, open: Span) {
+        let diagnostic = Diagnostic::new(Code::E1001, "An enum needs at least one variant.")
+            .at(self.span_from(open.start))
+            .help("list the variants separated by commas: `enum State { Menu, Playing }`");
+        self.error(diagnostic);
     }
 
     // ----- material, prefab, scene -------------------------------------------

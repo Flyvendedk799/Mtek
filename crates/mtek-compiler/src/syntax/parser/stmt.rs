@@ -97,6 +97,7 @@ impl Parser<'_> {
             TokenKind::KwConst => self.const_stmt(),
             TokenKind::KwIf => self.if_statement(),
             TokenKind::KwFor => self.for_stmt(),
+            TokenKind::KwMatch => self.match_stmt(),
             TokenKind::KwReturn => self.return_stmt(),
             TokenKind::KwBreak | TokenKind::KwContinue => self.jump_stmt(),
             TokenKind::LBrace => self.block_stmt(),

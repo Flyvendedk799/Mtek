@@ -157,6 +157,8 @@ pub enum ItemKind {
     Const(ConstDecl),
     Fn(FnDecl),
     Struct(StructDecl),
+    /// `enum Name { A, B }` (decision 0129).
+    Enum(EnumDecl),
     Material(MaterialDecl),
     Prefab(PrefabDecl),
     Scene(SceneDecl),
@@ -224,6 +226,17 @@ pub struct StructField {
     pub span: Span,
     pub name: Ident,
     pub ty: Type,
+}
+
+/// `enum Name { Variant, ... }` (decision 0129): a closed set of named
+/// values. The variants are ordinary [`Ident`]s in declaration order; a value
+/// is written `Name.Variant`.
+#[derive(Clone, PartialEq, Debug)]
+pub struct EnumDecl {
+    pub id: NodeId,
+    pub span: Span,
+    pub name: Ident,
+    pub variants: Vec<Ident>,
 }
 
 // ---------------------------------------------------------------------------
@@ -477,6 +490,8 @@ pub enum Stmt {
     Break(JumpStmt),
     Continue(JumpStmt),
     Block(Block),
+    /// `match value { Pattern => { ... } ... }` (decision 0129).
+    Match(MatchStmt),
     /// `place op= value;`
     Assign(AssignStmt),
     /// An expression used as a statement (valid only for calls, `E1020`).
@@ -529,6 +544,52 @@ pub enum ForIter {
     Range { start: Expr, end: Expr },
     /// An array.
     Each(Expr),
+}
+
+/// `match value { arms }` used as a statement: every arm body is a block.
+#[derive(Clone, PartialEq, Debug)]
+pub struct MatchStmt {
+    pub id: NodeId,
+    pub span: Span,
+    pub scrutinee: Expr,
+    pub arms: Vec<MatchArm>,
+}
+
+/// One arm of a `match`: one or more patterns separated by `|`, `=>`, and
+/// the arm's body (a block in a statement, an expression in an expression).
+#[derive(Clone, PartialEq, Debug)]
+pub struct MatchArm {
+    pub id: NodeId,
+    pub span: Span,
+    pub patterns: Vec<Pattern>,
+    pub body: ArmBody,
+}
+
+/// The body of a [`MatchArm`].
+#[derive(Clone, PartialEq, Debug)]
+pub enum ArmBody {
+    /// The arm of a `match` statement.
+    Block(Block),
+    /// The arm of a `match` expression.
+    Expr(Box<Expr>),
+}
+
+/// A pattern of a `match` arm.
+#[derive(Clone, PartialEq, Debug)]
+pub struct Pattern {
+    pub id: NodeId,
+    pub span: Span,
+    pub kind: PatternKind,
+}
+
+/// The forms of a [`Pattern`].
+#[derive(Clone, PartialEq, Debug)]
+pub enum PatternKind {
+    /// `_`: matches every value.
+    Wildcard,
+    /// `Enum.Variant`, kept as the field expression it is written as, so
+    /// that names resolve and type like any other enum value.
+    Value(Box<Expr>),
 }
 
 /// `return expr;` or `return;`.
@@ -668,6 +729,12 @@ pub enum ExprKind {
         base: Box<Expr>,
         index: Box<Expr>,
     },
+    /// `match scrutinee { Pattern => value, ... }` (decision 0129); every arm
+    /// body is [`ArmBody::Expr`].
+    Match {
+        scrutinee: Box<Expr>,
+        arms: Vec<MatchArm>,
+    },
     /// An expression the parser could not build, or a literal the lexer
     /// already reported as malformed.
     Error,
@@ -751,6 +818,7 @@ impl_node!(
     Param,
     StructDecl,
     StructField,
+    EnumDecl,
     MaterialDecl,
     ParamDecl,
     StageFn,
@@ -773,6 +841,9 @@ impl_node!(
     JumpStmt,
     AssignStmt,
     ExprStmt,
+    MatchStmt,
+    MatchArm,
+    Pattern,
     Expr,
     DescField,
 );
@@ -813,6 +884,7 @@ impl_node_for_enum!(Stmt {
     Break,
     Continue,
     Block,
+    Match,
     Assign,
     Expr,
     Error

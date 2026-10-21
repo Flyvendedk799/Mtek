@@ -130,6 +130,12 @@ catalogue! {
     W3081 Warning "unreachable code",
     E3090 Error "not a constant expression",
     E3102 Error "field or parameter type mismatch",
+    E3201 Error "non-exhaustive match",
+    E3202 Error "unreachable match arm",
+    E3203 Error "match on a value that is not an enum",
+    E3204 Error "invalid match pattern",
+    E3205 Error "unknown enum variant",
+    E3206 Error "match arms of different types",
     // 5.4 Functions, effects, stages (`4xxx`)
     E4001 Error "recursion not supported",
     E4002 Error "impure call from pure function",

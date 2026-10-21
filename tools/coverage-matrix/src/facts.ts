@@ -192,6 +192,10 @@ function exprFact(ctx: Context, node: JsonObject): void {
       add(ctx, `expr/body-target:${str(obj(node, "target"), "kind") ?? "entity"}`);
       break;
     }
+    case "match":
+      // A `match` expression (decision 0129); the statement form lowers to `if` and leaves no node.
+      add(ctx, "match");
+      break;
     case "frame": {
       const member = str(node, "member");
       add(ctx, "namespace:frame");

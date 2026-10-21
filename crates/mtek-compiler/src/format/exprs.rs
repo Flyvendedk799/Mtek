@@ -91,6 +91,7 @@ impl Printer<'_> {
                 let trailing = self.trailing_comments(closing(expr.span));
                 Doc::concat(vec![base, Doc::text("["), index, trailing, Doc::text("]")])
             }
+            ExprKind::Match { scrutinee, arms } => self.match_doc(scrutinee, arms, expr.span.end),
         }
     }
 

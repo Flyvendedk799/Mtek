@@ -731,6 +731,16 @@ pub enum ExprKind {
         prefab: Symbol,
         params: Vec<NamedExpr>,
     },
+    /// A `match` expression on a value of a user enum (decision 0129), which the IR sees as the
+    /// `u32` index of its variant. The scrutinee is evaluated once; the first arm one of whose
+    /// `values` equals it gives the value, and `otherwise` (the `_` arm) any other. Without
+    /// `otherwise` the arms cover every variant. CPU only: enums have no GPU form.
+    Match {
+        scrutinee: Box<Expr>,
+        arms: Vec<MatchArm>,
+        #[serde(rename = "else")]
+        otherwise: Option<Box<Expr>>,
+    },
     /// An `entity_ref` to the entity `entity` of the scene (or, in a prefab body, `self`:
     /// entity 0): a named entity used as a value, or `self` (decision 0064).
     EntityRef { entity: u32 },
@@ -744,6 +754,14 @@ pub enum BodyTarget {
     Entity { entity: u32 },
     /// An `entity_ref` value; the runtime checks its body kind (`E8101`).
     Ref { target: Box<Expr> },
+}
+
+/// One arm of a [`ExprKind::Match`]: the variant indices it matches and its value.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MatchArm {
+    pub values: Vec<u32>,
+    pub value: Expr,
 }
 
 /// A named field value of a struct or descriptor literal.

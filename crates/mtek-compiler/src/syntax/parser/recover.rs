@@ -57,6 +57,7 @@ pub(super) fn is_item_keyword(kind: TokenKind) -> bool {
             | TokenKind::KwFn
             | TokenKind::KwCpu
             | TokenKind::KwStruct
+            | TokenKind::KwEnum
             | TokenKind::KwMaterial
             | TokenKind::KwPrefab
             | TokenKind::KwScene
@@ -77,6 +78,7 @@ pub(super) fn starts_expression(kind: TokenKind) -> bool {
             | TokenKind::KwFalse
             | TokenKind::KwSelf
             | TokenKind::KwBind
+            | TokenKind::KwMatch
             | TokenKind::Ident
             | TokenKind::Underscore
             | TokenKind::LParen
@@ -235,6 +237,7 @@ impl Parser<'_> {
                     TokenKind::KwLet
                         | TokenKind::KwVar
                         | TokenKind::KwIf
+                        | TokenKind::KwMatch
                         | TokenKind::KwFor
                         | TokenKind::KwReturn
                         | TokenKind::KwBreak
@@ -341,6 +344,7 @@ impl Parser<'_> {
             TokenKind::KwFn
                 | TokenKind::KwCpu
                 | TokenKind::KwStruct
+                | TokenKind::KwEnum
                 | TokenKind::KwPrefab
                 | TokenKind::KwScene
                 | TokenKind::KwImport

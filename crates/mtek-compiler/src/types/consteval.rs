@@ -35,7 +35,8 @@ use crate::diagnostics::{Code, Diagnostic};
 use crate::resolve::{DefId, DefKind, Res};
 use crate::source::Span;
 use crate::syntax::ast::{
-    ArrayLengthKind, DescField, Expr, ExprKind, FieldValue, Type, TypeKind, UnaryOp,
+    ArmBody, ArrayLengthKind, DescField, Expr, ExprKind, FieldValue, MatchArm, PatternKind, Type,
+    TypeKind, UnaryOp,
 };
 
 /// The outcome of folding one expression.
@@ -250,6 +251,19 @@ impl Checker<'_> {
                 }
             }
             ExprKind::Field { base, .. } => self.constant_uses(base, uses),
+            ExprKind::Match { scrutinee, arms } => {
+                self.constant_uses(scrutinee, uses);
+                for arm in arms {
+                    for pattern in &arm.patterns {
+                        if let PatternKind::Value(value) = &pattern.kind {
+                            self.constant_uses(value, uses);
+                        }
+                    }
+                    if let ArmBody::Expr(value) = &arm.body {
+                        self.constant_uses(value, uses);
+                    }
+                }
+            }
             ExprKind::Array(items) => {
                 for item in items {
                     self.constant_uses(item, uses);
@@ -503,6 +517,7 @@ impl Checker<'_> {
                 })
             }
             ExprKind::Index { base, index } => self.fold_index(expr, base, index),
+            ExprKind::Match { scrutinee, arms } => self.fold_match(expr, scrutinee, arms),
             // `self` is gated in this build; `Error` nodes were reported.
             ExprKind::SelfValue | ExprKind::Error => Folded::Unknown,
         }
@@ -697,6 +712,8 @@ impl Checker<'_> {
                 Folded::NotConstant(reason) => Folded::NotConstant(reason),
                 _ => Folded::Unknown,
             },
+            // A variant is the constant its index is (decision 0129).
+            FieldKind::EnumVariant { index, .. } => Folded::Value(ConstValue::U32(index)),
             FieldKind::StructField(name) => {
                 let base = self.fold(base);
                 self.combine(expr, vec![base], |values| match values {
@@ -709,6 +726,45 @@ impl Checker<'_> {
                 })
             }
         }
+    }
+
+    /// A `match` expression (decision 0129): every arm value is folded (each
+    /// is a constant expression in its own right); with a constant
+    /// scrutinee the match is the value of the arm it selects.
+    fn fold_match(&mut self, expr: &Expr, scrutinee: &Expr, arms: &[MatchArm]) -> Folded {
+        let selector = self.fold(scrutinee);
+        let mut values: Vec<(Vec<Option<u32>>, Folded)> = Vec::with_capacity(arms.len());
+        for arm in arms {
+            let patterns = arm
+                .patterns
+                .iter()
+                .map(|pattern| match &pattern.kind {
+                    PatternKind::Wildcard => None,
+                    PatternKind::Value(value) => match self.fields.get(&value.id) {
+                        Some(FieldKind::EnumVariant { index, .. }) => Some(*index),
+                        // Not a variant: reported (`E3204`); it never matches.
+                        _ => Some(u32::MAX),
+                    },
+                })
+                .collect();
+            let folded = match &arm.body {
+                ArmBody::Expr(value) => self.fold(value),
+                ArmBody::Block(_) => Folded::Unknown,
+            };
+            values.push((patterns, folded));
+        }
+        let index = match selector {
+            Folded::Value(ConstValue::U32(index)) => index,
+            Folded::Value(_) | Folded::Unknown => return Folded::Unknown,
+            Folded::NotConstant(reason) => return Folded::NotConstant(reason),
+        };
+        if self.typed(expr).is_none() {
+            return Folded::Unknown;
+        }
+        values
+            .into_iter()
+            .find(|(patterns, _)| patterns.iter().any(|p| p.is_none_or(|p| p == index)))
+            .map_or(Folded::Unknown, |(_, folded)| folded)
     }
 
     /// `base[index]`: a constant index out of range is `E3030` whether or

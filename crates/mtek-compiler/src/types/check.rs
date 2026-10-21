@@ -55,9 +55,9 @@ use crate::stdlib::{
     registry,
 };
 use crate::syntax::ast::{
-    ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr,
-    ExprKind, FieldInit, FieldValue, Ident, ItemKind, MaterialDecl, Module, NodeId, SceneDecl,
-    SceneMember, SceneObject, StructDecl, Type, TypeKind as AstTypeKind, UnaryOp,
+    ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember,
+    EnumDecl, Expr, ExprKind, FieldInit, FieldValue, Ident, ItemKind, MaterialDecl, Module, NodeId,
+    SceneDecl, SceneMember, SceneObject, StructDecl, Type, TypeKind as AstTypeKind, UnaryOp,
 };
 
 /// Whether a literal expression is made of integer literals only, or holds a
@@ -191,6 +191,9 @@ pub enum FieldKind {
     NamespaceValue(String),
     /// A field of a user struct value.
     StructField(String),
+    /// A variant of a user enum (`GameState.Menu`, decision 0129), with its
+    /// index in declaration order: a constant, the `u32` the enum erases to.
+    EnumVariant { variant: String, index: u32 },
     /// A field of a registry record value (`input.uv` of a `SurfaceInput`,
     /// decision 0039), with its position in the record.
     RecordField { field: &'static str, index: usize },
@@ -229,6 +232,8 @@ pub(super) struct Checker<'a> {
     pub(super) struct_decls: BTreeMap<DefId, &'a StructDecl>,
     /// Struct declarations already checked.
     pub(super) struct_done: BTreeSet<DefId>,
+    /// Every enum declaration of the module, by its `DefId` (decision 0129).
+    pub(super) enum_decls: BTreeMap<DefId, &'a EnumDecl>,
     /// The types of imported structs, by the `DefId` of the imported name
     /// (seeded by [`super::check_module_with_imports`]).
     pub(super) imported_structs: BTreeMap<DefId, TyId>,
@@ -319,6 +324,7 @@ impl<'a> Checker<'a> {
             fields: BTreeMap::new(),
             struct_decls: BTreeMap::new(),
             struct_done: BTreeSet::new(),
+            enum_decls: BTreeMap::new(),
             imported_structs: BTreeMap::new(),
             struct_literals: BTreeMap::new(),
             imported_fns: BTreeMap::new(),
@@ -431,6 +437,15 @@ impl<'a> Checker<'a> {
     /// Every constant of the module, of its scenes and of their entities: the
     /// constants that code this build checks can refer to.
     fn collect_constants(&mut self, module: &'a Module) {
+        // Enum types first: they have no dependencies, and struct fields,
+        // constants and signatures may name them.
+        for item in &module.items {
+            if let ItemKind::Enum(decl) = &item.kind
+                && construct_implemented(Construct::Enum)
+            {
+                self.collect_enum(decl);
+            }
+        }
         for item in &module.items {
             match &item.kind {
                 ItemKind::Const(decl) => self.collect_constant(decl),
@@ -633,9 +648,12 @@ impl<'a> Checker<'a> {
                     );
                     TyId::ERROR
                 }
-                // A user struct, of this module or imported; anything else was
-                // reported by the resolver.
-                Some(Res::Def(id)) => self.struct_type(id).unwrap_or(TyId::ERROR),
+                // A user struct or enum, of this module or imported; anything
+                // else was reported by the resolver.
+                Some(Res::Def(id)) => match self.struct_type(id) {
+                    Some(ty) => ty,
+                    None => self.enum_type(id).unwrap_or(TyId::ERROR),
+                },
                 _ => TyId::ERROR,
             },
             AstTypeKind::Generic {
@@ -1015,6 +1033,7 @@ impl<'a> Checker<'a> {
             ExprKind::Binary { op, lhs, rhs, .. } => self.binary(expr, *op, lhs, rhs, expected),
             ExprKind::Call { callee, args } => self.call(expr, callee, args, expected),
             ExprKind::Field { base, name } => self.field(expr, base, name),
+            ExprKind::Match { scrutinee, arms } => self.match_expr(expr, scrutinee, arms, expected),
         }
     }
 
@@ -1046,6 +1065,7 @@ impl<'a> Checker<'a> {
             | DefKind::Scene
             | DefKind::Fn
             | DefKind::Struct
+            | DefKind::Enum
             | DefKind::Material
             | DefKind::Prefab => {
                 let (name, noun, span) = (def.name.clone(), def.kind.noun(), def.span);
@@ -1139,7 +1159,12 @@ impl<'a> Checker<'a> {
         };
         if matches!(
             target.kind,
-            DefKind::Scene | DefKind::Fn | DefKind::Struct | DefKind::Material | DefKind::Prefab
+            DefKind::Scene
+                | DefKind::Fn
+                | DefKind::Struct
+                | DefKind::Enum
+                | DefKind::Material
+                | DefKind::Prefab
         ) {
             let name = self
                 .res
@@ -2503,6 +2528,9 @@ impl<'a> Checker<'a> {
             }
             Some(Res::Error) => return TyId::ERROR,
             _ => {}
+        }
+        if let Some(ty) = self.enum_variant(expr, base, name) {
+            return ty;
         }
         if let Some(ty) = self.body_property_read(expr, base, name) {
             return ty;

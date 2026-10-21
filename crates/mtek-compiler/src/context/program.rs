@@ -17,7 +17,7 @@ use super::capabilities::{feature_name, prelude_feature};
 use crate::resolve::{Construct, DefId, DefKind, PreludeItem, Res, Resolution};
 use crate::source::{SourceFile, Span};
 use crate::syntax::ast::{
-    ConstDecl, EntityDecl, EntityMember, FnDecl, Ident, Item, ItemKind, MaterialDecl,
+    ConstDecl, EntityDecl, EntityMember, EnumDecl, FnDecl, Ident, Item, ItemKind, MaterialDecl,
     MaterialMember, Module, NodeId, ParamDecl, SceneDecl, SceneMember, SceneObject, StateDecl,
     StructDecl, Type,
 };
@@ -195,6 +195,7 @@ impl Collector<'_, '_> {
             }
             ItemKind::Fn(decl) => self.function(item, decl),
             ItemKind::Struct(decl) => self.structure(item, decl),
+            ItemKind::Enum(decl) => self.enumeration(item, decl),
             ItemKind::Material(decl) => self.material(item, decl),
             ItemKind::Prefab(decl) => {
                 let index = self.push(Spec {
@@ -296,6 +297,20 @@ impl Collector<'_, '_> {
             start: item.span.start,
             extent: item.span,
             features: vec![feature_name(Construct::Struct)],
+        });
+    }
+
+    fn enumeration(&mut self, item: &Item, decl: &EnumDecl) {
+        let variants: Vec<&str> = decl.variants.iter().map(|v| v.name.as_str()).collect();
+        self.push(Spec {
+            parent: None,
+            name: &decl.name,
+            node: decl.id,
+            kind: "enum",
+            ty: format!("enum {{ {} }}", variants.join(", ")),
+            start: item.span.start,
+            extent: item.span,
+            features: vec![feature_name(Construct::Enum)],
         });
     }
 

@@ -91,6 +91,8 @@ pub(super) fn type_name(types: &Typeck, file_paths: &BTreeMap<FileId, String>, t
             (Some(def), Some(path)) => qualified_name(path, &def.name),
             _ => types.display(ty),
         },
+        // A user enum is the `u32` index of its variant (decision 0129).
+        Ty::UserEnum(_) => types.display(TyId::U32),
         _ => types.display(ty),
     }
 }
@@ -268,7 +270,8 @@ fn lower_module(
                 marks.extend(scene_marks);
                 items.push(Item::Scene(scene));
             }
-            ItemKind::Import(_) => {}
+            // An enum has no item of its own: its values are `u32` constants (decision 0129).
+            ItemKind::Import(_) | ItemKind::Enum(_) => {}
             ItemKind::Struct(decl) => {
                 let symbol = Symbol::item(&path, &decl.name.name);
                 items.push(Item::Struct(lowering.structure(decl, symbol)?));

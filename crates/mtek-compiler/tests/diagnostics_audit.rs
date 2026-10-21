@@ -255,6 +255,16 @@ const RELATED_REQUIRED: &[(&str, Option<&str>, &str)] = &[
     ),
     ("E3080", None, "the written result type"),
     (
+        "E3202",
+        None,
+        "the earlier pattern that makes the arm unreachable",
+    ),
+    (
+        "E3206",
+        None,
+        "the first arm, whose type the others must have",
+    ),
+    (
         "E4001",
         None,
         "section 5.4: the call cycle in related spans",

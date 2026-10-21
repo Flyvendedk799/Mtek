@@ -61,6 +61,12 @@ export const AREAS: readonly Area[] = [
     codes: ["E3020", "E3021", "E3022", "E3023"],
   },
   {
+    id: "enums",
+    title: "Enums and match",
+    features: ["enums", "match"],
+    codes: ["E2002", "E3201", "E3202", "E3203", "E3204", "E3205", "E3206", "E4011"],
+  },
+  {
     id: "arrays",
     title: "Arrays and indexing",
     features: ["arrays", "indexing", "type:array"],

@@ -110,6 +110,9 @@ fn declaration_where_instead(kind: TokenKind, next: &str, place: Place) -> Optio
         TokenKind::KwFn | TokenKind::KwCpu => Some(
             "declare functions at the top level of the file, outside the scene, entity or block, and call them from there",
         ),
+        TokenKind::KwEnum => {
+            Some("declare enums at the top level of the file, outside the scene, entity or block")
+        }
         TokenKind::KwStruct | TokenKind::KwMaterial => {
             Some("declare structs and materials at the top level of the file, outside the scene")
         }

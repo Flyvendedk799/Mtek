@@ -196,6 +196,11 @@ pub(super) fn decl_signature(view: &ModuleView<'_>, def: &Def) -> Option<String>
                 format!("struct {name} {{\n{}\n}}", fields.join("\n"))
             }
         }
+        DefKind::Enum => {
+            let id = types.enum_ty(def.id)?;
+            let variants = types.interner().enum_def(id)?.variants.join(", ");
+            format!("enum {name} {{ {variants} }}")
+        }
         DefKind::Material => {
             let info = types.material(def.id)?;
             let params: Vec<String> = info

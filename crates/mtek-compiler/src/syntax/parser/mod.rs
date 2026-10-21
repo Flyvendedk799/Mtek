@@ -54,6 +54,7 @@ mod expr;
 #[cfg(test)]
 mod expr_tests;
 mod items;
+mod matching;
 mod members;
 mod recover;
 mod stmt;

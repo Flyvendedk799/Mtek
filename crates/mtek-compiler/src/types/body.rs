@@ -34,8 +34,8 @@ use crate::diagnostics::{Code, Diagnostic};
 use crate::resolve::{Def, DefId, DefKind, Res};
 use crate::source::Span;
 use crate::syntax::ast::{
-    AssignOp, AssignStmt, Block, ElseBranch, Expr, ExprKind, FnDecl, ForIter, ForStmt, IfStmt,
-    LocalDecl, NodeId, Stmt,
+    ArmBody, AssignOp, AssignStmt, Block, ElseBranch, Expr, ExprKind, FnDecl, ForIter, ForStmt,
+    IfStmt, LocalDecl, MatchStmt, NodeId, Stmt,
 };
 
 /// The state of the body being checked.
@@ -99,6 +99,7 @@ fn stmt_span(stmt: &Stmt) -> Span {
         Stmt::Block(block) => block.span,
         Stmt::Assign(stmt) => stmt.span,
         Stmt::Expr(stmt) => stmt.span,
+        Stmt::Match(stmt) => stmt.span,
         Stmt::Error(node) => node.span,
     }
 }
@@ -122,6 +123,13 @@ impl<'a> Checker<'a> {
                 }
                 Stmt::Block(inner) => self.collect_block_constants(inner),
                 Stmt::For(stmt) => self.collect_block_constants(&stmt.body),
+                Stmt::Match(stmt) => {
+                    for arm in &stmt.arms {
+                        if let ArmBody::Block(block) = &arm.body {
+                            self.collect_block_constants(block);
+                        }
+                    }
+                }
                 Stmt::If(stmt) => {
                     let mut current = stmt;
                     loop {
@@ -279,7 +287,13 @@ impl<'a> Checker<'a> {
     }
 
     /// Record a declaration of a type that has no GPU representation.
-    fn cpu_only_site(&mut self, span: Span, what: String, ty: TyId, value: Option<Span>) {
+    pub(super) fn cpu_only_site(
+        &mut self,
+        span: Span,
+        what: String,
+        ty: TyId,
+        value: Option<Span>,
+    ) {
         if self.gpu_representable(ty) {
             return;
         }
@@ -338,6 +352,7 @@ impl<'a> Checker<'a> {
                 | Ty::EntityRef
                 | Ty::GlbAsset
                 | Ty::Enum(_)
+                | Ty::UserEnum(_)
                 | Ty::Schema(_)
                 | Ty::Descriptor(_)
                 | Ty::PrefabDescriptor
@@ -422,6 +437,7 @@ impl<'a> Checker<'a> {
                 what: "a `continue`",
             }),
             Stmt::Block(block) => self.block(block),
+            Stmt::Match(stmt) => self.match_stmt(stmt),
             Stmt::Assign(assign) => {
                 self.assign(assign);
                 None
@@ -541,6 +557,34 @@ impl<'a> Checker<'a> {
             returns: every_branch_returns,
             span: stmt.span,
             what: "an `if` whose every branch leaves the block",
+        })
+    }
+
+    /// A `match` statement (decision 0129): the patterns as for a `match`
+    /// expression, then each arm's block. It always leaves when it covers
+    /// every variant and every arm leaves.
+    fn match_stmt(&mut self, stmt: &MatchStmt) -> Option<Exit> {
+        let coverage = self.match_patterns(stmt.span, &stmt.scrutinee, &stmt.arms);
+        self.fold_in_body(&stmt.scrutinee);
+        let mut every_arm_leaves = !stmt.arms.is_empty();
+        let mut every_arm_returns = true;
+        for arm in &stmt.arms {
+            let exit = match &arm.body {
+                ArmBody::Block(block) => self.block(block),
+                // The parser gives a `match` statement block arms only.
+                ArmBody::Expr(value) => {
+                    self.check(value, None);
+                    self.fold_in_body(value);
+                    None
+                }
+            };
+            every_arm_leaves &= exit.is_some();
+            every_arm_returns &= exit.is_some_and(|e| e.returns);
+        }
+        (coverage.exhaustive && every_arm_leaves).then_some(Exit {
+            returns: every_arm_returns,
+            span: stmt.span,
+            what: "a `match` whose every arm leaves the block",
         })
     }
 

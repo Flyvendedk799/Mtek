@@ -752,7 +752,7 @@ fn declared_fields(
 }
 
 const STATEMENT_KEYWORDS: &[&str] = &[
-    "let", "var", "const", "if", "for", "return", "break", "continue",
+    "let", "var", "const", "if", "for", "return", "break", "continue", "match",
 ];
 const LIFECYCLE_KEYWORDS: &[&str] = &["update", "fixed_update"];
 
@@ -774,7 +774,8 @@ fn member_start_candidates(
     let written = written_fields(view, owner, anchor);
     match owner.kind {
         "module" => keywords(&[
-            "import", "export", "const", "fn", "cpu", "struct", "material", "prefab", "scene",
+            "import", "export", "const", "fn", "cpu", "struct", "enum", "material", "prefab",
+            "scene",
         ]),
         "scene" => {
             let mut out = schema_fields(registry.declaration_schemas.scene, &written, 0);

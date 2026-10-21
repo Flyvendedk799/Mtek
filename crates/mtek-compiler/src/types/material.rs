@@ -291,6 +291,7 @@ impl<'a> Checker<'a> {
                 | Ty::GlbAsset
                 | Ty::Record(_)
                 | Ty::Enum(_)
+                | Ty::UserEnum(_)
                 | Ty::Schema(_)
                 | Ty::Descriptor(_)
                 | Ty::PrefabDescriptor

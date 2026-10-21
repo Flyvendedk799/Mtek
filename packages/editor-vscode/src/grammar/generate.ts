@@ -37,11 +37,12 @@ export interface TmGrammar {
 const LANG = "mtek";
 
 /** Keywords that steer control flow. */
-const CONTROL = ["break", "continue", "else", "for", "if", "in", "return"];
+const CONTROL = ["break", "continue", "else", "for", "if", "in", "match", "return"];
 /** Keywords that start a declaration or a member. */
 const DECLARATION = [
   "const",
   "entity",
+  "enum",
   "fn",
   "let",
   "material",
@@ -63,6 +64,7 @@ const BOOLEAN = ["true", "false"];
 const DECLARES_NAME: Record<string, string> = {
   fn: `entity.name.function.${LANG}`,
   struct: `entity.name.type.struct.${LANG}`,
+  enum: `entity.name.type.enum.${LANG}`,
   material: `entity.name.type.material.${LANG}`,
   scene: `entity.name.type.scene.${LANG}`,
   entity: `entity.name.type.entity.${LANG}`,
@@ -76,6 +78,7 @@ const DECLARES_NAME: Record<string, string> = {
 
 const OPERATOR_SCOPES: Record<string, string> = {
   "->": `keyword.operator.arrow.${LANG}`,
+  "=>": `keyword.operator.arrow.${LANG}`,
   "..": `keyword.operator.range.${LANG}`,
   "==": `keyword.operator.comparison.${LANG}`,
   "!=": `keyword.operator.comparison.${LANG}`,
