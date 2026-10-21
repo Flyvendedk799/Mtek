@@ -1045,14 +1045,20 @@ impl FnLowering<'_, '_> {
                     .member("goTo")
                     .call(vec![Expr::string(name), Expr::Num(Number::U32(span_id))])
             }
-            // `reset()`, `pause()`, `resume()` and `paused()` (decisions 0140 and 0143).
+            // `reset()`, `pause()`, `resume()` and `paused()` (decisions 0140 and 0143); `save()`,
+            // `load()` and `clear_saved()` (decision 0145).
             ir::ExprKind::Builtin { function, args }
-                if matches!(function.as_str(), "reset" | "pause" | "resume" | "paused") =>
+                if matches!(
+                    function.as_str(),
+                    "reset" | "pause" | "resume" | "paused" | "save" | "load" | "clear_saved"
+                ) =>
             {
                 let _ = args;
-                Expr::ident("ctx")
-                    .member(function.as_str())
-                    .call(Vec::new())
+                let member = match function.as_str() {
+                    "clear_saved" => "clearSaved",
+                    other => other,
+                };
+                Expr::ident("ctx").member(member).call(Vec::new())
             }
             ir::ExprKind::Builtin { function, args } => {
                 let types: Vec<&str> = args.iter().map(|a| a.ty.as_str()).collect();

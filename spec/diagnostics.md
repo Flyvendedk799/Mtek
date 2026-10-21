@@ -266,7 +266,12 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5202"></a>E5202 | shared state outside a scene | `shared state` in an entity or a prefab; only a scene's state carries over to another scene (decision 0141) |
 | <a id="mtek-e5203"></a>E5203 | shared state of a type that cannot carry over | a `shared state` whose type holds an `entity_ref`, a resource or a descriptor, which belong to one scene (decision 0141) |
 | <a id="mtek-e5204"></a>E5204 | shared state with different types | two scenes declare a `shared state` of the same name with different types; a related span at the other one (decision 0141) |
+| <a id="mtek-e5210"></a>E5210 | persistent state outside a scene | `saved state` or `setting state` in an entity or a prefab; only a scene's state is kept in storage (decision 0145) |
+| <a id="mtek-e5211"></a>E5211 | persistent state of a type that cannot be stored | a `saved state` or `setting state` whose type holds an `entity_ref`, a resource or a descriptor, which have no meaning in a later run (decision 0145) |
+| <a id="mtek-e5212"></a>E5212 | persistent state with different types or kinds | two scenes declare a persistent state of the same name with different types, or one `saved` and the other `setting`; a related span at the other one (decisions 0145 and 0146) |
 | <a id="mtek-e5401"></a>E5401 | scene change failed | run time: the scene of `go_to` or `reset()` could not be loaded or started (its module or manifest is missing or invalid); the current scene keeps running, the notes carry the underlying diagnostics (decision 0141) |
+| <a id="mtek-w5402"></a>W5402 | saved data ignored | run time: a stored value is unreadable, of another type than the state now has, or of another shape; the state keeps its value, reported once per state (decision 0145) |
+| <a id="mtek-w5403"></a>W5403 | saving failed | run time: the browser's storage refused the write (full or disabled), or the page has no usable `localStorage` and the values last only until it closes (decision 0145) |
 | <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** retired by decision 0141: `go_to(Scene)` switches the active scene, so no program produces it; the code is kept so that the number is not reused |
 | <a id="mtek-e5902"></a>E5902 | transparency not supported | **Reserved:** v0.1 has only opaque materials and no construct that asks for transparency, so no program produces it |
 

@@ -858,6 +858,10 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
     rows.push(("pause", &["() -> ()"], Domain::Cpu, false));
     rows.push(("resume", &["() -> ()"], Domain::Cpu, false));
     rows.push(("paused", &["() -> bool"], Domain::Cpu, false));
+    // Saved state and settings (decisions 0145 and 0146).
+    rows.push(("save", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("load", &["() -> bool"], Domain::Cpu, false));
+    rows.push(("clear_saved", &["() -> ()"], Domain::Cpu, false));
     rows
 }
 
@@ -889,7 +893,17 @@ fn every_intrinsic_row_of_section_6_is_present() {
     assert!(note("random").contains("xoshiro128**"));
     assert!(note("normalize").contains("zero vector"));
     // spawn and destroy are for handlers only.
-    for name in ["spawn", "destroy", "go_to", "reset", "pause", "resume"] {
+    for name in [
+        "spawn",
+        "destroy",
+        "go_to",
+        "reset",
+        "pause",
+        "resume",
+        "save",
+        "load",
+        "clear_saved",
+    ] {
         assert!(registry.intrinsic(name).unwrap().handlers_only, "{name}");
     }
     assert!(!registry.intrinsic("alive").unwrap().handlers_only);

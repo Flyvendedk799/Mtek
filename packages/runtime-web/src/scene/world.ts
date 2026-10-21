@@ -70,6 +70,9 @@ export const CONTEXT_MEMBERS = [
   "paused",
   "after",
   "every",
+  "save",
+  "load",
+  "clearSaved",
 ] as const;
 
 /**
@@ -145,7 +148,7 @@ export interface CpuServices {
   isKeyDown(code: string): boolean;
   /** `print`: development console output; `spanId` indexes the manifest spans table. */
   print(message: string, spanId: number): void;
-  /** `go_to`, `reset`, `pause`, `resume`, `paused` (decisions 0140, 0141, 0143); default: {@link INERT_GAME}. */
+  /** `go_to`, `reset`, `pause`, `resume`, `paused` (decisions 0140, 0141, 0143), `save`, `load`, `clear_saved` (0145); default: {@link INERT_GAME}. */
   readonly game?: GameHooks;
 }
 
@@ -468,6 +471,13 @@ export class World {
         game.resume();
       },
       paused: (): boolean => game.paused(),
+      save: (): void => {
+        game.save();
+      },
+      load: (): boolean => game.load(),
+      clearSaved: (): void => {
+        game.clearSaved();
+      },
       after: (seconds: unknown, fn: unknown, owner: unknown, spanId: unknown): void => {
         this.timers.after(seconds, fn, timerOwner(owner), spanId);
       },

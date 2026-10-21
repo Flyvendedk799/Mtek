@@ -388,6 +388,7 @@ fn scene(b: &mut Build) -> Item {
         id: b.id(),
         span: b.span(),
         shared: None,
+        persist: None,
         name: state_name,
         ty: state_ty,
         value: state_value,

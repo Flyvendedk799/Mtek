@@ -188,5 +188,8 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `reset` | `() → ()` | cpu (handlers only) | — | restarts the scene that runs from its initial values, at the start of a later frame (`spec/scenes.md` §15.5, decision 0140) |
 | `pause`, `resume` | `() → ()` | cpu (handlers only) | — | stop and restart the game clock: ticks, physics, timers and `update` (`spec/scenes.md` §15.4, decision 0143) |
 | `paused` | `() → bool` | cpu | — | whether `pause()` holds the game |
+| `save` | `() → ()` | cpu (handlers only) | — | writes every `saved` and `setting` state of the running scene to the game's storage at once (`spec/scenes.md` §16.3, decision 0145) |
+| `load` | `() → bool` | cpu (handlers only) | — | sets every `saved` and `setting` state of the running scene to its stored value; `false` when nothing is stored (`spec/scenes.md` §16.3, decision 0145) |
+| `clear_saved` | `() → ()` | cpu (handlers only) | — | deletes everything the game stored; the state of the running scene keeps its values (`spec/scenes.md` §16.3, decision 0145) |
 
 Conformance: `tests/semantics/intrinsics/` holds a table of inputs and expected CPU results for every row, and the GPU conformance test (`spec/testing.md` §5) evaluates the same inputs on the GPU through a probe shader and compares with the per-function tolerances.

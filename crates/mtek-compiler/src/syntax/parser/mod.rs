@@ -298,6 +298,17 @@ impl<'a> Parser<'a> {
         self.tok().span
     }
 
+    /// The source text of the token `n` places ahead; `""` past the end.
+    fn text_at(&self, n: usize) -> &'a str {
+        if n == 0 {
+            return self.text_of(self.span());
+        }
+        self.pos
+            .checked_add(n)
+            .and_then(|index| self.tokens.get(index))
+            .map_or("", |token| self.text_of(token.span))
+    }
+
     /// Consume the current token. `Eof` is never consumed.
     fn bump(&mut self) {
         if self.kind() != TokenKind::Eof {

@@ -330,9 +330,10 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
     match: `${START}(${words(importWords)})(?=\\s*")`,
     captures: { "1": { name: `keyword.control.import.${LANG}` } },
   });
-  // `shared state x: T = v;` (decision 0141) and `after(t) { }`, `every(t) { }` (decision 0142).
+  // `shared state x: T = v;` (decision 0141), `shared saved state`, `setting state` (decisions 0145, 0146) and
+  // `after(t) { }`, `every(t) { }` (decision 0142). A modifier is one when `state` follows, possibly after another.
   add("shared-state", {
-    match: `${START}(${words(sharedWords)})(?=\\s+state\\b)`,
+    match: `${START}(${words(sharedWords)})(?=\\s+(?:(?:${words(sharedWords)})\\s+)?state\\b)`,
     captures: { "1": { name: `storage.modifier.${LANG}` } },
   });
   add("timer", {

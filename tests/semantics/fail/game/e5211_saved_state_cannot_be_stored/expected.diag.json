@@ -1,0 +1,28 @@
+[
+  {
+    "code": "MTEK-E5211",
+    "file": "src/main.mtek",
+    "startByte": 221,
+    "endByte": 231,
+    "message": "The saved state 'last' has type entity_ref, whose values cannot be stored.",
+    "expected": "plain data: bool, numbers, vectors, quat, color, mat4, string, enums, and arrays and structs of these",
+    "actual": "entity_ref",
+    "notes": [
+      "an entity_ref exists only while the program runs",
+      "help: store plain values, for example a high score, a level number or a volume"
+    ]
+  },
+  {
+    "code": "MTEK-E5211",
+    "file": "src/main.mtek",
+    "startByte": 268,
+    "endByte": 274,
+    "message": "The setting state 'target' has type Target, whose values cannot be stored.",
+    "expected": "plain data: bool, numbers, vectors, quat, color, mat4, string, enums, and arrays and structs of these",
+    "actual": "Target",
+    "notes": [
+      "an entity_ref exists only while the program runs",
+      "help: store plain values, for example a high score, a level number or a volume"
+    ]
+  }
+]

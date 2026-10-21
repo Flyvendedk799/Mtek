@@ -952,6 +952,13 @@ pub struct State {
     /// shared state of the same name and type.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub shared: bool,
+    /// `saved` or `setting` (decisions 0145, 0146): the value is kept in the browser's storage.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub persist: Option<String>,
+    /// For a persistent state, the structural description of its type that a stored value is
+    /// checked against (`storedType` of the manifest, `spec/runtime-abi.md` section 5).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stored_type: Option<String>,
     /// The initialiser; it has no locals.
     pub init: Expr,
     /// The whole `state name: T = value;`.

@@ -6,7 +6,7 @@
 
 use std::collections::BTreeMap;
 
-use super::lower::{Defect, Lowering};
+use super::lower::{Defect, Lowering, stored_type};
 use super::model::{
     Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, BodyTarget as IrBodyTarget,
     Branch, Expr, ExprKind, Function, LocalItem, LocalKind, MatchArm, MaterialItem,
@@ -288,6 +288,8 @@ impl Lowering<'_> {
             ty: self.type_name(info.ty),
             owner,
             shared: decl.shared.is_some(),
+            persist: decl.persist.map(|(persist, _)| persist.word().to_owned()),
+            stored_type: decl.persist.map(|_| stored_type(self.types, info.ty)),
             init: lowering.expr(&decl.value)?,
             span: decl.span,
         })

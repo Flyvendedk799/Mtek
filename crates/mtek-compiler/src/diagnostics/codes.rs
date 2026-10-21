@@ -200,7 +200,12 @@ catalogue! {
     E5202 Error "shared state outside a scene",
     E5203 Error "shared state of a type that cannot carry over",
     E5204 Error "shared state with different types",
+    E5210 Error "persistent state outside a scene",
+    E5211 Error "persistent state of a type that cannot be stored",
+    E5212 Error "persistent state with different types or kinds",
     E5401 Error "scene change failed",
+    W5402 Warning "saved data ignored",
+    W5403 Warning "saving failed",
     E5901 Error "scene switching not supported",
     E5902 Error "transparency not supported",
     // 5.6 GPU and target (`6xxx`)
@@ -338,7 +343,7 @@ impl Code {
         match self {
             Code::E6100 => Phase::Validate,
             // Reported by the runtime when a `go_to` cannot load its scene (decision 0141).
-            Code::E5401 => Phase::Runtime(RuntimePhase::Update),
+            Code::E5401 | Code::W5402 | Code::W5403 => Phase::Runtime(RuntimePhase::Update),
             _ => match self.range() {
                 0 | 1 => Phase::Parse,
                 6 => Phase::Emit,

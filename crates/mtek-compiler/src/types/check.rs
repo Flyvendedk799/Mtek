@@ -438,6 +438,7 @@ impl<'a> Checker<'a> {
         }
         if construct_implemented(Construct::State) {
             self.shared_states(module);
+            self.persistent_states(module);
         }
     }
 

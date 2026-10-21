@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E5210",
+    "file": "src/main.mtek",
+    "startByte": 124,
+    "endByte": 131,
+    "message": "The state 'value' is declared `setting` in a prefab; only scene state can be kept in storage.",
+    "notes": [
+      "an entity's state belongs to one entity, and entities come and go; saved values are stored by the name of a scene state",
+      "help: move the state into the scene, or remove `setting`"
+    ]
+  },
+  {
+    "code": "MTEK-E5210",
+    "file": "src/main.mtek",
+    "startByte": 260,
+    "endByte": 265,
+    "message": "The state 'lives' is declared `saved` in an entity; only scene state can be kept in storage.",
+    "notes": [
+      "an entity's state belongs to one entity, and entities come and go; saved values are stored by the name of a scene state",
+      "help: move the state into the scene, or remove `saved`"
+    ]
+  }
+]

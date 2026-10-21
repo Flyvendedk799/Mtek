@@ -245,7 +245,9 @@ fn handler_only_note(name: &str) -> &'static str {
             "changing or restarting the scene is a lifecycle operation of the scene"
         }
         "pause" | "resume" => "pausing the game is a lifecycle operation of the scene",
-        "save" => "writing saved data is a side effect of a handler (decision 0145)",
+        "save" | "load" | "clear_saved" => {
+            "saved data is read and written by the scene's handlers (decision 0145)"
+        }
         _ => "this operation is a lifecycle operation of the scene",
     }
 }

@@ -1,0 +1,39 @@
+// Saved state and settings (decisions 0145 and 0146): saved and setting state of several types,
+// a shared saved state in two scenes, and save(), load() and clear_saved() in handlers.
+struct Options {
+    volume: f32;
+    lefty: bool;
+}
+
+scene Menu {
+    shared saved state best: i32 = 0;
+    setting state options: Options = Options { volume: 0.8; lefty: false };
+    saved state unlocked: array<bool, 3> = [true, false, false];
+    camera Main {
+        position: vec3(0.0, 0.0, 5.0);
+    }
+    on key_down(Key.S) {
+        save();
+    }
+    on key_down(Key.L) {
+        if !load() {
+            best = 0;
+        }
+    }
+    on key_down(Key.C) {
+        clear_saved();
+    }
+    on key_down(Key.ArrowUp) {
+        options.volume = min(options.volume + 0.1, 1.0);
+    }
+    on key_down(Key.Enter) {
+        go_to(Level);
+    }
+}
+
+scene Level {
+    shared saved state best: i32 = 0;
+    camera Main {
+        position: vec3(0.0, 0.0, 5.0);
+    }
+}

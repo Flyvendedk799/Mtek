@@ -363,9 +363,42 @@ pub struct StateDecl {
     /// The contextual word `shared` of `shared state` (decision 0141): the value carries over
     /// `go_to` into a scene with a shared state of the same name and type.
     pub shared: Option<Span>,
+    /// `saved state` or `setting state` (decisions 0145 and 0146), with the span of the word: the
+    /// value is kept in the browser's storage.
+    pub persist: Option<(Persist, Span)>,
     pub name: Ident,
     pub ty: Type,
     pub value: Expr,
+}
+
+/// How a scene state is kept across visits (decisions 0145 and 0146).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Persist {
+    /// `saved state`: written by `save()`, restored when the scene starts and by `load()`.
+    Saved,
+    /// `setting state`: like `saved`, and also written whenever its value changes.
+    Setting,
+}
+
+impl Persist {
+    /// The contextual word: `saved` or `setting`.
+    #[must_use]
+    pub fn word(self) -> &'static str {
+        match self {
+            Persist::Saved => "saved",
+            Persist::Setting => "setting",
+        }
+    }
+
+    /// The word for a contextual word, if it is one.
+    #[must_use]
+    pub fn of_word(word: &str) -> Option<Persist> {
+        match word {
+            "saved" => Some(Persist::Saved),
+            "setting" => Some(Persist::Setting),
+            _ => None,
+        }
+    }
 }
 
 /// `name: value;` in a scene, entity, prefab or scene object.

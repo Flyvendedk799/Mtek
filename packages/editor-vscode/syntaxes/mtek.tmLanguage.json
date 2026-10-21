@@ -536,7 +536,7 @@
       }
     },
     "shared-state": {
-      "match": "(?<![A-Za-z0-9_.])((?:shared))(?=\\s+state\\b)",
+      "match": "(?<![A-Za-z0-9_.])((?:setting|shared|saved))(?=\\s+(?:(?:(?:setting|shared|saved))\\s+)?state\\b)",
       "captures": {
         "1": {
           "name": "storage.modifier.mtek"
@@ -673,7 +673,7 @@
     },
     "builtin-function": {
       "name": "support.function.builtin.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:inverse_sqrt|is_key_down|smoothstep|normalize|transpose|distance|saturate|degrees|destroy|radians|reflect|length|paused|random|resume|sample|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|log2|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
+      "match": "(?<![A-Za-z0-9_.])(?:inverse_sqrt|clear_saved|is_key_down|smoothstep|normalize|transpose|distance|saturate|degrees|destroy|radians|reflect|length|paused|random|resume|sample|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|load|log2|save|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
     },
     "builtin-type": {
       "name": "support.type.builtin.mtek",

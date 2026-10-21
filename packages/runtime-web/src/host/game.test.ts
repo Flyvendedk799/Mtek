@@ -9,6 +9,7 @@ import type { MtekProgramScene } from "../abi/program.js";
 import { checkManifest } from "../abi/validate.js";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
 import { whileLimit } from "../scene/budget.js";
+import { MemorySaveStorage, saveKey, type SaveStorage } from "../scene/saves.js";
 import { BASE_URL, FakeHost, MANIFEST_URL, asDom, minimalSceneInit } from "../test-support/fake-host.js";
 import { installProgram, validManifest } from "../test-support/mount-fixture.js";
 import { syntheticProgram, type TestProgram } from "../test-support/program.js";
@@ -27,6 +28,9 @@ interface GameCtx {
   paused(): boolean;
   after(seconds: number, fn: () => void, owner: unknown, spanId: number): void;
   every(seconds: number, fn: () => void, owner: unknown, spanId: number): void;
+  save(): void;
+  load(): boolean;
+  clearSaved(): void;
 }
 
 interface Scenes {
@@ -99,15 +103,33 @@ interface Run {
   readonly debug: NonNullable<MtekApp["debug"]>;
 }
 
-async function mount(scene: Scenes, level2?: Scenes): Promise<Run> {
+/** Makes `score` a shared saved state and adds a setting state `volume: f32` (decisions 0145, 0146). */
+function withSaves(json: Record<string, unknown>): Record<string, unknown> {
+  const scene = json["scene"] as Record<string, unknown>;
+  const name = (scene["name"] as string | undefined) ?? "Demo";
+  const state = scene["state"] as Record<string, unknown>[];
+  state[0] = { ...state[0], persist: "saved", storedType: "i32" };
+  state.push({ name: "volume", type: "f32", symbol: `src/main.mtek::${name}.volume`, persist: "setting", storedType: "f32" });
+  (json["symbols"] as unknown[]).push({ id: `src/main.mtek::${name}.volume`, kind: "state", span: 0 });
+  json["game"] = { ...(json["game"] as Record<string, unknown>), storage: "demo" };
+  return json;
+}
+
+interface MountOptions {
+  /** Persistent state in both scenes, and this storage (decisions 0145, 0146). */
+  readonly saves?: SaveStorage | null;
+}
+
+async function mount(scene: Scenes, level2?: Scenes, options: MountOptions = {}): Promise<Run> {
   const host = new FakeHost();
-  const json = sceneManifestJson("Demo");
+  const persistent = options.saves !== undefined;
+  const json = persistent ? withSaves(sceneManifestJson("Demo")) : sceneManifestJson("Demo");
   installProgram(host, (manifest) => {
     Object.assign(manifest, json);
   });
   const manifest = parse(json);
   if (level2 !== undefined) {
-    const levelJson = sceneManifestJson("Level2");
+    const levelJson = persistent ? withSaves(sceneManifestJson("Level2")) : sceneManifestJson("Level2");
     host.files.set(LEVEL2_MANIFEST_URL, JSON.stringify(levelJson));
     const module = { default: programOf(parse(levelJson), level2, "program.Level2.manifest.json") };
     host.modules.set(`${BASE_URL}app.Level2.js?build=${manifest.buildId}`, module);
@@ -117,6 +139,7 @@ async function mount(scene: Scenes, level2?: Scenes): Promise<Run> {
     test: { manualClock: true, renderTarget: { width: 8, height: 8 } },
     seed: 1,
     onDiagnostic: (d) => seen.push(d),
+    ...(persistent ? { storage: options.saves } : {}),
   });
   if (app.debug === undefined) throw new Error("missing debug");
   expect(host.files.has(MANIFEST_URL)).toBe(true);
@@ -315,6 +338,194 @@ describe("while: the iteration cap", () => {
     expect(app.state).toBe("failed");
     expect(seen.map((d) => d.code)).toEqual(["MTEK-E8080"]);
     expect(seen[0]?.message).toContain("`while`");
+    app.dispose();
+  });
+});
+
+describe("saved state and settings (decisions 0145, 0146)", () => {
+  /** A store whose `demo` key already holds `values`. */
+  function storeWith(values: Record<string, { type: string; value: unknown }>): MemorySaveStorage {
+    const storage = new MemorySaveStorage();
+    storage.setItem(saveKey("demo"), JSON.stringify({ format: 1, values }));
+    return storage;
+  }
+
+  function stored(storage: SaveStorage): Record<string, { type: string; value: unknown }> {
+    const text = storage.getItem(saveKey("demo"));
+    if (text === null) return {};
+    return (JSON.parse(text) as { values: Record<string, { type: string; value: unknown }> }).values;
+  }
+
+  it("restores the stored values when the scene starts, after init", async () => {
+    const storage = storeWith({ score: { type: "i32", value: 12 }, volume: { type: "f32", value: 0.25 } });
+    const seenInInit: unknown[] = [];
+    const seenInUpdate: unknown[] = [];
+    const { app, debug, seen } = await mount(
+      {
+        init: (ctx) => {
+          ctx.s["volume"] = 0.8;
+          seenInInit.push(ctx.s["score"]);
+        },
+        update: (ctx) => {
+          seenInUpdate.push([ctx.s["score"], ctx.s["volume"]]);
+        },
+      },
+      undefined,
+      { saves: storage },
+    );
+    debug.step(1, FRAME);
+    expect(seenInInit).toEqual([0]);
+    expect(seenInUpdate).toEqual([[12, 0.25]]);
+    expect(seen).toEqual([]);
+    app.dispose();
+  });
+
+  it("save() writes, load() reads back and says whether there was anything, clear_saved() deletes", async () => {
+    const storage = new MemorySaveStorage();
+    const loads: boolean[] = [];
+    const { app, debug, seen } = await mount(
+      {
+        init: (ctx) => {
+          ctx.s["volume"] = 0.8;
+        },
+        onSpace: (ctx) => {
+          ctx.s["score"] = 5;
+          ctx.save();
+          ctx.s["score"] = 9;
+          loads.push(ctx.load());
+        },
+        onEnter: (ctx) => {
+          ctx.clearSaved();
+          loads.push(ctx.load());
+        },
+      },
+      undefined,
+      { saves: storage },
+    );
+    debug.step(1, FRAME);
+    expect(storage.getItem(saveKey("demo"))).toBeNull();
+    debug.pressKey("Space");
+    debug.step(1, FRAME);
+    expect(loads).toEqual([true]);
+    expect(debug.scene().state["score"]).toBe(5);
+    expect(stored(storage)).toEqual({ score: { type: "i32", value: 5 }, volume: { type: "f32", value: 0.8 } });
+    debug.pressKey("Enter");
+    debug.step(1, FRAME);
+    expect(loads).toEqual([true, false]);
+    expect(storage.getItem(saveKey("demo"))).toBeNull();
+    // The running scene keeps its values.
+    expect(debug.scene().state["score"]).toBe(5);
+    expect(seen).toEqual([]);
+    app.dispose();
+  });
+
+  it("writes a setting at the end of the frame it changed in, and a saved state only on save()", async () => {
+    const storage = new MemorySaveStorage();
+    const { app, debug } = await mount(
+      {
+        init: (ctx) => {
+          ctx.s["volume"] = 0.8;
+        },
+        onSpace: (ctx) => {
+          ctx.s["volume"] = 0.3;
+          ctx.s["score"] = 4;
+        },
+      },
+      undefined,
+      { saves: storage },
+    );
+    debug.step(2, FRAME);
+    // Nothing changed since the scene started: nothing written.
+    expect(storage.getItem(saveKey("demo"))).toBeNull();
+    debug.pressKey("Space");
+    debug.step(1, FRAME);
+    expect(stored(storage)).toEqual({ volume: { type: "f32", value: 0.3 } });
+    app.dispose();
+  });
+
+  it("go_to restores the saved values in the new scene, and a carried shared value wins", async () => {
+    const storage = storeWith({ score: { type: "i32", value: 1 }, volume: { type: "f32", value: 0.5 } });
+    let levelInits = 0;
+    const levelValues: unknown[] = [];
+    const { app, debug } = await mount(
+      {
+        init: (ctx) => {
+          ctx.s["volume"] = 0.8;
+        },
+        onSpace: (ctx) => {
+          ctx.s["score"] = 30;
+          ctx.goTo("Level2", 0);
+        },
+      },
+      {
+        init: (ctx) => {
+          levelInits += 1;
+          ctx.s["volume"] = 0.8;
+        },
+        update: (ctx) => {
+          levelValues.push([ctx.s["score"], ctx.s["volume"]]);
+        },
+      },
+      { saves: storage },
+    );
+    debug.step(1, FRAME);
+    debug.pressKey("Space");
+    debug.step(1, FRAME);
+    await vi.waitFor(() => {
+      expect(levelInits).toBe(1);
+    });
+    debug.step(1, FRAME);
+    expect(levelValues[0]).toEqual([30, 0.5]);
+    app.dispose();
+  });
+
+  it("W5402: a stored value of another type or shape is ignored, once per state", async () => {
+    const storage = storeWith({ score: { type: "f32", value: 1.5 }, volume: { type: "f32", value: "loud" } });
+    const { app, debug, seen } = await mount(
+      {
+        init: (ctx) => {
+          ctx.s["volume"] = 0.8;
+        },
+        onSpace: (ctx) => {
+          ctx.load();
+        },
+      },
+      undefined,
+      { saves: storage },
+    );
+    debug.pressKey("Space");
+    debug.step(1, FRAME);
+    expect(seen.map((d) => d.code)).toEqual(["MTEK-W5402", "MTEK-W5402"]);
+    expect(seen.every((d) => d.severity === "warning")).toBe(true);
+    expect(seen[0]?.message).toContain("'score'");
+    expect(debug.scene().state["score"]).toBe(0);
+    expect(debug.scene().state["volume"]).toBe(0.8);
+    expect(app.state).toBe("running");
+    app.dispose();
+  });
+
+  it("W5403: a storage that refuses writes is reported and the game goes on", async () => {
+    const storage: SaveStorage = {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error("QuotaExceededError");
+      },
+      removeItem: () => undefined,
+    };
+    const { app, debug, seen } = await mount(
+      {
+        onSpace: (ctx) => {
+          ctx.save();
+        },
+      },
+      undefined,
+      { saves: storage },
+    );
+    debug.pressKey("Space");
+    debug.step(1, FRAME);
+    expect(seen.map((d) => d.code)).toEqual(["MTEK-W5403"]);
+    expect(seen[0]?.message).toContain("QuotaExceededError");
+    expect(app.state).toBe("running");
     app.dispose();
   });
 });

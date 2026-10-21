@@ -1,0 +1,13 @@
+// One store for all scenes: a persistent name has one type and one kind everywhere.
+// covers: [S: saved-state]
+scene Menu {
+    saved state best: i32 = 0;
+    setting state volume: f32 = 0.8;
+    camera Main {}
+}
+
+scene Level {
+    saved state best: f32 = 0.0;
+    saved state volume: f32 = 0.8;
+    camera Main {}
+}

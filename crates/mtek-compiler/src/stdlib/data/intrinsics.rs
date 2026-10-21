@@ -261,6 +261,33 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             vec![sig(&[], exact(TypeRef::Bool))],
         ),
         function(
+            "save",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Writes the saved and setting state to storage.",
+            vec![sig(&[], exact(TypeRef::Unit))],
+        )
+        .handlers_only(),
+        function(
+            "load",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Reads saved values back; false if none.",
+            vec![sig(&[], exact(TypeRef::Bool))],
+        )
+        .handlers_only(),
+        function(
+            "clear_saved",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Deletes everything stored.",
+            vec![sig(&[], exact(TypeRef::Unit))],
+        )
+        .handlers_only(),
+        function(
             "alive",
             Domain::Cpu,
             false,

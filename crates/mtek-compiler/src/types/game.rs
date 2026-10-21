@@ -1,4 +1,5 @@
-//! Game flow checks (decisions 0141 and 0142): the scene argument of `go_to` and `shared state`.
+//! Game flow checks (decisions 0141, 0142, 0145 and 0146): the scene argument of `go_to`, `shared state`
+//! and persistent (`saved` and `setting`) state.
 //!
 //! * `go_to(Scene)` names a scene of the program (`E5201` for anything else). Only that argument
 //!   is a scene name with a type of its own ([`Ty::SceneName`]); a scene is not a value anywhere
@@ -7,6 +8,9 @@
 //!   whose values can be copied from one scene to the next: plain data, no `entity_ref` and no
 //!   GPU resource (`E5203`). Two scenes that declare a shared state of the same name declare it
 //!   with one type (`E5204`), so the value always fits where it carries over to.
+//! * `saved state` and `setting state` are scene members too (`E5210`), of a type that can be
+//!   stored (`E5211`, the same plain data). All scenes share one store keyed by the state's name,
+//!   so one name has one type and one kind in every scene (`E5212`).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -17,7 +21,7 @@ use crate::diagnostics::{Code, Diagnostic};
 use crate::resolve::{DefKind, Res};
 use crate::source::Span;
 use crate::syntax::ast::{
-    EntityDecl, EntityMember, Expr, ExprKind, ItemKind, Module, SceneMember, StateDecl,
+    EntityDecl, EntityMember, Expr, ExprKind, ItemKind, Module, Persist, SceneMember, StateDecl,
 };
 
 impl Checker<'_> {
@@ -196,6 +200,149 @@ impl Checker<'_> {
                     .actual(this_name)
                     .related(span, format!("'{name}' is declared as {other_name} here"))
                     .help("a shared state carries its value from scene to scene, so it has one type in every scene"),
+                );
+            }
+            Some(_) => {}
+        }
+    }
+
+    /// The `saved state` and `setting state` rules of the module (decisions 0145, 0146): `E5210`,
+    /// `E5211` and `E5212`.
+    pub(super) fn persistent_states(&mut self, module: &Module) {
+        // name -> (type, kind, the declaration that fixed them, the scene)
+        let mut first: BTreeMap<String, (TyId, Persist, Span, String)> = BTreeMap::new();
+        for item in &module.items {
+            match &item.kind {
+                ItemKind::Scene(scene) => {
+                    for member in &scene.members {
+                        match member {
+                            SceneMember::State(state) if state.persist.is_some() => {
+                                self.scene_persistent_state(state, &scene.name.name, &mut first);
+                            }
+                            SceneMember::Entity(entity) => self.misplaced_persist_in(entity),
+                            _ => {}
+                        }
+                    }
+                }
+                ItemKind::Prefab(prefab) => {
+                    let mut pending: Vec<&EntityDecl> = Vec::new();
+                    for member in &prefab.members {
+                        match member {
+                            EntityMember::State(state) => {
+                                self.report_misplaced_persist(state, "a prefab");
+                            }
+                            EntityMember::Entity(child) => pending.push(child),
+                            _ => {}
+                        }
+                    }
+                    for child in pending {
+                        self.misplaced_persist_in(child);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn misplaced_persist_in(&mut self, entity: &EntityDecl) {
+        let mut pending = vec![entity];
+        while let Some(entity) = pending.pop() {
+            for member in &entity.members {
+                match member {
+                    EntityMember::State(state) => {
+                        self.report_misplaced_persist(state, "an entity");
+                    }
+                    EntityMember::Entity(child) => pending.push(child),
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    /// `E5210` for `saved state` or `setting state` declared in an entity or prefab (`place`).
+    fn report_misplaced_persist(&mut self, state: &StateDecl, place: &str) {
+        let Some((persist, word)) = state.persist else {
+            return;
+        };
+        let word_text = persist.word();
+        self.report(
+            Diagnostic::new(
+                Code::E5210,
+                format!(
+                    "The state '{}' is declared `{word_text}` in {place}; only scene state can be kept in storage.",
+                    state.name.name
+                ),
+            )
+            .at(word)
+            .note("an entity's state belongs to one entity, and entities come and go; saved values are stored by the name of a scene state")
+            .help(format!("move the state into the scene, or remove `{word_text}`")),
+        );
+    }
+
+    /// `E5211` and `E5212` for the persistent state `state` of the scene `scene`.
+    fn scene_persistent_state(
+        &mut self,
+        state: &StateDecl,
+        scene: &str,
+        first: &mut BTreeMap<String, (TyId, Persist, Span, String)>,
+    ) {
+        let Some((persist, _)) = state.persist else {
+            return;
+        };
+        let Some(def) = self.res.def_of(state.id) else {
+            return;
+        };
+        let Some(ty) = self.out.locals.get(&def).copied() else {
+            return;
+        };
+        if self.out.interner.is_error(ty) {
+            return;
+        }
+        let word = persist.word();
+        if let Some(part) = self.not_carryable(ty) {
+            let name = self.display(ty);
+            self.report(
+                Diagnostic::new(
+                    Code::E5211,
+                    format!(
+                        "The {word} state '{}' has type {name}, whose values cannot be stored.",
+                        state.name.name
+                    ),
+                )
+                .at(state.ty.span)
+                .expected("plain data: bool, numbers, vectors, quat, color, mat4, string, enums, and arrays and structs of these")
+                .actual(name)
+                .note(format!("{part} exists only while the program runs"))
+                .help("store plain values, for example a high score, a level number or a volume"),
+            );
+            return;
+        }
+        let name = state.name.name.clone();
+        match first.get(&name) {
+            None => {
+                first.insert(name, (ty, persist, state.ty.span, scene.to_owned()));
+            }
+            Some((other, other_persist, span, other_scene))
+                if *other != ty || *other_persist != persist =>
+            {
+                let (span, other_scene, other_word) =
+                    (*span, other_scene.clone(), other_persist.word());
+                let (this_name, other_name) = (self.display(ty), self.display(*other));
+                let this = format!("{word} state of type {this_name}");
+                let that = format!("{other_word} state of type {other_name}");
+                self.report(
+                    Diagnostic::new(
+                        Code::E5212,
+                        format!(
+                            "'{name}' is a {this} in the scene '{scene}', but a {that} in the scene '{other_scene}'."
+                        ),
+                    )
+                    .at(state.span)
+                    .expected(that.clone())
+                    .actual(this)
+                    .related(span, format!("'{name}' is a {that} here"))
+                    .note("all scenes of a program share one store, in which a value is kept by its name")
+                    .help("give the state one kind and one type in every scene, or another name"),
                 );
             }
             Some(_) => {}

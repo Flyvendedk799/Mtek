@@ -27,7 +27,8 @@ use super::Parser;
 use super::recover::{Nest, Sync, is_item_keyword, starts_expression};
 use crate::syntax::ast::{
     ConstDecl, EntityDecl, EntityMember, ErrorNode, FieldInit, Handler, HandlerArg, LifecycleFn,
-    MaterialMember, Node, NodeId, Param, ParamDecl, SceneMember, SceneObject, StageFn, StateDecl,
+    MaterialMember, Node, NodeId, Param, ParamDecl, Persist, SceneMember, SceneObject, StageFn,
+    StateDecl,
 };
 use crate::syntax::token::TokenKind;
 
@@ -369,13 +370,9 @@ impl Parser<'_> {
         match self.kind() {
             TokenKind::KwConst => self.const_member(),
             TokenKind::KwState => self.state_member(),
-            // `shared state name: T = v;` (decision 0141): `shared` is contextual.
-            TokenKind::Ident
-                if self.kind_at(1) == TokenKind::KwState
-                    && self.text_of(self.span()) == "shared" =>
-            {
-                self.state_member()
-            }
+            // `shared state name: T = v;` (decision 0141), `saved state` and `setting state`
+            // (decisions 0145, 0146), `shared saved state`: the words are contextual.
+            TokenKind::Ident if self.starts_state_modifiers() => self.state_member(),
             TokenKind::KwParam => self.param_member(),
             TokenKind::KwEntity => self.entity_member(),
             TokenKind::KwOn => self.handler_member(),
@@ -598,14 +595,39 @@ impl Parser<'_> {
         })
     }
 
-    /// `state name: Type = expr;`.
+    /// Whether the tokens from here are `shared`? (`saved` | `setting`)? `state`.
+    fn starts_state_modifiers(&self) -> bool {
+        let mut at = 0;
+        let word = |parser: &Self, at: usize| -> Option<&str> {
+            (parser.kind_at(at) == TokenKind::Ident).then(|| parser.text_at(at))
+        };
+        if word(self, at) == Some("shared") {
+            at += 1;
+        }
+        if word(self, at).and_then(Persist::of_word).is_some() {
+            at += 1;
+        }
+        at > 0 && self.kind_at(at) == TokenKind::KwState
+    }
+
+    /// `shared`? (`saved` | `setting`)? `state name: Type = expr;`.
     pub(super) fn state_decl(&mut self) -> Option<StateDecl> {
         let start = self.span().start;
-        let shared = (self.kind() == TokenKind::Ident).then(|| {
-            let word = self.span();
-            self.bump();
-            word
-        });
+        let shared = (self.kind() == TokenKind::Ident && self.text_of(self.span()) == "shared")
+            .then(|| {
+                let word = self.span();
+                self.bump();
+                word
+            });
+        let persist = if self.kind() == TokenKind::Ident {
+            Persist::of_word(self.text_of(self.span())).map(|persist| {
+                let word = self.span();
+                self.bump();
+                (persist, word)
+            })
+        } else {
+            None
+        };
         self.bump();
         let Some(name) = self.ident() else {
             self.expected("a name after `state`");
@@ -624,6 +646,7 @@ impl Parser<'_> {
             id: self.id(),
             span: self.span_from(start),
             shared,
+            persist,
             name,
             ty,
             value,

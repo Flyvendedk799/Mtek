@@ -40,7 +40,8 @@
         "module": "app.Menu.js",
         "manifest": "program.Menu.manifest.json"
       }
-    ]
+    ],
+    "storage": "full-fixture"
   },
   "preview": {
     "loopBudget": 10000000
@@ -1154,7 +1155,9 @@
         "name": "speed",
         "type": "f32",
         "symbol": "src/main.mtek::Demo.speed",
-        "shared": true
+        "shared": true,
+        "persist": "setting",
+        "storedType": "f32"
       },
       {
         "name": "paused",

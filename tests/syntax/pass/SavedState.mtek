@@ -1,0 +1,15 @@
+scene Menu {
+    saved state best: i32 = 0;
+    setting state volume: f32 = 0.8;
+    shared saved state score: i32 = 0;
+    shared setting state lefty: bool = false;
+    state saved: bool = false;
+    state setting: i32 = 0;
+}
+fn saved(setting: f32) -> f32 { return setting; }
+scene Title {
+    shared saved state best: i32 = 0;     // a high score: written by save()
+    setting state volume: f32 = 0.8;      // a setting: written whenever it changes
+    saved state unlocked: array<bool, 3> = [true, false, false];
+    camera Main {}
+}

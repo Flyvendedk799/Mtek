@@ -272,6 +272,14 @@
     "invalid/preview-without-budget.json": {
       "code": "E8006",
       "field": "preview.loopBudget"
+    },
+    "invalid/game-storage-bad-name.json": {
+      "code": "E8006",
+      "field": "game.storage"
+    },
+    "invalid/state-persist-unknown.json": {
+      "code": "E8006",
+      "field": "scene.state[0].persist"
     }
   }
 }

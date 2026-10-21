@@ -62,6 +62,7 @@
       "function:atan2",
       "function:ceil",
       "function:clamp",
+      "function:clear_saved",
       "function:color.linear",
       "function:color.srgb",
       "function:cos",
@@ -79,6 +80,7 @@
       "function:is_key_down",
       "function:length",
       "function:lighting.pbr",
+      "function:load",
       "function:log",
       "function:log2",
       "function:mat4.columns",
@@ -109,6 +111,7 @@
       "function:sampler.nearest_clamp",
       "function:sampler.nearest_repeat",
       "function:saturate",
+      "function:save",
       "function:sign",
       "function:sin",
       "function:smoothstep",
@@ -311,14 +314,7 @@
     }
   ],
   "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",
-  "schemas": [
-    {
-      "name": "Box",
-      "fields": [
-        "size: vec3 = vec3(1.0, 1.0, 1.0) [C]"
-      ]
-    }
-  ],
+  "schemas": [],
   "examples": [],
   "diagnosticsGuide": "`mtek check --format json` prints one JSON report; each diagnostic has code, severity, title, message, source (file, startByte, endByte, startLine, startColumn, endLine, endColumn), expected and actual (when relevant), related, notes, suggestedEdits and phase. Fix errors in report order, apply a suggestedEdit only when it is present (they are validated), and never delete the feature a diagnostic is about.",
   "truncated": {
@@ -340,9 +336,10 @@
       ]
     },
     "schemas": {
-      "count": 1,
+      "count": 2,
       "names": [
-        "Entity"
+        "Entity",
+        "Box"
       ]
     }
   }

@@ -154,7 +154,20 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
    * contains no overlay code and ignores it. `mtek dev` pages pass `true` (decision 0055).
    */
   devOverlay?: boolean;
+  /**
+   * Where `saved state` and `setting state` are kept (decisions 0145 and 0146). Default: the page's
+   * `localStorage`, or an in-memory store when `test` is given, so that test runs never read or write the
+   * page's storage. `null` keeps saves in memory only, for the life of the application.
+   */
+  storage?: MtekSaveStorage | null;
   test?: MtekTestOptions;
+}
+
+/** The part of the Web Storage API that saves use (`localStorage` satisfies it). */
+export interface MtekSaveStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
 }
 
 /**

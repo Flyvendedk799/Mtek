@@ -110,6 +110,10 @@ pub struct Game {
     /// Every scene of the program, sorted by name; empty (absent) for a single scene.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub scenes: Vec<GameScene>,
+    /// The storage name of saved state and settings (decision 0145): the `localStorage` key is
+    /// `mtek.save.<storage>`. Present when a scene has a `saved` or `setting` state.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub storage: Option<String>,
 }
 
 /// One scene `go_to` can load: its program module and manifest, relative to the program.
@@ -566,6 +570,18 @@ pub struct StateEntry {
     /// `shared state` of a scene (decision 0141): carried over `go_to`. Written only when true.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub shared: bool,
+    /// `saved` or `setting` (decisions 0145, 0146): kept in the browser's storage. Written only
+    /// when present.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub persist: Option<String>,
+    /// With `persist`: the structural description of the type a stored value must have
+    /// (decision 0145); a struct spells out its fields, an enum its variants.
+    #[serde(
+        default,
+        rename = "storedType",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub stored_type: Option<String>,
 }
 
 /// A camera: structure only; its values are set by `init(ctx)`.

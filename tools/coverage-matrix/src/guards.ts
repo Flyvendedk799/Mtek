@@ -68,9 +68,9 @@ export const AREAS: readonly Area[] = [
   },
   {
     id: "game-flow",
-    title: "Scenes, timers, pause and while",
+    title: "Scenes, timers, pause, saves and while",
     features: ["stmt/while", "stmt/timer", "stmt/timer:after", "stmt/timer:every"],
-    codes: ["E3210", "E3211", "E5201", "E5202", "E5203", "E5204"],
+    codes: ["E3210", "E3211", "E5201", "E5202", "E5203", "E5204", "E5210", "E5211", "E5212"],
   },
   {
     id: "arrays",

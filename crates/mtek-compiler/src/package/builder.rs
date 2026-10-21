@@ -149,6 +149,17 @@ impl SceneFiles {
     }
 }
 
+/// The storage name of a program's saved state (decision 0145): the project name (`[a-z0-9-]+`),
+/// at most 64 characters, as the manifest schema allows.
+fn storage_name(project: &str) -> String {
+    let name: String = project.chars().take(64).collect();
+    if name.is_empty() {
+        "mtek".to_owned()
+    } else {
+        name
+    }
+}
+
 /// Packages the checked `program` of `project`. The project's source map holds the prelude
 /// modules the program uses (the front end added them, decision 0044).
 ///
@@ -176,13 +187,22 @@ pub fn package(
         .scenes()
         .map(|scene| (scene.name.clone(), scene.symbol.clone()))
         .collect();
+    // Saved state and settings (decision 0145) are stored under the project's name.
+    let storage = program
+        .scenes()
+        .any(|scene| scene.state.iter().any(|state| state.persist.is_some()))
+        .then(|| storage_name(&project.config.project.name));
     if scenes.len() <= 1 {
+        let game = storage.map(|storage| Game {
+            scenes: Vec::new(),
+            storage: Some(storage),
+        });
         return package_scene(
             project,
             program,
             input,
             &SceneFiles::of(&entry.name, true),
-            None,
+            game.as_ref(),
         );
     }
     scenes.sort();
@@ -199,6 +219,7 @@ pub fn package(
                 }
             })
             .collect(),
+        storage,
     };
     let mut packaged = package_scene(
         project,
@@ -1104,6 +1125,8 @@ fn manifest_prefabs(
                     ty: state.ty.clone(),
                     symbol: state.symbol.to_string(),
                     shared: false,
+                    persist: None,
+                    stored_type: None,
                 })
                 .collect(),
             update: has(&BehaviorKind::Update),
@@ -1200,6 +1223,8 @@ fn state_entries(scene: &crate::ir::Scene, owner: Owner) -> Vec<StateEntry> {
             ty: state.ty.clone(),
             symbol: state.symbol.to_string(),
             shared: state.shared,
+            persist: state.persist.clone(),
+            stored_type: state.stored_type.clone(),
         })
         .collect()
 }

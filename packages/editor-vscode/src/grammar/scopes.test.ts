@@ -115,6 +115,17 @@ describe("contextual words", () => {
     expect(has(scopes("camera Main { }", "Main"), "entity.name.type.object")).toBe(true);
   });
 
+  it("scopes `shared`, `saved` and `setting` before `state` as modifiers, and nowhere else (decisions 0141, 0145, 0146)", () => {
+    const lines = tokenizeText(grammar, "scene S {\n    shared saved state best: i32 = 0;\n    setting state volume: f32 = 0.5;\n}");
+    for (const word of ["shared", "saved", "setting"]) {
+      expect(has(scopesOf(lines, word), "storage.modifier"), word).toBe(true);
+    }
+    expect(has(scopes("let saved = true;", "saved"), "storage.modifier")).toBe(false);
+    expect(has(scopes("setting = 1;", "setting"), "storage.modifier")).toBe(false);
+    expect(has(scopes("save();", "save"), "support.function")).toBe(true);
+    expect(has(scopes("clear_saved();", "clear_saved"), "support.function")).toBe(true);
+  });
+
   it("leaves `update`, `camera` and `from` ordinary identifiers where they mean nothing", () => {
     expect(has(scopes("let update = 1;", "update"), "entity.name.function")).toBe(false);
     expect(has(scopes("let from = 1;", "from"), "keyword")).toBe(false);

@@ -269,6 +269,10 @@ export interface MtekStateEntry {
   readonly symbol: SymbolId;
   /** `shared state` (decision 0141): carried over by `go_to` to a scene with a shared state of the same name and type. */
   readonly shared?: true;
+  /** `saved state` or `setting state` (decisions 0145, 0146): kept in the browser's storage. Absent otherwise. */
+  readonly persist?: "saved" | "setting";
+  /** With `persist`: the structural description of the type a stored value must have (decision 0145). */
+  readonly storedType?: string;
 }
 
 /** One scene of a multi-scene program (decision 0141): what `go_to` loads, relative to the program's `baseUrl`. */
@@ -284,6 +288,8 @@ export interface MtekGameScene {
 export interface MtekGame {
   /** Every scene, sorted by name; absent for a single-scene program. */
   readonly scenes?: readonly MtekGameScene[];
+  /** The storage name of saved state and settings (`localStorage` key `mtek.save.<storage>`); present when a scene has any (decision 0145). */
+  readonly storage?: string;
 }
 
 export interface MtekCamera {

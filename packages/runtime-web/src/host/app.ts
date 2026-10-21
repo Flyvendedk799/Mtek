@@ -29,6 +29,7 @@ import { resolveStructure } from "../scene/structure.js";
 import type { CpuServices } from "../scene/world.js";
 import type { FetchResponseLike, HostEnvironment, ResizeObserverLike } from "./environment.js";
 import { resolveSpan, type DiagnosticSink } from "./failures.js";
+import { GameSaves, MemorySaveStorage, persistentEntries, type SaveProblem, type SaveStorage } from "../scene/saves.js";
 import { HostOutputs } from "./outputs.js";
 import { HostInputs, unknownInputResult } from "./inputs.js";
 import type { FailureOverlay } from "./overlay.js";
@@ -137,6 +138,10 @@ export interface AppDependencies {
   program: MtekMountProgram<Record<string, unknown>>;
   /** The game services the CPU services forward to (decisions 0140, 0141, 0143); the application connects them. */
   readonly game?: GameLink;
+  /** Where saved state and settings are kept (decisions 0145, 0146); default: in memory. */
+  readonly saveStorage?: SaveStorage;
+  /** The page's storage could not be reached, so `saveStorage` is in memory: the first save reports `W5403`. */
+  readonly saveStorageUnavailable?: boolean;
 }
 
 function errorText(error: unknown): string {
@@ -203,6 +208,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
   private attemptProblem: string | undefined;
   /** What the application was doing when the device was lost, to restore it afterwards. */
   private beforeLoss = { paused: false, byVisibility: false };
+  /** Saved state and settings (decisions 0145, 0146). */
+  private readonly saves: GameSaves;
   private injectedDeviceFailures: number;
   private readonly recoveryDelaysMs: readonly number[];
 
@@ -270,6 +277,16 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     }
 
     if (test !== undefined) this.debug = this.createDebug(manual);
+    this.saves = new GameSaves(
+      deps.saveStorage ?? new MemorySaveStorage(),
+      manifest.game?.storage,
+      (problem) => {
+        this.reportSaveProblem(problem);
+      },
+      deps.saveStorageUnavailable === true,
+    );
+    // The scene starts from its saved values (decision 0145): after `init`, before the first frame.
+    this.saves.restore(persistentEntries(manifest.scene.state), deps.scene.world.sceneState);
     if (deps.game !== undefined) deps.game.target = this.gameHooks();
     this.scheduler.start();
   }
@@ -294,7 +311,19 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         this.scheduler.resumeGame();
       },
       paused: () => this.scheduler.gamePaused,
+      save: () => {
+        this.saves.save(persistentEntries(this.deps.manifest.scene.state), this.deps.scene.world.sceneState);
+      },
+      load: () => this.saves.restore(persistentEntries(this.deps.manifest.scene.state), this.deps.scene.world.sceneState),
+      clearSaved: () => {
+        this.saves.clear();
+      },
     };
+  }
+
+  /** `W5402` and `W5403` (decision 0145): warnings, the scene goes on. */
+  private reportSaveProblem(problem: SaveProblem): void {
+    this.report(makeRuntimeDiagnostic(problem.code, { phase: "runtime:update", message: problem.message }));
   }
 
   /**
@@ -1146,6 +1175,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         this.frameTimeMs = end - this.frameStartMs;
         if (__MTEK_DEV__) this.deps.devTools?.afterFrame(this.frameTimeMs, () => this.counters());
         this.hostOutputs.publish(this.deps.scene.world.sceneState);
+        // Settings are written when they changed this frame (decision 0146).
+        this.saves.autosave(persistentEntries(this.deps.manifest.scene.state), this.deps.scene.world.sceneState);
       },
     };
   }
@@ -1196,6 +1227,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       // `go_to`/`reset` (decisions 0140, 0141): the new world keeps its initial values, except the shared state of
       // the same name and type, which carries over on `go_to`. A new scene starts with the game running.
       this.sceneRequest = undefined;
+      // Saved state and settings first (decision 0145), then the shared state, which is newer.
+      this.saves.restore(persistentEntries(pending.manifest.scene.state), pending.scene.world.sceneState);
       if (pending.fresh.carry) {
         const before = new Map(previousManifest.scene.state.filter((entry) => entry.shared === true).map((entry) => [entry.name, entry]));
         for (const entry of pending.manifest.scene.state) {

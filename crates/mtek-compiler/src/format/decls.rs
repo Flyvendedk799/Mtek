@@ -5,8 +5,8 @@ use crate::syntax::TokenKind;
 use crate::syntax::ast::{
     ConstDecl, EntityDecl, EntityMember, EnumDecl, FieldInit, FieldValue, FnDecl, Handler,
     HandlerArg, ImportDecl, Item, ItemKind, LifecycleFn, MaterialDecl, MaterialMember, Module,
-    Node, Param, ParamDecl, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl,
-    StructDecl, StructField, Type, TypeKind,
+    Node, Param, ParamDecl, Persist, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn,
+    StateDecl, StructDecl, StructField, Type, TypeKind,
 };
 
 use super::doc::Doc;
@@ -249,11 +249,19 @@ impl Printer<'_> {
         let value = self.expr(&decl.value);
         let semicolon = self.semicolon(decl.span.end);
         Doc::concat(vec![
-            Doc::text(if decl.shared.is_some() {
-                "shared state "
-            } else {
-                "state "
-            }),
+            Doc::text(
+                match (
+                    decl.shared.is_some(),
+                    decl.persist.map(|(persist, _)| persist),
+                ) {
+                    (false, None) => "state ",
+                    (true, None) => "shared state ",
+                    (false, Some(Persist::Saved)) => "saved state ",
+                    (false, Some(Persist::Setting)) => "setting state ",
+                    (true, Some(Persist::Saved)) => "shared saved state ",
+                    (true, Some(Persist::Setting)) => "shared setting state ",
+                },
+            ),
             name,
             Doc::text(": "),
             ty,

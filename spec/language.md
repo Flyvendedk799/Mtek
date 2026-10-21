@@ -53,6 +53,7 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 - Event names after `on` (`key_down`, `collision_enter`, …), resolved against the registry.
 - `after`, `every` — a timer statement when the word is followed by `(…)` and a block (§7.11, decision 0142); anywhere else an ordinary name.
 - `shared` — before `state` in a scene, marks a shared state (`spec/scenes.md` §15.2, decision 0141).
+- `saved`, `setting` — before `state` in a scene (after `shared`, if any), mark a persistent state (`spec/scenes.md` §16, decisions 0145 and 0146). Anywhere else they are ordinary names.
 
 2.5 **Literals.**
 

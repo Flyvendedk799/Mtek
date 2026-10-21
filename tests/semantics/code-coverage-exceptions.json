@@ -88,6 +88,16 @@
       "test": "packages/runtime-web/src/host/game.test.ts"
     },
     {
+      "code": "W5402",
+      "reason": "A runtime code (stored saved data that does not fit the state, decision 0145), produced by @mtek/runtime-web, whose unit tests are its fixtures.",
+      "test": "packages/runtime-web/src/scene/saves.test.ts"
+    },
+    {
+      "code": "W5403",
+      "reason": "A runtime code (a write to the browser's storage that failed, decision 0145), produced by @mtek/runtime-web, whose unit tests are its fixtures.",
+      "test": "packages/runtime-web/src/scene/saves.test.ts"
+    },
+    {
       "code": "E8080",
       "reason": "The loop budget of a preview build, enforced by the runtime (decision 0075).",
       "test": "packages/runtime-web/src/host/budget.test.ts"

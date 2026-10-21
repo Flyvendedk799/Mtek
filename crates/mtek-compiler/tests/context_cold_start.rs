@@ -622,11 +622,12 @@ fn a_stub_scene_gets_the_library_and_its_own_symbols_within_the_budget() {
     assert!(!output.context.reference.is_empty());
     assert_eq!(names(&output), ["Demo", "Demo.Main"]);
     assert_valid(&output);
-    // The project section and a few symbols of a stub fit with room to spare.
+    // The project section and a few symbols of a stub fit with room to spare: 600 bytes since decision 0147
+    // (1 000 in decision 0112; a stub scene with one camera costs about 300).
     let empty = ok("");
     assert!(
-        empty.text.len() + 1_000 <= DEFAULT_MAX_BYTES,
-        "the empty project leaves less than 1000 bytes for the project: {}",
+        empty.text.len() + 600 <= DEFAULT_MAX_BYTES,
+        "the empty project leaves less than 600 bytes for the project: {}",
         empty.text.len()
     );
 }

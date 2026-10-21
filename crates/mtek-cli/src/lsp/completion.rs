@@ -786,7 +786,9 @@ fn member_start_candidates(
                     .filter(|k| is_implemented(k.since))
                     .map(|k| Candidate::new(k.keyword, CompletionItemKind::KEYWORD, 8).doc(k.doc)),
             );
-            out.extend(keywords(&["const", "state", "shared", "entity", "on"]));
+            out.extend(keywords(&[
+                "const", "state", "shared", "saved", "setting", "entity", "on",
+            ]));
             out.extend(keywords(LIFECYCLE_KEYWORDS));
             out
         }

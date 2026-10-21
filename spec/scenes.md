@@ -259,3 +259,34 @@ This is the hook for pause menus and other UI: a handler that reacts to a key or
 The game pause is the program's; the host's `app.pause()` (`spec/runtime-abi.md` §6.2) is different: it stops the whole application, input and rendering included, and is what a hidden page does (§10.2). The two are independent: `app.resume()` does not resume a paused game, and `paused()` reports only the game pause.
 
 15.5 **`reset()`.** `reset()` restarts the scene that runs: like `go_to` (§15.2) it prepares the scene afresh, from its initial values, and swaps it in at the start of a later frame. Unlike `go_to`, shared state does not carry over: `reset()` is a full restart of the scene, shared state included. To keep a value across a reset, switch with `go_to(ThisScene)` instead, which keeps the shared state.
+
+## 16. Saved state and settings
+
+Decisions 0145 (saved state, `save()`, `load()`, `clear_saved()`) and 0146 (settings).
+
+16.1 **Declaring persistent state.** A scene state may be declared `saved state` or `setting state`, after `shared` when it is shared as well:
+
+```mtek
+scene Title {
+    shared saved state best: i32 = 0;     // a high score: written by save()
+    setting state volume: f32 = 0.8;      // a setting: written whenever it changes
+    saved state unlocked: array<bool, 3> = [true, false, false];
+    camera Main {}
+}
+```
+
+The value of a persistent state is kept in the browser's storage and outlives the page. Only scene state can be persistent (`E5210` in an entity or a prefab). Only plain data can be stored, the types `shared state` allows (§15.2): `bool`, the numeric, vector and matrix types, `quat`, `color`, `string`, enums, and arrays and structs of these, no `entity_ref`, resource or descriptor (`E5211`). The words `saved` and `setting` are contextual (`spec/language.md` §2.4): `let saved = true;` is an ordinary name.
+
+16.2 **One store for the program.** All scenes of a program share one store (`spec/runtime-abi.md` §5, `game.storage`), keyed by the state's name. A state of one name is the same stored value in every scene that declares it persistent. So two scenes that both declare `best` read and write one high score. They must agree on its type and on whether it is `saved` or `setting` (`E5212`). A scene that does not declare a name leaves its stored value alone.
+
+16.3 **When values are read and written.**
+
+- **Scene start.** When a scene starts (at mount, after `go_to` and after `reset()`), every persistent state that has a stored value takes it. This happens after `init` and before shared state is carried over (§15.2). `init` and the initialisers see the declared initial values. The first frame and the bindings see the stored ones, and a carried `shared` value wins over a stored one, because it is newer.
+- **`save()`** (lifecycle functions and handlers, `E5080` elsewhere) writes every `saved` and `setting` state of the running scene at once. Stored values of names this scene does not declare are kept.
+- **`load()`** (lifecycle functions and handlers) sets every persistent state of the running scene that has a stored value to it again, and returns whether there was at least one. It undoes the changes made since the last save.
+- **`clear_saved()`** (lifecycle functions and handlers) deletes everything the program stored, for every scene. The states of the running scene keep their current values: follow it with `reset()` to start over from the initial values.
+- **Settings save themselves** (decision 0146). At the end of every frame in which the value of a `setting state` changed, the settings of the running scene are written. A `saved state` is written only by `save()`.
+
+16.4 **What can go wrong.** Nothing about storage stops the program or reaches it as an error. A stored value of another type than the state now has (the program changed), of another shape, or unreadable, is ignored, and the state keeps its value. The runtime warns once per state with `W5402`. A write the browser refuses (the storage is full or disabled) warns with `W5403`. On a page with no usable `localStorage` (a sandboxed frame, a privacy mode) the values are kept in memory until the page closes, and the first write warns with `W5403`. An enum is stored as its variant index: reordering an enum's variants changes what an old save means, and removing variants makes an index out of range, which is then ignored (`W5402`).
+
+16.5 **Tests and hosts.** `mtek test` and any mount with test options start with an empty in-memory store, so tests do not depend on what an earlier run saved. A host may pass its own store, or `storage: null` for memory only (`spec/runtime-abi.md` §6.1).

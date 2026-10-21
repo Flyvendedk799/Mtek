@@ -296,6 +296,11 @@ const RELATED_REQUIRED: &[(&str, Option<&str>, &str)] = &[
         None,
         "the shared state of the same name in the other scene",
     ),
+    (
+        "E5212",
+        None,
+        "the persistent state of the same name in the other scene",
+    ),
     ("E5070", None, "section 5.5: a related span at `bind`"),
     ("E5075", None, "section 5.5: the full path of the cycle"),
     (

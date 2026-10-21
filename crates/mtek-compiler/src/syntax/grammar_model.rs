@@ -500,6 +500,7 @@ const CONTEXTUAL_WORDS: &str = "\
    'fragment'                material stage         (StageFn)
    'from'                    import clause          (Import)
    'shared'                  scene state carry-over (StateDecl)
+   'saved', 'setting'        persistent scene state (StateDecl)
    'after', 'every'          timer blocks           (TimerStmt)
    event names after 'on'    resolved via registry  (Handler)             */";
 
@@ -986,6 +987,7 @@ pub fn grammar() -> GrammarModel {
                 "StateDecl",
                 seq(vec![
                     opt(lit("shared")),
+                    opt(group(alt(vec![lit("saved"), lit("setting")]))),
                     lit("state"),
                     r("Ident"),
                     lit(":"),
@@ -998,6 +1000,8 @@ pub fn grammar() -> GrammarModel {
             &[
                 "                    /* [S: shared-state: 'shared' is contextual; shared state is declared in a scene only (E5202),",
                 "                        has a type that can carry over a scene change (E5203) and one type in every scene (E5204)] */",
+                "                    /* [S: saved-state: 'saved' and 'setting' are contextual; persistent state is declared in a scene only (E5210),",
+                "                        has a type that can be stored (E5211) and one type and kind in every scene (E5212)] */",
             ],
         ),
         syntax(

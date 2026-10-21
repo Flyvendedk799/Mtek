@@ -97,6 +97,34 @@ pub(super) fn type_name(types: &Typeck, file_paths: &BTreeMap<FileId, String>, t
     }
 }
 
+/// The structural description of a persistent state's type (decision 0145): what a stored value
+/// is checked against when it is read back. Unlike [`type_name`] it spells out what the stored
+/// JSON depends on, so that a program whose struct gained a field or changed a field's type, or
+/// whose enum changed its variants, ignores the old value (`W5402`) instead of misreading it:
+/// a struct is `{name: T, ...}` in field order, a user enum `enum(A|B)` in variant order.
+pub(super) fn stored_type(types: &Typeck, ty: TyId) -> String {
+    let interner = types.interner();
+    match interner.get(ty) {
+        Ty::Array { element, len } => format!("array<{}, {len}>", stored_type(types, element)),
+        Ty::Struct(_) => match interner.struct_def(ty) {
+            Some(def) => {
+                let fields: Vec<String> = def
+                    .fields
+                    .iter()
+                    .map(|(name, field)| format!("{name}: {}", stored_type(types, *field)))
+                    .collect();
+                format!("{{{}}}", fields.join(", "))
+            }
+            None => types.display(ty),
+        },
+        Ty::UserEnum(_) => match interner.enum_def(ty) {
+            Some(def) => format!("enum({})", def.variants.join("|")),
+            None => types.display(TyId::U32),
+        },
+        _ => types.display(ty),
+    }
+}
+
 /// One checked module: its id and what the front end produced for it.
 #[derive(Clone, Copy)]
 pub(super) struct Unit<'a> {

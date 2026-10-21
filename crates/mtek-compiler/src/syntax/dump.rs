@@ -29,7 +29,7 @@ use super::ast::{
     EntityDecl, EntityMember, EnumDecl, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter,
     ForStmt, Handler, HandlerArg, IfStmt, ImportDecl, Item, ItemKind, LifecycleFn, LocalDecl,
     MatchArm, MaterialDecl, MaterialMember, Module, Param, ParamDecl, Pattern, PatternKind,
-    PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt, StructDecl,
+    Persist, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt, StructDecl,
     StructField, Type, TypeKind,
 };
 
@@ -511,15 +511,22 @@ fn object_sexp(object: &SceneObject) -> Sexp {
 }
 
 fn state_sexp(state: &StateDecl) -> Sexp {
-    List::new(if state.shared.is_some() {
-        "shared-state"
-    } else {
-        "state"
-    })
-    .atom(state.name.name.as_str())
-    .child(type_sexp(&state.ty))
-    .child(expr_sexp(&state.value))
-    .done()
+    let head = match (
+        state.shared.is_some(),
+        state.persist.map(|(persist, _)| persist),
+    ) {
+        (false, None) => "state",
+        (true, None) => "shared-state",
+        (false, Some(Persist::Saved)) => "saved-state",
+        (false, Some(Persist::Setting)) => "setting-state",
+        (true, Some(Persist::Saved)) => "shared-saved-state",
+        (true, Some(Persist::Setting)) => "shared-setting-state",
+    };
+    List::new(head)
+        .atom(state.name.name.as_str())
+        .child(type_sexp(&state.ty))
+        .child(expr_sexp(&state.value))
+        .done()
 }
 
 fn init_sexp(field: &FieldInit) -> Sexp {

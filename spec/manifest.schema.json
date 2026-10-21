@@ -532,12 +532,14 @@
         "name": { "$ref": "#/$defs/name" },
         "type": { "$ref": "#/$defs/mtekTypeName" },
         "symbol": { "$ref": "#/$defs/symbolId" },
-        "shared": { "type": "boolean", "const": true, "description": "`shared state` (decision 0141): its value carries over when go_to switches to a scene with a shared state of the same name and type. Absent for ordinary state." }
+        "shared": { "type": "boolean", "const": true, "description": "`shared state` (decision 0141): its value carries over when go_to switches to a scene with a shared state of the same name and type. Absent for ordinary state." },
+        "persist": { "enum": ["saved", "setting"], "description": "`saved state` or `setting state` (decisions 0145, 0146): the value is kept in the browser's storage under game.storage, restored when the scene starts, written by save() (and, for a setting, whenever it changes). Absent for other state." },
+        "storedType": { "type": "string", "minLength": 1, "maxLength": 4096, "description": "With persist: the structural description of the state's type that a stored value must have (decision 0145): a struct is spelled out as {field: T, ...} in field order, a user enum as enum(A|B) in variant order, otherwise the type name. A stored value recorded with another description is ignored (W5402). Absent for other state." }
       }
     },
     "game": {
       "type": "object",
-      "description": "Game-level data (decision 0141): present when the program has several scenes. Every scene manifest of one build carries the same object.",
+      "description": "Game-level data (decisions 0141, 0145): present when the program has several scenes or persistent state. Every scene manifest of one build carries the same object.",
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
@@ -555,7 +557,8 @@
               "manifest": { "type": "string", "pattern": "^program(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.manifest\\.json$" }
             }
           }
-        }
+        },
+        "storage": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,64}$", "description": "The storage name of saved state and settings (decision 0145): the localStorage key is mtek.save.<storage>. Present when a scene of the program has a saved or setting state." }
       }
     },
     "camera": {

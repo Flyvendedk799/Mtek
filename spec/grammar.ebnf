@@ -46,6 +46,7 @@ Reserved        ::= 'as' | 'async' | 'await' | 'extern' | 'impl' | 'loop'
    'fragment'                material stage         (StageFn)
    'from'                    import clause          (Import)
    'shared'                  scene state carry-over (StateDecl)
+   'saved', 'setting'        persistent scene state (StateDecl)
    'after', 'every'          timer blocks           (TimerStmt)
    event names after 'on'    resolved via registry  (Handler)             */
 
@@ -127,9 +128,11 @@ EntityMember    ::= FieldInit | ConstDecl | StateDecl | ParamDecl | EntityDecl
 SceneObject     ::= Ident Ident '{' FieldInit* '}'
                     /* [S: scene-object-kind: first Ident is a registered scene-object kind: 'camera' (E5014 "unknown scene object kind" otherwise)] */
 
-StateDecl       ::= 'shared'? 'state' Ident ':' Type '=' Expr ';'
+StateDecl       ::= 'shared'? ( 'saved' | 'setting' )? 'state' Ident ':' Type '=' Expr ';'
                     /* [S: shared-state: 'shared' is contextual; shared state is declared in a scene only (E5202),
                         has a type that can carry over a scene change (E5203) and one type in every scene (E5204)] */
+                    /* [S: saved-state: 'saved' and 'setting' are contextual; persistent state is declared in a scene only (E5210),
+                        has a type that can be stored (E5211) and one type and kind in every scene (E5212)] */
 FieldInit       ::= Ident ':' FieldValue ';'
 FieldValue      ::= 'bind' '(' Expr ')' | Expr
                     /* [S: bind-bindable-field: bind only on bindable fields (E5004)] */

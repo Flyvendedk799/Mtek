@@ -46,6 +46,7 @@ import { loadPhysicsBackend, type PhysicsLoadResult } from "../physics/load.js";
 import { PhysicsSystem } from "../physics/system.js";
 import { Xoshiro128 } from "../random/xoshiro.js";
 import { ExecutionBudgetExceeded } from "../scene/budget.js";
+import { defaultSaveStorage, MemorySaveStorage } from "../scene/saves.js";
 import { GameLink } from "../scene/game.js";
 import type { CpuServices } from "../scene/world.js";
 import { checkProgram } from "../scene/program.js";
@@ -380,6 +381,10 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     const input = new InputState();
     // `go_to`, `reset`, `pause`, `resume`, `paused` (decisions 0140, 0141, 0143): the application connects the link.
     const game = new GameLink();
+    // Saved state and settings (decisions 0145, 0146): the page's localStorage unless the host chose; never under test.
+    const pageStorage = options.storage === undefined && options.test === undefined ? defaultSaveStorage() : null;
+    const saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage();
+    const saveStorageUnavailable = options.storage === undefined && options.test === undefined && pageStorage === null;
     const services: CpuServices = {
       game,
       random: () => generator.nextF32(),
@@ -506,6 +511,8 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
       input,
       services,
       game,
+      saveStorage,
+      saveStorageUnavailable,
       sceneFunctions: checked.program.scene,
       scene: started.scene,
       physics,

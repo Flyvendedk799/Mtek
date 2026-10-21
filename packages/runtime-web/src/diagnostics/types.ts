@@ -121,6 +121,8 @@ export const RUNTIME_ASSET_DIAGNOSTICS = {
  */
 export const RUNTIME_GAME_DIAGNOSTICS = {
   E5401: "scene change failed",
+  W5402: "saved data ignored",
+  W5403: "saving failed",
 } as const;
 
 export type RuntimeDiagnosticCode =

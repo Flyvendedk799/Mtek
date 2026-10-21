@@ -141,6 +141,7 @@ The runtime passes `ctx` to every generated function. Its shape is part of ABI 1
 | `ctx.warn(code, spanId)` | report a mapped runtime warning (e.g. index clamping `W8030`, once per span) |
 | `ctx.goTo(sceneName, spanId)`, `ctx.reset()` | `go_to(Scene)` and `reset()` (decisions 0140, 0141): request a scene change, prepared in the background and applied at the start of a later frame (§11.4); the first request wins until it is applied or fails (`E5401`, at `spanId`). `sceneName` is the scene's name (a string constant of the generated code). |
 | `ctx.pause()`, `ctx.resume()`, `ctx.paused()` | the game pause (decision 0143, §7): no fixed ticks and no phase 3 while paused; input, flush, bindings, transforms and rendering go on. |
+| `ctx.save()`, `ctx.load() → boolean`, `ctx.clearSaved()` | saved state and settings (decisions 0145, 0146, `spec/scenes.md` §16): write the persistent states of the running scene to the game's storage, read them back (`true` when at least one stored value was applied), delete the program's stored data. Problems are warnings (`W5402`, `W5403`); nothing throws into generated code. |
 | `ctx.after(seconds, fn, owner, spanId)`, `ctx.every(seconds, fn, owner, spanId)` | timers (decision 0142): `fn` is a closure of the generated code, `owner` the entity record whose handler started it (`self`) or `null` for the scene; the world runs due timers at the start of phase 3 on the game clock and drops the timers of a destroyed owner. |
 | `ctx.budget` | `{ n }`, the iterations of CPU loops left in this frame: refilled with `manifest.preview.loopBudget` at the start of every frame and before `init`, decremented by the checks of `--mode preview` builds (`rt.budgetExceeded(spanId)` throws when it goes below zero; the runtime then reports `E8080`). Zero when the manifest has no `preview` object. Decision 0075. |
 
@@ -183,6 +184,14 @@ Every `spans` entry carries the half-open byte range into the file as stored on 
 `requiredCapabilities.limits` lists only limits **above** the WebGPU defaults that the program needs (the v0.1 profile `webgpu-core-2026` is exactly the default limits, so it is `{}`); `features` lists optional WebGPU features (none in v0.1; `timestamp-query` is requested opportunistically by dev builds and never required).
 
 The optional top-level **`game`** object (decision 0141), `{ "scenes": [ { "name", "module", "manifest" } … ] }`, is present exactly when the program has more than one scene (it sits between `runtimeConfig` and `preview`): every scene sorted by name, with its program module (`app.js` for the entry, `app.<Scene>.js` otherwise) and manifest (`program.manifest.json`, `program.<Scene>.manifest.json`), relative to `baseUrl`. Every manifest of the build carries the same object. A scene state that is `shared state` has `"shared": true` in `scene.state` (absent otherwise).
+
+**Saved state and settings** (decisions 0145, 0146). A scene state declared `saved state` or `setting state` has `"persist": "saved"` or `"persist": "setting"` in `scene.state`. It also has `"storedType"`: the structural description of its type that a stored value must match. A struct is spelled out as `{field: T, ...}` in field order, a user enum as `enum(A|B)` in variant order, and any other type is its name. So a program whose struct or enum changed ignores an old value (`W5402`) instead of misreading it. A program with persistent state has `game.storage`, the name its values are stored under: the project's name (`[a-z0-9-]+`, `mtek.toml`), cut to 64 characters. A single-scene program then has a `game` object without `scenes`. The runtime keeps one JSON document per program in the page's `localStorage` (or the host's `storage`, §6.1) under the key `mtek.save.<game.storage>`:
+
+```json
+{ "format": 1, "values": { "best": { "type": "i32", "value": 12 }, "options": { "type": "{volume: f32, lefty: bool}", "value": { "volume": 0.5, "lefty": false } } } }
+```
+
+`type` is the `storedType` the value was written with. `value` is the JSON form of the CPU value of §4.1: vectors, quaternions, colours and structs as objects, `mat4` and arrays as arrays, enums as variant indices. Two programs with the same project name on one origin share their stored values. Give them different names.
 
 The optional top-level `preview` object, `{ "loopBudget": <integer 1 … 4294967295> }`, is present exactly in the manifest of a `--mode preview` build (it sits between `runtimeConfig` and `entryScene`; the build id covers it): the runtime enforces the loop budget through `ctx.budget` (§4.2) and refuses any request outside `baseUrl` (§6.5). No other mode writes the key. Decision 0075.
 
@@ -294,9 +303,18 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
   pauseWhenHidden?: boolean;                  // default from manifest runtimeConfig
   devicePixelRatio?: number | "auto";         // default "auto"
   devOverlay?: boolean;                       // development runtime only (decision 0055); the release runtime ignores it
+  storage?: MtekSaveStorage | null;           // saved state and settings (decision 0145); see below
   test?: MtekTestOptions;                     // §10.2; omit in production
 }
+
+export interface MtekSaveStorage {           // the part of the Web Storage API saves use; localStorage satisfies it
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
 ```
+
+`storage` is where saved state and settings are kept (§5, `spec/scenes.md` §16). By default it is the page's `localStorage`. With `test` options it is a fresh in-memory store, so tests do not depend on an earlier run. `null` means memory only. A page whose `localStorage` cannot be reached falls back to memory and warns `W5403` on the first write.
 
 `mountMtek` resolves only when the device is ready, the manifest is accepted, every startup shader module and pipeline was created without validation error, and every startup asset is `ready`. It **rejects** with an `MtekMountError`:
 

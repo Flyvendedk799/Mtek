@@ -1217,6 +1217,18 @@
       "doc": "Limits `x` to the range `lo..hi`."
     },
     {
+      "name": "clear_saved",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Deletes everything stored."
+    },
+    {
       "name": "cos",
       "signatures": [
         "(x: T) -> T"
@@ -1383,6 +1395,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Length of a vector, or the absolute value of a scalar."
+    },
+    {
+      "name": "load",
+      "signatures": [
+        "() -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Reads saved values back; false if none."
     },
     {
       "name": "log",
@@ -1602,6 +1626,18 @@
       "cpuSemantics": "`clamp(x, 0, 1)`.",
       "since": "M1",
       "doc": "Limits `x` to 0..1."
+    },
+    {
+      "name": "save",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Writes the saved and setting state to storage."
     },
     {
       "name": "sign",
