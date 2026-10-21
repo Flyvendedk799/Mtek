@@ -464,6 +464,9 @@ impl Checker<'_> {
                     .unwrap_or_default();
                 cpu.then(|| (format!("the `cpu fn` '{name}'"), true))
             }
+            // The easing curves are CPU functions without effects (decision 0135): a binding,
+            // which the CPU evaluates, may use them.
+            Callee::Builtin(builtin) if builtin.name.starts_with("easing.") => None,
             Callee::Builtin(builtin) => (builtin.domain == Domain::Cpu || builtin.handlers_only)
                 .then(|| (format!("the CPU intrinsic `{}`", builtin.name), false)),
             // Direct frame reads are allowed and become dependencies below.

@@ -152,6 +152,71 @@ fn hud_namespace() -> NamespaceDef {
     )
 }
 
+/// `easing` (decision 0135, `spec/tweens.md`): easing curves `f32 -> f32` for tweens. CPU functions
+/// that are pure, so `bind` may use them (`types/bind.rs`); not in GPU code and not constant.
+fn ease_namespace() -> NamespaceDef {
+    let member = |name, doc| {
+        NamespaceMember::Function(
+            function(
+                name,
+                Domain::Cpu,
+                false,
+                Milestone::M1,
+                doc,
+                vec![sig(&[p("t", F32)], F32)],
+            )
+            .cpu_semantics("Binary64 arithmetic on the clamped argument, rounded once to f32."),
+        )
+    };
+    namespace(
+        "easing",
+        Milestone::M1,
+        "Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.",
+        vec![
+            member(
+                "in_quad",
+                "Easing t²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "out_quad",
+                "Easing 1 − (1 − t)²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "in_out_quad",
+                "Easing quadratic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "in_cubic",
+                "Easing t³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "out_cubic",
+                "Easing 1 − (1 − t)³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "in_out_cubic",
+                "Easing cubic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "in_out_sine",
+                "Easing (1 − cos(π t)) / 2; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "out_back",
+                "Easing overshoots slightly past 1, then settles; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "out_elastic",
+                "Easing springs past 1 and oscillates to rest; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "out_bounce",
+                "Easing bounces at 1 like a dropped ball; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+        ],
+    )
+}
+
 /// Every namespace of the v0.1 registry. (`Key` is an enum, see `events::enums`.)
 pub(super) fn namespaces() -> Vec<NamespaceDef> {
     let vec3 = exact(TypeRef::Vec3);
@@ -365,6 +430,8 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         ),
         // Decision 0134 (spec/hud.md): immediate-mode HUD drawn over the canvas each frame.
         hud_namespace(),
+        // Decision 0135 (spec/tweens.md): easing curves for tweens.
+        ease_namespace(),
         // `lighting.pbr` and the `Pbr` material landed with task M4-03, before the M4 gate
         // (decision 0057).
         namespace(

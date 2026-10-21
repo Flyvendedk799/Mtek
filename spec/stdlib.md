@@ -56,6 +56,7 @@ Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material tex
 | `asset` | `glb(path: string) -> glb_asset`, `texture(path: string) -> texture`, `linear_texture(path: string) -> texture`, `sound(path: string) -> sound` (`spec/assets.md` §2, `spec/audio.md` §2; `glb_asset` accessors in §2.1 there; implemented by task M4-05 ahead of the M4 gate, decision 0058) |
 | `lighting` | `pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` — GPU only (implemented by M4-03, decision 0057) |
 | `hud` | `text(content: string, at: vec2[, size: f32[, tint: color[, align: f32]]])`, `rect(at: vec2, size: vec2, tint: color[, align: f32])`, `button(label: string, at: vec2[, size: f32]) -> bool` — CPU, handlers and lifecycle functions only; immediate mode, drawn over the canvas (`spec/hud.md`, decision 0134) |
+| `easing` | `in_quad(t: f32) -> f32`, `out_quad(t: f32) -> f32`, `in_out_quad(t: f32) -> f32`, `in_cubic(t: f32) -> f32`, `out_cubic(t: f32) -> f32`, `in_out_cubic(t: f32) -> f32`, `in_out_sine(t: f32) -> f32`, `out_back(t: f32) -> f32`, `out_elastic(t: f32) -> f32`, `out_bounce(t: f32) -> f32` — CPU, also allowed in `bind`; `t` clamped to 0..1, result binary32 (`spec/tweens.md`, decision 0135) |
 | `Key` | enum constants (§5.2) |
 
 ## 3. Schemas

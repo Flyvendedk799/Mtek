@@ -639,10 +639,11 @@ fn every_namespace_member_of_section_2_is_present() {
     let namespaces: Vec<&str> = registry.namespaces.iter().map(|n| n.name).collect();
     for name in [
         "quat", "mat4", "color", "texture", "sampler", "frame", "asset", "lighting", "hud",
+        "easing",
     ] {
         assert!(namespaces.contains(&name), "missing namespace {name}");
     }
-    assert_eq!(namespaces.len(), 9);
+    assert_eq!(namespaces.len(), 10);
     // Member counts: nothing beyond the specification.
     let count = |name: &str| registry.namespace(name).map_or(0, |n| n.members.len());
     assert_eq!(
@@ -655,10 +656,41 @@ fn every_namespace_member_of_section_2_is_present() {
             count("frame"),
             count("asset"),
             count("lighting"),
-            count("hud")
+            count("hud"),
+            count("easing")
         ],
-        [3, 5, 2, 2, 4, 3, 4, 1, 3]
+        [3, 5, 2, 2, 4, 3, 4, 1, 3, 10]
     );
+}
+
+/// The `easing` namespace (decision 0135): ten CPU-only `(f32) -> f32` curves, usable in `bind`.
+#[test]
+fn the_easing_namespace_is_ten_cpu_curves() {
+    let registry = registry();
+    let names = [
+        "in_quad",
+        "out_quad",
+        "in_out_quad",
+        "in_cubic",
+        "out_cubic",
+        "in_out_cubic",
+        "in_out_sine",
+        "out_back",
+        "out_elastic",
+        "out_bounce",
+    ];
+    for name in names {
+        match registry.namespace_member("easing", name) {
+            Some(NamespaceMember::Function(f)) => {
+                assert_eq!(f.domain, Domain::Cpu, "easing.{name}");
+                assert!(!f.handlers_only, "easing.{name}");
+                assert!(!f.const_eligible, "easing.{name}");
+                let shapes: Vec<String> = f.signatures.iter().map(shape).collect();
+                assert_eq!(shapes, ["(f32) -> f32"], "easing.{name}");
+            }
+            _ => panic!("easing.{name} is not a function"),
+        }
+    }
 }
 
 /// The `hud` namespace (decision 0134): CPU-only, handlers-only, with overloads for the optional

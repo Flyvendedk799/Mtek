@@ -33,6 +33,27 @@ pub const STRUCTURAL_HELPERS: [&str; 14] = [
     "fmt",
 ];
 
+/// The members of the `easing` namespace (decision 0135); the runtime names them `easeInQuad`, ….
+pub const EASE_FUNCTIONS: [&str; 10] = [
+    "in_quad",
+    "out_quad",
+    "in_out_quad",
+    "in_cubic",
+    "out_cubic",
+    "in_out_cubic",
+    "in_out_sine",
+    "out_back",
+    "out_elastic",
+    "out_bounce",
+];
+
+fn upper_first(name: &str) -> String {
+    let mut chars = name.chars();
+    chars.next().map_or_else(String::new, |c| {
+        c.to_ascii_uppercase().to_string() + chars.as_str()
+    })
+}
+
 /// `"(a, b) -> r"`, the signature key of the table.
 #[must_use]
 pub fn signature(params: &[&str], result: &str) -> String {
@@ -147,6 +168,16 @@ fn build() -> Table {
     add(&mut t, "transpose", &["mat4"], "mat4", "m4transpose".into());
 
     add(&mut t, "quat.identity", &[], "quat", "qidentity".into());
+    // Easing curves (decision 0135).
+    for name in EASE_FUNCTIONS {
+        add(
+            &mut t,
+            &format!("easing.{name}"),
+            &["f32"],
+            "f32",
+            format!("ease{}", upper_first(&camel(name))),
+        );
+    }
     add(
         &mut t,
         "quat.axis_angle",

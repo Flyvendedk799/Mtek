@@ -199,11 +199,15 @@ describe("tests/semantics/numeric/cpu.json", () => {
       const result = decode(row.expect, row.id).type;
       covered.add(`${row.fn} ${signature(args, result)}`);
     }
-    const missing = Object.entries(RT_OPERATIONS).flatMap(([callee, entries]) =>
-      Object.keys(entries)
-        .map((sig) => `${callee} ${sig}`)
-        .filter((key) => !covered.has(key)),
-    );
+    // The easing curves (decision 0135) are CPU-only and not constant, so the table's generated `fn` rows
+    // and constant folds cannot express them; ease.test.ts checks them instead.
+    const missing = Object.entries(RT_OPERATIONS)
+      .filter(([callee]) => !callee.startsWith("easing."))
+      .flatMap(([callee, entries]) =>
+        Object.keys(entries)
+          .map((sig) => `${callee} ${sig}`)
+          .filter((key) => !covered.has(key)),
+      );
     expect(missing).toEqual([]);
   });
 });

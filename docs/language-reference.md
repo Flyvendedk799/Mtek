@@ -656,6 +656,23 @@ Colour constructors.
 | `color.linear` | function | `(rgb: vec3, a: f32) -> color` | both | yes | A colour from linear-light components. |
 | `color.srgb` | function | `(rgb: vec3, a: f32) -> color` | both | yes | A colour from sRGB-encoded components, converted to linear light with the sRGB transfer function. |
 
+#### `easing`
+
+Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.
+
+| Member | Kind | Signatures | Domain | Constant | Description |
+|---|---|---|---|---|---|
+| `easing.in_cubic` | function | `(t: f32) -> f32` | cpu | no | Easing t³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.in_out_cubic` | function | `(t: f32) -> f32` | cpu | no | Easing cubic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.in_out_quad` | function | `(t: f32) -> f32` | cpu | no | Easing quadratic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.in_out_sine` | function | `(t: f32) -> f32` | cpu | no | Easing (1 − cos(π t)) / 2; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.in_quad` | function | `(t: f32) -> f32` | cpu | no | Easing t²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.out_back` | function | `(t: f32) -> f32` | cpu | no | Easing overshoots slightly past 1, then settles; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.out_bounce` | function | `(t: f32) -> f32` | cpu | no | Easing bounces at 1 like a dropped ball; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.out_cubic` | function | `(t: f32) -> f32` | cpu | no | Easing 1 − (1 − t)³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.out_elastic` | function | `(t: f32) -> f32` | cpu | no | Easing springs past 1 and oscillates to rest; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.out_quad` | function | `(t: f32) -> f32` | cpu | no | Easing 1 − (1 − t)²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+
 #### `frame`
 
 Per-frame values, readable in CPU code and in `bind` expressions, not in GPU stage code (route them through material parameters). `update(dt)` gets the frame delta, which varies from frame to frame; `fixed_update(dt)` runs zero or more times per frame and gets the constant fixed step, 1/60 s by default.
@@ -799,7 +816,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (183)
+## Part C. Features of this build (194)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -823,17 +840,17 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (75)
+### Functions (85)
 
-`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:exp` `function:exp2` `function:floor` `function:fract` `function:hud.button` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:length` `function:lighting.pbr` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:play` `function:play_at` `function:play_music` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:set_muted` `function:set_volume` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
+`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:floor` `function:fract` `function:hud.button` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:length` `function:lighting.pbr` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:play` `function:play_at` `function:play_music` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:set_muted` `function:set_volume` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
 
 ### Type methods (10)
 
 `method:glb_asset.material` `method:glb_asset.material_base_color` `method:glb_asset.material_metallic` `method:glb_asset.material_roughness` `method:glb_asset.material_texture` `method:glb_asset.mesh` `method:glb_asset.node_position` `method:glb_asset.node_rotation` `method:glb_asset.node_scale` `method:glb_asset.primitive`
 
-### Namespaces (9)
+### Namespaces (10)
 
-`namespace:asset` `namespace:color` `namespace:frame` `namespace:hud` `namespace:lighting` `namespace:mat4` `namespace:quat` `namespace:sampler` `namespace:texture`
+`namespace:asset` `namespace:color` `namespace:easing` `namespace:frame` `namespace:hud` `namespace:lighting` `namespace:mat4` `namespace:quat` `namespace:sampler` `namespace:texture`
 
 ### Scene objects (1)
 

@@ -13637,6 +13637,55 @@ function refEq(a, b) {
   return a.slot === b.slot && a.gen === b.gen;
 }
 
+// src/math/ease.ts
+var ELASTIC_C4 = 2 * Math.PI / 3;
+function clamp01(t) {
+  return Number.isFinite(t) ? Math.min(1, Math.max(0, t)) : 0;
+}
+function bounce(x) {
+  return x < 1 / 2.75 ? 7.5625 * x * x : x < 2 / 2.75 ? 7.5625 * (x - 1.5 / 2.75) ** 2 + 0.75 : x < 2.5 / 2.75 ? 7.5625 * (x - 2.25 / 2.75) ** 2 + 0.9375 : 7.5625 * (x - 2.625 / 2.75) ** 2 + 0.984375;
+}
+function easeInQuad(t) {
+  let x = clamp01(t);
+  return Math.fround(x * x);
+}
+function easeOutQuad(t) {
+  let x = clamp01(t);
+  return Math.fround(1 - (1 - x) * (1 - x));
+}
+function easeInOutQuad(t) {
+  let x = clamp01(t);
+  return Math.fround(x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
+}
+function easeInCubic(t) {
+  let x = clamp01(t);
+  return Math.fround(x * x * x);
+}
+function easeOutCubic(t) {
+  let x = clamp01(t);
+  return Math.fround(1 - (1 - x) ** 3);
+}
+function easeInOutCubic(t) {
+  let x = clamp01(t);
+  return Math.fround(x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
+}
+function easeInOutSine(t) {
+  let x = clamp01(t);
+  return Math.fround((1 - Math.cos(Math.PI * x)) / 2);
+}
+function easeOutBack(t) {
+  let x = clamp01(t);
+  return Math.fround(1 + 2.70158 * (x - 1) ** 3 + 1.70158 * (x - 1) ** 2);
+}
+function easeOutElastic(t) {
+  let x = clamp01(t);
+  return Math.fround(x === 0 ? 0 : x === 1 ? 1 : 2 ** (-10 * x) * Math.sin((x * 10 - 0.75) * ELASTIC_C4) + 1);
+}
+function easeOutBounce(t) {
+  let x = clamp01(t);
+  return Math.fround(bounce(x));
+}
+
 // src/math/format.ts
 function formatF32(value) {
   if (Number.isNaN(value)) return "NaN";
@@ -13721,6 +13770,16 @@ export {
   csrgb,
   degrees,
   distance,
+  easeInCubic,
+  easeInOutCubic,
+  easeInOutQuad,
+  easeInOutSine,
+  easeInQuad,
+  easeOutBack,
+  easeOutBounce,
+  easeOutCubic,
+  easeOutElastic,
+  easeOutQuad,
   exp,
   exp2,
   f2i,

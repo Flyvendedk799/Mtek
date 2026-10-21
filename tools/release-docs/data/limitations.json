@@ -335,6 +335,23 @@
       }
     },
     {
+      "id": "tween-scope",
+      "area": "Scenes and entities",
+      "restriction": "Tweens are progress state plus ten CPU easing curves (`easing.in_quad` .. `easing.out_bounce`) used in bindings, lifecycle functions, handlers and `cpu fn`s: no tween objects, timelines, delays, callbacks or user curves in `bind`, no easing in a plain `fn` or on the GPU (`smoothstep` only), and no curve in a `const`.",
+      "reason": "Spec/tweens.md (decision 0135): curves are the smallest addition that makes bindings animate; tween bookkeeping is ordinary state logic that fixtures can observe.",
+      "codes": [
+        "E4002",
+        "E3090"
+      ],
+      "decisions": [
+        "0135"
+      ],
+      "source": {
+        "file": "spec/tweens.md",
+        "quote": "## 4. Limits"
+      }
+    },
+    {
       "id": "audio-scope",
       "area": "Scenes and entities",
       "restriction": "Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy).",

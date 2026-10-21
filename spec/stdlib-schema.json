@@ -1954,6 +1954,143 @@
       ]
     },
     {
+      "name": "easing",
+      "since": "M1",
+      "doc": "Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.",
+      "members": [
+        {
+          "name": "in_cubic",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing t³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "in_out_cubic",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing cubic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "in_out_quad",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing quadratic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "in_out_sine",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing (1 − cos(π t)) / 2; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "in_quad",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing t²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "out_back",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing overshoots slightly past 1, then settles; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "out_bounce",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing bounces at 1 like a dropped ball; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "out_cubic",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing 1 − (1 − t)³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "out_elastic",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing springs past 1 and oscillates to rest; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "out_quad",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing 1 − (1 − t)²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        }
+      ]
+    },
+    {
       "name": "frame",
       "since": "M1",
       "doc": "Per-frame values, readable in CPU code and in `bind` expressions, not in GPU stage code (route them through material parameters). `update(dt)` gets the frame delta, which varies from frame to frame; `fixed_update(dt)` runs zero or more times per frame and gets the constant fixed step, 1/60 s by default.",

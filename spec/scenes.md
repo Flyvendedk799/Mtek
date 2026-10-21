@@ -236,6 +236,8 @@ Audio is no longer in this list: `spec/audio.md` (decision 0130).
 
 Screen-space text and buttons are no longer in this list: `spec/hud.md` (decision 0134) adds the immediate-mode HUD and `spec/language.md` §5.8 (decision 0133) interpolated strings.
 
+Tweens are covered by easing curves in bindings: `spec/tweens.md` (decision 0135) adds the `easing` namespace; a tween is progress state plus `bind(mix(a, b, easing.curve(t)))`. There is still no tween object, timeline or animation clip.
+
 ## 15. Game flow: scenes, reset, pause and timers
 
 Decisions 0140 (`reset`), 0141 (scenes and `go_to`), 0142 (timers), 0143 (`pause`) and 0144 (`while`, `spec/language.md` §7.10).

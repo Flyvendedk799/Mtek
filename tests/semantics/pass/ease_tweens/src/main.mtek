@@ -1,0 +1,24 @@
+// Every easing curve of the easing namespace (decision 0135): in bindings, in update and in a cpu fn.
+cpu fn wobble(t: f32) -> f32 {
+    return easing.out_elastic(t) + easing.out_bounce(t) + easing.in_out_sine(t);
+}
+
+scene Tweens {
+    state t: f32 = 0.0;
+    state y: f32 = 0.0;
+    camera Cam { position: vec3(0.0, 0.0, 6.0); }
+    entity A {
+        position: bind(mix(vec3(-2.0, 0.0, 0.0), vec3(2.0, 0.0, 0.0), easing.in_out_cubic(t)));
+        scale: bind(vec3(1.0, 1.0, 1.0) * easing.out_back(t));
+        mesh: Sphere { radius: 0.5 };
+    }
+    entity B {
+        position: bind(vec3(0.0, easing.in_quad(t) + easing.out_quad(t) + easing.in_out_quad(t), 0.0));
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+    }
+    update(dt: f32) {
+        t = min(t + dt, 1.0);
+        y = easing.in_cubic(t) + easing.out_cubic(t) + wobble(t);
+        B.rotation = quat.euler(0.0, easing.in_out_sine(t) * 3.0, 0.0);
+    }
+}

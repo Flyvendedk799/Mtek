@@ -113,6 +113,26 @@ Negative: `mtek check tests/semantics/fail/e5601_hud_size_out_of_range` gives `E
 
 Known limits are in `spec/hud.md` §6. The release-docs limitation row is `hud-scope`.
 
+## 6. Phase 6.2: Tweens / easing (decision 0135, `spec/tweens.md`)
+
+Automated (cheap, already green here):
+- `cargo test -p mtek-compiler --test fixtures` covers `tests/semantics/pass/ease_tweens` (all ten curves in `bind`, `update` and a `cpu fn`) and `tests/syntax/pass/EaseTween.mtek` (the spec example).
+- `--test stdlib_registry`: `the_easing_namespace_is_ten_cpu_curves`, namespace count 10. `--test stdlib_schema`: the schema has `easing`.
+- `--test codegen_cpu_table --test numeric_cpu_table --test fold_cpu_table`: unchanged and green. The easing curves are deliberately **not** in `tests/semantics/numeric/cpu.json`, because its generated `fn` rows and constant folds cannot call CPU-only, non-constant functions. `conformance.test.ts` excludes `easing.*` explicitly, with a comment.
+- `npx vitest run src/math` in `packages/runtime-web` (111 tests, including `ease.test.ts`: endpoints 0 and 1, clamping, NaN to 0, known values, binary32 results).
+
+Manual, in a WebGPU browser:
+1. `cargo run -p mtek-cli -- dev examples/hud-score --open`.
+2. Press **Space**. The cube should jump to about 1.4x size and ease back to 1x over 0.3 s, ending in a small undershoot (`easing.out_back`). It should not grow linearly or stay large.
+3. Fail: the cube never changes size, it snaps without easing, or the console shows `rt.easeOutBack is not a function` (a stale prebuilt runtime; run `npm run check:prebuilt`).
+
+Negative checks (no new codes):
+- Calling `easing.in_quad(t)` in a plain `fn` gives `E4002`.
+- Using `const K: f32 = easing.in_quad(0.5);` gives `E3090`.
+- Calling a `cpu fn` in `bind` still gives `E5005`.
+
+The namespace is `easing`, not `ease`: built-in namespaces cannot be shadowed (`E2001`), and an existing fixture imports a user function `ease`.
+
 ## Pre-existing failures seen while running targeted tests (not caused by this branch)
 
 - `cargo test -p mtek-compiler --lib syntax::lexer_tests::longest_match_wins_for_operators` expects `=>` to lex as `Eq Gt`. The base branch's `match` work made it `FatArrow`.

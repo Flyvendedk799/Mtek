@@ -1,6 +1,7 @@
-// HUD score (spec/hud.md, decision 0134; string interpolation, spec/language.md 5.8, decision 0133).
+// HUD score (spec/hud.md, decision 0134; string interpolation, spec/language.md 5.8, decision 0133;
+// easing, spec/tweens.md, decision 0135).
 //
-//   Space    score a point: the cube pulses and the score text updates
+//   Space    score a point: the cube pops and the score text updates
 //   R, or the "Reset" button at the bottom   start again
 //
 // The HUD is immediate mode: `update` draws the text, the bars and the button again every frame, and
@@ -11,6 +12,9 @@ const ROUND: f32 = 30.0;
 
 const BAR_WIDTH: f32 = 300.0;
 
+// How long the pop of the cube lasts after a point, in seconds.
+const PULSE: f32 = 0.3;
+
 scene Score {
     clear_color: #0e1420;
     ambient_color: #ffffff;
@@ -19,7 +23,7 @@ scene Score {
     state points: i32 = 0;
     state best: i32 = 0;
     state elapsed: f32 = 0.0;
-    // How long the cube still glows after a point, in seconds.
+    // How long the cube still pops after a point, in seconds (PULSE down to 0).
     state pulse: f32 = 0.0;
 
     camera Main {
@@ -34,13 +38,14 @@ scene Score {
 
     entity Cube {
         rotation: bind(quat.euler(0.3, frame.time, 0.0));
-        scale: bind(vec3(1.0 + pulse, 1.0 + pulse, 1.0 + pulse));
+        // A point pops the cube to 1.4 and eases it back with a small undershoot (`easing.out_back`).
+        scale: bind(vec3(1.0, 1.0, 1.0) * (1.4 - 0.4 * easing.out_back(1.0 - pulse / PULSE)));
         mesh: Box { size: vec3(1.0, 1.0, 1.0) };
         material: Pbr { base_color: #4fa3ff; roughness: 0.35 };
     }
 
     update(dt: f32) {
-        pulse = max(pulse - dt * 2.0, 0.0);
+        pulse = max(pulse - dt, 0.0);
         let left: f32 = max(ROUND - elapsed, 0.0);
         if left > 0.0 {
             elapsed += dt;
@@ -66,7 +71,7 @@ scene Score {
         if elapsed < ROUND {
             points += 1;
             best = max(best, points);
-            pulse = 0.3;
+            pulse = PULSE;
         }
     }
 
