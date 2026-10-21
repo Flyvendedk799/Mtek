@@ -280,7 +280,10 @@ fn owned_vars(body: &ir::Block) -> BTreeSet<u32> {
                         visit(block, out);
                     }
                 }
-                ir::Stmt::ForRange { body, .. } | ir::Stmt::ForEach { body, .. } => {
+                ir::Stmt::ForRange { body, .. }
+                | ir::Stmt::ForEach { body, .. }
+                | ir::Stmt::While { body, .. }
+                | ir::Stmt::Timer { body, .. } => {
                     visit(body, out);
                 }
                 ir::Stmt::Block { body } => visit(body, out),
@@ -352,6 +355,107 @@ impl FnLowering<'_, '_> {
             );
         }
         Ok(lowered)
+    }
+
+    /// `while cond { body }` (decision 0144), in a block of its own with the iteration counter:
+    ///
+    /// ```js
+    /// { let t_0 = 0; while (cond) { if (++t_0 > 1000000) { rt.whileLimit(id); } body } }
+    /// ```
+    ///
+    /// Every build counts: an execution that starts more than
+    /// [`crate::syntax::ast::WHILE_ITERATION_CAP`] iterations throws, and the runtime reports
+    /// `E8080` at the loop. A preview build checks its loop budget too ([`Self::loop_body`]).
+    fn while_loop(
+        &mut self,
+        cond: &ir::Expr,
+        body: &ir::Block,
+        span: Span,
+    ) -> Result<Stmt, String> {
+        let counter = self.temp();
+        let id = (self.span_id)(span)?;
+        let cond = self.expr(cond)?;
+        let mut lowered = self.loop_body(body, span)?;
+        let over = Expr::binary(
+            ">",
+            Expr::unary("++", Expr::ident(&counter)),
+            Expr::Num(Number::U32(crate::syntax::ast::WHILE_ITERATION_CAP)),
+        );
+        lowered.insert(
+            0,
+            Stmt::If {
+                branches: vec![(
+                    over,
+                    vec![Stmt::Expr {
+                        expr: rt("whileLimit", vec![Expr::Num(Number::U32(id))]),
+                        span: Some(span),
+                    }],
+                )],
+                otherwise: None,
+                span: Some(span),
+            },
+        );
+        Ok(Stmt::Block {
+            body: vec![
+                Stmt::Let {
+                    name: counter,
+                    value: int(0),
+                    span: Some(span),
+                },
+                Stmt::While {
+                    cond,
+                    body: lowered,
+                    span: Some(span),
+                },
+            ],
+        })
+    }
+
+    /// `after(seconds) { body }` / `every(seconds) { body }` (decision 0142): the body becomes a
+    /// local function (a closure over the handler's `let` locals, parameters and `self`) handed
+    /// to the runtime's timer list:
+    ///
+    /// ```js
+    /// { function t_0() { body } ctx.after(seconds, t_0, self, id); }
+    /// ```
+    ///
+    /// The owner is `self` inside an entity's or a prefab's own bodies (its timers end with
+    /// it), `null` in a scene's.
+    fn timer(
+        &mut self,
+        every: bool,
+        seconds: &ir::Expr,
+        body: &ir::Block,
+        span: Span,
+    ) -> Result<Stmt, String> {
+        let name = self.temp();
+        let id = (self.span_id)(span)?;
+        let seconds = self.expr(seconds)?;
+        let lowered = self.block(body)?;
+        let owner = match self.owner {
+            Some(ir::Owner::Entity { .. }) => Expr::ident("self"),
+            _ => Expr::Null,
+        };
+        let method = if every { "every" } else { "after" };
+        Ok(Stmt::Block {
+            body: vec![
+                Stmt::Function {
+                    name: name.clone(),
+                    params: Vec::new(),
+                    body: lowered,
+                    span: Some(span),
+                },
+                Stmt::Expr {
+                    expr: Expr::ident("ctx").member(method).call(vec![
+                        seconds,
+                        Expr::Ident(name),
+                        owner,
+                        Expr::Num(Number::U32(id)),
+                    ]),
+                    span: Some(span),
+                },
+            ],
+        })
     }
 
     /// `body`, preceded by `const budget = ctx.budget;` when it contains a budget check. The
@@ -446,6 +550,13 @@ impl FnLowering<'_, '_> {
                 body: self.loop_body(body, *span)?,
                 span: Some(*span),
             },
+            ir::Stmt::While { cond, body, span } => self.while_loop(cond, body, *span)?,
+            ir::Stmt::Timer {
+                every,
+                seconds,
+                body,
+                span,
+            } => self.timer(*every, seconds, body, *span)?,
             // The function's variables end here: returned owned storage needs no copy.
             ir::Stmt::Return { value, span } => Stmt::Return {
                 value: value.as_ref().map(|v| self.value(v)).transpose()?,
@@ -761,6 +872,42 @@ impl FnLowering<'_, '_> {
         }
     }
 
+    /// A `match` expression (decision 0129): the scrutinee, a `u32` variant index, is evaluated
+    /// once as the argument of an arrow function whose body tests it arm by arm,
+    /// `(($match) => $match === 0 ? a : $match === 1 || $match === 2 ? b : c)(scrutinee)`. Only
+    /// the selected arm is evaluated. Without a `_` arm the arms cover every variant, so the
+    /// last arm needs no test.
+    fn match_expr(
+        &mut self,
+        scrutinee: &ir::Expr,
+        arms: &[ir::MatchArm],
+        otherwise: Option<&ir::Expr>,
+    ) -> Result<Expr, String> {
+        const PARAM: &str = "$match";
+        let argument = self.expr(scrutinee)?;
+        let mut tested: Vec<(Expr, Expr)> = Vec::with_capacity(arms.len());
+        for arm in arms {
+            let mut test: Option<Expr> = None;
+            for value in &arm.values {
+                let equal = Expr::binary("===", Expr::ident(PARAM), Expr::Num(Number::U32(*value)));
+                test = Some(match test {
+                    None => equal,
+                    Some(before) => Expr::binary("||", before, equal),
+                });
+            }
+            let test = test.ok_or("a `match` arm without values")?;
+            tested.push((test, self.expr(&arm.value)?));
+        }
+        let mut body = match otherwise {
+            Some(otherwise) => self.expr(otherwise)?,
+            None => tested.pop().ok_or("a `match` without arms")?.1,
+        };
+        while let Some((test, value)) = tested.pop() {
+            body = Expr::Cond(Box::new(test), Box::new(value), Box::new(body));
+        }
+        Ok(Expr::Arrow(vec![PARAM.to_owned()], Box::new(body)).call(vec![argument]))
+    }
+
     /// Whether the value of `expr` is an array or struct that shares storage with an owned
     /// `var`, so that it must be copied before it is used anywhere else (decision 0045).
     fn escapes_owned(&self, expr: &ir::Expr) -> bool {
@@ -841,9 +988,50 @@ impl FnLowering<'_, '_> {
                 let _ = args;
                 Expr::ident("ctx").member("random").call(Vec::new())
             }
+            // `random_range`, `random_int`, `chance` (decision 0149): one draw each, in the runtime.
+            ir::ExprKind::Builtin { function, args }
+                if matches!(function.as_str(), "random_range" | "random_int" | "chance") =>
+            {
+                let member = match function.as_str() {
+                    "random_range" => "randomRange",
+                    "random_int" => "randomInt",
+                    _ => "chance",
+                };
+                let arguments = self.exprs(args)?;
+                Expr::ident("ctx").member(member).call(arguments)
+            }
+            // The tag built-ins (decision 0150): `ctx.countTagged(tag)` and friends.
+            ir::ExprKind::Builtin { function, args } if tag_member(function).is_some() => {
+                let member = tag_member(function).unwrap_or_default();
+                let arguments = self.exprs(args)?;
+                Expr::ident("ctx").member(member).call(arguments)
+            }
             ir::ExprKind::Builtin { function, args } if function == "is_key_down" => {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member("isKeyDown").call(arguments)
+            }
+            // Input polling (decision 0153) and array draws (decision 0152).
+            ir::ExprKind::Builtin { function, args }
+                if matches!(
+                    function.as_str(),
+                    "key_pressed"
+                        | "key_released"
+                        | "pointer_position"
+                        | "is_pointer_down"
+                        | "choose"
+                        | "shuffle"
+                ) =>
+            {
+                let member = match function.as_str() {
+                    "key_pressed" => "keyPressed",
+                    "key_released" => "keyReleased",
+                    "pointer_position" => "pointerPosition",
+                    "is_pointer_down" => "isPointerDown",
+                    "choose" => "choose",
+                    _ => "shuffle",
+                };
+                let arguments = self.exprs(args)?;
+                Expr::ident("ctx").member(member).call(arguments)
             }
             ir::ExprKind::Builtin { function, args } if function == "print" => {
                 let mut arguments = self.exprs(args)?;
@@ -877,9 +1065,127 @@ impl FnLowering<'_, '_> {
                 arguments.push(Expr::Num(Number::U32(span_id)));
                 Expr::ident("ctx").member("destroy").call(arguments)
             }
+            // Audio (decision 0130): `ctx.audio.<method>(spanId, ..args)`; the span names the call
+            // in `W8201`, and the runtime supplies the defaults of omitted arguments.
+            ir::ExprKind::Builtin { function, args } if audio_method(function).is_some() => {
+                let method = audio_method(function).unwrap_or_default();
+                let span_id = (self.span_id)(expr.span)?;
+                let mut arguments = vec![Expr::Num(Number::U32(span_id))];
+                arguments.extend(self.exprs(args)?);
+                Expr::ident("ctx")
+                    .member("audio")
+                    .member(method)
+                    .call(arguments)
+            }
+            // An interpolated string (decision 0133): its pieces joined with `+`, each value
+            // through `rt.fmt(value, type, precision)`; a leading `""` makes the sum a string.
+            ir::ExprKind::Builtin { function, args } if function == "interp" => {
+                let mut joined: Option<Expr> = None;
+                for arg in args {
+                    let piece = self.expr(arg)?;
+                    joined = Some(match joined {
+                        None if matches!(
+                            &arg.kind,
+                            ir::ExprKind::Const {
+                                value: ir::Value::String(_)
+                            }
+                        ) =>
+                        {
+                            piece
+                        }
+                        None => Expr::binary("+", Expr::string(""), piece),
+                        Some(left) => Expr::binary("+", left, piece),
+                    });
+                }
+                joined.unwrap_or_else(|| Expr::string(""))
+            }
+            ir::ExprKind::Builtin { function, args } if function == "fmt" => {
+                let [value, precision] = args.as_slice() else {
+                    return Err("a fmt without a value and a precision".to_owned());
+                };
+                let ir::ExprKind::Const {
+                    value: ir::Value::I32(precision),
+                } = &precision.kind
+                else {
+                    return Err("a fmt whose precision is not a constant".to_owned());
+                };
+                rt(
+                    "fmt",
+                    vec![
+                        self.expr(value)?,
+                        Expr::string(&value.ty),
+                        Expr::Num(Number::I32(*precision)),
+                    ],
+                )
+            }
+            // The HUD (decision 0134): `ctx.hud.<member>(spanId, ..args)`; the runtime supplies the
+            // defaults of omitted arguments and names the call in `W8203`.
+            ir::ExprKind::Builtin { function, args } if function.starts_with("hud.") => {
+                let member = function.trim_start_matches("hud.");
+                let span_id = (self.span_id)(expr.span)?;
+                let mut arguments = vec![Expr::Num(Number::U32(span_id))];
+                arguments.extend(self.exprs(args)?);
+                Expr::ident("ctx")
+                    .member("hud")
+                    .member(member)
+                    .call(arguments)
+            }
             ir::ExprKind::Builtin { function, args } if function == "alive" => {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member("alive").call(arguments)
+            }
+            // `set_camera(Name)`: `ctx.selectCamera("Name")` (decision 0154). An unknown camera
+            // is a compile error, so the call carries no span.
+            ir::ExprKind::Builtin { function, args } if function == "set_camera" => {
+                let [camera] = args.as_slice() else {
+                    return Err("a set_camera without one argument".to_owned());
+                };
+                let ir::ExprKind::Const {
+                    value: ir::Value::String(name),
+                } = &camera.kind
+                else {
+                    return Err("a set_camera whose argument is not a camera name".to_owned());
+                };
+                Expr::ident("ctx")
+                    .member("selectCamera")
+                    .call(vec![Expr::string(name)])
+            }
+            // `particle_count()`: `ctx.particleCount()` (decision 0155). Callable from `update`.
+            ir::ExprKind::Builtin { function, args } if function == "particle_count" => {
+                let _ = args;
+                Expr::ident("ctx").member("particleCount").call(Vec::new())
+            }
+            // `go_to(Scene)`: `ctx.goTo("Scene", spanId)` (decision 0141); the span names the call
+            // for `E5401` when the scene cannot be loaded.
+            ir::ExprKind::Builtin { function, args } if function == "go_to" => {
+                let [scene] = args.as_slice() else {
+                    return Err("a go_to without one argument".to_owned());
+                };
+                let ir::ExprKind::Const {
+                    value: ir::Value::String(name),
+                } = &scene.kind
+                else {
+                    return Err("a go_to whose argument is not a scene name".to_owned());
+                };
+                let span_id = (self.span_id)(expr.span)?;
+                Expr::ident("ctx")
+                    .member("goTo")
+                    .call(vec![Expr::string(name), Expr::Num(Number::U32(span_id))])
+            }
+            // `reset()`, `pause()`, `resume()` and `paused()` (decisions 0140 and 0143); `save()`,
+            // `load()` and `clear_saved()` (decision 0145).
+            ir::ExprKind::Builtin { function, args }
+                if matches!(
+                    function.as_str(),
+                    "reset" | "pause" | "resume" | "paused" | "save" | "load" | "clear_saved"
+                ) =>
+            {
+                let _ = args;
+                let member = match function.as_str() {
+                    "clear_saved" => "clearSaved",
+                    other => other,
+                };
+                Expr::ident("ctx").member(member).call(Vec::new())
             }
             ir::ExprKind::Builtin { function, args } => {
                 let types: Vec<&str> = args.iter().map(|a| a.ty.as_str()).collect();
@@ -888,12 +1194,23 @@ impl FnLowering<'_, '_> {
             }
             ir::ExprKind::State { owner, name } => self.state_path(*owner, name),
             ir::ExprKind::EntityRef { entity } => self.entity(*entity).member("ref"),
+            ir::ExprKind::Match {
+                scrutinee,
+                arms,
+                otherwise,
+            } => self.match_expr(scrutinee, arms, otherwise.as_deref())?,
             ir::ExprKind::PrefabLiteral { prefab, .. } => {
                 return Err(format!(
                     "a literal of the prefab '{prefab}' outside the argument of spawn"
                 ));
             }
             ir::ExprKind::EntityField { entity, field } => self.entity(*entity).member(field),
+            ir::ExprKind::RefField { target, field } => {
+                let value = self.expr(target)?;
+                Expr::ident("ctx")
+                    .member("refField")
+                    .call(vec![value, Expr::string(field)])
+            }
             ir::ExprKind::CameraField { field, .. } => {
                 Expr::ident("ctx").member("cam").member(field)
             }
@@ -1126,6 +1443,20 @@ fn swizzle(ty: &str, components: &[u32], value: Expr) -> Result<Expr, String> {
     }
 }
 
+/// The `ctx.audio` method of an audio intrinsic (decision 0130).
+fn audio_method(function: &str) -> Option<&'static str> {
+    Some(match function {
+        "play" => "play",
+        "play_at" => "playAt",
+        "play_music" => "playMusic",
+        "stop_music" => "stopMusic",
+        "set_volume" => "setVolume",
+        "set_muted" => "setMuted",
+        "is_muted" => "isMuted",
+        _ => return None,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1163,11 +1494,24 @@ mod tests {
                     expr(lhs, out);
                     expr(rhs, out);
                 }
+                ir::ExprKind::Match {
+                    scrutinee,
+                    arms,
+                    otherwise,
+                } => {
+                    expr(scrutinee, out);
+                    arms.iter().for_each(|arm| expr(&arm.value, out));
+                    if let Some(otherwise) = otherwise {
+                        expr(otherwise, out);
+                    }
+                }
                 ir::ExprKind::Call { args, .. }
                 | ir::ExprKind::Builtin { args, .. }
                 | ir::ExprKind::Construct { args } => args.iter().for_each(|a| expr(a, out)),
                 ir::ExprKind::Convert { arg } => expr(arg, out),
-                ir::ExprKind::Components { base, .. } | ir::ExprKind::Field { base, .. } => {
+                ir::ExprKind::Components { base, .. }
+                | ir::ExprKind::Field { base, .. }
+                | ir::ExprKind::RefField { target: base, .. } => {
                     expr(base, out);
                 }
                 ir::ExprKind::Index { base, index } => {
@@ -1252,6 +1596,21 @@ mod tests {
                     } => {
                         out.push(*span);
                         expr(array, out);
+                        block(body, out);
+                    }
+                    ir::Stmt::While { cond, body, span } => {
+                        out.push(*span);
+                        expr(cond, out);
+                        block(body, out);
+                    }
+                    ir::Stmt::Timer {
+                        seconds,
+                        body,
+                        span,
+                        ..
+                    } => {
+                        out.push(*span);
+                        expr(seconds, out);
                         block(body, out);
                     }
                     ir::Stmt::Return { value, span } => {
@@ -1901,4 +2260,17 @@ pub fn emit_prefab_behaviors(
         emitted.bindings.push(name);
     }
     Ok(emitted)
+}
+
+/// The context member of a tag built-in (decision 0150).
+fn tag_member(function: &str) -> Option<&'static str> {
+    Some(match function {
+        "count_tagged" => "countTagged",
+        "first_tagged" => "firstTagged",
+        "nearest_tagged" => "nearestTagged",
+        "has_tag" => "hasTag",
+        "tagged" => "tagged",
+        "destroy_tagged" => "destroyTagged",
+        _ => return None,
+    })
 }

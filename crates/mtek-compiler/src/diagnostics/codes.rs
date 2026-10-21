@@ -130,6 +130,16 @@ catalogue! {
     W3081 Warning "unreachable code",
     E3090 Error "not a constant expression",
     E3102 Error "field or parameter type mismatch",
+    E3201 Error "non-exhaustive match",
+    E3202 Error "unreachable match arm",
+    E3203 Error "match on a value that is not an enum",
+    E3204 Error "invalid match pattern",
+    E3205 Error "unknown enum variant",
+    E3206 Error "match arms of different types",
+    E3210 Error "timer block uses an enclosing variable",
+    E3211 Error "invalid timer time",
+    E3501 Error "value cannot be interpolated",
+    E3502 Error "invalid format spec",
     // 5.4 Functions, effects, stages (`4xxx`)
     E4001 Error "recursion not supported",
     E4002 Error "impure call from pure function",
@@ -158,6 +168,8 @@ catalogue! {
     E5012 Error "scene has no camera",
     E5013 Error "ambiguous active camera",
     E5014 Error "unknown scene object kind",
+    E5015 Error "set_camera target is not a camera",
+    E5016 Error "clip cannot play",
     E5020 Error "material without mesh",
     E5030 Error "named entity cannot be destroyed",
     E5040 Error "unsupported prefab assembly operation",
@@ -188,6 +200,24 @@ catalogue! {
     E5121 Error "body without collider",
     E5122 Error "scaled dynamic or kinematic body",
     E5123 Error "command not valid for this body kind",
+    E5201 Error "go_to target is not a scene",
+    E5202 Error "shared state outside a scene",
+    E5203 Error "shared state of a type that cannot carry over",
+    E5204 Error "shared state with different types",
+    E5210 Error "persistent state outside a scene",
+    E5211 Error "persistent state of a type that cannot be stored",
+    E5212 Error "persistent state with different types or kinds",
+    E5220 Error "invalid tag",
+    E5221 Error "tag argument is not a string literal",
+    E5222 Error "unknown tag",
+    E5223 Error "destroying a tag of a named entity",
+    E5224 Error "tagged entities outside a for loop",
+    E5401 Error "scene change failed",
+    W5402 Warning "saved data ignored",
+    W5403 Warning "saving failed",
+    E5501 Error "audio argument out of range",
+    E5601 Error "HUD size out of range",
+    E5701 Error "sprite sheet layout out of range",
     E5901 Error "scene switching not supported",
     E5902 Error "transparency not supported",
     // 5.6 GPU and target (`6xxx`)
@@ -224,6 +254,12 @@ catalogue! {
     E7026 Error "asset limit exceeded",
     E7030 Error "asset fetch or integrity failure",
     E7031 Error "image decode failure",
+    E7101 Error "unsupported audio file",
+    E7102 Error "malformed audio file",
+    E7103 Error "invalid favicon",
+    E7104 Error "game package exceeds itch.io limits",
+    E7105 Error "unsupported font file",
+    E7106 Error "malformed font file",
     E7901 Error "remote assets not supported",
     E7902 Error "node hierarchy instancing not supported",
     // 5.8 Runtime (`8xxx`)
@@ -255,6 +291,10 @@ catalogue! {
     E8102 Error "physics module failed to load",
     E8103 Error "non-finite pose produced by the solver",
     E8104 Error "non-finite value given to a body",
+    W8201 Warning "audio value clamped",
+    W8202 Warning "sound could not be decoded",
+    W8203 Warning "too many HUD items",
+    W8204 Warning "font could not be loaded",
     // 5.9 Project and internal (`9xxx`)
     E9001 Error "invalid project configuration",
     E9002 Error "too many modules",
@@ -305,7 +345,8 @@ impl Code {
     /// in v0.1"), except the internal error `E9999`.
     #[must_use]
     pub fn is_unsupported_feature(self) -> bool {
-        self != Code::E9999 && self.short().get(2..3) == Some("9")
+        !matches!(self, Code::E9999 | Code::E5901 | Code::E5902)
+            && self.short().get(2..3) == Some("9")
     }
 
     /// The anchor of this code inside `spec/diagnostics.md`, for the `docs`
@@ -324,6 +365,8 @@ impl Code {
     pub fn default_phase(self) -> Phase {
         match self {
             Code::E6100 => Phase::Validate,
+            // Reported by the runtime when a `go_to` cannot load its scene (decision 0141).
+            Code::E5401 | Code::W5402 | Code::W5403 => Phase::Runtime(RuntimePhase::Update),
             _ => match self.range() {
                 0 | 1 => Phase::Parse,
                 6 => Phase::Emit,
@@ -401,9 +444,12 @@ mod tests {
         assert_eq!(Code::E3102.range(), 3);
         assert_eq!(Code::E9999.range(), 9);
         assert!(Code::E1901.is_unsupported_feature());
-        assert!(Code::E5902.is_unsupported_feature());
         assert!(Code::E4901.is_unsupported_feature());
         assert!(!Code::E9999.is_unsupported_feature());
+        // Retired by decision 0141: scene switching is `go_to`.
+        assert!(!Code::E5901.is_unsupported_feature());
+        // Retired by decision 0138: materials can be translucent.
+        assert!(!Code::E5902.is_unsupported_feature());
         assert!(!Code::E9010.is_unsupported_feature());
         assert!(!Code::E3102.is_unsupported_feature());
     }

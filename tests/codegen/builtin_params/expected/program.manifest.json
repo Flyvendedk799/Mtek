@@ -3,7 +3,7 @@
   "runtimeAbi": 1,
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "buildId": "1249989ef63e87e5e447d0022917c4b461ce8c72def35334e299c0429230d90e",
+  "buildId": "2d5d8530c8f1408d1693af24591c6b84d78787b3dd71a1f4d00b95a8a4fa15df",
   "targetProfile": "webgpu-core-2026",
   "requiredCapabilities": {
     "features": [],
@@ -30,7 +30,7 @@
     {
       "id": 1,
       "path": "std/materials.mtek",
-      "sha256": "cbc8cdb3b47bc2ce2aec3f0fe45a5c6ed0e2009f81307d9770b56b4181622a53"
+      "sha256": "406d18b3645df7b61b0f2571da99be5ac4e099f519d3c216087899389fb5c6c6"
     }
   ],
   "spans": [
@@ -791,9 +791,9 @@
   ],
   "shaders": [
     {
-      "hash": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd",
-      "url": "shaders/1594a8ef1d1b39e6.wgsl",
-      "map": "shaders/1594a8ef1d1b39e6.mtek-map.json",
+      "hash": "2a8a1044d0d828eff6612944d10981aaad61ffe671bfc54f72aa5099a86ef9bf",
+      "url": "shaders/2a8a1044d0d828ef.wgsl",
+      "map": "shaders/2a8a1044d0d828ef.mtek-map.json",
       "material": "std/materials.mtek::Pbr",
       "vertexEntry": "mtek_vs",
       "instancedVertexEntry": "mtek_vs_instanced",
@@ -810,9 +810,9 @@
       ]
     },
     {
-      "hash": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
-      "url": "shaders/385b28531dc27b69.wgsl",
-      "map": "shaders/385b28531dc27b69.mtek-map.json",
+      "hash": "b210f9e70a40be73d5343f39f0247957359d67c6f7dab6eadf1dc887efec91e2",
+      "url": "shaders/b210f9e70a40be73.wgsl",
+      "map": "shaders/b210f9e70a40be73.mtek-map.json",
       "material": "std/materials.mtek::Unlit",
       "vertexEntry": "mtek_vs",
       "instancedVertexEntry": "mtek_vs_instanced",
@@ -827,7 +827,7 @@
     {
       "id": "std/materials.mtek::Pbr",
       "layout": "material:std/materials.mtek::Pbr",
-      "shader": "1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd",
+      "shader": "2a8a1044d0d828eff6612944d10981aaad61ffe671bfc54f72aa5099a86ef9bf",
       "resources": [
         {
           "name": "base_color_texture",
@@ -871,7 +871,7 @@
     {
       "id": "std/materials.mtek::Unlit",
       "layout": "material:std/materials.mtek::Unlit",
-      "shader": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
+      "shader": "b210f9e70a40be73d5343f39f0247957359d67c6f7dab6eadf1dc887efec91e2",
       "resources": [],
       "params": [
         {

@@ -1,0 +1,13 @@
+// choose and shuffle take T and N from the array (decision 0152).
+scene Demo {
+    camera Main {}
+    state lane: i32 = 0;
+    state first: i32 = 0;
+
+    update(dt: f32) {
+        let lanes = [0, 1, 2];
+        lane = choose(lanes);
+        let order = shuffle(lanes);
+        first = order[0];
+    }
+}

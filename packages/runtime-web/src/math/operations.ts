@@ -92,6 +92,18 @@ function build(): Table {
 
   // Namespace functions (`spec/stdlib.md` 2).
   add(t, "quat.identity", [], "quat", "qidentity");
+  // Easing curves (decision 0135).
+  add(t, "easing.in_quad", ["f32"], "f32", "easeInQuad");
+  add(t, "easing.out_quad", ["f32"], "f32", "easeOutQuad");
+  add(t, "easing.in_out_quad", ["f32"], "f32", "easeInOutQuad");
+  add(t, "easing.in_cubic", ["f32"], "f32", "easeInCubic");
+  add(t, "easing.out_cubic", ["f32"], "f32", "easeOutCubic");
+  add(t, "easing.in_out_cubic", ["f32"], "f32", "easeInOutCubic");
+  add(t, "easing.in_out_sine", ["f32"], "f32", "easeInOutSine");
+  add(t, "easing.out_back", ["f32"], "f32", "easeOutBack");
+  add(t, "easing.out_elastic", ["f32"], "f32", "easeOutElastic");
+  add(t, "easing.out_bounce", ["f32"], "f32", "easeOutBounce");
+
   add(t, "quat.axis_angle", ["vec3", "f32"], "quat", "qaxisAngle");
   add(t, "quat.euler", ["f32", "f32", "f32"], "quat", "qeuler");
   add(t, "mat4.identity", [], "mat4", "m4identity");
@@ -156,7 +168,8 @@ export const RT_OPERATIONS: Readonly<Record<string, Readonly<Record<string, stri
  * `rt` exports that implement no callee of {@link RT_OPERATIONS}: constructors of values the
  * emitter builds from components, swizzles, component replacement, column and channel access, index
  * clamping, the value copy of assignable places (decision 0045), the colour transfer function of
- * one channel, the loop budget of preview builds (decision 0075), and integer limits.
+ * one channel, the loop budget of preview builds (decision 0075), the text of an interpolated
+ * value (decision 0133), and integer limits.
  */
 export const RT_STRUCTURAL_EXPORTS: readonly string[] = [
   "quat",
@@ -173,6 +186,8 @@ export const RT_STRUCTURAL_EXPORTS: readonly string[] = [
   "copy",
   "refEq",
   "budgetExceeded",
+  "whileLimit",
+  "fmt",
   "srgbChannelToLinear",
   "I32_MIN",
   "I32_MAX",

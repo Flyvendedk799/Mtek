@@ -11,7 +11,7 @@ A Mtek program keeps its data in `state` and shows it on the screen with `bind`.
 3. **Three writers, one per field.** A field gets its value from exactly one of: its initial value together with assignments in handlers (the default), a `bind(...)` expression, or the physics engine (an entity with a `body`). Assigning a bound field anywhere is `MTEK-E5070`; assigning or binding the pose of a body is `MTEK-E5071` and `MTEK-E5072`.
 4. **Assignment** is a statement of a handler or a lifecycle function. `=`, `+=`, `-=`, `*=` and `/=` work on state, on writable fields (`self.rotation *= q`) and on one component of a vector field (`self.position.y = 0.0`).
 5. **`bind(expression)` is a live link.** The expression is evaluated every frame, after all handlers have run, and written to the field. It is allowed only as the *whole* value of a field that is bindable, or of a value parameter in a material instance (`MTEK-E5004` otherwise, and `MTEK-E1001` where a statement stands, because `bind` is not a value). Which fields are bindable is in the *After construction* column of the tables below.
-6. **A binding is pure.** It may read constants, scene state, `frame.delta`, `frame.time`, `frame.index`, the fields and state of named entities, parameters and `self`, and may call `fn`s and pure intrinsics. Calling a `cpu fn` or a CPU-only intrinsic (`random`, `is_key_down`, `alive`, `print`) is `MTEK-E5005`. A binding cannot depend on a camera field or a body property (`MTEK-E5005`) or on a field read through an `entity_ref` (`MTEK-E5074`). Its type must be exactly the type of the field (`MTEK-E3102`; no implicit conversion, so write `f32(count)`).
+6. **A binding is pure.** It may read constants, scene state, `frame.delta`, `frame.time`, `frame.index`, the fields and state of named entities, parameters and `self`, and may call `fn`s and pure intrinsics. Calling a `cpu fn` or a CPU-only intrinsic (`random`, `is_key_down`, `alive`, `print`) is `MTEK-E5005`. A binding cannot depend on a camera field, a body property, or a field read through an `entity_ref` (`MTEK-E5005`). Its type must be exactly the type of the field (`MTEK-E3102`; no implicit conversion, so write `f32(count)`).
 7. **No cycles.** If `A.position` is bound to something that reads `B.position`, and `B.position` is bound to something that reads `A.position`, the program is rejected (`MTEK-E5075`).
 8. **Deriving a value.** Put the formula in a pure `fn` and call it inside `bind`: the dependency on state stays visible and the function can be shared with a shader. If the formula needs a CPU-only function, compute the value in a handler and store it in a second `state`, then bind that.
 9. **Bound is not the same as initial.** `phase: bind(frame.time)` follows time. `phase: frame.time` is evaluated once, when the entity is created, and then never changes.
@@ -25,13 +25,16 @@ The fields of an entity, a camera and a light, and whether a field can be bound 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `body` | `body` | none | fixed at construction |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
+| `clip` | `string` | none | fixed at construction |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has. |
 | `collider` | `collider` | none | fixed at construction |  | A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`. |
 | `light` | `light` | none | fixed at construction |  | A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only. |
 | `material` | `material` | `Unlit {}` | fixed at construction |  | The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`. |
 | `mesh` | `mesh` | none | fixed at construction |  | The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh. |
+| `particles` | `emitter` | none | fixed at construction |  | A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | assignable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | assignable, bindable |  | Rotation local to the parent. |
 | `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | assignable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body. |
+| `tag` | `string` | none | fixed at construction |  | A group name (`"rock"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`. |
 | `visible` | `bool` | `true` | assignable, bindable |  | Hides the mesh draw only; the entity's behaviour keeps running. |
 
 **`Camera`**
@@ -269,7 +272,6 @@ state position: f32 = 0.0;
 | [`MTEK-E5070`](../../spec/diagnostics.md#mtek-e5070) | write to bound field |
 | [`MTEK-E5071`](../../spec/diagnostics.md#mtek-e5071) | write to physics-owned field |
 | [`MTEK-E5072`](../../spec/diagnostics.md#mtek-e5072) | binding on physics-owned field |
-| [`MTEK-E5074`](../../spec/diagnostics.md#mtek-e5074) | field access through entity_ref |
 | [`MTEK-E5075`](../../spec/diagnostics.md#mtek-e5075) | binding cycle |
 | [`MTEK-E5080`](../../spec/diagnostics.md#mtek-e5080) | lifecycle operation during initialisation |
 | [`MTEK-E5081`](../../spec/diagnostics.md#mtek-e5081) | entity field read during initialisation |

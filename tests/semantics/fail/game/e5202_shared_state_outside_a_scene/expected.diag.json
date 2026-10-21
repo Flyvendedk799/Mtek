@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E5202",
+    "file": "src/main.mtek",
+    "startByte": 125,
+    "endByte": 131,
+    "message": "The state 'value' is declared `shared` in a prefab; only scene state can be shared.",
+    "notes": [
+      "shared state carries over `go_to` from one scene to the next; entities end with their scene",
+      "help: move the state into the scene, or remove `shared`"
+    ]
+  },
+  {
+    "code": "MTEK-E5202",
+    "file": "src/main.mtek",
+    "startByte": 260,
+    "endByte": 266,
+    "message": "The state 'lives' is declared `shared` in an entity; only scene state can be shared.",
+    "notes": [
+      "shared state carries over `go_to` from one scene to the next; entities end with their scene",
+      "help: move the state into the scene, or remove `shared`"
+    ]
+  }
+]

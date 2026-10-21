@@ -98,6 +98,10 @@ pub enum Expr {
     Unary(&'static str, Box<Expr>),
     /// A binary operator (`+`, `|`, `>>>`, `===`, `&&`, …), left-associative.
     Binary(&'static str, Box<Expr>, Box<Expr>),
+    /// `test ? then : otherwise` (right-associative).
+    Cond(Box<Expr>, Box<Expr>, Box<Expr>),
+    /// `(params) => body`, an arrow function with an expression body.
+    Arrow(Vec<String>, Box<Expr>),
     /// The inner expression, mapped to a Mtek span in the source map where it starts.
     Spanned(Box<Expr>, Span),
 }
@@ -108,6 +112,10 @@ const PRIMARY: u8 = 20;
 const POSTFIX: u8 = 18;
 /// Prefix operators (and negative number literals).
 const PREFIX: u8 = 14;
+/// The conditional operator `?:`, below every binary operator.
+const CONDITIONAL: u8 = 2;
+/// An arrow function: the loosest form, parenthesised wherever it is an operand.
+const ARROW: u8 = 0;
 
 /// Whether `op` is a bitwise or shift operator.
 fn is_bitwise(op: &str) -> bool {
@@ -216,6 +224,8 @@ impl Expr {
             | Expr::New(..) => POSTFIX,
             Expr::Unary(..) => PREFIX,
             Expr::Binary(op, ..) => binary_precedence(op),
+            Expr::Cond(..) => CONDITIONAL,
+            Expr::Arrow(..) => ARROW,
             Expr::Spanned(inner, _) => inner.precedence(),
         }
     }
@@ -225,7 +235,7 @@ impl Expr {
         match self {
             Expr::Num(number) => number.is_negative(),
             Expr::Unary(op, _) => *op == "-",
-            Expr::Binary(_, left, _) => left.starts_with_minus(),
+            Expr::Binary(_, left, _) | Expr::Cond(left, ..) => left.starts_with_minus(),
             Expr::Spanned(inner, _) => inner.starts_with_minus(),
             _ => false,
         }
@@ -236,6 +246,21 @@ impl Expr {
         match self {
             Expr::Binary(..) => true,
             Expr::Spanned(inner, _) => inner.is_binary(),
+            _ => false,
+        }
+    }
+
+    /// Whether the printed text starts with `{` (an object literal).
+    fn starts_with_brace(&self) -> bool {
+        match self {
+            Expr::Object { .. } => true,
+            Expr::Member(base, _)
+            | Expr::Index(base, _)
+            | Expr::Subscript(base, _)
+            | Expr::Call(base, _)
+            | Expr::Binary(_, base, _)
+            | Expr::Cond(base, ..) => base.starts_with_brace(),
+            Expr::Spanned(inner, _) => inner.starts_with_brace(),
             _ => false,
         }
     }
@@ -297,6 +322,12 @@ pub enum Stmt {
     ForOf {
         var: String,
         iterable: Expr,
+        body: Vec<Stmt>,
+        span: Option<Span>,
+    },
+    /// `while (cond) { body }`.
+    While {
+        cond: Expr,
         body: Vec<Stmt>,
         span: Option<Span>,
     },
@@ -496,6 +527,21 @@ fn write(expr: &Expr, out: &mut String, marks: &mut Vec<(usize, Span)>) {
             out.push_str(op);
             out.push(' ');
             operand_in(right, right_paren, out, marks);
+        }
+        Expr::Cond(test, then, otherwise) => {
+            operand_in(test, test.precedence() <= CONDITIONAL, out, marks);
+            out.push_str(" ? ");
+            operand_in(then, then.precedence() < CONDITIONAL, out, marks);
+            out.push_str(" : ");
+            operand_in(otherwise, otherwise.precedence() < CONDITIONAL, out, marks);
+        }
+        Expr::Arrow(params, body) => {
+            out.push('(');
+            out.push_str(&params.join(", "));
+            out.push_str(") => ");
+            // An object literal body would read as a block.
+            let paren = body.precedence() < CONDITIONAL || body.starts_with_brace();
+            operand_in(body, paren, out, marks);
         }
     }
 }
@@ -705,6 +751,12 @@ impl Out {
                 self.map(*span);
                 let head = format!("for (const {var} of ");
                 self.line(&[Part::Text(&head), Part::Expr(iterable), Part::Text(") {")]);
+                self.body(body);
+                self.p.line("}");
+            }
+            Stmt::While { cond, body, span } => {
+                self.map(*span);
+                self.line(&[Part::Text("while ("), Part::Expr(cond), Part::Text(") {")]);
                 self.body(body);
                 self.p.line("}");
             }

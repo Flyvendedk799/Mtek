@@ -653,7 +653,7 @@ fn reserved_words_and_unsupported_codes_are_listed_from_their_catalogues() {
         .copied()
         .filter(|c| c.is_unsupported_feature())
         .collect();
-    assert!(unsupported.len() >= 6, "{unsupported:?}");
+    assert!(unsupported.len() >= 4, "{unsupported:?}");
     for code in &unsupported {
         assert!(
             listed.contains(unsupported_phrase(*code).as_str()),
@@ -1403,10 +1403,12 @@ const GOLDENS: &[Golden] = &[
         max_bytes: DEFAULT_MAX_BYTES,
     },
     Golden {
-        name: "pulse-cube.max-bytes-9000.json",
+        name: "pulse-cube.max-bytes-9900.json",
         project: "examples/pulse-cube",
         symbols: &["Demo.Cube", "Pulse"],
-        max_bytes: 9000,
+        // The floor rose with particles, camera switching and clips: a context below
+        // about 9 830 bytes is rejected as too small.
+        max_bytes: 9900,
     },
     Golden {
         name: "physics-playground.default.json",

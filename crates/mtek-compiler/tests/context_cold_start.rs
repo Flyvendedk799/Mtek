@@ -606,6 +606,54 @@ fn a_cold_start_is_a_project_without_entities_materials_functions_constants_or_s
 }
 
 #[test]
+fn a_cold_start_names_the_functions_once() {
+    // Decision 0148: `reference.builtins` gives every function its signature, so `supported.features`
+    // of a cold start has no `function:*` entry; the namespaces stay.
+    let functions = |output: &ContextOutput| {
+        output
+            .context
+            .supported
+            .features
+            .iter()
+            .filter(|feature| feature.starts_with("function:"))
+            .count()
+    };
+    let cold = ok("");
+    assert_eq!(functions(&cold), 0);
+    assert!(
+        cold.context
+            .supported
+            .features
+            .iter()
+            .any(|feature| feature == "namespace:mat4")
+    );
+    for name in ["abs", "spawn", "save", "mat4.identity"] {
+        assert!(
+            cold.context
+                .reference
+                .builtins
+                .iter()
+                .any(|line| line.starts_with(name) || line.contains(&format!("|{name}"))),
+            "{name} has no signature"
+        );
+    }
+    // A warm context has no reference and lists them.
+    let warm = ok("scene Demo { camera Main {} entity Cube { mesh: Box {}; } }\n");
+    assert!(functions(&warm) > 50);
+    assert!(
+        warm.context
+            .supported
+            .features
+            .iter()
+            .any(|feature| feature == "function:abs")
+    );
+    // A budget that drops `builtins` lists them again.
+    let small = run(&project(""), 12_000).unwrap();
+    assert!(small.context.reference.builtins.is_empty());
+    assert_eq!(functions(&small), functions(&warm));
+}
+
+#[test]
 fn a_stub_scene_gets_the_library_and_its_own_symbols_within_the_budget() {
     let stub = "// Build the scene here.\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n    }\n}\n";
     let output = ok(stub);
@@ -622,7 +670,8 @@ fn a_stub_scene_gets_the_library_and_its_own_symbols_within_the_budget() {
     assert!(!output.context.reference.is_empty());
     assert_eq!(names(&output), ["Demo", "Demo.Main"]);
     assert_valid(&output);
-    // The project section and a few symbols of a stub fit with room to spare.
+    // The project section and a few symbols of a stub fit with room to spare: 1 000 bytes
+    // (decision 0112; 600 in decision 0147, 1 000 again since decision 0148 made room).
     let empty = ok("");
     assert!(
         empty.text.len() + 1_000 <= DEFAULT_MAX_BYTES,

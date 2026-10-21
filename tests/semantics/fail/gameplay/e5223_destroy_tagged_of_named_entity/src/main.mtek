@@ -1,0 +1,20 @@
+// Named entities cannot be destroyed: neither the one that declares the tag nor a placed instance
+// of a prefab that does.
+prefab Coin {
+    tag: "coin";
+    mesh: Sphere {};
+}
+
+scene Demo {
+    camera Main {}
+    entity Gold: Coin {}
+    entity Wall {
+        tag: "wall";
+        mesh: Box {};
+    }
+    on key_down(Key.Space) {
+        spawn(Coin {});
+        destroy_tagged("coin");
+        destroy_tagged("wall");
+    }
+}

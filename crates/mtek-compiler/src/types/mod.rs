@@ -53,6 +53,10 @@
 //! - [`scene`]: the scene and schema checks and their result.
 
 mod assets;
+mod audio;
+mod hud;
+mod interp;
+pub(crate) use interp::precision as interp_precision;
 mod bind;
 mod body;
 mod check;
@@ -60,7 +64,9 @@ mod consteval;
 pub mod effects;
 #[cfg(test)]
 mod effects_tests;
+mod enums;
 pub mod facts;
+mod game;
 mod intrinsics;
 mod material;
 mod ops;
@@ -71,6 +77,7 @@ mod scene_body;
 #[cfg(test)]
 mod scene_tests;
 mod structs;
+mod tags;
 #[cfg(test)]
 mod tests;
 pub mod ty;
@@ -88,7 +95,8 @@ pub use scene::{
     CheckedEntity, CheckedField, CheckedInstance, CheckedObject, CheckedParam, CheckedPrefab,
     CheckedScene, CheckedState, FieldOrigin,
 };
-pub use ty::{MaterialKey, StructDef, StructKey, Ty, TyId, TyInterner};
+pub use tags::{MAX_TAG_LEN, TagUse, check_tags, valid_tag};
+pub use ty::{EnumDef, EnumKey, MaterialKey, StructDef, StructKey, Ty, TyId, TyInterner};
 pub use value::{ArithOp, ConstValue, EvalError, EvalResult, Scalar};
 
 use crate::diagnostics::Diagnostics;
@@ -492,6 +500,8 @@ pub struct Typeck {
     consts: BTreeMap<DefId, ConstInfo>,
     /// The type of every struct the module declares, by its `DefId`.
     structs: BTreeMap<DefId, TyId>,
+    /// The type of every enum the module declares, by its `DefId`.
+    enums: BTreeMap<DefId, TyId>,
     scenes: Vec<CheckedScene>,
     /// Every function the module declares, by its `DefId`.
     functions: BTreeMap<DefId, FnInfo>,
@@ -532,6 +542,8 @@ pub struct Typeck {
     init_params: BTreeMap<NodeId, Vec<(String, NodeId)>>,
     /// The prefab literals that are the argument of a `spawn`, without errors (decision 0064).
     prefab_literals: BTreeMap<NodeId, PrefabLiteral>,
+    /// The constant tags the tag built-ins name, in source order (decision 0150).
+    tag_uses: Vec<TagUse>,
 }
 
 impl Typeck {
@@ -544,6 +556,7 @@ impl Typeck {
             non_constant: BTreeMap::new(),
             consts: BTreeMap::new(),
             structs: BTreeMap::new(),
+            enums: BTreeMap::new(),
             scenes: Vec::new(),
             functions: BTreeMap::new(),
             locals: BTreeMap::new(),
@@ -561,7 +574,14 @@ impl Typeck {
             checked_prefabs: Vec::new(),
             init_params: BTreeMap::new(),
             prefab_literals: BTreeMap::new(),
+            tag_uses: Vec::new(),
         }
+    }
+
+    /// The constant tags the tag built-ins name, in source order (decision 0150).
+    #[must_use]
+    pub fn tag_uses(&self) -> &[TagUse] {
+        &self.tag_uses
     }
 
     /// The prefab literal `node` (the argument of a `spawn`), if it was checked without errors.
@@ -718,6 +738,13 @@ impl Typeck {
     #[must_use]
     pub fn struct_ty(&self, def: DefId) -> Option<TyId> {
         self.structs.get(&def).copied()
+    }
+
+    /// The type of the enum declared as `def` (its variants:
+    /// [`TyInterner::enum_def`]).
+    #[must_use]
+    pub fn enum_ty(&self, def: DefId) -> Option<TyId> {
+        self.enums.get(&def).copied()
     }
 
     /// The Mtek spelling of `ty`.

@@ -14,5 +14,9 @@ export * from "./color.js";
 export * from "./matrix.js";
 export * from "./copy.js";
 export * from "./entity-ref.js";
+// Easing curves (decision 0135).
+export * from "./ease.js";
+// Interpolated strings (decision 0133).
+export { fmt } from "./format.js";
 // The loop budget of preview builds (decision 0075): one helper; the error class stays out of `rt`.
-export { budgetExceeded } from "../scene/budget.js";
+export { budgetExceeded, whileLimit } from "../scene/budget.js";

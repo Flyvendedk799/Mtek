@@ -102,6 +102,10 @@ export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8102: "physics module failed to load",
   E8103: "non-finite pose produced by the solver",
   E8104: "non-finite value given to a body",
+  W8201: "audio value clamped",
+  W8202: "sound could not be decoded",
+  W8203: "too many HUD items",
+  W8204: "font could not be loaded",
 } as const;
 
 /**
@@ -114,9 +118,27 @@ export const RUNTIME_ASSET_DIAGNOSTICS = {
   E7031: "image decode failure",
 } as const;
 
-export type RuntimeDiagnosticCode = keyof typeof RUNTIME_DIAGNOSTIC_CATALOGUE | keyof typeof RUNTIME_ASSET_DIAGNOSTICS;
+/**
+ * The game-flow codes the runtime produces (`spec/diagnostics.md` section 5.5, decision 0141). They are
+ * catalogued with the other `54xx` codes, so they are not in {@link RUNTIME_DIAGNOSTIC_CATALOGUE}; a test asserts
+ * that their titles equal that table. None of them stops the application.
+ */
+export const RUNTIME_GAME_DIAGNOSTICS = {
+  E5401: "scene change failed",
+  W5402: "saved data ignored",
+  W5403: "saving failed",
+} as const;
 
-const RUNTIME_TITLES: Readonly<Record<RuntimeDiagnosticCode, string>> = { ...RUNTIME_DIAGNOSTIC_CATALOGUE, ...RUNTIME_ASSET_DIAGNOSTICS };
+export type RuntimeDiagnosticCode =
+  | keyof typeof RUNTIME_DIAGNOSTIC_CATALOGUE
+  | keyof typeof RUNTIME_ASSET_DIAGNOSTICS
+  | keyof typeof RUNTIME_GAME_DIAGNOSTICS;
+
+const RUNTIME_TITLES: Readonly<Record<RuntimeDiagnosticCode, string>> = {
+  ...RUNTIME_DIAGNOSTIC_CATALOGUE,
+  ...RUNTIME_ASSET_DIAGNOSTICS,
+  ...RUNTIME_GAME_DIAGNOSTICS,
+};
 
 export interface RuntimeDiagnosticInit {
   readonly message: string;

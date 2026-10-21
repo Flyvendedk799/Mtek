@@ -32,7 +32,7 @@ Materials are GPU programs plus a typed parameter interface. They have no state,
 - `T` must be **GPU-representable**: `bool`, `i32`, `u32`, `f32`, `vec2`, `vec3`, `vec4`, `mat4`, `quat`, `color`, a `struct` whose fields are all GPU-representable, or `array<T, N>` of a GPU-representable `T` — or one of the resource types `texture` and `sampler` (§5). Other types are `E4030`.
 - A default must be a constant expression (`spec/language.md` §8.1) of type `T` (`E4031`). A param without a default must be supplied by every instance (`E5003`).
 - Inside the material, params are read-only values in scope by name (`E3061` on assignment).
-- **Opaque colours.** Every `color`-typed param must hold an opaque colour (alpha exactly `1.0`) in v0.1: a constant default or instance constant with another alpha is `E5100`; a run-time value with another alpha (from a write, a binding or a host input) is rejected (`E8100`; the previous value stays). Use `vec4` for non-colour four-component data. Transparency is not part of v0.1 (`E5902` where it is requested explicitly).
+- **Colour alpha and translucency** (decision 0138, which retires `E5100` and `E5902`). A `color`-typed param takes any alpha, in a default, an instance constant, a write or a binding. While any colour param of an instance has an alpha below 1, its draw is *translucent* (§3.4). A fade is a binding on that alpha: `color: bind(color.linear(rgb, 1.0 - easing.in_quad(t)))`. A host input declared with the `color-hex-opaque` codec still rejects an alpha (`E8100`). Use `vec4` for non-colour four-component data.
 
 Parameter storage is planned by the resource planner (`spec/gpu-layout.md`): value params form one **parameter block** per material instance; `texture`/`sampler` params become explicit resource bindings. **Params are never folded into shader code**, even when they never change: changing an instance value must never require a new shader or pipeline (blueprint §6.1, M3 exit gate).
 
@@ -60,9 +60,20 @@ The compiler records which fields a material reads. The generated vertex stage o
 
 For each material the compiler generates (in WGSL, from shader IR — never from string templates of user logic):
 - the standard vertex entry point: reads `position` (and `normal`, `uv` if used), computes `world = object.model * vec4(position, 1)`, `clip = frame.view_proj * world`, world normal `= normalize((object.normal_matrix * vec4(normal, 0)).xyz)`, and forwards the used `SurfaceInput` fields as interpolated varyings;
-- the fragment entry point: reconstructs `SurfaceInput`, calls the user's `fragment` body (lowered to a WGSL function), and writes `vec4(result.rgb, 1.0)` to colour target 0. **Alpha is always written as 1.0** in v0.1 (blueprint §4.2); returning a fractional alpha does not enable blending. When the returned alpha is a constant other than 1.0 the compiler emits warning `W5101`.
+- the fragment entry point: reconstructs `SurfaceInput`, calls the user's `fragment` body (lowered to a WGSL function), and writes the result, alpha included, to colour target 0 (decision 0138). The canvas is opaque, so the alpha only matters for a translucent draw (§3.4). When the returned alpha is a constant other than 1.0 the compiler emits warning `W5101`: that alpha blends only while a colour param of the instance is translucent.
 
 Bind groups, struct names and binding numbers are fixed by `spec/gpu-layout.md` §6.
+
+### 3.4 Translucent draws (decision 0138)
+
+A draw is translucent while a `color` param of its material instance has an alpha below 1 (§2). Translucent draws:
+- are drawn after every opaque draw;
+- are ordered back to front each frame by the depth of their bounding-sphere centre;
+- blend straight alpha "over" what is behind them (`src·a + dst·(1 − a)`);
+- test depth but do not write it;
+- are never instanced.
+
+Order is per object, not per triangle: intersecting translucent objects, or one concave translucent mesh, can show order artefacts. The blended pipeline of a material is made the first time one of its draws turns translucent; until it exists, for a frame or two, the draw is opaque.
 
 ### 3.3 The fixed vertex and varying interface (normative)
 
@@ -177,6 +188,22 @@ export material Pbr {
 
 The param named `color` in `Unlit` relies on the rule in `spec/language.md` §4.2: a material param may share a prelude type's name; inside `Unlit`, `color` in expression position is the param, `color` in type position is the type, and `color.linear(…)` would be `E2005` (the prelude does not use it). (M1 provided `Unlit` through a minimal compiler-built shader IR; since M2 it is compiled from this source, and the temporary path is gone, decision 0044.) `Pbr` is compiled from this source too since task M4-03 (decision 0057).
 
+### 9.1 Sprites and the 2D camera (decision 0170)
+
+`Sprite` is a built-in material in `std/materials.mtek`, written in Mtek like `Unlit`. It shows one cell of a sprite sheet: a texture of `columns` × `rows` equal cells, numbered from 0 left to right, then top to bottom. Its params are:
+
+- `sheet` (`texture`, default `texture.white()`);
+- `sheet_sampler` (default `sampler.nearest_clamp()`, for crisp pixels);
+- `tint` (`color`, default white; multiplies the texel, alpha included);
+- `cell` (`f32`, default `0.0`): floored and wrapped modulo `columns · rows`, so `cell: bind(t * 8.0)` plays the sheet at 8 cells per second and loops;
+- `columns` and `rows` (`f32`, default `1.0`): a constant outside `1..64` is `E5701`.
+
+A `Sprite` draw is **always translucent** (§3.4), so transparent texels show what is behind them.
+
+A sprite is a `Plane` turned to face `+Z`: `mesh: Plane { size: vec2(w, h) }; rotation: quat.euler(1.5707964, 0.0, 0.0);`. With that rotation the top of the sheet is at `+Y`.
+
+The 2D camera preset is a camera on `+Z` looking down `-Z` with `projection: Orthographic { height: H }`: one world unit is `canvas height / H` pixels, `x` goes right and `y` goes up. Sprites at different `z` are ordered back to front by the translucent pass.
+
 ## 10. Not in v0.1
 
-Vertex and compute stages; transparency and blending; shadows; post-processing; multiple render targets; material inheritance; changing material identity at run time; texture params written at run time; mip-map generation; derivatives (`dpdx`); storage buffers; texture arrays and cube maps.
+Vertex and compute stages; blend modes other than alpha "over" (additive, multiply) and per-triangle sorting of translucent draws; shadows; post-processing; multiple render targets; material inheritance; changing material identity at run time; texture params written at run time; mip-map generation; derivatives (`dpdx`); storage buffers; texture arrays and cube maps.

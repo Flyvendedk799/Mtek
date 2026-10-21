@@ -262,6 +262,7 @@ fn failure_of_panic(note: &str) -> Written {
         shown: None,
         target: None,
         refused: None,
+        zip: None,
     }
 }
 

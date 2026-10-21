@@ -54,6 +54,8 @@ pub enum SchemaCategory {
     Body,
     Collider,
     Projection,
+    /// `Emitter { .. }` on an entity (decision 0155).
+    Emitter,
     /// `Scene`, `Entity` and `Camera`: the declarations whose fields are written directly.
     Object,
 }
@@ -68,6 +70,7 @@ impl SchemaCategory {
             SchemaCategory::Body => "body",
             SchemaCategory::Collider => "collider",
             SchemaCategory::Projection => "projection",
+            SchemaCategory::Emitter => "emitter",
             SchemaCategory::Object => "object",
         }
     }
@@ -98,6 +101,10 @@ pub enum TypeRef {
     EntityRef,
     /// The opaque compile-time handle of `asset.glb(..)` (`spec/assets.md` section 2).
     GlbAsset,
+    /// A sound file declared with `asset.sound(..)` (`spec/audio.md`).
+    Sound,
+    /// A font for `hud.text` (`asset.font(..)` or `hud.pixel_font()`, decision 0139).
+    Font,
     /// The result of a function without `->`.
     Unit,
     /// A built-in record type, by name (`SurfaceInput`, `PointerEvent`).
@@ -108,6 +115,12 @@ pub enum TypeRef {
     Descriptor(SchemaCategory),
     /// The argument of `spawn`: a prefab descriptor `Prefab { params.. }`.
     PrefabDescriptor,
+    /// The argument of `go_to`: the name of a scene of the entry module (decision 0141).
+    SceneName,
+    /// The argument of `set_camera`: the name of a camera of the current scene (decision 0154).
+    CameraName,
+    /// The result of `tagged(tag)`: the entities a `for` loop runs over (decision 0150).
+    TaggedEntities,
 }
 
 impl TypeRef {
@@ -131,10 +144,15 @@ impl TypeRef {
             TypeRef::Sampler => "sampler",
             TypeRef::EntityRef => "entity_ref",
             TypeRef::GlbAsset => "glb_asset",
+            TypeRef::Sound => "sound",
+            TypeRef::Font => "font",
             TypeRef::Unit => "()",
             TypeRef::Record(name) | TypeRef::Enum(name) => name,
             TypeRef::Descriptor(category) => category.as_str(),
             TypeRef::PrefabDescriptor => "prefab descriptor",
+            TypeRef::SceneName => "scene name",
+            TypeRef::CameraName => "camera name",
+            TypeRef::TaggedEntities => "tagged entities",
         }
     }
 }
@@ -462,14 +480,18 @@ impl TypeClass {
 pub enum SigType {
     Exact(TypeRef),
     Class(TypeClass),
+    /// A form the checker reads off the argument, not an overload (`choose`, `shuffle`, decision 0152).
+    /// The text is the spelling in the schema and the context (`array<T, N>`, `T`).
+    Form(&'static str),
 }
 
 impl SigType {
-    /// The spelling: the type name or the class letter.
+    /// The spelling: the type name, the class letter, or the documented form.
     pub const fn spelling(&self) -> &'static str {
         match self {
             SigType::Exact(ty) => ty.spelling(),
             SigType::Class(class) => class.name(),
+            SigType::Form(text) => text,
         }
     }
 }

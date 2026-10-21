@@ -84,7 +84,7 @@ describe("keywords", () => {
   });
 
   it("scopes a reserved word as illegal", () => {
-    expect(has(scopes("let while = 1;", "while"), "invalid.illegal.reserved-word")).toBe(true);
+    expect(has(scopes("let loop = 1;", "loop"), "invalid.illegal.reserved-word")).toBe(true);
     expect(has(scopes("compute f() {}", "compute"), "invalid.illegal.reserved-word")).toBe(true);
   });
 
@@ -113,6 +113,17 @@ describe("contextual words", () => {
     expect(has(scopes("fragment(input: SurfaceInput) {}", "fragment"), "entity.name.function.stage")).toBe(true);
     expect(has(scopes("camera Main { }", "camera"), "support.type.scene-object")).toBe(true);
     expect(has(scopes("camera Main { }", "Main"), "entity.name.type.object")).toBe(true);
+  });
+
+  it("scopes `shared`, `saved` and `setting` before `state` as modifiers, and nowhere else (decisions 0141, 0145, 0146)", () => {
+    const lines = tokenizeText(grammar, "scene S {\n    shared saved state best: i32 = 0;\n    setting state volume: f32 = 0.5;\n}");
+    for (const word of ["shared", "saved", "setting"]) {
+      expect(has(scopesOf(lines, word), "storage.modifier"), word).toBe(true);
+    }
+    expect(has(scopes("let saved = true;", "saved"), "storage.modifier")).toBe(false);
+    expect(has(scopes("setting = 1;", "setting"), "storage.modifier")).toBe(false);
+    expect(has(scopes("save();", "save"), "support.function")).toBe(true);
+    expect(has(scopes("clear_saved();", "clear_saved"), "support.function")).toBe(true);
   });
 
   it("leaves `update`, `camera` and `from` ordinary identifiers where they mean nothing", () => {
@@ -165,9 +176,9 @@ describe("literals", () => {
   });
 
   it("scopes a string and its escapes", () => {
-    const lines = tokenizeText(grammar, 'let s = "a\\n\\t\\"\\\\\\0\\u{1F600}\\u{41}b";');
+    const lines = tokenizeText(grammar, 'let s = "a\\n\\t\\"\\\\\\0\\$\\u{1F600}\\u{41}b";');
     expect(lines[0]?.tokens.some((t) => has(t.scopes, "string.quoted.double"))).toBe(true);
-    for (const escape of ["\\n", "\\t", '\\"', "\\\\", "\\0", "\\u{1F600}", "\\u{41}"]) {
+    for (const escape of ["\\n", "\\t", '\\"', "\\\\", "\\0", "\\$", "\\u{1F600}", "\\u{41}"]) {
       expect(has(scopesOf(lines, escape), "constant.character.escape"), escape).toBe(true);
     }
     expect(has(scopesOf(lines, "a"), "constant.character.escape")).toBe(false);

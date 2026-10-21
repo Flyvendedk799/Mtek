@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E3201",
+    "file": "src/main.mtek",
+    "startByte": 185,
+    "endByte": 190,
+    "message": "This `match` does not cover every variant of 'Phase': `Phase.Paused`, `Phase.GameOver` are not matched.",
+    "notes": [
+      "a `match` must handle every variant of its enum",
+      "help: add arms for `Phase.Paused`, `Phase.GameOver`, or a final `_ => …` arm"
+    ]
+  },
+  {
+    "code": "MTEK-E3201",
+    "file": "src/main.mtek",
+    "startByte": 365,
+    "endByte": 370,
+    "message": "This `match` does not cover every variant of 'Phase': `Phase.Playing`, `Phase.GameOver` are not matched.",
+    "notes": [
+      "a `match` must handle every variant of its enum",
+      "help: add arms for `Phase.Playing`, `Phase.GameOver`, or a final `_ => …` arm"
+    ]
+  }
+]

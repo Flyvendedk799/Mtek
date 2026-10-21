@@ -267,7 +267,7 @@ fn every_punctuation_and_operator_lexes_alone() {
 #[test]
 fn longest_match_wins_for_operators() {
     use TokenKind as K;
-    let cases: [(&str, &[TokenKind]); 14] = [
+    let cases: [(&str, &[TokenKind]); 15] = [
         ("<<=", &[K::Shl, K::Eq]),
         (">>=", &[K::Shr, K::Eq]),
         ("<=>", &[K::Le, K::Gt]),
@@ -275,7 +275,8 @@ fn longest_match_wins_for_operators() {
         ("|||", &[K::OrOr, K::Pipe]),
         ("===", &[K::EqEq, K::Eq]),
         ("!==", &[K::BangEq, K::Eq]),
-        ("=>", &[K::Eq, K::Gt]),
+        ("=>", &[K::FatArrow]),
+        ("==>", &[K::EqEq, K::Gt]),
         ("->>", &[K::Arrow, K::Gt]),
         ("-->", &[K::Minus, K::Arrow]),
         ("+++", &[K::Plus, K::Plus, K::Plus]),
@@ -1130,7 +1131,7 @@ Ident 10..11 "x"
 Eq 12..13 "="
 Int 14..17 "0x1" = malformed
 Semi 17..18 ";"
-Ident 19..24 "while" = reserved
+KwWhile 19..24 "while"
 Color 25..32 "#6b5cff" = #6b5cffff
 String 33..38 "\"a\\n\"" = "a\n"
 Float 39..42 "1.5" = 1.5

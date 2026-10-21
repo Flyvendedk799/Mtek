@@ -18,12 +18,19 @@ import {
   type MtekDiagnostic,
   type MtekRuntimePhase,
 } from "../diagnostics/types.js";
+import { SILENT_AUDIO, type AudioService } from "../audio/audio.js";
+import { NO_HUD, type HudService } from "../hud/hud.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { fromRotationTranslationScaleInto, multiplyInto, type Mat4 } from "../math/mat4.js";
 import type { LoopBudget } from "./budget.js";
+import { ClipPlayers, type PlayableChannel } from "./clips.js";
 import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic.js";
+import { ParticleSim, type ParticleDraw } from "./particles.js";
 import { RuntimeInternalError } from "./errors.js";
+import { INERT_GAME, type GameHooks } from "./game.js";
+import { TimerList, type TimerOwner } from "./timers.js";
 import { makeRef, type EntityRef } from "./slots.js";
+import { TagQueries } from "./tags.js";
 import type { ResolvedEntity, ResolvedInstance, SceneStructure } from "./structure.js";
 import {
   describeValue,
@@ -51,16 +58,46 @@ export const CONTEXT_MEMBERS = [
   "setVisible",
   "setParam",
   "setCamera",
+  "selectCamera",
+  "particleCount",
   "setLight",
   "spawn",
   "destroy",
   "alive",
+  "countTagged",
+  "firstTagged",
+  "nearestTagged",
+  "hasTag",
+  "tagged",
+  "destroyTagged",
   "body",
   "budget",
   "warn",
   "random",
+  "randomRange",
+  "randomInt",
+  "chance",
   "isKeyDown",
+  "keyPressed",
+  "keyReleased",
+  "pointerPosition",
+  "isPointerDown",
+  "choose",
+  "shuffle",
+  "refField",
   "print",
+  "goTo",
+  "reset",
+  "pause",
+  "resume",
+  "paused",
+  "after",
+  "every",
+  "save",
+  "load",
+  "clearSaved",
+  "audio",
+  "hud",
 ] as const;
 
 /**
@@ -134,8 +171,21 @@ export interface CpuServices {
   random(): number;
   /** `is_key_down`: the delivered key state. `code` is a DOM `KeyboardEvent.code`. */
   isKeyDown(code: string): boolean;
+  /** `key_pressed` / `key_released` (decision 0153): transitions delivered this frame. */
+  keyPressed(code: string): boolean;
+  keyReleased(code: string): boolean;
+  /** `pointer_position`: canvas NDC. */
+  pointerPosition(): { x: number; y: number };
+  /** `is_pointer_down`: button 0, 1 or 2. */
+  isPointerDown(button: number): boolean;
   /** `print`: development console output; `spanId` indexes the manifest spans table. */
   print(message: string, spanId: number): void;
+  /** `go_to`, `reset`, `pause`, `resume`, `paused` (decisions 0140, 0141, 0143), `save`, `load`, `clear_saved` (0145); default: {@link INERT_GAME}. */
+  readonly game?: GameHooks;
+  /** `ctx.audio` (decision 0130); silent when absent. */
+  readonly audio?: AudioService;
+  /** `ctx.hud` (decision 0134); draws nothing when absent. */
+  readonly hud?: HudService;
 }
 
 /**
@@ -151,6 +201,10 @@ export interface BodyService {
 export const INERT_SERVICES: CpuServices = Object.freeze({
   random: () => 0,
   isKeyDown: () => false,
+  keyPressed: () => false,
+  keyReleased: () => false,
+  pointerPosition: () => ({ x: 0, y: 0 }),
+  isPointerDown: () => false,
   print: () => undefined,
 });
 
@@ -158,7 +212,7 @@ export interface WorldOptions {
   readonly manifest: MtekManifest;
   readonly structure: SceneStructure;
   readonly params: ParamSink;
-  /** Receives run-time diagnostics (`E8011`, `E8090`, `E8100`, warnings from `ctx.warn`). */
+  /** Receives run-time diagnostics (`E8011`, `E8090`, warnings from `ctx.warn`). */
   readonly report: (diagnostic: MtekDiagnostic) => void;
   /** Defaults to {@link INERT_SERVICES}. */
   readonly services?: CpuServices;
@@ -272,7 +326,13 @@ export class World {
   readonly ctx: object;
   /** Entity records of the named entities by static index (`ctx.e`). Spawned entities: {@link World.dynamic}. */
   readonly entities: readonly EntityRecord[];
-  readonly camera: CameraRecord;
+  /** The active camera (decision 0154). `ctx.cam` reads this. */
+  private activeCamera: CameraRecord = {
+    position: CAMERA_POSITION,
+    target: null,
+    rotation: IDENTITY,
+    projection: { kind: "perspective", fov_y: DEFAULT_FOV_Y, near: DEFAULT_NEAR, far: DEFAULT_FAR },
+  };
   /** The scene state (`ctx.s`). */
   readonly sceneState: Record<string, unknown>;
   /** The spawned entities: queues, flush points, records (decision 0064). */
@@ -309,6 +369,15 @@ export class World {
   private visibility = 0;
   /** `ctx.budget` (decision 0075): the iterations of CPU loops left in this frame. Only a preview build checks it. */
   private readonly loopBudget: LoopBudget = { n: 0 };
+  /** The scene's `after`/`every` timers (decision 0142). */
+  readonly timers = new TimerList();
+  /** Living particles (decision 0155). */
+  private readonly particles = new ParticleSim();
+  /** Playing glTF clips (decision 0156). */
+  private readonly clips = new ClipPlayers();
+  private readonly cameraByName = new Map<string, CameraRecord>();
+  private readonly cameraMeta = new Map<CameraRecord, { name: string; symbol: string; exposure: number; hasTarget: boolean }>();
+  private nextRandom: () => number = Math.random;
   /** `manifest.preview.loopBudget`: what {@link resetBudget} refills the counter with; `undefined` outside a preview. */
   private readonly loopBudgetLimit: number | undefined;
   private readonly materialParamTypes: ReadonlyMap<string, readonly { readonly name: string; readonly type: string }[]>;
@@ -380,23 +449,63 @@ export class World {
       host,
     });
 
-    const camera = this.structure.camera;
-    this.camera = {
-      position: CAMERA_POSITION,
-      target: null,
-      rotation: IDENTITY,
-      projection:
-        camera.projection === "perspective"
-          ? { kind: "perspective", fov_y: DEFAULT_FOV_Y, near: DEFAULT_NEAR, far: DEFAULT_FAR }
-          : { kind: "orthographic", height: DEFAULT_HEIGHT, near: DEFAULT_NEAR, far: DEFAULT_FAR },
-    };
+    for (const camera of this.manifest.scene.cameras) {
+      const record: CameraRecord = {
+        position: { x: CAMERA_POSITION.x, y: CAMERA_POSITION.y, z: CAMERA_POSITION.z },
+        target: null,
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        projection:
+          camera.projection === "perspective"
+            ? { kind: "perspective", fov_y: DEFAULT_FOV_Y, near: DEFAULT_NEAR, far: DEFAULT_FAR }
+            : { kind: "orthographic", height: DEFAULT_HEIGHT, near: DEFAULT_NEAR, far: DEFAULT_FAR },
+      };
+      this.cameraByName.set(camera.name, record);
+      this.cameraMeta.set(record, {
+        name: camera.name,
+        symbol: camera.symbol,
+        exposure: camera.exposure,
+        hasTarget: camera.hasTarget,
+      });
+      if (camera.active) this.activeCamera = record;
+    }
+    if (!this.cameraByName.has(this.structure.camera.name)) {
+      this.cameraByName.set(this.structure.camera.name, this.activeCamera);
+      this.cameraMeta.set(this.activeCamera, {
+        name: this.structure.camera.name,
+        symbol: this.structure.camera.symbol,
+        exposure: this.structure.camera.exposure,
+        hasTarget: this.structure.camera.hasTarget,
+      });
+    }
 
     this.sceneState = stateObject(this.manifest.scene.state);
     const services = options.services ?? INERT_SERVICES;
+    this.nextRandom = () => services.random();
+    for (const entity of this.structure.entities) this.trackMotion(entity.index, entity);
+    const game = services.game ?? INERT_GAME;
+    const timerOwner = (owner: unknown): TimerOwner => {
+      if (owner === null || owner === undefined) return null;
+      if (typeof owner === "object" && "ref" in owner) return owner as TimerOwner;
+      throw new RuntimeInternalError(`a timer got the owner ${describeValue(owner)}; expected an entity record or null.`);
+    };
+    const staticTags = this.structure.entities.map((entity) => this.manifest.scene.entities[entity.index]?.tag);
+    const tags = new TagQueries({
+      staticTags,
+      staticRef: (index) => (this.entities[index] as EntityRecord).ref,
+      spawned: () => this.dynamic.live.map((entity) => ({ ref: entity.ref, removing: entity.removing, tag: entity.prefab.resolved.tag })),
+      worldPosition: (slot) => {
+        this.propagate();
+        const world = this.worldMatrix(slot);
+        return { x: world[12] as number, y: world[13] as number, z: world[14] as number };
+      },
+      alive: (ref) => this.dynamic.alive(ref),
+      destroy: (ref) => {
+        this.dynamic.destroy(ref, -1);
+      },
+    });
     const members = {
       s: this.sceneState,
       e: this.entities,
-      cam: this.camera,
       setTransform: (entity: unknown, field: unknown, value: unknown): void => {
         this.setTransform(entity, field, value);
       },
@@ -409,6 +518,10 @@ export class World {
       setCamera: (field: unknown, value: unknown): void => {
         this.setCamera(field, value);
       },
+      selectCamera: (name: unknown): void => {
+        this.selectCamera(name);
+      },
+      particleCount: (): number => this.particles.count(),
       setLight: (entity: unknown, field: unknown, value: unknown): void => {
         this.setLight(entity, field, value);
       },
@@ -417,6 +530,15 @@ export class World {
         this.dynamic.destroy(ref, spanId);
       },
       alive: (ref: unknown): boolean => this.dynamic.alive(ref),
+      // Decision 0150: the tag queries.
+      countTagged: (tag: unknown): number => tags.countTagged(tag),
+      firstTagged: (tag: unknown): EntityRef => tags.firstTagged(tag),
+      nearestTagged: (tag: unknown, point: unknown): EntityRef => tags.nearestTagged(tag, point),
+      hasTag: (ref: unknown, tag: unknown): boolean => tags.hasTag(ref, tag),
+      tagged: (tag: unknown): Iterable<EntityRef> => tags.tagged(tag),
+      destroyTagged: (tag: unknown): void => {
+        tags.destroyTagged(tag);
+      },
       body: (target: unknown, spanId: unknown): object => {
         if (this.bodies === undefined) {
           throw new RuntimeInternalError("generated code called ctx.body, but the physics subsystem is not mounted (the manifest says subsystems.physics is false, or the scene is still initialising).");
@@ -428,14 +550,61 @@ export class World {
         this.warn(code, spanId);
       },
       random: (): number => services.random(),
+      // Decision 0149: one draw of `random()` each.
+      randomRange: (lo: unknown, hi: unknown): number => randomRange(services.random(), num(lo, "randomRange"), num(hi, "randomRange")),
+      randomInt: (lo: unknown, hi: unknown): number => randomInt(services.random(), num(lo, "randomInt"), num(hi, "randomInt")),
+      chance: (p: unknown): boolean => services.random() < num(p, "chance"),
+      choose: (items: unknown): unknown => chooseItem(services.random(), items),
+      shuffle: (items: unknown): unknown => shuffled(items, () => services.random()),
+      refField: (ref: unknown, field: unknown): unknown => this.refField(ref, field),
       isKeyDown: (code: unknown): boolean => {
         if (typeof code !== "string") throw new RuntimeInternalError(`ctx.isKeyDown got ${describeValue(code)}; expected a DOM key code.`);
         return services.isKeyDown(code);
       },
+      keyPressed: (code: unknown): boolean => {
+        if (typeof code !== "string") throw new RuntimeInternalError(`ctx.keyPressed got ${describeValue(code)}; expected a DOM key code.`);
+        return services.keyPressed(code);
+      },
+      keyReleased: (code: unknown): boolean => {
+        if (typeof code !== "string") throw new RuntimeInternalError(`ctx.keyReleased got ${describeValue(code)}; expected a DOM key code.`);
+        return services.keyReleased(code);
+      },
+      pointerPosition: (): { x: number; y: number } => services.pointerPosition(),
+      isPointerDown: (button: unknown): boolean => services.isPointerDown(num(button, "isPointerDown")),
       print: (message: unknown, spanId: unknown): void => {
         services.print(typeof message === "string" ? message : describeValue(message), typeof spanId === "number" ? spanId : -1);
       },
+      goTo: (scene: unknown, spanId: unknown): void => {
+        if (typeof scene !== "string") throw new RuntimeInternalError(`ctx.goTo got ${describeValue(scene)}; expected a scene name.`);
+        game.goTo(scene, typeof spanId === "number" ? spanId : -1);
+      },
+      reset: (): void => {
+        game.reset();
+      },
+      pause: (): void => {
+        game.pause();
+      },
+      resume: (): void => {
+        game.resume();
+      },
+      paused: (): boolean => game.paused(),
+      save: (): void => {
+        game.save();
+      },
+      load: (): boolean => game.load(),
+      clearSaved: (): void => {
+        game.clearSaved();
+      },
+      after: (seconds: unknown, fn: unknown, owner: unknown, spanId: unknown): void => {
+        this.timers.after(seconds, fn, timerOwner(owner), spanId);
+      },
+      every: (seconds: unknown, fn: unknown, owner: unknown, spanId: unknown): void => {
+        this.timers.every(seconds, fn, timerOwner(owner), spanId);
+      },
+      audio: services.audio ?? SILENT_AUDIO,
+      hud: services.hud ?? NO_HUD,
     };
+    Object.defineProperty(members, "cam", { enumerable: true, get: () => this.camera });
     Object.defineProperty(members, "frame", { enumerable: true, get: () => this.frameValues });
     this.ctx = guarded(members, "ctx");
     holder.ctx = this.ctx;
@@ -450,9 +619,57 @@ export class World {
     if (this.loopBudgetLimit !== undefined) this.loopBudget.n = this.loopBudgetLimit;
   }
 
+  /**
+   * Runs the timers that fall due after `delta` seconds more of game time (`after`/`every`, decision 0142). The
+   * application calls it at the start of phase 3 of every frame in which the game is not paused. The timers of a
+   * destroyed (or pending-removal) spawned entity are dropped.
+   */
+  advanceTimers(delta: number): void {
+    this.timers.advance(delta, (owner) => this.dynamic.alive(owner.ref));
+  }
+
+  /** Samples every playing clip forward by `delta` seconds (decision 0156). Pause skips phase 3, so clips pause too. */
+  advanceClips(delta: number): void {
+    this.clips.advance(delta, (slot, channel, value) => {
+      this.writeChannel(slot, channel, value);
+    });
+  }
+
+  /** Spawns and integrates particles (decision 0155). */
+  advanceParticles(delta: number): void {
+    this.propagate();
+    this.particles.advance(delta, this.nextRandom, (slot) => {
+      const matrix = this.worlds[slot];
+      if (matrix === undefined) return { x: 0, y: 0, z: 0 };
+      return { x: matrix[12] ?? 0, y: matrix[13] ?? 0, z: matrix[14] ?? 0 };
+    });
+  }
+
   /** `ctx.frame` as generated code sees it. */
   get frame(): FrameValues {
     return this.frameValues;
+  }
+
+  /** The active camera. */
+  get camera(): CameraRecord {
+    return this.activeCamera;
+  }
+
+  /** Name, symbol, exposure and whether the active camera has a target (decision 0154). */
+  cameraInfo(): { name: string; symbol: string; exposure: number; hasTarget: boolean } {
+    return (
+      this.cameraMeta.get(this.activeCamera) ?? {
+        name: this.structure.camera.name,
+        symbol: this.structure.camera.symbol,
+        exposure: this.structure.camera.exposure,
+        hasTarget: this.structure.camera.hasTarget,
+      }
+    );
+  }
+
+  /** Living particles, grouped by the mesh they draw with (decision 0155). */
+  particleDraws(): readonly ParticleDraw[] {
+    return this.particles.draws();
   }
 
   /** Incremented by every `setVisible` that changed a value: the draw list depends on it. */
@@ -472,6 +689,8 @@ export class World {
       init(this.ctx);
       // Bindings are evaluated once after `init`, so bound fields have values before the first frame.
       afterInit?.();
+      // A clip is the pose at t = 0 once the defaults are written (decision 0156).
+      this.poseClips(0);
     } finally {
       this.initialising = false;
     }
@@ -654,6 +873,7 @@ export class World {
     this.transformDirty[slot] = 1;
     this.transformsPending = true;
     this.worldChanged[slot] = 0;
+    this.trackMotion(slot, resolved);
   }
 
   private unregisterDynamic(slot: number, record: EntityRecord): void {
@@ -663,6 +883,8 @@ export class World {
     this.worlds[slot] = undefined;
     this.transformDirty[slot] = 0;
     this.worldChanged[slot] = 0;
+    this.particles.remove(slot);
+    this.clips.remove(slot);
   }
 
   // ---- the setters of the context ----
@@ -747,8 +969,8 @@ export class World {
   /**
    * `app.debug.setParam` (`spec/runtime-abi.md` section 10.2): writes a material param of the entity called
    * `entityName` (its name, or its qualified symbol when several entities share the name) through the same
-   * path as `ctx.setParam`, so the generated field writer, the mirror and the opaque-colour rule
-   * (`E8100`) apply. Mistakes of the caller throw plain errors naming what exists; they are not diagnostics.
+   * path as `ctx.setParam`, so the generated field writer, and the mirror apply (any colour alpha is
+   * accepted, decision 0138). Mistakes of the caller throw plain errors naming what exists; they are not diagnostics.
    */
   setParamByName(entityName: string, param: string, value: unknown): void {
     const matches = this.structure.entities.filter((entity) => entity.name === entityName || entity.symbol === entityName);
@@ -821,16 +1043,7 @@ export class World {
   ): void {
     if (param.type === "color") {
       if (!isColor(value)) throw new RuntimeInternalError(`ctx.setParam(…, "${param.name}", ${describeValue(value)}) expects a color.`);
-      if (value.a !== 1) {
-        this.report(
-          makeRuntimeDiagnostic("E8100", {
-            phase: this.phase,
-            message: `The colour ${describeValue(value)} for param '${param.name}' of entity '${this.resolvedBySlot[index]?.name ?? String(index)}' is not opaque: material colours must have alpha 1.0 in v0.1. The previous value stays.`,
-            source: this.entitySource(index),
-          }),
-        );
-        return;
-      }
+      // Any alpha is accepted: below 1 the draw is translucent (decision 0138).
     }
     this.params.writeParam(instance.index, param.name, value);
     mat.p[param.name] = value;
@@ -866,8 +1079,8 @@ export class World {
       case "position":
       case "target": {
         if (!isVec3(value)) throw new RuntimeInternalError(`ctx.setCamera("${name}", ${describeValue(value)}) expects a vec3.`);
-        if (name === "target" && !this.structure.camera.hasTarget) {
-          throw new RuntimeInternalError(`ctx.setCamera("target", …) was called for camera '${this.structure.camera.name}', which declares no target.`);
+        if (name === "target" && !this.cameraInfo().hasTarget) {
+          throw new RuntimeInternalError(`ctx.setCamera("target", …) was called for camera '${this.cameraInfo().name}', which declares no target.`);
         }
         const next: CameraRecord = { ...camera, [name]: value };
         if (!this.acceptCamera(next, name, value)) return;
@@ -934,15 +1147,120 @@ export class World {
   }
 
   private reportCamera(message: string): void {
-    const symbol = this.structure.camera.symbol;
-    const span = spanOfSymbol(this.manifest, symbol);
+    const info = this.cameraInfo();
+    const span = spanOfSymbol(this.manifest, info.symbol);
     this.report(
       makeRuntimeDiagnostic("E8011", {
         phase: this.phase,
-        message: `Invalid value for camera '${this.structure.camera.name}': ${message}`,
+        message: `Invalid value for camera '${info.name}': ${message}`,
         source: span === undefined ? null : resolveSpan(this.manifest, span),
       }),
     );
+  }
+
+  /** `ctx.selectCamera(name)` (decision 0154). */
+  selectCamera(name: unknown): void {
+    if (typeof name !== "string") {
+      throw new RuntimeInternalError(`ctx.selectCamera got ${describeValue(name)}; expected a camera name.`);
+    }
+    const record = this.cameraByName.get(name);
+    if (record === undefined) {
+      throw new RuntimeInternalError(`ctx.selectCamera(${JSON.stringify(name)}) names a camera this scene does not have.`);
+    }
+    this.activeCamera = record;
+  }
+
+  /** Writes `field` of the named camera without changing which camera is active. */
+  setCameraOn(name: string, field: unknown, value: unknown): void {
+    const record = this.cameraByName.get(name);
+    if (record === undefined) {
+      this.setCamera(field, value);
+      return;
+    }
+    const previous = this.activeCamera;
+    this.activeCamera = record;
+    try {
+      this.setCamera(field, value);
+    } finally {
+      this.activeCamera = previous;
+    }
+  }
+
+  private poseClips(time: number): void {
+    this.clips.pose((slot, channel, value) => {
+      this.writeChannel(slot, channel, value);
+    }, time);
+  }
+
+  private writeChannel(slot: number, channel: PlayableChannel, value: readonly number[]): void {
+    const record = this.records[slot];
+    if (record === undefined) return;
+    if (channel.path === "rotation") {
+      this.applyTransform(slot, record, "rotation", {
+        x: value[0] ?? 0,
+        y: value[1] ?? 0,
+        z: value[2] ?? 0,
+        w: value[3] ?? 1,
+      });
+      return;
+    }
+    const vec = { x: value[0] ?? 0, y: value[1] ?? 0, z: value[2] ?? 0 };
+    this.applyTransform(slot, record, channel.path === "translation" ? "position" : "scale", vec);
+  }
+
+  private trackMotion(slot: number, resolved: ResolvedEntity): void {
+    if (resolved.particles !== undefined) {
+      this.particles.add({
+        slot,
+        rate: resolved.particles.rate,
+        lifetime: resolved.particles.lifetime,
+        speed: resolved.particles.speed,
+        size: resolved.particles.size,
+        gravity: resolved.particles.gravity,
+        meshId: resolved.mesh?.id ?? null,
+        materialId: resolved.instance?.material.id ?? null,
+        instanceIndex: resolved.instance?.index ?? null,
+      });
+    }
+    if (resolved.clip !== undefined) {
+      this.clips.add({ slot, duration: resolved.clip.duration, channels: resolved.clip.channels });
+    }
+  }
+
+  /**
+   * `r.position` and the other transform reads through an `entity_ref` (decision 0151).
+   * A reference that is not alive reads as zero: position and scale `(0, 0, 0)`, rotation identity,
+   * `visible` false. The live fields are the same objects the named-entity reads return.
+   */
+  refField(ref: unknown, field: unknown): unknown {
+    const name = typeof field === "string" ? field : "";
+    const zero = (): unknown => {
+      if (name === "visible") return false;
+      if (name === "rotation") return { x: 0, y: 0, z: 0, w: 1 };
+      return { x: 0, y: 0, z: 0 };
+    };
+    if (typeof ref !== "object" || ref === null || !("slot" in ref) || !("gen" in ref)) {
+      throw new RuntimeInternalError(`ctx.refField got ${describeValue(ref)}; expected an entity_ref.`);
+    }
+    if (name !== "position" && name !== "rotation" && name !== "scale" && name !== "visible") {
+      throw new RuntimeInternalError(`ctx.refField got the field ${describeValue(field)}; expected position, rotation, scale or visible.`);
+    }
+    const target = ref as EntityRef;
+    if (!this.dynamic.alive(target)) return zero();
+    const record = this.records[target.slot];
+    if (record === undefined) return zero();
+    switch (name) {
+      case "position":
+        return record.position;
+      case "rotation":
+        return record.rotation;
+      case "scale":
+        return record.scale;
+      case "visible":
+        return record.visible;
+      default:
+        return zero();
+    }
   }
 
   private warn(code: unknown, spanId: unknown): void {
@@ -962,3 +1280,50 @@ export class World {
     );
   }
 }
+
+/**
+ * `choose(items)` (decision 0152): one draw `r` in `[0, 1)` picks `floor(r * length)`.
+ * An empty array is a bug of generated code: arrays are at least one element long.
+ */
+export function chooseItem(r: number, items: unknown): unknown {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new RuntimeInternalError(`ctx.choose got ${describeValue(items)}; expected a non-empty array.`);
+  }
+  let index = Math.floor(r * items.length);
+  if (index >= items.length) index = items.length - 1;
+  if (index < 0) index = 0;
+  return items[index];
+}
+
+/** `shuffle(items)`: Fisher-Yates into a new array. `N - 1` draws; none when `N` is below 2. */
+export function shuffled(items: unknown, random: () => number): unknown[] {
+  if (!Array.isArray(items)) throw new RuntimeInternalError(`ctx.shuffle got ${describeValue(items)}; expected an array.`);
+  const out = items.slice();
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    let j = Math.floor(random() * (i + 1));
+    if (j > i) j = i;
+    if (j < 0) j = 0;
+    const swap = out[i];
+    out[i] = out[j];
+    out[j] = swap;
+  }
+  return out;
+}
+
+/** A numeric argument of a random helper; anything else is a bug of generated code. */
+function num(value: unknown, member: string): number {
+  if (typeof value !== "number") throw new RuntimeInternalError(`ctx.${member} got ${describeValue(value)}; expected a number.`);
+  return value;
+}
+
+/** `random_range(lo, hi)` from the draw `r` in `[0, 1)`: `lo + (hi - lo) * r`, rounded to f32 (decision 0149). */
+export function randomRange(r: number, lo: number, hi: number): number {
+  return Math.fround(lo + (hi - lo) * r);
+}
+
+/** `random_int(lo, hi)` from the draw `r` in `[0, 1)`: an i32 in `[lo, hi)`, `lo` when `hi <= lo` (decision 0149). */
+export function randomInt(r: number, lo: number, hi: number): number {
+  if (hi <= lo) return lo;
+  return (lo + Math.floor(r * (hi - lo))) | 0;
+}
+

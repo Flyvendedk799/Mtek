@@ -49,6 +49,7 @@ describe("the runtime bundle flavours", () => {
   it("name their output files as the compiler expects", () => {
     expect(FLAVOURS.release.outfile).toBe("dist/runtime.js");
     expect(FLAVOURS.dev.outfile).toBe("dist/runtime.dev.js");
+    expect(FLAVOURS.min.outfile).toBe("dist/runtime.min.js");
   });
 
   it("the development bundle contains the overlay, the GPU timer and the statistics", async () => {

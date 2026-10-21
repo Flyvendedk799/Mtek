@@ -1,0 +1,90 @@
+// Game flow (decisions 0140 to 0144): two scenes with a shared score, `go_to` between them,
+// `reset()`, `pause()`/`resume()`/`paused()`, timers in a scene, an entity and a spawned prefab,
+// and a bounded `while` in a function and a handler.
+fn digits(n: i32) -> i32 {
+    var count = 1;
+    var rest = n;
+    while rest >= 10 {
+        rest = rest / 10;
+        count += 1;
+    }
+    return count;
+}
+
+prefab Spark {
+    param speed: f32 = 1.0;
+    mesh: Sphere { radius: 0.1 };
+    on key_down(Key.Space) {
+        after(0.5) { destroy(self); }
+    }
+}
+
+scene Title {
+    shared state score: i32 = 0;
+    shared state best: i32 = 0;
+    state blink: bool = true;
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    entity Logo {
+        mesh: Box {};
+        visible: bind(blink);
+    }
+    on key_down(Key.Enter) {
+        score = 0;
+        go_to(Level);
+    }
+    on key_down(Key.Space) {
+        every(0.5) { blink = !blink; }
+    }
+}
+
+scene Level {
+    shared state score: i32 = 0;
+    shared state best: i32 = 0;
+    state time_left: f32 = 30.0;
+    state width: i32 = 1;
+    camera Main {
+        position: vec3(0.0, 4.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    entity Player {
+        mesh: Box {};
+        state flashes: i32 = 0;
+        on key_down(Key.F) {
+            let times = 3;
+            every(0.1) {
+                flashes += 1;
+                self.visible = !self.visible;
+            }
+            after(f32(times) * 0.1) { self.visible = true; }
+        }
+    }
+    update(dt: f32) {
+        time_left -= dt;
+        width = digits(score);
+        if time_left <= 0.0 {
+            if score > best { best = score; }
+            go_to(Title);
+        }
+    }
+    on key_down(Key.Space) {
+        score += 10;
+        let spark = spawn(Spark { speed: 2.0 });
+    }
+    on key_down(Key.P) {
+        if paused() { resume(); } else { pause(); }
+    }
+    on key_down(Key.R) {
+        reset();
+    }
+    on key_down(Key.ArrowUp) {
+        var budget = 3;
+        while budget > 0 && score < 1000 {
+            score += 1;
+            budget -= 1;
+        }
+        after(2.0) { score += 5; }
+    }
+}

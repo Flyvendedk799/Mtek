@@ -212,6 +212,120 @@ pub struct GlbFile {
     pub scenes: Vec<Vec<usize>>,
     /// The default scene: `scene`, or the first scene when the file names none.
     pub default_scene: Option<usize>,
+    /// Node TRS clips (decision 0156). Empty when the file has no LINEAR or STEP
+    /// translation, rotation or scale channels. Skins, morph weights and cubic splines
+    /// are rejected (`E7019`) and never appear here.
+    pub clips: Vec<GlbClip>,
+}
+
+/// One glTF animation the profile can play (decision 0156).
+#[derive(Clone, Debug, PartialEq)]
+pub struct GlbClip {
+    pub name: String,
+    /// The last keyframe time, in seconds.
+    pub duration: f32,
+    pub channels: Vec<GlbChannel>,
+}
+
+/// One TRS channel of a [`GlbClip`], already limited to one node when [`GlbFile::clip_for`]
+/// answers.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GlbChannel {
+    pub node: usize,
+    pub node_name: Option<String>,
+    /// The glTF mesh name of the node's mesh, when the node has one.
+    pub mesh_name: Option<String>,
+    pub path: GlbChannelPath,
+    pub interpolation: GlbInterpolation,
+    /// Keyframe times, strictly increasing.
+    pub times: Vec<f32>,
+    /// Keyframe values, `path.components()` floats each, in the same order as `times`.
+    pub values: Vec<f32>,
+}
+
+/// The node property a channel writes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GlbChannelPath {
+    Translation,
+    Rotation,
+    Scale,
+}
+
+impl GlbChannelPath {
+    /// The glTF path (`translation`).
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            GlbChannelPath::Translation => "translation",
+            GlbChannelPath::Rotation => "rotation",
+            GlbChannelPath::Scale => "scale",
+        }
+    }
+
+    /// The entity field this path writes (`position` for a translation).
+    #[must_use]
+    pub fn entity_field(self) -> &'static str {
+        match self {
+            GlbChannelPath::Translation => "position",
+            GlbChannelPath::Rotation => "rotation",
+            GlbChannelPath::Scale => "scale",
+        }
+    }
+
+    /// Floats per keyframe.
+    #[must_use]
+    pub fn components(self) -> usize {
+        match self {
+            GlbChannelPath::Translation | GlbChannelPath::Scale => 3,
+            GlbChannelPath::Rotation => 4,
+        }
+    }
+}
+
+/// LINEAR or STEP. Cubic spline is rejected.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GlbInterpolation {
+    Linear,
+    Step,
+}
+
+impl GlbInterpolation {
+    /// The manifest spelling (`linear`).
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            GlbInterpolation::Linear => "linear",
+            GlbInterpolation::Step => "step",
+        }
+    }
+}
+
+impl GlbFile {
+    /// The channels of clip `name` that move the node whose mesh or node is called `mesh`.
+    /// The duration stays the whole clip's. `None` when the name is missing or no channel
+    /// of that clip targets the mesh.
+    #[must_use]
+    pub fn clip_for(&self, name: &str, mesh: &str) -> Option<GlbClip> {
+        let clip = self.clips.iter().find(|clip| clip.name == name)?;
+        let node = clip.channels.iter().find(|channel| {
+            channel.mesh_name.as_deref() == Some(mesh) || channel.node_name.as_deref() == Some(mesh)
+        })?;
+        let node = node.node;
+        let channels: Vec<GlbChannel> = clip
+            .channels
+            .iter()
+            .filter(|channel| channel.node == node)
+            .cloned()
+            .collect();
+        if channels.is_empty() {
+            return None;
+        }
+        Some(GlbClip {
+            name: clip.name.clone(),
+            duration: clip.duration,
+            channels,
+        })
+    }
 }
 
 /// The parts of a container.
@@ -610,6 +724,7 @@ pub fn read_glb(path: &str, bytes: &[u8], limits: &AssetLimits) -> Result<GlbFil
         meshes,
         materials,
         images,
+        clips,
         ..
     } = validator;
     if !issues.is_empty() {
@@ -628,6 +743,7 @@ pub fn read_glb(path: &str, bytes: &[u8], limits: &AssetLimits) -> Result<GlbFil
         nodes,
         scenes,
         default_scene,
+        clips,
     })
 }
 
@@ -795,6 +911,8 @@ struct Validator<'a> {
     samplers: Vec<Option<SamplerChoice>>,
     /// The result of the image pass, by image index.
     image_ok: Vec<bool>,
+    /// TRS clips extracted by [`Self::check_animations`].
+    clips: Vec<GlbClip>,
 }
 
 /// `mesh 'Seat' (meshes[2])`, or `mesh at meshes[2]` without a name.
@@ -867,6 +985,7 @@ impl<'a> Validator<'a> {
             images: Vec::new(),
             samplers: Vec::new(),
             image_ok: Vec::new(),
+            clips: Vec::new(),
         }
     }
 
@@ -1706,29 +1825,322 @@ impl<'a> Validator<'a> {
         sampler.map(|sampler| GlbTexture { image, sampler })
     }
 
+    /// Skins, morph-weight channels and cubic splines stay `E7019` (decision 0156). LINEAR and
+    /// STEP translation, rotation and scale channels are packaged as [`GlbClip`]s.
     fn check_animations(&mut self) {
-        let (animations, skins) = (self.root.animations.len(), self.root.skins.len());
-        if animations > 0 || skins > 0 {
-            let mut parts = Vec::new();
-            if animations > 0 {
-                parts.push(format!("{animations} animation{}", plural(animations)));
-            }
-            if skins > 0 {
-                parts.push(format!("{} skin{}", skins, plural(skins)));
-            }
+        let skins = self.root.skins.len();
+        if skins > 0 {
             self.report(
                 12,
                 Issue::new(
                     Code::E7019,
                     format!(
-                        "The file contains {}; the v0.1 profile is static and has neither animations nor skins.",
-                        parts.join(" and ")
+                        "The file contains {skins} skin{}; the v0.1 profile has no skins.",
+                        plural(skins)
                     ),
                 )
-                .help("export the model without animations and skins"),
+                .help("export the model without skins"),
             );
         }
+        let mut names: Vec<String> = Vec::new();
+        for (index, animation) in self.root.animations.iter().enumerate() {
+            let name = animation
+                .name
+                .as_deref()
+                .filter(|name| !name.is_empty())
+                .map(str::to_owned)
+                .unwrap_or_else(|| format!("animation_{index}"));
+            if names.iter().any(|have| have == &name) {
+                self.report(
+                    12,
+                    Issue::new(
+                        Code::E7019,
+                        format!("The file has two animations named '{name}'."),
+                    )
+                    .help("give each animation its own name"),
+                );
+                continue;
+            }
+            names.push(name.clone());
+            let mut channels = Vec::new();
+            let mut rejected = false;
+            for channel in &animation.channels {
+                match self.clip_channel(&name, animation, channel) {
+                    ClipChannel::Ready(channel) => channels.push(channel),
+                    ClipChannel::Rejected => rejected = true,
+                    ClipChannel::Broken => rejected = true,
+                }
+            }
+            if rejected {
+                continue;
+            }
+            let duration = channels
+                .iter()
+                .flat_map(|channel| channel.times.last().copied())
+                .fold(0.0_f32, f32::max);
+            self.clips.push(GlbClip {
+                name,
+                duration,
+                channels,
+            });
+        }
     }
+
+    /// One channel, or why it cannot be played. `Broken` is a data error already reported
+    /// (`E7025` or `E7011`); `Rejected` is `E7019`.
+    fn clip_channel(
+        &mut self,
+        clip: &str,
+        animation: &json::animation::Animation,
+        channel: &json::animation::Channel,
+    ) -> ClipChannel {
+        use json::animation::{Interpolation, Property};
+        let path = match &channel.target.path {
+            Checked::Valid(Property::Translation) => GlbChannelPath::Translation,
+            Checked::Valid(Property::Rotation) => GlbChannelPath::Rotation,
+            Checked::Valid(Property::Scale) => GlbChannelPath::Scale,
+            Checked::Valid(Property::MorphTargetWeights) => {
+                self.report(
+                    12,
+                    Issue::new(
+                        Code::E7019,
+                        format!(
+                            "The animation '{clip}' animates morph weights; the v0.1 profile plays translation, rotation and scale only."
+                        ),
+                    )
+                    .help("export the clip without morph targets"),
+                );
+                return ClipChannel::Rejected;
+            }
+            Checked::Invalid => {
+                self.report(
+                    12,
+                    Issue::new(
+                        Code::E7019,
+                        format!("The animation '{clip}' has a channel whose path is not translation, rotation or scale."),
+                    )
+                    .help("export the clip with LINEAR or STEP translation, rotation or scale"),
+                );
+                return ClipChannel::Rejected;
+            }
+        };
+        let interpolation = match &animation
+            .samplers
+            .get(channel.sampler.value())
+            .map(|sampler| &sampler.interpolation)
+        {
+            Some(Checked::Valid(Interpolation::Linear)) => GlbInterpolation::Linear,
+            Some(Checked::Valid(Interpolation::Step)) => GlbInterpolation::Step,
+            Some(Checked::Valid(Interpolation::CubicSpline)) => {
+                self.report(
+                    12,
+                    Issue::new(
+                        Code::E7019,
+                        format!(
+                            "The animation '{clip}' uses cubic-spline interpolation; the v0.1 profile plays LINEAR and STEP only."
+                        ),
+                    )
+                    .help("export the clip with LINEAR or STEP interpolation"),
+                );
+                return ClipChannel::Rejected;
+            }
+            Some(Checked::Invalid) => {
+                self.report(
+                    12,
+                    Issue::new(
+                        Code::E7019,
+                        format!(
+                            "The animation '{clip}' uses an interpolation other than LINEAR or STEP."
+                        ),
+                    )
+                    .help("export the clip with LINEAR or STEP interpolation"),
+                );
+                return ClipChannel::Rejected;
+            }
+            None => {
+                self.report(
+                    7,
+                    Issue::new(
+                        Code::E7025,
+                        format!("The animation '{clip}' names a sampler that does not exist."),
+                    ),
+                );
+                return ClipChannel::Broken;
+            }
+        };
+        let sampler = &animation.samplers[channel.sampler.value()];
+        let node_index = channel.target.node.value();
+        let Some(node) = self.root.nodes.get(node_index) else {
+            self.report(
+                7,
+                Issue::new(
+                    Code::E7025,
+                    format!(
+                        "The animation '{clip}' targets node {node_index}, which does not exist."
+                    ),
+                ),
+            );
+            return ClipChannel::Broken;
+        };
+        let what = format!("animation '{clip}'");
+        let times = match self.clip_floats(&what, sampler.input.value(), 1, Type::Scalar) {
+            Some(times) => times,
+            None => return ClipChannel::Broken,
+        };
+        if times.is_empty() || times.len() > MAX_CLIP_KEYS {
+            self.report(
+                12,
+                Issue::new(
+                    Code::E7019,
+                    format!(
+                        "The animation '{clip}' has {} keyframes; a clip has between 1 and {MAX_CLIP_KEYS}.",
+                        times.len()
+                    ),
+                )
+                .help("bake fewer keyframes"),
+            );
+            return ClipChannel::Rejected;
+        }
+        if times.iter().any(|time| !time.is_finite())
+            || times.windows(2).any(|pair| pair[1] <= pair[0])
+        {
+            self.report(
+                7,
+                Issue::new(
+                    Code::E7025,
+                    format!(
+                        "The animation '{clip}' has keyframe times that are not finite and strictly increasing."
+                    ),
+                ),
+            );
+            return ClipChannel::Broken;
+        }
+        let values = match self.clip_floats(
+            &what,
+            sampler.output.value(),
+            path.components(),
+            match path {
+                GlbChannelPath::Rotation => Type::Vec4,
+                GlbChannelPath::Translation | GlbChannelPath::Scale => Type::Vec3,
+            },
+        ) {
+            Some(values) => values,
+            None => return ClipChannel::Broken,
+        };
+        if values.len() != times.len() * path.components() {
+            self.report(
+                7,
+                Issue::new(
+                    Code::E7025,
+                    format!(
+                        "The animation '{clip}' has {} output values for {} {path} keyframes.",
+                        values.len() / path.components().max(1),
+                        times.len(),
+                        path = path.as_str()
+                    ),
+                ),
+            );
+            return ClipChannel::Broken;
+        }
+        let mesh_name = node.mesh.as_ref().and_then(|mesh| {
+            self.root
+                .meshes
+                .get(mesh.value())
+                .and_then(|mesh| mesh.name.clone())
+        });
+        ClipChannel::Ready(GlbChannel {
+            node: node_index,
+            node_name: node.name.clone(),
+            mesh_name,
+            path,
+            interpolation,
+            times,
+            values,
+        })
+    }
+
+    /// The floats of a clip accessor: `F32` of `kind`, `components` per element. Problems are
+    /// reported; `None` means the channel cannot be read.
+    fn clip_floats(
+        &mut self,
+        what: &str,
+        index: usize,
+        components: usize,
+        kind: Type,
+    ) -> Option<Vec<f32>> {
+        let Some(accessor) = self.root.accessors.get(index) else {
+            self.report(
+                7,
+                Issue::new(
+                    Code::E7025,
+                    format!("{what}: accessors[{index}] does not exist."),
+                ),
+            );
+            return None;
+        };
+        let component_ok = matches!(
+            &accessor.component_type,
+            Checked::Valid(GenericComponentType(ComponentType::F32))
+        );
+        let type_ok = matches!(&accessor.type_, Checked::Valid(found) if *found == kind);
+        if !component_ok || !type_ok {
+            self.report(
+                7,
+                Issue::new(
+                    Code::E7025,
+                    format!(
+                        "{what}: accessors[{index}] must be FLOAT {} with {components} components.",
+                        type_name(kind)
+                    ),
+                ),
+            );
+            return None;
+        }
+        let resolved = match self.resolve(index, components * 4, false) {
+            Ok(resolved) => resolved,
+            Err(problem) => {
+                self.report_problem(&format!("{what}, accessors[{index}]"), problem);
+                return None;
+            }
+        };
+        let mut values = Vec::with_capacity(resolved.count.saturating_mul(components));
+        for element in 0..resolved.count {
+            for component in 0..components {
+                let at = resolved.offset + element * resolved.stride + component * 4;
+                let Some(value) = le_f32(self.bin, at) else {
+                    self.report(
+                        7,
+                        Issue::new(
+                            Code::E7025,
+                            format!("{what}: accessors[{index}] ends before its values do."),
+                        ),
+                    );
+                    return None;
+                };
+                if !value.is_finite() {
+                    self.report(
+                        7,
+                        Issue::new(
+                            Code::E7025,
+                            format!("{what}: accessors[{index}] has a value that is not finite."),
+                        ),
+                    );
+                    return None;
+                }
+                values.push(value);
+            }
+        }
+        Some(values)
+    }
+}
+
+/// The most keyframes one channel may carry (decision 0156).
+const MAX_CLIP_KEYS: usize = 4096;
+
+enum ClipChannel {
+    Ready(GlbChannel),
+    Rejected,
+    Broken,
 }
 
 fn plural(count: usize) -> &'static str {

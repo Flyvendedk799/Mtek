@@ -1,0 +1,8 @@
+// A shared state holds plain values: an entity_ref belongs to one scene.
+// covers: [S: shared-state]
+scene Demo {
+    shared state target: entity_ref = Floor;
+    shared state score: i32 = 0;
+    camera Main {}
+    entity Floor { mesh: Box {}; }
+}

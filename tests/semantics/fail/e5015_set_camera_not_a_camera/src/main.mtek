@@ -1,0 +1,10 @@
+scene Demo {
+    camera Main {}
+    entity Cube {
+        mesh: Box {};
+    }
+
+    on key_down(Key.Digit1) {
+        set_camera(Cube);
+    }
+}

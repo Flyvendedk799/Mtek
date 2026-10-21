@@ -216,6 +216,7 @@ enum Pending {
     HandlerOnly { node: usize, call: usize },
     CouldBePure { node: usize },
     UnboundedLoop { node: usize, index: usize },
+    WhileLoop { node: usize, index: usize },
     CpuOnlyType { node: usize, index: usize },
     CpuOnlyBuiltin { node: usize, call: usize },
     GpuOnlyBuiltin { node: usize, call: usize },
@@ -229,6 +230,27 @@ struct Step {
     from: usize,
     to: usize,
     span: Span,
+}
+
+/// The note of `E5080` for the handler-only built-in `name`.
+fn handler_only_note(name: &str) -> &'static str {
+    match name {
+        "spawn" | "destroy" | "destroy_tagged" => {
+            "spawning and destroying entities are lifecycle operations of the scene"
+        }
+        "after" | "every" => {
+            "a timer belongs to the scene or entity whose handler starts it (decision 0142)"
+        }
+        "go_to" | "reset" => {
+            "changing or restarting the scene is a lifecycle operation of the scene"
+        }
+        "set_camera" => "switching the camera is a lifecycle operation of the scene",
+        "pause" | "resume" => "pausing the game is a lifecycle operation of the scene",
+        "save" | "load" | "clear_saved" => {
+            "saved data is read and written by the scene's handlers (decision 0145)"
+        }
+        _ => "this operation is a lifecycle operation of the scene",
+    }
 }
 
 /// Check effects, recursion and reachability over every function of the
@@ -740,6 +762,16 @@ impl<'a> Graph<'a> {
                     },
                 ));
             }
+            for (i, span) in node.facts.while_loops.iter().enumerate() {
+                pending.push((
+                    *span,
+                    Code::E4010,
+                    Pending::WhileLoop {
+                        node: index,
+                        index: i,
+                    },
+                ));
+            }
             for (i, site) in node.facts.cpu_only.iter().enumerate() {
                 // `let t = texture.white();`: the call is `E4012` and the local only repeats it.
                 let from_cpu_call = site.value.is_some_and(|value| {
@@ -942,7 +974,7 @@ impl<'a> Graph<'a> {
                     ),
                 )
                 .at(fact.span)
-                .note("spawning and destroying entities are lifecycle operations of the scene")
+                .note(handler_only_note(&builtin.name))
             }
             Pending::CouldBePure { node } => {
                 let n = self.node(node)?;
@@ -955,6 +987,21 @@ impl<'a> Graph<'a> {
                 )
                 .at(n.span)
                 .help("declare it with `fn`, so that pure functions and GPU code can call it")
+            }
+            Pending::WhileLoop { node, index } => {
+                let n = self.node(node)?;
+                let span = *n.facts.while_loops.get(index)?;
+                let diagnostic = Diagnostic::new(
+                    Code::E4010,
+                    format!(
+                        "A `while` loop has no constant bound, but {} runs on the GPU.",
+                        n.subject()
+                    ),
+                )
+                .at(span)
+                .note("`while` is a CPU loop (decision 0144); loops in GPU code need bounds that are constant expressions")
+                .help("use `for i in 0..N { ... }` with a constant `N` and leave it early with `break`");
+                self.with_gpu_chain(diagnostic, gpu, node)
             }
             Pending::UnboundedLoop { node, index } => {
                 let n = self.node(node)?;
@@ -1316,6 +1363,10 @@ fn cpu_type_help(ty: &str) -> Option<&'static str> {
         "string" => {
             Some("strings exist only on the CPU; GPU code works with numbers, vectors and colors")
         }
+        "sound" => Some(
+            "sounds exist only on the CPU: play them from a handler with `play(..)`; a material that should react to a sound reads a `state` set by that handler through a `param` and `bind(...)`",
+        ),
+        "font" => Some("fonts exist only on the CPU: pass them to `hud.text(..)`"),
         "entity_ref" | "mesh" | "material" => Some(
             "handles exist only on the CPU; give the stage the number, vector or color it needs as a `param` of the material and set it from the entity, with `bind(...)` for a value that changes",
         ),

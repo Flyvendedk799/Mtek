@@ -1,0 +1,9 @@
+// Patterns: the wildcard `_` and a qualified variant `Enum.Variant`, alone or
+// joined by `|`.
+fn label(direction: Direction) -> i32 {
+    return match direction {
+        Direction.North | Direction.South => 1,
+        Direction.East => 2,
+        _ => 3,
+    };
+}

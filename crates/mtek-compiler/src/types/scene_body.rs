@@ -894,6 +894,20 @@ impl Checker<'_> {
                         self.report_property_write(current, property);
                         return Some((None, false));
                     }
+                    // Reads of these four fields are allowed (decision 0151); writes are not,
+                    // because the reference does not name the entity the single-writer rules need.
+                    Some(FieldKind::RefField { field }) => {
+                        self.sink.push(
+                            Diagnostic::new(
+                                Code::E5074,
+                                format!("'.{field}' cannot be written through an entity_ref."),
+                            )
+                            .at(current.span)
+                            .note("an entity_ref does not name the entity, so a write could not be checked against that entity's body and its bindings")
+                            .help("write a named entity's field, or move a spawned body with `r.body.teleport` or `r.body.apply_impulse`"),
+                        );
+                        return Some((None, false));
+                    }
                     _ => return None,
                 },
                 ExprKind::Name(_) => {

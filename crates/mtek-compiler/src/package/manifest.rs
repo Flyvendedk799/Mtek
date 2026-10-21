@@ -79,6 +79,10 @@ pub struct Manifest {
     pub required_capabilities: RequiredCapabilities,
     pub subsystems: Subsystems,
     pub runtime_config: RuntimeConfig,
+    /// Game-level data (decision 0141): the scenes of a multi-scene program. Absent, byte for
+    /// byte, for a single-scene program.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub game: Option<Game>,
     /// Present exactly in the manifest of a `--mode preview` build: the runtime then enforces the
     /// loop budget the program was instrumented with and refuses network access outside
     /// `baseUrl` (decision 0075). Absent in every other mode, byte for byte.
@@ -97,6 +101,28 @@ pub struct Manifest {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub prefabs: Vec<Prefab>,
     pub scene: Scene,
+}
+
+/// `game` of the manifest (decision 0141). Every scene manifest of one build has the same one.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Game {
+    /// Every scene of the program, sorted by name; empty (absent) for a single scene.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub scenes: Vec<GameScene>,
+    /// The storage name of saved state and settings (decision 0145): the `localStorage` key is
+    /// `mtek.save.<storage>`. Present when a scene has a `saved` or `setting` state.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub storage: Option<String>,
+}
+
+/// One scene `go_to` can load: its program module and manifest, relative to the program.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameScene {
+    pub name: String,
+    pub module: String,
+    pub manifest: String,
 }
 
 impl Manifest {
@@ -470,6 +496,27 @@ pub enum AssetKind {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         source: Option<String>,
     },
+    /// A sound file declared with `asset.sound(..)`, copied byte for byte (decision 0130).
+    #[serde(rename = "audio")]
+    Audio {
+        /// `wav`, `ogg` or `mp3`.
+        format: String,
+        mime: String,
+        /// The project path of the declaring `asset.sound(..)`: generated code names the sound
+        /// by it.
+        source: String,
+        span: u32,
+    },
+    /// A font file of `asset.font(..)` (decision 0139), copied byte for byte.
+    #[serde(rename = "font")]
+    Font {
+        /// `ttf`, `otf`, `woff` or `woff2`.
+        format: String,
+        mime: String,
+        /// The project path of the declaring `asset.font(..)`: generated code names the font by it.
+        source: String,
+        span: u32,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -541,6 +588,21 @@ pub struct StateEntry {
     #[serde(rename = "type")]
     pub ty: String,
     pub symbol: String,
+    /// `shared state` of a scene (decision 0141): carried over `go_to`. Written only when true.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub shared: bool,
+    /// `saved` or `setting` (decisions 0145, 0146): kept in the browser's storage. Written only
+    /// when present.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub persist: Option<String>,
+    /// With `persist`: the structural description of the type a stored value must have
+    /// (decision 0145); a struct spells out its fields, an enum its variants.
+    #[serde(
+        default,
+        rename = "storedType",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub stored_type: Option<String>,
 }
 
 /// A camera: structure only; its values are set by `init(ctx)`.
@@ -574,6 +636,47 @@ pub struct Entity {
     pub state: Vec<StateEntry>,
     pub update: bool,
     pub fixed_update: bool,
+    /// `tag: "name";` (decision 0150); absent when the entity has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
+    /// `particles: Emitter { .. }` (decision 0155); absent when the entity emits none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub particles: Option<Particles>,
+    /// A glTF clip that moves this entity (decision 0156); absent when it plays none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clip: Option<Clip>,
+}
+
+/// A particle emitter (decision 0155). The runtime keeps at most 64 particles.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Particles {
+    pub rate: Num,
+    pub lifetime: Num,
+    pub speed: Num,
+    pub size: Num,
+    pub gravity: Num,
+}
+
+/// A sampled TRS clip (decision 0156).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Clip {
+    pub name: String,
+    pub duration: Num,
+    pub channels: Vec<ClipChannel>,
+}
+
+/// One channel of a [`Clip`]. `path` is `translation`, `rotation` or `scale`; `interpolation`
+/// is `linear` or `step`. `values` holds `3` floats per key for translation and scale and `4`
+/// for rotation, in the same order as `times`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClipChannel {
+    pub path: String,
+    pub interpolation: String,
+    pub times: Vec<Num>,
+    pub values: Vec<Num>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -601,6 +704,15 @@ pub struct Prefab {
     pub fixed_update: bool,
     pub bindings: Vec<Binding>,
     pub span: u32,
+    /// The tag every instance carries (decision 0150); absent when the prefab has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
+    /// The emitter every instance starts with (decision 0155); absent when the prefab has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub particles: Option<Particles>,
+    /// The clip every instance plays (decision 0156); absent when the prefab plays none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clip: Option<Clip>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -732,11 +844,28 @@ pub struct Binding {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum BindingTarget {
-    Transform { entity: u32, field: String },
-    Visible { entity: u32 },
-    Param { instance: u32, name: String },
-    Camera { field: String },
-    Light { entity: u32, field: String },
+    Transform {
+        entity: u32,
+        field: String,
+    },
+    Visible {
+        entity: u32,
+    },
+    Param {
+        instance: u32,
+        name: String,
+    },
+    Camera {
+        field: String,
+        /// The camera the binding writes (decision 0154). Absent on manifests written before
+        /// camera switching, which bound the one active camera.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        camera: Option<String>,
+    },
+    Light {
+        entity: u32,
+        field: String,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

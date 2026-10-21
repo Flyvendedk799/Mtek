@@ -1,0 +1,19 @@
+// An emitter with no mesh is still counted (decision 0155).
+scene Demo {
+    camera Main {}
+    state sparks: i32 = 0;
+
+    entity Fountain {
+        particles: Emitter {
+            rate: 24.0;
+            lifetime: 0.8;
+            speed: 1.6;
+            size: 0.12;
+            gravity: 3.0;
+        };
+    }
+
+    update(dt: f32) {
+        sparks = particle_count();
+    }
+}

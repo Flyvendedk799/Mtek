@@ -388,7 +388,13 @@ fn content_addressed_files_are_named_by_their_hash() {
         ];
         // A program with a body also has the physics bundle (decision 0063, decision 0065).
         let physics_files = usize::from(manifest.subsystems.physics);
-        let expected_count = fixed.len() + 1 + physics_files + 2 * manifest.shaders.len();
+        // Every scene but the entry has its module, source map and manifest (decision 0141).
+        let other_scenes = manifest
+            .game
+            .as_ref()
+            .map_or(0, |game| game.scenes.len().saturating_sub(1));
+        let expected_count =
+            fixed.len() + 1 + physics_files + 2 * manifest.shaders.len() + 3 * other_scenes;
         assert_eq!(
             result.files.len(),
             expected_count,
@@ -1021,7 +1027,8 @@ fn a_build_that_uses_physics_has_the_bundle_under_its_hash_and_says_so_in_the_ma
                 .collect();
             assert_eq!(extra, [&name], "{label} {mode:?}");
             for (path, bytes) in &plain.files {
-                if path != "program.manifest.json" {
+                // Every scene manifest says `subsystems` (decision 0141).
+                if !(path.starts_with("program.") && path.ends_with(".manifest.json")) {
                     assert_eq!(&with.files[path], bytes, "{label} {mode:?} {path}");
                 }
             }
@@ -1473,7 +1480,11 @@ fn every_project_builds_as_a_preview_with_a_valid_manifest_and_checks_that_resol
             let span = &manifest.spans[rest.trim_end_matches(");").parse::<usize>().unwrap()];
             let file = result.sources.get(FileId(span.file)).unwrap();
             let text = file.slice(span.start, span.end).unwrap();
-            assert!(text.starts_with("for "), "{label}: {text}");
+            // `for` loops and, since decision 0144, `while` loops count against the budget.
+            assert!(
+                text.starts_with("for ") || text.starts_with("while "),
+                "{label}: {text}"
+            );
             checks += 1;
         }
     }

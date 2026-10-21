@@ -464,6 +464,9 @@ impl Checker<'_> {
                     .unwrap_or_default();
                 cpu.then(|| (format!("the `cpu fn` '{name}'"), true))
             }
+            // The easing curves are CPU functions without effects (decision 0135): a binding,
+            // which the CPU evaluates, may use them.
+            Callee::Builtin(builtin) if builtin.name.starts_with("easing.") => None,
             Callee::Builtin(builtin) => (builtin.domain == Domain::Cpu || builtin.handlers_only)
                 .then(|| (format!("the CPU intrinsic `{}`", builtin.name), false)),
             // Direct frame reads are allowed and become dependencies below.
@@ -540,6 +543,10 @@ impl Checker<'_> {
                     // The manifest has no dependency kind for a body property (decision 0065).
                     FieldKind::BodyProperty { property, .. } => {
                         unbindable.push((span, format!("the body property `body.{property}`")));
+                    }
+                    // The manifest has no dependency on "whichever entity this reference names".
+                    FieldKind::RefField { field } => {
+                        unbindable.push((span, format!("the field `.{field}` of an entity_ref")));
                     }
                     FieldKind::NamespaceValue(name) => {
                         if let Some(member) = name.strip_prefix("frame.") {

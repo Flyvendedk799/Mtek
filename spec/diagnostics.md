@@ -190,6 +190,16 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w3081"></a>W3081 | unreachable code | |
 | <a id="mtek-e3090"></a>E3090 | not a constant expression | |
 | <a id="mtek-e3102"></a>E3102 | field or parameter type mismatch | schema/material field |
+| <a id="mtek-e3201"></a>E3201 | non-exhaustive match | a `match` without `_` misses variants of its enum; the message lists them (decision 0129) |
+| <a id="mtek-e3202"></a>E3202 | unreachable match arm | a variant matched twice, a pattern after `_`, or a `_` after every variant; a related span at the earlier pattern |
+| <a id="mtek-e3203"></a>E3203 | match on a value that is not an enum | the scrutinee of `match` has another type |
+| <a id="mtek-e3204"></a>E3204 | invalid match pattern | a pattern that is not `Enum.Variant` of the scrutinee's enum, or `_` |
+| <a id="mtek-e3205"></a>E3205 | unknown enum variant | `Enum.Name` where the enum declares no `Name`; the nearest variant (help) and every variant (note) |
+| <a id="mtek-e3206"></a>E3206 | match arms of different types | the arm values of a `match` expression; a related span at the first arm |
+| <a id="mtek-e3210"></a>E3210 | timer block uses an enclosing variable | an `after`/`every` block reads or writes a `var` local of the body around it; the block runs later, when the `var` no longer exists (decision 0142). `let` locals, parameters and loop variables are captured with their value; state, `self` and constants are fine |
+| <a id="mtek-e3211"></a>E3211 | invalid timer time | a constant delay of `after` that is negative or not finite, or a constant period of `every` that is not greater than 0 (decision 0142) |
+| <a id="mtek-e3501"></a>E3501 | value cannot be interpolated | an interpolation `${expr}` in a string literal whose value is not a string, bool, i32, u32, f32, vec2, vec3 or vec4 (decision 0133) |
+| <a id="mtek-e3502"></a>E3502 | invalid format spec | the format spec of `${expr:spec}` is not `.N` with one digit, or `.N` is given for a value that is not f32 or a vector (decision 0133) |
 
 ### 5.4 Functions, effects, stages (`4xxx`)
 | Code | Title | Trigger |
@@ -224,6 +234,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5012"></a>E5012 | scene has no camera | |
 | <a id="mtek-e5013"></a>E5013 | ambiguous active camera | |
 | <a id="mtek-e5014"></a>E5014 | unknown scene object kind | `lamp Main { … }`; v0.1 kinds: `camera` |
+| <a id="mtek-e5015"></a>E5015 | set_camera target is not a camera | `set_camera` argument is not the name of a camera of this scene (decision 0154) |
+| <a id="mtek-e5016"></a>E5016 | clip cannot play | `clip` names no playable channel of the entity's GLB mesh, the entity also writes a channel the clip writes, or a scale keyframe is not positive (decision 0156) |
 | <a id="mtek-e5020"></a>E5020 | material without mesh | |
 | <a id="mtek-e5030"></a>E5030 | named entity cannot be destroyed | `destroy(Cube)`, or `self` of a named entity (decision 0064) |
 | <a id="mtek-e5040"></a>E5040 | unsupported prefab assembly operation | spawning a prefab with children, or a prefab instance nested inside another prefab (decision 0128) |
@@ -239,14 +251,14 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5071"></a>E5071 | write to physics-owned field | an assignment to the `position` or `rotation` of an entity with any body, or to a body velocity; names the allowed operation (decision 0065) |
 | <a id="mtek-e5072"></a>E5072 | binding on physics-owned field | `bind` on the `position` or `rotation` of an entity or prefab with any body (decision 0065) |
 | <a id="mtek-e5073"></a>E5073 | write to construction-only field | |
-| <a id="mtek-e5074"></a>E5074 | field access through entity_ref | not in v0.1; read or write of a field or state through a reference (decision 0064) |
+| <a id="mtek-e5074"></a>E5074 | field access through entity_ref | a write, or a read of anything but `position`, `rotation`, `scale` and `visible`, through a reference (decisions 0064 and 0151) |
 | <a id="mtek-e5075"></a>E5075 | binding cycle | full path |
 | <a id="mtek-e5080"></a>E5080 | lifecycle operation during initialisation | `spawn` or `destroy` in initialisers (decision 0064); a handler-only built-in function (`spawn`, `destroy`, a body command) called in a function (decision 0065) |
 | <a id="mtek-e5081"></a>E5081 | entity field read during initialisation | includes body-property reads reached through helper calls |
 | <a id="mtek-e5090"></a>E5090 | invalid scale | non-positive or non-finite constant |
 | <a id="mtek-e5091"></a>E5091 | body on non-root entity | a body on a nested entity, or a static instance of a prefab with a body nested in an entity (decision 0065) |
 | <a id="mtek-e5092"></a>E5092 | too many static entities | |
-| <a id="mtek-e5100"></a>E5100 | non-opaque color in material parameter | |
+| <a id="mtek-e5100"></a>E5100 | non-opaque color in material parameter | **Reserved:** retired by decision 0138: material colours take any alpha, an alpha below 1 makes the draw translucent; the code is kept so that the number is not reused |
 | <a id="mtek-w5101"></a>W5101 | fragment alpha ignored | constant alpha ≠ 1 |
 | <a id="mtek-e5110"></a>E5110 | light in prefab | at the `light` member; the light is not part of the prefab's entity (decisions 0053, 0062) |
 | <a id="mtek-e5111"></a>E5111 | too many lights | > 4 |
@@ -254,8 +266,26 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5121"></a>E5121 | body without collider | a `body` without a `collider`; the body would have no shape |
 | <a id="mtek-e5122"></a>E5122 | scaled dynamic or kinematic body | `scale` of a `Dynamic` or `Kinematic` body that is not the constant `vec3(1.0)` |
 | <a id="mtek-e5123"></a>E5123 | command not valid for this body kind | `Name.body.<command>(..)` or `Name.body.<velocity>` that the entity's body kind does not support, or on an entity without a body |
-| <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** switching the active scene at run time; v0.1 mounts one scene and has no construct that could switch it, so no program produces it |
-| <a id="mtek-e5902"></a>E5902 | transparency not supported | **Reserved:** v0.1 has only opaque materials and no construct that asks for transparency, so no program produces it |
+| <a id="mtek-e5201"></a>E5201 | go_to target is not a scene | the argument of `go_to` is not the name of a scene of the program; a note lists the scenes (decision 0141) |
+| <a id="mtek-e5202"></a>E5202 | shared state outside a scene | `shared state` in an entity or a prefab; only a scene's state carries over to another scene (decision 0141) |
+| <a id="mtek-e5203"></a>E5203 | shared state of a type that cannot carry over | a `shared state` whose type holds an `entity_ref`, a resource or a descriptor, which belong to one scene (decision 0141) |
+| <a id="mtek-e5204"></a>E5204 | shared state with different types | two scenes declare a `shared state` of the same name with different types; a related span at the other one (decision 0141) |
+| <a id="mtek-e5210"></a>E5210 | persistent state outside a scene | `saved state` or `setting state` in an entity or a prefab; only a scene's state is kept in storage (decision 0145) |
+| <a id="mtek-e5211"></a>E5211 | persistent state of a type that cannot be stored | a `saved state` or `setting state` whose type holds an `entity_ref`, a resource or a descriptor, which have no meaning in a later run (decision 0145) |
+| <a id="mtek-e5212"></a>E5212 | persistent state with different types or kinds | two scenes declare a persistent state of the same name with different types, or one `saved` and the other `setting`; a related span at the other one (decisions 0145 and 0146) |
+| <a id="mtek-e5220"></a>E5220 | invalid tag | the `tag` of an entity or prefab is not 1 to 32 lowercase letters, digits and `_` starting with a letter (decision 0150) |
+| <a id="mtek-e5221"></a>E5221 | tag argument is not a string literal | the tag argument of `count_tagged`, `first_tagged`, `nearest_tagged`, `has_tag`, `tagged` or `destroy_tagged` is not a string constant (decision 0150) |
+| <a id="mtek-e5222"></a>E5222 | unknown tag | no entity or prefab of the program declares the tag a tag built-in names; the help suggests the closest declared tag (decision 0150) |
+| <a id="mtek-e5223"></a>E5223 | destroying a tag of a named entity | `destroy_tagged` names a tag that a named entity has, its own or its prefab's; a related span at the entity (decision 0150) |
+| <a id="mtek-e5224"></a>E5224 | tagged entities outside a for loop | `tagged(tag)` is used other than as the iterable of a `for` loop (decision 0150) |
+| <a id="mtek-e5401"></a>E5401 | scene change failed | run time: the scene of `go_to` or `reset()` could not be loaded or started (its module or manifest is missing or invalid); the current scene keeps running, the notes carry the underlying diagnostics (decision 0141) |
+| <a id="mtek-w5402"></a>W5402 | saved data ignored | run time: a stored value is unreadable, of another type than the state now has, or of another shape; the state keeps its value, reported once per state (decision 0145) |
+| <a id="mtek-w5403"></a>W5403 | saving failed | run time: the browser's storage refused the write (full or disabled), or the page has no usable `localStorage` and the values last only until it closes (decision 0145) |
+| <a id="mtek-e5501"></a>E5501 | audio argument out of range | a constant volume of `play`, `play_at`, `play_music` or `set_volume` outside `0.0..=4.0`, or a constant pitch outside `0.0625..=16.0` (`spec/audio.md` §3) |
+| <a id="mtek-e5601"></a>E5601 | HUD size out of range | a constant `size` argument of `hud.text` or `hud.button` outside 1.0 to 512.0 CSS pixels, or a constant `hud.rect` size component outside 0.0 to 8192.0 (decision 0134) |
+| <a id="mtek-e5701"></a>E5701 | sprite sheet layout out of range | a constant `columns` or `rows` of a `Sprite` is outside 1..64 (decision 0170) |
+| <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** retired by decision 0141: `go_to(Scene)` switches the active scene, so no program produces it; the code is kept so that the number is not reused |
+| <a id="mtek-e5902"></a>E5902 | transparency not supported | **Reserved:** retired by decision 0138: materials are translucent when a colour param has an alpha below 1, so no program produces it; the code is kept so that the number is not reused |
 
 ### 5.6 GPU and target (`6xxx`)
 | Code | Title | Trigger |
@@ -286,7 +316,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7016"></a>E7016 | unsupported material feature | normal, occlusion, emissive or metallic-roughness texture, non-zero emissive factor, `doubleSided` |
 | <a id="mtek-e7017"></a>E7017 | unsupported or oversized image | image is not PNG/JPEG, has no embedded bytes, is unreadable, exceeds `max_texture_dimension`, or is a JPEG with an EXIF orientation other than 1 (decision 0082) |
 | <a id="mtek-e7018"></a>E7018 | unsupported sampler mode | MIRRORED_REPEAT, or wrap or filter modes that no sampler preset can express |
-| <a id="mtek-e7019"></a>E7019 | animation present | `animations` or `skins` present in the file |
+| <a id="mtek-e7019"></a>E7019 | animation present | a skin, a morph-weight channel, cubic-spline or any other interpolation, a path other than translation, rotation or scale, a duplicate animation name, or a channel with no keyframes or more than 4096 (decision 0156). LINEAR and STEP translation, rotation and scale are clips |
 | <a id="mtek-e7020"></a>E7020 | asset file not found | the file named by an `asset.*` call does not exist or cannot be read (decision 0058) |
 | <a id="mtek-e7021"></a>E7021 | asset path outside project | the path escapes the project root, is absolute or malformed |
 | <a id="mtek-e7022"></a>E7022 | invalid use of asset value | a `glb_asset` outside a `const` and its accessors, or a path that is not a string literal |
@@ -296,6 +326,12 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7026"></a>E7026 | asset limit exceeded | more vertices than `max_vertices_per_primitive`, or packaged assets over `max_total_bytes` |
 | <a id="mtek-e7030"></a>E7030 | asset fetch or integrity failure | runtime: fetch failed, length or SHA-256 mismatch (M4-06, decision 0060) |
 | <a id="mtek-e7031"></a>E7031 | image decode failure | runtime: the browser could not decode the image (M4-06, decision 0060) |
+| <a id="mtek-e7101"></a>E7101 | unsupported audio file | `asset.sound(path)` names a file that is not WAV (PCM or IEEE float), Ogg (Vorbis or Opus) or MP3, by extension or by content (`spec/audio.md` §2, decision 0130) |
+| <a id="mtek-e7102"></a>E7102 | malformed audio file | the header of a WAV, Ogg or MP3 file is truncated or inconsistent (no `fmt `/`data` chunk, zero channels or sample rate, no Ogg page, no MPEG frame) (`spec/audio.md` §2) |
+| <a id="mtek-e7103"></a>E7103 | invalid favicon | `mtek build --release` found `assets/favicon.svg`, `.png` or `.ico` whose content is not that format (PNG signature, ICO header, an `<svg` root) or that is larger than 1 MiB (`spec/tooling.md` §2.1, decision 0136) |
+| <a id="mtek-e7104"></a>E7104 | game package exceeds itch.io limits | `mtek build --release --itch` would write a zip with more than 1000 files, more than 500 MB uncompressed, or a path longer than 240 characters, the HTML5 upload limits of itch.io (`spec/tooling.md` §2.1, decision 0136) |
+| <a id="mtek-e7105"></a>E7105 | unsupported font file | `asset.font` names a file that is not `.ttf`, `.otf`, `.woff` or `.woff2` (decision 0139) |
+| <a id="mtek-e7106"></a>E7106 | malformed font file | the bytes of an `asset.font` file do not match its extension, or its header is inconsistent (decision 0139) |
 | <a id="mtek-e7901"></a>E7901 | remote assets not supported | an `http:`, `https:` or other URL as an asset path |
 | <a id="mtek-e7902"></a>E7902 | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy |
 | (E7032–E7099) | further asset codes | reserved; added with the feature that needs them |
@@ -326,11 +362,15 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w8070"></a>W8070 | scene restarted on reload | names the forcing declaration |
 | <a id="mtek-e8080"></a>E8080 | execution budget exceeded | a loop of a `--mode preview` build ran past the frame's loop budget (`manifest.preview.loopBudget`, default 10 million iterations): reported at the loop, the scene stops and the overlay shows it; during `init` the mount fails with the kind `budget-exceeded` (decision 0075) |
 | <a id="mtek-e8090"></a>E8090 | invalid scale value | run-time write ignored |
-| <a id="mtek-e8100"></a>E8100 | non-opaque color value | run-time value rejected |
+| <a id="mtek-e8100"></a>E8100 | non-opaque color value | a host input with the `color-hex-opaque` codec rejected a colour with alpha (material param writes take any alpha since decision 0138) |
 | <a id="mtek-e8101"></a>E8101 | command not valid for the target's body kind | a body command through an `entity_ref` (or a velocity read) whose body kind, or lack of a body, it does not support; the command is dropped and a read gives zero (decision 0066) |
 | <a id="mtek-e8102"></a>E8102 | physics module failed to load | mount fails with the kind `physics-failed`; a reload whose physics module cannot load is refused (decision 0066) |
 | <a id="mtek-e8103"></a>E8103 | non-finite pose produced by the solver | the body is frozen (taken out of the simulation, the entity keeps its last finite pose) and the code is reported once per body (decision 0066) |
 | <a id="mtek-e8104"></a>E8104 | non-finite value given to a body | a body command with an argument that is not finite (a rotation of zero length counts), or a body whose initial pose is not finite; the command is dropped, the body is not created (decision 0066) |
+| <a id="mtek-w8201"></a>W8201 | audio value clamped | runtime: a volume or pitch outside its range, or not finite, was given to an audio call; the nearest valid value is used (`spec/audio.md` §3) |
+| <a id="mtek-w8202"></a>W8202 | sound could not be decoded | runtime: the browser could not decode a sound file; playing it does nothing and the program keeps running (`spec/audio.md` §5) |
+| <a id="mtek-w8203"></a>W8203 | too many HUD items | runtime: a frame drew more than 512 `hud` items; the rest of that frame is not shown (reported once per call site, decision 0134) |
+| <a id="mtek-w8204"></a>W8204 | font could not be loaded | the browser rejected an `asset.font` file when the HUD first used it; the text uses the default family (decision 0139) |
 | (E8105–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
 
 ### 5.9 Project and internal (`9xxx`)
@@ -345,7 +385,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e9010"></a>E9010 | not implemented by this compiler build | specified, not yet built |
 | <a id="mtek-e9020"></a>E9020 | host input target not exposable | input target or output source: not scene state, or unsupported type |
 | <a id="mtek-e9021"></a>E9021 | unknown host input target | also an unknown host output source |
-| <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built without `packages/runtime-web/dist`; also a program that uses physics built without `packages/physics-rapier/dist/physics.js` (decision 0063) |
+| <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built with neither `packages/runtime-web/dist` nor the prebuilt runtime of `crates/mtek-cli/prebuilt` (decision 0131); also a program that uses physics built without `packages/physics-rapier/dist/physics.js` (decision 0063) |
 | <a id="mtek-e9031"></a>E9031 | build output not written | `mtek build` could not write the output directory (I/O failure; exit code 3, the previous output stays in place; decision 0032) |
 | <a id="mtek-e9032"></a>E9032 | compilation timed out | `mtek build --mode preview` did not finish within the compile time limit (10 s, a constant of the command line tool); no files are written (decision 0075) |
 | <a id="mtek-e9999"></a>E9999 | internal compiler error | panic converted; asks for a report |

@@ -41,6 +41,8 @@ impl TyId {
     pub const SAMPLER: TyId = TyId(16);
     pub const ENTITY_REF: TyId = TyId(17);
     pub const GLB_ASSET: TyId = TyId(18);
+    /// `asset.sound(..)` (`spec/audio.md`, decision 0130).
+    pub const SOUND: TyId = TyId(19);
 
     /// The id as an index into the interner.
     #[must_use]
@@ -92,6 +94,10 @@ pub enum Ty {
     /// A user `struct`: nominal, identified by its declaration (in any
     /// module, decision 0035 item 5).
     Struct(StructKey),
+    /// A user `enum` (decision 0129): nominal, identified by its declaration
+    /// in any module, like a struct. CPU only; erased to a `u32` (the index of
+    /// the variant) at the IR boundary.
+    UserEnum(EnumKey),
     Mesh,
     Material,
     Texture,
@@ -99,6 +105,10 @@ pub enum Ty {
     EntityRef,
     /// The compile-time handle of `asset.glb(..)` (`spec/assets.md` section 2).
     GlbAsset,
+    /// A sound file declared with `asset.sound(..)` (`spec/audio.md`): CPU only.
+    Sound,
+    /// A font declared with `asset.font(..)` or `hud.pixel_font()` (decision 0139): CPU only.
+    Font,
     /// A built-in record type of the registry (`SurfaceInput`, `PointerEvent`).
     Record(&'static str),
     /// A registry enum (`Key`).
@@ -113,6 +123,14 @@ pub enum Ty {
     Descriptor(SchemaCategory),
     /// The argument of `spawn`: a prefab descriptor.
     PrefabDescriptor,
+    /// The argument of `go_to`: the name of a scene of the entry module (decision 0141). Only
+    /// that argument has this type; a scene is not a value anywhere else.
+    SceneName,
+    /// The argument of `set_camera`: the name of a camera of the current scene (decision 0154).
+    /// Only that argument has this type; a camera is not a value anywhere else.
+    CameraName,
+    /// The result of `tagged(tag)` (decision 0150): only the iterable of a `for` loop has it.
+    TaggedEntities,
     /// The value of a descriptor literal of a user material (`Pulse { .. }`,
     /// decision 0039): nominal, identified by the material's declaration in
     /// any module, and accepted wherever a `material` is expected.
@@ -120,7 +138,7 @@ pub enum Ty {
 }
 
 /// The types with fixed ids, in id order.
-const PRIMITIVES: [Ty; 19] = [
+const PRIMITIVES: [Ty; 21] = [
     Ty::Error,
     Ty::Unit,
     Ty::Bool,
@@ -140,12 +158,14 @@ const PRIMITIVES: [Ty; 19] = [
     Ty::Sampler,
     Ty::EntityRef,
     Ty::GlbAsset,
+    Ty::Sound,
+    Ty::Font,
 ];
 
 /// The registry types without parameters, by which the registry's type names
 /// are mapped to [`Ty`] (through [`TypeRef::spelling`], so the registry stays
 /// the only place that spells them).
-const NAMED_TYPE_REFS: [TypeRef; 17] = [
+const NAMED_TYPE_REFS: [TypeRef; 19] = [
     TypeRef::Bool,
     TypeRef::I32,
     TypeRef::U32,
@@ -163,6 +183,8 @@ const NAMED_TYPE_REFS: [TypeRef; 17] = [
     TypeRef::Sampler,
     TypeRef::EntityRef,
     TypeRef::GlbAsset,
+    TypeRef::Sound,
+    TypeRef::Font,
 ];
 
 /// The identity of a user struct type: its declaration, by the file that
@@ -185,6 +207,37 @@ pub struct MaterialKey {
     pub file: FileId,
     /// The declaration in that module's resolution.
     pub def: DefId,
+}
+
+/// The identity of a user enum: its declaration, by the file that declares
+/// it and its `DefId` there, like [`StructKey`] (decision 0129).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct EnumKey {
+    /// The file of the declaring module.
+    pub file: FileId,
+    /// The declaration in that module's resolution.
+    pub def: DefId,
+}
+
+/// The variants of a user enum type, in declaration order: a variant's index
+/// is its discriminant (decision 0129).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EnumDef {
+    /// The enum's name, as diagnostics print it.
+    pub name: String,
+    /// The variant names, in declaration order, without duplicates.
+    pub variants: Vec<String>,
+}
+
+impl EnumDef {
+    /// The index (discriminant) of the variant `name`.
+    #[must_use]
+    pub fn variant(&self, name: &str) -> Option<u32> {
+        self.variants
+            .iter()
+            .position(|v| v == name)
+            .and_then(|i| u32::try_from(i).ok())
+    }
 }
 
 /// The fields of a user struct type, in declaration order, with their types
@@ -225,6 +278,8 @@ pub struct TyInterner {
     structs: BTreeMap<StructKey, StructDef>,
     /// The names of user material types.
     materials: BTreeMap<MaterialKey, String>,
+    /// The names and variants of user enum types.
+    enums: BTreeMap<EnumKey, EnumDef>,
 }
 
 impl Default for TyInterner {
@@ -242,6 +297,7 @@ impl TyInterner {
             ids: BTreeMap::new(),
             structs: BTreeMap::new(),
             materials: BTreeMap::new(),
+            enums: BTreeMap::new(),
         };
         for ty in PRIMITIVES {
             interner.intern(ty);
@@ -275,6 +331,25 @@ impl TyInterner {
             broken: false,
         });
         self.intern(Ty::Struct(key))
+    }
+
+    /// The enum type declared as `key`, named `name`, with `variants` in
+    /// declaration order (the first registration wins).
+    pub fn intern_enum(&mut self, key: EnumKey, name: &str, variants: Vec<String>) -> TyId {
+        self.enums.entry(key).or_insert_with(|| EnumDef {
+            name: name.to_owned(),
+            variants,
+        });
+        self.intern(Ty::UserEnum(key))
+    }
+
+    /// The definition of the user enum type `id`.
+    #[must_use]
+    pub fn enum_def(&self, id: TyId) -> Option<&EnumDef> {
+        match self.get(id) {
+            Ty::UserEnum(key) => self.enums.get(&key),
+            _ => None,
+        }
     }
 
     /// The instance type of the user material declared as `key`, named
@@ -403,6 +478,13 @@ impl TyInterner {
                 }
                 self.intern(Ty::Struct(key))
             }
+            Ty::UserEnum(key) => {
+                let (name, variants) = other.enums.get(&key).map_or_else(
+                    || ("enum".to_owned(), Vec::new()),
+                    |d| (d.name.clone(), d.variants.clone()),
+                );
+                self.intern_enum(key, &name, variants)
+            }
             Ty::MaterialInstance(key) => {
                 let name = other
                     .materials
@@ -460,11 +542,16 @@ impl TyInterner {
             TypeRef::Sampler => Ty::Sampler,
             TypeRef::EntityRef => Ty::EntityRef,
             TypeRef::GlbAsset => Ty::GlbAsset,
+            TypeRef::Sound => Ty::Sound,
+            TypeRef::Font => Ty::Font,
             TypeRef::Unit => Ty::Unit,
             TypeRef::Record(name) => Ty::Record(name),
             TypeRef::Enum(name) => Ty::Enum(name),
             TypeRef::Descriptor(category) => Ty::Descriptor(category),
             TypeRef::PrefabDescriptor => Ty::PrefabDescriptor,
+            TypeRef::SceneName => Ty::SceneName,
+            TypeRef::CameraName => Ty::CameraName,
+            TypeRef::TaggedEntities => Ty::TaggedEntities,
         };
         self.intern(ty)
     }
@@ -491,14 +578,20 @@ impl TyInterner {
             Ty::Sampler => TypeRef::Sampler,
             Ty::EntityRef => TypeRef::EntityRef,
             Ty::GlbAsset => TypeRef::GlbAsset,
+            Ty::Sound => TypeRef::Sound,
+            Ty::Font => TypeRef::Font,
             Ty::Unit => TypeRef::Unit,
             Ty::Record(name) => TypeRef::Record(name),
             Ty::Enum(name) => TypeRef::Enum(name),
             Ty::Descriptor(category) => TypeRef::Descriptor(category),
             Ty::PrefabDescriptor => TypeRef::PrefabDescriptor,
+            Ty::SceneName => TypeRef::SceneName,
+            Ty::CameraName => TypeRef::CameraName,
+            Ty::TaggedEntities => TypeRef::TaggedEntities,
             Ty::Error
             | Ty::Array { .. }
             | Ty::Struct(_)
+            | Ty::UserEnum(_)
             | Ty::Schema(_)
             | Ty::MaterialInstance(_) => return None,
         })
@@ -583,6 +676,10 @@ impl TyInterner {
                 .structs
                 .get(&key)
                 .map_or_else(|| "struct".to_owned(), |def| def.name.clone()),
+            Ty::UserEnum(key) => self
+                .enums
+                .get(&key)
+                .map_or_else(|| "enum".to_owned(), |def| def.name.clone()),
             Ty::Schema(name) => name.to_owned(),
             Ty::MaterialInstance(key) => self
                 .materials
@@ -730,6 +827,9 @@ mod tests {
             TypeRef::Enum("Key"),
             TypeRef::Descriptor(SchemaCategory::Projection),
             TypeRef::PrefabDescriptor,
+            TypeRef::SceneName,
+            TypeRef::CameraName,
+            TypeRef::TaggedEntities,
         ]);
         for type_ref in refs {
             let id = interner.from_type_ref(type_ref);

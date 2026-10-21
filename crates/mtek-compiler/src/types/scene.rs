@@ -20,9 +20,8 @@
 //!   field, so the values of a mesh descriptor must be constant and the
 //!   parameters of a material need not be. A field initialiser that reads a
 //!   field of an entity or camera is `E5081` (section 11).
-//! * **Opaque colours.** A `color` parameter of a material schema must be
-//!   opaque (`E5100`, `spec/materials.md` section 2); other colour fields
-//!   (`clear_color`) take any alpha.
+//! * **Colours** take any alpha: a material colour below 1 makes the draw
+//!   translucent (decision 0138; `E5100` is retired).
 //! * **Rules** between fields (`E5020`, `E5010`), the active object of a
 //!   scene-object kind (`E5012`, `E5013`), the static entity limit
 //!   (`E5092`) and the light rules: at most four per scene (`E5111`), none in
@@ -308,13 +307,6 @@ impl Holder<'_> {
     /// [`Self::field`] at the start of a sentence.
     fn field_capitalised(self, field: &str) -> String {
         capitalise(&self.field(field))
-    }
-
-    fn category(self) -> Option<SchemaCategory> {
-        match self {
-            Holder::Body { .. } => None,
-            Holder::Descriptor { schema } => Some(schema.category),
-        }
     }
 }
 
@@ -980,8 +972,7 @@ impl Checker<'_> {
     }
 
     /// The checks of one value against its field: the type (`E3102`), the
-    /// range (the field's `range_code`) and, for colour parameters of
-    /// materials, opacity (`E5100`).
+    /// range (the field's `range_code`).
     fn value_checks(
         &mut self,
         holder: Holder<'_>,
@@ -1038,25 +1029,6 @@ impl Checker<'_> {
             };
             self.sink
                 .push(Diagnostic::new(def.range_code, message).at(value.span));
-            return Checked::Rejected;
-        }
-        if holder.category() == Some(SchemaCategory::Material)
-            && def.ty == TypeRef::Color
-            && let ConstValue::Color([_, _, _, alpha]) = folded
-            && alpha != 1.0
-        {
-            self.sink.push(
-                Diagnostic::new(
-                    Code::E5100,
-                    format!(
-                        "{} must be an opaque colour, but its alpha is {alpha:?}.",
-                        holder.field_capitalised(def.name)
-                    ),
-                )
-                .at(value.span)
-                .note("colour parameters of materials must have alpha 1.0 in v0.1: transparency is not supported")
-                .help("use a `#rrggbb` literal, or a vec4 for four components that are not a colour"),
-            );
             return Checked::Rejected;
         }
         Checked::Valid(folded)
@@ -1463,6 +1435,21 @@ impl Checker<'_> {
             ExprKind::Array(items) => {
                 for item in items {
                     self.descriptors_in(item);
+                }
+            }
+            ExprKind::Match { scrutinee, arms } => {
+                self.descriptors_in(scrutinee);
+                for arm in arms {
+                    if let crate::syntax::ast::ArmBody::Expr(value) = &arm.body {
+                        self.descriptors_in(value);
+                    }
+                }
+            }
+            ExprKind::Interp { parts } => {
+                for part in parts {
+                    if let crate::syntax::ast::InterpPart::Expr { expr, .. } = part {
+                        self.descriptors_in(expr);
+                    }
                 }
             }
             ExprKind::Int { .. }

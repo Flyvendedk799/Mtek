@@ -1,0 +1,28 @@
+[
+  {
+    "code": "MTEK-E5201",
+    "file": "src/main.mtek",
+    "startByte": 154,
+    "endByte": 158,
+    "message": "`go_to` takes the name of a scene, but its argument is the camera 'Main'.",
+    "expected": "the name of a scene",
+    "actual": "the camera 'Main'",
+    "notes": [
+      "the scene to switch to is fixed where `go_to` is written: every scene of the program is built ahead of time",
+      "help: the scenes of this module are 'Demo'"
+    ]
+  },
+  {
+    "code": "MTEK-E5201",
+    "file": "src/main.mtek",
+    "startByte": 210,
+    "endByte": 215,
+    "message": "`go_to` takes the name of a scene, but its argument is the state 'level'.",
+    "expected": "the name of a scene",
+    "actual": "the state 'level'",
+    "notes": [
+      "the scene to switch to is fixed where `go_to` is written: every scene of the program is built ahead of time",
+      "help: the scenes of this module are 'Demo'"
+    ]
+  }
+]

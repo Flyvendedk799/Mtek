@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5080",
+    "file": "src/main.mtek",
+    "startByte": 171,
+    "endByte": 193,
+    "message": "`destroy_tagged` may be called only in lifecycle functions and event handlers, not in the function 'clear'.",
+    "notes": [
+      "spawning and destroying entities are lifecycle operations of the scene"
+    ]
+  }
+]

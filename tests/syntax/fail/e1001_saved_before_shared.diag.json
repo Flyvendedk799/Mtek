@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_saved_before_shared.mtek",
+    "startByte": 23,
+    "endByte": 29,
+    "message": "Expected `:` after the field name `saved`, found identifier `shared`."
+  }
+]

@@ -47,8 +47,6 @@ const UNSUPPORTED_PHRASES: &[(Code, &str)] = &[
         Code::E4901,
         "stage functions other than `fragment` (vertex, compute)",
     ),
-    (Code::E5901, "switching the active scene at run time"),
-    (Code::E5902, "transparency (alpha blending)"),
     (Code::E7901, "remote assets (URLs as asset paths)"),
     (
         Code::E7902,
@@ -70,6 +68,7 @@ pub const fn feature_name(construct: Construct) -> &'static str {
         Construct::Fn => "functions",
         Construct::CpuFn => "cpu-functions",
         Construct::Struct => "structs",
+        Construct::Enum => "enums",
         Construct::Material => "materials",
         Construct::Prefab => "prefabs",
         Construct::Scene => "scenes",
@@ -93,6 +92,7 @@ pub const fn feature_name(construct: Construct) -> &'static str {
         Construct::Comparison => "comparison",
         Construct::Equality => "equality",
         Construct::Logical => "logical",
+        Construct::Match => "match",
     }
 }
 

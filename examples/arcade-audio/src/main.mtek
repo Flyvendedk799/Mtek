@@ -1,0 +1,125 @@
+// Arcade audio (spec/audio.md, decision 0130): hit and score sounds, looping music and a mute button.
+//
+//   Space      hit the ball: a hit sound, panned to where the ball is
+//   S          score: the score sound, pitched up with every point
+//   M          start or stop the music (it loops)
+//   N, or a click on the speaker in the top-left corner   mute or unmute everything
+//   ArrowUp / ArrowDown   the global volume
+//
+// Browsers keep audio silent until the page gets a user gesture; the runtime unlocks it on the first
+// key press, click or touch (spec/audio.md section 5), so the first Space already sounds.
+// The sounds are written by scripts/gen-sounds.mjs.
+
+const HIT = asset.sound("../sounds/hit.wav");
+
+const SCORE = asset.sound("../sounds/score.wav");
+
+const MUSIC = asset.sound("../sounds/music.wav");
+
+// The volume changes in steps of a tenth, between silent and twice the recorded level.
+const VOLUME_STEP: f32 = 0.1;
+
+const MAX_VOLUME: f32 = 2.0;
+
+scene Arcade {
+    clear_color: #101820;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.3;
+
+    state points: i32 = 0;
+    state music_on: bool = false;
+    state muted: bool = false;
+    state volume: f32 = 1.0;
+    // How long the ball still glows after a hit, in seconds.
+    state flash: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Sun {
+        rotation: quat.euler(-0.7, 0.5, 0.0);
+        light: DirectionalLight { intensity: 2.5 };
+    }
+
+    // The ball swings left and right, so the panning of `play_at` is audible.
+    entity Ball {
+        position: bind(vec3(sin(frame.time) * 3.0, 0.0, 0.0));
+        scale: bind(vec3(1.0 + flash, 1.0 + flash, 1.0 + flash));
+        mesh: Sphere { radius: 0.5 };
+        material: Pbr { base_color: #ff8a3d; roughness: 0.4 };
+    }
+
+    // The score as a bar: one segment per point.
+    entity Meter {
+        position: bind(vec3(-4.0 + 0.125 * f32(points), -2.5, 0.0));
+        scale: bind(vec3(0.25 * f32(points) + 0.01, 0.2, 0.2));
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #ffd040 };
+    }
+
+    // The speaker icon of the mute button: green when sound is on, red when muted. Its height shows the volume.
+    entity SpeakerOn {
+        position: vec3(-5.2, 2.7, 0.0);
+        scale: bind(vec3(0.6, 0.2 + 0.3 * volume, 0.2));
+        visible: bind(!muted);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #30d070 };
+    }
+    entity SpeakerOff {
+        position: vec3(-5.2, 2.7, 0.0);
+        scale: vec3(0.6, 0.2, 0.2);
+        visible: bind(muted);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #d03030 };
+    }
+
+    update(dt: f32) {
+        flash = max(flash - dt * 2.0, 0.0);
+    }
+
+    on key_down(Key.Space) {
+        play_at(HIT, Ball.position, 0.9);
+        flash = 0.4;
+    }
+
+    on key_down(Key.S) {
+        points += 1;
+        // Every point a semitone higher, up to two octaves.
+        play(SCORE, 0.8, pow(2.0, f32(min(points, 24)) / 12.0));
+    }
+
+    on key_down(Key.M) {
+        music_on = !music_on;
+        if music_on {
+            play_music(MUSIC, 0.5);
+        } else {
+            stop_music();
+        }
+    }
+
+    on key_down(Key.N) {
+        muted = !muted;
+        set_muted(muted);
+    }
+
+    on key_down(Key.ArrowUp) {
+        volume = min(volume + VOLUME_STEP, MAX_VOLUME);
+        set_volume(volume);
+    }
+
+    on key_down(Key.ArrowDown) {
+        volume = max(volume - VOLUME_STEP, 0.0);
+        set_volume(volume);
+    }
+
+    // The mute button: a click in the top-left corner of the canvas, where the speaker is drawn. Pointer
+    // positions are normalised device coordinates: x right and y up, both from -1 to 1.
+    on pointer_down(event: PointerEvent) {
+        if event.position.x < -0.7 && event.position.y > 0.6 {
+            muted = !muted;
+            set_muted(muted);
+        }
+    }
+}

@@ -25,11 +25,11 @@ use mtek_compiler::{
     BuildMode, CompileOptions, Inspect, InspectFormat, TargetProfile, build, check, inspect,
 };
 
-use crate::args::{Format, Request};
-use crate::dist;
+use crate::args::{Format, Game, Request};
 use crate::limits::{self, Interrupted, PREVIEW_COMPILE_TIMEOUT};
 use crate::real_fs::RealFs;
 use crate::runtime::Runtime;
+use crate::{dist, game_package};
 
 /// Exit code: success (warnings allowed).
 pub const EXIT_OK: u8 = 0;
@@ -286,6 +286,7 @@ pub fn execute(request: &Request, context: &Context) -> Outcome {
         Request::Build {
             mode,
             loop_budget,
+            game,
             out,
             ..
         } => {
@@ -297,6 +298,7 @@ pub fn execute(request: &Request, context: &Context) -> Outcome {
                 BuildSettings {
                     mode: *mode,
                     loop_budget: *loop_budget,
+                    game: *game,
                 },
                 out.as_deref(),
             )
@@ -339,6 +341,8 @@ pub struct BuildSettings {
     pub mode: BuildMode,
     /// `--loop-budget` (preview only): `None` is the compiler's default.
     pub loop_budget: Option<u32>,
+    /// `--release`: package a game (decision 0136).
+    pub game: Option<Game>,
 }
 
 impl From<BuildMode> for BuildSettings {
@@ -346,6 +350,7 @@ impl From<BuildMode> for BuildSettings {
         Self {
             mode,
             loop_budget: None,
+            game: None,
         }
     }
 }
@@ -369,6 +374,8 @@ pub struct Written {
     /// Why nothing was written although the program has no errors: the output directory is
     /// the project directory, contains it or contains one of its sources (decision 0032 item 8).
     pub refused: Option<String>,
+    /// The itch.io zip as the user sees it, when `--release --itch` wrote one (decision 0136).
+    pub zip: Option<String>,
 }
 
 /// Compile the project in `mode` and, if the program has no errors, write the file set with
@@ -381,11 +388,22 @@ pub fn compile_and_write(
     settings: BuildSettings,
     out: Option<&Path>,
 ) -> Written {
-    let BuildSettings { mode, loop_budget } = settings;
+    let BuildSettings {
+        mode,
+        loop_budget,
+        game,
+    } = settings;
     let options = CompileOptions {
         profile: TargetProfile::WebGpuCore2026,
         mode,
-        runtime_bundle: context.runtime.map(|runtime| Arc::from(runtime.bundle)),
+        // A game package ships the minified release flavour (decision 0136).
+        runtime_bundle: context.runtime.map(|runtime| {
+            Arc::from(if game.is_some() {
+                runtime.min_bundle
+            } else {
+                runtime.bundle
+            })
+        }),
         dev_runtime_bundle: context.runtime.map(|runtime| Arc::from(runtime.dev_bundle)),
         runtime_declarations: context
             .runtime
@@ -401,7 +419,7 @@ pub fn compile_and_write(
     };
     // A preview is built against a clock as well as against the size limits of the compiler
     // (decision 0075); every other build runs as long as it takes.
-    let result = if mode == BuildMode::Preview {
+    let mut result = if mode == BuildMode::Preview {
         let fs = project.fs.clone();
         let job = move || build(&ProjectRoot::at_base(), &fs, &options);
         match limits::run_within(PREVIEW_COMPILE_TIMEOUT, job) {
@@ -434,6 +452,7 @@ pub fn compile_and_write(
         shown: place.as_ref().map(|(_, shown)| shown.clone()),
         target: place.as_ref().map(|(target, _)| target.clone()),
         refused: None,
+        zip: None,
     };
     if written.report.summary.errors > 0 {
         return written;
@@ -449,13 +468,48 @@ pub fn compile_and_write(
         written.refused = Some(problem);
         return written;
     }
+    if game.is_some() {
+        match game_package::favicon(project.dir) {
+            Ok(favicon) => {
+                let title = result.title.clone().unwrap_or_default();
+                game_package::package(&mut result.files, &title, favicon);
+            }
+            Err(diagnostic) => {
+                written.report = with_diagnostic(&written.report, *diagnostic);
+                return written;
+            }
+        }
+    }
     match dist::write_dist(&target, &build_id, &result.files) {
         Ok(()) => written.written = Some((build_id, result.files.len())),
         Err(error) => {
             written.report = with_diagnostic(&written.report, write_failed(&shown, &error));
+            return written;
+        }
+    }
+    if game.is_some_and(|game| game.itch) {
+        let zip = itch_zip_path(&target);
+        let shown_zip = itch_zip_path(Path::new(&shown)).display().to_string();
+        match game_package::itch_zip(&result.files) {
+            Ok(bytes) => match std::fs::write(&zip, bytes) {
+                Ok(()) => written.zip = Some(shown_zip),
+                Err(error) => {
+                    written.report =
+                        with_diagnostic(&written.report, write_failed(&shown_zip, &error));
+                }
+            },
+            Err(diagnostic) => written.report = with_diagnostic(&written.report, *diagnostic),
         }
     }
     written
+}
+
+/// `<out>-itch.zip` beside the output directory `out` (decision 0136).
+fn itch_zip_path(out: &Path) -> PathBuf {
+    let name = out
+        .file_name()
+        .map_or_else(|| "dist".into(), |name| name.to_string_lossy().into_owned());
+    out.with_file_name(format!("{name}-itch.zip"))
 }
 
 /// The outcome of a build that was stopped before it had a result: its diagnostic alone, no project
@@ -471,6 +525,7 @@ fn interrupted(diagnostic: Diagnostic) -> Written {
         shown: None,
         target: None,
         refused: None,
+        zip: None,
     }
 }
 
@@ -481,8 +536,12 @@ pub fn built_line(written: &Written, mode: BuildMode) -> String {
         Some((build_id, files)) => (build_id.as_str(), *files),
         None => ("", 0),
     };
+    let zip = written
+        .zip
+        .as_ref()
+        .map_or_else(String::new, |zip| format!(" and {zip}"));
     format!(
-        "built '{}' ({}): {files} files in {}, build {}; {}",
+        "built '{}' ({}): {files} files in {}{zip}, build {}; {}",
         written.name.as_deref().unwrap_or_default(),
         mode_name(mode),
         written.shown.as_deref().unwrap_or_default(),

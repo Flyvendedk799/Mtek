@@ -157,6 +157,8 @@ pub enum ItemKind {
     Const(ConstDecl),
     Fn(FnDecl),
     Struct(StructDecl),
+    /// `enum Name { A, B }` (decision 0129).
+    Enum(EnumDecl),
     Material(MaterialDecl),
     Prefab(PrefabDecl),
     Scene(SceneDecl),
@@ -224,6 +226,17 @@ pub struct StructField {
     pub span: Span,
     pub name: Ident,
     pub ty: Type,
+}
+
+/// `enum Name { Variant, ... }` (decision 0129): a closed set of named
+/// values. The variants are ordinary [`Ident`]s in declaration order; a value
+/// is written `Name.Variant`.
+#[derive(Clone, PartialEq, Debug)]
+pub struct EnumDecl {
+    pub id: NodeId,
+    pub span: Span,
+    pub name: Ident,
+    pub variants: Vec<Ident>,
 }
 
 // ---------------------------------------------------------------------------
@@ -347,9 +360,45 @@ pub struct SceneObject {
 pub struct StateDecl {
     pub id: NodeId,
     pub span: Span,
+    /// The contextual word `shared` of `shared state` (decision 0141): the value carries over
+    /// `go_to` into a scene with a shared state of the same name and type.
+    pub shared: Option<Span>,
+    /// `saved state` or `setting state` (decisions 0145 and 0146), with the span of the word: the
+    /// value is kept in the browser's storage.
+    pub persist: Option<(Persist, Span)>,
     pub name: Ident,
     pub ty: Type,
     pub value: Expr,
+}
+
+/// How a scene state is kept across visits (decisions 0145 and 0146).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Persist {
+    /// `saved state`: written by `save()`, restored when the scene starts and by `load()`.
+    Saved,
+    /// `setting state`: like `saved`, and also written whenever its value changes.
+    Setting,
+}
+
+impl Persist {
+    /// The contextual word: `saved` or `setting`.
+    #[must_use]
+    pub fn word(self) -> &'static str {
+        match self {
+            Persist::Saved => "saved",
+            Persist::Setting => "setting",
+        }
+    }
+
+    /// The word for a contextual word, if it is one.
+    #[must_use]
+    pub fn of_word(word: &str) -> Option<Persist> {
+        match word {
+            "saved" => Some(Persist::Saved),
+            "setting" => Some(Persist::Setting),
+            _ => None,
+        }
+    }
 }
 
 /// `name: value;` in a scene, entity, prefab or scene object.
@@ -473,15 +522,68 @@ pub enum Stmt {
     Const(ConstDecl),
     If(IfStmt),
     For(ForStmt),
+    /// `while cond { ... }` (decision 0144).
+    While(WhileStmt),
+    /// `after(seconds) { ... }` and `every(seconds) { ... }` (decision 0142).
+    Timer(TimerStmt),
     Return(ReturnStmt),
     Break(JumpStmt),
     Continue(JumpStmt),
     Block(Block),
+    /// `match value { Pattern => { ... } ... }` (decision 0129).
+    Match(MatchStmt),
     /// `place op= value;`
     Assign(AssignStmt),
     /// An expression used as a statement (valid only for calls, `E1020`).
     Expr(ExprStmt),
     Error(ErrorNode),
+}
+
+/// `while cond { ... }`: a condition-controlled loop, CPU only, capped at
+/// [`WHILE_ITERATION_CAP`] iterations per execution (decision 0144).
+#[derive(Clone, PartialEq, Debug)]
+pub struct WhileStmt {
+    pub id: NodeId,
+    pub span: Span,
+    pub cond: Expr,
+    pub body: Block,
+}
+
+/// The most iterations one execution of a `while` loop may run before the frame is stopped
+/// with `E8080` (decision 0144).
+pub const WHILE_ITERATION_CAP: u32 = 1_000_000;
+
+/// Which timer statement (decision 0142).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum TimerKind {
+    /// `after(seconds) { ... }`: runs the block once, `seconds` of game time later.
+    After,
+    /// `every(seconds) { ... }`: runs the block every `seconds` of game time.
+    Every,
+}
+
+impl TimerKind {
+    /// The contextual word that starts the statement.
+    #[must_use]
+    pub const fn word(self) -> &'static str {
+        match self {
+            TimerKind::After => "after",
+            TimerKind::Every => "every",
+        }
+    }
+}
+
+/// `after(seconds) { ... }` / `every(seconds) { ... }` (decision 0142). `after` and `every`
+/// are contextual: they start a timer only as `word ( expr ) {` at the start of a statement.
+#[derive(Clone, PartialEq, Debug)]
+pub struct TimerStmt {
+    pub id: NodeId,
+    pub span: Span,
+    pub kind: TimerKind,
+    /// The span of the word `after` / `every`.
+    pub word: Span,
+    pub seconds: Expr,
+    pub body: Block,
 }
 
 /// The common shape of `let` and `var`.
@@ -529,6 +631,52 @@ pub enum ForIter {
     Range { start: Expr, end: Expr },
     /// An array.
     Each(Expr),
+}
+
+/// `match value { arms }` used as a statement: every arm body is a block.
+#[derive(Clone, PartialEq, Debug)]
+pub struct MatchStmt {
+    pub id: NodeId,
+    pub span: Span,
+    pub scrutinee: Expr,
+    pub arms: Vec<MatchArm>,
+}
+
+/// One arm of a `match`: one or more patterns separated by `|`, `=>`, and
+/// the arm's body (a block in a statement, an expression in an expression).
+#[derive(Clone, PartialEq, Debug)]
+pub struct MatchArm {
+    pub id: NodeId,
+    pub span: Span,
+    pub patterns: Vec<Pattern>,
+    pub body: ArmBody,
+}
+
+/// The body of a [`MatchArm`].
+#[derive(Clone, PartialEq, Debug)]
+pub enum ArmBody {
+    /// The arm of a `match` statement.
+    Block(Block),
+    /// The arm of a `match` expression.
+    Expr(Box<Expr>),
+}
+
+/// A pattern of a `match` arm.
+#[derive(Clone, PartialEq, Debug)]
+pub struct Pattern {
+    pub id: NodeId,
+    pub span: Span,
+    pub kind: PatternKind,
+}
+
+/// The forms of a [`Pattern`].
+#[derive(Clone, PartialEq, Debug)]
+pub enum PatternKind {
+    /// `_`: matches every value.
+    Wildcard,
+    /// `Enum.Variant`, kept as the field expression it is written as, so
+    /// that names resolve and type like any other enum value.
+    Value(Box<Expr>),
 }
 
 /// `return expr;` or `return;`.
@@ -598,6 +746,26 @@ impl AssignOp {
 // Expressions (`spec/grammar.ebnf` section 7)
 // ---------------------------------------------------------------------------
 
+/// One part of an interpolated string literal (decision 0133).
+#[derive(Clone, PartialEq, Debug)]
+pub enum InterpPart {
+    /// Literal text, escapes decoded; never empty.
+    Text(String),
+    /// `${expr}` or `${expr:spec}`.
+    Expr {
+        expr: Expr,
+        spec: Option<FormatSpec>,
+    },
+}
+
+/// The format spec after the `:` of `${expr:spec}`, as written (checked by the type checker,
+/// `E3502`).
+#[derive(Clone, PartialEq, Debug)]
+pub struct FormatSpec {
+    pub text: String,
+    pub span: Span,
+}
+
 /// An expression.
 #[derive(Clone, PartialEq, Debug)]
 pub struct Expr {
@@ -622,6 +790,11 @@ pub enum ExprKind {
     /// A string literal, escapes decoded.
     Str {
         value: String,
+    },
+    /// An interpolated string literal, `"Score: ${points}"` (decision 0133): text and
+    /// expressions in source order.
+    Interp {
+        parts: Vec<InterpPart>,
     },
     /// A color literal as sRGB-encoded bytes (`spec/language.md` 5.4).
     Color {
@@ -667,6 +840,12 @@ pub enum ExprKind {
     Index {
         base: Box<Expr>,
         index: Box<Expr>,
+    },
+    /// `match scrutinee { Pattern => value, ... }` (decision 0129); every arm
+    /// body is [`ArmBody::Expr`].
+    Match {
+        scrutinee: Box<Expr>,
+        arms: Vec<MatchArm>,
     },
     /// An expression the parser could not build, or a literal the lexer
     /// already reported as malformed.
@@ -751,6 +930,7 @@ impl_node!(
     Param,
     StructDecl,
     StructField,
+    EnumDecl,
     MaterialDecl,
     ParamDecl,
     StageFn,
@@ -769,10 +949,15 @@ impl_node!(
     LocalDecl,
     IfStmt,
     ForStmt,
+    WhileStmt,
+    TimerStmt,
     ReturnStmt,
     JumpStmt,
     AssignStmt,
     ExprStmt,
+    MatchStmt,
+    MatchArm,
+    Pattern,
     Expr,
     DescField,
 );
@@ -809,10 +994,13 @@ impl_node_for_enum!(Stmt {
     Const,
     If,
     For,
+    While,
+    Timer,
     Return,
     Break,
     Continue,
     Block,
+    Match,
     Assign,
     Expr,
     Error

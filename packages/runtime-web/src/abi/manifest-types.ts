@@ -251,7 +251,33 @@ export interface MtekImageAsset {
   readonly source?: string;
 }
 
-export type MtekAsset = MtekMeshDataAsset | MtekImageAsset;
+/** A sound file declared with `asset.sound(..)`, copied byte for byte (`spec/audio.md` section 4, decision 0130). */
+export interface MtekAudioAsset {
+  readonly url: string;
+  readonly sha256: string;
+  readonly bytes: number;
+  readonly kind: "audio";
+  readonly format: "wav" | "ogg" | "mp3";
+  readonly mime: "audio/wav" | "audio/ogg" | "audio/mpeg";
+  /** The project path generated code names the sound by. */
+  readonly source: string;
+  readonly span: SpanId;
+}
+
+/** A font file of `asset.font(..)` (decision 0139). */
+export interface MtekFontAsset {
+  readonly url: string;
+  readonly sha256: string;
+  readonly bytes: number;
+  readonly kind: "font";
+  readonly format: "ttf" | "otf" | "woff" | "woff2";
+  readonly mime: "font/ttf" | "font/otf" | "font/woff" | "font/woff2";
+  /** The project path generated code names the font by. */
+  readonly source: string;
+  readonly span: SpanId;
+}
+
+export type MtekAsset = MtekMeshDataAsset | MtekImageAsset | MtekAudioAsset | MtekFontAsset;
 
 // ---- scene structure (spec/runtime-abi.md section 5.2) ----
 
@@ -267,6 +293,29 @@ export interface MtekStateEntry {
   readonly name: string;
   readonly type: MtekTypeName;
   readonly symbol: SymbolId;
+  /** `shared state` (decision 0141): carried over by `go_to` to a scene with a shared state of the same name and type. */
+  readonly shared?: true;
+  /** `saved state` or `setting state` (decisions 0145, 0146): kept in the browser's storage. Absent otherwise. */
+  readonly persist?: "saved" | "setting";
+  /** With `persist`: the structural description of the type a stored value must have (decision 0145). */
+  readonly storedType?: string;
+}
+
+/** One scene of a multi-scene program (decision 0141): what `go_to` loads, relative to the program's `baseUrl`. */
+export interface MtekGameScene {
+  readonly name: string;
+  /** `app.js` for the entry scene, `app.<Scene>.js` for the others. */
+  readonly module: string;
+  /** `program.manifest.json` for the entry scene, `program.<Scene>.manifest.json` for the others. */
+  readonly manifest: string;
+}
+
+/** Game-level data (decision 0141); absent when there is none. */
+export interface MtekGame {
+  /** Every scene, sorted by name; absent for a single-scene program. */
+  readonly scenes?: readonly MtekGameScene[];
+  /** The storage name of saved state and settings (`localStorage` key `mtek.save.<storage>`); present when a scene has any (decision 0145). */
+  readonly storage?: string;
 }
 
 export interface MtekCamera {
@@ -323,6 +372,33 @@ export interface MtekEntity {
   readonly state: readonly MtekStateEntry[];
   readonly update: boolean;
   readonly fixedUpdate: boolean;
+  /** `tag: "name";` (decision 0150); absent when the entity has none. */
+  readonly tag?: string;
+  /** `particles: Emitter { .. }` (decision 0155); absent when the entity emits none. */
+  readonly particles?: MtekParticles;
+  /** A glTF clip that moves this entity (decision 0156); absent when it plays none. */
+  readonly clip?: MtekClip;
+}
+
+export interface MtekParticles {
+  readonly rate: number;
+  readonly lifetime: number;
+  readonly speed: number;
+  readonly size: number;
+  readonly gravity: number;
+}
+
+export interface MtekClipChannel {
+  readonly path: "translation" | "rotation" | "scale";
+  readonly interpolation: "linear" | "step";
+  readonly times: readonly number[];
+  readonly values: readonly number[];
+}
+
+export interface MtekClip {
+  readonly name: string;
+  readonly duration: number;
+  readonly channels: readonly MtekClipChannel[];
 }
 
 export type MtekBuiltinResourceName =
@@ -376,6 +452,12 @@ export interface MtekPrefab {
   readonly fixedUpdate: boolean;
   readonly bindings: readonly MtekBinding[];
   readonly span: SpanId;
+  /** The tag every instance carries (decision 0150); absent when the prefab has none. */
+  readonly tag?: string;
+  /** The emitter every instance starts with (decision 0155). */
+  readonly particles?: MtekParticles;
+  /** The clip every instance plays (decision 0156). */
+  readonly clip?: MtekClip;
 }
 
 export type MtekBindingTarget =
@@ -384,6 +466,8 @@ export type MtekBindingTarget =
   | { readonly kind: "param"; readonly instance: number; readonly name: string }
   | {
       readonly kind: "camera";
+      /** The camera the binding writes (decision 0154). Absent on older manifests, which bound the active camera. */
+      readonly camera?: string;
       readonly field:
         | "position"
         | "target"
@@ -496,6 +580,8 @@ export interface MtekManifest {
    */
   readonly subsystems: { readonly physics: boolean; readonly physicsModule?: string };
   readonly runtimeConfig: MtekRuntimeConfig;
+  /** Game-level data: the scenes `go_to` can load (decision 0141); absent for a single-scene program. */
+  readonly game?: MtekGame;
   /**
    * Present exactly in the manifest of a `--mode preview` build (decision 0075): the program was instrumented with a
    * loop budget the runtime enforces (`E8080`), and the runtime refuses every request outside `baseUrl`.

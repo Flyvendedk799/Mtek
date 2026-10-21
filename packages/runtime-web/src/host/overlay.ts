@@ -5,6 +5,7 @@
  * because messages contain browser-provided text.
  */
 import type { MtekDiagnostic, MtekSourceSpan } from "../diagnostics/types.js";
+import { guessBrowser, UNSUPPORTED_BROWSER_CODES, unsupportedAdvice } from "./browser-support.js";
 
 /** At most this many diagnostics are listed; the rest are summarised. */
 export const MAX_OVERLAY_DIAGNOSTICS = 20;
@@ -66,7 +67,11 @@ export class FailureOverlay {
     const root = this.root ?? this.createRoot();
     root.replaceChildren();
 
-    const heading = doc.createElement("h1");
+    // A browser without WebGPU gets plain advice first (decision 0132); the diagnostics follow as details.
+    const unsupported = this.diagnostics.find((d) => UNSUPPORTED_BROWSER_CODES.includes(d.code));
+    if (unsupported !== undefined) root.append(this.renderUnsupported(unsupported.code));
+
+    const heading = doc.createElement(unsupported === undefined ? "h1" : "h2");
     heading.textContent = "Mtek could not run this program";
     heading.style.cssText = "margin:0 0 12px;font-size:16px;font-weight:700";
     root.append(heading);
@@ -80,6 +85,38 @@ export class FailureOverlay {
       more.textContent = `... and ${String(hidden)} more diagnostics`;
       root.append(more);
     }
+  }
+
+  /** The "unsupported browser" panel: what happened and what to do, for the browser in use. */
+  private renderUnsupported(code: string): HTMLElement {
+    const doc = this.canvas.ownerDocument;
+    const view = doc.defaultView;
+    const advice = unsupportedAdvice(guessBrowser(view?.navigator.userAgent ?? ""), code, view?.isSecureContext !== false);
+    const panel = doc.createElement("section");
+    panel.setAttribute("data-mtek-unsupported-browser", code);
+    panel.style.cssText = "margin:0 0 16px;padding:0 0 12px;border-bottom:1px solid rgba(255,255,255,.4);font:15px/1.5 system-ui,sans-serif";
+    const title = doc.createElement("h1");
+    title.textContent = advice.title;
+    title.style.cssText = "margin:0 0 8px;font-size:20px;font-weight:700";
+    const summary = doc.createElement("p");
+    summary.textContent = advice.summary;
+    summary.style.cssText = "margin:0 0 8px";
+    panel.append(title, summary);
+    if (advice.steps.length > 0) {
+      const list = doc.createElement("ul");
+      list.style.cssText = "margin:0 0 8px;padding-left:20px";
+      for (const step of advice.steps) {
+        const item = doc.createElement("li");
+        item.textContent = step;
+        list.append(item);
+      }
+      panel.append(list);
+    }
+    const supported = doc.createElement("p");
+    supported.textContent = advice.supported;
+    supported.style.cssText = "margin:0;opacity:.85";
+    panel.append(supported);
+    return panel;
   }
 
   private renderDiagnostic(diagnostic: MtekDiagnostic): HTMLElement {

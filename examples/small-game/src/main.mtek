@@ -1,0 +1,111 @@
+// A small game (decisions 0140, 0145, 0150, 0151, 0152, 0153).
+//
+// Title   Enter starts a run. The best score is saved.
+// Play    ArrowLeft and ArrowRight change lane (one step per press). Gems fall;
+//         touching the player scores. Escape pauses the game (`pause()`, spec/scenes.md
+//         §15.4): update stops, so the HUD goes away and a white mark stays up through
+//         a binding. Escape resumes. The Title button returns while the game is running.
+
+const LANES: array<f32, 3> = [-1.6, 0.0, 1.6];
+
+prefab Gem {
+    param lane: i32 = 1;
+    tag: "gem";
+    mesh: Sphere { radius: 0.35 };
+    material: Unlit { color: #3ec46d };
+    position: vec3(LANES[lane], 3.2, 0.0);
+
+    update(dt: f32) {
+        self.position.y -= 2.4 * dt;
+        if self.position.y < -3.4 {
+            destroy(self);
+        }
+    }
+}
+
+scene Title {
+    clear_color: #10141c;
+    shared state score: i32 = 0;
+    shared saved state best: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    update(dt: f32) {
+        hud.text("SMALL GAME", vec2(0.0, 0.35), 48.0, #ffffff, 0.5, hud.pixel_font());
+        hud.text("Best ${best}", vec2(0.0, 0.05), 24.0, #ffd040, 0.5, hud.pixel_font());
+        hud.text("Enter to play", vec2(0.0, -0.25), 20.0, #a0b0c0, 0.5, hud.pixel_font());
+    }
+
+    on key_down(Key.Enter) {
+        score = 0;
+        go_to(Play);
+    }
+}
+
+scene Play {
+    clear_color: #10141c;
+    shared state score: i32 = 0;
+    shared saved state best: i32 = 0;
+    state lane: i32 = 1;
+    state holding: bool = false;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity PauseMark {
+        mesh: Box { size: vec3(0.28, 1.15, 0.15) };
+        material: Unlit { color: #ffffff };
+        position: vec3(0.0, 0.15, 0.0);
+        visible: bind(holding);
+    }
+
+    entity Player {
+        tag: "player";
+        mesh: Box { size: vec3(0.7, 0.7, 0.7) };
+        material: Unlit { color: #4fa3ff };
+        position: vec3(0.0, -2.0, 0.0);
+    }
+
+    update(dt: f32) {
+        if key_pressed(Key.ArrowLeft) && lane > 0 {
+            lane -= 1;
+        }
+        if key_pressed(Key.ArrowRight) && lane < 2 {
+            lane += 1;
+        }
+        Player.position = vec3(LANES[lane], -2.0, 0.0);
+        if count_tagged("gem") < 1 {
+            spawn(Gem { lane: choose([0, 1, 2]) });
+        }
+        for gem in tagged("gem") {
+            if distance(gem.position, Player.position) < 0.8 {
+                score += 1;
+                if score > best {
+                    best = score;
+                    save();
+                }
+                destroy(gem);
+            }
+        }
+        hud.text("Score ${score}", vec2(-0.95, 0.88), 24.0, #ffffff, 0.0, hud.pixel_font());
+        hud.text("Best ${best}", vec2(0.95, 0.88), 24.0, #ffd040, 1.0, hud.pixel_font());
+        if hud.button("Title", vec2(0.95, -0.88), 18.0) {
+            go_to(Title);
+        }
+    }
+
+    on key_down(Key.Escape) {
+        if paused() {
+            holding = false;
+            resume();
+        } else {
+            holding = true;
+            pause();
+        }
+    }
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 187,
+    "endByte": 192,
+    "message": "The time of `after` is a number of seconds of type f32, but this expression has type i32.",
+    "expected": "f32",
+    "actual": "i32",
+    "notes": [
+      "help: write the time as a float, for example `1.5`; convert an integer with `f32(n)`"
+    ]
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 223,
+    "endByte": 227,
+    "message": "The time of `every` is a number of seconds of type f32, but this expression has type bool.",
+    "expected": "f32",
+    "actual": "bool",
+    "notes": [
+      "help: write the time as a float, for example `1.5`; convert an integer with `f32(n)`"
+    ]
+  }
+]

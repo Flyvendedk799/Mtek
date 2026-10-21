@@ -18,9 +18,9 @@
 use super::lower_fn::SceneCtx;
 use super::model::{
     Behavior, Binding, Body, BodyDesc, Camera, Collider, ColliderDesc, Const, Entity, Field, Item,
-    Light, LightKind, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin, Owner, Param, Program,
-    Projection, ProjectionDesc, Scene, SceneFields, Source, State, StructFieldItem, StructItem,
-    Symbol, UpdateClass, Value,
+    Light, LightKind, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin, Owner, Param,
+    Particles, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, State,
+    StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 
@@ -54,8 +54,19 @@ pub(super) const CAMERA_FIELDS: [&str; 6] = [
     "exposure",
 ];
 /// The entity fields lowered into [`Entity`].
-pub(super) const ENTITY_FIELDS: [&str; 9] = [
-    "position", "rotation", "scale", "visible", "mesh", "material", "light", "body", "collider",
+pub(super) const ENTITY_FIELDS: [&str; 12] = [
+    "position",
+    "rotation",
+    "scale",
+    "visible",
+    "mesh",
+    "material",
+    "light",
+    "body",
+    "collider",
+    "tag",
+    "particles",
+    "clip",
 ];
 /// The scene-object kinds lowered (into [`Camera`]).
 pub(super) const OBJECT_KINDS: [&str; 1] = ["camera"];
@@ -90,6 +101,36 @@ pub(super) fn type_name(types: &Typeck, file_paths: &BTreeMap<FileId, String>, t
         Ty::Struct(key) => match (interner.struct_def(ty), file_paths.get(&key.file)) {
             (Some(def), Some(path)) => qualified_name(path, &def.name),
             _ => types.display(ty),
+        },
+        // A user enum is the `u32` index of its variant (decision 0129).
+        Ty::UserEnum(_) => types.display(TyId::U32),
+        _ => types.display(ty),
+    }
+}
+
+/// The structural description of a persistent state's type (decision 0145): what a stored value
+/// is checked against when it is read back. Unlike [`type_name`] it spells out what the stored
+/// JSON depends on, so that a program whose struct gained a field or changed a field's type, or
+/// whose enum changed its variants, ignores the old value (`W5402`) instead of misreading it:
+/// a struct is `{name: T, ...}` in field order, a user enum `enum(A|B)` in variant order.
+pub(super) fn stored_type(types: &Typeck, ty: TyId) -> String {
+    let interner = types.interner();
+    match interner.get(ty) {
+        Ty::Array { element, len } => format!("array<{}, {len}>", stored_type(types, element)),
+        Ty::Struct(_) => match interner.struct_def(ty) {
+            Some(def) => {
+                let fields: Vec<String> = def
+                    .fields
+                    .iter()
+                    .map(|(name, field)| format!("{name}: {}", stored_type(types, *field)))
+                    .collect();
+                format!("{{{}}}", fields.join(", "))
+            }
+            None => types.display(ty),
+        },
+        Ty::UserEnum(_) => match interner.enum_def(ty) {
+            Some(def) => format!("enum({})", def.variants.join("|")),
+            None => types.display(TyId::U32),
         },
         _ => types.display(ty),
     }
@@ -268,7 +309,8 @@ fn lower_module(
                 marks.extend(scene_marks);
                 items.push(Item::Scene(scene));
             }
-            ItemKind::Import(_) => {}
+            // An enum has no item of its own: its values are `u32` constants (decision 0129).
+            ItemKind::Import(_) | ItemKind::Enum(_) => {}
             ItemKind::Struct(decl) => {
                 let symbol = Symbol::item(&path, &decl.name.name);
                 items.push(Item::Struct(lowering.structure(decl, symbol)?));
@@ -770,6 +812,24 @@ impl Lowering<'_> {
                 "{what} has a body without a collider or the reverse"
             ));
         }
+        let tag = match fields.iter().find(|f| f.name == "tag") {
+            Some(field) => match parts(&what, field, checked.span)?.0 {
+                crate::types::ConstValue::Str(tag) => Some(tag.clone()),
+                _ => return Err(format!("the tag of {what} is not a string")),
+            },
+            None => None,
+        };
+        let particles = match fields.iter().find(|f| f.name == "particles") {
+            Some(field) => Some(emitter(&what, field, checked.span)?),
+            None => None,
+        };
+        let clip = match fields.iter().find(|f| f.name == "clip") {
+            Some(field) => match parts(&what, field, checked.span)?.0 {
+                crate::types::ConstValue::Str(name) => Some(name.clone()),
+                _ => return Err(format!("the clip of {what} is not a string")),
+            },
+            None => None,
+        };
         out.push(Entity {
             index,
             name: checked.name.clone(),
@@ -786,6 +846,9 @@ impl Lowering<'_> {
             body,
             collider,
             prefab: None,
+            tag,
+            particles,
+            clip,
         });
         for child in &checked.children {
             self.entity(child, &symbol, Some(index), out)?;
@@ -937,6 +1000,26 @@ fn vec3_member(schema: &str, fields: &Fields, name: &str) -> Result<[f32; 3], De
         ConstValue::Vec3(v) => Ok(*v),
         _ => Err(format!("the field '{name}' of {schema} is not a vec3")),
     }
+}
+
+/// A completed `Emitter` descriptor (decision 0155).
+fn emitter(what: &str, field: &CheckedField, owner: Span) -> Result<Particles, Defect> {
+    let (value, origin, span) = parts(what, field, owner)?;
+    let (schema, fields) = descriptor(what, value)?;
+    if schema != "Emitter" {
+        return Err(format!(
+            "the particles of {what} are {schema}, not an Emitter"
+        ));
+    }
+    Ok(Particles {
+        rate: f32_member(schema, fields, "rate")?,
+        lifetime: f32_member(schema, fields, "lifetime")?,
+        speed: f32_member(schema, fields, "speed")?,
+        size: f32_member(schema, fields, "size")?,
+        gravity: f32_member(schema, fields, "gravity")?,
+        origin,
+        span,
+    })
 }
 
 /// A completed mesh descriptor.

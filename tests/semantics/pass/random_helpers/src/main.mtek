@@ -1,0 +1,27 @@
+// Random helpers (decision 0149): random_range, random_int and chance in a state initialiser,
+// a cpu fn, update and a handler.
+cpu fn pick_lane() -> i32 {
+    return random_int(0, 3);
+}
+
+scene Demo {
+    state height: f32 = random_range(2.0, 4.0);
+    state lane: i32 = random_int(0, 3);
+    state lucky: bool = chance(0.5);
+    camera Main {
+        position: vec3(0.0, 2.0, 8.0);
+    }
+    entity Cube {
+        mesh: Box {};
+        position: bind(vec3(f32(lane) - 1.0, height, 0.0));
+    }
+    update(dt: f32) {
+        if chance(0.01) {
+            height = random_range(1, 5);
+        }
+    }
+    on key_down(Key.Space) {
+        lane = pick_lane();
+        lucky = random_int(5, 5) == 5;
+    }
+}

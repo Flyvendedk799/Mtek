@@ -3,7 +3,7 @@
   "runtimeAbi": 1,
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "buildId": "e37498719cf011b2af04f70ebe517d9b49832b9edab4defb1017e97ccb59848d",
+  "buildId": "e72bb0220d0ce01c0554d7192cf645de710fda53f8c49afdf778b2ca773ffe65",
   "targetProfile": "webgpu-core-2026",
   "requiredCapabilities": {
     "features": [],
@@ -30,7 +30,7 @@
     {
       "id": 1,
       "path": "std/materials.mtek",
-      "sha256": "cbc8cdb3b47bc2ce2aec3f0fe45a5c6ed0e2009f81307d9770b56b4181622a53"
+      "sha256": "406d18b3645df7b61b0f2571da99be5ac4e099f519d3c216087899389fb5c6c6"
     }
   ],
   "spans": [
@@ -368,9 +368,9 @@
   ],
   "shaders": [
     {
-      "hash": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
-      "url": "shaders/385b28531dc27b69.wgsl",
-      "map": "shaders/385b28531dc27b69.mtek-map.json",
+      "hash": "b210f9e70a40be73d5343f39f0247957359d67c6f7dab6eadf1dc887efec91e2",
+      "url": "shaders/b210f9e70a40be73.wgsl",
+      "map": "shaders/b210f9e70a40be73.mtek-map.json",
       "material": "std/materials.mtek::Unlit",
       "vertexEntry": "mtek_vs",
       "instancedVertexEntry": "mtek_vs_instanced",
@@ -385,7 +385,7 @@
     {
       "id": "std/materials.mtek::Unlit",
       "layout": "material:std/materials.mtek::Unlit",
-      "shader": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
+      "shader": "b210f9e70a40be73d5343f39f0247957359d67c6f7dab6eadf1dc887efec91e2",
       "resources": [],
       "params": [
         {

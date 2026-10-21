@@ -433,22 +433,20 @@ fn words(list: &[&'static str], breaks: &[usize]) -> Expr {
 }
 
 /// The keywords (`Keyword`), in grammar order.
-pub const KEYWORD_WORDS: [&str; 26] = [
-    "bind", "break", "const", "continue", "cpu", "else", "entity", "export", "false", "fn", "for",
-    "if", "import", "in", "let", "material", "on", "param", "prefab", "return", "scene", "self",
-    "state", "struct", "true", "var",
+pub const KEYWORD_WORDS: [&str; 29] = [
+    "bind", "break", "const", "continue", "cpu", "else", "entity", "enum", "export", "false", "fn",
+    "for", "if", "import", "in", "let", "match", "material", "on", "param", "prefab", "return",
+    "scene", "self", "state", "struct", "true", "var", "while",
 ];
 
 /// The words reserved for future use (`Reserved`), in grammar order.
-pub const RESERVED_WORDS_MODEL: [&str; 30] = [
+pub const RESERVED_WORDS_MODEL: [&str; 27] = [
     "as",
     "async",
     "await",
-    "enum",
     "extern",
     "impl",
     "loop",
-    "match",
     "mod",
     "move",
     "mut",
@@ -461,7 +459,6 @@ pub const RESERVED_WORDS_MODEL: [&str; 30] = [
     "unsafe",
     "use",
     "where",
-    "while",
     "yield",
     "compute",
     "vertex",
@@ -502,14 +499,18 @@ const CONTEXTUAL_WORDS: &str = "\
    'update', 'fixed_update'  lifecycle functions    (LifecycleFn)
    'fragment'                material stage         (StageFn)
    'from'                    import clause          (Import)
+   'shared'                  scene state carry-over (StateDecl)
+   'saved', 'setting'        persistent scene state (StateDecl)
+   'after', 'every'          timer blocks           (TimerStmt)
    event names after 'on'    resolved via registry  (Handler)             */";
 
 const PUNCTUATION: &str = "\
 /* Punctuation and operators */
-/*  {  }  (  )  [  ]  <  >  ,  ;  :  .  ..  ->
+/*  {  }  (  )  [  ]  <  >  ,  ;  :  .  ..  ->  =>
     +  -  *  /  %  !  =  ==  !=  <=  >=  &&  ||  +=  -=  *=  /=
     The lexer also recognises  &  |  ^  ~  <<  >>  so they can be rejected
-    with E1901 (bitwise operators are not in v0.1).                       */";
+    with E1901 (bitwise operators are not in v0.1); '|' also separates the
+    patterns of a match arm (Patterns).                                   */";
 
 const SECTION_2: &str = "\
 /* ---------------------------------------------------------------------
@@ -642,10 +643,10 @@ pub fn grammar() -> GrammarModel {
             ],
         ),
         Blank,
-        lexical("Keyword", words(&KEYWORD_WORDS, &[7, 15, 22])),
+        lexical("Keyword", words(&KEYWORD_WORDS, &[8, 16, 24])),
         Blank,
         commented(
-            lexical("Reserved", words(&RESERVED_WORDS_MODEL, &[8, 16, 23, 29])),
+            lexical("Reserved", words(&RESERVED_WORDS_MODEL, &[6, 14, 20, 26])),
             4,
             33,
             "/* E0013 when used as a name */",
@@ -677,13 +678,18 @@ pub fn grammar() -> GrammarModel {
                 plus(digits()),
             ]),
         ),
-        lexical(
-            "String",
-            seq(vec![
-                lit("\""),
-                star(group(alt(vec![r("StringChar"), r("Escape")]))),
-                lit("\""),
-            ]),
+        commented(
+            lexical(
+                "String",
+                seq(vec![
+                    lit("\""),
+                    star(group(alt(vec![r("StringChar"), r("Escape")]))),
+                    lit("\""),
+                ]),
+            ),
+            0,
+            3,
+            "/* '${' Expr ( ':' '.' [0-9] )? '}' inside is an interpolation (language.md 5.8) */",
         ),
         lexical(
             "StringChar",
@@ -700,6 +706,7 @@ pub fn grammar() -> GrammarModel {
                     lit("t"),
                     lit("r"),
                     lit("0"),
+                    lit("$"),
                     seq(vec![
                         lit("u{"),
                         hex(),
@@ -746,11 +753,12 @@ pub fn grammar() -> GrammarModel {
                                 r("ConstDecl"),
                                 r("FnDecl"),
                                 r("StructDecl"),
+                                r("EnumDecl"),
                                 r("MaterialDecl"),
                                 r("PrefabDecl"),
                                 r("SceneDecl"),
                             ],
-                            &[4],
+                            &[5],
                         )),
                     ]),
                 ],
@@ -821,6 +829,25 @@ pub fn grammar() -> GrammarModel {
         syntax(
             "StructField",
             seq(vec![r("Ident"), lit(":"), r("Type"), lit(";")]),
+        ),
+        Blank,
+        noted(
+            syntax(
+                "EnumDecl",
+                seq(vec![
+                    lit("enum"),
+                    r("Ident"),
+                    lit("{"),
+                    r("Ident"),
+                    star(group(seq(vec![lit(","), r("Ident")]))),
+                    opt(lit(",")),
+                    lit("}"),
+                ]),
+            ),
+            &[
+                "                    /* The Idents in braces are the variants, numbered from 0 in order (decision 0129).",
+                "                       [S: enum-variants: variant names are distinct (E2002)] */",
+            ],
         ),
         Blank,
         Comment(SECTION_3),
@@ -961,17 +988,27 @@ pub fn grammar() -> GrammarModel {
             ],
         ),
         Blank,
-        syntax(
-            "StateDecl",
-            seq(vec![
-                lit("state"),
-                r("Ident"),
-                lit(":"),
-                r("Type"),
-                lit("="),
-                r("Expr"),
-                lit(";"),
-            ]),
+        noted(
+            syntax(
+                "StateDecl",
+                seq(vec![
+                    opt(lit("shared")),
+                    opt(group(alt(vec![lit("saved"), lit("setting")]))),
+                    lit("state"),
+                    r("Ident"),
+                    lit(":"),
+                    r("Type"),
+                    lit("="),
+                    r("Expr"),
+                    lit(";"),
+                ]),
+            ),
+            &[
+                "                    /* [S: shared-state: 'shared' is contextual; shared state is declared in a scene only (E5202),",
+                "                        has a type that can carry over a scene change (E5203) and one type in every scene (E5204)] */",
+                "                    /* [S: saved-state: 'saved' and 'setting' are contextual; persistent state is declared in a scene only (E5210),",
+                "                        has a type that can be stored (E5211) and one type and kind in every scene (E5212)] */",
+            ],
         ),
         syntax(
             "FieldInit",
@@ -1078,6 +1115,9 @@ pub fn grammar() -> GrammarModel {
                     r("ConstDecl"),
                     r("IfStmt"),
                     r("ForStmt"),
+                    r("WhileStmt"),
+                    r("TimerStmt"),
+                    r("MatchStmt"),
                     r("ReturnStmt"),
                     r("BreakStmt"),
                     r("ContinueStmt"),
@@ -1152,12 +1192,72 @@ pub fn grammar() -> GrammarModel {
                 r("Block"),
             ]),
         ),
+        noted(
+            syntax(
+                "WhileStmt",
+                seq(vec![lit("while"), r("ExprNoDesc"), r("Block")]),
+            ),
+            &[
+                "                    /* [S: while-loop: the condition is bool (E3070); CPU only (E4010 in GPU code)] */",
+            ],
+        ),
+        noted(
+            syntax(
+                "TimerStmt",
+                seq(vec![
+                    group(alt(vec![lit("after"), lit("every")])),
+                    lit("("),
+                    r("Expr"),
+                    lit(")"),
+                    r("Block"),
+                ]),
+            ),
+            &[
+                "                    /* [S: timer: 'after' and 'every' are contextual; the time is f32 seconds (E3001), a constant one",
+                "                        positive for 'every' and not negative for 'after' (E3211); handlers only (E5080);",
+                "                        the block cannot use a 'var' of the enclosing body (E3210)] */",
+            ],
+        ),
         syntax(
             "ReturnStmt",
             seq(vec![lit("return"), opt(r("Expr")), lit(";")]),
         ),
         syntax("BreakStmt", seq(vec![lit("break"), lit(";")])),
         syntax("ContinueStmt", seq(vec![lit("continue"), lit(";")])),
+        Blank,
+        syntax(
+            "MatchStmt",
+            seq(vec![
+                lit("match"),
+                r("ExprNoDesc"),
+                lit("{"),
+                plus(r("MatchStmtArm")),
+                lit("}"),
+            ]),
+        ),
+        syntax(
+            "MatchStmtArm",
+            seq(vec![r("Patterns"), lit("=>"), r("Block"), opt(lit(","))]),
+        ),
+        syntax(
+            "Patterns",
+            seq(vec![
+                r("Pattern"),
+                star(group(seq(vec![lit("|"), r("Pattern")]))),
+            ]),
+        ),
+        noted(
+            syntax(
+                "Pattern",
+                alt(vec![lit("_"), seq(vec![r("Ident"), lit("."), r("Ident")])]),
+            ),
+            &[
+                "                    /* Ident '.' Ident names a variant: Enum.Variant (decision 0129).",
+                "                       [S: match-patterns: the value matched is of an enum type (E3203); each Pattern",
+                "                       is a variant of that enum (E3204); every arm can match (E3202); the arms cover",
+                "                       every variant or one is '_' (E3201)] */",
+            ],
+        ),
         Blank,
         Comment(SECTION_7),
         Blank,
@@ -1255,8 +1355,9 @@ pub fn grammar() -> GrammarModel {
                     seq(vec![lit("("), r("Expr"), lit(")")]),
                     r("ArrayLiteral"),
                     r("DescriptorLiteral"),
+                    r("MatchExpr"),
                 ],
-                &[5, 6, 7, 8, 9],
+                &[5, 6, 7, 8, 9, 10],
             ),
         ),
         Blank,
@@ -1286,6 +1387,28 @@ pub fn grammar() -> GrammarModel {
         syntax(
             "DescField",
             seq(vec![r("Ident"), lit(":"), r("FieldValue")]),
+        ),
+        noted(
+            syntax(
+                "MatchExpr",
+                seq(vec![
+                    lit("match"),
+                    r("ExprNoDesc"),
+                    lit("{"),
+                    r("MatchExprArm"),
+                    star(group(seq(vec![lit(","), r("MatchExprArm")]))),
+                    opt(lit(",")),
+                    lit("}"),
+                ]),
+            ),
+            &[
+                "                    /* A 'match' that starts a statement is a MatchStmt. [S: match-arm-types: the",
+                "                       arm values have one type (E3206)] */",
+            ],
+        ),
+        syntax(
+            "MatchExprArm",
+            seq(vec![r("Patterns"), lit("=>"), r("Expr")]),
         ),
         Blank,
         Comment(NO_DESC),
@@ -1351,7 +1474,7 @@ mod tests {
                 );
             }
         }
-        assert_eq!(model.productions().count(), 73);
+        assert_eq!(model.productions().count(), 82);
     }
 
     #[test]

@@ -182,7 +182,7 @@ live("the generated documents against the compiler (docs/*, limitations/*)", () 
   });
 
   it("a notSupported item missing from the page fails limitations/not-supported-list", () => {
-    const limitations = replaceOnce(base.docs.limitations ?? "", "- `transparency (alpha blending)`\n", "");
+    const limitations = replaceOnce(base.docs.limitations ?? "", "- `loop`\n", "");
     const found = checkInputs({ ...base, docs: { ...base.docs, limitations } });
     expectNamesBoth(found, "limitations/not-supported-list", "mtek context (supported.notSupported)", "docs/limitations.md section 7");
   });
@@ -352,7 +352,7 @@ live("the ABI: constants and capabilities (abi/*, runtime/*)", () => {
 
 live("the claims of the README and the other hand-written pages (readme/*)", () => {
   it("a README that miscounts the examples fails readme/example-count", () => {
-    const readme = replaceOnce(base.readme.readme, /the web runtime, five\s+examples/, "the web runtime, three\nexamples");
+    const readme = replaceOnce(base.readme.readme, /the web runtime, ten\s+examples/, "the web runtime, three\nexamples");
     const found = checkInputs({ ...base, readme: { ...base.readme, readme } });
     expectNamesBoth(found, "readme/example-count", "the examples/ directory", "README.md (Status)");
   });
@@ -376,7 +376,7 @@ live("the claims of the README and the other hand-written pages (readme/*)", () 
   });
 
   it("a step of npm run check the README row omits fails readme/check-steps", () => {
-    const readme = replaceOnce(base.readme.readme, ", `npm run check:assets` |", " |");
+    const readme = replaceOnce(base.readme.readme, ", `npm run check:assets`", "");
     const found = checkInputs({ ...base, readme: { ...base.readme, readme } });
     expectNamesBoth(found, "readme/check-steps", "package.json (scripts.check)", "README.md");
   });

@@ -1,0 +1,4 @@
+// An interpolated string literal (decision 0133).
+fn label(points: i32, t: f32, at: vec3) -> string {
+    return "Score: ${points} after ${t:.2}s at ${at}; ${points > 10} \${not}";
+}

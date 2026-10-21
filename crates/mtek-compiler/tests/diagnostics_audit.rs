@@ -255,6 +255,16 @@ const RELATED_REQUIRED: &[(&str, Option<&str>, &str)] = &[
     ),
     ("E3080", None, "the written result type"),
     (
+        "E3202",
+        None,
+        "the earlier pattern that makes the arm unreachable",
+    ),
+    (
+        "E3206",
+        None,
+        "the first arm, whose type the others must have",
+    ),
+    (
         "E4001",
         None,
         "section 5.4: the call cycle in related spans",
@@ -281,6 +291,17 @@ const RELATED_REQUIRED: &[(&str, Option<&str>, &str)] = &[
         None,
         "the first declaration of the lifecycle function",
     ),
+    (
+        "E5204",
+        None,
+        "the shared state of the same name in the other scene",
+    ),
+    (
+        "E5212",
+        None,
+        "the persistent state of the same name in the other scene",
+    ),
+    ("E5223", None, "the named entity that has the tag"),
     ("E5070", None, "section 5.5: a related span at `bind`"),
     ("E5075", None, "section 5.5: the full path of the cycle"),
     (

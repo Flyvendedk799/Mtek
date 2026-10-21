@@ -1,0 +1,14 @@
+// A constant delay of `after` is not negative; a constant period of `every` is greater than zero.
+// covers: [S: timer]
+const NEVER: f32 = 0.0;
+
+scene Demo {
+    state hits: i32 = 0;
+    camera Main {}
+    on key_down(Key.Space) {
+        after(-1.0) { hits += 1; }
+        every(0.0) { hits += 1; }
+        every(NEVER) { hits += 1; }
+        after(0.0) { hits += 1; }
+    }
+}

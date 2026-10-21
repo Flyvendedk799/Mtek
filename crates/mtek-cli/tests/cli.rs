@@ -800,6 +800,26 @@ fn new_scaffolds_the_demo_project() {
 }
 
 #[test]
+fn new_template_game_scaffolds_the_small_game() {
+    let scratch = Scratch::new("new-game");
+    let out = run_in(&scratch.0, &["new", "my-game", "--template", "game"]);
+    assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+    assert_eq!(
+        stdout(&out),
+        "created 'my-game' with the small-game template (mtek.toml, src/main.mtek, .gitignore)\n"
+    );
+    let root = scratch.path("my-game");
+    let toml = fs::read_to_string(root.join("mtek.toml")).unwrap();
+    assert!(toml.contains("scene = \"Title\""));
+    assert!(!toml.contains("[host.inputs]"));
+    let main = fs::read_to_string(root.join("src/main.mtek")).unwrap();
+    assert!(main.contains("scene Title"));
+    assert!(main.contains("scene Play"));
+    assert!(main.contains("choose("));
+    assert!(main.contains("key_pressed"));
+}
+
+#[test]
 fn new_rejects_invalid_and_existing_names() {
     let scratch = Scratch::new("new-bad");
     let out = run_in(&scratch.0, &["new", "Pulse"]);

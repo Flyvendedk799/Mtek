@@ -1,0 +1,25 @@
+// A fade (decision 0138): the alpha of a material colour is bound to an eased tween, so the
+// entity is translucent while it fades and drawn after the opaque ones.
+scene Fade {
+    state t: f32 = 0.0;
+    camera Cam {
+        position: vec3(0.0, 0.0, 6.0);
+    }
+    entity Ghost {
+        mesh: Sphere { radius: 0.5 };
+        material: Unlit { color: bind(color.linear(vec3(1.0, 0.4, 0.2), 1.0 - easing.in_quad(t))) };
+    }
+    entity Glass {
+        position: vec3(1.5, 0.0, 0.0);
+        mesh: Box {};
+        material: Pbr { base_color: color.linear(vec3(0.6, 0.8, 1.0), 0.35) };
+    }
+    entity Wall {
+        position: vec3(0.0, 0.0, -2.0);
+        mesh: Box { size: vec3(6.0, 4.0, 0.2) };
+        material: Unlit { color: #303844 };
+    }
+    update(dt: f32) {
+        t = min(t + dt, 1.0);
+    }
+}

@@ -23,8 +23,8 @@ use std::collections::BTreeMap;
 use super::lower::ImperativeMark;
 use super::model::{
     Behavior, Binding, BindingDep, BindingTarget, Block, BodyTarget, Branch, Expr, ExprKind, Field,
-    Item, MaterialInstanceDesc, Module, NamedExpr, NamedValue, Owner, Param, Place, PlaceRoot,
-    PlaceStep, PrefabItem, Scene, Source, State, Stmt, Symbol, UpdateClass, Value,
+    Item, MatchArm, MaterialInstanceDesc, Module, NamedExpr, NamedValue, Owner, Param, Place,
+    PlaceRoot, PlaceStep, PrefabItem, Scene, Source, State, Stmt, Symbol, UpdateClass, Value,
 };
 
 /// Instantiate the prefabs of every static instance of `modules`, then apply `marks`.
@@ -114,6 +114,9 @@ fn instantiate_scene(
             entity.light = None;
             entity.body = template_entity.body.clone();
             entity.collider = template_entity.collider.clone();
+            entity.tag = template_entity.tag.clone();
+            entity.particles = template_entity.particles.clone();
+            entity.clip = template_entity.clip.clone();
         }
         for child in &template.children {
             let mut copy = sub.entity(child)?;
@@ -132,6 +135,9 @@ fn instantiate_scene(
                 symbol: instance_symbol(&state.symbol, &template.symbol, &symbol)?,
                 ty: state.ty.clone(),
                 owner: sub.owner(state.owner),
+                shared: false,
+                persist: None,
+                stored_type: None,
                 init: sub.expr(&state.init)?,
                 span: state.span,
             });
@@ -414,7 +420,8 @@ impl Substitution<'_> {
                 entity: self.index(*entity),
                 name: name.clone(),
             },
-            BindingTarget::Camera { field } => BindingTarget::Camera {
+            BindingTarget::Camera { camera, field } => BindingTarget::Camera {
+                camera: camera.clone(),
                 field: field.clone(),
             },
             BindingTarget::Light { entity, field } => BindingTarget::Light {
@@ -541,6 +548,22 @@ impl Substitution<'_> {
             } => Stmt::ForEach {
                 local: *local,
                 array: self.expr(array)?,
+                body: self.block(body)?,
+                span: *span,
+            },
+            Stmt::While { cond, body, span } => Stmt::While {
+                cond: self.expr(cond)?,
+                body: self.block(body)?,
+                span: *span,
+            },
+            Stmt::Timer {
+                every,
+                seconds,
+                body,
+                span,
+            } => Stmt::Timer {
+                every: *every,
+                seconds: self.expr(seconds)?,
                 body: self.block(body)?,
                 span: *span,
             },
@@ -784,12 +807,33 @@ impl Substitution<'_> {
             ExprKind::EntityRef { entity } => ExprKind::EntityRef {
                 entity: self.index(*entity),
             },
+            ExprKind::Match {
+                scrutinee,
+                arms,
+                otherwise,
+            } => ExprKind::Match {
+                scrutinee: self.boxed(scrutinee)?,
+                arms: arms
+                    .iter()
+                    .map(|arm| {
+                        Ok(MatchArm {
+                            values: arm.values.clone(),
+                            value: self.expr(&arm.value)?,
+                        })
+                    })
+                    .collect::<Result<Vec<_>>>()?,
+                otherwise: otherwise.as_ref().map(|e| self.boxed(e)).transpose()?,
+            },
             ExprKind::State { owner, name } => ExprKind::State {
                 owner: self.owner(*owner),
                 name: name.clone(),
             },
             ExprKind::EntityField { entity, field } => ExprKind::EntityField {
                 entity: self.index(*entity),
+                field: field.clone(),
+            },
+            ExprKind::RefField { target, field } => ExprKind::RefField {
+                target: self.boxed(target)?,
                 field: field.clone(),
             },
             ExprKind::CameraField { camera, field } => ExprKind::CameraField {

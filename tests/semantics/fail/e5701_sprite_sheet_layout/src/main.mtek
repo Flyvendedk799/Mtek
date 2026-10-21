@@ -1,0 +1,10 @@
+// E5701: a sprite sheet has 1 to 64 columns and rows.
+scene Sprites {
+    camera Cam2D {
+        projection: Orthographic {};
+    }
+    entity Empty {
+        mesh: Plane {};
+        material: Sprite { columns: 0.0; rows: 100.0 };
+    }
+}

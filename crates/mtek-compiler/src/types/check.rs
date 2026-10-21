@@ -55,9 +55,9 @@ use crate::stdlib::{
     registry,
 };
 use crate::syntax::ast::{
-    ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember, Expr,
-    ExprKind, FieldInit, FieldValue, Ident, ItemKind, MaterialDecl, Module, NodeId, SceneDecl,
-    SceneMember, SceneObject, StructDecl, Type, TypeKind as AstTypeKind, UnaryOp,
+    ArrayLength, ArrayLengthKind, BinaryOp, ConstDecl, DescField, EntityDecl, EntityMember,
+    EnumDecl, Expr, ExprKind, FieldInit, FieldValue, Ident, ItemKind, MaterialDecl, Module, NodeId,
+    SceneDecl, SceneMember, SceneObject, StructDecl, Type, TypeKind as AstTypeKind, UnaryOp,
 };
 
 /// Whether a literal expression is made of integer literals only, or holds a
@@ -166,6 +166,9 @@ pub enum CallKind {
 pub enum FieldKind {
     /// Components of a vector, quaternion or colour (a swizzle when several).
     Components(Vec<usize>),
+    /// A transform field read through an `entity_ref` (`r.position`, decision 0151).
+    /// Writes stay `E5074`.
+    RefField { field: String },
     /// A field of a named entity or scene object (`Cube.position`).
     ObjectField {
         noun: &'static str,
@@ -191,6 +194,9 @@ pub enum FieldKind {
     NamespaceValue(String),
     /// A field of a user struct value.
     StructField(String),
+    /// A variant of a user enum (`GameState.Menu`, decision 0129), with its
+    /// index in declaration order: a constant, the `u32` the enum erases to.
+    EnumVariant { variant: String, index: u32 },
     /// A field of a registry record value (`input.uv` of a `SurfaceInput`,
     /// decision 0039), with its position in the record.
     RecordField { field: &'static str, index: usize },
@@ -229,6 +235,8 @@ pub(super) struct Checker<'a> {
     pub(super) struct_decls: BTreeMap<DefId, &'a StructDecl>,
     /// Struct declarations already checked.
     pub(super) struct_done: BTreeSet<DefId>,
+    /// Every enum declaration of the module, by its `DefId` (decision 0129).
+    pub(super) enum_decls: BTreeMap<DefId, &'a EnumDecl>,
     /// The types of imported structs, by the `DefId` of the imported name
     /// (seeded by [`super::check_module_with_imports`]).
     pub(super) imported_structs: BTreeMap<DefId, TyId>,
@@ -272,6 +280,15 @@ pub(super) struct Checker<'a> {
     pub(super) prefab_entity_counts: BTreeMap<DefId, usize>,
     /// The prefab literal that is the argument of the `spawn` being checked (decision 0064).
     pub(super) spawn_argument: Option<NodeId>,
+    /// The scene names that are the argument of a `go_to` (decision 0141): there, and only
+    /// there, a scene name is a value, of type `scene name`.
+    pub(super) scene_arguments: BTreeSet<NodeId>,
+    /// The camera names that are the argument of a `set_camera` (decision 0154): there, and
+    /// only there, a camera name is a value, of type `camera name`.
+    pub(super) camera_arguments: BTreeSet<NodeId>,
+    /// The `tagged(..)` calls that are the iterable of a `for` loop (decision 0150): the only
+    /// place where one is allowed.
+    pub(super) tagged_iterables: BTreeSet<NodeId>,
 }
 
 impl<'a> Checker<'a> {
@@ -319,6 +336,7 @@ impl<'a> Checker<'a> {
             fields: BTreeMap::new(),
             struct_decls: BTreeMap::new(),
             struct_done: BTreeSet::new(),
+            enum_decls: BTreeMap::new(),
             imported_structs: BTreeMap::new(),
             struct_literals: BTreeMap::new(),
             imported_fns: BTreeMap::new(),
@@ -336,6 +354,9 @@ impl<'a> Checker<'a> {
             prefab_params: BTreeMap::new(),
             prefab_entity_counts: BTreeMap::new(),
             spawn_argument: None,
+            scene_arguments: BTreeSet::new(),
+            camera_arguments: BTreeSet::new(),
+            tagged_iterables: BTreeSet::new(),
         }
     }
 
@@ -426,11 +447,24 @@ impl<'a> Checker<'a> {
                 _ => {}
             }
         }
+        if construct_implemented(Construct::State) {
+            self.shared_states(module);
+            self.persistent_states(module);
+        }
     }
 
     /// Every constant of the module, of its scenes and of their entities: the
     /// constants that code this build checks can refer to.
     fn collect_constants(&mut self, module: &'a Module) {
+        // Enum types first: they have no dependencies, and struct fields,
+        // constants and signatures may name them.
+        for item in &module.items {
+            if let ItemKind::Enum(decl) = &item.kind
+                && construct_implemented(Construct::Enum)
+            {
+                self.collect_enum(decl);
+            }
+        }
         for item in &module.items {
             match &item.kind {
                 ItemKind::Const(decl) => self.collect_constant(decl),
@@ -633,9 +667,12 @@ impl<'a> Checker<'a> {
                     );
                     TyId::ERROR
                 }
-                // A user struct, of this module or imported; anything else was
-                // reported by the resolver.
-                Some(Res::Def(id)) => self.struct_type(id).unwrap_or(TyId::ERROR),
+                // A user struct or enum, of this module or imported; anything
+                // else was reported by the resolver.
+                Some(Res::Def(id)) => match self.struct_type(id) {
+                    Some(ty) => ty,
+                    None => self.enum_type(id).unwrap_or(TyId::ERROR),
+                },
                 _ => TyId::ERROR,
             },
             AstTypeKind::Generic {
@@ -984,6 +1021,9 @@ impl<'a> Checker<'a> {
             ExprKind::Bool(_) => TyId::BOOL,
             ExprKind::Color { .. } => TyId::COLOR,
             ExprKind::Str { .. } if construct_implemented(Construct::StringLiteral) => TyId::STRING,
+            ExprKind::Interp { parts } if construct_implemented(Construct::StringLiteral) => {
+                self.interpolation(parts)
+            }
             ExprKind::Array(items) if construct_implemented(Construct::ArrayLiteral) => {
                 self.array_literal(expr, items, expected)
             }
@@ -999,6 +1039,7 @@ impl<'a> Checker<'a> {
                 }
             }
             ExprKind::Str { .. }
+            | ExprKind::Interp { .. }
             | ExprKind::Array(_)
             | ExprKind::Index { .. }
             | ExprKind::SelfValue
@@ -1015,6 +1056,7 @@ impl<'a> Checker<'a> {
             ExprKind::Binary { op, lhs, rhs, .. } => self.binary(expr, *op, lhs, rhs, expected),
             ExprKind::Call { callee, args } => self.call(expr, callee, args, expected),
             ExprKind::Field { base, name } => self.field(expr, base, name),
+            ExprKind::Match { scrutinee, arms } => self.match_expr(expr, scrutinee, arms, expected),
         }
     }
 
@@ -1042,10 +1084,17 @@ impl<'a> Checker<'a> {
             // (`spec/scenes.md` 8.3); that is the only meaning of a bare
             // entity name.
             DefKind::Entity => TyId::ENTITY_REF,
+            DefKind::Scene if self.scene_arguments.contains(&expr.id) => {
+                self.out.interner.intern(Ty::SceneName)
+            }
+            DefKind::SceneObject { kind } if self.is_set_camera_target(kind, expr.id) => {
+                self.out.interner.intern(Ty::CameraName)
+            }
             DefKind::SceneObject { kind: Some(_) }
             | DefKind::Scene
             | DefKind::Fn
             | DefKind::Struct
+            | DefKind::Enum
             | DefKind::Material
             | DefKind::Prefab => {
                 let (name, noun, span) = (def.name.clone(), def.kind.noun(), def.span);
@@ -1065,6 +1114,7 @@ impl<'a> Checker<'a> {
             // build (prefab params) are untyped.
             DefKind::FnParam | DefKind::Local { .. } | DefKind::LoopVar | DefKind::Param => {
                 self.note_surface_use(id);
+                self.timer_capture(id, expr.span);
                 let ty = self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR);
                 if matches!(def.kind, DefKind::Param) && self.misused_resource(expr, ty) {
                     return TyId::ERROR;
@@ -1139,7 +1189,12 @@ impl<'a> Checker<'a> {
         };
         if matches!(
             target.kind,
-            DefKind::Scene | DefKind::Fn | DefKind::Struct | DefKind::Material | DefKind::Prefab
+            DefKind::Scene
+                | DefKind::Fn
+                | DefKind::Struct
+                | DefKind::Enum
+                | DefKind::Material
+                | DefKind::Prefab
         ) {
             let name = self
                 .res
@@ -1896,10 +1951,40 @@ impl<'a> Checker<'a> {
                     if name == "spawn" {
                         self.note_spawn_argument(args);
                     }
-                    let ty = self.function_call(expr, name, function, args, kind, expected);
+                    if name == "go_to" && !self.go_to_argument(args) {
+                        // `E5201` described a name already; an expression is still checked.
+                        let named = args.iter().all(|arg| {
+                            matches!(super::prefab::strip_parens(arg).kind, ExprKind::Name(_))
+                        });
+                        if !named {
+                            self.synth_args(args);
+                        }
+                        return TyId::UNIT;
+                    }
+                    if name == "set_camera" && !self.set_camera_argument(args) {
+                        let named = args.iter().all(|arg| {
+                            matches!(super::prefab::strip_parens(arg).kind, ExprKind::Name(_))
+                        });
+                        if !named {
+                            self.synth_args(args);
+                        }
+                        return TyId::UNIT;
+                    }
+                    if !self.tag_call_allowed(expr, name, args) {
+                        return TyId::ERROR;
+                    }
+                    let ty = if matches!(name, "choose" | "shuffle") {
+                        self.array_sample(expr, name, function, args, kind)
+                    } else {
+                        self.function_call(expr, name, function, args, kind, expected)
+                    };
                     if name == "destroy" {
                         self.check_destroy_target(args);
                     }
+                    if super::audio::AUDIO_FUNCTIONS.contains(&name) {
+                        self.check_audio_args(name, args);
+                    }
+                    self.note_tag_argument(function.name, args);
                     return ty;
                 }
                 Some(Res::Def(id)) if self.names_function(id) => {
@@ -2239,6 +2324,9 @@ impl<'a> Checker<'a> {
                 if name == "lighting.pbr" {
                     self.note_lighting_surface(args);
                 }
+                if namespace == "hud" && ty != TyId::ERROR {
+                    self.check_hud_args(member, args);
+                }
                 ty
             }
             Some(NamespaceMember::Value(value)) => {
@@ -2312,7 +2400,7 @@ impl<'a> Checker<'a> {
             let plain = function
                 .signatures
                 .iter()
-                .all(|s| s.params.iter().all(|p| matches!(p.ty, SigType::Exact(_))));
+                .all(|s| s.params.iter().all(|p| matches!(p.ty, SigType::Exact(_)))); // Form signatures are not plain types.
             let listed = match &only {
                 Some(params) if plain && !params.is_empty() => format!(" ({})", params.join(", ")),
                 _ => String::new(),
@@ -2352,7 +2440,7 @@ impl<'a> Checker<'a> {
                 .iter()
                 .map(|p| match p.ty {
                     SigType::Exact(t) => Some(t),
-                    SigType::Class(_) => None,
+                    SigType::Class(_) | SigType::Form(_) => None,
                 })
                 .collect();
             if let (Some(params), SigType::Exact(ret)) = (exact, signature.ret) {
@@ -2483,6 +2571,44 @@ impl<'a> Checker<'a> {
         self.out.interner.from_type_ref(resolution.ret)
     }
 
+    /// `choose(items)` and `shuffle(items)` (decision 0152). `T` and `N` come from the argument,
+    /// which the signature spells `array<T, N>` without an overload for each element type.
+    fn array_sample(
+        &mut self,
+        expr: &Expr,
+        name: &str,
+        function: &IntrinsicDef,
+        args: &[Expr],
+        kind: CallKind,
+    ) -> TyId {
+        if args.len() != 1 {
+            return self.function_call(expr, name, function, args, kind, None);
+        }
+        let arg = &args[0];
+        let ty = self.check(arg, None);
+        let Some(element) = (match self.out.interner.get(ty) {
+            Ty::Array { element, .. } => Some(element),
+            _ => None,
+        }) else {
+            if !self.is_error(ty) {
+                let found = self.display(ty);
+                self.report(
+                    Diagnostic::new(
+                        Code::E3001,
+                        format!("`{name}` takes an array, but this argument has type {found}."),
+                    )
+                    .at(arg.span)
+                    .expected("an array, such as `[1, 2, 3]`")
+                    .actual(found),
+                );
+            }
+            return TyId::ERROR;
+        };
+        // An array is at least one element long (`E3031`), so `choose` always has an element.
+        self.calls.insert(expr.id, kind);
+        if name == "choose" { element } else { ty }
+    }
+
     // ----- field access ----------------------------------------------------
 
     fn field(&mut self, expr: &Expr, base: &Expr, name: &Ident) -> TyId {
@@ -2503,6 +2629,9 @@ impl<'a> Checker<'a> {
             }
             Some(Res::Error) => return TyId::ERROR,
             _ => {}
+        }
+        if let Some(ty) = self.enum_variant(expr, base, name) {
+            return ty;
         }
         if let Some(ty) = self.body_property_read(expr, base, name) {
             return ty;

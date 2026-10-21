@@ -51,6 +51,7 @@
       "else": { "properties": { "physics": {}, "physicsModule": false }, "additionalProperties": false }
     },
     "runtimeConfig": { "$ref": "#/$defs/runtimeConfig" },
+    "game": { "$ref": "#/$defs/game" },
     "preview": {
       "type": "object",
       "description": "Present exactly in the manifest of a `--mode preview` build (decision 0075): the runtime enforces the loop budget the program was instrumented with and refuses any request outside baseUrl.",
@@ -398,7 +399,7 @@
     "assetUrl": { "type": "string", "pattern": "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" },
     "asset": {
       "type": "object",
-      "oneOf": [{ "$ref": "#/$defs/meshDataAsset" }, { "$ref": "#/$defs/imageAsset" }],
+      "oneOf": [{ "$ref": "#/$defs/meshDataAsset" }, { "$ref": "#/$defs/imageAsset" }, { "$ref": "#/$defs/audioAsset" }, { "$ref": "#/$defs/fontAsset" }],
       "discriminator": { "propertyName": "kind" }
     },
     "meshDataAsset": {
@@ -428,6 +429,38 @@
         "preprocessing": { "$ref": "#/$defs/preprocessing" },
         "span": { "$ref": "#/$defs/spanId" },
         "source": { "type": "string", "minLength": 1, "description": "The author's file (decision 0082): the project path of a standalone image, or \"<glb path>#images[N]\" for an image embedded in a GLB. Optional; shown by the runtime when the image fails." }
+      }
+    },
+    "fontAsset": {
+      "type": "object",
+      "description": "A font file declared with asset.font(..), copied byte for byte (spec/hud.md section 6, decision 0139).",
+      "additionalProperties": false,
+      "required": ["url", "sha256", "bytes", "kind", "format", "mime", "source", "span"],
+      "properties": {
+        "url": { "$ref": "#/$defs/assetUrl" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "bytes": { "$ref": "#/$defs/index" },
+        "kind": { "const": "font" },
+        "format": { "type": "string", "enum": ["ttf", "otf", "woff", "woff2"] },
+        "mime": { "type": "string", "enum": ["font/ttf", "font/otf", "font/woff", "font/woff2"] },
+        "source": { "type": "string", "minLength": 1, "description": "The project path of the declaring asset.font(..); generated code names the font by it." },
+        "span": { "$ref": "#/$defs/spanId" }
+      }
+    },
+    "audioAsset": {
+      "type": "object",
+      "description": "A sound file declared with asset.sound(..), copied byte for byte (spec/audio.md section 4, decision 0130).",
+      "additionalProperties": false,
+      "required": ["url", "sha256", "bytes", "kind", "format", "mime", "source", "span"],
+      "properties": {
+        "url": { "$ref": "#/$defs/assetUrl" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "bytes": { "$ref": "#/$defs/index" },
+        "kind": { "const": "audio" },
+        "format": { "type": "string", "enum": ["wav", "ogg", "mp3"] },
+        "mime": { "type": "string", "enum": ["audio/wav", "audio/ogg", "audio/mpeg"] },
+        "source": { "type": "string", "minLength": 1, "description": "The project path of the declaring asset.sound(..); generated code names the sound by it." },
+        "span": { "$ref": "#/$defs/spanId" }
       }
     },
     "preprocessing": {
@@ -502,7 +535,7 @@
             "gravity": { "$ref": "#/$defs/vec3" }
           }
         },
-        "state": { "type": "array", "items": { "$ref": "#/$defs/stateEntry" } },
+        "state": { "type": "array", "items": { "$ref": "#/$defs/sceneStateEntry" } },
         "cameras": { "type": "array", "items": { "$ref": "#/$defs/camera" } },
         "entities": { "type": "array", "items": { "$ref": "#/$defs/entity" } },
         "materialInstances": { "type": "array", "items": { "$ref": "#/$defs/materialInstance" } },
@@ -520,6 +553,44 @@
         "name": { "$ref": "#/$defs/name" },
         "type": { "$ref": "#/$defs/mtekTypeName" },
         "symbol": { "$ref": "#/$defs/symbolId" }
+      }
+    },
+    "sceneStateEntry": {
+      "type": "object",
+      "description": "A state of the scene: a stateEntry that can be shared.",
+      "additionalProperties": false,
+      "required": ["name", "type", "symbol"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "type": { "$ref": "#/$defs/mtekTypeName" },
+        "symbol": { "$ref": "#/$defs/symbolId" },
+        "shared": { "type": "boolean", "const": true, "description": "`shared state` (decision 0141): its value carries over when go_to switches to a scene with a shared state of the same name and type. Absent for ordinary state." },
+        "persist": { "enum": ["saved", "setting"], "description": "`saved state` or `setting state` (decisions 0145, 0146): the value is kept in the browser's storage under game.storage, restored when the scene starts, written by save() (and, for a setting, whenever it changes). Absent for other state." },
+        "storedType": { "type": "string", "minLength": 1, "maxLength": 4096, "description": "With persist: the structural description of the state's type that a stored value must have (decision 0145): a struct is spelled out as {field: T, ...} in field order, a user enum as enum(A|B) in variant order, otherwise the type name. A stored value recorded with another description is ignored (W5402). Absent for other state." }
+      }
+    },
+    "game": {
+      "type": "object",
+      "description": "Game-level data (decisions 0141, 0145): present when the program has several scenes or persistent state. Every scene manifest of one build carries the same object.",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "scenes": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Every scene of the program, sorted by name: the program module and the manifest that go_to loads for it, relative to the program's baseUrl.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "module", "manifest"],
+            "properties": {
+              "name": { "$ref": "#/$defs/name" },
+              "module": { "type": "string", "pattern": "^app(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.js$" },
+              "manifest": { "type": "string", "pattern": "^program(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.manifest\\.json$" }
+            }
+          }
+        },
+        "storage": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,64}$", "description": "The storage name of saved state and settings (decision 0145): the localStorage key is mtek.save.<storage>. Present when a scene of the program has a saved or setting state." }
       }
     },
     "camera": {
@@ -571,7 +642,10 @@
         },
         "state": { "type": "array", "items": { "$ref": "#/$defs/stateEntry" } },
         "update": { "type": "boolean", "description": "The entity declares update(dt)." },
-        "fixedUpdate": { "type": "boolean", "description": "The entity declares fixed_update(dt)." }
+        "fixedUpdate": { "type": "boolean", "description": "The entity declares fixed_update(dt)." },
+        "tag": { "$ref": "#/$defs/tag", "description": "`tag: \"name\";` (decision 0150). Absent when the entity has none." },
+        "particles": { "$ref": "#/$defs/emitter", "description": "`particles: Emitter { .. }` (decision 0155). Absent when the entity emits none." },
+        "clip": { "$ref": "#/$defs/clip", "description": "A glTF clip that moves this entity (decision 0156). Absent when it plays none." }
       }
     },
     "body": {
@@ -719,7 +793,50 @@
         "update": { "type": "boolean", "description": "The prefab declares update(dt)." },
         "fixedUpdate": { "type": "boolean", "description": "The prefab declares fixed_update(dt)." },
         "bindings": { "type": "array", "items": { "$ref": "#/$defs/binding" } },
-        "span": { "$ref": "#/$defs/spanId", "description": "The declaration." }
+        "span": { "$ref": "#/$defs/spanId", "description": "The declaration." },
+        "tag": { "$ref": "#/$defs/tag", "description": "The tag every instance carries (decision 0150). Absent when the prefab has none." },
+        "particles": { "$ref": "#/$defs/emitter", "description": "The emitter every instance starts with (decision 0155). Absent when the prefab has none." },
+        "clip": { "$ref": "#/$defs/clip", "description": "The clip every instance plays (decision 0156). Absent when the prefab plays none." }
+      }
+    },
+    "tag": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "description": "An entity's group name for the tag queries (decision 0150): 1 to 32 lowercase letters, digits and `_`, starting with a letter."
+    },
+    "emitter": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A particle emitter (decision 0155). The runtime keeps at most 64 particles.",
+      "required": ["rate", "lifetime", "speed", "size", "gravity"],
+      "properties": {
+        "rate": { "type": "number", "minimum": 0 },
+        "lifetime": { "type": "number", "exclusiveMinimum": 0 },
+        "speed": { "type": "number", "minimum": 0 },
+        "size": { "type": "number", "exclusiveMinimum": 0 },
+        "gravity": { "type": "number" }
+      }
+    },
+    "clip": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A sampled TRS clip (decision 0156).",
+      "required": ["name", "duration", "channels"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "duration": { "type": "number", "minimum": 0 },
+        "channels": { "type": "array", "items": { "$ref": "#/$defs/clipChannel" } }
+      }
+    },
+    "clipChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "interpolation", "times", "values"],
+      "properties": {
+        "path": { "type": "string", "enum": ["translation", "rotation", "scale"] },
+        "interpolation": { "type": "string", "enum": ["linear", "step"] },
+        "times": { "type": "array", "items": { "type": "number" } },
+        "values": { "type": "array", "items": { "type": "number" } }
       }
     },
 
@@ -862,7 +979,8 @@
         "field": {
           "type": "string",
           "enum": ["position", "target", "rotation", "projection.fov_y", "projection.height", "projection.near", "projection.far"]
-        }
+        },
+        "camera": { "$ref": "#/$defs/name", "description": "The camera the binding writes (decision 0154). Absent on manifests that bound the one active camera." }
       }
     },
     "lightTarget": {

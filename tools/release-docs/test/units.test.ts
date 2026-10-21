@@ -78,8 +78,9 @@ describe("readers of the specification", () => {
   it("reads the keyword lists", () => {
     const { keywords, reserved } = languageWordLists(languageMd);
     expect(keywords).toContain("prefab");
-    expect(reserved).toContain("while");
-    expect(reserved).toHaveLength(30);
+    expect(keywords).toContain("while");
+    expect(reserved).toContain("loop");
+    expect(reserved).toHaveLength(27);
     expect(keywords.filter((k) => reserved.includes(k))).toEqual([]);
   });
 

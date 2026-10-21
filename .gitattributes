@@ -6,3 +6,7 @@
 
 # Benchmark holdout tree hash (decision 0021): bytes are hashed as stored, so LF everywhere.
 benchmarks/holdout/** text eol=lf
+
+# The prebuilt runtime (decision 0161): generated bundles, no text diffs.
+crates/mtek-cli/prebuilt/*.js -diff linguist-generated
+crates/mtek-cli/prebuilt/*.d.ts linguist-generated

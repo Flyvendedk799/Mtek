@@ -1,0 +1,7 @@
+String 0..18 "\"Score: ${points}\"" = interpolated "Score: " ${10..16}
+String 19..30 "\"t=${t:.2}\"" = interpolated "t=" ${24..25:.2}
+String 31..41 "\"${a}${b}\"" = interpolated ${34..35} ${38..39}
+String 42..54 "\"cost \\${x}\"" = "cost ${x}"
+String 55..70 "\"${f(1, 2)} ok\"" = interpolated ${58..65} " ok"
+String 71..85 "\"${v.x + {1}}\"" = interpolated ${74..83}
+Eof 86..86 ""

@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E3204",
+    "file": "src/main.mtek",
+    "startByte": 259,
+    "endByte": 260,
+    "message": "A pattern must be a variant of Phase (`Phase.Variant`) or `_`.",
+    "expected": "a variant of Phase",
+    "actual": "i32",
+    "notes": [
+      "patterns are written `Enum.Variant`, several joined by `|`, or `_` for every other value"
+    ]
+  },
+  {
+    "code": "MTEK-E3204",
+    "file": "src/main.mtek",
+    "startByte": 277,
+    "endByte": 292,
+    "message": "This pattern is a variant of Direction, but the `match` is on a value of type Phase.",
+    "expected": "a variant of Phase",
+    "actual": "Direction",
+    "notes": [
+      "patterns are written `Enum.Variant`, several joined by `|`, or `_` for every other value"
+    ]
+  }
+]

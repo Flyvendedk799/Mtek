@@ -1,0 +1,23 @@
+[
+  {
+    "code": "MTEK-E3205",
+    "file": "src/main.mtek",
+    "startByte": 137,
+    "endByte": 143,
+    "message": "The enum 'Phase' has no variant 'Playng'.",
+    "expected": "a variant of Phase",
+    "actual": "'Playng'",
+    "related": [
+      {
+        "message": "the enum 'Phase' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 58,
+        "endByte": 63
+      }
+    ],
+    "notes": [
+      "help: did you mean `Phase.Playing`?",
+      "the variants of 'Phase' are: Menu, Playing, GameOver"
+    ]
+  }
+]

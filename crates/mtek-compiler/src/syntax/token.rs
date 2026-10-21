@@ -39,6 +39,7 @@ pub enum TokenKind {
     KwCpu,
     KwElse,
     KwEntity,
+    KwEnum,
     KwExport,
     KwFalse,
     KwFn,
@@ -47,6 +48,7 @@ pub enum TokenKind {
     KwImport,
     KwIn,
     KwLet,
+    KwMatch,
     KwMaterial,
     KwOn,
     KwParam,
@@ -58,6 +60,7 @@ pub enum TokenKind {
     KwStruct,
     KwTrue,
     KwVar,
+    KwWhile,
 
     // Punctuation and operators (`spec/language.md` 2.6).
     LBrace,
@@ -76,6 +79,8 @@ pub enum TokenKind {
     DotDot,
     /// `->`
     Arrow,
+    /// `=>` (between a `match` pattern and its arm)
+    FatArrow,
     Plus,
     Minus,
     Star,
@@ -135,6 +140,7 @@ pub const KEYWORDS: &[(&str, TokenKind)] = &[
     ("cpu", TokenKind::KwCpu),
     ("else", TokenKind::KwElse),
     ("entity", TokenKind::KwEntity),
+    ("enum", TokenKind::KwEnum),
     ("export", TokenKind::KwExport),
     ("false", TokenKind::KwFalse),
     ("fn", TokenKind::KwFn),
@@ -143,6 +149,7 @@ pub const KEYWORDS: &[(&str, TokenKind)] = &[
     ("import", TokenKind::KwImport),
     ("in", TokenKind::KwIn),
     ("let", TokenKind::KwLet),
+    ("match", TokenKind::KwMatch),
     ("material", TokenKind::KwMaterial),
     ("on", TokenKind::KwOn),
     ("param", TokenKind::KwParam),
@@ -154,6 +161,7 @@ pub const KEYWORDS: &[(&str, TokenKind)] = &[
     ("struct", TokenKind::KwStruct),
     ("true", TokenKind::KwTrue),
     ("var", TokenKind::KwVar),
+    ("while", TokenKind::KwWhile),
 ];
 
 /// The words reserved for future use (`spec/language.md` 2.3). They lex as
@@ -162,11 +170,9 @@ pub const RESERVED_WORDS: &[&str] = &[
     "as",
     "async",
     "await",
-    "enum",
     "extern",
     "impl",
     "loop",
-    "match",
     "mod",
     "move",
     "mut",
@@ -179,7 +185,6 @@ pub const RESERVED_WORDS: &[&str] = &[
     "unsafe",
     "use",
     "where",
-    "while",
     "yield",
     "compute",
     "vertex",
@@ -209,6 +214,7 @@ pub const PUNCTUATION: &[(&str, TokenKind)] = &[
     (".", TokenKind::Dot),
     ("..", TokenKind::DotDot),
     ("->", TokenKind::Arrow),
+    ("=>", TokenKind::FatArrow),
     ("+", TokenKind::Plus),
     ("-", TokenKind::Minus),
     ("*", TokenKind::Star),
@@ -288,6 +294,7 @@ impl TokenKind {
             TokenKind::KwCpu => "`cpu`",
             TokenKind::KwElse => "`else`",
             TokenKind::KwEntity => "`entity`",
+            TokenKind::KwEnum => "`enum`",
             TokenKind::KwExport => "`export`",
             TokenKind::KwFalse => "`false`",
             TokenKind::KwFn => "`fn`",
@@ -296,6 +303,7 @@ impl TokenKind {
             TokenKind::KwImport => "`import`",
             TokenKind::KwIn => "`in`",
             TokenKind::KwLet => "`let`",
+            TokenKind::KwMatch => "`match`",
             TokenKind::KwMaterial => "`material`",
             TokenKind::KwOn => "`on`",
             TokenKind::KwParam => "`param`",
@@ -307,6 +315,7 @@ impl TokenKind {
             TokenKind::KwStruct => "`struct`",
             TokenKind::KwTrue => "`true`",
             TokenKind::KwVar => "`var`",
+            TokenKind::KwWhile => "`while`",
             TokenKind::LBrace => "`{`",
             TokenKind::RBrace => "`}`",
             TokenKind::LParen => "`(`",
@@ -321,6 +330,7 @@ impl TokenKind {
             TokenKind::Dot => "`.`",
             TokenKind::DotDot => "`..`",
             TokenKind::Arrow => "`->`",
+            TokenKind::FatArrow => "`=>`",
             TokenKind::Plus => "`+`",
             TokenKind::Minus => "`-`",
             TokenKind::Star => "`*`",
@@ -391,11 +401,28 @@ pub enum TokenValue {
     Float { value: f64 },
     /// A string literal with its escapes decoded.
     String(String),
+    /// A string literal with at least one interpolation `${expr}` (decision 0133): the text
+    /// pieces with their escapes decoded and, between them, where each interpolated expression
+    /// is in the source. The parser parses those expressions.
+    Interpolated(Vec<StrPiece>),
     /// A color literal as `[r, g, b, a]` bytes; the alpha of `#RRGGBB` is 255.
     /// The values are still sRGB-encoded (`spec/language.md` 5.4).
     Color { rgba: [u8; 4] },
     /// A literal with a lexical error; see the type documentation.
     Malformed,
+}
+
+/// One piece of an interpolated string literal (`"Score: ${points}"`, decision 0133).
+#[derive(Clone, PartialEq, Debug)]
+pub enum StrPiece {
+    /// Literal text, escapes decoded.
+    Text(String),
+    /// `${expr}` or `${expr:spec}`: `expr` is the source between `${` and the `}` (or the `:`
+    /// of the format spec), `spec` the text after the `:` with its span.
+    Expr {
+        expr: Span,
+        spec: Option<(String, Span)>,
+    },
 }
 
 /// One token: its kind, where it is and what it carries.
@@ -511,7 +538,7 @@ mod tests {
             assert_eq!(kind.describe(), format!("`{text}`"));
         }
         assert_eq!(keyword_kind("update"), None);
-        assert_eq!(keyword_kind("while"), None);
+        assert_eq!(keyword_kind("loop"), None);
         assert_eq!(keyword_kind("Fn"), None);
     }
 

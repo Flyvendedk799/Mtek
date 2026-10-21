@@ -114,6 +114,8 @@ function quoted(text: string): string {
  */
 function describe(asset: MtekAsset): string {
   if (asset.kind === "image") return asset.source === undefined ? "image" : `image ${quoted(asset.source)}`;
+  if (asset.kind === "audio") return `sound ${quoted(asset.source)}`;
+  if (asset.kind === "font") return `font ${quoted(asset.source)}`;
   const sources = [...new Set(asset.primitives.map((primitive) => primitive.source.file))];
   return `mesh data of ${sources.map(quoted).join(", ")}`;
 }

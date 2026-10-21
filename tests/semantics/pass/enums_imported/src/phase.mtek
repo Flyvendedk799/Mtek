@@ -1,0 +1,10 @@
+// An exported enum and a function over it, used from another module.
+export enum Phase { Menu, Playing, GameOver }
+
+export fn next(phase: Phase) -> Phase {
+    return match phase {
+        Phase.Menu => Phase.Playing,
+        Phase.Playing => Phase.GameOver,
+        Phase.GameOver => Phase.Menu,
+    };
+}

@@ -88,7 +88,9 @@ describe("the rt surface", () => {
     const pure = pureFunctions();
     const other = new Set(["vec2", "vec3", "vec4", "f32", "i32", "u32", "+", "-", "*", "/", "%", "neg"]);
     for (const callee of Object.keys(RT_OPERATIONS)) {
-      expect(pure.has(callee) || other.has(callee), `unexpected callee ${callee}`).toBe(true);
+      // The easing curves are CPU-only but computed by `rt` (decision 0135).
+      const easing = callee.startsWith("easing.") && schema.namespaces.some((ns) => ns.name === "easing" && ns.members.some((m) => `easing.${m.name}` === callee));
+      expect(pure.has(callee) || other.has(callee) || easing, `unexpected callee ${callee}`).toBe(true);
     }
     // CPU-only intrinsics are context members (spec/runtime-abi.md 4.2), GPU-only ones never run here.
     for (const name of ["random", "print", "is_key_down", "spawn", "destroy", "alive", "sample", "lighting.pbr"]) {

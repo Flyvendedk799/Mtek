@@ -1,0 +1,12 @@
+fn loops(n: i32) -> i32 {
+    var i = 0;
+    while i < n { i += 1; }
+    while i > 0 && i % 2 == 0 { i = i / 2; }
+    while true {
+        if i > 100 { break; }
+        i += 7;
+        if i % 3 == 0 { continue; }
+    }
+    while (Limits { max: 3 }).max > i { i += 1; }
+    return i;
+}

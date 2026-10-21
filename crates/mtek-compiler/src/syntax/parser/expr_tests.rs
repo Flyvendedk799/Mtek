@@ -606,13 +606,13 @@ fn bind_outside_a_field_value_is_explained() {
 
 #[test]
 fn reserved_words_used_as_names_are_e0013() {
-    let src = "while + x";
+    let src = "loop + x";
     let run = run(src);
     assert_eq!(run.codes(), [Code::E0013]);
-    assert_eq!(run.spans(src), ["while"]);
+    assert_eq!(run.spans(src), ["loop"]);
     assert_eq!(
         one_line(&dump_expr(&run.parsed.expr)),
-        "(binary + (name while) (name x))"
+        "(binary + (name loop) (name x))"
     );
     let run = self::run("a.type");
     assert_eq!(run.codes(), [Code::E0013]);

@@ -48,7 +48,55 @@ pub(super) fn schemas() -> Vec<SchemaDef> {
     all.extend(lights());
     all.extend(bodies());
     all.extend(colliders());
+    all.extend(emitters());
     all
+}
+
+/// `Emitter { .. }` (decision 0155): a construction-only descriptor, not a spawned entity.
+fn emitters() -> Vec<SchemaDef> {
+    vec![schema(
+        "Emitter",
+        SchemaCategory::Emitter,
+        Milestone::M1,
+        "A bounded particle emitter: at most 64 particles, spawned at `rate` per second in a hemisphere around the entity's up axis.",
+        vec![
+            field(
+                "rate",
+                TypeRef::F32,
+                C,
+                "Particles spawned per second. A fraction carries to the next frame.",
+            )
+            .default(ConstValue::F32(0.0))
+            .range(ValueRange::non_negative()),
+            field(
+                "lifetime",
+                TypeRef::F32,
+                C,
+                "How long each particle lives, in seconds.",
+            )
+            .default(ConstValue::F32(1.0))
+            .range(ValueRange::positive().and_finite()),
+            field(
+                "speed",
+                TypeRef::F32,
+                C,
+                "Initial speed in metres per second.",
+            )
+            .default(ConstValue::F32(1.0))
+            .range(ValueRange::non_negative()),
+            field("size", TypeRef::F32, C, "Billboard size in metres.")
+                .default(ConstValue::F32(0.05))
+                .range(ValueRange::positive().and_finite()),
+            field(
+                "gravity",
+                TypeRef::F32,
+                C,
+                "Downward acceleration in metres per second squared.",
+            )
+            .default(ConstValue::F32(0.0))
+            .range(ValueRange::finite()),
+        ],
+    )]
 }
 
 fn objects() -> Vec<SchemaDef> {
@@ -158,6 +206,24 @@ fn objects() -> Vec<SchemaDef> {
                 TypeRef::Descriptor(SchemaCategory::Collider),
                 C,
                 "A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`.",
+            ),
+            field(
+                "tag",
+                TypeRef::String,
+                C,
+                "A group name (`\"rock\"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`.",
+            ),
+            field(
+                "particles",
+                TypeRef::Descriptor(SchemaCategory::Emitter),
+                C,
+                "A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted.",
+            ),
+            field(
+                "clip",
+                TypeRef::String,
+                C,
+                "The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has.",
             ),
         ],
     )
@@ -413,6 +479,31 @@ fn materials() -> Vec<SchemaDef> {
                 .default(ConstValue::Sampler(
                     crate::stdlib::value::BuiltinSampler::LinearRepeat,
                 )),
+            ],
+        ),
+        // Decision 0170: sprites, always drawn in the translucent pass (decision 0138).
+        schema(
+            "Sprite",
+            SchemaCategory::Material,
+            Milestone::M1,
+            "One frame of a sprite sheet, tinted; always translucent.",
+            vec![
+                field("sheet", TypeRef::Texture, C, "The sprite sheet: `columns` x `rows` equal cells.")
+                    .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
+                field("sheet_sampler", TypeRef::Sampler, C, "Sampler of the sheet (default nearest, clamped: crisp pixels).")
+                    .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::NearestClamp)),
+                field("tint", TypeRef::Color, writable_bindable(), "Multiplies the texel, alpha included.")
+                    .default(ConstValue::srgb(0xff, 0xff, 0xff)),
+                field("cell", TypeRef::F32, writable_bindable(), "The cell (animation frame) shown, from 0, left to right then top to bottom; floored and wrapped, so `bind(t * fps)` animates.")
+                    .default(ConstValue::F32(0.0)),
+                field("columns", TypeRef::F32, writable_bindable(), "Cells per row of the sheet.")
+                    .default(ConstValue::F32(1.0))
+                    .range(ValueRange::closed(1, 64))
+                    .range_code(Code::E5701),
+                field("rows", TypeRef::F32, writable_bindable(), "Rows of cells in the sheet.")
+                    .default(ConstValue::F32(1.0))
+                    .range(ValueRange::closed(1, 64))
+                    .range_code(Code::E5701),
             ],
         ),
     ]

@@ -25,7 +25,7 @@ import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
 import { instancingCandidates } from "./instancing.js";
-import { BindingPlan, PipelineCache, materialPipelineKey, type PipelineResult } from "./pipelines.js";
+import { BindingPlan, PipelineCache, canBlend, materialPipelineKey, type PipelineResult } from "./pipelines.js";
 import type { TextureOverrides } from "./resources.js";
 import { Renderer, type MaterialPipeline, type RenderSurface } from "./renderer.js";
 
@@ -156,9 +156,16 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
           throw new Error(`internal error: no shader module for '${material.id}'`);
         }
         const request = { material, module, colorFormat: surface.colorFormat, ...(phase === undefined ? {} : { phase }) };
-        const [plain, variant] = await Promise.all([pipelines.obtain(request), instanced.has(material.id) ? pipelines.obtain({ ...request, instanced: true }) : undefined]);
-        if (!plain.ok || variant === undefined) return plain;
-        return variant.ok ? { ...plain, instancedPipeline: variant.pipeline } : variant;
+        const [plain, variant] = await Promise.all([
+          pipelines.obtain(request),
+          instanced.has(material.id) ? pipelines.obtain({ ...request, instanced: true }) : undefined,
+        ]);
+        if (!plain.ok) return plain;
+        if (variant !== undefined && !variant.ok) return variant;
+        return {
+          ...plain,
+          ...(variant === undefined ? {} : { instancedPipeline: variant.pipeline }),
+        };
       }),
     );
     const diagnostics: MtekDiagnostic[] = [];
@@ -168,7 +175,13 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     results.forEach((result, index) => {
       const material = structure.materials[index];
       if (material === undefined) return;
-      if (result.ok) byMaterial.set(material.id, { key: result.key, pipeline: result.pipeline, ...(result.instancedPipeline === undefined ? {} : { instanced: result.instancedPipeline }) });
+      if (result.ok) {
+        byMaterial.set(material.id, {
+          key: result.key,
+          pipeline: result.pipeline,
+          ...(result.instancedPipeline === undefined ? {} : { instanced: result.instancedPipeline }),
+        });
+      }
       else if (recover === undefined) diagnostics.push(result.diagnostic);
       else failed.push({ id: material.id, diagnostic: result.diagnostic });
     });
@@ -189,6 +202,15 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
       materials,
       meshes,
       pipelines: byMaterial,
+      // The translucent variant (decision 0138) is made the first time a draw of the material needs it.
+      blend: async (material) => {
+        const module = modules.get(material.shader.hash);
+        if (module === undefined || !canBlend(material)) return undefined;
+        const made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: true });
+        if (made.ok) return { key: made.key, pipeline: made.pipeline };
+        report(made.diagnostic);
+        return undefined;
+      },
       report,
       ...(options.instancing === undefined ? {} : { instancing: options.instancing }),
     });

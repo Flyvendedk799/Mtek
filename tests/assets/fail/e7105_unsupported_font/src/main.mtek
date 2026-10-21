@@ -1,0 +1,6 @@
+// E7105: `asset.font` reads .ttf, .otf, .woff and .woff2 only.
+const BITMAP = asset.font("../fonts/tiny.bdf");
+
+scene Demo {
+    camera Main {}
+}

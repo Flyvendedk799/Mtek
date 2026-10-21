@@ -37,11 +37,12 @@ export interface TmGrammar {
 const LANG = "mtek";
 
 /** Keywords that steer control flow. */
-const CONTROL = ["break", "continue", "else", "for", "if", "in", "return"];
+const CONTROL = ["break", "continue", "else", "for", "if", "in", "match", "return", "while"];
 /** Keywords that start a declaration or a member. */
 const DECLARATION = [
   "const",
   "entity",
+  "enum",
   "fn",
   "let",
   "material",
@@ -63,6 +64,7 @@ const BOOLEAN = ["true", "false"];
 const DECLARES_NAME: Record<string, string> = {
   fn: `entity.name.function.${LANG}`,
   struct: `entity.name.type.struct.${LANG}`,
+  enum: `entity.name.type.enum.${LANG}`,
   material: `entity.name.type.material.${LANG}`,
   scene: `entity.name.type.scene.${LANG}`,
   entity: `entity.name.type.entity.${LANG}`,
@@ -76,6 +78,7 @@ const DECLARES_NAME: Record<string, string> = {
 
 const OPERATOR_SCOPES: Record<string, string> = {
   "->": `keyword.operator.arrow.${LANG}`,
+  "=>": `keyword.operator.arrow.${LANG}`,
   "..": `keyword.operator.range.${LANG}`,
   "==": `keyword.operator.comparison.${LANG}`,
   "!=": `keyword.operator.comparison.${LANG}`,
@@ -172,11 +175,15 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
   const stage = contextual("StageFn");
   const importWords = contextual("Import");
   const sceneObjectWords = contextual("SceneObject");
+  const sharedWords = contextual("StateDecl");
+  const timerWords = contextual("TimerStmt");
   for (const [rule, list] of [
     ["LifecycleFn", lifecycle],
     ["StageFn", stage],
     ["Import", importWords],
     ["SceneObject", sceneObjectWords],
+    ["StateDecl", sharedWords],
+    ["TimerStmt", timerWords],
   ] as const) {
     if (list.length === 0) throw new Error(`no contextual word for the rule ${rule}`);
   }
@@ -224,7 +231,8 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
     patterns: [
       {
         name: `constant.character.escape.${LANG}`,
-        match: '\\\\(?:["\\\\ntr0]|u\\{[0-9A-Fa-f]{1,6}\\})',
+        // `$` is the escaped dollar of an interpolated string (decision 0133): `\${not}`.
+        match: '\\\\(?:["\\\\ntr0$]|u\\{[0-9A-Fa-f]{1,6}\\})',
       },
       { name: `invalid.illegal.escape.${LANG}`, match: "\\\\." },
     ],
@@ -323,6 +331,16 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
     match: `${START}(${words(importWords)})(?=\\s*")`,
     captures: { "1": { name: `keyword.control.import.${LANG}` } },
   });
+  // `shared state x: T = v;` (decision 0141), `shared saved state`, `setting state` (decisions 0145, 0146) and
+  // `after(t) { }`, `every(t) { }` (decision 0142). A modifier is one when `state` follows, possibly after another.
+  add("shared-state", {
+    match: `${START}(${words(sharedWords)})(?=\\s+(?:(?:${words(sharedWords)})\\s+)?state\\b)`,
+    captures: { "1": { name: `storage.modifier.${LANG}` } },
+  });
+  add("timer", {
+    match: `${START}(${words(timerWords)})(?=\\s*\\()`,
+    captures: { "1": { name: `keyword.control.timer.${LANG}` } },
+  });
 
   // --- the standard library ---------------------------------------------------------------------
   const byNamespace = (list: readonly { namespace: string; name: string }[]): Map<string, string[]> => {
@@ -410,6 +428,12 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
     match: `(?<![A-Za-z0-9_])${IDENT}`,
   });
 
+  // `|` between the patterns of a match arm (`A.X | A.Y => ...`, decision 0129) is a separator,
+  // not the bitwise operator: the arm's `=>` follows on the same line.
+  add("pattern-separator", {
+    name: `punctuation.separator.pattern.${LANG}`,
+    match: "\\|(?!\\|)(?=[^;{}|]*(?:\\|[^;{}|]*)*=>)",
+  });
   // --- operators and punctuation: longest first, so `<=` is not `<` and `=` ---------------------
   const operatorTokens: [string, string][] = [
     ...Object.entries(OPERATOR_SCOPES),

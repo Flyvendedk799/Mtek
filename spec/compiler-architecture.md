@@ -39,7 +39,7 @@ evidence/    M0/ M1/ …     # milestone gate evidence (spec/testing.md §8)
 | Item | Pin (2026-10-03) | Where |
 |---|---|---|
 | Rust | stable `1.99.0`, edition 2024 | `rust-toolchain.toml` (`channel = "1.99.0"`, components `rustfmt`, `clippy`); `edition = "2024"` and `rust-version = "1.99"` in every crate |
-| Node.js | `24` LTS (active LTS today; v26 becomes LTS on 2026-10-28 — upgrading is a recorded decision, not a drive-by change) | `.nvmrc`, `"engines": { "node": ">=24 <25" }` |
+| Node.js | `24` LTS pinned for CI and recorded runs (v26 becomes LTS on 2026-10-28 — upgrading is a recorded decision, not a drive-by change); any `>=22.18.0` is accepted (decision 0131) | `.nvmrc`, `"engines": { "node": ">=22.18.0" }` |
 | npm | the version bundled with the pinned Node | `"packageManager"` field; `.npmrc` with `save-exact=true` |
 | TypeScript | latest 5.x/6.x at bootstrap, exact | `devDependencies` |
 | esbuild, vitest, @playwright/test | exact versions chosen at bootstrap (`@playwright/test` 1.63.x current) | `devDependencies` |

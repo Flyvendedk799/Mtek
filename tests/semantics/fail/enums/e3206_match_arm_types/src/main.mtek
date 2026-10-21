@@ -1,0 +1,14 @@
+// The arms of a match expression have one type.
+// covers: [S: match-arm-types]
+enum Phase { Menu, Playing }
+
+fn speed(phase: Phase) -> f32 {
+    return match phase {
+        Phase.Menu => 0.0,
+        Phase.Playing => true,
+    };
+}
+
+scene Demo {
+    camera Main {}
+}

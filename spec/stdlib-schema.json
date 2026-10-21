@@ -235,6 +235,74 @@
       ]
     },
     {
+      "name": "Emitter",
+      "category": "emitter",
+      "since": "M1",
+      "doc": "A bounded particle emitter: at most 64 particles, spawned at `rate` per second in a hemisphere around the entity's up axis.",
+      "fields": [
+        {
+          "name": "gravity",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "finite",
+          "since": "M1",
+          "doc": "Downward acceleration in metres per second squared."
+        },
+        {
+          "name": "lifetime",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0, finite",
+          "since": "M1",
+          "doc": "How long each particle lives, in seconds."
+        },
+        {
+          "name": "rate",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0",
+          "since": "M1",
+          "doc": "Particles spawned per second. A fraction carries to the next frame."
+        },
+        {
+          "name": "size",
+          "type": "f32",
+          "default": "0.05",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0, finite",
+          "since": "M1",
+          "doc": "Billboard size in metres."
+        },
+        {
+          "name": "speed",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0",
+          "since": "M1",
+          "doc": "Initial speed in metres per second."
+        }
+      ]
+    },
+    {
       "name": "Entity",
       "category": "object",
       "since": "M1",
@@ -251,6 +319,18 @@
           "range": null,
           "since": "M1",
           "doc": "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`."
+        },
+        {
+          "name": "clip",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has."
         },
         {
           "name": "collider",
@@ -302,6 +382,18 @@
           "doc": "The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh."
         },
         {
+          "name": "particles",
+          "type": "emitter",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted."
+        },
+        {
           "name": "position",
           "type": "vec3",
           "default": "vec3(0.0, 0.0, 0.0)",
@@ -336,6 +428,18 @@
           "range": "every component > 0, finite",
           "since": "M1",
           "doc": "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body."
+        },
+        {
+          "name": "tag",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "A group name (`\"rock\"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`."
         },
         {
           "name": "visible",
@@ -731,6 +835,86 @@
           "range": null,
           "since": "M1",
           "doc": "A sensor reports collisions but does not push other bodies."
+        }
+      ]
+    },
+    {
+      "name": "Sprite",
+      "category": "material",
+      "since": "M1",
+      "doc": "One frame of a sprite sheet, tinted; always translucent.",
+      "fields": [
+        {
+          "name": "cell",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "The cell (animation frame) shown, from 0, left to right then top to bottom; floored and wrapped, so `bind(t * fps)` animates."
+        },
+        {
+          "name": "columns",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "1…64",
+          "since": "M1",
+          "doc": "Cells per row of the sheet."
+        },
+        {
+          "name": "rows",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "1…64",
+          "since": "M1",
+          "doc": "Rows of cells in the sheet."
+        },
+        {
+          "name": "sheet",
+          "type": "texture",
+          "default": "texture.white()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "The sprite sheet: `columns` x `rows` equal cells."
+        },
+        {
+          "name": "sheet_sampler",
+          "type": "sampler",
+          "default": "sampler.nearest_clamp()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Sampler of the sheet (default nearest, clamped: crisp pixels)."
+        },
+        {
+          "name": "tint",
+          "type": "color",
+          "default": "#ffffff",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Multiplies the texel, alpha included."
         }
       ]
     },
@@ -1204,6 +1388,30 @@
       "doc": "Smallest integer value not below `x`."
     },
     {
+      "name": "chance",
+      "signatures": [
+        "(p: f32) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "`random() < p`; one draw.",
+      "since": "M1",
+      "doc": "True with probability `p`."
+    },
+    {
+      "name": "choose",
+      "signatures": [
+        "(items: array<T, N>) -> T"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "One draw of `random()`: index `floor(random() * N)`. `N` is at least 1.",
+      "since": "M1",
+      "doc": "One element of an array, chosen uniformly."
+    },
+    {
       "name": "clamp",
       "signatures": [
         "(x: T, lo: T, hi: T) -> T",
@@ -1217,6 +1425,18 @@
       "doc": "Limits `x` to the range `lo..hi`."
     },
     {
+      "name": "clear_saved",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Deletes everything stored."
+    },
+    {
       "name": "cos",
       "signatures": [
         "(x: T) -> T"
@@ -1227,6 +1447,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Cosine of an angle in radians."
+    },
+    {
+      "name": "count_tagged",
+      "signatures": [
+        "(tag: string) -> i32"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "The number of live entities with the tag."
     },
     {
       "name": "cross",
@@ -1263,6 +1495,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Queues removal of a spawned entity; it counts as dead from the moment of the call."
+    },
+    {
+      "name": "destroy_tagged",
+      "signatures": [
+        "(tag: string) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has."
     },
     {
       "name": "distance",
@@ -1313,6 +1557,18 @@
       "doc": "2 raised to `x`."
     },
     {
+      "name": "first_tagged",
+      "signatures": [
+        "(tag: string) -> entity_ref"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "The first live entity with the tag in instance order; a dead reference (`alive` is false) if there is none."
+    },
+    {
       "name": "floor",
       "signatures": [
         "(x: T) -> T"
@@ -1335,6 +1591,30 @@
       "cpuSemantics": "`fract(x) = x - floor(x)`.",
       "since": "M1",
       "doc": "Fractional part of `x`."
+    },
+    {
+      "name": "go_to",
+      "signatures": [
+        "(scene: scene name) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Switches scene, keeping shared state."
+    },
+    {
+      "name": "has_tag",
+      "signatures": [
+        "(target: entity_ref, tag: string) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether the entity is live and has the tag."
     },
     {
       "name": "inverse_sqrt",
@@ -1361,6 +1641,54 @@
       "doc": "Whether the key was down at the end of input handling in the current frame."
     },
     {
+      "name": "is_muted",
+      "signatures": [
+        "() -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether audio is muted with `set_muted`."
+    },
+    {
+      "name": "is_pointer_down",
+      "signatures": [
+        "(button: i32) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "0 primary, 1 middle, 2 secondary. Any other button is false.",
+      "since": "M1",
+      "doc": "Whether pointer button `button` was down at the end of input handling."
+    },
+    {
+      "name": "key_pressed",
+      "signatures": [
+        "(key: Key) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether the key went down during input handling of the current frame."
+    },
+    {
+      "name": "key_released",
+      "signatures": [
+        "(key: Key) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether the key went up during input handling of the current frame."
+    },
+    {
       "name": "length",
       "signatures": [
         "(x: T) -> f32"
@@ -1371,6 +1699,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Length of a vector, or the absolute value of a scalar."
+    },
+    {
+      "name": "load",
+      "signatures": [
+        "() -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Reads saved values back; false if none."
     },
     {
       "name": "log",
@@ -1436,6 +1776,18 @@
       "doc": "Linear interpolation `a * (1 - t) + b * t`, with a scalar or a component-wise `t`."
     },
     {
+      "name": "nearest_tagged",
+      "signatures": [
+        "(tag: string, point: vec3) -> entity_ref"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "Ties go to the first in instance order.",
+      "since": "M1",
+      "doc": "The live entity with the tag whose world position is nearest `point`; a dead reference if there is none."
+    },
+    {
       "name": "normalize",
       "signatures": [
         "(v: V) -> V"
@@ -1446,6 +1798,94 @@
       "cpuSemantics": "A zero vector, or one whose squared length underflows or overflows, gives the zero vector on the CPU and the GPU (decision 0047).",
       "since": "M1",
       "doc": "The vector scaled to length 1."
+    },
+    {
+      "name": "particle_count",
+      "signatures": [
+        "() -> i32"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "How many particles are alive."
+    },
+    {
+      "name": "pause",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Stops update, physics and timers; input goes on."
+    },
+    {
+      "name": "paused",
+      "signatures": [
+        "() -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether paused."
+    },
+    {
+      "name": "play",
+      "signatures": [
+        "(sound: sound) -> ()",
+        "(sound: sound, volume: f32) -> ()",
+        "(sound: sound, volume: f32, pitch: f32) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "Web Audio; silent until the first user input unlocks audio (spec/audio.md section 5).",
+      "since": "M1",
+      "doc": "Plays a sound once, at a volume (default 1.0, range 0..4) and a pitch (playback rate, default 1.0, range 0.0625..16)."
+    },
+    {
+      "name": "play_at",
+      "signatures": [
+        "(sound: sound, position: vec3) -> ()",
+        "(sound: sound, position: vec3, volume: f32) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "A Web Audio PannerNode (HRTF off, inverse distance, reference distance 1 m); the listener follows the active camera each frame.",
+      "since": "M1",
+      "doc": "Plays a sound once from a world position: it is quieter further from the active camera and panned left or right."
+    },
+    {
+      "name": "play_music",
+      "signatures": [
+        "(sound: sound) -> ()",
+        "(sound: sound, volume: f32) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Starts a sound as looping music, replacing the music that plays (one music track at a time)."
+    },
+    {
+      "name": "pointer_position",
+      "signatures": [
+        "() -> vec2"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "`x` right, `y` up, both in `[-1, 1]`. `(0, 0)` until the pointer moves or a button changes.",
+      "since": "M1",
+      "doc": "The pointer position at the end of input handling, in canvas NDC."
     },
     {
       "name": "pow",
@@ -1496,6 +1936,30 @@
       "doc": "A pseudo-random number in `[0, 1)`."
     },
     {
+      "name": "random_int",
+      "signatures": [
+        "(lo: i32, hi: i32) -> i32"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "`lo + floor(random() * (hi - lo))` in f64; one draw, also when `hi <= lo`.",
+      "since": "M1",
+      "doc": "A random i32 in `[lo, hi)`; `lo` if `hi <= lo`."
+    },
+    {
+      "name": "random_range",
+      "signatures": [
+        "(lo: f32, hi: f32) -> f32"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "`lo + (hi - lo) * random()`, rounded to f32; one draw.",
+      "since": "M1",
+      "doc": "A random f32 in `[lo, hi)`."
+    },
+    {
       "name": "reflect",
       "signatures": [
         "(i: V, n: V) -> V"
@@ -1506,6 +1970,30 @@
       "cpuSemantics": "`i - 2 * dot(n, i) * n`.",
       "since": "M1",
       "doc": "Reflects incident vector `i` about the surface normal `n`."
+    },
+    {
+      "name": "reset",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Next frame, restarts the scene."
+    },
+    {
+      "name": "resume",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Undoes pause()."
     },
     {
       "name": "round",
@@ -1542,6 +2030,66 @@
       "cpuSemantics": "`clamp(x, 0, 1)`.",
       "since": "M1",
       "doc": "Limits `x` to 0..1."
+    },
+    {
+      "name": "save",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Writes the saved and setting state to storage."
+    },
+    {
+      "name": "set_camera",
+      "signatures": [
+        "(camera: camera name) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Switches the active camera."
+    },
+    {
+      "name": "set_muted",
+      "signatures": [
+        "(muted: bool) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Mutes or unmutes all audio; the volume is kept."
+    },
+    {
+      "name": "set_volume",
+      "signatures": [
+        "(volume: f32) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Sets the global volume of every sound and the music (default 1.0, range 0..4)."
+    },
+    {
+      "name": "shuffle",
+      "signatures": [
+        "(items: array<T, N>) -> array<T, N>"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "Fisher-Yates: `N - 1` draws of `random()` (`N` below 2 draws none). Does not modify `items`.",
+      "since": "M1",
+      "doc": "A new array with the same elements in a random order."
     },
     {
       "name": "sign",
@@ -1616,6 +2164,30 @@
       "doc": "0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`."
     },
     {
+      "name": "stop_music",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Stops the music started with `play_music`; does nothing when none plays."
+    },
+    {
+      "name": "tagged",
+      "signatures": [
+        "(tag: string) -> tagged entities"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "The loop skips an entity that is destroyed before its turn and does not visit one spawned during the loop.",
+      "since": "M1",
+      "doc": "The live entities with the tag, in instance order: only the iterable of a `for` loop (`for r in tagged(\"rock\") { .. }`)."
+    },
+    {
       "name": "tan",
       "signatures": [
         "(x: T) -> T"
@@ -1659,6 +2231,19 @@
       "doc": "Compile-time asset declarations. The argument must be a string literal naming a file inside the project.",
       "members": [
         {
+          "name": "font",
+          "kind": "function",
+          "signatures": [
+            "(path: string) -> font"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "A font file (`.ttf`, `.otf`, `.woff` or `.woff2`) for `hud.text`."
+        },
+        {
           "name": "glb",
           "kind": "function",
           "signatures": [
@@ -1683,6 +2268,19 @@
           "cpuSemantics": "",
           "since": "M1",
           "doc": "A linear data texture (masks, normal data)."
+        },
+        {
+          "name": "sound",
+          "kind": "function",
+          "signatures": [
+            "(path: string) -> sound"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`."
         },
         {
           "name": "texture",
@@ -1733,6 +2331,143 @@
       ]
     },
     {
+      "name": "easing",
+      "since": "M1",
+      "doc": "Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.",
+      "members": [
+        {
+          "name": "in_cubic",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing t³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "in_out_cubic",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing cubic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "in_out_quad",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing quadratic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "in_out_sine",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing (1 − cos(π t)) / 2; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "in_quad",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing t²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "out_back",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing overshoots slightly past 1, then settles; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "out_bounce",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing bounces at 1 like a dropped ball; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "out_cubic",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing 1 − (1 − t)³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "out_elastic",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing springs past 1 and oscillates to rest; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        },
+        {
+          "name": "out_quad",
+          "kind": "function",
+          "signatures": [
+            "(t: f32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "Binary64 arithmetic on the clamped argument, rounded once to f32.",
+          "since": "M1",
+          "doc": "Easing 1 − (1 − t)²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1."
+        }
+      ]
+    },
+    {
       "name": "frame",
       "since": "M1",
       "doc": "Per-frame values, readable in CPU code and in `bind` expressions, not in GPU stage code (route them through material parameters). `update(dt)` gets the frame delta, which varies from frame to frame; `fixed_update(dt)` runs zero or more times per frame and gets the constant fixed step, 1/60 s by default.",
@@ -1760,6 +2495,71 @@
           "domain": "cpu",
           "since": "M1",
           "doc": "Active application time in seconds since mount, excluding paused time."
+        }
+      ]
+    },
+    {
+      "name": "hud",
+      "since": "M1",
+      "doc": "The heads-up display: text, rectangles and buttons drawn over the canvas. Immediate mode: what a frame draws is shown until the next frame, so draw from `update`.",
+      "members": [
+        {
+          "name": "button",
+          "kind": "function",
+          "signatures": [
+            "(label: string, at: vec2) -> bool",
+            "(label: string, at: vec2, size: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "A DOM button over the canvas; clicks are queued and reported by the next frame's call.",
+          "since": "M1",
+          "doc": "Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label."
+        },
+        {
+          "name": "pixel_font",
+          "kind": "function",
+          "signatures": [
+            "() -> font"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "Returns the built-in font; draws nothing.",
+          "since": "M1",
+          "doc": "The built-in font: a 5x7 pixel bitmap of printable ASCII, the same in every browser (decision 0139). Other characters show as a box."
+        },
+        {
+          "name": "rect",
+          "kind": "function",
+          "signatures": [
+            "(at: vec2, size: vec2, tint: color) -> ()",
+            "(at: vec2, size: vec2, tint: color, align: f32) -> ()"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "A DOM element over the canvas.",
+          "since": "M1",
+          "doc": "Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). For panels and bars."
+        },
+        {
+          "name": "text",
+          "kind": "function",
+          "signatures": [
+            "(content: string, at: vec2) -> ()",
+            "(content: string, at: vec2, size: f32) -> ()",
+            "(content: string, at: vec2, size: f32, tint: color) -> ()",
+            "(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()",
+            "(content: string, at: vec2, size: f32, tint: color, align: f32, font: font) -> ()"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "A DOM element over the canvas; the text is set as text, never as HTML.",
+          "since": "M1",
+          "doc": "Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: the page's sans-serif). The line is centred vertically on `at`."
         }
       ]
     },
@@ -2071,7 +2871,7 @@
       "kind": "handle",
       "gpu": false,
       "since": "M1",
-      "doc": "A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only.",
+      "doc": "A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`.",
       "fields": [],
       "methods": []
     },
@@ -2081,6 +2881,15 @@
       "gpu": true,
       "since": "M1",
       "doc": "IEEE-754 binary32 floating-point number.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "font",
+      "kind": "handle",
+      "gpu": false,
+      "since": "M1",
+      "doc": "A font for `hud.text`: `asset.font(..)` or the built-in `hud.pixel_font()`; CPU only (decision 0139).",
       "fields": [],
       "methods": []
     },
@@ -2265,6 +3074,15 @@
       "gpu": false,
       "since": "M1",
       "doc": "A sampler preset. Usable only as a material parameter.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "sound",
+      "kind": "handle",
+      "gpu": false,
+      "since": "M1",
+      "doc": "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0130).",
       "fields": [],
       "methods": []
     },

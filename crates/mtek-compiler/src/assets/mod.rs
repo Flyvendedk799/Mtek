@@ -14,6 +14,9 @@
 
 pub mod access;
 pub(crate) mod attributes;
+pub mod audio;
+pub(crate) mod clips;
+pub mod font;
 mod glb;
 mod host;
 mod image;
@@ -21,11 +24,13 @@ pub mod pack;
 mod transform;
 
 pub use glb::{
-    GlbFile, GlbImage, GlbMaterial, GlbMesh, GlbNode, GlbPrimitive, GlbTexture, ImageFormat,
-    IndexKind, IndexSource, LocalTransform, SamplerChoice, Strided, read_glb,
+    GlbChannel, GlbChannelPath, GlbClip, GlbFile, GlbImage, GlbInterpolation, GlbMaterial, GlbMesh,
+    GlbNode, GlbPrimitive, GlbTexture, ImageFormat, IndexKind, IndexSource, LocalTransform,
+    SamplerChoice, Strided, read_glb,
 };
 pub use host::{
-    AssetHandle, AssetHost, AssetKind, AssetLoader, AssetStore, DeclaredFile, ImageFile, ImageSpace,
+    AssetHandle, AssetHost, AssetKind, AssetLoader, AssetStore, DeclaredFile, FontFile, ImageFile,
+    ImageSpace, SoundFile,
 };
 pub use image::{ImageInfo, sniff_image};
 pub use pack::{ImageRef, ImageSource, MeshRef};

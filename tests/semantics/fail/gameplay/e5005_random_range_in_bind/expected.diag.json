@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E5005",
+    "file": "src/main.mtek",
+    "startByte": 197,
+    "endByte": 219,
+    "message": "The binding of the field 'position' of entity 'Cube' must be pure, but it calls the CPU intrinsic `random_range`.",
+    "notes": [
+      "a binding is re-evaluated every frame; it may read state, entity fields and `frame`, and call pure functions",
+      "a CPU intrinsic (`random`, `print`, `spawn`, `destroy`, a body command) may only be called from `update`, `fixed_update` and `on` handlers; a binding may call only `fn` functions and pure built-ins (math, vector, quaternion and colour functions)",
+      "help: call it in `update`, assign the result to a `state` and write `bind(that_state)`; the binding then follows the state every frame"
+    ]
+  },
+  {
+    "code": "MTEK-E5005",
+    "file": "src/main.mtek",
+    "startByte": 255,
+    "endByte": 266,
+    "message": "The binding of the field 'visible' of entity 'Cube' must be pure, but it calls the CPU intrinsic `chance`.",
+    "notes": [
+      "a binding is re-evaluated every frame; it may read state, entity fields and `frame`, and call pure functions",
+      "a CPU intrinsic (`random`, `print`, `spawn`, `destroy`, a body command) may only be called from `update`, `fixed_update` and `on` handlers; a binding may call only `fn` functions and pure built-ins (math, vector, quaternion and colour functions)",
+      "help: call it in `update`, assign the result to a `state` and write `bind(that_state)`; the binding then follows the state every frame"
+    ]
+  }
+]

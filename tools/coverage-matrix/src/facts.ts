@@ -168,6 +168,9 @@ function exprFact(ctx: Context, node: JsonObject): void {
       add(ctx, "expr/entity-field-read");
       selfFact(ctx, node["entity"]);
       break;
+    case "refField":
+      add(ctx, "expr/ref-field-read");
+      break;
     case "cameraField":
       add(ctx, "expr/camera-field-read");
       break;
@@ -192,6 +195,10 @@ function exprFact(ctx: Context, node: JsonObject): void {
       add(ctx, `expr/body-target:${str(obj(node, "target"), "kind") ?? "entity"}`);
       break;
     }
+    case "match":
+      // A `match` expression (decision 0129); the statement form lowers to `if` and leaves no node.
+      add(ctx, "match");
+      break;
     case "frame": {
       const member = str(node, "member");
       add(ctx, "namespace:frame");
@@ -260,6 +267,10 @@ function stmtFact(ctx: Context, node: JsonObject): void {
       break;
     case "const":
       add(ctx, "body-constants");
+      break;
+    case "timer":
+      // `after(t) { }` and `every(t) { }` (decision 0142).
+      add(ctx, node["every"] === true ? "stmt/timer:every" : "stmt/timer:after");
       break;
     default:
       break;
@@ -336,6 +347,8 @@ function entityFact(ctx: Context, entity: JsonObject): void {
     if (desc !== undefined && desc["sensor"] === true) add(ctx, "entity/sensor-collider");
     add(ctx, "entity/collider");
   }
+  if (entity["particles"] !== undefined) add(ctx, "schema:Emitter", "entity-field/particles");
+  if (typeof entity["clip"] === "string") add(ctx, "entity-field/clip");
   const prefab = obj(entity, "prefab");
   if (prefab !== undefined) {
     add(ctx, "prefab-instances", "entity/prefab-instance");
@@ -507,6 +520,8 @@ const EXPR_KINDS = new Set([
   "lightField",
   "bodyCommand",
   "bodyProperty",
+  "match",
+  "refField",
   "frame",
   "enumMember",
   "param",

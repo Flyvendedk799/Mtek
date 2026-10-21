@@ -245,7 +245,7 @@ fn lighting_pbr_is_a_helper_over_the_frame_block_that_reads_two_surface_fields()
     assert_eq!(pbr, checker);
 
     for (key, artifact) in &lit {
-        if key == "materials.Unlit" {
+        if key == "materials.Unlit" || key == "materials.Sprite" {
             assert!(!artifact.wgsl.contains("mtek_lighting_pbr"));
             continue;
         }

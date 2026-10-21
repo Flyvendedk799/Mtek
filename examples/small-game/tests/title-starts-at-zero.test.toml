@@ -1,0 +1,6 @@
+# The title scene before any key: score and best are the declared zeros.
+name = "the title starts at a score of zero"
+steps = [
+  { step = 1, dt = 0.016 },
+  { expect_state = { score = 0, best = 0 } },
+]

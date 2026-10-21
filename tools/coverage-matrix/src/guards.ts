@@ -61,6 +61,18 @@ export const AREAS: readonly Area[] = [
     codes: ["E3020", "E3021", "E3022", "E3023"],
   },
   {
+    id: "enums",
+    title: "Enums and match",
+    features: ["enums", "match"],
+    codes: ["E2002", "E3201", "E3202", "E3203", "E3204", "E3205", "E3206", "E4011"],
+  },
+  {
+    id: "game-flow",
+    title: "Scenes, timers, pause, saves and while",
+    features: ["stmt/while", "stmt/timer", "stmt/timer:after", "stmt/timer:every"],
+    codes: ["E3210", "E3211", "E5201", "E5202", "E5203", "E5204", "E5210", "E5211", "E5212"],
+  },
+  {
     id: "arrays",
     title: "Arrays and indexing",
     features: ["arrays", "indexing", "type:array"],
@@ -85,12 +97,13 @@ export const AREAS: readonly Area[] = [
       "materials",
       "schema:Unlit",
       "schema:Pbr",
+      "schema:Sprite",
       "form/*",
       "param-update/*",
       "expr/material-*",
       "project/user-material-shaders",
     ],
-    codes: ["E4020", "E4021", "E4030", "E4031", "E4032", "E4040", "E5002", "E5003", "E5100", "W5101", "E6001"],
+    codes: ["E4020", "E4021", "E4030", "E4031", "E4032", "E4040", "E5002", "E5003", "E5100", "W5101", "E5701", "E6001"],
   },
   {
     id: "textures",
@@ -110,13 +123,13 @@ export const AREAS: readonly Area[] = [
   {
     id: "scenes",
     title: "Scenes, cameras and scene objects",
-    features: ["scenes", "scene-fields", "scene-objects", "scene-object:*", "schema:Scene", "schema:Camera", "schema:Perspective", "schema:Orthographic", "camera/*"],
-    codes: ["E5001", "E5002", "E5003", "E5006", "E5010", "E5011", "E5012", "E5013", "E5014", "E9006"],
+    features: ["scenes", "scene-fields", "scene-objects", "scene-object:*", "schema:Scene", "schema:Camera", "schema:Perspective", "schema:Orthographic", "camera/*", "function:set_camera"],
+    codes: ["E5001", "E5002", "E5003", "E5006", "E5010", "E5011", "E5012", "E5013", "E5014", "E5015", "E5016", "E9006"],
   },
   {
     id: "entities",
     title: "Entities, meshes and transforms",
-    features: ["entities", "entity-fields", "schema:Entity", "schema:Box", "schema:Sphere", "schema:Plane", "entity/nested", "entity-field/*", "type:mesh"],
+    features: ["entities", "entity-fields", "schema:Entity", "schema:Box", "schema:Sphere", "schema:Plane", "schema:Emitter", "entity/nested", "entity-field/*", "type:mesh", "function:particle_count"],
     codes: ["E5001", "E5006", "E5020", "E5081", "E5090", "E5092"],
   },
   {
@@ -134,8 +147,14 @@ export const AREAS: readonly Area[] = [
   {
     id: "prefabs",
     title: "Prefabs, spawn and destroy",
-    features: ["prefabs", "prefab-instances", "prefab/*", "self", "entity/prefab-instance", "expr/prefab-*", "expr/entity-ref", "function:spawn", "function:destroy", "function:alive", "type:entity_ref"],
+    features: ["prefabs", "prefab-instances", "prefab/*", "self", "entity/prefab-instance", "expr/prefab-*", "expr/entity-ref", "expr/ref-field-read", "function:spawn", "function:destroy", "function:alive", "type:entity_ref"],
     codes: ["E5030", "E5040", "E5041", "E5042", "E5074", "E5080", "E5110"],
+  },
+  {
+    id: "tags",
+    title: "Tags and tag queries",
+    features: ["function:count_tagged", "function:first_tagged", "function:nearest_tagged", "function:has_tag", "function:tagged", "function:destroy_tagged"],
+    codes: ["E5220", "E5221", "E5222", "E5223", "E5224"],
   },
   {
     id: "lights",

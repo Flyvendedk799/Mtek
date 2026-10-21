@@ -337,3 +337,5 @@ Imports name what they take, start with `./` or `../` and end in `.mtek`. See [M
 ## What you built, and where to go next
 
 You used a scene, a camera, a light, entities, a prefab, `state`, `bind`, a handler, `spawn` and `destroy`, a body and its commands, a material and a module. The compact [language guide](language-guide.md) lists the rules of all of them in one page, and the [concept pages](README.md#concepts) explain each with its common mistakes. Ideas to try: make the crates heavier as the score rises (a `state` and a multiplication in the handler), show the score with a bar in a different colour per tens, make the sun a `PointLight` that swings with `bind`, or give the crates a texture ([Textures, samplers and assets](concepts/textures-samplers-and-assets.md)).
+
+For a game with a title scene, a saved best score, tags and a pause key, start from `mtek new my-game --template game`, or open `examples/small-game`. Sprites, fades and easing are in `examples/sprite-pop`.

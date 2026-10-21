@@ -3,10 +3,10 @@
     "code": "MTEK-E0013",
     "file": "src/main.mtek",
     "startByte": 43,
-    "endByte": 48,
-    "message": "`match` is reserved for a future version of Mtek and cannot be used as a name.",
+    "endByte": 47,
+    "message": "`impl` is reserved for a future version of Mtek and cannot be used as a name.",
     "notes": [
-      "help: v0.1 has no pattern matching; compare with `==` in an `if ... else if ... else` chain"
+      "help: v0.1 has no methods or `impl` blocks; write a function and pass the value as an argument"
     ]
   }
 ]

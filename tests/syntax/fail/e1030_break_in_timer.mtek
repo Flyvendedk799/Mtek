@@ -1,0 +1,8 @@
+scene S {
+    update(dt: f32) {
+        while true {
+            after(1.0) { break; }
+            break;
+        }
+    }
+}

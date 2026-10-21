@@ -421,6 +421,22 @@ impl Tree<'_> {
                 );
                 self.block(depth + 1, body, locals);
             }
+            Stmt::While { cond, body, span } => {
+                let location = self.location(*span);
+                self.line(depth, format!("while {} {location}", expr_text(cond)));
+                self.block(depth + 1, body, locals);
+            }
+            Stmt::Timer {
+                every,
+                seconds,
+                body,
+                span,
+            } => {
+                let location = self.location(*span);
+                let word = if *every { "every" } else { "after" };
+                self.line(depth, format!("{word}({}) {location}", expr_text(seconds)));
+                self.block(depth + 1, body, locals);
+            }
             Stmt::ForEach {
                 local,
                 array,
@@ -516,7 +532,7 @@ impl Tree<'_> {
             BindingTarget::Transform { entity, field } => format!("entity#{entity}.{field}"),
             BindingTarget::Visible { entity } => format!("entity#{entity}.visible"),
             BindingTarget::Param { entity, name } => format!("entity#{entity}.material.{name}"),
-            BindingTarget::Camera { field } => format!("camera.{field}"),
+            BindingTarget::Camera { camera, field } => format!("camera {camera}.{field}"),
             BindingTarget::Light { entity, field } => format!("entity#{entity}.light.{field}"),
         };
         let deps: Vec<String> = binding
@@ -661,6 +677,9 @@ impl Tree<'_> {
         self.field(depth + 1, "rotation", &entity.rotation);
         self.field(depth + 1, "scale", &entity.scale);
         self.field(depth + 1, "visible", &entity.visible);
+        if let Some(tag) = &entity.tag {
+            self.line(depth + 1, format!("tag {tag:?}"));
+        }
         if let Some(mesh) = &entity.mesh {
             self.mesh(depth + 1, mesh);
         }
@@ -853,6 +872,9 @@ fn expr_text(expr: &Expr) -> String {
         ExprKind::Param { param, name } => return format!("param {name}#{param}"),
         ExprKind::State { owner, name } => return format!("{}{name}", owner_prefix(*owner)),
         ExprKind::EntityField { entity, field } => return format!("entity#{entity}.{field}"),
+        ExprKind::RefField { target, field } => {
+            return format!("({}).{field}", expr_text(target));
+        }
         ExprKind::CameraField { camera, field } => return format!("{camera}.{field}"),
         ExprKind::InstanceParam { entity, param } => {
             return format!("entity#{entity}.material.{param}");
@@ -881,6 +903,23 @@ fn expr_text(expr: &Expr) -> String {
             format!("{prefab} {{ {} }}", named(params))
         }
         ExprKind::EntityRef { entity } => return format!("ref entity#{entity}"),
+        ExprKind::Match {
+            scrutinee,
+            arms,
+            otherwise,
+        } => {
+            let mut parts: Vec<String> = arms
+                .iter()
+                .map(|arm| {
+                    let values: Vec<String> = arm.values.iter().map(u32::to_string).collect();
+                    format!("{} => {}", values.join(" | "), expr_text(&arm.value))
+                })
+                .collect();
+            if let Some(otherwise) = otherwise {
+                parts.push(format!("_ => {}", expr_text(otherwise)));
+            }
+            format!("match {} {{ {} }}", expr_text(scrutinee), parts.join(", "))
+        }
     };
     format!("({text}): {}", expr.ty)
 }

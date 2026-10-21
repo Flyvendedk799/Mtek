@@ -1,0 +1,19 @@
+// A timer block runs later: it cannot read or write a `var` of the handler that starts it;
+// a `let`, a parameter, a loop variable and state are fine.
+// covers: [S: timer]
+scene Demo {
+    state hits: i32 = 0;
+    camera Main {}
+    on key_down(Key.Space) {
+        var combo = 2;
+        let bonus = 3;
+        after(1.0) {
+            hits += combo;
+            combo = 0;
+            hits += bonus;
+        }
+        for i in 0..3 {
+            after(f32(i)) { hits += i; }
+        }
+    }
+}

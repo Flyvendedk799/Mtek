@@ -1,0 +1,12 @@
+// Timers belong to handlers and lifecycle functions: a function cannot start one.
+// covers: [S: timer]
+fn later() {
+    after(1.0) {}
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        later();
+    }
+}

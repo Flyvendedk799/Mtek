@@ -78,7 +78,8 @@ export function checkFeatures(i: FeatureInputs): Mismatch[] {
       { where: "spec/language.md 2.3 (reserved for future use)", items: words },
     ),
   );
-  const { unsupported } = x9xxCodes(i.catalogue);
+  // A retired x9xx code (E5901 by decision 0141, E5902 by decision 0138) names a feature that is now supported.
+  const unsupported = x9xxCodes(i.catalogue).unsupported.filter((entry) => !/retired by decision/.test(entry.trigger));
   const phrases = splitNotSupported(i.compiler.notSupported, words).phrases;
   if (phrases.length !== unsupported.length) {
     found.push(
@@ -465,7 +466,7 @@ export interface ReadmeInputs {
   decisionFiles: readonly string[];
 }
 
-const NUMBER_WORDS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8 };
+const NUMBER_WORDS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11 };
 
 export function checkReadmeClaims(i: ReadmeInputs): Mismatch[] {
   const found: Mismatch[] = [];
@@ -487,7 +488,7 @@ export function checkReadmeClaims(i: ReadmeInputs): Mismatch[] {
       { where: "README.md (table of Examples)", items: exampleRows },
     ),
   );
-  const claimed = /\b(one|two|three|four|five|six|seven|eight)\s+examples\b/.exec(i.readme);
+  const claimed = /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven)\s+examples\b/.exec(i.readme);
   if (claimed !== null) {
     found.push(
       ...compareValue(
@@ -497,7 +498,7 @@ export function checkReadmeClaims(i: ReadmeInputs): Mismatch[] {
       ),
     );
   }
-  const claimedFixtures = /the (one|two|three|four|five|six|seven|eight) examples have theirs/.exec(i.readme);
+  const claimedFixtures = /the (one|two|three|four|five|six|seven|eight|nine|ten|eleven) examples have theirs/.exec(i.readme);
   if (claimedFixtures !== null) {
     found.push(
       ...compareValue(

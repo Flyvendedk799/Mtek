@@ -1,0 +1,25 @@
+// Sounds are assets (spec/audio.md section 2, decision 0130): declared in a constant, validated by the compiler,
+// packaged byte for byte, and played from handlers.
+const BLIP = asset.sound("../sounds/blip.wav");
+
+scene Demo {
+    state muted: bool = false;
+    camera Main {}
+    entity Part {
+        mesh: Box {};
+    }
+    on key_down(Key.P) {
+        play_music(BLIP, 0.5);
+    }
+    on key_down(Key.Space) {
+        play(BLIP);
+        play(BLIP, 0.5, 2.0);
+        play_at(BLIP, vec3(1.0, 0.0, 0.0), 1.0);
+    }
+    on key_down(Key.M) {
+        muted = !is_muted();
+        set_muted(muted);
+        set_volume(0.8);
+        stop_music();
+    }
+}

@@ -1,0 +1,9 @@
+// E7102: the data chunk of the WAV file declares more bytes than the file has.
+const CUT = asset.sound("../sounds/cut.wav");
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: Box {};
+    }
+}

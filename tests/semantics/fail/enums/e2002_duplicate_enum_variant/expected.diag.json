@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E2002",
+    "file": "src/main.mtek",
+    "startByte": 105,
+    "endByte": 109,
+    "message": "The enum 'Phase' declares the variant 'Menu' twice.",
+    "related": [
+      {
+        "message": "first declared here",
+        "file": "src/main.mtek",
+        "startByte": 90,
+        "endByte": 94
+      }
+    ],
+    "notes": [
+      "help: remove one of them or give it another name"
+    ]
+  }
+]

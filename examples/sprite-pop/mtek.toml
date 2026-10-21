@@ -1,0 +1,9 @@
+[project]
+name = "sprite-pop"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Pop"
+
+[build]
+target = "web"
+title = "Sprite Pop"

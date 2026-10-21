@@ -97,6 +97,9 @@ fn schema_rows() -> Vec<Row> {
         ("Entity", "light", "light", None, "C", None),
         ("Entity", "body", "body", None, "C", None),
         ("Entity", "collider", "collider", None, "C", None),
+        ("Entity", "tag", "string", None, "C", None),
+        ("Entity", "particles", "emitter", None, "C", None),
+        ("Entity", "clip", "string", None, "C", None),
         // 3.3 Camera (spec/scenes.md section 3)
         (
             "Camera",
@@ -221,6 +224,27 @@ fn schema_rows() -> Vec<Row> {
             "C",
             None,
         ),
+        // Decision 0170: sprites.
+        (
+            "Sprite",
+            "sheet",
+            "texture",
+            Some("texture.white()"),
+            "C",
+            None,
+        ),
+        (
+            "Sprite",
+            "sheet_sampler",
+            "sampler",
+            Some("sampler.nearest_clamp()"),
+            "C",
+            None,
+        ),
+        ("Sprite", "tint", "color", Some(WHITE), "WB", None),
+        ("Sprite", "cell", "f32", Some("0.0"), "WB", None),
+        ("Sprite", "columns", "f32", Some("1.0"), "WB", Some("1…64")),
+        ("Sprite", "rows", "f32", Some("1.0"), "WB", Some("1…64")),
         // 3.6 Lights
         (
             "DirectionalLight",
@@ -323,6 +347,47 @@ fn schema_rows() -> Vec<Row> {
             "C",
             Some("0\u{2026}1"),
         ),
+        // Emitter (decision 0155)
+        (
+            "Emitter",
+            "rate",
+            "f32",
+            Some("0.0"),
+            "C",
+            Some("\u{2265} 0"),
+        ),
+        (
+            "Emitter",
+            "lifetime",
+            "f32",
+            Some("1.0"),
+            "C",
+            Some("> 0, finite"),
+        ),
+        (
+            "Emitter",
+            "speed",
+            "f32",
+            Some("1.0"),
+            "C",
+            Some("\u{2265} 0"),
+        ),
+        (
+            "Emitter",
+            "size",
+            "f32",
+            Some("0.05"),
+            "C",
+            Some("> 0, finite"),
+        ),
+        (
+            "Emitter",
+            "gravity",
+            "f32",
+            Some("0.0"),
+            "C",
+            Some("finite"),
+        ),
     ]
 }
 
@@ -364,6 +429,7 @@ fn schemas_have_exactly_the_specified_fields() {
         "Plane",
         "Unlit",
         "Pbr",
+        "Sprite",
         "DirectionalLight",
         "PointLight",
         "Static",
@@ -371,6 +437,7 @@ fn schemas_have_exactly_the_specified_fields() {
         "Kinematic",
         "BoxCollider",
         "SphereCollider",
+        "Emitter",
     ];
     let mut registered: Vec<&str> = registry.schemas.iter().map(|s| s.name).collect();
     registered.sort_unstable();
@@ -407,6 +474,7 @@ fn schema_categories_match_the_specification() {
         ("Plane", SchemaCategory::Mesh),
         ("Unlit", SchemaCategory::Material),
         ("Pbr", SchemaCategory::Material),
+        ("Sprite", SchemaCategory::Material),
         ("DirectionalLight", SchemaCategory::Light),
         ("PointLight", SchemaCategory::Light),
         ("Static", SchemaCategory::Body),
@@ -414,6 +482,7 @@ fn schema_categories_match_the_specification() {
         ("Kinematic", SchemaCategory::Body),
         ("BoxCollider", SchemaCategory::Collider),
         ("SphereCollider", SchemaCategory::Collider),
+        ("Emitter", SchemaCategory::Emitter),
     ];
     for (name, category) in expected {
         assert_eq!(
@@ -517,6 +586,8 @@ fn field_rules_and_range_codes_follow_the_scene_specification() {
             ("Orthographic", "height", "E5011"),
             ("Orthographic", "near", "E5011"),
             ("Orthographic", "far", "E5011"),
+            ("Sprite", "columns", "E5701"),
+            ("Sprite", "rows", "E5701"),
         ]
     );
 }
@@ -541,6 +612,7 @@ fn types_cover_section_2() {
         "texture",
         "sampler",
         "entity_ref",
+        "sound",
         "array",
         "SurfaceInput",
         "PointerEvent",
@@ -576,7 +648,7 @@ fn types_cover_section_2() {
 }
 
 /// `(namespace, member, signature shape or value type)`.
-const NAMESPACE_ROWS: [(&str, &str, &str); 23] = [
+const NAMESPACE_ROWS: [(&str, &str, &str); 25] = [
     ("quat", "identity", "() -> quat"),
     ("quat", "axis_angle", "(vec3, f32) -> quat"),
     ("quat", "euler", "(f32, f32, f32) -> quat"),
@@ -599,6 +671,8 @@ const NAMESPACE_ROWS: [(&str, &str, &str); 23] = [
     ("asset", "glb", "(string) -> glb_asset"),
     ("asset", "texture", "(string) -> texture"),
     ("asset", "linear_texture", "(string) -> texture"),
+    ("asset", "sound", "(string) -> sound"),
+    ("asset", "font", "(string) -> font"),
     (
         "lighting",
         "pbr",
@@ -636,11 +710,12 @@ fn every_namespace_member_of_section_2_is_present() {
     }
     let namespaces: Vec<&str> = registry.namespaces.iter().map(|n| n.name).collect();
     for name in [
-        "quat", "mat4", "color", "texture", "sampler", "frame", "asset", "lighting",
+        "quat", "mat4", "color", "texture", "sampler", "frame", "asset", "lighting", "hud",
+        "easing",
     ] {
         assert!(namespaces.contains(&name), "missing namespace {name}");
     }
-    assert_eq!(namespaces.len(), 8);
+    assert_eq!(namespaces.len(), 10);
     // Member counts: nothing beyond the specification.
     let count = |name: &str| registry.namespace(name).map_or(0, |n| n.members.len());
     assert_eq!(
@@ -652,9 +727,80 @@ fn every_namespace_member_of_section_2_is_present() {
             count("sampler"),
             count("frame"),
             count("asset"),
-            count("lighting")
+            count("lighting"),
+            count("hud"),
+            count("easing")
         ],
-        [3, 5, 2, 2, 4, 3, 3, 1]
+        [3, 5, 2, 2, 4, 3, 5, 1, 4, 10]
+    );
+}
+
+/// The `easing` namespace (decision 0135): ten CPU-only `(f32) -> f32` curves, usable in `bind`.
+#[test]
+fn the_easing_namespace_is_ten_cpu_curves() {
+    let registry = registry();
+    let names = [
+        "in_quad",
+        "out_quad",
+        "in_out_quad",
+        "in_cubic",
+        "out_cubic",
+        "in_out_cubic",
+        "in_out_sine",
+        "out_back",
+        "out_elastic",
+        "out_bounce",
+    ];
+    for name in names {
+        match registry.namespace_member("easing", name) {
+            Some(NamespaceMember::Function(f)) => {
+                assert_eq!(f.domain, Domain::Cpu, "easing.{name}");
+                assert!(!f.handlers_only, "easing.{name}");
+                assert!(!f.const_eligible, "easing.{name}");
+                let shapes: Vec<String> = f.signatures.iter().map(shape).collect();
+                assert_eq!(shapes, ["(f32) -> f32"], "easing.{name}");
+            }
+            _ => panic!("easing.{name} is not a function"),
+        }
+    }
+}
+
+/// The `hud` namespace (decision 0134): CPU-only, handlers-only, with overloads for the optional
+/// trailing arguments.
+#[test]
+fn the_hud_namespace_has_its_overloads() {
+    let registry = registry();
+    let shapes = |name: &str| match registry.namespace_member("hud", name) {
+        Some(NamespaceMember::Function(f)) => {
+            assert_eq!(f.domain, Domain::Cpu, "hud.{name}");
+            assert!(f.handlers_only, "hud.{name}");
+            assert!(!f.const_eligible, "hud.{name}");
+            f.signatures.iter().map(shape).collect::<Vec<_>>()
+        }
+        _ => panic!("hud.{name} is not a function"),
+    };
+    assert_eq!(
+        shapes("text"),
+        [
+            "(string, vec2) -> ()",
+            "(string, vec2, f32) -> ()",
+            "(string, vec2, f32, color) -> ()",
+            "(string, vec2, f32, color, f32) -> ()",
+            "(string, vec2, f32, color, f32, font) -> ()",
+        ]
+    );
+    // Decision 0139: the built-in pixel font.
+    assert_eq!(shapes("pixel_font"), ["() -> font"]);
+    assert_eq!(
+        shapes("rect"),
+        [
+            "(vec2, vec2, color) -> ()",
+            "(vec2, vec2, color, f32) -> ()"
+        ]
+    );
+    assert_eq!(
+        shapes("button"),
+        ["(string, vec2) -> bool", "(string, vec2, f32) -> bool"]
     );
 }
 
@@ -842,8 +988,25 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
         false,
     ));
     rows.push(("random", &["() -> f32"], Domain::Cpu, false));
+    // Random helpers (decision 0149).
+    rows.push(("random_range", &["(f32, f32) -> f32"], Domain::Cpu, false));
+    rows.push(("random_int", &["(i32, i32) -> i32"], Domain::Cpu, false));
+    rows.push(("chance", &["(f32) -> bool"], Domain::Cpu, false));
+    // choose and shuffle (decision 0152): the element type comes from the argument.
+    rows.push(("choose", &["(array<T, N>) -> T"], Domain::Cpu, false));
+    rows.push((
+        "shuffle",
+        &["(array<T, N>) -> array<T, N>"],
+        Domain::Cpu,
+        false,
+    ));
     rows.push(("print", &["(string) -> ()"], Domain::Cpu, false));
     rows.push(("is_key_down", &["(Key) -> bool"], Domain::Cpu, false));
+    // Input polling (decision 0153).
+    rows.push(("key_pressed", &["(Key) -> bool"], Domain::Cpu, false));
+    rows.push(("key_released", &["(Key) -> bool"], Domain::Cpu, false));
+    rows.push(("pointer_position", &["() -> vec2"], Domain::Cpu, false));
+    rows.push(("is_pointer_down", &["(i32) -> bool"], Domain::Cpu, false));
     rows.push((
         "spawn",
         &["(prefab descriptor) -> entity_ref"],
@@ -851,7 +1014,73 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
         false,
     ));
     rows.push(("destroy", &["(entity_ref) -> ()"], Domain::Cpu, false));
+    // Audio (spec/audio.md section 3, decision 0130).
+    rows.push((
+        "play",
+        &[
+            "(sound) -> ()",
+            "(sound, f32) -> ()",
+            "(sound, f32, f32) -> ()",
+        ],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "play_at",
+        &["(sound, vec3) -> ()", "(sound, vec3, f32) -> ()"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "play_music",
+        &["(sound) -> ()", "(sound, f32) -> ()"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push(("stop_music", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("set_volume", &["(f32) -> ()"], Domain::Cpu, false));
+    rows.push(("set_muted", &["(bool) -> ()"], Domain::Cpu, false));
+    rows.push(("is_muted", &["() -> bool"], Domain::Cpu, false));
     rows.push(("alive", &["(entity_ref) -> bool"], Domain::Cpu, false));
+    // Tags (decision 0150).
+    rows.push(("count_tagged", &["(string) -> i32"], Domain::Cpu, false));
+    rows.push((
+        "first_tagged",
+        &["(string) -> entity_ref"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "nearest_tagged",
+        &["(string, vec3) -> entity_ref"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "has_tag",
+        &["(entity_ref, string) -> bool"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "tagged",
+        &["(string) -> tagged entities"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push(("destroy_tagged", &["(string) -> ()"], Domain::Cpu, false));
+    // Game flow (decisions 0140, 0141 and 0143).
+    rows.push(("go_to", &["(scene name) -> ()"], Domain::Cpu, false));
+    rows.push(("reset", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("pause", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("resume", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("paused", &["() -> bool"], Domain::Cpu, false));
+    rows.push(("particle_count", &["() -> i32"], Domain::Cpu, false));
+    rows.push(("set_camera", &["(camera name) -> ()"], Domain::Cpu, false));
+    // Saved state and settings (decisions 0145 and 0146).
+    rows.push(("save", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("load", &["() -> bool"], Domain::Cpu, false));
+    rows.push(("clear_saved", &["() -> ()"], Domain::Cpu, false));
     rows
 }
 
@@ -883,10 +1112,30 @@ fn every_intrinsic_row_of_section_6_is_present() {
     assert!(note("random").contains("xoshiro128**"));
     assert!(note("normalize").contains("zero vector"));
     // spawn and destroy are for handlers only.
-    for name in ["spawn", "destroy"] {
+    for name in [
+        "spawn",
+        "destroy",
+        "go_to",
+        "reset",
+        "pause",
+        "resume",
+        "save",
+        "load",
+        "clear_saved",
+        "play",
+        "play_at",
+        "play_music",
+        "stop_music",
+        "set_volume",
+        "set_muted",
+        "set_camera",
+    ] {
         assert!(registry.intrinsic(name).unwrap().handlers_only, "{name}");
     }
+    assert!(!registry.intrinsic("is_muted").unwrap().handlers_only);
     assert!(!registry.intrinsic("alive").unwrap().handlers_only);
+    assert!(!registry.intrinsic("paused").unwrap().handlers_only);
+    assert!(!registry.intrinsic("particle_count").unwrap().handlers_only);
 }
 
 #[test]

@@ -1,0 +1,13 @@
+// `tagged(..)` is the iterable of a `for` loop and nothing else.
+prefab Rock {
+    tag: "rock";
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    update(dt: f32) {
+        let rocks = tagged("rock");
+        for r in [tagged("rock")] {}
+    }
+}

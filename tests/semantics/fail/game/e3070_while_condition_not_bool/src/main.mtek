@@ -1,0 +1,13 @@
+// The condition of `while` is a bool.
+// covers: [S: while-loop]
+fn count(n: i32) -> i32 {
+    var i = n;
+    while i {
+        i -= 1;
+    }
+    return i;
+}
+
+scene Demo {
+    camera Main {}
+}

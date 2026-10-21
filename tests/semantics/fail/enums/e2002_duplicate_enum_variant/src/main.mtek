@@ -1,0 +1,7 @@
+// The variants of an enum are distinct names.
+// covers: [S: enum-variants]
+enum Phase { Menu, Playing, Menu }
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,11 @@
+scene Main {
+    camera Cam {
+        position: vec3(0.0, 0.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    update(dt: f32) {
+        // The only format spec is `.N`.
+        print("dt ${dt:x}");
+    }
+}

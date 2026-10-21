@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E5220",
+    "file": "src/main.mtek",
+    "startByte": 97,
+    "endByte": 113,
+    "message": "'Big Rock' is not a valid tag.",
+    "expected": "1 to 32 lowercase letters, digits and `_`, starting with a letter",
+    "actual": "\"Big Rock\"",
+    "notes": [
+      "help: for example `tag: \"big_rock\";`"
+    ]
+  },
+  {
+    "code": "MTEK-E5220",
+    "file": "src/main.mtek",
+    "startByte": 195,
+    "endByte": 203,
+    "message": "'' is not a valid tag.",
+    "expected": "1 to 32 lowercase letters, digits and `_`, starting with a letter",
+    "actual": "\"\"",
+    "notes": [
+      "help: for example `tag: \"tag\";`"
+    ]
+  }
+]

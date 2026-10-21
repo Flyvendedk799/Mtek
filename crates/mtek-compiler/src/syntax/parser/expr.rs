@@ -40,8 +40,11 @@ use crate::diagnostics::{Code, Diagnostic, SuggestedEdit};
 use crate::source::Span;
 
 use super::{CandidateEdit, MAX_TREE_HEIGHT, Parser};
-use crate::syntax::ast::{BinaryOp, Bind, DescField, Expr, ExprKind, FieldValue, Ident, UnaryOp};
-use crate::syntax::token::{TokenKind, TokenValue};
+use crate::syntax::ast::{
+    BinaryOp, Bind, DescField, Expr, ExprKind, FieldValue, FormatSpec, Ident, InterpPart, UnaryOp,
+};
+use crate::syntax::lexer::lex_str;
+use crate::syntax::token::{StrPiece, TokenKind, TokenValue};
 
 /// An expression together with the height of its tree: 0 for a leaf, 1 more
 /// than the tallest child otherwise.
@@ -128,7 +131,7 @@ impl Parser<'_> {
     /// of nesting, counted against [`MAX_NESTING_DEPTH`](super::MAX_NESTING_DEPTH): the operand of a
     /// parenthesis, bracket, argument or field value is parsed by a call of
     /// its own, and so is the right operand of a binary operator.
-    fn expr_bp(&mut self, min_bp: u8, allow_descriptor: bool) -> Sub {
+    pub(super) fn expr_bp(&mut self, min_bp: u8, allow_descriptor: bool) -> Sub {
         if !self.enter() {
             return self.too_deep(allow_descriptor);
         }
@@ -264,7 +267,7 @@ impl Parser<'_> {
 
     // ----- primary expressions ----------------------------------------------
 
-    fn primary(&mut self, allow_descriptor: bool) -> Sub {
+    pub(super) fn primary(&mut self, allow_descriptor: bool) -> Sub {
         match self.kind() {
             TokenKind::Int
             | TokenKind::Float
@@ -280,11 +283,21 @@ impl Parser<'_> {
             TokenKind::Ident | TokenKind::Underscore => self.name_or_descriptor(allow_descriptor),
             TokenKind::LParen => self.paren(),
             TokenKind::LBracket => self.array(),
+            TokenKind::KwMatch => self.match_expr(),
             _ => self.unexpected_expression(),
         }
     }
 
     fn literal(&mut self) -> Sub {
+        if let TokenValue::Interpolated(pieces) = &self.tok().value {
+            let pieces = pieces.clone();
+            let span = self.span();
+            self.bump();
+            let parts = self.interpolation_parts(&pieces);
+            let mut sub = self.leaf(span, ExprKind::Interp { parts });
+            sub.height = 1;
+            return sub;
+        }
         let token = self.tok();
         let span = token.span;
         let kind = if token.is_malformed() {
@@ -309,6 +322,61 @@ impl Parser<'_> {
         };
         self.bump();
         self.leaf(span, kind)
+    }
+
+    /// The expressions of an interpolated string (decision 0133): each is lexed and parsed on
+    /// its own, from a copy of the file text blanked up to where it starts so that its spans
+    /// are those of the file (followed by the closing `}`), with the node ids of this parser.
+    fn interpolation_parts(&mut self, pieces: &[StrPiece]) -> Vec<InterpPart> {
+        let mut parts = Vec::with_capacity(pieces.len());
+        for piece in pieces {
+            match piece {
+                StrPiece::Text(text) => parts.push(InterpPart::Text(text.clone())),
+                StrPiece::Expr { expr, spec } => {
+                    let start = expr.start as usize;
+                    let end = (expr.end as usize).min(self.text.len());
+                    let source = self.text.get(start..end).unwrap_or("");
+                    // The closing `}` is lexed too, so that a missing operand reads "found `}`".
+                    let padded = format!("{}{source}}}", " ".repeat(start));
+                    let mut lexed = lex_str(self.file, &padded);
+                    lexed.report_into(self.sink);
+                    let mut sub = Parser::new(&padded, &lexed.tokens, self.sink);
+                    sub.next_id = self.next_id;
+                    let parsed = if sub.kind() == TokenKind::RBrace {
+                        let diagnostic = Diagnostic::new(
+                            Code::E1001,
+                            "Expected an expression inside `${}`, found nothing.",
+                        )
+                        .at(*expr)
+                        .help("write the value to show, as in `${score}`, or `\\${` for a literal `${`");
+                        sub.error(diagnostic);
+                        let leaf = sub.error_leaf(*expr);
+                        *leaf.expr
+                    } else {
+                        let parsed = sub.expr(true);
+                        if sub.kind() != TokenKind::RBrace {
+                            let found = sub.found();
+                            let diagnostic = Diagnostic::new(
+                                Code::E1001,
+                                format!("Expected `}}` to end the interpolation, found {found}."),
+                            )
+                            .at(sub.span());
+                            sub.error(diagnostic);
+                        }
+                        parsed
+                    };
+                    self.next_id = sub.next_id;
+                    parts.push(InterpPart::Expr {
+                        expr: parsed,
+                        spec: spec.as_ref().map(|(text, span)| FormatSpec {
+                            text: text.clone(),
+                            span: *span,
+                        }),
+                    });
+                }
+            }
+        }
+        parts
     }
 
     /// `Ident`, or `Ident { ... }` where a descriptor literal is allowed.
@@ -504,7 +572,7 @@ impl Parser<'_> {
                     TokenKind::KwIf => diagnostic
                         .note("`if` is a statement and gives no value: v0.1 has no `if` expression and no ternary operator")
                         .help("declare the variable first and assign it in the branches: `var x = a; if cond { x = b; }`; for numbers, `mix(a, b, t)` with `t` 0.0 or 1.0 also selects between two values"),
-                    TokenKind::KwFor | TokenKind::KwReturn | TokenKind::KwLet | TokenKind::KwVar => {
+                    TokenKind::KwFor | TokenKind::KwWhile | TokenKind::KwReturn | TokenKind::KwLet | TokenKind::KwVar => {
                         diagnostic
                             .note(format!("{} starts a statement and gives no value, so it cannot be part of an expression", kind.describe()))
                             .help("write the statement on a line of its own, before the expression that needs its result")
@@ -526,7 +594,7 @@ impl Parser<'_> {
 
     // ----- postfix operators --------------------------------------------------
 
-    fn postfix(&mut self, mut lhs: Sub) -> Sub {
+    pub(super) fn postfix(&mut self, mut lhs: Sub) -> Sub {
         loop {
             lhs = match self.kind() {
                 TokenKind::LParen => self.call(lhs),
@@ -689,7 +757,7 @@ impl Parser<'_> {
     /// the last consumed token, whose children are at most `child_height`
     /// tall. A node that would make the tree too tall is `E1050` and an
     /// `Error` node takes its place (the children are dropped).
-    fn mk(&mut self, start: u32, kind: ExprKind, child_height: u32) -> Sub {
+    pub(super) fn mk(&mut self, start: u32, kind: ExprKind, child_height: u32) -> Sub {
         let span = self.span_from(start);
         let height = child_height.saturating_add(1);
         if height > MAX_TREE_HEIGHT {
@@ -777,14 +845,8 @@ impl Parser<'_> {
 /// What to write instead of a reserved word that stands where a name is expected (`E0013`).
 fn reserved_help(word: &str) -> &'static str {
     match word {
-        "while" | "loop" => {
-            "v0.1 has only the counted loop `for i in 0..n { ... }` (the bounds are integers, `break` leaves it early); there is no `while` or `loop`"
-        }
-        "match" => {
-            "v0.1 has no pattern matching; compare with `==` in an `if ... else if ... else` chain"
-        }
-        "enum" => {
-            "v0.1 has no user-defined enums; use `i32` constants, or the built-in `Key` for keys"
+        "loop" => {
+            "there is no `loop`: write `while true { ... }` and leave it with `break`, or use the counted loop `for i in 0..n { ... }`"
         }
         "mut" => {
             "variables are declared with `var` (assignable) or `let` (fixed); there is no `mut`"

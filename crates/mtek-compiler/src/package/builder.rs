@@ -31,7 +31,7 @@ use crate::assets::{AssetStore, ImageRef, MeshRef, pack::Packed};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::emit_js::{CpuFlags, ProgramParts, emit_app_dts, emit_program, source_map};
 use crate::emit_wgsl::{ShaderArtifact, emit_shader};
-use crate::ir::{self, BehaviorKind, MeshDesc, Owner, Program};
+use crate::ir::{self, BehaviorKind, MeshDesc, Owner, Program, Symbol};
 use crate::layout::{LayoutRecord, builtin_blocks, compute};
 use crate::lowering::shader::lower_material;
 use crate::plan::{
@@ -48,12 +48,13 @@ use crate::{
 use super::html::{BOOTSTRAP_JS, index_html, preview_bootstrap};
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
-    Binding, BindingDep, BindingTarget, Body, Camera, Collider, Entity, EntityMaterial,
-    InstanceParam, Layout, Light as ManifestLight, LightClass, LightClasses,
-    LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material, MaterialInstance,
-    MaterialParam, MaterialResource, Mesh, MeshShape, Num, ParamClass as ManifestClass, Prefab,
-    PrefabMaterial, PrefabParam, Preview, RequiredCapabilities, ResourceValue, RuntimeConfig,
-    Scene, SceneFields, Shader, SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
+    Binding, BindingDep, BindingTarget, Body, Camera, Clip, ClipChannel, Collider, Entity,
+    EntityMaterial, Game, GameScene, InstanceParam, Layout, Light as ManifestLight, LightClass,
+    LightClasses, LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material,
+    MaterialInstance, MaterialParam, MaterialResource, Mesh, MeshShape, Num,
+    ParamClass as ManifestClass, Particles, Prefab, PrefabMaterial, PrefabParam, Preview,
+    RequiredCapabilities, ResourceValue, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry,
+    StateEntry, Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -119,8 +120,55 @@ struct BuiltMaterial<'p> {
     shader: ShaderArtifact,
 }
 
+/// The program files of one scene (decision 0141): `app.js`, `app.js.map` and
+/// `program.manifest.json` for the entry scene, `app.<Scene>.js`, `app.<Scene>.js.map` and
+/// `program.<Scene>.manifest.json` for every other scene of a multi-scene program.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SceneFiles {
+    pub module: String,
+    pub source_map: String,
+    pub manifest: String,
+}
+
+impl SceneFiles {
+    /// The files of scene `name`; `entry` says whether it is the entry scene.
+    #[must_use]
+    pub fn of(name: &str, entry: bool) -> Self {
+        if entry {
+            Self {
+                module: APP_JS.to_owned(),
+                source_map: APP_JS_MAP.to_owned(),
+                manifest: MANIFEST_JSON.to_owned(),
+            }
+        } else {
+            Self {
+                module: format!("app.{name}.js"),
+                source_map: format!("app.{name}.js.map"),
+                manifest: format!("program.{name}.manifest.json"),
+            }
+        }
+    }
+}
+
+/// The storage name of a program's saved state (decision 0145): the project name (`[a-z0-9-]+`),
+/// at most 64 characters, as the manifest schema allows.
+fn storage_name(project: &str) -> String {
+    let name: String = project.chars().take(64).collect();
+    if name.is_empty() {
+        "mtek".to_owned()
+    } else {
+        name
+    }
+}
+
 /// Packages the checked `program` of `project`. The project's source map holds the prelude
 /// modules the program uses (the front end added them, decision 0044).
+///
+/// A program with several scenes (decision 0141) is packaged once per scene: the entry scene
+/// into `app.js` and `program.manifest.json`, every other scene into `app.<Scene>.js` and
+/// `program.<Scene>.manifest.json`, which `go_to` loads. The content-addressed files (shaders,
+/// assets, the runtime and physics bundles) are shared; every manifest lists the scenes in
+/// `game.scenes`. A single-scene program is packaged exactly as before.
 ///
 /// # Errors
 /// `E6001` for a parameter block over the target profile's limit; `E9999` (or `E6100` from
@@ -129,6 +177,89 @@ pub fn package(
     project: &Project,
     program: &Program,
     input: &PackageInput<'_>,
+) -> Result<Package, Vec<Diagnostic>> {
+    let entry = program.entry().ok_or_else(|| {
+        defect(format!(
+            "the entry scene '{}' is not in the IR",
+            program.entry_scene
+        ))
+    })?;
+    let mut scenes: Vec<(String, Symbol)> = program
+        .scenes()
+        .map(|scene| (scene.name.clone(), scene.symbol.clone()))
+        .collect();
+    // Saved state and settings (decision 0145) are stored under the project's name.
+    let storage = program
+        .scenes()
+        .any(|scene| scene.state.iter().any(|state| state.persist.is_some()))
+        .then(|| storage_name(&project.config.project.name));
+    if scenes.len() <= 1 {
+        let game = storage.map(|storage| Game {
+            scenes: Vec::new(),
+            storage: Some(storage),
+        });
+        return package_scene(
+            project,
+            program,
+            input,
+            &SceneFiles::of(&entry.name, true),
+            game.as_ref(),
+        );
+    }
+    scenes.sort();
+    let entry_symbol = entry.symbol.clone();
+    let game = Game {
+        scenes: scenes
+            .iter()
+            .map(|(name, symbol)| {
+                let files = SceneFiles::of(name, *symbol == entry_symbol);
+                GameScene {
+                    name: name.clone(),
+                    module: files.module,
+                    manifest: files.manifest,
+                }
+            })
+            .collect(),
+        storage,
+    };
+    let mut packaged = package_scene(
+        project,
+        program,
+        input,
+        &SceneFiles::of(&entry.name, true),
+        Some(&game),
+    )?;
+    for (name, symbol) in &scenes {
+        if *symbol == entry_symbol {
+            continue;
+        }
+        let mut other = program.clone();
+        other.entry_scene = symbol.clone();
+        let scene = package_scene(
+            project,
+            &other,
+            input,
+            &SceneFiles::of(name, false),
+            Some(&game),
+        )?;
+        for (path, bytes) in scene.files {
+            // The page, the host declarations and the preview bootstrap belong to the entry.
+            if path == INDEX_HTML || path == APP_DTS || path == BOOTSTRAP_JS {
+                continue;
+            }
+            packaged.files.entry(path).or_insert(bytes);
+        }
+    }
+    Ok(packaged)
+}
+
+/// Packages the scene `program.entry_scene` into `files`, with the manifest `game` object.
+fn package_scene(
+    project: &Project,
+    program: &Program,
+    input: &PackageInput<'_>,
+    scene_files: &SceneFiles,
+    game: Option<&Game>,
 ) -> Result<Package, Vec<Diagnostic>> {
     let sources = &project.sources;
     let scene = program.entry().ok_or_else(|| {
@@ -252,9 +383,11 @@ pub fn package(
         &mut spans,
         &host_inputs,
         &host_outputs,
+        input.assets,
     )
     .map_err(defect)?;
-    let manifest_prefabs = manifest_prefabs(program, &plan, &packed, &mut spans).map_err(defect)?;
+    let manifest_prefabs =
+        manifest_prefabs(program, &plan, &packed, &mut spans, input.assets).map_err(defect)?;
 
     // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
     // other span, so a program's span ids do not depend on its function bodies.
@@ -270,6 +403,8 @@ pub fn package(
         &ProgramParts {
             runtime_file: &runtime_file,
             layouts: &layouts,
+            manifest_file: &scene_files.manifest,
+            source_map_file: &scene_files.source_map,
             flags: CpuFlags {
                 release: matches!(input.mode, BuildMode::Release | BuildMode::Preview),
                 loop_budget: preview.is_some(),
@@ -278,7 +413,7 @@ pub fn package(
         &mut |span| spans.intern(span),
     )
     .map_err(defect)?;
-    let app_map = source_map(APP_JS, &app.mappings, sources).map_err(defect)?;
+    let app_map = source_map(&scene_files.module, &app.mappings, sources).map_err(defect)?;
     let span_entries = spans.into_entries();
 
     let source_entries: Vec<SourceEntry> = sources
@@ -334,6 +469,7 @@ pub fn package(
             max_entities: runtime.max_entities,
             pause_when_hidden: runtime.pause_when_hidden,
         },
+        game: game.cloned(),
         preview,
         entry_scene: scene.name.clone(),
         sources: source_entries,
@@ -354,8 +490,11 @@ pub fn package(
     if input.mode == BuildMode::Preview {
         files.insert(BOOTSTRAP_JS.to_owned(), preview_bootstrap().into_bytes());
     }
-    files.insert(APP_JS.to_owned(), app.text.into_bytes());
-    files.insert(APP_JS_MAP.to_owned(), app_map.to_json().into_bytes());
+    files.insert(scene_files.module.clone(), app.text.into_bytes());
+    files.insert(
+        scene_files.source_map.clone(),
+        app_map.to_json().into_bytes(),
+    );
     files.insert(
         APP_DTS.to_owned(),
         emit_app_dts(&host_inputs, &host_outputs).into_bytes(),
@@ -365,7 +504,10 @@ pub fn package(
     if let (Some(bundle), Some(module)) = (physics_bundle, &manifest.subsystems.physics_module) {
         files.insert(module.clone(), bundle.to_vec());
     }
-    files.insert(MANIFEST_JSON.to_owned(), manifest.to_json().into_bytes());
+    files.insert(
+        scene_files.manifest.clone(),
+        manifest.to_json().into_bytes(),
+    );
     for (path, bytes) in shader_files {
         files.insert(path, bytes);
     }
@@ -721,6 +863,7 @@ fn manifest_scene(
     spans: &mut SpanTable,
     host_inputs: &[ResolvedHostInput],
     host_outputs: &[ResolvedHostOutput],
+    assets: &AssetStore,
 ) -> Result<Scene, String> {
     let clear_color = match scene.fields.clear_color.source.as_const() {
         Some(ir::Value::Color(rgba)) => nums(rgba)?,
@@ -830,6 +973,13 @@ fn manifest_scene(
             ),
             update: has_behavior(scene, entity.index, &BehaviorKind::Update),
             fixed_update: has_behavior(scene, entity.index, &BehaviorKind::FixedUpdate),
+            tag: entity.tag.clone(),
+            particles: entity
+                .particles
+                .as_ref()
+                .map(manifest_particles)
+                .transpose()?,
+            clip: manifest_clip(entity, assets)?,
         });
     }
     let material_instances = plan
@@ -930,6 +1080,7 @@ fn manifest_prefabs(
     plan: &ResourcePlan,
     packed: &Packed,
     spans: &mut SpanTable,
+    assets: &AssetStore,
 ) -> Result<Vec<Prefab>, String> {
     let mut out = Vec::with_capacity(plan.prefabs.len());
     for planned in &plan.prefabs {
@@ -985,15 +1136,96 @@ fn manifest_prefabs(
                     name: state.name.clone(),
                     ty: state.ty.clone(),
                     symbol: state.symbol.to_string(),
+                    shared: false,
+                    persist: None,
+                    stored_type: None,
                 })
                 .collect(),
             update: has(&BehaviorKind::Update),
             fixed_update: has(&BehaviorKind::FixedUpdate),
             bindings,
             span: spans.intern(item.span)?,
+            tag: item.entity.tag.clone(),
+            particles: item
+                .entity
+                .particles
+                .as_ref()
+                .map(manifest_particles)
+                .transpose()?,
+            clip: manifest_clip(&item.entity, assets)?,
         });
     }
     Ok(out)
+}
+
+/// The manifest's emitter (decision 0155).
+fn manifest_particles(particles: &ir::Particles) -> Result<Particles, String> {
+    Ok(Particles {
+        rate: num(particles.rate)?,
+        lifetime: num(particles.lifetime)?,
+        speed: num(particles.speed)?,
+        size: num(particles.size)?,
+        gravity: num(particles.gravity)?,
+    })
+}
+
+/// The manifest's clip (decision 0156): keyframes copied out of the GLB, because lowering has
+/// no asset store. A clip the checker accepted and that cannot be found here is a defect.
+fn manifest_clip(entity: &ir::Entity, assets: &AssetStore) -> Result<Option<Clip>, String> {
+    let Some(name) = &entity.clip else {
+        return Ok(None);
+    };
+    let Some(mesh) = &entity.mesh else {
+        return Err(format!(
+            "entity '{}' has a clip without a mesh",
+            entity.name
+        ));
+    };
+    let MeshDesc::Asset { file, mesh, .. } = &mesh.desc else {
+        return Err(format!(
+            "the clip of entity '{}' is not on an asset mesh",
+            entity.name
+        ));
+    };
+    let declared = assets.glb(file).ok_or_else(|| {
+        format!(
+            "the clip of entity '{}' names a GLB that was not loaded",
+            entity.name
+        )
+    })?;
+    let clip = declared.file.clip_for(name, mesh).ok_or_else(|| {
+        format!(
+            "the clip '{name}' of entity '{}' does not play on '{mesh}'",
+            entity.name
+        )
+    })?;
+    let channels = clip
+        .channels
+        .iter()
+        .map(|channel| {
+            Ok(ClipChannel {
+                path: channel.path.as_str().to_owned(),
+                interpolation: channel.interpolation.as_str().to_owned(),
+                times: channel
+                    .times
+                    .iter()
+                    .copied()
+                    .map(num)
+                    .collect::<Result<Vec<_>, _>>()?,
+                values: channel
+                    .values
+                    .iter()
+                    .copied()
+                    .map(num)
+                    .collect::<Result<Vec<_>, _>>()?,
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(Some(Clip {
+        name: clip.name,
+        duration: num(clip.duration)?,
+        channels,
+    }))
 }
 
 /// The manifest's update class of a light field: a light field is never a resource.
@@ -1028,8 +1260,9 @@ fn manifest_bindings(
                 instance: instance(*entity)?,
                 name: name.clone(),
             },
-            ir::BindingTarget::Camera { field } => BindingTarget::Camera {
+            ir::BindingTarget::Camera { camera, field } => BindingTarget::Camera {
                 field: field.clone(),
+                camera: Some(camera.clone()),
             },
             ir::BindingTarget::Light { entity, field } => BindingTarget::Light {
                 entity: *entity,
@@ -1080,6 +1313,9 @@ fn state_entries(scene: &crate::ir::Scene, owner: Owner) -> Vec<StateEntry> {
             name: state.name.clone(),
             ty: state.ty.clone(),
             symbol: state.symbol.to_string(),
+            shared: state.shared,
+            persist: state.persist.clone(),
+            stored_type: state.stored_type.clone(),
         })
         .collect()
 }

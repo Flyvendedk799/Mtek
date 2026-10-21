@@ -230,6 +230,23 @@ describe("candidates", () => {
     // All three share: capacity 3.
     expect(instancingCandidates(resolved.structure, () => 0, keyOf).capacity).toBe(3);
   });
+
+  it("includes an emitter's material even when nothing else can be instanced", () => {
+    const host = new FakeHost();
+    const json = installProgram(host, (manifest: Json) => {
+      const shader = (manifest["shaders"] as Json[])[0];
+      if (shader !== undefined) shader["instancedVertexEntry"] = "mtek_vs_instanced";
+      const scene = manifest["scene"] as { entities: Json[] };
+      const entity = scene.entities[0];
+      if (entity !== undefined) entity["particles"] = { rate: 24, lifetime: 0.8, speed: 1.6, size: 0.12, gravity: 3 };
+    });
+    const parsed = checkManifest(json);
+    if (!parsed.ok) throw new Error(JSON.stringify(parsed.failures));
+    const resolved = resolveStructure(parsed.manifest);
+    if (!resolved.ok) throw new Error("structure");
+    const keyOf = (m: Parameters<typeof materialPipelineKey>[0]): string => materialPipelineKey(m, "rgba8unorm-srgb");
+    expect(instancingCandidates(resolved.structure, (i) => i, keyOf)).toEqual({ materials: new Set([UNLIT]), capacity: 0 });
+  });
 });
 
 describe("compatible instancing in the renderer", () => {

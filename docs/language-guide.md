@@ -54,7 +54,7 @@ scene Demo {
 - One scene runs (`scene = "Name"` in `mtek.toml` if the entry file has several), with exactly one active camera. Entity names are unique in the scene.
 - Fields and statements end in `;`. A descriptor separates its fields with `;` too (`Box { size: vec3(1.0, 1.0, 1.0) }`; a comma is `MTEK-E1001`). `state` and `param` need a type.
 - Metres, seconds, radians, kilograms; right-handed, `+Y` up, a camera or light looks along its `-Z`. An entity with a `mesh` and no `material` is `Unlit {}`; a `material` without a `mesh` is `MTEK-E5020`.
-- Not in the language: `while`, closures, generics, null, ternary, string joining, user enums. 30 words are reserved (`move`, `type`, `use`, `loop`, `static`, `mod`, ...): `MTEK-E0013`.
+- Not in the language: `while`, closures, generics, null, ternary, string joining, user enums. 27 words are reserved (`move`, `type`, `use`, `loop`, `static`, `mod`, ...): `MTEK-E0013`.
 
 ## 2. Values
 
@@ -98,7 +98,7 @@ cpu fn jitter(range: f32) -> f32 {
 ```
 
 - `fn` is pure and may run on the CPU and on the GPU. `cpu fn` and handlers may use the CPU-only intrinsics. A `cpu fn` sees no scene: pass values in. A `fn` that calls CPU code is `MTEK-E4002`; recursion is `MTEK-E4001`; a `const` cannot call your functions (`MTEK-E3090`).
-- Both domains: `abs`, `acos`, `asin`, `atan`, `atan2`, `ceil`, `clamp`, `color.linear`, `color.srgb`, `cos`, `cross`, `degrees`, `distance`, `dot`, `exp`, `exp2`, `floor`, `fract`, `inverse_sqrt`, `length`, `log`, `log2`, `mat4.columns`, `mat4.identity`, `mat4.rotation`, `mat4.scale`, `mat4.translation`, `max`, `min`, `mix`, `normalize`, `pow`, `quat.axis_angle`, `quat.euler`, `quat.identity`, `radians`, `reflect`, `round`, `saturate`, `sign`, `sin`, `smoothstep`, `sqrt`, `step`, `tan`, `transpose`, `trunc`. CPU only: `alive`, `asset.glb`, `asset.linear_texture`, `asset.texture`, `destroy`, `is_key_down`, `print`, `random`, `sampler.linear_clamp`, `sampler.linear_repeat`, `sampler.nearest_clamp`, `sampler.nearest_repeat`, `spawn`, `texture.black`, `texture.white`. GPU only: `lighting.pbr`, `sample`. `spawn` and `destroy` go directly in handlers and in `update` or `fixed_update` (`MTEK-E5080`).
+- Both domains: `abs`, `acos`, `asin`, `atan`, `atan2`, `ceil`, `clamp`, `color.linear`, `color.srgb`, `cos`, `cross`, `degrees`, `distance`, `dot`, `exp`, `exp2`, `floor`, `fract`, `inverse_sqrt`, `length`, `log`, `log2`, `mat4.columns`, `mat4.identity`, `mat4.rotation`, `mat4.scale`, `mat4.translation`, `max`, `min`, `mix`, `normalize`, `pow`, `quat.axis_angle`, `quat.euler`, `quat.identity`, `radians`, `reflect`, `round`, `saturate`, `sign`, `sin`, `smoothstep`, `sqrt`, `step`, `tan`, `transpose`, `trunc`. CPU only: `alive`, `asset.font`, `asset.glb`, `asset.linear_texture`, `asset.sound`, `asset.texture`, `chance`, `choose`, `clear_saved`, `count_tagged`, `destroy`, `destroy_tagged`, `easing.in_cubic`, `easing.in_out_cubic`, `easing.in_out_quad`, `easing.in_out_sine`, `easing.in_quad`, `easing.out_back`, `easing.out_bounce`, `easing.out_cubic`, `easing.out_elastic`, `easing.out_quad`, `first_tagged`, `go_to`, `has_tag`, `hud.button`, `hud.pixel_font`, `hud.rect`, `hud.text`, `is_key_down`, `is_muted`, `is_pointer_down`, `key_pressed`, `key_released`, `load`, `nearest_tagged`, `particle_count`, `pause`, `paused`, `play`, `play_at`, `play_music`, `pointer_position`, `print`, `random`, `random_int`, `random_range`, `reset`, `resume`, `sampler.linear_clamp`, `sampler.linear_repeat`, `sampler.nearest_clamp`, `sampler.nearest_repeat`, `save`, `set_camera`, `set_muted`, `set_volume`, `shuffle`, `spawn`, `stop_music`, `tagged`, `texture.black`, `texture.white`. GPU only: `lighting.pbr`, `sample`. `spawn` and `destroy` go directly in handlers and in `update` or `fixed_update` (`MTEK-E5080`).
 
 ## 4. State and bind
 
@@ -155,7 +155,7 @@ scene Demo {
 }
 ```
 
-- An `entity_ref` is compared (`other == Floor`), tested with `alive`, passed to `destroy`, given body commands, and kept in state, arrays and prefab params. Reading or writing a field through it is `MTEK-E5074`. A declared entity cannot be destroyed (`MTEK-E5030`): set `visible = false`.
+- An `entity_ref` is compared (`other == Floor`), tested with `alive`, passed to `destroy`, given body commands, and kept in state, arrays and prefab params. `position`, `rotation`, `scale` and `visible` can be read; writing a field, or reading any other, is `MTEK-E5074`. A declared entity cannot be destroyed (`MTEK-E5030`): set `visible = false`.
 - A prefab has a root entity and may have ordinary children in static instances. Spawning an assembly or nesting prefab instances inside a prefab is `MTEK-E5040`. A prefab has no light (`MTEK-E5110`) and does not see the scene (`MTEK-E2003`): pass values in as `param`s. `entity E: Prefab { param: constant; }` sets params only (`MTEK-E5042`, `MTEK-E3090`).
 
 ## 6. Time and input

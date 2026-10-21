@@ -47,7 +47,7 @@ export interface MtekTestOptions {
 export interface MtekAssetStateEvent {
   /** The file's `url` in the manifest's `assets` table. */
   readonly url: string;
-  readonly kind: "mesh-data" | "image";
+  readonly kind: "mesh-data" | "image" | "audio" | "font";
   readonly state: "pending" | "ready" | "failed";
 }
 
@@ -82,8 +82,8 @@ export interface MtekDebug {
   releaseKey(code: string): void;
   /**
    * Writes a material param of the named entity (its name, or its qualified symbol when the name is shared)
-   * without `bind`: uploaded by the next frame, never creates a shader, pipeline or bind group; a non-opaque
-   * colour is `E8100` and the previous value stays. A wrong entity, param or value throws (decision 0046).
+   * without `bind`: uploaded by the next frame, never creates a shader, pipeline or bind group; a colour with
+   * alpha below 1 makes the draw translucent (decision 0138). A wrong entity, param or value throws (decision 0046).
    */
   setParam(entityName: string, param: string, value: unknown): void;
   /**
@@ -154,7 +154,20 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
    * contains no overlay code and ignores it. `mtek dev` pages pass `true` (decision 0055).
    */
   devOverlay?: boolean;
+  /**
+   * Where `saved state` and `setting state` are kept (decisions 0145 and 0146). Default: the page's
+   * `localStorage`, or an in-memory store when `test` is given, so that test runs never read or write the
+   * page's storage. `null` keeps saves in memory only, for the life of the application.
+   */
+  storage?: MtekSaveStorage | null;
   test?: MtekTestOptions;
+}
+
+/** The part of the Web Storage API that saves use (`localStorage` satisfies it). */
+export interface MtekSaveStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
 }
 
 /**

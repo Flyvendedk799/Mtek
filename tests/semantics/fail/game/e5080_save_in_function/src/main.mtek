@@ -1,0 +1,14 @@
+// save(), load() and clear_saved() are for lifecycle functions and handlers, not functions.
+cpu fn checkpoint() -> bool {
+    save();
+    clear_saved();
+    return load();
+}
+
+scene Demo {
+    saved state level: i32 = 1;
+    camera Main {}
+    on key_down(Key.S) {
+        let ok = checkpoint();
+    }
+}

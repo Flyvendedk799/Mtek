@@ -1,0 +1,11 @@
+// `go_to` takes the name of a scene of the program.
+scene Demo {
+    state level: i32 = 1;
+    camera Main {}
+    on key_down(Key.Enter) {
+        go_to(Main);
+    }
+    on key_down(Key.Space) {
+        go_to(level);
+    }
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "code": "MTEK-E7106",
+    "file": "src/main.mtek",
+    "startByte": 84,
+    "endByte": 105,
+    "message": "'fonts/fake.woff2' does not start with the signature 'wOF2', so it is not a woff2 font.",
+    "notes": [
+      "help: re-export the font from a font editor, or convert it to WOFF2"
+    ]
+  },
+  {
+    "code": "MTEK-E7106",
+    "file": "src/main.mtek",
+    "startByte": 135,
+    "endByte": 159,
+    "message": "'fonts/renamed.woff2' does not start with the signature 'wOF2', so it is not a woff2 font.",
+    "notes": [
+      "help: re-export the font from a font editor, or convert it to WOFF2"
+    ]
+  }
+]

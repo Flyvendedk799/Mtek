@@ -1,0 +1,25 @@
+// Reads of position, rotation, scale and visible through an entity_ref (decision 0151).
+prefab Crate {
+    position: vec3(0.0, 2.0, 0.0);
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    entity Floor {
+        mesh: Plane {};
+    }
+    state last: entity_ref = Floor;
+    state seen: bool = false;
+
+    update(dt: f32) {
+        let p = last.position;
+        let r = last.rotation;
+        let s = last.scale;
+        seen = last.visible && p.y == 0.0 && r.w == 1.0 && s.x == 1.0;
+    }
+
+    on key_down(Key.Space) {
+        last = spawn(Crate {});
+    }
+}

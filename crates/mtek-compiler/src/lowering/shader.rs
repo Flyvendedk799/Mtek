@@ -410,6 +410,12 @@ impl<'p> ShaderLowering<'p> {
                 body: loop_body,
                 span,
             } => self.for_each(body, *local, array, loop_body, *span)?,
+            ir::Stmt::While { .. } => {
+                return Err("a `while` loop in GPU code (E4010)".to_owned());
+            }
+            ir::Stmt::Timer { .. } => {
+                return Err("a timer statement in GPU code (E5080)".to_owned());
+            }
             ir::Stmt::Return { value, span } => Statement::Return {
                 value: match value {
                     Some(value) => Some(self.expr(body, value)?),
@@ -561,6 +567,11 @@ impl<'p> ShaderLowering<'p> {
         let span = expr.span;
         let ty = expr.ty.as_str();
         Ok(match &expr.kind {
+            // Enums are CPU only (decision 0129): the checker reports a `match` that GPU code
+            // reaches (`E4011`), so none gets here.
+            ir::ExprKind::Match { .. } => {
+                return Err("a `match` expression in GPU code".to_owned());
+            }
             ir::ExprKind::Const { value } => self.value(value, ty, span)?,
             ir::ExprKind::Local { local, .. } => {
                 let item = local_item(body, *local)?;
@@ -670,6 +681,7 @@ impl<'p> ShaderLowering<'p> {
             ir::ExprKind::State { .. }
             | ir::ExprKind::EntityRef { .. }
             | ir::ExprKind::EntityField { .. }
+            | ir::ExprKind::RefField { .. }
             | ir::ExprKind::CameraField { .. }
             | ir::ExprKind::InstanceParam { .. }
             | ir::ExprKind::LightField { .. }
@@ -998,6 +1010,8 @@ impl<'p> ShaderLowering<'p> {
                 Expr::construct(array, lowered, span)
             }
             Value::String(_) => return Err("a string constant in GPU code".to_owned()),
+            Value::Sound(_) => return Err("a sound constant in GPU code".to_owned()),
+            Value::Font(_) => return Err("a font constant in GPU code".to_owned()),
             Value::Texture(_) | Value::Sampler(_) | Value::Image(_) => {
                 return Err("a texture or sampler constant in GPU code".to_owned());
             }

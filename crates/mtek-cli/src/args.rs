@@ -15,6 +15,23 @@ use mtek_compiler::context::DEFAULT_MAX_BYTES;
 
 use crate::test_cmd::TestArgs;
 
+/// `mtek build --release` (decision 0136): a game package, and with `--itch` its zip.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Game {
+    /// `--itch`: also write `<out>-itch.zip`.
+    pub itch: bool,
+}
+
+/// `mtek new --template`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ValueEnum)]
+pub enum NewTemplate {
+    /// The blueprint Demo: a cube whose pulse a host input tints.
+    #[default]
+    Demo,
+    /// A two-scene game: a title, a run, tags, a saved best score and a pause key.
+    Game,
+}
+
 /// The output format of `--format`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ValueEnum)]
 pub enum Format {
@@ -125,6 +142,12 @@ enum CliCommand {
         /// `--mode preview` only: iterations of CPU loops allowed per frame [default: 10000000]
         #[arg(long, value_name = "N", value_parser = clap::value_parser!(u32).range(1..))]
         loop_budget: Option<u32>,
+        /// Package a game: release mode, minified runtime, loading screen, favicon, title
+        #[arg(long, conflicts_with_all = ["mode", "loop_budget"])]
+        release: bool,
+        /// With --release: also write the folder as `<out>-itch.zip` for itch.io
+        #[arg(long, requires = "release")]
+        itch: bool,
         /// Output format
         #[arg(long, value_enum, default_value_t)]
         format: Format,
@@ -152,10 +175,13 @@ enum CliCommand {
         /// The project directory or a directory inside it [default: the current directory]
         path: Option<PathBuf>,
     },
-    /// Scaffold a project from the built-in Demo template
+    /// Scaffold a project from a built-in template
     New {
         /// Project name (`[a-z0-9-]+`); also the directory created in the working directory
         name: String,
+        /// `demo` (the pulse cube) or `game` (a title scene, a run, tags and a saved score)
+        #[arg(long, value_enum, default_value_t)]
+        template: NewTemplate,
     },
     /// Format Mtek files canonically (in place, or only check them)
     Fmt {
@@ -206,6 +232,8 @@ pub enum Request {
         mode: BuildMode,
         /// `--loop-budget`: only with `BuildMode::Preview`.
         loop_budget: Option<u32>,
+        /// `--release` (game package, decision 0136): `Some(itch)` with `--itch`.
+        game: Option<Game>,
         out: Option<PathBuf>,
         format: Format,
         path: Option<PathBuf>,
@@ -222,8 +250,8 @@ pub enum Request {
         open: bool,
         path: Option<PathBuf>,
     },
-    /// `mtek new NAME`.
-    New { name: String },
+    /// `mtek new NAME [--template demo|game]`.
+    New { name: String, template: NewTemplate },
     /// `mtek fmt [--check] [PATHS…]`.
     Fmt { check: bool, paths: Vec<PathBuf> },
     /// `mtek context --entry FILE`.
@@ -315,9 +343,12 @@ where
             mode,
             out,
             loop_budget,
+            release,
+            itch,
             format,
             path,
         } => {
+            let game = release.then_some(Game { itch });
             let mode = match mode {
                 Mode::Release => BuildMode::Release,
                 Mode::Dev => BuildMode::Dev,
@@ -340,6 +371,7 @@ where
             Ok(Request::Build {
                 mode,
                 loop_budget,
+                game,
                 out,
                 format,
                 path,
@@ -358,7 +390,7 @@ where
             Ok(Request::Inspect { view, format, path })
         }
         CliCommand::Dev { port, open, path } => Ok(Request::Dev { port, open, path }),
-        CliCommand::New { name } => Ok(Request::New { name }),
+        CliCommand::New { name, template } => Ok(Request::New { name, template }),
         CliCommand::Fmt { check, paths } => Ok(Request::Fmt { check, paths }),
         CliCommand::Test(args) => Ok(Request::Test(args)),
         CliCommand::Context {
@@ -426,6 +458,7 @@ mod tests {
             Ok(Request::Build {
                 mode: BuildMode::Release,
                 loop_budget: None,
+                game: None,
                 out: None,
                 format: Format::Human,
                 path: None
@@ -439,6 +472,7 @@ mod tests {
             Ok(Request::Build {
                 mode: BuildMode::Test,
                 loop_budget: None,
+                game: None,
                 out: Some(PathBuf::from("out/x")),
                 format: Format::Json,
                 path: Some(PathBuf::from("proj"))
@@ -454,6 +488,7 @@ mod tests {
             Ok(Request::Build {
                 mode: BuildMode::Preview,
                 loop_budget: None,
+                game: None,
                 out: None,
                 format: Format::Human,
                 path: None
@@ -471,6 +506,7 @@ mod tests {
             Ok(Request::Build {
                 mode: BuildMode::Preview,
                 loop_budget: Some(5000),
+                game: None,
                 out: None,
                 format: Format::Human,
                 path: Some(PathBuf::from("proj"))
@@ -587,11 +623,20 @@ mod tests {
         assert_eq!(
             parse_args(&["new", "pulse-cube"]),
             Ok(Request::New {
-                name: "pulse-cube".into()
+                name: "pulse-cube".into(),
+                template: NewTemplate::Demo,
+            })
+        );
+        assert_eq!(
+            parse_args(&["new", "my-game", "--template", "game"]),
+            Ok(Request::New {
+                name: "my-game".into(),
+                template: NewTemplate::Game,
             })
         );
         usage(&["new"]);
         usage(&["new", "a", "b"]);
+        usage(&["new", "my-game", "--template", "nope"]);
     }
 
     #[test]

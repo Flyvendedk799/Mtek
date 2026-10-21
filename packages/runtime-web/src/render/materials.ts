@@ -159,6 +159,32 @@ export class MaterialStore implements ParamSink {
     return this.blockChanges;
   }
 
+  /** Instances whose `color` or `base_color` alpha is below 1 (decision 0138). */
+  /** The colour params with an alpha below 1, by instance (decision 0138). */
+  private readonly translucent = new Map<number, Set<string>>();
+
+  /** Whether the instance is drawn in the translucent pass: one of its colour params has an alpha below 1. */
+  isTranslucent(instance: number): boolean {
+    return this.translucent.has(instance);
+  }
+
+  /** Tracks the alpha of a colour param; a change of translucency rebuilds the draw list (via `blockVersion`). */
+  private trackAlpha(instance: number, name: string, value: unknown): void {
+    if (typeof value !== "object" || value === null || !("r" in value) || !("a" in value)) return;
+    const alpha = (value as { readonly a?: unknown }).a;
+    const translucent = typeof alpha === "number" && alpha < 1;
+    const before = this.translucent.has(instance);
+    let names = this.translucent.get(instance);
+    if (translucent) {
+      if (names === undefined) this.translucent.set(instance, (names = new Set()));
+      names.add(name);
+    } else if (names !== undefined) {
+      names.delete(name);
+      if (names.size === 0) this.translucent.delete(instance);
+    }
+    if (before !== this.translucent.has(instance)) this.blockChanges += 1;
+  }
+
   /** The number of live material instances. */
   get instanceCount(): number {
     return this.instances.size;
@@ -208,6 +234,7 @@ export class MaterialStore implements ParamSink {
     if (!this.instances.has(index)) throw new Error(`internal error: no material instance ${String(index)}`);
     this.leave(index);
     this.instances.delete(index);
+    this.translucent.delete(index);
     this.blocks[index] = undefined;
     this.resources.delete(index);
     this.blockChanges += 1;
@@ -298,6 +325,7 @@ export class MaterialStore implements ParamSink {
    * its block gets a block of its own first when the write would change the bytes.
    */
   writeParam(instance: number, name: string, value: unknown): void {
+    this.trackAlpha(instance, name, value);
     let block = this.blockOfInstance(instance);
     let storage = block.storage;
     if (storage === null) throw new Error(`internal error: material instance ${String(instance)} has no value params`);

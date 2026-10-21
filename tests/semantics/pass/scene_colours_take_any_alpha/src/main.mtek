@@ -1,5 +1,5 @@
 // The renderer uses only the RGB channels of scene colours, so any alpha is
-// accepted; only material colour parameters must be opaque (E5100).
+// accepted; material colours take any alpha too (decision 0138).
 scene Dusk {
     clear_color: #10141880;
     camera Main {}

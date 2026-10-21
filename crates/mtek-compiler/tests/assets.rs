@@ -828,3 +828,41 @@ scene Demo {
     assert!(!result.files.keys().any(|k| k.starts_with("assets/")));
     assert_eq!(manifest_of(&result)["assets"], json!([]));
 }
+
+// ---------------------------------------------------------------------------
+// Sounds (spec/audio.md, decision 0130)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn the_audio_project_packages_its_sounds_byte_for_byte() {
+    let result = build_project("pass", "audio_sounds");
+    assert!(
+        !result.has_errors(),
+        "{}",
+        diagnostics_json(&result.sources, &result.report.diagnostics)
+    );
+    let manifest = manifest_of(&result);
+    let schema: Value =
+        serde_json::from_str(include_str!("../../../spec/manifest.schema.json")).unwrap();
+    let validator = jsonschema::draft202012::new(&schema).unwrap();
+    let problems: Vec<String> = validator
+        .iter_errors(&manifest)
+        .map(|e| format!("{e} at {}", e.instance_path()))
+        .collect();
+    assert!(problems.is_empty(), "{problems:#?}");
+    let audio: Vec<&Value> = manifest["assets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|a| a["kind"] == "audio")
+        .collect();
+    assert_eq!(audio.len(), 1);
+    assert_eq!(audio[0]["source"], "sounds/blip.wav");
+    assert_eq!(audio[0]["format"], "wav");
+    let url = audio[0]["url"].as_str().unwrap();
+    let original = fs::read(assets_dir().join("pass/audio_sounds/sounds/blip.wav")).unwrap();
+    assert_eq!(result.files.get(url).unwrap(), &original);
+    let app = String::from_utf8(result.files.get("app.js").unwrap().clone()).unwrap();
+    assert!(app.contains("ctx.audio.play("), "{app}");
+    assert!(app.contains("\"sounds/blip.wav\""), "{app}");
+}

@@ -1,12 +1,12 @@
 shaders of scene src/main.mtek::Demo (target profile webgpu-core-2026)
 
 shader of material src/main.mtek::Pulse (declared at src/main.mtek:8:1-15:2)
-  file shaders/131089bf80118bdf.wgsl (sha256 131089bf80118bdf5d1e666e186abfefcb763bce6d7270984735b7695b862ff4)
+  file shaders/d70374a95ccad283.wgsl (sha256 d70374a95ccad2839209ea1d60edf23cd50075ed6d7dd9ed76930520abd5f149)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position
   surface inputs none
   parameter block material:src/main.mtek::Pulse (group 1 binding 0)
-  span map 99 entries over 61 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 96 entries over 61 lines; a line is followed by `// <source> <symbol>` where its origin changes
    1 | struct MtekLight {  // src/main.mtek:8:1-15:2 src/main.mtek::Pulse
    2 |     color: vec3<f32>,
    3 |     kind: u32,
@@ -66,5 +66,5 @@ shader of material src/main.mtek::Pulse (declared at src/main.mtek:8:1-15:2)
   57 | @fragment
   58 | fn mtek_fs() -> @location(0) vec4<f32> {
   59 |     let mtek_color = mtek_fragment();
-  60 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  60 |     return mtek_color;
   61 | }

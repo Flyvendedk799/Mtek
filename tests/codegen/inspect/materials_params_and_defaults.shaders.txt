@@ -1,12 +1,12 @@
 shaders of scene src/main.mtek::Harbour (target profile webgpu-core-2026)
 
 shader of material src/main.mtek::Ocean (declared at src/main.mtek:12:1-31:2)
-  file shaders/04ddf61bb72c6c6b.wgsl (sha256 04ddf61bb72c6c6b70bd28c3a7a6e68c9571ef1982ac7f54e9c05cfc0c60196c)
+  file shaders/c8aee37b967855b6.wgsl (sha256 c8aee37b967855b6c074cc3dc44138f50c42488be36227e807d3a567478e762c)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position
   surface inputs none
   parameter block material:src/main.mtek::Ocean (group 1 binding 0)
-  span map 135 entries over 78 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 132 entries over 78 lines; a line is followed by `// <source> <symbol>` where its origin changes
    1 | struct MtekLight {  // src/main.mtek:12:1-31:2 src/main.mtek::Ocean
    2 |     color: vec3<f32>,
    3 |     kind: u32,
@@ -83,5 +83,5 @@ shader of material src/main.mtek::Ocean (declared at src/main.mtek:12:1-31:2)
   74 | @fragment
   75 | fn mtek_fs() -> @location(0) vec4<f32> {
   76 |     let mtek_color = mtek_fragment();
-  77 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  77 |     return mtek_color;
   78 | }

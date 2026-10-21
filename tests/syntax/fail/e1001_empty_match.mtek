@@ -1,0 +1,4 @@
+// A match needs at least one arm.
+fn f(phase: GameState) {
+    match phase {}
+}

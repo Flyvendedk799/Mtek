@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7105",
+    "file": "src/main.mtek",
+    "startByte": 90,
+    "endByte": 109,
+    "message": "'fonts/tiny.bdf' is not a `.ttf`, `.otf`, `.woff` or `.woff2` file; `asset.font` reads those four formats.",
+    "notes": [
+      "help: convert the font to WOFF2 (or use the TTF/OTF file)"
+    ]
+  }
+]

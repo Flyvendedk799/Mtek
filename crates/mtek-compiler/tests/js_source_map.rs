@@ -201,8 +201,19 @@ fn expr(e: &Expr, out: &mut Expected) {
             }
         }
         ExprKind::Convert { arg } => children.push(arg),
-        ExprKind::Components { base, .. } | ExprKind::Field { base, .. } => children.push(base),
+        ExprKind::Components { base, .. }
+        | ExprKind::Field { base, .. }
+        | ExprKind::RefField { target: base, .. } => children.push(base),
         ExprKind::Index { base, index } => children.extend([&**base, &**index]),
+        ExprKind::Match {
+            scrutinee,
+            arms,
+            otherwise,
+        } => {
+            children.push(scrutinee);
+            children.extend(arms.iter().map(|arm| &arm.value));
+            children.extend(otherwise.iter().map(|e| &**e));
+        }
         ExprKind::Array { elements } => children.extend(elements),
         ExprKind::Struct { fields }
         | ExprKind::Descriptor { fields, .. }
@@ -279,6 +290,21 @@ fn stmt(s: &Stmt, out: &mut Expected) {
         } => {
             out.statements.push(*span);
             expr(array, out);
+            block(body, out);
+        }
+        Stmt::While { cond, body, span } => {
+            out.statements.push(*span);
+            expr(cond, out);
+            block(body, out);
+        }
+        Stmt::Timer {
+            seconds,
+            body,
+            span,
+            ..
+        } => {
+            out.statements.push(*span);
+            expr(seconds, out);
             block(body, out);
         }
         Stmt::Return { value, span } => {

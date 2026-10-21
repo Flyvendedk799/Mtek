@@ -1,0 +1,29 @@
+// spec/scenes.md section 17 (decision 0150): a tag field, and the tag queries in a scene.
+prefab Rock {
+    param lane: i32 = 0;
+    tag: "rock";
+    mesh: Box {};
+}
+
+scene Run {
+    camera Main {}
+    entity Player {
+        tag: "player";
+        mesh: Sphere {};
+    }
+    on key_down(Key.Space) {
+        spawn(Rock { lane: random_int(0, 3) });
+    }
+    update(dt: f32) {
+        if count_tagged("rock") > 8 {
+            destroy_tagged("rock");
+        }
+        // Keep only the rock nearest the player.
+        let near = nearest_tagged("rock", Player.position);
+        for r in tagged("rock") {
+            if r != near && !has_tag(r, "player") {
+                destroy(r);
+            }
+        }
+    }
+}

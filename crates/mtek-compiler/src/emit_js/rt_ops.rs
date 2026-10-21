@@ -14,9 +14,9 @@ use std::sync::OnceLock;
 
 /// The `rt` exports the emitter uses that implement no callee of the table
 /// (`RT_STRUCTURAL_EXPORTS` of the runtime): swizzles, single-component replacement, the
-/// colour's `.rgb`, a `mat4` column, index clamping, the value copy of assignable places, `entity_ref` equality and the loop budget of
-/// preview builds.
-pub const STRUCTURAL_HELPERS: [&str; 12] = [
+/// colour's `.rgb`, a `mat4` column, index clamping, the value copy of assignable places, `entity_ref` equality, the loop budget of
+/// preview builds and the iteration cap of `while` (decision 0144); `fmt` formats an interpolated value (decision 0133).
+pub const STRUCTURAL_HELPERS: [&str; 14] = [
     "swizzle2",
     "swizzle3",
     "swizzle4",
@@ -29,7 +29,30 @@ pub const STRUCTURAL_HELPERS: [&str; 12] = [
     "copy",
     "refEq",
     "budgetExceeded",
+    "whileLimit",
+    "fmt",
 ];
+
+/// The members of the `easing` namespace (decision 0135); the runtime names them `easeInQuad`, ….
+pub const EASE_FUNCTIONS: [&str; 10] = [
+    "in_quad",
+    "out_quad",
+    "in_out_quad",
+    "in_cubic",
+    "out_cubic",
+    "in_out_cubic",
+    "in_out_sine",
+    "out_back",
+    "out_elastic",
+    "out_bounce",
+];
+
+fn upper_first(name: &str) -> String {
+    let mut chars = name.chars();
+    chars.next().map_or_else(String::new, |c| {
+        c.to_ascii_uppercase().to_string() + chars.as_str()
+    })
+}
 
 /// `"(a, b) -> r"`, the signature key of the table.
 #[must_use]
@@ -145,6 +168,16 @@ fn build() -> Table {
     add(&mut t, "transpose", &["mat4"], "mat4", "m4transpose".into());
 
     add(&mut t, "quat.identity", &[], "quat", "qidentity".into());
+    // Easing curves (decision 0135).
+    for name in EASE_FUNCTIONS {
+        add(
+            &mut t,
+            &format!("easing.{name}"),
+            &["f32"],
+            "f32",
+            format!("ease{}", upper_first(&camel(name))),
+        );
+    }
     add(
         &mut t,
         "quat.axis_angle",

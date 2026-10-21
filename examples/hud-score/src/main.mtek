@@ -1,0 +1,89 @@
+// HUD score (spec/hud.md, decision 0134; string interpolation, spec/language.md 5.8, decision 0133;
+// easing, spec/tweens.md, decision 0135).
+//
+//   Space    score a point: the cube pops and the score text updates
+//   R, or the "Reset" button at the bottom   start again
+//   After 30 s: a GAME OVER panel with the score and a "Play again" button
+//
+// The HUD is immediate mode: `update` draws the text, the bars and the button again every frame, and
+// `hud.button` returns true in the frame after a click.
+
+// A round lasts this many seconds; the bar at the top shows the time left.
+const ROUND: f32 = 30.0;
+
+const BAR_WIDTH: f32 = 300.0;
+
+// How long the pop of the cube lasts after a point, in seconds.
+const PULSE: f32 = 0.3;
+
+scene Score {
+    clear_color: #0e1420;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.4;
+
+    state points: i32 = 0;
+    state best: i32 = 0;
+    state elapsed: f32 = 0.0;
+    // How long the cube still pops after a point, in seconds (PULSE down to 0).
+    state pulse: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Sun {
+        rotation: quat.euler(-0.6, 0.4, 0.0);
+        light: DirectionalLight { intensity: 2.0 };
+    }
+
+    entity Cube {
+        rotation: bind(quat.euler(0.3, frame.time, 0.0));
+        // A point pops the cube to 1.4 and eases it back with a small undershoot (`easing.out_back`).
+        scale: bind(vec3(1.0, 1.0, 1.0) * (1.4 - 0.4 * easing.out_back(1.0 - pulse / PULSE)));
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Pbr { base_color: #4fa3ff; roughness: 0.35 };
+    }
+
+    update(dt: f32) {
+        pulse = max(pulse - dt, 0.0);
+        let left: f32 = max(ROUND - elapsed, 0.0);
+        if left > 0.0 {
+            elapsed += dt;
+        }
+
+        hud.text("Score: ${points}", vec2(-0.95, 0.9), 32.0, #ffffff, 0.0);
+        hud.text("Best: ${best}", vec2(0.95, 0.9), 24.0, #ffd040, 1.0);
+        // The time bar: a dark track and a fill that shrinks from the right.
+        hud.rect(vec2(-0.95, 0.78), vec2(BAR_WIDTH, 10.0), #202838, 0.0);
+        hud.rect(vec2(-0.95, 0.78), vec2(BAR_WIDTH * left / ROUND, 10.0), #40d070, 0.0);
+        hud.text("${left:.1} s", vec2(-0.95, 0.7), 18.0, #a0b0c0, 0.0);
+
+        if left <= 0.0 {
+            // GAME OVER panel: a dark rectangle behind centred text and a "Play again" button.
+            hud.rect(vec2(0.0, 0.1), vec2(420.0, 220.0), #000000c0, 0.5);
+            hud.text("GAME OVER", vec2(0.0, 0.3), 56.0, #ff5050, 0.5);
+            hud.text("${points} points", vec2(0.0, 0.12), 28.0, #ffffff, 0.5);
+            if hud.button("Play again", vec2(0.0, -0.05), 24.0) {
+                points = 0;
+                elapsed = 0.0;
+            }
+        } else if hud.button("Reset", vec2(0.0, -0.85)) {
+            points = 0;
+            elapsed = 0.0;
+        }
+    }
+
+    on key_down(Key.Space) {
+        if elapsed < ROUND {
+            points += 1;
+            best = max(best, points);
+            pulse = PULSE;
+        }
+    }
+
+    on key_down(Key.R) {
+        points = 0;
+        elapsed = 0.0;
+    }
+}

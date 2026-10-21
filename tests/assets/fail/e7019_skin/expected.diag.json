@@ -4,10 +4,10 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The file contains 1 skin; the v0.1 profile is static and has neither animations nor skins.",
+    "message": "The file contains 1 skin; the v0.1 profile has no skins.",
     "notes": [
       "the problem is in the file 'models/model.glb'",
-      "help: export the model without animations and skins"
+      "help: export the model without skins"
     ]
   }
 ]

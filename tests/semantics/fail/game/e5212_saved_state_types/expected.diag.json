@@ -1,0 +1,44 @@
+[
+  {
+    "code": "MTEK-E5212",
+    "file": "src/main.mtek",
+    "startByte": 234,
+    "endByte": 262,
+    "message": "'best' is a saved state of type f32 in the scene 'Level', but a saved state of type i32 in the scene 'Menu'.",
+    "expected": "saved state of type i32",
+    "actual": "saved state of type f32",
+    "related": [
+      {
+        "message": "'best' is a saved state of type i32 here",
+        "file": "src/main.mtek",
+        "startByte": 148,
+        "endByte": 151
+      }
+    ],
+    "notes": [
+      "all scenes of a program share one store, in which a value is kept by its name",
+      "help: give the state one kind and one type in every scene, or another name"
+    ]
+  },
+  {
+    "code": "MTEK-E5212",
+    "file": "src/main.mtek",
+    "startByte": 267,
+    "endByte": 297,
+    "message": "'volume' is a saved state of type f32 in the scene 'Level', but a setting state of type f32 in the scene 'Menu'.",
+    "expected": "setting state of type f32",
+    "actual": "saved state of type f32",
+    "related": [
+      {
+        "message": "'volume' is a setting state of type f32 here",
+        "file": "src/main.mtek",
+        "startByte": 183,
+        "endByte": 186
+      }
+    ],
+    "notes": [
+      "all scenes of a program share one store, in which a value is kept by its name",
+      "help: give the state one kind and one type in every scene, or another name"
+    ]
+  }
+]

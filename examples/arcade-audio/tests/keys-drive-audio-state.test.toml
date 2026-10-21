@@ -1,0 +1,39 @@
+# The audio calls themselves are not observable from a fixture (audio output is a manual check, TESTING-codey2.md);
+# this fixture checks the state that the keys drive, and that every handler that plays a sound runs without a
+# runtime error. Each press is applied at the start of the next frame.
+name = "S scores, N mutes and unmutes, the arrows change the volume, M toggles the music"
+steps = [
+  { step = 2, dt = 0.016666668 },
+  { expect_state = { points = 0, muted = false, music_on = false, volume = { value = 1.0, tolerance = 1e-6 } } },
+
+  { press = "KeyS" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyS" },
+  { press = "KeyS" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyS" },
+  { expect_state = { points = 2 } },
+
+  { press = "KeyN" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyN" },
+  { expect_state = { muted = true } },
+  { press = "KeyN" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyN" },
+  { expect_state = { muted = false } },
+
+  { press = "ArrowDown" },
+  { step = 1, dt = 0.016666668 },
+  { release = "ArrowDown" },
+  { expect_state = { volume = { value = 0.9, tolerance = 1e-5 } } },
+
+  { press = "KeyM" },
+  { step = 1, dt = 0.016666668 },
+  { release = "KeyM" },
+  { expect_state = { music_on = true } },
+  { press = "Space" },
+  { step = 1, dt = 0.016666668 },
+  { release = "Space" },
+  { expect_state = { flash = { value = 0.38, tolerance = 0.03 } } },
+]

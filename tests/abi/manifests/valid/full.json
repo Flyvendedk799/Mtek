@@ -28,6 +28,21 @@
     "maxEntities": 16384,
     "pauseWhenHidden": true
   },
+  "game": {
+    "scenes": [
+      {
+        "name": "Demo",
+        "module": "app.js",
+        "manifest": "program.manifest.json"
+      },
+      {
+        "name": "Menu",
+        "module": "app.Menu.js",
+        "manifest": "program.Menu.manifest.json"
+      }
+    ],
+    "storage": "full-fixture"
+  },
   "preview": {
     "loopBudget": 10000000
   },
@@ -934,6 +949,16 @@
       "colorSpace": "linear",
       "preprocessing": [],
       "span": 23
+    },
+    {
+      "url": "assets/5b0e8f1c2d3a4b69.wav",
+      "sha256": "5b0e8f1c2d3a4b69a1c0e7d6f5b4a3928170615f4e3d2c1b0a99887766554433",
+      "bytes": 2252,
+      "kind": "audio",
+      "format": "wav",
+      "mime": "audio/wav",
+      "source": "sounds/hit.wav",
+      "span": 23
     }
   ],
   "prefabs": [
@@ -1013,9 +1038,57 @@
           ],
           "order": 0,
           "span": 12
+        },
+        {
+          "id": 1,
+          "target": {
+            "kind": "camera",
+            "field": "position",
+            "camera": "Main"
+          },
+          "deps": [
+            {
+              "kind": "frame",
+              "name": "time"
+            }
+          ],
+          "order": 1,
+          "span": 13
         }
       ],
-      "span": 11
+      "span": 11,
+      "tag": "crate",
+      "particles": {
+        "rate": 1,
+        "lifetime": 1,
+        "speed": 1,
+        "size": 0.05,
+        "gravity": 0
+      },
+      "clip": {
+        "name": "Spin",
+        "duration": 1,
+        "channels": [
+          {
+            "path": "rotation",
+            "interpolation": "linear",
+            "times": [
+              0,
+              1
+            ],
+            "values": [
+              0,
+              0,
+              0,
+              1,
+              0,
+              1,
+              0,
+              0
+            ]
+          }
+        ]
+      }
     },
     {
       "symbol": "src/props.mtek::Marble",
@@ -1139,7 +1212,10 @@
       {
         "name": "speed",
         "type": "f32",
-        "symbol": "src/main.mtek::Demo.speed"
+        "symbol": "src/main.mtek::Demo.speed",
+        "shared": true,
+        "persist": "setting",
+        "storedType": "f32"
       },
       {
         "name": "paused",
@@ -1202,7 +1278,37 @@
           }
         ],
         "update": true,
-        "fixedUpdate": true
+        "fixedUpdate": true,
+        "tag": "player",
+        "particles": {
+          "rate": 24,
+          "lifetime": 0.8,
+          "speed": 1.6,
+          "size": 0.12,
+          "gravity": 3
+        },
+        "clip": {
+          "name": "Spin",
+          "duration": 1,
+          "channels": [
+            {
+              "path": "translation",
+              "interpolation": "step",
+              "times": [
+                0,
+                1
+              ],
+              "values": [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0
+              ]
+            }
+          ]
+        }
       },
       {
         "index": 1,
@@ -1477,7 +1583,8 @@
         "id": 3,
         "target": {
           "kind": "camera",
-          "field": "projection.fov_y"
+          "field": "projection.fov_y",
+          "camera": "Main"
         },
         "deps": [
           {

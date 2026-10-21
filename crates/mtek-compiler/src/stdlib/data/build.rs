@@ -104,6 +104,12 @@ pub(super) const V: SigType = SigType::Class(TypeClass::Vector);
 /// The concrete type `f32`.
 pub(super) const F32: SigType = SigType::Exact(TypeRef::F32);
 
+/// `array<T, N>`: the checker takes the element and the length from the argument (decision 0152).
+pub(super) const ARRAY_TN: SigType = SigType::Form("array<T, N>");
+
+/// The element of [`ARRAY_TN`].
+pub(super) const ELEMENT_T: SigType = SigType::Form("T");
+
 /// A parameter of a signature.
 pub(super) const fn p(name: &'static str, ty: SigType) -> ParamDef {
     ParamDef { name, ty }

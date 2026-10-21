@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_timer_two_arguments.mtek",
+    "startByte": 56,
+    "endByte": 57,
+    "message": "Expected `)` after the number of seconds, found `,`.",
+    "notes": [
+      "help: `after` takes one argument, the time in seconds: `after(1.5) { ... }`"
+    ]
+  }
+]

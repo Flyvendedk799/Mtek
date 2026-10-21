@@ -1,0 +1,3 @@
+String 0..15 "\"open ${points\"" = malformed
+String 16..30 "\"line ${points" = malformed
+Eof 31..31 ""

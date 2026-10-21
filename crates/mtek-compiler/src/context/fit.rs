@@ -30,6 +30,9 @@ pub struct Draft {
     /// `neighbour[i]` says whether `context.symbols[i]` is one reference away from the
     /// requested symbols rather than one of them.
     pub neighbour: Vec<bool>,
+    /// The full `supported.features`, when the context lists fewer because `reference.builtins`
+    /// names the functions (decision 0148): restored when the budget drops `builtins`.
+    pub full_features: Option<Vec<String>>,
 }
 
 /// What can be dropped, in the order it is dropped.
@@ -88,6 +91,12 @@ impl Draft {
                     if let Some(section) = draft.context.reference.sections().first().copied() {
                         draft.context.reference.clear(section);
                         dropped.reference.push(section.to_owned());
+                        // Without the signatures, the features name the functions again.
+                        if section == "builtins"
+                            && let Some(features) = draft.full_features.take()
+                        {
+                            draft.context.supported.features = features;
+                        }
                     }
                 }
                 Phase::Schemas => {
@@ -172,7 +181,7 @@ mod tests {
                 context_format: 2,
                 supported: Supported {
                     features: vec!["scenes".to_owned()],
-                    not_supported: vec!["while".to_owned()],
+                    not_supported: vec!["loop".to_owned()],
                 },
                 syntax: SyntaxSection {
                     keywords: vec!["fn".to_owned()],
@@ -193,6 +202,7 @@ mod tests {
                 truncated: None,
             },
             neighbour: vec![true, false, false, true, false],
+            full_features: None,
         }
     }
 

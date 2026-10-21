@@ -1,0 +1,24 @@
+# The difficulty is a `setting state` (decision 0146): ArrowRight raises it, ArrowLeft lowers it, and
+# the logo turns faster on a harder difficulty. A test starts with an empty in-memory store, so the
+# first frame sees the declared initial value, Normal (variant index 1).
+#
+# Every frame is 0.0625 s, under `max_frame_delta` (0.1 s) so the runtime does not clamp it.
+# On Normal the logo turns by 0.16 * 5.0 * dt = 0.05 rad per frame, and on Hard by
+# 0.16 * 7.0 * dt = 0.07 rad per frame. A key handler runs in phase 1 of the next frame, before
+# `update`.
+name = "the difficulty setting changes with the arrow keys"
+steps = [
+  { step = 1, dt = 0.0625 },
+  { expect_state = { difficulty = 1, spin = { value = 0.05, tolerance = 1e-5 } } },
+  { press = "ArrowRight" },
+  { step = 1, dt = 0.0625 },
+  { release = "ArrowRight" },
+  { expect_state = { difficulty = 2, spin = { value = 0.12, tolerance = 1e-5 } } },
+  { press = "ArrowLeft" },
+  { step = 1, dt = 0.0625 },
+  { release = "ArrowLeft" },
+  { press = "ArrowLeft" },
+  { step = 1, dt = 0.0625 },
+  { release = "ArrowLeft" },
+  { expect_state = { difficulty = 0 } },
+]

@@ -1,0 +1,7 @@
+// `Enum.Variant` names a variant the enum declares.
+enum Phase { Menu, Playing, GameOver }
+
+scene Demo {
+    state phase: Phase = Phase.Playng;
+    camera Main {}
+}

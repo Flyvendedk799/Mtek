@@ -3,10 +3,10 @@
 use crate::source::Span;
 use crate::syntax::TokenKind;
 use crate::syntax::ast::{
-    ConstDecl, EntityDecl, EntityMember, FieldInit, FieldValue, FnDecl, Handler, HandlerArg,
-    ImportDecl, Item, ItemKind, LifecycleFn, MaterialDecl, MaterialMember, Module, Node, Param,
-    ParamDecl, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, StructDecl,
-    StructField, Type, TypeKind,
+    ConstDecl, EntityDecl, EntityMember, EnumDecl, FieldInit, FieldValue, FnDecl, Handler,
+    HandlerArg, ImportDecl, Item, ItemKind, LifecycleFn, MaterialDecl, MaterialMember, Module,
+    Node, Param, ParamDecl, Persist, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn,
+    StateDecl, StructDecl, StructField, Type, TypeKind,
 };
 
 use super::doc::Doc;
@@ -38,6 +38,7 @@ impl Printer<'_> {
             ItemKind::Const(decl) => self.const_decl(decl),
             ItemKind::Fn(decl) => self.fn_decl(decl),
             ItemKind::Struct(decl) => self.struct_decl(decl),
+            ItemKind::Enum(decl) => self.enum_decl(decl),
             ItemKind::Material(decl) => self.material_decl(decl),
             ItemKind::Prefab(decl) => self.prefab_decl(decl),
             ItemKind::Scene(decl) => self.scene_decl(decl),
@@ -108,6 +109,19 @@ impl Printer<'_> {
             p.struct_field(f)
         });
         Doc::concat(vec![Doc::text("struct "), name, Doc::Space, body])
+    }
+
+    /// `enum Name { A, B }` on one line if it fits, else one variant per line
+    /// with a trailing comma.
+    fn enum_decl(&mut self, decl: &EnumDecl) -> Doc {
+        let name = self.ident(&decl.name);
+        let variants = self.list(
+            &ListStyle::IMPORT_BRACES,
+            &decl.variants,
+            closing(decl.span),
+            &mut |p, v| p.ident(v),
+        );
+        Doc::concat(vec![Doc::text("enum "), name, Doc::Space, variants])
     }
 
     fn struct_field(&mut self, field: &StructField) -> Doc {
@@ -235,7 +249,19 @@ impl Printer<'_> {
         let value = self.expr(&decl.value);
         let semicolon = self.semicolon(decl.span.end);
         Doc::concat(vec![
-            Doc::text("state "),
+            Doc::text(
+                match (
+                    decl.shared.is_some(),
+                    decl.persist.map(|(persist, _)| persist),
+                ) {
+                    (false, None) => "state ",
+                    (true, None) => "shared state ",
+                    (false, Some(Persist::Saved)) => "saved state ",
+                    (false, Some(Persist::Setting)) => "setting state ",
+                    (true, Some(Persist::Saved)) => "shared saved state ",
+                    (true, Some(Persist::Setting)) => "shared setting state ",
+                },
+            ),
             name,
             Doc::text(": "),
             ty,

@@ -40,6 +40,8 @@ pub enum Construct {
     Fn,
     CpuFn,
     Struct,
+    /// `enum Name { … }` (decision 0129).
+    Enum,
     Material,
     Prefab,
     Scene,
@@ -78,11 +80,13 @@ pub enum Construct {
     Equality,
     /// `!`, `&&`, `||`.
     Logical,
+    /// `match` statements and expressions (decision 0129).
+    Match,
 }
 
 impl Construct {
     /// Every construct, in declaration order.
-    pub const ALL: [Construct; 30] = [
+    pub const ALL: [Construct; 32] = [
         Construct::Import,
         Construct::Export,
         Construct::ConstItem,
@@ -90,6 +94,7 @@ impl Construct {
         Construct::Fn,
         Construct::CpuFn,
         Construct::Struct,
+        Construct::Enum,
         Construct::Material,
         Construct::Prefab,
         Construct::Scene,
@@ -113,6 +118,7 @@ impl Construct {
         Construct::Comparison,
         Construct::Equality,
         Construct::Logical,
+        Construct::Match,
     ];
 }
 
@@ -155,6 +161,8 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::CpuFn => row("`cpu fn` declarations", true, M1),
         // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
         Construct::Struct => row("`struct` declarations", true, M1),
+        // Small-game support, stage 1 (decision 0129): implemented by this build.
+        Construct::Enum => row("`enum` declarations", true, M1),
         // Planned for M2; implemented by task M2-04 before the M2 gate (decision 0039).
         Construct::Material => row("`material` declarations", true, M1),
         // Planned for M5; implemented by task M5-01 before the M5 gate (decision 0062).
@@ -189,6 +197,7 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::Comparison => row("Comparison operators (`<`, `<=`, `>`, `>=`)", true, M1),
         Construct::Equality => row("Equality operators (`==`, `!=`)", true, M1),
         Construct::Logical => row("Logical operators (`!`, `&&`, `||`)", true, M1),
+        Construct::Match => row("`match`", false, M1),
     }
 }
 

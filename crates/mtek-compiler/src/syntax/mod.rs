@@ -24,7 +24,7 @@ pub use parser::{
     parse_expression, parse_expression_no_desc, parse_module,
 };
 pub use token::{
-    KEYWORDS, PUNCTUATION, RESERVED_WORDS, Token, TokenKind, TokenValue, Trivia, TriviaItem,
-    TriviaKind, is_reserved_word, keyword_kind,
+    KEYWORDS, PUNCTUATION, RESERVED_WORDS, StrPiece, Token, TokenKind, TokenValue, Trivia,
+    TriviaItem, TriviaKind, is_reserved_word, keyword_kind,
 };
 pub use walk::{NodeInfo, walk_expr, walk_module};

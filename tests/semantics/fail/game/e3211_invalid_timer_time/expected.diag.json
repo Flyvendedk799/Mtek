@@ -1,0 +1,38 @@
+[
+  {
+    "code": "MTEK-E3211",
+    "file": "src/main.mtek",
+    "startByte": 246,
+    "endByte": 250,
+    "message": "The time of `after` cannot be negative, but it is -1.",
+    "expected": "a time >= 0.0",
+    "actual": "-1",
+    "notes": [
+      "help: timers count seconds of game time; `every(0.5) { ... }` runs twice a second"
+    ]
+  },
+  {
+    "code": "MTEK-E3211",
+    "file": "src/main.mtek",
+    "startByte": 281,
+    "endByte": 284,
+    "message": "The time of `every` must be greater than zero, but it is 0.",
+    "expected": "a time > 0.0",
+    "actual": "0",
+    "notes": [
+      "help: timers count seconds of game time; `every(0.5) { ... }` runs twice a second"
+    ]
+  },
+  {
+    "code": "MTEK-E3211",
+    "file": "src/main.mtek",
+    "startByte": 315,
+    "endByte": 320,
+    "message": "The time of `every` must be greater than zero, but it is 0.",
+    "expected": "a time > 0.0",
+    "actual": "0",
+    "notes": [
+      "help: timers count seconds of game time; `every(0.5) { ... }` runs twice a second"
+    ]
+  }
+]

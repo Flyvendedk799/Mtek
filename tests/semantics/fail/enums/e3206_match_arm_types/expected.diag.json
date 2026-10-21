@@ -1,0 +1,22 @@
+[
+  {
+    "code": "MTEK-E3206",
+    "file": "src/main.mtek",
+    "startByte": 220,
+    "endByte": 224,
+    "message": "The arms of this `match` give values of different types: f32 and bool.",
+    "expected": "f32",
+    "actual": "bool",
+    "related": [
+      {
+        "message": "the first arm gives f32",
+        "file": "src/main.mtek",
+        "startByte": 190,
+        "endByte": 193
+      }
+    ],
+    "notes": [
+      "help: every arm of a `match` expression must give a value of one type; convert explicitly where needed"
+    ]
+  }
+]

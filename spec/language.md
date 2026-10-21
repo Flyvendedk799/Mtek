@@ -30,18 +30,18 @@ Conventions in this document: **must** / **must not** are requirements on the co
 2.2 **Keywords (reserved).** These may never be used as identifiers:
 
 ```
-bind  break  continue  cpu  else  entity  export  false  fn  for  if
-import  in  let  material  on  param  prefab  return  scene  self
-state  struct  true  var  const
+bind  break  continue  cpu  else  entity  enum  export  false  fn  for  if
+import  in  let  match  material  on  param  prefab  return  scene  self
+state  struct  true  var  const  while
 ```
 
-The blueprint's list (§3.4) plus `struct`, `true`, `false`, `self`, `bind`, `break`, `continue` (decision 0008).
+The blueprint's list (§3.4) plus `struct`, `true`, `false`, `self`, `bind`, `break`, `continue` (decision 0008), `enum` and `match` (decision 0129, which moved them here from §2.3), and `while` (decision 0144, likewise).
 
-2.3 **Reserved for future use.** Using these as identifiers is error `E0013` ("`while` is reserved for a future version"):
+2.3 **Reserved for future use.** Using these as identifiers is error `E0013` ("`loop` is reserved for a future version"):
 
 ```
-as  async  await  enum  extern  impl  loop  match  mod  move  mut
-priv  pub  static  super  trait  type  unsafe  use  where  while  yield
+as  async  await  extern  impl  loop  mod  move  mut
+priv  pub  static  super  trait  type  unsafe  use  where  yield
 compute  vertex  storage  uniform  workgroup  system  query  component
 ```
 
@@ -51,6 +51,9 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 - `fragment` — the stage function name inside a material body (`spec/materials.md` §3).
 - `from` — in an import clause (`import { A } from "…";`).
 - Event names after `on` (`key_down`, `collision_enter`, …), resolved against the registry.
+- `after`, `every` — a timer statement when the word is followed by `(…)` and a block (§7.11, decision 0142); anywhere else an ordinary name.
+- `shared` — before `state` in a scene, marks a shared state (`spec/scenes.md` §15.2, decision 0141).
+- `saved`, `setting` — before `state` in a scene (after `shared`, if any), mark a persistent state (`spec/scenes.md` §16, decisions 0145 and 0146). Anywhere else they are ordinary names.
 
 2.5 **Literals.**
 
@@ -59,7 +62,7 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 | Integer | `0` or `[1-9][0-9]*` | No sign (unary minus is an operator), no leading zeros (`007` is `E0020`), no separators, no suffixes, no hexadecimal in v0.1 (`0x1F` is `E0021`). |
 | Float | `[0-9]+ '.' [0-9]+ ( [eE] [+-]? [0-9]+ )?` | Digits are required on both sides of the point: `1.0`, `0.5`, `2.5e-3`. `1.`, `.5`, `1e3` are `E0022` with a suggested edit (`1.0`, `0.5`, `1.0e3`). |
 | Boolean | `true`, `false` | |
-| String | `"…"` | Escapes: `\"`, `\\`, `\n`, `\t`, `\r`, `\0`, `\u{H…}` (1–6 hex digits, a Unicode scalar value). Any other escape is `E0023`. A raw line terminator inside a string is `E0024` (unterminated). Strings are CPU-only (§5.1). |
+| String | `"…"` | Escapes: `\"`, `\\`, `\n`, `\t`, `\r`, `\0`, `\u{H…}` (1–6 hex digits, a Unicode scalar value). Any other escape is `E0023`. A raw line terminator inside a string is `E0024` (unterminated). `${expr}` inside a string is an interpolation (§5.8) and `\$` a literal `$`. Strings are CPU-only (§5.1). |
 | Color | `#RRGGBB` or `#RRGGBBAA` | Hex digits, case-insensitive (formatter lowercases). Any other length (`#fff`) is `E0025`. Meaning: §5.4. |
 
 2.6 **Punctuation and operators.**
@@ -67,10 +70,10 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 ```
 { } ( ) [ ] < > , ; : . ..
 + - * / % ! = == != < <= > >= && ||
-+= -= *= /= ->
++= -= *= /= -> =>
 ```
 
-`<` and `>` double as generic brackets only inside type syntax (`array<f32, 4>`), which appears exclusively after `:` or `->`, so no expression ambiguity exists. `..` appears only in `for` headers (§7.5). Bitwise operators (`& | ^ ~ << >>`) are not part of v0.1; each is lexed so that it can be rejected with `E1901` ("bitwise operators are not supported in v0.1") rather than producing a confusing parse error.
+`<` and `>` double as generic brackets only inside type syntax (`array<f32, 4>`), which appears exclusively after `:` or `->`, so no expression ambiguity exists. `..` appears only in `for` headers (§7.5); `=>` only in `match` arms (decision 0129). Bitwise operators (`& | ^ ~ << >>`) are not part of v0.1; each is lexed so that it can be rejected with `E1901` ("bitwise operators are not supported in v0.1") rather than producing a confusing parse error.
 
 ## 3. Program structure
 
@@ -82,6 +85,7 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 | Constant | `const NAME: Type = expr;` (type annotation optional) | §8.1 |
 | Function | `fn name(params) -> T { … }` / `cpu fn name(…) { … }` | §8.2 |
 | Struct | `struct Name { field: Type; … }` | §5.5 |
+| Enum | `enum Name { A, B, … }` | §5.7 |
 | Material | `material Name { … }` | `spec/materials.md` |
 | Prefab | `prefab Name { … }` | `spec/scenes.md` |
 | Scene | `scene Name { … }` | `spec/scenes.md` |
@@ -102,7 +106,7 @@ One deliberate exception keeps common words usable: a **local, parameter, `state
 
 4.3 **Static resolution.** Every name is resolved at compile time. An unknown name is error `E2003`; when an in-scope name is within edit distance 2 the diagnostic includes a related "did you mean" span but no automatic edit (blueprint §9.4: do not suggest an arbitrary fix when intent is unknown — a rename suggestion is offered only as a *validated edit* if exactly one candidate exists and it type-checks; see `spec/diagnostics.md` §6 and decision 0071).
 
-4.4 **Qualified access.** `TypeName.member` names an associated function or constant of a built-in type (`quat.identity()`, `color.linear(…)`, `Key.Space`). `frame.time` reads a built-in frame value (`spec/scenes.md` §7). `EntityName.field` reads an entity field (`spec/scenes.md` §4).
+4.4 **Qualified access.** `TypeName.member` names an associated function or constant of a built-in type (`quat.identity()`, `color.linear(…)`, `Key.Space`). `frame.time` reads a built-in frame value (`spec/scenes.md` §7). `EntityName.field` reads an entity field (`spec/scenes.md` §4). `EnumName.Variant` names a variant of a user `enum` (§5.7); an unknown variant is `E3205`.
 
 ## 5. Types
 
@@ -117,13 +121,14 @@ One deliberate exception keeps common words usable: a **local, parameter, `state
 | Rotation | `quat` | CPU and GPU | Unit quaternion `(x, y, z, w)`. Distinct from `vec4`. |
 | Color | `color` | CPU and GPU | Linear-light RGBA `f32`. Distinct from `vec4`. |
 | Records | user `struct` types | CPU; GPU if every field is GPU-representable | §5.5 |
+| Enums | user `enum` types | CPU only | §5.7. A closed set of named variants without data. |
 | Arrays | `array<T, N>` | CPU; GPU if `T` is | Fixed length `N`: an integer literal or the name of an integer constant, with value 1 … 65 536 (`E3031`). |
 | Handles | `mesh`, `material`, `texture`, `sampler`, `entity_ref` | CPU only (opaque) | Never convertible to numbers. `texture`/`sampler` may appear as material params (`spec/materials.md` §2). |
 | Unit | (no name) | both | The result of a function without `->`. Not usable as a value. |
 
 There is no implicit `null`, no `any`, no implicit optional. Fallibility exists only at host boundaries (`spec/runtime-abi.md` §6) and in a small number of built-in operations whose fallible result is a `bool` plus a documented default (e.g. `alive(r)`).
 
-5.2 **Type equivalence.** Nominal for `struct` types; structural for everything else (`array<f32, 3>` is one type everywhere). `vec4`, `quat` and `color` are three different types even though all are four `f32`s.
+5.2 **Type equivalence.** Nominal for `struct` and `enum` types; structural for everything else (`array<f32, 3>` is one type everywhere). `vec4`, `quat` and `color` are three different types even though all are four `f32`s.
 
 5.3 **Matrices.** `mat4` is column-major and multiplies column vectors on the right: `m * v` where `v: vec4`. `m[i]` is column `i` (`vec4`). Composition `a * b` applies `b` first.
 
@@ -140,6 +145,28 @@ There is no implicit `null`, no `any`, no implicit optional. Fallibility exists 
 - A constant index out of range is error `E3030`.
 - A run-time index is **clamped** to `[0, N-1]` in both execution domains (decision 0009): the WGSL emitter inserts the clamp explicitly, because WGSL itself guarantees only an indeterminate value (or, through a reference, an implementation-chosen outcome) for an out-of-bounds run-time index [S5]. In development builds the CPU additionally reports warning `W8030` once per call site when clamping occurs. This gives identical results on CPU and GPU.
 
+5.7 **Enums** (decision 0129). `enum Name { A, B, C }` declares a type whose values are exactly its variants, written `Name.A`. Rules:
+- At least one variant (`E1001`); a trailing comma is allowed. Variant names are distinct within the enum (`E2002`, with a related span at the first); `_` is not a variant name (`E0012`). A variant carries no data, and there are no explicit discriminants.
+- An enum is a module item: it can be `export`ed and imported like a struct, and its name is a type (`state phase: Phase = Phase.Menu;`, parameters, results, struct fields, arrays).
+- `Name.Variant` is a constant expression (§6.3), so it may initialise a `const` and a `state`, and it folds.
+- Operators: only `==` and `!=`, between two values of the same enum (§6.2). There is no ordering (`<` is `E3014`) and no conversion to or from numbers (`i32(Phase.Menu)` is `E3001`).
+- Enums are **CPU only**: a value of an enum type never reaches GPU code (`E4011`, §8.4), and an enum is not a material param type (`E4030`). In the IR and the program manifest an enum value is its variant's index, `u32`, numbered from 0 in declaration order; the index is not observable in the language.
+- A value of an enum type is consumed with `==`/`!=` or with `match` (§6.11, §7.9).
+
+5.8 **Interpolated strings** (decision 0133). A string literal may contain interpolations `${expr}` and `${expr:.N}`; its type is `string`:
+
+```mtek
+fn label(points: i32, t: f32, at: vec3) -> string {
+    return "Score: ${points} after ${t:.2}s at ${at}; ${points > 10} \${not}";
+}
+```
+
+- The expression is any expression without a string literal in it (a `"` inside `${` ends the string, `E0024`), parsed as a whole expression up to the `}` that closes the `${`; braces inside it nest. `${}` is `E1001`. `\$` writes a literal `$`, so `\${x}` is the text `${x}`.
+- Its type must be `string`, `bool`, `i32`, `u32`, `f32`, `vec2`, `vec3` or `vec4` (`E3501` otherwise; show a field or component of anything else).
+- Text forms: a string as it is; `true`/`false`; integers in decimal; an `f32` as the shortest decimal that reads back as the same `f32`, with `.0` on whole numbers (`3.0`, `0.1`), and `NaN`, `inf`, `-inf`; a vector as `(x, y, z)` with each component an `f32`.
+- The format spec `.N` (one digit, 0–9) prints exactly `N` digits after the decimal point, for an `f32` or each component of a vector. Any other spec, or `.N` on another type, is `E3502`.
+- An interpolated string is formatted at run time: it is not a constant expression (§6.3, `E3090` in a `const`), even when every part is constant. Like every string it is CPU only.
+
 ## 6. Expressions
 
 6.1 **Precedence and associativity** (highest first). The Pratt parser must implement exactly this table; `spec/grammar.ebnf` encodes the same.
@@ -155,7 +182,7 @@ There is no implicit `null`, no `any`, no implicit optional. Fallibility exists 
 | 2 | `&&` | left |
 | 1 | `\|\|` | left |
 
-Parentheses group. There is no ternary operator, no assignment expression, no comma operator, no `if` expression in v0.1.
+Parentheses group. There is no ternary operator, no assignment expression, no comma operator, no `if` expression in v0.1. A `match` expression (§6.11) is a primary expression: it binds like a parenthesised one.
 
 6.2 **Operator typing.** No implicit conversions between established types (§6.5). Let S = scalar float `f32`, V = any of `vec2/vec3/vec4`.
 
@@ -172,7 +199,7 @@ Parentheses group. There is no ternary operator, no assignment expression, no co
 | `!` | `bool` | `bool` |
 | `&& \|\|` | `bool` | `bool`, short-circuit on CPU; on GPU both operands are evaluated only if both are side-effect-free, which v0.1 GPU code always is |
 | `< <= > >=` | `f32`, `i32`, `u32` (same type) | `bool` |
-| `== !=` | same-typed `bool`, `f32`, `i32`, `u32`, `entity_ref` | `bool` |
+| `== !=` | same-typed `bool`, `f32`, `i32`, `u32`, `entity_ref`, values of one user `enum` (§5.7) | `bool` |
 
 Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated remainder `x - y * trunc(x / y)`.
 
@@ -216,6 +243,14 @@ Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated rema
 
 6.10 **Calls.** `f(a, b)` calls a function; arguments are positional, all required, no named or default arguments in v0.1. Built-in functions (§10) follow the same rule. A call to a `cpu fn` from a pure context is an effect error (§8.3).
 
+6.11 **`match` expressions** (decision 0129). `match value { Pattern => expr, … }` gives the value of the first arm whose pattern matches `value`.
+- `value` must be of a user `enum` type (`E3203`). It is evaluated exactly once. Like the condition of `if`, it may not be a bare descriptor literal (§6.8).
+- A **pattern** is `Enum.Variant`, a variant of `value`'s enum, or `_`, which matches any value. Several patterns may share an arm, joined by `|`: `Phase.Menu | Phase.Paused => 0.0`. Anything else (a literal, a bare name, a variant of another enum) is `E3204`; an unknown variant is `E3205`.
+- **Exhaustive:** the arms together cover every variant, or one of them is `_`; otherwise `E3201`, which names the missing variants (and so tells an agent what to add when a variant is added to the enum).
+- **No unreachable arms:** a pattern whose variants earlier arms already cover, and every arm after a `_`, is `E3202` (with a related span at the earlier pattern).
+- Arms are separated by commas; a trailing comma is allowed. Every arm value has the same type, after literal resolution (§6.6) against the context type when there is one (`E3206`, with a related span at the first arm); that type is the type of the `match`. A `match` whose arms are unit calls is not a value (`E3001`); use the statement form (§7.9).
+- A `match` that starts a statement is always the statement form (§7.9). A `match` whose scrutinee and arm values are constant expressions is itself one and folds (§6.3).
+
 ## 7. Statements
 
 7.1 `let name[: T] = expr;` — immutable local. `var name[: T] = expr;` — mutable local. An initialiser is mandatory (no uninitialised locals). A `var` never assigned after declaration is lint `W2010`.
@@ -231,11 +266,23 @@ Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated rema
 - Array: `for x in arr { … }` where `arr: array<T, N>`; `x: T` by value.
 The loop variable is immutable. In GPU-reachable code (§8.4) the range bounds must be constant expressions (`E4010` otherwise) and `N` is constant by construction.
 
-7.6 **`break`, `continue`** apply to the innermost `for`. Outside a loop: `E1030`.
+7.6 **`break`, `continue`** apply to the innermost `for` or `while` of the same body. Outside a loop: `E1030`. A timer block (§7.11) is a body of its own: a `break` in it does not leave a loop around the timer (`E1030`).
 
 7.7 **`return`.** `return expr;` in functions with a result type; `return;` in unit functions and handlers. Every path of a function with a result type must return (`E3080`). Unreachable statements after `return`/`break`/`continue` are warning `W3081`.
 
 7.8 **Blocks.** `{ … }` introduces a scope. Locals are visible from their declaration to the end of the block.
+
+7.9 **`match` statements** (decision 0129). `match value { Pattern => { … } … }` runs the block of the first arm whose pattern matches. The scrutinee, the patterns and the rules for exhaustiveness and unreachable arms are those of the `match` expression (§6.11: `E3201`–`E3205`). Each arm body is a block; a comma after it is optional. `break`, `continue` and `return` in an arm act as in any block. For §7.7, a `match` statement leaves its function only when it is exhaustive and every arm leaves it: a function may end with a `match` whose arms all `return`.
+
+7.10 **`while`** (decision 0144). `while cond { … }` runs its block as long as `cond`, a `bool` (`E3070`), is true; the condition is checked before every iteration. Like the condition of `if`, `cond` cannot start with a descriptor literal (wrap it in parentheses). `break` leaves the loop and `continue` starts the next check. `while` is CPU only: GPU-reachable code has no loops without a constant bound (`E4010`). There is no `loop`: write `while true { … }` and leave it with `break` (`loop` stays reserved, §2.3).
+
+Every `while` is **bounded**: one execution of a `while` statement runs at most 1 000 000 iterations (`WHILE_ITERATION_CAP`). The next iteration fails the frame with the run-time error `E8080` at the loop, and the scene stops like any frame failure (`spec/runtime-abi.md` §7). The cap is not a budget a program should approach; it turns an endless loop, which would hang the browser tab, into a reported error. A preview build's loop budget (decision 0075) also counts `while` iterations. For §7.7 a `while` never counts as leaving its function, even `while true` (a function with a result type needs a `return` after it).
+
+7.11 **Timers** (decision 0142). `after(seconds) { … }` runs its block once, `seconds` of game time from now; `every(seconds) { … }` runs its block every `seconds` of game time until the scene ends or, in an entity, until the entity is destroyed. `seconds` is an `f32` expression evaluated when the statement runs (`E3001`); a constant time must not be negative for `after` and must be greater than 0 for `every` (`E3211`). A time that is computed at run time is clamped: a negative or non-finite delay is 0, and a period that is not greater than 0 runs the block once per frame.
+
+- Timers are **handler-only**: they can be started in lifecycle functions and event handlers of scenes, entities and prefabs, not in functions or initialisers (`E5080`).
+- The block runs **later**, at the start of phase 3 of the frame in which it falls due (`spec/scenes.md` §15.3). It can read and write state, `self` and constants, and read the `let` locals, the parameters and the loop variables around it, whose values are captured when the timer starts. It cannot use a `var` of the body around it (`E3210`): that variable no longer exists when the block runs. A `return;` in the block leaves the block only; `break` and `continue` cannot reach a loop outside it (`E1030`).
+- `after` and `every` are contextual (§2.4): the statement is recognised only when the word is followed by a parenthesised argument and a block; `let after = 2.0;` is an ordinary name.
 
 ## 8. Constants, functions, effects
 
@@ -283,10 +330,10 @@ The authoritative list with signatures, domains, const-eligibility and CPU seman
 - `sign(0.0) = 0.0`.
 - Integer `abs(i32::MIN) = i32::MIN`.
 
-CPU-only intrinsics in v0.1: `random() -> f32` in `[0, 1)` (seeded per application from the mount option `seed`, default derived from time; tests always pass a seed), `print(message: string)` (development console; a no-op in release builds), `spawn`, `destroy`, `alive` (`spec/scenes.md` §9), `is_key_down(key: Key) -> bool` (`spec/scenes.md` §7.3).
+CPU-only intrinsics in v0.1: `random() -> f32` in `[0, 1)` (seeded per application from the mount option `seed`, default derived from time; tests always pass a seed), `print(message: string)` (development console; a no-op in release builds), `spawn`, `destroy`, `alive` (`spec/scenes.md` §9), `is_key_down(key: Key) -> bool` (`spec/scenes.md` §7.3), and the game-flow functions `go_to(Scene)`, `reset()`, `pause()`, `resume()` and `paused() -> bool` (`spec/scenes.md` §15, decisions 0140, 0141 and 0143).
 
 ## 11. What is not in v0.1
 
 Each of these is rejected with a diagnostic; `docs/limitations.md` gives the code of each. Only the reserved words (`E0013`), the bitwise operators (`E1901`) and the vertex and compute stages (`E4901`) have an unsupported-feature code of their own; the others are rejected by the general rule that names the construct (an unknown type is `E3003`, a numeric suffix or a hexadecimal literal `E0021`, `+` on strings `E3014`, and so on; decision 0102).
 
-`while`/`loop`; bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enums (only the built-in `Key`-style registry enums exist); optional/result types in the language; string formatting/concatenation (`+` on `string` is `E3014`); recursion; compute and vertex stages; storage buffers; pattern matching. The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).
+`loop` (write `while true`, §7.10); bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enum variants that carry data, explicit enum discriminants and conversions between enums and numbers (§5.7); optional/result types in the language; string concatenation (`+` on `string` is `E3014`; interpolation, §5.8, builds strings); recursion; compute and vertex stages; storage buffers; patterns other than an enum variant and `_` (no literal, binding, range or guard patterns, no destructuring, §6.11). The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).

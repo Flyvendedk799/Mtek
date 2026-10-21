@@ -1,0 +1,22 @@
+// Match statements: each arm is one or more patterns joined by `|`, `=>` and
+// a block; a comma after the block is optional.
+fn step(phase: GameState) {
+    match phase {
+        GameState.Menu => {
+            start();
+        }
+        GameState.Playing | GameState.Paused => {
+            tick();
+        },
+        _ => {}
+    }
+}
+
+fn exhaustive(direction: Direction) -> i32 {
+    match direction {
+        Direction.North => { return 0; }
+        Direction.East => { return 1; }
+        Direction.South => { return 2; }
+        Direction.West => { return 3; }
+    }
+}

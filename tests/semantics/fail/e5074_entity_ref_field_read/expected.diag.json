@@ -2,12 +2,12 @@
   {
     "code": "MTEK-E5074",
     "file": "src/main.mtek",
-    "startByte": 444,
-    "endByte": 457,
-    "message": "'.position' accesses a field through an entity_ref, but fields cannot be read or written through an entity_ref in v0.1.",
+    "startByte": 447,
+    "endByte": 456,
+    "message": "'.hits' cannot be read through an entity_ref. Only `position`, `rotation`, `scale` and `visible` can.",
     "notes": [
-      "through an entity_ref you may compare it (`==`, `!=`), test `alive(r)`, `destroy(r)` it and issue body commands",
-      "help: a named entity's fields are read by its name: `Floor.position`; keep the data you need in state"
+      "state, material params and other fields stay on the named entity, because an entity_ref does not say which entity it will be",
+      "help: read `position`, `rotation`, `scale` or `visible`, or keep the value in scene state"
     ]
   }
 ]

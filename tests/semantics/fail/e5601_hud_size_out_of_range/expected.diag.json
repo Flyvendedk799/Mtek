@@ -1,0 +1,41 @@
+[
+  {
+    "code": "MTEK-E5601",
+    "file": "src/main.mtek",
+    "startByte": 269,
+    "endByte": 275,
+    "message": "The text size 1000.0 of `hud.text` is outside the range 1.0 to 512.0.",
+    "expected": "1.0 to 512.0 CSS pixels",
+    "actual": "1000.0",
+    "notes": [
+      "HUD sizes are CSS pixels; values computed at run time are clamped to the same range",
+      "help: give a text size between 1.0 and 512.0"
+    ]
+  },
+  {
+    "code": "MTEK-E5601",
+    "file": "src/main.mtek",
+    "startByte": 322,
+    "endByte": 325,
+    "message": "The text size 0.5 of `hud.button` is outside the range 1.0 to 512.0.",
+    "expected": "1.0 to 512.0 CSS pixels",
+    "actual": "0.5",
+    "notes": [
+      "HUD sizes are CSS pixels; values computed at run time are clamped to the same range",
+      "help: give a text size between 1.0 and 512.0"
+    ]
+  },
+  {
+    "code": "MTEK-E5601",
+    "file": "src/main.mtek",
+    "startByte": 361,
+    "endByte": 377,
+    "message": "The rectangle size -4.0 of `hud.rect` is outside the range 0.0 to 8192.0.",
+    "expected": "0.0 to 8192.0 CSS pixels",
+    "actual": "-4.0",
+    "notes": [
+      "HUD sizes are CSS pixels; values computed at run time are clamped to the same range",
+      "help: give a rectangle size between 0.0 and 8192.0"
+    ]
+  }
+]

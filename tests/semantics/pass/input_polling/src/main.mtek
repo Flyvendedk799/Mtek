@@ -1,0 +1,21 @@
+// Edges and the pointer, polled from update (decision 0153).
+scene Demo {
+    camera Main {}
+    state lane: i32 = 0;
+    state at: vec2 = vec2(0.0, 0.0);
+    state clicking: bool = false;
+
+    update(dt: f32) {
+        if is_key_down(Key.ArrowUp) {
+            lane += 0;
+        }
+        if key_pressed(Key.ArrowLeft) {
+            lane -= 1;
+        }
+        if key_released(Key.ArrowRight) {
+            lane += 1;
+        }
+        at = pointer_position();
+        clicking = is_pointer_down(0);
+    }
+}

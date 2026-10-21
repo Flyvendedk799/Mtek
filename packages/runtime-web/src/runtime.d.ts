@@ -127,7 +127,7 @@ export interface MtekTestOptions {
 export interface MtekAssetStateEvent {
   /** The file's url in the manifest's assets table. */
   readonly url: string;
-  readonly kind: "mesh-data" | "image";
+  readonly kind: "mesh-data" | "image" | "audio" | "font";
   readonly state: "pending" | "ready" | "failed";
 }
 
@@ -217,8 +217,17 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
   devicePixelRatio?: number | "auto";
   /** Show the development overlay and measure GPU time (`timestamp-query`). Development runtime only; the release runtime ignores it. */
   devOverlay?: boolean;
+  /** Where saved state and settings are kept; default localStorage (in memory when `test` is given); null: memory only. */
+  storage?: MtekSaveStorage | null;
   /** Omit in production. */
   test?: MtekTestOptions;
+}
+
+/** The part of the Web Storage API that saves use (`localStorage` satisfies it). */
+export interface MtekSaveStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
 }
 
 export declare function mountMtek<I = Record<string, unknown>, O = Record<string, unknown>>(

@@ -58,6 +58,11 @@ pub struct ProgramParts<'a> {
     /// The layout records whose writers the module carries, in `writers` table order
     /// (`builtin:frame`, `builtin:object`, then the material blocks by id).
     pub layouts: &'a [LayoutRecord],
+    /// The manifest `manifestUrl` names, relative to the module (`program.manifest.json`, or
+    /// `program.<Scene>.manifest.json` for a scene other than the entry, decision 0141).
+    pub manifest_file: &'a str,
+    /// The source map the module points to ([`SOURCE_MAP_FILE`], or `app.<Scene>.js.map`).
+    pub source_map_file: &'a str,
     /// What the build mode changes: `print` is compiled out of every CPU body in a release
     /// or preview build, and a preview build checks the loop budget in every loop.
     pub flags: CpuFlags,
@@ -120,7 +125,7 @@ pub fn emit_program(
         },
         Item::ExportConst {
             name: "manifestUrl".to_owned(),
-            value: new_url("./program.manifest.json"),
+            value: new_url(&format!("./{}", parts.manifest_file)),
         },
     ];
 
@@ -232,7 +237,7 @@ pub fn emit_program(
             .map(|name| ((*name).to_owned(), Expr::ident(name)))
             .collect(),
     )));
-    items.push(Item::SourceMappingUrl(SOURCE_MAP_FILE.to_owned()));
+    items.push(Item::SourceMappingUrl(parts.source_map_file.to_owned()));
     Ok(print(&Module { items }))
 }
 
@@ -444,23 +449,29 @@ fn init_body(
     plan: &ResourcePlan,
     span_id: &mut dyn FnMut(crate::source::Span) -> Result<u32, String>,
 ) -> Result<Vec<Stmt>, String> {
-    // The active camera and entity roots follow scene declaration order. Keep each root
-    // with its pre-order descendants: imported prefab spans are from a different file
-    // and cannot be sorted against the scene (or against their own instance root).
-    let mut declarations: Vec<Declaration<'_>> = Vec::with_capacity(scene.entities.len() + 1);
-    let mut camera = scene.active_camera();
+    // Cameras and entity roots follow scene declaration order. Keep each root with its
+    // pre-order descendants: imported prefab spans are from a different file and cannot
+    // be sorted against the scene (or against their own instance root). One camera keeps
+    // the historical bytes: no `selectCamera`, and the comment still says "active".
+    let several = scene.cameras.len() > 1;
+    let mut cameras: Vec<&Camera> = scene.cameras.iter().collect();
+    let mut declarations: Vec<Declaration<'_>> =
+        Vec::with_capacity(scene.entities.len() + cameras.len());
     for entity in &scene.entities {
-        if entity.parent.is_none()
-            && camera.is_some_and(|c| {
-                c.span.file == entity.span.file && c.span.start < entity.span.start
-            })
-            && let Some(c) = camera.take()
-        {
-            declarations.push(Declaration::Camera(c));
+        if entity.parent.is_none() {
+            let mut index = 0;
+            while index < cameras.len() {
+                let camera = cameras[index];
+                if camera.span.file == entity.span.file && camera.span.start < entity.span.start {
+                    declarations.push(Declaration::Camera(cameras.remove(index)));
+                } else {
+                    index += 1;
+                }
+            }
         }
         declarations.push(Declaration::Entity(entity));
     }
-    if let Some(camera) = camera {
+    for camera in cameras {
         declarations.push(Declaration::Camera(camera));
     }
 
@@ -471,7 +482,7 @@ fn init_body(
     }
     for declaration in declarations {
         match declaration {
-            Declaration::Camera(camera) => camera_statements(camera, &mut body)?,
+            Declaration::Camera(camera) => camera_statements(camera, several, &mut body)?,
             Declaration::Entity(entity) => {
                 // An entity's state, then its fields (step 3).
                 let owner = Owner::Entity {
@@ -484,6 +495,12 @@ fn init_body(
             }
         }
     }
+    if several && let Some(active) = scene.active_camera() {
+        body.push(Stmt::Expr {
+            expr: ctx_call("selectCamera", vec![Expr::string(&active.name)]),
+            span: Some(active.span),
+        });
+    }
     Ok(body)
 }
 
@@ -491,9 +508,16 @@ fn ctx_call(method: &str, arguments: Vec<Expr>) -> Expr {
     Expr::ident("ctx").member(method).call(arguments)
 }
 
-fn camera_statements(camera: &Camera, body: &mut Vec<Stmt>) -> Result<(), String> {
+fn camera_statements(camera: &Camera, announce: bool, body: &mut Vec<Stmt>) -> Result<(), String> {
+    if announce {
+        body.push(Stmt::Expr {
+            expr: ctx_call("selectCamera", vec![Expr::string(&camera.name)]),
+            span: Some(camera.span),
+        });
+    }
+    let active = if camera.active { ", active" } else { "" };
     body.push(Stmt::Comment(format!(
-        "camera {} ({}), active",
+        "camera {} ({}){active}",
         camera.name, camera.symbol
     )));
     let mut set = |field: &str, value: Expr, span| {
@@ -712,6 +736,8 @@ pub fn value_expr(value: &Value) -> Result<Expr, String> {
         // consumes one: resource params are bound from the manifest.
         Value::Texture(name) | Value::Sampler(name) => Expr::string(name),
         Value::Image(image) => Expr::string(&image.to_string()),
+        Value::Sound(file) => Expr::string(file),
+        Value::Font(file) => Expr::string(file),
     })
 }
 

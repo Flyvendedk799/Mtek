@@ -3,12 +3,16 @@
   "notYetImplemented": [],
   "reserved": [
     {
+      "code": "E5100",
+      "reason": "Retired by decision 0138: material colour params take any alpha (an alpha below 1 makes the draw translucent), so no program can produce it; the catalogue keeps the code so that the number is not reused."
+    },
+    {
       "code": "E5901",
-      "reason": "No construct of v0.1 switches the active scene (spec/scenes.md section 1: one scene per application), so no program can produce it; the context export lists the feature as not supported."
+      "reason": "Retired by decision 0141: go_to(Scene) switches the active scene, so no program can produce it; the catalogue keeps the code so that the number is not reused."
     },
     {
       "code": "E5902",
-      "reason": "No construct of v0.1 asks for transparency (spec/materials.md section 2: opaque materials only), so no program can produce it; the context export lists the feature as not supported."
+      "reason": "Retired by decision 0138: a material colour param with an alpha below 1 makes the draw translucent, so no program can produce it; the catalogue keeps the code so that the number is not reused."
     },
     {
       "code": "E6003",
@@ -81,6 +85,21 @@
       "code": "E9032",
       "reason": "The compile time limit of mtek build --mode preview (decision 0075), a constant of the command line tool.",
       "test": "crates/mtek-cli/src/limits.rs"
+    },
+    {
+      "code": "E5401",
+      "reason": "A runtime code (a go_to or reset() whose scene cannot be loaded, decision 0141), produced by @mtek/runtime-web, whose unit tests are its fixtures.",
+      "test": "packages/runtime-web/src/host/game.test.ts"
+    },
+    {
+      "code": "W5402",
+      "reason": "A runtime code (stored saved data that does not fit the state, decision 0145), produced by @mtek/runtime-web, whose unit tests are its fixtures.",
+      "test": "packages/runtime-web/src/scene/saves.test.ts"
+    },
+    {
+      "code": "W5403",
+      "reason": "A runtime code (a write to the browser's storage that failed, decision 0145), produced by @mtek/runtime-web, whose unit tests are its fixtures.",
+      "test": "packages/runtime-web/src/scene/saves.test.ts"
     },
     {
       "code": "E8080",
@@ -241,6 +260,36 @@
       "code": "E8104",
       "reason": "A runtime code of the physics subsystem (decision 0066).",
       "test": "packages/runtime-web/src/physics/system.test.ts"
+    },
+    {
+      "code": "W8201",
+      "reason": "A runtime code of the audio subsystem (decision 0130).",
+      "test": "packages/runtime-web/src/audio/audio.test.ts"
+    },
+    {
+      "code": "W8202",
+      "reason": "A runtime code of the audio subsystem (decision 0130).",
+      "test": "packages/runtime-web/src/audio/audio.test.ts"
+    },
+    {
+      "code": "W8203",
+      "reason": "A runtime code of the HUD (decision 0134).",
+      "test": "packages/runtime-web/src/hud/hud.test.ts"
+    },
+    {
+      "code": "E7103",
+      "reason": "Produced by mtek build --release from the project's assets/favicon file, not by the compiler (decision 0136).",
+      "test": "crates/mtek-cli/src/game_package.rs"
+    },
+    {
+      "code": "E7104",
+      "reason": "Produced by mtek build --release --itch when the package breaks the itch.io limits, not by the compiler (decision 0136).",
+      "test": "crates/mtek-cli/src/game_package.rs"
+    },
+    {
+      "code": "W8204",
+      "reason": "A runtime code of the HUD fonts (decision 0139): the browser rejects a font file only at run time.",
+      "test": "packages/runtime-web/src/hud/fonts.test.ts"
     }
   ]
 }

@@ -32,10 +32,13 @@ dist/
   shaders/<h16>.mtek-map.json      # WGSL span map (§5.4)
   assets/<h16>.<ext>               # packaged assets (spec/assets.md)
   physics/<h16>.js                 # only if the program uses physics (spec/physics.md; decisions 0063, 0066); named by subsystems.physicsModule
+  app.<Scene>.js                   # only for a program with several scenes: one program module per scene but the entry (decision 0141)
+  app.<Scene>.js.map               #   its source map
+  program.<Scene>.manifest.json    #   its manifest
 ```
 
 - `<h16>` is the first 16 lowercase hex digits of the SHA-256 of the file's bytes; the manifest records the full 64-digit hash.
-- `index.html`, `app.js`, `app.d.ts`, `runtime.d.ts` and `program.manifest.json` have fixed names so hosts can reference them.
+- `index.html`, `app.js`, `app.d.ts`, `runtime.d.ts` and `program.manifest.json` have fixed names so hosts can reference them. They are the entry scene's. In a program with several scenes every other scene `S` has its own program module and manifest, `app.S.js` and `program.S.manifest.json`, which `go_to(S)` loads (§11.4); the content-addressed files are shared, and every manifest lists the scenes in `game` (§5).
 - **Reproducibility.** Two builds of the same inputs with the same compiler produce byte-identical `dist/` trees (no timestamps, absolute paths, random ids, or hash-map iteration order in outputs). A test enforces this (`spec/testing.md` §7).
 - **Replace on success** (not atomic): the build writes into the sibling directory `<out_dir>.tmp-<buildId>/`; only if everything succeeded it renames the existing `<out_dir>` to `<out_dir>.old-<buildId>`, renames the temporary directory to `<out_dir>`, then deletes the `.old` directory (Windows cannot rename onto an existing directory, hence the three steps). A failed build deletes its temporary directory and leaves the previous output untouched.
 
@@ -126,23 +129,34 @@ The runtime passes `ctx` to every generated function. Its shape is part of ABI 1
 |---|---|
 | `ctx.s` | scene state object (`ctx.s.speed`). Read and write directly (`ctx.s.speed = v`). |
 | `ctx.e[i]` | static entity record by index (manifest order). An **entity record** — the type of every `e`/`self` parameter in this table — has: `position`, `rotation`, `scale`, `visible` (read directly; write only through the setters below), `state` (object; read **and write directly**, e.g. `self.state.hits = v`), `params` (prefab params, read-only), `mat` (material instance: `p` = current param values, read-only; write through `setParam`), `ref` (its `entity_ref`). |
-| `ctx.cam` | the active camera record: `position`, `target`, `rotation`, `projection` fields. |
+| `ctx.cam` | the active camera record: `position`, `target`, `rotation`, `projection` fields. It follows `ctx.selectCamera` (decision 0154). |
 | `ctx.frame` | `{ time, delta, index }` (f32/f32/u32 already converted). |
 | `ctx.setTransform(e, field, value)` | `field` ∈ `"position" | "rotation" | "scale"`; validates scale (`E8090`), marks transform dirty. |
 | `ctx.setVisible(e, value)` | |
 | `ctx.setParam(e, name, value)` | writes the instance's mirror through the generated field writer; validates opaque colours (`E8100`). |
-| `ctx.setCamera(field, value)`, `ctx.setLight(e, field, value)` | |
+| `ctx.setCamera(field, value)`, `ctx.setLight(e, field, value)` | `setCamera` writes the active camera. A binding that names a camera writes that camera and leaves the active one (`setCameraOn`). |
+| `ctx.selectCamera(name)` | `set_camera(Name)` (decision 0154). `name` is a camera of this scene. |
+| `ctx.particleCount()` | `particle_count()` (decision 0155): how many particles are alive. |
 | `ctx.spawn(prefabSymbol, params, spanId) → entity_ref`, `ctx.destroy(ref, spanId)`, `ctx.alive(ref)` | `spec/scenes.md` §9, decision 0064. `prefabSymbol` is the key of the `prefabs` table of `app.js`; `params` is the object of evaluated params (every param, defaults filled in by the generated code), which the runtime freezes and hands to `init` and to `self.params`. An `entity_ref` is a frozen `{ slot, gen }`; two references are equal when both fields are (`rt.refEq`). `E8030`, `W8032` and `E8033` carry `spanId`. |
 | `ctx.body(refOrEntity, spanId)` | the **body handle** of an entity record (`ctx.e[i]`, `self`) or of an `entity_ref`, for the body commands and velocity reads of `spec/physics.md` §3 (decision 0065): `h.applyImpulse(v)`, `h.applyForce(v)`, `h.setKinematicTarget(position, rotation)`, `h.teleport(position, rotation, keepVelocity)`, `h.setLinearVelocity(v)` (commands: queued for the next tick, in the category order of physics §4) and the read-only `h.linearVelocity`, `h.angularVelocity` (`vec3`, as of the last completed tick, zero before the first). The compiler has checked the body kind of a record; for an `entity_ref` the handle reports `E8101` and drops a command the body kind of its target does not support (and `W8031` for a pending or dead target). `spanId` is the manifest span of the command or property in the Mtek source (decision 0066), for `W8031`, `E8101` and `E8104`; a command with a value that is not finite is dropped with `E8104`. Generated code calls it as `ctx.body(self, 7).applyImpulse(..)`, `ctx.body(ctx.e[3], 8).teleport(..)`, `ctx.body(a_other, 9).applyForce(..)` |
 | `ctx.random()`, `ctx.print(message, spanId)`, `ctx.isKeyDown(code)` | CPU intrinsics |
+| `ctx.randomRange(lo, hi)`, `ctx.randomInt(lo, hi)`, `ctx.chance(p)` | `random_range`, `random_int`, `chance` (decision 0149): one `random()` draw each |
+| `ctx.countTagged(tag)`, `ctx.firstTagged(tag)`, `ctx.nearestTagged(tag, point)`, `ctx.hasTag(ref, tag)`, `ctx.tagged(tag)`, `ctx.destroyTagged(tag)` | the tag queries (`spec/scenes.md` §17, decision 0150). `tag` is the string of the source. `ctx.tagged` returns an iterable of `entity_ref` that the generated `for … of` loop runs over; `ctx.firstTagged` and `ctx.nearestTagged` return the dead reference `{ slot: -1, gen: 0 }` when no entity matches. |
+| `ctx.keyPressed(code)`, `ctx.keyReleased(code)`, `ctx.pointerPosition()`, `ctx.isPointerDown(button)` | `key_pressed`, `key_released`, `pointer_position`, `is_pointer_down` (decision 0153). `code` is the DOM key code. `pointerPosition` returns `{ x, y }`. |
+| `ctx.choose(items)`, `ctx.shuffle(items)` | `choose` and `shuffle` (decision 0152). Each draws through `ctx.random()`. |
+| `ctx.refField(ref, field)` | a read of `position`, `rotation`, `scale` or `visible` through an `entity_ref` (decision 0151). A reference that is not alive reads as zero. |
 | `ctx.warn(code, spanId)` | report a mapped runtime warning (e.g. index clamping `W8030`, once per span) |
+| `ctx.goTo(sceneName, spanId)`, `ctx.reset()` | `go_to(Scene)` and `reset()` (decisions 0140, 0141): request a scene change, prepared in the background and applied at the start of a later frame (§11.4); the first request wins until it is applied or fails (`E5401`, at `spanId`). `sceneName` is the scene's name (a string constant of the generated code). |
+| `ctx.pause()`, `ctx.resume()`, `ctx.paused()` | the game pause (decision 0143, §7): no fixed ticks and no phase 3 while paused; input, flush, bindings, transforms and rendering go on. |
+| `ctx.save()`, `ctx.load() → boolean`, `ctx.clearSaved()` | saved state and settings (decisions 0145, 0146, `spec/scenes.md` §16): write the persistent states of the running scene to the game's storage, read them back (`true` when at least one stored value was applied), delete the program's stored data. Problems are warnings (`W5402`, `W5403`); nothing throws into generated code. |
+| `ctx.after(seconds, fn, owner, spanId)`, `ctx.every(seconds, fn, owner, spanId)` | timers (decision 0142): `fn` is a closure of the generated code, `owner` the entity record whose handler started it (`self`) or `null` for the scene; the world runs due timers at the start of phase 3 on the game clock and drops the timers of a destroyed owner. |
 | `ctx.budget` | `{ n }`, the iterations of CPU loops left in this frame: refilled with `manifest.preview.loopBudget` at the start of every frame and before `init`, decremented by the checks of `--mode preview` builds (`rt.budgetExceeded(spanId)` throws when it goes below zero; the runtime then reports `E8080`). Zero when the manifest has no `preview` object. Decision 0075. |
 
 Ownership rules (`spec/scenes.md` §8) are enforced **statically**; the setters only re-validate values. Generated code passes **span ids** (indices into the manifest `spans` table) so the runtime can map any run-time diagnostic to the Mtek source.
 
 ### 4.3 Initialisation
 
-`scenes.X.init(ctx)` runs once with a `ctx` whose state objects are pre-created with every declared key set to its zero value. It executes the initialisation order of `spec/scenes.md` §11 as straight-line generated code (state initialisers, entity params/state/fields, material instance values written through the writers). Then the runtime evaluates all bindings once, propagates transforms, creates physics bodies (decision 0066: the bodies of the named entities, from the manifest, at the poses `init` and the bindings gave them), and loads startup resources.
+`scenes.X.init(ctx)` runs once with a `ctx` whose state objects are pre-created with every declared key set to its zero value. It executes the initialisation order of `spec/scenes.md` §11 as straight-line generated code (state initialisers, entity params/state/fields, material instance values written through the writers). Then the runtime evaluates all bindings once, samples every clip at time 0 (decision 0156), propagates transforms, creates physics bodies (decision 0066: the bodies of the named entities, from the manifest, at the poses `init`, the bindings and the clips gave them), and loads startup resources.
 
 ## 5. The manifest (`program.manifest.json`)
 
@@ -175,6 +189,16 @@ JSON, UTF-8, keys in a fixed order, schema version 1. A JSON Schema for it is ch
 Every `spans` entry carries the half-open byte range into the file as stored on disk and the 1-based line and column of both ends (columns count Unicode scalar values), computed by the compiler's source manager exactly as for compiler diagnostics; the runtime copies them verbatim into the `source` of a diagnostic and never ships or reads source text (decision `spec/decisions/0019-manifest-spans-carry-line-columns.md`).
 
 `requiredCapabilities.limits` lists only limits **above** the WebGPU defaults that the program needs (the v0.1 profile `webgpu-core-2026` is exactly the default limits, so it is `{}`); `features` lists optional WebGPU features (none in v0.1; `timestamp-query` is requested opportunistically by dev builds and never required).
+
+The optional top-level **`game`** object (decision 0141), `{ "scenes": [ { "name", "module", "manifest" } … ] }`, is present exactly when the program has more than one scene (it sits between `runtimeConfig` and `preview`): every scene sorted by name, with its program module (`app.js` for the entry, `app.<Scene>.js` otherwise) and manifest (`program.manifest.json`, `program.<Scene>.manifest.json`), relative to `baseUrl`. Every manifest of the build carries the same object. A scene state that is `shared state` has `"shared": true` in `scene.state` (absent otherwise).
+
+**Saved state and settings** (decisions 0145, 0146). A scene state declared `saved state` or `setting state` has `"persist": "saved"` or `"persist": "setting"` in `scene.state`. It also has `"storedType"`: the structural description of its type that a stored value must match. A struct is spelled out as `{field: T, ...}` in field order, a user enum as `enum(A|B)` in variant order, and any other type is its name. So a program whose struct or enum changed ignores an old value (`W5402`) instead of misreading it. A program with persistent state has `game.storage`, the name its values are stored under: the project's name (`[a-z0-9-]+`, `mtek.toml`), cut to 64 characters. A single-scene program then has a `game` object without `scenes`. The runtime keeps one JSON document per program in the page's `localStorage` (or the host's `storage`, §6.1) under the key `mtek.save.<game.storage>`:
+
+```json
+{ "format": 1, "values": { "best": { "type": "i32", "value": 12 }, "options": { "type": "{volume: f32, lefty: bool}", "value": { "volume": 0.5, "lefty": false } } } }
+```
+
+`type` is the `storedType` the value was written with. `value` is the JSON form of the CPU value of §4.1: vectors, quaternions, colours and structs as objects, `mat4` and arrays as arrays, enums as variant indices. Two programs with the same project name on one origin share their stored values. Give them different names.
 
 The optional top-level `preview` object, `{ "loopBudget": <integer 1 … 4294967295> }`, is present exactly in the manifest of a `--mode preview` build (it sits between `runtimeConfig` and `entryScene`; the build id covers it): the runtime enforces the loop budget through `ctx.budget` (§4.2) and refuses any request outside `baseUrl` (§6.5). No other mode writes the key. Decision 0075.
 
@@ -209,7 +233,7 @@ The runtime **rejects** a manifest whose `manifestSchema` or `runtimeAbi` it doe
 - `fields` carries the **constant** scene-field values (linear colours as `[r, g, b, a]`, the result of compile-time colour conversion), so the runtime needs no code to obtain them. `gravity` is the scene's `gravity` (default `[0, -9.81, 0]`), read when the physics world is created.
 - `body` and `collider` of an entity (decision 0065) are `null` or, exactly together, the construction data of its physics body in the shapes of `spec/manifest.schema.json`: `{ "kind": "static" }`, `{ "kind": "kinematic" }` or `{ "kind": "dynamic", "mass", "linearDamping", "angularDamping" }`, and `{ "kind": "box", "size": [x, y, z], "sensor", "friction", "restitution" }` (full extents, `spec/physics.md` §5.1 halves them) or `{ "kind": "sphere", "radius", "sensor", "friction", "restitution" }`. Every field is written out, defaults included; the values are in the ranges of `spec/stdlib.md` §3.7; the body of an entity is on a root entity; the initial pose is the entity's world pose after `init(ctx)` and the bindings (`spec/scenes.md` §11, step 5). A **static prefab instance** is an ordinary entity of the table with the prefab's body and collider; the body data of a prefab for `spawn` is in the `prefabs` table (§5.6, decision 0064; the compiler builds it with the same functions).
 - `subsystems.physics` is `true` exactly when the entry scene has an entity with a `body` or a prefab of the program declares one (the program may `spawn` it); then `physics/<h16>.js` is part of the build (decision 0063) and **`subsystems.physicsModule`** is its relative path (`"physics/<h16>.js"`, present exactly when `physics` is true, decision 0066): the runtime cannot derive the content hash, and it imports exactly that file, once, during mount. Otherwise the runtime never requests it.
-- Binding **target** kinds: `{ "kind": "transform", "entity": i, "field": "position" | "rotation" | "scale" }`, `{ "kind": "visible", "entity": i }`, `{ "kind": "param", "instance": i, "name": … }`, `{ "kind": "camera", "field": "position" | "target" | "rotation" | "projection.fov_y" | "projection.height" | "projection.near" | "projection.far" }`, `{ "kind": "light", "entity": i, "field": "color" | "intensity" }`.
+- Binding **target** kinds: `{ "kind": "transform", "entity": i, "field": "position" | "rotation" | "scale" }`, `{ "kind": "visible", "entity": i }`, `{ "kind": "param", "instance": i, "name": … }`, `{ "kind": "camera", "field": "position" | "target" | "rotation" | "projection.fov_y" | "projection.height" | "projection.near" | "projection.far", "camera"?: name }`, `{ "kind": "light", "entity": i, "field": "color" | "intensity" }`. `camera` names the camera the binding writes (decision 0154). Absent, the binding writes the active camera.
 - Binding **dependency** kinds: `{ "kind": "state", "name": … }`, `{ "kind": "frame", "name": "time" | "delta" | "index" }`, `{ "kind": "entityField", "entity": i, "field": … }`, `{ "kind": "entityState", "entity": i, "name": … }`, `{ "kind": "param", "instance": i, "name": … }`, `{ "kind": "light", "entity": i, "field": "color" | "intensity" }` (decision 0067; a read of the construction-only `range` is not a dependency, and a camera field or a body property has no dependency kind: reading one is `E5005`).
 - `order` is the binding's position in the topological evaluation order (phase 5).
 - The `params` of a material instance carry their update class whatever the material: an instance of the built-in `Unlit` or `Pbr` is recorded, written (`ctx.setParam`), uploaded and migrated by a hot reload exactly as a user material's (decision 0087).
@@ -228,7 +252,7 @@ One entry per emitted WGSL statement/expression that originates in Mtek source; 
 
 ### 5.5 Assets (decision 0058)
 
-`assets` lists the packaged files of the entry scene (none if no entity uses an asset). Every `url` is relative to the program like `shaders[].url`; file names are opaque; the runtime verifies `bytes` and `sha256` (`spec/assets.md` §5) and never parses a name. Entries are sorted: `mesh-data` by the project path of their GLB, then `image` by `url`. `span` is the declaring `asset.*` call (the first declaration that named the file).
+`assets` lists the packaged files of the entry scene (none if no entity uses an asset). Every `url` is relative to the program like `shaders[].url`; file names are opaque; the runtime verifies `bytes` and `sha256` (`spec/assets.md` §5) and never parses a name. Entries are sorted: `mesh-data` by the project path of their GLB, then `image` by `url`, then `audio` by the project path of the sound (`spec/audio.md` §4). `span` is the declaring `asset.*` call (the first declaration that named the file).
 
 ```json
 { "url": "assets/07f04966d738a71c.bin", "sha256": "…", "bytes": 500, "kind": "mesh-data", "span": 4,
@@ -245,6 +269,7 @@ One entry per emitted WGSL statement/expression that originates in Mtek source; 
 - **Mesh data.** A `.bin` holds the referenced primitives of one GLB, in the order of the `primitives` array. Every offset is a **byte offset from the start of the file** and a multiple of 4; numbers are little-endian. A primitive stores, in this order: `position` (`f32 × 3` per vertex), `normal` (`f32 × 3`) if `attributes` has `"normal"`, `uv` (`f32 × 2`) if it has `"uv"`, all tightly packed, then `indexCount` indices of `indexFormat` (`uint16` when `vertexCount` ≤ 65 535, otherwise `uint32`), then zero padding to a multiple of 4. `boundingSphere` is in the mesh's local space (the entity transform applies as for built-in shapes). Triangles are counter-clockwise from the front, uv origin top-left, +Y up (glTF's conventions, which are Mtek's; nothing is converted).
 - **Meshes.** `meshes[]` has entries `{ "id": "mesh:N", "kind": "asset", "asset": <url of a mesh-data entry>, "primitive": <index into that entry's primitives> }`; an entity's `mesh` is the id. The compiler has checked that the mesh has every attribute its material reads (`shaders[].vertexAttributes`, `E7010`).
 - **Images.** The file is a PNG or JPEG exactly as the author wrote it; `colorSpace` says how to upload it (`"srgb"`: `rgba8unorm-srgb`, `"linear"`: `rgba8unorm`, `spec/assets.md` §5). An instance's `texture` param is `{ "name": "base_color_texture", "class": "resource", "value": { "kind": "asset", "asset": <url of an image entry> } }`; its `sampler` param is a built-in preset. `preprocessing` lists what the compiler decided instead of the author (`mipmaps not generated`: the file's sampler asked for mip-maps, v0.1 samples the base level).
+- **Audio** (decision 0130). The file is a WAV, Ogg or MP3 exactly as the author wrote it: `{ "url": "assets/<h16>.wav", "sha256": "…", "bytes": 2252, "kind": "audio", "format": "wav", "mime": "audio/wav", "source": "sounds/hit.wav", "span": 3 }`. `format` is `wav`, `ogg` or `mp3`; `source` is the project path, the string by which generated code names the sound (`ctx.audio.play(spanId, "sounds/hit.wav", ..)`).
 - **Loading.** The runtime fetches each `url` from `baseUrl`, verifies `bytes` and `sha256`, decodes images, uploads meshes and textures and keeps the verified bytes for device recovery and hot reload; every state, diagnostic and limit check is decision 0060.
 - **Names.** The `<h16>` of a `.bin` is the first 16 hex digits of the SHA-256 of the GLB's project path, a zero byte and the file's bytes; of an image, of the colour space name, a zero byte and the image bytes. The same image bytes used in both colour spaces are two files.
 
@@ -263,6 +288,7 @@ One entry per emitted WGSL statement/expression that originates in Mtek source; 
 
 - `material.params` and `shareable` follow the instances of §5.2 (classes of decision 0059): the runtime gives a spawned entity a shared parameter block when `shareable` and an identical block exists, an arena slot otherwise.
 - `body` and `collider` are those of §5.2 (decision 0065), the data a physics subsystem needs to build the body of a spawned entity.
+- `tag` (absent when the prefab has none) is the prefab's `tag` (`spec/scenes.md` §17, decision 0150), which every spawned instance carries; an entity of §5.2 has its own optional `tag` the same way.
 - **Bindings** use the target and dependency kinds of §5.2 with the instance as **entity 0** and its material instance as **instance 0**; the runtime evaluates them for the entity in `order`, after `init`, in phase 5, and the ids index the prefab's own `bindings` array in `app.js`.
 - The runtime creates the record with `self.params` set to the frozen params object `ctx.spawn` received, which is also the `params` argument of `init` (decision 0062).
 - **Slots and generations.** The named entities of the scene are slots `0..S-1` (generation 0, never freed); spawned entities take the slots above, a freed slot's generation increases, and `entity_ref` values are `{ slot, gen }` (§4.1). Flush points: the start of each fixed tick and `phase4_flush` (§7).
@@ -286,9 +312,18 @@ export interface MtekMountOptions<I = Record<string, unknown>> {
   pauseWhenHidden?: boolean;                  // default from manifest runtimeConfig
   devicePixelRatio?: number | "auto";         // default "auto"
   devOverlay?: boolean;                       // development runtime only (decision 0055); the release runtime ignores it
+  storage?: MtekSaveStorage | null;           // saved state and settings (decision 0145); see below
   test?: MtekTestOptions;                     // §10.2; omit in production
 }
+
+export interface MtekSaveStorage {           // the part of the Web Storage API saves use; localStorage satisfies it
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
 ```
+
+`storage` is where saved state and settings are kept (§5, `spec/scenes.md` §16). By default it is the page's `localStorage`. With `test` options it is a fresh in-memory store, so tests do not depend on an earlier run. `null` means memory only. A page whose `localStorage` cannot be reached falls back to memory and warns `W5403` on the first write.
 
 `mountMtek` resolves only when the device is ready, the manifest is accepted, every startup shader module and pipeline was created without validation error, and every startup asset is `ready`. It **rejects** with an `MtekMountError`:
 
@@ -414,18 +449,22 @@ onAnimationFrame(nowMs):
   rawDelta = (lastMs === null) ? 0 : (nowMs - lastMs) / 1000; lastMs = nowMs   // first frame after mount/resume: 0
   delta    = min(rawDelta, maxFrameDelta)
   activeTime += delta                                    // f64
-  phase1_input()                                         // host inputs, input transitions, input handlers
-  accumulator += delta
-  steps = 0
-  while accumulator >= fixedStep and steps < maxCatchUpSteps:
-      phase2_tick(fixedStep); accumulator -= fixedStep; steps += 1
-  if accumulator >= fixedStep:
-      counters.discardedSteps += floor(accumulator / fixedStep); accumulator = accumulator % fixedStep
-  phase3_update(delta); phase4_flush(); phase5_bindings(); phase6_transforms(); phase7_render() // ends with host-output publication (§6.6)
+  phase1_input()                                         // pending swap (§11), host inputs, input transitions, input handlers
+  if not gamePaused:                                     // the game pause of pause()/resume() (decision 0143)
+      accumulator += delta
+      steps = 0
+      while accumulator >= fixedStep and steps < maxCatchUpSteps and not gamePaused:
+          phase2_tick(fixedStep); accumulator -= fixedStep; steps += 1
+      if accumulator >= fixedStep and not gamePaused:
+          counters.discardedSteps += floor(accumulator / fixedStep); accumulator = accumulator % fixedStep
+  if not gamePaused:
+      phase3_update(delta)                               // clips (0156), particles (0155), due timers (0142), then update(dt)
+  phase4_flush(); phase5_bindings(); phase6_transforms(); phase7_render() // ends with host-output publication (§6.6)
   requestNext()
 ```
 
 - `pause()` sets `state = paused` and stops accumulating; `resume()` sets `lastMs = null`, so the first frame after resuming has delta 0 and the paused interval is never simulated. Visibility changes call pause/resume when `pauseWhenHidden`.
+- **The game pause** (`pause()`/`resume()` of the program, decision 0143) is a flag of the scheduler, `gamePaused`, distinct from the application state: frames keep running and `activeTime` and `ctx.frame` keep advancing, but no tick runs, the accumulator does not grow and phase 3 is skipped, so clips, particles, `update`, `fixed_update`, physics and timers stand still while input handlers, the flush, bindings, transforms and rendering go on. A scene change (§11.4) clears it. This is the hook UI work builds on: a pause menu is input handlers and bindings, which keep running.
 - **Manual clock (tests).** With `options.test.manualClock`, `requestAnimationFrame` is not used; `app.debug.step(n, dtSeconds)` runs `n` frames with the given delta synchronously (rendering included). This makes every behavioural test deterministic.
 - **Flush points** (decision 0064): `phase2_tick` calls the entity flush before every fixed tick, `phase4_flush` after `update`. A flush removes the entities pending removal (releasing their resources), then creates the pending spawns in spawn order (`init`, first binding evaluation); a created entity first runs in the next phase that starts after its flush.
 - All per-frame iteration uses arrays in stable instance order. Never iterate `Object.keys` of user-named objects to decide execution order.
@@ -480,7 +519,7 @@ interface MtekTestOptions {
   disableCulling?: boolean;       // draw every visible entity, as if culling did not exist (decision 0055)
   disableInstancing?: boolean;    // one draw call per entity, as if instancing did not exist; parameter blocks are still shared (decision 0059)
   textures?: { "texture.white"?: MtekTestTexture; "texture.black"?: MtekTestTexture };  // M4-04: a generated texture in place of a built-in (decision 0054)
-  onAssetState?: (event: { url: string; kind: "mesh-data" | "image"; state: "pending" | "ready" | "failed" }) => void;
+  onAssetState?: (event: { url: string; kind: "mesh-data" | "image" | "audio"; state: "pending" | "ready" | "failed" }) => void;
                                   // M4-06: every state change of every asset file; all pending first (decision 0060)
 }
 interface MtekTestTexture { width: number; height: number; data: Uint8Array; colorSpace?: "srgb" | "linear"; }  // RGBA8, top row first, width x height x 4 bytes
@@ -492,7 +531,7 @@ interface MtekDebug {
   setParam(entityName: string, param: string, value: unknown): void;  // M2 gate: change a param without `bind` (decision 0046)
   loseDevice(): void;      // destroys the GPU device; handled as a device loss (§9.4, decision 0056)
   failAllocation(): void;  // reports E8063 as an out-of-memory scope would (§9.5)
-  assets(): ReadonlyArray<{ url: string; kind: "mesh-data" | "image"; state: "pending" | "ready" | "failed"; bytes: number }>;  // M4-06: the asset files of the running program (decision 0060)
+  assets(): ReadonlyArray<{ url: string; kind: "mesh-data" | "image" | "audio"; state: "pending" | "ready" | "failed"; bytes: number }>;  // M4-06: the asset files of the running program (decision 0060)
   scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }>;
              spawned: Array<{ prefab: string; slot: number; gen: number; alive: boolean; position: unknown; rotation: unknown; scale: unknown; visible: boolean; state: Record<string, unknown>; mat?: { p: Record<string, unknown> } }> };   // M5-02: the spawned entities that exist, in spawn order (decision 0064)
 }
@@ -512,6 +551,8 @@ With `renderTarget`, frames render into an offscreen `rgba8unorm-srgb` texture o
 **Spawned entities** (decision 0064). A reload that does not restart the scene re-creates every spawned entity that exists in the same slot and generation, by the new program's `init` with the params it was spawned with, and carries its state, pose and imperative material params by identity like a named entity's; references kept in state stay valid for them. A spawned prefab whose param list (`name: type`) changed, or a prefab added to or removed from the program, restarts the scene (`W8070`). A prefab the program no longer spawns drops its live entities silently and their references stay dead. After a device loss the entities keep their slots and instance indices (§9.4).
 
 **Physics** (decision 0066). The physics world follows the swap: a new world is created for the candidate's scene, the bodies of the named entities are made from the poses the migration carried over, the bodies of the spawned entities the migration re-created are made as they are re-created, and the old world is disposed. Velocities and queued commands do not survive a reload (the new world starts at rest). A candidate whose physics module (`subsystems.physicsModule`) is another file than the one loaded is imported during `replaceProgram`; if it cannot be, the candidate is refused with `E8102` (phase `runtime:reload`) and nothing is swapped. Device loss does not touch physics: it is CPU state.
+
+11.4 **Scene changes** (every build; decisions 0140 and 0141). `go_to(S)` and `reset()` reuse the preparation of §11.2 for a scene started afresh. The runtime imports the program module of `S` named by `manifest.game.scenes` (`new URL(module, baseUrl)` with the query `?build=<buildId>`, so a hot reload never meets a stale copy; the scene that runs reuses its own module), fetches and validates its manifest, creates its shaders, loads its assets and physics module, and runs its `init`, while the current scene keeps running. At the start of the next frame after that (where a hot-reload swap happens) the new scene replaces the old one as a whole: no migration; the old world's timers, entities and bodies end; the values of the old scene's `shared state` are copied into the new scene's `shared state` of the same name and type (`go_to` only, not `reset()`); the game pause is cleared. A failure of any step reports `E5401` (notes: the underlying diagnostics) and leaves the running scene untouched. One scene change is prepared at a time: later `go_to`/`reset()` calls are ignored until it is applied or failed. A hot reload while a scene other than the entry runs reloads that scene (`game.scenes` of the candidate's manifest names its new module). Device recovery (§9.4) rebuilds the scene that runs.
 
 ## 12. Runtime diagnostics
 

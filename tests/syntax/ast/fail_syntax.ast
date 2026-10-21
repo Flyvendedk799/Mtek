@@ -81,9 +81,9 @@
 ; MTEK-E1001 17..18 `}` Expected `(` after `bind`, found `}`.
 
 ;; reserved words used as names (E0013), the tree is still built
-; while + x
-(binary + (name while) (name x))
-; MTEK-E0013 0..5 `while` `while` is reserved for a future version of Mtek and cannot be used as a name.
+; loop + x
+(binary + (name loop) (name x))
+; MTEK-E0013 0..4 `loop` `loop` is reserved for a future version of Mtek and cannot be used as a name.
 
 ; a.type
 (field (name a) type)

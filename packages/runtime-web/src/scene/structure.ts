@@ -17,8 +17,10 @@ import type {
   MtekInstanceParam,
   MtekLayoutRecord,
   MtekManifest,
+  MtekClip,
   MtekMaterialParam,
   MtekMaterialResource,
+  MtekParticles,
   MtekShader,
   MtekStateEntry,
   MtekVertexAttribute,
@@ -92,6 +94,10 @@ export interface ResolvedEntity {
   readonly parent: number | null;
   readonly mesh: ResolvedMesh | null;
   readonly instance: ResolvedInstance | null;
+  /** Present when the entity declares `particles` (decision 0155). */
+  readonly particles?: MtekParticles;
+  /** Present when the entity declares `clip` (decision 0156). */
+  readonly clip?: MtekClip;
 }
 
 /** The material instance of a prefab, before an instance exists: every instance starts with these classes. */
@@ -122,6 +128,12 @@ export interface ResolvedPrefab {
   /** In binding-id order; entity 0 is the instance and material instance 0 its material. */
   readonly bindings: readonly MtekBinding[];
   readonly span: number;
+  /** The tag every instance carries (decision 0150). */
+  readonly tag?: string;
+  /** The emitter every instance starts with (decision 0155). */
+  readonly particles?: MtekParticles;
+  /** The clip every instance plays (decision 0156). */
+  readonly clip?: MtekClip;
 }
 
 /** A light of `scene.lights`: which entity carries it and what it was constructed with. */
@@ -414,7 +426,16 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
         return;
       }
     }
-    entities.push({ index, name: entity.name, symbol: entity.symbol, parent: entity.parent, mesh, instance });
+    entities.push({
+      index,
+      name: entity.name,
+      symbol: entity.symbol,
+      parent: entity.parent,
+      mesh,
+      instance,
+      ...(entity.particles === undefined ? {} : { particles: entity.particles }),
+      ...(entity.clip === undefined ? {} : { clip: entity.clip }),
+    });
   });
 
   const lightsNode = frameLayout?.root.members.find((member) => member.name === "lights")?.node;
@@ -540,6 +561,9 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
       fixedUpdate: prefab.fixedUpdate,
       bindings: prefab.bindings,
       span: prefab.span,
+      ...(prefab.tag === undefined ? {} : { tag: prefab.tag }),
+      ...(prefab.particles === undefined ? {} : { particles: prefab.particles }),
+      ...(prefab.clip === undefined ? {} : { clip: prefab.clip }),
     });
   });
 

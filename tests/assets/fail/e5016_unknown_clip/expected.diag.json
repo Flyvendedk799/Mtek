@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5016",
+    "file": "src/main.mtek",
+    "startByte": 140,
+    "endByte": 153,
+    "message": "The clip 'Nope' cannot play on the mesh 'Tri' of 'models/model.glb'.",
+    "notes": [
+      "help: the animations of 'models/model.glb' are 'animation_0'"
+    ]
+  }
+]

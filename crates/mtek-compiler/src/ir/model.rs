@@ -424,6 +424,23 @@ pub enum Stmt {
         #[serde(serialize_with = "self::span")]
         span: Span,
     },
+    /// `while cond { … }` (decision 0144): CPU only, at most
+    /// [`crate::syntax::ast::WHILE_ITERATION_CAP`] iterations per execution.
+    While {
+        cond: Expr,
+        body: Block,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// `after(seconds) { … }` (`every: false`) or `every(seconds) { … }` (decision 0142): the
+    /// body runs later on the game clock, owned by the entity of the handler (if any).
+    Timer {
+        every: bool,
+        seconds: Expr,
+        body: Block,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
     Return {
         value: Option<Expr>,
         #[serde(serialize_with = "self::span")]
@@ -685,6 +702,8 @@ pub enum ExprKind {
     State { owner: Owner, name: String },
     /// A read of a field of a named entity (`Cube.position`) or of `self`.
     EntityField { entity: u32, field: String },
+    /// A read of `position`, `rotation`, `scale` or `visible` through an `entity_ref` (decision 0151).
+    RefField { target: Box<Expr>, field: String },
     /// A read of a camera field (`Main.position`).
     CameraField { camera: String, field: String },
     /// A read of a param of the material instance of a named entity.
@@ -731,6 +750,16 @@ pub enum ExprKind {
         prefab: Symbol,
         params: Vec<NamedExpr>,
     },
+    /// A `match` expression on a value of a user enum (decision 0129), which the IR sees as the
+    /// `u32` index of its variant. The scrutinee is evaluated once; the first arm one of whose
+    /// `values` equals it gives the value, and `otherwise` (the `_` arm) any other. Without
+    /// `otherwise` the arms cover every variant. CPU only: enums have no GPU form.
+    Match {
+        scrutinee: Box<Expr>,
+        arms: Vec<MatchArm>,
+        #[serde(rename = "else")]
+        otherwise: Option<Box<Expr>>,
+    },
     /// An `entity_ref` to the entity `entity` of the scene (or, in a prefab body, `self`:
     /// entity 0): a named entity used as a value, or `self` (decision 0064).
     EntityRef { entity: u32 },
@@ -744,6 +773,14 @@ pub enum BodyTarget {
     Entity { entity: u32 },
     /// An `entity_ref` value; the runtime checks its body kind (`E8101`).
     Ref { target: Box<Expr> },
+}
+
+/// One arm of a [`ExprKind::Match`]: the variant indices it matches and its value.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MatchArm {
+    pub values: Vec<u32>,
+    pub value: Expr,
 }
 
 /// A named field value of a struct or descriptor literal.
@@ -864,6 +901,8 @@ pub enum BindingTarget {
         name: String,
     },
     Camera {
+        /// The camera the binding writes (decision 0154).
+        camera: String,
         field: String,
     },
     /// `color` or `intensity` of the light of an entity.
@@ -913,6 +952,17 @@ pub struct State {
     #[serde(rename = "type")]
     pub ty: String,
     pub owner: Owner,
+    /// `shared state` (decision 0141): the value carries over `go_to` into a scene with a
+    /// shared state of the same name and type.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub shared: bool,
+    /// `saved` or `setting` (decisions 0145, 0146): the value is kept in the browser's storage.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub persist: Option<String>,
+    /// For a persistent state, the structural description of its type that a stored value is
+    /// checked against (`storedType` of the manifest, `spec/runtime-abi.md` section 5).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stored_type: Option<String>,
     /// The initialiser; it has no locals.
     pub init: Expr,
     /// The whole `state name: T = value;`.
@@ -1137,6 +1187,32 @@ pub struct Entity {
     /// `state`, `behaviors` and `bindings` hold the copies that belong to the instance.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prefab: Option<PrefabInstance>,
+    /// `tag: "name";` (decision 0150): the group the tag queries find the entity in.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
+    /// `particles: Emitter { .. }` (decision 0155). Absent when the entity emits none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub particles: Option<Particles>,
+    /// `clip: "name"` (decision 0156): a glTF animation of this entity's mesh. Absent when
+    /// the entity plays none. The keyframes live in the manifest, not here.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clip: Option<String>,
+}
+
+/// A particle emitter (decision 0155): construction-only numbers. The runtime keeps at most
+/// 64 particles and draws them as camera-facing copies of the entity's mesh.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Particles {
+    pub rate: f32,
+    pub lifetime: f32,
+    pub speed: f32,
+    pub size: f32,
+    pub gravity: f32,
+    pub origin: Origin,
+    /// The `particles: …;` member.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
 }
 
 /// An entity's light component (`spec/materials.md` section 7, decision 0053).
@@ -1363,6 +1439,11 @@ pub enum Value {
     /// A texture from an image file or an image embedded in a GLB (decision 0058):
     /// `{ "image": { "source": { "file": "textures/wood.png" }, "space": "srgb", "mipmapped": false } }`.
     Image(crate::assets::AssetImage),
+    /// A sound file (`asset.sound`, decision 0130), by project path: `{ "sound": "sfx/hit.wav" }`.
+    /// The runtime finds the packaged file by this path in the manifest's `audio` entries.
+    Sound(String),
+    /// A font file (`asset.font`, decision 0139), by project path: `{ "font": "fonts/title.woff2" }`.
+    Font(String),
 }
 
 /// A field of a [`Value::Struct`].
@@ -1401,6 +1482,8 @@ impl From<&crate::types::ConstValue> for Value {
             C::Texture(texture) => Value::Texture(texture.name().to_owned()),
             C::Sampler(sampler) => Value::Sampler(sampler.name().to_owned()),
             C::AssetTexture(image) => Value::Image(image.clone()),
+            C::AssetSound(file) => Value::Sound(file.clone()),
+            C::AssetFont(file) => Value::Font(file.clone()),
             // The handle of a GLB and an asset mesh are consumed by the lowering of entities
             // (`MeshDesc::Asset`); as plain values they are only descriptive text.
             C::GlbAsset(file) => Value::String(file.clone()),
@@ -1497,6 +1580,8 @@ impl fmt::Display for Value {
             }
             Value::Texture(name) | Value::Sampler(name) => write!(f, "{name}()"),
             Value::Image(image) => write!(f, "{image}"),
+            Value::Sound(file) => write!(f, "asset.sound({file:?})"),
+            Value::Font(file) => write!(f, "asset.font({file:?})"),
             Value::String(text) => {
                 f.write_str("\"")?;
                 for c in text.chars() {

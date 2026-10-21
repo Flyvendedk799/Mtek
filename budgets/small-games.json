@@ -1,0 +1,37 @@
+{
+  "$comment": "Small-game budgets (decision 0137). size: the game package of each example (mtek build --release --itch), the folder and the zip, in bytes; checked in CI by scripts/game-budgets.mjs size. frame: p95 frame time of scripts/record-frame-evidence.mjs on a real GPU; checked by scripts/game-budgets.mjs frames, never on a software adapter. Raise a budget only in a reviewed commit that says why. Initial size budgets: the sizes measured on 2026-10-21 (Linux, branch feat/sgs-codey2) plus 10 %, rounded up to 10 kB.",
+  "size": {
+    "arcade-audio": {
+      "maxFolderBytes": 760000,
+      "maxZipBytes": 770000
+    },
+    "hud-score": {
+      "maxFolderBytes": 710000,
+      "maxZipBytes": 710000
+    },
+    "material-configurator": {
+      "maxFolderBytes": 860000,
+      "maxZipBytes": 860000
+    },
+    "modular-scene": {
+      "maxFolderBytes": 650000,
+      "maxZipBytes": 650000
+    },
+    "physics-playground": {
+      "maxFolderBytes": 5590000,
+      "maxZipBytes": 5590000
+    },
+    "product-configurator": {
+      "maxFolderBytes": 760000,
+      "maxZipBytes": 760000
+    },
+    "pulse-cube": {
+      "maxFolderBytes": 630000,
+      "maxZipBytes": 630000
+    }
+  },
+  "frame": {
+    "maxP95Ms": 20,
+    "minFrames": 300
+  }
+}

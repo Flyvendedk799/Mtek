@@ -1,0 +1,7 @@
+# t grows by dt each frame. A frame delta above max_frame_delta (0.1 s) is clamped, so these
+# frames are 0.0625 s. Eight of them are 0.5 s of game time.
+name = "time advances by the frame delta"
+steps = [
+  { step = 8, dt = 0.0625 },
+  { expect_state = { t = { value = 0.5, tolerance = 1e-5 } } },
+]

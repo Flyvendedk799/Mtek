@@ -70,6 +70,171 @@ fn compile_time(
     )
 }
 
+/// `hud` (decision 0134, `spec/hud.md`): text, rectangles and buttons over the canvas, drawn again
+/// every frame. Positions are normalised device coordinates of the canvas (as `PointerEvent`),
+/// sizes CSS pixels.
+fn hud_namespace() -> NamespaceDef {
+    let string = exact(TypeRef::String);
+    let vec2 = exact(TypeRef::Vec2);
+    let tint = exact(TypeRef::Color);
+    let unit = exact(TypeRef::Unit);
+    let boolean = exact(TypeRef::Bool);
+    let font = exact(TypeRef::Font);
+    let member = |name, doc, signatures, semantics| {
+        NamespaceMember::Function(
+            function(name, Domain::Cpu, false, Milestone::M1, doc, signatures)
+                .handlers_only()
+                .cpu_semantics(semantics),
+        )
+    };
+    namespace(
+        "hud",
+        Milestone::M1,
+        "The heads-up display: text, rectangles and buttons drawn over the canvas. Immediate mode: what a frame draws is shown until the next frame, so draw from `update`.",
+        vec![
+            member(
+                "text",
+                "Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: the page's sans-serif). The line is centred vertically on `at`.",
+                vec![
+                    sig(&[p("content", string), p("at", vec2)], unit),
+                    sig(&[p("content", string), p("at", vec2), p("size", F32)], unit),
+                    sig(
+                        &[
+                            p("content", string),
+                            p("at", vec2),
+                            p("size", F32),
+                            p("tint", tint),
+                        ],
+                        unit,
+                    ),
+                    sig(
+                        &[
+                            p("content", string),
+                            p("at", vec2),
+                            p("size", F32),
+                            p("tint", tint),
+                            p("align", F32),
+                        ],
+                        unit,
+                    ),
+                    sig(
+                        &[
+                            p("content", string),
+                            p("at", vec2),
+                            p("size", F32),
+                            p("tint", tint),
+                            p("align", F32),
+                            p("font", font),
+                        ],
+                        unit,
+                    ),
+                ],
+                "A DOM element over the canvas; the text is set as text, never as HTML.",
+            ),
+            member(
+                "pixel_font",
+                "The built-in font: a 5x7 pixel bitmap of printable ASCII, the same in every browser (decision 0139). Other characters show as a box.",
+                vec![sig(&[], font)],
+                "Returns the built-in font; draws nothing.",
+            ),
+            member(
+                "rect",
+                "Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). For panels and bars.",
+                vec![
+                    sig(&[p("at", vec2), p("size", vec2), p("tint", tint)], unit),
+                    sig(
+                        &[
+                            p("at", vec2),
+                            p("size", vec2),
+                            p("tint", tint),
+                            p("align", F32),
+                        ],
+                        unit,
+                    ),
+                ],
+                "A DOM element over the canvas.",
+            ),
+            member(
+                "button",
+                "Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label.",
+                vec![
+                    sig(&[p("label", string), p("at", vec2)], boolean),
+                    sig(
+                        &[p("label", string), p("at", vec2), p("size", F32)],
+                        boolean,
+                    ),
+                ],
+                "A DOM button over the canvas; clicks are queued and reported by the next frame's call.",
+            ),
+        ],
+    )
+}
+
+/// `easing` (decision 0135, `spec/tweens.md`): easing curves `f32 -> f32` for tweens. CPU functions
+/// that are pure, so `bind` may use them (`types/bind.rs`); not in GPU code and not constant.
+fn ease_namespace() -> NamespaceDef {
+    let member = |name, doc| {
+        NamespaceMember::Function(
+            function(
+                name,
+                Domain::Cpu,
+                false,
+                Milestone::M1,
+                doc,
+                vec![sig(&[p("t", F32)], F32)],
+            )
+            .cpu_semantics("Binary64 arithmetic on the clamped argument, rounded once to f32."),
+        )
+    };
+    namespace(
+        "easing",
+        Milestone::M1,
+        "Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.",
+        vec![
+            member(
+                "in_quad",
+                "Easing t²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "out_quad",
+                "Easing 1 − (1 − t)²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "in_out_quad",
+                "Easing quadratic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "in_cubic",
+                "Easing t³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "out_cubic",
+                "Easing 1 − (1 − t)³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "in_out_cubic",
+                "Easing cubic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "in_out_sine",
+                "Easing (1 − cos(π t)) / 2; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "out_back",
+                "Easing overshoots slightly past 1, then settles; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "out_elastic",
+                "Easing springs past 1 and oscillates to rest; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+            member(
+                "out_bounce",
+                "Easing bounces at 1 like a dropped ball; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
+            ),
+        ],
+    )
+}
+
 /// Every namespace of the v0.1 registry. (`Key` is an enum, see `events::enums`.)
 pub(super) fn namespaces() -> Vec<NamespaceDef> {
     let vec3 = exact(TypeRef::Vec3);
@@ -271,8 +436,28 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                     &[p("path", string)],
                     TypeRef::Texture,
                 )),
+                // Decision 0130 (spec/audio.md): sounds are assets like images.
+                NamespaceMember::Function(compile_time(
+                    "sound",
+                    Milestone::M1,
+                    "A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`.",
+                    &[p("path", string)],
+                    TypeRef::Sound,
+                )),
+                // Decision 0139 (spec/hud.md section 6): fonts for `hud.text`.
+                NamespaceMember::Function(compile_time(
+                    "font",
+                    Milestone::M1,
+                    "A font file (`.ttf`, `.otf`, `.woff` or `.woff2`) for `hud.text`.",
+                    &[p("path", string)],
+                    TypeRef::Font,
+                )),
             ],
         ),
+        // Decision 0134 (spec/hud.md): immediate-mode HUD drawn over the canvas each frame.
+        hud_namespace(),
+        // Decision 0135 (spec/tweens.md): easing curves for tweens.
+        ease_namespace(),
         // `lighting.pbr` and the `Pbr` material landed with task M4-03, before the M4 gate
         // (decision 0057).
         namespace(
@@ -486,7 +671,17 @@ pub(super) fn types() -> Vec<TypeDef> {
         handle(
             "entity_ref",
             Milestone::M1,
-            "A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only.",
+            "A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`.",
+        ),
+        handle(
+            "font",
+            Milestone::M1,
+            "A font for `hud.text`: `asset.font(..)` or the built-in `hud.pixel_font()`; CPU only (decision 0139).",
+        ),
+        handle(
+            "sound",
+            Milestone::M1,
+            "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0130).",
         ),
         TypeDef {
             methods: glb_methods(),

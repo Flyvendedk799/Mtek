@@ -10,10 +10,10 @@
 | Command | Milestone | Purpose |
 |---|---|---|
 | `mtek check [--format human\|json] [PATH]` | M1 | parse + type-check; **no GPU needed**; exit 1 on errors |
-| `mtek build [--target web] [--mode release\|dev\|test\|preview] [--loop-budget N] [--out DIR] [--format human\|json] [PATH]` | M1 (`preview`: M6) | produce `dist/` (`spec/runtime-abi.md` §2). `--target` accepts only `web` in v0.1 (the default; any other value is a usage error) |
+| `mtek build [--target web] [--mode release\|dev\|test\|preview] [--loop-budget N] [--release [--itch]] [--out DIR] [--format human\|json] [PATH]` | M1 (`preview`: M6; `--release`: decision 0136) | produce `dist/` (`spec/runtime-abi.md` §2). `--target` accepts only `web` in v0.1 (the default; any other value is a usage error). `--release` packages a game (§2.1) |
 | `mtek dev [--port N] [--open] [PATH]` | M1 (reload: M3) | build, serve, watch, rebuild; candidate-based hot reload from M3 |
 | `mtek inspect --ir\|--bindings\|--shaders\|--assets [--format human\|json] [PATH]` | M1 (`--ir`), M2 (`--shaders`, `--bindings`), M4 (`--assets`) | inspection (`spec/gpu-layout.md` §10; the views are decision 0044; `--assets` is the packaged assets of `spec/assets.md` §4, decision 0058) |
-| `mtek new NAME` | M3 | scaffold a project from the built-in template (`mtek.toml`, `src/main.mtek` with the Demo scene, `.gitignore`) |
+| `mtek new NAME [--template demo\|game]` | M3 | scaffold a project (`mtek.toml`, `src/main.mtek`, `.gitignore`). `demo` (the default) is the Demo scene; `game` is a title scene, a run, tags and a saved score |
 | `mtek fmt [--check] [PATHS…]` | M6 | canonical formatter |
 | `mtek test [--allow-not-run] [--format human\|json] [PATH]` | M6 | run a project's declarative test fixtures (§6; decision 0074) |
 | `mtek context --entry FILE [--symbol NAME…] --format json` | M6 | AI context export (`spec/ai-and-benchmarks.md` §2; `--max-bytes N` defaults to 24000; format `spec/context.schema.json`; exit codes, `--entry` and the failure modes are decision 0072) |
@@ -25,7 +25,7 @@
 
 **Exit codes:** `0` success (warnings allowed) · `1` the program has errors · `2` usage error (bad arguments) · `3` internal error (`E9999`) or I/O failure. **Output:** human diagnostics on stderr; `--format json` prints exactly one JSON document (the report of `spec/diagnostics.md` §2.2) on stdout and nothing else on stdout. `mtek check` never touches the GPU; target-device validation is a separate operation (`mtek build` + runtime, blueprint §10).
 
-`mtek build` embeds the runtime bundle compiled into the CLI binary (`mtek-cli/build.rs` reads `packages/runtime-web/dist/runtime.js` and `runtime.dev.js` if present; `release` builds embed the former, which has no development code, and `dev` and `test` builds the latter, decision 0055). A CLI built without it still checks and inspects, but `build` fails with `E9030` explaining how to build the runtime first (`npm run build`). The physics bundle `packages/physics-rapier/dist/physics.js` is embedded the same way but on its own: without it only a program that uses physics fails to build with `E9030` (decision 0063).
+`mtek build` embeds the runtime bundle compiled into the CLI binary (`mtek-cli/build.rs` reads `packages/runtime-web/dist/runtime.js` and `runtime.dev.js` if present; `release` builds embed the former, which has no development code, and `dev` and `test` builds the latter, decision 0055). When `dist/` was not built, `build.rs` embeds the **prebuilt runtime** checked into `crates/mtek-cli/prebuilt/` instead (decision 0131), so a fresh clone needs no Node.js to get a working `mtek build`; `npm run check:prebuilt` fails when the runtime sources changed since the prebuilt copy was written (`npm run build && npm run prebuilt:write` refreshes it). A CLI built with neither still checks and inspects, but `build` fails with `E9030` explaining how to build the runtime first (`npm run build`). The physics bundle `physics.js` is embedded the same way (from `packages/physics-rapier/dist/`, else the prebuilt copy) but on its own: without it only a program that uses physics fails to build with `E9030` (decision 0063).
 
 What the commands print besides diagnostics, the colour rule for stderr, `--out` resolution, the project search on disk, `E9031` for an output directory that cannot be written, and the embedding mechanics are decision 0032.
 
@@ -39,6 +39,22 @@ The path of a new user through these commands (install from source, `mtek new`, 
 | `dev` (used by `mtek dev`) | overlay, hot-reload client, `print`, dev-only warnings, `timestamp-query` requested if available |
 | `test` | like `dev` without the overlay and reload client; `index.html` does not auto-mount and exposes `window.__mtekMount(options)` (signature in `spec/runtime-abi.md` §6.5) for Playwright; probe shaders emitted when requested by fixtures |
 | `preview` (M6) | like `release` plus CPU loop budgets (`--loop-budget N`, default 10 million iterations per frame, valid with this mode only), a manifest that restricts the runtime's network access to `baseUrl`, external `bootstrap.js` and a restrictive Content-Security-Policy (`spec/ai-and-benchmarks.md` §5, decision 0075); the build runs against a 10 s clock (`E9032`) |
+
+### 2.1 Game packages (`mtek build --release`, decision 0136)
+
+`--release` is a `release` build packaged for players. It conflicts with `--mode` and `--loop-budget` (a usage error). Compared with a plain `release` build:
+
+1. **Minified runtime.** `runtime.<h16>.js` is the minified release flavour `runtime.min.js` (esbuild `minify`, no source map; about 60 % of the unminified bundle), embedded in the CLI beside the other two flavours and in the prebuilt copy. `app.js` keeps its source map, so diagnostics still point into the Mtek sources.
+2. **Game page.** `index.html` is the compiler's game page (`package::html::game_html`): a viewport `<meta>`, the `<title>` of `[build] title` (default: the project name), a favicon link and a loading screen showing the title and "Loading…". The screen fades out when `mountMtek` settles. On a failure it goes too, so the runtime's overlay (including the unsupported-browser screen, decision 0132) shows.
+3. **Favicon.** `assets/favicon.svg`, `assets/favicon.png` or `assets/favicon.ico` of the project, the first that exists, copied as is. Its content must match the extension (an `<svg` root, the PNG signature, the ICO header) and be at most 1 MiB, else `E7103`. Without one, a built-in SVG favicon is written.
+4. **`--itch`** (requires `--release`). After the folder is written, the same files are written as `<out>-itch.zip` beside it: stored entries, `index.html` at the root, every timestamp 1980-01-01, so the zip is reproducible. More than 1000 files, more than 500 MB uncompressed or a path longer than 240 characters is `E7104` (itch.io's HTML5 limits); the folder is still written.
+
+The output stays one self-contained folder of relative paths, so it can be uploaded as is. The `buildId` of the manifest is the one of the plain `release` build; the game page and favicon are not part of it.
+
+### 2.2 Small-game budgets (decision 0137)
+
+- **Size.** `budgets/small-games.json` gives each example a maximum size for its game package folder and its itch.io zip. `node scripts/game-budgets.mjs size` (`npm run check:budgets`, CI job `game-budgets`) builds them with `mtek build --release --itch` and fails when one is over budget.
+- **Frame time.** `node scripts/record-frame-evidence.mjs <out.json>` records the p50 and p95 `requestAnimationFrame` interval of each example on the machine's GPU. `node scripts/game-budgets.mjs frames <out.json>` requires p95 ≤ 20 ms over at least 300 frames, from an identified, non-fallback adapter. A software adapter is refused. Frame-time evidence is recorded only on real hardware (`evidence/small-games/README.md`).
 
 ## 3. `mtek.toml`
 

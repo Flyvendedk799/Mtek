@@ -1,4 +1,4 @@
 scene Demo {
     camera Main {}
-    entity match { mesh: Box {}; }
+    entity impl { mesh: Box {}; }
 }

@@ -17,7 +17,7 @@ pub struct Registry { pub types: Vec<TypeDef>, pub schemas: Vec<SchemaDef>, pub 
                       pub events: Vec<EventDef>, pub enums: Vec<EnumDef>, pub intrinsics: Vec<IntrinsicDef>,
                       pub namespaces: Vec<NamespaceDef>, pub prelude_sources: Vec<(&'static str, &'static str)> }
 
-pub struct SchemaDef { pub name: &'static str, pub category: SchemaCategory /* Mesh | Material | Light | Body | Collider | Projection | Object */,
+pub struct SchemaDef { pub name: &'static str, pub category: SchemaCategory /* Mesh | Material | Light | Body | Collider | Projection | Object | Emitter */,
                        pub fields: Vec<FieldDef>, pub since: Milestone, pub doc: &'static str }
 
 pub struct FieldDef { pub name: &'static str, pub ty: TypeRef, pub default: Option<ConstValue>,
@@ -43,7 +43,7 @@ The generated file contains more than the sketch above (field `constructionOnly`
 
 ## 2. Types and namespaces
 
-Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material texture sampler entity_ref` and the generic `array<T, N>`; structured built-ins `SurfaceInput` (`spec/materials.md` §3.1) and `PointerEvent { position: vec2; button: i32 }`.
+Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material texture sampler entity_ref sound` and the generic `array<T, N>`; structured built-ins `SurfaceInput` (`spec/materials.md` §3.1) and `PointerEvent { position: vec2; button: i32 }`.
 
 | Namespace | Members |
 |---|---|
@@ -53,8 +53,10 @@ Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material tex
 | `texture` | `white()`, `black()` (1×1 built-ins) |
 | `sampler` | `linear_repeat()`, `linear_clamp()`, `nearest_repeat()`, `nearest_clamp()` |
 | `frame` | `time: f32`, `delta: f32`, `index: u32` (`spec/scenes.md` §7.5) |
-| `asset` | `glb(path: string) -> glb_asset`, `texture(path: string) -> texture`, `linear_texture(path: string) -> texture` (`spec/assets.md` §2; `glb_asset` accessors in §2.1 there; implemented by task M4-05 ahead of the M4 gate, decision 0058) |
+| `asset` | `glb(path: string) -> glb_asset`, `texture(path: string) -> texture`, `linear_texture(path: string) -> texture`, `sound(path: string) -> sound`, `font(path: string) -> font` (`spec/assets.md` §2, `spec/audio.md` §2, `spec/hud.md` §6; `glb_asset` accessors in §2.1 there; implemented by task M4-05 ahead of the M4 gate, decision 0058) |
 | `lighting` | `pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` — GPU only (implemented by M4-03, decision 0057) |
+| `hud` | `text(content: string, at: vec2[, size: f32[, tint: color[, align: f32[, font: font]]]])`, `pixel_font() -> font` (decision 0139), `rect(at: vec2, size: vec2, tint: color[, align: f32])`, `button(label: string, at: vec2[, size: f32]) -> bool` — CPU, handlers and lifecycle functions only; immediate mode, drawn over the canvas (`spec/hud.md`, decision 0134) |
+| `easing` | `in_quad(t: f32) -> f32`, `out_quad(t: f32) -> f32`, `in_out_quad(t: f32) -> f32`, `in_cubic(t: f32) -> f32`, `out_cubic(t: f32) -> f32`, `in_out_cubic(t: f32) -> f32`, `in_out_sine(t: f32) -> f32`, `out_back(t: f32) -> f32`, `out_elastic(t: f32) -> f32`, `out_bounce(t: f32) -> f32` — CPU, also allowed in `bind`; `t` clamped to 0..1, result binary32 (`spec/tweens.md`, decision 0135) |
 | `Key` | enum constants (§5.2) |
 
 ## 3. Schemas
@@ -81,6 +83,9 @@ Flags: **R** required · **W** writable from handlers · **B** bindable · **C**
 | `light` | light schema | — | C (fields W B) |
 | `body` | body schema | — | C |
 | `collider` | collider schema | — | C |
+| `tag` | string | — | C |
+| `particles` | `Emitter` | — | C |
+| `clip` | string | — | C |
 
 ### 3.3 `Camera` (scene-object kind `camera`), `Perspective`, `Orthographic`
 As in `spec/scenes.md` §3, including `exposure: f32 = -1.9145305` (EV100, C, decision 0081). `Perspective { fov_y: f32 = 0.9 (0, π); near: f32 = 0.1 (> 0); far: f32 = 1000.0 (> near) }`, `Orthographic { height: f32 = 10.0 (> 0); near: f32 = 0.1; far: f32 = 1000.0 }`; all projection fields W B.
@@ -106,6 +111,9 @@ Out-of-range constants are `E5006` ("field value out of range"). Asset meshes co
 `SphereCollider { radius: f32 (R, > 0, finite); sensor: bool = false; friction: f32 = 0.5; restitution: f32 = 0.0 }`.
 
 A `collider` requires a `body` (`E5120`) and a `body` a `collider` (`E5121`); `Scene.gravity` is a finite `vec3`. The M5 gates of these rows, of `entity_ref` and of the collision events were lifted by task M5-03 (decision 0065).
+
+### 3.8 `Emitter` (category `emitter`, all C) — semantics in `spec/scenes.md` §4.6
+`Emitter { rate: f32 = 0.0 (≥ 0); lifetime: f32 = 1.0 (> 0, finite); speed: f32 = 1.0 (≥ 0); size: f32 = 0.05 (> 0, finite); gravity: f32 = 0.0 (finite) }` (decision 0155).
 
 ## 4. Primitive mesh generation (normative, runtime `src/mesh/`)
 
@@ -179,10 +187,41 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `transpose` | `mat4 → mat4` | both | ✓ | |
 | `sample` | `(texture, sampler, vec2) → vec4` | gpu | — | `spec/materials.md` §5 |
 | `random` | `() → f32` | cpu | — | `[0, 1)`, seeded PRNG (xoshiro128**, seed from mount options) — deterministic under a fixed seed |
+| `random_range` | `(f32, f32) → f32` | cpu | — | `lo + (hi − lo) · random()` rounded to f32: in `[lo, hi)`; one draw of `random()` (decision 0149) |
+| `random_int` | `(i32, i32) → i32` | cpu | — | `lo + floor(random() · (hi − lo))`: in `[lo, hi)`, `lo` when `hi ≤ lo`; one draw, also then (decision 0149) |
+| `chance` | `(f32) → bool` | cpu | — | `random() < p`: true with probability `p` (never for `p ≤ 0`, always for `p ≥ 1`); one draw (decision 0149) |
+| `choose` | `(array<T, N>) → T` | cpu | — | one element, index `floor(random() · N)`; one draw; `N` is at least 1 (decision 0152) |
+| `shuffle` | `(array<T, N>) → array<T, N>` | cpu | — | a new array, Fisher-Yates, `N − 1` draws (`N` below 2 draws none); does not modify the argument (decision 0152) |
 | `print` | `(string) → ()` | cpu | — | dev console; no-op in release builds |
-| `is_key_down` | `(Key) → bool` | cpu | — | |
+| `is_key_down` | `(Key) → bool` | cpu | — | down at the end of input handling (decision 0153) |
+| `key_pressed` | `(Key) → bool` | cpu | — | went down in the transitions delivered this frame (decision 0153) |
+| `key_released` | `(Key) → bool` | cpu | — | went up in the transitions delivered this frame (decision 0153) |
+| `pointer_position` | `() → vec2` | cpu | — | pointer in canvas NDC, `x` right and `y` up; `(0, 0)` until the pointer moves or a button changes (decision 0153) |
+| `is_pointer_down` | `(i32) → bool` | cpu | — | button 0, 1 or 2 was down; any other button is false (decision 0153) |
 | `spawn` | `(prefab descriptor) → entity_ref` | cpu (handlers only) | — | the argument is a prefab literal `Prefab { param: value; }`; params may be run-time values (decision 0064) |
 | `destroy` | `(entity_ref) → ()` | cpu (handlers only) | — | `E5030` for a named entity |
+| `play` | `(sound) → ()`, `(sound, f32) → ()`, `(sound, f32, f32) → ()` | cpu (handlers only) | — | volume `0..4` (default 1), pitch `0.0625..16` (default 1); `spec/audio.md` §3 (decision 0130) |
+| `play_at` | `(sound, vec3) → ()`, `(sound, vec3, f32) → ()` | cpu (handlers only) | — | positional: distance attenuation and panning from the active camera; `spec/audio.md` §3 |
+| `play_music` | `(sound) → ()`, `(sound, f32) → ()` | cpu (handlers only) | — | loops; replaces the music that plays |
+| `stop_music` | `() → ()` | cpu (handlers only) | — | |
+| `set_volume` | `(f32) → ()` | cpu (handlers only) | — | global volume `0..4` |
+| `set_muted` | `(bool) → ()` | cpu (handlers only) | — | the volume is kept |
+| `is_muted` | `() → bool` | cpu | — | |
 | `alive` | `(entity_ref) → bool` | cpu | — | false for a pending spawn, a pending removal and a dead reference |
+| `count_tagged` | `(string) → i32` | cpu | — | the live entities with the tag (`spec/scenes.md` §17, decision 0150); the tag is a string constant that some entity or prefab declares (`E5221`, `E5222`) |
+| `first_tagged` | `(string) → entity_ref` | cpu | — | the first live entity with the tag in instance order; a dead reference when there is none |
+| `nearest_tagged` | `(string, vec3) → entity_ref` | cpu | — | the live entity with the tag whose world position is nearest the point; a tie goes to the first in instance order; a dead reference when there is none |
+| `has_tag` | `(entity_ref, string) → bool` | cpu | — | false for a reference that is not alive |
+| `tagged` | `(string) → tagged entities` | cpu | — | only the iterable of a `for` loop, `for r in tagged("rock") { .. }` (`E5224`); skips an entity destroyed before its turn |
+| `destroy_tagged` | `(string) → ()` | cpu (handlers only) | — | queues the removal of every live spawned entity with the tag; `E5223` when a named entity has the tag |
+| `go_to` | `(scene name) → ()` | cpu (handlers only) | — | the argument is the name of a scene of the program, `go_to(Level)` (`E5201` otherwise); switches scene at the start of a later frame, carrying `shared state` over (`spec/scenes.md` §15.2, decision 0141) |
+| `reset` | `() → ()` | cpu (handlers only) | — | restarts the scene that runs from its initial values, at the start of a later frame (`spec/scenes.md` §15.5, decision 0140) |
+| `pause`, `resume` | `() → ()` | cpu (handlers only) | — | stop and restart the game clock: ticks, physics, timers and `update` (`spec/scenes.md` §15.4, decision 0143) |
+| `paused` | `() → bool` | cpu | — | whether `pause()` holds the game |
+| `particle_count` | `() → i32` | cpu | — | how many particles are alive (`spec/scenes.md` §4.6, decision 0155) |
+| `set_camera` | `(camera name) → ()` | cpu (handlers only) | — | the argument is the name of a camera of this scene, `set_camera(Wide)` (`E5015` otherwise); that camera draws (`spec/scenes.md` §3, decision 0154) |
+| `save` | `() → ()` | cpu (handlers only) | — | writes every `saved` and `setting` state of the running scene to the game's storage at once (`spec/scenes.md` §16.3, decision 0145) |
+| `load` | `() → bool` | cpu (handlers only) | — | sets every `saved` and `setting` state of the running scene to its stored value; `false` when nothing is stored (`spec/scenes.md` §16.3, decision 0145) |
+| `clear_saved` | `() → ()` | cpu (handlers only) | — | deletes everything the game stored; the state of the running scene keeps its values (`spec/scenes.md` §16.3, decision 0145) |
 
 Conformance: `tests/semantics/intrinsics/` holds a table of inputs and expected CPU results for every row, and the GPU conformance test (`spec/testing.md` §5) evaluates the same inputs on the GPU through a probe shader and compares with the per-function tolerances.

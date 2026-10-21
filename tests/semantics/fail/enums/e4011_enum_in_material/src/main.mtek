@@ -1,0 +1,18 @@
+// Enums are CPU-only in v0.1: a function a material stage calls cannot take
+// an enum parameter or match on one.
+enum Shade { Dark, Light }
+
+fn shade_value(shade: Shade) -> f32 {
+    return match shade { Shade.Dark => 0.2, Shade.Light => 0.9 };
+}
+
+material Tinted {
+    fragment(input: SurfaceInput) -> color {
+        let v = shade_value(Shade.Light);
+        return color.linear(vec3(v), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

@@ -1,0 +1,5 @@
+scene S {
+    on key_down(Key.Space) {
+        after(1.0, 2.0) {}
+    }
+}

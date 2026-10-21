@@ -16,17 +16,17 @@
       }
     },
     "E5901": {
-      "reason": "A v0.1 application mounts one scene and has no construct that switches the active scene, so no program can produce this code: it is reserved.",
+      "reason": "Retired: `go_to(Scene)` switches the active scene (decision 0141), so no program produces this code. It stays in the catalogue so that the number is not reused.",
       "source": {
-        "file": "spec/scenes.md",
-        "quote": "v0.1 mounts **one scene** per application"
+        "file": "spec/diagnostics.md",
+        "quote": "retired by decision 0141"
       }
     },
     "E5902": {
-      "reason": "v0.1 has only opaque materials and no construct that asks for transparency, so no program can produce this code: it is reserved. A transparent glTF material is rejected earlier, with E7015.",
+      "reason": "Retired: a material colour param with an alpha below 1 makes the draw translucent (decision 0138), so no program produces this code. It stays in the catalogue so that the number is not reused. A transparent glTF material is still rejected with E7015.",
       "source": {
-        "file": "spec/materials.md",
-        "quote": "Transparency is not part of v0.1"
+        "file": "spec/diagnostics.md",
+        "quote": "retired by decision 0138"
       }
     },
     "E7901": {
@@ -75,15 +75,18 @@
     {
       "id": "lang-loops",
       "area": "Language",
-      "restriction": "No `while` or `loop`; the only loops are `for i in a..b` and `for x in array`.",
-      "reason": "Listed as not in v0.1; the specification records no rationale beyond scope.",
+      "restriction": "No `loop`. Write `while true { … }` and leave it with `break`. `while` runs at most 1 000 000 iterations.",
+      "reason": "`loop` stays reserved (decision 0144). A `while` that runs past the cap fails the frame with E8080.",
       "codes": [
-        "E0013"
+        "E0013",
+        "E8080"
       ],
-      "decisions": [],
+      "decisions": [
+        "0144"
+      ],
       "source": {
         "file": "spec/language.md",
-        "quote": "`while`/`loop`"
+        "quote": "There is no `loop`"
       }
     },
     {
@@ -160,15 +163,34 @@
     {
       "id": "lang-future-constructs",
       "area": "Language",
-      "restriction": "No methods or `impl`, no user-defined enums, no pattern matching (`match`), no `use`, `mod`, `trait`, `type`, `async` or any other word of the reserved list.",
-      "reason": "Reserved for future versions (E0013); the built-in registry enums such as `Key` are the only enums.",
+      "restriction": "No methods or `impl`, no `use`, `mod`, `trait`, `type`, `async` or any other word of the reserved list.",
+      "reason": "Reserved for future versions (E0013).",
       "codes": [
         "E0013"
       ],
       "decisions": [],
       "source": {
         "file": "spec/language.md",
-        "quote": "methods and `impl`; enums"
+        "quote": "methods and `impl`;"
+      }
+    },
+    {
+      "id": "lang-enum-limits",
+      "area": "Language",
+      "restriction": "Enum variants carry no data and have no explicit discriminants; an enum does not convert to or from a number, has no ordering, and is CPU-only. A `match` pattern is an enum variant or `_`: no literal, binding, range or guard patterns and no destructuring.",
+      "reason": "Decision 0129 adds the closed, data-free enum and the exhaustive `match` that a game-state machine needs and leaves the rest for a later version; an enum is erased to its variant index, which the language does not expose.",
+      "codes": [
+        "E3001",
+        "E3014",
+        "E3204",
+        "E4011"
+      ],
+      "decisions": [
+        "0129"
+      ],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "enum variants that carry data, explicit enum discriminants"
       }
     },
     {
@@ -186,15 +208,19 @@
     {
       "id": "lang-string-operations",
       "area": "Language",
-      "restriction": "Strings are immutable, CPU-only values with no concatenation or formatting; `+` on strings is an error.",
-      "reason": "Not in v0.1. Strings have no GPU representation.",
+      "restriction": "Strings are immutable, CPU-only values with no concatenation; `+` on strings is an error. Strings are built by interpolation (`\"Score: ${points}\"`, format spec `.N` only), which is formatted at run time and is not a constant expression.",
+      "reason": "Strings have no GPU representation. Interpolation covers HUD text (decision 0133); other format specs (width, padding, hexadecimal) are not specified yet.",
       "codes": [
-        "E3014"
+        "E3014",
+        "E3501",
+        "E3502"
       ],
-      "decisions": [],
+      "decisions": [
+        "0133"
+      ],
       "source": {
         "file": "spec/language.md",
-        "quote": "string formatting/concatenation"
+        "quote": "string concatenation (`+` on `string` is `E3014`"
       }
     },
     {
@@ -234,11 +260,10 @@
     {
       "id": "materials-scope",
       "area": "Materials and rendering",
-      "restriction": "No vertex or compute stages, no transparency or blending, no shadows, no post-processing, no multiple render targets, no material inheritance, no mip-map generation, no derivatives (`dpdx`), no storage buffers, no texture arrays or cube maps.",
-      "reason": "Not in v0.1 (spec/materials.md section 10); the specification records no rationale beyond scope. Vertex and compute stages are E4901 and transparency is E5902 (reserved).",
+      "restriction": "No vertex or compute stages, no blend modes other than alpha over, no shadows, no post-processing, no multiple render targets, no material inheritance, no mip-map generation, no derivatives (`dpdx`), no storage buffers, no texture arrays or cube maps.",
+      "reason": "Not in v0.1 (spec/materials.md section 10); the specification records no rationale beyond scope. Vertex and compute stages are E4901.",
       "codes": [
-        "E4901",
-        "E5902"
+        "E4901"
       ],
       "decisions": [],
       "source": {
@@ -247,18 +272,19 @@
       }
     },
     {
-      "id": "materials-opaque-colours",
+      "id": "materials-translucency",
       "area": "Materials and rendering",
-      "restriction": "Every `color` parameter of a material holds an opaque colour (alpha exactly 1.0).",
-      "reason": "Transparency is not part of v0.1. A constant with another alpha is E5100; a run-time value with another alpha (a write, a binding or a host input) is rejected with E8100 and the previous value stays. Use `vec4` for non-colour four-component data.",
+      "restriction": "Translucency is per object: translucent draws are sorted back to front by their centre, blend alpha \"over\" only, write no depth and are never instanced.",
+      "reason": "Decision 0138 keeps the small-game transparency to one blend mode, with no order-independent transparency. Intersecting translucent objects can show order artefacts. A host input with the `color-hex-opaque` codec still rejects alpha (E8100).",
       "codes": [
-        "E5100",
         "E8100"
       ],
-      "decisions": [],
+      "decisions": [
+        "0138"
+      ],
       "source": {
         "file": "spec/materials.md",
-        "quote": "must hold an opaque colour (alpha exactly `1.0`) in v0.1"
+        "quote": "Order is per object, not per triangle"
       }
     },
     {
@@ -280,28 +306,101 @@
     {
       "id": "scenes-scope",
       "area": "Scenes and entities",
-      "restriction": "One scene per application; no scene switching, no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text or UI, no audio.",
-      "reason": "Not in v0.1 (spec/scenes.md section 14). Scene switching is E5901 (reserved); `component`, `query` and `system` are reserved words (E0013).",
+      "restriction": "One scene runs at a time (`go_to(Scene)` switches between the scenes of a program, and `set_camera(Name)` switches which of that scene's cameras draws); no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text in the 3D world, no UI layout or text input (screen-space text and buttons are the HUD, spec/hud.md).",
+      "reason": "Not in v0.1 (spec/scenes.md section 14). Scene switching landed with decision 0141; `component`, `query` and `system` are reserved words (E0013).",
       "codes": [
-        "E5901",
         "E0013"
       ],
-      "decisions": [],
+      "decisions": [
+        "0141"
+      ],
       "source": {
         "file": "spec/scenes.md",
         "quote": "## 14. Not in v0.1"
       }
     },
     {
-      "id": "scenes-entity-ref-fields",
+      "id": "hud-scope",
       "area": "Scenes and entities",
-      "restriction": "An `entity_ref` (the result of `spawn`, the argument of a collision handler) can be passed to `destroy`, `alive` and body commands, but its fields and state cannot be read or written.",
-      "reason": "Decision 0064: not in v0.1.",
+      "restriction": "The HUD is immediate mode and screen-space only: `hud.text`, `hud.rect` and `hud.button` drawn again every frame from lifecycle functions and handlers (not from functions), in the system UI font, an `asset.font(..)` file or the built-in ASCII pixel font, with horizontal alignment as the only layout. No text in the 3D world, no images, no text input, no keyboard or gamepad navigation, and `mtek test` fixtures cannot see or click it.",
+      "reason": "Spec/hud.md section 7 (decisions 0134, 0139): the smallest UI that covers scores, timers, bars and buttons, drawn as a DOM layer over the canvas.",
       "codes": [
-        "E5074"
+        "E5601",
+        "W8203",
+        "E5080"
       ],
       "decisions": [
-        "0064"
+        "0134"
+      ],
+      "source": {
+        "file": "spec/hud.md",
+        "quote": "## 7. Not in this extension"
+      }
+    },
+    {
+      "id": "tween-scope",
+      "area": "Scenes and entities",
+      "restriction": "Tweens are progress state plus ten CPU easing curves (`easing.in_quad` .. `easing.out_bounce`) used in bindings, lifecycle functions, handlers and `cpu fn`s: no tween objects, timelines, delays, callbacks or user curves in `bind`, no easing in a plain `fn` or on the GPU (`smoothstep` only), and no curve in a `const`.",
+      "reason": "Spec/tweens.md (decision 0135): curves are the smallest addition that makes bindings animate; tween bookkeeping is ordinary state logic that fixtures can observe.",
+      "codes": [
+        "E4002",
+        "E3090"
+      ],
+      "decisions": [
+        "0135"
+      ],
+      "source": {
+        "file": "spec/tweens.md",
+        "quote": "## 4. Limits"
+      }
+    },
+    {
+      "id": "game-package-scope",
+      "area": "Tooling",
+      "restriction": "`mtek build --release` packages one self-contained folder (minified runtime, loading screen, favicon, title) and, with `--itch`, an uncompressed zip for itch.io: `app.js` is not minified, the zip is stored rather than deflated, the favicon is found only at `assets/favicon.svg|png|ico`, and there is no upload, no other store format and no PWA manifest.",
+      "reason": "Spec/tooling.md section 2.1 (decision 0136): the smallest packaging that turns a release build into an uploadable HTML5 game without new dependencies.",
+      "codes": [
+        "E7103",
+        "E7104"
+      ],
+      "decisions": [
+        "0136"
+      ],
+      "source": {
+        "file": "spec/tooling.md",
+        "quote": "### 2.1 Game packages"
+      }
+    },
+    {
+      "id": "audio-scope",
+      "area": "Scenes and entities",
+      "restriction": "Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy).",
+      "reason": "Spec/audio.md section 8 (decision 0130): the smallest audio model that covers hit, score and music sounds.",
+      "codes": [
+        "E7101",
+        "E7102",
+        "E5501"
+      ],
+      "decisions": [
+        "0130"
+      ],
+      "source": {
+        "file": "spec/audio.md",
+        "quote": "## 8. Not in this extension"
+      }
+    },
+    {
+      "id": "scenes-entity-ref-fields",
+      "area": "Scenes and entities",
+      "restriction": "An `entity_ref` can be compared, passed to `destroy` and `alive`, given body commands, and read for `position`, `rotation`, `scale` and `visible`. Writing a field, or reading any other field or state, is rejected, and a `bind` cannot read a field through a reference.",
+      "reason": "Decision 0151 allows the four transform reads. Writes stay rejected because the single-writer rules need the entity's declaration (decision 0064).",
+      "codes": [
+        "E5074",
+        "E5005"
+      ],
+      "decisions": [
+        "0064",
+        "0151"
       ],
       "source": {
         "file": "spec/diagnostics.md",
@@ -417,15 +516,16 @@
     {
       "id": "gltf-animation",
       "area": "Assets",
-      "restriction": "No skinning, morph targets or animations; no sparse accessors.",
-      "reason": "Decision 0015.",
+      "restriction": "No skinning, morph targets, cubic-spline interpolation or sparse accessors. A node clip of translation, rotation and scale with LINEAR or STEP interpolation plays (decision 0156).",
+      "reason": "Decision 0015 rejected every animation. Decision 0156 plays TRS clips and keeps the rest of that rejection.",
       "codes": [
         "E7008",
         "E7019",
         "E7011"
       ],
       "decisions": [
-        "0015"
+        "0015",
+        "0156"
       ],
       "source": {
         "file": "spec/decisions/0015-asset-strictness.md",
@@ -513,6 +613,23 @@
       "source": {
         "file": "spec/runtime-abi.md",
         "quote": "the v0.1 profile `webgpu-core-2026` is exactly the default limits"
+      }
+    },
+    {
+      "id": "webgpu-only",
+      "area": "Runtime",
+      "restriction": "WebGPU is the only renderer: there is no WebGL2 fallback, and a browser without WebGPU (or without an adapter) shows the unsupported-browser screen instead of the game. Only Chromium has a full automated run; Firefox has one Windows run and Safari none.",
+      "reason": "Decision 0132: a second backend would need a second shader language and layout for every feature; spec/browser-support.md section 2 marks which browsers are expectations.",
+      "codes": [
+        "E8004",
+        "E8005"
+      ],
+      "decisions": [
+        "0132"
+      ],
+      "source": {
+        "file": "spec/browser-support.md",
+        "quote": "## 1. The stance: WebGPU only, no WebGL2"
       }
     },
     {

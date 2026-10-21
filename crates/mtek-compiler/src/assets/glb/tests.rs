@@ -112,6 +112,7 @@ fn a_valid_triangle_reads_with_its_values() {
     assert_eq!(file.default_scene, Some(0));
     assert_eq!(file.scenes, [vec![0]]);
     assert_eq!(file.sha256.len(), 64);
+    assert!(file.clips.is_empty());
 }
 
 #[test]
@@ -130,12 +131,56 @@ fn the_bounding_sphere_encloses_every_vertex_and_is_centred_on_the_box() {
 #[test]
 fn rows_are_reported_in_the_order_of_the_profile_table() {
     let (mut json, bin) = base();
-    // Written in the reverse order of the table: animations, material, mode.
-    json["animations"] = json!([{ "channels": [{ "sampler": 0, "target": { "node": 0, "path": "translation" } }],
-        "samplers": [{ "input": 1, "output": 0 }] }]);
+    // Written in the reverse order of the table: a skin (still E7019), material, mode.
+    // A translation channel is a clip now, so the row is a skin rather than an animation.
+    json["skins"] = json!([{ "joints": [0] }]);
     json["materials"][0]["alphaMode"] = json!("BLEND");
     json["meshes"][0]["primitives"][0]["mode"] = json!(1);
     assert_eq!(codes(&read(&json, &bin)), ["E7006", "E7015", "E7019"]);
+}
+
+#[test]
+fn a_linear_translation_is_a_clip_and_a_cubic_spline_is_not() {
+    let (mut json, mut bin) = base();
+    while !bin.len().is_multiple_of(4) {
+        bin.push(0);
+    }
+    let times_offset = bin.len();
+    bin.extend(le(&[0.0, 1.0]));
+    let values_offset = bin.len();
+    bin.extend(le(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0]));
+    json["buffers"][0]["byteLength"] = json!(bin.len());
+    json["bufferViews"].as_array_mut().unwrap().extend([
+        json!({ "buffer": 0, "byteOffset": times_offset, "byteLength": 8 }),
+        json!({ "buffer": 0, "byteOffset": values_offset, "byteLength": 24 }),
+    ]);
+    json["accessors"].as_array_mut().unwrap().extend([
+        json!({ "bufferView": 2, "componentType": 5126, "count": 2, "type": "SCALAR" }),
+        json!({ "bufferView": 3, "componentType": 5126, "count": 2, "type": "VEC3" }),
+    ]);
+    json["animations"] = json!([{
+        "name": "Spin",
+        "channels": [{ "sampler": 0, "target": { "node": 0, "path": "translation" } }],
+        "samplers": [{ "input": 2, "interpolation": "LINEAR", "output": 3 }]
+    }]);
+    let file = read(&json, &bin).unwrap();
+    assert_eq!(file.clips.len(), 1);
+    let clip = file.clip_for("Spin", "Tri").unwrap();
+    assert_eq!(clip.duration, 1.0);
+    assert_eq!(clip.channels.len(), 1);
+    assert_eq!(clip.channels[0].times, [0.0, 1.0]);
+    assert_eq!(clip.channels[0].values, [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
+    assert!(file.clip_for("missing", "Tri").is_none());
+
+    json["animations"][0]["samplers"][0]["interpolation"] = json!("CUBICSPLINE");
+    assert_eq!(codes(&read(&json, &bin)), ["E7019"]);
+    json["animations"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("name");
+    json["animations"][0]["samplers"][0]["interpolation"] = json!("LINEAR");
+    let file = read(&json, &bin).unwrap();
+    assert_eq!(file.clips[0].name, "animation_0");
 }
 
 #[test]

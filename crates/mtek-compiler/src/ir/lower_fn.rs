@@ -6,19 +6,22 @@
 
 use std::collections::BTreeMap;
 
-use super::lower::{Defect, Lowering};
+use super::lower::{Defect, Lowering, stored_type};
 use super::model::{
     Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, BodyTarget as IrBodyTarget,
-    Branch, Expr, ExprKind, Function, LocalItem, LocalKind, MaterialItem, MaterialParamItem,
-    NamedExpr, Owner, Place, PlaceRoot, PlaceStep, StageItem, State, Stmt, Symbol, Value,
+    Branch, Expr, ExprKind, Function, LocalItem, LocalKind, MatchArm, MaterialItem,
+    MaterialParamItem, NamedExpr, Owner, Place, PlaceRoot, PlaceStep, StageItem, State, Stmt,
+    Symbol, Value,
 };
 use crate::layout::{
     LayoutType, compute, material_layout_id, material_params_struct, qualified_name,
 };
 use crate::resolve::{DefId, DefKind, Res};
 use crate::stdlib::{EventForm, registry};
-use crate::syntax::ast::{self, ElseBranch, ExprKind as AstExpr, FieldValue, ForIter, HandlerArg};
-use crate::types::{BodyTarget, CallKind, EffectLevel, FieldKind, FnRef, Ty, TyId};
+use crate::syntax::ast::{
+    self, ArmBody, ElseBranch, ExprKind as AstExpr, FieldValue, ForIter, HandlerArg, PatternKind,
+};
+use crate::types::{BodyTarget, CallKind, ConstValue, EffectLevel, FieldKind, FnRef, Ty, TyId};
 
 /// What the lowering of a scene body needs to name entities and cameras: the static index of
 /// every entity declaration and the name of every camera. For a prefab body (decision 0062) the
@@ -284,6 +287,9 @@ impl Lowering<'_> {
             symbol: scope.child(&name),
             ty: self.type_name(info.ty),
             owner,
+            shared: decl.shared.is_some(),
+            persist: decl.persist.map(|(persist, _)| persist.word().to_owned()),
+            stored_type: decl.persist.map(|_| stored_type(self.types, info.ty)),
             init: lowering.expr(&decl.value)?,
             span: decl.span,
         })
@@ -643,6 +649,17 @@ impl FnLowering<'_, '_> {
                     }
                 }
             },
+            ast::Stmt::While(stmt) => Stmt::While {
+                cond: self.expr(&stmt.cond)?,
+                body: self.block(&stmt.body)?,
+                span: stmt.span,
+            },
+            ast::Stmt::Timer(stmt) => Stmt::Timer {
+                every: stmt.kind == ast::TimerKind::Every,
+                seconds: self.expr(&stmt.seconds)?,
+                body: self.block(&stmt.body)?,
+                span: stmt.span,
+            },
             ast::Stmt::Return(ret) => Stmt::Return {
                 value: ret.value.as_ref().map(|v| self.expr(v)).transpose()?,
                 span: ret.span,
@@ -662,8 +679,143 @@ impl FnLowering<'_, '_> {
                 expr: self.expr(&stmt.expr)?,
                 span: stmt.span,
             },
+            ast::Stmt::Match(stmt) => self.match_stmt(stmt)?,
             ast::Stmt::Error(_) => return Err(self.defect("a statement with a syntax error")),
         })
+    }
+
+    /// A `match` statement (decision 0129), as a block: a local holding the scrutinee (the
+    /// `u32` index of its variant, evaluated once), then an `if` chain comparing it with the
+    /// variants of each arm; the `_` arm is the `else`. The local is named `match`, a keyword,
+    /// so it never meets a name of the program.
+    fn match_stmt(&mut self, stmt: &ast::MatchStmt) -> Result<Stmt, Defect> {
+        let types = self.lowering.types;
+        let scrutinee = self.expr(&stmt.scrutinee)?;
+        let ty = types
+            .ty(stmt.scrutinee.id)
+            .filter(|t| !types.interner().is_error(*t))
+            .ok_or_else(|| self.defect("a `match` scrutinee without a type"))?;
+        let index = u32::try_from(self.locals.len()).map_err(|_| self.defect("too many locals"))?;
+        let local_ty = self.display(ty);
+        self.locals.push(LocalItem {
+            index,
+            name: "match".to_owned(),
+            ty: local_ty.clone(),
+            kind: LocalKind::Let,
+            span: stmt.scrutinee.span,
+        });
+        let read = Expr {
+            kind: ExprKind::Local {
+                local: index,
+                name: "match".to_owned(),
+            },
+            ty: local_ty,
+            span: stmt.scrutinee.span,
+        };
+        let mut branches = Vec::with_capacity(stmt.arms.len());
+        let mut otherwise = None;
+        for arm in &stmt.arms {
+            let ArmBody::Block(block) = &arm.body else {
+                return Err(self.defect("a `match` statement arm without a block"));
+            };
+            match self.arm_values(arm)? {
+                None => {
+                    otherwise = Some(self.block(block)?);
+                    // Arms after `_` are unreachable (`E3202`).
+                    break;
+                }
+                Some(values) => {
+                    let cond = self.arm_condition(&read, &values, arm.span)?;
+                    branches.push(Branch {
+                        cond,
+                        body: self.block(block)?,
+                    });
+                }
+            }
+        }
+        // Without `_` the arms cover every variant (`E3201` otherwise): the
+        // last arm needs no test, so every path through the `if` runs an arm.
+        if otherwise.is_none() && branches.len() > 1 {
+            otherwise = branches.pop().map(|branch| branch.body);
+        }
+        let mut stmts = vec![Stmt::Let {
+            local: index,
+            value: scrutinee,
+            span: stmt.scrutinee.span,
+        }];
+        match (branches.is_empty(), otherwise) {
+            // Only a `_` arm: its block runs.
+            (true, Some(body)) => stmts.push(Stmt::Block { body }),
+            (true, None) => return Err(self.defect("a `match` without arms")),
+            (false, otherwise) => stmts.push(Stmt::If {
+                branches,
+                otherwise,
+                span: stmt.span,
+            }),
+        }
+        Ok(Stmt::Block {
+            body: Block {
+                stmts,
+                span: stmt.span,
+            },
+        })
+    }
+
+    /// The variant indices an arm matches; `None` for an arm with `_`.
+    fn arm_values(&self, arm: &ast::MatchArm) -> Result<Option<Vec<u32>>, Defect> {
+        let mut values = Vec::with_capacity(arm.patterns.len());
+        for pattern in &arm.patterns {
+            match &pattern.kind {
+                PatternKind::Wildcard => return Ok(None),
+                PatternKind::Value(value) => match self.lowering.types.field_kind(value.id) {
+                    Some(FieldKind::EnumVariant { index, .. }) => values.push(*index),
+                    _ => return Err(self.defect("a `match` pattern that is not a variant")),
+                },
+            }
+        }
+        Ok(Some(values))
+    }
+
+    /// `read == v0 || read == v1 || …` for the variant indices of an arm.
+    fn arm_condition(
+        &self,
+        read: &Expr,
+        values: &[u32],
+        span: crate::source::Span,
+    ) -> Result<Expr, Defect> {
+        let bool_ty = self.display(TyId::BOOL);
+        let mut cond: Option<Expr> = None;
+        for value in values {
+            let constant = Expr {
+                kind: ExprKind::Const {
+                    value: (&ConstValue::U32(*value)).into(),
+                },
+                ty: read.ty.clone(),
+                span,
+            };
+            let test = Expr {
+                kind: ExprKind::Binary {
+                    op: "==",
+                    lhs: Box::new(read.clone()),
+                    rhs: Box::new(constant),
+                },
+                ty: bool_ty.clone(),
+                span,
+            };
+            cond = Some(match cond {
+                None => test,
+                Some(before) => Expr {
+                    kind: ExprKind::Binary {
+                        op: "||",
+                        lhs: Box::new(before),
+                        rhs: Box::new(test),
+                    },
+                    ty: bool_ty.clone(),
+                    span,
+                },
+            });
+        }
+        cond.ok_or_else(|| self.defect("a `match` arm without patterns"))
     }
 
     /// An assignment target (decision 0045): a `var` local followed by struct fields,
@@ -856,6 +1008,22 @@ impl FnLowering<'_, '_> {
                 value: value.into(),
             }));
         }
+        // The argument of `go_to` (decision 0141) or `set_camera` (decision 0154): the
+        // declaration's name, as a string constant. Folding stores no value for either.
+        if matches!(types.interner().get(ty), Ty::SceneName | Ty::CameraName) {
+            let mut inner = expr;
+            while let AstExpr::Paren(next) = &inner.kind {
+                inner = next;
+            }
+            let name = match self.lowering.resolution.res(inner.id) {
+                Some(Res::Def(def)) => self.lowering.resolution.def(def).map(|d| d.name.clone()),
+                _ => None,
+            }
+            .ok_or_else(|| self.defect("a scene or camera name that does not name one"))?;
+            return Ok(make(ExprKind::Const {
+                value: Value::String(name),
+            }));
+        }
         let boxed = |e: &ast::Expr| self.expr(e).map(Box::new);
         let list = |items: &[ast::Expr]| -> Result<Vec<Expr>, Defect> {
             items.iter().map(|item| self.expr(item)).collect()
@@ -931,6 +1099,33 @@ impl FnLowering<'_, '_> {
                 },
                 None => return Err(self.defect("a call that was not resolved")),
             },
+            AstExpr::Match { scrutinee, arms } => {
+                let mut lowered = Vec::with_capacity(arms.len());
+                let mut otherwise = None;
+                for arm in arms {
+                    let ArmBody::Expr(value) = &arm.body else {
+                        return Err(self.defect("a `match` expression arm without a value"));
+                    };
+                    match self.arm_values(arm)? {
+                        None => {
+                            otherwise = Some(boxed(value)?);
+                            break;
+                        }
+                        Some(values) => lowered.push(MatchArm {
+                            values,
+                            value: self.expr(value)?,
+                        }),
+                    }
+                }
+                if lowered.is_empty() && otherwise.is_none() {
+                    return Err(self.defect("a `match` without arms"));
+                }
+                make(ExprKind::Match {
+                    scrutinee: boxed(scrutinee)?,
+                    arms: lowered,
+                    otherwise,
+                })
+            }
             AstExpr::Field { .. } if self.enum_member(expr).is_some() => {
                 let (enumeration, member, code) = self
                     .enum_member(expr)
@@ -942,6 +1137,10 @@ impl FnLowering<'_, '_> {
                 })
             }
             AstExpr::Field { base, name } => match types.field_kind(expr.id) {
+                Some(FieldKind::RefField { field }) => make(ExprKind::RefField {
+                    target: boxed(base)?,
+                    field: field.clone(),
+                }),
                 Some(
                     kind @ (FieldKind::EntityState { .. }
                     | FieldKind::ObjectField { .. }
@@ -1107,6 +1306,51 @@ impl FnLowering<'_, '_> {
                     }
                 }
             }
+            // `"a ${x:.2} b"` (decision 0133): `interp("a ", fmt(x, 2), " b")`, where `fmt` takes
+            // the precision of a `.N` spec or -1; both builtins exist only in the IR.
+            AstExpr::Interp { parts } => {
+                let mut args = Vec::with_capacity(parts.len());
+                for part in parts {
+                    match part {
+                        ast::InterpPart::Text(text) => args.push(Expr {
+                            kind: ExprKind::Const {
+                                value: Value::String(text.clone()),
+                            },
+                            ty: "string".to_owned(),
+                            span: expr.span,
+                        }),
+                        ast::InterpPart::Expr { expr: inner, spec } => {
+                            let precision = spec
+                                .as_ref()
+                                .and_then(|spec| crate::types::interp_precision(&spec.text))
+                                .map_or(-1, i32::from);
+                            let value = self.expr(inner)?;
+                            let span = value.span;
+                            args.push(Expr {
+                                kind: ExprKind::Builtin {
+                                    function: "fmt".to_owned(),
+                                    args: vec![
+                                        value,
+                                        Expr {
+                                            kind: ExprKind::Const {
+                                                value: Value::I32(precision),
+                                            },
+                                            ty: "i32".to_owned(),
+                                            span,
+                                        },
+                                    ],
+                                },
+                                ty: "string".to_owned(),
+                                span,
+                            });
+                        }
+                    }
+                }
+                make(ExprKind::Builtin {
+                    function: "interp".to_owned(),
+                    args,
+                })
+            }
             AstExpr::Int { .. }
             | AstExpr::Float { .. }
             | AstExpr::Str { .. }
@@ -1228,8 +1472,9 @@ impl Lowering<'_> {
                 .ok_or_else(|| format!("the binding {} has no source", info.id))?;
             let target = match &info.target {
                 crate::types::BindTarget::Field { object, field } => {
-                    if ctx.cameras.contains_key(object) {
+                    if let Some(name) = ctx.cameras.get(object) {
                         BindingTarget::Camera {
+                            camera: name.clone(),
                             field: field.clone(),
                         }
                     } else if field == "visible" {

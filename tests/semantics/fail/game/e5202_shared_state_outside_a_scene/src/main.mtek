@@ -1,0 +1,14 @@
+// Only scene state can be shared: entities and prefabs end with their scene.
+// covers: [S: shared-state]
+prefab Coin {
+    shared state value: i32 = 1;
+    mesh: Sphere {};
+}
+
+scene Demo {
+    camera Main {}
+    entity Player {
+        mesh: Box {};
+        shared state lives: i32 = 3;
+    }
+}

@@ -4,7 +4,7 @@
     "file": "src/main.mtek",
     "startByte": 58,
     "endByte": 65,
-    "message": "Unknown field 'positon' on entity 'Cube'. Valid fields: position, rotation, scale, visible, mesh, material, light, body, collider.",
+    "message": "Unknown field 'positon' on entity 'Cube'. Valid fields: position, rotation, scale, visible, mesh, material, light, body, collider, tag, particles, clip.",
     "notes": [
       "help: did you mean 'position'?"
     ]

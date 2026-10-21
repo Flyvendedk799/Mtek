@@ -5,7 +5,7 @@
 //!   vector, `mat4`, `quat`, `color`, or a struct or array of those (`E4030`;
 //!   `texture` and `sampler` are params of their own, decision 0054); a default must
 //!   be a constant expression of the param's type (`E4031`), and a `color`
-//!   default must be opaque (`E5100`); at most [`MAX_MATERIAL_PARAMS`] params
+//!   default may have any alpha (decision 0138); at most [`MAX_MATERIAL_PARAMS`] params
 //!   (`E4032`). Params are checked in the dependency order of the constants
 //!   (`consteval.rs`): a material after the constants and structs its params
 //!   name, a constant after the materials its descriptor literals name.
@@ -28,8 +28,8 @@
 //! * **Instances** (section 4). A descriptor literal of a user material has
 //!   the material's instance type; every param without a default must be
 //!   given (`E5003`), unknown and duplicate names are `E5001`/`E5002`, values
-//!   are checked exactly against the param types (`E3102`) and a constant
-//!   `color` must be opaque (`E5100`). The literal folds to a
+//!   are checked exactly against the param types (`E3102`); a `color`
+//!   takes any alpha (decision 0138). The literal folds to a
 //!   [`ConstValue::Material`] holding every param in declaration order.
 
 use std::collections::BTreeSet;
@@ -230,7 +230,7 @@ impl<'a> Checker<'a> {
             else {
                 continue;
             };
-            let value = self.param_default(&material, &param.name, ty, default);
+            let value = self.param_default(&param.name, ty, default);
             if let Some(slot) = params.get_mut(index) {
                 slot.default = value;
             }
@@ -289,11 +289,17 @@ impl<'a> Checker<'a> {
                 | Ty::Material
                 | Ty::EntityRef
                 | Ty::GlbAsset
+                | Ty::Sound
+                | Ty::Font
                 | Ty::Record(_)
                 | Ty::Enum(_)
+                | Ty::UserEnum(_)
                 | Ty::Schema(_)
                 | Ty::Descriptor(_)
                 | Ty::PrefabDescriptor
+                | Ty::SceneName
+                | Ty::CameraName
+                | Ty::TaggedEntities
                 | Ty::MaterialInstance(_) => return Some(current),
             }
         }
@@ -301,14 +307,8 @@ impl<'a> Checker<'a> {
     }
 
     /// Check the default of the param `name` of type `ty`: a constant
-    /// expression of that type (`E4031`), opaque for a colour (`E5100`).
-    fn param_default(
-        &mut self,
-        material: &str,
-        name: &Ident,
-        ty: TyId,
-        default: &Expr,
-    ) -> Option<ConstValue> {
+    /// expression of that type (`E4031`); a colour may have any alpha (decision 0138).
+    fn param_default(&mut self, name: &Ident, ty: TyId, default: &Expr) -> Option<ConstValue> {
         let error = self.out.interner.is_error(ty);
         let actual = self.check(default, (!error).then_some(ty));
         let folded = self.fold(default);
@@ -352,37 +352,9 @@ impl<'a> Checker<'a> {
             return None;
         }
         match folded {
-            Folded::Value(value) => {
-                if let ConstValue::Color([_, _, _, alpha]) = value
-                    && alpha != 1.0
-                {
-                    self.report_translucent(
-                        default.span,
-                        &format!(
-                            "The default of the param '{}' of material {material}",
-                            name.name
-                        ),
-                        alpha,
-                    );
-                    return None;
-                }
-                Some(value)
-            }
+            Folded::Value(value) => Some(value),
             Folded::NotConstant(_) | Folded::Unknown => None,
         }
-    }
-
-    /// `E5100` for a constant colour of a material param with `alpha`.
-    fn report_translucent(&mut self, span: Span, subject: &str, alpha: f32) {
-        self.sink.push(
-            Diagnostic::new(
-                Code::E5100,
-                format!("{subject} must be an opaque colour, but its alpha is {alpha:?}."),
-            )
-            .at(span)
-            .note("colour parameters of materials must have alpha 1.0 in v0.1: transparency is not supported")
-            .help("use a `#rrggbb` literal, or a vec4 for four components that are not a colour"),
-        );
     }
 
     // ----- the stage function ----------------------------------------------
@@ -838,12 +810,12 @@ impl<'a> Checker<'a> {
             Diagnostic::new(
                 Code::W5101,
                 format!(
-                    "The fragment stage of material '{material}' returns the alpha {alpha:?}, which is ignored: v0.1 always writes alpha 1.0."
+                    "The fragment stage of material '{material}' returns the constant alpha {alpha:?}, which blends only while the instance's `color` or `base_color` param has an alpha below 1."
                 ),
             )
             .at(span)
-            .note("materials are opaque in v0.1; a fractional alpha does not enable blending")
-            .help("return an alpha of 1.0"),
+            .note("a draw is translucent only when its `color` or `base_color` param has an alpha below 1 (decision 0138); otherwise the returned alpha is ignored")
+            .help("return the alpha of the `color` param, or an alpha of 1.0"),
         );
     }
 
@@ -1102,15 +1074,14 @@ impl<'a> Checker<'a> {
     }
 
     /// Fold a material instance literal checked without errors: every param
-    /// in declaration order, written or defaulted. A constant `color` value
-    /// must be opaque (`E5100`); the reason each written value is not
+    /// in declaration order, written or defaulted. A `color` value may have
+    /// any alpha (decision 0138); the reason each written value is not
     /// constant is recorded for the scene checks.
     pub(super) fn fold_material_literal(&mut self, expr: &Expr, fields: &[DescField]) -> Folded {
         let Some(info) = self.material_literals.get(&expr.id).cloned() else {
             return Folded::Unknown;
         };
         let mut written: Vec<(&str, Folded)> = Vec::with_capacity(fields.len());
-        let mut rejected = false;
         let mut bound: Vec<&str> = Vec::new();
         for field in fields {
             let FieldValue::Expr(value) = &field.value else {
@@ -1131,15 +1102,6 @@ impl<'a> Checker<'a> {
                     folded = Folded::Value(stand_in);
                 }
             }
-            if let (Folded::Value(ConstValue::Color([_, _, _, alpha])), Some(param)) =
-                (&folded, info.param(&field.name.name))
-                && param.ty == TyId::COLOR
-                && *alpha != 1.0
-            {
-                let subject = format!("Parameter '{}' of material {}", param.name, info.name);
-                self.report_translucent(value.span, &subject, *alpha);
-                rejected = true;
-            }
             written.push((field.name.name.as_str(), folded));
         }
         // The first value that is not constant, in source order.
@@ -1150,7 +1112,7 @@ impl<'a> Checker<'a> {
             return Folded::NotConstant(reason);
         }
         let mut params = Vec::with_capacity(info.params.len());
-        let mut unknown = rejected;
+        let mut unknown = false;
         for param in &info.params {
             let value = match written.iter().find(|(n, _)| *n == param.name) {
                 Some((_, Folded::Value(value))) => Some(value.clone()),

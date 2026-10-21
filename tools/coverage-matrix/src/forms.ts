@@ -40,6 +40,10 @@ export const FORMS: readonly Form[] = [
     ["stmt/else", "`else`"],
     ["stmt/forRange", "`for i in a..b`"],
     ["stmt/forEach", "`for x in array`"],
+    ["stmt/while", "`while cond { }` (decision 0144)"],
+    ["stmt/timer", "timer block"],
+    ["stmt/timer:after", "`after(t) { }` (decision 0142)"],
+    ["stmt/timer:every", "`every(t) { }` (decision 0142)"],
     ["stmt/return:value", "`return expr;`"],
     ["stmt/return:unit", "`return;`"],
     ["stmt/break", "`break`"],
@@ -69,6 +73,7 @@ export const FORMS: readonly Form[] = [
     ["expr/state-read:scene", "read of scene `state`"],
     ["expr/state-read:entity", "read of entity `state`"],
     ["expr/entity-field-read", "read of an entity field (`Cube.position`, `self.rotation`)"],
+    ["expr/ref-field-read", "read of `position`, `rotation`, `scale` or `visible` through an `entity_ref` (decision 0151)"],
     ["expr/camera-field-read", "read of a camera field"],
     ["expr/instance-param-read", "read of a material instance param (`Cube.material.phase`)"],
     ["expr/light-field-read", "read of a light field (`Sun.light.intensity`)"],
@@ -79,7 +84,14 @@ export const FORMS: readonly Form[] = [
     ["expr/entity-ref", "entity used as a value (`entity_ref`)"],
     ["expr/body-target:entity", "body command or velocity read on a named entity or `self`"],
     ["expr/body-target:ref", "body command or velocity read through an `entity_ref`"],
-  ]).map((form) => ({ ...form, ref: form.id.startsWith("expr/body-target") ? "spec/physics.md section 3" : form.ref })),
+  ]).map((form) => ({
+    ...form,
+    ref: form.id.startsWith("expr/body-target")
+      ? "spec/physics.md section 3"
+      : form.id === "expr/ref-field-read"
+        ? "spec/scenes.md section 8.3"
+        : form.ref,
+  })),
   ...forms("places", "spec/language.md section 7.2", [
     ["place/root:local", "assignment to a `var` local"],
     ["place/root:state:scene", "assignment to scene `state`"],
@@ -198,6 +210,8 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "Stmt.If": "stmt/if",
   "Stmt.ForRange": "stmt/forRange",
   "Stmt.ForEach": "stmt/forEach",
+  "Stmt.While": "stmt/while",
+  "Stmt.Timer": "stmt/timer",
   "Stmt.Return": "stmt/return:value",
   "Stmt.Break": "stmt/break",
   "Stmt.Continue": "stmt/continue",
@@ -230,6 +244,7 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "ExprKind.Descriptor": "descriptors",
   "ExprKind.State": "expr/state-read:scene",
   "ExprKind.EntityField": "expr/entity-field-read",
+  "ExprKind.RefField": "expr/ref-field-read",
   "ExprKind.CameraField": "expr/camera-field-read",
   "ExprKind.InstanceParam": "expr/instance-param-read",
   "ExprKind.LightField": "expr/light-field-read",
@@ -241,6 +256,7 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "ExprKind.Material": "expr/material-literal",
   "ExprKind.PrefabLiteral": "expr/prefab-literal",
   "ExprKind.EntityRef": "expr/entity-ref",
+  "ExprKind.Match": "match",
   "BodyTarget.Entity": "expr/body-target:entity",
   "BodyTarget.Ref": "expr/body-target:ref",
   "BehaviorKind.Update": "behavior/update",

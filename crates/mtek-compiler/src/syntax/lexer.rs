@@ -25,7 +25,8 @@ use crate::diagnostics::{Code, Diagnostic, Diagnostics, Severity, SuggestedEdit}
 use crate::source::{FileId, SourceFile, Span};
 
 use super::token::{
-    Token, TokenKind, TokenValue, Trivia, TriviaItem, TriviaKind, is_reserved_word, keyword_kind,
+    StrPiece, Token, TokenKind, TokenValue, Trivia, TriviaItem, TriviaKind, is_reserved_word,
+    keyword_kind,
 };
 
 /// A replacement the lexer recorded for a malformed float literal (`E0022`):
@@ -708,11 +709,21 @@ impl<'a> Lexer<'a> {
         self.pos += 1;
         let mut value = String::new();
         let mut malformed = false;
+        let mut pieces: Vec<StrPiece> = Vec::new();
         loop {
             match self.byte(0) {
                 Some(b'"') => {
                     self.pos += 1;
                     break;
+                }
+                Some(b'$') if self.byte(1) == Some(b'{') => {
+                    pieces.push(StrPiece::Text(std::mem::take(&mut value)));
+                    if let Some(piece) = self.interpolation() {
+                        pieces.push(piece);
+                    } else {
+                        malformed = true;
+                        break;
+                    }
                 }
                 None | Some(b'\n' | b'\r') => {
                     let diagnostic = Diagnostic::new(
@@ -739,10 +750,77 @@ impl<'a> Lexer<'a> {
         }
         let value = if malformed {
             TokenValue::Malformed
-        } else {
+        } else if pieces.is_empty() {
             TokenValue::String(value)
+        } else {
+            pieces.push(StrPiece::Text(value));
+            pieces.retain(|piece| !matches!(piece, StrPiece::Text(text) if text.is_empty()));
+            TokenValue::Interpolated(pieces)
         };
         self.push(TokenKind::String, start, value);
+    }
+
+    /// `${expr}` or `${expr:spec}` inside a string, the cursor on the `$` (decision 0133). The
+    /// expression is not lexed here: it may not contain a `"` (so a string inside an
+    /// interpolation is not possible) and ends at the `}` that closes the `${`; a `:` outside
+    /// any brace starts the format spec. An unclosed interpolation reports `E0024` and returns
+    /// `None`, which ends the string (a `"` that ended it is consumed).
+    fn interpolation(&mut self) -> Option<StrPiece> {
+        let open = self.pos;
+        self.pos += 2;
+        let expr_start = self.pos;
+        let mut depth = 0u32;
+        let mut colon: Option<usize> = None;
+        loop {
+            match self.byte(0) {
+                Some(b'{') => depth += 1,
+                Some(b'}') if depth == 0 => break,
+                Some(b'}') => depth -= 1,
+                Some(b':') if depth == 0 && colon.is_none() => colon = Some(self.pos),
+                Some(b'"') => {
+                    let diagnostic = Diagnostic::new(
+                        Code::E0024,
+                        "The interpolation `${` is not closed: a `}` must end it before the string ends.",
+                    )
+                    .at(self.span(open, self.pos))
+                    .note("an interpolated expression cannot contain a string literal")
+                    .help("close it with `}`, or write `\\${` for a literal `${`");
+                    self.report(diagnostic);
+                    self.pos += 1;
+                    return None;
+                }
+                None | Some(b'\n' | b'\r') => {
+                    let diagnostic = Diagnostic::new(
+                        Code::E0024,
+                        "String literal is not terminated: the interpolation `${` is not closed with `}` on the same line.",
+                    )
+                    .at(self.span(open, self.pos));
+                    self.report(diagnostic);
+                    return None;
+                }
+                Some(_) => {}
+            }
+            match self.char_here() {
+                Some(c) => self.pos += c.len_utf8(),
+                None => self.pos += 1,
+            }
+        }
+        let close = self.pos;
+        self.pos += 1;
+        let (expr_end, spec) = match colon {
+            Some(at) => (
+                at,
+                Some((
+                    self.slice(at + 1, close).to_owned(),
+                    self.span(at + 1, close),
+                )),
+            ),
+            None => (close, None),
+        };
+        Some(StrPiece::Expr {
+            expr: self.span(expr_start, expr_end),
+            spec,
+        })
     }
 
     /// Read one escape sequence at the cursor (a backslash), append its
@@ -760,6 +838,8 @@ impl<'a> Lexer<'a> {
             Some(b't') => Some('\t'),
             Some(b'r') => Some('\r'),
             Some(b'0') => Some('\0'),
+            // `\$` is a literal `$`, so `\${` is text and not an interpolation (decision 0133).
+            Some(b'$') => Some('$'),
             Some(b'u') => None,
             Some(_) => {
                 // Unknown escape: report it with the whole character.
@@ -834,7 +914,7 @@ impl<'a> Lexer<'a> {
     fn invalid_escape(&mut self, start: usize, message: String) {
         let diagnostic = Diagnostic::new(Code::E0023, message)
             .at(self.span(start, self.pos))
-            .note("valid escapes are \\\", \\\\, \\n, \\t, \\r, \\0 and \\u{HEX} with 1 to 6 hexadecimal digits");
+            .note("valid escapes are \\\", \\\\, \\n, \\t, \\r, \\0, \\$ and \\u{HEX} with 1 to 6 hexadecimal digits");
         self.report(diagnostic);
     }
 
@@ -910,6 +990,7 @@ impl<'a> Lexer<'a> {
             (b'!', Some(b'=')) => (K::BangEq, 2),
             (b'!', _) => (K::Bang, 1),
             (b'=', Some(b'=')) => (K::EqEq, 2),
+            (b'=', Some(b'>')) => (K::FatArrow, 2),
             (b'=', _) => (K::Eq, 1),
             (b'&', Some(b'&')) => (K::AndAnd, 2),
             (b'&', _) => (K::Amp, 1),
@@ -999,6 +1080,23 @@ impl Lexed {
                 TokenValue::Float { value } => out.push_str(&format!(" = {value:?}")),
                 TokenValue::String(value) => {
                     out.push_str(&format!(" = \"{}\"", escape_dump(value)));
+                }
+                TokenValue::Interpolated(pieces) => {
+                    out.push_str(" = interpolated");
+                    for piece in pieces {
+                        match piece {
+                            StrPiece::Text(text) => {
+                                out.push_str(&format!(" \"{}\"", escape_dump(text)));
+                            }
+                            StrPiece::Expr { expr, spec } => {
+                                out.push_str(&format!(" ${{{}..{}", expr.start, expr.end));
+                                if let Some((spec, _)) = spec {
+                                    out.push_str(&format!(":{}", escape_dump(spec)));
+                                }
+                                out.push('}');
+                            }
+                        }
+                    }
                 }
                 TokenValue::Color { rgba: [r, g, b, a] } => {
                     out.push_str(&format!(" = #{r:02x}{g:02x}{b:02x}{a:02x}"));

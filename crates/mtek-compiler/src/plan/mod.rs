@@ -547,11 +547,24 @@ fn spawned_prefabs(program: &Program, scene: &Scene) -> Vec<Symbol> {
                     expr(lhs, out);
                     expr(rhs, out);
                 }
+                K::Match {
+                    scrutinee,
+                    arms,
+                    otherwise,
+                } => {
+                    expr(scrutinee, out);
+                    arms.iter().for_each(|arm| expr(&arm.value, out));
+                    if let Some(otherwise) = otherwise {
+                        expr(otherwise, out);
+                    }
+                }
                 K::Call { args, .. } | K::Builtin { args, .. } | K::Construct { args } => {
                     args.iter().for_each(|a| expr(a, out));
                 }
                 K::Convert { arg } => expr(arg, out),
-                K::Components { base, .. } | K::Field { base, .. } => expr(base, out),
+                K::Components { base, .. }
+                | K::Field { base, .. }
+                | K::RefField { target: base, .. } => expr(base, out),
                 K::Index { base, index } => {
                     expr(base, out);
                     expr(index, out);
@@ -608,6 +621,14 @@ fn spawned_prefabs(program: &Program, scene: &Scene) -> Vec<Symbol> {
                 }
                 ir::Stmt::ForEach { array, body, .. } => {
                     expr(array, out);
+                    literals(body, out);
+                }
+                ir::Stmt::While { cond, body, .. } => {
+                    expr(cond, out);
+                    literals(body, out);
+                }
+                ir::Stmt::Timer { seconds, body, .. } => {
+                    expr(seconds, out);
                     literals(body, out);
                 }
                 ir::Stmt::Return { value, .. } => {

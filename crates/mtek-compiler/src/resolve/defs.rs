@@ -32,6 +32,8 @@ pub enum DefKind {
     /// `fn` or `cpu fn`.
     Fn,
     Struct,
+    /// `enum Name { … }` (decision 0129).
+    Enum,
     Material,
     Prefab,
     Scene,
@@ -67,6 +69,7 @@ impl DefKind {
             DefKind::Const => "constant",
             DefKind::Fn => "function",
             DefKind::Struct => "struct",
+            DefKind::Enum => "enum",
             DefKind::Material => "material",
             DefKind::Prefab => "prefab",
             DefKind::Scene => "scene",

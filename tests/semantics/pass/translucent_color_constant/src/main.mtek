@@ -1,0 +1,10 @@
+// A translucent colour constant is accepted (decision 0138; E5100 is retired).
+const GHOST = color.linear(vec3(1.0, 1.0, 1.0), 0.5);
+
+scene Demo {
+    camera Main {}
+    entity Glass {
+        mesh: Box {};
+        material: Unlit { color: GHOST };
+    }
+}

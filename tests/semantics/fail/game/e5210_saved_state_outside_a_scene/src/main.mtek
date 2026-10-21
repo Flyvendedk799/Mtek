@@ -1,0 +1,14 @@
+// Only scene state can be kept in storage: entities and prefabs come and go.
+// covers: [S: saved-state]
+prefab Coin {
+    setting state value: i32 = 1;
+    mesh: Sphere {};
+}
+
+scene Demo {
+    camera Main {}
+    entity Player {
+        mesh: Box {};
+        saved state lives: i32 = 3;
+    }
+}

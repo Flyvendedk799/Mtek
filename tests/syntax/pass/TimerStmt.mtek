@@ -1,0 +1,15 @@
+scene S {
+    state hits: i32 = 0;
+    on key_down(Key.Space) {
+        after(1.5) { hits += 1; }
+        every(0.25) { hits += 1; }
+        after(delay * 2.0) {
+            every(1.0) { hits -= 1; }
+            return;
+        }
+        let after = 2.0;
+        let every = after;
+        after(every) {}
+    }
+}
+fn names(after: f32, every: f32) -> f32 { return after + every; }

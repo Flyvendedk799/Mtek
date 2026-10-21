@@ -74,5 +74,5 @@ fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(2) mtek_uv
 fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
     let mtek_surface = MtekSurfaceInput(mtek_in.uv);
     let mtek_color = mtek_fragment(mtek_surface);
-    return vec4<f32>(mtek_color.xyz, 1.0);
+    return mtek_color;
 }

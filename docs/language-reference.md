@@ -42,18 +42,18 @@ Conventions in this document: **must** / **must not** are requirements on the co
 2.2 **Keywords (reserved).** These may never be used as identifiers:
 
 ```
-bind  break  continue  cpu  else  entity  export  false  fn  for  if
-import  in  let  material  on  param  prefab  return  scene  self
-state  struct  true  var  const
+bind  break  continue  cpu  else  entity  enum  export  false  fn  for  if
+import  in  let  match  material  on  param  prefab  return  scene  self
+state  struct  true  var  const  while
 ```
 
-The blueprint's list (§3.4) plus `struct`, `true`, `false`, `self`, `bind`, `break`, `continue` (decision 0008).
+The blueprint's list (§3.4) plus `struct`, `true`, `false`, `self`, `bind`, `break`, `continue` (decision 0008), `enum` and `match` (decision 0129, which moved them here from §2.3), and `while` (decision 0144, likewise).
 
-2.3 **Reserved for future use.** Using these as identifiers is error `E0013` ("`while` is reserved for a future version"):
+2.3 **Reserved for future use.** Using these as identifiers is error `E0013` ("`loop` is reserved for a future version"):
 
 ```
-as  async  await  enum  extern  impl  loop  match  mod  move  mut
-priv  pub  static  super  trait  type  unsafe  use  where  while  yield
+as  async  await  extern  impl  loop  mod  move  mut
+priv  pub  static  super  trait  type  unsafe  use  where  yield
 compute  vertex  storage  uniform  workgroup  system  query  component
 ```
 
@@ -63,6 +63,9 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 - `fragment` — the stage function name inside a material body (`spec/materials.md` §3).
 - `from` — in an import clause (`import { A } from "…";`).
 - Event names after `on` (`key_down`, `collision_enter`, …), resolved against the registry.
+- `after`, `every` — a timer statement when the word is followed by `(…)` and a block (§7.11, decision 0142); anywhere else an ordinary name.
+- `shared` — before `state` in a scene, marks a shared state (`spec/scenes.md` §15.2, decision 0141).
+- `saved`, `setting` — before `state` in a scene (after `shared`, if any), mark a persistent state (`spec/scenes.md` §16, decisions 0145 and 0146). Anywhere else they are ordinary names.
 
 2.5 **Literals.**
 
@@ -71,7 +74,7 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 | Integer | `0` or `[1-9][0-9]*` | No sign (unary minus is an operator), no leading zeros (`007` is `E0020`), no separators, no suffixes, no hexadecimal in v0.1 (`0x1F` is `E0021`). |
 | Float | `[0-9]+ '.' [0-9]+ ( [eE] [+-]? [0-9]+ )?` | Digits are required on both sides of the point: `1.0`, `0.5`, `2.5e-3`. `1.`, `.5`, `1e3` are `E0022` with a suggested edit (`1.0`, `0.5`, `1.0e3`). |
 | Boolean | `true`, `false` | |
-| String | `"…"` | Escapes: `\"`, `\\`, `\n`, `\t`, `\r`, `\0`, `\u{H…}` (1–6 hex digits, a Unicode scalar value). Any other escape is `E0023`. A raw line terminator inside a string is `E0024` (unterminated). Strings are CPU-only (§5.1). |
+| String | `"…"` | Escapes: `\"`, `\\`, `\n`, `\t`, `\r`, `\0`, `\u{H…}` (1–6 hex digits, a Unicode scalar value). Any other escape is `E0023`. A raw line terminator inside a string is `E0024` (unterminated). `${expr}` inside a string is an interpolation (§5.8) and `\$` a literal `$`. Strings are CPU-only (§5.1). |
 | Color | `#RRGGBB` or `#RRGGBBAA` | Hex digits, case-insensitive (formatter lowercases). Any other length (`#fff`) is `E0025`. Meaning: §5.4. |
 
 2.6 **Punctuation and operators.**
@@ -79,10 +82,10 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 ```
 { } ( ) [ ] < > , ; : . ..
 + - * / % ! = == != < <= > >= && ||
-+= -= *= /= ->
++= -= *= /= -> =>
 ```
 
-`<` and `>` double as generic brackets only inside type syntax (`array<f32, 4>`), which appears exclusively after `:` or `->`, so no expression ambiguity exists. `..` appears only in `for` headers (§7.5). Bitwise operators (`& | ^ ~ << >>`) are not part of v0.1; each is lexed so that it can be rejected with `E1901` ("bitwise operators are not supported in v0.1") rather than producing a confusing parse error.
+`<` and `>` double as generic brackets only inside type syntax (`array<f32, 4>`), which appears exclusively after `:` or `->`, so no expression ambiguity exists. `..` appears only in `for` headers (§7.5); `=>` only in `match` arms (decision 0129). Bitwise operators (`& | ^ ~ << >>`) are not part of v0.1; each is lexed so that it can be rejected with `E1901` ("bitwise operators are not supported in v0.1") rather than producing a confusing parse error.
 
 ### 3. Program structure
 
@@ -94,6 +97,7 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 | Constant | `const NAME: Type = expr;` (type annotation optional) | §8.1 |
 | Function | `fn name(params) -> T { … }` / `cpu fn name(…) { … }` | §8.2 |
 | Struct | `struct Name { field: Type; … }` | §5.5 |
+| Enum | `enum Name { A, B, … }` | §5.7 |
 | Material | `material Name { … }` | `spec/materials.md` |
 | Prefab | `prefab Name { … }` | `spec/scenes.md` |
 | Scene | `scene Name { … }` | `spec/scenes.md` |
@@ -114,7 +118,7 @@ One deliberate exception keeps common words usable: a **local, parameter, `state
 
 4.3 **Static resolution.** Every name is resolved at compile time. An unknown name is error `E2003`; when an in-scope name is within edit distance 2 the diagnostic includes a related "did you mean" span but no automatic edit (blueprint §9.4: do not suggest an arbitrary fix when intent is unknown — a rename suggestion is offered only as a *validated edit* if exactly one candidate exists and it type-checks; see `spec/diagnostics.md` §6 and decision 0071).
 
-4.4 **Qualified access.** `TypeName.member` names an associated function or constant of a built-in type (`quat.identity()`, `color.linear(…)`, `Key.Space`). `frame.time` reads a built-in frame value (`spec/scenes.md` §7). `EntityName.field` reads an entity field (`spec/scenes.md` §4).
+4.4 **Qualified access.** `TypeName.member` names an associated function or constant of a built-in type (`quat.identity()`, `color.linear(…)`, `Key.Space`). `frame.time` reads a built-in frame value (`spec/scenes.md` §7). `EntityName.field` reads an entity field (`spec/scenes.md` §4). `EnumName.Variant` names a variant of a user `enum` (§5.7); an unknown variant is `E3205`.
 
 ### 5. Types
 
@@ -129,13 +133,14 @@ One deliberate exception keeps common words usable: a **local, parameter, `state
 | Rotation | `quat` | CPU and GPU | Unit quaternion `(x, y, z, w)`. Distinct from `vec4`. |
 | Color | `color` | CPU and GPU | Linear-light RGBA `f32`. Distinct from `vec4`. |
 | Records | user `struct` types | CPU; GPU if every field is GPU-representable | §5.5 |
+| Enums | user `enum` types | CPU only | §5.7. A closed set of named variants without data. |
 | Arrays | `array<T, N>` | CPU; GPU if `T` is | Fixed length `N`: an integer literal or the name of an integer constant, with value 1 … 65 536 (`E3031`). |
 | Handles | `mesh`, `material`, `texture`, `sampler`, `entity_ref` | CPU only (opaque) | Never convertible to numbers. `texture`/`sampler` may appear as material params (`spec/materials.md` §2). |
 | Unit | (no name) | both | The result of a function without `->`. Not usable as a value. |
 
 There is no implicit `null`, no `any`, no implicit optional. Fallibility exists only at host boundaries (`spec/runtime-abi.md` §6) and in a small number of built-in operations whose fallible result is a `bool` plus a documented default (e.g. `alive(r)`).
 
-5.2 **Type equivalence.** Nominal for `struct` types; structural for everything else (`array<f32, 3>` is one type everywhere). `vec4`, `quat` and `color` are three different types even though all are four `f32`s.
+5.2 **Type equivalence.** Nominal for `struct` and `enum` types; structural for everything else (`array<f32, 3>` is one type everywhere). `vec4`, `quat` and `color` are three different types even though all are four `f32`s.
 
 5.3 **Matrices.** `mat4` is column-major and multiplies column vectors on the right: `m * v` where `v: vec4`. `m[i]` is column `i` (`vec4`). Composition `a * b` applies `b` first.
 
@@ -152,6 +157,28 @@ There is no implicit `null`, no `any`, no implicit optional. Fallibility exists 
 - A constant index out of range is error `E3030`.
 - A run-time index is **clamped** to `[0, N-1]` in both execution domains (decision 0009): the WGSL emitter inserts the clamp explicitly, because WGSL itself guarantees only an indeterminate value (or, through a reference, an implementation-chosen outcome) for an out-of-bounds run-time index [S5]. In development builds the CPU additionally reports warning `W8030` once per call site when clamping occurs. This gives identical results on CPU and GPU.
 
+5.7 **Enums** (decision 0129). `enum Name { A, B, C }` declares a type whose values are exactly its variants, written `Name.A`. Rules:
+- At least one variant (`E1001`); a trailing comma is allowed. Variant names are distinct within the enum (`E2002`, with a related span at the first); `_` is not a variant name (`E0012`). A variant carries no data, and there are no explicit discriminants.
+- An enum is a module item: it can be `export`ed and imported like a struct, and its name is a type (`state phase: Phase = Phase.Menu;`, parameters, results, struct fields, arrays).
+- `Name.Variant` is a constant expression (§6.3), so it may initialise a `const` and a `state`, and it folds.
+- Operators: only `==` and `!=`, between two values of the same enum (§6.2). There is no ordering (`<` is `E3014`) and no conversion to or from numbers (`i32(Phase.Menu)` is `E3001`).
+- Enums are **CPU only**: a value of an enum type never reaches GPU code (`E4011`, §8.4), and an enum is not a material param type (`E4030`). In the IR and the program manifest an enum value is its variant's index, `u32`, numbered from 0 in declaration order; the index is not observable in the language.
+- A value of an enum type is consumed with `==`/`!=` or with `match` (§6.11, §7.9).
+
+5.8 **Interpolated strings** (decision 0133). A string literal may contain interpolations `${expr}` and `${expr:.N}`; its type is `string`:
+
+```mtek
+fn label(points: i32, t: f32, at: vec3) -> string {
+    return "Score: ${points} after ${t:.2}s at ${at}; ${points > 10} \${not}";
+}
+```
+
+- The expression is any expression without a string literal in it (a `"` inside `${` ends the string, `E0024`), parsed as a whole expression up to the `}` that closes the `${`; braces inside it nest. `${}` is `E1001`. `\$` writes a literal `$`, so `\${x}` is the text `${x}`.
+- Its type must be `string`, `bool`, `i32`, `u32`, `f32`, `vec2`, `vec3` or `vec4` (`E3501` otherwise; show a field or component of anything else).
+- Text forms: a string as it is; `true`/`false`; integers in decimal; an `f32` as the shortest decimal that reads back as the same `f32`, with `.0` on whole numbers (`3.0`, `0.1`), and `NaN`, `inf`, `-inf`; a vector as `(x, y, z)` with each component an `f32`.
+- The format spec `.N` (one digit, 0–9) prints exactly `N` digits after the decimal point, for an `f32` or each component of a vector. Any other spec, or `.N` on another type, is `E3502`.
+- An interpolated string is formatted at run time: it is not a constant expression (§6.3, `E3090` in a `const`), even when every part is constant. Like every string it is CPU only.
+
 ### 6. Expressions
 
 6.1 **Precedence and associativity** (highest first). The Pratt parser must implement exactly this table; `spec/grammar.ebnf` encodes the same.
@@ -167,7 +194,7 @@ There is no implicit `null`, no `any`, no implicit optional. Fallibility exists 
 | 2 | `&&` | left |
 | 1 | `\|\|` | left |
 
-Parentheses group. There is no ternary operator, no assignment expression, no comma operator, no `if` expression in v0.1.
+Parentheses group. There is no ternary operator, no assignment expression, no comma operator, no `if` expression in v0.1. A `match` expression (§6.11) is a primary expression: it binds like a parenthesised one.
 
 6.2 **Operator typing.** No implicit conversions between established types (§6.5). Let S = scalar float `f32`, V = any of `vec2/vec3/vec4`.
 
@@ -184,7 +211,7 @@ Parentheses group. There is no ternary operator, no assignment expression, no co
 | `!` | `bool` | `bool` |
 | `&& \|\|` | `bool` | `bool`, short-circuit on CPU; on GPU both operands are evaluated only if both are side-effect-free, which v0.1 GPU code always is |
 | `< <= > >=` | `f32`, `i32`, `u32` (same type) | `bool` |
-| `== !=` | same-typed `bool`, `f32`, `i32`, `u32`, `entity_ref` | `bool` |
+| `== !=` | same-typed `bool`, `f32`, `i32`, `u32`, `entity_ref`, values of one user `enum` (§5.7) | `bool` |
 
 Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated remainder `x - y * trunc(x / y)`.
 
@@ -228,6 +255,14 @@ Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated rema
 
 6.10 **Calls.** `f(a, b)` calls a function; arguments are positional, all required, no named or default arguments in v0.1. Built-in functions (§10) follow the same rule. A call to a `cpu fn` from a pure context is an effect error (§8.3).
 
+6.11 **`match` expressions** (decision 0129). `match value { Pattern => expr, … }` gives the value of the first arm whose pattern matches `value`.
+- `value` must be of a user `enum` type (`E3203`). It is evaluated exactly once. Like the condition of `if`, it may not be a bare descriptor literal (§6.8).
+- A **pattern** is `Enum.Variant`, a variant of `value`'s enum, or `_`, which matches any value. Several patterns may share an arm, joined by `|`: `Phase.Menu | Phase.Paused => 0.0`. Anything else (a literal, a bare name, a variant of another enum) is `E3204`; an unknown variant is `E3205`.
+- **Exhaustive:** the arms together cover every variant, or one of them is `_`; otherwise `E3201`, which names the missing variants (and so tells an agent what to add when a variant is added to the enum).
+- **No unreachable arms:** a pattern whose variants earlier arms already cover, and every arm after a `_`, is `E3202` (with a related span at the earlier pattern).
+- Arms are separated by commas; a trailing comma is allowed. Every arm value has the same type, after literal resolution (§6.6) against the context type when there is one (`E3206`, with a related span at the first arm); that type is the type of the `match`. A `match` whose arms are unit calls is not a value (`E3001`); use the statement form (§7.9).
+- A `match` that starts a statement is always the statement form (§7.9). A `match` whose scrutinee and arm values are constant expressions is itself one and folds (§6.3).
+
 ### 7. Statements
 
 7.1 `let name[: T] = expr;` — immutable local. `var name[: T] = expr;` — mutable local. An initialiser is mandatory (no uninitialised locals). A `var` never assigned after declaration is lint `W2010`.
@@ -243,11 +278,23 @@ Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated rema
 - Array: `for x in arr { … }` where `arr: array<T, N>`; `x: T` by value.
 The loop variable is immutable. In GPU-reachable code (§8.4) the range bounds must be constant expressions (`E4010` otherwise) and `N` is constant by construction.
 
-7.6 **`break`, `continue`** apply to the innermost `for`. Outside a loop: `E1030`.
+7.6 **`break`, `continue`** apply to the innermost `for` or `while` of the same body. Outside a loop: `E1030`. A timer block (§7.11) is a body of its own: a `break` in it does not leave a loop around the timer (`E1030`).
 
 7.7 **`return`.** `return expr;` in functions with a result type; `return;` in unit functions and handlers. Every path of a function with a result type must return (`E3080`). Unreachable statements after `return`/`break`/`continue` are warning `W3081`.
 
 7.8 **Blocks.** `{ … }` introduces a scope. Locals are visible from their declaration to the end of the block.
+
+7.9 **`match` statements** (decision 0129). `match value { Pattern => { … } … }` runs the block of the first arm whose pattern matches. The scrutinee, the patterns and the rules for exhaustiveness and unreachable arms are those of the `match` expression (§6.11: `E3201`–`E3205`). Each arm body is a block; a comma after it is optional. `break`, `continue` and `return` in an arm act as in any block. For §7.7, a `match` statement leaves its function only when it is exhaustive and every arm leaves it: a function may end with a `match` whose arms all `return`.
+
+7.10 **`while`** (decision 0144). `while cond { … }` runs its block as long as `cond`, a `bool` (`E3070`), is true; the condition is checked before every iteration. Like the condition of `if`, `cond` cannot start with a descriptor literal (wrap it in parentheses). `break` leaves the loop and `continue` starts the next check. `while` is CPU only: GPU-reachable code has no loops without a constant bound (`E4010`). There is no `loop`: write `while true { … }` and leave it with `break` (`loop` stays reserved, §2.3).
+
+Every `while` is **bounded**: one execution of a `while` statement runs at most 1 000 000 iterations (`WHILE_ITERATION_CAP`). The next iteration fails the frame with the run-time error `E8080` at the loop, and the scene stops like any frame failure (`spec/runtime-abi.md` §7). The cap is not a budget a program should approach; it turns an endless loop, which would hang the browser tab, into a reported error. A preview build's loop budget (decision 0075) also counts `while` iterations. For §7.7 a `while` never counts as leaving its function, even `while true` (a function with a result type needs a `return` after it).
+
+7.11 **Timers** (decision 0142). `after(seconds) { … }` runs its block once, `seconds` of game time from now; `every(seconds) { … }` runs its block every `seconds` of game time until the scene ends or, in an entity, until the entity is destroyed. `seconds` is an `f32` expression evaluated when the statement runs (`E3001`); a constant time must not be negative for `after` and must be greater than 0 for `every` (`E3211`). A time that is computed at run time is clamped: a negative or non-finite delay is 0, and a period that is not greater than 0 runs the block once per frame.
+
+- Timers are **handler-only**: they can be started in lifecycle functions and event handlers of scenes, entities and prefabs, not in functions or initialisers (`E5080`).
+- The block runs **later**, at the start of phase 3 of the frame in which it falls due (`spec/scenes.md` §15.3). It can read and write state, `self` and constants, and read the `let` locals, the parameters and the loop variables around it, whose values are captured when the timer starts. It cannot use a `var` of the body around it (`E3210`): that variable no longer exists when the block runs. A `return;` in the block leaves the block only; `break` and `continue` cannot reach a loop outside it (`E1030`).
+- `after` and `every` are contextual (§2.4): the statement is recognised only when the word is followed by a parenthesised argument and a block; `let after = 2.0;` is an ordinary name.
 
 ### 8. Constants, functions, effects
 
@@ -295,13 +342,13 @@ The authoritative list with signatures, domains, const-eligibility and CPU seman
 - `sign(0.0) = 0.0`.
 - Integer `abs(i32::MIN) = i32::MIN`.
 
-CPU-only intrinsics in v0.1: `random() -> f32` in `[0, 1)` (seeded per application from the mount option `seed`, default derived from time; tests always pass a seed), `print(message: string)` (development console; a no-op in release builds), `spawn`, `destroy`, `alive` (`spec/scenes.md` §9), `is_key_down(key: Key) -> bool` (`spec/scenes.md` §7.3).
+CPU-only intrinsics in v0.1: `random() -> f32` in `[0, 1)` (seeded per application from the mount option `seed`, default derived from time; tests always pass a seed), `print(message: string)` (development console; a no-op in release builds), `spawn`, `destroy`, `alive` (`spec/scenes.md` §9), `is_key_down(key: Key) -> bool` (`spec/scenes.md` §7.3), and the game-flow functions `go_to(Scene)`, `reset()`, `pause()`, `resume()` and `paused() -> bool` (`spec/scenes.md` §15, decisions 0140, 0141 and 0143).
 
 ### 11. What is not in v0.1
 
 Each of these is rejected with a diagnostic; `docs/limitations.md` gives the code of each. Only the reserved words (`E0013`), the bitwise operators (`E1901`) and the vertex and compute stages (`E4901`) have an unsupported-feature code of their own; the others are rejected by the general rule that names the construct (an unknown type is `E3003`, a numeric suffix or a hexadecimal literal `E0021`, `+` on strings `E3014`, and so on; decision 0102).
 
-`while`/`loop`; bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enums (only the built-in `Key`-style registry enums exist); optional/result types in the language; string formatting/concatenation (`+` on `string` is `E3014`); recursion; compute and vertex stages; storage buffers; pattern matching. The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).
+`loop` (write `while true`, §7.10); bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enum variants that carry data, explicit enum discriminants and conversions between enums and numbers (§5.7); optional/result types in the language; string concatenation (`+` on `string` is `E3014`; interpolation, §5.8, builds strings); recursion; compute and vertex stages; storage buffers; patterns other than an enum variant and `_` (no literal, binding, range or guard patterns, no destructuring, §6.11). The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).
 
 ## Part B. The standard library
 
@@ -316,8 +363,9 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | `array` | array | yes |  |  | The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`. |
 | `bool` | scalar | yes |  |  | Truth value. |
 | `color` | color | yes |  |  | Linear-light RGBA with straight alpha; distinct from `vec4`. A literal `#rrggbb` is sRGB-encoded and converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a` and `.rgb`; no arithmetic. |
-| `entity_ref` | handle | no |  |  | A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only. |
+| `entity_ref` | handle | no |  |  | A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`. |
 | `f32` | scalar | yes |  |  | IEEE-754 binary32 floating-point number. |
+| `font` | handle | no |  |  | A font for `hud.text`: `asset.font(..)` or the built-in `hud.pixel_font()`; CPU only (decision 0139). |
 | `glb_asset` | handle | no |  | material, material_base_color, material_metallic, material_roughness, material_texture, mesh, node_position, node_rotation, node_scale, primitive | The compile-time handle of `asset.glb(..)`; may be stored only in a `const` and used through its accessors. |
 | `i32` | scalar | yes |  |  | 32-bit signed integer. |
 | `mat4` | matrix | yes |  |  | 4x4 `f32` matrix, column-major; multiplies column vectors on the right. |
@@ -325,6 +373,7 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | `mesh` | handle | no |  |  | An immutable mesh: a primitive descriptor or an asset mesh. |
 | `quat` | rotation | yes |  |  | Unit quaternion `(x, y, z, w)`; distinct from `vec4`. |
 | `sampler` | handle | no |  |  | A sampler preset. Usable only as a material parameter. |
+| `sound` | handle | no |  |  | A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0130). |
 | `string` | text | no |  |  | Immutable text. CPU only. |
 | `texture` | handle | no |  |  | An immutable texture. Usable only as a material parameter. |
 | `u32` | scalar | yes |  |  | 32-bit unsigned integer. |
@@ -412,13 +461,16 @@ The fields of an entity or prefab body: a named node with a transform and option
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `body` | `body` | none | no | construction only |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
+| `clip` | `string` | none | no | construction only |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has. |
 | `collider` | `collider` | none | no | construction only |  | A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`. |
 | `light` | `light` | none | no | construction only |  | A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only. |
 | `material` | `material` | `Unlit {}` | no | construction only |  | The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`. |
 | `mesh` | `mesh` | none | no | construction only |  | The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh. |
+| `particles` | `emitter` | none | no | construction only |  | A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | no | writable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | no | writable, bindable |  | Rotation local to the parent. |
 | `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | writable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body. |
+| `tag` | `string` | none | no | construction only |  | A group name (`"rock"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`. |
 | `visible` | `bool` | `true` | no | writable, bindable |  | Hides the mesh draw only; the entity's behaviour keeps running. |
 
 ##### `Scene`
@@ -477,6 +529,20 @@ An immovable body; its pose is fixed at creation from the entity transform.
 
 No fields.
 
+#### Schemas of the category `emitter`
+
+##### `Emitter`
+
+A bounded particle emitter: at most 64 particles, spawned at `rate` per second in a hemisphere around the entity's up axis.
+
+| Field | Type | Default | Required | Update | Range | Description |
+|---|---|---|---|---|---|---|
+| `gravity` | `f32` | `0.0` | no | construction only | finite | Downward acceleration in metres per second squared. |
+| `lifetime` | `f32` | `1.0` | no | construction only | > 0, finite | How long each particle lives, in seconds. |
+| `rate` | `f32` | `0.0` | no | construction only | ≥ 0 | Particles spawned per second. A fraction carries to the next frame. |
+| `size` | `f32` | `0.05` | no | construction only | > 0, finite | Billboard size in metres. |
+| `speed` | `f32` | `1.0` | no | construction only | ≥ 0 | Initial speed in metres per second. |
+
 #### Schemas of the category `projection`
 
 ##### `Orthographic`
@@ -512,6 +578,19 @@ The documented PBR subset (metallic-roughness, no image-based lighting).
 | `base_color_texture` | `texture` | `texture.white()` | no | construction only |  | Base colour texture. |
 | `metallic` | `f32` | `0.0` | no | writable, bindable |  | Metalness; clamped to 0..1 by the lighting model. |
 | `roughness` | `f32` | `0.5` | no | writable, bindable |  | Perceptual roughness; clamped to 0.045..1 by the lighting model. |
+
+##### `Sprite`
+
+One frame of a sprite sheet, tinted; always translucent.
+
+| Field | Type | Default | Required | Update | Range | Description |
+|---|---|---|---|---|---|---|
+| `cell` | `f32` | `0.0` | no | writable, bindable |  | The cell (animation frame) shown, from 0, left to right then top to bottom; floored and wrapped, so `bind(t * fps)` animates. |
+| `columns` | `f32` | `1.0` | no | writable, bindable | 1…64 | Cells per row of the sheet. |
+| `rows` | `f32` | `1.0` | no | writable, bindable | 1…64 | Rows of cells in the sheet. |
+| `sheet` | `texture` | `texture.white()` | no | construction only |  | The sprite sheet: `columns` x `rows` equal cells. |
+| `sheet_sampler` | `sampler` | `sampler.nearest_clamp()` | no | construction only |  | Sampler of the sheet (default nearest, clamped: crisp pixels). |
+| `tint` | `color` | `#ffffff` | no | writable, bindable |  | Multiplies the texel, alpha included. |
 
 ##### `Unlit`
 
@@ -607,8 +686,10 @@ Compile-time asset declarations. The argument must be a string literal naming a 
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
+| `asset.font` | function | `(path: string) -> font` | cpu | yes | A font file (`.ttf`, `.otf`, `.woff` or `.woff2`) for `hud.text`. |
 | `asset.glb` | function | `(path: string) -> glb_asset` | cpu | yes | A static GLB model. May be stored only in a `const` and used through its accessors. |
 | `asset.linear_texture` | function | `(path: string) -> texture` | cpu | yes | A linear data texture (masks, normal data). |
+| `asset.sound` | function | `(path: string) -> sound` | cpu | yes | A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`. |
 | `asset.texture` | function | `(path: string) -> texture` | cpu | yes | An sRGB colour texture. |
 
 #### `color`
@@ -620,6 +701,23 @@ Colour constructors.
 | `color.linear` | function | `(rgb: vec3, a: f32) -> color` | both | yes | A colour from linear-light components. |
 | `color.srgb` | function | `(rgb: vec3, a: f32) -> color` | both | yes | A colour from sRGB-encoded components, converted to linear light with the sRGB transfer function. |
 
+#### `easing`
+
+Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.
+
+| Member | Kind | Signatures | Domain | Constant | Description |
+|---|---|---|---|---|---|
+| `easing.in_cubic` | function | `(t: f32) -> f32` | cpu | no | Easing t³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.in_out_cubic` | function | `(t: f32) -> f32` | cpu | no | Easing cubic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.in_out_quad` | function | `(t: f32) -> f32` | cpu | no | Easing quadratic in, then out; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.in_out_sine` | function | `(t: f32) -> f32` | cpu | no | Easing (1 − cos(π t)) / 2; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.in_quad` | function | `(t: f32) -> f32` | cpu | no | Easing t²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.out_back` | function | `(t: f32) -> f32` | cpu | no | Easing overshoots slightly past 1, then settles; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.out_bounce` | function | `(t: f32) -> f32` | cpu | no | Easing bounces at 1 like a dropped ball; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.out_cubic` | function | `(t: f32) -> f32` | cpu | no | Easing 1 − (1 − t)³; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.out_elastic` | function | `(t: f32) -> f32` | cpu | no | Easing springs past 1 and oscillates to rest; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+| `easing.out_quad` | function | `(t: f32) -> f32` | cpu | no | Easing 1 − (1 − t)²; `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1. |
+
 #### `frame`
 
 Per-frame values, readable in CPU code and in `bind` expressions, not in GPU stage code (route them through material parameters). `update(dt)` gets the frame delta, which varies from frame to frame; `fixed_update(dt)` runs zero or more times per frame and gets the constant fixed step, 1/60 s by default.
@@ -629,6 +727,17 @@ Per-frame values, readable in CPU code and in `bind` expressions, not in GPU sta
 | `frame.delta` | value | `f32` | cpu | no | The clamped frame delta of the current rendered frame; the value passed to `update`. |
 | `frame.index` | value | `u32` | cpu | no | Rendered frame counter since mount, wrapping. |
 | `frame.time` | value | `f32` | cpu | no | Active application time in seconds since mount, excluding paused time. |
+
+#### `hud`
+
+The heads-up display: text, rectangles and buttons drawn over the canvas. Immediate mode: what a frame draws is shown until the next frame, so draw from `update`.
+
+| Member | Kind | Signatures | Domain | Constant | Description |
+|---|---|---|---|---|---|
+| `hud.button` | function | `(label: string, at: vec2) -> bool`<br>`(label: string, at: vec2, size: f32) -> bool` | cpu | no | Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label. |
+| `hud.pixel_font` | function | `() -> font` | cpu | no | The built-in font: a 5x7 pixel bitmap of printable ASCII, the same in every browser (decision 0139). Other characters show as a box. |
+| `hud.rect` | function | `(at: vec2, size: vec2, tint: color) -> ()`<br>`(at: vec2, size: vec2, tint: color, align: f32) -> ()` | cpu | no | Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). For panels and bars. |
+| `hud.text` | function | `(content: string, at: vec2) -> ()`<br>`(content: string, at: vec2, size: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32, font: font) -> ()` | cpu | no | Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: the page's sans-serif). The line is centred vertically on `at`. |
 
 #### `lighting`
 
@@ -693,40 +802,72 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `atan` | `(x: T) -> T` | both | yes | no | Arc tangent, in radians. |
 | `atan2` | `(y: T, x: T) -> T` | both | yes | no | Angle of the point `(x, y)` in radians; note the argument order `atan2(y, x)`. |
 | `ceil` | `(x: T) -> T` | both | yes | no | Smallest integer value not below `x`. |
+| `chance` | `(p: f32) -> bool` | cpu | no | no | True with probability `p`. |
+| `choose` | `(items: array<T, N>) -> T` | cpu | no | no | One element of an array, chosen uniformly. |
 | `clamp` | `(x: T, lo: T, hi: T) -> T`<br>`(x: I, lo: I, hi: I) -> I` | both | yes | no | Limits `x` to the range `lo..hi`. |
+| `clear_saved` | `() -> ()` | cpu | no | yes | Deletes everything stored. |
 | `cos` | `(x: T) -> T` | both | yes | no | Cosine of an angle in radians. |
+| `count_tagged` | `(tag: string) -> i32` | cpu | no | no | The number of live entities with the tag. |
 | `cross` | `(a: vec3, b: vec3) -> vec3` | both | yes | no | Cross product of two 3D vectors. |
 | `degrees` | `(x: T) -> T` | both | yes | no | Radians to degrees. |
 | `destroy` | `(target: entity_ref) -> ()` | cpu | no | yes | Queues removal of a spawned entity; it counts as dead from the moment of the call. |
+| `destroy_tagged` | `(tag: string) -> ()` | cpu | no | yes | Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has. |
 | `distance` | `(a: T, b: T) -> f32` | both | yes | no | Distance between two points. |
 | `dot` | `(a: V, b: V) -> f32` | both | yes | no | Dot product of two vectors. |
 | `exp` | `(x: T) -> T` | both | yes | no | e raised to `x`. |
 | `exp2` | `(x: T) -> T` | both | yes | no | 2 raised to `x`. |
+| `first_tagged` | `(tag: string) -> entity_ref` | cpu | no | no | The first live entity with the tag in instance order; a dead reference (`alive` is false) if there is none. |
 | `floor` | `(x: T) -> T` | both | yes | no | Largest integer value not above `x`. |
 | `fract` | `(x: T) -> T` | both | yes | no | Fractional part of `x`. |
+| `go_to` | `(scene: scene name) -> ()` | cpu | no | yes | Switches scene, keeping shared state. |
+| `has_tag` | `(target: entity_ref, tag: string) -> bool` | cpu | no | no | Whether the entity is live and has the tag. |
 | `inverse_sqrt` | `(x: T) -> T` | both | yes | no | Reciprocal of the square root. |
 | `is_key_down` | `(key: Key) -> bool` | cpu | no | no | Whether the key was down at the end of input handling in the current frame. |
+| `is_muted` | `() -> bool` | cpu | no | no | Whether audio is muted with `set_muted`. |
+| `is_pointer_down` | `(button: i32) -> bool` | cpu | no | no | Whether pointer button `button` was down at the end of input handling. |
+| `key_pressed` | `(key: Key) -> bool` | cpu | no | no | Whether the key went down during input handling of the current frame. |
+| `key_released` | `(key: Key) -> bool` | cpu | no | no | Whether the key went up during input handling of the current frame. |
 | `length` | `(x: T) -> f32` | both | yes | no | Length of a vector, or the absolute value of a scalar. |
+| `load` | `() -> bool` | cpu | no | yes | Reads saved values back; false if none. |
 | `log` | `(x: T) -> T` | both | yes | no | Natural logarithm. |
 | `log2` | `(x: T) -> T` | both | yes | no | Base-2 logarithm. |
 | `max` | `(a: T, b: T) -> T`<br>`(a: I, b: I) -> I` | both | yes | no | Larger of two values, component-wise. |
 | `min` | `(a: T, b: T) -> T`<br>`(a: I, b: I) -> I` | both | yes | no | Smaller of two values, component-wise. |
 | `mix` | `(a: T, b: T, t: f32) -> T`<br>`(a: T, b: T, t: T) -> T` | both | yes | no | Linear interpolation `a * (1 - t) + b * t`, with a scalar or a component-wise `t`. |
+| `nearest_tagged` | `(tag: string, point: vec3) -> entity_ref` | cpu | no | no | The live entity with the tag whose world position is nearest `point`; a dead reference if there is none. |
 | `normalize` | `(v: V) -> V` | both | yes | no | The vector scaled to length 1. |
+| `particle_count` | `() -> i32` | cpu | no | no | How many particles are alive. |
+| `pause` | `() -> ()` | cpu | no | yes | Stops update, physics and timers; input goes on. |
+| `paused` | `() -> bool` | cpu | no | no | Whether paused. |
+| `play` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()`<br>`(sound: sound, volume: f32, pitch: f32) -> ()` | cpu | no | yes | Plays a sound once, at a volume (default 1.0, range 0..4) and a pitch (playback rate, default 1.0, range 0.0625..16). |
+| `play_at` | `(sound: sound, position: vec3) -> ()`<br>`(sound: sound, position: vec3, volume: f32) -> ()` | cpu | no | yes | Plays a sound once from a world position: it is quieter further from the active camera and panned left or right. |
+| `play_music` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()` | cpu | no | yes | Starts a sound as looping music, replacing the music that plays (one music track at a time). |
+| `pointer_position` | `() -> vec2` | cpu | no | no | The pointer position at the end of input handling, in canvas NDC. |
 | `pow` | `(base: T, exponent: T) -> T` | both | yes | no | `base` raised to `exponent`, component-wise. |
 | `print` | `(message: string) -> ()` | cpu | no | no | Writes a message to the development console. |
 | `radians` | `(x: T) -> T` | both | yes | no | Degrees to radians. |
 | `random` | `() -> f32` | cpu | no | no | A pseudo-random number in `[0, 1)`. |
+| `random_int` | `(lo: i32, hi: i32) -> i32` | cpu | no | no | A random i32 in `[lo, hi)`; `lo` if `hi <= lo`. |
+| `random_range` | `(lo: f32, hi: f32) -> f32` | cpu | no | no | A random f32 in `[lo, hi)`. |
 | `reflect` | `(i: V, n: V) -> V` | both | yes | no | Reflects incident vector `i` about the surface normal `n`. |
+| `reset` | `() -> ()` | cpu | no | yes | Next frame, restarts the scene. |
+| `resume` | `() -> ()` | cpu | no | yes | Undoes pause(). |
 | `round` | `(x: T) -> T` | both | yes | no | Nearest integer value, halves to even. |
 | `sample` | `(t: texture, s: sampler, uv: vec2) -> vec4` | gpu | no | no | Filtered texel of `t` at `uv`. `texture` and `sampler` parameters may be used only as direct arguments to `sample`. |
 | `saturate` | `(x: T) -> T` | both | yes | no | Limits `x` to 0..1. |
+| `save` | `() -> ()` | cpu | no | yes | Writes the saved and setting state to storage. |
+| `set_camera` | `(camera: camera name) -> ()` | cpu | no | yes | Switches the active camera. |
+| `set_muted` | `(muted: bool) -> ()` | cpu | no | yes | Mutes or unmutes all audio; the volume is kept. |
+| `set_volume` | `(volume: f32) -> ()` | cpu | no | yes | Sets the global volume of every sound and the music (default 1.0, range 0..4). |
+| `shuffle` | `(items: array<T, N>) -> array<T, N>` | cpu | no | no | A new array with the same elements in a random order. |
 | `sign` | `(x: T) -> T` | both | yes | no | -1, 0 or 1 according to the sign of `x`. |
 | `sin` | `(x: T) -> T` | both | yes | no | Sine of an angle in radians. |
 | `smoothstep` | `(edge0: T, edge1: T, x: T) -> T` | both | yes | no | Smooth Hermite interpolation between `edge0` and `edge1`. |
 | `spawn` | `(prefab: prefab descriptor) -> entity_ref` | cpu | no | yes | Queues creation of a prefab instance as a root entity; the reference is valid immediately and `alive` turns true after the next lifecycle flush. |
 | `sqrt` | `(x: T) -> T` | both | yes | no | Square root. |
 | `step` | `(edge: T, x: T) -> T` | both | yes | no | 0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`. |
+| `stop_music` | `() -> ()` | cpu | no | yes | Stops the music started with `play_music`; does nothing when none plays. |
+| `tagged` | `(tag: string) -> tagged entities` | cpu | no | no | The live entities with the tag, in instance order: only the iterable of a `for` loop (`for r in tagged("rock") { .. }`). |
 | `tan` | `(x: T) -> T` | both | yes | no | Tangent of an angle in radians. |
 | `transpose` | `(m: mat4) -> mat4` | both | yes | no | Transpose of a 4x4 matrix. |
 | `trunc` | `(x: T) -> T` | both | yes | no | Integer part of `x`, rounding toward zero. |
@@ -746,13 +887,13 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (168)
+## Part C. Features of this build (224)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
-### Language constructs (30)
+### Language constructs (32)
 
-`imports` `exports` `constants` `body-constants` `functions` `cpu-functions` `structs` `materials` `prefabs` `scenes` `scene-fields` `state` `scene-objects` `entities` `entity-fields` `prefab-instances` `lifecycle-functions` `handlers` `bind` `self` `descriptors` `strings` `arrays` `indexing` `negation` `arithmetic` `remainder` `comparison` `equality` `logical`
+`imports` `exports` `constants` `body-constants` `functions` `cpu-functions` `structs` `enums` `materials` `prefabs` `scenes` `scene-fields` `state` `scene-objects` `entities` `entity-fields` `prefab-instances` `lifecycle-functions` `handlers` `bind` `self` `descriptors` `strings` `arrays` `indexing` `negation` `arithmetic` `remainder` `comparison` `equality` `logical` `match`
 
 ### Body commands (5)
 
@@ -770,29 +911,29 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (64)
+### Functions (112)
 
-`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.glb` `function:asset.linear_texture` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:exp` `function:exp2` `function:floor` `function:fract` `function:inverse_sqrt` `function:is_key_down` `function:length` `function:lighting.pbr` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
+`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:chance` `function:choose` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:count_tagged` `function:cross` `function:degrees` `function:destroy` `function:destroy_tagged` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:first_tagged` `function:floor` `function:fract` `function:go_to` `function:has_tag` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:is_pointer_down` `function:key_pressed` `function:key_released` `function:length` `function:lighting.pbr` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:nearest_tagged` `function:normalize` `function:particle_count` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pointer_position` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:random_int` `function:random_range` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:save` `function:set_camera` `function:set_muted` `function:set_volume` `function:shuffle` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tagged` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
 
 ### Type methods (10)
 
 `method:glb_asset.material` `method:glb_asset.material_base_color` `method:glb_asset.material_metallic` `method:glb_asset.material_roughness` `method:glb_asset.material_texture` `method:glb_asset.mesh` `method:glb_asset.node_position` `method:glb_asset.node_rotation` `method:glb_asset.node_scale` `method:glb_asset.primitive`
 
-### Namespaces (8)
+### Namespaces (10)
 
-`namespace:asset` `namespace:color` `namespace:frame` `namespace:lighting` `namespace:mat4` `namespace:quat` `namespace:sampler` `namespace:texture`
+`namespace:asset` `namespace:color` `namespace:easing` `namespace:frame` `namespace:hud` `namespace:lighting` `namespace:mat4` `namespace:quat` `namespace:sampler` `namespace:texture`
 
 ### Scene objects (1)
 
 `scene-object:camera`
 
-### Schemas (17)
+### Schemas (19)
 
-`schema:Box` `schema:BoxCollider` `schema:Camera` `schema:DirectionalLight` `schema:Dynamic` `schema:Entity` `schema:Kinematic` `schema:Orthographic` `schema:Pbr` `schema:Perspective` `schema:Plane` `schema:PointLight` `schema:Scene` `schema:Sphere` `schema:SphereCollider` `schema:Static` `schema:Unlit`
+`schema:Box` `schema:BoxCollider` `schema:Camera` `schema:DirectionalLight` `schema:Dynamic` `schema:Emitter` `schema:Entity` `schema:Kinematic` `schema:Orthographic` `schema:Pbr` `schema:Perspective` `schema:Plane` `schema:PointLight` `schema:Scene` `schema:Sphere` `schema:SphereCollider` `schema:Sprite` `schema:Static` `schema:Unlit`
 
-### Types (20)
+### Types (22)
 
-`type:PointerEvent` `type:SurfaceInput` `type:array` `type:bool` `type:color` `type:entity_ref` `type:f32` `type:glb_asset` `type:i32` `type:mat4` `type:material` `type:mesh` `type:quat` `type:sampler` `type:string` `type:texture` `type:u32` `type:vec2` `type:vec3` `type:vec4`
+`type:PointerEvent` `type:SurfaceInput` `type:array` `type:bool` `type:color` `type:entity_ref` `type:f32` `type:font` `type:glb_asset` `type:i32` `type:mat4` `type:material` `type:mesh` `type:quat` `type:sampler` `type:sound` `type:string` `type:texture` `type:u32` `type:vec2` `type:vec3` `type:vec4`
 
 ### Namespace values (3)
 
@@ -800,7 +941,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (201 codes)
+## Part D. Diagnostics (241 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -809,12 +950,12 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `0xxx` | source text and lexical structure | 18 |
 | `1xxx` | syntax | 11 |
 | `2xxx` | names, scopes, modules | 14 |
-| `3xxx` | types, values, constant evaluation | 25 |
+| `3xxx` | types, values, constant evaluation | 35 |
 | `4xxx` | functions, effects, execution domains, material stages | 15 |
-| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 43 |
+| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 63 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
-| `7xxx` | assets | 30 |
-| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 28 |
+| `7xxx` | assets | 36 |
+| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 32 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 
 Within each range the `x9xx` codes mean "specified as not supported in v0.1"; all of them are listed, with their reasons, on [limitations.md](limitations.md).

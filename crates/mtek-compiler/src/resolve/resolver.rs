@@ -17,11 +17,11 @@ use crate::stdlib::{
     Domain, Milestone, NamespaceMember, PreludeNameKind, Registry, SchemaCategory, registry,
 };
 use crate::syntax::ast::{
-    ArrayLength, ArrayLengthKind, Block, ConstDecl, DescField, ElseBranch, EntityDecl,
-    EntityMember, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter, Handler, HandlerArg,
-    Ident, IfStmt, Item, ItemKind, LifecycleFn, MaterialDecl, MaterialMember, Module, NodeId,
-    Param, ParamDecl, PrefabDecl, SceneDecl, SceneMember, SceneObject, Stmt, StructDecl, Type,
-    TypeKind,
+    ArmBody, ArrayLength, ArrayLengthKind, Block, ConstDecl, DescField, ElseBranch, EntityDecl,
+    EntityMember, EnumDecl, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter, Handler,
+    HandlerArg, Ident, IfStmt, InterpPart, Item, ItemKind, LifecycleFn, MatchArm, MaterialDecl,
+    MaterialMember, Module, NodeId, Param, ParamDecl, PatternKind, PrefabDecl, SceneDecl,
+    SceneMember, SceneObject, Stmt, StructDecl, Type, TypeKind,
 };
 
 /// The reserved identifier (`spec/language.md` 2.1, `E0012`).
@@ -747,6 +747,9 @@ impl<'a> Resolver<'a> {
             ItemKind::Struct(decl) => {
                 self.declare(DefKind::Struct, &decl.name, decl.id, None);
             }
+            ItemKind::Enum(decl) => {
+                self.declare(DefKind::Enum, &decl.name, decl.id, None);
+            }
             ItemKind::Material(decl) => {
                 self.declare(DefKind::Material, &decl.name, decl.id, None);
             }
@@ -767,6 +770,7 @@ impl<'a> Resolver<'a> {
             ItemKind::Fn(decl) if decl.cpu => Construct::CpuFn,
             ItemKind::Fn(_) => Construct::Fn,
             ItemKind::Struct(_) => Construct::Struct,
+            ItemKind::Enum(_) => Construct::Enum,
             ItemKind::Material(_) => Construct::Material,
             ItemKind::Prefab(_) => Construct::Prefab,
             ItemKind::Scene(_) => Construct::Scene,
@@ -786,11 +790,43 @@ impl<'a> Resolver<'a> {
             ItemKind::Const(decl) => self.const_body(decl),
             ItemKind::Fn(decl) => self.function(decl),
             ItemKind::Struct(decl) => self.structure(decl),
+            ItemKind::Enum(decl) => self.enumeration(decl),
             ItemKind::Material(decl) => self.material(decl),
             ItemKind::Prefab(decl) => self.prefab(decl),
             ItemKind::Scene(decl) => self.scene(decl),
         }
         self.leave(entered);
+    }
+
+    /// The variants of an `enum` (decision 0129). They are not names of a
+    /// scope: they are reached only through the enum (`State.Menu`), so they
+    /// resolve as members. Two variants with one name are `E2002`; `_` is
+    /// `E0012`.
+    fn enumeration(&mut self, decl: &EnumDecl) {
+        let mut seen: BTreeMap<&str, Span> = BTreeMap::new();
+        for variant in &decl.variants {
+            self.set_res(variant.id, Res::Field);
+            if variant.name == UNDERSCORE {
+                self.report_underscore(variant.span);
+                continue;
+            }
+            if let Some(first) = seen.get(variant.name.as_str()) {
+                self.sink.push(
+                    Diagnostic::new(
+                        Code::E2002,
+                        format!(
+                            "The enum '{}' declares the variant '{}' twice.",
+                            decl.name.name, variant.name
+                        ),
+                    )
+                    .at(variant.span)
+                    .related(*first, "first declared here")
+                    .help("remove one of them or give it another name"),
+                );
+                continue;
+            }
+            seen.insert(variant.name.as_str(), variant.span);
+        }
     }
 
     fn const_body(&mut self, decl: &ConstDecl) {
@@ -1225,6 +1261,14 @@ impl<'a> Resolver<'a> {
                 self.block(&stmt.body);
                 self.pop();
             }
+            Stmt::While(stmt) => {
+                self.expr(&stmt.cond);
+                self.block(&stmt.body);
+            }
+            Stmt::Timer(stmt) => {
+                self.expr(&stmt.seconds);
+                self.block(&stmt.body);
+            }
             Stmt::Return(stmt) => {
                 if let Some(value) = &stmt.value {
                     self.expr(value);
@@ -1237,6 +1281,7 @@ impl<'a> Resolver<'a> {
                 self.expr(&stmt.value);
             }
             Stmt::Expr(stmt) => self.expr(&stmt.expr),
+            Stmt::Match(stmt) => self.match_parts(stmt.span, &stmt.scrutinee, &stmt.arms),
         }
     }
 
@@ -1290,6 +1335,26 @@ impl<'a> Resolver<'a> {
         self.set_res(name.id, res);
     }
 
+    /// A `match` statement or expression (decision 0129): the scrutinee, the
+    /// patterns (expressions, normally `Enum.Variant`) and the arm bodies,
+    /// each block a scope of its own.
+    fn match_parts(&mut self, span: Span, scrutinee: &Expr, arms: &[MatchArm]) {
+        let entered = self.enter(Construct::Match, span);
+        self.expr(scrutinee);
+        for arm in arms {
+            for pattern in &arm.patterns {
+                if let PatternKind::Value(value) = &pattern.kind {
+                    self.expr(value);
+                }
+            }
+            match &arm.body {
+                ArmBody::Block(block) => self.block(block),
+                ArmBody::Expr(value) => self.expr(value),
+            }
+        }
+        self.leave(entered);
+    }
+
     fn type_res(&mut self, name: &Ident) -> Res {
         if name.name == UNDERSCORE {
             self.report_underscore(name.span);
@@ -1302,7 +1367,7 @@ impl<'a> Resolver<'a> {
             else {
                 return Res::Error;
             };
-            if kind == DefKind::Struct {
+            if matches!(kind, DefKind::Struct | DefKind::Enum) {
                 return Res::Def(id);
             }
             if let Some(type_name) = prelude {
@@ -1341,7 +1406,8 @@ impl<'a> Resolver<'a> {
             );
             return Res::Error;
         }
-        let mut candidates = self.visible_names(|k| k == Some(DefKind::Struct));
+        let mut candidates =
+            self.visible_names(|k| matches!(k, Some(DefKind::Struct | DefKind::Enum)));
         for t in &self.registry.types {
             candidates.entry(t.name.to_owned()).or_insert(None);
         }
@@ -1363,7 +1429,7 @@ impl<'a> Resolver<'a> {
             .map(|t| t.name)
             .collect();
         self.sink.push(diagnostic.note(format!(
-            "the built-in types are: {}, and your own `struct`s",
+            "the built-in types are: {}, and your own `struct`s and `enum`s",
             types.join(", ")
         )));
         Res::Error
@@ -1380,6 +1446,15 @@ impl<'a> Resolver<'a> {
             | ExprKind::Error => {}
             ExprKind::Str { .. } => {
                 let entered = self.enter(Construct::StringLiteral, expr.span);
+                self.leave(entered);
+            }
+            ExprKind::Interp { parts } => {
+                let entered = self.enter(Construct::StringLiteral, expr.span);
+                for part in parts {
+                    if let InterpPart::Expr { expr, .. } = part {
+                        self.expr(expr);
+                    }
+                }
                 self.leave(entered);
             }
             ExprKind::SelfValue => self.self_value(expr),
@@ -1414,6 +1489,7 @@ impl<'a> Resolver<'a> {
                 }
             }
             ExprKind::Field { base, name } => self.field_access(expr.span, base, name),
+            ExprKind::Match { scrutinee, arms } => self.match_parts(expr.span, scrutinee, arms),
             ExprKind::Index { base, index } => {
                 let entered = self.enter(Construct::Index, expr.span);
                 self.expr(base);

@@ -16,7 +16,7 @@ program (entry scene src/main.mtek::Gallery)
         mesh = Box { size: vec3(1.0, 1.0, 1.0) } (written @11:9-11:49)
         material = std/materials.mtek::Unlit (written @12:9-12:44)
           color: color = color(0.14702727, 0.107023105, 1.0, 1.0)
-  module std/materials.mtek @1:1-22:1
+  module std/materials.mtek @1:1-43:1
     material Unlit [std/materials.mtek::Unlit] @5:8-8:2
       param #0 color: color = color(1.0, 1.0, 1.0, 1.0) @6:5-6:34
       block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit (size 16, align 16)
@@ -37,3 +37,26 @@ program (entry scene src/main.mtek::Gallery)
         let texel#1 = (sample(param base_color_texture#3, param base_color_sampler#4, (surface#0.uv): vec2)): vec4 @17:9-17:80
         let albedo#2 = (color.linear(((param base_color#0.rgb): vec3 * (texel#1.xyz): vec3): vec3, 1.0)): color @18:9-18:68
         return (lighting.pbr(surface#0, albedo#2, param metallic#1, param roughness#2)): color @19:9-19:67
+    material Sprite [std/materials.mtek::Sprite] @26:8-42:2
+      param #0 sheet: texture = texture.white() @27:5-27:44
+      param #1 sheet_sampler: sampler = sampler.nearest_clamp() @28:5-28:60
+      param #2 tint: color = color(1.0, 1.0, 1.0, 1.0) @29:5-29:33
+      param #3 cell: f32 = 0.0 @30:5-30:27
+      param #4 columns: f32 = 1.0 @31:5-31:30
+      param #5 rows: f32 = 1.0 @32:5-32:27
+      block material:std/materials.mtek::Sprite MtekParams_2b212d15_Sprite (size 32, align 16)
+      fragment -> color [std/materials.mtek::Sprite.fragment] reads uv @33:5-41:6
+        local #0 surface: SurfaceInput (param) @33:14-33:21
+        local #1 count: f32 (let) @34:13-34:18
+        local #2 index: f32 (let) @35:13-35:18
+        local #3 row: f32 (let) @36:13-36:16
+        local #4 column: f32 (let) @37:13-37:19
+        local #5 uv: vec2 (let) @38:13-38:15
+        local #6 texel: vec4 (let) @39:13-39:18
+        let count#1 = (max((param columns#4 * param rows#5): f32, 1.0)): f32 @34:9-34:46
+        let index#2 = (clamp((floor((param cell#3 - (count#1 * (floor((param cell#3 / count#1): f32)): f32): f32): f32)): f32, 0.0, (count#1 - 1.0): f32)): f32 @35:9-35:88
+        let row#3 = (floor((index#2 / param columns#4): f32)): f32 @36:9-36:42
+        let column#4 = (index#2 - (row#3 * param columns#4): f32): f32 @37:9-37:44
+        let uv#5 = (((surface#0.uv): vec2 + (vec2(column#4, row#3)): vec2): vec2 / (vec2(param columns#4, param rows#5)): vec2): vec2 @38:9-38:73
+        let texel#6 = (sample(param sheet#0, param sheet_sampler#1, uv#5)): vec4 @39:9-39:54
+        return (color.linear(((param tint#2.rgb): vec3 * (texel#6.xyz): vec3): vec3, ((param tint#2.a): f32 * (texel#6.w): f32): f32)): color @40:9-40:69

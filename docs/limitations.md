@@ -27,8 +27,8 @@ The reasons and the restrictions of sections 2, 3 and 6 are written by hand in `
 |---|---|---|---|---|
 | `E1901` | bitwise operators not supported | v0.1 | Bitwise operators are not part of the v0.1 language. They are lexed only so that they are rejected with this code instead of a confusing parse error. | [tests/syntax/fail/e1901_bitwise_and.mtek](../tests/syntax/fail/e1901_bitwise_and.mtek) and 2 more |
 | `E4901` | stage not supported | `vertex`/`compute` | A material has exactly one stage function, `fragment`. Custom vertex and compute stages are planned for v0.2. | [tests/syntax/fail/e4901_compute_stage.mtek](../tests/syntax/fail/e4901_compute_stage.mtek) and 3 more |
-| `E5901` | scene switching not supported | Reserved: switching the active scene at run time; v0.1 mounts one scene and has no construct that could switch it, so no program produces it | A v0.1 application mounts one scene and has no construct that switches the active scene, so no program can produce this code: it is reserved. | none: no program produces it |
-| `E5902` | transparency not supported | Reserved: v0.1 has only opaque materials and no construct that asks for transparency, so no program produces it | v0.1 has only opaque materials and no construct that asks for transparency, so no program can produce this code: it is reserved. A transparent glTF material is rejected earlier, with E7015. | none: no program produces it |
+| `E5901` | scene switching not supported | Reserved: retired by decision 0141: `go_to(Scene)` switches the active scene, so no program produces it; the code is kept so that the number is not reused | Retired: `go_to(Scene)` switches the active scene (decision 0141), so no program produces this code. It stays in the catalogue so that the number is not reused. | none: no program produces it |
+| `E5902` | transparency not supported | Reserved: retired by decision 0138: materials are translucent when a colour param has an alpha below 1, so no program produces it; the code is kept so that the number is not reused | Retired: a material colour param with an alpha below 1 makes the draw translucent (decision 0138), so no program produces this code. It stays in the catalogue so that the number is not reused. A transparent glTF material is still rejected with E7015. | none: no program produces it |
 | `E7901` | remote assets not supported | an `http:`, `https:` or other URL as an asset path | Assets are compile-time dependencies that the compiler opens and validates while it checks the program (decision 0015); v0.1 offers no option to load remote assets. | [tests/assets/fail/e7901_remote_asset](../tests/assets/fail/e7901_remote_asset) |
 | `E7902` | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy | Entities reference the meshes of a glTF asset individually, which keeps every drawn object a named, inspectable entity; instancing a whole node hierarchy is not provided. | [tests/assets/fail/e7902_model_field](../tests/assets/fail/e7902_model_field) |
 
@@ -46,20 +46,21 @@ The reasons and the restrictions of sections 2, 3 and 6 are written by hand in `
 - Records: [0039](../spec/decisions/0039-materials-in-the-checker-details.md), [0086](../spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md), [0094](../spec/decisions/0094-coverage-audit-findings.md).
 - Source: [spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md](../spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md): "the build still folds every initial value"
 
-## 4. Reserved words (30)
+## 4. Reserved words (27)
 
 The words are reserved for future use (spec/language.md 2.3); using one as a name is E0013 ("`while` is reserved for a future version"). The specification gives no further rationale. ([spec/language.md](../spec/language.md): "Using these as identifiers is error `E0013`")
 
-`as` `async` `await` `enum` `extern` `impl` `loop` `match` `mod` `move` `mut` `priv` `pub` `static` `super` `trait` `type` `unsafe` `use` `where` `while` `yield` `compute` `vertex` `storage` `uniform` `workgroup` `system` `query` `component`
+`as` `async` `await` `extern` `impl` `loop` `mod` `move` `mut` `priv` `pub` `static` `super` `trait` `type` `unsafe` `use` `where` `yield` `compute` `vertex` `storage` `uniform` `workgroup` `system` `query` `component`
 
-## 5. Specified, but no program can produce the diagnostic (4)
+## 5. Specified, but no program can produce the diagnostic (5)
 
 These codes are in the catalogue and are marked there. Each stays in the catalogue so that the number is not reused; none has a negative test, because no program of v0.1 can reach it. `tests/semantics/code-coverage-exceptions.json` holds the reasons, and a test fails when one of these codes gains a fixture without leaving the list.
 
 | Code | Title | Mark in the catalogue | Why no program produces it |
 |---|---|---|---|
-| `E5901` | scene switching not supported | Reserved | No construct of v0.1 switches the active scene (spec/scenes.md section 1: one scene per application), so no program can produce it; the context export lists the feature as not supported. |
-| `E5902` | transparency not supported | Reserved | No construct of v0.1 asks for transparency (spec/materials.md section 2: opaque materials only), so no program can produce it; the context export lists the feature as not supported. |
+| `E5100` | non-opaque color in material parameter | Reserved | Retired by decision 0138: material colour params take any alpha (an alpha below 1 makes the draw translucent), so no program can produce it; the catalogue keeps the code so that the number is not reused. |
+| `E5901` | scene switching not supported | Reserved | Retired by decision 0141: go_to(Scene) switches the active scene, so no program can produce it; the catalogue keeps the code so that the number is not reused. |
+| `E5902` | transparency not supported | Reserved | Retired by decision 0138: a material colour param with an alpha below 1 makes the draw translucent, so no program can produce it; the catalogue keeps the code so that the number is not reused. |
 | `E6003` | too many interpolated inputs | Reserved | v0.1 has at most 4 inter-stage variables (spec/materials.md section 3.3) and no custom vertex stage (E4901), so the limit of 16 cannot be reached; custom vertex stages are v0.2. |
 | `W0030` | naming convention | Not implemented | The naming lint is not part of v0.1 (spec/language.md section 3.3 as amended by decision 0102; decision 0070 item 11): neither the compiler nor mtek fmt implements it, the catalogue keeps the code so that the number is not reused, and no program can produce it. |
 
@@ -71,15 +72,16 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 
 | Restriction | Why | Diagnostics | Records and source |
 |---|---|---|---|
-| No `while` or `loop`; the only loops are `for i in a..b` and `for x in array`. | Listed as not in v0.1; the specification records no rationale beyond scope. | `E0013` | [spec/language.md](../spec/language.md): "`while`/`loop`" |
+| No `loop`. Write `while true { … }` and leave it with `break`. `while` runs at most 1 000 000 iterations. | `loop` stays reserved (decision 0144). A `while` that runs past the cap fails the frame with E8080. | `E0013`, `E8080` | decisions [0144](../spec/decisions/0144-while.md); [spec/language.md](../spec/language.md): "There is no `loop`" |
 | No integer or boolean vectors, no `mat2` or `mat3` (only `mat4`), no `f16` or `f64`. The names are not defined, so a use is an unknown type. | Listed as not in v0.1; the specification records no rationale beyond scope. The diagnostic is the general unknown-type error, not a dedicated unsupported-feature code. | `E3003` | [spec/language.md](../spec/language.md): "Integer and boolean vectors are not in v0.1" |
 | No numeric suffixes (`1u`), no hexadecimal, binary or octal literals, no digit separators. | The spelling of a literal decides its type and the lexical rules keep it canonical; the other forms are not in v0.1. | `E0021` | [spec/language.md](../spec/language.md): "no hexadecimal in v0.1" |
 | Identifiers are ASCII only. | Not in v0.1; the diagnostic says so ("Unicode identifiers are not supported in v0.1"). | `E0010` | [spec/language.md](../spec/language.md): "ASCII only in v0.1" |
 | No closures or function values; functions are module items only. | Not in v0.1. There is no dedicated diagnostic: the `\|` that would start a closure is read as the (unsupported) bitwise operator, E1901, and its parameter is an unknown name, E2003. | `E1901`, `E2003` | [spec/language.md](../spec/language.md): "closures and function values" |
 | No generics: a function cannot take type parameters (`fn f<T>(x: T)`). | Not in v0.1. There is no dedicated diagnostic: the `<` after the name is a syntax error, E1001. | `E1001` | [spec/language.md](../spec/language.md): "generics" |
-| No methods or `impl`, no user-defined enums, no pattern matching (`match`), no `use`, `mod`, `trait`, `type`, `async` or any other word of the reserved list. | Reserved for future versions (E0013); the built-in registry enums such as `Key` are the only enums. | `E0013` | [spec/language.md](../spec/language.md): "methods and `impl`; enums" |
+| No methods or `impl`, no `use`, `mod`, `trait`, `type`, `async` or any other word of the reserved list. | Reserved for future versions (E0013). | `E0013` | [spec/language.md](../spec/language.md): "methods and `impl`;" |
+| Enum variants carry no data and have no explicit discriminants; an enum does not convert to or from a number, has no ordering, and is CPU-only. A `match` pattern is an enum variant or `_`: no literal, binding, range or guard patterns and no destructuring. | Decision 0129 adds the closed, data-free enum and the exhaustive `match` that a game-state machine needs and leaves the rest for a later version; an enum is erased to its variant index, which the language does not expose. | `E3001`, `E3014`, `E3204`, `E4011` | decisions [0129](../spec/decisions/0129-enums-and-match.md); [spec/language.md](../spec/language.md): "enum variants that carry data, explicit enum discriminants" |
 | No optional or result types and no null. | Fallibility exists only at host boundaries (spec/runtime-abi.md section 6) and in a few built-in operations that return a `bool` plus a documented default, such as `alive(r)`. | none | [spec/language.md](../spec/language.md): "There is no implicit `null`, no `any`, no implicit optional." |
-| Strings are immutable, CPU-only values with no concatenation or formatting; `+` on strings is an error. | Not in v0.1. Strings have no GPU representation. | `E3014` | [spec/language.md](../spec/language.md): "string formatting/concatenation" |
+| Strings are immutable, CPU-only values with no concatenation; `+` on strings is an error. Strings are built by interpolation (`"Score: ${points}"`, format spec `.N` only), which is formatted at run time and is not a constant expression. | Strings have no GPU representation. Interpolation covers HUD text (decision 0133); other format specs (width, padding, hexadecimal) are not specified yet. | `E3014`, `E3501`, `E3502` | decisions [0133](../spec/decisions/0133-string-interpolation.md); [spec/language.md](../spec/language.md): "string concatenation (`+` on `string` is `E3014`" |
 | No recursion, direct or mutual, in either execution domain. | Decision 0016 item 3: GPU code cannot recurse, and v0.1 forbids it on the CPU too, which keeps effect analysis simple and the rules identical for code that may run in either domain. To be revisited with evidence of need. | `E4001` | decisions [0016](../spec/decisions/0016-v0.1-restrictions.md); [spec/language.md](../spec/language.md): "Recursion, direct or mutual, is error `E4001`" |
 | Most items of spec/language.md section 11 have no unsupported-feature code of their own. Only the reserved words (E0013), the bitwise operators (E1901) and the vertex and compute stages (E4901) do; the others are rejected by the general rules named in the entries above. | Section 11 used to be headed as if every item had "a dedicated unsupported diagnostic", which the compiler does not meet. Decision 0102 corrected the heading instead of hiding the difference. Every item is still rejected with a diagnostic. | `E0013`, `E1901`, `E4901` | decisions [0102](../spec/decisions/0102-naming-lint-w0030-and-the-language-reference.md); [spec/language.md](../spec/language.md): "## 11. What is not in v0.1" |
 
@@ -87,16 +89,26 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 
 | Restriction | Why | Diagnostics | Records and source |
 |---|---|---|---|
-| No vertex or compute stages, no transparency or blending, no shadows, no post-processing, no multiple render targets, no material inheritance, no mip-map generation, no derivatives (`dpdx`), no storage buffers, no texture arrays or cube maps. | Not in v0.1 (spec/materials.md section 10); the specification records no rationale beyond scope. Vertex and compute stages are E4901 and transparency is E5902 (reserved). | `E4901`, `E5902` | [spec/materials.md](../spec/materials.md): "## 10. Not in v0.1" |
-| Every `color` parameter of a material holds an opaque colour (alpha exactly 1.0). | Transparency is not part of v0.1. A constant with another alpha is E5100; a run-time value with another alpha (a write, a binding or a host input) is rejected with E8100 and the previous value stays. Use `vec4` for non-colour four-component data. | `E5100`, `E8100` | [spec/materials.md](../spec/materials.md): "must hold an opaque colour (alpha exactly `1.0`) in v0.1" |
+| No vertex or compute stages, no blend modes other than alpha over, no shadows, no post-processing, no multiple render targets, no material inheritance, no mip-map generation, no derivatives (`dpdx`), no storage buffers, no texture arrays or cube maps. | Not in v0.1 (spec/materials.md section 10); the specification records no rationale beyond scope. Vertex and compute stages are E4901. | `E4901` | [spec/materials.md](../spec/materials.md): "## 10. Not in v0.1" |
+| Translucency is per object: translucent draws are sorted back to front by their centre, blend alpha "over" only, write no depth and are never instanced. | Decision 0138 keeps the small-game transparency to one blend mode, with no order-independent transparency. Intersecting translucent objects can show order artefacts. A host input with the `color-hex-opaque` codec still rejects alpha (E8100). | `E8100` | decisions [0138](../spec/decisions/0138-translucent-pass.md); [spec/materials.md](../spec/materials.md): "Order is per object, not per triangle" |
 | `texture` and `sampler` parameters are fixed when the instance is constructed; a texture cannot be replaced at run time. | Decision 0016 item 2: texture and sampler parameters are construction-only, so resource identity never changes while the program runs; replacing a texture is v0.2. | `E5073` | decisions [0016](../spec/decisions/0016-v0.1-restrictions.md); [spec/decisions/0016-v0.1-restrictions.md](../spec/decisions/0016-v0.1-restrictions.md): "Texture identity fixed per instance." |
 
 ### Scenes and entities
 
 | Restriction | Why | Diagnostics | Records and source |
 |---|---|---|---|
-| One scene per application; no scene switching, no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text or UI, no audio. | Not in v0.1 (spec/scenes.md section 14). Scene switching is E5901 (reserved); `component`, `query` and `system` are reserved words (E0013). | `E5901`, `E0013` | [spec/scenes.md](../spec/scenes.md): "## 14. Not in v0.1" |
-| An `entity_ref` (the result of `spawn`, the argument of a collision handler) can be passed to `destroy`, `alive` and body commands, but its fields and state cannot be read or written. | Decision 0064: not in v0.1. | `E5074` | decisions [0064](../spec/decisions/0064-spawn-destroy-entity-ref.md); [spec/diagnostics.md](../spec/diagnostics.md): "field access through entity_ref" |
+| One scene runs at a time (`go_to(Scene)` switches between the scenes of a program, and `set_camera(Name)` switches which of that scene's cameras draws); no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text in the 3D world, no UI layout or text input (screen-space text and buttons are the HUD, spec/hud.md). | Not in v0.1 (spec/scenes.md section 14). Scene switching landed with decision 0141; `component`, `query` and `system` are reserved words (E0013). | `E0013` | decisions [0141](../spec/decisions/0141-scenes-and-go-to.md); [spec/scenes.md](../spec/scenes.md): "## 14. Not in v0.1" |
+| The HUD is immediate mode and screen-space only: `hud.text`, `hud.rect` and `hud.button` drawn again every frame from lifecycle functions and handlers (not from functions), in the system UI font, an `asset.font(..)` file or the built-in ASCII pixel font, with horizontal alignment as the only layout. No text in the 3D world, no images, no text input, no keyboard or gamepad navigation, and `mtek test` fixtures cannot see or click it. | Spec/hud.md section 7 (decisions 0134, 0139): the smallest UI that covers scores, timers, bars and buttons, drawn as a DOM layer over the canvas. | `E5601`, `W8203`, `E5080` | decisions [0134](../spec/decisions/0134-hud-immediate-mode.md); [spec/hud.md](../spec/hud.md): "## 7. Not in this extension" |
+| Tweens are progress state plus ten CPU easing curves (`easing.in_quad` .. `easing.out_bounce`) used in bindings, lifecycle functions, handlers and `cpu fn`s: no tween objects, timelines, delays, callbacks or user curves in `bind`, no easing in a plain `fn` or on the GPU (`smoothstep` only), and no curve in a `const`. | Spec/tweens.md (decision 0135): curves are the smallest addition that makes bindings animate; tween bookkeeping is ordinary state logic that fixtures can observe. | `E4002`, `E3090` | decisions [0135](../spec/decisions/0135-tweens-easing.md); [spec/tweens.md](../spec/tweens.md): "## 4. Limits" |
+| Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy). | Spec/audio.md section 8 (decision 0130): the smallest audio model that covers hit, score and music sounds. | `E7101`, `E7102`, `E5501` | decisions [0130](../spec/decisions/0130-audio.md); [spec/audio.md](../spec/audio.md): "## 8. Not in this extension" |
+| An `entity_ref` can be compared, passed to `destroy` and `alive`, given body commands, and read for `position`, `rotation`, `scale` and `visible`. Writing a field, or reading any other field or state, is rejected, and a `bind` cannot read a field through a reference. | Decision 0151 allows the four transform reads. Writes stay rejected because the single-writer rules need the entity's declaration (decision 0064). | `E5074`, `E5005` | decisions [0064](../spec/decisions/0064-spawn-destroy-entity-ref.md), [0151](../spec/decisions/0151-entity-ref-reads.md); [spec/diagnostics.md](../spec/diagnostics.md): "field access through entity_ref" |
+
+### Tooling
+
+| Restriction | Why | Diagnostics | Records and source |
+|---|---|---|---|
+| `mtek build --release` packages one self-contained folder (minified runtime, loading screen, favicon, title) and, with `--itch`, an uncompressed zip for itch.io: `app.js` is not minified, the zip is stored rather than deflated, the favicon is found only at `assets/favicon.svg\|png\|ico`, and there is no upload, no other store format and no PWA manifest. | Spec/tooling.md section 2.1 (decision 0136): the smallest packaging that turns a release build into an uploadable HTML5 game without new dependencies. | `E7103`, `E7104` | decisions [0136](../spec/decisions/0136-game-packages-release.md); [spec/tooling.md](../spec/tooling.md): "### 2.1 Game packages" |
+| `mtek fmt` has no range formatting, no standard-input mode and no configuration, and comments inside a multi-line block comment are not re-indented. | Decision 0070 item 11: "no options" is the design; the layout is one canonical form. | none | decisions [0070](../spec/decisions/0070-canonical-formatter.md); [spec/decisions/0070-canonical-formatter.md](../spec/decisions/0070-canonical-formatter.md): "Range formatting, a stdin mode and configuration are not provided" |
 
 ### Physics
 
@@ -124,7 +136,7 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 |---|---|---|---|
 | Only binary glTF 2.0 (`.glb`) with embedded buffers and images: no `.gltf`, no external or `data:` URIs; PNG and JPEG images only (a JPEG with an EXIF orientation other than 1 is rejected). | Decision 0015: assets are compile-time dependencies validated by the compiler, and the v0.1 profile is strict so that every deviation is an error naming the feature. | `E7001`, `E7003`, `E7017` | decisions [0015](../spec/decisions/0015-asset-strictness.md), [0082](../spec/decisions/0082-asset-diagnostics-follow-ups.md); [spec/decisions/0015-asset-strictness.md](../spec/decisions/0015-asset-strictness.md): "Assets are compile-time dependencies validated by the compiler." |
 | No glTF extension, required or used. | Decision 0015. Consequence recorded there: many exported files need a re-export without extensions; the limitation is documented rather than hidden. | `E7004`, `E7005` | decisions [0015](../spec/decisions/0015-asset-strictness.md); [spec/decisions/0015-asset-strictness.md](../spec/decisions/0015-asset-strictness.md): "glTF extensions (required or used)" |
-| No skinning, morph targets or animations; no sparse accessors. | Decision 0015. | `E7008`, `E7019`, `E7011` | decisions [0015](../spec/decisions/0015-asset-strictness.md); [spec/decisions/0015-asset-strictness.md](../spec/decisions/0015-asset-strictness.md): "skinning, morphs, animations, sparse accessors" |
+| No skinning, morph targets, cubic-spline interpolation or sparse accessors. A node clip of translation, rotation and scale with LINEAR or STEP interpolation plays (decision 0156). | Decision 0015 rejected every animation. Decision 0156 plays TRS clips and keeps the rest of that rejection. | `E7008`, `E7019`, `E7011` | decisions [0015](../spec/decisions/0015-asset-strictness.md), [0156](../spec/decisions/0156-animated-glb-clips.md); [spec/decisions/0015-asset-strictness.md](../spec/decisions/0015-asset-strictness.md): "skinning, morphs, animations, sparse accessors" |
 | Only positions, normals and the first UV set (triangles only); no vertex colours, tangents or second UV set. | Decision 0015. | `E7006`, `E7007`, `E7009` | decisions [0015](../spec/decisions/0015-asset-strictness.md); [spec/decisions/0015-asset-strictness.md](../spec/decisions/0015-asset-strictness.md): "vertex colours, tangents, second UV sets" |
 | Opaque, single-sided materials with a base colour texture only: no alpha modes other than OPAQUE, no double-sided materials, no normal, occlusion, emissive or metallic-roughness textures, no emissive factor. | Decision 0015. | `E7015`, `E7016` | decisions [0015](../spec/decisions/0015-asset-strictness.md); [spec/decisions/0015-asset-strictness.md](../spec/decisions/0015-asset-strictness.md): "non-opaque or double-sided materials, or textures other than base colour" |
 | Asset files, textures and vertex counts are limited by the `[assets]` table of `mtek.toml`. | Compile-time limits checked before the data is used (spec/assets.md section 6). | `E7002`, `E7026` | [spec/assets.md](../spec/assets.md): "## 6. Limits (`mtek.toml [assets]`)" |
@@ -140,12 +152,7 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 | Restriction | Why | Diagnostics | Records and source |
 |---|---|---|---|
 | The target profile `webgpu-core-2026` is exactly the WebGPU default limits and requires no optional feature; a device below it cannot run a program. | Keeps the required capabilities of every v0.1 program empty (`features: []`, `limits: {}`); the consistency check compares this with the manifest the compiler writes. | `E8002` | [spec/runtime-abi.md](../spec/runtime-abi.md): "the v0.1 profile `webgpu-core-2026` is exactly the default limits" |
-
-### Tooling
-
-| Restriction | Why | Diagnostics | Records and source |
-|---|---|---|---|
-| `mtek fmt` has no range formatting, no standard-input mode and no configuration, and comments inside a multi-line block comment are not re-indented. | Decision 0070 item 11: "no options" is the design; the layout is one canonical form. | none | decisions [0070](../spec/decisions/0070-canonical-formatter.md); [spec/decisions/0070-canonical-formatter.md](../spec/decisions/0070-canonical-formatter.md): "Range formatting, a stdin mode and configuration are not provided" |
+| WebGPU is the only renderer: there is no WebGL2 fallback, and a browser without WebGPU (or without an adapter) shows the unsupported-browser screen instead of the game. Only Chromium has a full automated run; Firefox has one Windows run and Safari none. | Decision 0132: a second backend would need a second shader language and layout for every feature; spec/browser-support.md section 2 marks which browsers are expectations. | `E8004`, `E8005` | decisions [0132](../spec/decisions/0132-browser-support-webgpu-only.md); [spec/browser-support.md](../spec/browser-support.md): "## 1. The stance: WebGPU only, no WebGL2" |
 
 ## 7. The list `mtek context` gives to agents
 
@@ -155,11 +162,9 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 - `as`
 - `async`
 - `await`
-- `enum`
 - `extern`
 - `impl`
 - `loop`
-- `match`
 - `mod`
 - `move`
 - `mut`
@@ -172,7 +177,6 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 - `unsafe`
 - `use`
 - `where`
-- `while`
 - `yield`
 - `compute`
 - `vertex`
@@ -184,7 +188,5 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 - `component`
 - `bitwise operators (& | ^ ~ << >>)`
 - `` stage functions other than `fragment` (vertex, compute) ``
-- `switching the active scene at run time`
-- `transparency (alpha blending)`
 - `remote assets (URLs as asset paths)`
 - `instancing a whole node hierarchy of a glTF asset`

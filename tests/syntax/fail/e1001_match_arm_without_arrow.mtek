@@ -1,0 +1,7 @@
+// An arm's patterns are followed by `=>`.
+fn f(phase: GameState) {
+    match phase {
+        GameState.Menu { start(); }
+        _ => {}
+    }
+}

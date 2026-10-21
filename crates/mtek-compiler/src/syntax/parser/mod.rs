@@ -54,6 +54,7 @@ mod expr;
 #[cfg(test)]
 mod expr_tests;
 mod items;
+mod matching;
 mod members;
 mod recover;
 mod stmt;
@@ -295,6 +296,17 @@ impl<'a> Parser<'a> {
 
     fn span(&self) -> Span {
         self.tok().span
+    }
+
+    /// The source text of the token `n` places ahead; `""` past the end.
+    fn text_at(&self, n: usize) -> &'a str {
+        if n == 0 {
+            return self.text_of(self.span());
+        }
+        self.pos
+            .checked_add(n)
+            .and_then(|index| self.tokens.get(index))
+            .map_or("", |token| self.text_of(token.span))
     }
 
     /// Consume the current token. `Eof` is never consumed.

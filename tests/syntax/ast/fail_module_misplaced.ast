@@ -22,4 +22,4 @@
 ; MTEK-E4901 191..197 `vertex` Custom `vertex` stages are not supported in v0.1; they are planned for v0.2.
 ; MTEK-E1040 270..276 `entity` `entity` declarations cannot appear at the top level of a file.
 ; MTEK-E1040 295..297 `fn` `fn` declarations cannot appear in a function body or block.
-; MTEK-E1030 305..310 `break` `break` can only be used inside a `for` loop.
+; MTEK-E1030 305..310 `break` `break` can only be used inside a `for` or `while` loop.

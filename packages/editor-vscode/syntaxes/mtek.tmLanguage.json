@@ -51,6 +51,9 @@
       "include": "#declares-struct"
     },
     {
+      "include": "#declares-enum"
+    },
+    {
       "include": "#declares-material"
     },
     {
@@ -108,10 +111,22 @@
       "include": "#import-from"
     },
     {
+      "include": "#shared-state"
+    },
+    {
+      "include": "#timer"
+    },
+    {
       "include": "#value-frame"
     },
     {
       "include": "#function-asset"
+    },
+    {
+      "include": "#function-easing"
+    },
+    {
+      "include": "#function-hud"
     },
     {
       "include": "#function-color"
@@ -166,6 +181,9 @@
     },
     {
       "include": "#identifier"
+    },
+    {
+      "include": "#pattern-separator"
     },
     {
       "include": "#operator-2-keyword.operator.arrow.mtek"
@@ -281,7 +299,7 @@
       "patterns": [
         {
           "name": "constant.character.escape.mtek",
-          "match": "\\\\(?:[\"\\\\ntr0]|u\\{[0-9A-Fa-f]{1,6}\\})"
+          "match": "\\\\(?:[\"\\\\ntr0$]|u\\{[0-9A-Fa-f]{1,6}\\})"
         },
         {
           "name": "invalid.illegal.escape.mtek",
@@ -311,7 +329,7 @@
     },
     "reserved": {
       "name": "invalid.illegal.reserved-word.mtek",
-      "match": "(?<![A-Za-z0-9_])(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_])"
+      "match": "(?<![A-Za-z0-9_])(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_])"
     },
     "field-named-material": {
       "match": "(?<![A-Za-z0-9_.])(material)(?=\\s*:)",
@@ -333,7 +351,7 @@
       }
     },
     "declares-fn": {
-      "match": "(?<![A-Za-z0-9_.])(fn)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(fn)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -344,7 +362,7 @@
       }
     },
     "declares-struct": {
-      "match": "(?<![A-Za-z0-9_.])(struct)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(struct)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -354,8 +372,19 @@
         }
       }
     },
+    "declares-enum": {
+      "match": "(?<![A-Za-z0-9_.])(enum)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.other.declaration.mtek"
+        },
+        "2": {
+          "name": "entity.name.type.enum.mtek"
+        }
+      }
+    },
     "declares-material": {
-      "match": "(?<![A-Za-z0-9_.])(material)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(material)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -366,7 +395,7 @@
       }
     },
     "declares-scene": {
-      "match": "(?<![A-Za-z0-9_.])(scene)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(scene)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -377,7 +406,7 @@
       }
     },
     "declares-entity": {
-      "match": "(?<![A-Za-z0-9_.])(entity)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(entity)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -388,7 +417,7 @@
       }
     },
     "declares-prefab": {
-      "match": "(?<![A-Za-z0-9_.])(prefab)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(prefab)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -399,7 +428,7 @@
       }
     },
     "declares-const": {
-      "match": "(?<![A-Za-z0-9_.])(const)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(const)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -410,7 +439,7 @@
       }
     },
     "declares-let": {
-      "match": "(?<![A-Za-z0-9_.])(let)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(let)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -421,7 +450,7 @@
       }
     },
     "declares-var": {
-      "match": "(?<![A-Za-z0-9_.])(var)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(var)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -432,7 +461,7 @@
       }
     },
     "declares-state": {
-      "match": "(?<![A-Za-z0-9_.])(state)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(state)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -443,7 +472,7 @@
       }
     },
     "declares-param": {
-      "match": "(?<![A-Za-z0-9_.])(param)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|match|query|super|trait|where|while|yield|enum|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(?<![A-Za-z0-9_.])(param)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.other.declaration.mtek"
@@ -455,7 +484,7 @@
     },
     "keyword-control": {
       "name": "keyword.control.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:continue|return|break|else|for|if|in)(?![A-Za-z0-9_])"
+      "match": "(?<![A-Za-z0-9_.])(?:continue|return|break|match|while|else|for|if|in)(?![A-Za-z0-9_])"
     },
     "keyword-import": {
       "name": "keyword.control.import.mtek",
@@ -463,7 +492,7 @@
     },
     "keyword-declaration": {
       "name": "keyword.other.declaration.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:material|entity|prefab|struct|const|param|scene|state|bind|let|var|fn|on)(?![A-Za-z0-9_])"
+      "match": "(?<![A-Za-z0-9_.])(?:material|entity|prefab|struct|const|param|scene|state|bind|enum|let|var|fn|on)(?![A-Za-z0-9_])"
     },
     "keyword-modifier": {
       "name": "storage.modifier.mtek",
@@ -512,6 +541,22 @@
         }
       }
     },
+    "shared-state": {
+      "match": "(?<![A-Za-z0-9_.])((?:setting|shared|saved))(?=\\s+(?:(?:(?:setting|shared|saved))\\s+)?state\\b)",
+      "captures": {
+        "1": {
+          "name": "storage.modifier.mtek"
+        }
+      }
+    },
+    "timer": {
+      "match": "(?<![A-Za-z0-9_.])((?:after|every))(?=\\s*\\()",
+      "captures": {
+        "1": {
+          "name": "keyword.control.timer.mtek"
+        }
+      }
+    },
     "value-frame": {
       "match": "(?<![A-Za-z0-9_.])(frame)(\\.)((?:delta|index|time))(?![A-Za-z0-9_])",
       "captures": {
@@ -527,7 +572,35 @@
       }
     },
     "function-asset": {
-      "match": "(?<![A-Za-z0-9_.])(asset)(\\.)((?:linear_texture|texture|glb))\\s*(?=\\()",
+      "match": "(?<![A-Za-z0-9_.])(asset)(\\.)((?:linear_texture|texture|sound|font|glb))\\s*(?=\\()",
+      "captures": {
+        "1": {
+          "name": "support.class.namespace.mtek"
+        },
+        "2": {
+          "name": "punctuation.accessor.mtek"
+        },
+        "3": {
+          "name": "support.function.builtin.mtek"
+        }
+      }
+    },
+    "function-easing": {
+      "match": "(?<![A-Za-z0-9_.])(easing)(\\.)((?:in_out_cubic|in_out_quad|in_out_sine|out_elastic|out_bounce|out_cubic|in_cubic|out_back|out_quad|in_quad))\\s*(?=\\()",
+      "captures": {
+        "1": {
+          "name": "support.class.namespace.mtek"
+        },
+        "2": {
+          "name": "punctuation.accessor.mtek"
+        },
+        "3": {
+          "name": "support.function.builtin.mtek"
+        }
+      }
+    },
+    "function-hud": {
+      "match": "(?<![A-Za-z0-9_.])(hud)(\\.)((?:pixel_font|button|rect|text))\\s*(?=\\()",
       "captures": {
         "1": {
           "name": "support.class.namespace.mtek"
@@ -626,7 +699,7 @@
     },
     "namespace": {
       "name": "support.class.namespace.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:lighting|sampler|texture|asset|color|frame|mat4|quat)(?=\\s*\\.)"
+      "match": "(?<![A-Za-z0-9_.])(?:lighting|sampler|texture|easing|asset|color|frame|mat4|quat|hud)(?=\\s*\\.)"
     },
     "enum": {
       "name": "support.type.enum.mtek",
@@ -634,15 +707,15 @@
     },
     "builtin-function": {
       "name": "support.function.builtin.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:inverse_sqrt|is_key_down|smoothstep|normalize|transpose|distance|saturate|degrees|destroy|radians|reflect|length|random|sample|alive|atan2|clamp|cross|floor|fract|print|round|spawn|trunc|acos|asin|atan|ceil|exp2|log2|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
+      "match": "(?<![A-Za-z0-9_.])(?:pointer_position|is_pointer_down|destroy_tagged|nearest_tagged|particle_count|count_tagged|first_tagged|inverse_sqrt|key_released|random_range|clear_saved|is_key_down|key_pressed|play_music|random_int|set_camera|set_volume|smoothstep|stop_music|normalize|set_muted|transpose|distance|is_muted|saturate|degrees|destroy|has_tag|play_at|radians|reflect|shuffle|chance|choose|length|paused|random|resume|sample|tagged|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|load|log2|play|save|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
     },
     "builtin-type": {
       "name": "support.type.builtin.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:PointerEvent|SurfaceInput|entity_ref|glb_asset|material|sampler|texture|string|array|color|bool|mat4|mesh|quat|vec2|vec3|vec4|f32|i32|u32)(?![A-Za-z0-9_])"
+      "match": "(?<![A-Za-z0-9_.])(?:PointerEvent|SurfaceInput|entity_ref|glb_asset|material|sampler|texture|string|array|color|sound|bool|font|mat4|mesh|quat|vec2|vec3|vec4|f32|i32|u32)(?![A-Za-z0-9_])"
     },
     "schema": {
       "name": "support.class.schema.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:DirectionalLight|SphereCollider|Orthographic|BoxCollider|Perspective|PointLight|Kinematic|Dynamic|Camera|Entity|Sphere|Static|Plane|Scene|Unlit|Box|Pbr)(?![A-Za-z0-9_])"
+      "match": "(?<![A-Za-z0-9_.])(?:DirectionalLight|SphereCollider|Orthographic|BoxCollider|Perspective|PointLight|Kinematic|Dynamic|Emitter|Camera|Entity|Sphere|Sprite|Static|Plane|Scene|Unlit|Box|Pbr)(?![A-Za-z0-9_])"
     },
     "call": {
       "match": "(?<![A-Za-z0-9_.])([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",
@@ -694,9 +767,13 @@
       "name": "variable.other.readwrite.mtek",
       "match": "(?<![A-Za-z0-9_])[A-Za-z_][A-Za-z0-9_]*"
     },
+    "pattern-separator": {
+      "name": "punctuation.separator.pattern.mtek",
+      "match": "\\|(?!\\|)(?=[^;{}|]*(?:\\|[^;{}|]*)*=>)"
+    },
     "operator-2-keyword.operator.arrow.mtek": {
       "name": "keyword.operator.arrow.mtek",
-      "match": "\\->"
+      "match": "=>|\\->"
     },
     "operator-2-keyword.operator.range.mtek": {
       "name": "keyword.operator.range.mtek",

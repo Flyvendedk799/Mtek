@@ -1,4 +1,4 @@
-// Through an entity_ref nothing is read: a named entity's fields are read by its name.
+// position, rotation, scale and visible can be read (decision 0151). Other fields cannot.
 prefab Crate {
     param origin: vec3 = vec3(0.0, 2.0, 0.0);
     param tint: color = #6b5cff;
@@ -13,6 +13,6 @@ scene Demo {
     state last: entity_ref = Floor;
     on key_down(Key.Space) {
         last = spawn(Crate {});
-        let p = last.position;
+        let p = last.hits;
     }
 }

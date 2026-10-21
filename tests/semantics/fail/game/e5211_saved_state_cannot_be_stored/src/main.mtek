@@ -1,0 +1,15 @@
+// A saved or setting state holds plain data: an entity reference exists only while the program runs.
+// covers: [S: saved-state]
+struct Target {
+    who: entity_ref;
+    score: i32;
+}
+
+scene Demo {
+    saved state last: entity_ref = Player;
+    setting state target: Target = Target { who: Player; score: 0; };
+    camera Main {}
+    entity Player {
+        mesh: Box {};
+    }
+}

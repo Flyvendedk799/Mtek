@@ -103,7 +103,7 @@ fn a_missing_required_field_is_e5003() {
 }
 
 #[test]
-fn only_material_colour_parameters_must_be_opaque() {
+fn colours_take_any_alpha() {
     // A translucent scene colour is accepted: the renderer uses only the RGB channels of
     // `clear_color` and `ambient_color`.
     let c = checked(
@@ -113,7 +113,8 @@ fn only_material_colour_parameters_must_be_opaque() {
     let c = checked(
         "scene Demo { camera Main {} entity A { mesh: Box {}; material: Unlit { color: #ffffff00 }; } }\n",
     );
-    assert_eq!(c.codes(), ["E5100"]);
+    // A translucent material colour is accepted since decision 0138 (`E5100` is retired).
+    assert!(c.codes().is_empty(), "{:#?}", c.diagnostics);
 }
 
 #[test]

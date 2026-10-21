@@ -1,0 +1,13 @@
+scene Main {
+    state points: i32 = 0;
+
+    camera Cam {
+        position: vec3(0.0, 0.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    update(dt: f32) {
+        // `.N` applies to f32 and vectors only.
+        print("points ${points:.2}");
+    }
+}

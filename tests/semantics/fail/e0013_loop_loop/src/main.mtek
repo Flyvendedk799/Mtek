@@ -1,0 +1,13 @@
+// `loop` is reserved: one error that says which loops exist, and no second error for an unknown name.
+fn count() -> i32 {
+    var i = 0;
+    loop {
+        i += 1;
+        if i >= 3 { break; }
+    }
+    return i;
+}
+
+scene Demo {
+    camera Main {}
+}

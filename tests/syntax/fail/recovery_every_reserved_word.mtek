@@ -4,11 +4,9 @@ struct Reserved {
     as: f32;
     async: f32;
     await: f32;
-    enum: f32;
     extern: f32;
     impl: f32;
     loop: f32;
-    match: f32;
     mod: f32;
     move: f32;
     mut: f32;
@@ -21,7 +19,6 @@ struct Reserved {
     unsafe: f32;
     use: f32;
     where: f32;
-    while: f32;
     yield: f32;
     compute: f32;
     vertex: f32;

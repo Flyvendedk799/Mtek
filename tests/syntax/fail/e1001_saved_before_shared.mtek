@@ -1,0 +1,3 @@
+scene Menu {
+    saved shared state best: i32 = 0;
+}

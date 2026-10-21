@@ -1,0 +1,11 @@
+// The time of a timer is f32 seconds.
+// covers: [S: timer]
+scene Demo {
+    state hits: i32 = 0;
+    state delay: i32 = 2;
+    camera Main {}
+    on key_down(Key.Space) {
+        after(delay) { hits += 1; }
+        every(true) { hits += 1; }
+    }
+}

@@ -1,0 +1,9 @@
+// A binding is pure: a random helper draws from the program's generator, so it cannot be bound.
+scene Demo {
+    camera Main {}
+    entity Cube {
+        mesh: Box {};
+        position: bind(vec3(random_range(0.0, 1.0), 0.0, 0.0));
+        visible: bind(chance(0.5));
+    }
+}

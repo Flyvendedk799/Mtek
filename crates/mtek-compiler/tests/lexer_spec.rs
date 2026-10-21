@@ -53,14 +53,14 @@ fn set_of(words: impl IntoIterator<Item = impl AsRef<str>>) -> BTreeSet<String> 
 fn keywords_match_language_md_2_2() {
     let spec = words_of_fence_after(LANGUAGE, "2.2 **Keywords");
     assert_eq!(set_of(KEYWORDS.iter().map(|(text, _)| *text)), spec);
-    assert_eq!(spec.len(), 26);
+    assert_eq!(spec.len(), 29);
 }
 
 #[test]
 fn reserved_words_match_language_md_2_3() {
     let spec = words_of_fence_after(LANGUAGE, "2.3 **Reserved for future use");
     assert_eq!(set_of(RESERVED_WORDS.iter().copied()), spec);
-    assert_eq!(spec.len(), 30);
+    assert_eq!(spec.len(), 27);
 }
 
 #[test]

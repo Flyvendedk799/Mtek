@@ -311,6 +311,7 @@ fn access_referent(
                 _ => None,
             }
         }
+        FieldKind::RefField { .. } => None,
         FieldKind::LightField { entity, field } => {
             let schema = types.entity_light(*entity)?;
             let field = registry().schema_field(schema, field)?;
@@ -339,6 +340,12 @@ fn access_referent(
         }
         // `frame.time` carries the registry's own resolution on its name already.
         FieldKind::NamespaceValue(_) => None,
+        FieldKind::EnumVariant { variant, index } => {
+            let ty = types.ty(access.id).map(|ty| types.display(ty))?;
+            Some(Referent::Typed(format!(
+                "{ty}.{variant} (variant {index} of enum {ty})"
+            )))
+        }
     }
 }
 

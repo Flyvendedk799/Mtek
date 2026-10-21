@@ -73,7 +73,8 @@ export class Bindings {
       }
       case "camera":
         return (value) => {
-          ctx.setCamera(target.field, value);
+          if (typeof target.camera === "string") this.world.setCameraOn(target.camera, target.field, value);
+          else ctx.setCamera(target.field, value);
         };
       case "light": {
         const record = entity(target.entity);
