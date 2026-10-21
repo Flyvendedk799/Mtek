@@ -415,6 +415,31 @@ fn materials() -> Vec<SchemaDef> {
                 )),
             ],
         ),
+        // Decision 0170: sprites, always drawn in the translucent pass (decision 0138).
+        schema(
+            "Sprite",
+            SchemaCategory::Material,
+            Milestone::M1,
+            "One frame of a sprite sheet, tinted; always translucent.",
+            vec![
+                field("sheet", TypeRef::Texture, C, "The sprite sheet: `columns` x `rows` equal cells.")
+                    .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
+                field("sheet_sampler", TypeRef::Sampler, C, "Sampler of the sheet (default nearest, clamped: crisp pixels).")
+                    .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::NearestClamp)),
+                field("tint", TypeRef::Color, writable_bindable(), "Multiplies the texel, alpha included.")
+                    .default(ConstValue::srgb(0xff, 0xff, 0xff)),
+                field("cell", TypeRef::F32, writable_bindable(), "The cell (animation frame) shown, from 0, left to right then top to bottom; floored and wrapped, so `bind(t * fps)` animates.")
+                    .default(ConstValue::F32(0.0)),
+                field("columns", TypeRef::F32, writable_bindable(), "Cells per row of the sheet.")
+                    .default(ConstValue::F32(1.0))
+                    .range(ValueRange::closed(1, 64))
+                    .range_code(Code::E5701),
+                field("rows", TypeRef::F32, writable_bindable(), "Rows of cells in the sheet.")
+                    .default(ConstValue::F32(1.0))
+                    .range(ValueRange::closed(1, 64))
+                    .range_code(Code::E5701),
+            ],
+        ),
     ]
 }
 

@@ -185,6 +185,7 @@
       "schema:Scene",
       "schema:Sphere",
       "schema:SphereCollider",
+      "schema:Sprite",
       "schema:Static",
       "schema:Unlit",
       "type:PointerEvent",

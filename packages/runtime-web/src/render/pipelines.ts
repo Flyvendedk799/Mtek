@@ -183,6 +183,14 @@ export function canBlend(material: { readonly params: readonly { readonly name: 
   return material.params.some((param) => param.type === "color");
 }
 
+/** The built-in `Sprite` material (decision 0170): its draws are always translucent, whatever the tint's alpha. */
+export const SPRITE_MATERIAL = "std/materials.mtek::Sprite";
+
+/** Whether every draw of `material` is translucent (the built-in `Sprite`, decision 0170). */
+export function alwaysBlends(material: { readonly id: string }): boolean {
+  return material.id === SPRITE_MATERIAL || material.id === `material:${SPRITE_MATERIAL}`;
+}
+
 /** Straight-alpha "over" blending of the translucent pass (decision 0138). */
 export const ALPHA_BLEND: GPUBlendState = {
   color: { srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha", operation: "add" },

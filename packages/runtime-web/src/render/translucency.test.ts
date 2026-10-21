@@ -42,3 +42,11 @@ describe("translucent draws (decision 0138)", () => {
     expect(orderTranslucent(draws, viewProj, new Float32Array(6))).toBe(draws);
   });
 });
+
+describe("sprites (decision 0170)", () => {
+  it("the built-in Sprite material always blends", async () => {
+    const { alwaysBlends, SPRITE_MATERIAL } = await import("./pipelines.js");
+    expect(alwaysBlends({ id: SPRITE_MATERIAL })).toBe(true);
+    expect(alwaysBlends({ id: "std/materials.mtek::Unlit" })).toBe(false);
+  });
+});

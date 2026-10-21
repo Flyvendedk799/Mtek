@@ -48,7 +48,7 @@ import { extractFrustumPlanes, sphereIntersectsFrustum, worldBoundingSphere, typ
 import { batchDraws, instancingCandidates, type Batch } from "./instancing.js";
 import type { MaterialStore } from "./materials.js";
 import { vertexBufferOf, type GpuMesh, type MeshStore } from "./meshes.js";
-import { INSTANCE_FLOATS, INSTANCE_STRIDE, type BindingPlan } from "./pipelines.js";
+import { INSTANCE_FLOATS, INSTANCE_STRIDE, type BindingPlan, alwaysBlends } from "./pipelines.js";
 
 /** What the renderer needs of the drawing surface (`host/surface.ts`). */
 export interface RenderSurface {
@@ -502,7 +502,8 @@ export class Renderer {
       const pipeline = pipelines.get(entity.instance.material.id);
       if (pipeline === undefined) throw new Error(`internal error: no pipeline for material '${entity.instance.material.id}'`);
       const gpuMesh = meshes.get(entity.mesh.id);
-      const blended = materials.isTranslucent(entity.instance.index) ? this.blendedPipeline(entity.instance.material) : undefined;
+      const translucent = materials.isTranslucent(entity.instance.index) || alwaysBlends(entity.instance.material);
+      const blended = translucent ? this.blendedPipeline(entity.instance.material) : undefined;
       items.push({
         pipelineKey: blended === undefined ? pipeline.key : TRANSLUCENT_KEY_PREFIX + blended.key,
         instance: materials.blockOf(entity.instance.index),

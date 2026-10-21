@@ -221,6 +221,27 @@ fn schema_rows() -> Vec<Row> {
             "C",
             None,
         ),
+        // Decision 0170: sprites.
+        (
+            "Sprite",
+            "sheet",
+            "texture",
+            Some("texture.white()"),
+            "C",
+            None,
+        ),
+        (
+            "Sprite",
+            "sheet_sampler",
+            "sampler",
+            Some("sampler.nearest_clamp()"),
+            "C",
+            None,
+        ),
+        ("Sprite", "tint", "color", Some(WHITE), "WB", None),
+        ("Sprite", "cell", "f32", Some("0.0"), "WB", None),
+        ("Sprite", "columns", "f32", Some("1.0"), "WB", Some("1…64")),
+        ("Sprite", "rows", "f32", Some("1.0"), "WB", Some("1…64")),
         // 3.6 Lights
         (
             "DirectionalLight",
@@ -364,6 +385,7 @@ fn schemas_have_exactly_the_specified_fields() {
         "Plane",
         "Unlit",
         "Pbr",
+        "Sprite",
         "DirectionalLight",
         "PointLight",
         "Static",
@@ -407,6 +429,7 @@ fn schema_categories_match_the_specification() {
         ("Plane", SchemaCategory::Mesh),
         ("Unlit", SchemaCategory::Material),
         ("Pbr", SchemaCategory::Material),
+        ("Sprite", SchemaCategory::Material),
         ("DirectionalLight", SchemaCategory::Light),
         ("PointLight", SchemaCategory::Light),
         ("Static", SchemaCategory::Body),
@@ -517,6 +540,8 @@ fn field_rules_and_range_codes_follow_the_scene_specification() {
             ("Orthographic", "height", "E5011"),
             ("Orthographic", "near", "E5011"),
             ("Orthographic", "far", "E5011"),
+            ("Sprite", "columns", "E5701"),
+            ("Sprite", "rows", "E5701"),
         ]
     );
 }

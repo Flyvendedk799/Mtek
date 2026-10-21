@@ -1,0 +1,16 @@
+[
+  {
+    "code": "MTEK-E5701",
+    "file": "src/main.mtek",
+    "startByte": 212,
+    "endByte": 215,
+    "message": "Parameter 'columns' of material Sprite must be between 1 and 64, but the value is 0.0."
+  },
+  {
+    "code": "MTEK-E5701",
+    "file": "src/main.mtek",
+    "startByte": 223,
+    "endByte": 228,
+    "message": "Parameter 'rows' of material Sprite must be between 1 and 64, but the value is 100.0."
+  }
+]

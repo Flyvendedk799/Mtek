@@ -11049,6 +11049,10 @@ var BindingPlan = class {
 function canBlend(material) {
   return material.params.some((param) => param.type === "color");
 }
+var SPRITE_MATERIAL = "std/materials.mtek::Sprite";
+function alwaysBlends(material) {
+  return material.id === SPRITE_MATERIAL || material.id === `material:${SPRITE_MATERIAL}`;
+}
 var ALPHA_BLEND = {
   color: { srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha", operation: "add" },
   alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha", operation: "add" }
@@ -11457,7 +11461,7 @@ var Renderer = class {
       if (visible !== !0 || entity.mesh === null || entity.instance === null || objectSlot === void 0 || this.failedMaterials.has(entity.instance.material.id)) return;
       let pipeline = pipelines.get(entity.instance.material.id);
       if (pipeline === void 0) throw new Error(`internal error: no pipeline for material '${entity.instance.material.id}'`);
-      let gpuMesh = meshes.get(entity.mesh.id), blended = materials.isTranslucent(entity.instance.index) ? this.blendedPipeline(entity.instance.material) : void 0;
+      let gpuMesh = meshes.get(entity.mesh.id), blended = materials.isTranslucent(entity.instance.index) || alwaysBlends(entity.instance.material) ? this.blendedPipeline(entity.instance.material) : void 0;
       items.push({
         pipelineKey: blended === void 0 ? pipeline.key : TRANSLUCENT_KEY_PREFIX + blended.key,
         instance: materials.blockOf(entity.instance.index),

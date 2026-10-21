@@ -1,0 +1,17 @@
+// A sprite (decision 0170): the built-in Sprite material on a Plane turned to face the camera,
+// its cell animated by a binding, seen by a 2D orthographic camera.
+scene Sprites {
+    state t: f32 = 0.0;
+    camera Cam2D {
+        position: vec3(0.0, 0.0, 10.0);
+        projection: Orthographic { height: 10.0 };
+    }
+    entity Hero {
+        mesh: Plane { size: vec2(1.0, 1.0) };
+        rotation: quat.euler(1.5707964, 0.0, 0.0);
+        material: Sprite { columns: 4.0; rows: 2.0; cell: bind(t * 8.0); tint: #ffffffcc };
+    }
+    update(dt: f32) {
+        t = t + dt;
+    }
+}

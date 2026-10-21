@@ -562,6 +562,19 @@ The documented PBR subset (metallic-roughness, no image-based lighting).
 | `metallic` | `f32` | `0.0` | no | writable, bindable |  | Metalness; clamped to 0..1 by the lighting model. |
 | `roughness` | `f32` | `0.5` | no | writable, bindable |  | Perceptual roughness; clamped to 0.045..1 by the lighting model. |
 
+##### `Sprite`
+
+One frame of a sprite sheet, tinted; always translucent.
+
+| Field | Type | Default | Required | Update | Range | Description |
+|---|---|---|---|---|---|---|
+| `cell` | `f32` | `0.0` | no | writable, bindable |  | The cell (animation frame) shown, from 0, left to right then top to bottom; floored and wrapped, so `bind(t * fps)` animates. |
+| `columns` | `f32` | `1.0` | no | writable, bindable | 1…64 | Cells per row of the sheet. |
+| `rows` | `f32` | `1.0` | no | writable, bindable | 1…64 | Rows of cells in the sheet. |
+| `sheet` | `texture` | `texture.white()` | no | construction only |  | The sprite sheet: `columns` x `rows` equal cells. |
+| `sheet_sampler` | `sampler` | `sampler.nearest_clamp()` | no | construction only |  | Sampler of the sheet (default nearest, clamped: crisp pixels). |
+| `tint` | `color` | `#ffffff` | no | writable, bindable |  | Multiplies the texel, alpha included. |
+
 ##### `Unlit`
 
 Flat colour, no lighting.
@@ -840,7 +853,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (205)
+## Part C. Features of this build (206)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -880,9 +893,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `scene-object:camera`
 
-### Schemas (17)
+### Schemas (18)
 
-`schema:Box` `schema:BoxCollider` `schema:Camera` `schema:DirectionalLight` `schema:Dynamic` `schema:Entity` `schema:Kinematic` `schema:Orthographic` `schema:Pbr` `schema:Perspective` `schema:Plane` `schema:PointLight` `schema:Scene` `schema:Sphere` `schema:SphereCollider` `schema:Static` `schema:Unlit`
+`schema:Box` `schema:BoxCollider` `schema:Camera` `schema:DirectionalLight` `schema:Dynamic` `schema:Entity` `schema:Kinematic` `schema:Orthographic` `schema:Pbr` `schema:Perspective` `schema:Plane` `schema:PointLight` `schema:Scene` `schema:Sphere` `schema:SphereCollider` `schema:Sprite` `schema:Static` `schema:Unlit`
 
 ### Types (22)
 
@@ -894,7 +907,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (233 codes)
+## Part D. Diagnostics (234 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -905,7 +918,7 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `2xxx` | names, scopes, modules | 14 |
 | `3xxx` | types, values, constant evaluation | 35 |
 | `4xxx` | functions, effects, execution domains, material stages | 15 |
-| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 55 |
+| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 56 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
 | `7xxx` | assets | 36 |
 | `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 32 |

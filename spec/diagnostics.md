@@ -276,6 +276,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w5403"></a>W5403 | saving failed | run time: the browser's storage refused the write (full or disabled), or the page has no usable `localStorage` and the values last only until it closes (decision 0145) |
 | <a id="mtek-e5501"></a>E5501 | audio argument out of range | a constant volume of `play`, `play_at`, `play_music` or `set_volume` outside `0.0..=4.0`, or a constant pitch outside `0.0625..=16.0` (`spec/audio.md` §3) |
 | <a id="mtek-e5601"></a>E5601 | HUD size out of range | a constant `size` argument of `hud.text` or `hud.button` outside 1.0 to 512.0 CSS pixels, or a constant `hud.rect` size component outside 0.0 to 8192.0 (decision 0134) |
+| <a id="mtek-e5701"></a>E5701 | sprite sheet layout out of range | a constant `columns` or `rows` of a `Sprite` is outside 1..64 (decision 0170) |
 | <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** retired by decision 0141: `go_to(Scene)` switches the active scene, so no program produces it; the code is kept so that the number is not reused |
 | <a id="mtek-e5902"></a>E5902 | transparency not supported | **Reserved:** retired by decision 0138: materials are translucent when a colour param has an alpha below 1, so no program produces it; the code is kept so that the number is not reused |
 

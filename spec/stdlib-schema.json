@@ -735,6 +735,86 @@
       ]
     },
     {
+      "name": "Sprite",
+      "category": "material",
+      "since": "M1",
+      "doc": "One frame of a sprite sheet, tinted; always translucent.",
+      "fields": [
+        {
+          "name": "cell",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "The cell (animation frame) shown, from 0, left to right then top to bottom; floored and wrapped, so `bind(t * fps)` animates."
+        },
+        {
+          "name": "columns",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "1…64",
+          "since": "M1",
+          "doc": "Cells per row of the sheet."
+        },
+        {
+          "name": "rows",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "1…64",
+          "since": "M1",
+          "doc": "Rows of cells in the sheet."
+        },
+        {
+          "name": "sheet",
+          "type": "texture",
+          "default": "texture.white()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "The sprite sheet: `columns` x `rows` equal cells."
+        },
+        {
+          "name": "sheet_sampler",
+          "type": "sampler",
+          "default": "sampler.nearest_clamp()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Sampler of the sheet (default nearest, clamped: crisp pixels)."
+        },
+        {
+          "name": "tint",
+          "type": "color",
+          "default": "#ffffff",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Multiplies the texel, alpha included."
+        }
+      ]
+    },
+    {
       "name": "Static",
       "category": "body",
       "since": "M1",

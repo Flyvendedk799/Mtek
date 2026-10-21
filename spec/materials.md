@@ -188,6 +188,22 @@ export material Pbr {
 
 The param named `color` in `Unlit` relies on the rule in `spec/language.md` §4.2: a material param may share a prelude type's name; inside `Unlit`, `color` in expression position is the param, `color` in type position is the type, and `color.linear(…)` would be `E2005` (the prelude does not use it). (M1 provided `Unlit` through a minimal compiler-built shader IR; since M2 it is compiled from this source, and the temporary path is gone, decision 0044.) `Pbr` is compiled from this source too since task M4-03 (decision 0057).
 
+### 9.1 Sprites and the 2D camera (decision 0170)
+
+`Sprite` is a built-in material in `std/materials.mtek`, written in Mtek like `Unlit`. It shows one cell of a sprite sheet: a texture of `columns` × `rows` equal cells, numbered from 0 left to right, then top to bottom. Its params are:
+
+- `sheet` (`texture`, default `texture.white()`);
+- `sheet_sampler` (default `sampler.nearest_clamp()`, for crisp pixels);
+- `tint` (`color`, default white; multiplies the texel, alpha included);
+- `cell` (`f32`, default `0.0`): floored and wrapped modulo `columns · rows`, so `cell: bind(t * 8.0)` plays the sheet at 8 cells per second and loops;
+- `columns` and `rows` (`f32`, default `1.0`): a constant outside `1..64` is `E5701`.
+
+A `Sprite` draw is **always translucent** (§3.4), so transparent texels show what is behind them.
+
+A sprite is a `Plane` turned to face `+Z`: `mesh: Plane { size: vec2(w, h) }; rotation: quat.euler(1.5707964, 0.0, 0.0);`. With that rotation the top of the sheet is at `+Y`.
+
+The 2D camera preset is a camera on `+Z` looking down `-Z` with `projection: Orthographic { height: H }`: one world unit is `canvas height / H` pixels, `x` goes right and `y` goes up. Sprites at different `z` are ordered back to front by the translucent pass.
+
 ## 10. Not in v0.1
 
 Vertex and compute stages; blend modes other than alpha "over" (additive, multiply) and per-triangle sorting of translucent draws; shadows; post-processing; multiple render targets; material inheritance; changing material identity at run time; texture params written at run time; mip-map generation; derivatives (`dpdx`); storage buffers; texture arrays and cube maps.

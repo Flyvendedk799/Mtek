@@ -260,3 +260,22 @@ These were not re-run on the bare base commit; my evidence is only that the code
   2. "SCORE 0" is in Russo One. DevTools > Network shows the `.ttf` loaded once, and `document.fonts` has `mtek-font-…`.
   3. "PRESS SPACE" is crisp pixel text exactly 16 px tall, the same in Chrome, Firefox and Safari. Zoom to 200 %: there are no blurry edges.
   4. Replace the font file with a renamed PNG that keeps a valid sfnt header: the console shows W8204 once and the text falls back to the system font.
+
+## Phase 6.4 sprites and the 2D camera (decision 0170)
+
+- **Done:**
+  - the built-in `Sprite` material (sheet, `cell`, `columns`×`rows`, tint);
+  - `cell: bind(t * fps)` for frame animation;
+  - sprites are always translucent;
+  - `E5701` for a constant sheet layout outside 1..64;
+  - the 2D camera is documented as `Orthographic` looking down -Z, and a sprite as a `Plane` rotated by `quat.euler(1.5707964, 0, 0)`.
+- **Partial:** there is no dedicated `Quad` mesh and no camera preset keyword (decision 0170, Consequences).
+- **Cheap tests:**
+  - `cargo test -p mtek-compiler --test fixtures --test stdlib_registry`;
+  - `cd packages/runtime-web && npx vitest run src/render/translucency.test.ts`.
+- **GPU and browser checks (for Abe, not run):**
+  1. Use a 4×2 sheet PNG with transparent margins.
+  2. The sprite in `sprite_sheet_animation`, with the PNG set as `sheet: asset.texture(..)`, cycles through 8 cells at 8 fps and loops.
+  3. Transparent texels show the background; there are no black boxes.
+  4. Pixels stay crisp (nearest sampling), and the top of the sheet is up.
+  5. Two overlapping sprites at z = 0 and z = 0.1 draw the nearer one on top.

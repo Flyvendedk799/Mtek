@@ -210,6 +210,7 @@ catalogue! {
     W5403 Warning "saving failed",
     E5501 Error "audio argument out of range",
     E5601 Error "HUD size out of range",
+    E5701 Error "sprite sheet layout out of range",
     E5901 Error "scene switching not supported",
     E5902 Error "transparency not supported",
     // 5.6 GPU and target (`6xxx`)
