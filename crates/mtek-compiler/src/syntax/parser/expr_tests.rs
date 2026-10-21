@@ -612,7 +612,7 @@ fn reserved_words_used_as_names_are_e0013() {
     assert_eq!(run.spans(src), ["loop"]);
     assert_eq!(
         one_line(&dump_expr(&run.parsed.expr)),
-        "(binary + (name while) (name x))"
+        "(binary + (name loop) (name x))"
     );
     let run = self::run("a.type");
     assert_eq!(run.codes(), [Code::E0013]);

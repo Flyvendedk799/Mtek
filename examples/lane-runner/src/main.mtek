@@ -10,8 +10,11 @@
 // `score` and `best` are `shared state`: they are copied into the next scene by name.
 
 const LANES: array<f32, 3> = [-2.0, 0.0, 2.0];
+
 const PARKED: f32 = 12.0;
+
 const TOP: f32 = 9.0;
+
 const PLAYER_Y: f32 = 0.0;
 
 // A pseudo-random lane in 0..2.
@@ -59,7 +62,9 @@ scene Title {
         spin += 0.8 * dt;
         if !started {
             started = true;
-            every(0.5) { prompt = !prompt; }
+            every(0.5) {
+                prompt = !prompt;
+            }
         }
     }
 
@@ -123,7 +128,9 @@ scene Run {
         if !started {
             started = true;
             // A point per second survived.
-            every(1.0) { score += 1; }
+            every(1.0) {
+                score += 1;
+            }
             // A new rock every 0.8 s, in a lane that has none falling: try the lanes in turn.
             every(0.8) {
                 var pick = random_lane();
@@ -137,7 +144,9 @@ scene Run {
                 }
             }
             // After 20 s the rocks fall faster.
-            after(20.0) { fall_speed = 8.0; }
+            after(20.0) {
+                fall_speed = 8.0;
+            }
         }
         for i in 0..3 {
             if rocks[i] < PARKED {
@@ -210,7 +219,9 @@ scene GameOver {
     update(dt: f32) {
         if !started {
             started = true;
-            after(3.0) { go_to(Title); }
+            after(3.0) {
+                go_to(Title);
+            }
         }
     }
 

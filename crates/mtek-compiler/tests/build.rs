@@ -1480,7 +1480,11 @@ fn every_project_builds_as_a_preview_with_a_valid_manifest_and_checks_that_resol
             let span = &manifest.spans[rest.trim_end_matches(");").parse::<usize>().unwrap()];
             let file = result.sources.get(FileId(span.file)).unwrap();
             let text = file.slice(span.start, span.end).unwrap();
-            assert!(text.starts_with("for "), "{label}: {text}");
+            // `for` loops and, since decision 0144, `while` loops count against the budget.
+            assert!(
+                text.starts_with("for ") || text.starts_with("while "),
+                "{label}: {text}"
+            );
             checks += 1;
         }
     }
