@@ -1,0 +1,91 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 0b051572..0c901262 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -3,6 +3,13 @@ name: CI
+ on:
+   push:
+   pull_request:
++  # Manual runs only: the frame-evidence job below needs self-hosted GPU runners (decision 0137).
++  workflow_dispatch:
++    inputs:
++      frame_evidence:
++        description: "Record frame-time evidence on the self-hosted GPU runners (NVIDIA, Intel, Apple)"
++        type: boolean
++        default: false
+ 
+ permissions:
+   contents: read
+@@ -81,6 +88,72 @@ jobs:
+       - name: M7 baseline
+         run: npm run check:baseline
+ 
++  # Small-game budgets (decision 0137): every example is packaged with `mtek build --release --itch` and
++  # its folder and zip sizes are checked against budgets/small-games.json. No GPU is needed.
++  game-budgets:
++    name: game-budgets (ubuntu-latest)
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v7
++      - uses: actions/setup-node@v7
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - name: Install pinned Rust toolchain
++        run: rustup toolchain install --profile minimal
++      # The CLI embeds the prebuilt runtime (decision 0131), including runtime.min.js; no npm build needed.
++      - name: Build the CLI
++        run: cargo build -p mtek-cli --locked
++      - name: Game package unit tests
++        run: cargo test -p mtek-cli --locked --bin mtek game_package
++      - name: Bundle size budgets
++        run: node scripts/game-budgets.mjs size --json game-sizes.json
++      - name: Upload the size report
++        if: always()
++        uses: actions/upload-artifact@v7
++        with:
++          name: game-sizes
++          path: game-sizes.json
++          if-no-files-found: warn
++
++  # Frame-time evidence on real GPUs (decision 0137). It runs only when started by hand with
++  # frame_evidence=true, on self-hosted runners labelled `mtek-gpu` plus the vendor. The runners are Abe's
++  # machines; none is registered yet, so this job has never produced evidence. A software adapter is
++  # refused by `game-budgets.mjs frames`; it can never pass.
++  frame-evidence:
++    name: frame-evidence (${{ matrix.gpu }})
++    if: github.event_name == 'workflow_dispatch' && inputs.frame_evidence
++    runs-on: [self-hosted, mtek-gpu, "${{ matrix.gpu }}"]
++    strategy:
++      fail-fast: false
++      matrix:
++        gpu: [nvidia, intel, apple]
++    steps:
++      - uses: actions/checkout@v7
++      - uses: actions/setup-node@v7
++        with:
++          node-version-file: .nvmrc
++          cache: npm
++      - name: Install pinned Rust toolchain
++        run: rustup toolchain install --profile minimal
++      - name: Install dependencies
++        run: npm ci
++      - name: Install Playwright Chromium
++        run: npx playwright install chromium
++      - name: Build the CLI
++        run: cargo build -p mtek-cli --locked
++      - name: Record frame times
++        run: node scripts/record-frame-evidence.mjs frame-evidence-${{ matrix.gpu }}.json
++      - name: Check the frame budget
++        run: node scripts/game-budgets.mjs frames frame-evidence-${{ matrix.gpu }}.json
++      - name: Upload the evidence
++        if: always()
++        uses: actions/upload-artifact@v7
++        with:
++          name: frame-evidence-${{ matrix.gpu }}
++          path: frame-evidence-${{ matrix.gpu }}.json
++          if-no-files-found: warn
++
+   # Software-adapter browser tests (SwiftShader): correctness only, never hardware evidence. Without
+   # a usable adapter the tests are reported NOT-RUN (the job does not fail for that; real test
+   # failures still fail it). MTEK_REQUIRE_GPU is deliberately not set here.

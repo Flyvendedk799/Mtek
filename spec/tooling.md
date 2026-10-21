@@ -51,6 +51,11 @@ The path of a new user through these commands (install from source, `mtek new`, 
 
 The output stays one self-contained folder of relative paths, so it can be uploaded as is. The `buildId` of the manifest is the one of the plain `release` build; the game page and favicon are not part of it.
 
+### 2.2 Small-game budgets (decision 0137)
+
+- **Size.** `budgets/small-games.json` gives each example a maximum size for its game package folder and its itch.io zip. `node scripts/game-budgets.mjs size` (`npm run check:budgets`, CI job `game-budgets`) builds them with `mtek build --release --itch` and fails when one is over budget.
+- **Frame time.** `node scripts/record-frame-evidence.mjs <out.json>` records the p50 and p95 `requestAnimationFrame` interval of each example on the machine's GPU. `node scripts/game-budgets.mjs frames <out.json>` requires p95 ≤ 20 ms over at least 300 frames, from an identified, non-fallback adapter. A software adapter is refused. Frame-time evidence is recorded only on real hardware (`evidence/small-games/README.md`).
+
 ## 3. `mtek.toml`
 
 ```toml

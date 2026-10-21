@@ -162,6 +162,30 @@ Fail looks like:
 - a zip whose files sit inside a sub-folder (itch shows "index.html not found");
 - runtime errors only with the minified bundle (compare with `mtek build` without `--release`).
 
+## 8. Phases 8.3 and 8.5: CI, budgets, hardware evidence (decision 0137)
+
+Done here:
+- `cargo build -p mtek-cli && node scripts/game-budgets.mjs size`: all seven examples within budget. The budgets are this run's sizes plus 10 %. For example hud-score is 637 576 B (folder) and 638 702 B (zip); physics-playground is about 5.07 MB because of the Rapier wasm.
+- `node scripts/game-budgets.mjs frames /tmp/fe.json`, where the file has a SwiftShader fallback adapter and p95 30 ms: exit 1, "not hardware evidence" and "over budget".
+- `node scripts/game-budgets.mjs frames` with no file: exit 1, "needs a run on real GPU hardware".
+
+Not run here:
+- CI itself. The jobs are in `ci/small-games-ci.patch`, not applied, because GitHub refused a push touching `.github/workflows/` without the `workflow` token scope. Apply it (`ci/README.md`), push, and look at the Actions tab. The `game-budgets (ubuntu-latest)` job must be green. The YAML was edited by hand and not parsed on the box, so a syntax error would show as a workflow error on GitHub.
+- `scripts/record-frame-evidence.mjs` was never executed. The box has no GPU and no Chromium; `node --check` passes.
+
+Abe, on each GPU machine (NVIDIA, Intel, Apple silicon):
+1. `npm ci && npx playwright install chromium && cargo build -p mtek-cli`.
+2. `node scripts/record-frame-evidence.mjs evidence/small-games/2026-MM-DD-<os>-<gpu>.json`.
+   - Expected: one line per example with p50, p95 and max. At 60 Hz, p50 should be about 16.7 ms.
+   - The final `wrote ...` line shows the adapter. `isFallbackAdapter` must be false, and the vendor or description must name the real GPU.
+3. `node scripts/game-budgets.mjs frames evidence/small-games/<file>.json`.
+   - Pass: "every budget holds".
+   - Fail: an example's p95 over 20 ms, or the adapter refused. A refused adapter usually means Chromium fell back to SwiftShader; check `chrome://gpu`.
+4. Commit the JSON and update the status table in `evidence/small-games/README.md`.
+5. Optional: register the machine as a self-hosted runner with labels `mtek-gpu` plus `nvidia`, `intel` or `apple`. Then start the CI workflow by hand with `frame_evidence: true`.
+
+On a 120 Hz or 144 Hz display the intervals are about 8.3 or 6.9 ms. The budget still applies, and the refresh rate shows in p50. A headless run on Linux may not be vsync-capped; set `MTEK_HEADLESS=0` to measure a real window.
+
 ## Pre-existing failures seen while running targeted tests (not caused by this branch)
 
 - `cargo test -p mtek-compiler --lib syntax::lexer_tests::longest_match_wins_for_operators` expects `=>` to lex as `Eq Gt`. The base branch's `match` work made it `FatArrow`.
